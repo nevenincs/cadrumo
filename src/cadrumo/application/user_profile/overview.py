@@ -49,7 +49,7 @@ from ...core.identity.profile import ProfileId
 from ...core.json_contract import Notice
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.redaction.rules import ALWAYS_REDACT_KEY_TERMS
-from ...domain.user_profile.labels import profile_field_label, profile_section_title
+from ...domain.user_profile.labels import profile_field_label, profile_section_summary, profile_section_title
 
 # ``ProfileSetupState`` is a pydantic FIELD type below, so it must resolve at
 # runtime; deferring it to TYPE_CHECKING leaves the model undefined and every
@@ -293,6 +293,8 @@ class ProfileSectionView(BaseModel):
 
     key: str
     title: str
+    summary: str
+    """What the section is for, in one sentence of the output language."""
     repeatable: bool
     fields: tuple[ProfileFieldView, ...]
 
@@ -730,6 +732,7 @@ def build_profile_overview(
             ProfileSectionView(
                 key=section.key,
                 title=profile_section_title(section),
+                summary=profile_section_summary(section),
                 repeatable=section.repeatable,
                 fields=tuple(
                     _section_field_views(

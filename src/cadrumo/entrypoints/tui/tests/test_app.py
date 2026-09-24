@@ -367,6 +367,7 @@ def _account_factories(
     change_user: Screen[ProfileLoginOutcome | None],
     *,
     password: Screen[ProfilePassphraseRotationOutcome | None] | None = None,
+    onboarding_pending: bool = False,
 ) -> AccountFactoriesV1:
     """Supply observable account doors without reproducing an account surface."""
     factories = object.__new__(AccountFactoriesV1)
@@ -376,7 +377,32 @@ def _account_factories(
     object.__setattr__(factories, "appearance", lambda _app: "appearance.changed")
     object.__setattr__(factories, "language", lambda _screen: None)
     object.__setattr__(factories, "sign_out", lambda: None)
+    object.__setattr__(factories, "onboarding_pending", onboarding_pending)
     return factories
+
+
+@pytest.mark.asyncio
+async def test_an_unfinished_profile_opens_on_setup_once_then_returns_home() -> None:
+    """The first Home of a session hands on to the Profile setup walk, and only once."""
+    contexts: list[TuiScreenContextV1] = []
+    app = CadrumoTuiApp(
+        services=cast(OperationComposedServices, object()),
+        destination_catalogue=_catalogue(contexts),
+        refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
+        account_factories=_account_factories(HandoverScreen(), onboarding_pending=True),
+    )
+    async with app.run_test() as pilot:
+        await _settle(app, pilot)
+        await _settle(app, pilot)
+        assert isinstance(app.screen, MarkerScreen)
+        assert [context.destination for context in contexts] == ["workbench.profile"]
+
+        await pilot.press("escape")
+        await _settle(app, pilot)
+        await _settle(app, pilot)
+        assert isinstance(app.screen, HomeScreen)
+        assert [context.destination for context in contexts] == ["workbench.profile"]
+        app.exit(None)
 
 
 @pytest.mark.asyncio

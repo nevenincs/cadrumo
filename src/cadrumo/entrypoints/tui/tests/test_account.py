@@ -19,6 +19,7 @@ from ....application.user_profile.login_interaction import ProfileLoginAttempt, 
 from ....application.user_profile.operations import ProfileLogoutOperationRequest
 from ....application.user_profile.overview import ProfileOverview
 from ....core.credentials import ProfilePasswordAssessment
+from ....domain.user_profile.values import ProfileSetupState
 from ..account import (
     AccountAppearanceFactoryV1,
     AccountRecomposeRequiredV1,
@@ -262,3 +263,36 @@ async def test_profile_sign_out_factory_submits_the_canonical_request_only_when_
     assert actor_ref == "operator:tui-account"
     assert request.definition_id == "user-profile.logout"
     assert str(request.payload.profile_id) == "11111111-1111-4111-8111-111111111111"
+
+
+@pytest.mark.parametrize(
+    ("setup_state", "offers_completion", "pending"),
+    [
+        (ProfileSetupState.INCOMPLETE, True, True),
+        (ProfileSetupState.COMPLETE, True, False),
+        (ProfileSetupState.INCOMPLETE, False, False),
+    ],
+)
+def test_the_session_opens_on_setup_only_while_setup_can_still_be_finished(
+    setup_state: ProfileSetupState, offers_completion: bool, pending: bool
+) -> None:
+    """An unfinished profile the host can complete opens on the setup walk; nothing else does."""
+
+    def refuse(*_args: object) -> NoReturn:
+        raise AssertionError("a door ran while composing")
+
+    async def sign_out() -> object:
+        return object()
+
+    factories = compose_account_factories(
+        profile_overview=ProfileOverview.model_construct(setup_state=setup_state),
+        persist_profile_field=refuse,
+        login_choices=(ProfileLoginChoice(profile_id="profile-1", label="Profile one"),),
+        authenticate=refuse,
+        assess_password=refuse,
+        rotate_password=refuse,
+        sign_out=cast(AccountSignOutFactoryV1, sign_out),
+        complete_setup=refuse if offers_completion else None,
+    )
+
+    assert factories.onboarding_pending is pending

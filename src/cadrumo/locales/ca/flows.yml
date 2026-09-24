@@ -78,6 +78,30 @@ flows:
     language:
       unavailable: Aquest perfil no ofereix cap configuració d'idioma.
     namespace_detail: detall {number}
+    onboarding:
+      continue: Continua
+      done: La configuració és completa. Continua a l'àrea de treball o continua afegint
+        detalls opcionals a sota.
+      finish: Acaba la configuració
+      heading: Configura el teu perfil
+      intro: Aquí només es demanen les respostes necessàries per preparar les teves
+        declaracions. Prem Continua i respon cada pregunta; la resta és opcional i
+        pot esperar.
+      progress: '{answered} de {total} respostes obligatòries'
+      question: Pregunta {number} de {total} · {section}
+      ready: Ja tens totes les respostes obligatòries. Prem Continua per acabar la
+        configuració.
+      required_only: Mostra només les respostes obligatòries
+      search_empty: Cap ajust no coincideix amb «{query}».
+      search_placeholder: Cerca ajustos per nom o valor
+      section_done: ✓ {title} - {present}/{total}
+      section_pending: ✖ {title} - {missing} obligatòries
+      sources_summary: Omple el perfil a partir dels registres de l'AEAT o dels teus
+        documents en lloc d'escriure'l.
+      sources_title: Importa dades (opcional)
+      step: 'Pas {step} de {steps}: {section}'
+      step_finish: 'Pas {step} de {steps}: acabar la configuració'
+      to_workbench: Continua a l'àrea de treball
     plantilla_media:
       average_workforce: Plantilla mitjana
       list_failed: No s'han pogut llegir els anys declarats. Torna-ho a provar.

@@ -96,7 +96,11 @@ def _overview(
         content_digest=digest,
         label=label,
         setup_state=ProfileSetupState.INCOMPLETE,
-        sections=(ProfileSectionView(key=_SECTION, title="Activities", repeatable=True, fields=fields),),
+        sections=(
+            ProfileSectionView(
+                key=_SECTION, title="Activities", summary="Economic activities", repeatable=True, fields=fields
+            ),
+        ),
     )
 
 
@@ -141,7 +145,11 @@ def _empty_repeatable_overview(
         content_digest=digest,
         label=label,
         setup_state=ProfileSetupState.INCOMPLETE,
-        sections=(ProfileSectionView(key=_SECTION, title="Activities", repeatable=True, fields=template),),
+        sections=(
+            ProfileSectionView(
+                key=_SECTION, title="Activities", summary="Economic activities", repeatable=True, fields=template
+            ),
+        ),
     )
 
 

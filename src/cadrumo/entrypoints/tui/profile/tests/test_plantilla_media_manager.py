@@ -74,7 +74,11 @@ class _FakePlantillaMediaDoors:
             content_digest=f"{self.revision:064x}",
             label="Synthetic profile",
             setup_state=ProfileSetupState.INCOMPLETE,
-            sections=(ProfileSectionView(key="irpf", title="IRPF", repeatable=False, fields=(regime, *instance_rows)),),
+            sections=(
+                ProfileSectionView(
+                    key="irpf", title="IRPF", summary="Income tax", repeatable=False, fields=(regime, *instance_rows)
+                ),
+            ),
         )
 
     def list_years(self) -> tuple[PlantillaMediaYear, ...]:

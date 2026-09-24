@@ -32,6 +32,7 @@ from ....core.i18n.render import tr
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ..components.host import ScreenHostApp
 from ..components.status import PinnedStatusBar
+from ..components.widgets import DisclosureGroup
 from ..profile.overview import ProfileManagerScreen
 from .manager_pilot import wait_until_settled
 
@@ -553,6 +554,8 @@ async def test_a_long_field_label_never_pushes_the_value_off_screen(tmp_path) ->
             # value column fit once the operator can see the row", not
             # "is the row above or below the fold" -- a separate, already
             # -covered question the vertical ContentScroll host answers.
+            app.query_one("#fold-irpf", DisclosureGroup).collapsed = False
+            await pilot.pause()
             table = app._table_by_section["irpf"]
             table.scroll_visible(animate=False)
             await pilot.pause()

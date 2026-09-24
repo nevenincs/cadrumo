@@ -53,7 +53,9 @@ async def _assert_tab_reaches_everything(screen: object, label: str) -> None:
         focusable = {
             widget.id or f"{type(widget).__name__}@{id(widget)}"
             for widget in app.screen.query(Widget)
-            if widget.focusable and widget.display
+            # A control inside a folded section is out of the Tab order by
+            # design until the section is opened; its fold's title is not.
+            if widget.focusable and all(node.display for node in widget.ancestors_with_self if isinstance(node, Widget))
         }
         reached: set[str] = set()
         for _ in range(len(focusable) * 2 + 2):

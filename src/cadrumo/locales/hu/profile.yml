@@ -541,56 +541,96 @@ profile:
           label: Bérleti díjat forrásadóval fizet
     section:
       activities:
+        summary: Az ön által végzett gazdasági tevékenységek, tevékenységenként egy
+          sorral.
         title: Gazdasági tevékenységek
       attribution_entity:
+        summary: Az ön által működtetett jövedelem-hozzárendelési jogalany (comunidad
+          de bienes, sociedad civil) jogi formája.
         title: Jövedelem-hozzárendelő entitás jogi formája
       attribution_entity_socios:
+        summary: A jogalany tagjai és az egyes tagoknak hozzárendelt jövedelemrész.
         title: A hozzárendelő entitás tagjai
       attribution_received:
+        summary: Azok a jövedelmek, amelyeket olyan jogalanyok rendelnek önhöz, amelyeknek
+          tagja.
         title: Kapott hozzárendelt jövedelem
       auth:
+        summary: 'Hogyan azonosítja magát az AEAT felé: tanúsítvánnyal, Cl@ve Móvil
+          vagy Cl@ve PIN használatával.'
         title: AEAT-hitelesítés
       capabilities:
+        summary: Mely opcionális szolgáltatásokat használhat ez a profil, például
+          a beolvasott dokumentumok helyi olvasását.
         title: Szolgáltatási képességek
       censo:
+        summary: Az AEAT adózói nyilvántartásába (036/037-es nyomtatvány) történt
+          bejelentkezése és annak dátumai.
         title: Censo és bejelentkezés
       contact:
+        summary: Hol érheti el önt az AEAT, és mi az adózási lakcíme.
         title: Kapcsolat és adóügyi cím
       identity:
+        summary: 'A neve és NIF-száma: kinek a nevében készülnek a bevallások.'
         title: Azonosítás
       irpf:
+        summary: Hogyan számítják a személyi jövedelemadóját (IRPF), és milyen levonások
+          terhelik.
         title: IRPF és forrásadó
       iva:
+        summary: Az áfa (IVA) rendszere, és milyen gyakran nyújtja be a bevallását.
         title: IVA-profil
       maritime_worker:
+        summary: 'Csak tengerészeknek: a különleges kedvezményeket meghatározó besorolás.'
         title: Trabajador del mar (besorolás)
       obligations:
+        summary: Azok az értékhatárok, amelyek eldöntik, kell-e bizonyos bevallásokat
+          benyújtania.
         title: Bevallási kötelezettség küszöbértékei
       preferences:
+        summary: Hogyan kommunikál önnel az alkalmazás, például az egyes képernyők
+          nyelve.
         title: Kezelői beállítások
       properties:
+        summary: Az ön tulajdonában lévő vagy bérbe adott ingatlanok, ingatlanonként
+          egy sorral.
         title: Ingatlanok és bérbeadás
       provenance:
+        summary: Honnan származnak a profil adatai, és mikortól érvényesek.
         title: Eredet és érvényesség
       renta_family:
+        summary: Gyermekek és más hozzátartozók, akik után családi kedvezmény illetheti
+          meg.
         title: Család (Renta)
       renta_filing:
+        summary: Hogyan nyújtja be az éves személyi jövedelemadó-bevallását (Renta).
         title: Bevallási környezet (Renta)
       renta_rental:
+        summary: A bérbeadásból származó jövedelem háttéradatai az éves bevallásban.
         title: Bérbeadási környezet (Renta)
       renta_spouse:
+        summary: A házastársa adatai, amelyekre a közös bevalláshoz van szükség.
         title: Házastárs (Renta)
       renta_taxpayer:
+        summary: Az adózó személyes körülményei, amelyeket az éves bevallás felhasznál.
         title: Adózó (Renta)
       tax_residence:
+        summary: Hol adóilletőségű, ami meghatározza az alkalmazandó szabályokat és
+          területet.
         title: Adóügyi illetőség és joghatóság
       taxpayer_type:
+        summary: Milyen típusú adózó ön, és milyen jövedelemfajtákból van bevétele.
         title: Adózó típusa és jövedelemkategóriák
       usage_ratios:
+        summary: A közösen használt eszközök, például autó vagy telefon üzleti használatának
+          aránya.
         title: Használati arányok és levonhatóság
       vivienda_office:
+        summary: Használja-e a fő lakóhelye egy részét irodaként a tevékenységéhez.
         title: Állandó lakás irodai hasznosítása
       withholding:
+        summary: Azok a levonások, amelyeket önnek kell alkalmaznia, amikor másoknak
+          fizet, például alkalmazottaknak vagy bérbeadóknak.
         title: Forrásadó-fizetői kötelezettségek
   validation:
     boolean_field_invalid: Érvénytelen logikai mező

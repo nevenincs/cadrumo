@@ -37,7 +37,7 @@ from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
 from textual.screen import ModalScreen, Screen
-from textual.widgets import Button, DataTable, Footer, Input, Label, OptionList, Static
+from textual.widgets import Button, Checkbox, DataTable, Footer, Input, Label, OptionList, ProgressBar, Static
 from textual.worker import Worker, WorkerState
 
 from ....application.user_profile.acquisition_sources import (
@@ -65,6 +65,7 @@ from ..components.widgets import (
     ContentDataTable,
     ContentScroll,
     CredentialRequirement,
+    DisclosureGroup,
     NoticeBand,
     RequirementStatus,
     SourceActionCard,
@@ -80,6 +81,7 @@ if TYPE_CHECKING:
     from collections.abc import Mapping
     from decimal import Decimal
 
+    from textual.timer import Timer
     from textual.widgets.data_table import ColumnKey
 
     from ....application.user_profile.overview import ProfileFieldView, ProfileOverview, ProfileSectionView
@@ -137,6 +139,7 @@ _EDIT_DIALOG_CSS = tokenised("""
     width: 100%;
     height: auto;
 }
+#edit-context { color: $text-muted; margin-bottom: $cadrumo-space-1; }
 #edit-label { text-style: bold; }
 #edit-hint { color: $text-muted; }
 #edit-refusal { color: $error; text-style: bold; }
@@ -160,10 +163,16 @@ class FieldEditScreen(ModalScreen[str | None]):
         prompt: str | None = None,
         choice_labels: Mapping[str, str] | None = None,
         validate: Callable[[str], str | None] | None = None,
+        context: str | None = None,
     ) -> None:
-        """Initialize the modal from one already-projected profile field."""
+        """Initialize the modal from one already-projected profile field.
+
+        ``context`` is shown above the question: where the operator is in
+        the setup walk and what the section being asked about is for.
+        """
         super().__init__()
         self._field = field
+        self._question_context = context
         self._prompt = prompt if prompt is not None else field.label
         self._choice_labels: dict[str, str] = dict(choice_labels) if choice_labels is not None else {}
         self._validate = validate
@@ -192,6 +201,8 @@ class FieldEditScreen(ModalScreen[str | None]):
     def compose(self) -> ComposeResult:
         """Lay out the choice or typed editor without exposing masked values."""
         with Vertical(id="edit-dialog"):
+            if self._question_context:
+                yield Static(self._question_context, id="edit-context", markup=False)
             yield Label(self._prompt, id="edit-label")
             if self._field.choices:
                 yield OptionList(
@@ -414,6 +425,18 @@ _PLANTILLA_MEDIA_SECTION = PLANTILLA_MEDIA_PATH.split(".", 1)[0]
 
 _PLANTILLA_MEDIA_BUTTON_ID = "manager-plantilla-media"
 
+_CONTINUE_BUTTON_ID = "onboarding-continue"
+
+_SEARCH_ID = "manager-search"
+
+_REQUIRED_ONLY_ID = "manager-required-only"
+
+_SEARCH_SETTLE_SECONDS = 0.15
+"""How long typing pauses before the sections are filtered again.
+
+Filtering rebuilds every section table, so doing it on each keystroke would
+make the box lag behind the operator's typing on a full profile."""
+
 
 class ProfileManagerScreen(AccountChromeScreen):
     """Full-screen profile overview with in-place editing."""
@@ -427,6 +450,18 @@ class ProfileManagerScreen(AccountChromeScreen):
     #manager-requirements { width: 100%; height: auto; }
     .manager-section DataTable { height: auto; width: 100%; background: $surface; }
     """
+        + tokenised("""
+    #manager-onboarding { height: auto; padding: $cadrumo-space-0 $cadrumo-gutter; }
+    #onboarding-heading { text-style: bold; }
+    #onboarding-intro { color: $text-muted; }
+    #onboarding-progress { width: 100%; }
+    #onboarding-progress Bar { width: 1fr; }
+    #manager-tools { height: auto; padding: $cadrumo-space-0 $cadrumo-gutter; }
+    #manager-search { width: 1fr; }
+    #manager-required-only { width: auto; }
+    #manager-search-empty { height: auto; }
+    .manager-section-summary { color: $text-muted; }
+    """)
     )
 
     BINDINGS: ClassVar = [
@@ -447,6 +482,7 @@ class ProfileManagerScreen(AccountChromeScreen):
         # Named on its own button rather than in the footer, which has no
         # room left for it on an eighty-column terminal.
         Binding(_COMPLETE_SETUP_KEY, _COMPLETE_SETUP_ACTION, "", show=False),
+        Binding("slash", "focus_search", "", show=False),
         Binding("q", "quit", "", show=False),
         Binding("escape", "quit", "", show=False),
     ]
@@ -569,25 +605,76 @@ class ProfileManagerScreen(AccountChromeScreen):
 
         Serialised against field writes for the reason those are serialised
         against each other: both replace the whole record."""
+        self._onboarding = complete_setup is not None and overview.setup_state is ProfileSetupState.INCOMPLETE
+        """Whether this page opened as the setup walk of an unfinished profile.
+
+        Fixed at construction so the walk's header stays in place after the
+        last step, where it hands the operator on to the workbench."""
+        self._required_only = self._onboarding
+        """Whether sections show only the answers setup requires right now."""
+        self._query = ""
+        """The operator's search text; empty shows every field the filter allows."""
+        self._search_timer: Timer | None = None
+        self._walking = False
+        """Whether Continue is leading the operator from one required answer to the next.
+
+        Set when Continue opens a question and cleared as soon as the
+        operator cancels, a save is refused, or nothing required is left, so
+        a later unrelated edit never reopens the walk by surprise."""
+        self._render_lock = asyncio.Lock()
+        """Serialises every rebuild of the section tables.
+
+        A search, a settled write and a language change each rebuild tables
+        across several loop turns; two interleaved would mount rows into
+        tables the other has already replaced."""
 
     @override
     def compose(self) -> ComposeResult:
         yield Static(id="manager-banner", classes="cadrumo-banner")
         yield PinnedStatusBar(id="manager-status")
+        if self._onboarding:
+            with Vertical(id="manager-onboarding"):
+                yield Static(id="onboarding-heading", markup=False)
+                yield Static(id="onboarding-intro", markup=False)
+                yield ProgressBar(id="onboarding-progress", show_eta=False)
+                yield Static(id="onboarding-step", markup=False)
+                yield Button("", id=_CONTINUE_BUTTON_ID, classes="-primary", compact=True)
+        with Horizontal(id="manager-tools"):
+            yield Input(id=_SEARCH_ID, compact=True)
+            yield Checkbox("", value=self._required_only, id=_REQUIRED_ONLY_ID, compact=True)
         with ContentScroll(id="manager-body", classes="cadrumo-scroll"), Vertical(classes="cadrumo-column"):
             yield Vertical(id="manager-context")
+            yield Static(id="manager-search-empty", classes="cadrumo-note", markup=False)
             # Filled by :meth:`_redraw`, not here: a card's text is fixed when
             # it is built, so cards composed once would keep the language the
             # page opened in after the operator changes it.
-            yield Vertical(id="manager-sources", classes="cadrumo-panel")
+            with DisclosureGroup(title="", collapsed=self._onboarding, id="manager-sources-fold"):
+                yield Static(id="manager-sources-summary", classes="manager-section-summary", markup=False)
+                yield Vertical(id="manager-sources", classes="cadrumo-panel")
+            missing = frozenset(self.overview.missing_required)
             for section in self.overview.sections:
-                yield Static(id=f"section-{section.key}", classes="manager-section cadrumo-panel")
+                # Only a section still owing a required answer starts open.
+                # Decided here rather than on render: a fold that opens scrolls
+                # itself into view, which would open the page mid-way down.
+                owing = any(field.path in missing for field in section.fields)
+                with DisclosureGroup(title="", collapsed=not owing, id=f"fold-{section.key}"):
+                    yield Static(id=f"summary-{section.key}", classes="manager-section-summary", markup=False)
+                    yield Static(id=f"section-{section.key}", classes="manager-section cadrumo-panel")
         yield Footer()
 
     async def on_mount(self) -> None:
         """Install the presentation theme and render the supplied overview."""
         install_cadrumo_themes(self.app)
+        # The shared theme sizes every Input to the full row, which would push
+        # the required-only switch beside the search box off the screen.
+        self.query_one(f"#{_SEARCH_ID}", Input).styles.width = "1fr"
         await self._redraw()
+        if self._onboarding:
+            self.query_one(f"#{_CONTINUE_BUTTON_ID}", Button).focus()
+        # Whatever took focus while the page was building may have scrolled
+        # the body; the page opens at its top.
+        body = self.query_one("#manager-body", ContentScroll)
+        self.call_after_refresh(body.scroll_home, animate=False, immediate=True)
 
     def _source_cards(self) -> list[SourceActionCard]:
         """Build one card per known source, worded in the page's current language."""
@@ -653,6 +740,9 @@ class ProfileManagerScreen(AccountChromeScreen):
         """
         if event.button.id == "manager-complete-setup":
             self.action_complete_setup()
+            return
+        if event.button.id == _CONTINUE_BUTTON_ID:
+            await self.action_continue_setup()
             return
         button_id = event.button.id or ""
         if button_id.startswith("manager-add-row-"):
@@ -821,6 +911,11 @@ class ProfileManagerScreen(AccountChromeScreen):
         :meth:`_apply_overview` instead, which repaints only the cells whose
         content actually moved — the same page, at a fraction of the work.
         """
+        async with self._render_lock:
+            await self._redraw_now()
+
+    async def _redraw_now(self) -> None:
+        """The wholesale redraw, for a caller already holding the render lock."""
         self._render_chrome()
         self.refresh_account_chrome()
         self._clear_notice()
@@ -840,15 +935,35 @@ class ProfileManagerScreen(AccountChromeScreen):
                 )
             )
         self._sync_source_actions()
+        await self._render_sections()
+        self._render_onboarding()
+
+    async def _render_sections(self, *, disclose_matches: bool = False) -> None:
+        """Rebuild every section table from the rows the filters leave visible.
+
+        A section with no visible row folds away entirely rather than showing
+        an empty table, so "only required" and a search both reduce the page
+        to what the operator is looking for. ``disclose_matches`` opens every
+        section still showing rows, which is what a search is for; otherwise
+        a section keeps whatever fold state the operator left it in.
+        """
         self._field_by_key.clear()
         self._table_by_section.clear()
         self._columns_by_section.clear()
+        any_visible = False
         for section in self.overview.sections:
             # One section per loop turn: building every table in one pass held
             # the loop for over half a second on a complete profile.
             await asyncio.sleep(0)
+            visible = self._visible_fields(self.overview, section)
+            fold = self.query_one(f"#fold-{section.key}", DisclosureGroup)
+            fold.title = self._fold_title(self.overview, section)
+            fold.display = bool(visible)
+            any_visible = any_visible or bool(visible)
+            if disclose_matches and visible:
+                fold.collapsed = False
+            self.query_one(f"#summary-{section.key}", Static).update(section.summary)
             panel = self.query_one(f"#section-{section.key}", Static)
-            panel.border_title = self._section_title(section)
             await panel.remove_children()
             table: DataTable[str] = ContentDataTable[str](cursor_type="row", zebra_stripes=True)
             await panel.mount(table)
@@ -859,13 +974,13 @@ class ProfileManagerScreen(AccountChromeScreen):
                 table.add_column(tr("flows.manager.column.value")),
             ]
             for field in section.fields:
-                key = field.path
-                self._field_by_key[key] = field
+                self._field_by_key[field.path] = field
+            for field in visible:
                 # ``height=None`` is what lets a field name past the capped
                 # column width wrap onto more lines instead of being clipped
                 # or pushing the value column off-screen — see
                 # ``_FIELD_COLUMN_WIDTH``.
-                table.add_row(*self._rendered_row(field), key=key, height=None)
+                table.add_row(*self._rendered_row(field), key=field.path, height=None)
             if section.repeatable:
                 # These use the same established CLI wording, rather than
                 # introducing a second vocabulary before the locale pass.
@@ -895,6 +1010,109 @@ class ProfileManagerScreen(AccountChromeScreen):
                         compact=True,
                     )
                 )
+        searching = bool(self._query.strip())
+        # Importing is an alternative to typing, not a match for a search.
+        self.query_one("#manager-sources-fold", DisclosureGroup).display = not searching
+        empty = self.query_one("#manager-search-empty", Static)
+        empty.display = searching and not any_visible
+        if empty.display:
+            empty.update(tr("flows.manager.onboarding.search_empty", query=self._query.strip()))
+
+    def _required_now(self, overview: ProfileOverview, field: ProfileFieldView) -> bool:
+        """Whether setup requires this row now: missing, or answered and required.
+
+        A repeatable section's template row is marked required but demands
+        nothing until the operator adds a row, so it is not counted here;
+        the overview's own missing list is the authority on what is owed.
+        """
+        return field.path in overview.missing_required or (field.required and field.present)
+
+    def _visible_fields(self, overview: ProfileOverview, section: ProfileSectionView) -> tuple[ProfileFieldView, ...]:
+        """The section's rows that the required-only switch and the search leave in view.
+
+        A search that names the section itself keeps all of its rows, so an
+        operator who types "IVA" sees the whole IVA section rather than only
+        the rows whose own label happens to contain the word.
+        """
+        fields = section.fields
+        if self._required_only:
+            fields = tuple(field for field in fields if self._required_now(overview, field))
+        query = self._query.strip().casefold()
+        if not query or query in section.title.casefold() or query in section.summary.casefold():
+            return fields
+        return tuple(
+            field for field in fields if query in " ".join((field.path, *self._rendered_row(field)[1:])).casefold()
+        )
+
+    def _fold_title(self, overview: ProfileOverview, section: ProfileSectionView) -> str:
+        """Title a section's fold with how much setup still needs from it.
+
+        A glyph as well as words, so the state reads without colour.
+        """
+        missing = sum(1 for field in section.fields if field.path in overview.missing_required)
+        if missing:
+            return tr("flows.manager.onboarding.section_pending", title=section.title, missing=missing)
+        if any(self._required_now(overview, field) for field in section.fields):
+            return tr(
+                "flows.manager.onboarding.section_done",
+                title=section.title,
+                present=section.present_count,
+                total=section.total_count,
+            )
+        return self._section_title(section)
+
+    def _render_onboarding(self) -> None:
+        """Word the setup walk's header: progress, the current step, and what Continue does."""
+        self.query_one("#manager-sources-summary", Static).update(tr("flows.manager.onboarding.sources_summary"))
+        self.query_one("#manager-sources-fold", DisclosureGroup).title = tr("flows.manager.onboarding.sources_title")
+        self.query_one(f"#{_SEARCH_ID}", Input).placeholder = tr("flows.manager.onboarding.search_placeholder")
+        self.query_one(f"#{_REQUIRED_ONLY_ID}", Checkbox).label = tr("flows.manager.onboarding.required_only")
+        if not self._onboarding:
+            return
+        overview = self.overview
+        required = [
+            (section, field)
+            for section in overview.sections
+            for field in section.fields
+            if self._required_now(overview, field)
+        ]
+        missing = frozenset(overview.missing_required)
+        # A requirement with no row to show still counts, so the bar never
+        # reads as finished while the store would refuse completion.
+        total = len(required) + sum(1 for path in missing if path not in self._field_by_key)
+        answered = sum(1 for _section, field in required if field.path not in missing)
+        done = overview.setup_state is not ProfileSetupState.INCOMPLETE
+        steps: list[ProfileSectionView] = []
+        for section, _field in required:
+            if section not in steps:
+                steps.append(section)
+        current = next((section for section, field in required if field.path in missing), None)
+        bar = self.query_one("#onboarding-progress", ProgressBar)
+        bar.update(total=total + 1, progress=answered + (1 if done else 0))
+        progress = tr("flows.manager.onboarding.progress", answered=answered, total=total)
+        if done:
+            step = tr("flows.manager.onboarding.done")
+            action = tr("flows.manager.onboarding.to_workbench")
+        elif current is not None:
+            step = tr(
+                "flows.manager.onboarding.step",
+                step=steps.index(current) + 1,
+                steps=len(steps) + 1,
+                section=current.title,
+            )
+            action = tr("flows.manager.onboarding.continue")
+        else:
+            step = "\n".join(
+                (
+                    tr("flows.manager.onboarding.step_finish", step=len(steps) + 1, steps=len(steps) + 1),
+                    tr("flows.manager.onboarding.ready"),
+                )
+            )
+            action = tr("flows.manager.onboarding.finish")
+        self.query_one("#onboarding-heading", Static).update(tr("flows.manager.onboarding.heading"))
+        self.query_one("#onboarding-intro", Static).update(tr("flows.manager.onboarding.intro"))
+        self.query_one("#onboarding-step", Static).update(f"{progress} · {step}")
+        self.query_one(f"#{_CONTINUE_BUTTON_ID}", Button).label = action
 
     async def _apply_overview(self, updated: ProfileOverview) -> None:
         """Show ``updated`` by repainting only what differs from the page on screen.
@@ -912,43 +1130,49 @@ class ProfileManagerScreen(AccountChromeScreen):
         Some edits DO move the row set, because how many rows a repeated
         fact stands for is the record's to say, not the schema's: clearing
         the last leaf of a censal divergence retires its rows, and filling a
-        row of a repeatable section can add a group. The structural
-        comparison is what makes that safe — the shapes stop matching and
-        this falls back to the full rebuild rather than writing into
-        coordinates the new page no longer has.
+        row of a repeatable section can add a group. The same holds for the
+        rows the filters leave visible, since an answer can change what is
+        required or what a search matches. The structural comparison is what
+        makes that safe — the shapes stop matching and this falls back to the
+        full rebuild rather than writing into coordinates the new page no
+        longer has.
         """
-        previous = self.overview
-        self.overview = updated
-        if self._shape_of(previous) != self._shape_of(updated):
-            await self._redraw()
-            return
-
-        self._render_chrome()
-        self._clear_notice()
-        await self._render_profile_context()
-        for was, now in zip(previous.sections, updated.sections, strict=True):
-            table = self._table_by_section.get(now.key)
-            columns = self._columns_by_section.get(now.key)
-            if table is None or columns is None:
-                # The page was never fully rendered, so there are no cells to
-                # address. Build it rather than silently dropping the update.
-                await self._redraw()
+        async with self._render_lock:
+            previous = self.overview
+            self.overview = updated
+            if self._shape_of(previous) != self._shape_of(updated):
+                await self._redraw_now()
                 return
-            if (was.present_count, was.total_count) != (now.present_count, now.total_count):
-                self.query_one(f"#section-{now.key}", Static).border_title = self._section_title(now)
-            for before, after in zip(was.fields, now.fields, strict=True):
-                self._field_by_key[after.path] = after
-                old_cells = self._rendered_row(before)
-                new_cells = self._rendered_row(after)
-                if old_cells == new_cells:
-                    continue
-                for column, old_cell, new_cell in zip(columns, old_cells, new_cells, strict=True):
-                    if old_cell != new_cell:
-                        # ``update_width`` defaults off, which would clip a value
-                        # that grew past the column's current width — the full
-                        # rebuild sizes columns as it adds rows, and this is the
-                        # equivalent for a cell written in place.
-                        table.update_cell(after.path, column, new_cell, update_width=True)
+
+            self._render_chrome()
+            self._clear_notice()
+            await self._render_profile_context()
+            for was, now in zip(previous.sections, updated.sections, strict=True):
+                table = self._table_by_section.get(now.key)
+                columns = self._columns_by_section.get(now.key)
+                if table is None or columns is None:
+                    # The page was never fully rendered, so there are no cells to
+                    # address. Build it rather than silently dropping the update.
+                    await self._redraw_now()
+                    return
+                self.query_one(f"#fold-{now.key}", DisclosureGroup).title = self._fold_title(updated, now)
+                for after in now.fields:
+                    self._field_by_key[after.path] = after
+                for before, after in zip(
+                    self._visible_fields(previous, was), self._visible_fields(updated, now), strict=True
+                ):
+                    old_cells = self._rendered_row(before)
+                    new_cells = self._rendered_row(after)
+                    if old_cells == new_cells:
+                        continue
+                    for column, old_cell, new_cell in zip(columns, old_cells, new_cells, strict=True):
+                        if old_cell != new_cell:
+                            # ``update_width`` defaults off, which would clip a value
+                            # that grew past the column's current width — the full
+                            # rebuild sizes columns as it adds rows, and this is the
+                            # equivalent for a cell written in place.
+                            table.update_cell(after.path, column, new_cell, update_width=True)
+            self._render_onboarding()
 
     async def _render_profile_context(self) -> None:
         """Render actionable profile context in the scrollable page body.
@@ -966,13 +1190,15 @@ class ProfileManagerScreen(AccountChromeScreen):
             for path in self.overview.missing_required
             if path not in resolved_paths
         )
+        # The setup walk's header already says what is missing and leads to
+        # it, so the page does not repeat the list beneath it.
         requirements = (
             tr(
                 "flows.manager.profile_missing_fields",
                 count=len(self.overview.missing_required),
                 fields=", ".join(missing_labels),
             )
-            if self.overview.missing_required
+            if self.overview.missing_required and not self._onboarding
             else ""
         )
         context = self.query_one("#manager-context", Vertical)
@@ -981,7 +1207,9 @@ class ProfileManagerScreen(AccountChromeScreen):
             await context.mount(
                 Static(requirements, id="manager-requirements", classes="cadrumo-note", markup=False),
             )
-        if self._completion_offered:
+        if self._completion_offered and not self._onboarding:
+            # The setup walk's Continue finishes setup itself, so a second
+            # button for the same step would only compete with it.
             await context.mount(
                 Button(
                     tr("flows.manager.complete_setup.button", key=_COMPLETE_SETUP_KEY.upper()),
@@ -1036,14 +1264,16 @@ class ProfileManagerScreen(AccountChromeScreen):
             value,
         )
 
-    @staticmethod
-    def _shape_of(overview: ProfileOverview) -> tuple[tuple[str, tuple[str, ...]], ...]:
-        """The page's row layout: section keys, each with its field paths in order.
+    def _shape_of(self, overview: ProfileOverview) -> tuple[tuple[str, tuple[str, ...]], ...]:
+        """The page's row layout: section keys, each with its visible field paths in order.
 
         Two overviews sharing a shape address the same cells, which is the
         precondition for updating one in place from the other.
         """
-        return tuple((section.key, tuple(field.path for field in section.fields)) for section in overview.sections)
+        return tuple(
+            (section.key, tuple(field.path for field in self._visible_fields(overview, section)))
+            for section in overview.sections
+        )
 
     def _render_chrome(self) -> None:
         """Resolve all manager-owned chrome under the active output language."""
@@ -1125,6 +1355,11 @@ class ProfileManagerScreen(AccountChromeScreen):
         field = self._field_by_key.get(str(key))
         if field is None:
             return
+        self._walking = False
+        self._open_field_editor(field)
+
+    def _open_field_editor(self, field: ProfileFieldView, *, context: str | None = None) -> None:
+        """Open the edit dialog for one field, or the add-row form for an unfilled row."""
         section = self._section(field.path.split(".", 1)[0])
         if section is not None and section.repeatable:
             row_key = self._row_key_for_field(section, field)
@@ -1137,10 +1372,112 @@ class ProfileManagerScreen(AccountChromeScreen):
                 # an accidental update of an identity that does not exist.
                 self._open_add_row(section.key)
                 return
-        self.app.push_screen(
-            FieldEditScreen(field, validate=self._validator_for(field)),
-            self._apply_edit_for(field),
+        apply = self._apply_edit_for(field)
+
+        def _close(value: str | None) -> None:
+            # Cancelling, or leaving the box blank, is the operator stepping
+            # out of the walk; only an answer carries it on to the next one.
+            if value is None or not value.strip():
+                self._walking = False
+            apply(value)
+
+        self.app.push_screen(FieldEditScreen(field, validate=self._validator_for(field), context=context), _close)
+
+    # ── setup walk ──────────────────────────────────────────────────────
+
+    async def action_continue_setup(self) -> None:
+        """Take the one next step of setup: the next required question, finishing, or leaving.
+
+        Only what setup requires is asked, in page order, one question at a
+        time; everything optional stays in its folded section. With nothing
+        left to answer, Continue asks the store to declare setup complete,
+        and once it is, Continue leaves for the workbench.
+        """
+        if self._pending_write is not None or self._pending_completion is not None:
+            self._refuse(tr("flows.manager.edit.write_in_flight"))
+            return
+        if self.overview.setup_state is not ProfileSetupState.INCOMPLETE:
+            self._walking = False
+            await self.action_quit()
+            return
+        field = next(iter(self.overview.missing_required_fields), None)
+        if field is None:
+            self._walking = False
+            if self.overview.missing_required:
+                self._refuse(tr("flows.manager.complete_setup.incomplete_unnamed"))
+                return
+            self.action_complete_setup()
+            return
+        section = self._section(field.path.split(".", 1)[0])
+        if section is None:
+            return
+        fold = self.query_one(f"#fold-{section.key}", DisclosureGroup)
+        fold.collapsed = False
+        fold.scroll_visible()
+        required = [
+            candidate
+            for candidate_section in self.overview.sections
+            for candidate in candidate_section.fields
+            if self._required_now(self.overview, candidate)
+        ]
+        number = 1 + sum(1 for candidate in required if candidate.present)
+        context = "\n".join(
+            (
+                tr(
+                    "flows.manager.onboarding.question",
+                    number=number,
+                    total=len(required),
+                    section=section.title,
+                ),
+                section.summary,
+            )
         )
+        self._walking = True
+        self._open_field_editor(field, context=context)
+
+    def _carry_walk_on(self) -> None:
+        """After an answer lands, open the next required question, or hand back to Continue."""
+        if not self._walking:
+            return
+        if self.overview.missing_required_fields:
+            self.run_worker(self.action_continue_setup(), group="profile-setup-walk", exclusive=True)
+            return
+        self._walking = False
+        if self._onboarding:
+            self.query_one(f"#{_CONTINUE_BUTTON_ID}", Button).focus()
+
+    # ── search and filters ──────────────────────────────────────────────
+
+    def action_focus_search(self) -> None:
+        """Move the cursor to the search box."""
+        self.query_one(f"#{_SEARCH_ID}", Input).focus()
+
+    def on_input_changed(self, event: Input.Changed) -> None:
+        """Filter the sections once typing in the search box pauses."""
+        if event.input.id != _SEARCH_ID:
+            return
+        self._query = event.value
+        if self._search_timer is not None:
+            self._search_timer.stop()
+        self._search_timer = self.set_timer(_SEARCH_SETTLE_SECONDS, self._apply_filters)
+
+    def on_checkbox_changed(self, event: Checkbox.Changed) -> None:
+        """Show every field, or only the answers setup requires."""
+        if event.checkbox.id != _REQUIRED_ONLY_ID:
+            return
+        self._required_only = event.value
+        self.run_worker(self._apply_filters(), group="profile-filter")
+
+    async def _apply_filters(self) -> None:
+        """Rebuild the sections under the current search and required-only switch."""
+        self._search_timer = None
+        async with self._render_lock:
+            await self._render_sections(disclose_matches=bool(self._query.strip()))
+            self._render_onboarding()
+        # Each fold a search opens scrolls itself into view; the results read
+        # from the top.
+        body = self.query_one("#manager-body", ContentScroll)
+        self.call_after_refresh(body.scroll_home, animate=False, immediate=True)
 
     def _validator_for(self, field: ProfileFieldView) -> Callable[[str], str | None] | None:
         """Bind the injected judge to one field, or ``None`` when there is none.
@@ -1354,6 +1691,8 @@ class ProfileManagerScreen(AccountChromeScreen):
             self.query_one("#manager-status", PinnedStatusBar).show_success(
                 tr("flows.manager.complete_setup.completed")
             )
+            if self._onboarding:
+                self.query_one(f"#{_CONTINUE_BUTTON_ID}", Button).focus()
             return
         if isinstance(worker.error, ProfileSchemaValidationError):
             missing = [field.label for field in self.overview.missing_required_fields]
@@ -1423,7 +1762,9 @@ class ProfileManagerScreen(AccountChromeScreen):
             self.query_one("#manager-status", PinnedStatusBar).show_success(
                 tr("flows.manager.edit.saved" if changed else "flows.manager.edit.no_change")
             )
+            self._carry_walk_on()
             return
+        self._walking = False
         # A refusal reaches the operator as itself. A cancelled or
         # result-less worker would otherwise leave the page looking as
         # though nothing had been asked of it.
