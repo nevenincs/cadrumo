@@ -359,8 +359,16 @@ def test_censal_executor_rejects_none_and_post_commit_failure_stays_unknown(tmp_
                     responded_at=_NOW,
                 )
             )
-            rejected = await _wait_for_phase(supervisor, operation_id, CENSAL_PHASE_SETTLEMENT)
+            # Awaiting the terminal state, not the settlement phase: returning at
+            # the phase tore the loop down while the rejection was still being
+            # journalled, which left the outcome to scheduling.
+            rejected = await supervisor.await_terminal(operation_id)
+            assert rejected.phase_code == CENSAL_PHASE_SETTLEMENT
+            assert rejected.terminal_condition is OperationTerminalCondition.SUCCEEDED
             assert rejected.effect is OperationEffect.NONE
+            assert rejected.terminal_receipt is not None
+            assert rejected.terminal_receipt.result_ref is not None
+            assert rejected.terminal_receipt.result_ref.endswith(":rejected")
 
         asyncio.run(reject_run())
         assert (
