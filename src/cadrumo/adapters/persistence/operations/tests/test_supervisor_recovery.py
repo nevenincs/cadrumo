@@ -357,6 +357,10 @@ def test_detached_cancellation_race_persists_acknowledgement_before_terminal_set
 def test_detached_deadline_race_persists_cooperative_stop_before_terminal_settlement(tmp_path: Path) -> None:
     """The aggregate deadline races real execution through the filesystem journal before settlement."""
     executor = DeadlineAcknowledgingExecutor()
+    # The supervisor re-reads its clock each time its deadline wait wakes, so
+    # holding time still until the detach has been journalled means the
+    # deadline can only fire after it, however slowly the host schedules.
+    instant = [datetime.now(UTC)]
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         storage_root = tmp_path / "durable-state"
         journal, leases, operands = _repositories(storage_root=storage_root, profile_objects=profile.repository)
@@ -378,7 +382,7 @@ def test_detached_deadline_race_persists_cooperative_stop_before_terminal_settle
             operands=operands,
             owner_id="1" * 64,
             token="2" * 64,
-            clock=lambda: datetime.now(UTC),
+            clock=lambda: instant[0],
             execution_timeout=timedelta(milliseconds=50),
             cleanup_timeout=timedelta(seconds=1),
         )
@@ -392,6 +396,7 @@ def test_detached_deadline_race_persists_cooperative_stop_before_terminal_settle
             start_task = asyncio.create_task(run_to_settlement(supervisor, operation_id))
             await executor.started.wait()
             detached = await supervisor.detach(operation_id)
+            instant[0] += timedelta(milliseconds=50)
             # The start door settles an executor that acknowledged the
             # deadline's cooperative stop, so the terminal fact arrives from it
             # rather than from a second settlement the caller drives.
