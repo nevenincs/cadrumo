@@ -1515,7 +1515,7 @@ def setup(app):
             return
         from dev.docs.glossary_reference import generate_glossary_reference
 
-        generate_glossary_reference(Path(__file__).resolve().parent)
+        generate_glossary_reference(Path(__file__).resolve().parent, repo_root=_PROJECT_ROOT)
 
     def _generate_casilla_reference(app):
         """Render the per-modelo casilla reference pages fresh from the registry.
