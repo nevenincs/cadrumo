@@ -64,10 +64,10 @@ class WithholdingEvidenceScreen(Screen[None]):
     CSS: ClassVar[str] = BASE_CSS + tokenised(
         """
         WithholdingEvidenceScreen { overflow-y: auto; }
-        #withholding-page { overflow-y: auto; height: 1fr; padding: 1 2; }
-        #withholding-status, #withholding-inspection { height: auto; margin-top: 1; }
+        #withholding-page { overflow-y: auto; height: 1fr; padding: $cadrumo-gutter-y $cadrumo-gutter; }
+        #withholding-status, #withholding-inspection { height: auto; margin-top: $cadrumo-stack; }
         .withholding-field { width: 100%; max-width: $cadrumo-control-max-width; }
-        .withholding-label { margin-top: 1; }
+        .withholding-label { margin-top: $cadrumo-stack; }
         """
     )
 
