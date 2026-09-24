@@ -683,31 +683,6 @@ def _delete_profile_session(*, storage_root: Path, profile_id: UUID) -> None:
         _log.debug("profile-session receipt deletion refused error_type=%s", type(exc).__name__)
 
 
-def _discard_unpublished_journal(
-    *,
-    receipt_path: Path,
-    retirement_path: Path,
-    predecessor: bytes | None,
-    journal: bytes,
-) -> None:
-    """Clear a failed mint's own journal while its successor is still unpublished.
-
-    The journal is then the only on-disk half of a key the store may or may not
-    hold, so a refused login must not leave it behind. A published successor,
-    or a receipt some other writer replaced, is left to the journal's recovery.
-    Never raises: the mint's own failure is what its caller must see.
-    """
-    try:
-        current = read_optional_profile_custody_local_record(
-            receipt_path,
-            maximum_bytes=PROFILE_SESSION_RECORD_MAX_BYTES,
-        )
-        if current == predecessor:
-            _clear_retirement_journal(retirement_path, payload=journal)
-    except ProfileCustodyRecordError as exc:
-        _log.debug("profile-session mint journal clear deferred error_type=%s", type(exc).__name__)
-
-
 def _clear_unrecovered_retirement(*, storage_root: Path, profile_id: UUID) -> None:
     """Remove a retirement journal that recovery could not consume.
 
@@ -880,15 +855,7 @@ def _mint_profile_session(
                 # retirement after publication without touching a substitute.
                 try:
                     _recover_pending_retirement(storage_root=storage_root, profile_id=profile_id)
-                except KeyringUnavailableError as exc:
-                    _log.debug("profile-session mint cleanup deferred error_type=%s", type(exc).__name__)
-                    _discard_unpublished_journal(
-                        receipt_path=receipt_path,
-                        retirement_path=retirement_path,
-                        predecessor=predecessor,
-                        journal=journal,
-                    )
-                except (ProfileCustodyRecordError, StorageValidationError) as exc:
+                except (KeyringUnavailableError, ProfileCustodyRecordError, StorageValidationError) as exc:
                     _log.debug("profile-session mint cleanup deferred error_type=%s", type(exc).__name__)
                 raise
             try:

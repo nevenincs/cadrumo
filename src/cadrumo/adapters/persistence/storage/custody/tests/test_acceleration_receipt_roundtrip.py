@@ -166,11 +166,8 @@ class TestKeyringBoundary:
         except KeyringUnavailableError:
             # The live Windows credential boundary refused the key before a
             # disk-only receipt could be published.  The next login remains
-            # process-scoped, never a fallback to another key authority, and
-            # the retirement journal -- which carries the wrapped DEK -- is
-            # not left behind for a key that was never published.
+            # process-scoped, never a fallback to another key authority.
             assert not path.exists()
-            assert not _profile_session_retirement_path(storage_root=tmp_path, profile_id=profile_id).exists()
         else:
             try:
                 assert path.exists()
