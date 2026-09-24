@@ -77,6 +77,20 @@ flows:
     language:
       unavailable: Este perfil no ofrece un ajuste de idioma.
     namespace_detail: detalle {number}
+    plantilla_media:
+      average_workforce: Plantilla media
+      list_failed: No se han podido leer los años declarados. Vuelve a intentarlo.
+      none_declared: Todavía no hay ningún año declarado.
+      remove: Eliminar este año
+      state: Estado
+      state_committed: Comprometida (el año sigue abierto)
+      state_observed: Observada (el año está cerrado)
+      state_required: Indica si la cifra es observada o comprometida.
+      workforce_not_number: Introduce la plantilla media como un número, con punto
+        para los decimales - por ejemplo 12.50.
+      year: Año natural
+      year_not_whole: Introduce el año natural como un número entero - por ejemplo
+        2025.
     profile_missing_fields: 'Al perfil le faltan %{count} campo(s) obligatorio(s):
       %{fields}'
     required_field_unavailable: Campo obligatorio del perfil

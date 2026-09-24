@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
+from decimal import Decimal
 
 import pytest
 
@@ -62,6 +63,7 @@ from ....domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ....domain.modelos.filing_record import ModeloRecordCatalogue
 from ....domain.modelos.work_unit import WorkUnitCatalogue
 from ....domain.transactions.models import TransactionCatalogue
+from ....domain.user_profile.plantilla_media import PlantillaMediaState, PlantillaMediaYear
 from ...adapter_composition import build_censal_fetch_port
 from ..declarations.calendar import DeclarationsCalendarScreen
 from ..declarations.controller import DeclarationsWorkspaceScreen
@@ -260,6 +262,15 @@ def _account_inputs(
     def rotate(_current: str, _replacement: str, _confirmation: str):
         raise AssertionError("password rotation must not run while composing the workbench")
 
+    def list_plantilla_media() -> tuple[PlantillaMediaYear, ...]:
+        raise AssertionError("the average-workforce listing must not be read while composing the workbench")
+
+    def set_plantilla_media(_year: int, _average_workforce: Decimal, _state: PlantillaMediaState) -> ProfileOverview:
+        raise AssertionError("an average-workforce year must not be written while composing the workbench")
+
+    def remove_plantilla_media(_year: int) -> ProfileOverview:
+        raise AssertionError("an average-workforce year must not be withdrawn while composing the workbench")
+
     return InstalledWorkbenchAccountInputsV1(
         profile_id=profile_id,
         profile_overview=ProfileOverview.model_construct(profile_id=overview_profile_id, label=label),
@@ -268,6 +279,9 @@ def _account_inputs(
         authenticate=authenticate,
         assess_password=assess,
         rotate_password=rotate,
+        list_plantilla_media=list_plantilla_media,
+        set_plantilla_media=set_plantilla_media,
+        remove_plantilla_media=remove_plantilla_media,
     )
 
 
@@ -364,6 +378,29 @@ def test_generation_provider_composes_the_real_account_screen_owners_without_eff
     assert isinstance(root_inputs.account_factories.profile(context), ProfileManagerScreen)
     assert isinstance(root_inputs.account_factories.change_user(), LoginScreen)
     assert isinstance(root_inputs.account_factories.password(), PassphraseScreen)
+
+
+def test_generation_provider_hands_the_average_workforce_doors_to_the_profile_screen(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    """The Profile screen receives the session's own average-workforce doors, not a default."""
+    dependencies = _dependencies()
+    provider = InstalledWorkbenchGenerationProviderV1(
+        _GenerationReadDoor(lambda: _inputs(_NOW, operation=authority_operation))
+    )
+    root_inputs = compose_installed_workbench_generation_provider(provider, dependencies)(
+        _operation_runtime(operation=authority_operation)
+    )
+
+    screen = root_inputs.account_factories.profile(TuiScreenContextV1(destination="workbench.profile"))
+
+    account = dependencies.account
+    assert account.list_plantilla_media is not None
+    assert account.set_plantilla_media is not None
+    assert account.remove_plantilla_media is not None
+    assert screen._list_plantilla_media is account.list_plantilla_media
+    assert screen._set_plantilla_media is account.set_plantilla_media
+    assert screen._remove_plantilla_media is account.remove_plantilla_media
 
 
 @pytest.mark.parametrize(

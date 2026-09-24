@@ -25,6 +25,8 @@ from .account import (
 )
 
 if TYPE_CHECKING:
+    from decimal import Decimal
+
     from textual.app import AutopilotCallbackType
     from textual.screen import Screen
 
@@ -47,6 +49,7 @@ if TYPE_CHECKING:
     from ...core.period import Period
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.modelos.work_unit import WorkUnit
+    from ...domain.user_profile.plantilla_media import PlantillaMediaState, PlantillaMediaYear
     from .account import AccountFactoriesV1
     from .declarations.models import CalendarRecoveryHandoffV1, ModeloWorkCreateHandoffV1
     from .ledger.models import (
@@ -454,6 +457,9 @@ class InstalledWorkbenchAccountInputsV1:
     add_profile_row: Callable[[str, Mapping[str, str], int, str], ProfileOverview] | None = None
     update_profile_row: Callable[[str, str, Mapping[str, str], Sequence[str], int, str], ProfileOverview] | None = None
     remove_profile_row: Callable[[str, str, int, str], ProfileOverview] | None = None
+    list_plantilla_media: Callable[[], Sequence[PlantillaMediaYear]] | None = None
+    set_plantilla_media: Callable[[int, Decimal, PlantillaMediaState], ProfileOverview] | None = None
+    remove_plantilla_media: Callable[[int], ProfileOverview] | None = None
 
     def __post_init__(self) -> None:
         """Bind every account door to one exact authenticated profile identity."""
@@ -471,6 +477,9 @@ class InstalledWorkbenchAccountInputsV1:
             add_profile_row=self.add_profile_row,
             update_profile_row=self.update_profile_row,
             remove_profile_row=self.remove_profile_row,
+            list_plantilla_media=self.list_plantilla_media,
+            set_plantilla_media=self.set_plantilla_media,
+            remove_plantilla_media=self.remove_plantilla_media,
             login_choices=self.login_choices,
             authenticate=self.authenticate,
             assess_password=self.assess_password,
@@ -779,7 +788,6 @@ def _ledger_generation_factory(
 
     def create(context: TuiScreenContextV1) -> Screen[None]:
         from datetime import date
-        from decimal import Decimal
 
         from ...adapters.persistence.profile.actividad_asset import ActividadAssetHistoryRepository
         from ...application.actividad_asset.operations import ActivityAssetOperations

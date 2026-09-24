@@ -63,6 +63,8 @@ from .launcher import (
 )
 
 if TYPE_CHECKING:
+    from decimal import Decimal
+
     from textual.app import AutopilotCallbackType
 
     from ...application.user_profile.login_interaction import ProfileLoginChoice, ProfileLoginInventoryV1
@@ -73,6 +75,7 @@ if TYPE_CHECKING:
         ProfileSessionAdmissionV1,
     )
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ...domain.user_profile.plantilla_media import PlantillaMediaState, PlantillaMediaYear
 
 SESSION_COMPLETED = 0
 """The session ran to a clean end, including an operator who declined it."""
@@ -106,6 +109,12 @@ def compose_authenticated_account_inputs(
     from ...application.user_profile.fact_write import apply_manager_profile_field_mutation
     from ...application.user_profile.login_interaction import attempt_profile_login
     from ...application.user_profile.overview import build_profile_overview
+    from ...application.user_profile.plantilla_media_rows import (
+        PlantillaMediaWriteSurface,
+        list_plantilla_media_years,
+        remove_plantilla_media_year,
+        set_plantilla_media_year,
+    )
     from ...application.user_profile.profile_record_repository import ProfileRecordRepository
     from ...application.user_profile.section_rows import (
         add_profile_repeatable_section_row,
@@ -193,6 +202,41 @@ def compose_authenticated_account_inputs(
         )
         return build_profile_overview(applied.record, label=profile_label, schema=profile_schema)
 
+    def reloaded_overview() -> ProfileOverview:
+        """Project the record as storage holds it after a write that returns no record."""
+        current = ProfileRecordRepository.for_current_session(
+            profile_id,
+            profile_decode_context=profile_decode_context,
+        ).load(profile_id)
+        return build_profile_overview(current, label=profile_label, schema=profile_schema)
+
+    def list_plantilla_media() -> tuple[PlantillaMediaYear, ...]:
+        return list_plantilla_media_years(profile_id=profile_id, profile_decode_context=profile_decode_context)
+
+    def set_plantilla_media(
+        year: int,
+        average_workforce: Decimal,
+        state: PlantillaMediaState,
+    ) -> ProfileOverview:
+        set_plantilla_media_year(
+            profile_id=profile_id,
+            year=year,
+            average_workforce=average_workforce,
+            state=state,
+            surface=PlantillaMediaWriteSurface.MANAGER,
+            profile_decode_context=profile_decode_context,
+        )
+        return reloaded_overview()
+
+    def remove_plantilla_media(year: int) -> ProfileOverview:
+        remove_plantilla_media_year(
+            profile_id=profile_id,
+            year=year,
+            surface=PlantillaMediaWriteSurface.MANAGER,
+            profile_decode_context=profile_decode_context,
+        )
+        return reloaded_overview()
+
     def complete_setup() -> ProfileOverview:
         """Promote setup to complete through the repository door ``complete-setup`` uses."""
         profiles = ProfileRecordRepository.for_current_session(
@@ -226,6 +270,9 @@ def compose_authenticated_account_inputs(
         add_profile_row=add_profile_row,
         update_profile_row=update_profile_row,
         remove_profile_row=remove_profile_row,
+        list_plantilla_media=list_plantilla_media,
+        set_plantilla_media=set_plantilla_media,
+        remove_plantilla_media=remove_plantilla_media,
         complete_setup=complete_setup,
         login_choices=tuple(login_choices),
         authenticate=authenticate,

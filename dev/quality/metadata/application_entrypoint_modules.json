@@ -1152,6 +1152,7 @@
         "cadrumo.entrypoints.tui.profile",
         "cadrumo.entrypoints.tui.profile.local_reader",
         "cadrumo.entrypoints.tui.profile.overview",
+        "cadrumo.entrypoints.tui.profile.plantilla_media",
         "cadrumo.entrypoints.tui.search",
         "cadrumo.entrypoints.tui.secret",
         "cadrumo.entrypoints.tui.secret.credentials",

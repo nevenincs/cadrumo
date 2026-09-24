@@ -77,6 +77,19 @@ flows:
     language:
       unavailable: Ez a profil nem kínál nyelvi beállítást.
     namespace_detail: '{number}. részlet'
+    plantilla_media:
+      average_workforce: Átlagos állományi létszám
+      list_failed: A bejelentett éveket nem sikerült beolvasni. Próbáld újra.
+      none_declared: Még nincs bejelentett év.
+      remove: Az év törlése
+      state: Állapot
+      state_committed: Vállalt (az év még nyitott)
+      state_observed: Megfigyelt (az év lezárult)
+      state_required: Válaszd ki, hogy az adat megfigyelt vagy vállalt.
+      workforce_not_number: Az átlagos állományi létszámot számként add meg, tizedesponttal
+        - például 12.50.
+      year: Naptári év
+      year_not_whole: A naptári évet egész számként add meg - például 2025.
     profile_missing_fields: 'A profilból %{count} kötelező mező hiányzik: %{fields}'
     required_field_unavailable: Kötelező profilmező
     rows:

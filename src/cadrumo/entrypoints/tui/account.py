@@ -27,6 +27,8 @@ from .secret.login import LoginScreen
 from .secret.passphrase import PassphraseChangeAttempt, PassphraseScreen
 
 if TYPE_CHECKING:
+    from decimal import Decimal
+
     from textual.screen import Screen
 
     from ...application.operations.composition import OperationComposedServices
@@ -37,6 +39,7 @@ if TYPE_CHECKING:
     from ...application.user_profile.login_interaction import ProfileLoginAttempt, ProfileLoginChoice
     from ...application.user_profile.overview import ProfileOverview
     from ...core.credentials import ProfilePasswordAssessment
+    from ...domain.user_profile.plantilla_media import PlantillaMediaState, PlantillaMediaYear
     from .operations.controller import OperationController
 
 
@@ -99,6 +102,9 @@ def compose_account_factories(
     add_profile_row: Callable[[str, Mapping[str, str], int, str], ProfileOverview] | None = None,
     update_profile_row: Callable[[str, str, Mapping[str, str], Sequence[str], int, str], ProfileOverview] | None = None,
     remove_profile_row: Callable[[str, str, int, str], ProfileOverview] | None = None,
+    list_plantilla_media: Callable[[], Sequence[PlantillaMediaYear]] | None = None,
+    set_plantilla_media: Callable[[int, Decimal, PlantillaMediaState], ProfileOverview] | None = None,
+    remove_plantilla_media: Callable[[int], ProfileOverview] | None = None,
     login_choices: Sequence[ProfileLoginChoice],
     authenticate: Callable[[str, str], ProfileLoginAttempt],
     assess_password: Callable[[str], ProfilePasswordAssessment],
@@ -129,6 +135,9 @@ def compose_account_factories(
             add_row=add_profile_row,
             update_row=update_profile_row,
             remove_row=remove_profile_row,
+            list_plantilla_media=list_plantilla_media,
+            set_plantilla_media=set_plantilla_media,
+            remove_plantilla_media=remove_plantilla_media,
             complete_setup=complete_setup,
             validate=validate_profile_field,
             launch_source=launch_profile_source,

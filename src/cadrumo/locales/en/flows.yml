@@ -77,6 +77,19 @@ flows:
     language:
       unavailable: This profile does not offer a language setting.
     namespace_detail: detail {number}
+    plantilla_media:
+      average_workforce: Average workforce
+      list_failed: The declared years could not be read. Try again.
+      none_declared: No year is declared yet.
+      remove: Remove this year
+      state: State
+      state_committed: Committed (the year is still open)
+      state_observed: Observed (the year is closed)
+      state_required: Choose whether the figure is observed or committed.
+      workforce_not_number: Enter the average workforce as a number, using a point
+        for decimals - for example 12.50.
+      year: Calendar year
+      year_not_whole: Enter the calendar year as a whole number - for example 2025.
     profile_missing_fields: 'Profile is missing %{count} required field(s): %{fields}'
     required_field_unavailable: Required profile field
     rows:

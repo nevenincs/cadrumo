@@ -78,6 +78,19 @@ flows:
     language:
       unavailable: Aquest perfil no ofereix cap configuració d'idioma.
     namespace_detail: detall {number}
+    plantilla_media:
+      average_workforce: Plantilla mitjana
+      list_failed: No s'han pogut llegir els anys declarats. Torna-ho a provar.
+      none_declared: Encara no hi ha cap any declarat.
+      remove: Elimina aquest any
+      state: Estat
+      state_committed: Compromesa (l'any encara és obert)
+      state_observed: Observada (l'any és tancat)
+      state_required: Indica si la xifra és observada o compromesa.
+      workforce_not_number: Introdueix la plantilla mitjana com un nombre, amb punt
+        per als decimals - per exemple 12.50.
+      year: Any natural
+      year_not_whole: Introdueix l'any natural com un nombre enter - per exemple 2025.
     profile_missing_fields: 'Al perfil li falten %{count} camp(s) obligatori(s): %{fields}'
     required_field_unavailable: Camp obligatori del perfil
     rows:

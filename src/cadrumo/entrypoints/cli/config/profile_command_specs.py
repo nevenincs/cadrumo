@@ -223,6 +223,7 @@ def _leaf(
 def _plantilla_media_leaf(
     token: str,
     handler: str,
+    help_key: str,
     policy: ExecutionPolicySpec,
     parameters: tuple[ArgumentSpec | OptionSpec, ...],
 ) -> CommandSpec:
@@ -236,7 +237,7 @@ def _plantilla_media_leaf(
         "config_profile_plantilla_media",
         token,
         CommandNodeKind.LEAF,
-        _key(f"cli.config.profile.plantilla_media.{token}_help"),
+        _key(help_key),
         None,
         InvocationSpec(context_parameter="ctx"),
         parameters,
@@ -933,6 +934,7 @@ PROFILE_COMMAND_SPECS = (
     _plantilla_media_leaf(
         "set",
         "plantilla_media_set",
+        "cli.config.profile.plantilla_media.set_help",
         ENCRYPTED_WRITE,
         (
             _option(
@@ -959,10 +961,17 @@ PROFILE_COMMAND_SPECS = (
             _LANGUAGE,
         ),
     ),
-    _plantilla_media_leaf("list", "plantilla_media_list", ENCRYPTED_READ, (_LANGUAGE,)),
+    _plantilla_media_leaf(
+        "list",
+        "plantilla_media_list",
+        "cli.config.profile.plantilla_media.list_help",
+        ENCRYPTED_READ,
+        (_LANGUAGE,),
+    ),
     _plantilla_media_leaf(
         "remove",
         "plantilla_media_remove",
+        "cli.config.profile.plantilla_media.remove_help",
         ENCRYPTED_DESTRUCTIVE,
         (_argument("year", WHOLE_NUMBER_VALUE, "cli.config.profile.plantilla_media.remove_year_help"), _LANGUAGE),
     ),

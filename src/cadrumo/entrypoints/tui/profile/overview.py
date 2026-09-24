@@ -49,6 +49,7 @@ from ....application.user_profile.acquisition_sources import (
 from ....application.user_profile.presentation import notice_presentation, profile_field_shape_hint
 from ....core.i18n.render import tr
 from ....domain.user_profile.errors import ProfileSchemaValidationError
+from ....domain.user_profile.plantilla_media import PLANTILLA_MEDIA_PATH
 from ....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....domain.user_profile.values import ProfileSetupState
 from ....entrypoints.tui.components.account_chrome import AccountChromeScreen
@@ -70,13 +71,20 @@ from ....entrypoints.tui.components.widgets import (
     SourceActionDescriptor,
 )
 from ..components.app_access import TypedAppAccess
+from .plantilla_media import (
+    PlantillaMediaRequest,
+    PlantillaMediaScreen,
+    PlantillaMediaSetRequest,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
+    from decimal import Decimal
 
     from textual.widgets.data_table import ColumnKey
 
     from ....application.user_profile.overview import ProfileFieldView, ProfileOverview, ProfileSectionView
+    from ....domain.user_profile.plantilla_media import PlantillaMediaState, PlantillaMediaYear
 
 
 _PRESENT_GLYPH = "●"
@@ -399,6 +407,11 @@ _SOURCE_ACTION_LOCALE_KEYS: dict[ProfileAcquisitionSourceKey, str] = {
 
 _DOCUMENT_READER_CARD_ID = "manager-document-reader"
 
+_PLANTILLA_MEDIA_SECTION = PLANTILLA_MEDIA_PATH.split(".", 1)[0]
+"""The non-repeatable section whose panel carries the average-workforce years."""
+
+_PLANTILLA_MEDIA_BUTTON_ID = "manager-plantilla-media"
+
 
 class ProfileManagerScreen(TypedAppAccess, AccountChromeScreen):
     """Full-screen profile overview with in-place editing."""
@@ -449,6 +462,9 @@ class ProfileManagerScreen(TypedAppAccess, AccountChromeScreen):
         launch_source: Callable[[ProfileAcquisitionSourceV1], Awaitable[None]] | None = None,
         credential_postures: Sequence[AcquisitionSourceCredentialPostureV1] | None = None,
         open_document_reader: Callable[[], Screen[None]] | None = None,
+        list_plantilla_media: Callable[[], Sequence[PlantillaMediaYear]] | None = None,
+        set_plantilla_media: Callable[[int, Decimal, PlantillaMediaState], ProfileOverview] | None = None,
+        remove_plantilla_media: Callable[[int], ProfileOverview] | None = None,
     ) -> None:
         """Initialize the overview with injected projection and write doors."""
         super().__init__()
@@ -502,6 +518,22 @@ class ProfileManagerScreen(TypedAppAccess, AccountChromeScreen):
         Calls carry the overview baseline captured when the dialog opened;
         completion never substitutes whichever profile happens to be visible.
         """
+        self._list_plantilla_media = list_plantilla_media
+        self._set_plantilla_media = set_plantilla_media
+        self._remove_plantilla_media = remove_plantilla_media
+        """Average-workforce doors, bound by composition to one profile.
+
+        A year is its own identity, so these take the year rather than a
+        row key or an overview baseline: the application service reads the
+        record once and compare-and-swaps against that read. The writes hand
+        back the page as storage now holds it, like every other door here,
+        so the page and its revision never go stale behind a declared year.
+        """
+        self._pending_listing: Worker[tuple[PlantillaMediaYear, ...]] | None = None
+        """The in-flight read of the declared years, or ``None``.
+
+        Read off the event loop for the reason writes are: it decrypts the
+        record. At most one runs, so a double press opens one dialog."""
         self._field_by_key: dict[str, ProfileFieldView] = {}
         self._table_by_section: dict[str, DataTable[str]] = {}
         """The live table per section, so a single-field edit can address a
@@ -627,6 +659,9 @@ class ProfileManagerScreen(TypedAppAccess, AccountChromeScreen):
         if button_id.startswith("manager-remove-row-"):
             self._open_remove_selected_row(button_id.removeprefix("manager-remove-row-"))
             return
+        if button_id == _PLANTILLA_MEDIA_BUTTON_ID:
+            self._open_plantilla_media()
+            return
         card = event.button.parent
         if isinstance(card, SourceActionCard) and card.id == _DOCUMENT_READER_CARD_ID:
             if self._open_document_reader is not None:
@@ -718,6 +753,60 @@ class ProfileManagerScreen(TypedAppAccess, AccountChromeScreen):
             ),
         )
 
+    @property
+    def _plantilla_media_offered(self) -> bool:
+        """Whether this host wired the doors the average-workforce dialog needs."""
+        return self._list_plantilla_media is not None and (
+            self._set_plantilla_media is not None or self._remove_plantilla_media is not None
+        )
+
+    def _open_plantilla_media(self) -> None:
+        """Read the declared years off the event loop, then open the dialog on them."""
+        if self._pending_write is not None:
+            self._refuse(tr("flows.manager.edit.write_in_flight"))
+            return
+        door = self._list_plantilla_media
+        if door is None or not self._plantilla_media_offered or self._pending_listing is not None:
+            return
+        listing_context = copy_context()
+
+        def _read() -> tuple[PlantillaMediaYear, ...]:
+            return tuple(listing_context.run(door))
+
+        self._pending_listing = self.run_worker(
+            _read,
+            name="profile-plantilla-media-list",
+            group="profile-plantilla-media-list",
+            exit_on_error=False,
+            thread=True,
+        )
+
+    def _settle_listing(self, worker: Worker[tuple[PlantillaMediaYear, ...]]) -> None:
+        """Open the dialog on the years storage holds, or say why they could not be read."""
+        self._pending_listing = None
+        if worker.state is WorkerState.SUCCESS and worker.result is not None:
+            self.app.push_screen(PlantillaMediaScreen(worker.result), self._apply_plantilla_media)
+            return
+        self._refuse_worker(worker.error, message_key="flows.manager.plantilla_media.list_failed")
+
+    def _apply_plantilla_media(self, request: PlantillaMediaRequest | None) -> None:
+        """Send one dialog answer to its door; a dismissal requests nothing."""
+        if request is None:
+            return
+        if isinstance(request, PlantillaMediaSetRequest):
+            set_door = self._set_plantilla_media
+            if set_door is None:
+                return
+            self._run_row_write(
+                f"{PLANTILLA_MEDIA_PATH}:{request.year}",
+                lambda: set_door(request.year, request.average_workforce, request.state),
+            )
+            return
+        remove_door = self._remove_plantilla_media
+        if remove_door is None:
+            return
+        self._run_row_write(f"{PLANTILLA_MEDIA_PATH}:{request.year}", lambda: remove_door(request.year))
+
     # ── rendering ───────────────────────────────────────────────────────
 
     async def _redraw(self) -> None:
@@ -793,6 +882,17 @@ class ProfileManagerScreen(TypedAppAccess, AccountChromeScreen):
                             compact=True,
                         )
                     )
+            if section.key == _PLANTILLA_MEDIA_SECTION and self._plantilla_media_offered:
+                # The years are indexed instances of one field, so the section
+                # itself is not repeatable and offers no row buttons. A year is
+                # declared, replaced or withdrawn as a whole through its dialog.
+                await panel.mount(
+                    Button(
+                        tr("profile.schema.field.irpf.plantilla_media.label"),
+                        id=_PLANTILLA_MEDIA_BUTTON_ID,
+                        compact=True,
+                    )
+                )
 
     async def _apply_overview(self, updated: ProfileOverview) -> None:
         """Show ``updated`` by repainting only what differs from the page on screen.
@@ -1279,6 +1379,10 @@ class ProfileManagerScreen(TypedAppAccess, AccountChromeScreen):
         pending_completion = self._pending_completion
         if pending_completion is not None and event_worker is pending_completion:
             await self._settle_completion(pending_completion)
+            return
+        pending_listing = self._pending_listing
+        if pending_listing is not None and event_worker is pending_listing:
+            self._settle_listing(pending_listing)
             return
 
     async def _settle_write(self, worker: Worker[ProfileOverview]) -> None:
