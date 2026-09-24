@@ -88,6 +88,12 @@ async def _observe(
     layout and clipping, which is what an operator reads.
     """
     app = ScreenHostApp(MODELO_WORKSPACE_DESTINATIONS[destination_id](session))
+    # Focusing a destination's first control scrolls it into view, and that
+    # scroll is animated. Under load the frame can be exported mid-scroll, when
+    # the offset is fractional and the scrollbar thumb paints a different
+    # partial-block glyph; the two themes would then differ by timing, not by
+    # theme. Without animation every scroll lands on its final offset.
+    app.animation_level = "none"
     async with app.run_test(size=TERMINAL_ORDINARY) as pilot:
         # The theme must be active BEFORE the destination mounts, and a fresh
         # screen is pushed to guarantee it. The shared host resolves the theme
