@@ -4,6 +4,7 @@ The boundaries between the actions are the design:
 
 * **browser** — downloads the Chromium build browser automation launches, when missing.
 * **status** — runtime installation, reachability and each reader role's model. Reads only.
+* **probe** — the status, with the text model's fitness checked now; loads that model.
 * **report** — measured machine and model-selection state. Reads only.
 * **install** — installs the runtime through the platform package manager, only with ``--confirm``.
 * **start** — starts an installed local runtime that is not answering.
@@ -50,6 +51,7 @@ from .provision_payloads import (
     ProvisionLoadItemPayload,
     ProvisionLoadResult,
     ProvisionModelPayload,
+    ProvisionProbeResult,
     ProvisionPullItemPayload,
     ProvisionPullResult,
     ProvisionRemoveItemPayload,
@@ -82,6 +84,7 @@ __all__ = [
     "provision_browser",
     "provision_install",
     "provision_load",
+    "provision_probe",
     "provision_pull",
     "provision_remove",
     "provision_report",
@@ -143,9 +146,14 @@ def _selection_refusal(target: RoleModelTarget) -> PreconditionVerdict:
     return target.selection_verdict
 
 
-def provision_status(ctx: typer.Context, probe: bool = False) -> None:
-    """Report the local runtime and each reader role's model; ``--probe`` checks text-model fitness now."""
-    _emit_provision_status(ctx, probe=probe)
+def provision_status(ctx: typer.Context) -> None:
+    """Report the local runtime and each reader role's model from recorded verdicts."""
+    _emit_local_reader_status(ctx, command="config.provision.status", result_type=ProvisionStatusResult, probe=False)
+
+
+def provision_probe(ctx: typer.Context) -> None:
+    """Report the local reader with the text model's fitness checked now, loading that model."""
+    _emit_local_reader_status(ctx, command="config.provision.probe", result_type=ProvisionProbeResult, probe=True)
 
 
 def provision_install(ctx: typer.Context, confirm: bool = False) -> None:
@@ -484,12 +492,18 @@ def _emit_provision_verify(ctx: typer.Context, *, model: str | None, role: Model
         raise typer.Exit(code=2)
 
 
-def _emit_provision_status(ctx: typer.Context, *, probe: bool) -> None:
+def _emit_local_reader_status(
+    ctx: typer.Context,
+    *,
+    command: str,
+    result_type: type[ProvisionStatusResult],
+    probe: bool,
+) -> None:
     """Measure the local reader and emit its status envelope. Records nothing.
 
-    Text-model fitness is the verdict ``verify`` recorded for the model's
-    current weights, so a status read never spends a model load. ``--probe``
-    runs the check now and reports it without recording it.
+    Without ``probe`` text-model fitness is the verdict ``verify`` recorded for
+    the model's current weights, so ``status`` never spends a model load.
+    ``probe`` runs the check now and reports it without recording it.
     """
     from ....application.local_reader import read_local_reader_status
 
@@ -501,7 +515,7 @@ def _emit_provision_status(ctx: typer.Context, *, probe: bool) -> None:
         status = read_local_reader_status()
     host = status.host
     last = status.last_pull
-    result = ProvisionStatusResult(
+    result = result_type(
         runtime=ProvisionRuntimePayload(
             platform=host.platform.value,
             endpoint_url=host.endpoint_url,
@@ -542,10 +556,9 @@ def _emit_provision_status(ctx: typer.Context, *, probe: bool) -> None:
         extraction_ready=status.extraction_ready,
         document_readiness=status.document_readiness,
         text_layer_model_fill_available=status.text_layer_model_fill_available,
-        probed=probe,
     )
     lines = (*_provision_result_lines(result), *_fitness_condition_lines(status.roles))
-    emit_envelope(ctx, command="config.provision.status", result=result, lines=lines)
+    emit_envelope(ctx, command=command, result=result, lines=lines)
 
 
 #: The fitness conditions a status row can fail on, with the sentence that says

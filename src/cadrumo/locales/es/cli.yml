@@ -2471,6 +2471,10 @@ cli:
           modelo ya cargado se deja como está.
         model_help: Identificador en el runtime del modelo que se cargará. Debe estar
           ya descargado. Por defecto, el modelo seleccionado para la función.
+      probe:
+        help: Comprueba ahora la aptitud del modelo de texto en lugar de leer el veredicto
+          registrado por `aeat config provision verify` e informa del lector local
+          con ese resultado. Carga el modelo; no registra nada.
       pull:
         help: Descarga modelos al runtime local, el de cada función del lector salvo
           que --role o --model lo acoten. Rechaza antes de descargar si un modelo
@@ -2502,9 +2506,6 @@ cli:
       status:
         help: Informa de si el runtime local está instalado y responde, y de si el
           modelo de cada función del lector está instalado. Solo lee.
-        probe_help: Comprueba ahora la aptitud del modelo de texto en lugar de leer
-          el veredicto registrado por `aeat config provision verify`. Carga el modelo
-          y consume una respuesta completa; el resultado no se registra.
       verify:
         help: Verifica que los modelos cargan y responden a una consulta trivial dentro
           de un límite de tiempo, el de cada función del lector salvo que --role o

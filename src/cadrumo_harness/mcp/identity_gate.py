@@ -138,15 +138,16 @@ def identity_gate_refusal(
       (returns the localized refusal text) unless an identity read has occurred
       since session start or the last active-identity change.
 
-    The open-world exclusion is why the predicate is not simply ``read_only``. A
+    The AEAT exclusion is why the predicate is not simply ``read_only``. A
     live ``pull`` changes nothing locally and is still not safe to run
     unidentified: it fetches taxpayer data from AEAT under a certificate, so
     reading the WRONG taxpayer is a confidentiality breach that then feeds every
     downstream calculation. "Changes nothing" and "may proceed unidentified" are
     different questions, and this gate asks the second.
 
-    The exclusion is attached-policy driven: network-capable callbacks stay
-    gated even when their local effect is read-only.
+    The exclusion is attached-policy driven by the ``aeat`` capability, not by
+    ``network``: a read of this host's own model runtime leaves the machine's
+    process but reads nothing tied to a taxpayer, so it stays ungated.
 
     The refusal text carries no interpolation, so it is byte-identical on both
     call paths.
@@ -163,7 +164,7 @@ def identity_gate_refusal(
         return tr(
             "mcp.identity_gate.first_mutation_refused",
         )
-    if classification.read_only and not classification.open_world:
+    if classification.read_only and not classification.reaches_aeat:
         return None
     if state.identity_confirmed:
         return None

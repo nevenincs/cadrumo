@@ -48,7 +48,6 @@ test's ``offline_outcome`` property.
 from __future__ import annotations
 
 import ast
-import asyncio
 import inspect
 import os
 import socket
@@ -58,52 +57,53 @@ from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import date
-from enum import Enum
 from functools import cache
 from itertools import islice
 from pathlib import Path
 from types import CodeType
-from typing import Final, NoReturn
+from typing import Final
 
 import pytest
 
 import cadrumo
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.application.operator_surface.command_ports import CommandNodeKind, CommandWriteRoute
 
-from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
-from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....adapters.persistence.storage.tests.secure_sql import isolated_cli_runtime_profile
 from ....domain.calculations.registry.governed_fact_scope import (
     governed_facts_in_scope,
     outside_governed_fact_validation,
-    validating_governed_facts,
 )
 from ....domain.calculations.registry.m347_threshold import resolve_m347_counterparty_annual_threshold
-from ....domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
-from .._command_runtime import build_command_app, resolve_deferred_target, runs_in_governed_fact_scope
+from .._command_runtime import build_command_app, runs_in_governed_fact_scope
 from ..command_spec import (
-    ArgumentSpec,
     BindingState,
     CommandSpec,
     CommandSpecGraph,
-    DefaultKind,
     DeferredTarget,
     ExecutionPolicySpec,
     InvocationSpec,
     LazyBinding,
-    OptionSpec,
     ResultSchemaSpec,
     SchemaState,
     TranslationKey,
 )
 from ..command_specs import COMMAND_GRAPH
+from ._command_drive_support import (
+    PROBE_PROFILE_ID,
+    PROBE_PROFILE_LABEL,
+    free_monitoring_tool,
+    handler_code,
+    is_runnable,
+    seed_probe_profile,
+    synthetic_argv,
+)
+from ._offline_seal_fixture import OfflineGuard, offline_guard_fixture
 from .cli_runner import invoke_cached_cli, invoke_uncached_typer_app
+
+__all__ = ["offline_guard_fixture"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_PROFILE_ID: Final = "0ac1e000-0000-4000-8000-000000515077"
-_PROFILE_LABEL: Final = "Governed fact declaration probe"
 _MISSING_SCOPE_WORDING: Final = (
     "explicit authority operation or scope",
     "generation-pinned governed-fact scope",
@@ -257,23 +257,6 @@ class ProbeObservation:
     scope_lent_to_handler: bool = False
 
 
-def _free_monitoring_tool() -> int:
-    for tool_id in (3, 4):
-        if sys.monitoring.get_tool(tool_id) is None:
-            return tool_id
-    raise AssertionError("no free sys.monitoring tool id for the governed-fact probe")
-
-
-def _handler_code(target: DeferredTarget) -> CodeType:
-    behavior = resolve_deferred_target(target)
-    if callable(behavior):
-        behavior = inspect.unwrap(behavior)
-    code = getattr(behavior, "__code__", None)
-    if not isinstance(code, CodeType):
-        raise AssertionError(f"behavior target {target.identity!r} has no Python code to observe")
-    return code
-
-
 @contextmanager
 def observe_invocation(handler: CodeType) -> Iterator[ProbeObservation]:
     """Record missing-scope raises and the handler's start while the block runs."""
@@ -282,7 +265,7 @@ def observe_invocation(handler: CodeType) -> Iterator[ProbeObservation]:
         by_file.setdefault(site.path, []).append(site)
     observation = ProbeObservation()
     monitoring = sys.monitoring
-    tool_id = _free_monitoring_tool()
+    tool_id = free_monitoring_tool()
 
     def on_raise(code: CodeType, instruction_offset: int, exception: BaseException) -> object:
         sites = by_file.get(os.path.normcase(code.co_filename))
@@ -316,160 +299,12 @@ def observe_invocation(handler: CodeType) -> Iterator[ProbeObservation]:
         monitoring.free_tool_id(tool_id)
 
 
-# --- offline seal ---------------------------------------------------------
-
-
-@dataclass(slots=True)
-class OfflineGuard:
-    """The boundaries a sealed run tried to cross, in order."""
-
-    refused: list[str] = field(default_factory=list)
-
-    def refuse(self, boundary: str) -> NoReturn:
-        """Record and refuse one attempt to leave the process."""
-        self.refused.append(boundary)
-        raise OSError(f"the governed-fact probe runs offline and refuses {boundary}")
-
-    def outcome(self) -> str:
-        """Name the boundary the run met, or that it met none."""
-        if not self.refused:
-            return "completed without leaving the process"
-        return "refused at " + ", ".join(dict.fromkeys(self.refused))
-
-
-@pytest.fixture
-def offline_guard(monkeypatch: pytest.MonkeyPatch) -> OfflineGuard:
-    """Seal the process against network and child-process launches for one test."""
-    guard = OfflineGuard()
-    original_connect = socket.socket.connect
-    # Windows builds ``socket.socketpair`` from a loopback connect, and every
-    # asyncio event loop needs one for its self-pipe; that connect never
-    # leaves the process.
-    socketpair_code = getattr(socket.socketpair, "__code__", None)
-
-    def connect(self: socket.socket, address: tuple[str, int]) -> None:
-        frame = inspect.currentframe()
-        caller = None if frame is None else frame.f_back
-        if socketpair_code is not None and caller is not None and caller.f_code is socketpair_code:
-            return original_connect(self, address)
-        guard.refuse("socket.connect")
-
-    def connect_ex(self: socket.socket, address: tuple[str, int]) -> int:
-        del self, address
-        guard.refuse("socket.connect_ex")
-
-    def create_connection(address: tuple[str, int], *args: object, **kwargs: object) -> socket.socket:
-        del address, args, kwargs
-        guard.refuse("socket.create_connection")
-
-    def getaddrinfo(host: object, port: object, *args: object, **kwargs: object) -> list[object]:
-        del host, port, args, kwargs
-        guard.refuse("socket.getaddrinfo")
-
-    async def loop_connection(self: asyncio.AbstractEventLoop, *args: object, **kwargs: object) -> object:
-        del self, args, kwargs
-        guard.refuse("event-loop connection")
-
-    def execute_child(self: subprocess.Popen[bytes], *args: object, **kwargs: object) -> None:
-        del self, args, kwargs
-        guard.refuse("child process")
-
-    def shell_launch(*args: object, **kwargs: object) -> int:
-        del args, kwargs
-        guard.refuse("shell launch")
-
-    monkeypatch.setattr(socket.socket, "connect", connect)
-    monkeypatch.setattr(socket.socket, "connect_ex", connect_ex)
-    monkeypatch.setattr(socket, "create_connection", create_connection)
-    monkeypatch.setattr(socket, "getaddrinfo", getaddrinfo)
-    monkeypatch.setattr(asyncio.BaseEventLoop, "create_connection", loop_connection)
-    monkeypatch.setattr(subprocess.Popen, "_execute_child", execute_child)
-    monkeypatch.setattr(os, "system", shell_launch)
-    monkeypatch.setattr(os, "startfile", shell_launch, raising=False)
-    return guard
-
-
 # --- population and argv --------------------------------------------------
-
-
-def _is_runnable(spec: CommandSpec) -> bool:
-    return spec.kind == CommandNodeKind.LEAF or (
-        spec.kind == CommandNodeKind.GROUP and spec.invocation.terminal_behavior == "executable"
-    )
 
 
 def non_declaring_population(graph: CommandSpecGraph) -> tuple[CommandSpec, ...]:
     """Every runnable command dispatch does not scope."""
-    return tuple(spec for spec in graph.specs if _is_runnable(spec) and not runs_in_governed_fact_scope(spec))
-
-
-def command_path(graph: CommandSpecGraph, spec: CommandSpec) -> tuple[str, ...]:
-    """Return the operator tokens that select ``spec`` below the root."""
-    tokens: list[str] = []
-    current = spec
-    while current.parent_key is not None:
-        tokens.append(current.token)
-        current = graph.spec(current.parent_key)
-    return tuple(reversed(tokens))
-
-
-def _synthetic_value(spec: CommandSpec, parameter: ArgumentSpec | OptionSpec, workdir: Path) -> str:
-    if parameter.value.choices:
-        return parameter.value.choices[0]
-    annotation = resolve_deferred_target(parameter.value.annotation)
-    if isinstance(annotation, type) and issubclass(annotation, Enum):
-        member = next(iter(annotation))
-        return str(member.value)
-    if isinstance(annotation, type) and issubclass(annotation, Path):
-        location = workdir / f"{spec.key}-{parameter.name}.bin"
-        if parameter.name != "output":
-            location.write_bytes(b"synthetic probe input\n")
-        return str(location)
-    if parameter.name in {"name", "label"}:
-        return _PROFILE_LABEL
-    return f"probe-{parameter.name.replace('_', '-')}"
-
-
-def synthetic_argv(
-    graph: CommandSpecGraph,
-    spec: CommandSpec,
-    workdir: Path,
-    *,
-    also: tuple[str, ...] = (),
-) -> list[str]:
-    """Build the command path plus a synthetic value for every required parameter.
-
-    ``also`` names optional parameters to supply as well.
-    """
-    positional: list[str] = []
-    named: list[str] = []
-    for parameter in spec.parameters:
-        if parameter.default.kind is not DefaultKind.REQUIRED and parameter.name not in also:
-            continue
-        value = _synthetic_value(spec, parameter, workdir)
-        if isinstance(parameter, OptionSpec):
-            named.extend((parameter.declarations[0], value))
-        else:
-            positional.append(value)
-    return [*command_path(graph, spec), *positional, *named]
-
-
-def _seed_profile(runtime_profile: TestRuntimeProfile) -> None:
-    """Seed a natural-person profile; the seed itself may lease the authority."""
-    with bundled_indexed_authority().operation() as operation, validating_governed_facts(operation):
-        record = create_user_profile_record(
-            profile_id=_PROFILE_ID,
-            setup_state=ProfileSetupState.COMPLETE,
-            facts=(
-                UserProfileFact(path="identity.name", value="Ana"),
-                UserProfileFact(path="identity.surnames", value="Perez"),
-                UserProfileFact(path="identity.tax_id", value="12345678Z"),
-                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-                UserProfileFact(path="provenance.source", value="manual_cli"),
-            ),
-            context=profile_creation_context_for_test(),
-        )
-        seed_test_profile_record(record, root=runtime_profile.storage_root, label=_PROFILE_LABEL)
+    return tuple(spec for spec in graph.specs if is_runnable(spec) and not runs_in_governed_fact_scope(spec))
 
 
 def _refusal_report(key: str, spec: CommandSpec, refusals: Sequence[ScopeRefusal]) -> str:
@@ -552,9 +387,11 @@ def test_a_non_declaring_command_never_reaches_a_missing_scope_refusal(
     workdir.mkdir()
     argv = synthetic_argv(COMMAND_GRAPH, spec, workdir, also=_HANDLER_REQUIRED_OPTIONS.get(key, ()))
 
-    with isolated_cli_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID, label=_PROFILE_LABEL) as profile:
-        _seed_profile(profile)
-        with outside_governed_fact_validation(), observe_invocation(_handler_code(handler.target)) as observed:
+    with isolated_cli_runtime_profile(
+        tmp_path=tmp_path, bucket_id=PROBE_PROFILE_ID, label=PROBE_PROFILE_LABEL
+    ) as profile:
+        seed_probe_profile(profile)
+        with outside_governed_fact_validation(), observe_invocation(handler_code(handler.target)) as observed:
             result = invoke_cached_cli(argv)
     request.node.user_properties.append(("offline_outcome", f"{offline_guard.outcome()}; exit {result.exit_code}"))
 
@@ -625,7 +462,7 @@ def test_the_probe_flags_a_state_free_command_that_reads_a_governed_fact() -> No
     assert [spec.key for spec in population] == ["under_declared_read"]
     argv = synthetic_argv(graph, population[0], Path())
 
-    with outside_governed_fact_validation(), observe_invocation(_handler_code(_TEETH_TARGET)) as observed:
+    with outside_governed_fact_validation(), observe_invocation(handler_code(_TEETH_TARGET)) as observed:
         result = invoke_uncached_typer_app(build_command_app(graph), argv)
 
     assert observed.handler_started

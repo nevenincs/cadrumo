@@ -2446,6 +2446,10 @@ cli:
           ha kevés a memória; a már betöltött modellt nem módosítja.
         model_help: A betöltendő modell azonosítója a futtatókörnyezetben. Már letöltöttnek
           kell lennie. Alapértelmezés szerint a szerepkörhöz kiválasztott modell.
+      probe:
+        help: Most ellenőrzi a szövegmodell alkalmasságát ahelyett, hogy az `aeat
+          config provision verify` által rögzített ítéletet olvasná, és ezzel az eredménnyel
+          jelenti a helyi olvasó állapotát. Betölti a modellt; semmit sem rögzít.
       pull:
         help: Modellek letöltése a helyi futtatókörnyezetbe, alapértelmezés szerint
           minden olvasószerepkör modelljéé, hacsak a --role vagy a --model nem szűkíti.
@@ -2477,9 +2481,6 @@ cli:
         help: Jelenti, hogy a helyi futtatókörnyezet telepítve van-e és válaszol-e,
           valamint hogy az egyes olvasószerepkörök modelljei telepítve vannak-e. Csak
           olvas.
-        probe_help: A szövegmodell alkalmasságát most ellenőrzi ahelyett, hogy az
-          `aeat config provision verify` által rögzített eredményt olvasná be. Betölti
-          a modellt és egy teljes választ felhasznál; az eredményt nem rögzíti.
       verify:
         help: Ellenőrzi, hogy a modellek betöltődnek és időkorláton belül válaszolnak
           egy egyszerű kérésre, alapértelmezés szerint minden olvasószerepkör modelljére,

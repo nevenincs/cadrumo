@@ -51,6 +51,7 @@ type Capability = Literal[
     "profile-custody",
     "encrypted-facts",
     "network",
+    "aeat",
     "browser",
     "google",
     "calculation",

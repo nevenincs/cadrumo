@@ -79,7 +79,6 @@ def test_provision_status_runs_with_an_active_profile_and_no_keychain(active_pro
     assert envelope["result"]["runtime"]["reachable"] is False
     assert envelope["result"]["extraction_ready"] is False
     assert envelope["result"]["document_readiness"] == "text_layer_only"
-    assert envelope["result"]["probed"] is False
 
 
 def test_provision_verify_runs_with_an_active_profile_and_no_keychain(active_profile_root: Path) -> None:

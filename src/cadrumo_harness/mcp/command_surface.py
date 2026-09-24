@@ -151,6 +151,7 @@ _CAPABILITIES: tuple[Capability, ...] = (
     "profile-custody",
     "encrypted-facts",
     "network",
+    "aeat",
     "browser",
     "google",
     "calculation",

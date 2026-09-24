@@ -84,6 +84,7 @@ type Capability = Literal[
     "profile-custody",
     "encrypted-facts",
     "network",
+    "aeat",
     "browser",
     "google",
     "calculation",
@@ -120,6 +121,7 @@ class CommandCapabilityClass:
         """Return the transitive capability implications used by policy checks."""
         implications: dict[Capability, tuple[Capability, ...]] = {
             "encrypted-facts": ("profile-custody",),
+            "aeat": ("network",),
             "browser": ("network",),
             "google": ("network",),
             "calculation": ("registry",),

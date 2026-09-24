@@ -1,4 +1,4 @@
-"""Network-capable callback policy keeps AEAT reads behind identity confirmation."""
+"""AEAT-reaching callback policy keeps AEAT reads behind identity confirmation."""
 
 from __future__ import annotations
 
@@ -32,16 +32,17 @@ def test_the_exposed_surface_is_non_empty() -> None:
     assert len(_exposed_keys()) > 100
 
 
-def test_read_only_open_world_commands_still_require_identity() -> None:
-    """Precise leaf mutability cannot bypass open-world identity protection."""
+def test_read_only_aeat_commands_still_require_identity() -> None:
+    """Precise leaf mutability cannot bypass AEAT identity protection."""
     planted = CommandPolicyProjection(
-        command_key="renamed.network.read",
+        command_key="renamed.aeat.read",
         read_only=True,
         destructive=False,
         idempotent=True,
         handoff=False,
         live_write=False,
         open_world=True,
+        reaches_aeat=True,
     )
     assert identity_gate_refusal(
         planted.command_key,
@@ -54,20 +55,20 @@ def test_every_aeat_reaching_command_is_still_gated() -> None:
     """The positive half: the population the term protects is real and non-empty.
 
     Without this, the invariant above is satisfiable by there being no
-    open-world commands at all, and would keep passing if the whole live surface
-    were removed or stopped classifying as open-world.
+    AEAT-reaching commands at all, and would keep passing if the whole live
+    surface were removed or stopped declaring the ``aeat`` capability.
     """
-    open_world = [key for key in _exposed_keys() if command_policy(key).open_world]
+    reaching = [key for key in _exposed_keys() if command_policy(key).reaches_aeat]
 
-    assert len(open_world) > 10, f"expected the live AEAT surface, found {len(open_world)}"
+    assert len(reaching) > 10, f"expected the live AEAT surface, found {len(reaching)}"
 
 
 def test_an_unidentified_open_world_call_is_refused() -> None:
     """End to end through the real decision function, not the predicate alone."""
-    open_world = [key for key in _exposed_keys() if command_policy(key).open_world and key.startswith("app.live.")]
-    assert open_world, "no app.live command found to exercise the gate"
+    reaching = [key for key in _exposed_keys() if command_policy(key).reaches_aeat and key.startswith("app.live.")]
+    assert reaching, "no app.live command found to exercise the gate"
 
-    for key in open_world[:5]:
+    for key in reaching[:5]:
         refusal = identity_gate_refusal(key, state=_UnconfirmedSession())  # type: ignore[arg-type]
         assert refusal, f"{key} reaches AEAT and was allowed without an identity read"
 
@@ -78,7 +79,7 @@ def test_a_local_read_is_still_allowed_unidentified() -> None:
     Without this, refusing everything would satisfy every assertion above.
     """
     local_reads = [
-        key for key in _exposed_keys() if command_policy(key).read_only and not command_policy(key).open_world
+        key for key in _exposed_keys() if command_policy(key).read_only and not command_policy(key).reaches_aeat
     ]
     assert local_reads, "no local read-only command found"
 

@@ -176,8 +176,8 @@ class ProvisionLastPullPayload(OutputSchema):
 class ProvisionStatusResult(OutputSchema):
     """JSON envelope for ``aeat config provision status``. Reads only.
 
-    ``probed`` says whether the text model's fitness was checked now
-    (``--probe``) rather than read from the verdict ``verify`` recorded.
+    Text-model fitness is the verdict ``verify`` recorded for the model's
+    current weights.
     """
 
     runtime: ProvisionRuntimePayload
@@ -186,7 +186,15 @@ class ProvisionStatusResult(OutputSchema):
     extraction_ready: bool
     document_readiness: LocalReaderDocumentReadiness
     text_layer_model_fill_available: bool
-    probed: bool
+
+
+class ProvisionProbeResult(ProvisionStatusResult):
+    """JSON envelope for ``aeat config provision probe``.
+
+    The same projection as ``status``, with the text model's fitness checked
+    now instead of read from the verdict ``verify`` recorded. Nothing is
+    recorded.
+    """
 
 
 class ProvisionInstallResult(OutputSchema):
@@ -311,6 +319,7 @@ __all__ = [
     "ProvisionLoadItemPayload",
     "ProvisionLoadResult",
     "ProvisionModelPayload",
+    "ProvisionProbeResult",
     "ProvisionPullItemPayload",
     "ProvisionPullResult",
     "ProvisionRemoveItemPayload",

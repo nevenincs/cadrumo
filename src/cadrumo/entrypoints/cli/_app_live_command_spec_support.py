@@ -47,7 +47,7 @@ _ENCRYPTED_LOCAL_READ_POLICY: Final[ExecutionPolicySpec] = ExecutionPolicySpec(
     live_write=False,
 )
 _PROFILE_BOUND_NETWORK_CAPTURE_POLICY: Final[ExecutionPolicySpec] = ExecutionPolicySpec(
-    capabilities=frozenset(["encrypted-facts", "network"]),
+    capabilities=frozenset(["aeat", "encrypted-facts", "network"]),
     side_effects=frozenset(["local-state", "network"]),
     performance="external-io",
     write_route=CommandWriteRoute.PROFILE_BOUND,

@@ -157,7 +157,7 @@ LIVE_IVA_WALLET_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _OUTPUT_ROOT_OPTION,
         ),
         policy=ExecutionPolicySpec(
-            capabilities=frozenset(["browser", "encrypted-facts", "subprocess"]),
+            capabilities=frozenset(["aeat", "browser", "encrypted-facts", "subprocess"]),
             side_effects=frozenset(["browser", "local-state", "network"]),
             performance="external-io",
             write_route=CommandWriteRoute.PROFILE_BOUND,

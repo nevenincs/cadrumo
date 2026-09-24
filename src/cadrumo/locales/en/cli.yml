@@ -2278,6 +2278,10 @@ cli:
           already loaded is left as it is.
         model_help: Runtime identifier of the model to load. It must already be downloaded.
           Defaults to the model selected for the role.
+      probe:
+        help: Check the text model's fitness now instead of reading the verdict recorded
+          by `aeat config provision verify`, and report the local reader with that
+          result. Loads the model; records nothing.
       pull:
         help: Download models into the local runtime, every reader role's model unless
           --role or --model narrows it. Refuses before downloading when a model could
@@ -2308,9 +2312,6 @@ cli:
       status:
         help: Report whether the local runtime is installed and answering, and whether
           each reader role's model is installed. Reads only.
-        probe_help: Check the text model's fitness now instead of reading the verdict
-          recorded by `aeat config provision verify`. Loads the model and spends a
-          full answer; the result is not recorded.
       verify:
         help: Verify models load and answer a trivial prompt within a time bound,
           every reader role's model unless --role or --model narrows it.
