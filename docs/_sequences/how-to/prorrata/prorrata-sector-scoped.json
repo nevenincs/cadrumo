@@ -13,6 +13,10 @@
         "2026",
         "--percentage",
         "80",
+        "--provenance",
+        "inicio_actividad",
+        "--reference",
+        "propuesta-inicio-2026",
         "--sector",
         "arrendamiento"
       ],
@@ -25,7 +29,7 @@
           "bucket_id": "<bucket-id>",
           "count": 1,
           "entry": {
-            "authorisation_reference": null,
+            "authorisation_reference": "propuesta-inicio-2026",
             "definitive_percentage": null,
             "definitive_volume_con_derecho": null,
             "definitive_volume_sin_derecho": null,
@@ -33,11 +37,12 @@
             "especial_transition": null,
             "interrupted": false,
             "provisional_percentage": "80",
-            "provisional_provenance": "carried_prior_definitiva",
+            "provisional_provenance": "inicio_actividad",
             "regime": "especial",
             "schema_version": "2",
             "sector_id": "arrendamiento",
-            "source_observation_ref": null
+            "source_observation_ref": null,
+            "source_registry_snapshot_refs": []
           }
         },
         "schema_version": "2",
@@ -123,6 +128,7 @@
             "description": "compra",
             "direction": "OUTGOING",
             "fx_rate": null,
+            "invoice_id": null,
             "irpf_category": null,
             "iva_amount": "105",
             "iva_category": null,

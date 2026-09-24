@@ -108,9 +108,9 @@
         "--casilla",
         "0003=24000",
         "--binding",
-        "renta-2025-certificado-trabajo-retenciones=2400",
+        "renta-certificado-trabajo-retenciones=2400",
         "--binding",
-        "renta-2025-base-liquidable-negativa-general-anterior=0"
+        "renta-base-liquidable-negativa-general-anterior=0"
       ],
       "captures": [],
       "envelope": {
@@ -133,39 +133,39 @@
             "action": null,
             "code": "modelo.work.calculate.source_advisory",
             "context": {
-              "binding_id": "renta-2025-inventory-activity-closing-increase-0177",
+              "binding_id": "renta-inventory-activity-closing-increase-0177",
               "binding_source": "inventory",
               "casilla_id": "0177",
               "reason": "unresolved_binding",
               "source_kind": "inventory"
             },
-            "message": "binding 'renta-2025-inventory-activity-closing-increase-0177' (casilla '0177') declares present source <BindingSourceKind.INVENTORY: 'inventory'> whose resolver produced no value; the bound casilla would otherwise default to a silent zero. Supply the source records before filing.",
+            "message": "binding 'renta-inventory-activity-closing-increase-0177' (casilla '0177') declares present source <BindingSourceKind.INVENTORY: 'inventory'> whose resolver produced no value; the bound casilla would otherwise default to a silent zero. Supply the source records before filing.",
             "severity": "warning"
           },
           {
             "action": null,
             "code": "modelo.work.calculate.source_advisory",
             "context": {
-              "binding_id": "renta-2025-inventory-activity-acquisition-cost-0181",
+              "binding_id": "renta-inventory-activity-acquisition-cost-0181",
               "binding_source": "inventory",
               "casilla_id": "0181",
               "reason": "unresolved_binding",
               "source_kind": "inventory"
             },
-            "message": "binding 'renta-2025-inventory-activity-acquisition-cost-0181' (casilla '0181') declares present source <BindingSourceKind.INVENTORY: 'inventory'> whose resolver produced no value; the bound casilla would otherwise default to a silent zero. Supply the source records before filing.",
+            "message": "binding 'renta-inventory-activity-acquisition-cost-0181' (casilla '0181') declares present source <BindingSourceKind.INVENTORY: 'inventory'> whose resolver produced no value; the bound casilla would otherwise default to a silent zero. Supply the source records before filing.",
             "severity": "warning"
           },
           {
             "action": null,
             "code": "modelo.work.calculate.source_advisory",
             "context": {
-              "binding_id": "renta-2025-inventory-activity-closing-decrease-0182",
+              "binding_id": "renta-inventory-activity-closing-decrease-0182",
               "binding_source": "inventory",
               "casilla_id": "0182",
               "reason": "unresolved_binding",
               "source_kind": "inventory"
             },
-            "message": "binding 'renta-2025-inventory-activity-closing-decrease-0182' (casilla '0182') declares present source <BindingSourceKind.INVENTORY: 'inventory'> whose resolver produced no value; the bound casilla would otherwise default to a silent zero. Supply the source records before filing.",
+            "message": "binding 'renta-inventory-activity-closing-decrease-0182' (casilla '0182') declares present source <BindingSourceKind.INVENTORY: 'inventory'> whose resolver produced no value; the bound casilla would otherwise default to a silent zero. Supply the source records before filing.",
             "severity": "warning"
           },
           {
@@ -173,51 +173,54 @@
             "code": "modelo.work.calculate.source_advisory",
             "context": {
               "casilla_id": "0513",
-              "legal_refs": "ley-35-2006:art-56, ley-35-2006:art-58, ley-35-2006:art-61, orden-hac-277-2026:art-3",
               "reason": "source_issue",
-              "remedy": "Declare each descendant with `descendiente add --descendiente NACIMIENTO=YYYY-MM-DD`, before filing.",
+              "remedy": "Declare the family situation with `descendiente add --descendiente NACIMIENTO=YYYY-MM-DD`.",
               "source_kind": "minimo_descendientes_undeclared"
             },
-            "message": "casilla '0513' (mínimo por descendientes, parte estatal) resolved to zero because the active profile declares no renta_family.descendiente facts. If you have children or other eligible descendants, the Art. 58 LIRPF allowance is being silently omitted",
+            "message": "casilla '0513' (mínimo por descendientes, parte estatal) resolved to zero and the active profile declares no descendant facts",
             "severity": "warning"
           }
         ],
         "result": {
           "authorization_state": null,
           "binding_overrides": {
-            "renta-2025-base-liquidable-negativa-general-anterior": "0",
-            "renta-2025-certificado-trabajo-retenciones": "2400",
-            "renta-2025-ledger-expense-0183-deductible": "0",
-            "renta-2025-ledger-expense-0186-deductible": "0",
-            "renta-2025-ledger-expense-0191-deductible": "0",
-            "renta-2025-ledger-expense-0192-deductible": "0",
-            "renta-2025-ledger-expense-0193-deductible": "0",
-            "renta-2025-ledger-expense-0194-deductible": "0",
-            "renta-2025-ledger-expense-0195-deductible": "0",
-            "renta-2025-ledger-expense-0199-deductible": "0",
-            "renta-2025-ledger-expense-0200-deductible": "0",
-            "renta-2025-ledger-expense-0202-deductible": "0",
-            "renta-2025-ledger-expense-0203-deductible": "0",
-            "renta-2025-ledger-expense-0206-deductible": "0",
-            "renta-2025-ledger-expense-0208-deductible": "0",
-            "renta-2025-ledger-expense-0217-deductible": "0",
-            "renta-2025-ledger-income-0171": "0",
-            "renta-2025-modelo-130-pagos-fraccionados": "0",
-            "renta-2025-modelo-131-pagos-fraccionados": "0",
-            "renta-2025-profile-anualidades-sin-minimo-descendientes": "1",
-            "renta-2025-profile-declaration-type": "1",
-            "renta-2025-profile-has-economic-activity": "0",
-            "renta-2025-profile-madrid-nacimiento-adopcion-eligible-count": "0",
-            "renta-2025-profile-marriage-full-year": "0",
-            "renta-2025-profile-marriage-month-end": "0",
-            "renta-2025-profile-marriage-month-start": "0",
-            "renta-2025-profile-minimo-descendientes-autonomico": "0",
-            "renta-2025-profile-minimo-descendientes-estatal": "0",
-            "renta-2025-profile-tax-residence-ccaa": "madrid",
-            "renta-2025-profile-taxpayer-birth-date": "1985-06-15",
-            "renta-2025-profile-unidad-familiar-otros-miembros-base": "0"
+            "renta-base-liquidable-negativa-general-anterior": "0",
+            "renta-certificado-trabajo-retenciones": "2400",
+            "renta-ledger-expense-0183-deductible": "0",
+            "renta-ledger-expense-0186-deductible": "0",
+            "renta-ledger-expense-0191-deductible": "0",
+            "renta-ledger-expense-0192-deductible": "0",
+            "renta-ledger-expense-0193-deductible": "0",
+            "renta-ledger-expense-0194-deductible": "0",
+            "renta-ledger-expense-0195-deductible": "0",
+            "renta-ledger-expense-0199-deductible": "0",
+            "renta-ledger-expense-0200-deductible": "0",
+            "renta-ledger-expense-0202-deductible": "0",
+            "renta-ledger-expense-0203-deductible": "0",
+            "renta-ledger-expense-0206-deductible": "0",
+            "renta-ledger-expense-0208-deductible": "0",
+            "renta-ledger-expense-0217-deductible": "0",
+            "renta-ledger-income-0171": "0",
+            "renta-maritime-annual-salary": "0",
+            "renta-maritime-gross-navigation-income": "0",
+            "renta-maritime-path-rebeca": "false",
+            "renta-maritime-qualifying-days": "0",
+            "renta-modelo-130-pagos-fraccionados": "0",
+            "renta-modelo-131-pagos-fraccionados": "0",
+            "renta-profile-anualidades-sin-minimo-descendientes": "true",
+            "renta-profile-declaration-type": "1",
+            "renta-profile-has-economic-activity": "false",
+            "renta-profile-madrid-nacimiento-adopcion-eligible-count": "0",
+            "renta-profile-marriage-full-year": "false",
+            "renta-profile-marriage-month-end": "0",
+            "renta-profile-marriage-month-start": "0",
+            "renta-profile-minimo-descendientes-autonomico": "0",
+            "renta-profile-minimo-descendientes-estatal": "0",
+            "renta-profile-tax-residence-ccaa": "madrid",
+            "renta-profile-taxpayer-birth-date": "1985-06-15",
+            "renta-profile-unidad-familiar-otros-miembros-base": "0"
           },
-          "calculation_revision_id": "8e197be64071b890e0a5223d51ac918512ec0e2d33a1188a5c0fa2e211fbaf71",
+          "calculation_revision_id": "623a3ba760fcc2069d7db7e4ed1103f11b38222d8a9e69fed10b7252fe1084fe",
           "casilla_values": {
             "0001": "0",
             "0002": "0",
@@ -724,7 +727,7 @@
             "0509": "0",
             "0510": "0.00",
             "0511": "5550.00",
-            "0512": "5550.00",
+            "0512": "5956.65",
             "0513": "0.00",
             "0514": "0.00",
             "0515": "0",
@@ -732,12 +735,12 @@
             "0517": "0",
             "0518": "0",
             "0519": "5550.00",
-            "0520": "5550.00",
+            "0520": "5956.65",
             "0521": "5550.00",
             "0522": "0.00",
-            "0523": "5550.00",
+            "0523": "5956.65",
             "0524": "0.00",
-            "0525": "0",
+            "0525": "0.00",
             "0526": "0",
             "0527": "0.00",
             "0528": "2382.75",
@@ -2622,7 +2625,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0007",
-              "formula_id": "renta-2025-trabajo-especie-importe-integro",
+              "formula_id": "renta-trabajo-especie-importe-integro",
               "legal_refs": [
                 "ley-35-2006:art-17",
                 "ley-35-2006:art-99",
@@ -2721,7 +2724,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0012",
-              "formula_id": "renta-2025-trabajo-total-ingresos-integros-computables",
+              "formula_id": "renta-trabajo-total-ingresos-integros-computables",
               "legal_refs": [
                 "ley-35-2006:art-17",
                 "ley-35-2006:art-18",
@@ -2836,7 +2839,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0017",
-              "formula_id": "renta-2025-trabajo-rendimiento-neto-previo",
+              "formula_id": "renta-trabajo-rendimiento-neto-previo",
               "legal_refs": [
                 "ley-35-2006:art-19",
                 "orden-hac-277-2026:art-3"
@@ -2872,7 +2875,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0018",
-              "formula_id": "renta-2025-trabajo-suma-rendimientos-netos-previos",
+              "formula_id": "renta-trabajo-suma-rendimientos-netos-previos",
               "legal_refs": [
                 "ley-35-2006:art-19",
                 "orden-hac-277-2026:art-3"
@@ -2896,7 +2899,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0019",
-              "formula_id": "renta-2025-trabajo-otros-gastos",
+              "formula_id": "renta-trabajo-otros-gastos",
               "legal_refs": [
                 "ley-35-2006:art-19"
               ],
@@ -2952,7 +2955,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0022",
-              "formula_id": "renta-2025-trabajo-rendimiento-neto",
+              "formula_id": "renta-trabajo-rendimiento-neto",
               "legal_refs": [
                 "ley-35-2006:art-19",
                 "orden-hac-277-2026:art-3"
@@ -3019,7 +3022,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0025",
-              "formula_id": "renta-2025-trabajo-rendimiento-neto-reducido",
+              "formula_id": "renta-trabajo-rendimiento-neto-reducido",
               "legal_refs": [
                 "ley-35-2006:art-18",
                 "ley-35-2006:art-19",
@@ -3228,7 +3231,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0036",
-              "formula_id": "renta-2025-capital-mobiliario-ahorro-total-ingresos",
+              "formula_id": "renta-capital-mobiliario-ahorro-total-ingresos",
               "legal_refs": [
                 "ley-35-2006:art-25",
                 "orden-hac-277-2026:art-3"
@@ -3293,7 +3296,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0038",
-              "formula_id": "renta-2025-capital-mobiliario-ahorro-rendimiento-neto",
+              "formula_id": "renta-capital-mobiliario-ahorro-rendimiento-neto",
               "legal_refs": [
                 "ley-35-2006:art-25",
                 "ley-35-2006:art-26",
@@ -3338,7 +3341,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0040",
-              "formula_id": "renta-2025-capital-mobiliario-ahorro-rendimiento-neto-reducido",
+              "formula_id": "renta-capital-mobiliario-ahorro-rendimiento-neto-reducido",
               "legal_refs": [
                 "ley-35-2006:art-25",
                 "ley-35-2006:art-26",
@@ -3366,7 +3369,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0041",
-              "formula_id": "renta-2025-capital-mobiliario-ahorro-suma-rendimientos-reducidos",
+              "formula_id": "renta-capital-mobiliario-ahorro-suma-rendimientos-reducidos",
               "legal_refs": [
                 "ley-35-2006:art-25",
                 "ley-35-2006:art-26",
@@ -3596,7 +3599,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0052",
-              "formula_id": "renta-2025-capital-mobiliario-general-total-ingresos",
+              "formula_id": "renta-capital-mobiliario-general-total-ingresos",
               "legal_refs": [
                 "ley-35-2006:art-25",
                 "orden-hac-277-2026:art-3"
@@ -3649,7 +3652,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0054",
-              "formula_id": "renta-2025-capital-mobiliario-general-rendimiento-neto",
+              "formula_id": "renta-capital-mobiliario-general-rendimiento-neto",
               "legal_refs": [
                 "ley-35-2006:art-25",
                 "ley-35-2006:art-26",
@@ -3694,7 +3697,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0056",
-              "formula_id": "renta-2025-capital-mobiliario-general-rendimiento-neto-reducido",
+              "formula_id": "renta-capital-mobiliario-general-rendimiento-neto-reducido",
               "legal_refs": [
                 "ley-35-2006:art-25",
                 "ley-35-2006:art-26",
@@ -3756,7 +3759,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0060",
-              "formula_id": "renta-2025-capital-mobiliario-general-suma-rendimientos-reducidos",
+              "formula_id": "renta-capital-mobiliario-general-suma-rendimientos-reducidos",
               "legal_refs": [
                 "ley-35-2006:art-25",
                 "ley-35-2006:art-26",
@@ -4442,7 +4445,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0089",
-              "formula_id": "renta-2025-inmobiliario-renta-imputada-art-85",
+              "formula_id": "renta-inmobiliario-renta-imputada-art-85",
               "legal_refs": [
                 "ley-35-2006:art-22",
                 "ley-35-2006:art-85",
@@ -5748,7 +5751,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0149",
-              "formula_id": "renta-2025-capital-inmobiliario-rendimiento-neto",
+              "formula_id": "renta-capital-inmobiliario-rendimiento-neto",
               "legal_refs": [
                 "ley-35-2006:art-22",
                 "ley-35-2006:art-23",
@@ -5896,7 +5899,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0154",
-              "formula_id": "renta-2025-capital-inmobiliario-rendimiento-neto-reducido",
+              "formula_id": "renta-capital-inmobiliario-rendimiento-neto-reducido",
               "legal_refs": [
                 "ley-35-2006:art-22",
                 "ley-35-2006:art-23",
@@ -5932,7 +5935,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0155",
-              "formula_id": "renta-2025-inmobiliario-suma-rentas-imputadas",
+              "formula_id": "renta-inmobiliario-suma-rentas-imputadas",
               "legal_refs": [
                 "ley-35-2006:art-22",
                 "ley-35-2006:art-85",
@@ -5958,7 +5961,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0156",
-              "formula_id": "renta-2025-capital-inmobiliario-suma-rendimientos-reducidos",
+              "formula_id": "renta-capital-inmobiliario-suma-rendimientos-reducidos",
               "legal_refs": [
                 "ley-35-2006:art-22",
                 "ley-35-2006:art-23",
@@ -6041,7 +6044,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0159",
-              "formula_id": "renta-2025-eo-agraria-rendimiento-base-mejillon-batea",
+              "formula_id": "renta-eo-agraria-rendimiento-base-mejillon-batea",
               "legal_refs": [
                 "ley-35-2006:art-31",
                 "orden-hac-1347-2024:anexo-i-instruccion-2-1"
@@ -6546,7 +6549,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0180",
-              "formula_id": "renta-2025-estimacion-directa-ingresos-computables",
+              "formula_id": "renta-estimacion-directa-ingresos-computables",
               "legal_refs": [
                 "ley-35-2006:art-27",
                 "ley-35-2006:art-28",
@@ -7390,7 +7393,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0218",
-              "formula_id": "renta-2025-estimacion-directa-gastos-previos",
+              "formula_id": "renta-estimacion-directa-gastos-previos",
               "legal_refs": [
                 "ley-35-2006:art-28",
                 "ley-35-2006:art-30",
@@ -7523,7 +7526,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0220",
-              "formula_id": "renta-2025-estimacion-directa-gastos-normal",
+              "formula_id": "renta-estimacion-directa-gastos-normal",
               "legal_refs": [
                 "ley-35-2006:art-28",
                 "ley-35-2006:art-30",
@@ -7551,7 +7554,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0221",
-              "formula_id": "renta-2025-estimacion-directa-diferencia-previa",
+              "formula_id": "renta-estimacion-directa-diferencia-previa",
               "legal_refs": [
                 "ley-35-2006:art-27",
                 "ley-35-2006:art-28",
@@ -7580,7 +7583,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0222",
-              "formula_id": "renta-2025-estimacion-directa-gastos-dificil-justificacion",
+              "formula_id": "renta-estimacion-directa-gastos-dificil-justificacion",
               "legal_refs": [
                 "ley-35-2006:art-30",
                 "rd-439-2007:art-30",
@@ -7612,7 +7615,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0223",
-              "formula_id": "renta-2025-estimacion-directa-gastos-simplificada",
+              "formula_id": "renta-estimacion-directa-gastos-simplificada",
               "legal_refs": [
                 "ley-35-2006:art-28",
                 "ley-35-2006:art-30",
@@ -7640,7 +7643,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0224",
-              "formula_id": "renta-2025-estimacion-directa-rendimiento-neto",
+              "formula_id": "renta-estimacion-directa-rendimiento-neto",
               "legal_refs": [
                 "ley-35-2006:art-27",
                 "ley-35-2006:art-28",
@@ -7651,7 +7654,7 @@
               "op": "if_then_else",
               "operand_casilla_refs": [],
               "operand_refs": [
-                "renta-2025-profile-has-economic-activity"
+                "renta-profile-has-economic-activity"
               ],
               "operand_values": [
                 "0"
@@ -7688,7 +7691,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0226",
-              "formula_id": "renta-2025-estimacion-directa-rendimiento-neto-reducido",
+              "formula_id": "renta-estimacion-directa-rendimiento-neto-reducido",
               "legal_refs": [
                 "ley-35-2006:art-28",
                 "ley-35-2006:art-30",
@@ -7814,7 +7817,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0231",
-              "formula_id": "renta-2025-estimacion-directa-total-rendimiento-neto-reducido",
+              "formula_id": "renta-estimacion-directa-total-rendimiento-neto-reducido",
               "legal_refs": [
                 "ley-35-2006:art-28",
                 "ley-35-2006:art-30",
@@ -7904,7 +7907,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0235",
-              "formula_id": "renta-2025-estimacion-directa-rendimiento-neto-reducido-total",
+              "formula_id": "renta-estimacion-directa-rendimiento-neto-reducido-total",
               "legal_refs": [
                 "ley-35-2006:art-28",
                 "ley-35-2006:art-30",
@@ -8157,14 +8160,14 @@
             {
               "absent_by_design": false,
               "casilla_id": "0245",
-              "formula_id": "renta-2025-matrimonio-vigente-todo-anio",
+              "formula_id": "renta-matrimonio-vigente-todo-anio",
               "legal_refs": [
                 "ley-35-2006:art-82"
               ],
               "op": "value",
               "operand_casilla_refs": [],
               "operand_refs": [
-                "renta-2025-profile-marriage-full-year"
+                "renta-profile-marriage-full-year"
               ],
               "operand_values": [
                 "0"
@@ -8180,14 +8183,14 @@
             {
               "absent_by_design": false,
               "casilla_id": "0246",
-              "formula_id": "renta-2025-matrimonio-mes-inicio",
+              "formula_id": "renta-matrimonio-mes-inicio",
               "legal_refs": [
                 "ley-35-2006:art-82"
               ],
               "op": "value",
               "operand_casilla_refs": [],
               "operand_refs": [
-                "renta-2025-profile-marriage-month-start"
+                "renta-profile-marriage-month-start"
               ],
               "operand_values": [
                 "0"
@@ -8203,14 +8206,14 @@
             {
               "absent_by_design": false,
               "casilla_id": "0247",
-              "formula_id": "renta-2025-matrimonio-mes-fin",
+              "formula_id": "renta-matrimonio-mes-fin",
               "legal_refs": [
                 "ley-35-2006:art-82"
               ],
               "op": "value",
               "operand_casilla_refs": [],
               "operand_refs": [
-                "renta-2025-profile-marriage-month-end"
+                "renta-profile-marriage-month-end"
               ],
               "operand_values": [
                 "0"
@@ -8622,7 +8625,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0265",
-              "formula_id": "renta-2025-bases-imputadas-suma",
+              "formula_id": "renta-bases-imputadas-suma",
               "legal_refs": [
                 "ley-35-2006:art-85"
               ],
@@ -8743,7 +8746,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0270",
-              "formula_id": "renta-2025-transparencia-fiscal-suma",
+              "formula_id": "renta-transparencia-fiscal-suma",
               "legal_refs": [
                 "ley-35-2006:art-50",
                 "ley-35-2006:art-91"
@@ -8983,7 +8986,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0280",
-              "formula_id": "renta-2025-iic-paraisos-fiscales-suma",
+              "formula_id": "renta-iic-paraisos-fiscales-suma",
               "legal_refs": [
                 "ley-35-2006:art-85"
               ],
@@ -9129,7 +9132,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0286",
-              "formula_id": "renta-2025-juegos-importe-computable",
+              "formula_id": "renta-juegos-importe-computable",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -9184,7 +9187,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0288",
-              "formula_id": "renta-2025-juegos-ganancias-suma",
+              "formula_id": "renta-juegos-ganancias-suma",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -9214,7 +9217,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0289",
-              "formula_id": "renta-2025-juegos-perdidas-suma",
+              "formula_id": "renta-juegos-perdidas-suma",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -9238,7 +9241,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0290",
-              "formula_id": "renta-2025-juegos-saldo-neto",
+              "formula_id": "renta-juegos-saldo-neto",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -9389,7 +9392,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0296",
-              "formula_id": "renta-2025-premios-importe-computable",
+              "formula_id": "renta-premios-importe-computable",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -9419,7 +9422,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0297",
-              "formula_id": "renta-2025-premios-ganancias-suma",
+              "formula_id": "renta-premios-ganancias-suma",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -9648,7 +9651,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0306",
-              "formula_id": "renta-2025-otras-ganancias-no-transmision-suma",
+              "formula_id": "renta-otras-ganancias-no-transmision-suma",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -9702,7 +9705,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0307",
-              "formula_id": "renta-2025-otras-perdidas-no-transmision-suma",
+              "formula_id": "renta-otras-perdidas-no-transmision-suma",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -10025,7 +10028,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0320",
-              "formula_id": "renta-2025-iic-ganancias-reducidas-no-exentas",
+              "formula_id": "renta-iic-ganancias-reducidas-no-exentas",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -10130,7 +10133,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0324",
-              "formula_id": "renta-2025-iic-ganancias-reducidas-suma",
+              "formula_id": "renta-iic-ganancias-reducidas-suma",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -10154,7 +10157,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0325",
-              "formula_id": "renta-2025-iic-perdidas-reducidas-suma",
+              "formula_id": "renta-iic-perdidas-reducidas-suma",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -10427,7 +10430,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0336",
-              "formula_id": "renta-2025-acciones-negociadas-ganancias-reducidas",
+              "formula_id": "renta-acciones-negociadas-ganancias-reducidas",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -10507,7 +10510,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0339",
-              "formula_id": "renta-2025-acciones-negociadas-ganancias-suma",
+              "formula_id": "renta-acciones-negociadas-ganancias-suma",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -10531,7 +10534,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0340",
-              "formula_id": "renta-2025-acciones-negociadas-perdidas-suma",
+              "formula_id": "renta-acciones-negociadas-perdidas-suma",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -10804,7 +10807,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0351",
-              "formula_id": "renta-2025-derechos-suscripcion-ganancias-reducidas",
+              "formula_id": "renta-derechos-suscripcion-ganancias-reducidas",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -10884,7 +10887,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0354",
-              "formula_id": "renta-2025-derechos-suscripcion-ganancias-suma",
+              "formula_id": "renta-derechos-suscripcion-ganancias-suma",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -10908,7 +10911,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0355",
-              "formula_id": "renta-2025-derechos-suscripcion-perdidas-suma",
+              "formula_id": "renta-derechos-suscripcion-perdidas-suma",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -11656,7 +11659,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0385",
-              "formula_id": "renta-2025-otros-elementos-perdidas-suma",
+              "formula_id": "renta-otros-elementos-perdidas-suma",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -11680,7 +11683,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0386",
-              "formula_id": "renta-2025-otros-elementos-no-afectos-ganancias-suma",
+              "formula_id": "renta-otros-elementos-no-afectos-ganancias-suma",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -11704,7 +11707,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0387",
-              "formula_id": "renta-2025-otros-elementos-afectos-ganancias-suma",
+              "formula_id": "renta-otros-elementos-afectos-ganancias-suma",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -11777,7 +11780,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0390",
-              "formula_id": "renta-2025-otras-ganancias-base-ahorro-suma",
+              "formula_id": "renta-otras-ganancias-base-ahorro-suma",
               "legal_refs": [
                 "ley-35-2006:art-49"
               ],
@@ -11848,7 +11851,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0393",
-              "formula_id": "renta-2025-ganancias-ejercicios-anteriores-suma",
+              "formula_id": "renta-ganancias-ejercicios-anteriores-suma",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -11921,7 +11924,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0396",
-              "formula_id": "renta-2025-perdidas-ejercicios-anteriores-suma",
+              "formula_id": "renta-perdidas-ejercicios-anteriores-suma",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -12019,7 +12022,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0400",
-              "formula_id": "renta-2025-diferimiento-reinversion-imputacion-suma",
+              "formula_id": "renta-diferimiento-reinversion-imputacion-suma",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -12292,7 +12295,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0411",
-              "formula_id": "renta-2025-cambio-residencia-ganancias-reducidas",
+              "formula_id": "renta-cambio-residencia-ganancias-reducidas",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -12319,7 +12322,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0412",
-              "formula_id": "renta-2025-cambio-residencia-extranjero-suma",
+              "formula_id": "renta-cambio-residencia-extranjero-suma",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -12433,7 +12436,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0418",
-              "formula_id": "renta-2025-ganancias-patrimoniales-base-general-suma",
+              "formula_id": "renta-ganancias-patrimoniales-base-general-suma",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -12470,7 +12473,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0419",
-              "formula_id": "renta-2025-perdidas-patrimoniales-base-general-suma",
+              "formula_id": "renta-perdidas-patrimoniales-base-general-suma",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -12498,7 +12501,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0420",
-              "formula_id": "renta-2025-ganancias-patrimoniales-base-general-saldo-positivo",
+              "formula_id": "renta-ganancias-patrimoniales-base-general-saldo-positivo",
               "legal_refs": [
                 "ley-35-2006:art-50"
               ],
@@ -12523,7 +12526,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0421",
-              "formula_id": "renta-2025-ganancias-patrimoniales-base-general-saldo-negativo",
+              "formula_id": "renta-ganancias-patrimoniales-base-general-saldo-negativo",
               "legal_refs": [
                 "ley-35-2006:art-50"
               ],
@@ -12548,7 +12551,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0422",
-              "formula_id": "renta-2025-ganancias-patrimoniales-base-ahorro-suma",
+              "formula_id": "renta-ganancias-patrimoniales-base-ahorro-suma",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -12609,7 +12612,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0423",
-              "formula_id": "renta-2025-perdidas-patrimoniales-base-ahorro-suma",
+              "formula_id": "renta-perdidas-patrimoniales-base-ahorro-suma",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -12658,7 +12661,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0424",
-              "formula_id": "renta-2025-ganancias-patrimoniales-base-ahorro-saldo-positivo",
+              "formula_id": "renta-ganancias-patrimoniales-base-ahorro-saldo-positivo",
               "legal_refs": [
                 "ley-35-2006:art-49",
                 "ley-35-2006:art-50"
@@ -12684,7 +12687,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0425",
-              "formula_id": "renta-2025-ganancias-patrimoniales-base-ahorro-saldo-negativo",
+              "formula_id": "renta-ganancias-patrimoniales-base-ahorro-saldo-negativo",
               "legal_refs": [
                 "ley-35-2006:art-49",
                 "ley-35-2006:art-50"
@@ -12856,7 +12859,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0432",
-              "formula_id": "renta-2025-saldo-neto-rendimientos-base-imponible-general",
+              "formula_id": "renta-saldo-neto-rendimientos-base-imponible-general",
               "legal_refs": [
                 "ley-35-2006:art-17",
                 "ley-35-2006:art-22",
@@ -12896,7 +12899,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0433",
-              "formula_id": "renta-2025-saldo-gp-base-general-cap-25",
+              "formula_id": "renta-saldo-gp-base-general-cap-25",
               "legal_refs": [
                 "ley-35-2006:art-48",
                 "ley-35-2006:art-50"
@@ -12946,7 +12949,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0435",
-              "formula_id": "renta-2025-base-imponible-general",
+              "formula_id": "renta-base-imponible-general",
               "legal_refs": [
                 "ley-35-2006:art-48",
                 "orden-hac-277-2026:art-3"
@@ -12973,7 +12976,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0436",
-              "formula_id": "renta-2025-saldo-capital-mobiliario-cap-25-base-ahorro",
+              "formula_id": "renta-saldo-capital-mobiliario-cap-25-base-ahorro",
               "legal_refs": [
                 "ley-35-2006:art-49"
               ],
@@ -13215,7 +13218,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0446",
-              "formula_id": "renta-2025-saldo-gp-base-ahorro-cap-25",
+              "formula_id": "renta-saldo-gp-base-ahorro-cap-25",
               "legal_refs": [
                 "ley-35-2006:art-49"
               ],
@@ -13558,7 +13561,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0460",
-              "formula_id": "renta-2025-base-imponible-del-ahorro",
+              "formula_id": "renta-base-imponible-del-ahorro",
               "legal_refs": [
                 "ley-35-2006:art-49",
                 "ley-35-2006:art-50",
@@ -13643,7 +13646,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0461",
-              "formula_id": "renta-2025-reduccion-art-84-conjunta",
+              "formula_id": "renta-reduccion-art-84-conjunta",
               "legal_refs": [
                 "ley-35-2006:art-82",
                 "ley-35-2006:art-83",
@@ -13652,7 +13655,7 @@
               "op": "if_then_else",
               "operand_casilla_refs": [],
               "operand_refs": [
-                "renta-2025-profile-declaration-type"
+                "renta-profile-declaration-type"
               ],
               "operand_values": [
                 "1"
@@ -13791,7 +13794,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0467",
-              "formula_id": "renta-2025-importe-derecho-reduccion-pension-suma",
+              "formula_id": "renta-importe-derecho-reduccion-pension-suma",
               "legal_refs": [
                 "ley-35-2006:art-50"
               ],
@@ -13834,7 +13837,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0468",
-              "formula_id": "renta-2025-reduccion-prevision-social-total",
+              "formula_id": "renta-reduccion-prevision-social-total",
               "legal_refs": [
                 "ley-35-2006:art-52"
               ],
@@ -14621,7 +14624,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0500",
-              "formula_id": "renta-2025-base-liquidable-general",
+              "formula_id": "renta-base-liquidable-general",
               "legal_refs": [
                 "ley-35-2006:art-50",
                 "ley-35-2006:art-52",
@@ -14655,7 +14658,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0501",
-              "formula_id": "renta-2025-base-liquidable-negativa-general-compensacion-total",
+              "formula_id": "renta-base-liquidable-negativa-general-compensacion-total",
               "legal_refs": [
                 "ley-35-2006:art-50"
               ],
@@ -14762,7 +14765,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0505",
-              "formula_id": "renta-2025-base-liquidable-general-sometida-a-gravamen",
+              "formula_id": "renta-base-liquidable-general-sometida-a-gravamen",
               "legal_refs": [
                 "ley-35-2006:art-50",
                 "ley-35-2006:art-63",
@@ -14891,7 +14894,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0510",
-              "formula_id": "renta-2025-base-liquidable-del-ahorro",
+              "formula_id": "renta-base-liquidable-del-ahorro",
               "legal_refs": [
                 "ley-35-2006:art-49",
                 "ley-35-2006:art-50",
@@ -14922,7 +14925,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0511",
-              "formula_id": "renta-2025-minimo-contribuyente-estatal",
+              "formula_id": "renta-minimo-contribuyente-estatal",
               "legal_refs": [
                 "ley-35-2006:art-56",
                 "ley-35-2006:art-57",
@@ -14932,7 +14935,7 @@
               "operand_casilla_refs": [],
               "operand_refs": [
                 "renta-minimo-contribuyente-base",
-                "renta-2025-profile-taxpayer-birth-date"
+                "renta-profile-taxpayer-birth-date"
               ],
               "operand_values": [
                 "5550",
@@ -14947,33 +14950,39 @@
             {
               "absent_by_design": false,
               "casilla_id": "0512",
-              "formula_id": "renta-2025-minimo-contribuyente-autonomica",
+              "formula_id": "renta-minimo-contribuyente-autonomica",
               "legal_refs": [
                 "ley-35-2006:art-56",
                 "ley-35-2006:art-57",
                 "ley-35-2006:art-73",
-                "orden-hac-277-2026:art-3"
+                "orden-hac-277-2026:art-3",
+                "andalucia-ley-5-2021:art-23-bis",
+                "asturias-dl-2-2014:art-2-bis",
+                "canarias-dl-1-2009:art-18-quater",
+                "galicia-dl-1-2011:art-4-bis",
+                "madrid-dl-1-2010:art-2",
+                "valenciana-ley-13-1997:art-2-bis"
               ],
               "op": "lookup_parameter_by_entity_type",
               "operand_casilla_refs": [],
               "operand_refs": [
-                "renta-2025-profile-tax-residence-ccaa",
-                "renta-minimo-contribuyente-base"
+                "renta-profile-tax-residence-ccaa",
+                "renta-minimo-contribuyente-base-madrid"
               ],
               "operand_values": [
-                "5550"
+                "5956.65"
               ],
               "source_refs": [
                 "aeat-renta-2025-manual-parte1",
                 "aeat-renta-2025-manual-deducciones-autonomicas",
                 "boe-modelo-100-2025-form"
               ],
-              "value": "5550.00"
+              "value": "5956.65"
             },
             {
               "absent_by_design": false,
               "casilla_id": "0513",
-              "formula_id": "renta-2025-minimo-descendientes-estatal",
+              "formula_id": "renta-minimo-descendientes-estatal",
               "legal_refs": [
                 "ley-35-2006:art-58",
                 "ley-35-2006:art-61"
@@ -14981,7 +14990,7 @@
               "op": "copy",
               "operand_casilla_refs": [],
               "operand_refs": [
-                "renta-2025-profile-minimo-descendientes-estatal"
+                "renta-profile-minimo-descendientes-estatal"
               ],
               "operand_values": [
                 "0"
@@ -14995,7 +15004,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0514",
-              "formula_id": "renta-2025-minimo-descendientes-autonomico",
+              "formula_id": "renta-minimo-descendientes-autonomico",
               "legal_refs": [
                 "ley-35-2006:art-58",
                 "ley-35-2006:art-61",
@@ -15005,7 +15014,7 @@
               "op": "copy",
               "operand_casilla_refs": [],
               "operand_refs": [
-                "renta-2025-profile-minimo-descendientes-autonomico"
+                "renta-profile-minimo-descendientes-autonomico"
               ],
               "operand_values": [
                 "0"
@@ -15115,7 +15124,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0519",
-              "formula_id": "renta-2025-minimo-personal-y-familiar-estatal",
+              "formula_id": "renta-minimo-personal-y-familiar-estatal",
               "legal_refs": [
                 "ley-35-2006:art-56",
                 "orden-hac-277-2026:art-3"
@@ -15148,7 +15157,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0520",
-              "formula_id": "renta-2025-minimo-personal-y-familiar-autonomica",
+              "formula_id": "renta-minimo-personal-y-familiar-autonomica",
               "legal_refs": [
                 "ley-35-2006:art-56",
                 "ley-35-2006:art-73",
@@ -15168,7 +15177,7 @@
                 "0518"
               ],
               "operand_values": [
-                "5550.00",
+                "5956.65",
                 "0.00",
                 "0",
                 "0"
@@ -15177,12 +15186,12 @@
                 "aeat-renta-2025-manual-parte1",
                 "boe-modelo-100-2025-form"
               ],
-              "value": "5550.00"
+              "value": "5956.65"
             },
             {
               "absent_by_design": false,
               "casilla_id": "0521",
-              "formula_id": "renta-2025-minimo-personal-base-liquidable-general-estatal",
+              "formula_id": "renta-minimo-personal-base-liquidable-general-estatal",
               "legal_refs": [
                 "ley-35-2006:art-56",
                 "ley-35-2006:art-63",
@@ -15210,7 +15219,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0522",
-              "formula_id": "renta-2025-minimo-personal-base-liquidable-ahorro-estatal",
+              "formula_id": "renta-minimo-personal-base-liquidable-ahorro-estatal",
               "legal_refs": [
                 "ley-35-2006:art-56",
                 "ley-35-2006:art-66",
@@ -15241,7 +15250,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0523",
-              "formula_id": "renta-2025-minimo-personal-base-liquidable-general-autonomica",
+              "formula_id": "renta-minimo-personal-base-liquidable-general-autonomica",
               "legal_refs": [
                 "ley-35-2006:art-56",
                 "ley-35-2006:art-74",
@@ -15258,18 +15267,18 @@
               ],
               "operand_values": [
                 "22000.00",
-                "5550.00"
+                "5956.65"
               ],
               "source_refs": [
                 "aeat-renta-2025-manual-parte1",
                 "boe-modelo-100-2025-form"
               ],
-              "value": "5550.00"
+              "value": "5956.65"
             },
             {
               "absent_by_design": false,
               "casilla_id": "0524",
-              "formula_id": "renta-2025-minimo-personal-base-liquidable-ahorro-autonomica",
+              "formula_id": "renta-minimo-personal-base-liquidable-ahorro-autonomica",
               "legal_refs": [
                 "ley-35-2006:art-56",
                 "ley-35-2006:art-76",
@@ -15287,8 +15296,8 @@
                 "0510"
               ],
               "operand_values": [
-                "5550.00",
-                "5550.00",
+                "5956.65",
+                "5956.65",
                 "0.00"
               ],
               "source_refs": [
@@ -15300,26 +15309,31 @@
             {
               "absent_by_design": false,
               "casilla_id": "0525",
-              "formula_id": null,
+              "formula_id": "renta-maritime-exempt-income-0525",
               "legal_refs": [
                 "ley-35-2006:art-7",
-                "orden-hac-277-2026:art-3"
+                "ley-19-1994:art-75"
               ],
-              "op": null,
+              "op": "if_then_else",
               "operand_casilla_refs": [],
-              "operand_refs": [],
-              "operand_values": [],
-              "source_refs": [
-                "aeat-dr-100-2025-dictionary",
-                "aeat-dr-100-2025-input-dictionary",
-                "aeat-dr-100-2025-xsd",
-                "aeat-renta-2025-manual-parte1",
-                "aeat-renta-2025-manual-deducciones-autonomicas",
-                "boe-modelo-100-2025-form",
-                "aeat-modelo-100-procedure",
-                "aeat-renta-web-open"
+              "operand_refs": [
+                "renta-maritime-path-rebeca",
+                "renta-maritime-annual-salary",
+                "renta-maritime-qualifying-days",
+                "lirpf-art-7p-exemption-cap"
               ],
-              "value": "0"
+              "operand_values": [
+                "0",
+                "0",
+                "0",
+                "60100"
+              ],
+              "source_refs": [
+                "boe-lirpf-statutory-facts",
+                "boe-ley-19-1994-art-75-statutory-facts",
+                "aeat-renta-2025-manual-parte1"
+              ],
+              "value": "0.00"
             },
             {
               "absent_by_design": false,
@@ -15348,7 +15362,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0527",
-              "formula_id": "renta-2025-anualidades-alimentos-hijos-suma",
+              "formula_id": "renta-anualidades-alimentos-hijos-suma",
               "legal_refs": [
                 "ley-35-2006:art-64",
                 "ley-35-2006:art-75"
@@ -15383,7 +15397,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0528",
-              "formula_id": "renta-2025-cuota-escala-estatal-sobre-base-liquidable-general",
+              "formula_id": "renta-cuota-escala-estatal-sobre-base-liquidable-general",
               "legal_refs": [
                 "ley-35-2006:art-62",
                 "ley-35-2006:art-63",
@@ -15414,7 +15428,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0529",
-              "formula_id": "renta-2025-cuota-escala-autonomica-sobre-base-liquidable-general",
+              "formula_id": "renta-cuota-escala-autonomica-sobre-base-liquidable-general",
               "legal_refs": [
                 "ley-35-2006:art-73",
                 "ley-35-2006:art-74",
@@ -15429,7 +15443,7 @@
               "operand_refs": [
                 "0527",
                 "0505",
-                "renta-2025-profile-tax-residence-ccaa",
+                "renta-profile-tax-residence-ccaa",
                 "renta-escala-autonomica-madrid-base-general"
               ],
               "operand_values": [
@@ -15446,7 +15460,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0530",
-              "formula_id": "renta-2025-cuota-escala-estatal-sobre-minimo-personal-familiar",
+              "formula_id": "renta-cuota-escala-estatal-sobre-minimo-personal-familiar",
               "legal_refs": [
                 "ley-35-2006:art-62",
                 "ley-35-2006:art-63",
@@ -15477,7 +15491,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0531",
-              "formula_id": "renta-2025-cuota-escala-autonomica-sobre-minimo-personal-familiar",
+              "formula_id": "renta-cuota-escala-autonomica-sobre-minimo-personal-familiar",
               "legal_refs": [
                 "ley-35-2006:art-73",
                 "ley-35-2006:art-74",
@@ -15492,7 +15506,7 @@
               "operand_refs": [
                 "0527",
                 "0521",
-                "renta-2025-profile-tax-residence-ccaa",
+                "renta-profile-tax-residence-ccaa",
                 "renta-escala-autonomica-madrid-base-general"
               ],
               "operand_values": [
@@ -15509,7 +15523,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0532",
-              "formula_id": "renta-2025-cuota-base-liquidable-general-estatal",
+              "formula_id": "renta-cuota-base-liquidable-general-estatal",
               "legal_refs": [
                 "ley-35-2006:art-62",
                 "ley-35-2006:art-63",
@@ -15538,7 +15552,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0533",
-              "formula_id": "renta-2025-cuota-base-liquidable-general-autonomica",
+              "formula_id": "renta-cuota-base-liquidable-general-autonomica",
               "legal_refs": [
                 "ley-35-2006:art-73",
                 "ley-35-2006:art-74",
@@ -15567,7 +15581,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0534",
-              "formula_id": "renta-2025-tipo-medio-gravamen-estatal-base-liquidable-general",
+              "formula_id": "renta-tipo-medio-gravamen-estatal-base-liquidable-general",
               "legal_refs": [
                 "ley-35-2006:art-62",
                 "ley-35-2006:art-63"
@@ -15596,7 +15610,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0535",
-              "formula_id": "renta-2025-tipo-medio-gravamen-autonomico-base-liquidable-general",
+              "formula_id": "renta-tipo-medio-gravamen-autonomico-base-liquidable-general",
               "legal_refs": [
                 "ley-35-2006:art-74"
               ],
@@ -15624,7 +15638,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0536",
-              "formula_id": "renta-2025-cuota-escala-estatal-sobre-base-liquidable-ahorro",
+              "formula_id": "renta-cuota-escala-estatal-sobre-base-liquidable-ahorro",
               "legal_refs": [
                 "ley-35-2006:art-66",
                 "orden-hac-277-2026:art-3"
@@ -15650,7 +15664,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0537",
-              "formula_id": "renta-2025-cuota-escala-autonomica-sobre-base-liquidable-ahorro",
+              "formula_id": "renta-cuota-escala-autonomica-sobre-base-liquidable-ahorro",
               "legal_refs": [
                 "ley-35-2006:art-76",
                 "orden-hac-277-2026:art-3"
@@ -15676,7 +15690,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0538",
-              "formula_id": "renta-2025-cuota-escala-estatal-sobre-minimo-personal-familiar-base-ahorro",
+              "formula_id": "renta-cuota-escala-estatal-sobre-minimo-personal-familiar-base-ahorro",
               "legal_refs": [
                 "ley-35-2006:art-66",
                 "ley-35-2006:art-56",
@@ -15703,7 +15717,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0539",
-              "formula_id": "renta-2025-cuota-escala-autonomica-sobre-minimo-personal-familiar-base-ahorro",
+              "formula_id": "renta-cuota-escala-autonomica-sobre-minimo-personal-familiar-base-ahorro",
               "legal_refs": [
                 "ley-35-2006:art-76",
                 "ley-35-2006:art-56",
@@ -15730,7 +15744,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0540",
-              "formula_id": "renta-2025-cuota-base-liquidable-ahorro-estatal",
+              "formula_id": "renta-cuota-base-liquidable-ahorro-estatal",
               "legal_refs": [
                 "ley-35-2006:art-66",
                 "orden-hac-277-2026:art-3"
@@ -15757,7 +15771,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0541",
-              "formula_id": "renta-2025-cuota-base-liquidable-ahorro-autonomica",
+              "formula_id": "renta-cuota-base-liquidable-ahorro-autonomica",
               "legal_refs": [
                 "ley-35-2006:art-76",
                 "orden-hac-277-2026:art-3"
@@ -15784,7 +15798,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0542",
-              "formula_id": "renta-2025-tipo-medio-gravamen-estatal-base-liquidable-ahorro",
+              "formula_id": "renta-tipo-medio-gravamen-estatal-base-liquidable-ahorro",
               "legal_refs": [
                 "ley-35-2006:art-66"
               ],
@@ -15806,7 +15820,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0543",
-              "formula_id": "renta-2025-tipo-medio-gravamen-autonomico-base-liquidable-ahorro",
+              "formula_id": "renta-tipo-medio-gravamen-autonomico-base-liquidable-ahorro",
               "legal_refs": [
                 "ley-35-2006:art-76"
               ],
@@ -15856,7 +15870,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0545",
-              "formula_id": "renta-2025-cuota-integra-estatal",
+              "formula_id": "renta-cuota-integra-estatal",
               "legal_refs": [
                 "ley-35-2006:art-62",
                 "ley-35-2006:art-63",
@@ -15885,7 +15899,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0546",
-              "formula_id": "renta-2025-cuota-integra-autonomica",
+              "formula_id": "renta-cuota-integra-autonomica",
               "legal_refs": [
                 "ley-35-2006:art-73",
                 "ley-35-2006:art-74",
@@ -15914,7 +15928,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0547",
-              "formula_id": "renta-2025-deducciones-actividades-economicas-estatal-suma",
+              "formula_id": "renta-deducciones-actividades-economicas-estatal-suma",
               "legal_refs": [
                 "ley-35-2006:dt-18",
                 "ley-35-2006:art-67"
@@ -15943,7 +15957,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0548",
-              "formula_id": "renta-2025-deducciones-actividades-economicas-autonomica-suma",
+              "formula_id": "renta-deducciones-actividades-economicas-autonomica-suma",
               "legal_refs": [
                 "ley-35-2006:dt-18",
                 "ley-35-2006:art-77"
@@ -15996,7 +16010,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0550",
-              "formula_id": "renta-2025-deduccion-cultural-estatal-50-porciento",
+              "formula_id": "renta-deduccion-cultural-estatal-50-porciento",
               "legal_refs": [
                 "ley-35-2006:art-68.5",
                 "ley-35-2006:art-67"
@@ -16019,7 +16033,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0551",
-              "formula_id": "renta-2025-deduccion-cultural-autonomica-50-porciento",
+              "formula_id": "renta-deduccion-cultural-autonomica-50-porciento",
               "legal_refs": [
                 "ley-35-2006:art-68.5",
                 "ley-35-2006:art-77"
@@ -16042,7 +16056,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0552",
-              "formula_id": "renta-2025-deduccion-donativos-estatal-50-porciento",
+              "formula_id": "renta-deduccion-donativos-estatal-50-porciento",
               "legal_refs": [
                 "ley-35-2006:art-68.3",
                 "ley-35-2006:art-67"
@@ -16074,7 +16088,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0553",
-              "formula_id": "renta-2025-deduccion-donativos-autonomica-50-porciento",
+              "formula_id": "renta-deduccion-donativos-autonomica-50-porciento",
               "legal_refs": [
                 "ley-35-2006:art-68.3",
                 "ley-35-2006:art-77"
@@ -16266,7 +16280,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0560",
-              "formula_id": "renta-2025-deduccion-ceuta-melilla-estatal-50-porciento",
+              "formula_id": "renta-deduccion-ceuta-melilla-estatal-50-porciento",
               "legal_refs": [
                 "ley-35-2006:art-68.4",
                 "ley-35-2006:art-67",
@@ -16290,7 +16304,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0561",
-              "formula_id": "renta-2025-deduccion-ceuta-melilla-autonomica-50-porciento",
+              "formula_id": "renta-deduccion-ceuta-melilla-autonomica-50-porciento",
               "legal_refs": [
                 "ley-35-2006:art-68.4",
                 "ley-35-2006:art-77",
@@ -16314,7 +16328,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0562",
-              "formula_id": "renta-2025-deduccion-alquiler-vivienda-estatal-50-porciento",
+              "formula_id": "renta-deduccion-alquiler-vivienda-estatal-50-porciento",
               "legal_refs": [
                 "ley-35-2006:dt-15",
                 "ley-35-2006:art-67"
@@ -16337,7 +16351,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0563",
-              "formula_id": "renta-2025-deduccion-alquiler-vivienda-autonomica-50-porciento",
+              "formula_id": "renta-deduccion-alquiler-vivienda-autonomica-50-porciento",
               "legal_refs": [
                 "ley-35-2006:dt-15",
                 "ley-35-2006:art-77"
@@ -16432,7 +16446,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0567",
-              "formula_id": "renta-2025-deduccion-eficiencia-energetica-vivienda-suma",
+              "formula_id": "renta-deduccion-eficiencia-energetica-vivienda-suma",
               "legal_refs": [
                 "ley-35-2006:da-50",
                 "ley-35-2006:art-67"
@@ -16515,7 +16529,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0570",
-              "formula_id": "renta-2025-cuota-liquida-estatal",
+              "formula_id": "renta-cuota-liquida-estatal",
               "legal_refs": [
                 "ley-35-2006:art-67",
                 "ley-35-2006:art-68",
@@ -16576,7 +16590,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0571",
-              "formula_id": "renta-2025-cuota-liquida-autonomica",
+              "formula_id": "renta-cuota-liquida-autonomica",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "orden-hac-277-2026:art-3"
@@ -16993,7 +17007,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0585",
-              "formula_id": "renta-2025-cuota-liquida-estatal-incrementada",
+              "formula_id": "renta-cuota-liquida-estatal-incrementada",
               "legal_refs": [
                 "ley-35-2006:art-67",
                 "orden-hac-277-2026:art-3"
@@ -17035,7 +17049,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0586",
-              "formula_id": "renta-2025-cuota-liquida-autonomica-incrementada",
+              "formula_id": "renta-cuota-liquida-autonomica-incrementada",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "orden-hac-277-2026:art-3"
@@ -17080,7 +17094,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0587",
-              "formula_id": "renta-2025-cuota-liquida-incrementada-total",
+              "formula_id": "renta-cuota-liquida-incrementada-total",
               "legal_refs": [
                 "orden-hac-277-2026:art-3"
               ],
@@ -17232,7 +17246,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0595",
-              "formula_id": "renta-2025-cuota-resultante-autoliquidacion",
+              "formula_id": "renta-cuota-resultante-autoliquidacion",
               "legal_refs": [
                 "ley-35-2006:art-99",
                 "orden-hac-277-2026:art-3"
@@ -17327,7 +17341,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0598",
-              "formula_id": "renta-2025-retenciones-arrendamientos-urbanos",
+              "formula_id": "renta-retenciones-arrendamientos-urbanos",
               "legal_refs": [
                 "ley-35-2006:art-99",
                 "ley-35-2006:art-22",
@@ -17462,7 +17476,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0604",
-              "formula_id": "renta-2025-pagos-fraccionados-ingresados",
+              "formula_id": "renta-pagos-fraccionados-ingresados",
               "legal_refs": [
                 "rd-439-2007:art-109",
                 "rd-439-2007:art-110",
@@ -17472,8 +17486,8 @@
               "op": "sum",
               "operand_casilla_refs": [],
               "operand_refs": [
-                "renta-2025-rel-130-pagos-fraccionados",
-                "renta-2025-rel-131-pagos-fraccionados"
+                "renta-modelo-130-pagos-fraccionados",
+                "renta-modelo-131-pagos-fraccionados"
               ],
               "operand_values": [
                 "0",
@@ -17572,7 +17586,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0609",
-              "formula_id": "renta-2025-total-pagos-a-cuenta",
+              "formula_id": "renta-total-pagos-a-cuenta",
               "legal_refs": [
                 "ley-35-2006:art-99",
                 "rd-439-2007:art-109",
@@ -17636,7 +17650,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0610",
-              "formula_id": "renta-2025-cuota-diferencial",
+              "formula_id": "renta-cuota-diferencial",
               "legal_refs": [
                 "ley-35-2006:art-99",
                 "orden-hac-277-2026:art-3"
@@ -18975,7 +18989,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0670",
-              "formula_id": "renta-2025-resultado-declaracion",
+              "formula_id": "renta-resultado-declaracion",
               "legal_refs": [
                 "orden-hac-277-2026:art-3"
               ],
@@ -19046,7 +19060,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0671",
-              "formula_id": "renta-2025-cuota-liquida-autonomica-incrementada-passthrough",
+              "formula_id": "renta-cuota-liquida-autonomica-incrementada-passthrough",
               "legal_refs": [
                 "ley-35-2006:art-77"
               ],
@@ -19068,7 +19082,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0672",
-              "formula_id": "renta-2025-doble-imposicion-50-porciento",
+              "formula_id": "renta-doble-imposicion-50-porciento",
               "legal_refs": [
                 "ley-35-2006:art-77"
               ],
@@ -19096,7 +19110,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0675",
-              "formula_id": "renta-2025-cuota-irpf-comunidad-autonoma",
+              "formula_id": "renta-cuota-irpf-comunidad-autonoma",
               "legal_refs": [
                 "ley-35-2006:art-77"
               ],
@@ -19385,7 +19399,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0695",
-              "formula_id": "renta-2025-resto-a-ingresar-positivo",
+              "formula_id": "renta-resto-a-ingresar-positivo",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "ley-35-2006:art-99"
@@ -19638,6 +19652,8 @@
               "operand_values": [],
               "source_refs": [
                 "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2024-dictionary",
+                "aeat-renta-2024-manual-parte1",
                 "aeat-dr-100-2025-input-dictionary",
                 "aeat-dr-100-2025-xsd",
                 "aeat-renta-2025-manual-parte1",
@@ -20138,7 +20154,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0728",
-              "formula_id": "renta-2025-unidad-familiar-cuota-liquida-ue-formula",
+              "formula_id": "renta-unidad-familiar-cuota-liquida-ue-formula",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "ley-35-2006:art-82",
@@ -20267,7 +20283,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0731",
-              "formula_id": "renta-2025-deduccion-unidad-familiar-clamp-positiva",
+              "formula_id": "renta-deduccion-unidad-familiar-clamp-positiva",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "ley-35-2006:art-99"
@@ -22960,7 +22976,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0845",
-              "formula_id": "renta-2025-deduccion-incentivos-inversion-empresarial-total",
+              "formula_id": "renta-deduccion-incentivos-inversion-empresarial-total",
               "legal_refs": [
                 "ley-35-2006:art-68.2"
               ],
@@ -23957,7 +23973,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "0879",
-              "formula_id": "renta-2025-deduccion-economia-social-passthrough",
+              "formula_id": "renta-deduccion-economia-social-passthrough",
               "legal_refs": [
                 "ley-35-2006:art-77"
               ],
@@ -27579,7 +27595,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1039",
-              "formula_id": "renta-2025-deduccion-madrid-nacimiento-adopcion",
+              "formula_id": "renta-deduccion-madrid-nacimiento-adopcion",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "madrid-dl-1-2010:art-4",
@@ -27595,13 +27611,13 @@
               "operand_refs": [
                 "0435",
                 "0460",
-                "renta-2025-profile-declaration-type",
+                "renta-profile-declaration-type",
                 "renta-deduccion-madrid-nacimiento-adopcion-limite-contribuyente-individual",
                 "0435",
                 "0460",
-                "renta-2025-profile-unidad-familiar-otros-miembros-base",
+                "renta-profile-unidad-familiar-otros-miembros-base",
                 "renta-deduccion-madrid-nacimiento-adopcion-limite-unidad-familiar",
-                "renta-2025-profile-madrid-nacimiento-adopcion-eligible-count",
+                "renta-profile-madrid-nacimiento-adopcion-eligible-count",
                 "renta-deduccion-madrid-nacimiento-adopcion-cuantia"
               ],
               "operand_values": [
@@ -29666,7 +29682,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1128",
-              "formula_id": "renta-2025-deduccion-doble-imposicion-internacional-suma",
+              "formula_id": "renta-deduccion-doble-imposicion-internacional-suma",
               "legal_refs": [
                 "ley-35-2006:art-80"
               ],
@@ -31972,7 +31988,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1224",
-              "formula_id": "renta-2025-capital-inmobiliario-intereses-gastos-passthrough",
+              "formula_id": "renta-capital-inmobiliario-intereses-gastos-passthrough",
               "legal_refs": [
                 "ley-35-2006:art-22",
                 "ley-35-2006:art-23"
@@ -32791,7 +32807,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1257",
-              "formula_id": "renta-2025-saldo-negativo-pendiente-base-general",
+              "formula_id": "renta-saldo-negativo-pendiente-base-general",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -33106,7 +33122,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1270",
-              "formula_id": "renta-2025-saldo-negativo-pendiente-base-ahorro",
+              "formula_id": "renta-saldo-negativo-pendiente-base-ahorro",
               "legal_refs": [
                 "ley-35-2006:art-49"
               ],
@@ -33419,7 +33435,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1283",
-              "formula_id": "renta-2025-capital-mobiliario-saldo-pendiente-base-ahorro",
+              "formula_id": "renta-capital-mobiliario-saldo-pendiente-base-ahorro",
               "legal_refs": [
                 "ley-35-2006:art-49"
               ],
@@ -36072,7 +36088,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1390",
-              "formula_id": "renta-2025-base-liquidable-negativa-general-2024-pendiente-fin",
+              "formula_id": "renta-base-liquidable-negativa-general-2024-pendiente-fin",
               "legal_refs": [
                 "ley-35-2006:art-50"
               ],
@@ -38431,7 +38447,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1482",
-              "formula_id": "renta-2025-estimacion-objetiva-no-agricola-suma",
+              "formula_id": "renta-estimacion-objetiva-no-agricola-suma",
               "legal_refs": [
                 "ley-35-2006:art-31"
               ],
@@ -38481,7 +38497,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1484",
-              "formula_id": "renta-2025-estimacion-objetiva-no-agricola-rendimiento-neto-reducido-total",
+              "formula_id": "renta-estimacion-objetiva-no-agricola-rendimiento-neto-reducido-total",
               "legal_refs": [
                 "ley-35-2006:art-31"
               ],
@@ -38642,7 +38658,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1490",
-              "formula_id": "renta-2025-eo-agraria-rendimiento-base-porcino-carne",
+              "formula_id": "renta-eo-agraria-rendimiento-base-porcino-carne",
               "legal_refs": [
                 "ley-35-2006:art-31",
                 "orden-hac-1347-2024:anexo-i-instruccion-2-1"
@@ -38724,7 +38740,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1493",
-              "formula_id": "renta-2025-eo-agraria-rendimiento-base-remolacha",
+              "formula_id": "renta-eo-agraria-rendimiento-base-remolacha",
               "legal_refs": [
                 "ley-35-2006:art-31",
                 "orden-hac-1347-2024:anexo-i-instruccion-2-1"
@@ -38806,7 +38822,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1496",
-              "formula_id": "renta-2025-eo-agraria-rendimiento-base-bovino-carne-avicultura",
+              "formula_id": "renta-eo-agraria-rendimiento-base-bovino-carne-avicultura",
               "legal_refs": [
                 "ley-35-2006:art-31",
                 "orden-hac-1347-2024:anexo-i-instruccion-2-1"
@@ -38888,7 +38904,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1499",
-              "formula_id": "renta-2025-eo-agraria-rendimiento-base-forestal-corta-larga",
+              "formula_id": "renta-eo-agraria-rendimiento-base-forestal-corta-larga",
               "legal_refs": [
                 "ley-35-2006:art-31",
                 "orden-hac-1347-2024:anexo-i-instruccion-2-1"
@@ -38970,7 +38986,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1502",
-              "formula_id": "renta-2025-eo-agraria-rendimiento-base-bovino-leche",
+              "formula_id": "renta-eo-agraria-rendimiento-base-bovino-leche",
               "legal_refs": [
                 "ley-35-2006:art-31",
                 "orden-hac-1347-2024:anexo-i-instruccion-2-1"
@@ -39052,7 +39068,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1505",
-              "formula_id": "renta-2025-eo-agraria-rendimiento-base-cereales-citricos-horticultura",
+              "formula_id": "renta-eo-agraria-rendimiento-base-cereales-citricos-horticultura",
               "legal_refs": [
                 "ley-35-2006:art-31",
                 "orden-hac-1347-2024:anexo-i-instruccion-2-1"
@@ -39134,7 +39150,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1508",
-              "formula_id": "renta-2025-eo-agraria-rendimiento-base-porcino-cria-ovino-leche-apicultura",
+              "formula_id": "renta-eo-agraria-rendimiento-base-porcino-cria-ovino-leche-apicultura",
               "legal_refs": [
                 "ley-35-2006:art-31",
                 "orden-hac-1347-2024:anexo-i-instruccion-2-1"
@@ -39216,7 +39232,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1511",
-              "formula_id": "renta-2025-eo-agraria-rendimiento-base-forestal-corta-corta",
+              "formula_id": "renta-eo-agraria-rendimiento-base-forestal-corta-corta",
               "legal_refs": [
                 "ley-35-2006:art-31",
                 "orden-hac-1347-2024:anexo-i-instruccion-2-1"
@@ -39298,7 +39314,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1514",
-              "formula_id": "renta-2025-eo-agraria-rendimiento-base-arroz-oleaginosas-flores",
+              "formula_id": "renta-eo-agraria-rendimiento-base-arroz-oleaginosas-flores",
               "legal_refs": [
                 "ley-35-2006:art-31",
                 "orden-hac-1347-2024:anexo-i-instruccion-2-1"
@@ -39380,7 +39396,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1517",
-              "formula_id": "renta-2025-eo-agraria-rendimiento-base-otras-especies-ganaderas",
+              "formula_id": "renta-eo-agraria-rendimiento-base-otras-especies-ganaderas",
               "legal_refs": [
                 "ley-35-2006:art-31",
                 "orden-hac-1347-2024:anexo-i-instruccion-2-1"
@@ -39462,7 +39478,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1520",
-              "formula_id": "renta-2025-eo-agraria-rendimiento-base-forestal-resina",
+              "formula_id": "renta-eo-agraria-rendimiento-base-forestal-resina",
               "legal_refs": [
                 "ley-35-2006:art-31",
                 "orden-hac-1347-2024:anexo-i-instruccion-2-1"
@@ -39544,7 +39560,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1523",
-              "formula_id": "renta-2025-eo-agraria-rendimiento-base-raices-tuberculos-forrajes",
+              "formula_id": "renta-eo-agraria-rendimiento-base-raices-tuberculos-forrajes",
               "legal_refs": [
                 "ley-35-2006:art-31",
                 "orden-hac-1347-2024:anexo-i-instruccion-2-1"
@@ -39626,7 +39642,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1526",
-              "formula_id": "renta-2025-eo-agraria-rendimiento-base-plantas-textiles",
+              "formula_id": "renta-eo-agraria-rendimiento-base-plantas-textiles",
               "legal_refs": [
                 "ley-35-2006:art-31",
                 "orden-hac-1347-2024:anexo-i-instruccion-2-1"
@@ -39708,7 +39724,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1529",
-              "formula_id": "renta-2025-eo-agraria-rendimiento-base-actividades-accesorias",
+              "formula_id": "renta-eo-agraria-rendimiento-base-actividades-accesorias",
               "legal_refs": [
                 "ley-35-2006:art-31",
                 "orden-hac-1347-2024:anexo-i-instruccion-2-1"
@@ -39790,7 +39806,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1532",
-              "formula_id": "renta-2025-eo-agraria-rendimiento-base-otros-trabajos-accesorios",
+              "formula_id": "renta-eo-agraria-rendimiento-base-otros-trabajos-accesorios",
               "legal_refs": [
                 "ley-35-2006:art-31",
                 "orden-hac-1347-2024:anexo-i-instruccion-2-1"
@@ -39872,7 +39888,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1535",
-              "formula_id": "renta-2025-eo-agraria-rendimiento-base-cria-guarda-engorde-ganado",
+              "formula_id": "renta-eo-agraria-rendimiento-base-cria-guarda-engorde-ganado",
               "legal_refs": [
                 "ley-35-2006:art-31",
                 "orden-hac-1347-2024:anexo-i-instruccion-2-1"
@@ -39926,7 +39942,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1537",
-              "formula_id": "renta-2025-eo-agraria-rendimiento-neto-previo",
+              "formula_id": "renta-eo-agraria-rendimiento-neto-previo",
               "legal_refs": [
                 "ley-35-2006:art-31",
                 "orden-hac-1347-2024:anexo-i-instruccion-2-1"
@@ -40025,7 +40041,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1539",
-              "formula_id": "renta-2025-eo-agraria-rendimiento-neto-minorado",
+              "formula_id": "renta-eo-agraria-rendimiento-neto-minorado",
               "legal_refs": [
                 "ley-35-2006:art-31",
                 "orden-hac-1347-2024:anexo-i-instruccion-2-2"
@@ -40275,7 +40291,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1548",
-              "formula_id": "renta-2025-eo-agraria-rendimiento-neto-modulos",
+              "formula_id": "renta-eo-agraria-rendimiento-neto-modulos",
               "legal_refs": [
                 "ley-35-2006:art-31",
                 "orden-hac-1347-2024:anexo-i-instruccion-2-3"
@@ -40300,7 +40316,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1549",
-              "formula_id": "renta-2025-eo-agraria-reduccion-general",
+              "formula_id": "renta-eo-agraria-reduccion-general",
               "legal_refs": [
                 "ley-35-2006:art-31",
                 "orden-hac-1347-2024:da-1"
@@ -40323,7 +40339,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1550",
-              "formula_id": "renta-2025-estimacion-objetiva-agricola-rendimiento-neto-reducido",
+              "formula_id": "renta-estimacion-objetiva-agricola-rendimiento-neto-reducido",
               "legal_refs": [
                 "ley-35-2006:art-31",
                 "ley-35-2006:art-32",
@@ -40350,7 +40366,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1551",
-              "formula_id": "renta-2025-eo-agraria-reduccion-jovenes",
+              "formula_id": "renta-eo-agraria-reduccion-jovenes",
               "legal_refs": [
                 "ley-35-2006:da-6",
                 "orden-hac-1347-2024:anexo-i-instruccion-3"
@@ -40421,7 +40437,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1554",
-              "formula_id": "renta-2025-eo-agraria-reduccion-irregularidad",
+              "formula_id": "renta-eo-agraria-reduccion-irregularidad",
               "legal_refs": [
                 "ley-35-2006:art-32"
               ],
@@ -40447,7 +40463,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1555",
-              "formula_id": "renta-2025-eo-agraria-rendimiento-neto-reducido-por-actividad",
+              "formula_id": "renta-eo-agraria-rendimiento-neto-reducido-por-actividad",
               "legal_refs": [
                 "ley-35-2006:art-31",
                 "ley-35-2006:art-32",
@@ -40530,7 +40546,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1558",
-              "formula_id": "renta-2025-estimacion-objetiva-agricola-suma",
+              "formula_id": "renta-estimacion-objetiva-agricola-suma",
               "legal_refs": [
                 "ley-35-2006:art-31"
               ],
@@ -40580,7 +40596,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1560",
-              "formula_id": "renta-2025-estimacion-objetiva-agricola-rendimiento-neto-reducido-total",
+              "formula_id": "renta-estimacion-objetiva-agricola-rendimiento-neto-reducido-total",
               "legal_refs": [
                 "ley-35-2006:art-31"
               ],
@@ -40773,7 +40789,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1568",
-              "formula_id": "renta-2025-atribucion-capital-mobiliario-rendimiento-neto-computable",
+              "formula_id": "renta-atribucion-capital-mobiliario-rendimiento-neto-computable",
               "legal_refs": [
                 "ley-35-2006:art-25",
                 "ley-35-2006:art-26",
@@ -40952,7 +40968,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1575",
-              "formula_id": "renta-2025-atribucion-capital-inmobiliario-rendimiento-neto-computable",
+              "formula_id": "renta-atribucion-capital-inmobiliario-rendimiento-neto-computable",
               "legal_refs": [
                 "ley-35-2006:art-22",
                 "ley-35-2006:art-23",
@@ -41021,6 +41037,8 @@
                 "ley-35-2006:art-30",
                 "ley-35-2006:art-31",
                 "ley-35-2006:art-32",
+                "ley-35-2006:art-86",
+                "ley-35-2006:art-89",
                 "orden-hap-2250-2015:art-3"
               ],
               "op": null,
@@ -41157,7 +41175,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1583",
-              "formula_id": "renta-2025-atribucion-actividades-rendimiento-neto-computable",
+              "formula_id": "renta-atribucion-actividades-rendimiento-neto-computable",
               "legal_refs": [
                 "ley-35-2006:art-27",
                 "ley-35-2006:art-28",
@@ -41445,7 +41463,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1594",
-              "formula_id": "renta-2025-acciones-no-negociadas-ganancia-reducida-no-exenta",
+              "formula_id": "renta-acciones-no-negociadas-ganancia-reducida-no-exenta",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -41625,7 +41643,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1601",
-              "formula_id": "renta-2025-atribucion-capital-mobiliario-general-suma",
+              "formula_id": "renta-atribucion-capital-mobiliario-general-suma",
               "legal_refs": [
                 "ley-35-2006:art-25",
                 "ley-35-2006:art-50",
@@ -41654,7 +41672,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1602",
-              "formula_id": "renta-2025-atribucion-capital-mobiliario-ahorro-suma",
+              "formula_id": "renta-atribucion-capital-mobiliario-ahorro-suma",
               "legal_refs": [
                 "ley-35-2006:art-25",
                 "ley-35-2006:art-49",
@@ -41683,7 +41701,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1603",
-              "formula_id": "renta-2025-atribucion-deuda-subordinada-preferentes-suma",
+              "formula_id": "renta-atribucion-deuda-subordinada-preferentes-suma",
               "legal_refs": [
                 "ley-35-2006:art-25",
                 "ley-35-2006:art-49",
@@ -41712,7 +41730,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1604",
-              "formula_id": "renta-2025-atribucion-capital-inmobiliario-suma",
+              "formula_id": "renta-atribucion-capital-inmobiliario-suma",
               "legal_refs": [
                 "ley-35-2006:art-22",
                 "ley-35-2006:art-23",
@@ -41741,7 +41759,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1605",
-              "formula_id": "renta-2025-atribucion-actividades-economicas-suma",
+              "formula_id": "renta-atribucion-actividades-economicas-suma",
               "legal_refs": [
                 "ley-35-2006:art-27",
                 "ley-35-2006:art-28",
@@ -41774,7 +41792,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1606",
-              "formula_id": "renta-2025-atribucion-ganancias-no-transmision-base-general",
+              "formula_id": "renta-atribucion-ganancias-no-transmision-base-general",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -41804,7 +41822,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1607",
-              "formula_id": "renta-2025-atribucion-perdidas-no-transmision-base-general",
+              "formula_id": "renta-atribucion-perdidas-no-transmision-base-general",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -41834,7 +41852,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1608",
-              "formula_id": "renta-2025-atribucion-ganancias-transmision-base-ahorro",
+              "formula_id": "renta-atribucion-ganancias-transmision-base-ahorro",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -41864,7 +41882,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1609",
-              "formula_id": "renta-2025-atribucion-perdidas-transmision-base-ahorro",
+              "formula_id": "renta-atribucion-perdidas-transmision-base-ahorro",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -42576,7 +42594,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1638",
-              "formula_id": "renta-2025-perdida-no-exenta-negativa-base-general",
+              "formula_id": "renta-perdida-no-exenta-negativa-base-general",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -42628,7 +42646,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1640",
-              "formula_id": "renta-2025-ganancia-no-exenta-positiva-base-general",
+              "formula_id": "renta-ganancia-no-exenta-positiva-base-general",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -42754,7 +42772,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1645",
-              "formula_id": "renta-2025-ganancia-no-exenta-base-general",
+              "formula_id": "renta-ganancia-no-exenta-base-general",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -42859,7 +42877,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1649",
-              "formula_id": "renta-2025-ganancia-reducida-no-exenta-base-general",
+              "formula_id": "renta-ganancia-reducida-no-exenta-base-general",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -42961,7 +42979,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1653",
-              "formula_id": "renta-2025-ganancia-reducida-base-general",
+              "formula_id": "renta-ganancia-reducida-base-general",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -46662,7 +46680,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1807",
-              "formula_id": "renta-2025-criptomonedas-perdida-negativa",
+              "formula_id": "renta-criptomonedas-perdida-negativa",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -46714,7 +46732,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1809",
-              "formula_id": "renta-2025-criptomonedas-ganancia-positiva",
+              "formula_id": "renta-criptomonedas-ganancia-positiva",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -46766,7 +46784,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1811",
-              "formula_id": "renta-2025-criptomonedas-ganancia-no-exenta",
+              "formula_id": "renta-criptomonedas-ganancia-no-exenta",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -46796,7 +46814,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1812",
-              "formula_id": "renta-2025-ganancia-cripto-imputable",
+              "formula_id": "renta-ganancia-cripto-imputable",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-37"
@@ -46819,7 +46837,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1813",
-              "formula_id": "renta-2025-criptomonedas-perdidas-suma",
+              "formula_id": "renta-criptomonedas-perdidas-suma",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -46843,7 +46861,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1814",
-              "formula_id": "renta-2025-criptomonedas-ganancias-suma",
+              "formula_id": "renta-criptomonedas-ganancias-suma",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -47141,7 +47159,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1826",
-              "formula_id": "renta-2025-inmuebles-valor-transmision",
+              "formula_id": "renta-inmuebles-valor-transmision",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -47243,7 +47261,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1830",
-              "formula_id": "renta-2025-inmuebles-valor-adquisicion",
+              "formula_id": "renta-inmuebles-valor-adquisicion",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -47273,7 +47291,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1831",
-              "formula_id": "renta-2025-inmuebles-perdida-no-exenta-base-general",
+              "formula_id": "renta-inmuebles-perdida-no-exenta-base-general",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -47325,7 +47343,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1833",
-              "formula_id": "renta-2025-inmuebles-ganancia-no-exenta-base-general",
+              "formula_id": "renta-inmuebles-ganancia-no-exenta-base-general",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -47402,7 +47420,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1836",
-              "formula_id": "renta-2025-inmuebles-ganancia-no-exenta-reducida",
+              "formula_id": "renta-inmuebles-ganancia-no-exenta-reducida",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -47513,7 +47531,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1840",
-              "formula_id": "renta-2025-inmuebles-ganancia-reducida-no-exenta",
+              "formula_id": "renta-inmuebles-ganancia-reducida-no-exenta",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -47615,7 +47633,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1844",
-              "formula_id": "renta-2025-inmuebles-perdidas-transmision-suma",
+              "formula_id": "renta-inmuebles-perdidas-transmision-suma",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -47639,7 +47657,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1845",
-              "formula_id": "renta-2025-inmuebles-ganancias-no-afectos-suma",
+              "formula_id": "renta-inmuebles-ganancias-no-afectos-suma",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -47663,7 +47681,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1846",
-              "formula_id": "renta-2025-inmuebles-ganancias-afectos-suma",
+              "formula_id": "renta-inmuebles-ganancias-afectos-suma",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -49395,7 +49413,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "1919",
-              "formula_id": "renta-2025-vehiculo-valor-adquisicion-suma",
+              "formula_id": "renta-vehiculo-valor-adquisicion-suma",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -56332,7 +56350,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "2211",
-              "formula_id": "renta-2025-atencion-percibida-importe-total",
+              "formula_id": "renta-atencion-percibida-importe-total",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -56846,7 +56864,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "2232",
-              "formula_id": "renta-2025-criptomonedas-ganancia-reducida-no-exenta",
+              "formula_id": "renta-criptomonedas-ganancia-reducida-no-exenta",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -58037,7 +58055,7 @@
             {
               "absent_by_design": false,
               "casilla_id": "base-liq-neg-general-2024-aplicada-maxima",
-              "formula_id": "renta-2025-base-liquidable-negativa-general-2024-aplicada-maxima",
+              "formula_id": "renta-base-liquidable-negativa-general-2024-aplicada-maxima",
               "legal_refs": [
                 "ley-35-2006:art-50"
               ],
@@ -58100,26 +58118,29 @@
             }
           ],
           "operation": "modelo.work.calculate",
-          "relation_overrides": {
-            "renta-2025-rel-130-pagos-fraccionados": "0",
-            "renta-2025-rel-131-pagos-fraccionados": "0"
+          "registry_snapshot_ref": {
+            "modelo": "100",
+            "modelo_year": 2025,
+            "period": "0A",
+            "revision_id": "2025"
           },
+          "relation_overrides": {},
           "result_summary": [
             {
               "casilla_id": "0519",
-              "label": "State portion: Personal and family minimum",
+              "label": "State part: Personal and family minimum",
               "role": "key_figure",
               "value": "5550.00"
             },
             {
               "casilla_id": "0520",
-              "label": "Total increased or decreased amount of the personal and family minimum for the regional-tax calculation",
+              "label": "Total increased or decreased amount of the personal and family minimum for calculating the autonomous-community tax",
               "role": "key_figure",
-              "value": "5550.00"
+              "value": "5956.65"
             },
             {
               "casilla_id": "0521",
-              "label": "Amount of the personal and family minimum forming part of the general net taxable base for the State-tax calculation: the lower of the amounts entered in boxes [0505] and [051...",
+              "label": "Amount of the personal and family minimum that forms part of the general net taxable base for calculating state tax: the lower of the amounts entered in boxes [0505] and [0519] (if box [0505] is negative or equal to zero, enter the number zero in box [0521])",
               "role": "key_figure",
               "value": "5550.00"
             },
@@ -58131,9 +58152,9 @@
             },
             {
               "casilla_id": "0523",
-              "label": "Amount of the personal and family minimum forming part of the general net taxable base for the regional-tax calculation: the lower of the amounts entered in boxes [0505] and [...",
+              "label": "Personal and family minimum included in the general net taxable base for calculating regional tax: the lower of boxes [0505] and [0520] (if box [0505] is negative or zero, enter zero in box [0523])",
               "role": "key_figure",
-              "value": "5550.00"
+              "value": "5956.65"
             },
             {
               "casilla_id": "0524",
@@ -58143,7 +58164,7 @@
             },
             {
               "casilla_id": "0432",
-              "label": "Net balance of income to be included in the general taxable base, and of income imputations",
+              "label": "Net balance of income to be included in the general taxable base and of income imputations",
               "role": "key_figure",
               "value": "22000.00"
             },
@@ -58155,7 +58176,7 @@
             },
             {
               "casilla_id": "0460",
-              "label": "Savings taxable base ([0424] - [0436] - [0439] - [0440] - [0441] - [0442] - [0443] - [0444] - [0445] - [0447] + [0429] - [0446] - [0449] - [0450] - [0451] - [0452] - [0453] - [0454] - [0455] -...",
+              "label": "Savings taxable base calculated from boxes [0424], [0436], [0439], [0440], [0441], [0442], [0443], [0444], [0445], [0447], [0429], [0446], [0449], [0450], [0451], [0452], [0453], [0454], [0455], [0448]",
               "role": "key_figure",
               "value": "0.00"
             },
@@ -58173,13 +58194,13 @@
             },
             {
               "casilla_id": "0532",
-              "label": "Tax liability corresponding to the general net taxable base: ([0532] = [0528] - [0530]); ([0533] = [0529] - [0531]): State portion",
+              "label": "Tax amounts corresponding to the general net taxable base: ( [0532] = [0528] - [0530] ); ( [0533] = [0529] - [0531] ): State part",
               "role": "key_figure",
               "value": "1855.50"
             },
             {
               "casilla_id": "0533",
-              "label": "Tax liability corresponding to the general net taxable base: ([0532] = [0528] - [0530]); ([0533] = [0529] - [0531]): Regional portion",
+              "label": "Tax amounts corresponding to the general net taxable base: ( [0532] = [0528] - [0530] ); ( [0533] = [0529] - [0531] ): Autonomous-community part",
               "role": "key_figure",
               "value": "1651.19"
             },
@@ -58191,7 +58212,7 @@
             },
             {
               "casilla_id": "0546",
-              "label": "Gross regional tax liability: Regional portion",
+              "label": "Autonomous-community gross tax: Autonomous-community part",
               "role": "key_figure",
               "value": "1651.19"
             },
@@ -58203,7 +58224,7 @@
             },
             {
               "casilla_id": "0571",
-              "label": "Net regional tax liability: Regional portion",
+              "label": "Net autonomous-community tax liability: Autonomous-community part",
               "role": "key_figure",
               "value": "1651.19"
             },
@@ -58221,7 +58242,31 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 8e197be64071b890e0a5223d51ac918512ec0e2d33a1188a5c0fa2e211fbaf71 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 100 --year 2025 --period 0A` and re-inspect this one with `aeat app modelo work revision 8e197be64071b890e0a5223d51ac918512ec0e2d33a1188a5c0fa2e211fbaf71`.",
+          "saved_confirmation": "Saved as draft calculation revision 623a3ba760fcc2069d7db7e4ed1103f11b38222d8a9e69fed10b7252fe1084fe (state: draft). It is persisted and can be resumed later.",
+          "source_provenance": [
+            {
+              "contributor_binding_source": "relation_prefill",
+              "contributor_source_kind": "relation_prefill",
+              "dependency_treatment": "direct_annual_settlement",
+              "fingerprint": null,
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "relation_prefill",
+              "resolver_id": "relation_prefill",
+              "source_ref": "renta-modelo-130-pagos-fraccionados:130:2025:1T,2T,3T,4T:19"
+            },
+            {
+              "contributor_binding_source": "relation_prefill",
+              "contributor_source_kind": "relation_prefill",
+              "dependency_treatment": "direct_annual_settlement",
+              "fingerprint": null,
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "relation_prefill",
+              "resolver_id": "relation_prefill",
+              "source_ref": "renta-modelo-131-pagos-fraccionados:131:2025:1T,2T,3T,4T:15"
+            }
+          ],
           "state": "borrador",
           "superseded_at": null,
           "updated_at": "2026-04-01T09:00:00+00:00",
@@ -58269,9 +58314,10 @@
               "kind": "blocking_rule",
               "legal_refs": "ley-35-2006:dt-12",
               "reduccion_id": "0011",
-              "severity": "warning"
+              "severity": "warning",
+              "source_refs": "aeat-renta-2025-manual-parte1, boe-lirpf-statutory-facts"
             },
-            "message": "Income 0003 of 24000 EUR may qualify for reduction 0011.",
+            "message": "Casilla 0003 declares 24000 EUR of trabajo income above the DT 12ª threshold, so casilla 0011 may qualify for a reduction it currently declares as zero.",
             "severity": "warning"
           },
           {
@@ -58280,7 +58326,7 @@
             "context": {
               "kind": "advisory",
               "legal_refs": "ley-35-2006:art-48, ley-58-2003:art-119, ley-58-2003:art-120, ley-35-2006:art-50, orden-hac-277-2026:art-3",
-              "origin_ids": "renta-2025-base-liquidable-negativa-general-anterior",
+              "origin_ids": "renta-base-liquidable-negativa-general-anterior",
               "severity": "warning",
               "source_filing_year": "2024",
               "source_modelo": "100",
@@ -58290,7 +58336,7 @@
               "target_modelo": "100",
               "target_period": "0A"
             },
-            "message": "Modelo 100 2024 0A carries a zero value into 100 2025.",
+            "message": "Modelo 100 2024 0A carries a zero value into 100 2025 0A.",
             "severity": "warning"
           },
           {
@@ -58298,18 +58344,18 @@
             "code": "modelo.work.verify.finding.advisory",
             "context": {
               "kind": "advisory",
-              "legal_refs": "ley-58-2003:art-119, ley-58-2003:art-120, ley-35-2006:art-99, orden-hac-277-2026:art-3, rd-439-2007:art-108, orden-eha-3435-2007:anexo-ii, orden-hac-56-2024:art-1, rd-439-2007:art-109, orden-eha-672-2007:art-3, ley-35-2006:art-86, ley-35-2006:art-87, ley-35-2006:art-88, ley-35-2006:art-89, orden-hap-2250-2015:art-1, orden-hap-2250-2015:art-3, orden-eha-3127-2009:art-1, orden-hac-1431-2025:art-2, orden-eha-3377-2011:art-1",
+              "legal_refs": "ley-58-2003:art-119, ley-58-2003:art-120, ley-35-2006:art-99, orden-hac-277-2026:art-3, rd-439-2007:art-108, orden-eha-3435-2007:anexo-ii, orden-hac-56-2024:art-1, orden-eha-672-2007:art-1, rd-439-2007:art-109, orden-eha-672-2007:art-3, ley-35-2006:art-86, ley-35-2006:art-87, ley-35-2006:art-88, ley-35-2006:art-89, orden-hap-2250-2015:art-1, orden-hap-2250-2015:art-3, orden-eha-3127-2009:art-1, orden-hac-1431-2025:art-2, orden-eha-3377-2011:art-1",
               "severity": "warning",
               "source_modelo_count": "7",
               "source_modelos": "111|123|130|131|184|190|193",
-              "source_refs": "aeat-renta-2025-manual-parte1, boe-modelo-100-2025-form, aeat-modelo-190-instructions-2025, boe-modelo-190-2025-form, aeat-modelo-193-296-note-2025, boe-modelo-193-2011-form"
+              "source_refs": "aeat-renta-2025-manual-parte1, boe-modelo-100-2025-form, aeat-dr-184-2025, aeat-modelo-190-instructions-2025, boe-modelo-190-2025-form, aeat-modelo-193-296-note-2025, boe-modelo-193-2011-form"
             },
             "message": "7 source modelo(s) are not applicable to this taxpayer: 111|123|130|131|184|190|193.",
             "severity": "warning"
           }
         ],
         "result": {
-          "calculation_revision_id": "8e197be64071b890e0a5223d51ac918512ec0e2d33a1188a5c0fa2e211fbaf71",
+          "calculation_revision_id": "623a3ba760fcc2069d7db7e4ed1103f11b38222d8a9e69fed10b7252fe1084fe",
           "completeness_status": "complete",
           "findings": [
             {
@@ -58320,9 +58366,12 @@
               "legal_refs": [
                 "ley-35-2006:dt-12"
               ],
-              "message": "Income 0003 of 24000 EUR may qualify for reduction 0011.",
+              "message": "Casilla 0003 declares 24000 EUR of trabajo income above the DT 12ª threshold, so casilla 0011 may qualify for a reduction it currently declares as zero.",
               "severity": "warning",
-              "source_refs": []
+              "source_refs": [
+                "aeat-renta-2025-manual-parte1",
+                "boe-lirpf-statutory-facts"
+              ]
             },
             {
               "action": null,
@@ -58336,7 +58385,7 @@
                 "ley-35-2006:art-50",
                 "orden-hac-277-2026:art-3"
               ],
-              "message": "Modelo 100 2024 0A carries a zero value into 100 2025.",
+              "message": "Modelo 100 2024 0A carries a zero value into 100 2025 0A.",
               "severity": "warning",
               "source_refs": [
                 "aeat-dr-100-2025-dictionary",
@@ -58357,6 +58406,7 @@
                 "rd-439-2007:art-108",
                 "orden-eha-3435-2007:anexo-ii",
                 "orden-hac-56-2024:art-1",
+                "orden-eha-672-2007:art-1",
                 "rd-439-2007:art-109",
                 "orden-eha-672-2007:art-3",
                 "ley-35-2006:art-86",
@@ -58374,6 +58424,7 @@
               "source_refs": [
                 "aeat-renta-2025-manual-parte1",
                 "boe-modelo-100-2025-form",
+                "aeat-dr-184-2025",
                 "aeat-modelo-190-instructions-2025",
                 "boe-modelo-190-2025-form",
                 "aeat-modelo-193-296-note-2025",
@@ -58384,9 +58435,15 @@
           "granted_verificado_completo": true,
           "missing_required_casilla_ids": [],
           "operation": "modelo.work.verify",
+          "registry_snapshot_ref": {
+            "modelo": "100",
+            "modelo_year": 2025,
+            "period": "0A",
+            "revision_id": "2025"
+          },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "718ff51e8fcc9f2e21cac354e8146fd2c1bb9b165971f48160d0e19a8a94d3ee",
+          "verification_report_id": "cc626793a20bc8c64af01c44438097e8ba7f60103b51cb70c6987f417b2b53b2",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
@@ -58420,14 +58477,31 @@
         "active_profile": "docs-sequence-sandbox",
         "command": "modelo.export",
         "error": {
-          "action": null,
+          "action": {
+            "action": null,
+            "argument_bindings": [],
+            "conditionality": "not_applicable",
+            "evidence": [
+              {
+                "condition_id": "filing.application.operation.admissible",
+                "evidence_id": "filing.application.operation.admissible.observation",
+                "provenance": "application_state",
+                "values": {
+                  "error_type": "ModeloApplicationError"
+                }
+              }
+            ],
+            "failed_condition_id": "filing.application.operation.admissible",
+            "missing_argument_names": [],
+            "no_recovery_outcome": "operator_decision"
+          },
           "category": "FAIL",
           "code": "FAIL_MODELO_EXPORT",
           "context": {
-            "calculation_revision_id": "8e197be64071b890e0a5223d51ac918512ec0e2d33a1188a5c0fa2e211fbaf71",
+            "calculation_revision_id": "623a3ba760fcc2069d7db7e4ed1103f11b38222d8a9e69fed10b7252fe1084fe",
             "cause": "application.filing.export_parity.errors.aux_block_undeclared"
           },
-          "message": "Could not write the export file for calculation revision 8e197be64071b890e0a5223d51ac918512ec0e2d33a1188a5c0fa2e211fbaf71.",
+          "message": "Could not write the export file for calculation revision 623a3ba760fcc2069d7db7e4ed1103f11b38222d8a9e69fed10b7252fe1084fe.",
           "retryable": false,
           "runbook_id": null,
           "trace_id": null

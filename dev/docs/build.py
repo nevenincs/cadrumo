@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import os
 import shutil
 import subprocess
 import sys
 import tempfile
 import xml.etree.ElementTree as ET
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Iterator, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
@@ -243,6 +244,25 @@ def _copy_docs_source(docs_root: Path, target: Path) -> None:
     shutil.copytree(docs_root, target, ignore=shutil.ignore_patterns("_build"))
 
 
+@contextlib.contextmanager
+def _full_build_source(docs_root: Path, *, isolated: bool) -> Iterator[Path]:
+    """Yield the source tree a full build reads, a private copy when ``isolated``.
+
+    A build writes its generated sources -- the CLI reference, glossary, casilla
+    and legal pages, and the CLI tree -- into the tree it reads, and the glossary
+    and legal pages are rendered in the root's own language. Roots built at the
+    same time from one tree would overwrite each other's pages, so each reads a
+    copy of its own.
+    """
+    if not isolated:
+        yield docs_root
+        return
+    with tempfile.TemporaryDirectory(prefix="cadrumo-docs-source-") as tmp:
+        source_root = Path(tmp) / "docs"
+        _copy_docs_source(docs_root, source_root)
+        yield source_root
+
+
 def ensure_isolated_storage_root() -> None:
     """Point product storage at a build-scoped scratch root unless already pinned.
 
@@ -402,7 +422,7 @@ def docs_build_jobs(env: Mapping[str, str]) -> str:
     """Resolve the Sphinx ``-j`` parallelism from the deployment override.
 
     Defaults to ``auto`` (one worker per core) so local and CI builds keep the
-    full-parallel read. The deployment sets ``CADRUMO_DOCS_JOBS=1`` to pin a
+    full-parallel read, the deployment included. ``CADRUMO_DOCS_JOBS=1`` pins a
     single-worker build when a serial run is wanted for reproducibility; the
     post-build sitemap and Pagefind passes run after Sphinx completes and are
     parallel-safe regardless. A set value must be ``auto`` or a positive
@@ -633,6 +653,7 @@ def build_docs(
     single_page: bool = False,
     scope: str = "full",
     output_root: Path | None = None,
+    isolated_source: bool = False,
 ) -> None:
     """Run Sphinx against the selected targets.
 
@@ -655,6 +676,9 @@ def build_docs(
     without disturbing the English root. It applies only to a full build; the
     canonical-``_build`` cleanup is skipped when redirected so a language subdir
     build never clears the English root beside it.
+
+    ``isolated_source`` makes a full build read a private copy of ``docs/``
+    (:func:`_full_build_source`), so several roots can build at once.
     """
     docs_root = repo_root / "docs"
     targets = plan.targets
@@ -684,15 +708,17 @@ def build_docs(
     if plan.full_build_required:
         if output_root is None:
             remove_noncanonical_build_entries(docs_root)
-        out_dir = html_output_root
-        out_dir.mkdir(parents=True, exist_ok=True)
-        command.extend(
-            [
-                str(docs_root),
-                str(out_dir),
-            ],
-        )
-        result = subprocess.run(command, cwd=repo_root, env=env, check=False)
+        html_output_root.mkdir(parents=True, exist_ok=True)
+        with _full_build_source(docs_root, isolated=isolated_source) as source_root:
+            result = subprocess.run(
+                [*command, str(source_root), str(html_output_root)],
+                cwd=repo_root,
+                env=env,
+                check=False,
+            )
+            # Generated pages exist only in the tree the build read.
+            if result.returncode == 0:
+                remove_orphan_pages(source_root, html_output_root, repo_root)
     elif single_page:
         remove_noncanonical_build_entries(docs_root)
         with tempfile.TemporaryDirectory(prefix="cadrumo-docs-doctrees-") as tmp:
@@ -735,7 +761,6 @@ def build_docs(
     # or a lone page) that must not regenerate the whole search index.
     if plan.full_build_required:
         html_root = html_output_root
-        remove_orphan_pages(docs_root, html_root, repo_root)
         base_url = os.environ.get("CADRUMO_DOCS_BASE_URL")
         if base_url:
             sitemap_path = write_deployment_sitemap(html_root, base_url)
@@ -864,12 +889,24 @@ def main(argv: list[str] | None = None) -> int:
             "site into a per-language subdirectory. Full builds only; not valid with --single-page or explicit paths."
         ),
     )
+    parser.add_argument(
+        "--isolated-source",
+        action="store_true",
+        help=(
+            "Build from a private copy of docs/, so the sources this build generates never meet another "
+            "build's. Lets the deploy publisher build every site root at once. Full builds only."
+        ),
+    )
     args = parser.parse_args(argv)
 
     repo_root = _repo_root()
     output_root = Path(args.out_dir) if args.out_dir else None
     if output_root is not None and (args.single_page or args.paths):
         raise SystemExit("--out-dir applies to a whole-scope build; it cannot combine with --single-page or paths.")
+    if args.isolated_source and (args.single_page or args.paths):
+        raise SystemExit(
+            "--isolated-source applies to a whole-scope build; it cannot combine with --single-page or paths."
+        )
     if args.language is not None:
         # A localized build is a user-scope build: the API autodoc tree is
         # English-only, so only the operator surface is translated. conf.py reads
@@ -924,6 +961,7 @@ def main(argv: list[str] | None = None) -> int:
         single_page=bool(args.single_page),
         scope=scope,
         output_root=output_root,
+        isolated_source=args.isolated_source,
     )
     if args.rag_index:
         update_rag_index(repo_root)

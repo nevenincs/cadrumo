@@ -71,7 +71,11 @@ import keyring.core
 from click.testing import Result
 from pydantic import BaseModel, Field, JsonValue
 
-from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
+from cadrumo.adapters.persistence.storage.master_key.active_session import (
+    active_session,
+    close_active_bucket_session,
+    current_active_bucket_session,
+)
 from cadrumo.adapters.persistence.storage.profile_persistence_composition import (
     composed_profile_persistence_ports,
 )
@@ -351,21 +355,40 @@ def _seed_m303_filing_evidence(fixtures_dir: Path) -> None:
     from the shared evidence helper binds it to the live snapshot every time,
     and keeps a six-figure-byte blob out of the tree.
     """
+    fixtures_dir.mkdir(parents=True, exist_ok=True)
+    for name, text in _m303_filing_evidence_documents():
+        (fixtures_dir / name).write_text(text, encoding="utf-8", newline="\n")
+
+
+#: The generated documents per authority generation. A gate worker runs many
+#: sequences against one published generation, and each document is a pure
+#: function of it, so it is built once rather than once per sandbox.
+_M303_EVIDENCE_BY_GENERATION: dict[str, tuple[tuple[str, str], ...]] = {}
+
+
+def _m303_filing_evidence_documents() -> tuple[tuple[str, str], ...]:
+    """Return ``(fixture name, JSON text)`` for every seeded period, built once per generation."""
     from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
     from cadrumo.core.period import Period
     from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
-    fixtures_dir.mkdir(parents=True, exist_ok=True)
     with bundled_indexed_authority().operation() as operation:
-        for filing_year, code in _M303_EVIDENCE_PERIODS:
-            period = Period(filing_year=filing_year, code=code)
-            evidence = general_m303_filing_evidence(
-                period,
-                reference=f"docs:sequence-sandbox:m303-general:{filing_year}-{code}",
-                operation=operation,
-            )
-            target = fixtures_dir / m303_filing_evidence_fixture_name(filing_year, code)
-            target.write_text(evidence.model_dump_json(indent=2) + "\n", encoding="utf-8", newline="\n")
+        generation = str(operation.generation)
+        documents = _M303_EVIDENCE_BY_GENERATION.get(generation)
+        if documents is None:
+            built: list[tuple[str, str]] = []
+            for filing_year, code in _M303_EVIDENCE_PERIODS:
+                period = Period(filing_year=filing_year, code=code)
+                evidence = general_m303_filing_evidence(
+                    period,
+                    reference=f"docs:sequence-sandbox:m303-general:{filing_year}-{code}",
+                    operation=operation,
+                )
+                name = m303_filing_evidence_fixture_name(filing_year, code)
+                built.append((name, evidence.model_dump_json(indent=2) + "\n"))
+            documents = tuple(built)
+            _M303_EVIDENCE_BY_GENERATION[generation] = documents
+    return documents
 
 
 def m303_filing_evidence_fixture_name(filing_year: int, code: str) -> str:
@@ -481,7 +504,7 @@ def _refuse_live_opt_in(sequence_id: str) -> None:
 
 
 @contextmanager
-def _provisioned_sandbox_profile() -> Generator[None]:
+def _provisioned_sandbox_profile(*, published: bool = False) -> Generator[None]:
     """Publish the deterministic sandbox profile and hold its custody span open.
 
     Mirrors production exactly, so the sandbox introduces no parallel write
@@ -497,7 +520,15 @@ def _provisioned_sandbox_profile() -> Generator[None]:
     there is no password any frame could present: an in-process frame reaches
     the bucket only by reusing the session bound here. Closing it after the
     merge would leave every profile-bound verb refusing on custody.
+
+    ``published`` is set when the storage root is a clone of a sandbox that
+    already went through exactly this publication (:func:`_sandbox_template`):
+    the profile exists on disk, so only its session is opened.
     """
+    if published:
+        with open_test_profile_session(SANDBOX_PROFILE_ID):
+            yield
+        return
     publish_test_profile_capsule(SANDBOX_PROFILE_ID, label=SANDBOX_PROFILE_LABEL)
     with open_test_profile_session(SANDBOX_PROFILE_ID):
         from uuid import UUID
@@ -528,6 +559,54 @@ def _provisioned_sandbox_profile() -> Generator[None]:
             observed_at=observed_at,
         )
         yield
+
+
+#: The provisioned-at-rest sandbox state each later sandbox in this process is
+#: cloned from, keyed by the authority generation it was provisioned under.
+_SANDBOX_TEMPLATES: dict[str, Path] = {}
+_SANDBOX_TEMPLATE_HOLDER: list[TemporaryDirectory[str]] = []
+
+
+def _sandbox_template() -> Path:
+    """Return a sandbox state directory with the profile already published.
+
+    Publishing the sandbox profile (capsule, facts, setup, retention and
+    legal-hold observations) is the same work for every sequence and was most
+    of each sandbox's cost. It is done once per process and per authority
+    generation, through the production writers exactly as before, then closed
+    so every file is at rest before it is copied.
+    """
+    from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+
+    with bundled_indexed_authority().operation() as operation:
+        generation = str(operation.generation)
+    template = _SANDBOX_TEMPLATES.get(generation)
+    if template is not None:
+        return template
+    holder = TemporaryDirectory(prefix="cadrumo-docs-sandbox-template-")
+    _SANDBOX_TEMPLATE_HOLDER.append(holder)
+    template = Path(holder.name)
+    dispose_engine()
+    close_active_bucket_session()
+    with (
+        _neutralized_ambient_env(),
+        _isolated_external_tool_env(template),
+        _absent_credential_vault(),
+        override_settings(
+            cadrumo_llm_ollama_chat_url="http://127.0.0.1:1/api/chat",
+            cadrumo_output_language="en",
+        ),
+        isolated_profile_storage_root(tmp_path=template),
+        composed_profile_persistence_ports(),
+        _isolated_diagnostic_log(),
+        frozen_clock(SANDBOX_INSTANT),
+        _provisioned_sandbox_profile(),
+    ):
+        pass
+    close_active_bucket_session()
+    dispose_engine()
+    _SANDBOX_TEMPLATES[generation] = template
+    return template
 
 
 #: Environment prefixes scrubbed from the process environment for the whole
@@ -756,6 +835,7 @@ def sequence_sandbox(
     if fixtures.is_dir():
         shutil.copytree(fixtures, workdir / "fixtures", dirs_exist_ok=True)
     _seed_m303_filing_evidence(workdir / "fixtures")
+    shutil.copytree(_sandbox_template(), sandbox_root, dirs_exist_ok=True)
 
     dispose_engine()
     # A login frame binds its BucketSession UNSCOPED (``bind_active_bucket_session``)
@@ -793,7 +873,7 @@ def sequence_sandbox(
         _isolated_diagnostic_log(),
         frozen_clock(SANDBOX_INSTANT),
         chdir(workdir),
-        _provisioned_sandbox_profile(),
+        _provisioned_sandbox_profile(published=True),
     ):
         effective_settings = load_settings()
         try:
@@ -1011,6 +1091,25 @@ def _drop_handlers_bound_to_a_dead_stream() -> None:
         configure_logging()
 
 
+@contextmanager
+def _next_process_session_view() -> Generator[None]:
+    """Show a frame the session state a fresh ``aeat`` process would see.
+
+    Every documented command is its own process, but the sandbox runs them in
+    one: the capsule session opened for the whole span is what lets each frame
+    reach the bucket. Logout seals that session in place, and a real next
+    process would then find no session at all -- so once it is sealed, the
+    following frames run with the session masked as absent rather than
+    observing a sealed object no separate process could ever hold.
+    """
+    live = current_active_bucket_session()
+    if live is None or not live.sealed:
+        yield
+        return
+    with active_session.override(None):
+        yield
+
+
 def _invoke_frame(args: tuple[str, ...]) -> Result:
     """Invoke the cached CLI, retrying only on the transient registry-write race.
 
@@ -1028,7 +1127,7 @@ def _invoke_frame(args: tuple[str, ...]) -> Result:
     # field for this exact leaf; every sibling retains the normal sandbox span.
     is_profile_delete = any(args[index : index + 3] == ("config", "profile", "delete") for index in range(len(args)))
     settings_context = override_settings(cadrumo_active_profile=None) if is_profile_delete else nullcontext()
-    with settings_context:
+    with settings_context, _next_process_session_view():
         result = invoke_cached_cli(list(args))
     if os.environ.get("CI"):
         return result

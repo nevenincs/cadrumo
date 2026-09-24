@@ -331,21 +331,23 @@ async def _run_index(
     Returns:
         The number of pages Pagefind indexed from the directory pass.
     """
-    from pagefind.index import PagefindIndex
+    from .pagefind_service import ResponsivePagefindService
 
     _mark_excluded_pages(html_root)
     _mark_page_display_classes(html_root)
     output_path = html_root / "pagefind"
-    # Configured, not written explicitly: the context exit performs the one
-    # write, into <html_root>/pagefind/, so the built site serves the index
-    # alongside its pages (an uncommitted artifact) and nothing lands in the
-    # process working directory.
-    async with PagefindIndex(config={"output_path": str(output_path)}) as index:
+    # One explicit write, into <html_root>/pagefind/, so the built site serves
+    # the index alongside its pages (an uncommitted artifact) and nothing lands
+    # in the process working directory. The index is not used as a context
+    # manager, whose exit would write a second time.
+    async with ResponsivePagefindService() as service:
+        index = await service.create_index({"output_path": str(output_path)})
         response = await index.add_directory(str(html_root))
         if inject is not None:
             # Injection seam: the custom-record step adds the unified search
             # records and relevance weights here, before the index is written.
             await inject(index)
+        await index.write_files(output_path=str(output_path))
     # The directory-pass response is a dict carrying the indexed page count.
     if isinstance(response, dict):
         return int(response.get("page_count", 0) or 0)

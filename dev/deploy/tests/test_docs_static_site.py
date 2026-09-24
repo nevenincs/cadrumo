@@ -8,6 +8,8 @@ import gzip
 import http.server
 import inspect
 import json
+import os
+import sys
 import textwrap
 import threading
 from collections.abc import Callable, Iterator
@@ -20,6 +22,7 @@ import dev.docs.i18n as _docs_i18n
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.tests.env_scope import scoped_env_var
+from dev._paths import REPO_ROOT
 from dev.docs.build import pagefind_index_mode
 from dev.docs.pagefind_index import DECIDED_INJECTED_RECORD_KINDS
 from dev.docs.sequence_build_gate import SEQUENCE_CHECK_SKIP_ENV, should_check_sequences
@@ -30,6 +33,9 @@ from ..docs_static_site import (
     _DOWNLOAD_LATEST_STATIC_PATH,
     _REQUIRED_ARTIFACTS,
     CANONICAL_DOCS_BASE_URL,
+    _build_language_roots,
+    _clear_apex,
+    _compose_apex,
     _dry_run,
     _language_build_environments,
     _language_site_url,
@@ -40,6 +46,7 @@ from ..docs_static_site import (
     language_build_command,
     language_build_environment,
     localized_languages,
+    root_build_jobs,
     site_build_environment,
 )
 
@@ -89,16 +96,8 @@ def _materialise_language_root(html_root: Path, language: str) -> None:
 
 
 def _materialise_apex_root(html_root: Path) -> None:
-    """Write the apex's own artifact set, then the language entry over its index page.
-
-    The apex is a site root in its own right -- it carries the English
-    full-scope build, its sitemap is rooted at the canonical docs URL rather
-    than a language sub-path, and its Pagefind bundle is the one the published
-    site is checked against after upload -- so a tree that omits it is not a
-    complete built site and must not stand in for one here.
-    """
-    _materialise_site_root(html_root, canonical_base=CANONICAL_DOCS_BASE_URL)
-    _write_language_entry(html_root)
+    """Compose the apex around the language roots exactly as a publish does."""
+    _compose_apex(html_root)
 
 
 def _materialise_site_root(root: Path, *, canonical_base: str) -> None:
@@ -187,6 +186,7 @@ def test_language_build_command_reuses_the_driver_language_and_out_dir_flags(tmp
         "-m",
         "dev.docs.build",
         "--strict",
+        "--isolated-source",
         "--scope",
         "user",
         "--language",
@@ -196,12 +196,76 @@ def test_language_build_command_reuses_the_driver_language_and_out_dir_flags(tmp
     ]
 
 
+# Each stand-in root records the storage root it was given, then waits until
+# every root has started: roots built one after another never all start, so the
+# wait times out and the root fails. ``ca`` then fails on purpose.
+_ROOT_STAND_IN = textwrap.dedent(
+    """
+    import os, pathlib, sys, time
+    out = pathlib.Path(sys.argv[1])
+    started = out.parent / "started"
+    started.mkdir(parents=True, exist_ok=True)
+    (started / out.name).touch()
+    deadline = time.monotonic() + 60
+    while len(list(started.iterdir())) < int(sys.argv[2]):
+        if time.monotonic() > deadline:
+            sys.exit(9)
+        time.sleep(0.05)
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "storage.txt").write_text(os.environ["CADRUMO_LOCAL_STORAGE_ROOT"], encoding="utf-8")
+    (out / "jobs.txt").write_text(os.environ["CADRUMO_DOCS_JOBS"], encoding="utf-8")
+    print(f"built {out.name}")
+    sys.exit(3 if out.name == "ca" else 0)
+    """,
+)
+
+
+def test_the_language_roots_build_at_once_each_with_its_own_storage_and_every_failure_named(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Every root runs concurrently, in its own storage root, and a failed root stops the publish by name."""
+    html_root = tmp_path / "html"
+    languages = localized_languages()
+
+    def stand_in(_language: str, out_dir: Path) -> list[str]:
+        return [sys.executable, "-c", _ROOT_STAND_IN, str(out_dir), str(len(languages))]
+
+    with pytest.raises(SystemExit, match=r"failed for ca \(3\); refusing to publish") as refused:
+        _build_language_roots(REPO_ROOT, html_root, command_for=stand_in)
+
+    assert "9)" not in str(refused.value), "the roots did not all run at once"
+    storage_roots = {(html_root / language / "storage.txt").read_text(encoding="utf-8") for language in languages}
+    assert len(storage_roots) == len(languages)
+    expected_jobs = root_build_jobs(languages, os.cpu_count() or 1)
+    for language in languages:
+        assert (html_root / language / "jobs.txt").read_text(encoding="utf-8") == expected_jobs[language]
+    output = capsys.readouterr().out
+    for language in languages:
+        assert f"built {language}" in output
+
+
+@pytest.mark.parametrize("cpus", [1, 2, 4, 12, 64])
+def test_concurrent_roots_share_the_cpus_the_full_scope_root_taking_half(cpus: int) -> None:
+    """The roots never fork more workers than CPUs between them once each has one."""
+    languages = localized_languages()
+    jobs = {language: int(count) for language, count in root_build_jobs(languages, cpus).items()}
+
+    assert set(jobs) == set(languages)
+    assert min(jobs.values()) >= 1
+    assert sum(jobs.values()) <= max(cpus, len(languages))
+    source = _docs_i18n.DEFAULT_SOURCE_LANGUAGE
+    assert all(jobs[source] >= count for count in jobs.values())
+    if cpus >= 2 * (len(languages) - 1):
+        assert jobs[source] == cpus // 2
+
+
 def test_language_build_environment_points_the_base_url_at_the_language_root() -> None:
     """Each localized build carries the full Pagefind contract and its own base URL."""
     env = language_build_environment("hu", check_sequences=True)
     assert env["CADRUMO_DOCS_BASE_URL"] == f"{CANONICAL_DOCS_BASE_URL}/hu"
     assert env["CADRUMO_DOCS_PAGEFIND_MODE"] == "full"
-    assert env["CADRUMO_DOCS_JOBS"] == "1"
+    assert env["CADRUMO_DOCS_JOBS"] == "auto"
 
 
 def test_every_deploy_root_pins_the_full_record_injected_search_contract() -> None:
@@ -368,7 +432,7 @@ def test_the_publish_reaches_upload_through_the_composition_the_dry_run_runs() -
     inlined form is refused here by name.
     """
     calls = _direct_calls(_docs_static_site._publish)
-    assert calls.index("_build_site_roots") < calls.index("_validate_built_site") < calls.index("_sync_site"), (
+    assert calls.index("_build_site_roots") < calls.index("_validate_built_site") < calls.index("_upload_release"), (
         f"the publish no longer builds, then validates, then uploads: {calls}"
     )
     inlined = sorted(
@@ -412,23 +476,45 @@ def test_dry_run_refuses_a_root_that_would_publish_incomplete(tmp_path: Path) ->
         _dry_run(tmp_path, build=lambda _: tmp_path)
 
 
-def test_dry_run_refuses_an_apex_missing_the_bundle_the_publish_checks_after_upload(tmp_path: Path) -> None:
-    """The apex is validated as a root BEFORE the upload, not only after it.
-
-    ``_verify_published_search_index`` fetches the apex's served Pagefind entry
-    and compares it against the built file at the apex root, raising when that
-    built file is absent -- but it runs after the sync and after the cache
-    invalidation. An apex that cannot satisfy the publish would therefore have
-    written to the live destination first and failed second. The same file is
-    now required before a byte moves, and this deletes exactly it.
-    """
+def test_the_apex_carries_only_the_entry_error_page_and_a_sitemap_index(tmp_path: Path) -> None:
+    """No site is built at the apex; it indexes every language root's sitemap."""
     for language in localized_languages():
         _materialise_language_root(tmp_path, language)
     _materialise_apex_root(tmp_path)
-    (tmp_path / "pagefind" / "pagefind-entry.json").unlink()
 
-    with pytest.raises(SystemExit, match="required artifacts are missing"):
+    apex_files = {entry.name for entry in tmp_path.iterdir() if entry.is_file()}
+    assert apex_files == {"index.html", "404.html", "sitemap.xml"}
+    sitemap = (tmp_path / "sitemap.xml").read_text(encoding="utf-8")
+    for language in localized_languages():
+        assert f"<loc>{_language_site_url(language)}/sitemap.xml</loc>" in sitemap
+
+
+def test_dry_run_refuses_an_apex_sitemap_index_missing_a_root(tmp_path: Path) -> None:
+    for language in localized_languages():
+        _materialise_language_root(tmp_path, language)
+    _materialise_apex_root(tmp_path)
+    dropped = localized_languages()[-1]
+    sitemap = tmp_path / "sitemap.xml"
+    sitemap.write_text(
+        sitemap.read_text(encoding="utf-8").replace(f"{_language_site_url(dropped)}/sitemap.xml", "https://x.invalid/"),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(SystemExit, match="not every language root's sitemap"):
         _dry_run(tmp_path, build=lambda _: tmp_path)
+
+
+def test_clearing_the_apex_keeps_only_the_language_roots(tmp_path: Path) -> None:
+    """A full site left at the apex by an earlier layout is never uploaded as current."""
+    for language in localized_languages():
+        _materialise_language_root(tmp_path, language)
+    (tmp_path / "api").mkdir()
+    (tmp_path / "api" / "stale.html").write_text("x", encoding="utf-8")
+    (tmp_path / "how-to.html").write_text("x", encoding="utf-8")
+
+    _clear_apex(tmp_path)
+
+    assert {entry.name for entry in tmp_path.iterdir()} == set(localized_languages())
 
 
 def test_dry_run_refuses_an_apex_entry_that_strands_a_root(tmp_path: Path) -> None:

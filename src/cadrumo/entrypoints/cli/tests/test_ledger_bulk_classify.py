@@ -335,6 +335,33 @@ def test_classify_from_csv_not_found_raises(tmp_path: Path) -> None:
 # ---------------------------------------------------------------------------
 
 
+def test_rule_add_with_a_governed_category_is_accepted() -> None:
+    """A rule naming a spending category validates it against the pinned authority.
+
+    Reproduction: every ``rule add --category-id`` exited 1 with "spending
+    category catalogue requires an explicit authority operation or scope",
+    because the command validated the category before opening its authority.
+    """
+    result = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "ledger",
+            "rule",
+            "add",
+            "--description-pattern",
+            "material",
+            "--classification",
+            "BUSINESS",
+            "--category-id",
+            "material_oficina",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert json.loads(result.output)["result"]["category_id"] == "material_oficina"
+
+
 def test_rule_add_then_list_shows_rule() -> None:
     add_result = invoke_cached_cli(
         ["app", "ledger", "rule", "add", "--description-pattern", "acme", "--classification", "BUSINESS"],

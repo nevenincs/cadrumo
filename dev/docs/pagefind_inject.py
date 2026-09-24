@@ -454,6 +454,7 @@ async def _inject_records(
         content = _content_for(record)
         if not content:
             continue
+        # Sequential: the indexer drops records added concurrently to one index.
         await index.add_custom_record(
             url=record.target,
             content=content,

@@ -1158,6 +1158,13 @@ test-workbook-parity:
 test-locale-spelling:
     uv run --no-sync pytest -v -n0 -m external_tool dev/locales/tests
 
+# Run the documentation Worker's unit tests. They carry `external_tool`
+# because the Worker is JavaScript and runs under Node.
+[doc('Run the documentation Worker unit tests under Node (external_tool marker).')]
+[group('test')]
+test-docs-worker:
+    uv run --no-sync pytest -v -n0 -m external_tool dev/deploy/tests/test_docs_worker.py
+
 # Run the Homebrew/Scoop channel-artifact conformance tests. These bind
 # the generated formula and manifest to a real built cohort. Explicit paths
 # and -n0, never marker selection alone: a marker-filtered xdist run holds
@@ -1429,7 +1436,9 @@ db-upgrade:
 # check-and-balance verification with no bearing on deployment; publishing
 # writes bytes to a live public destination. The `docs-build` group therefore holds
 # only build and check verbs, and the three recipes below are the only ones in
-# this file that reach outward at all.
+# this file that reach outward at all. They read the Cloudflare delivery
+# credentials from env/.env; CI supplies the same names from the protected
+# `docs` environment and calls the publisher directly.
 #
 # The release group is adjacent but disjoint, and nothing here re-declares
 # any of it: every release recipe is read-only (`release-preview` is a dry-run preview,
@@ -1437,18 +1446,23 @@ db-upgrade:
 # release publication itself lives in CI behind the `pypi` environment
 # (`publish.yml`). The release lane deliberately publishes nothing.
 #
-# These three verbs do NOT share an automation posture, and this group must
+# These verbs do NOT share an automation posture, and this group must
 # not be read as granting one. Each states its own authority below.
 
-[doc('Provision the private Cadrumo documentation stack; external infrastructure mutation requiring explicit confirmation.')]
+[doc('Route both documentation mounts to the Cloudflare Worker; one-time neve.md zone change, local only, explicit confirmation.')]
 [group('docs')]
-docs-stack-provision:
-    uv run --no-sync python -m dev.deploy.docs_static_site provision --confirm provision-cadrumo-docs
+docs-site-provision:
+    uv run --no-sync --env-file env/.env python -m dev.deploy.docs_static_site provision --confirm provision-cadrumo-docs
 
-[doc('Build and upload the Cadrumo documentation site; separate explicit publication confirmation required.')]
+[doc('Build, upload and deploy one documentation release to Cloudflare; separate explicit publication confirmation required.')]
 [group('docs')]
 docs-publish:
-    uv run --no-sync python -m dev.deploy.docs_static_site publish --confirm publish-cadrumo-docs
+    uv run --no-sync --env-file env/.env python -m dev.deploy.docs_static_site publish --confirm publish-cadrumo-docs
+
+[doc('Serve an earlier, already uploaded documentation release again; uploads nothing, explicit confirmation required.')]
+[group('docs')]
+docs-rollback RELEASE:
+    uv run --no-sync --env-file env/.env python -m dev.deploy.docs_static_site rollback --confirm rollback-cadrumo-docs --release {{quote(RELEASE)}}
 
 # ── Release ──────────────────────────────────────────────────────────────────
 

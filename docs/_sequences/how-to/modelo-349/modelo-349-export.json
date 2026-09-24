@@ -569,42 +569,52 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "modelo.export",
-        "error": {
-          "action": {
+        "notices": [
+          {
             "action": null,
-            "argument_bindings": [],
-            "conditionality": "not_applicable",
-            "evidence": [
-              {
-                "condition_id": "filing.application.operation.admissible",
-                "evidence_id": "filing.application.operation.admissible.observation",
-                "provenance": "application_state",
-                "values": {
-                  "error_type": "ModeloApplicationError"
-                }
-              }
-            ],
-            "failed_condition_id": "filing.application.operation.admissible",
-            "missing_argument_names": [],
-            "no_recovery_outcome": "operator_decision"
+            "code": "modelo.export.local_export_not_official_evidence",
+            "context": {
+              "evidence_status": "local_export_not_official_aeat_filing_evidence",
+              "filing_year": "2026",
+              "modelo": "349",
+              "period": "1T"
+            },
+            "message": "The local export is not official filing evidence.",
+            "severity": "warning"
+          }
+        ],
+        "result": {
+          "bucket_event_id": "af42190547e7b9b5a14ade40996412c54201b99fc052e32f56302221691be49b",
+          "bucket_id": "<bucket-id>",
+          "byte_size": 1500,
+          "calculation_revision_id": "569676efbb928505e1ddc3e7b690208a7a5e59b68fe09dacffa03c0665b2044c",
+          "file_sha256": "7b4ba64dbac52dd067f5d0179754b7bd1dd6ecd35665832ada6b0b995309fe46",
+          "filing_year": 2026,
+          "format": "fichero-boe",
+          "modelo": "349",
+          "operation": "modelo.export",
+          "output_path": "modelo-349.boe",
+          "payment_election": "ingreso",
+          "period": {
+            "code": "1T",
+            "filing_year": 2026
           },
-          "category": "FAIL",
-          "code": "FAIL_MODELO_EXPORT",
-          "context": {
-            "calculation_revision_id": "569676efbb928505e1ddc3e7b690208a7a5e59b68fe09dacffa03c0665b2044c",
-            "cause": "application.filing.export_parity.errors.required_casillas_omitted"
+          "prior_domiciliation_election": {
+            "baseline_evidence_reference_id": null,
+            "baseline_filing_record_id": null,
+            "baseline_result_disposition": null,
+            "baseline_source_header_locator": null,
+            "election": "keep"
           },
-          "message": "Could not write the export file for calculation revision 569676efbb928505e1ddc3e7b690208a7a5e59b68fe09dacffa03c0665b2044c.",
-          "retryable": false,
-          "runbook_id": null,
-          "trace_id": null
+          "refund_election": null,
+          "resolved_result_disposition": "I",
+          "work_unit_id": "640a4c074dc06e4238ac45aad87d73d0a3c26458fbe3e1c766bc2d35589f9d5e"
         },
-        "notices": [],
         "schema_version": "2",
-        "status": "error"
+        "status": "warning"
       },
-      "envelope_source": "stderr",
-      "exit_code": 5,
+      "envelope_source": "stdout",
+      "exit_code": 0,
       "kind": "result",
       "stderr_text": null,
       "text": null

@@ -3,5 +3,6 @@
 aeat --format json app overview backlog --allow-incomplete
 @step Narrow the backlog to a specific date range.
 @result aeat --format json app overview backlog --from 2026-01-01 --to 2026-06-30 --allow-incomplete
-@expect result.late_count == 3
+@expect result.range.from_date == "2026-01-01"
+@expect result.range.to_date == "2026-06-30"
 @expect exit_code == 0

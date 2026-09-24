@@ -885,7 +885,7 @@ def storage_tree_targets(
     provisions per bucket, and members whose field is absent are opt-in
     locations the operator has not asked for; neither is materialised here.
     ``include_explicit`` and ``include_derived`` select settings named in, or
-    absent from, :attr:`Settings.model_fields_set`. This lets callers
+    absent from, ``Settings.model_fields_set``. This lets callers
     distinguish application-owned defaults from operator-owned dependencies
     without maintaining a second taxonomy, including when both resolve to the
     same path.
