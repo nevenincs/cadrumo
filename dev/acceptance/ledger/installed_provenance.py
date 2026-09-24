@@ -215,6 +215,8 @@ def _host_free_memory_gb() -> float | None:
     import ctypes
 
     class _MemoryStatus(ctypes.Structure):
+        length: int
+        available_physical: int
         _fields_ = [
             ("length", ctypes.c_ulong),
             ("memory_load", ctypes.c_ulong),

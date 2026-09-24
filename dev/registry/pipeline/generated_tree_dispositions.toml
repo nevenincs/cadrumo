@@ -1,34 +1,34 @@
-# Why a published generated export tree is UNSAFE to republish today. This
-# ledger carries the `record_drift` class only: trees whose shipped record bytes
-# are not what the current inputs produce, so regenerating them would ship
-# whatever the inputs now say - which may be worse than what is there.
-#
-# The gate refuses in both directions. A record-drifting tree with no row here
-# fails, because an unexplained difference in filing data is exactly what nobody
-# notices. A row whose tree has been repaired fails too, so an explanation
-# cannot outlive its cause.
-#
-# Manifest-only staleness is deliberately NOT ledgered. A tree whose records
-# reproduce byte-for-byte and differs only in its generation manifest is safe to
-# republish, and that state arrives in bulk: any refactor of the generator
-# invalidates every manifest at once, twenty-one of them in one sweep on
-# 2026-09-03. Twenty-one rows saying "a refactor moved the generator" would be
-# churn, not explanation. The gate instead asserts the property that makes the
-# class safe - that every such tree really does reproduce its records - and the
-# screen reports the population.
-#
-# A third class, `type_column_contradiction`, carries a tree that REPRODUCES and
-# still contradicts its design: shipped bytes and inputs agree, and the inputs
-# are what the official type column contradicts. Regenerating changes nothing,
-# so a drift row would be dormant on arrival and the reproduction gate would
-# fail it. These rows carry a field_count instead, which is the only count in
-# this file that is load-bearing: it is the size of the contradiction being
-# explained, and it fails when the population moves in either direction.
-#
-# This is not a ratchet. It stores no counts and no ceilings, and shrinking it
-# is not the measure of progress.
-
-schema_version = 4
+# Why a published generated export tree is UNSAFE to republish today. This
+# ledger carries the `record_drift` class only: trees whose shipped record bytes
+# are not what the current inputs produce, so regenerating them would ship
+# whatever the inputs now say - which may be worse than what is there.
+#
+# The gate refuses in both directions. A record-drifting tree with no row here
+# fails, because an unexplained difference in filing data is exactly what nobody
+# notices. A row whose tree has been repaired fails too, so an explanation
+# cannot outlive its cause.
+#
+# Manifest-only staleness is deliberately NOT ledgered. A tree whose records
+# reproduce byte-for-byte and differs only in its generation manifest is safe to
+# republish, and that state arrives in bulk: any refactor of the generator
+# invalidates every manifest at once, twenty-one of them in one sweep on
+# 2026-09-03. Twenty-one rows saying "a refactor moved the generator" would be
+# churn, not explanation. The gate instead asserts the property that makes the
+# class safe - that every such tree really does reproduce its records - and the
+# screen reports the population.
+#
+# A third class, `type_column_contradiction`, carries a tree that REPRODUCES and
+# still contradicts its design: shipped bytes and inputs agree, and the inputs
+# are what the official type column contradicts. Regenerating changes nothing,
+# so a drift row would be dormant on arrival and the reproduction gate would
+# fail it. These rows carry a field_count instead, which is the only count in
+# this file that is load-bearing: it is the size of the contradiction being
+# explained, and it fails when the population moves in either direction.
+#
+# This is not a ratchet. It stores no counts and no ceilings, and shrinking it
+# is not the measure of progress.
+
+schema_version = 4
 [[dispositions]]
 kind = 'below_floor'
 modelo = '232'

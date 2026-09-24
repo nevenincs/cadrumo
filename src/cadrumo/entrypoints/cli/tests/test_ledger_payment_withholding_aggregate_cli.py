@@ -325,7 +325,9 @@ def test_ledger_payroll_capture_refuses_a_large_company_whose_modelo_111_is_mont
         )
         transaction = _seed_payroll_payment(profile)
 
-        exit_code, output = _aggregate("111", "--ledger-payment-withholding", _payroll_payload(transaction.transaction_id))
+        exit_code, output = _aggregate(
+            "111", "--ledger-payment-withholding", _payroll_payload(transaction.transaction_id)
+        )
 
         assert exit_code != 0, output
         error = json.loads(output)["error"]

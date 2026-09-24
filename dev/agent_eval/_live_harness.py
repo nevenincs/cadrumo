@@ -383,7 +383,10 @@ async def run_live_session_async(
     # runner, a notebook) replaces with an in-memory stream that has no fileno,
     # and the spawn then fails before the server starts. The harness owns this
     # sink, closes (and so deletes) it, and attaches its tail to any failure.
-    with tempfile.TemporaryFile(mode="w+", encoding=_UTF_8, errors="replace") as server_stderr:
+    with (
+        tempfile.TemporaryDirectory() as stderr_dir,
+        open(os.path.join(stderr_dir, "server-stderr.log"), "w+", encoding=_UTF_8, errors="replace") as server_stderr,
+    ):
         try:
             async with stdio_client(params, errlog=server_stderr) as (read_stream, write_stream):
                 session: ClientSession

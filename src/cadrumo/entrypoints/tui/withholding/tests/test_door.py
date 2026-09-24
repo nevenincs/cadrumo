@@ -216,7 +216,6 @@ def test_tui_door_captures_and_inspects_professional_annual_detail(tmp_path: Pat
         assert annual[0].source_allocation_id == "professional-1"
 
 
-
 def test_tui_door_refuses_a_large_company_professional_invoice_without_writing(tmp_path: Path) -> None:
     """A large company files Modelo 111 monthly, so the quarterly window is refused and stays empty."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
@@ -241,6 +240,7 @@ def test_tui_door_refuses_a_large_company_professional_invoice_without_writing(t
     assert outcome.status == "refused"
     assert outcome.refusal_code == "withholding_quarterly_window_not_scheduled"
     assert stored == ()
+
 
 def test_tui_door_captures_rent_property_detail_and_inspects_it(tmp_path: Path) -> None:
     """The TUI keeps explicit property evidence on the same rent allocation."""
