@@ -3,12 +3,18 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
-from types import SimpleNamespace
-from typing import Any, cast
+from typing import override
 
 import pytest
+from textual.app import App, ComposeResult
+from textual.pilot import Pilot
+from textual.widgets import Static
+
+from cadrumo.domain.calculations.registry.authority_artifact import AuthorityGenerationPin
+from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
 
 from ..authority import IncomeTaxAuthorityResolution, resolve_income_tax_authority
 from ..scenario import AcceptanceOutcome
@@ -20,6 +26,7 @@ from ..tui_journey import (
     LocalXsdValidationEvidence,
     TuiJourneyError,
     TuiOperationBinding,
+    TuiTerminalEvidence,
     _observe_operation_terminal,
     blocked_tui_journey_evidence,
     build_tui_journey_evidence,
@@ -35,15 +42,32 @@ from ..tui_journey import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
+@dataclass(frozen=True, slots=True)
+class _Support:
+    floor: int
+
+
+@dataclass(frozen=True, slots=True)
+class _Revision:
+    id: str
+    export_layouts: tuple[ExportLayoutDefinition, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class _Snapshot:
+    revision: _Revision
+
+
 class _Operation:
-    generation = SimpleNamespace(logical_generation="a" * 64)
+    @property
+    def generation(self) -> AuthorityGenerationPin:
+        return AuthorityGenerationPin(logical_generation="a" * 64, reader_incarnation="b" * 64)
 
-    def supported_filing_years(self) -> SimpleNamespace:
-        return SimpleNamespace(floor=2022)
+    def supported_filing_years(self) -> _Support:
+        return _Support(floor=2022)
 
-    def snapshot(self, modelo: str, *, filing_year: int, period: str) -> SimpleNamespace:
-        revision = SimpleNamespace(id=f"{modelo}-{filing_year}", export_layouts=())
-        return SimpleNamespace(revision=revision)
+    def snapshot(self, modelo: str, /, *, filing_year: int, period: str) -> _Snapshot:
+        return _Snapshot(revision=_Revision(id=f"{modelo}-{filing_year}", export_layouts=()))
 
 
 def _resolution() -> IncomeTaxAuthorityResolution:
@@ -80,28 +104,35 @@ def test_installed_lifecycle_contract_uses_the_real_actions_without_claiming_ent
     assert "calculate.activation" not in contract.missing_controls()
 
 
+class _NoPausePilot(Pilot[None]):
+    """A real pilot that fails if the observed control is not visible on the first poll."""
+
+    @override
+    async def pause(self, delay: float | None = None) -> None:
+        raise AssertionError("the observed control should be visible on the first poll")
+
+
+class _SingleWidgetApp(App[None]):
+    def __init__(self, widget: Static) -> None:
+        super().__init__()
+        self._widget = widget
+
+    @override
+    def compose(self) -> ComposeResult:
+        yield self._widget
+
+
 def test_refresh_destination_must_be_the_current_installed_screen() -> None:
-    class Screen:
-        def query_one(self, selector: str) -> object:
-            assert selector == "#declarations-list"
-            return object()
+    async def scenario() -> None:
+        app = _SingleWidgetApp(Static(id="declarations-list"))
+        async with app.run_test():
+            await wait_for_tui_refresh(
+                _NoPausePilot(app),
+                binding=TuiOperationBinding("modelo.work.calculate", refresh_result_id="#declarations-list"),
+                maximum_polls=1,
+            )
 
-    class App:
-        screen = Screen()
-
-    class Pilot:
-        app = App()
-
-        async def pause(self) -> None:
-            raise AssertionError("current-screen refresh target should already be visible")
-
-    asyncio.run(
-        wait_for_tui_refresh(
-            Pilot(),
-            binding=TuiOperationBinding("modelo.work.calculate", refresh_result_id="#declarations-list"),
-            maximum_polls=1,
-        )
-    )
+    asyncio.run(scenario())
 
 
 @pytest.mark.parametrize(
@@ -142,39 +173,27 @@ def test_a_modal_that_dismissed_itself_settles_from_the_workspace_notice(
     copy = tr(copy_key)
     notice = copy if explanation is None else f"{copy}: {explanation}"
 
-    class Notice:
-        def render(self) -> str:
-            return notice
-
     class DismissedModal:
         is_mounted = False
 
         def query_one(self, selector: str) -> object:
             raise NoMatches(selector)
 
-    class App:
-        def query_one(self, selector: str) -> object:
-            assert selector == "#modelo-lifecycle-notice"
-            return Notice()
+    async def scenario() -> TuiTerminalEvidence:
+        app = _SingleWidgetApp(Static(notice, id="modelo-lifecycle-notice"))
+        async with app.run_test():
+            return await _observe_operation_terminal(
+                _NoPausePilot(app),
+                modal=DismissedModal(),
+                binding=TuiOperationBinding(
+                    "modelo.work.calculate",
+                    terminal_result_id="#operation-modal-status",
+                    refusal_notice_id="#modelo-lifecycle-notice",
+                ),
+                maximum_polls=1,
+            )
 
-    class Pilot:
-        app = App()
-
-        async def pause(self) -> None:
-            raise AssertionError("a settled notice must classify on the first poll")
-
-    terminal = asyncio.run(
-        _observe_operation_terminal(
-            cast("Any", Pilot()),
-            modal=cast("Any", DismissedModal()),
-            binding=TuiOperationBinding(
-                "modelo.work.calculate",
-                terminal_result_id="#operation-modal-status",
-                refusal_notice_id="#modelo-lifecycle-notice",
-            ),
-            maximum_polls=1,
-        )
-    )
+    terminal = asyncio.run(scenario())
 
     assert terminal.terminal_condition == condition
     assert terminal.receipt_present is False

@@ -40,10 +40,10 @@ def test_installed_cli_rebuilds_the_child_environment_and_delivers_secrets_only_
     monkeypatch.setenv("PYTHONHOME", "must-not-reach-child")
     monkeypatch.setenv("VIRTUAL_ENV", "must-not-reach-child")
     passphrase = secrets.token_urlsafe(24)
-    observed: list[dict[str, object]] = []
+    observed: list[tuple[list[str], dict[str, object]]] = []
 
     def fake_run(argv: list[str], **kwargs: object) -> subprocess.CompletedProcess[str]:
-        observed.append({"argv": argv, **kwargs})
+        observed.append((argv, kwargs))
         return subprocess.CompletedProcess(
             argv,
             0,
@@ -57,9 +57,9 @@ def test_installed_cli_rebuilds_the_child_environment_and_delivers_secrets_only_
     cli.create_profile(year=2025)
 
     assert len(observed) == 2
-    first, second = observed
-    assert passphrase not in first["argv"]
-    assert passphrase not in second["argv"]
+    (first_argv, first), (second_argv, second) = observed
+    assert passphrase not in first_argv
+    assert passphrase not in second_argv
     assert json.loads(str(first["input"])) == {
         "passphrase": passphrase,
         "passphrase_confirmation": passphrase,

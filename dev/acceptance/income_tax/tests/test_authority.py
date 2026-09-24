@@ -2,57 +2,92 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import date
-from types import SimpleNamespace
 
 import pytest
+from pydantic import ValidationError
 
+from cadrumo.core.declaracion_idioma import DeclaracionIdioma
 from cadrumo.core.export_layout_format import ExportLayoutFormat
+from cadrumo.domain.calculations.registry.authority_artifact import AuthorityGenerationPin
 from cadrumo.domain.calculations.registry.errors import RegistryError
+from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
+from cadrumo.domain.calculations.registry.schema_exports import (
+    ExportLayoutDefinition,
+    ExportLineEnding,
+    ExportRecordDefinition,
+)
 
 from ..authority import resolve_income_tax_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_DICTIONARY_SOURCE = "aeat-dr-100-dictionary"
+_LEGAL_REF = "ley-35-2006:art-1"
+
+
+@dataclass(frozen=True, slots=True)
+class _Support:
+    floor: int
+
+
+@dataclass(frozen=True, slots=True)
+class _Revision:
+    id: str
+    export_layouts: tuple[ExportLayoutDefinition, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class _Snapshot:
+    revision: _Revision
+
+
+def _xml_layout() -> ExportLayoutDefinition:
+    return ExportLayoutDefinition(
+        id="modelo-100-xml-dictionary",
+        format=ExportLayoutFormat.XML_DICTIONARY,
+        dictionary_source_ref=_DICTIONARY_SOURCE,
+        source_refs=(_DICTIONARY_SOURCE,),
+        legal_refs=(_LEGAL_REF,),
+        aux_idioma=DeclaracionIdioma.CASTELLANO,
+    )
+
+
+def _fixed_width_layout(*, records: bool) -> ExportLayoutDefinition:
+    record = ExportRecordDefinition(
+        id="modelo-130-record",
+        record_type="130",
+        order=0,
+        encoding=ExportEncoding.ISO_8859_1,
+        line_ending=ExportLineEnding.CRLF,
+    )
+    return ExportLayoutDefinition(
+        id="modelo-130-fichero-boe",
+        format=ExportLayoutFormat.FIXED_WIDTH,
+        source_refs=("aeat-dr-130",),
+        legal_refs=(_LEGAL_REF,),
+        records=(record,) if records else (),
+    )
+
 
 class _Operation:
-    generation = SimpleNamespace(logical_generation="a" * 64)
-
-    def __init__(
-        self,
-        *,
-        missing_years: frozenset[int] = frozenset(),
-        aux_idioma: str | None = "E",
-        dictionary_source_ref: str | None = "aeat-dr-100-dictionary",
-    ) -> None:
+    def __init__(self, *, missing_years: frozenset[int] = frozenset(), m130_records: bool = True) -> None:
         self._missing_years = missing_years
-        self._aux_idioma = aux_idioma
-        self._dictionary_source_ref = dictionary_source_ref
+        self._m130_records = m130_records
 
-    def supported_filing_years(self) -> SimpleNamespace:
-        return SimpleNamespace(floor=2022)
+    @property
+    def generation(self) -> AuthorityGenerationPin:
+        return AuthorityGenerationPin(logical_generation="a" * 64, reader_incarnation="b" * 64)
 
-    def snapshot(self, modelo: str, *, filing_year: int, period: str) -> SimpleNamespace:
+    def supported_filing_years(self) -> _Support:
+        return _Support(floor=2022)
+
+    def snapshot(self, modelo: str, /, *, filing_year: int, period: str) -> _Snapshot:
         if filing_year in self._missing_years:
             raise RegistryError("coordinate unavailable")
-        if modelo == "100":
-            layout = SimpleNamespace(
-                id="modelo-100-xml-dictionary",
-                format=ExportLayoutFormat.XML_DICTIONARY,
-                dictionary_source_ref=self._dictionary_source_ref,
-                aux_idioma=self._aux_idioma,
-                records=(),
-            )
-        else:
-            layout = SimpleNamespace(
-                id="modelo-130-fichero-boe",
-                format=ExportLayoutFormat.FIXED_WIDTH,
-                dictionary_source_ref=None,
-                aux_idioma=None,
-                records=(object(),),
-            )
-        revision = SimpleNamespace(id=f"{modelo}-{filing_year}", export_layouts=(layout,))
-        return SimpleNamespace(revision=revision)
+        layout = _xml_layout() if modelo == "100" else _fixed_width_layout(records=self._m130_records)
+        return _Snapshot(revision=_Revision(id=f"{modelo}-{filing_year}", export_layouts=(layout,)))
 
 
 def test_latest_mode_keeps_the_latest_completed_year_when_runtime_aux_identity_replaces_static_layout_token() -> None:
@@ -60,6 +95,7 @@ def test_latest_mode_keeps_the_latest_completed_year_when_runtime_aux_identity_r
 
     assert report.latest_completed_year == report.selected_year == 2025
     assert report.support_gap_years == 0
+    assert report.authority_generation == "a" * 64
     assert [item.revision for item in report.modelo_130] == ["130-2025", "130-2025"]
     assert report.modelo_100 is not None
     (m100_export,) = report.modelo_100.exports
@@ -76,27 +112,37 @@ def test_runtime_aux_contract_does_not_require_an_obsolete_static_layout_field()
     assert report.modelo_100.exports[0].admission == "admitted"
 
 
-def test_xml_layout_without_declared_aux_idioma_remains_blocked() -> None:
-    report = resolve_income_tax_authority(_Operation(aux_idioma=None), as_of=date(2026, 9, 21))
+def test_xml_layout_cannot_be_declared_without_aux_idioma() -> None:
+    with pytest.raises(ValidationError, match="must declare aux_idioma"):
+        ExportLayoutDefinition(
+            id="modelo-100-xml-dictionary",
+            format=ExportLayoutFormat.XML_DICTIONARY,
+            dictionary_source_ref=_DICTIONARY_SOURCE,
+            source_refs=(_DICTIONARY_SOURCE,),
+            legal_refs=(_LEGAL_REF,),
+        )
 
-    assert report.modelo_100 is not None
-    (m100_export,) = report.modelo_100.exports
-    assert (m100_export.admission, m100_export.refusal_code, m100_export.undeclared_fields) == (
-        "blocked",
-        "application.filing.export_parity.errors.aux_block_undeclared",
-        ("aux_idioma",),
-    )
+
+def test_xml_layout_cannot_be_declared_without_the_official_dictionary_source() -> None:
+    with pytest.raises(ValidationError, match="must declare dictionary_source_ref"):
+        ExportLayoutDefinition(
+            id="modelo-100-xml-dictionary",
+            format=ExportLayoutFormat.XML_DICTIONARY,
+            source_refs=(_DICTIONARY_SOURCE,),
+            legal_refs=(_LEGAL_REF,),
+            aux_idioma=DeclaracionIdioma.CASTELLANO,
+        )
 
 
-def test_xml_layout_without_the_official_dictionary_source_remains_blocked() -> None:
-    report = resolve_income_tax_authority(_Operation(dictionary_source_ref=None), as_of=date(2026, 9, 21))
+def test_fixed_width_layout_without_records_remains_blocked() -> None:
+    report = resolve_income_tax_authority(_Operation(m130_records=False), as_of=date(2026, 9, 21))
 
-    assert report.modelo_100 is not None
-    (m100_export,) = report.modelo_100.exports
-    assert (m100_export.admission, m100_export.refusal_code) == (
-        "blocked",
-        "application.filing.export.errors.layout_not_renderable",
-    )
+    assert report.selected_year == 2025
+    assert {
+        (export.admission, export.renderability, export.refusal_code)
+        for m130 in report.modelo_130
+        for export in m130.exports
+    } == {("blocked", "no_export_records", "application.filing.export.errors.layout_not_renderable")}
 
 
 def test_explicit_year_keeps_the_completed_year_gap_visible() -> None:
