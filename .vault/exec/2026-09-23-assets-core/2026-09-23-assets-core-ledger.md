@@ -5,7 +5,7 @@ tags:
 date: '2026-09-23'
 modified: '2026-09-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:289b23d8cdef5a7acae3bc9b612b7d562d90c06d3c98b9ed43582f710ea70f9a'
+body_hash: 'sha256:1ef17c42692480a8232e2d6f1eb691317096b3ee85c8b2a8b39f96662bf98dd4'
 related:
   - "[[2026-09-23-assets-core-plan]]"
 ---
@@ -95,6 +95,20 @@ related:
 - `S11` `A` `src/cadrumo/domain/renta/actividad_asset/tests/test_workforce.py`
 - `S11` `verify:` `workforce unit tests 5` -> `pass`
 - `S11` `by:` `assets-core`
+- `S13` `A` `src/cadrumo/application/user_profile/plantilla_media_rows.py`
+- `S13` `M` `src/cadrumo/application/user_profile/fact_write.py`
+- `S13` `A` `src/cadrumo/entrypoints/cli/config/plantilla_media.py`
+- `S13` `A` `src/cadrumo/entrypoints/cli/_config_plantilla_media_payloads.py`
+- `S13` `M` `src/cadrumo/entrypoints/cli/config/profile_command_specs.py`
+- `S13` `A` `src/cadrumo/entrypoints/tui/profile/plantilla_media.py`
+- `S13` `M` `src/cadrumo/entrypoints/tui/profile/overview.py`
+- `S13` `M` `src/cadrumo/entrypoints/tui/installed_session.py`
+- `S13` `M` `src/cadrumo/entrypoints/tui/account.py`
+- `S13` `M` `src/cadrumo/entrypoints/tui/launcher.py`
+- `S13` `M` `src/cadrumo/locales/en/cli.yml`
+- `S13` `M` `src/cadrumo/locales/en/flows.yml`
+- `S13` `verify:` `locale audit missing=0` -> `pass`
+- `S13` `by:` `assets-core`
 
 ## Notes
 
@@ -102,4 +116,3 @@ related:
 - `S07` the superseding-claim fixes f92721ce93 and 2f97378e51 postdate wheel 16d5e13e; installed run 3 at 2f97378e51 is queued for the machine-wide installed-run slot
 - `S12` installed run 5 at 150f306c8b proves the tree before S10; the final installed proof of HEAD remains open
 - `S11` resolver wiring waits for the profile schema version 7 field irpf.plantilla_media
-

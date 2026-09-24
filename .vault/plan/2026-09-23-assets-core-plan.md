@@ -12,7 +12,7 @@ related:
   - '[[2026-09-24-assets-core-average-workforce-write-path-adr]]'
 modified: '2026-09-24'
 body_schema: body-v2
-body_hash: 'sha256:66083aa9c456f46c6ec37df7c33570834c7305582a1d2ccb4e4aa4252931d6d5'
+body_hash: 'sha256:162c1a759a45182e29066325d9f6c238fd52fa95081485b9683eb7142dea1277'
 ---
 
 # `assets-core` plan
@@ -41,7 +41,7 @@ S09-S12 were added on 2026-09-23 under the operator's instruction that every cri
 - [x] `S10` - Give the undeclared-vehicle refusal a typed recovery action to the CLI and TUI correction; `src/cadrumo/application/actividad_asset/`.
 - [ ] `S11` - Consume the average-workforce profile fact for job-creating and renewable self-consumption free depreciation; `src/cadrumo/domain/renta/actividad_asset/workforce.py`.
 - [ ] `S12` - Republish the authority once after the format cutover and prove the final tree through one installed run; `dev/acceptance/assets/`.
-- [ ] `S13` - Give the average-workforce profile field a typed CLI and TUI write path against the committed schema version 7, ahead of the S11 resolver wiring; `src/cadrumo/entrypoints/cli/config/`.
+- [x] `S13` - Give the average-workforce profile field a typed CLI and TUI write path against the committed schema version 7, ahead of the S11 resolver wiring; `src/cadrumo/entrypoints/cli/config/`.
 
 ## Parallelization
 
