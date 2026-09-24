@@ -126,10 +126,12 @@ def test_m303_attestation_cli_admits_only_a_sanitized_secure_reference_once(
             "attest-m303-exonerado-390",
             "--year",
             "2025",
+            # Only the year's last return asks the Modelo 390 exemption
+            # (DP30301 Nota 4), so only its period admits the attestation.
             "--period",
-            "1T",
+            "4T",
             "--observed-at",
-            "2025-03-31T12:00:00+00:00",
+            "2025-12-31T12:00:00+00:00",
         ]
     )
 
@@ -140,7 +142,7 @@ def test_m303_attestation_cli_admits_only_a_sanitized_secure_reference_once(
     assert isinstance(attachment_id, str) and len(attachment_id) == 64
     assert attachment_id == sha256
     assert payload["filing_year"] == 2025
-    assert payload["period"] == {"filing_year": 2025, "code": "1T"}
+    assert payload["period"] == {"filing_year": 2025, "code": "4T"}
     assert "profile_witness" not in result.output
     assert "attachment:" not in result.output
     assert "filing_evidence_reference" not in result.output
