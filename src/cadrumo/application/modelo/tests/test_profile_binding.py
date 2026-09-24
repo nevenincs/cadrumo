@@ -407,7 +407,7 @@ def test_string_decimal_profile_raises_type_invalid_error_without_leaking_value(
 ) -> None:
     """A string-typed profile fact in a Decimal channel raises a type-invalid error.
 
-    ``_coerce_profile_fact_value`` promotes canonical Decimal/bool/date strings
+    ``restore_profile_fact_value`` promotes canonical Decimal/bool/date strings
     to their typed counterparts at the Pydantic boundary.  A string that is not
     a valid Decimal, boolean token, or date falls through as ``str``.  The
     Decimal-channel resolver now refuses it via the typed ``ProfileBindingResolutionError``

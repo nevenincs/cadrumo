@@ -17,6 +17,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.profile_path_values import ProfilePathValuesPersistenceAdapter
 from cadrumo.application.user_profile.capsule_record import (
     ProfileRecordMigrationRequiredError,
     ProfileRecordSession,
@@ -320,3 +321,51 @@ def test_a_v7_average_workforce_instance_round_trips_with_its_typed_meaning(
         PlantillaMediaYear(year=2025, average_workforce=Decimal("13.05"), state=PlantillaMediaState.COMMITTED),
     )
     assert str(years[0].average_workforce) == "12.50"
+
+
+def test_the_profile_path_port_reads_average_workforce_as_typed_years(
+    tmp_path: Path,
+    contexts: tuple[ProfileCreateContext, ProfileDecodeContext],
+) -> None:
+    """Consumers read through the path port, which projects every stored value as a string."""
+    create_context, decode_context = contexts
+    instances = (
+        UserProfileFact(path="irpf.plantilla_media.0.year", value=2024),
+        UserProfileFact(path="irpf.plantilla_media.0.average_workforce", value=Decimal("12.50")),
+        UserProfileFact(path="irpf.plantilla_media.0.state", value="observed"),
+        UserProfileFact(path="irpf.plantilla_media.1.year", value=2025),
+        UserProfileFact(path="irpf.plantilla_media.1.average_workforce", value=Decimal("7")),
+        UserProfileFact(path="irpf.plantilla_media.1.state", value="committed"),
+    )
+    _publish(
+        tmp_path, facts=(*_UNTOUCHED_FACTS, *instances), create_context=create_context, decode_context=decode_context
+    )
+    session = _session(decode_context)
+    try:
+        port = ProfilePathValuesPersistenceAdapter(repository=ProfileRecordRepository(session=session, root=tmp_path))
+        values = port.load_path_values(bucket_id=str(PROFILE_ID))
+    finally:
+        session.close()
+
+    assert values is not None
+    assert values["irpf.plantilla_media.0.year"] == "2024", "the port projects stored values as strings"
+    assert plantilla_media_years(values) == (
+        PlantillaMediaYear(year=2024, average_workforce=Decimal("12.50"), state=PlantillaMediaState.OBSERVED),
+        PlantillaMediaYear(year=2025, average_workforce=Decimal("7"), state=PlantillaMediaState.COMMITTED),
+    )
+
+
+@pytest.mark.parametrize(
+    ("subfield", "stored"),
+    (("year", "2024.5"), ("average_workforce", "12.505"), ("average_workforce", "-1"), ("state", "planned")),
+)
+def test_a_malformed_stored_string_is_still_refused_after_restoration(subfield: str, stored: str) -> None:
+    """Restoring the stored representation must not loosen any rule."""
+    values = {
+        "irpf.plantilla_media.0.year": "2024",
+        "irpf.plantilla_media.0.average_workforce": "12.50",
+        "irpf.plantilla_media.0.state": "observed",
+        f"irpf.plantilla_media.0.{subfield}": stored,
+    }
+    with pytest.raises(UserProfileValidationError, match=rf"irpf\.plantilla_media\.0\.{subfield}"):
+        plantilla_media_years(values)

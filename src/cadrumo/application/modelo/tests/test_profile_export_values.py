@@ -129,7 +129,7 @@ def test_a_declared_identity_slot_is_populated_from_the_profile(*, operation: Pi
     assert values["SEXO_D"] == "M"
     assert values["ZCCAD"] == "madrid"
     # Decimal, not "1", and deliberately so. `UserProfileFact` runs
-    # `_coerce_profile_fact_value`, which restores the Decimal and date types
+    # `restore_profile_fact_value`, which restores the Decimal and date types
     # JSON drops on persistence -- a stored "1" is indistinguishable from a
     # round-tripped Decimal(1), and the model resolves that ambiguity towards
     # Decimal. Values with an insignificant leading zero (postcodes) are

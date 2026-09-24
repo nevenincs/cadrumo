@@ -5,6 +5,10 @@ Each instance lives at ``irpf.plantilla_media.{n}`` with three subfields:
 "con dos decimales", so more places are refused, never rounded) and ``state``
 (``observed`` for a closed year, ``committed`` for a year still open). A year
 without an instance is undeclared; it never reads as zero.
+
+Values arrive either typed, from a record's facts, or as the stored strings
+the profile path port projects. Both are read through the one restoration
+every stored fact takes, so a port reader and a record reader agree.
 """
 
 from __future__ import annotations
@@ -16,6 +20,7 @@ from enum import StrEnum
 from typing import Final
 
 from .errors import UserProfileValidationError
+from .values import restore_profile_fact_value
 
 PLANTILLA_MEDIA_PATH: Final[str] = "irpf.plantilla_media"
 """The declared object field whose instances this module reads."""
@@ -131,9 +136,10 @@ def plantilla_media_refusals(values: Mapping[str, object]) -> tuple[PlantillaMed
     """
     refusals: list[PlantillaMediaRefusal] = []
     instances: dict[int, dict[str, object]] = {}
-    for path, value in sorted(values.items()):
-        if value is None or not (path == PLANTILLA_MEDIA_PATH or path.startswith(f"{PLANTILLA_MEDIA_PATH}.")):
+    for path, raw in sorted(values.items()):
+        if raw is None or not (path == PLANTILLA_MEDIA_PATH or path.startswith(f"{PLANTILLA_MEDIA_PATH}.")):
             continue
+        value = restore_profile_fact_value(raw)
         located = _instance_path(path)
         if located is None or located[1] not in _SUBFIELDS:
             refusals.append(
@@ -192,7 +198,7 @@ def plantilla_media_years(values: Mapping[str, object]) -> tuple[PlantillaMediaY
     for path, value in values.items():
         located = _instance_path(path)
         if located is not None and value is not None:
-            instances.setdefault(located[0], {})[located[1]] = value
+            instances.setdefault(located[0], {})[located[1]] = restore_profile_fact_value(value)
     years = [
         PlantillaMediaYear(
             year=int(str(fields["year"])),
