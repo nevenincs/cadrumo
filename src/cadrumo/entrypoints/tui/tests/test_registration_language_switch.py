@@ -18,6 +18,8 @@ so a catalogue that translated nothing could not pass either.
 
 from __future__ import annotations
 
+import time
+
 import pytest
 from textual.widgets import Button, Input, Label, Select, Static
 from textual.widgets._select import SelectOverlay
@@ -32,6 +34,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.user_profile.login_session import login_profile
 from ....core.bucket_pointer import require_active_bucket_id
+from ....core.config import override_settings
 from ....core.credentials import assess_profile_password
 from ....core.i18n.render import output_language, tr
 from ....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
@@ -63,18 +66,22 @@ def _screen() -> RegistrationScreen:
     )
 
 
-async def _wait_for_screen(pilot, screen_type: type, *, composed: str, polls: int = 300) -> bool:
+async def _wait_for_screen(pilot, screen_type: type, *, composed: str, deadline_seconds: float = 180.0) -> bool:
     """Pause until ``screen_type`` is active and ``composed`` is queryable on it.
 
-    Creation runs real key derivation, and a pushed screen is active before
-    its ``compose`` has run, so both the screen and one of its widgets are
-    awaited before the page's words are read.
+    Creation and recovery enrolment run real key derivation, and a pushed
+    screen is active before its ``compose`` has run, so both the screen and one
+    of its widgets are awaited before the page's words are read. The bound is
+    wall-clock rather than a poll count: key derivation on a contended host
+    outlasted a fixed thirty-second budget, and a slow host is not a failure
+    of the screen under test.
     """
 
     def _ready() -> bool:
         return isinstance(pilot.app.screen, screen_type) and bool(pilot.app.screen.query(composed))
 
-    for _ in range(polls):
+    deadline = time.monotonic() + deadline_seconds
+    while time.monotonic() < deadline:
         if _ready():
             return True
         await pilot.pause(0.1)
@@ -343,7 +350,13 @@ async def test_the_chosen_language_does_not_outlive_the_screen(tmp_path) -> None
     override was live inside the screen, an unchanged caller language
     would be equally consistent with a chooser that never worked at all.
     """
-    with isolated_profile_storage_root(tmp_path=tmp_path):
+    # The caller's language is pinned in its own settings scope, so what this
+    # test measures is the screen and never a language an earlier test left
+    # resolved in the process.
+    with (
+        isolated_profile_storage_root(tmp_path=tmp_path),
+        override_settings(cadrumo_output_language=_STARTING_LANGUAGE),
+    ):
         before = output_language()
         assert before != _TARGET_LANGUAGE, (
             "the caller must not already be speaking the target language, or this test proves nothing"
