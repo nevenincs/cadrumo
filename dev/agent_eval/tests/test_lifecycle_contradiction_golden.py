@@ -40,6 +40,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_cli_backend
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli
 from cadrumo.tests.cli_envelope import parse_json_object, require_error_document, require_schema_envelope
 from cadrumo_harness.mcp.tools import build_tool_descriptors
@@ -52,7 +53,11 @@ from ._scripted_registration_channels import (
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-pytest_plugins = ("cadrumo.adapters.persistence.storage.tests.secure_sql",)
+
+# Bound into this module, not named in ``pytest_plugins``: a plugin a test module
+# names is registered for the whole session, so its autouse fixtures - one pins
+# English output - would reach every test collected after this one, anywhere.
+__all__ = ["isolated_cli_backend"]
 
 _PROFILE_ID = "operator"
 _MODELO = "347"
