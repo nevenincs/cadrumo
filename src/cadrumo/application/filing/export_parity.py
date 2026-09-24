@@ -30,7 +30,7 @@ None of the three is a property of the layout alone: each is scoped to what
 *this* filing's disposition actually files. The bank-account (DID) page is the
 worked case -- it belongs to the layout but reaches disk only where the fichero
 must carry an account, so a casilla it carries is required on such a filing and
-out of scope otherwise. :func:`_did_page_suppressed` is therefore the shared
+out of scope otherwise. :func:`did_page_suppressed` is therefore the shared
 predicate behind representability and record order alike, and lives here with the
 disposition-scoped concern rather than beside the renderer that also consults it.
 
@@ -139,7 +139,7 @@ def _did_page_required(
     )
 
 
-def _did_page_suppressed(
+def did_page_suppressed(
     record: ExportRecordDefinition,
     *,
     draft: ModeloDraft,
@@ -211,7 +211,7 @@ def boe_representable_casilla_ids(
         tuple(
             record
             for record in layout.records
-            if not _did_page_suppressed(
+            if not did_page_suppressed(
                 record,
                 draft=draft,
                 headers=headers,
@@ -277,7 +277,7 @@ def _rendered_row_binding_casilla_ids(
     }
     rendered: set[CasillaId] = set()
     for record in layout.records:
-        if _did_page_suppressed(
+        if did_page_suppressed(
             record,
             draft=draft,
             headers=headers,
@@ -561,7 +561,7 @@ def _declared_records_for_filing(
     return tuple(
         record
         for record in layout.records
-        if not _did_page_suppressed(
+        if not did_page_suppressed(
             record,
             draft=draft,
             headers=headers,
@@ -705,9 +705,6 @@ def _assert_casilla_metadata_fidelity(
             "casilla_drifts": tuple(drifts),
         },
     )
-
-
-did_page_suppressed = _did_page_suppressed
 
 
 def assert_xml_declaration_aux_declared(layout: ExportLayoutDefinition, *, aux_version: str) -> None:
