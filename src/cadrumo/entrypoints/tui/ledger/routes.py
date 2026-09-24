@@ -29,13 +29,13 @@ from .models import (
     LedgerImportDoorV1,
     LedgerInvoiceAddDoorV1,
     LedgerLinkSubmitterV1,
+    LedgerRecordDoorsV1,
     LedgerRouteRefusalV1,
     LedgerRouteTargetV1,
     declared_ledger_destination_ids,
 )
 from .overview import LedgerOverviewScreen
 from .reconciliation import LedgerReconciliationScreen
-from .record_doors import LedgerRecordDoors
 from .review import LedgerReviewScreen
 from .workspace_injection import LedgerWorkspaceInjection, LedgerWorkspaceRefreshDoorV1
 from .workspace_presentation import ledger_workspace_page
@@ -160,7 +160,7 @@ def ledger_screen_factory(
     evidence_door: LedgerEvidenceDoorV1 | None = None,
     refresh: LedgerWorkspaceRefreshDoorV1 | None = None,
     activity_asset_actions: ActivityAssetTuiActionsV1 | None = None,
-    record_doors: LedgerRecordDoors | None = None,
+    record_doors: LedgerRecordDoorsV1 | None = None,
 ) -> TuiScreenFactoryV1:
     """Bind an injected immutable projection to the outer navigation factory contract."""
     injection = LedgerWorkspaceInjection(

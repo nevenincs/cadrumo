@@ -22,7 +22,7 @@ from .....domain.transactions.errors import TransactionValidationError
 from .....domain.transactions.models import Transaction
 from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..controller import LedgerWorkspaceController
-from ..record_doors import LedgerRecordDoors
+from ..models import LedgerRecordDoorsV1
 from ..record_views import LedgerInvoiceCatalogueScreen, LedgerInvoiceDetailScreen, LedgerTransactionDetailScreen
 from ..workspace_injection import LedgerWorkspaceInjection
 from .test_ledger_selection_journey import _WorkspaceHostApp
@@ -92,14 +92,14 @@ def _controller(door: _RecordDoor) -> LedgerWorkspaceController:
     return LedgerWorkspaceController(
         ledger_context(),
         ledger_projection(),
-        LedgerWorkspaceInjection(review_action=ledger_review_action(), record_doors=cast(LedgerRecordDoors, door)),
+        LedgerWorkspaceInjection(review_action=ledger_review_action(), record_doors=cast(LedgerRecordDoorsV1, door)),
     )
 
 
 @pytest.mark.asyncio
 async def test_invoice_catalogue_opens_canonical_detail_and_saves_reviewed_notes() -> None:
     door = _RecordDoor(_invoice())
-    screen = LedgerInvoiceCatalogueScreen(_controller(door), cast(LedgerRecordDoors, door))
+    screen = LedgerInvoiceCatalogueScreen(_controller(door), cast(LedgerRecordDoorsV1, door))
     with override_settings(cadrumo_output_language="en"):
         async with _WorkspaceHostApp(screen).run_test(size=(110, 55)) as pilot:
             await pilot.app.workers.wait_for_complete()
@@ -163,7 +163,9 @@ async def test_linked_transaction_detail_shows_refusal_without_claiming_a_save()
         ),
     )
     door = _LinkedRecordDoor(invoice, transaction)
-    screen = LedgerTransactionDetailScreen(_controller(door), cast(LedgerRecordDoors, door), transaction.transaction_id)
+    screen = LedgerTransactionDetailScreen(
+        _controller(door), cast(LedgerRecordDoorsV1, door), transaction.transaction_id
+    )
     with override_settings(cadrumo_output_language="en"):
         async with _WorkspaceHostApp(screen).run_test(size=(110, 55)) as pilot:
             await pilot.app.workers.wait_for_complete()
@@ -200,12 +202,12 @@ async def test_imported_record_details_show_stored_filename_and_row() -> None:
     door = _LinkedRecordDoor(invoice, transaction)
     controller = _controller(door)
     with override_settings(cadrumo_output_language="en"):
-        invoice_screen = LedgerInvoiceDetailScreen(controller, cast(LedgerRecordDoors, door), invoice.invoice_id)
+        invoice_screen = LedgerInvoiceDetailScreen(controller, cast(LedgerRecordDoorsV1, door), invoice.invoice_id)
         async with _WorkspaceHostApp(invoice_screen).run_test(size=(110, 55)) as pilot:
             await pilot.app.workers.wait_for_complete()
             assert "march-statement.csv:7" in str(invoice_screen.query_one("#ledger-record-detail", Static).render())
         transaction_screen = LedgerTransactionDetailScreen(
-            controller, cast(LedgerRecordDoors, door), transaction.transaction_id
+            controller, cast(LedgerRecordDoorsV1, door), transaction.transaction_id
         )
         async with _WorkspaceHostApp(transaction_screen).run_test(size=(110, 55)) as pilot:
             await pilot.app.workers.wait_for_complete()

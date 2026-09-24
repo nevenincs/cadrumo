@@ -19,11 +19,10 @@ from .....core.config import override_settings
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.iva.classification import InvoiceKind
 from ....tui.components.host import ScreenHostApp
-from ...ledger_doors import ledger_invoice_add_door
+from ...ledger_doors import LedgerRecordDoors, ledger_invoice_add_door
 from ..controller import LedgerWorkspaceController
 from ..invoice_entry import LedgerInvoiceEntryScreen
 from ..models import LedgerFlowState, LedgerInvoiceAddResultV1, LedgerInvoiceEntryV1, LedgerInvoiceLineEntryV1
-from ..record_doors import LedgerRecordDoors
 from ..record_views import LedgerInvoiceDetailScreen
 from ..workspace_injection import LedgerWorkspaceInjection
 from .test_ledger_selection_journey import _WorkspaceHostApp

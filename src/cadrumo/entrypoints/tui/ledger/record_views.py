@@ -17,14 +17,14 @@ from ..components.widgets import ContentDataTable
 from ..components.workspace_host import replace_workspace_body
 from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen, ledger_copy
 from .invoice_entry import invoice_line_row
-from .record_doors import LedgerRecordDoors
+from .models import LedgerRecordDoorsV1
 from .workspace_presentation import door_refusal_text, ledger_workspace_page
 
 
 class LedgerInvoiceCatalogueScreen(LedgerWorkspaceScreen):
     """Read the bucket's canonical invoices and open one by its full identity."""
 
-    def __init__(self, controller: LedgerWorkspaceController, doors: LedgerRecordDoors) -> None:
+    def __init__(self, controller: LedgerWorkspaceController, doors: LedgerRecordDoorsV1) -> None:
         """Keep the injected bucket-bound door for every later selection."""
         super().__init__(controller, id="ledger-invoice-catalogue-screen")
         self.doors = doors
@@ -85,7 +85,7 @@ class LedgerInvoiceCatalogueScreen(LedgerWorkspaceScreen):
 class LedgerInvoiceDetailScreen(LedgerWorkspaceScreen):
     """Read an invoice, then submit a supported notes patch against its baseline."""
 
-    def __init__(self, controller: LedgerWorkspaceController, doors: LedgerRecordDoors, invoice_id: str) -> None:
+    def __init__(self, controller: LedgerWorkspaceController, doors: LedgerRecordDoorsV1, invoice_id: str) -> None:
         """Capture the selected invoice and door before any navigation changes."""
         super().__init__(controller, id="ledger-invoice-detail-screen")
         self.doors = doors
@@ -229,7 +229,7 @@ class LedgerInvoiceDetailScreen(LedgerWorkspaceScreen):
 class LedgerTransactionDetailScreen(LedgerWorkspaceScreen):
     """Read and edit one transaction through the shared manual operation."""
 
-    def __init__(self, controller: LedgerWorkspaceController, doors: LedgerRecordDoors, transaction_id: str) -> None:
+    def __init__(self, controller: LedgerWorkspaceController, doors: LedgerRecordDoorsV1, transaction_id: str) -> None:
         """Capture the selected transaction identity and bound door."""
         super().__init__(controller, id="ledger-transaction-detail-screen")
         self.doors = doors

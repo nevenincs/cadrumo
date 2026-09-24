@@ -10,6 +10,7 @@ from typing import Final, Literal, Protocol, get_args
 
 from pydantic import BaseModel, Field, model_validator
 
+from ....application.invoices.catalogue_lifecycle import CatalogueInvoicePatch
 from ....application.ledger.actions_import import LedgerProviderID
 from ....application.ledger.attachment_review import AttachmentReviewItem
 from ....application.ledger.models import (
@@ -30,8 +31,10 @@ from ....core.country_code import CountryCodeAlpha2
 from ....core.identity.hex_ids import InvoiceId
 from ....core.identity.transaction_ids import TransactionId
 from ....core.models import STRICT_FROZEN_CONFIG
+from ....domain.invoices.models import Invoice
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.schema import IvaCategory
+from ....domain.transactions.models import Transaction
 
 type LedgerDestinationIdV1 = Literal[
     "ledger.overview",
@@ -360,6 +363,34 @@ class LedgerInvoiceAddDoorV1(Protocol):
         ...
 
 
+class LedgerRecordDoorsV1(Protocol):
+    """Injected application doors that read and edit canonical invoice and transaction records.
+
+    The bound implementation captures one profile and authority generation,
+    so navigating between records can never retarget a write.
+    """
+
+    async def invoices(self) -> tuple[Invoice, ...]:
+        """List the bucket's canonical invoices."""
+        ...
+
+    async def invoice(self, invoice_id: str) -> Invoice:
+        """Resolve one canonical invoice by its full identity."""
+        ...
+
+    async def update_invoice(self, baseline: Invoice, patch: CatalogueInvoicePatch) -> Invoice:
+        """Submit a baseline-guarded metadata patch through the shared writer."""
+        ...
+
+    async def transaction(self, transaction_id: str) -> Transaction:
+        """Resolve one typed transaction."""
+        ...
+
+    async def update_transaction(self, baseline: Transaction, patch: ManualLedgerTransactionPatch) -> Transaction:
+        """Apply a typed edit against the captured transaction baseline."""
+        ...
+
+
 class LedgerEvidenceRecordStatus(StrEnum):
     """Where one registered document stands; unmeasured is not the same as awaiting."""
 
@@ -556,6 +587,7 @@ __all__ = [
     "LedgerLinkSubmissionV1",
     "LedgerLinkSubmitterV1",
     "LedgerReaderReadinessV1",
+    "LedgerRecordDoorsV1",
     "LedgerReviewRowV1",
     "LedgerRouteRefusalV1",
     "LedgerRouteTargetV1",

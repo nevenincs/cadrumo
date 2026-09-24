@@ -34,7 +34,7 @@ from .models import (
 
 if TYPE_CHECKING:
     from .actividad_asset import ActivityAssetTuiActionsV1
-    from .record_doors import LedgerRecordDoors
+    from .models import LedgerRecordDoorsV1
 
 
 @dataclass(frozen=True, slots=True)
@@ -73,7 +73,7 @@ class LedgerWorkspaceInjection:
     """Re-read the projection after a write; without it a flow shows its own result only."""
     activity_asset_actions: ActivityAssetTuiActionsV1 | None = None
     """Shared encrypted activity-asset operations; absent means no asset affordance."""
-    record_doors: LedgerRecordDoors | None = None
+    record_doors: LedgerRecordDoorsV1 | None = None
     """Bucket-bound canonical invoice and transaction detail operations."""
 
     def __post_init__(self) -> None:
