@@ -77,7 +77,7 @@ _SENTINEL_BYTES = (
 
 
 def _settings(tmp_path: Path) -> Settings:
-    return Settings(cadrumo_local_storage_root=tmp_path)
+    return Settings(cadrumo_local_storage_root=tmp_path, cadrumo_profile_kdf_measure_calibration=True)
 
 
 def _kdf(

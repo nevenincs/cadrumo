@@ -162,6 +162,9 @@ def source_tree_ast() -> Mapping[Path, ast.AST]:
     return cache
 
 
+_KDF_MEASURE_CALIBRATION_ENV = "CADRUMO_PROFILE_KDF_MEASURE_CALIBRATION"
+
+
 @pytest.fixture(scope="session", autouse=True)
 def _skip_profile_kdf_grid_measurement() -> Iterator[None]:
     """Stop every profile registration re-benchmarking this host's KDF grid.
@@ -181,23 +184,26 @@ def _skip_profile_kdf_grid_measurement() -> Iterator[None]:
     every custody envelope a test opens is wrapped at a strength production
     also accepts.
 
-    Session-scoped and outermost, which is what makes it survive: a nested
-    ``override_settings`` setting other fields keeps this value (checked), so
-    the many tests that override a storage root do not silently re-enable
-    measurement.
+    Set through the environment rather than a session-long ``override_settings``
+    block. An override is a frozen snapshot of EVERY field, the storage root
+    included, so holding one open for the session made every later test in the
+    worker that isolates itself through the environment -- as the MCP harness
+    and subprocess CLI tests do -- silently run against the collection root
+    instead. The variable reaches every ``Settings`` resolution and every child
+    process, and each nested ``override_settings`` still inherits it.
 
-    It cannot reach the calibration gate. ``calibrate_profile_kdf`` consults
-    ``settings or load_settings()``, and
-    ``custody/tests/test_kdf_supervision.py`` passes an explicitly constructed
-    ``Settings``; ``override_settings`` does not reach a directly-constructed
-    ``Settings`` (checked: ``load_settings()`` reads False here while
-    ``Settings()`` still reads True). So the behaviour this skips is still
-    proven, by the module that owns it.
+    ``custody/tests/test_kdf_supervision.py`` proves the measurement itself, so
+    it sets the field explicitly on the ``Settings`` it constructs.
     """
-    from .core.config import override_settings
-
-    with override_settings(cadrumo_profile_kdf_measure_calibration=False):
+    previous = os.environ.get(_KDF_MEASURE_CALIBRATION_ENV)
+    os.environ[_KDF_MEASURE_CALIBRATION_ENV] = "false"
+    try:
         yield
+    finally:
+        if previous is None:
+            os.environ.pop(_KDF_MEASURE_CALIBRATION_ENV, None)
+        else:
+            os.environ[_KDF_MEASURE_CALIBRATION_ENV] = previous
 
 
 @pytest.fixture(scope="session", autouse=True)
