@@ -20,7 +20,7 @@ from textual.command import DiscoveryHit, Hit, Hits, Provider
 
 from ...core.errors.hierarchy import CadrumoError
 from .components.account_chrome import AccountActionV1, TuiAccountHostV1, account_action_help, account_action_label
-from .components.theme import AppearanceHost, toggle_appearance
+from .components.theme import toggle_appearance
 from .navigation import TuiScreenContextV1
 from .profile.overview import ProfileManagerScreen
 from .secret.login import LoginScreen
@@ -29,6 +29,7 @@ from .secret.passphrase import PassphraseChangeAttempt, PassphraseScreen
 if TYPE_CHECKING:
     from decimal import Decimal
 
+    from textual.app import App
     from textual.screen import Screen
 
     from ...application.operations.composition import OperationComposedServices
@@ -46,7 +47,7 @@ if TYPE_CHECKING:
 type AccountProfileFactoryV1 = Callable[[TuiScreenContextV1], ProfileManagerScreen]
 type AccountChangeUserFactoryV1 = Callable[[], LoginScreen]
 type AccountPasswordFactoryV1 = Callable[[], PassphraseScreen]
-type AccountAppearanceFactoryV1 = Callable[[AppearanceHost], str]
+type AccountAppearanceFactoryV1 = Callable[[App[AccountRecomposeRequiredV1 | None]], str]
 type AccountLanguageFactoryV1 = Callable[[ProfileManagerScreen], None]
 type AccountSignOutFactoryV1 = Callable[[], Awaitable[OperationController]]
 

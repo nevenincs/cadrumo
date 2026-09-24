@@ -87,6 +87,9 @@ if TYPE_CHECKING:
     from ....domain.user_profile.plantilla_media import PlantillaMediaState, PlantillaMediaYear
 
 
+type ProfileFieldPersist = Callable[[str, str, int, str], ProfileOverview]
+"""The one-field write door: path, value, and the revision and digest the edit was made against."""
+
 _PRESENT_GLYPH = "●"
 """Marks a field carrying a value. A glyph, not colour alone."""
 
@@ -453,7 +456,7 @@ class ProfileManagerScreen(TypedAppAccess, AccountChromeScreen):
         self,
         overview: ProfileOverview,
         *,
-        persist: Callable[[str, str, int, str], ProfileOverview],
+        persist: ProfileFieldPersist,
         add_row: Callable[[str, Mapping[str, str], int, str], ProfileOverview] | None = None,
         update_row: Callable[[str, str, Mapping[str, str], Sequence[str], int, str], ProfileOverview] | None = None,
         remove_row: Callable[[str, str, int, str], ProfileOverview] | None = None,
@@ -749,7 +752,7 @@ class ProfileManagerScreen(TypedAppAccess, AccountChromeScreen):
         self.app.push_screen(
             RepeatableRowRemoveScreen(section.key, row_key),
             lambda confirmed: self._remove_repeatable_row(
-                section.key, row_key, baseline_revision, baseline_digest, confirmed
+                section.key, row_key, baseline_revision, baseline_digest, confirmed is True
             ),
         )
 
@@ -1371,7 +1374,7 @@ class ProfileManagerScreen(TypedAppAccess, AccountChromeScreen):
         """
         if event.state not in {WorkerState.SUCCESS, WorkerState.ERROR, WorkerState.CANCELLED}:
             return
-        event_worker: object = event.worker
+        event_worker = cast("object", event.worker)
         pending_write = self._pending_write
         if pending_write is not None and event_worker is pending_write:
             await self._settle_write(pending_write)
@@ -1526,5 +1529,6 @@ class ProfileManagerScreen(TypedAppAccess, AccountChromeScreen):
 
 
 __all__ = [
+    "ProfileFieldPersist",
     "ProfileManagerScreen",
 ]

@@ -32,7 +32,7 @@ from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.user_profile.fact_write import apply_manager_profile_field_mutation
 from ....application.user_profile.login_session import login_profile
-from ....application.user_profile.overview import build_profile_overview
+from ....application.user_profile.overview import ProfileOverview, build_profile_overview
 from ....application.user_profile.registration import register_profile_with_credentials
 from ....core.bucket_pointer import require_active_bucket_id
 from ....core.i18n.render import tr
@@ -40,7 +40,7 @@ from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....tests.env_scope import output_language_scope
 from ..components.host import ScreenHostApp
-from ..profile.overview import ProfileManagerScreen
+from ..profile.overview import ProfileFieldPersist, ProfileManagerScreen
 from .manager_pilot import wait_until_settled
 
 pytestmark = [
@@ -137,7 +137,9 @@ def _manager() -> ProfileManagerScreen:
         _ensure_logged_in()
         record = load_test_profile_record(require_active_bucket_id())
 
-        def persist(path: str, value: str):
+        def persist_door(
+            path: str, value: str, expected_revision: int, expected_content_digest: str
+        ) -> ProfileOverview:
             # The write door runs on a worker thread, which inherits no lease.
             with bundled_indexed_authority().operation():
                 _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
@@ -145,9 +147,13 @@ def _manager() -> ProfileManagerScreen:
                     profile_id=require_active_bucket_id(),
                     path=path,
                     value=value,
+                    expected_revision=expected_revision,
+                    expected_content_digest=expected_content_digest,
                     profile_decode_context=_profile_decode_context_for_test,
                 )
                 return build_profile_overview(applied, label=_LABEL, schema=_profile_contexts_for_test()[1].schema)
+
+        persist: ProfileFieldPersist = persist_door
 
         return ProfileManagerScreen(
             build_profile_overview(record, label=_LABEL, schema=_profile_contexts_for_test()[1].schema), persist=persist

@@ -140,11 +140,13 @@ async def test_the_profile_surface_fits_every_terminal_width(tmp_path: Path, siz
         record = load_test_profile_record(require_active_bucket_id())
         overview = build_profile_overview(record, label=_LABEL, schema=_authority_operation.profile_schema())
 
-        def _refuse_write(path: str, value: str) -> ProfileOverview:
+        def _refuse_write(
+            path: str, value: str, expected_revision: int, expected_content_digest: str
+        ) -> ProfileOverview:
             # This proof measures layout, never storage. A write door that
             # raises makes an accidental mutation a failure rather than a
             # silent side effect on the fixture profile.
-            del path, value
+            del path, value, expected_revision, expected_content_digest
             message = "the terminal-size proof never writes"
             raise AssertionError(message)
 

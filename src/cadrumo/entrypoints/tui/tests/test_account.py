@@ -8,6 +8,7 @@ from types import SimpleNamespace
 from typing import NoReturn, cast
 
 import pytest
+from textual.app import App
 
 from ....application.operations.models import OperationRequest
 from ....application.user_profile.acquisition_sources import (
@@ -20,11 +21,11 @@ from ....application.user_profile.overview import ProfileOverview
 from ....core.credentials import ProfilePasswordAssessment
 from ..account import (
     AccountAppearanceFactoryV1,
+    AccountRecomposeRequiredV1,
     AccountSignOutFactoryV1,
     compose_account_factories,
     compose_profile_sign_out_factory,
 )
-from ..components.theme import AppearanceHost
 from ..navigation import TuiFocusIdentityV1, TuiScreenContextV1
 from ..operations.controller import OperationController
 from ..profile.overview import ProfileManagerScreen
@@ -41,10 +42,6 @@ class _LanguageScreen:
 
     def action_choose_language(self) -> None:
         self.opened = True
-
-
-class _Appearance:
-    theme = "cadrumo-light"
 
 
 def _factories(
@@ -65,7 +62,7 @@ def _factories(
         observed_calls.add(name)
         raise AssertionError(f"{name} ran while composing an account screen")
 
-    def default_appearance(_app: AppearanceHost) -> str:
+    def default_appearance(_app: App[AccountRecomposeRequiredV1 | None]) -> str:
         return "appearance.changed"
 
     selected_appearance = appearance or default_appearance
@@ -107,7 +104,7 @@ def test_account_factories_construct_existing_screens_without_host_effects() -> 
     """Composition does not read or mutate; each screen remains its prior owner."""
     calls: set[str] = set()
 
-    def refuse_appearance(_app: AppearanceHost) -> str:
+    def refuse_appearance(_app: App[AccountRecomposeRequiredV1 | None]) -> str:
         calls.add("appearance")
         raise AssertionError("appearance ran while composing an account screen")
 
@@ -174,16 +171,16 @@ def test_profile_factory_refuses_another_destination_before_constructing_a_scree
 
 def test_language_and_appearance_delegates_are_explicit_host_effects() -> None:
     """Language reuses Profile's action and appearance is supplied by the host."""
-    observed_apps: list[AppearanceHost] = []
+    observed_apps: list[App[AccountRecomposeRequiredV1 | None]] = []
 
-    def change_appearance(app: AppearanceHost) -> str:
+    def change_appearance(app: App[AccountRecomposeRequiredV1 | None]) -> str:
         observed_apps.append(app)
         return "appearance.changed"
 
     factories = _factories(appearance=change_appearance)
     language_screen = _LanguageScreen()
     factories.language(cast(ProfileManagerScreen, language_screen))
-    app = _Appearance()
+    app: App[AccountRecomposeRequiredV1 | None] = App()
 
     assert language_screen.opened is True
     assert factories.appearance(app) == "appearance.changed"
