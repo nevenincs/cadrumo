@@ -33,15 +33,15 @@ import pytest
 
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
+from ....core.period import Period
+from ....domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from ....domain.invoices.models import InvoiceCatalogue
+from ....domain.transactions.models import LedgerDatePartition, TransactionCatalogue
 from ...invoices.catalogue_reads_ports import (
     InvoiceCatalogueReader,
     InvoiceCatalogueReadPersistenceError,
     InvoiceCatalogueReadPorts,
 )
-from ....core.period import Period
-from ....domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
-from ....domain.invoices.models import InvoiceCatalogue
-from ....domain.transactions.models import LedgerDatePartition, TransactionCatalogue
 from .._modelo_bindings_invoice_iva import (
     screened_invoice_iva_observations,
 )

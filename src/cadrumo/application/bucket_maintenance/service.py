@@ -14,7 +14,6 @@ from enum import StrEnum
 from pathlib import Path
 from uuid import UUID
 
-from ..filing.retention import FilingRetentionAuthority
 from ...core.hashing import CONTENT_DIGEST_PREFIX
 from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core.time.clock import now
@@ -22,6 +21,7 @@ from ...domain.buckets.errors import BucketDeleteRefusedError
 from ...domain.retention.floor import RetentionFloorAssessment
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ..bucket_deletion_contracts import BucketDeletionFingerprint
+from ..filing.retention import FilingRetentionAuthority
 from ..operator_actions.models import PreconditionVerdict
 from ..operator_actions.preconditions import no_action_precondition_verdict
 from ..user_profile.custody_ports import (

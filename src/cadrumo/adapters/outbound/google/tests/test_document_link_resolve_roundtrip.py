@@ -27,12 +27,12 @@ from pathlib import Path
 
 import pytest
 
-from ....persistence.storage.attachment import AttachmentStore
-from ....persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .....domain.attachments.enums import AttachmentKind, AttachmentSource
 from .....domain.attachments.errors import AttachmentValidationError
 from .....domain.attachments.service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment
 from .....tests.google_credentials import unused_google_credentials
+from ....persistence.storage.attachment import AttachmentStore
+from ....persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...storage.errors import OutboundStoragePermissionError
 from ..document_link_resolver import resolve_document_link
 from .drive_media_server import drive_media_endpoint
@@ -104,14 +104,14 @@ def test_blob_mutation_after_store_surfaces_on_reverify(tmp_path: Path) -> None:
     """
     from sqlalchemy import select
 
-    from ....persistence.storage.sql.engine import get_engine
-    from ....persistence.storage.sql.session import session_scope
     from ....persistence.storage.crypto.encrypted_columns import (
         decrypt_secure_object_payload,
         encrypt_secure_object_payload,
         secure_object_payload_aad,
     )
+    from ....persistence.storage.sql.engine import get_engine
     from ....persistence.storage.sql.orm import SecureObjectRow
+    from ....persistence.storage.sql.session import session_scope
 
     payload = b"%PDF-1.4 anti-tautology blob mutation proof payload"
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:

@@ -34,7 +34,6 @@ from datetime import date
 from decimal import Decimal
 from typing import NoReturn
 
-from ..invoices.catalogue_creation import resolve_iva_rate_slot
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.parsing.dates import parse_iso8601_date
 from ...domain.calculations.registry.authority import bundled_indexed_authority
@@ -46,6 +45,7 @@ from ...domain.invoices.enums import (
 from ...domain.invoices.models import InvoiceLine
 from ...domain.iva.lookup import rate_kinds_for_declared_rate
 from ...domain.iva.schema import IvaRateKind, spanish_eu_member_state
+from ..invoices.catalogue_creation import resolve_iva_rate_slot
 from .evidence_errors import PurchaseInvoiceEvidenceInputError
 from .invoice_draft_records import InvoiceDraft
 from .preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict

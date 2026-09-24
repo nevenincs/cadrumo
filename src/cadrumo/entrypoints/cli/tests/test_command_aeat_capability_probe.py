@@ -71,8 +71,8 @@ from ....core.remote_authority import canonical_remote_hostname, is_aeat_host, i
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ....domain.user_profile.values import UserProfileFact
-from ...live_state_composition import compose_notifications_ports
 from ....tests.offline_seal import OfflineGuard, offline_guard_fixture
+from ...live_state_composition import compose_notifications_ports
 from .._command_runtime import build_command_app
 from ..command_spec import (
     BindingState,

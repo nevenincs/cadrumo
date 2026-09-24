@@ -31,13 +31,10 @@ from cadrumo.adapters.persistence.storage.profile_login_session import build_pro
 from cadrumo.adapters.persistence.storage.tests.profile_storage_root_fixture import isolated_profile_storage_fixture
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli
 
-from ....core.config import load_settings
-from ....core.paths import effective_storage_root
-from ....core.profile_session import ProfileSessionRefusalReason
-from ....core.time.clock import now
-from ....domain.calculations.registry.authority import bundled_indexed_authority
-from ....domain.calculations.registry.authority_artifact import ProfileDecodeContext
-from ....application.user_profile.custody_ports import load_profile_custody_password_material, unlock_profile_custody_password
+from ....application.user_profile.custody_ports import (
+    load_profile_custody_password_material,
+    unlock_profile_custody_password,
+)
 from ....application.user_profile.login_handover import ProfileLoginHandoverJournal
 from ....application.user_profile.login_session_port import (
     ProfileBucketSessionPort,
@@ -49,6 +46,12 @@ from ....application.user_profile.login_session_port import (
 )
 from ....application.user_profile.profile_record_repository import profile_record_session_if_authenticated
 from ....application.user_profile.session_admission import ProfileSessionAdmissionState, admit_profile_session
+from ....core.config import load_settings
+from ....core.paths import effective_storage_root
+from ....core.profile_session import ProfileSessionRefusalReason
+from ....core.time.clock import now
+from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.calculations.registry.authority_artifact import ProfileDecodeContext
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

@@ -37,13 +37,13 @@ from datetime import date
 from types import MappingProxyType
 from typing import TYPE_CHECKING
 
-from ..operator_actions.catalogue import next_action
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.period import Period as _Period
 from ...domain.calculations.registry.applicability_routes import TaxRoute
 from ..calculations.observations_repository import ObservationSourceKind
 from ..calculations.ports import FiledDeclaracionObservationProtocol
+from ..operator_actions.catalogue import next_action
 from ._calendar_evidence_sources import (
     authenticated_identity_matches_expected as _authenticated_identity_matches_expected,
 )

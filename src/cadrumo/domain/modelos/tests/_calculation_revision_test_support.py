@@ -7,10 +7,10 @@ from typing import TypedDict
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
-from ...calculations.registry.tests.published_authority import PublishedGovernedFactSource, published_snapshot
 from ...calculations.registry.ids import RelationId
 from ...calculations.registry.iva_schema_vocabulary import m303_regime_composition_simplified_scope
 from ...calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
+from ...calculations.registry.tests.published_authority import PublishedGovernedFactSource, published_snapshot
 from ...filing_evidence import FilingEvidenceReference
 from ...iva.regimen_simplificado_rows import (
     M303RegimenSimplificadoScopeDecision,

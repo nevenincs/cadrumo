@@ -23,13 +23,13 @@ from pathlib import Path
 
 import pytest
 
-from ...aggregation.currency_predicates import is_non_eur_without_conversion
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.money.rounding import round_to_cents
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.models import Transaction
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from ...aggregation.currency_predicates import is_non_eur_without_conversion
 from ..actions_split_merge import _split_child_eur_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]

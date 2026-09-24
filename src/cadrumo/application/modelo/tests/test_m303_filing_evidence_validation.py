@@ -8,7 +8,6 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
-from ...calculations.tests.filing_evidence import regimen_simplificado_filing_evidence
 from ....core.modelo import Modelo
 from ....core.period import Period
 from ....domain.calculations.registry.iva_schema_vocabulary import m303_regime_composition_simplified_scope
@@ -25,6 +24,7 @@ from ....domain.iva.regimen_simplificado_rows import (
 from ....domain.modelos.calculation_revision_m303_evidence import M303Exonerado390FilingEvidence
 from ....domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence, M303FilingInstanceEvidence
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
+from ...calculations.tests.filing_evidence import regimen_simplificado_filing_evidence
 from ..action_errors import M303FilingEvidenceError
 from ..m303_filing_evidence import validate_m303_filing_instance_evidence_for_revision
 

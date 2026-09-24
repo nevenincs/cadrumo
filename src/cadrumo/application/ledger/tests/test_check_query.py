@@ -21,7 +21,6 @@ from pathlib import Path
 
 import pytest
 
-from ...invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.invoices.models import InvoiceCatalogue
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
@@ -33,6 +32,7 @@ from ....domain.transactions.models import (
     TransactionCatalogue,
 )
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from ...invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from ..check_query import ledger_check_years, read_ledger_check
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

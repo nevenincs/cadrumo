@@ -12,12 +12,12 @@ import pydantic
 import pytest
 
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from ...calculations.registry.authority import bundled_indexed_authority
+from ...calculations.registry.ledger_iva_bindings import IvaLedgerObservation
 from ...calculations.registry.schema_base import ThresholdComparison
 from ...iva.deduction_facts import IvaDeductionClassificationProvenance
 from ...iva.flow import IvaFlowDirection
 from ...iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
-from ...calculations.registry.authority import bundled_indexed_authority
-from ...calculations.registry.ledger_iva_bindings import IvaLedgerObservation
 from ..register import (
     BienesInversionIvaRegister,
     BienesInversionSectorContribution,

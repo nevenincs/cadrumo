@@ -18,7 +18,6 @@ from pydantic import ValidationError
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
-from ...calculations.tests.filing_evidence import general_m303_filing_evidence
 from ....core.period import Period
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.calculation_revision import (
@@ -36,6 +35,7 @@ from ...aggregation.ledger_filing_snapshot import (
     evaluate_ledger_filing_staleness,
     stale_filed_revisions,
 )
+from ...calculations.tests.filing_evidence import general_m303_filing_evidence
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 

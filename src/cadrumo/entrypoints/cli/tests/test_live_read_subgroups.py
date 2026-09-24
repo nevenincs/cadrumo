@@ -43,8 +43,8 @@ from ....application.live.verify import (
 from ....core.config import override_settings
 from ....core.identity_check_verdict import IdentityCheckVerdict
 from ....core.period import Period
-from ...adapter_composition import build_borrador_100_snapshot_repository
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
+from ...adapter_composition import build_borrador_100_snapshot_repository
 from .._app_live import (
     _PROCESS_INVENTORY_TIMEOUT_SECONDS,
     _iva_remote_state_capture_lines,

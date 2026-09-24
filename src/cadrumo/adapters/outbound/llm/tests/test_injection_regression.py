@@ -56,7 +56,6 @@ from typing import override
 
 import pytest
 
-from ....inbound.pdf.page_text_extraction import extract_pages_text_from_bytes
 from .....application.ledger.closure_findings import closure_findings
 from .....application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
 from .....application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
@@ -75,6 +74,7 @@ from .....tests.loopback_llm import (
     serving_loopback,
     write_json_response,
 )
+from ....inbound.pdf.page_text_extraction import extract_pages_text_from_bytes
 from ....persistence.llm.cache import LLMCache
 from ....persistence.llm.usage import UsageRecorder
 from ..client import LLMClient

@@ -22,7 +22,6 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
 )
 
-from ...tests.secure_sql import isolated_profile_storage_root
 from ......application.user_profile.custody_ports import (
     profile_custody_recovery_envelope_path,
     unlock_profile_custody_password,
@@ -33,6 +32,7 @@ from ......application.user_profile.recovery_custody import (
     reset_profile_passphrase_with_recovery,
 )
 from ......application.user_profile.registration import register_profile_with_credentials
+from ...tests.secure_sql import isolated_profile_storage_root
 from ..capsule import (
     install_committed_profile_custody_recovery_envelope,
     load_committed_profile_password_material,

@@ -18,14 +18,14 @@ See Also:
 
 from __future__ import annotations
 
+from ...core.access_gate.gate import AeatAccessGate
+from ...core.config import Settings, load_settings
+from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
 from ..auth.operator_scope_ports import OperatorScopePorts
 from ..auth.protocols import BrowserSessionFactoryPort
 from ..auth.session_types import AeatSession
 from ..auth.sessions import ensure_authenticated_aeat_session
-from ...core.access_gate.gate import AeatAccessGate
-from ...core.config import Settings, load_settings
-from ...domain.calculations.registry.authority import bundled_indexed_authority
 
 
 async def active_verified_session(

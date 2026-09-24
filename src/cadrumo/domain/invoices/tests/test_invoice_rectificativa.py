@@ -18,8 +18,8 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from ...iva.classification import InvoiceKind
 from ...calculations.registry.authority import bundled_indexed_authority
+from ...iva.classification import InvoiceKind
 from ..enums import InvoiceClass, IvaRate, PaymentStatus
 from ..models import Invoice, InvoiceLine
 

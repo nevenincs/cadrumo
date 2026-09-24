@@ -20,13 +20,13 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel
 
-from ..definition import CopyRef, FlowDefinition, FlowPage, FlowSection
-from ..engine import answer, start_flow
 from ....core.directory_scan import scan_directory
 from ....core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
 from ....core.i18n.render import tr
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....tests.locale_catalogue import flatten_catalogue, shard_keys, shard_payload
+from ..definition import CopyRef, FlowDefinition, FlowPage, FlowSection
+from ..engine import answer, start_flow
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

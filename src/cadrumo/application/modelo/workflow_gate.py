@@ -50,8 +50,6 @@ from functools import lru_cache
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
-from ..auth.providers import select_provider
 from ...core.auth_provider import AuthProviderKind
 from ...core.config import Settings, load_settings
 from ...core.period import Period
@@ -65,6 +63,8 @@ from ...domain.modelos.work_unit import WorkUnit
 from ...domain.submission.engine import SubmissionEngine
 from ...domain.submission.models import ModeloDraftStatus
 from ...domain.submission.protocols import DeadlineWindowChecker
+from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
+from ..auth.providers import select_provider
 from ..filing.draft_construction import build_draft
 from ..filing.draft_review import approve_draft
 from ..filing.draft_review_ports import DraftReviewPorts

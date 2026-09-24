@@ -26,7 +26,6 @@ from types import SimpleNamespace
 
 import pytest
 
-from ...aggregation.ledger_filing_snapshot import row_fingerprint
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.casilla_membership import (
@@ -53,6 +52,7 @@ from ....domain.transactions.models import (
     TransactionCatalogue,
 )
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from ...aggregation.ledger_filing_snapshot import row_fingerprint
 from .._calculation_helpers import build_typed_observations
 from .._calculation_modelo_adjustments import drop_row_field_template_outputs
 from ..amendment_actions import _amendment_ledger_anchor

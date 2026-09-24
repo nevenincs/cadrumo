@@ -12,10 +12,10 @@ from contextlib import AbstractContextManager
 from pathlib import Path
 from typing import TYPE_CHECKING, Protocol
 
-from ..auth.session_types import AeatSession
-from ..auth.sessions import AuthenticatedAeatSessionResult
 from ...core.config import Settings
 from ...core.period import Period
+from ..auth.session_types import AeatSession
+from ..auth.sessions import AuthenticatedAeatSessionResult
 from .remote_state_models import (
     IvaCompensationHistoryCaptureReport,
     IvaCompensationHistoryReport,

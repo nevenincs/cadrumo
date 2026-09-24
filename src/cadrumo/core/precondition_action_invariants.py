@@ -10,8 +10,8 @@ from typing import Final, Self
 
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
-from .errors.hierarchy import pydantic_validation_boundary
 from .action_argument_resolution import ActionArgumentResolution
+from .errors.hierarchy import pydantic_validation_boundary
 from .identifier_grammar import FIELD_KEY_PATTERN, NamespacedId
 from .models import STRICT_FROZEN_CONFIG
 from .operator_action_enums import (

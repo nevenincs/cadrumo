@@ -16,8 +16,8 @@ from ....core.external_constants import PROVENANCE_SOURCE_CENSO_ARTEFACT
 from ...calculations.registry.tests.published_authority import (
     leased_profile_create_context as _profile_creation_context_for_test,
 )
-from ..values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ..portable_export import CarriedSecureObject, CoverageManifest, UserProfilePortableExport
+from ..values import ProfileSetupState, UserProfileFact, UserProfileRecord
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("authority_operation")]
 

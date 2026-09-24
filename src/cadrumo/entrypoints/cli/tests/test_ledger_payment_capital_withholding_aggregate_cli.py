@@ -38,8 +38,8 @@ from ....domain.calculations.registry.tests.published_authority import (
 )
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
-from ...adapter_composition import build_retencion_observation_ports
 from ....tests.storage_scope import storage_overrides
+from ...adapter_composition import build_retencion_observation_ports
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]

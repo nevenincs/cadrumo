@@ -14,7 +14,6 @@ from cadrumo.domain.calculations.registry.tests.published_authority import (
     PublishedGovernedFactSource,
 )
 
-from ...calculations.tests.filing_evidence import regimen_simplificado_filing_evidence
 from ....core.casilla_id import validated_casilla_id
 from ....core.modelo import Modelo
 from ....core.payment_election import PaymentElection
@@ -47,6 +46,7 @@ from ....domain.modelos.calculation_revision_m303_handoff import M303RegimenSimp
 from ....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 from ....domain.submission.models import ModeloDraftStatus
 from ...aggregation.m303_arrivals import M303ProrrataTransitionArrival, M303SupplierRegimeArrival
+from ...calculations.tests.filing_evidence import regimen_simplificado_filing_evidence
 from ..draft_construction import build_draft
 from ..export import export_draft
 from ..producer_snapshot import (

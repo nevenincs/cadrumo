@@ -19,7 +19,6 @@ from cadrumo.domain.filing.errors import FilingExportValidationError
 from cadrumo.domain.identifiers import canonical_decimal_string
 from cadrumo.domain.submission.models import ModeloDraftStatus
 
-from ...filing.runtime import ModeloOperatorProfile, build_runtime_schema_provider
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.schema_input_kind import InputKind
@@ -50,6 +49,7 @@ from ...filing.producer_snapshot import (
     TaxpayerIdentityFacts,
     build_filing_producer_snapshot,
 )
+from ...filing.runtime import ModeloOperatorProfile, build_runtime_schema_provider
 from ..revision_replay_inputs import revision_filing_replay_inputs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]

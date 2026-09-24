@@ -26,9 +26,6 @@ from cadrumo.entrypoints.cli.app_live_justificante_composition import (
     build_justificante_registration_ports,
 )
 
-from ....core.bucket_pointer import require_active_bucket_id
-from ....core.period import Period
-from ....tests.live_gate import requires_live_enabled
 from ....application.live.errors import LiveApplicationInputError
 from ....application.live.expedientes import capture_expedientes
 from ....application.live.justificante import (
@@ -36,6 +33,9 @@ from ....application.live.justificante import (
 )
 from ....application.live.snapshot_base import SnapshotLifecycleState
 from ....application.live.tests.operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
+from ....core.bucket_pointer import require_active_bucket_id
+from ....core.period import Period
+from ....tests.live_gate import requires_live_enabled
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 

@@ -14,11 +14,6 @@ from typing import TYPE_CHECKING, Protocol
 
 from pydantic import BaseModel
 
-from ..profile.calculation_observations import (
-    CalculationObservationRepository,
-    IvaWalletDecisionRepository,
-)
-from ..profile.filing_history import FilingHistoryRepositoryAdapter
 from ....application.calculations.observations_repository import (
     IvaWalletDecisionEnvelopePayload,
     iva_wallet_decision_event_key,
@@ -57,9 +52,14 @@ from ...outbound.aeat.sede.observation_store import (
     iva_compensation_wallet_observation_object_key,
 )
 from ...outbound.aeat.sede.schema import FiledDeclaracionObservation, IvaCompensationWalletObservation
+from ..profile.calculation_observations import (
+    CalculationObservationRepository,
+    IvaWalletDecisionRepository,
+)
 from ..profile.counterparty_establishment import CounterpartyEstablishmentRepository
 from ..profile.evidence_bundles import EvidenceBundleRepository
 from ..profile.filing_drafts import ModeloDraftRepository
+from ..profile.filing_history import FilingHistoryRepositoryAdapter
 from ..profile.iva_compensation_history import IvaCompensationHistoryRepository
 from ..profile.iva_remote_state import IvaRemoteStateAcquisitionManifestRepository
 from ..profile.justificante import JustificanteRepository

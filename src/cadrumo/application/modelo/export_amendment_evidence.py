@@ -8,7 +8,6 @@ from __future__ import annotations
 
 from typing import NoReturn, Protocol
 
-from ..filing.producer_snapshot import AmendmentEvidence
 from ...core.modelo import Modelo
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.deadlines.models import TaxpayerProfile
@@ -33,6 +32,7 @@ from ...domain.modelos.filing_record import (
 from ...domain.modelos.protocols import ModeloRecordCatalogueRepositoryProtocol
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
+from ..filing.producer_snapshot import AmendmentEvidence
 
 
 class AmendmentExportCommand(Protocol):

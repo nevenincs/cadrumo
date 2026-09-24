@@ -15,7 +15,6 @@ from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_s
 from ....application.storage_write_policy import inspect_storage_write_policy
 from ....core.bucket_pointer import pointer_path
 from ....core.config import Settings, override_settings
-from ..main import app
 from ..command_suggestions import INVOCATION_REMAINDER_META_KEY
 from ..common import (
     RequestedCliLeaf,
@@ -26,6 +25,7 @@ from ..common import (
     project_cli_policy_refusal,
 )
 from ..errors import CliRefusedBoundaryError, suspend_error_boundary
+from ..main import app
 from .cli_runner import cadrumo_click_command
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]

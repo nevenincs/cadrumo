@@ -12,7 +12,6 @@ import pytest
 from cadrumo.domain.invoices.enums import resolve_iva_rate_token
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 
-from ...filing.draft_review_ports import DraftReviewPorts
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.config import Settings
 from ....core.errors.severity import BaseSeverity
@@ -35,6 +34,7 @@ from ....domain.submission.models import ModeloDraftStatus
 from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from ...filing.draft_review_ports import DraftReviewPorts
 from .._aggregator import ReviewQueue
 from ..enums import ReviewItemKind, ReviewSeverity, ReviewState
 from .draft_review_test_support import draft_review_ports

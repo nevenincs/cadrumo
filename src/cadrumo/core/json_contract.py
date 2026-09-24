@@ -49,9 +49,8 @@ from pydantic import (
     field_validator,
 )
 
-from .errors.hierarchy import pydantic_validation_boundary
 from .action_argument_resolution import ActionArgumentResolution
-from .errors.hierarchy import CadrumoError
+from .errors.hierarchy import CadrumoError, pydantic_validation_boundary
 from .identifier_grammar import FIELD_KEY_PATTERN
 from .logging import get_logger
 from .operator_action_enums import ActionArgumentStatus

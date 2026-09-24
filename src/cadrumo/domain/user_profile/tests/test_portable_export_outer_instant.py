@@ -20,9 +20,8 @@ import pytest
 from pydantic import ValidationError
 
 from ...calculations.registry.tests.published_authority import leased_profile_create_context
-from ..values import ProfileSetupState
 from ..portable_export import UserProfilePortableExport
-from ..values import UserProfileFact, UserProfileRecord, create_user_profile_record
+from ..values import ProfileSetupState, UserProfileFact, UserProfileRecord, create_user_profile_record
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("authority_operation")]
 

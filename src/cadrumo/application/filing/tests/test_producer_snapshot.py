@@ -16,7 +16,6 @@ from cadrumo.core.prorrata_register import ProrrataEspecialTransitionKind, Prorr
 from cadrumo.domain.bienes_inversion.vocabulary import BienInversionKind
 from cadrumo.domain.deadlines.models import IVARegime, M303RegimeComposition, M303TaxTerritory
 
-from ...calculations.tests.filing_evidence import regimen_simplificado_filing_evidence
 from ....core.casilla_id import validated_casilla_id
 from ....core.filing_producer_key import FilingProducerKey
 from ....core.modelo import Modelo
@@ -73,6 +72,7 @@ from ...aggregation.m303_arrivals import (
     M303SupplierRegimeArrival,
     resolve_m303_prorrata_transition_arrival,
 )
+from ...calculations.tests.filing_evidence import regimen_simplificado_filing_evidence
 from .._record_field_renderer import (
     complementaria_page_marker,
     m303_complementaria_marker,

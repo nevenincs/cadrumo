@@ -16,7 +16,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.entrypoints.tests.profile_persistence.modelo_303_export_support import build_verified_modelo_303_revision
 from cadrumo.adapters.persistence.profile.tests.modelo_export_support import isolated_backend_context
 from cadrumo.application.modelo.operation_definitions import MODELO_EXPORT_OPERATION_DEFINITION_ID, ModeloExportRequest
 from cadrumo.application.operations.frontend_requests import (
@@ -28,6 +27,7 @@ from cadrumo.core.operations import OperationTerminalCondition
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli
 from cadrumo.entrypoints.operation_composition import compose_operation_dependencies
+from cadrumo.entrypoints.tests.profile_persistence.modelo_303_export_support import build_verified_modelo_303_revision
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

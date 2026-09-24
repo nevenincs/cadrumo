@@ -38,7 +38,6 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
 )
 
-from ...tests.secure_sql import isolated_profile_storage_root
 from ......application.user_profile.login_session import login_profile
 from ......application.user_profile.profile_record_repository import close_active_profile_record_session
 from ......application.user_profile.registration import register_profile_with_credentials
@@ -48,6 +47,7 @@ from ......domain.user_profile.values import ProfileSetupState
 from ...custody.errors import ProfileCustodyRecordError
 from ...errors import StorageValidationError
 from ...runtime_repository import secure_object_repository_for_active_bucket
+from ...tests.secure_sql import isolated_profile_storage_root
 from ..active_session import close_active_bucket_session
 
 if TYPE_CHECKING:

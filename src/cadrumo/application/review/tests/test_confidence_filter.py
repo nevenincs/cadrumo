@@ -15,11 +15,11 @@ from pathlib import Path
 
 import pytest
 
-from ...filing.draft_review_ports import DraftReviewPorts
 from ....core.config import Settings, override_settings
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from ...filing.draft_review_ports import DraftReviewPorts
 from ..enums import ReviewState
 from ..operator import project_review_queue
 from .draft_review_test_support import draft_review_ports

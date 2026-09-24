@@ -665,11 +665,11 @@ def test_the_ledger_read_refuses_an_unreadable_row_rather_than_skipping_it(tmp_p
     The corrupt record is written through the real repository at the ledger's
     own namespace, so it is reached by exactly the read path production uses.
     """
-    from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
-    from ....persistence.storage.secure_object_namespaces import LLM_EVIDENCE_CONSENT_LEDGER_NAMESPACE
     from .....core.hashing import canonical_json_bytes
     from .....core.time.clock import now
     from ....persistence.llm.consent_ledger import EvidenceConsentLedger
+    from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+    from ....persistence.storage.secure_object_namespaces import LLM_EVIDENCE_CONSENT_LEDGER_NAMESPACE
 
     settings = _settings(tmp_path, cloud_upload_permitted=True)
     with _serve_openai() as (endpoint, _), override_settings(cadrumo_llm_openai_chat_completions_url=endpoint):

@@ -58,8 +58,8 @@ from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.schema import IvaCategory
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
-from ...adapter_composition import build_calculation_action_ports, build_retencion_observation_ports
 from ....tests.storage_scope import storage_overrides
+from ...adapter_composition import build_calculation_action_ports, build_retencion_observation_ports
 from .cli_runner import invoke_cached_cli, invoke_uncached_typer_app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]

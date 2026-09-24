@@ -54,11 +54,11 @@ from ..operator_actions.models import DeclaredNextAction
 from .next_actions import declare_next_action
 
 if TYPE_CHECKING:
-    from ..ledger.evidence import PurchaseInvoiceEvidence
-    from ..ledger.preflight import LedgerPreflightReport
     from ...domain.invoices.models import InvoiceCatalogue
     from ...domain.transactions.models import Transaction
     from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+    from ..ledger.evidence import PurchaseInvoiceEvidence
+    from ..ledger.preflight import LedgerPreflightReport
 
 
 class DataPrepStepState(StrEnum):

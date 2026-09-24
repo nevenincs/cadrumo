@@ -6,10 +6,9 @@ import pytest
 
 from .....core.authority_grade import RegistryAuthorityGrade
 from ..authority import PinnedAuthorityOperation
-from ..ids import RevisionId
-from ..schema import ModeloDefinition, RegistryCatalogues
 from ..governed_fact_scope import validating_governed_facts
-from ..schema import RegistrySnapshot
+from ..ids import RevisionId
+from ..schema import ModeloDefinition, RegistryCatalogues, RegistrySnapshot
 from ._formula_runtime_support import (
     _committed_modelo_130_snapshot,
     _committed_modelo_180_snapshot,

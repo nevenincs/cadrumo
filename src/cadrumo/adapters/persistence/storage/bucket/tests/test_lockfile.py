@@ -20,7 +20,6 @@ from typing import Protocol, runtime_checkable
 
 import pytest
 
-from .bucket_layout import provision_bucket_directory
 from ......core.errors.error_codes import build_error_envelope
 from ......core.external_constants import UTF_8_ENCODING
 from ..directory_layout import (
@@ -34,6 +33,7 @@ from ..lockfile import (
     lock_path,
     release_lock,
 )
+from .bucket_layout import provision_bucket_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

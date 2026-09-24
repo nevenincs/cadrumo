@@ -18,10 +18,6 @@ from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, override
 
-from ....persistence.profile.calculation_observations import (
-    CalculationObservationRepository,
-)
-from ....persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from .....application.calculations.iva_compensation_history import persist_observation_envelope_and_iva_history
 from .....application.calculations.observations_repository import (
     ObservationEnvelopePayload,
@@ -61,6 +57,10 @@ from .....domain.modelos.filing_record import ModeloRecordCatalogue
 from .....domain.modelos.protocols import ModeloRecordCatalogueRepositoryProtocol
 from ....inbound.justificante.parser import parse_justificante_bytes
 from ....persistence.profile.buckets import BucketEventHistoryRepository
+from ....persistence.profile.calculation_observations import (
+    CalculationObservationRepository,
+)
+from ....persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from ....persistence.profile.justificante import JustificanteRepository
 from ....persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....persistence.profile.modelos_filing import ModeloRecordCatalogueRepository

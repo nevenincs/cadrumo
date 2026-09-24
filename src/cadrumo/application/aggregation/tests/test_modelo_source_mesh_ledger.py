@@ -13,8 +13,6 @@ import pytest
 from cadrumo.domain.calculations.registry.tests.published_authority import published_revision, published_snapshot
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 
-from ...actividad_asset.history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
-from ...invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from ....core.aggregation import BindingSourceKind
 from ....core.operator_action_enums import NoRecoveryOutcome
 from ....core.period import Period
@@ -59,6 +57,8 @@ from ....domain.transactions.models import (
     TransactionCatalogue,
 )
 from ....domain.usage_ratios.model import UsageRatioProfile
+from ...actividad_asset.history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
+from ...invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from .._preconditions import AggregationPreconditionCondition
 from ..errors import (
     AggregationValidationError,

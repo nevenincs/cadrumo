@@ -8,11 +8,11 @@ from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
 from .....core.period import Period
 from .....core.resources.bundled_data import bundled_path
-from .registry_tree import bundled_registry_tree
 from ..bindings import CasillaObservation, RegistryModeloObservation
 from ..errors import NoRevisionForPeriodError
 from ..relations import RegistryFoldRequirement
 from ..schema import ModeloRevision
+from .registry_tree import bundled_registry_tree
 from .snapshot_support import build_snapshot
 
 _M202_CUOTA_BASE_CASILLA: CasillaId = validated_casilla_id("01", surface="_M202_CUOTA_BASE_CASILLA")

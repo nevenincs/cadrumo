@@ -23,7 +23,6 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
-from ...calculations.tests.filing_evidence import general_m303_filing_evidence
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.classification.policies import SensitivityClass
 from ....core.period import Period
@@ -42,6 +41,7 @@ from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
+from ...calculations.tests.filing_evidence import general_m303_filing_evidence
 from .._m303_m349_reconcile import m303_m349_intracom_reconcile_findings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

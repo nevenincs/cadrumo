@@ -9,7 +9,6 @@ from pydantic import ValidationError
 
 from .....core.aggregation import BindingAggregation, BindingAggregationOp
 from .....core.authority_grade import RegistryAuthorityGrade
-from .registry_observations import registry_grounded_modelo_observation
 from ..binding_temporal import FilingYearOffset, TargetPeriodOffset
 from ..bindings_previous_filing import (
     PreviousFilingProvider,
@@ -35,6 +34,7 @@ from ._formula_runtime_support import (
     _PREVIOUS_YEAR_NET_INCOME_BINDING,
     _previous_year_net_income_binding,
 )
+from .registry_observations import registry_grounded_modelo_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
