@@ -21,7 +21,6 @@ from ...domain.calculations.registry.schema_exports import (
 )
 from ...domain.filing.errors import FilingExportValidationError
 from ...domain.filing.schema import ModeloDraft
-from .export_parity import did_page_suppressed
 from ._record_field_renderer import (
     complementaria_page_marker,
     format_field,
@@ -32,6 +31,7 @@ from ._record_field_renderer import (
 from ._record_field_renderer import (
     render_record as _render_record_fields,
 )
+from .export_parity import did_page_suppressed
 from .producer_snapshot import FilingProducerSnapshot
 from .projection import FilingProjectionPlan, FilingRecordRenderContext
 from .record_types import ProjectionAddress, RecordRenderRow, RenderedRecordOccurrence
