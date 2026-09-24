@@ -439,3 +439,36 @@ def test_redirected_roots_are_scanned_separately(
     assert "cadrumo.domain.calculations.registry.module_a" in maps[0].production
     assert "cadrumo.domain.calculations.registry.module_a" not in maps[1].production
     assert load_census._reference_map_for.cache_info().misses == 2
+
+
+def test_the_reference_map_reads_the_registry_package_once_per_scan(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: pathlib.Path,
+) -> None:
+    """TEETH: a scan must not re-read the registry package for every import statement.
+
+    Re-reading it per import statement made the real map take several times as
+    long as parsing every file it reads, which timed the census out. The scan
+    below has forty import statements across two files; the package is read once.
+    """
+    from ..analysis import load_census
+
+    root = tmp_path / "cadrumo"
+    root.mkdir()
+    lines = [f"from cadrumo.domain.calculations.registry.module_{index} import Thing" for index in range(20)]
+    for name in ("first_consumer.py", "second_consumer.py"):
+        (root / name).write_text(chr(10).join(lines) + chr(10), encoding="utf-8")
+    monkeypatch.setattr(load_census, "REFERENCE_SCAN_ROOTS", (root,))
+    reads: list[None] = []
+    read_package = load_census.registry_package_modules
+
+    def counted() -> frozenset[str]:
+        reads.append(None)
+        return read_package()
+
+    monkeypatch.setattr(load_census, "registry_package_modules", counted)
+
+    reference_map = load_census.build_reference_map()
+
+    assert "cadrumo.domain.calculations.registry.module_19" in reference_map.production
+    assert len(reads) == 1

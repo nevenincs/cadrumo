@@ -567,7 +567,11 @@ def dynamic_import_sites(*, production_only: bool = True) -> tuple[DynamicImport
     return tuple(sites)
 
 
-def _registry_import_targets(node: ast.Import | ast.ImportFrom, module: str) -> tuple[str, ...]:
+def _registry_import_targets(
+    node: ast.Import | ast.ImportFrom,
+    module: str,
+    defining_modules: frozenset[str],
+) -> tuple[str, ...]:
     """Return canonical registry modules named directly by one import statement.
 
     ``from`` imports resolve the module path before the imported symbol is
@@ -579,6 +583,10 @@ def _registry_import_targets(node: ast.Import | ast.ImportFrom, module: str) -> 
     Args:
         node: The import statement.
         module: The dotted name of the module containing it.
+        defining_modules: The registry package's modules, read once by the
+            caller for its whole scan; rescanning the package directory per
+            import statement made the reference map several times slower
+            than parsing every file it reads.
 
     Returns:
         Canonical registry module names, possibly empty.
@@ -593,7 +601,6 @@ def _registry_import_targets(node: ast.Import | ast.ImportFrom, module: str) -> 
         del base[len(base) - node.level :]
         target = ".".join((*base, node.module)) if node.module else ".".join(base)
         targets = (target,)
-    defining_modules = registry_package_modules()
     resolved: list[str] = []
     for target in targets:
         if target.startswith(REGISTRY_PACKAGE + "."):
@@ -654,6 +661,7 @@ def _reference_map_for(roots: tuple[Path, ...]) -> ReferenceMap:
     production: dict[str, set[str]] = {}
     tests: dict[str, set[str]] = {}
     unread: list[str] = []
+    defining_modules = registry_package_modules()
     for path in _iter_source_files():
         module = _module_name_for(path)
         try:
@@ -673,7 +681,7 @@ def _reference_map_for(roots: tuple[Path, ...]) -> ReferenceMap:
         for node in ast.walk(tree):
             if not isinstance(node, ast.Import | ast.ImportFrom):
                 continue
-            for owner in _registry_import_targets(node, module):
+            for owner in _registry_import_targets(node, module, defining_modules):
                 bucket.setdefault(owner, set()).add(module)
     report_unread(
         "registry load census reference map",
