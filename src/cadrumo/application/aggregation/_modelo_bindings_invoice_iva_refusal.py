@@ -210,6 +210,7 @@ def _raise_if_screened_invoice_iva_would_be_silent(
             reverse_charge_underivable=screened.reverse_charge_underivable,
             deduction_authority_missing=screened.deduction_authority_missing,
             recargo_rate_divergences=screened.recargo_rate_divergences,
+            recargo_unattributable=screened.recargo_unattributable,
             storage_degraded=screened.storage_degraded,
         )
     invoice_binding_values = resolve_iva_ledger_binding_values(
@@ -231,6 +232,7 @@ def _raise_if_screened_invoice_iva_would_be_silent(
             reverse_charge_underivable=screened.reverse_charge_underivable,
             deduction_authority_missing=screened.deduction_authority_missing,
             recargo_rate_divergences=screened.recargo_rate_divergences,
+            recargo_unattributable=screened.recargo_unattributable,
             storage_degraded=screened.storage_degraded,
         )
     raise AggregationValidationError(

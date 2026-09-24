@@ -94,6 +94,7 @@ from ._modelo_bindings_invoice_iva import (
     missing_invoice_deduction_authority_diagnostics,
     out_of_window_summary_diagnostics,
     recargo_rate_mismatch_diagnostics,
+    recargo_unattributable_diagnostics,
     reverse_charge_underivable_diagnostics,
 )
 from ._modelo_bindings_invoice_iva_refusal import raise_if_invoice_iva_would_be_silent
@@ -432,6 +433,10 @@ class LedgerIvaAggregationSourceResolver:
             )
             + recargo_rate_mismatch_diagnostics(
                 silence_report.recargo_rate_divergences,
+                resolver_id=self.resolver_id,
+            )
+            + recargo_unattributable_diagnostics(
+                silence_report.recargo_unattributable,
                 resolver_id=self.resolver_id,
             )
             + source_issue_diagnostics(
