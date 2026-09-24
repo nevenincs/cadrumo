@@ -15,6 +15,8 @@ related:
 
 ## Problem Statement
 
+Authorization: the operator's standing pre-approval for this lane's work, applied by CADRUMO-ADMIN on 2026-09-24 when it assigned the average-workforce write path as plan step S13 and granted its file slots.
+
 Job-creating and renewable self-consumption free depreciation read the
 enterprise's average workforce per calendar year, which schema version 7 stores
 as `irpf.plantilla_media` instances. No command or screen can write those
