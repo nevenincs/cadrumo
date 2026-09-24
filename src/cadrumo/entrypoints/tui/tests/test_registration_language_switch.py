@@ -18,7 +18,10 @@ so a catalogue that translated nothing could not pass either.
 
 from __future__ import annotations
 
+import sys
+import threading
 import time
+import traceback
 
 import pytest
 from textual.widgets import Button, Input, Label, Select, Static
@@ -66,7 +69,17 @@ def _screen() -> RegistrationScreen:
     )
 
 
-async def _wait_for_screen(pilot, screen_type: type, *, composed: str, deadline_seconds: float = 180.0) -> bool:
+def _thread_stacks() -> str:
+    """Every live thread's stack, so a wait that expires says what it waited on."""
+    frames = sys._current_frames()
+    names = {thread.ident: thread.name for thread in threading.enumerate()}
+    return "\n".join(
+        f"--- {names.get(ident, ident)} ---\n{''.join(traceback.format_stack(frame)[-12:])}"
+        for ident, frame in frames.items()
+    )
+
+
+async def _wait_for_screen(pilot, screen_type: type, *, composed: str, deadline_seconds: float = 120.0) -> bool:
     """Pause until ``screen_type`` is active and ``composed`` is queryable on it.
 
     Creation and recovery enrolment run real key derivation, and a pushed
@@ -85,7 +98,12 @@ async def _wait_for_screen(pilot, screen_type: type, *, composed: str, deadline_
         if _ready():
             return True
         await pilot.pause(0.1)
-    return _ready()
+    if _ready():
+        return True
+    # Below the per-test timeout on purpose: an expiring wait reports what every
+    # thread was doing instead of the timeout killing the worker silently.
+    print(f"{screen_type.__name__} did not appear within {deadline_seconds:g}s\n{_thread_stacks()}", file=sys.stderr)
+    return False
 
 
 def _text(app: RegistrationScreen, selector: str) -> str:
