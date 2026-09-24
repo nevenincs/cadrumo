@@ -45,7 +45,7 @@ from typing import Final, Never, Protocol, TypeGuard, cast, get_args
 
 import click
 import typer
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, ConfigDict, ValidationError
 
 from ...application.cli_exception_preconditions import CliExceptionPrecondition
 from ...application.operator_actions.models import PreconditionVerdict
@@ -299,19 +299,33 @@ def _safe_violation_field_hints(
     raised = typed_context.get("error") if typed_context is not None else None
     candidates = (raised, getattr(raised, "__cause__", None))
     for candidate in candidates:
-        nested_context = getattr(candidate, "context", None)
-        if not isinstance(nested_context, Mapping):
-            continue
-        raw_fields = nested_context.get("fields")
-        if isinstance(raw_fields, str):
-            fields = tuple(part.strip() for part in raw_fields.split(",") if part.strip())
-        elif isinstance(raw_fields, (tuple, list)):
-            fields = tuple(raw_fields)
-        else:
-            continue
-        if fields and all(isinstance(field, str) and field in declared for field in fields):
-            return cast(tuple[str, ...], fields)
+        fields = _validator_field_names(getattr(candidate, "context", None))
+        if fields and all(field in declared for field in fields):
+            return fields
     return ()
+
+
+class _ValidatorFieldHint(BaseModel):
+    """The ``fields`` hint a registered domain error may carry for a model-level invariant."""
+
+    model_config = ConfigDict(extra="ignore", frozen=True)
+
+    fields: str | tuple[str, ...]
+
+
+def _validator_field_names(context: object) -> tuple[str, ...]:
+    """Parse a domain error's ``fields`` hint into names, or nothing when it carries no well-formed one.
+
+    A comma-separated string and a sequence of names are both accepted; any
+    other shape, including a sequence holding a non-string, is no hint at all.
+    """
+    try:
+        hint = _ValidatorFieldHint.model_validate(context)
+    except ValidationError:
+        return ()
+    if isinstance(hint.fields, str):
+        return tuple(part.strip() for part in hint.fields.split(",") if part.strip())
+    return hint.fields
 
 
 def _violation_location(item: Mapping[str, object], declared: frozenset[str]) -> str:
