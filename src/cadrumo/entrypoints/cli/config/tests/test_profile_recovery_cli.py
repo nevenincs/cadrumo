@@ -15,6 +15,7 @@ from __future__ import annotations
 import json
 import os
 import threading
+import time
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager, suppress
 from dataclasses import replace
@@ -43,6 +44,15 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _CREDENTIAL_INPUT = "a-sufficiently-long-operator-passphrase"
 _ROTATED_CREDENTIAL_INPUT = "a-replacement-passphrase-after-reset"
 _PROFILE = "Recovery Operator"
+
+_BACKOFF_WAIT_SECONDS = 2.5
+"""Long enough to outlast the backoff one failed proof arms.
+
+A refused recovery code is a failed proof against the same per-profile backoff
+login answers to, and the schedule is ``min(2 ** failures, 60)`` seconds, so a
+single refusal imposes two. Waited in real time rather than cleared through
+the throttle authority: the claim is that the surviving passphrase still opens
+the profile, and stepping past the backoff an operator would meet proves less."""
 
 
 def _creation_payload(credential: str = _CREDENTIAL_INPUT) -> str:
@@ -466,6 +476,7 @@ def test_reset_refuses_a_wrong_code_and_keeps_the_current_passphrase(tmp_path: P
         # Prove the surviving passphrase before the refused one: a failed login
         # arms the throttle and would mask the success it precedes.
         _logout()
+        time.sleep(_BACKOFF_WAIT_SECONDS)
         assert _login(_PROFILE, credential=_CREDENTIAL_INPUT).exit_code == 0
         _logout()
         assert _login(_PROFILE, credential=_ROTATED_CREDENTIAL_INPUT).exit_code != 0
@@ -481,6 +492,7 @@ def test_reset_refuses_a_malformed_code_without_touching_the_capsule(tmp_path: P
         assert refused.exit_code != 0
         assert "Traceback" not in refused.stdout + refused.stderr
         _logout()
+        time.sleep(_BACKOFF_WAIT_SECONDS)
         assert _login(_PROFILE, credential=_CREDENTIAL_INPUT).exit_code == 0
 
 
