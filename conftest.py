@@ -147,6 +147,17 @@ pytest_plugins = ("dev.ci_reports",)
 
 register_collection_storage_root_cleanup(collection_storage_root())
 
+# A publish into the checkout's live authority during the run would swap the
+# generation under every session-scoped lease, so the run reads the generation
+# current at start. xdist workers inherit the frozen root and skip this.
+if Path(os.environ["CADRUMO_AUTHORITY_ROOT"].strip()).resolve() == _PURE_STDLIB_AUTHORITY_ROOT:
+    _frozen_authority_root = import_module("cadrumo.tests.authority_run_snapshot").freeze_authority_root(
+        _PURE_STDLIB_AUTHORITY_ROOT,
+        collection_storage_root() / "authority-snapshot",
+    )
+    if _frozen_authority_root is not None:
+        os.environ["CADRUMO_AUTHORITY_ROOT"] = str(_frozen_authority_root)
+
 
 @pytest.hookimpl(trylast=True)
 def pytest_configure(config: pytest.Config) -> None:
