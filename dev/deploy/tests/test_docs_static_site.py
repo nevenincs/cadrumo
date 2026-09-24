@@ -8,6 +8,7 @@ import gzip
 import http.server
 import inspect
 import json
+import os
 import sys
 import textwrap
 import threading
@@ -45,6 +46,7 @@ from ..docs_static_site import (
     language_build_command,
     language_build_environment,
     localized_languages,
+    root_build_jobs,
     site_build_environment,
 )
 
@@ -211,6 +213,7 @@ _ROOT_STAND_IN = textwrap.dedent(
         time.sleep(0.05)
     out.mkdir(parents=True, exist_ok=True)
     (out / "storage.txt").write_text(os.environ["CADRUMO_LOCAL_STORAGE_ROOT"], encoding="utf-8")
+    (out / "jobs.txt").write_text(os.environ["CADRUMO_DOCS_JOBS"], encoding="utf-8")
     print(f"built {out.name}")
     sys.exit(3 if out.name == "ca" else 0)
     """,
@@ -234,9 +237,27 @@ def test_the_language_roots_build_at_once_each_with_its_own_storage_and_every_fa
     assert "9)" not in str(refused.value), "the roots did not all run at once"
     storage_roots = {(html_root / language / "storage.txt").read_text(encoding="utf-8") for language in languages}
     assert len(storage_roots) == len(languages)
+    expected_jobs = root_build_jobs(languages, os.cpu_count() or 1)
+    for language in languages:
+        assert (html_root / language / "jobs.txt").read_text(encoding="utf-8") == expected_jobs[language]
     output = capsys.readouterr().out
     for language in languages:
         assert f"built {language}" in output
+
+
+@pytest.mark.parametrize("cpus", [1, 2, 4, 12, 64])
+def test_concurrent_roots_share_the_cpus_the_full_scope_root_taking_half(cpus: int) -> None:
+    """The roots never fork more workers than CPUs between them once each has one."""
+    languages = localized_languages()
+    jobs = {language: int(count) for language, count in root_build_jobs(languages, cpus).items()}
+
+    assert set(jobs) == set(languages)
+    assert min(jobs.values()) >= 1
+    assert sum(jobs.values()) <= max(cpus, len(languages))
+    source = _docs_i18n.DEFAULT_SOURCE_LANGUAGE
+    assert all(jobs[source] >= count for count in jobs.values())
+    if cpus >= 2 * (len(languages) - 1):
+        assert jobs[source] == cpus // 2
 
 
 def test_language_build_environment_points_the_base_url_at_the_language_root() -> None:

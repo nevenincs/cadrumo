@@ -466,6 +466,24 @@ def language_build_environment(language: str, *, check_sequences: bool) -> dict[
     return environment
 
 
+def root_build_jobs(languages: Sequence[str], cpus: int) -> dict[str, str]:
+    """Share one machine's CPUs between site roots that build at the same time.
+
+    Each root left at ``auto`` forks a worker per CPU, so four roots ran four
+    times as many workers as CPUs; every full-scope worker imports the whole
+    application, and the English build's workers died mid-read. The full-scope
+    source root carries more than ten times the pages of a translated root, so
+    it takes half the CPUs and the translated roots share the rest. Every root
+    gets at least one worker, so on a machine with fewer CPUs than that needs,
+    the full-scope root yields its half first.
+    """
+    source = _docs_i18n.DEFAULT_SOURCE_LANGUAGE
+    translated = [language for language in languages if language != source]
+    source_jobs = max(1, min(cpus // 2, cpus - len(translated))) if translated else max(1, cpus)
+    translated_jobs = max(1, (cpus - source_jobs) // len(translated)) if translated else 0
+    return {language: str(source_jobs if language == source else translated_jobs) for language in languages}
+
+
 def _language_build_environments() -> tuple[tuple[str, dict[str, str]], ...]:
     """Return each site root paired with the environment it is built under.
 
@@ -504,8 +522,9 @@ def _build_language_roots(
 
     The roots build at the same time. Each reads its own copy of the sources
     and writes only below its own directory, and each gets its own scratch
-    product-storage root, so no two builds share a file they write. A root's
-    output is printed whole once it finishes; the publish stops, naming every
+    product-storage root, so no two builds share a file they write. The CPUs
+    are shared between them (:func:`root_build_jobs`). A root's output is
+    printed whole once it finishes; the publish stops, naming every
     failed root, after all of them have finished.
 
     Args:
@@ -517,8 +536,11 @@ def _build_language_roots(
             isolation without paying for four Sphinx builds.
     """
     environments = _language_build_environments()
+    cpus = os.cpu_count() or 1
+    jobs = root_build_jobs([language for language, _ in environments], cpus)
     print(
-        f"Building the {', '.join(language for language, _ in environments)} roots at once on {os.cpu_count()} CPUs.",
+        f"Building the roots at once on {cpus} CPUs: "
+        f"{', '.join(f'{language} with {jobs[language]} workers' for language, _ in environments)}.",
         flush=True,
     )
     with tempfile.TemporaryDirectory(prefix="cadrumo-docs-roots-") as scratch:
@@ -530,7 +552,11 @@ def _build_language_roots(
             return run_command(
                 command,
                 cwd=repo_root,
-                environment={**environment, "CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root)},
+                environment={
+                    **environment,
+                    "CADRUMO_DOCS_JOBS": jobs[language],
+                    "CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root),
+                },
             )
 
         with ThreadPoolExecutor(max_workers=len(environments)) as pool:
