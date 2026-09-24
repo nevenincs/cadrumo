@@ -153,6 +153,9 @@ aggregation:
         edit --modelo-111-no-retenciones-periods %{attestation_period}` (the option
         replaces the stored list, so also list, comma-separated, any periods already
         declared), or record the perceptor rows with `aeat app modelo aggregate --retencion-observation`.'
+      m193_phase_allocation_collision: 'Modelo %{modelo} %{filing_year}: allocation(s)
+        %{source_allocations} are declared manually and also come from captured capital
+        withholding. Remove the manual row.'
       perceptor_nif_blank: Perceptor NIF must not be blank.
       perceptor_observations_missing: No per-perceptor retention observations exist
         for modelo %{modelo} %{filing_year} %{period}; source %{source_kind} cannot

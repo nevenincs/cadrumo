@@ -68,6 +68,13 @@ class _EmptyRetencionObservationRepository:
     def load_annual_source_observations(self, source_modelo: str, filing_year: int) -> tuple[RetencionObservation, ...]:
         return ()
 
+    def load_source_observations_through_year(
+        self,
+        source_modelo: str,
+        last_filing_year: int,
+    ) -> tuple[RetencionObservation, ...]:
+        return ()
+
 
 def _m180_retenciones_revision() -> ModeloRevision:
     return ModeloRevision(

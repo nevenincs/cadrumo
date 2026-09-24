@@ -121,6 +121,19 @@ class RetencionObservationRepository(Protocol):
         """Return all active periodic projections feeding one annual family."""
         ...
 
+    def load_source_observations_through_year(
+        self,
+        source_modelo: str,
+        last_filing_year: int,
+    ) -> tuple[RetencionObservation, ...]:
+        """Return every active periodic projection of ``source_modelo`` up to ``last_filing_year``.
+
+        An annual disclosure can depend on an allocation recognised in an
+        earlier year and settled in this one, so the read spans every periodic
+        window whose filing year is at or before ``last_filing_year``.
+        """
+        ...
+
 
 @dataclass(frozen=True, slots=True)
 class RetencionObservationPorts:

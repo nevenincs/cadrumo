@@ -167,6 +167,9 @@ aggregation:
         (la opción sustituye la lista guardada, así que incluye también, separados
         por comas, los periodos ya declarados), o registra las filas de perceptor
         con `aeat app modelo aggregate --retencion-observation`.'
+      m193_phase_allocation_collision: 'Modelo %{modelo} %{filing_year}: la(s) asignación(es)
+        %{source_allocations} figuran declaradas manualmente y también proceden de
+        las retenciones de capital capturadas. Elimine la fila manual.'
       perceptor_nif_blank: El NIF del perceptor no puede estar vacío.
       perceptor_observations_missing: No existen observaciones de retenciones por
         perceptor para el modelo %{modelo} %{filing_year} %{period}; la fuente %{source_kind}

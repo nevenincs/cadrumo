@@ -27,6 +27,8 @@ from ....domain.calculations.registry.schema import BindingDefinition, ModeloRev
 from ....domain.calculations.registry.schema_references import PeriodSelector
 from ....domain.calculations.registry.withholding_bindings import WithholdingObservation
 from ..percepciones_observations_repository import PercepcionObservationPorts
+from ..retencion_observations_repository import RetencionObservationPorts
+from ..retenciones import RetencionObservation
 from ..source_mesh import CalculationSourceContext
 from ..withholding_source import WithholdingSourceResolver
 
@@ -84,6 +86,46 @@ class _InMemoryPercepcionObservationRepository:
             if modelo == source_modelo and year == filing_year and period.endswith("T")
             for observation in observations
         )
+
+
+class _EmptyRetencionObservationRepository:
+    """Protocol-conforming inward fake: no captured retención allocations."""
+
+    def replace_observations(
+        self,
+        *,
+        modelo: str,
+        filing_year: int,
+        period: Period,
+        observations: Sequence[RetencionObservation],
+        source_kind: AggregationCaptureKind,
+        captured_at: datetime | None = None,
+        source_metadata: Mapping[str, str] | None = None,
+    ) -> None:
+        del modelo, filing_year, period, observations, source_kind, captured_at, source_metadata
+
+    def load_observations(self, modelo: str, period: Period) -> tuple[RetencionObservation, ...]:
+        del modelo, period
+        return ()
+
+    def load_annual_source_observations(self, source_modelo: str, filing_year: int) -> tuple[RetencionObservation, ...]:
+        del source_modelo, filing_year
+        return ()
+
+    def load_source_observations_through_year(
+        self,
+        source_modelo: str,
+        last_filing_year: int,
+    ) -> tuple[RetencionObservation, ...]:
+        del source_modelo, last_filing_year
+        return ()
+
+
+def _resolver(repository: _InMemoryPercepcionObservationRepository) -> WithholdingSourceResolver:
+    return WithholdingSourceResolver(
+        ports=PercepcionObservationPorts(repository=repository),
+        retencion_ports=RetencionObservationPorts(repository=_EmptyRetencionObservationRepository()),
+    )
 
 
 def _revision_with(*bindings: BindingDefinition) -> ModeloRevision:
@@ -168,7 +210,7 @@ def test_resolver_materialises_distinct_percepcion_count() -> None:
         ],
         source_kind=AggregationCaptureKind.AGGREGATE_PULL,
     )
-    resolution = WithholdingSourceResolver(ports=PercepcionObservationPorts(repository=repository)).resolve(
+    resolution = _resolver(repository).resolve(
         _context(_revision_with(binding)),
     )
 
@@ -200,9 +242,7 @@ def test_m190_resolver_folds_active_quarterly_m111_detail() -> None:
         source_kind=AggregationCaptureKind.AGGREGATE_PULL,
     )
 
-    resolution = WithholdingSourceResolver(ports=PercepcionObservationPorts(repository=repository)).resolve(
-        _context(_revision_with(binding))
-    )
+    resolution = _resolver(repository).resolve(_context(_revision_with(binding)))
 
     assert resolution.binding_values == {binding.id: Decimal(2)}
     assert len(resolution.provenance) == 3
@@ -211,8 +251,7 @@ def test_m190_resolver_folds_active_quarterly_m111_detail() -> None:
 def test_resolver_materialises_zero_with_advisory_on_empty_store() -> None:
     """Empty store -> zero count materialised + a non-blocking advisory (not a refusal)."""
     binding = _percepcion_binding()
-    ports = PercepcionObservationPorts(repository=_InMemoryPercepcionObservationRepository())
-    resolution = WithholdingSourceResolver(ports=ports).resolve(_context(_revision_with(binding)))
+    resolution = _resolver(_InMemoryPercepcionObservationRepository()).resolve(_context(_revision_with(binding)))
 
     assert resolution.binding_values == {binding.id: Decimal(0)}
     assert len(resolution.diagnostics) == 1
@@ -222,8 +261,7 @@ def test_resolver_materialises_zero_with_advisory_on_empty_store() -> None:
 
 def test_resolver_silent_when_revision_declares_no_withholding_binding() -> None:
     """A revision with no withholding binding resolves empty (no false advisory)."""
-    ports = PercepcionObservationPorts(repository=_InMemoryPercepcionObservationRepository())
-    resolution = WithholdingSourceResolver(ports=ports).resolve(
+    resolution = _resolver(_InMemoryPercepcionObservationRepository()).resolve(
         CalculationSourceContext(
             bucket_id="operator",
             modelo="303",

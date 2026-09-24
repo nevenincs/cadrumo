@@ -201,6 +201,22 @@ class RetencionObservationRepositoryAdapter(
             ),
         )
 
+    @override
+    def load_source_observations_through_year(
+        self,
+        source_modelo: str,
+        last_filing_year: int,
+    ) -> tuple[RetencionObservation, ...]:
+        """Read every active periodic row for the source modelo up to and including ``last_filing_year``."""
+        return _translate_storage_failure(
+            "retencion_load_source_observations_through_year",
+            lambda: tuple(
+                payload.observation
+                for payload in self.iter_modelo(source_modelo)
+                if payload.filing_year <= last_filing_year and payload.period.registry_token.endswith("T")
+            ),
+        )
+
     def iter_modelo(self, modelo: str) -> Iterator[_RetencionObservationEnvelopePayload]:
         """Yield encrypted payloads for one modelo in unspecified order."""
         safe_repository_id(modelo, context="modelo")

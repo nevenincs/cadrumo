@@ -164,6 +164,9 @@ aggregation:
         (l''opció substitueix la llista desada, així que inclou també, separats per
         comes, els períodes ja declarats), o registra les files de perceptor amb `aeat
         app modelo aggregate --retencion-observation`.'
+      m193_phase_allocation_collision: 'Model %{modelo} %{filing_year}: les assignacions
+        %{source_allocations} consten declarades manualment i també provenen de les
+        retencions de capital capturades. Elimineu la fila manual.'
       perceptor_nif_blank: El NIF del perceptor no pot estar buit.
       perceptor_observations_missing: No hi ha observacions de retencions per perceptor
         per al model %{modelo} %{filing_year} %{period}; la font %{source_kind} no

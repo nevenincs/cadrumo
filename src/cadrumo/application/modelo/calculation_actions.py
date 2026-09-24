@@ -889,7 +889,14 @@ def resolve_bucket_source_mesh(
             # per-perceptor-clave withholding store and materialises scalar
             # withholding bindings. Empty store on a declaring revision surfaces
             # a no-silent advisory while still materialising an explicit zero.
-            resolve_declared(WithholdingSourceResolver(ports=ports.percepciones_observation_ports)),
+            # M193 also reads the Modelo 123 retención store for the disclosure
+            # phases of captured capital allocations.
+            resolve_declared(
+                WithholdingSourceResolver(
+                    ports=ports.percepciones_observation_ports,
+                    retencion_ports=ports.retencion_observation_ports,
+                )
+            ),
             # M349 collectible / payable invoices (collectible_invoice,
             # payable_invoice).  Loads the encrypted invoice catalogue and resolves
             # binding values for intra-community transactions in scope.

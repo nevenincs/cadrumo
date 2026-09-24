@@ -81,6 +81,18 @@ class _InMemoryRetencionObservationRepository:
             for observation in observations
         )
 
+    def load_source_observations_through_year(
+        self,
+        source_modelo: str,
+        last_filing_year: int,
+    ) -> tuple[RetencionObservation, ...]:
+        return tuple(
+            observation
+            for (modelo, year, period), observations in self._windows.items()
+            if modelo == source_modelo and year <= last_filing_year and period.endswith("T")
+            for observation in observations
+        )
+
 
 def _resolver(repository: _InMemoryRetencionObservationRepository) -> RetencionesAggregationSourceResolver:
     return RetencionesAggregationSourceResolver(ports=RetencionObservationPorts(repository=repository))

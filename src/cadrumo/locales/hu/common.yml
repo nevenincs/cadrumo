@@ -154,6 +154,9 @@ aggregation:
         vesszővel elválasztva add meg a már bejelentett időszakokat is), vagy rögzítsd
         a perceptor-sorokat az `aeat app modelo aggregate --retencion-observation`
         paranccsal.'
+      m193_phase_allocation_collision: '%{modelo} modell, %{filing_year}: a(z) %{source_allocations}
+        felosztás(ok) kézzel is rögzítve vannak, és a rögzített tőkejövedelem-visszatartásból
+        is származnak. Törölje a kézi sort.'
       perceptor_nif_blank: A perceptor NIF nem lehet üres.
       perceptor_observations_missing: Nincsenek perceptoronkénti retención megfigyelések
         a(z) %{modelo} %{filing_year} %{period} modellhez; a(z) %{source_kind} forrás
