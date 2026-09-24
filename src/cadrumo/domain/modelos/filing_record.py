@@ -31,7 +31,7 @@ from collections.abc import Iterator, Mapping
 from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated, Self, cast, override
+from typing import Annotated, Self, override
 
 from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
@@ -46,6 +46,7 @@ from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.time.utc import UtcInstant
+from ...core.type_guards import is_object_list_or_tuple
 from ..filing_evidence import FilingEvidenceReference
 from .codes import ModeloCode
 from .errors import ModeloValidationError
@@ -272,12 +273,11 @@ class IvaSettlementSnapshot(BaseModel):
         """Keep first-seen evidence order while collapsing only exact duplicates."""
         if value is None:
             return ()
-        if not isinstance(value, (list, tuple)):
+        if not is_object_list_or_tuple(value):
             raise ModeloValidationError("payment_evidence must be an ordered sequence")
         ordered: list[IvaSettlementPaymentEvidence] = []
         by_reference: dict[str, IvaSettlementPaymentEvidence] = {}
-        entries = cast(tuple[object, ...] | list[object], value)
-        for raw_entry in entries:
+        for raw_entry in value:
             entry = (
                 raw_entry
                 if isinstance(raw_entry, IvaSettlementPaymentEvidence)

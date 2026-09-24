@@ -24,7 +24,7 @@ import cycle.
 
 from __future__ import annotations
 
-from typing import Any, Final
+from typing import Any, Final, Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 from pydantic_core import PydanticCustomError
@@ -56,8 +56,11 @@ from ..contribuyente.renta_codes import (
 from ..deadlines.models import IVARegime
 from .quarter_sets import format_quarter_set, parse_quarter_set
 
+type OptionalWizardBool = bool | Literal[""]
+"""A three-state wizard answer: ``True``, ``False`` or blank when unanswered."""
 
-def _parse_optional_bool_token(value: object, *, field_name: str) -> object:
+
+def _parse_optional_bool_token(value: object, *, field_name: str) -> OptionalWizardBool:
     """Parse a three-state optional wizard boolean token.
 
     Accepted affirmative tokens become ``True``; accepted negative tokens become
@@ -228,13 +231,13 @@ class SetupAnswers(BaseModel):
     irpf_special_regime_start_date: str = ""
     """ISO-8601 opt-in election date for the special regime."""
     does_intracomunitario: bool = False
-    third_party_transactions_above_347_threshold: Any = ""
+    third_party_transactions_above_347_threshold: OptionalWizardBool = ""
     """Three-state payer fact: ``True``, ``False`` or blank when unanswered."""
-    bienes_extranjero_above_threshold: Any = ""
+    bienes_extranjero_above_threshold: OptionalWizardBool = ""
     """Three-state payer fact: ``True``, ``False`` or blank when unanswered."""
-    monedas_virtuales_extranjero_above_threshold: Any = ""
+    monedas_virtuales_extranjero_above_threshold: OptionalWizardBool = ""
     """Three-state payer fact: ``True``, ``False`` or blank when unanswered."""
-    premio_loteria_gravamen_especial_sin_retencion: Any = ""
+    premio_loteria_gravamen_especial_sin_retencion: OptionalWizardBool = ""
     """Three-state payer fact: ``True``, ``False`` or blank when unanswered."""
     premio_loteria_gravamen_especial_trimestres: str = ""
     """Canonical ``|``-delimited ``YYYY-nT`` quarters in which such prizes were cashed."""
@@ -312,7 +315,7 @@ class SetupAnswers(BaseModel):
     )
     @classmethod
     @pydantic_validation_boundary
-    def _parse_optional_payer_fact_bool(cls, value: object) -> Any:
+    def _parse_optional_payer_fact_bool(cls, value: object) -> OptionalWizardBool:
         return _parse_optional_bool_token(value, field_name="payer applicability fact")
 
     @field_validator("premio_loteria_gravamen_especial_trimestres")

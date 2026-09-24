@@ -14,7 +14,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -23,6 +23,7 @@ from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import canonical_json_bytes, sha256_hex
 from ...core.paths import effective_storage_root
 from ...core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID, SecureObjectWrite
+from ...core.type_guards import is_object_dict
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import append_bucket_event, build_bucket_event
 from ...domain.user_profile.errors import UserProfileError
@@ -666,9 +667,9 @@ def _stored_schema_version(payload: bytes | str) -> int | None:
         decoded: object = json.loads(payload)
     except ValueError:
         return None
-    if not isinstance(decoded, dict):
+    if not is_object_dict(decoded):
         return None
-    version = cast("dict[str, object]", decoded).get("schema_version")
+    version = decoded.get("schema_version")
     return version if isinstance(version, int) and not isinstance(version, bool) else None
 
 
