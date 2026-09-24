@@ -20,6 +20,7 @@ from ..docs_static_site import (
     WORKER_SCRIPT,
     DeliveryCredentials,
     _delivery_credentials,
+    expected_redirect,
     localized_languages,
     public_delivery_checks,
     release_id,
@@ -85,3 +86,18 @@ def test_missing_credentials_are_named_together_without_their_values() -> None:
 def test_the_publisher_and_worker_agree_on_the_release_header() -> None:
     """The publisher polls the header the Worker sets; a rename on one side would stall every deploy."""
     assert f'"{RELEASE_HEADER}"' in WORKER_MODULE.read_text(encoding="utf-8")
+
+
+def test_an_apex_page_is_checked_to_redirect_to_the_source_language_root() -> None:
+    checks = dict(public_delivery_checks())
+    for base_url, mount in ((CANONICAL_DOCS_BASE_URL, "/docs"), (MIRROR_DOCS_BASE_URL, "/cadrumo/docs")):
+        deep_link = f"{base_url}/search.html"
+        assert checks[deep_link] == 301
+        assert expected_redirect(deep_link) == f"{mount}/en/search.html"
+        assert expected_redirect(base_url) == f"{mount}/"
+
+
+def test_the_worker_knows_every_language_root_and_the_source_root() -> None:
+    bindings = {binding["name"]: binding for binding in worker_bindings(_CREDENTIALS, "v1-20260923T000000Z")}
+    assert bindings["LANGUAGE_ROOTS"]["text"].split(",") == list(localized_languages())
+    assert bindings["SOURCE_ROOT"]["text"] == "en"

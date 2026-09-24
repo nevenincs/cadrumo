@@ -15,6 +15,7 @@ import contextlib
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import time
@@ -90,6 +91,9 @@ _ENDPOINT_TIMEOUT_SECONDS = 20
 _RELEASE_WAIT_SECONDS = 180
 _RELEASE_POLL_SECONDS = 5
 _MISSING_DOCS_PATH = "__cadrumo-delivery-missing__.html"
+#: A page every language root carries and the apex never does, so a request for
+#: it at the apex proves the redirect to the source-language root.
+_APEX_DEEP_LINK = "search.html"
 
 #: The runtime download payload the docs download page enhances with
 #: (``initDownloadCards`` in ``docs/_static/cadrumo-docs.js``). It is pulled —
@@ -262,20 +266,73 @@ def _refresh_download_latest(repo_root: Path, *, source_url: str = _DOWNLOAD_LAT
     print(f"Refreshed {destination.relative_to(repo_root)} from the latest release.", flush=True)
 
 
-def _build_site(repo_root: Path) -> Path:
-    """Build the complete strict site at the canonical Cadrumo URL."""
-    try:
-        _run(
-            [sys.executable, "-m", "dev.docs.build", "--strict", "docs/conf.py"],
-            cwd=repo_root,
-            env=site_build_environment(),
-            stream_output=True,
-        )
-    except SystemExit as exc:
-        raise SystemExit(
-            f"Strict docs build failed; refusing to publish site or Pagefind output ({exc.code}).",
-        ) from exc
+def _site_root(repo_root: Path) -> Path:
+    """Return the directory the published tree is composed in."""
     return repo_root / "docs" / "_build" / "html"
+
+
+def _clear_apex(html_root: Path) -> None:
+    """Remove everything at the apex except the language roots.
+
+    The apex is composed afresh on every publish, but each language root keeps
+    its own subdirectory, and with it the Sphinx environment an incremental
+    rebuild reads. Anything else at the apex -- a full site from an earlier
+    layout, a stale entry page -- would otherwise be uploaded as current.
+    """
+    html_root.mkdir(parents=True, exist_ok=True)
+    roots = set(localized_languages())
+    for entry in scan_directory(html_root):
+        if entry.name in roots and entry.is_dir():
+            continue
+        if entry.is_dir():
+            shutil.rmtree(entry)
+        else:
+            entry.unlink()
+
+
+def _write_apex_sitemap(html_root: Path) -> Path:
+    """Write the apex sitemap as an index of every language root's own sitemap."""
+    sitemaps = "".join(
+        f"  <sitemap><loc>{_language_site_url(language)}/sitemap.xml</loc></sitemap>\n"
+        for language in localized_languages()
+    )
+    path = html_root / "sitemap.xml"
+    path.write_text(
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        f"{sitemaps}</sitemapindex>\n",
+        encoding=_UTF_8,
+        newline="\n",
+    )
+    return path
+
+
+def _compose_apex(html_root: Path) -> None:
+    """Give the apex its language entry, error page and sitemap index.
+
+    The apex carries no copy of any site. Its 404 page is the source-language
+    root's, whose links are absolute; an apex path naming no language root is
+    redirected by the Worker to the same page under the source-language root.
+    """
+    _write_language_entry(html_root)
+    source = html_root / _docs_i18n.DEFAULT_SOURCE_LANGUAGE
+    shutil.copyfile(source / "404.html", html_root / "404.html")
+    _write_apex_sitemap(html_root)
+
+
+def _validate_apex(html_root: Path) -> None:
+    """Require the apex entry, its error page, and a sitemap index of every root."""
+    missing = [name for name in ("index.html", "404.html", "sitemap.xml") if not (html_root / name).is_file()]
+    if missing:
+        raise SystemExit(f"The apex is not deployable; missing: {', '.join(missing)}")
+    try:
+        sitemap = ElementTree.parse(html_root / "sitemap.xml")
+    except ElementTree.ParseError as exc:
+        raise SystemExit("The apex sitemap index is not valid XML.") from exc
+    listed = {(element.text or "").strip() for element in sitemap.iter() if element.tag.endswith("loc")}
+    expected = {f"{_language_site_url(language)}/sitemap.xml" for language in localized_languages()}
+    if listed != expected:
+        raise SystemExit(f"The apex sitemap index lists {sorted(listed)}, not every language root's sitemap.")
 
 
 def _require_artifacts_present(html_root: Path, *, root_label: str) -> None:
@@ -318,13 +375,6 @@ def _require_valid_sitemap(html_root: Path, *, expected_base_url: str, root_labe
     unexpected = [location for location in locations if not location.startswith(f"{expected_base_url}/")]
     if unexpected:
         raise SystemExit(f"{root_label} sitemap contains a non-canonical URL: " + unexpected[0])
-
-
-def _validate_site_artifacts(html_root: Path) -> None:
-    """Require the rendered site and its Pagefind search bundle."""
-    _require_artifacts_present(html_root, root_label="Docs build")
-    _require_valid_sitemap(html_root, expected_base_url=CANONICAL_DOCS_BASE_URL, root_label="Docs build")
-    _require_search_index(html_root, root_label="Docs build")
 
 
 def _require_search_index(site_root: Path, *, root_label: str) -> None:
@@ -622,6 +672,8 @@ def worker_bindings(credentials: DeliveryCredentials, release: str) -> tuple[dic
         {"type": "plain_text", "name": "CANONICAL_MOUNT", "text": urlsplit(CANONICAL_DOCS_BASE_URL).path},
         {"type": "plain_text", "name": "MIRROR_HOST", "text": MIRROR_SITE_DOMAIN},
         {"type": "plain_text", "name": "MIRROR_MOUNT", "text": urlsplit(MIRROR_DOCS_BASE_URL).path},
+        {"type": "plain_text", "name": "LANGUAGE_ROOTS", "text": ",".join(localized_languages())},
+        {"type": "plain_text", "name": "SOURCE_ROOT", "text": _docs_i18n.DEFAULT_SOURCE_LANGUAGE},
     )
 
 
@@ -698,7 +750,21 @@ def public_delivery_checks() -> tuple[tuple[str, int], ...]:
         checks.extend((f"{base_url}/{language}/", 200) for language in localized_languages())
         checks.append((f"{base_url}/{_MISSING_DOCS_PATH}", 404))
         checks.append((base_url, 301))
+        checks.append((f"{base_url}/{_APEX_DEEP_LINK}", 301))
     return tuple(checks)
+
+
+def expected_redirect(url: str) -> str:
+    """Return where a redirecting delivery check must point.
+
+    The bare mount redirects to its directory; an apex page redirects to the same
+    page under the source-language root.
+    """
+    path = urlsplit(url).path
+    if path.endswith(f"/{_APEX_DEEP_LINK}"):
+        mount = path[: -len(_APEX_DEEP_LINK) - 1]
+        return f"{mount}/{_docs_i18n.DEFAULT_SOURCE_LANGUAGE}/{_APEX_DEEP_LINK}"
+    return f"{path}/"
 
 
 def _published_body(url: str) -> bytes:
@@ -777,12 +843,9 @@ def _verify_published_search_index(
         fetch: DI seam for the HTTPS body read, so the comparison can be proven
             against real built artefacts without standing up a TLS endpoint.
     """
-    roots: tuple[tuple[str, Path, str], ...] = (
-        (f"{base_url}/", html_root, "docs root"),
-        *tuple(
-            (f"{base_url}/{language}/", html_root / language, f"localized root {language!r}")
-            for language in localized_languages()
-        ),
+    roots: tuple[tuple[str, Path, str], ...] = tuple(
+        (f"{base_url}/{language}/", html_root / language, f"localized root {language!r}")
+        for language in localized_languages()
     )
     for root_url, built_root, label in roots:
         served = fetch(f"{root_url}pagefind/pagefind-entry.json")
@@ -820,8 +883,8 @@ def _delivery_mismatch(url: str, expected_status: int, release: str) -> str | No
         return f"expected HTTP {expected_status}, received HTTP {actual_status}"
     if headers.get(RELEASE_HEADER) != release:
         return f"answered from release {headers.get(RELEASE_HEADER)!r}, not {release!r}"
-    if expected_status == 301 and headers.get("location") != f"{urlsplit(url).path}/":
-        return f"redirected to {headers.get('location')!r}, not to its directory"
+    if expected_status == 301 and headers.get("location") != expected_redirect(url):
+        return f"redirected to {headers.get('location')!r}, not to {expected_redirect(url)!r}"
     return None
 
 
@@ -910,33 +973,31 @@ def _provision(*, environment: Mapping[str, str] | None = None) -> int:
 
 
 def _build_site_roots(repo_root: Path) -> Path:
-    """Build the apex site, every language root, and the apex language entry.
+    """Build every language root and compose the apex around them.
 
     The write half of a publish's pre-upload work, factored out so the dry run
     below and the publish share one composition. A second composition would be
-    free to drift, and the drift would only ever surface on the live site.
+    free to drift, and the drift would only ever surface on the live site. The
+    English root is the one full-scope build; nothing is built twice.
 
     Returns:
-        The built HTML root, carrying every published root.
+        The composed HTML root, carrying every published root.
     """
-    html_root = _build_site(repo_root)
+    html_root = _site_root(repo_root)
+    _clear_apex(html_root)
     _build_language_roots(repo_root, html_root)
-    _write_language_entry(html_root)
+    _compose_apex(html_root)
     return html_root
 
 
 def _validate_built_site(html_root: Path) -> None:
     """Run every validation a publish runs against the built tree before uploading.
 
-    The apex is validated here as a root in its own right, not only as the
-    language entry. It carries the English full-scope site — the API tree lives
-    nowhere else — and its own Pagefind bundle, which
-    :func:`_verify_published_search_index` demands back from the served site
-    AFTER the upload and the Worker deploy. Checking it only there means a
-    publish that cannot succeed still writes to the live destination first, so
-    the same artifact set is required before a byte moves.
+    Every language root must carry its complete artifact set and a record-bearing
+    search index before a byte moves, because a publish that cannot succeed
+    would otherwise write to the live destination first.
     """
-    _validate_site_artifacts(html_root)
+    _validate_apex(html_root)
     _validate_language_entry(html_root)
     _validate_language_roots(html_root)
 

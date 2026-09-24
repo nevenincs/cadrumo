@@ -9,6 +9,8 @@ const ENV = {
   CANONICAL_MOUNT: "/docs",
   MIRROR_HOST: "neve.md",
   MIRROR_MOUNT: "/cadrumo/docs",
+  LANGUAGE_ROOTS: "en,es",
+  SOURCE_ROOT: "en",
 };
 
 /* An in-memory bucket with the slice of the R2 binding the Worker uses. */
@@ -24,6 +26,7 @@ function bucket(objects) {
         headers.set("cache-control", "public, max-age=300, must-revalidate");
       },
       body: new Response(body).body,
+      text: async () => body,
     };
   };
   return { get: async (key) => entry(key), head: async (key) => entry(key) };
@@ -33,7 +36,9 @@ const release = (tail) => `releases/${ENV.RELEASE_ID}${tail}`;
 const SITE = bucket({
   [release("/index.html")]: { body: "apex", contentType: "text/html; charset=utf-8" },
   [release("/es/index.html")]: { body: "es", contentType: "text/html; charset=utf-8" },
-  [release("/404.html")]: { body: "missing", contentType: "text/html; charset=utf-8" },
+  [release("/404.html")]: { body: '<a href="/docs/en/index.html">missing</a>', contentType: "text/html; charset=utf-8" },
+  [release("/en/how-to/guide.html")]: { body: "guide", contentType: "text/html; charset=utf-8" },
+  [release("/en/how-to/index.html")]: { body: "how-to", contentType: "text/html; charset=utf-8" },
   [release("/pagefind/pagefind.js")]: { body: "js", contentType: "text/javascript; charset=utf-8" },
 });
 
@@ -87,7 +92,7 @@ test("a directory without its slash redirects to the directory", async () => {
 test("a missing page is the release's 404 page with status 404", async () => {
   const response = await fetchFrom("https://cadrumo.neve.md/docs/nowhere.html");
   assert.equal(response.status, 404);
-  assert.equal(await response.text(), "missing");
+  assert.equal(await response.text(), '<a href="/docs/en/index.html">missing</a>');
   assert.equal(response.headers.get(RELEASE_HEADER), ENV.RELEASE_ID);
 });
 
@@ -102,4 +107,30 @@ test("writes are refused and an unconfigured release is unavailable", async () =
   assert.equal((await fetchFrom("https://cadrumo.neve.md/docs/", { method: "POST" })).status, 405);
   const response = await worker.fetch(new Request("https://cadrumo.neve.md/docs/"), { ...ENV, RELEASE_ID: " ", SITE });
   assert.equal(response.status, 503);
+});
+
+test("an apex path that names no language root redirects to the source-language page", async () => {
+  for (const [url, location] of [
+    ["https://cadrumo.neve.md/docs/how-to/guide.html?q=1", "/docs/en/how-to/guide.html?q=1"],
+    ["https://neve.md/cadrumo/docs/how-to/guide.html", "/cadrumo/docs/en/how-to/guide.html"],
+    ["https://cadrumo.neve.md/docs/how-to/", "/docs/en/how-to/"],
+  ]) {
+    const response = await fetchFrom(url);
+    assert.equal(response.status, 301, url);
+    assert.equal(response.headers.get("location"), location);
+  }
+});
+
+test("a miss inside a language root, or with no source page, stays a 404", async () => {
+  for (const url of ["https://cadrumo.neve.md/docs/es/how-to/guide.html", "https://cadrumo.neve.md/docs/how-to/absent.html"]) {
+    assert.equal((await fetchFrom(url)).status, 404, url);
+  }
+});
+
+test("the 404 page's absolute links are re-rooted on the mirror only", async () => {
+  const canonical = await fetchFrom("https://cadrumo.neve.md/docs/nowhere.html");
+  assert.match(await canonical.text(), /href="\/docs\/en\/index.html"/);
+  const mirror = await fetchFrom("https://neve.md/cadrumo/docs/nowhere.html");
+  assert.equal(mirror.status, 404);
+  assert.match(await mirror.text(), /href="\/cadrumo\/docs\/en\/index.html"/);
 });

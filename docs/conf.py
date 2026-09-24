@@ -18,6 +18,7 @@ os.environ["CADRUMO_OUTPUT_LANGUAGE"] = "en"
 import sys
 from pathlib import Path
 from typing import Annotated, get_origin, override
+from urllib.parse import urlsplit
 
 from docutils import nodes
 from docutils.parsers.rst import Directive
@@ -350,6 +351,10 @@ html_theme = "furo"
 html_title = f"{PRODUCT_IDENTITY.prose_name} documentation - local Spanish tax preparation"
 html_short_title = f"{PRODUCT_IDENTITY.prose_name} documentation"
 html_baseurl = f"{_DOCS_BASE_URL}/" if _DOCS_BASE_URL else ""
+# The error page is served at whatever path missed, so its links are absolute.
+# They are rooted at this site root's own path; the extension's default is a
+# Read the Docs layout ("/en/latest/") no Cadrumo root lives under.
+notfound_urls_prefix = urlsplit(html_baseurl).path or "/"
 html_meta = {
     "description": (
         "Cadrumo helps you prepare, check, and export Spanish tax files locally. "

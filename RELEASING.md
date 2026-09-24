@@ -299,7 +299,9 @@ private R2 bucket `cadrumo-docs`. After the channels are reacquired, the `publis
 job of the publish phase builds the site from the proven commit, uploads it as a new
 release under `releases/<tag>-<UTC instant>/`, deploys the Worker with that release id
 and checks both mounts live. Every response carries the `x-cadrumo-docs-release`
-header naming the release it came from.
+header naming the release it came from. Each language has its own root (`/en/`,
+`/es/`, `/ca/`, `/hu/`); the apex serves only the language chooser, and any other
+apex path redirects to the same page under `/en/`.
 
 The job runs in the `docs` environment and refuses to start without its five secrets:
 `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_API_TOKEN` (a token limited to deploying the Worker

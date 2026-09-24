@@ -30,6 +30,8 @@ from ..docs_static_site import (
     _DOWNLOAD_LATEST_STATIC_PATH,
     _REQUIRED_ARTIFACTS,
     CANONICAL_DOCS_BASE_URL,
+    _clear_apex,
+    _compose_apex,
     _dry_run,
     _language_build_environments,
     _language_site_url,
@@ -89,16 +91,8 @@ def _materialise_language_root(html_root: Path, language: str) -> None:
 
 
 def _materialise_apex_root(html_root: Path) -> None:
-    """Write the apex's own artifact set, then the language entry over its index page.
-
-    The apex is a site root in its own right -- it carries the English
-    full-scope build, its sitemap is rooted at the canonical docs URL rather
-    than a language sub-path, and its Pagefind bundle is the one the published
-    site is checked against after upload -- so a tree that omits it is not a
-    complete built site and must not stand in for one here.
-    """
-    _materialise_site_root(html_root, canonical_base=CANONICAL_DOCS_BASE_URL)
-    _write_language_entry(html_root)
+    """Compose the apex around the language roots exactly as a publish does."""
+    _compose_apex(html_root)
 
 
 def _materialise_site_root(root: Path, *, canonical_base: str) -> None:
@@ -412,23 +406,45 @@ def test_dry_run_refuses_a_root_that_would_publish_incomplete(tmp_path: Path) ->
         _dry_run(tmp_path, build=lambda _: tmp_path)
 
 
-def test_dry_run_refuses_an_apex_missing_the_bundle_the_publish_checks_after_upload(tmp_path: Path) -> None:
-    """The apex is validated as a root BEFORE the upload, not only after it.
-
-    ``_verify_published_search_index`` fetches the apex's served Pagefind entry
-    and compares it against the built file at the apex root, raising when that
-    built file is absent -- but it runs after the sync and after the cache
-    invalidation. An apex that cannot satisfy the publish would therefore have
-    written to the live destination first and failed second. The same file is
-    now required before a byte moves, and this deletes exactly it.
-    """
+def test_the_apex_carries_only_the_entry_error_page_and_a_sitemap_index(tmp_path: Path) -> None:
+    """No site is built at the apex; it indexes every language root's sitemap."""
     for language in localized_languages():
         _materialise_language_root(tmp_path, language)
     _materialise_apex_root(tmp_path)
-    (tmp_path / "pagefind" / "pagefind-entry.json").unlink()
 
-    with pytest.raises(SystemExit, match="required artifacts are missing"):
+    apex_files = {entry.name for entry in tmp_path.iterdir() if entry.is_file()}
+    assert apex_files == {"index.html", "404.html", "sitemap.xml"}
+    sitemap = (tmp_path / "sitemap.xml").read_text(encoding="utf-8")
+    for language in localized_languages():
+        assert f"<loc>{_language_site_url(language)}/sitemap.xml</loc>" in sitemap
+
+
+def test_dry_run_refuses_an_apex_sitemap_index_missing_a_root(tmp_path: Path) -> None:
+    for language in localized_languages():
+        _materialise_language_root(tmp_path, language)
+    _materialise_apex_root(tmp_path)
+    dropped = localized_languages()[-1]
+    sitemap = tmp_path / "sitemap.xml"
+    sitemap.write_text(
+        sitemap.read_text(encoding="utf-8").replace(f"{_language_site_url(dropped)}/sitemap.xml", "https://x.invalid/"),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(SystemExit, match="not every language root's sitemap"):
         _dry_run(tmp_path, build=lambda _: tmp_path)
+
+
+def test_clearing_the_apex_keeps_only_the_language_roots(tmp_path: Path) -> None:
+    """A full site left at the apex by an earlier layout is never uploaded as current."""
+    for language in localized_languages():
+        _materialise_language_root(tmp_path, language)
+    (tmp_path / "api").mkdir()
+    (tmp_path / "api" / "stale.html").write_text("x", encoding="utf-8")
+    (tmp_path / "how-to.html").write_text("x", encoding="utf-8")
+
+    _clear_apex(tmp_path)
+
+    assert {entry.name for entry in tmp_path.iterdir()} == set(localized_languages())
 
 
 def test_dry_run_refuses_an_apex_entry_that_strands_a_root(tmp_path: Path) -> None:

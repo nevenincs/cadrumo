@@ -7,9 +7,11 @@
  * earlier id; nothing in the bucket is ever overwritten.
  *
  * The built site is mount-relative, so the same bytes serve both mounts: the
- * mount is stripped before the key is formed and nothing rewrites content. A
- * missing path answers the release's own 404 page with status 404, never a
- * 200, because a 200 for a missing page is how a broken link hides.
+ * mount is stripped before the key is formed, and only the 404 page, whose
+ * links must be absolute, is re-rooted for the mirror. A missing path answers
+ * the release's own 404 page with status 404, never a 200, because a 200 for a
+ * missing page is how a broken link hides. An apex path that names no language
+ * root redirects to the same page under the source-language root.
  *
  * Every response carries the release header. It is what the publisher polls
  * after a deploy to prove the new release is the one being served.
@@ -78,7 +80,14 @@ function lastSegmentHasExtension(path) {
   return path.slice(path.lastIndexOf("/") + 1).includes(".");
 }
 
-async function notFound(env, release, method) {
+function onMirror(url, env) {
+  return url.hostname.toLowerCase().replace(/\.$/, "") === String(env.MIRROR_HOST).toLowerCase();
+}
+
+/* The 404 page is served at whatever path missed, so its links are absolute and
+   built for the canonical mount. On the mirror host they are re-rooted onto the
+   mirror mount; this is the one response whose bytes the Worker changes. */
+async function notFound(env, release, method, url) {
   const page = await env.SITE.get(`releases/${release}/404.html`);
   if (page === null) return textResponse(404, "Not Found\n", release, { "cache-control": NOT_FOUND_CACHE_CONTROL });
   const headers = new Headers();
@@ -90,13 +99,42 @@ async function notFound(env, release, method) {
     await page.body.cancel();
     return new Response(null, { status: 404, headers });
   }
+  const canonical = normalizeMount(env.CANONICAL_MOUNT);
+  const mirror = normalizeMount(env.MIRROR_MOUNT);
+  if (url && onMirror(url, env) && canonical && mirror && canonical !== mirror) {
+    const body = (await page.text()).replaceAll(`"${canonical}/`, `"${mirror}/`);
+    return new Response(body, { status: 404, headers });
+  }
   return new Response(page.body, { status: 404, headers });
+}
+
+function languageRoots(env) {
+  return String(env.LANGUAGE_ROOTS || "")
+    .split(",")
+    .map((root) => root.trim())
+    .filter(Boolean);
+}
+
+/* The apex holds only the language entry; every page lives under a language
+   root. A miss on an apex path that names no language root is the same page
+   under the source-language root, where links from before the roots existed
+   now live. Redirecting rather than serving a copy keeps one URL per page. */
+async function sourceRootRedirect(env, release, url, path, tail) {
+  const source = String(env.SOURCE_ROOT || "").trim();
+  const first = tail.split("/")[1] || "";
+  if (!source || languageRoots(env).includes(first)) return null;
+  const candidate = `releases/${release}/${source}${tail}`;
+  let found = await env.SITE.head(candidate);
+  if (found === null && !lastSegmentHasExtension(tail)) found = await env.SITE.head(`${candidate}/index.html`);
+  if (found === null) return null;
+  const mount = url.pathname.slice(0, url.pathname.length - path.length);
+  return redirect(`${mount}/${source}${path}${url.search}`, release);
 }
 
 async function serve(request, env, path, release) {
   const url = new URL(request.url);
   const tail = keyTail(path);
-  if (tail === null) return notFound(env, release, request.method);
+  if (tail === null) return notFound(env, release, request.method, url);
   const key = `releases/${release}${tail}`;
   const object = await env.SITE.get(key, { onlyIf: request.headers });
   if (object === null) {
@@ -108,7 +146,11 @@ async function serve(request, env, path, release) {
       const index = await env.SITE.head(`${key}/index.html`);
       if (index !== null) return redirect(`${url.pathname}/${url.search}`, release);
     }
-    return notFound(env, release, request.method);
+    if (!url.pathname.startsWith("//")) {
+      const moved = await sourceRootRedirect(env, release, url, path, tail);
+      if (moved !== null) return moved;
+    }
+    return notFound(env, release, request.method, url);
   }
   const headers = new Headers();
   object.writeHttpMetadata(headers);
@@ -136,7 +178,7 @@ export default {
       if (!release) return textResponse(503, "Service Unavailable: no release is configured\n", release);
       const target = route(new URL(request.url), env);
       if (target.kind === "redirect") return redirect(target.location, release);
-      if (target.kind === "not-found") return await notFound(env, release, request.method);
+      if (target.kind === "not-found") return await notFound(env, release, request.method, new URL(request.url));
       return await serve(request, env, target.path, release);
     } catch (err) {
       /* Only the error's own name and message are logged: the request, and
