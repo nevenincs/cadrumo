@@ -371,9 +371,12 @@ async def _await_outcome(pilot: Pilot[None], host: _ModalHost, controller: Opera
         screen = host.screen
         refusal = (
             str(screen.query_one("#operation-modal-action-refusal", Static).content)
+            + f" interaction={type(screen._interaction).__name__}"
+            + f" apply_disabled={screen.query_one('#btn-operation-apply', Button).disabled}"
+            + f" reject_disabled={screen.query_one('#btn-operation-reject', Button).disabled}"
             if isinstance(screen, OperationModal)
             else "<modal not shown>"
-        )
+        ) + f" app_exception={host._exception!r}"
         message = (
             "the modal never returned its outcome; the supervisor holds the operation at "
             f"lifecycle={projection.lifecycle} terminal={projection.terminal_condition} "
