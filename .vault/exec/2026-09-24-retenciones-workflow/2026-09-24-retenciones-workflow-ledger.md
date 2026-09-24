@@ -5,7 +5,7 @@ tags:
 date: '2026-09-24'
 modified: '2026-09-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:9a60318bf67d1fa86db50164eea94360d97554819b40f481987f9dd3dbb3511b'
+body_hash: 'sha256:b817d6e451f60a10d3eff73b0878ae1b560f3a7eccd6902d887c9a1822c20984'
 related:
   - "[[2026-09-24-retenciones-workflow-plan]]"
 ---
@@ -50,9 +50,15 @@ related:
 - `S02` `A` `src/cadrumo/application/aggregation/tests/test_withholding_source_m193_phases.py`
 - `S02` `M` `src/cadrumo/locales/en/common.yml`
 - `S02` `verify:` `pytest m193 phases, withholding source, retenciones resolver, empty-store guard, locale parity` -> `pass`
+- `S06` `M` `src/cadrumo/application/aggregation/m193_phase_materialization.py`
+- `S06` `M` `src/cadrumo/application/aggregation/withholding_source.py`
+- `S06` `M` `src/cadrumo/application/aggregation/source_mesh.py`
+- `S06` `M` `src/cadrumo/application/aggregation/tests/test_withholding_source_m193_phases.py`
+- `S06` `verify:` `pytest m193 phases, withholding resolver, producer, ledger capital, source mesh` -> `pass`
 
 ## Notes
 
 - `S01` test_grouping_dispatch_coverage fails on per_type2_record from the Modelo 180 row bindings (b7b4e95d20), pre-existing and outside this Step
 - `S02` the 123 loader reads quarterly windows only, matching capture and the 111 loader; monthly 123 filers are an existing wider gap
+- `S06` end-to-end calculate assertion parked until S03 is published; filing_export_supported is read by nothing, so the export gate is a new Step
 
