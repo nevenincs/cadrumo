@@ -6,10 +6,10 @@ import argparse
 import json
 import sys
 from collections import Counter
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import (
@@ -18,6 +18,7 @@ from cadrumo.domain.calculations.registry.authority import (
 )
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 
+from ..compiler.validate_below_floor_export_refs import declared_supported_filing_years_floor
 from ..compiler.validate_bindings import informational_binding_ids, unreferenced_binding_advisories
 from ..compiler.validate_export_field_placement import (
     binding_export_spans,
@@ -29,8 +30,40 @@ from ..conformance.cli import load_bundled_runtime_authority, validate_registry
 from ..maintenance_support import OracleEnvironment
 from ..parity.maintenance import audit_registry_oracles
 from ..pipeline.authority_publication import AuthorityDatabaseCurrencyStatus, authority_database_currency
+from ..pipeline.generated_tree_dispositions import (
+    GeneratedTreeBelowSupportedFilingYearsDisposition,
+    GeneratedTreeRecordDriftDisposition,
+    GeneratedTreeRenderRefusalDisposition,
+    GeneratedTreeTypeColumnContradictionDisposition,
+    below_floor_dispositions,
+    disposition_ledger_from_path,
+    record_drift_dispositions,
+)
 
-_TARGET_STATE_NAMES: Final[tuple[str, ...]] = ("current", "stale", "drifted", "never-committed", "unreadable")
+if TYPE_CHECKING:
+    from .generated_tree_state import GeneratedTreeState
+
+type GeneratedTreeDispositionRow = (
+    GeneratedTreeBelowSupportedFilingYearsDisposition
+    | GeneratedTreeRecordDriftDisposition
+    | GeneratedTreeRenderRefusalDisposition
+    | GeneratedTreeTypeColumnContradictionDisposition
+)
+
+_TARGET_STATE_NAMES: Final[tuple[str, ...]] = (
+    "current",
+    "explained",
+    "stale",
+    "drifted",
+    "never-committed",
+    "unreadable",
+)
+
+#: Generated-tree states whose difference from a fresh render a ledger row may explain.
+_EXPLAINABLE_TREE_STATES: Final[frozenset[str]] = frozenset({"record_drift", "manifest_only_stale"})
+
+#: Manifest members whose movement means the official design changed under a row.
+_SOURCE_PIN_MANIFEST_FIELDS: Final[frozenset[str]] = frozenset({"source_ref", "source_sha256"})
 
 #: What the placement census counted, named wherever its numbers are shown.
 #:
@@ -122,11 +155,206 @@ class RegistryStatus:
     """
 
 
+@dataclass(frozen=True, slots=True)
+class TargetDriftExplanation:
+    """Whether one ledger row explains one drifting target, and why or why not.
+
+    ``honoured`` is False whenever the row's recorded evidence no longer
+    describes the observed drift. The target then stays a currentness failure,
+    and ``detail`` names the evidence that stopped matching.
+    """
+
+    subject: str
+    kind: str
+    honoured: bool
+    detail: str
+
+
+def explain_target_drift(
+    state: GeneratedTreeState,
+    dispositions: Iterable[GeneratedTreeDispositionRow],
+    *,
+    declared_floor: int,
+    revision_filing_years: tuple[int, ...],
+) -> TargetDriftExplanation | None:
+    """Judge whether the ledger row keyed to exactly this target explains its drift.
+
+    Returns ``None`` when no row names the target, or the target is in a state no
+    row can explain, so the target keeps the verdict it already had.
+
+    Two classes explain a difference from a fresh render, matching how the
+    reproduction gate and the publisher read them:
+
+    - ``below_floor``: republication is unreachable because every filing year
+      the revision declares lies below the supported-filing-years floor.
+      Honoured only while the row's recorded floor equals the floor the legal
+      tree declares, and the revision's own newest filing year still equals the
+      row's and lies below that floor.
+    - ``record_drift``: honoured only for record drift, and only while the
+      number of differing records equals the count the row states.
+
+    Either row is honoured only while its design pin equals the source the
+    committed tree attests and the fresh render did not move that pin: a
+    reissued design is a different drift from the one the row was written for.
+    ``render_refusal`` rows describe trees that never reach the comparison and
+    ``type_column_contradiction`` rows describe trees that reproduce, so neither
+    explains a drift here.
+
+    Args:
+        state: The classified target, carrying the observed comparison evidence.
+        dispositions: Ledger rows loaded through the canonical ledger loader.
+        declared_floor: The supported-filing-years floor the legal tree declares.
+        revision_filing_years: Every filing year the target revision declares.
+    """
+    if state.state not in _EXPLAINABLE_TREE_STATES:
+        return None
+    subject = f"{state.modelo}/{state.revision}"
+    row = next(
+        (
+            item
+            for item in dispositions
+            if item.subject == subject
+            and isinstance(
+                item, GeneratedTreeBelowSupportedFilingYearsDisposition | GeneratedTreeRecordDriftDisposition
+            )
+        ),
+        None,
+    )
+    if row is None:
+        return None
+
+    def refused(reason: str) -> TargetDriftExplanation:
+        return TargetDriftExplanation(subject=subject, kind=row.kind, honoured=False, detail=reason)
+
+    pin = (row.source_ref, row.source_sha256)
+    if state.committed_source != pin:
+        attested = "no loadable manifest" if state.committed_source is None else "@".join(state.committed_source)
+        return refused(f"{row.kind} row pins design {'@'.join(pin)}, the committed tree attests {attested}")
+    moved_pin = sorted(_SOURCE_PIN_MANIFEST_FIELDS.intersection(state.provenance_fields))
+    if moved_pin:
+        return refused(f"{row.kind} row pins design {row.source_ref}, the fresh render moved {', '.join(moved_pin)}")
+
+    if isinstance(row, GeneratedTreeBelowSupportedFilingYearsDisposition):
+        if row.supported_filing_years_floor != declared_floor:
+            return refused(
+                f"below_floor row pins floor {row.supported_filing_years_floor}, "
+                f"the registry declares {declared_floor}",
+            )
+        newest = max(revision_filing_years, default=None)
+        if newest is None or newest != row.revision_last_filing_year or newest >= declared_floor:
+            return refused(
+                f"below_floor row pins newest filing year {row.revision_last_filing_year}, the revision declares "
+                f"{list(revision_filing_years)} against floor {declared_floor}",
+            )
+        return TargetDriftExplanation(
+            subject=subject,
+            kind=row.kind,
+            honoured=True,
+            detail=(
+                f"explained by below_floor disposition: filing years through {newest} lie below the "
+                f"supported floor {declared_floor}; {state.detail}"
+            ),
+        )
+
+    if state.state != "record_drift":
+        return refused("record_drift row stands but only the generation manifest differs")
+    observed = len(state.record_differing)
+    if observed != row.differing_records:
+        return refused(
+            f"record_drift row explains {row.differing_records} record(s), the comparison reports {observed}"
+        )
+    return TargetDriftExplanation(
+        subject=subject,
+        kind=row.kind,
+        honoured=True,
+        detail=f"explained by record_drift disposition (remedy={row.remedy}); {state.detail}",
+    )
+
+
+def _explaining_dispositions(ledger_path: Path | None) -> tuple[GeneratedTreeDispositionRow, ...]:
+    """Load the ledger rows through the canonical loader; the live ledger by default."""
+    if ledger_path is None:
+        return (*below_floor_dispositions(), *record_drift_dispositions())
+    return disposition_ledger_from_path(ledger_path)
+
+
+@dataclass(frozen=True, slots=True)
+class ProjectedTargets:
+    """Generated-target states projected onto the report's target buckets."""
+
+    counts: tuple[tuple[str, int], ...]
+    findings: tuple[tuple[str, tuple[tuple[str, str, str], ...]], ...]
+    details: tuple[str, ...]
+
+
+_REPORTED_TREE_STATES: Final[dict[str, str]] = {
+    "reproducible": "current",
+    "manifest_only_stale": "stale",
+    "record_drift": "drifted",
+    "never_committed": "never-committed",
+}
+
+
+def project_target_states(
+    states: Iterable[GeneratedTreeState],
+    excluded: Iterable[tuple[str, str, str]],
+    *,
+    dispositions: tuple[GeneratedTreeDispositionRow, ...],
+    declared_floor: Callable[[], int],
+    revision_filing_years: Callable[[str, str], tuple[int, ...]],
+    excluded_count: int,
+) -> ProjectedTargets:
+    """Bucket each classified target, moving a drift its ledger row explains to ``explained``.
+
+    A target whose row is not honoured stays in its drifting bucket and the
+    refusal is named in its detail and in the report details. ``declared_floor``
+    is read only when some row names a classified target.
+    """
+    grouped: dict[str, list[tuple[str, str, str]]] = {
+        "explained": [],
+        "stale": [],
+        "drifted": [],
+        "never-committed": [],
+        "unreadable": list(excluded),
+    }
+    counts: Counter[str] = Counter()
+    details: list[str] = []
+    floor: int | None = None
+    for item in states:
+        bucket = _REPORTED_TREE_STATES[item.state]
+        detail = item.detail
+        if any(row.subject == f"{item.modelo}/{item.revision}" for row in dispositions):
+            if floor is None:
+                floor = declared_floor()
+            explanation = explain_target_drift(
+                item,
+                dispositions,
+                declared_floor=floor,
+                revision_filing_years=revision_filing_years(item.modelo, item.revision),
+            )
+            if explanation is not None and explanation.honoured:
+                bucket = "explained"
+                detail = explanation.detail
+            elif explanation is not None:
+                detail = f"{item.detail}; disposition not honoured: {explanation.detail}"
+                details.append(f"TARGETS: {explanation.subject}: disposition not honoured: {explanation.detail}")
+        counts[bucket] += 1
+        if bucket in grouped:
+            grouped[bucket].append((item.modelo, item.revision, detail))
+    counts["unreadable"] = excluded_count
+    return ProjectedTargets(
+        counts=tuple((state, counts[state]) for state in _TARGET_STATE_NAMES),
+        findings=tuple((state, tuple(findings)) for state, findings in grouped.items()),
+        details=tuple(details),
+    )
+
+
 def collect_registry_status(
     *,
     registry_root: Path | None = None,
     source_root: Path | None = None,
     authority_descriptor: Path | None = None,
+    disposition_ledger: Path | None = None,
 ) -> RegistryStatus:
     """Delegate each status axis to its owning validator or currency primitive."""
     resolved_registry_root = registry_root or bundled_path("registry", "aeat")
@@ -188,33 +416,24 @@ def collect_registry_status(
                 details.append(f"TARGETS: {len(unrenderable)} modelo(s) could not be censused: {joined}")
             expected_target_count = sum(len(modelo.revisions) for modelo in authority.modelos)
             excluded_target_count = max(0, expected_target_count - len(states))
-            targets = Counter(
-                {
-                    "current": sum(item.state == "reproducible" for item in states),
-                    "stale": sum(item.state == "manifest_only_stale" for item in states),
-                    "drifted": sum(item.state == "record_drift" for item in states),
-                    "never-committed": sum(item.state == "never_committed" for item in states),
-                    "unreadable": excluded_target_count,
-                }
-            )
             if excluded_target_count:
                 details.append(f"TARGETS: {excluded_target_count} target(s) were excluded by the generated-state owner")
-            grouped_findings: dict[str, list[tuple[str, str, str]]] = {
-                "stale": [],
-                "drifted": [],
-                "never-committed": [],
-                "unreadable": list(excluded),
-            }
-            state_names = {
-                "manifest_only_stale": "stale",
-                "record_drift": "drifted",
-                "never_committed": "never-committed",
-            }
-            for item in states:
-                projected_state = state_names.get(item.state)
-                if projected_state is not None:
-                    grouped_findings[projected_state].append((item.modelo, item.revision, item.detail))
-            target_findings = tuple((state, tuple(grouped_findings[state])) for state in grouped_findings)
+            validated_authority = authority
+            projected = project_target_states(
+                states,
+                excluded,
+                dispositions=_explaining_dispositions(disposition_ledger),
+                declared_floor=lambda: declared_supported_filing_years_floor(registry_root=resolved_registry_root),
+                revision_filing_years=lambda modelo_id, revision_id: next(
+                    tuple(revision.period_selector.years)
+                    for candidate_id, revision in validated_authority.modelo(modelo_id).revisions.items()
+                    if str(candidate_id) == revision_id
+                ),
+                excluded_count=excluded_target_count,
+            )
+            details.extend(projected.details)
+            targets = Counter(dict(projected.counts))
+            target_findings = projected.findings
         except Exception as error:
             target_census_failed = True
             targets = Counter({"unreadable": 1})
@@ -569,8 +788,13 @@ if __name__ == "__main__":
 __all__ = [
     "EXPORT_PLACEMENT_POPULATION",
     "ExportPlacementCensus",
+    "GeneratedTreeDispositionRow",
+    "ProjectedTargets",
     "RegistryStatus",
+    "TargetDriftExplanation",
     "collect_registry_status",
+    "explain_target_drift",
     "export_placement_census",
     "main",
+    "project_target_states",
 ]
