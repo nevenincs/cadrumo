@@ -184,7 +184,7 @@ class RetencionesAnnualCliJourneyEvidence:
 
     def to_dict(self) -> dict[str, object]:
         """Return the stable JSON-safe annual acceptance receipt."""
-        return asdict(self)
+        return dict[str, object](asdict(self))
 
 
 @dataclass(frozen=True, slots=True)
@@ -214,7 +214,7 @@ class RetencionesCliJourneyEvidence:
 
     def to_dict(self) -> dict[str, object]:
         """Return the stable JSON-safe acceptance receipt."""
-        return asdict(self)
+        return dict[str, object](asdict(self))
 
 
 @dataclass(frozen=True, slots=True)
@@ -242,7 +242,7 @@ class RetencionesCliFailureEvidence:
 
     def to_dict(self) -> dict[str, object]:
         """Return a payload-free machine-readable failure receipt."""
-        return asdict(self)
+        return dict[str, object](asdict(self))
 
 
 def run_retenciones_cli_journey(
@@ -806,7 +806,7 @@ def _attest_annual_no_activity_periods(
     }
     option = option_by_modelo.get(slice_.source_modelo)
     if option is None:
-        return frozenset()
+        return frozenset[str]()
     tokens: list[str] = []
     for source_period in slice_.source_periods:
         captures = tuple(captures_by_period.get(source_period.period, ()))
@@ -818,7 +818,7 @@ def _attest_annual_no_activity_periods(
         if not captures:
             tokens.append(f"{year}:{source_period.period}")
     if not tokens:
-        return frozenset()
+        return frozenset[str]()
     _require_result(
         cli,
         (

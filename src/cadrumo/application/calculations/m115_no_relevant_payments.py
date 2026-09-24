@@ -28,7 +28,7 @@ def parse_m115_no_relevant_payment_periods(raw: str | None) -> frozenset[tuple[i
     profile input leaves the normal missing-observation refusal in force.
     """
     if raw is None:
-        return frozenset()
+        return frozenset[tuple[int, str]]()
     periods: set[tuple[int, str]] = set()
     for token in re.split(r"[,;\s]+", raw.strip().upper()):
         match = _TOKEN_RE.fullmatch(token) if token else None
@@ -49,7 +49,7 @@ def m115_no_relevant_payment_periods_from_profile_values(
 ) -> frozenset[tuple[int, str]]:
     """Return explicit attested periods from a profile projection."""
     if values is None:
-        return frozenset()
+        return frozenset[tuple[int, str]]()
     return parse_m115_no_relevant_payment_periods(values.get(M115_NO_RELEVANT_PAYMENT_PROFILE_PATH))
 
 

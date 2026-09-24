@@ -851,9 +851,10 @@ def _resolve_withholding_row_field(
     """Project one row field without silently choosing contradictory detail."""
     values = tuple(getattr(observation, row_field) for observation in observations)
     if row_field in _WITHHOLDING_ADDITIVE_ROW_FIELDS:
-        if not all(isinstance(value, Decimal) for value in values):
+        amounts = tuple(value for value in values if isinstance(value, Decimal))
+        if len(amounts) != len(values):
             raise RegistryValidationError(f"withholding row amount field {row_field!r} is not monetary evidence")
-        return sum(values, Decimal("0"))
+        return sum(amounts, Decimal("0"))
 
     supplied = tuple(value for value in values if not _withholding_row_value_is_absent(value))
     if not supplied:

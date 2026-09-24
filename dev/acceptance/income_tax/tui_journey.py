@@ -242,7 +242,7 @@ class TuiJourneyEvidence:
 
     def to_dict(self) -> dict[str, object]:
         """Return the stable, JSON-safe receipt payload."""
-        return asdict(self)
+        return dict[str, object](asdict(self))
 
 
 def installed_lifecycle_contract(

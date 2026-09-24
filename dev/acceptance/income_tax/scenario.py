@@ -188,7 +188,7 @@ class AcceptanceReceipt:
 
     def to_dict(self) -> dict[str, object]:
         """Return a stable JSON-safe representation."""
-        return asdict(self)
+        return dict[str, object](asdict(self))
 
 
 def money(value: Decimal) -> Decimal:
