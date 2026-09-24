@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import inspect
 import sys
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
 from datetime import UTC, datetime, timedelta
 from enum import Enum
@@ -82,17 +82,21 @@ def synthetic_argv(
     workdir: Path,
     *,
     also: tuple[str, ...] = (),
+    values: Mapping[str, str] | None = None,
 ) -> list[str]:
     """Build the command path plus a synthetic value for every required parameter.
 
-    ``also`` names optional parameters to supply as well.
+    ``also`` names optional parameters to supply as well, and ``values`` gives
+    named parameters a domain-valid value in place of the synthetic one.
     """
+    supplied = values or {}
     positional: list[str] = []
     named: list[str] = []
     for parameter in spec.parameters:
-        if parameter.default.kind is not DefaultKind.REQUIRED and parameter.name not in also:
+        wanted = parameter.name in also or parameter.name in supplied
+        if parameter.default.kind is not DefaultKind.REQUIRED and not wanted:
             continue
-        value = _synthetic_value(spec, parameter, workdir)
+        value = supplied.get(parameter.name) or _synthetic_value(spec, parameter, workdir)
         if isinstance(parameter, OptionSpec):
             named.extend((parameter.declarations[0], value))
         else:
@@ -100,8 +104,12 @@ def synthetic_argv(
     return [*command_path(graph, spec), *positional, *named]
 
 
-def seed_probe_profile(runtime_profile: TestRuntimeProfile) -> None:
-    """Seed a natural-person profile; the seed itself may lease the authority."""
+def seed_probe_profile(
+    runtime_profile: TestRuntimeProfile,
+    *,
+    extra_facts: tuple[UserProfileFact, ...] = (),
+) -> None:
+    """Seed a natural-person profile, plus ``extra_facts``; the seed itself may lease the authority."""
     with bundled_indexed_authority().operation() as operation, validating_governed_facts(operation):
         record = create_user_profile_record(
             profile_id=PROBE_PROFILE_ID,
@@ -112,6 +120,7 @@ def seed_probe_profile(runtime_profile: TestRuntimeProfile) -> None:
                 UserProfileFact(path="identity.tax_id", value=PROBE_PROFILE_TAX_ID),
                 UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
                 UserProfileFact(path="provenance.source", value="manual_cli"),
+                *extra_facts,
             ),
             context=profile_creation_context_for_test(),
         )
