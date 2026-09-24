@@ -19,12 +19,18 @@ survives its own operation would pass a weaker test and fail in production.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+from contextlib import contextmanager
 from typing import TYPE_CHECKING
 from uuid import UUID
 
 import pytest
 
 from ....adapters.persistence.storage.custody.acceleration_receipt import profile_session_path
+from ....adapters.persistence.storage.master_key.active_session import (
+    close_active_bucket_session,
+    suspend_active_session,
+)
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....core.paths import effective_storage_root
@@ -41,9 +47,29 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 _CREDENTIAL = "registration-admits-the-profile-it-creates"
 
 
+@contextmanager
+def _this_process_owns_no_session() -> Iterator[None]:
+    """Hide a session an earlier test left bound, and close the one registration binds.
+
+    These claims are about the session registration itself leaves live, so a
+    session inherited from elsewhere in the run must neither satisfy nor
+    contradict them. Hiding it, rather than closing it, leaves its owner's
+    teardown intact.
+    """
+    with suspend_active_session():
+        try:
+            yield
+        finally:
+            close_active_bucket_session()
+
+
 def test_registration_leaves_a_live_session_serving_the_created_profile(tmp_path: Path) -> None:
     """DISCRIMINATING: the absence that sent a just-registered operator back to Login."""
-    with isolated_profile_storage_root(tmp_path=tmp_path), bundled_indexed_authority().operation():
+    with (
+        isolated_profile_storage_root(tmp_path=tmp_path),
+        bundled_indexed_authority().operation(),
+        _this_process_owns_no_session(),
+    ):
         create_context, decode_context = profile_authority_contexts()
 
         assert profile_current_bucket_session() is None
@@ -101,7 +127,11 @@ def test_registration_mints_no_acceleration_receipt(tmp_path: Path) -> None:
     just created a profile should be able to use it. Minting one here would
     answer that question on their behalf.
     """
-    with isolated_profile_storage_root(tmp_path=tmp_path), bundled_indexed_authority().operation():
+    with (
+        isolated_profile_storage_root(tmp_path=tmp_path),
+        bundled_indexed_authority().operation(),
+        _this_process_owns_no_session(),
+    ):
         create_context, decode_context = profile_authority_contexts()
         outcome = register_profile_with_credentials(
             label="No Receipt On Creation",
