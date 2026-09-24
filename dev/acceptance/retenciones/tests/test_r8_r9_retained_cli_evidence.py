@@ -43,7 +43,7 @@ def test_retained_installed_cli_evidence_keeps_r8_r9_states_and_provenance_disti
     assert missing_detail["diagnostic_code"] == "annual_verification_not_complete"
     assert missing_detail["retention"] == "caller_owned_failure_artifacts_only; no stdout_or_stderr_retained"
     assert any(
-        command.get("notice_codes", []).count("modelo.work.verify.finding.missing_required_casilla") == 6
+        _notice_codes(command).count("modelo.work.verify.finding.missing_required_casilla") == 6
         for command in _commands(missing_detail)
     )
 
@@ -68,7 +68,7 @@ def test_retained_installed_cli_evidence_keeps_r8_r9_states_and_provenance_disti
         for source in _sources(m180_slice, "no_relevant_payment")
     )
     assert any(
-        "modelo.export.local_export_not_official_evidence" in command.get("notice_codes", [])
+        "modelo.export.local_export_not_official_evidence" in _notice_codes(command)
         for command in _commands(m180_receipt)
     )
 
@@ -97,6 +97,13 @@ def _commands(document: Mapping[str, object]) -> tuple[Mapping[str, object], ...
     assert isinstance(commands, list)
     assert all(isinstance(command, Mapping) for command in commands)
     return tuple(cast(Mapping[str, object], command) for command in commands)
+
+
+def _notice_codes(command: Mapping[str, object]) -> tuple[str, ...]:
+    codes = command.get("notice_codes", [])
+    assert isinstance(codes, list)
+    assert all(isinstance(code, str) for code in codes)
+    return tuple(cast(str, code) for code in codes)
 
 
 def _single_slice(document: Mapping[str, object], modelo: str) -> Mapping[str, object]:

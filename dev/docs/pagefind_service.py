@@ -16,7 +16,7 @@ from __future__ import annotations
 import base64
 import json
 import logging
-from typing import cast
+from typing import cast, override
 
 from pagefind.service import PagefindService
 from pagefind.service.types import InternalResponsePayload, InternalResponseType
@@ -27,6 +27,7 @@ log = logging.getLogger(__name__)
 class ResponsivePagefindService(PagefindService):
     """Pagefind's service with a reader that dispatches each response as it arrives."""
 
+    @override
     async def _wait_for_responses(self) -> None:
         stdout = self._backend.stdout
         if stdout is None:
