@@ -95,6 +95,7 @@ def parse_guarderia_mensual(raw: str, *, field: str) -> tuple[GuarderiaMonthSpen
             # the one that silently drops evidence.
             raise ProfileAnswerTypeError(
                 f"{field} contains an empty entry; write {GUARDERIA_MENSUAL_ACCEPTED_FORM}.",
+                context={"key": field},
             )
         months, amount = _parse_entry(entry, field=field)
         for month in months:
@@ -104,6 +105,7 @@ def parse_guarderia_mensual(raw: str, *, field: str) -> tuple[GuarderiaMonthSpen
                     "carrying that month's total; two entries for one month are either a "
                     "duplicate or a partial, and adding them would invent a figure you did "
                     "not state.",
+                    context={"key": field},
                 )
             by_month[month] = amount
     return tuple(GuarderiaMonthSpend(month=month, amount_euros=by_month[month]) for month in sorted(by_month))
@@ -116,6 +118,7 @@ def _parse_entry(entry: str, *, field: str) -> tuple[Sequence[int], int]:
         raise ProfileAnswerTypeError(
             f"{field} entry {entry!r} has no ':' binding a month to an amount; "
             f"write {GUARDERIA_MENSUAL_ACCEPTED_FORM}.",
+            context={"key": field},
         )
     return parse_month_spec(month_spec.strip(), entry=entry, field=field), _parse_amount(
         amount_raw.strip(),
@@ -147,6 +150,7 @@ def parse_month_spec(
         raise ProfileAnswerTypeError(
             f"{field} entry {entry!r} runs from month {start} back to month {end}. "
             "Write the range in ascending order, or give the months separately.",
+            context={"key": field},
         )
     return range(start, end + 1)
 
@@ -178,11 +182,13 @@ def _parse_month(raw: str, *, entry: str, field: str, accepted_form: str = GUARD
     if not is_plain_whole_number(raw):
         raise ProfileAnswerTypeError(
             f"{field} entry {entry!r} names month {raw!r}, which is not a number; write {accepted_form}.",
+            context={"key": field},
         )
     month = int(raw)
     if not (_MIN_MONTH <= month <= _MAX_MONTH):
         raise ProfileAnswerTypeError(
             f"{field} entry {entry!r} names month {month}, outside {_MIN_MONTH}-{_MAX_MONTH}.",
+            context={"key": field},
         )
     return month
 
@@ -196,6 +202,7 @@ def _parse_amount(raw: str, *, entry: str, field: str) -> int:
         raise ProfileAnswerTypeError(
             f"{field} entry {entry!r} carries amount {raw!r}, which is not a whole number of euros "
             f"of zero or more; write {GUARDERIA_MENSUAL_ACCEPTED_FORM}.",
+            context={"key": field},
         )
     return int(raw)
 

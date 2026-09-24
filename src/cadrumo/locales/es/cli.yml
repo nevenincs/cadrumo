@@ -2325,6 +2325,9 @@ cli:
         invalid_flag: El valor de --descendiente no es válido. Cada fila debe declarar
           NACIMIENTO=YYYY-MM-DD; otras claves como RELACION, DISCAPACIDAD o CONVIVENCIA
           son opcionales.
+        invalid_row: No se ha podido leer la fila de --descendiente. Compruebe cada
+          par CLAVE=VALOR con las claves que admite este comando; el contexto del
+          error indica la clave cuando se puede identificar.
         list_help: Listar los descendientes declarados en el perfil activo.
         remove_help: Eliminar un descendiente por índice (base 0) del perfil activo.
         remove_index_help: Índice (base 0) del descendiente a eliminar.

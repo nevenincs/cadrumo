@@ -2299,6 +2299,9 @@ cli:
         invalid_flag: A --descendiente értéke érvénytelen. Minden sornak tartalmaznia
           kell a NACIMIENTO=YYYY-MM-DD mezőt; a többi kulcs, például RELACION, DISCAPACIDAD
           vagy CONVIVENCIA, opcionális.
+        invalid_row: A --descendiente sor nem olvasható. Ellenőrizze az egyes KULCS=ÉRTÉK
+          párokat a parancs által elfogadott kulcsokkal; a hiba kontextusa megnevezi
+          a kulcsot, ha az azonosítható.
         list_help: Az aktív profilon megadott leszármazottak listázása.
         remove_help: Egy leszármazott eltávolítása 0-alapú index szerint az aktív
           profilról.

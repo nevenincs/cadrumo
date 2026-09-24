@@ -148,7 +148,7 @@ def _disability_band_declarations(*, authority: GovernedFactSource | None = None
     """Resolve descendant disability-grade vocabulary from the dated registry fact."""
     authority = authority or governed_facts_in_scope()
     if authority is None:
-        raise ProfileAnswerTypeError("descendant facts require an explicit authority operation or scope")
+        raise RegistryValidationError("descendant facts require an explicit authority operation or scope")
     resolved = authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id=_DISABILITY_BAND_FACT_ID,
@@ -157,7 +157,7 @@ def _disability_band_declarations(*, authority: GovernedFactSource | None = None
         ),
     )
     if not isinstance(resolved, ResolvedMappingFact):
-        raise ProfileAnswerTypeError("descendant disability catalogue must resolve as a mapping fact")
+        raise RegistryValidationError("descendant disability catalogue must resolve as a mapping fact")
     return {str(entry.key): str(entry.value) for entry in resolved.payload.entries}
 
 
@@ -169,13 +169,13 @@ def _accepted_disability_grades(*, authority: GovernedFactSource | None = None) 
     try:
         accepted = declarations["accepted_grades"]
     except KeyError as exc:
-        raise ProfileAnswerTypeError("descendant disability catalogue is missing accepted_grades") from exc
+        raise RegistryValidationError("descendant disability catalogue is missing accepted_grades") from exc
     try:
         parsed = frozenset(int(token.strip()) for token in accepted.split(",") if token.strip())
     except ValueError as exc:
-        raise ProfileAnswerTypeError("descendant disability catalogue has invalid accepted_grades") from exc
+        raise RegistryValidationError("descendant disability catalogue has invalid accepted_grades") from exc
     if not parsed.issubset({0, 33, 65}):
-        raise ProfileAnswerTypeError("descendant disability catalogue declares unsupported accepted_grades")
+        raise RegistryValidationError("descendant disability catalogue declares unsupported accepted_grades")
     return frozenset(cast(_DisabilityGrade, grade) for grade in parsed)
 
 
@@ -369,6 +369,7 @@ def _stored_relacion(
     raw: str | None,
     *,
     index: int,
+    key: str,
     authority: GovernedFactSource | None = None,
 ) -> DescendantRelacion | None:
     """Read one descendant's stored relación, refusing a token outside the registry catalogue.
@@ -387,18 +388,22 @@ def _stored_relacion(
     ``acogimiento_temporal`` resolving to the default would additionally strip
     the record of the one distinction keeping the Art. 58.2 increase away from
     it.
+
+    *key* names the value in the refusal's context: the fact path on the
+    profile-read door, the flag key on the ``--descendiente`` door.
     """
     if raw is None:
         return None
     authority = authority or governed_facts_in_scope()
     if authority is None:
-        raise ProfileAnswerTypeError("descendant facts require an explicit authority operation or scope")
+        raise RegistryValidationError("descendant facts require an explicit authority operation or scope")
     try:
         return require_descendant_relacion(raw.strip().lower(), authority=authority)
     except (RegistryValidationError, ValueError):
         accepted = ", ".join(member.value for member in descendant_relacion_tokens(authority=authority))
         raise ProfileAnswerTypeError(
             f"renta_family.descendiente.{index}.relacion must be one of {accepted}; got {raw!r}.",
+            context={"key": key},
         ) from None
 
 
@@ -449,7 +454,12 @@ def _descendant_from_stored_row(
         raise ProfileAnswerTypeError(
             f"renta_family.descendiente.{index}.birth_date carries no readable date; got {birth_raw!r}.",
         )
-    relacion = _stored_relacion(row.get("relacion"), index=index, authority=authority)
+    relacion = _stored_relacion(
+        row.get("relacion"),
+        index=index,
+        key=f"renta_family.descendiente.{index}.relacion",
+        authority=authority,
+    )
     return DescendantInfo(
         birth_date=birth_date,
         **relacion_kwarg(relacion),
@@ -492,7 +502,11 @@ def _stored_family_fields(row: dict[str, str], *, index: int) -> _FamilyFields:
             else None
         ),
         "custodia_compartida": row.get("custodia_compartida", "false").lower() not in _FALSE_PROFILE_TOKENS,
-        "rentas_anuales_euros": _stored_rentas_anuales(row.get("rentas_anuales"), index=index),
+        "rentas_anuales_euros": _stored_rentas_anuales(
+            row.get("rentas_anuales"),
+            index=index,
+            key=f"renta_family.descendiente.{index}.rentas_anuales",
+        ),
         "presenta_declaracion_propia": (
             _flag_bool(declaracion_raw, key=f"renta_family.descendiente.{index}.declaracion_propia")
             if declaracion_raw is not None
@@ -604,7 +618,7 @@ def _stored_gastos_guarderia(raw: str | None, *, index: int) -> int:
     return int(digits)
 
 
-def _stored_rentas_anuales(raw: str | None, *, index: int) -> Decimal | None:
+def _stored_rentas_anuales(raw: str | None, *, index: int, key: str) -> Decimal | None:
     """Read one descendant's stored Art. 58.1 rentas figure, refusing a bad value.
 
     Returns ``None`` for an absent fact, which the eligibility predicate reads
@@ -619,6 +633,9 @@ def _stored_rentas_anuales(raw: str | None, *, index: int) -> Decimal | None:
     :meth:`~domain.contribuyente.descendant_record.DescendantRecordBase.exceeds_rentas_cap` exists to
     prevent. A negative figure refuses for the same reason rather than being
     clamped to zero.
+
+    *key* names the value in the refusal's context: the fact path on the
+    profile-read door, the flag key on the ``--descendiente`` door.
     """
     if raw is None:
         return None
@@ -644,11 +661,13 @@ def _stored_rentas_anuales(raw: str | None, *, index: int) -> Decimal | None:
             "The Spanish thousands shape is refused rather than read, because reading '12.500' as "
             "twelve euros fifty would restore a mínimo por descendientes that the real figure "
             "disqualifies.",
+            context={"key": key},
             translated_message=_RENTAS_GRAMMAR_LOCALE_KEY,
         )
     if value < 0:
         raise ProfileAnswerTypeError(
             f"renta_family.descendiente.{index}.rentas_anuales must be a non-negative amount; got {raw!r}.",
+            context={"key": key},
             translated_message=_RENTAS_GRAMMAR_LOCALE_KEY,
         )
     return value
@@ -739,7 +758,10 @@ def _flag_birth_date(parts: dict[str, str], *, raw: str) -> date:
     """Read the required birth date from parsed descendant flag parts."""
     nacimiento_raw = parts.get("NACIMIENTO")
     if not nacimiento_raw:
-        raise ProfileAnswerTypeError(f"--descendiente flag requires NACIMIENTO=YYYY-MM-DD; got: {raw!r}")
+        raise ProfileAnswerTypeError(
+            f"--descendiente flag requires NACIMIENTO=YYYY-MM-DD; got: {raw!r}",
+            context={"key": "NACIMIENTO"},
+        )
     return _flag_date(nacimiento_raw, key="NACIMIENTO")
 
 
@@ -827,6 +849,7 @@ def parse_descendiente_flag(
     relacion = _stored_relacion(
         relacion_raw.strip() or None if relacion_raw else None,
         index=0,
+        key="RELACION",
         authority=authority,
     )
 
@@ -858,6 +881,7 @@ def _flag_civil_fields(
     if discapacidad_grado is not None and discapacidad_grado not in _accepted_disability_grades(authority=authority):
         raise ProfileAnswerTypeError(
             f"DISCAPACIDAD carries an unsupported governed grade: {discapacidad_grado!r}",
+            context={"key": "DISCAPACIDAD"},
         )
     return {
         "inscripcion_registro_civil_date": (
@@ -881,7 +905,7 @@ def _flag_family_fields(parts: dict[str, str]) -> _FamilyFields:
             _flag_bool(dependencia_raw, key="DEPENDENCIA") if dependencia_raw is not None else None
         ),
         "custodia_compartida": _flag_bool(custodia_raw, key="CUSTODIA") if custodia_raw is not None else False,
-        "rentas_anuales_euros": _stored_rentas_anuales(parts.get("RENTAS") or None, index=0),
+        "rentas_anuales_euros": _stored_rentas_anuales(parts.get("RENTAS") or None, index=0, key="RENTAS"),
         "presenta_declaracion_propia": (
             _flag_bool(declaracion_raw, key="DECLARACION_PROPIA") if declaracion_raw is not None else False
         ),
@@ -897,7 +921,10 @@ def _flag_maternity_fields(parts: dict[str, str]) -> _MaternityFields:
         _flag_integer(alta_posterior_raw, key="ALTA_POSTERIOR_MES") if alta_posterior_raw is not None else None
     )
     if alta_posterior_nacimiento_mes is not None and not is_calendar_month(alta_posterior_nacimiento_mes):
-        raise ProfileAnswerTypeError(f"ALTA_POSTERIOR_MES must be 1-12; got {alta_posterior_nacimiento_mes!r}")
+        raise ProfileAnswerTypeError(
+            f"ALTA_POSTERIOR_MES must be 1-12; got {alta_posterior_nacimiento_mes!r}",
+            context={"key": "ALTA_POSTERIOR_MES"},
+        )
     segundo_ciclo_infantil_inicio_mes = (
         _flag_integer(segundo_ciclo_raw, key="SEGUNDO_CICLO_INFANTIL_INICIO_MES")
         if segundo_ciclo_raw is not None
@@ -906,11 +933,15 @@ def _flag_maternity_fields(parts: dict[str, str]) -> _MaternityFields:
     if segundo_ciclo_infantil_inicio_mes is not None and not is_calendar_month(segundo_ciclo_infantil_inicio_mes):
         raise ProfileAnswerTypeError(
             f"SEGUNDO_CICLO_INFANTIL_INICIO_MES must be 1-12; got {segundo_ciclo_infantil_inicio_mes!r}",
+            context={"key": "SEGUNDO_CICLO_INFANTIL_INICIO_MES"},
         )
     gastos_raw = parts.get("GASTOS_GUARDERIA")
     gastos_guarderia_euros = _flag_integer(gastos_raw, key="GASTOS_GUARDERIA") if gastos_raw is not None else 0
     if gastos_guarderia_euros < 0:
-        raise ProfileAnswerTypeError(f"GASTOS_GUARDERIA must be ≥ 0; got {gastos_guarderia_euros!r}")
+        raise ProfileAnswerTypeError(
+            f"GASTOS_GUARDERIA must be ≥ 0; got {gastos_guarderia_euros!r}",
+            context={"key": "GASTOS_GUARDERIA"},
+        )
     gastos_guarderia_mensuales = parse_guarderia_mensual(
         parts.get("GASTOS_GUARDERIA_MENSUAL") or "",
         field="GASTOS_GUARDERIA_MENSUAL",

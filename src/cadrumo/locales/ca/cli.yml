@@ -2300,6 +2300,9 @@ cli:
         invalid_flag: El valor de --descendiente no és vàlid. Cada fila ha de declarar
           NACIMIENTO=YYYY-MM-DD; altres claus com RELACION, DISCAPACIDAD o CONVIVENCIA
           són opcionals.
+        invalid_row: No s'ha pogut llegir la fila de --descendiente. Comproveu cada
+          parell CLAU=VALOR amb les claus que admet aquesta ordre; el context de l'error
+          indica la clau quan es pot identificar.
         list_help: Llista els descendents declarats al perfil actiu.
         remove_help: Elimina un descendent per índex (base 0) del perfil actiu.
         remove_index_help: Índex (base 0) del descendent a eliminar.

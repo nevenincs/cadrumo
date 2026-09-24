@@ -69,6 +69,7 @@ def parse_meses_trabajo(raw: str, *, field: str) -> tuple[int, ...]:
             # the other reading is a month whose text was lost.
             raise ProfileAnswerTypeError(
                 f"{field} contains an empty entry; write {MESES_TRABAJO_ACCEPTED_FORM}.",
+                context={"key": field},
             )
         for month in parse_month_spec(entry, entry=entry, field=field, accepted_form=MESES_TRABAJO_ACCEPTED_FORM):
             if month in months:
@@ -76,6 +77,7 @@ def parse_meses_trabajo(raw: str, *, field: str) -> tuple[int, ...]:
                     f"{field} declares month {month} more than once. A month either qualified "
                     "or it did not, so a repeat is a transcription slip rather than a figure "
                     "to combine.",
+                    context={"key": field},
                 )
             months.add(month)
     return tuple(sorted(months))

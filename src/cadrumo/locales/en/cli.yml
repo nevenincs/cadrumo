@@ -2141,6 +2141,9 @@ cli:
         invalid_flag: The --descendiente value is invalid. Every row must declare
           NACIMIENTO=YYYY-MM-DD; other keys such as RELACION, DISCAPACIDAD or CONVIVENCIA
           are optional.
+        invalid_row: The --descendiente row could not be read. Check each KEY=VALUE
+          pair against the keys this command accepts; the error context names the
+          key when it can be identified.
         list_help: List descendants declared on the active profile.
         remove_help: Remove one descendant by 0-based index from the active profile.
         remove_index_help: 0-based index of the descendant to remove.

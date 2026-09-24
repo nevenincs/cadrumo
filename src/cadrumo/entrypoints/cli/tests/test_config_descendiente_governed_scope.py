@@ -28,7 +28,7 @@ from ....domain.calculations.registry.governed_fact_scope import (
 )
 from ....domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
-from ....tests.cli_envelope import unwrap_schema_envelope
+from ....tests.cli_envelope import require_error_document, unwrap_schema_envelope
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -97,3 +97,16 @@ def test_a_row_missing_its_birth_date_still_refuses_without_a_borrowed_scope(
 
     assert code == 2, output
     assert "NACIMIENTO" in output
+
+
+def test_a_refusal_about_another_key_does_not_claim_the_birth_date_is_missing(
+    runtime_profile: TestRuntimeProfile,
+) -> None:
+    """A row that declares NACIMIENTO is refused for the key that is actually wrong."""
+    _seed_profile(runtime_profile)
+
+    code, output = _cli("add", "--descendiente", "NACIMIENTO=2018-04-01,DISCAPACIDAD=bogus")
+
+    assert code == 2, output
+    assert "NACIMIENTO=YYYY" not in output
+    assert require_error_document(output)["error"]["context"]["key"] == "DISCAPACIDAD"
