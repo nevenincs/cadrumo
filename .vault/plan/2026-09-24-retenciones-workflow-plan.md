@@ -9,7 +9,7 @@ related:
   - '[[2026-09-23-retenciones-workflow-evidence-capture-scope-adr]]'
 modified: '2026-09-24'
 body_schema: body-v2
-body_hash: 'sha256:33339a5be529ac7a5d5359bd511ae401644785aea6cc399c5111fe2946a3f230'
+body_hash: 'sha256:8a7d7fcee6a22fcaef83242a64562aa6b490b12b4255dc1cd51f3581bb6c5024'
 ---
 
 <!-- LINK RULES:
@@ -136,7 +136,7 @@ map their scope to Steps at L1 or the relevant containers at higher tiers. -->
 
 - [x] `S01` - add a per perceptor, clave, pending flag and accrual year row grouping plus a type-2 record count and base and withholding sum facts to the withholding bindings; `src/cadrumo/domain/calculations/registry/withholding_bindings.py`.
 - [x] `S02` - compose the Modelo 193 annual source from the manual window and materialised pending and settled phase rows read from Modelo 123 retenciones, refusing allocation collisions and emitting contributor provenance; `src/cadrumo/application/aggregation/withholding_source.py`.
-- [ ] `S03` - rebind the 2025 declarant totals to the type-2 record count and row sums and the perceptor rows to the new grouping, keeping the Modelo 123 relation as a reconciliation check, then queue the republish; `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2025-y-siguientes/revision.toml`.
+- [x] `S03` - rebind the 2025 declarant totals to the type-2 record count and row sums and the perceptor rows to the new grouping, keeping the Modelo 123 relation as a reconciliation check, then queue the republish; `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2025-y-siguientes/revision.toml`.
 - [ ] `S04` - prove multi-source rows, exclusions, missing-store advisories, pull and calculate parity and 2025 export byte parity for one pending and one settled row; `src/cadrumo/application/aggregation/tests`.
 - [x] `S05` - ground whether the payment-year settled row repeats the withholding amounts, and lift the filing-export block only when the official design settles it; `src/cadrumo/application/aggregation/m193_phase_materialization.py`.
 - [x] `S06` - attach a structured advisory naming modelo 193, the base and withholding fields and the missing-authority reason to every settled-prior-accrual row, so the unresolved payment-year amounts reach the handoff instead of reading as settled; `src/cadrumo/application/aggregation/m193_phase_materialization.py`.

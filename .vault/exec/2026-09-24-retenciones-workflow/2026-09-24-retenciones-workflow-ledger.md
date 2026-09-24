@@ -5,7 +5,7 @@ tags:
 date: '2026-09-24'
 modified: '2026-09-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:8ca5e0d6e4ea6d281f8ce4058c182041d7d4acfa532a80a8b505f1139abf9ac9'
+body_hash: 'sha256:552f7441cc4b60e83fc47817feb847e7f73ed1751b1deefb5ef9e193270de928'
 related:
   - "[[2026-09-24-retenciones-workflow-plan]]"
 ---
@@ -62,6 +62,10 @@ related:
 - `S09` `A` `src/cadrumo/application/modelo/tests/test_m193_settled_row_export_gate.py`
 - `S09` `A` `dev/quality/tests/test_capability_flags_have_production_readers.py`
 - `S09` `verify:` `pytest export gate 7, application/modelo 1472, core/errors 43, capability flag guard` -> `pass`
+- `S03` `M` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2025-y-siguientes/bindings/0001-declarations.toml`
+- `S03` `M` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2025-y-siguientes/revision.toml`
+- `S03` `M` `dev/registry/tests/test_modelo_193_registry.py`
+- `S03` `verify:` `inspect_authoring_candidate publication_valid 0 findings; test_modelo_193_registry and generated export trees anchor test 43` -> `pass`
 
 ## Notes
 
@@ -69,4 +73,5 @@ related:
 - `S02` the 123 loader reads quarterly windows only, matching capture and the 111 loader; monthly 123 filers are an existing wider gap
 - `S06` end-to-end calculate assertion parked until S03 is published; filing_export_supported is read by nothing, so the export gate is a new Step
 - `S09` detection uses the phase contributor plus the 2025 accrual bound because the revision does not persist the phase; exact per-row detection needs CalculationSourceRef to keep source_filing_year
+- `S03` runtime adoption waits for the next authority republish; S04 byte tests run after it
 
