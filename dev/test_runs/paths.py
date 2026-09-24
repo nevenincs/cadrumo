@@ -14,8 +14,6 @@ from datetime import UTC, datetime
 from pathlib import Path
 from uuid import uuid4
 
-from dev._paths import REPO_ROOT
-
 LOGS_STEM = ".logs"
 """The one directory name every run family lives under, whatever the base."""
 
@@ -38,6 +36,10 @@ def run_log_bases() -> tuple[Path, ...]:
     returned from here so that adding a third cannot be done in one place and
     forgotten in the other.
     """
+    # Imported here: the pytest run logger imports this module before the root
+    # conftest's environment setup, and ``dev._paths`` seeds process state on import.
+    from dev._paths import REPO_ROOT
+
     return (REPO_ROOT, Path(tempfile.gettempdir()))
 
 
@@ -80,6 +82,69 @@ def run_log_families(*, bases: tuple[Path, ...] | None = None) -> tuple[str, ...
             if child.is_dir() and not child.is_symlink():
                 families[child.name] = None
     return tuple(sorted(families))
+
+
+SCRATCH_BASE_ENV = "CADRUMO_SCRATCH_BASE"
+"""Pins the directory every nested run's scratch is allocated beside.
+
+A run redirects ``TEMP`` into its own scratch, so a child run that derived its
+base from ``TEMP`` would nest one scratch inside another and grow the path with
+every level. Exporting the base keeps every run's scratch a direct child of the
+original temp directory, however deeply runs nest.
+"""
+
+SCRATCH_PREFIX = "cr"
+"""Leading token of a run scratch directory name: ``cr-<pid>-<token>``."""
+
+SCRATCH_PATH_BUDGET = 64
+"""The longest scratch path a run may hand its processes as ``TEMP``.
+
+Tools on Windows create Unix-domain sockets under ``TEMP``, and a socket path
+is capped near 108 bytes including the tool's own file name. semgrep-core's
+socketpair emulation is the measured case: a 79-character ``TEMP`` works and an
+80-character one fails the whole scan. Scratch therefore cannot live inside the
+date-partitioned run directory, which is already longer than that before the
+tool adds anything; it sits directly under the temp base instead, and this
+budget keeps headroom below the measured limit.
+"""
+
+
+def scratch_base() -> Path:
+    """Return the directory run scratch is allocated in: the pinned base, else the temp directory."""
+    inherited = os.environ.get(SCRATCH_BASE_ENV, "").strip()
+    return Path(inherited) if inherited else Path(tempfile.gettempdir())
+
+
+def allocate_scratch_directory() -> Path:
+    """Create this process's run scratch, short enough to serve as ``TEMP``.
+
+    The name carries the owning PID in the same position a run marker does, so
+    the run reaper resolves its owner against the OS exactly as it does for run
+    directories.
+
+    Raises:
+        RuntimeError: When the temp base is so deep that no scratch below it fits
+            :data:`SCRATCH_PATH_BUDGET`; handing tools a ``TEMP`` they cannot bind
+            sockets under fails later and far less legibly.
+    """
+    scratch = scratch_base() / f"{SCRATCH_PREFIX}-{os.getpid()}-{uuid4().hex[:6]}"
+    if len(str(scratch)) > SCRATCH_PATH_BUDGET:
+        raise RuntimeError(
+            f"run scratch {scratch} exceeds the {SCRATCH_PATH_BUDGET}-character TEMP budget; "
+            f"point {SCRATCH_BASE_ENV} at a shorter directory"
+        )
+    scratch.mkdir(parents=True)
+    return scratch
+
+
+def scratch_environment(scratch: Path) -> dict[str, str]:
+    """Return the variables that make ``scratch`` a process's temporary directory."""
+    return {
+        SCRATCH_BASE_ENV: str(scratch.parent),
+        "TEMP": str(scratch),
+        "TMP": str(scratch),
+        "TMPDIR": str(scratch),
+    }
 
 
 def allocate_run_directory(

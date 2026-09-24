@@ -14,11 +14,14 @@ from uuid import uuid4
 
 import pytest
 
+from .paths import allocate_scratch_directory, scratch_environment
+
 _STATE_KEY = pytest.StashKey["RunLog"]()
 _SILENT_COLLECTION_KEY = pytest.StashKey[bool]()
 _COLLECTION_SUMMARY_KEY = pytest.StashKey[str]()
 _collection_errors = 0
 _ACTIVE: RunLog | None = None
+_RUN_SCRATCH_ENV: Final = "CADRUMO_TEST_RUN_SCRATCH"
 
 
 class RunLog:
@@ -32,15 +35,15 @@ class RunLog:
         self.root.mkdir(parents=True, exist_ok=False)
         self.artifacts = self.root / "artifacts"
         self.cache = self.root / "cache"
-        self.scratch = self.root / "scratch"
-        for path in (self.artifacts, self.cache, self.scratch):
+        for path in (self.artifacts, self.cache):
             path.mkdir()
+        self.scratch = allocate_scratch_directory()
         self.path = self.root / "run.log"
         self.metadata_path = self.root / "run.json"
         self.started = now
         self.exit_status: int | None = None
         self.stream: IO[str] = self.path.open("x", encoding="utf-8", newline="\n")
-        _apply_run_environment(self.root)
+        _apply_run_environment(self.root, self.scratch)
         product_logs = self.artifacts / "product-logs" / f"pid-{os.getpid()}"
         product_logs.mkdir(parents=True)
         os.environ["CADRUMO_LOG_DIR"] = str(product_logs)
@@ -79,7 +82,7 @@ def prepare_environment(repository: Path) -> None:
     inherited_root = os.environ.get("CADRUMO_TEST_RUN_ROOT")
     if inherited_root:
         root = Path(inherited_root).resolve()
-        _apply_run_environment(root)
+        _apply_run_environment(root, Path(os.environ[_RUN_SCRATCH_ENV]))
         product_logs = root / "artifacts" / "product-logs" / f"pid-{os.getpid()}"
         product_logs.mkdir(parents=True, exist_ok=True)
         os.environ["CADRUMO_LOG_DIR"] = str(product_logs)
@@ -87,20 +90,22 @@ def prepare_environment(repository: Path) -> None:
     _ACTIVE = RunLog(repository)
 
 
-def _apply_run_environment(root: Path) -> None:
-    """Confine generic temporary, cache, coverage, and pytest scratch paths."""
+def _apply_run_environment(root: Path, scratch: Path) -> None:
+    """Confine generic temporary, cache, coverage, and pytest scratch paths.
+
+    Logs, artifacts and caches live in the run directory; temporary files live in
+    the run's short scratch, which the run directory is too deep to host.
+    """
     artifacts = root / "artifacts"
     cache = root / "cache"
-    scratch = root / "scratch"
-    for path in (artifacts, cache, scratch):
+    for path in (artifacts, cache):
         path.mkdir(parents=True, exist_ok=True)
     os.environ["CADRUMO_TEST_RUN_ROOT"] = str(root)
+    os.environ[_RUN_SCRATCH_ENV] = str(scratch)
     os.environ["COVERAGE_FILE"] = str(artifacts / ".coverage")
     os.environ["PYTEST_DEBUG_TEMPROOT"] = str(scratch)
     os.environ["XDG_CACHE_HOME"] = str(cache)
-    os.environ["TEMP"] = str(scratch)
-    os.environ["TMP"] = str(scratch)
-    os.environ["TMPDIR"] = str(scratch)
+    os.environ.update(scratch_environment(scratch))
     tempfile.tempdir = str(scratch)
 
 
@@ -113,7 +118,7 @@ def _worker_id(config: pytest.Config) -> str | None:
     return str(identity) if identity else None
 
 
-def _confine_pytest_storage(config: pytest.Config, root: Path) -> None:
+def _confine_pytest_storage(config: pytest.Config, root: Path, scratch: Path) -> None:
     """Rebind pytest objects created by its own early ``pytest_configure`` hooks.
 
     The basetemp is per-process, never shared. ``TempPathFactory.getbasetemp``
@@ -123,11 +128,11 @@ def _confine_pytest_storage(config: pytest.Config, root: Path) -> None:
     started second could delete the live ``tmp_path`` trees of one already
     running, and the loser of the ``mkdir`` race died at fixture setup with
     ``FileExistsError``. Suffixing the worker id keeps the run's temporary files
-    confined to the run root while giving each process a directory no other
+    confined to the run's scratch while giving each process a directory no other
     process will clear.
     """
     cache = root / "cache" / "pytest"
-    basetemp = root / "scratch" / "pytest"
+    basetemp = scratch / "pytest"
     worker = _worker_id(config)
     if worker is not None:
         basetemp = basetemp / worker
@@ -170,7 +175,8 @@ def _redirect_collection_output(config: pytest.Config, run_log: RunLog) -> bool:
 def configure(config: pytest.Config) -> None:
     """Create and announce the controller's unique run directory."""
     root = Path(os.environ["CADRUMO_TEST_RUN_ROOT"]).resolve()
-    _confine_pytest_storage(config, root)
+    scratch = Path(os.environ[_RUN_SCRATCH_ENV])
+    _confine_pytest_storage(config, root, scratch)
     if hasattr(config, "workerinput"):
         return
     global _ACTIVE
@@ -181,7 +187,7 @@ def configure(config: pytest.Config) -> None:
     config.stash[_STATE_KEY] = run_log
     silent_collection = _redirect_collection_output(config, run_log)
     config.stash[_SILENT_COLLECTION_KEY] = silent_collection
-    notice = f"test run log: {run_log.path} (cache={root / 'cache'}, scratch={root / 'scratch'})"
+    notice = f"test run log: {run_log.path} (cache={root / 'cache'}, scratch={scratch})"
     if silent_collection:
         print(notice, flush=True)
     else:

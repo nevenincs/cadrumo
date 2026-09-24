@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import tempfile
 from datetime import UTC, datetime
 from pathlib import Path
@@ -8,7 +9,17 @@ import pytest
 
 from dev._paths import REPO_ROOT
 
-from ..paths import allocate_run_directory, run_log_bases, run_log_families, run_log_roots
+from ..paths import (
+    SCRATCH_BASE_ENV,
+    SCRATCH_PATH_BUDGET,
+    allocate_run_directory,
+    allocate_scratch_directory,
+    run_log_bases,
+    run_log_families,
+    run_log_roots,
+    scratch_base,
+    scratch_environment,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -69,3 +80,42 @@ def test_every_run_family_is_discovered_rather_than_named(tmp_path: Path) -> Non
 
     assert run_log_families(bases=(tmp_path, other)) == ("audit-runs", "lane-runs", "test-runs")
     assert run_log_families(bases=(tmp_path / "absent",)) == ()
+
+
+def test_run_scratch_is_short_owned_and_beside_the_pinned_base() -> None:
+    base = scratch_base()
+    scratch = allocate_scratch_directory()
+    sibling = allocate_scratch_directory()
+    try:
+        assert scratch.is_dir()
+        assert scratch.parent == base
+        assert scratch.name.split("-")[1] == str(os.getpid())
+        assert sibling != scratch
+        assert len(str(scratch)) <= SCRATCH_PATH_BUDGET
+    finally:
+        scratch.rmdir()
+        sibling.rmdir()
+
+
+def test_nested_runs_allocate_beside_the_first_rather_than_inside_it(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A child run inherits the parent's TEMP; its scratch must not nest inside it."""
+    outer = allocate_scratch_directory()
+    try:
+        for name, value in scratch_environment(outer).items():
+            monkeypatch.setenv(name, value)
+        inner = allocate_scratch_directory()
+        inner.rmdir()
+    finally:
+        outer.rmdir()
+
+    assert inner.parent == outer.parent
+
+
+def test_a_base_too_deep_for_the_temp_budget_is_refused(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    deep = tmp_path / ("d" * SCRATCH_PATH_BUDGET)
+    monkeypatch.setenv(SCRATCH_BASE_ENV, str(deep))
+
+    with pytest.raises(RuntimeError, match="TEMP budget"):
+        allocate_scratch_directory()
+
+    assert not deep.exists()
