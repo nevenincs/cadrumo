@@ -93,7 +93,7 @@ from ...application.user_profile.censal_operation import (
 )
 from ...application.user_profile.censo_sync import CENSAL_ADOPTABLE_PATHS
 from ...application.user_profile.custody_ports import profile_custody_secure_object_repository
-from ...application.user_profile.login_session import login_profile
+from ...application.user_profile.login_session import login_profile, logout_active_profile
 from ...application.user_profile.profile_record_repository import ProfileRecordRepository
 from ...application.user_profile.registration import register_profile_with_credentials
 from ...core.auth_provider import AuthProviderKind
@@ -951,6 +951,10 @@ def _runtime(
             finally:
                 asyncio.run(services.shutdown())
                 authority_scope.__exit__(None, None, None)
+                # The login above binds this process's live session; a runtime
+                # that leaves it open hands every later test in the worker a
+                # logged-in profile it never created.
+                logout_active_profile()
 
 
 @pytest.mark.parametrize("apply", [True, False], ids=["apply", "reject"])
