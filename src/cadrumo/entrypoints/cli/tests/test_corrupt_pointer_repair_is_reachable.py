@@ -19,11 +19,12 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.application.operator_surface.command_ports import CommandNodeKind
 from cadrumo.tests.audited_process import run_audited_process
 
 from ....core.bucket_pointer import pointer_path
 from ....tests.inventory import REPO_ROOT
-from ..command_spec import CommandNodeKind, CommandSpec
+from ..command_spec import CommandSpec
 from ..command_specs import COMMAND_GRAPH
 from .subprocess_cli import as_text_completed_process
 

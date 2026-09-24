@@ -22,10 +22,10 @@ Three in-process observations, any one of which is an AEAT contact:
   port registry is wiring, not a read, and is not counted); and
 * the start of any function defined in a Sede client module.
 
-The Sede client modules are derived from the source tree: every module under
-``adapters/outbound/aeat`` that defines or names
-``default_browser_session_factory``, the one factory every AEAT browser session
-is built from.
+The Sede client modules are declared, and a test holds the declaration to the
+source tree: every module under ``adapters/outbound/aeat`` that defines or
+names ``default_browser_session_factory``, the one factory every AEAT browser
+session is built from, must be declared, and nothing else may be.
 
 Every run carries a synthetic, self-signed certificate naming the seeded
 taxpayer, configured through settings. Without it a session-gated flow refuses
@@ -40,7 +40,7 @@ undeclared one.
 from __future__ import annotations
 
 import ast
-import builtins
+import dis
 import importlib
 import importlib.util
 import inspect
@@ -106,6 +106,19 @@ __all__ = ["offline_guard_fixture"]
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _SEDE_CLIENT_FACTORY: Final = "default_browser_session_factory"
+
+#: Every AEAT adapter module that defines or names the Sede session factory.
+_SEDE_CLIENT_MODULES: Final = (
+    "cadrumo.adapters.outbound.aeat.browser.connectivity",
+    "cadrumo.adapters.outbound.aeat.browser.factory",
+    "cadrumo.adapters.outbound.aeat.sede.censal_datos",
+    "cadrumo.adapters.outbound.aeat.sede.groi_check",
+    "cadrumo.adapters.outbound.aeat.sede.iva_compensation_wallet",
+    "cadrumo.adapters.outbound.aeat.sede.nif_iva_check",
+    "cadrumo.adapters.outbound.aeat.sede.notifications",
+    "cadrumo.adapters.outbound.aeat.sede.walker",
+    "cadrumo.adapters.outbound.aeat.verify.contract",
+)
 _AEAT_ADAPTERS: Final = ("adapters", "outbound", "aeat")
 
 #: Optional parameters a command's own handler requires one of.
@@ -284,9 +297,8 @@ def _names_sede_factory(tree: ast.AST) -> bool:
     return False
 
 
-@cache
-def sede_client_modules() -> frozenset[str]:
-    """Every AEAT adapter module that defines or names the Sede session factory."""
+def scanned_sede_client_modules() -> frozenset[str]:
+    """Every AEAT adapter module the source tree shows defining or naming the Sede session factory."""
     source_root = Path(cadrumo.__file__).resolve().parent
     package_root = source_root.joinpath(*_AEAT_ADAPTERS)
     modules: set[str] = set()
@@ -325,8 +337,11 @@ def _module_codes(module: ModuleType) -> Iterator[CodeType]:
 
 @cache
 def sede_client_codes() -> frozenset[CodeType]:
-    """Every code object defined in a Sede client module."""
-    return frozenset(code for name in sede_client_modules() for code in _module_codes(importlib.import_module(name)))
+    """Every code object defined in a declared Sede client module."""
+    codes: set[CodeType] = set()
+    for name in _SEDE_CLIENT_MODULES:
+        codes.update(_module_codes(importlib.import_module(name)))
+    return frozenset(codes)
 
 
 # --- observation ----------------------------------------------------------
@@ -362,26 +377,36 @@ def _imported_names(
     return {base, *(f"{base}.{item}" for item in fromlist or ())}
 
 
-@contextmanager
-def observe_aeat_contact(handler: CodeType, monkeypatch: pytest.MonkeyPatch) -> Iterator[AeatContactObservation]:
-    """Record the handler's Sede-client imports, Sede-client calls and the handler's start."""
-    modules = sede_client_modules()
-    codes = sede_client_codes()
-    observation = AeatContactObservation()
-    original_import = builtins.__import__
+def _import_sites(code: CodeType) -> dict[int, tuple[str, int, tuple[str, ...]]]:
+    """Map each import instruction in ``code`` to its module name, level and from-list."""
+    instructions = [instruction for instruction in dis.get_instructions(code) if instruction.opname != "EXTENDED_ARG"]
+    sites: dict[int, tuple[str, int, tuple[str, ...]]] = {}
+    for index, instruction in enumerate(instructions):
+        if instruction.opname != "IMPORT_NAME":
+            continue
+        level, fromlist = instructions[index - 2].argval, instructions[index - 1].argval
+        site = (str(instruction.argval), int(level), tuple(fromlist or ()))
+        sites[instruction.offset] = site
+        sites[instruction.start_offset] = site
+    return sites
 
-    def recording_import(
-        name: str,
-        module_globals: Mapping[str, object] | None = None,
-        module_locals: Mapping[str, object] | None = None,
-        fromlist: Sequence[str] = (),
-        level: int = 0,
-    ) -> ModuleType:
+
+@contextmanager
+def observe_aeat_contact(handler: CodeType) -> Iterator[AeatContactObservation]:
+    """Record the handler's Sede-client imports, Sede-client calls and the handler's start."""
+    modules = frozenset(_SEDE_CLIENT_MODULES)
+    codes = sede_client_codes()
+    import_sites = _import_sites(handler)
+    observation = AeatContactObservation()
+
+    def on_instruction(code: CodeType, instruction_offset: int) -> object:
+        site = import_sites.get(instruction_offset) if code is handler else None
         frame = inspect.currentframe()
         caller = None if frame is None else frame.f_back
-        if caller is not None and caller.f_code is handler:
-            observation.imports.extend(sorted(_imported_names(name, module_globals, fromlist, level) & modules))
-        return original_import(name, module_globals, module_locals, fromlist, level)
+        if site is not None and caller is not None and caller.f_code is handler:
+            name, level, fromlist = site
+            observation.imports.extend(sorted(_imported_names(name, caller.f_globals, fromlist, level) & modules))
+        return None
 
     monitoring = sys.monitoring
     tool_id = free_monitoring_tool()
@@ -398,15 +423,18 @@ def observe_aeat_contact(handler: CodeType, monkeypatch: pytest.MonkeyPatch) -> 
     monitoring.use_tool_id(tool_id, "aeat-capability-probe")
     try:
         monitoring.register_callback(tool_id, monitoring.events.PY_START, on_start)
+        monitoring.register_callback(tool_id, monitoring.events.INSTRUCTION, on_instruction)
         for code in watched:
-            monitoring.set_local_events(tool_id, code, monitoring.events.PY_START)
-        with monkeypatch.context() as scoped:
-            scoped.setattr(builtins, "__import__", recording_import)
-            yield observation
+            events = monitoring.events.PY_START
+            if code is handler:
+                events |= monitoring.events.INSTRUCTION
+            monitoring.set_local_events(tool_id, code, events)
+        yield observation
     finally:
         for code in watched:
             monitoring.set_local_events(tool_id, code, monitoring.events.NO_EVENTS)
         monitoring.register_callback(tool_id, monitoring.events.PY_START, None)
+        monitoring.register_callback(tool_id, monitoring.events.INSTRUCTION, None)
         monitoring.free_tool_id(tool_id)
 
 
@@ -430,7 +458,7 @@ def aeat_suspects_without_aeat(graph: CommandSpecGraph) -> tuple[CommandSpec, ..
 _POPULATION: Final = aeat_suspects_without_aeat(COMMAND_GRAPH)
 
 
-def _drive(key: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> tuple[AeatContactObservation, int, str]:
+def _drive(key: str, tmp_path: Path) -> tuple[AeatContactObservation, int, str]:
     spec = COMMAND_GRAPH.spec(key)
     handler = spec.handler
     assert handler is not None and handler.state is BindingState.TARGET and handler.target is not None
@@ -452,17 +480,18 @@ def _drive(key: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> tuple[A
             seeder()
         with (
             synthetic_aeat_credentials(workdir),
-            observe_aeat_contact(handler_code(handler.target), monkeypatch) as observed,
+            observe_aeat_contact(handler_code(handler.target)) as observed,
         ):
             result = invoke_cached_cli(argv)
     return observed, result.exit_code, result.output[-400:]
 
 
-def test_the_sede_client_is_found_in_the_source_tree() -> None:
-    modules = sede_client_modules()
+def test_the_declared_sede_client_is_the_one_in_the_source_tree() -> None:
+    scanned = scanned_sede_client_modules()
 
-    assert "cadrumo.adapters.outbound.aeat.browser.factory" in modules
-    assert len(modules) > 1, "only the factory itself names the Sede client"
+    assert "cadrumo.adapters.outbound.aeat.browser.factory" in scanned
+    assert len(scanned) > 1, "only the factory itself names the Sede client"
+    assert sorted(_SEDE_CLIENT_MODULES) == sorted(scanned)
     assert sede_client_codes()
 
 
@@ -490,9 +519,8 @@ def test_a_command_without_aeat_never_reaches_aeat(
     key: str,
     tmp_path: Path,
     offline_guard: OfflineGuard,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    observed, exit_code, output = _drive(key, tmp_path, monkeypatch)
+    observed, exit_code, output = _drive(key, tmp_path)
     spec = COMMAND_GRAPH.spec(key)
 
     assert observed.contacts(offline_guard) == [], (
@@ -507,10 +535,9 @@ def test_the_instrument_fires_on_a_command_that_declares_aeat(
     key: str,
     tmp_path: Path,
     offline_guard: OfflineGuard,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     assert "aeat" in COMMAND_GRAPH.spec(key).policy.expanded_capabilities
-    observed, exit_code, output = _drive(key, tmp_path, monkeypatch)
+    observed, exit_code, output = _drive(key, tmp_path)
 
     assert observed.handler_started, f"{key} never reached its behavior target (exit {exit_code}); output={output}"
     assert observed.contacts(offline_guard), (
@@ -581,14 +608,13 @@ def _teeth_graph() -> CommandSpecGraph:
 
 def test_the_probe_flags_a_network_command_that_reaches_aeat_undeclared(
     offline_guard: OfflineGuard,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     graph = _teeth_graph()
     population = aeat_suspects_without_aeat(graph)
     assert [spec.key for spec in population] == ["undeclared_sede_read"]
     argv = synthetic_argv(graph, population[0], Path())
 
-    with observe_aeat_contact(handler_code(_TEETH_TARGET), monkeypatch) as observed:
+    with observe_aeat_contact(handler_code(_TEETH_TARGET)) as observed:
         invoke_uncached_typer_app(build_command_app(graph), argv)
 
     assert observed.handler_started

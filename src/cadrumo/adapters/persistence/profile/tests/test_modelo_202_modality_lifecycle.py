@@ -76,8 +76,8 @@ from ..modelos_calculation import CalculationRevisionCatalogueRepository
 from ..modelos_filing import ModeloRecordCatalogueRepository
 from ..modelos_verification_reports import VerificationReportCatalogueRepository
 from ..modelos_work_units import WorkUnitCatalogueRepository
-from ._modelo_export_ports_support import modelo_export_ports_for_test
 from .justificante_metadata import persist_justificante_metadata
+from .modelo_export_ports_support import modelo_export_ports_for_test
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 

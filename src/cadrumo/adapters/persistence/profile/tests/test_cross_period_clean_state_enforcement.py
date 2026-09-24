@@ -91,8 +91,8 @@ from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..calculation_observations import CalculationObservationRepository
 from ..modelos_calculation import CalculationRevisionCatalogueRepository
 from ..modelos_filing import ModeloRecordCatalogueRepository
-from ._modelo_export_ports_support import modelo_export_ports_for_test
 from .justificante_metadata import persist_justificante_metadata
+from .modelo_export_ports_support import modelo_export_ports_for_test
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 

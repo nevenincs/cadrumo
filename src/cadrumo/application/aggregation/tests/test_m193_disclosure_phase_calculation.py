@@ -25,7 +25,7 @@ EHA/3377/2011 as updated by Orden HAC/1430/2025):
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
@@ -41,8 +41,8 @@ from cadrumo.adapters.persistence.profile.modelos_calculation import Calculation
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.percepciones_observations import PercepcionObservationRepositoryAdapter
 from cadrumo.adapters.persistence.profile.retencion_observations import RetencionObservationRepositoryAdapter
-from cadrumo.adapters.persistence.profile.tests._modelo_export_ports_support import modelo_export_ports_for_test
 from cadrumo.adapters.persistence.profile.tests.file_flow_test_support import calculation_ports_for_test
+from cadrumo.adapters.persistence.profile.tests.modelo_export_ports_support import modelo_export_ports_for_test
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_modelo_ready_profile_record
@@ -77,11 +77,8 @@ from cadrumo.application.modelo.calculation_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from cadrumo.application.modelo.export import (
-    Modelo193SettledRowAmountAuthorityUnresolvedError,
-    ModeloExportCommand,
-    export_modelo_revision,
-)
+from cadrumo.application.modelo.export import ModeloExportCommand, export_modelo_revision
+from cadrumo.application.modelo.m193_settled_row_gate import Modelo193SettledRowAmountAuthorityUnresolvedError
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.aggregation import BindingSourceKind, CalculationSourceLineageRole
@@ -129,9 +126,7 @@ class _Bucket:
 
 
 @contextmanager
-def _m193_bucket(
-    tmp_path: Path, *, filing_year: int, operation: PinnedAuthorityOperation
-) -> Iterator[_Bucket]:
+def _m193_bucket(tmp_path: Path, *, filing_year: int, operation: PinnedAuthorityOperation) -> Iterator[_Bucket]:
     """Open an isolated bucket with a quarterly filer's profile and one Modelo 193 work unit."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects: SecureObjectRepository = profile.repository
@@ -229,13 +224,11 @@ def _persist_manual_2025_row(objects: SecureObjectRepository) -> None:
     )
 
 
-def _rows_by_nif(row_binding_values: dict[str, dict[str, str]]) -> dict[str, dict[str, str]]:
+def _rows_by_nif(row_binding_values: Mapping[str, Mapping[str, str]]) -> dict[str, dict[str, str]]:
     """Return each persisted type-2 row's binding values, keyed by the row's perceptor NIF."""
     rows: dict[str, dict[str, str]] = {}
     for index, nif in row_binding_values[_NIF_BINDING].items():
-        rows[nif] = {
-            binding_id: values[index] for binding_id, values in row_binding_values.items() if index in values
-        }
+        rows[nif] = {binding_id: values[index] for binding_id, values in row_binding_values.items() if index in values}
     return rows
 
 
@@ -272,7 +265,9 @@ def test_a_manual_row_and_a_pending_capture_total_the_2025_declarant_from_the_ty
     assert Decimal(manual[_BASE_BINDING]) == _MANUAL_BASE
     assert Decimal(manual[_RETENCION_BINDING]) == _MANUAL_RETENCION
 
-    withholding_refs = [ref for ref in revision.source_provenance if ref.resolver_id == WithholdingSourceResolver.resolver_id]
+    withholding_refs = [
+        ref for ref in revision.source_provenance if ref.resolver_id == WithholdingSourceResolver.resolver_id
+    ]
     roles = sorted(ref.lineage_role.value for ref in withholding_refs)
     assert roles == sorted(
         [
@@ -290,7 +285,9 @@ def test_a_same_year_payment_gives_no_phase_row_and_the_zero_stays_loud(
 ) -> None:
     """A coupon paid in its own year is an ordinary 123 allocation: no 193 row, a zero count and its advisory."""
     with _m193_bucket(tmp_path, filing_year=2025, operation=authority_operation) as bucket:
-        _capture(bucket.objects, _coupon_capture(exigible_on=date(2025, 6, 30), paid_on=date(2025, 7, 2), pending=False))
+        _capture(
+            bucket.objects, _coupon_capture(exigible_on=date(2025, 6, 30), paid_on=date(2025, 7, 2), pending=False)
+        )
         result = _calculate(bucket)
 
     revision = result.revision
@@ -347,7 +344,9 @@ def test_a_2026_accrual_with_pending_evidence_refuses_the_2026_calculation(
 ) -> None:
     """Pending disclosure is grounded for 2025 accruals only, so a captured 2026 accrual stops the 2026 return."""
     with _m193_bucket(tmp_path, filing_year=2026, operation=authority_operation) as bucket:
-        _capture(bucket.objects, _coupon_capture(exigible_on=date(2026, 12, 15), paid_on=date(2027, 1, 20), pending=True))
+        _capture(
+            bucket.objects, _coupon_capture(exigible_on=date(2026, 12, 15), paid_on=date(2027, 1, 20), pending=True)
+        )
         with pytest.raises(Modelo193PhaseMaterializationError) as raised:
             _calculate(bucket)
 
@@ -381,7 +380,9 @@ def test_the_source_resolved_directly_and_the_live_calculation_agree(
         )
 
     relay_inputs = {
-        **{casilla.id: Decimal("0") for casilla in snapshot.revision.casillas if casilla.input_kind is InputKind.MANUAL},
+        **{
+            casilla.id: Decimal("0") for casilla in snapshot.revision.casillas if casilla.input_kind is InputKind.MANUAL
+        },
         **resolve_available_bound_inputs_by_casilla_id(snapshot.revision, resolution.binding_values),
     }
     relay = calculate_registry_snapshot(
@@ -418,9 +419,7 @@ def test_a_settled_prior_accrual_row_refuses_the_2026_export(
     with _m193_bucket(tmp_path, filing_year=2026, operation=authority_operation) as bucket:
         _capture_pending_2025_coupon(bucket.objects)
         result = _calculate(bucket)
-        assert [d.reason for d in result.source_diagnostics if d.reason == _UNRESOLVED_AMOUNTS] == [
-            _UNRESOLVED_AMOUNTS
-        ]
+        assert [d.reason for d in result.source_diagnostics if d.reason == _UNRESOLVED_AMOUNTS] == [_UNRESOLVED_AMOUNTS]
         with pytest.raises(Modelo193SettledRowAmountAuthorityUnresolvedError) as raised:
             export_modelo_revision(
                 ModeloExportCommand(

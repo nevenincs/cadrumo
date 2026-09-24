@@ -31,7 +31,7 @@ from cadrumo.adapters.persistence.profile.tests._export_test_support import (
     _seed_profile,
     _seed_revision,
 )
-from cadrumo.adapters.persistence.profile.tests._modelo_export_ports_support import modelo_export_ports_for_test
+from cadrumo.adapters.persistence.profile.tests.modelo_export_ports_support import modelo_export_ports_for_test
 from cadrumo.adapters.persistence.storage.namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from cadrumo.adapters.persistence.storage.sql.engine import dispose_engine, get_engine
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository

@@ -31,7 +31,7 @@ from ....domain.calculations.registry.governed_fact_scope import validating_gove
 from ....domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ....tests.certificates import CERTIFICATE_BUNDLE_INPUT, build_pkcs12_bundle
-from .._command_runtime import resolve_deferred_target
+from .._command_target import resolve_deferred_target
 from ..command_spec import ArgumentSpec, CommandSpec, CommandSpecGraph, DefaultKind, DeferredTarget, OptionSpec
 
 PROBE_PROFILE_ID: Final = "0ac1e000-0000-4000-8000-000000515077"
