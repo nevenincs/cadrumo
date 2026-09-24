@@ -26,7 +26,7 @@ import sys
 import zipfile
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, cast
+from typing import Any
 
 import pytest
 
@@ -911,17 +911,6 @@ def test_post_build_source_mutation_cannot_change_an_existing_installation(
     assert _operative_oracle_identity(mcp_after) == _operative_oracle_identity(mcp_before)
     assert sha256_path(installed_descriptor) == installed_descriptor_digest
     assert sha256_path(installed_database) == installed_database_digest
-
-
-def _as_plugin_cohort(cohort: PythonCohort) -> Any:
-    """Adapt a PythonCohort to the marketplace materialiser's protocol.
-
-    PythonCohort satisfies the runtime protocol exactly; the materialiser
-    annotates its mutable digest mapping as a read-only Mapping protocol,
-    which static structural typing cannot prove for a frozen dataclass
-    (same documented cast as the release-cohort builder).
-    """
-    return cast("Any", cohort)
 
 
 def test_owned_server_launch_capture_is_a_clean_real_subprocess(installed_cohort: InstalledCohort) -> None:
