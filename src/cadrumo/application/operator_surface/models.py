@@ -137,19 +137,17 @@ class RootSurface(BaseModel):
 
 
 class LifecycleContract(BaseModel):
-    """Modelo lifecycle vocabulary and live-submission safety contract.
+    """Canonical modelo lifecycle: calculate, verify, then file.
 
-    The default ``internal_filed_term`` and disabled live-submission fields keep
-    operator copy aligned with the accepted workflow: calculate, verify, then
-    internally file/export without implying live AEAT submission.
+    Filing is local: no command submits to AEAT. That refusal is enforced where
+    a write could happen -- CLI dispatch refuses every command declared
+    ``live_write`` through :meth:`core.access_gate.gate.AeatAccessGate.require_live_write`
+    -- not by a field here that nothing would read.
     """
 
     model_config = OPERATOR_SURFACE_MODEL_CONFIG
 
     steps: tuple[ModeloLifecycleStep, ...]
-    internal_filed_term: str = "internal filed"
-    live_submission_enabled: bool = False
-    live_submission_wording: str = "live submission is permanently disabled"
 
     @field_validator("steps")
     @classmethod
@@ -162,14 +160,6 @@ class LifecycleContract(BaseModel):
         )
         if value != expected:
             raise ValueError("modelo lifecycle must be calculate -> verify -> file")
-        return value
-
-    @field_validator("live_submission_enabled")
-    @classmethod
-    @pydantic_validation_boundary
-    def _live_submission_is_forbidden(cls, value: bool) -> bool:
-        if value:
-            raise ValueError("live submission must remain disabled")
         return value
 
 

@@ -1089,6 +1089,9 @@ application:
       work_unit_already_discarded: A munkakérés már el van vetve.
       work_unit_create_discarded: Ezt a bevallási célt elvetettek. Az ismételt létrehozás
         ugyanazt az elvetett munkaegységét adja vissza, igy nem folytatható.
+      work_unit_create_superseded_modelo: A(z) %{modelo} modellt a(z) %{superseded_by}
+        modell váltotta fel, ezért már nem nyújtható be. Semmi sem jött létre; a bevallást
+        a(z) %{superseded_by} modellel nyissa meg.
       work_unit_discarded_cannot_calculate: A(z) %{work_unit_id} munkaegység állapota
         %{work_unit_state}, ezért nem számítható.
       work_unit_discarded_cannot_import: A(z) %{work_unit_id} munkaegység állapota

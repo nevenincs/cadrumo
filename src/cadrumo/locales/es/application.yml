@@ -1135,6 +1135,9 @@ application:
       work_unit_create_discarded: Este objetivo de declaración fue descartado. Volver
         a crearlo devuelve la misma unidad de trabajo descartada, por lo que no se
         puede reanudar.
+      work_unit_create_superseded_modelo: El modelo %{modelo} ha sido sustituido por
+        el modelo %{superseded_by} y ya no admite presentaciones. No se ha creado
+        nada; abre la declaración con el modelo %{superseded_by}.
       work_unit_discarded_cannot_calculate: La unidad de trabajo %{work_unit_id} está
         en el estado %{work_unit_state} y no puede calcularse.
       work_unit_discarded_cannot_import: La unidad de trabajo %{work_unit_id} está

@@ -1134,6 +1134,9 @@ application:
       work_unit_create_discarded: Aquest objectiu de declaració es va descartar. Tornar
         a crear-lo retorna la mateixa unitat de treball descartada, de manera que
         no es pot reprendre.
+      work_unit_create_superseded_modelo: El model %{modelo} ha estat substituït pel
+        model %{superseded_by} i ja no admet presentacions. No s'ha creat res; obre
+        la declaració amb el model %{superseded_by}.
       work_unit_discarded_cannot_calculate: La unitat de treball %{work_unit_id} és
         a l'estat %{work_unit_state} i no es pot calcular.
       work_unit_discarded_cannot_import: La unitat de treball %{work_unit_id} és a

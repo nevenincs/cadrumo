@@ -34,6 +34,7 @@ from .command_spec import (
     CommandSpecGraph,
     DefaultKind,
     DeferredTarget,
+    ExecutionPolicySpec,
     OptionSpec,
     ParameterDefault,
 )
@@ -351,13 +352,31 @@ def _governed_fact_scope(spec: CommandSpec, context: typer.Context) -> AbstractC
     return validating_governed_facts(authority_operation(context))
 
 
+def refuse_declared_live_write(policy: ExecutionPolicySpec) -> None:
+    """Refuse a behavior whose policy declares a live AEAT write.
+
+    Live AEAT submission is permanently forbidden, so a ``live_write``
+    declaration is never a permission: dispatch raises the access gate's typed
+    refusal before any preflight, provisioning or handler import can run.
+
+    Raises:
+        LiveSubmitForbiddenError: When ``policy.live_write`` is set.
+    """
+    if not policy.live_write:
+        return
+    from ...core.access_gate.gate import AeatAccessGate
+    from ...core.config import load_settings
+
+    AeatAccessGate(settings=load_settings()).require_live_write()
+
+
 def _invoke_bound_behavior(
     graph: CommandSpecGraph,
     spec: CommandSpec,
     target_ref: DeferredTarget,
     bound: inspect.BoundArguments,
 ) -> object:
-    """Apply group short-circuiting and terminal preflight to bound arguments."""
+    """Apply group short-circuiting, the live-write refusal and terminal preflight."""
     context_parameter = spec.invocation.context_parameter
     if spec.kind == "group" and context_parameter is not None:
         structural_context = _invocation_context(bound, context_parameter)
@@ -366,6 +385,11 @@ def _invoke_bound_behavior(
             # must not be imported or executed while Click descends toward
             # the fully parsed child authority.
             return None
+    try:
+        refuse_declared_live_write(spec.policy)
+    except Exception as error:
+        _capture_refusal_spine(error)
+        raise
     if context_parameter is not None and _requires_leaf_preflight(spec):
         from ...application.user_profile.profile_summary import summary_inventory_snapshot
         from ._profile_authentication_gate import preflight_parsed_leaf
@@ -555,6 +579,7 @@ __all__ = [
     "CommandSpecTyperGroup",
     "build_command_app",
     "build_command_subtree",
+    "refuse_declared_live_write",
     "resolve_deferred_target",
     "runs_in_governed_fact_scope",
 ]

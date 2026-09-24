@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import ast
-from dataclasses import FrozenInstanceError
+from dataclasses import FrozenInstanceError, replace
 from pathlib import Path
 from typing import cast
 
@@ -15,11 +15,15 @@ from cadrumo.application.operator_surface.command_ports import (
 )
 
 from ....application.operator_surface.command_ports import CommandCapabilityClass
+from ....core.access_gate.errors import LiveSubmitForbiddenError
+from ....core.errors.error_codes import get_registered_error_code
 from .._command_policy import (
     CommandExecutionPolicy,
 )
+from .._command_runtime import refuse_declared_live_write
 from ..command_spec import (
     Capability,
+    ExecutionPolicySpec,
     SideEffect,
 )
 
@@ -85,7 +89,6 @@ def test_policy_is_immutable_and_preserves_explicit_safe_judgments() -> None:
         ({"encrypted-facts"}, {"local-state"}, "profile-bound", False, False, False),
         ({"profile-custody"}, {"local-state"}, "none", True, False, False),
         ({"filing"}, {"local-state"}, "none", False, True, False),
-        ({"browser"}, {"browser"}, "none", False, False, True),
     ],
 )
 def test_policy_accepts_graph_derived_capability_implications(
@@ -110,6 +113,30 @@ def test_policy_accepts_graph_derived_capability_implications(
     assert policy.destructive is destructive
     assert policy.handoff is handoff
     assert policy.live_write is live_write
+
+
+def test_a_declared_live_write_is_refused_at_dispatch() -> None:
+    """A coherent ``live_write`` declaration is describable, never runnable.
+
+    The declaration stays valid -- browser implies network, so the policy is
+    self-consistent and MCP can classify and block it -- but the dispatch seam
+    turns it into the access gate's permanent, registered refusal.
+    """
+    declared = ExecutionPolicySpec(
+        capabilities=frozenset({"browser"}),
+        side_effects=frozenset({"browser"}),
+        performance="external-io",
+        write_route=CommandWriteRoute.NONE,
+        live_write=True,
+    )
+
+    with pytest.raises(LiveSubmitForbiddenError) as excinfo:
+        refuse_declared_live_write(declared)
+
+    code = get_registered_error_code(excinfo.value)
+    assert code.code == "LOCKED_ACCESS_GATE_LIVE_SUBMIT_FORBIDDEN"
+    assert not code.retryable
+    assert refuse_declared_live_write(replace(declared, live_write=False)) is None
 
 
 @pytest.mark.parametrize(

@@ -134,6 +134,12 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
     ),
     _profile(
+        "modelo.work.create",
+        "modelo.work.create.censo.work_unit_allowed",
+        "modelo.work.create.censo.modelo_superseded",
+        no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+    ),
+    _profile(
         "modelo.work.rename",
         "modelo.work.rename.lifecycle.mutable",
         "modelo.work.rename.lifecycle.discarded",

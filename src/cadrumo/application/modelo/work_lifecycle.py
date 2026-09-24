@@ -51,6 +51,7 @@ from ...core.time.clock import now as _utc_now
 from ...domain.buckets.event import BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import bucket_event_history_write as _bucket_event_write
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.censo_modelos import censo_ownership_refusing_work_units
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.contribuyente.ccaa import CCAA
 from ...domain.modelos.codes import ModeloCode
@@ -329,6 +330,34 @@ def _default_name(*, modelo: str, filing_year: int, period: Period) -> str:
     return f"{modelo}-{filing_year}-{period.registry_token}"
 
 
+def reject_superseded_censo_modelo(*, modelo: str, operation: PinnedAuthorityOperation) -> None:
+    """Refuse a work unit for a censo modelo its registry ownership marks as superseded.
+
+    Every creation entry calls this before resolving a revision, so the refusal
+    names the superseded modelo and its successor rather than surfacing as a
+    missing registry revision.
+    """
+    ownership = censo_ownership_refusing_work_units(modelo, operation=operation)
+    if ownership is None:
+        return
+    evidence_values: dict[str, str | int | bool] = {
+        "modelo": modelo,
+        "superseded_by": ownership.superseded_by or "",
+        "active_work_unit_allowed": False,
+    }
+    raise WorkUnitMutationRefusedError(
+        translated_message="application.modelo.errors.work_unit_create_superseded_modelo",
+        context=evidence_values,
+        precondition_failure=build_modelo_precondition_failure_for_scenario(
+            subject_leaf_key="modelo.work.create",
+            scenario_id="modelo.work.create.censo.modelo_superseded",
+            evidence_id="modelo.work.create.censo.ownership",
+            evidence_values=evidence_values,
+            provenance=ActionEvidenceProvenance.REGISTRY_RECORD,
+        ),
+    )
+
+
 def create_work_unit(
     *,
     bucket_id: str,
@@ -372,6 +401,7 @@ def create_work_unit(
     command that produced it. Recovery needs a supersede transition, which does
     not exist yet.
     """
+    reject_superseded_censo_modelo(modelo=modelo, operation=operation)
     if period.filing_year != filing_year:
         evidence_values = {
             "modelo": modelo,

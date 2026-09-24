@@ -1026,6 +1026,9 @@ application:
       work_unit_already_discarded: The work unit is already discarded.
       work_unit_create_discarded: This filing target was discarded. Creating it again
         resolves to the same discarded work unit, so the target cannot be resumed.
+      work_unit_create_superseded_modelo: Modelo %{modelo} is superseded by modelo
+        %{superseded_by} and no longer accepts a filing. Nothing was created; open
+        the filing under modelo %{superseded_by}.
       work_unit_discarded_cannot_calculate: Work unit %{work_unit_id} is in state
         %{work_unit_state} and cannot be calculated.
       work_unit_discarded_cannot_import: Work unit %{work_unit_id} is in state %{work_unit_state}

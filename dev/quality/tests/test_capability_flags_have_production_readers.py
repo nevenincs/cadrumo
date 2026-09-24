@@ -36,16 +36,7 @@ _DECLARING_LAYERS: Final[tuple[str, ...]] = ("src/cadrumo/domain/", "src/cadrumo
 
 #: Known unread flags awaiting their owners. Each is a defect, not a data-only
 #: field: the reason names what the flag claims to gate and that nothing does.
-_KNOWN_UNREAD: Final[Mapping[tuple[str, str], str]] = {
-    ("src/cadrumo/domain/calculations/registry/censo_modelos.py", "active_work_unit_allowed"): (
-        "Known defect, routed to the censo registry owner: the superseded censo modelo is declared "
-        "False but no work-unit creation path reads it, so the restriction is not enforced."
-    ),
-    ("src/cadrumo/application/operator_surface/models.py", "live_submission_enabled"): (
-        "Known defect, routed to the operator-surface owner: a validator pins it to False but no "
-        "surface reads it, so it gates nothing; delete it or make the surface consult it."
-    ),
-}
+_KNOWN_UNREAD: Final[Mapping[tuple[str, str], str]] = dict[tuple[str, str], str]()
 
 
 @dataclass(frozen=True, slots=True)

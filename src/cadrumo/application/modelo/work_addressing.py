@@ -71,7 +71,13 @@ from .selectors import (
     ModeloCalculationRevisionSelectorStateError,
     resolve_modelo_calculation_revision_pick,
 )
-from .work_lifecycle import RevisionParentOperation, create_work_unit, rename_work_unit, require_revision_parent_active
+from .work_lifecycle import (
+    RevisionParentOperation,
+    create_work_unit,
+    reject_superseded_censo_modelo,
+    rename_work_unit,
+    require_revision_parent_active,
+)
 from .work_lifecycle_ports import WorkLifecyclePorts
 from .work_selection import (
     ModeloWorkResolution,
@@ -1181,6 +1187,7 @@ def ensure_modelo_work_unit_for_active_target(
             name_applied = unit.name
         return ModeloWorkEnsureResult(work_unit=unit, reused=True, name_applied=name_applied)
 
+    reject_superseded_censo_modelo(modelo=modelo, operation=operation)
     revision_id = law_selected_revision_for_work_target(
         modelo=modelo,
         filing_year=filing_year,
