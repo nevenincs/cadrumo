@@ -115,6 +115,11 @@ from .action_errors import (
 from .amendment_action_ports import AmendmentActionPorts
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
 from .filed_revision_observation import filed_revision_observation_writes, prepare_filed_revision_observation
+from .lifecycle_clock_gate import (
+    ModeloLifecycleClockOperation,
+    amendment_ordering_instants,
+    require_lifecycle_clock_not_before,
+)
 from .m303_filing_evidence import validate_m303_filing_instance_evidence_for_revision
 from .profile_export_binding import resolve_export_identity
 from .result_disposition_resolution import base_modelo_result_disposition
@@ -405,6 +410,11 @@ def amend_modelo_revision[CasillaKey](
     )
 
     now = clock or _utc_now()
+    require_lifecycle_clock_not_before(
+        now,
+        operation=ModeloLifecycleClockOperation.AMEND,
+        instants=amendment_ordering_instants(work_unit=work_unit, baseline=baseline, in_force=in_force),
+    )
     corrected_values: dict[CasillaId, Decimal] = dict(source_revision.casilla_values)
     corrected_values.update(canonical_overrides)
 

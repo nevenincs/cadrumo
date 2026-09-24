@@ -65,6 +65,11 @@ from .action_errors import (
     WorkUnitMutationRefusedError,
     WorkUnitNotFoundError,
 )
+from .lifecycle_clock_gate import (
+    ModeloLifecycleClockOperation,
+    require_lifecycle_clock_not_before,
+    work_unit_ordering_instants,
+)
 from .preconditions import build_modelo_precondition_failure_for_scenario
 from .revision_persistence import build_modelo_bucket_event as _build_bucket_event
 from .work_lifecycle_ports import WorkLifecyclePorts
@@ -696,6 +701,11 @@ def rename_work_unit(
             ),
         )
     now = clock or _utc_now()
+    require_lifecycle_clock_not_before(
+        now,
+        operation=ModeloLifecycleClockOperation.RENAME,
+        instants=work_unit_ordering_instants(existing),
+    )
     cleaned_name = new_name.strip()
     cleaned_actor = actor.strip()
     renamed = existing.model_copy(update={"name": cleaned_name, "updated_at": now})
@@ -764,6 +774,11 @@ def discard_work_unit(
             ),
         )
     now = clock or _utc_now()
+    require_lifecycle_clock_not_before(
+        now,
+        operation=ModeloLifecycleClockOperation.DISCARD,
+        instants=work_unit_ordering_instants(existing),
+    )
     discarded = existing.model_copy(
         update={
             "state": WorkUnitState.DESCARTADO,

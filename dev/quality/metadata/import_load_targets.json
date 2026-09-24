@@ -815,6 +815,7 @@
         "cadrumo.application.modelo.iva_wallet_seed",
         "cadrumo.application.modelo.iva_wallet_seed_ports",
         "cadrumo.application.modelo.justificante_repository",
+        "cadrumo.application.modelo.lifecycle_clock_gate",
         "cadrumo.application.modelo.local_observation_actions",
         "cadrumo.application.modelo.local_observation_spreadsheet",
         "cadrumo.application.modelo.m036_lifecycle",

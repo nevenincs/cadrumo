@@ -808,6 +808,9 @@ errors:
       hay retenciones registradas en este periodo, pero ninguna norma oficial define
       cómo se cuenta el «Número de rentas», por lo que no puede calcularse, verificarse
       ni presentarse.'
+    canonical_modelo_lifecycle_clock_precedes: El reloj de la acción es anterior a
+      un registro que actualizaría, así que no se ha guardado nada. Vuelva a intentarlo
+      con la hora actual.
     canonical_modelo_workspace_stale_cursor: El cursor fijado ya no coincide con la
       referencia actual; reinicia la consulta.
     canonical_modelo_workspace_unresolved_work: La lectura del espacio de trabajo

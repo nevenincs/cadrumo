@@ -157,6 +157,11 @@ from .calculation_route import CALCULATION_ROUTE_ENROLLED_SOURCES
 from .calculation_route import CalculationRouteStage as _CalculationRouteStage
 from .calculation_route import require_calculation_route_resolver as _require_calculation_route_resolver
 from .calculation_source_policy import BUCKET_AGGREGATION_LOCK_SOURCES, CALLER_OVERRIDABLE_CARRY_SOURCES
+from .lifecycle_clock_gate import (
+    ModeloLifecycleClockOperation,
+    require_lifecycle_clock_not_before,
+    work_unit_ordering_instants,
+)
 from .m123_count_authority_gate import Modelo123CountAuthorityStage, require_modelo_123_count_authority
 from .m303_filing_evidence import validate_m303_filing_instance_evidence_for_revision
 from .m303_regimen_simplificado_scope import (
@@ -581,6 +586,13 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
     )
 
     now = _trusted_calculation_clock(clock)
+    # The new draft is created at ``now`` and orders itself; the parent work
+    # unit's advanced pointer is stamped with it too.
+    require_lifecycle_clock_not_before(
+        now,
+        operation=ModeloLifecycleClockOperation.CALCULATE,
+        instants=work_unit_ordering_instants(work_unit),
+    )
     return persist_calculation_revision(
         work_unit_id=work_unit_id,
         registry_snapshot_ref=snapshot.snapshot_ref,

@@ -104,6 +104,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.modelo.lifecycle_clock_gate.ModeloLifecycleClockPrecedesError",
+        ErrorCode(
+            code="REFUSED_MODELO_LIFECYCLE_CLOCK_PRECEDES",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.canonical_modelo_lifecycle_clock_precedes",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.aggregation.withholding_observation_service.WithholdingObservationMutationError",
         ErrorCode(
             code="REFUSED_WITHHOLDING_OBSERVATION_MUTATION",

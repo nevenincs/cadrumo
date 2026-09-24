@@ -746,6 +746,8 @@ errors:
       evidence is stored for this period, but no official rule defines how the ''Número
       de rentas'' recipient count is made, so it cannot be calculated, verified or
       filed.'
+    canonical_modelo_lifecycle_clock_precedes: The action's clock is earlier than
+      a record it would update, so nothing was saved. Retry with the current time.
     canonical_modelo_workspace_stale_cursor: The pinned cursor no longer matches the
       current baseline; restart the query.
     canonical_modelo_workspace_unresolved_work: The workspace read reached an unresolved

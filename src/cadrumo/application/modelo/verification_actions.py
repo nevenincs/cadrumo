@@ -174,6 +174,11 @@ from .iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
 from .iva_wallet_gate import (
     require_persisted_iva_compensation_decision_matches_revision as _require_iva_compensation_revision_match,
 )
+from .lifecycle_clock_gate import (
+    ModeloLifecycleClockOperation,
+    require_lifecycle_clock_not_before,
+    verification_ordering_instants,
+)
 from .m123_count_authority_gate import Modelo123CountAuthorityStage, require_modelo_123_count_authority
 from .preconditions import ModeloPreconditionFailure
 from .pulled_filing_reconcile import pulled_filing_divergence_findings
@@ -856,6 +861,9 @@ def verify_modelo_revision_with_preconditions(
             unit is missing.
         :class:`~cadrumo.application.modelo.action_errors.ModeloCrossPeriodCleanStateError`: A
             required cross-period dependency has a blocking clean-state finding.
+        :class:`~cadrumo.application.modelo.lifecycle_clock_gate.ModeloLifecycleClockPrecedesError`:
+            ``clock`` precedes the revision's or work unit's ``created_at``;
+            refused before anything is persisted.
     """
     repos = verification_repositories
     cr_repo = repos.calculation
@@ -984,6 +992,14 @@ def verify_modelo_revision_with_preconditions(
     )
 
     now = clock or _utc_now()
+    # Before the workflow gate and every save below: each record this action
+    # rewrites takes ``now``, and a stamp earlier than those instants would
+    # persist catalogues their own loaders refuse.
+    require_lifecycle_clock_not_before(
+        now,
+        operation=ModeloLifecycleClockOperation.VERIFY,
+        instants=verification_ordering_instants(revision=target, work_unit=work_unit),
+    )
     report = _build_verification_report(
         calculation_revision_id=calculation_revision_id,
         registry_snapshot_ref=target.registry_snapshot_ref,
