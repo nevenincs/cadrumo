@@ -31,6 +31,7 @@ from ._tree_validation import (
 from .export_fragment_provenance import (
     ExportFragmentProvenanceManifest,
     ExportFragmentTarget,
+    loader_semantic_drift,
     normalised_loader_semantics,
     verify_export_fragment_provenance_manifest,
 )
@@ -151,8 +152,14 @@ def check_generated_export_tree(
         render_profile_source_evidence=render_profile_source_evidence,
     )
     refuse_repeat_the_candidate_would_drop(published_layout, candidate.layout)
-    if normalised_loader_semantics(published_layout) != normalised_loader_semantics(candidate.layout):
-        raise RegistryValidationError("published export loader semantics do not match fresh generated semantics")
+    semantic_drift = loader_semantic_drift(
+        normalised_loader_semantics(published_layout),
+        normalised_loader_semantics(candidate.layout),
+    )
+    if semantic_drift:
+        raise RegistryValidationError(
+            "published export loader semantics do not match fresh generated semantics: " + "; ".join(semantic_drift),
+        )
     _require_exact_tree_bytes(
         published_export_root,
         candidate_export_root,

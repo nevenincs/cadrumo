@@ -86,6 +86,7 @@ __all__ = [
     "export_fragment_provenance_path",
     "load_export_fragment_provenance_manifest",
     "loader_semantic_digest",
+    "loader_semantic_drift",
     "normalised_loader_semantics",
     "semantic_map_digest",
     "verify_export_fragment_provenance_manifest",
@@ -101,7 +102,18 @@ EXPORT_FRAGMENT_GENERATOR_SCHEMA_VERSION: Final[int] = 6
 EXPORT_RENDER_NORMALIZATION_SCHEMA_VERSION: Final[int] = 2
 """Reviewed parser-to-wire normalization contract recorded for every field."""
 
-_LOADER_SEMANTIC_SCHEMA_VERSION: Final[int] = 6
+_LOADER_SEMANTIC_SCHEMA_VERSION: Final[int] = 7
+"""Shape of the projection ``normalised_loader_semantics`` attests.
+
+Every committed manifest's ``loader_semantic_sha256`` is a digest of this
+projection, so adding, removing or renaming a projected key re-attests every
+generated tree even though no tree byte moved. Bump it with any such change,
+in the same change that republishes the trees.
+
+Version 7 is the projection without ``aux_version``: the layout member was
+retired, and version 6 had attested it as ``null`` for every layout.
+"""
+
 #: The shape of a lowercase hex digest, stated where digests are validated.
 #: The publication module carried an identical copy: two modules deciding
 #: separately what a digest looks like is one relaxation away from one of
@@ -574,6 +586,20 @@ def loader_semantic_digest(loaded_layout: ExportLayoutDefinition) -> str:
     return content_hash_hex(normalised_loader_semantics(loaded_layout))
 
 
+def loader_semantic_drift(recorded: Mapping[str, object], current: Mapping[str, object]) -> tuple[str, ...]:
+    """Name every projected loader-semantic path whose value differs between two projections.
+
+    A digest can only say that two projections differ. This names where, so a
+    refusal points at the key that moved rather than at the whole layout.
+    Records and fields are addressed by their ids and dictionary overrides by
+    their field id, never by list position, so a reported path is one a reviewer
+    can find in the tree. Each entry ends in ``added``, ``removed`` or ``changed``.
+    """
+    drift: list[str] = []
+    _collect_semantic_drift("", recorded, current, drift)
+    return tuple(sorted(drift))
+
+
 def collect_export_fragment_output_digests(export_root: Path) -> tuple[ExportFragmentOutputDigest, ...]:
     """Hash every real regular file below one generated export root.
 
@@ -727,7 +753,17 @@ def verify_export_fragment_provenance_manifest(
         raise RegistryValidationError("export provenance output-file digests do not match generated tree")
     actual_loader_digest = loader_semantic_digest(loaded_layout)
     if manifest.loader_semantic_sha256 != actual_loader_digest:
-        raise RegistryValidationError("export provenance loader-semantic digest does not match generated tree")
+        # The output files were proven equal to their attested digests just
+        # above, so the tree's bytes did not move: what moved is the projection
+        # or the loader's hydration of those unchanged bytes. The manifest keeps
+        # only the digest, so the key cannot be named here; say which side moved.
+        raise RegistryValidationError(
+            "export provenance loader-semantic digest does not match generated tree: "
+            f"the manifest attests {manifest.loader_semantic_sha256}, the current projection "
+            f"(loader semantic schema {_LOADER_SEMANTIC_SCHEMA_VERSION}) gives {actual_loader_digest}; "
+            "every output file matches its attested digest, so the loader projection or the loader's "
+            "hydration of this unchanged tree moved after the manifest was written",
+        )
     _require_field_derivations_match_layout(manifest.field_derivations, loaded_layout)
     expected_derivations = tuple(
         sorted(field_derivations, key=lambda item: (item.export_record_id, str(item.field.id)))
@@ -1244,6 +1280,72 @@ def _normalise_loader_field(payload: Mapping[str, object]) -> dict[str, object]:
     for key in _FIELD_KEYS_PRESENT_ONLY_WHEN_DECLARED:
         normalised[key] = payload[key]
     return _omit_undeclared_field_keys(normalised)
+
+
+#: Projected arrays whose members carry a stable identity, keyed by the member
+#: field holding it. Drift inside them is reported against that identity.
+_IDENTIFIED_PROJECTION_ARRAYS: Final[Mapping[str, str]] = {
+    "records": "id",
+    "fields": "id",
+    "dictionary_path_overrides": "field_id",
+}
+
+
+def _collect_semantic_drift(path: str, recorded: object, current: object, drift: list[str]) -> None:
+    if recorded == current:
+        return
+    recorded_mapping = _mapping_or_none(recorded)
+    current_mapping = _mapping_or_none(current)
+    if recorded_mapping is not None and current_mapping is not None:
+        for key in sorted(recorded_mapping.keys() | current_mapping.keys()):
+            child = f"{path}.{key}" if path else key
+            if key not in current_mapping:
+                drift.append(f"{child} removed")
+            elif key not in recorded_mapping:
+                drift.append(f"{child} added")
+            else:
+                _collect_semantic_drift(child, recorded_mapping[key], current_mapping[key], drift)
+        return
+    identity_key = _IDENTIFIED_PROJECTION_ARRAYS.get(path.rsplit(".", 1)[-1])
+    recorded_members = _members_by_identity(recorded, identity_key)
+    current_members = _members_by_identity(current, identity_key)
+    if recorded_members is None or current_members is None:
+        drift.append(f"{path} changed")
+        return
+    reported_before = len(drift)
+    for identity in sorted(recorded_members.keys() | current_members.keys()):
+        child = f"{path}[{identity}]"
+        if identity not in current_members:
+            drift.append(f"{child} removed")
+        elif identity not in recorded_members:
+            drift.append(f"{child} added")
+        else:
+            _collect_semantic_drift(child, recorded_members[identity], current_members[identity], drift)
+    if len(drift) == reported_before:
+        # Same members, same values: only their sequence differs, which is
+        # still a difference the projection attests.
+        drift.append(f"{path} reordered")
+
+
+def _mapping_or_none(value: object) -> Mapping[str, object] | None:
+    return cast(Mapping[str, object], value) if isinstance(value, Mapping) else None
+
+
+def _members_by_identity(value: object, identity_key: str | None) -> dict[str, object] | None:
+    """Index an identified projected array, or ``None`` when it cannot be addressed by identity."""
+    if identity_key is None or not isinstance(value, list):
+        return None
+    members: dict[str, object] = {}
+    items: list[object] = list(cast(list[object], value))
+    for item in items:
+        member = _mapping_or_none(item)
+        if member is None:
+            return None
+        identity = member.get(identity_key)
+        if not isinstance(identity, str) or identity in members:
+            return None
+        members[identity] = item
+    return members
 
 
 def _loader_record_sort_key(payload: Mapping[str, object]) -> tuple[int, str]:

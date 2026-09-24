@@ -47,7 +47,7 @@ import tempfile
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Literal
+from typing import Literal, cast
 
 import rtoml
 
@@ -78,6 +78,7 @@ __all__ = [
     "RenderComparison",
     "compare_export_tree_roots",
     "compare_revision_against_committed",
+    "differing_manifest_fields",
     "parsed_tree_file",
 ]
 
@@ -106,6 +107,14 @@ class RenderComparison:
     only_committed: tuple[str, ...]
     only_rendered: tuple[str, ...]
     serialization_only: tuple[str, ...] = ()
+    provenance_fields: tuple[str, ...] = ()
+    """Top-level generation-manifest members whose values differ, when the manifest does.
+
+    A differing manifest is safe to republish or not depending on WHICH member
+    moved: a loader-semantic digest alone says the tree's bytes still reproduce
+    and the attestation is stale, while a moved source or semantic-map digest
+    says an input changed. Naming the member is what lets a red name its cause.
+    """
 
     @property
     def byte_differing(self) -> tuple[str, ...]:
@@ -427,6 +436,32 @@ def compare_export_tree_roots(
         serialization_only=serialization_only,
         only_committed=tuple(sorted(set(committed) - set(rendered))),
         only_rendered=tuple(sorted(set(rendered) - set(committed))),
+        provenance_fields=(
+            differing_manifest_fields(committed[_PROVENANCE_MANIFEST], rendered[_PROVENANCE_MANIFEST])
+            if _PROVENANCE_MANIFEST in differing
+            else ()
+        ),
+    )
+
+
+def differing_manifest_fields(committed: bytes, rendered: bytes) -> tuple[str, ...]:
+    """Name the top-level generation-manifest members whose parsed values differ.
+
+    An unparseable side is reported as such rather than compared, so a corrupt
+    manifest can never read as one whose members all agree.
+    """
+    committed_manifest = parsed_tree_file(_PROVENANCE_MANIFEST, committed)
+    rendered_manifest = parsed_tree_file(_PROVENANCE_MANIFEST, rendered)
+    if not isinstance(committed_manifest, dict) or not isinstance(rendered_manifest, dict):
+        return (f"{_PROVENANCE_MANIFEST} does not parse as a JSON object",)
+    committed_members = cast(dict[str, object], committed_manifest)
+    rendered_members = cast(dict[str, object], rendered_manifest)
+    return tuple(
+        name
+        for name in sorted(committed_members.keys() | rendered_members.keys())
+        if name not in committed_members
+        or name not in rendered_members
+        or committed_members[name] != rendered_members[name]
     )
 
 

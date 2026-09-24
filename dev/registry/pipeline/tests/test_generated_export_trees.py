@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import filecmp
 import shutil
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -32,6 +33,7 @@ from cadrumo.domain.calculations.registry.errors import (
     RegistryLoadError,
     RegistryValidationError,
 )
+from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
 
 from ...compiler.authority import compiled_bundled_authority
 from ...compiler.loader import (
@@ -46,6 +48,10 @@ from ..candidate_staging import (
 from ..cli import stage_published_modelo
 from ..export_fragment_provenance import (
     ExportFragmentTarget,
+    export_fragment_provenance_manifest_json_bytes,
+    export_fragment_provenance_path,
+    load_export_fragment_provenance_manifest,
+    loader_semantic_digest,
 )
 from ..generated_tree_dispositions import record_drift_dispositions, render_refusal_dispositions
 from ..generated_tree_inventory import GeneratedExportTree, generated_export_trees
@@ -159,6 +165,68 @@ def test_every_reproduction_pending_pin_is_live_and_source_bound() -> None:
         assert comparison.disposition_class == "provenance_only", (
             f"{subject}: reproduction pin is dormant or its failure class changed"
         )
+
+
+def _published_layout(tree: GeneratedExportTree, root: Path) -> ExportLayoutDefinition:
+    """Load the committed tree's layout exactly as check mode loads its published witness."""
+    staged = stage_published_modelo(root, modelo=tree.modelo, revision=tree.revision)
+    definition = load_modelo_directory(staged or bundled_path("registry", "aeat", "modelos", tree.modelo))
+    (layout,) = definition.revisions[tree.revision].export_layouts
+    return layout
+
+
+def _stale_loader_attestations(entries: Iterable[tuple[str, Path, ExportLayoutDefinition]]) -> list[str]:
+    """Name every export root whose manifest attests a loader digest its layout no longer has."""
+    stale: list[str] = []
+    for subject, export_root, layout in entries:
+        manifest = load_export_fragment_provenance_manifest(export_fragment_provenance_path(export_root).read_bytes())
+        current = loader_semantic_digest(layout)
+        if manifest.loader_semantic_sha256 != current:
+            stale.append(f"{subject} (attests {manifest.loader_semantic_sha256}, current {current})")
+    return stale
+
+
+def test_every_committed_manifest_attests_the_current_loader_semantics(tmp_path: Path) -> None:
+    """Each committed manifest's loader digest equals the digest of the layout it ships.
+
+    The reproduction gate reaches this question only after a full render and
+    reports one tree at a time. This asks it directly and names every stale tree
+    at once, so a projection or loader change that re-attests the corpus reads
+    as one list of trees to republish. A tree pinned as reproduction-pending is
+    excluded by its pin, which states why it cannot yet be republished.
+    """
+    stale = _stale_loader_attestations(
+        (str(tree), tree.committed, _published_layout(tree, tmp_path / str(tree)))
+        for tree in _GENERATED_TREES
+        if str(tree) not in _REPRODUCTION_PENDING
+    )
+
+    assert stale == [], (
+        f"{len(stale)} committed export manifest(s) attest loader semantics their layout no longer has: "
+        f"{stale}. Republish each through `python -m dev.registry.pipeline republish-target`; "
+        "test_loader_semantic_projection_shape_is_bound_to_its_schema_version names a projection change"
+    )
+
+
+def test_a_manifest_attesting_other_loader_semantics_is_named(tmp_path: Path) -> None:
+    """Detector: a tree whose manifest attests a different loader digest is reported by name."""
+    tree = next(item for item in _GENERATED_TREES if str(item) == "m347-2025-y-siguientes")
+    layout = _published_layout(tree, tmp_path / "published")
+    stale_root = tmp_path / "stale" / "export"
+    shutil.copytree(tree.committed, stale_root)
+    manifest_path = export_fragment_provenance_path(stale_root)
+    manifest = load_export_fragment_provenance_manifest(manifest_path.read_bytes())
+    manifest_path.write_bytes(
+        export_fragment_provenance_manifest_json_bytes(
+            manifest.model_copy(update={"loader_semantic_sha256": "0" * 64})
+        ),
+    )
+
+    stale = _stale_loader_attestations(
+        (("committed", tree.committed, layout), ("stale-copy", stale_root, layout)),
+    )
+
+    assert stale == [f"stale-copy (attests {'0' * 64}, current {loader_semantic_digest(layout)})"]
 
 
 def test_m390_isolation_excludes_both_export_authorities_and_keeps_required_support(tmp_path: Path) -> None:
@@ -343,7 +411,8 @@ def test_committed_tree_is_reproducible_and_check_mode_refuses_only_for_its_name
             return
         reproduction_pin = _REPRODUCTION_PENDING.get(str(tree))
         assert reproduction_pin is not None, (
-            f"{tree}: committed export fragment(s) differ from a fresh render: {differing}"
+            f"{tree}: committed export fragment(s) differ from a fresh render: {differing}; "
+            f"differing manifest members: {list(comparison.provenance_fields)}"
         )
         assert reproduction_pin.source_ref == tree.source_ref
         assert comparison.disposition_class == "provenance_only", (

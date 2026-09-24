@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 import inspect
+from typing import cast
 
 import pytest
 from pydantic import ValidationError
@@ -35,6 +36,7 @@ from ..pipeline.export_fragment_provenance import (
     export_fragment_provenance_manifest_json_bytes,
     load_export_fragment_provenance_manifest,
     loader_semantic_digest,
+    loader_semantic_drift,
     normalised_loader_semantics,
     semantic_map_digest,
 )
@@ -401,6 +403,136 @@ def test_loader_semantic_digest_normalises_loader_order_but_detects_coordinate_c
 
     assert loader_semantic_digest(_loaded_layout(records_reversed=True)) == baseline
     assert loader_semantic_digest(_loaded_layout(first_offset=2)) != baseline
+
+
+def test_loader_semantic_drift_names_the_one_key_that_moved() -> None:
+    """A digest only says two layouts differ; the drift report names the field and key."""
+    baseline = normalised_loader_semantics(_loaded_layout())
+
+    assert loader_semantic_drift(baseline, normalised_loader_semantics(_loaded_layout(records_reversed=True))) == ()
+    assert loader_semantic_drift(baseline, normalised_loader_semantics(_loaded_layout(first_offset=2))) == (
+        "records[registro-tipo-1].fields[registro-tipo-1.literal].offset changed",
+    )
+
+
+def test_loader_semantic_drift_names_a_projected_key_the_projection_gained_or_lost() -> None:
+    """A projection that stops carrying a key re-attests every tree; the report says which key."""
+    current = normalised_loader_semantics(_loaded_layout())
+    recorded_with_retired_key = {**current, "aux_version": None}
+    first_record, second_record = cast(list[dict[str, object]], current["records"])
+
+    assert loader_semantic_drift(recorded_with_retired_key, current) == ("aux_version removed",)
+    assert loader_semantic_drift(current, recorded_with_retired_key) == ("aux_version added",)
+    assert loader_semantic_drift(current, {**current, "records": [first_record]}) == (
+        f"records[{second_record['id']}] removed",
+    )
+    assert loader_semantic_drift(current, {**current, "records": [second_record, first_record]}) == (
+        "records reordered",
+    )
+
+
+#: The shape of the projection every committed manifest's loader digest covers,
+#: and the schema version it is attested under. Changing the shape changes every
+#: generated tree's digest while no tree byte moves, so the change must arrive
+#: with a version bump and a republication of every tree, never on its own.
+_PINNED_LOADER_SEMANTIC_SCHEMA_VERSION = 7
+_PINNED_LOADER_SEMANTIC_SHAPE = frozenset(
+    {
+        "aux_idioma",
+        "dictionary_path_overrides",
+        "dictionary_source_ref",
+        "filing_envelope",
+        "format",
+        "id",
+        "legal_refs",
+        "loader_semantic_schema_version",
+        "records",
+        "source_refs",
+        *(
+            f"records[].{key}"
+            for key in (
+                "binding_record",
+                "discriminator",
+                "encoding",
+                "fields",
+                "id",
+                "line_ending",
+                "order",
+                "record_type",
+                "repeat",
+                "required",
+                "requires_positive_casilla_id",
+                "row_field_casilla_ids",
+            )
+        ),
+        *(
+            f"records[].fields[].{key}"
+            for key in (
+                "allowed_values",
+                "binding",
+                "casilla_id",
+                "computed_key",
+                "data_type",
+                "date_format",
+                "decimals",
+                "draft_attribute",
+                "id",
+                "justification",
+                "kind",
+                "legal_refs",
+                "length",
+                "literal",
+                "offset",
+                "padding",
+                "producer_key",
+                "projection_ref",
+                "required",
+                "signed",
+                "source_refs",
+                "value_policy",
+            )
+        ),
+    },
+)
+
+
+def _loader_semantic_shape(projection: dict[str, object]) -> frozenset[str]:
+    records = cast(list[dict[str, object]], projection["records"])
+    fields = [field for record in records for field in cast(list[dict[str, object]], record["fields"])]
+    return frozenset(
+        {
+            *projection,
+            *(f"records[].{key}" for record in records for key in record),
+            *(f"records[].fields[].{key}" for field in fields for key in field),
+        },
+    )
+
+
+def test_loader_semantic_projection_shape_is_bound_to_its_schema_version() -> None:
+    """A projected key added or removed is named here, at the change, not later as a bare digest red.
+
+    The committed manifests keep only the digest, so the generated-tree gate can
+    say that a tree's loader digest is stale but not which key moved. This pin
+    is where that key is named.
+    """
+    projection = normalised_loader_semantics(_loaded_layout())
+    # Teeth: a projection still carrying a retired key reads as that named key.
+    assert _loader_semantic_shape({**projection, "aux_version": None}) - _PINNED_LOADER_SEMANTIC_SHAPE == {
+        "aux_version",
+    }
+    shape = _loader_semantic_shape(projection)
+    added = sorted(shape - _PINNED_LOADER_SEMANTIC_SHAPE)
+    removed = sorted(_PINNED_LOADER_SEMANTIC_SHAPE - shape)
+
+    assert not (added or removed), (
+        f"the loader-semantic projection changed shape: added {added}, removed {removed}. Every "
+        "committed generated tree attests a digest of this projection, so bump the loader semantic "
+        "schema version, pin the new shape and version here, and republish every generated tree "
+        "through `python -m dev.registry.pipeline republish-target`"
+    )
+    assert projection["loader_semantic_schema_version"] == _PINNED_LOADER_SEMANTIC_SCHEMA_VERSION, (
+        "the loader semantic schema version moved without a pinned shape; pin the shape it attests"
+    )
 
 
 def test_loader_semantic_digest_detects_value_policy_change() -> None:
