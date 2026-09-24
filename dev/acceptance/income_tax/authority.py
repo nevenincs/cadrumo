@@ -14,12 +14,14 @@ import json
 from collections.abc import Sequence
 from dataclasses import asdict, dataclass
 from datetime import date
-from typing import Protocol
+from typing import Protocol, TypeIs
 
 from cadrumo.application.filing.export import export_layout_renderability_reason_code
 from cadrumo.application.filing.export_parity import assert_xml_declaration_aux_declared
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority_artifact import AuthorityGenerationPin
 from cadrumo.domain.calculations.registry.errors import RegistryError
+from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from cadrumo.domain.filing.errors import FilingExportError
 from cadrumo.domain.filing.software_identity import aeat_aux_version
 
@@ -28,15 +30,32 @@ _M100_PERIOD = "0A"
 
 
 class _SupportEnvelope(Protocol):
-    floor: int
+    @property
+    def floor(self) -> int: ...
+
+
+class _CoordinateRevision(Protocol):
+    @property
+    def id(self) -> str: ...
+
+    @property
+    def export_layouts(self) -> Sequence[ExportLayoutDefinition]: ...
+
+
+class _CoordinateSnapshot(Protocol):
+    @property
+    def revision(self) -> _CoordinateRevision: ...
 
 
 class _AuthorityOperation(Protocol):
-    generation: object
+    """The generation-pinned authority reads this resolver performs."""
+
+    @property
+    def generation(self) -> AuthorityGenerationPin: ...
 
     def supported_filing_years(self) -> _SupportEnvelope: ...
 
-    def snapshot(self, modelo_id: str, *, filing_year: int, period: str) -> object: ...
+    def snapshot(self, modelo_id: str, /, *, filing_year: int, period: str) -> _CoordinateSnapshot: ...
 
 
 @dataclass(frozen=True, slots=True)
@@ -78,7 +97,7 @@ class IncomeTaxAuthorityResolution:
 
     def to_dict(self) -> dict[str, object]:
         """Return a stable machine-readable receipt fragment."""
-        return asdict(self)
+        return dict[str, object](asdict(self))
 
 
 def resolve_income_tax_authority(
@@ -150,16 +169,16 @@ def _resolve_coordinate(
     return CoordinateResolution(
         modelo=modelo,
         period=period,
-        revision=str(revision.id),
+        revision=revision.id,
         exports=tuple(_admit_layout(layout) for layout in revision.export_layouts),
     )
 
 
-def _admit_layout(layout: object) -> ExportAdmission:
+def _admit_layout(layout: ExportLayoutDefinition) -> ExportAdmission:
     renderability = export_layout_renderability_reason_code(layout)
     if renderability is not None:
         return ExportAdmission(
-            layout_id=str(layout.id),
+            layout_id=layout.id,
             format=layout.format.value,
             renderability=renderability.value,
             admission="blocked",
@@ -174,9 +193,10 @@ def _admit_layout(layout: object) -> ExportAdmission:
     except FilingExportError as exc:
         context = exc.context or {}
         raw_fields = context.get("undeclared_fields", ())
-        fields = tuple(str(item) for item in raw_fields) if isinstance(raw_fields, tuple) else ()
+        undeclared = raw_fields if _is_tuple(raw_fields) else ()
+        fields = tuple(str(item) for item in undeclared)
         return ExportAdmission(
-            layout_id=str(layout.id),
+            layout_id=layout.id,
             format=layout.format.value,
             renderability=None,
             admission="blocked",
@@ -184,7 +204,7 @@ def _admit_layout(layout: object) -> ExportAdmission:
             undeclared_fields=fields,
         )
     return ExportAdmission(
-        layout_id=str(layout.id),
+        layout_id=layout.id,
         format=layout.format.value,
         renderability=None,
         admission="admitted",
@@ -193,12 +213,12 @@ def _admit_layout(layout: object) -> ExportAdmission:
     )
 
 
+def _is_tuple(value: object) -> TypeIs[tuple[object, ...]]:
+    return isinstance(value, tuple)
+
+
 def _logical_generation(operation: _AuthorityOperation) -> str:
-    generation = operation.generation
-    logical_generation = getattr(generation, "logical_generation", None)
-    if not isinstance(logical_generation, str):
-        raise TypeError("income-tax authority resolver requires a generation-pinned operation")
-    return logical_generation
+    return operation.generation.logical_generation
 
 
 def _parser() -> argparse.ArgumentParser:
