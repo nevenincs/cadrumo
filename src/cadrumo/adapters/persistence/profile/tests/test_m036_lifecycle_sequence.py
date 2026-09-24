@@ -159,6 +159,10 @@ def test_a_refused_sequence_persists_nothing_and_emits_no_event(tmp_path: Path) 
     )
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as runtime:
+        # Provisioning the profile records its own creation in the bucket
+        # history, so the refusal is measured against that history rather
+        # than against an empty one.
+        history_before = BucketEventHistoryRepository().load()
         with pytest.raises(Modelo036PriorAltaRequiredError):
             record_m036_declaration(refused_command, bucket_id=runtime.bucket_id, ports=_ports(runtime.bucket_id))
 
@@ -174,7 +178,7 @@ def test_a_refused_sequence_persists_nothing_and_emits_no_event(tmp_path: Path) 
     assert would_be_id not in listed_ids
     assert listed_ids == set()
     assert not any(event.object_id == would_be_id for event in catalogue.events.values())
-    assert catalogue.events == {}
+    assert catalogue.events == history_before.events
 
 
 def test_an_identical_repeat_of_the_terminal_baja_stays_idempotent(tmp_path: Path) -> None:

@@ -304,10 +304,18 @@ def test_production_composition_imports_only_public_operation_defining_modules()
 
 
 def test_inbound_entrypoints_do_not_import_the_operation_owner_module() -> None:
+    """Inbound production code reaches operations through frontend requests, never the owner.
+
+    Test packages are not inbound surfaces: a test that drives an operation end
+    to end supplies a fake executor, which implements the owner's own emitter
+    protocol.
+    """
     entrypoints_root = Path(__file__).parents[1]
     owner_imports: list[tuple[Path, str]] = []
 
     for source in entrypoints_root.rglob("*.py"):
+        if "tests" in source.relative_to(entrypoints_root).parts:
+            continue
         tree = ast.parse(source.read_text(encoding="utf-8"))
         for node in ast.walk(tree):
             if (

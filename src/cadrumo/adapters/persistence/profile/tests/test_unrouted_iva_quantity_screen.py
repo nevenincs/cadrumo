@@ -67,6 +67,21 @@ def _revision(modelo_id: str) -> ModeloRevision:
     return published_authority_operation().snapshot(modelo_id, filing_year=_Q1_2025.filing_year, period=period).revision
 
 
+def _revision_without_fact(revision: ModeloRevision, fact: str) -> ModeloRevision:
+    """Return ``revision`` with every ``ledger_iva_aggregation`` binding drawing ``fact`` removed.
+
+    Models a revision declaring no binding for the fact at all. Stripping the
+    committed revision, rather than keying on a modelo that happens to lack the
+    fact today, keeps the case true once every form models it correctly.
+    """
+    kept = [
+        binding
+        for binding in revision.bindings
+        if not (binding.source.value == "ledger_iva_aggregation" and getattr(binding.provider, "fact", None) == fact)
+    ]
+    return revision.model_copy(update={"bindings": tuple(kept)})
+
+
 def _sale(
     provider_id: str,
     *,
@@ -170,7 +185,7 @@ def test_the_advisory_reaches_the_resolver_envelope(tmp_path: Path) -> None:
                 modelo="303",
                 filing_year=2025,
                 period=_Q1_2025,
-                revision=_revision("303"),
+                revision=_revision_without_fact(_revision("303"), "base_amount_sum"),
             ),
         )
 
