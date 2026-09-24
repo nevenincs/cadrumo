@@ -71,6 +71,11 @@ def _prohibited_aeat_product_forms(surface: str) -> tuple[str, ...]:
 
 
 _REPOSITORY_ROOT = REPO_ROOT
+
+# A hang guard, not a speed budget: each nested `uv run pytest --collect-only`
+# starts an interpreter and collects in a fresh process, which under the merge
+# gate's full xdist lane outlasted thirty seconds without anything being wrong.
+_NESTED_COLLECTION_HANG_GUARD_SECONDS = 180
 _PYPROJECT = _REPOSITORY_ROOT / "pyproject.toml"
 #: Per-test wall ceiling for the harness lane's combined real-proof pass, in
 #: seconds. Deliberately above the ini default: this lane's subject is a real
@@ -286,7 +291,7 @@ def test_harness_member_preflight_rejects_empty_collection_even_when_another_mem
     aggregate = run_command(
         [*invocation, str(populated_member), str(empty_member)],
         cwd=_REPOSITORY_ROOT,
-        timeout_seconds=30,
+        timeout_seconds=_NESTED_COLLECTION_HANG_GUARD_SECONDS,
     )
     assert aggregate.returncode == 0, (
         "the populated control must make aggregate collection non-empty\n"
@@ -297,7 +302,7 @@ def test_harness_member_preflight_rejects_empty_collection_even_when_another_mem
     empty_preflight = run_command(
         [*invocation, str(empty_member)],
         cwd=_REPOSITORY_ROOT,
-        timeout_seconds=30,
+        timeout_seconds=_NESTED_COLLECTION_HANG_GUARD_SECONDS,
     )
     assert empty_preflight.returncode == 5, (
         "the per-member collect preflight must preserve pytest exit 5 for an empty member\n"
