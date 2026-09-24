@@ -316,11 +316,13 @@ def test_refiling_local_modelo_303_preserves_each_settlement_credit_snapshot_and
         assert current.settlement.credit_snapshot.applied_amount == Decimal("600.00")
         assert current.settlement.credit_snapshot.remaining_amount == Decimal("0")
         assert current.settlement != retired.settlement
-        assert (
-            calc_repo.load().get(revisions[0].calculation_revision_id).state
-            is CalculationRevisionState.PRESENTADO_SUPERSEDIDO
-        )
-        assert calc_repo.load().get(revisions[1].calculation_revision_id).state is CalculationRevisionState.PRESENTADO
+        calculations = calc_repo.load()
+        superseded_revision = calculations.get(revisions[0].calculation_revision_id)
+        presented_revision = calculations.get(revisions[1].calculation_revision_id)
+        assert superseded_revision is not None
+        assert superseded_revision.state is CalculationRevisionState.PRESENTADO_SUPERSEDIDO
+        assert presented_revision is not None
+        assert presented_revision.state is CalculationRevisionState.PRESENTADO
 
 
 def test_local_filed_303_compensation_updates_wallet_balance_but_next_period_still_requires_authority(

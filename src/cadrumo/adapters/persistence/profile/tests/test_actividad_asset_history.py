@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
+from .....application.actividad_asset.history import ActivityAssetHistory
 from .....domain.renta.actividad_asset.claims import (
     AmortizationClaim,
     effective_claims,
@@ -91,8 +93,7 @@ def _claim(revision: ActivityAssetRevision, **overrides: object) -> Amortization
 
 
 def _free_claim(revision: ActivityAssetRevision, **overrides: object) -> AmortizationClaim:
-    payload: dict[str, object] = {
-        **_claim(revision).model_dump(),
+    free_fields: dict[str, object] = {
         "amount": Decimal("300.00"),
         "method": AmortizationMethod.LOW_VALUE_FREE,
         "free_depreciation_election_reference": f"election-{revision.asset_id}",
@@ -100,8 +101,8 @@ def _free_claim(revision: ActivityAssetRevision, **overrides: object) -> Amortiz
         "free_depreciation_unit_acquisition_value": Decimal("300.00"),
         "free_depreciation_annual_cap": Decimal("500.00"),
     }
-    payload.update(overrides)
-    return AmortizationClaim.model_validate(payload)
+    free_fields.update(overrides)
+    return _claim(revision, **free_fields)
 
 
 def test_history_roundtrips_encrypted_revision_and_claim_history(tmp_path: Path) -> None:
@@ -169,7 +170,10 @@ def test_cas_retry_keeps_revisions_appended_by_independent_repositories(tmp_path
         }
 
 
-def test_cas_rechecks_effective_free_depreciation_cap_after_an_independent_write(tmp_path: Path) -> None:
+def test_cas_rechecks_effective_free_depreciation_cap_after_an_independent_write(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """A forecast cannot bypass the taxpayer-period cap by racing another claim."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="70dc4d0b-56b5-4fd5-aaee-23d307738b06"):
         repository = ActividadAssetHistoryRepository()
@@ -183,14 +187,18 @@ def test_cas_rechecks_effective_free_depreciation_cap_after_an_independent_write
         original_mutate = repository._storage.mutate
         interloper_written = False
 
-        def mutate_after_interloper(callback):
+        def mutate_after_interloper(
+            mutation: Callable[[ActivityAssetHistory], ActivityAssetHistory],
+            *,
+            attempts: int = 4,
+        ) -> ActivityAssetHistory:
             nonlocal interloper_written
             if not interloper_written:
                 interloper_written = True
                 interloper.record_claim(second)
-            return original_mutate(callback)
+            return original_mutate(mutation, attempts=attempts)
 
-        repository._storage.mutate = mutate_after_interloper
+        monkeypatch.setattr(repository._storage, "mutate", mutate_after_interloper)
 
         with pytest.raises(ActividadAssetClaimConflictError, match="annual cap"):
             repository.record_claim(first)
@@ -199,7 +207,10 @@ def test_cas_rechecks_effective_free_depreciation_cap_after_an_independent_write
         assert effective_free_depreciation_claims(reopened.claims, tax_year=2025) == (second,)
 
 
-def test_cas_rechecks_the_remaining_basis_after_an_independent_write(tmp_path: Path) -> None:
+def test_cas_rechecks_the_remaining_basis_after_an_independent_write(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """Two claims validated against the same history cannot both consume one basis."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="3c9d1f0e-5a2b-4f7c-8e6d-1b2a3c4d5e6f"):
         repository = ActividadAssetHistoryRepository()
@@ -216,14 +227,18 @@ def test_cas_rechecks_the_remaining_basis_after_an_independent_write(tmp_path: P
         original_mutate = repository._storage.mutate
         interloper_written = False
 
-        def mutate_after_interloper(callback):
+        def mutate_after_interloper(
+            mutation: Callable[[ActivityAssetHistory], ActivityAssetHistory],
+            *,
+            attempts: int = 4,
+        ) -> ActivityAssetHistory:
             nonlocal interloper_written
             if not interloper_written:
                 interloper_written = True
                 interloper.record_claim(first_quarter)
-            return original_mutate(callback)
+            return original_mutate(mutation, attempts=attempts)
 
-        repository._storage.mutate = mutate_after_interloper
+        monkeypatch.setattr(repository._storage, "mutate", mutate_after_interloper)
 
         # 600 + 600 would reach 1,200 of a 1,000 amortizable basis.
         with pytest.raises(ActividadAssetClaimConflictError, match="lawful amortizable basis"):

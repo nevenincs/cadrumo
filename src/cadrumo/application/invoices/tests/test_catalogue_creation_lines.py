@@ -32,21 +32,16 @@ def _line(*, description: str, subtotal: str, iva_amount: str, iva_rate: IvaRate
 
 
 def _build(*, lines: tuple[InvoiceLine, ...] | None = None, taxable_base: Decimal | None = None):
-    common = {
-        "bucket_id": "20202020-0000-4000-8000-000000000000",
-        "kind": InvoiceKind.RECEIVED,
-        "counterparty_name": "Papeleria Sol SL",
-        "counterparty_tax_id": "A58818501",
-        "counterparty_country": "ES",
-        "invoice_number": "LINES-001",
-        "issued_at": date(2026, 3, 10),
-        "currency": "EUR",
-        "rate_provider": recorded_ecb_rate_provider(),
-    }
-    if lines is not None and taxable_base is None:
-        return build_catalogue_invoice(**common, lines=lines)
     return build_catalogue_invoice(
-        **common,
+        bucket_id="20202020-0000-4000-8000-000000000000",
+        kind=InvoiceKind.RECEIVED,
+        counterparty_name="Papeleria Sol SL",
+        counterparty_tax_id="A58818501",
+        counterparty_country="ES",
+        invoice_number="LINES-001",
+        issued_at=date(2026, 3, 10),
+        currency="EUR",
+        rate_provider=recorded_ecb_rate_provider(),
         taxable_base=taxable_base,
         iva_rate=None if lines is not None else Decimal("21"),
         lines=lines,

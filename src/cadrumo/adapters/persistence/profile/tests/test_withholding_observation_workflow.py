@@ -16,6 +16,8 @@ from cadrumo.application.aggregation.retenciones import RetencionObservation
 from cadrumo.application.aggregation.withholding_observation_service import (
     EconomicAllocation,
     SourceLiabilitySnapshot,
+    WithholdingGenerationAudit,
+    WithholdingIdempotencyReplay,
     WithholdingMutationEnvelope,
     WithholdingMutationMode,
     WithholdingObservationMutationError,
@@ -23,7 +25,9 @@ from cadrumo.application.aggregation.withholding_observation_service import (
     WithholdingProjectionEntry,
     WithholdingProjectionIdentity,
     WithholdingProjectionRole,
+    WithholdingWindowBaseline,
     WithholdingWindowScope,
+    WithholdingWindowState,
 )
 from cadrumo.core.aggregation import BindingSourceKind, RetencionClave, RetencionScheme
 from cadrumo.core.period import Period
@@ -479,16 +483,30 @@ def test_distinct_concurrent_appends_converge_after_a_real_head_cas_race(tmp_pat
             def __init__(self) -> None:
                 self.injected = False
 
-            def load_window(self, current_scope):
-                return workflow.load_window(current_scope)
+            def load_window(self, scope: WithholdingWindowScope) -> WithholdingWindowState:
+                return workflow.load_window(scope)
 
-            def idempotency_replay(self, current_scope, key):
-                return workflow.idempotency_replay(current_scope, key)
+            def idempotency_replay(
+                self,
+                scope: WithholdingWindowScope,
+                key: str,
+            ) -> WithholdingIdempotencyReplay | None:
+                return workflow.idempotency_replay(scope, key)
 
-            def load_generation(self, current_scope, generation_id):
-                return workflow.load_generation(current_scope, generation_id)
+            def load_generation(
+                self,
+                scope: WithholdingWindowScope,
+                generation_id: str,
+            ) -> WithholdingGenerationAudit | None:
+                return workflow.load_generation(scope, generation_id)
 
-            def commit_transition(self, *, predecessor, successor, envelope):
+            def commit_transition(
+                self,
+                *,
+                predecessor: WithholdingWindowState,
+                successor: tuple[WithholdingProjectionEntry, ...],
+                envelope: WithholdingMutationEnvelope,
+            ) -> WithholdingWindowBaseline:
                 if not self.injected:
                     self.injected = True
                     workflow.commit_transition(

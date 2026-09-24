@@ -165,8 +165,10 @@ def test_a_large_company_capital_capture_is_refused_although_no_monthly_123_sche
     with pytest.raises(WithholdingFilingCadenceError) as raised:
         quarterly_withholding_capture_period(cadence, modelo="123", recognized_on=date(2025, 12, 15))
 
-    assert raised.value.context["period"] == "4T"
-    assert raised.value.context["scheduled_periods"] == ""
+    context = raised.value.context
+    assert context is not None
+    assert context["period"] == "4T"
+    assert context["scheduled_periods"] == ""
 
 
 def test_the_annual_source_refuses_when_its_periodic_modelo_is_not_quarterly_all_year(

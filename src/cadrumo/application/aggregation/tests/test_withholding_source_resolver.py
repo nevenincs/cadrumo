@@ -281,10 +281,12 @@ def test_m190_refuses_a_monthly_m111_filer_instead_of_a_quarterly_only_count(
         )
 
     assert raised.value.refusal_code == "withholding_annual_source_not_quarterly"
-    assert raised.value.context["annual_modelo"] == "190"
-    assert raised.value.context["modelo"] == "111"
-    assert raised.value.context["scheduled_periods"] == "01|02|03|04|05|06|07|08|09|10|11|12"
-    assert raised.value.context["unscheduled_quarters"] == "1T|2T|3T|4T"
+    context = raised.value.context
+    assert context is not None
+    assert context["annual_modelo"] == "190"
+    assert context["modelo"] == "111"
+    assert context["scheduled_periods"] == "01|02|03|04|05|06|07|08|09|10|11|12"
+    assert context["unscheduled_quarters"] == "1T|2T|3T|4T"
 
 
 def test_m190_refuses_when_no_filer_profile_was_loaded() -> None:

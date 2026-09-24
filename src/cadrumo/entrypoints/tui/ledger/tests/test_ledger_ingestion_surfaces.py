@@ -54,10 +54,12 @@ class _InvoiceDoor:
                 translated_message="application.invoices.creation.errors.duplicate_invoice",
                 context={"invoice_id": _INVOICE_ID},
             )
+        taxable_base = entry.taxable_base
+        assert taxable_base is not None
         return LedgerInvoiceAddResultV1(
             invoice_id=_INVOICE_ID,
             invoice_number=entry.invoice_number,
-            base_total=entry.taxable_base,
+            base_total=taxable_base,
             iva_total=Decimal("252.00"),
             grand_total=Decimal("1452.00"),
             currency=entry.currency,

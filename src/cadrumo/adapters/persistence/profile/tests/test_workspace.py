@@ -657,8 +657,8 @@ def test_static_inspection_binding_schema_records_use_the_real_binding_definitio
     definitions = {binding.id: binding for binding in inspection.bindings}
     # Every binding declares at least one source reference, so an empty tuple
     # here would mean the record dropped it rather than that none exists.
-    for record in records:
-        definition = definitions[record.reference.binding_id]
+    for binding_id, record in zip(binding_ids, records, strict=True):
+        definition = definitions[binding_id]
         assert record.source_refs == tuple(definition.source_refs)
         assert record.source_refs
 

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from functools import cache
+from typing import override
 
 import pytest
 
@@ -14,6 +15,7 @@ from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ...aggregation.source_mesh import CalculationSourceContext
+from ...modelo.tests.advisory_diagnostic_repositories import EmptyObservationRepository
 from ..iva_compensation_annual_partition import (
     IvaCompensationAnnualPartitionSourceResolver,
     _annual_source_evidence_diagnostics,
@@ -23,21 +25,14 @@ from ..observations_repository import ObservationEnvelopePayload
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
-class _EmptyObservationRepository:
-    """Read-only application port with no filed Modelo 303 observations."""
-
-    def load_observation(self, modelo: str, period: Period) -> None:
-        del modelo, period
-        return None
-
-
-class _StaleObservationRepository:
-    """Read-only port returning one stale M303 envelope for carry admission."""
+class _StaleObservationRepository(EmptyObservationRepository):
+    """Observation port returning one stale M303 envelope for carry admission."""
 
     def __init__(self, payload: ObservationEnvelopePayload, period: Period) -> None:
         self._payload = payload
         self._period = period
 
+    @override
     def load_observation(self, modelo: str, period: Period) -> ObservationEnvelopePayload | None:
         if modelo == str(self._payload.observation.modelo) and period == self._period:
             return self._payload
@@ -53,7 +48,7 @@ def test_missing_required_m303_periods_emit_a_typed_annual_source_evidence_failu
     snapshot = _snapshot()
     with bundled_indexed_authority().operation() as authority_operation:
         resolution = IvaCompensationAnnualPartitionSourceResolver(
-            repository=_EmptyObservationRepository(),
+            repository=EmptyObservationRepository(),
             registry_snapshot=snapshot,
             operation=authority_operation,
         ).resolve(

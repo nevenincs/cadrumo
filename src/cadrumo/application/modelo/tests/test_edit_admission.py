@@ -2,15 +2,27 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta
-from types import SimpleNamespace
+from datetime import UTC, date, datetime, timedelta
+from typing import override
 
 import pytest
 
-from ....core.aggregation import BindingSourceKind
+from ....core.authority_grade import RegistryAuthorityGrade
+from ....core.modelo import Modelo
 from ....core.period import Period
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.ids import RevisionId
+from ....domain.calculations.registry.ledger_renta_income_bindings import LedgerRentaIncomeProvider
+from ....domain.calculations.registry.manual_input_selector import ManualInputProvider
+from ....domain.calculations.registry.schema import (
+    BindingDefinition,
+    ModeloDefinition,
+    ModeloRevision,
+    RegistrySnapshot,
+)
 from ....domain.calculations.registry.schema_base import CasillaDataType
 from ....domain.calculations.registry.schema_input_kind import InputKind
+from ....domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ....domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ...operations.registry import (
@@ -35,14 +47,60 @@ _NOW = datetime(2026, 9, 21, 10, 0, tzinfo=UTC)
 _DIGEST = "a" * 64
 
 
-class _Operation:
-    def __init__(self, snapshot: object) -> None:
-        self._snapshot = snapshot
-        self.calls: list[dict[str, object]] = []
+def _recording_operation(prepared: RegistrySnapshot) -> tuple[PinnedAuthorityOperation, list[dict[str, object]]]:
+    """Return a pinned operation serving ``prepared``, and the coordinates it is asked for."""
+    calls: list[dict[str, object]] = []
 
-    def snapshot(self, modelo_id: str, **kwargs: object) -> object:
-        self.calls.append({"modelo_id": modelo_id, **kwargs})
-        return self._snapshot
+    class _RecordingOperation(PinnedAuthorityOperation):
+        @override
+        def snapshot(
+            self,
+            modelo_id: str | Modelo,
+            *,
+            filing_year: int,
+            period: str,
+            on: date | None = None,
+            revision_id: RevisionId | None = None,
+            grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING,
+        ) -> RegistrySnapshot:
+            calls.append(
+                {
+                    "modelo_id": modelo_id,
+                    "filing_year": filing_year,
+                    "period": period,
+                    "on": on,
+                    "revision_id": revision_id,
+                    "grade": grade,
+                }
+            )
+            return prepared
+
+    return _RecordingOperation.__new__(_RecordingOperation), calls
+
+
+def _casilla(casilla_id: str, input_kind: InputKind, data_type: CasillaDataType) -> CasillaDefinition:
+    return CasillaDefinition.model_construct(id=casilla_id, input_kind=input_kind, data_type=data_type)
+
+
+def _manual_binding(binding_id: str) -> BindingDefinition:
+    return BindingDefinition.model_construct(id=binding_id, provider=ManualInputProvider.model_construct())
+
+
+def _ledger_binding(binding_id: str) -> BindingDefinition:
+    return BindingDefinition.model_construct(id=binding_id, provider=LedgerRentaIncomeProvider.model_construct())
+
+
+def _modelo_100_snapshot(
+    casillas: tuple[CasillaDefinition, ...],
+    bindings: tuple[BindingDefinition, ...],
+) -> RegistrySnapshot:
+    revision = ModeloRevision.model_construct(
+        id="2025-y-siguientes",
+        casillas=casillas,
+        bindings=bindings,
+        completeness_manifest=None,
+    )
+    return RegistrySnapshot.model_construct(modelo=ModeloDefinition.model_construct(id="100"), revision=revision)
 
 
 def _work_unit(*, current_calculation_revision_id: str | None = None) -> WorkUnit:
@@ -67,18 +125,17 @@ def _work_unit(*, current_calculation_revision_id: str | None = None) -> WorkUni
     )
 
 
-def _snapshot() -> object:
-    manual = SimpleNamespace(id="0001", input_kind=InputKind.MANUAL, data_type=CasillaDataType.TEXT)
-    computed = SimpleNamespace(id="0171", input_kind=InputKind.COMPUTED, data_type=CasillaDataType.MONEY)
-    manual_binding = SimpleNamespace(id="renta-manual", source=BindingSourceKind.MANUAL_INPUT)
-    ledger_binding = SimpleNamespace(id="renta-ledger", source=BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION)
-    revision = SimpleNamespace(
-        id="2025-y-siguientes",
-        casillas=(manual, computed),
-        bindings=(manual_binding, ledger_binding),
-        completeness_manifest=None,
+def _snapshot() -> RegistrySnapshot:
+    return _modelo_100_snapshot(
+        casillas=(
+            _casilla("0001", InputKind.MANUAL, CasillaDataType.TEXT),
+            _casilla("0171", InputKind.COMPUTED, CasillaDataType.MONEY),
+        ),
+        bindings=(
+            _manual_binding("renta-manual"),
+            _ledger_binding("renta-ledger"),
+        ),
     )
-    return SimpleNamespace(modelo=SimpleNamespace(id="100"), revision=revision)
 
 
 def _contracts(*, include_edit: bool = True) -> OperationPublicContractSetV1:
@@ -108,35 +165,28 @@ def _admit(
     *,
     current_calculation_revision_id: str | None = None,
     contracts: OperationPublicContractSetV1 | None = None,
-    snapshot: object | None = None,
+    snapshot: RegistrySnapshot | None = None,
 ):
     work_unit = _work_unit(current_calculation_revision_id=current_calculation_revision_id)
-    operation = _Operation(_snapshot() if snapshot is None else snapshot)
+    operation, calls = _recording_operation(_snapshot() if snapshot is None else snapshot)
     outcome = admit_modelo_edit_baseline(
         work_unit_id=work_unit.work_unit_id,
         work_catalogue=WorkUnitCatalogue(work_units={work_unit.work_unit_id: work_unit}),
         calculation_catalogue=CalculationRevisionCatalogue(),
-        operation=operation,  # type: ignore[arg-type]  # the producer uses only PinnedAuthorityOperation.snapshot
+        operation=operation,
         operation_contracts=_contracts() if contracts is None else contracts,
         issued_at=_NOW,
     )
-    return outcome, operation
+    return outcome, calls
 
 
-def _sized_snapshot(*, casillas: int, bindings: int) -> object:
-    revision = SimpleNamespace(
-        id="2025-y-siguientes",
+def _sized_snapshot(*, casillas: int, bindings: int) -> RegistrySnapshot:
+    return _modelo_100_snapshot(
         casillas=tuple(
-            SimpleNamespace(id=f"{index:04d}", input_kind=InputKind.COMPUTED, data_type=CasillaDataType.MONEY)
-            for index in range(1, casillas + 1)
+            _casilla(f"{index:04d}", InputKind.COMPUTED, CasillaDataType.MONEY) for index in range(1, casillas + 1)
         ),
-        bindings=tuple(
-            SimpleNamespace(id=f"renta-surface-{index}", source=BindingSourceKind.MANUAL_INPUT)
-            for index in range(bindings)
-        ),
-        completeness_manifest=None,
+        bindings=tuple(_manual_binding(f"renta-surface-{index}") for index in range(bindings)),
     )
-    return SimpleNamespace(modelo=SimpleNamespace(id="100"), revision=revision)
 
 
 def test_published_2025_modelo_100_surface_size_is_admitted_without_dropping_entries() -> None:
@@ -164,7 +214,7 @@ def test_oversized_edit_surface_refuses_at_admission_before_model_validation() -
 
 
 def test_admission_re_resolves_the_work_and_pinned_authority_into_a_value_free_five_minute_baseline() -> None:
-    outcome, operation = _admit()
+    outcome, calls = _admit()
 
     assert isinstance(outcome, ModeloEditAdmittedV1)
     baseline = outcome.baseline
@@ -172,12 +222,14 @@ def test_admission_re_resolves_the_work_and_pinned_authority_into_a_value_free_f
     assert baseline.expires_at == _NOW + timedelta(minutes=5)
     assert baseline.law_selected_revision_id == "2025-y-siguientes"
     assert baseline.compatibility.operation_definition_id == "modelo.edit.apply"
-    assert operation.calls == [
+    assert calls == [
         {
             "modelo_id": "100",
             "filing_year": 2025,
             "period": "0A",
+            "on": None,
             "revision_id": "2025-y-siguientes",
+            "grade": RegistryAuthorityGrade.FILING,
         }
     ]
     assert not any("value" in field for field in baseline.model_dump(mode="json"))

@@ -11,6 +11,8 @@ from .....core.aggregation import BindingAggregation, BindingAggregationOp, Rete
 from ..binding_value_contract import BindingDataType, BindingValueChannel, BindingValueContract
 from ..errors import RegistryValidationError
 from ..schema import BindingDefinition, ModeloRevision
+from ..schema_base import CasillaDataType
+from ..schema_exports import ExportFieldDataType
 from ..schema_references import PeriodSelector
 from ..withholding_bindings import (
     WithholdingObservation,
@@ -31,6 +33,11 @@ _SOURCE_REFS = (
     "aeat-modelo-190-instructions-2025",
 )
 
+_ROW_EXPORT_DATA_TYPES: dict[BindingDataType, ExportFieldDataType] = {
+    BindingDataType.TEXT: CasillaDataType.TEXT,
+    BindingDataType.MONEY: CasillaDataType.MONEY,
+}
+
 
 def _row_binding(binding_id: str, row_field: str, data_type: BindingDataType) -> BindingDefinition:
     return BindingDefinition(
@@ -40,7 +47,7 @@ def _row_binding(binding_id: str, row_field: str, data_type: BindingDataType) ->
             row_field=row_field,
             grouping="per_perceptor_clave",
             record="perceptor",
-            data_type=data_type.value,
+            data_type=_ROW_EXPORT_DATA_TYPES[data_type],
         ),
         value=BindingValueContract(
             data_type=data_type,

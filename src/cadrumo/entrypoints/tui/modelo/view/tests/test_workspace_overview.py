@@ -8,6 +8,7 @@ STATED rather than shown as an empty list.
 
 from __future__ import annotations
 
+from enum import Enum
 from types import SimpleNamespace
 
 import pytest
@@ -362,6 +363,6 @@ async def test_a_modelo_without_those_elections_exports_with_the_command_line_de
         (PriorDomiciliationElection, PRIOR_DOMICILIATION_ELECTION_LOCALE_KEYS),
     ],
 )
-def test_every_election_member_has_a_label(election: type, keys: dict[object, str]) -> None:
+def test_every_election_member_has_a_label(election: type[Enum], keys: dict[object, str]) -> None:
     """A member added to an election set must be offered, not silently missing from the form."""
     assert set(keys) == set(election)
