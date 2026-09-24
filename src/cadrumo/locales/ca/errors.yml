@@ -826,6 +826,10 @@ errors:
       hi ha retencions registrades en aquest període, però cap norma oficial no defineix
       com es compta el «Número de rendes», de manera que no es pot calcular, verificar
       ni presentar.'
+    canonical_modelo_193_settled_row_amount_authority_unresolved: 'El model 193 no
+      es pot exportar: conté un registre que paga rendiments meritats en un exercici
+      anterior i cap font oficial no determina la base i la retenció que declara aquest
+      registre.'
     canonical_modelo_lifecycle_clock_precedes: El rellotge de l'acció és anterior
       a un registre que actualitzaria, així que no s'ha desat res. Torneu-ho a provar
       amb l'hora actual.

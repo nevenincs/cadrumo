@@ -25,6 +25,8 @@ from .retenciones import Modelo193CapitalDetail, RetencionObservation
 
 _PENDING_PERCEPTOR_NIF = "999999999"
 _PENDING_PERCEPTOR_NAME = "VALORES PENDIENTE DE ABONO"
+_PHASE_ACCRUAL_YEARS: frozenset[int] = frozenset({2025})
+"""Accrual years whose pending-payment disclosure is grounded; any other accrual year is refused."""
 
 
 class Modelo193DisclosurePhase(StrEnum):
@@ -103,8 +105,6 @@ class Modelo193PhaseRow(BaseModel):
     taxable_base: Decimal = Field(ge=Decimal("0"))
     retencion_amount: Decimal = Field(ge=Decimal("0"))
     annual_detail: WithholdingObservation
-    filing_export_supported: Literal[False] = False
-    """Always false: this is domain evidence, not a filing-grade later-year export."""
     amount_authority_advisory: Modelo193SettledAmountAuthorityAdvisory | None = None
     """Required on a settled prior-accrual row and absent on a pending one, whose amounts the design settles."""
 
@@ -169,7 +169,7 @@ def materialize_modelo_193_disclosure_phases(
         if capital is None:
             continue
         recognized_on = date.fromisoformat(str(observation.accrued_on))
-        if recognized_on.year != 2025:
+        if recognized_on.year not in _PHASE_ACCRUAL_YEARS:
             raise Modelo193PhaseMaterializationError("unsupported_accrual_year")
         allocation_key = (
             observation.source_kind.value,
@@ -190,6 +190,19 @@ def materialize_modelo_193_disclosure_phases(
         elif settlement is not None and filing_year == settlement.occurred_on.year:
             rows.append(_settled_prior_accrual_row(observation, capital, recognized_on))
     return tuple(sorted(rows, key=_phase_sort_key))
+
+
+def modelo_193_phase_rows_may_settle_prior_accruals(filing_year: int) -> bool:
+    """Whether a disclosure phase row of ``filing_year`` can be a settled prior-accrual row.
+
+    A phase row is pending in its accrual year and settled in a later payment
+    year, and only the accrual years this module grounds can materialise at
+    all. A persisted phase row keeps no accrual year, so a consumer that holds
+    only the filing year asks here: false means every phase row of that year is
+    pending. Were a later accrual year grounded, a year holding both phases
+    answers true, which over-refuses rather than lets a settled row through.
+    """
+    return any(filing_year > accrual_year for accrual_year in _PHASE_ACCRUAL_YEARS)
 
 
 def _validate_active_evidence(
@@ -301,4 +314,5 @@ __all__ = [
     "Modelo193PhaseRow",
     "Modelo193SettledAmountAuthorityAdvisory",
     "materialize_modelo_193_disclosure_phases",
+    "modelo_193_phase_rows_may_settle_prior_accruals",
 ]

@@ -239,6 +239,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.modelo.export.Modelo193SettledRowAmountAuthorityUnresolvedError",
+        ErrorCode(
+            code="REFUSED_MODELO_193_SETTLED_ROW_AMOUNT_AUTHORITY_UNRESOLVED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.canonical_modelo_193_settled_row_amount_authority_unresolved",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.modelo.export.ModeloExportCrossBucketRefusedError",
         ErrorCode(
             code="REFUSED_MODELO_EXPORT_CROSS_BUCKET",

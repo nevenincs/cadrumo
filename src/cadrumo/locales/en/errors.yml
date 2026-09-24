@@ -754,6 +754,9 @@ errors:
       evidence is stored for this period, but no official rule defines how the ''Número
       de rentas'' recipient count is made, so it cannot be calculated, verified or
       filed.'
+    canonical_modelo_193_settled_row_amount_authority_unresolved: 'Modelo 193 cannot
+      be exported: it contains a record paying income accrued in an earlier year,
+      and no official source settles the base and withholding that record declares.'
     canonical_modelo_lifecycle_clock_precedes: The action's clock is earlier than
       a record it would update, so nothing was saved. Retry with the current time.
     canonical_modelo_workspace_stale_cursor: The pinned cursor no longer matches the

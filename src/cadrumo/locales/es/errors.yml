@@ -817,6 +817,10 @@ errors:
       hay retenciones registradas en este periodo, pero ninguna norma oficial define
       cómo se cuenta el «Número de rentas», por lo que no puede calcularse, verificarse
       ni presentarse.'
+    canonical_modelo_193_settled_row_amount_authority_unresolved: 'El modelo 193 no
+      puede exportarse: contiene un registro que paga rendimientos devengados en un
+      ejercicio anterior y ninguna fuente oficial determina la base y la retención
+      que declara ese registro.'
     canonical_modelo_lifecycle_clock_precedes: El reloj de la acción es anterior a
       un registro que actualizaría, así que no se ha guardado nada. Vuelva a intentarlo
       con la hora actual.

@@ -439,7 +439,7 @@ def test_unpaid_exigible_capital_reopens_and_later_settlement_does_not_duplicate
         assert settled_row.annual_detail.perceptor_tax_id == "11111111H"
         assert settled_row.annual_detail.accrual_year == 2025
         assert settled_row.annual_detail.pendiente_flag is None
-        assert settled_row.filing_export_supported is False
+        assert settled_row.amount_authority_advisory is not None
         assert materialize_modelo_193_disclosure_phases(persisted_after_settlement, filing_year=2027) == ()
 
         replay = reopened_producer.capture(settled_command)

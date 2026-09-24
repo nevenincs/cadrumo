@@ -12,7 +12,8 @@ runtime schema provider; Python code owns orchestration and safety checks, while
 the registry remains the authority for record fields, casillas, header keys, and
 provenance. The service refuses non-exportable revision states, cross-bucket
 targets, missing profile facts, unclean cross-period prerequisites, unmatched IVA
-wallet decisions, missing ledger evidence, and unusable output paths before the
+wallet decisions, missing ledger evidence, Modelo 193 settled prior-accrual rows
+whose amounts no official source settles, and unusable output paths before the
 operator-visible file is committed.
 
 The service is local-only: it never contacts AEAT and never invokes
@@ -46,6 +47,7 @@ from typing import NamedTuple
 
 from pydantic import BaseModel, Field, NonNegativeInt
 
+from ...core.aggregation import CalculationSourceLineageRole
 from ...core.atomic_write import StagedPublication, hardened_staged_publication
 from ...core.casilla_id import validated_casilla_id
 from ...core.export_layout_format import ExportLayoutFormat
@@ -91,7 +93,11 @@ from ...domain.filing.protocols import ModeloInputs
 from ...domain.filing.schema import ModeloCasillaProvenance, ModeloDraft
 from ...domain.filing.software_identity import AeatProductSoftwareIdentity
 from ...domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
-from ...domain.modelos.calculation_revision import SEALED_REVISION_STATES, CalculationRevision
+from ...domain.modelos.calculation_revision import (
+    SEALED_REVISION_STATES,
+    CalculationRevision,
+    CalculationSourceRef,
+)
 from ...domain.modelos.errors import (
     ModeloError,
     ModeloExportError,
@@ -106,10 +112,12 @@ from ..aggregation.iva_ledger import (
     aggregate_iva_ledger_observations_from_repositories,
     resolve_iva_differentiated_deduction_contributions,
 )
+from ..aggregation.m193_phase_materialization import modelo_193_phase_rows_may_settle_prior_accruals
 from ..aggregation.m303_arrivals import (
     resolve_m303_prorrata_transition_arrival,
     resolve_m303_supplier_regime_arrival,
 )
+from ..aggregation.withholding_source import WithholdingSourceResolver
 from ..calculations.cross_period_models import CrossPeriodExpectedMemberSet
 from ..calculations.m303_regimen_simplificado_annual_summary import (
     validate_m303_regimen_simplificado_annual_summary_target_revision,
@@ -183,6 +191,7 @@ from .revision_persistence import (
 from .revision_replay_inputs import revision_filing_replay_inputs
 from .verification_cross_period import cross_period_expected_member_sets_from_profile, require_cross_period_clean_state
 
+_MODELO_193 = Modelo("193")
 _LOCAL_EXPORT_EVIDENCE_STATUS = "local_export_not_official_aeat_filing_evidence"
 _LOCAL_EXPORT_OFFICIAL_EVIDENCE_MESSAGE = (
     "Local export wrote an AEAT-compatible fichero-BOE file only; it is not official AEAT filing evidence. "
@@ -310,6 +319,10 @@ class ModeloExportNoActiveBucketError(ModeloError):
 
 class ModeloExportEvidenceMissingError(ModeloPreconditionErrorMixin, ModeloExportError):
     """Raised when a ledger-derived revision lacks exportable evidence."""
+
+
+class Modelo193SettledRowAmountAuthorityUnresolvedError(ModeloPreconditionErrorMixin, ModeloExportError):
+    """Raised when a Modelo 193 revision carries a settled prior-accrual row whose amounts no source settles."""
 
 
 class ModeloExportUnsupportedError(ModeloExportError):
@@ -529,6 +542,67 @@ def _raise_if_ledger_export_evidence_missing(revision: CalculationRevision) -> N
     raise ModeloExportEvidenceMissingError(
         translated_message="application.modelo.errors.export_ledger_evidence_missing",
         context={"calculation_revision_id": revision.calculation_revision_id},
+    )
+
+
+def _settled_prior_accrual_phase_contributors(
+    work_unit: WorkUnit,
+    revision: CalculationRevision,
+) -> tuple[CalculationSourceRef, ...]:
+    """Return the persisted Modelo 193 phase contributors that are settled prior-accrual rows.
+
+    The withholding resolver records every materialised disclosure phase row
+    as a contributor node linked to its annual row, and nothing else it
+    records is a contributor. The node keeps no phase, so the filing year
+    decides it through the phase materialisation's own accrual-year bound.
+    """
+    if work_unit.modelo != _MODELO_193:
+        return ()
+    if not modelo_193_phase_rows_may_settle_prior_accruals(work_unit.filing_year):
+        return ()
+    return tuple(
+        ref
+        for ref in revision.source_provenance
+        if ref.resolver_id == WithholdingSourceResolver.resolver_id
+        and ref.lineage_role is CalculationSourceLineageRole.CONTRIBUTOR
+    )
+
+
+def _require_modelo_193_settled_row_amount_authority(work_unit: WorkUnit, revision: CalculationRevision) -> None:
+    """Refuse to export a Modelo 193 revision that carries a settled prior-accrual row.
+
+    No official source settles what the payment-year record declares as base
+    and withholding for income accrued and declared in an earlier year, so the
+    calculation carries an advisory beside those amounts. Writing the fichero
+    would turn that advisory into a filed declaration. The refusal carries no
+    command action: recovering needs that authority, which is the operator's
+    decision rather than a step this application can offer.
+    """
+    settled = _settled_prior_accrual_phase_contributors(work_unit, revision)
+    if not settled:
+        return
+    raise Modelo193SettledRowAmountAuthorityUnresolvedError(
+        translated_message="errors.refused.canonical_modelo_193_settled_row_amount_authority_unresolved",
+        context={
+            "calculation_revision_id": revision.calculation_revision_id,
+            "modelo": str(work_unit.modelo),
+            "filing_year": str(work_unit.filing_year),
+            "settled_prior_accrual_rows": str(len(settled)),
+        },
+        precondition_failure=build_modelo_precondition_failure_for_scenario(
+            subject_leaf_key="modelo.export",
+            scenario_id="modelo.export.m193_settled_row_amount_authority.unresolved",
+            evidence_id="modelo.export.m193_settled_row_amount_authority",
+            evidence_values={
+                "calculation_revision_id": revision.calculation_revision_id,
+                "work_unit_id": work_unit.work_unit_id,
+                "modelo": str(work_unit.modelo),
+                "year": work_unit.filing_year,
+                "settled_prior_accrual_rows": len(settled),
+                "amount_authority_resolved": False,
+            },
+            provenance=ActionEvidenceProvenance.PERSISTED_STATE,
+        ),
     )
 
 
@@ -1516,6 +1590,7 @@ def _prepare_modelo_export(
         retencion_ports=export_ports.retencion_observation_ports,
         stage=Modelo123CountAuthorityStage.EXPORT,
     )
+    _require_modelo_193_settled_row_amount_authority(work_unit, revision)
     amendment_evidence = resolve_persisted_amendment_export_evidence(
         command,
         revision,
@@ -1684,6 +1759,7 @@ def export_modelo_revision(
 
 
 __all__ = [
+    "Modelo193SettledRowAmountAuthorityUnresolvedError",
     "ModeloExportCommand",
     "ModeloExportCrossBucketRefusedError",
     "ModeloExportEvidenceMissingError",
