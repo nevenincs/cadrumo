@@ -44,6 +44,7 @@ _ENROLLED_DOOR_MODULES: frozenset[str] = frozenset(
         "application/wizard/commands.py",
         "application/wizard/descendant_door.py",
         "application/user_profile/fact_write.py",
+        "application/user_profile/plantilla_media_rows.py",
         "application/user_profile/section_rows.py",
         "entrypoints/cli/config/_capabilities_cli.py",
         "entrypoints/cli/config/descendiente.py",

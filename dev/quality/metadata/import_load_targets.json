@@ -1067,6 +1067,7 @@
         "cadrumo.application.user_profile.operations",
         "cadrumo.application.user_profile.overview",
         "cadrumo.application.user_profile.passphrase_rotation",
+        "cadrumo.application.user_profile.plantilla_media_rows",
         "cadrumo.application.user_profile.preflight",
         "cadrumo.application.user_profile.presentation",
         "cadrumo.application.user_profile.profile_key",
