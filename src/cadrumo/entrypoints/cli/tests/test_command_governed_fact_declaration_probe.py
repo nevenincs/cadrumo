@@ -31,13 +31,28 @@ seen. A second observer on the command's own behavior target proves the
 invocation reached the handler with no scope lent to it, so a command that
 stopped at argument parsing or preflight cannot pass by never running, and a
 preflight lease cannot mask a read the way a test-level scope would.
+
+Offline drive
+-------------
+Every probed command runs with the process sealed: outbound connections, name
+resolution, event-loop connections, child processes and shell launches are
+refused with ``OSError`` at the standard library, so a ``network`` or
+``browser`` command meets its boundary as it would with no network, and no
+runtime server, installer, browser or TUI child starts. A command then passes
+by refusing at that boundary before any governed-fact read, or by reading
+governed facts only inside a scope it opened; either way the raise observer
+sees no missing-scope refusal. The boundary each run met is recorded as the
+test's ``offline_outcome`` property.
 """
 
 from __future__ import annotations
 
 import ast
+import asyncio
 import inspect
 import os
+import socket
+import subprocess
 import sys
 from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
@@ -48,7 +63,7 @@ from functools import cache
 from itertools import islice
 from pathlib import Path
 from types import CodeType
-from typing import Final
+from typing import Final, NoReturn
 
 import pytest
 
@@ -96,17 +111,12 @@ _MISSING_SCOPE_WORDING: Final = (
 _SCOPE_READER: Final = "governed_facts_in_scope"
 
 #: Runnable non-declaring commands the probe cannot drive, with the reason.
-_EXEMPTIONS: Final[dict[str, str]] = {
-    "app_tui": "starts the interactive Textual application, which needs a terminal",
-    "config_provision_pull": "declares network: downloads provisioned components",
-    "config_provision_verify": "declares network: verifies components against their remote source",
-    "config_provision_install": "declares network: downloads and installs components",
-    "config_provision_browser": "declares network: downloads the automation browser",
-    "config_provision_start": "declares network: starts provisioning against remote sources",
-    "config_provision_remove": "declares network: provisioning family bound to remote sources",
-    "config_provision_load": "declares network: loads components from remote sources",
-    "config_provision_setup": "declares network: runs the full remote provisioning setup",
-    "config_repair_connectivity": "declares network and browser: probes live AEAT connectivity",
+_EXEMPTIONS: Final[dict[str, str]] = {}
+
+#: Optional parameters a command's own handler requires one of, which the
+#: required-parameter derivation alone would leave the handler to refuse.
+_HANDLER_REQUIRED_OPTIONS: Final[dict[str, tuple[str, ...]]] = {
+    "config_provision_remove": ("role",),
 }
 
 
@@ -306,6 +316,79 @@ def observe_invocation(handler: CodeType) -> Iterator[ProbeObservation]:
         monitoring.free_tool_id(tool_id)
 
 
+# --- offline seal ---------------------------------------------------------
+
+
+@dataclass(slots=True)
+class OfflineGuard:
+    """The boundaries a sealed run tried to cross, in order."""
+
+    refused: list[str] = field(default_factory=list)
+
+    def refuse(self, boundary: str) -> NoReturn:
+        """Record and refuse one attempt to leave the process."""
+        self.refused.append(boundary)
+        raise OSError(f"the governed-fact probe runs offline and refuses {boundary}")
+
+    def outcome(self) -> str:
+        """Name the boundary the run met, or that it met none."""
+        if not self.refused:
+            return "completed without leaving the process"
+        return "refused at " + ", ".join(dict.fromkeys(self.refused))
+
+
+@pytest.fixture
+def offline_guard(monkeypatch: pytest.MonkeyPatch) -> OfflineGuard:
+    """Seal the process against network and child-process launches for one test."""
+    guard = OfflineGuard()
+    original_connect = socket.socket.connect
+    # Windows builds ``socket.socketpair`` from a loopback connect, and every
+    # asyncio event loop needs one for its self-pipe; that connect never
+    # leaves the process.
+    socketpair_code = getattr(socket.socketpair, "__code__", None)
+
+    def connect(self: socket.socket, address: tuple[str, int]) -> None:
+        frame = inspect.currentframe()
+        caller = None if frame is None else frame.f_back
+        if socketpair_code is not None and caller is not None and caller.f_code is socketpair_code:
+            return original_connect(self, address)
+        guard.refuse("socket.connect")
+
+    def connect_ex(self: socket.socket, address: tuple[str, int]) -> int:
+        del self, address
+        guard.refuse("socket.connect_ex")
+
+    def create_connection(address: tuple[str, int], *args: object, **kwargs: object) -> socket.socket:
+        del address, args, kwargs
+        guard.refuse("socket.create_connection")
+
+    def getaddrinfo(host: object, port: object, *args: object, **kwargs: object) -> list[object]:
+        del host, port, args, kwargs
+        guard.refuse("socket.getaddrinfo")
+
+    async def loop_connection(self: asyncio.AbstractEventLoop, *args: object, **kwargs: object) -> object:
+        del self, args, kwargs
+        guard.refuse("event-loop connection")
+
+    def execute_child(self: subprocess.Popen[bytes], *args: object, **kwargs: object) -> None:
+        del self, args, kwargs
+        guard.refuse("child process")
+
+    def shell_launch(*args: object, **kwargs: object) -> int:
+        del args, kwargs
+        guard.refuse("shell launch")
+
+    monkeypatch.setattr(socket.socket, "connect", connect)
+    monkeypatch.setattr(socket.socket, "connect_ex", connect_ex)
+    monkeypatch.setattr(socket, "create_connection", create_connection)
+    monkeypatch.setattr(socket, "getaddrinfo", getaddrinfo)
+    monkeypatch.setattr(asyncio.BaseEventLoop, "create_connection", loop_connection)
+    monkeypatch.setattr(subprocess.Popen, "_execute_child", execute_child)
+    monkeypatch.setattr(os, "system", shell_launch)
+    monkeypatch.setattr(os, "startfile", shell_launch, raising=False)
+    return guard
+
+
 # --- population and argv --------------------------------------------------
 
 
@@ -347,12 +430,21 @@ def _synthetic_value(spec: CommandSpec, parameter: ArgumentSpec | OptionSpec, wo
     return f"probe-{parameter.name.replace('_', '-')}"
 
 
-def synthetic_argv(graph: CommandSpecGraph, spec: CommandSpec, workdir: Path) -> list[str]:
-    """Build the command path plus a synthetic value for every required parameter."""
+def synthetic_argv(
+    graph: CommandSpecGraph,
+    spec: CommandSpec,
+    workdir: Path,
+    *,
+    also: tuple[str, ...] = (),
+) -> list[str]:
+    """Build the command path plus a synthetic value for every required parameter.
+
+    ``also`` names optional parameters to supply as well.
+    """
     positional: list[str] = []
     named: list[str] = []
     for parameter in spec.parameters:
-        if parameter.default.kind is not DefaultKind.REQUIRED:
+        if parameter.default.kind is not DefaultKind.REQUIRED and parameter.name not in also:
             continue
         value = _synthetic_value(spec, parameter, workdir)
         if isinstance(parameter, OptionSpec):
@@ -418,21 +510,53 @@ def test_every_exemption_names_a_live_non_declaring_command() -> None:
     assert sorted(key for key in _EXEMPTIONS if key not in population) == []
     assert all(reason.strip() for reason in _EXEMPTIONS.values())
     assert len(_DRIVEN) + len(_EXEMPTIONS) == len(_POPULATION)
+    for key, names in _HANDLER_REQUIRED_OPTIONS.items():
+        assert key in population
+        declared = {parameter.name for parameter in COMMAND_GRAPH.spec(key).parameters}
+        assert set(names) <= declared, (key, names)
+
+
+def test_the_offline_seal_refuses_every_boundary(offline_guard: OfflineGuard) -> None:
+    """The seal refuses a connection, a resolution and a child process, and records each."""
+    with pytest.raises(OSError, match="refuses"):
+        socket.create_connection(("127.0.0.1", 9), timeout=1)
+    with pytest.raises(OSError, match="refuses"), socket.socket() as probe:
+        probe.connect(("127.0.0.1", 9))
+    with pytest.raises(OSError, match="refuses"):
+        socket.getaddrinfo("localhost", 80)
+    with pytest.raises(OSError, match="refuses"):
+        subprocess.run([sys.executable, "-c", "pass"], check=False)
+    first, second = socket.socketpair()
+    first.close()
+    second.close()
+
+    assert offline_guard.refused == [
+        "socket.create_connection",
+        "socket.connect",
+        "socket.getaddrinfo",
+        "child process",
+    ]
 
 
 @pytest.mark.parametrize("key", _DRIVEN)
-def test_a_non_declaring_command_never_reaches_a_missing_scope_refusal(key: str, tmp_path: Path) -> None:
+def test_a_non_declaring_command_never_reaches_a_missing_scope_refusal(
+    key: str,
+    tmp_path: Path,
+    offline_guard: OfflineGuard,
+    request: pytest.FixtureRequest,
+) -> None:
     spec = COMMAND_GRAPH.spec(key)
     handler = spec.handler
     assert handler is not None and handler.state is BindingState.TARGET and handler.target is not None
     workdir = tmp_path / "probe-inputs"
     workdir.mkdir()
-    argv = synthetic_argv(COMMAND_GRAPH, spec, workdir)
+    argv = synthetic_argv(COMMAND_GRAPH, spec, workdir, also=_HANDLER_REQUIRED_OPTIONS.get(key, ()))
 
     with isolated_cli_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID, label=_PROFILE_LABEL) as profile:
         _seed_profile(profile)
         with outside_governed_fact_validation(), observe_invocation(_handler_code(handler.target)) as observed:
             result = invoke_cached_cli(argv)
+    request.node.user_properties.append(("offline_outcome", f"{offline_guard.outcome()}; exit {result.exit_code}"))
 
     assert observed.refusals == [], _refusal_report(key, spec, observed.refusals)
     assert observed.handler_started, (
