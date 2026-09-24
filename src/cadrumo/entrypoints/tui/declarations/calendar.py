@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from typing import ClassVar, cast, override
 
-from textual.app import App, ComposeResult
+from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.widgets import DataTable, Input, Select, Static
 
@@ -323,7 +323,7 @@ class DeclarationsCalendarScreen(AccountChromeScreen):
                 )
             elif self._pending_recovery is None and not self._recovery_in_flight:
                 self._pending_recovery = (row.recovery_action, row)
-                app = cast("App[None]", self.app)
+                app = self.app
                 app.push_screen(
                     ConfirmScreen(
                         title=declarations_copy("tui.declarations.calendar.action.create"),

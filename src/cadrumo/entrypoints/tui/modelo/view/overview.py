@@ -55,7 +55,6 @@ from .....core.payment_election import PaymentElection
 from .....core.prior_domiciliation_election import PriorDomiciliationElection
 from .....core.refund_election import RefundElection
 from ...components.account_chrome import AccountChromeScreen
-from ...components.app_access import TypedAppAccess
 from ...components.dialogs import ConfirmScreen
 from ...components.theme import toggle_appearance
 from ...components.widgets import ContentDataTable, ContentScroll, DisclosureGroup
@@ -117,7 +116,7 @@ def edit_control_id(kind: str, key: str) -> str:
     return f"modelo-edit-{kind}-{encoded}"
 
 
-class ModeloWorkspaceOverviewScreen(TypedAppAccess, AccountChromeScreen):
+class ModeloWorkspaceOverviewScreen(AccountChromeScreen):
     """Address, revision coordinates, status, and the capability denominator."""
 
     BINDINGS: ClassVar = [

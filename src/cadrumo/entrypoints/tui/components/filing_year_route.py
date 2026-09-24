@@ -10,9 +10,10 @@ from textual.screen import Screen
 from textual.widgets import Button, Input, Static
 
 from ....core.i18n.render import tr
+from .app_access import TypedAppAccess
 
 
-class FilingYearRouteScreen(Screen[None]):
+class FilingYearRouteScreen(TypedAppAccess, Screen[None]):
     """Open an injected screen for a visibly selected, validated year."""
 
     BINDINGS: ClassVar = [("escape", "app.pop_screen", "Back")]

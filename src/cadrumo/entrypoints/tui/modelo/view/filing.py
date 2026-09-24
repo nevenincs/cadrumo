@@ -36,7 +36,6 @@ from .....application.modelo.workspace_models import (
 )
 from .....core.i18n.render import tr
 from ...components.account_chrome import AccountChromeScreen
-from ...components.app_access import TypedAppAccess
 from ...components.theme import toggle_appearance
 from ...components.widgets import ContentDataTable, ContentScroll
 from .controller import ModeloWorkspaceReadSession
@@ -59,7 +58,7 @@ def _filing_capabilities(session: ModeloWorkspaceReadSession) -> tuple[ModeloWor
     return tuple(capability for capability in session.projection.capabilities if capability.capability in wanted)
 
 
-class ModeloWorkspaceFilingScreen(TypedAppAccess, AccountChromeScreen):
+class ModeloWorkspaceFilingScreen(AccountChromeScreen):
     """The filing capability beside the reason it reads as it does."""
 
     BINDINGS: ClassVar = [

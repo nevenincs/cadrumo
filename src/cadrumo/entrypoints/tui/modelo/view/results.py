@@ -45,7 +45,6 @@ from .....application.modelo.workspace_models import (
 )
 from .....core.i18n.render import tr
 from ...components.account_chrome import AccountChromeScreen
-from ...components.app_access import TypedAppAccess
 from ...components.theme import toggle_appearance
 from ...components.widgets import ContentDataTable, ContentScroll
 from .controller import ModeloWorkspaceReadSession
@@ -73,7 +72,7 @@ def _computed_casillas(session: ModeloWorkspaceReadSession) -> dict[str, str] | 
     }
 
 
-class ModeloWorkspaceResultsScreen(TypedAppAccess, AccountChromeScreen):
+class ModeloWorkspaceResultsScreen(AccountChromeScreen):
     """Computed values for the current session, or an explicit not-applicable."""
 
     BINDINGS: ClassVar = [

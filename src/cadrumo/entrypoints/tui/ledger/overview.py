@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import ClassVar, cast, override
 
-from textual.app import App, ComposeResult
+from textual.app import ComposeResult
 from textual.widgets import Button, DataTable, Static
 
 from ....application.ledger.workspace import LedgerWorkspaceArea
@@ -87,7 +87,7 @@ class LedgerOverviewScreen(LedgerWorkspaceScreen):
         elif event.button.id == "ledger-open-invoices":
             self.post_message(LedgerInvoiceCatalogueRequested())
         elif event.button.id == "ledger-activity-assets":
-            cast("App[None]", self.app).push_screen(ActivityAssetScreen(self.controller))
+            self.app.push_screen(ActivityAssetScreen(self.controller))
 
 
 __all__ = ["LedgerOverviewScreen"]

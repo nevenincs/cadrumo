@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import ClassVar, cast, override
 
-from textual.app import App, ComposeResult
+from textual.app import ComposeResult
 from textual.widgets import Button, DataTable, Static
 
 from ....core.identity.transaction_ids import TransactionId
@@ -124,7 +124,7 @@ class LedgerEntriesScreen(LedgerWorkspaceScreen):
         # cannot be used with class and instance checks` at mount. The cast
         # carries the element type for the reader and the type checker.
         table = cast("ContentDataTable[str]", self.query_one("#ledger-entries", ContentDataTable))
-        self._fill_table(table, cast("App[None]", self.app).size.width)
+        self._fill_table(table, self.app.size.width)
         if not table.row_count:
             # An empty ledger is a state, not a refusal: it gets the muted line,
             # and the warning line stays free for a navigation refusal.
@@ -182,7 +182,7 @@ class LedgerEntriesScreen(LedgerWorkspaceScreen):
         # cannot be used with class and instance checks` at mount. The cast
         # carries the element type for the reader and the type checker.
         table = cast("ContentDataTable[str]", self.query_one("#ledger-entries", ContentDataTable))
-        self._fill_table(table, cast("App[None]", self.app).size.width)
+        self._fill_table(table, self.app.size.width)
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
         """Route navigation or retain a safe semantic entry selection."""

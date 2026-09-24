@@ -7,7 +7,6 @@ from collections.abc import Callable
 from dataclasses import replace
 from typing import ClassVar, Final, cast
 
-from textual.app import App
 from textual.binding import Binding
 from textual.message import Message
 from textual.widgets import DataTable, Static
@@ -713,7 +712,7 @@ class LedgerWorkspaceScreen(AccountChromeScreen):
         # for the shared shell; at module scope the two would form a cycle.
         from .routes import resolve_ledger_screen
 
-        replace_workspace_body(cast(App[object], self.app), resolve_ledger_screen(self.controller, event.target))
+        replace_workspace_body(self.app, resolve_ledger_screen(self.controller, event.target))
 
     def on_ledger_invoice_entry_requested(self, _: LedgerInvoiceEntryRequested) -> None:
         """Open the invoice entry form, or say why it cannot open in this session."""
@@ -722,7 +721,7 @@ class LedgerWorkspaceScreen(AccountChromeScreen):
         if not self.controller.can_add_invoices():
             self.query_one("#ledger-refusal", Static).update(ledger_copy("tui.ledger.refusal.submission_unavailable"))
             return
-        replace_workspace_body(cast(App[object], self.app), LedgerInvoiceEntryScreen(self.controller))
+        replace_workspace_body(self.app, LedgerInvoiceEntryScreen(self.controller))
 
     def on_ledger_invoice_catalogue_requested(self, _: LedgerInvoiceCatalogueRequested) -> None:
         """Open canonical invoice readback through the injected record door."""
@@ -732,7 +731,7 @@ class LedgerWorkspaceScreen(AccountChromeScreen):
         if doors is None:
             self.query_one("#ledger-refusal", Static).update(ledger_copy("tui.ledger.refusal.submission_unavailable"))
             return
-        replace_workspace_body(cast(App[object], self.app), LedgerInvoiceCatalogueScreen(self.controller, doors))
+        replace_workspace_body(self.app, LedgerInvoiceCatalogueScreen(self.controller, doors))
 
     def on_ledger_transaction_detail_requested(self, event: LedgerTransactionDetailRequested) -> None:
         """Open the selected transaction without resolving a row position."""
@@ -743,7 +742,7 @@ class LedgerWorkspaceScreen(AccountChromeScreen):
             self.query_one("#ledger-refusal", Static).update(ledger_copy("tui.ledger.refusal.submission_unavailable"))
             return
         replace_workspace_body(
-            cast(App[object], self.app),
+            self.app,
             LedgerTransactionDetailScreen(self.controller, doors, str(event.transaction_id)),
         )
 

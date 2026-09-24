@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from typing import ClassVar, cast, override
 
-from textual.app import App, ComposeResult
+from textual.app import ComposeResult
 from textual.containers import Vertical
 from textual.widgets import Button, DataTable, Input, Static
 
@@ -130,7 +130,7 @@ class DeclarationsOverviewScreen(DeclarationsWorkspaceScreen):
             self.refuse_handoff()
         else:
             child = factory(row)
-            cast("App[None]", self.app).push_screen(child, self._restore_declaration_focus)
+            self.app.push_screen(child, self._restore_declaration_focus)
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Create only the explicit natural address the operator supplied."""

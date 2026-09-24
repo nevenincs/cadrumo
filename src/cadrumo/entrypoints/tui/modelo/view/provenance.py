@@ -48,7 +48,6 @@ from .....application.modelo.workspace_models import (
 )
 from .....core.i18n.render import tr
 from ...components.account_chrome import AccountChromeScreen
-from ...components.app_access import TypedAppAccess
 from ...components.theme import toggle_appearance
 from ...components.widgets import ContentDataTable, ContentScroll
 from .controller import ModeloWorkspaceReadSession
@@ -58,7 +57,7 @@ from .technical_details import TechnicalDetailRowV1, mount_technical_details
 _COLUMN_KEYS: tuple[str, ...] = ("subject", "source_ref")
 
 
-class ModeloWorkspaceProvenanceScreen(TypedAppAccess, AccountChromeScreen):
+class ModeloWorkspaceProvenanceScreen(AccountChromeScreen):
     """Flat attribution rows for the current session, or an explicit not-applicable."""
 
     BINDINGS: ClassVar = [

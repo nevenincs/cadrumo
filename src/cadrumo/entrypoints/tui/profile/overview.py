@@ -70,7 +70,6 @@ from ....entrypoints.tui.components.widgets import (
     SourceActionCard,
     SourceActionDescriptor,
 )
-from ..components.app_access import TypedAppAccess
 from .plantilla_media import (
     PlantillaMediaRequest,
     PlantillaMediaScreen,
@@ -416,7 +415,7 @@ _PLANTILLA_MEDIA_SECTION = PLANTILLA_MEDIA_PATH.split(".", 1)[0]
 _PLANTILLA_MEDIA_BUTTON_ID = "manager-plantilla-media"
 
 
-class ProfileManagerScreen(TypedAppAccess, AccountChromeScreen):
+class ProfileManagerScreen(AccountChromeScreen):
     """Full-screen profile overview with in-place editing."""
 
     SCOPED_CSS = False

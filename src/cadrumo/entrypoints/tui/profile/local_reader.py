@@ -34,6 +34,7 @@ from ....core.errors.hierarchy import CadrumoError
 from ....core.i18n.render import tr
 from ....core.model_catalogue import ModelRole
 from ....core.operations import OperationTerminalCondition
+from ..components.app_access import TypedAppAccess
 from ..components.dialogs import ConfirmScreen
 from ..components.theme import BASE_CSS, tokenised
 from ..components.widgets import ContentDataTable, ContentScroll
@@ -348,7 +349,7 @@ class OperationLocalReaderDoor:
         return resolved.projection
 
 
-class LocalReaderScreen(Screen[None]):
+class LocalReaderScreen(TypedAppAccess, Screen[None]):
     """The document reader's setup checklist, its measured roles and its supervised actions."""
 
     DEFAULT_CSS = BASE_CSS + _LOCAL_READER_CSS
