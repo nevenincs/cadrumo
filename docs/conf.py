@@ -988,6 +988,13 @@ nitpick_ignore_regex = [
     # docs/cli/), so module references into it have no autodoc target.
     (r"py:.*", r"^cadrumo\.entrypoints\.cli(\..*)?$"),
 ]
+if _USER_SCOPE:
+    # Markdown links into the excluded API tree resolve in the full build only.
+    # MyST reports them itself, bypassing the ``missing-reference`` event that
+    # ``_suppress_api_scope_reference`` answers, and consults this list before it
+    # logs: a logging filter cannot stand in, because a parallel build's workers
+    # hand their warnings to the main process without passing through it.
+    nitpick_ignore_regex.append(("myst", r"api/.*"))
 
 # ── Linkcheck (advisory, never a blocking local gate) ─────────────────────────
 # `sphinx-build -b linkcheck` is CI-scheduled and advisory: several AEAT/BOE
@@ -1398,21 +1405,6 @@ def _suppress_api_scope_reference(app, env, node, contnode):
     return None
 
 
-class _UserScopeApiWarningFilter:
-    """Drop the user-scope MyST 'Unknown source document api/...' warnings.
-
-    MyST emits ``myst.xref_missing`` for the markdown links into the excluded API
-    tree directly (not via the ``missing-reference`` event that
-    :func:`_suppress_api_scope_reference` intercepts), so this logging filter
-    drops exactly those API-targeted records under user scope, leaving every
-    other broken-link warning intact so the gate stays meaningful.
-    """
-
-    def filter(self, record) -> bool:
-        message = record.getMessage()
-        return not ("Unknown source document" in message and "api/" in message)
-
-
 def setup(app):
     """Resolve deferred pydantic forward references before autodoc runs.
 
@@ -1627,15 +1619,12 @@ def setup(app):
     # unresolved in-tree references.
     app.connect("missing-reference", _resolve_short_reference, priority=700)
     if _USER_SCOPE:
-        # Scope-aware API-reference suppression (see the two helpers above): the
-        # missing-reference handler runs LAST (priority 900, after the short-name
-        # bridge) so it only inerts references the full build would resolve
-        # against the excluded autodoc surface; the logging filter drops the
-        # MyST markdown-link warnings into api/ that never reach that event.
-        import logging as _stdlib_logging
-
+        # Scope-aware API-reference suppression: the missing-reference handler
+        # runs LAST (priority 900, after the short-name bridge) so it only inerts
+        # references the full build would resolve against the excluded autodoc
+        # surface. MyST's markdown links into api/ never reach that event; the
+        # user-scope ``nitpick_ignore_regex`` entry covers them.
         app.connect("missing-reference", _suppress_api_scope_reference, priority=900)
-        _stdlib_logging.getLogger("sphinx").addFilter(_UserScopeApiWarningFilter())
     app.add_role("paramref", _paramref_role)
     app.add_directive("legacy", _LegacyDirective)
 
