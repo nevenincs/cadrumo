@@ -4,9 +4,10 @@ The MCP identity gate refuses an unidentified call to a command whose policy
 declares ``aeat``: reading AEAT for the wrong taxpayer is a confidentiality
 breach even when nothing local changes. A command that reaches AEAT without the
 declaration would slip past that gate, so this probe drives every runnable
-command that may leave the host (``network``) but does not declare ``aeat``
-through the real CLI under the offline seal, and fails naming each one that
-reaches for AEAT.
+command that does not declare ``aeat`` but may leave the host (``network``) or
+belongs to the ``config auth`` family, which reads the configured AEAT
+credentials, through the real CLI under the offline seal, and fails naming each
+one that reaches for AEAT.
 
 Detection signal
 ----------------
@@ -26,10 +27,14 @@ The Sede client modules are derived from the source tree: every module under
 ``default_browser_session_factory``, the one factory every AEAT browser session
 is built from.
 
-The limit is the synthetic state: a session-gated flow whose handler holds the
-client only through a module-level import and refuses before calling it shows
-none of the three. The positive controls prove the instrument fires on real
-AEAT commands, and the teeth test proves it flags an undeclared one.
+Every run carries a synthetic, self-signed certificate naming the seeded
+taxpayer, configured through settings. Without it a session-gated flow refuses
+at credential loading, before it builds a Sede session, and shows none of the
+three signals; with it the flow reaches the Sede client and stops at the sealed
+browser launch. What remains out of reach is a command whose arguments or prior
+local state the synthetic run cannot satisfy. The positive controls prove the
+instrument fires on real AEAT commands, and the teeth test proves it flags an
+undeclared one.
 """
 
 from __future__ import annotations
@@ -39,6 +44,7 @@ import builtins
 import importlib
 import importlib.util
 import inspect
+import os
 import socket
 import sys
 from collections.abc import Iterator, Mapping, Sequence
@@ -57,6 +63,7 @@ from cadrumo.application.operator_surface.command_ports import CommandNodeKind, 
 from ....adapters.persistence.storage.tests.secure_sql import isolated_cli_runtime_profile
 from ....core.external_constants import load_external_constants
 from ....core.remote_authority import canonical_remote_hostname, is_aeat_host, is_sanctioned_gov_idp_host
+from ....tests.offline_seal import OfflineGuard, offline_guard_fixture
 from .._command_runtime import build_command_app
 from ..command_spec import (
     BindingState,
@@ -74,13 +81,14 @@ from ..command_specs import COMMAND_GRAPH
 from ._command_drive_support import (
     PROBE_PROFILE_ID,
     PROBE_PROFILE_LABEL,
+    command_path,
     free_monitoring_tool,
     handler_code,
     is_runnable,
     seed_probe_profile,
+    synthetic_aeat_credentials,
     synthetic_argv,
 )
-from ._offline_seal_fixture import OfflineGuard, offline_guard_fixture
 from .cli_runner import invoke_cached_cli, invoke_uncached_typer_app
 
 __all__ = ["offline_guard_fixture"]
@@ -97,7 +105,22 @@ _HANDLER_REQUIRED_OPTIONS: Final[dict[str, tuple[str, ...]]] = {
 
 #: AEAT-declaring commands whose synthetic run reaches the Sede client, proving
 #: the instrument fires on real code paths.
-_POSITIVE_CONTROLS: Final = ("config_repair_connectivity", "config_auth_login")
+_POSITIVE_CONTROLS: Final = (
+    "app_live_expedientes_pull",
+    "app_live_filed_discover",
+    "app_live_filed_pull_all",
+    "app_live_iva_wallet_pull_history",
+    "app_live_notifications_pull",
+    "app_live_verify_nif_iva",
+    "app_live_verify_tgvi",
+    "config_auth_login",
+    "config_profile_censo_pull",
+    "config_repair_connectivity",
+)
+
+#: The command group whose members read the configured AEAT credentials and
+#: session, and so are driven whatever network capability they declare.
+_AUTHENTICATION_FAMILY: Final = ("config", "auth")
 
 
 # --- the Sede client ------------------------------------------------------
@@ -141,14 +164,19 @@ def _nested_codes(code: CodeType) -> Iterator[CodeType]:
 
 
 def _module_codes(module: ModuleType) -> Iterator[CodeType]:
+    """Yield the code the module's own source defines, never a decorator's shared wrapper."""
+    source = os.path.normcase(str(Path(module.__file__ or "").resolve()))
     for value in vars(module).values():
         members: list[object] = [value]
         if isinstance(value, type) and value.__module__ == module.__name__:
             members = list(vars(value).values())
         for member in members:
             for candidate in (member, getattr(member, "__func__", None), getattr(member, "fget", None)):
-                if isinstance(candidate, FunctionType) and candidate.__module__ == module.__name__:
-                    yield from _nested_codes(candidate.__code__)
+                if not isinstance(candidate, FunctionType):
+                    continue
+                code = inspect.unwrap(candidate).__code__
+                if os.path.normcase(str(Path(code.co_filename).resolve())) == source:
+                    yield from _nested_codes(code)
 
 
 @cache
@@ -241,18 +269,21 @@ def observe_aeat_contact(handler: CodeType, monkeypatch: pytest.MonkeyPatch) -> 
 # --- population -----------------------------------------------------------
 
 
-def network_without_aeat(graph: CommandSpecGraph) -> tuple[CommandSpec, ...]:
-    """Every runnable command that may leave the host but does not declare AEAT."""
+def aeat_suspects_without_aeat(graph: CommandSpecGraph) -> tuple[CommandSpec, ...]:
+    """Every runnable command without ``aeat`` that may leave the host or reads AEAT credentials."""
     return tuple(
         spec
         for spec in graph.specs
         if is_runnable(spec)
-        and "network" in spec.policy.expanded_capabilities
         and "aeat" not in spec.policy.expanded_capabilities
+        and (
+            "network" in spec.policy.expanded_capabilities
+            or command_path(graph, spec)[: len(_AUTHENTICATION_FAMILY)] == _AUTHENTICATION_FAMILY
+        )
     )
 
 
-_POPULATION: Final = network_without_aeat(COMMAND_GRAPH)
+_POPULATION: Final = aeat_suspects_without_aeat(COMMAND_GRAPH)
 
 
 def _drive(key: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> tuple[AeatContactObservation, int, str]:
@@ -266,7 +297,10 @@ def _drive(key: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> tuple[A
         tmp_path=tmp_path, bucket_id=PROBE_PROFILE_ID, label=PROBE_PROFILE_LABEL
     ) as profile:
         seed_probe_profile(profile)
-        with observe_aeat_contact(handler_code(handler.target), monkeypatch) as observed:
+        with (
+            synthetic_aeat_credentials(workdir),
+            observe_aeat_contact(handler_code(handler.target), monkeypatch) as observed,
+        ):
             result = invoke_cached_cli(argv)
     return observed, result.exit_code, result.output[-400:]
 
@@ -279,10 +313,10 @@ def test_the_sede_client_is_found_in_the_source_tree() -> None:
     assert sede_client_codes()
 
 
-def test_the_population_is_every_network_command_without_aeat() -> None:
+def test_the_population_covers_network_commands_and_the_authentication_family() -> None:
     keys = {spec.key for spec in _POPULATION}
 
-    assert "config_provision_status" in keys
+    assert {"config_provision_status", "config_auth_test", "config_auth_status"} <= keys
     assert not keys & set(_POSITIVE_CONTROLS)
     for key in _HANDLER_REQUIRED_OPTIONS:
         assert key in keys
@@ -316,7 +350,9 @@ def test_the_instrument_fires_on_a_command_that_declares_aeat(
     observed, exit_code, output = _drive(key, tmp_path, monkeypatch)
 
     assert observed.handler_started, f"{key} never reached its behavior target (exit {exit_code}); output={output}"
-    assert observed.contacts(offline_guard), f"{key} declares aeat but its run showed no AEAT contact"
+    assert observed.contacts(offline_guard), (
+        f"{key} declares aeat but its run showed no AEAT contact; exit {exit_code}; output={output}"
+    )
 
 
 # --- detector teeth -------------------------------------------------------
@@ -385,7 +421,7 @@ def test_the_probe_flags_a_network_command_that_reaches_aeat_undeclared(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     graph = _teeth_graph()
-    population = network_without_aeat(graph)
+    population = aeat_suspects_without_aeat(graph)
     assert [spec.key for spec in population] == ["undeclared_sede_read"]
     argv = synthetic_argv(graph, population[0], Path())
 

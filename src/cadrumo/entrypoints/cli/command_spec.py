@@ -632,9 +632,11 @@ class CommandSpecFamily:
             value = getattr(value, part)
         if isinstance(value, CommandSpec):
             return (value,)
-        if not isinstance(value, tuple) or not all(isinstance(spec, CommandSpec) for spec in value):
+        members: tuple[object, ...] = cast("tuple[object, ...]", value) if isinstance(value, tuple) else ()
+        specs = tuple(member for member in members if isinstance(member, CommandSpec))
+        if not isinstance(value, tuple) or len(specs) != len(members):
             raise TypeError(f"command spec family {self.source.identity!r} is not a CommandSpec tuple")
-        return cast(tuple[CommandSpec, ...], value)
+        return specs
 
 
 @dataclass(frozen=True, slots=True)

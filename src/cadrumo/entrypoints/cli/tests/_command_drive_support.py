@@ -11,24 +11,32 @@ from __future__ import annotations
 
 import inspect
 import sys
+from collections.abc import Iterator
+from contextlib import contextmanager
+from datetime import UTC, datetime, timedelta
 from enum import Enum
 from pathlib import Path
 from types import CodeType
 from typing import Final
 
+from pydantic import SecretStr
+
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.application.operator_surface.command_ports import CommandNodeKind
 
 from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
+from ....core.config import override_settings
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ....domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
+from ....tests.certificates import CERTIFICATE_BUNDLE_INPUT, build_pkcs12_bundle
 from .._command_runtime import resolve_deferred_target
 from ..command_spec import ArgumentSpec, CommandSpec, CommandSpecGraph, DefaultKind, DeferredTarget, OptionSpec
 
 PROBE_PROFILE_ID: Final = "0ac1e000-0000-4000-8000-000000515077"
 PROBE_PROFILE_LABEL: Final = "Governed fact declaration probe"
+PROBE_PROFILE_TAX_ID: Final = "12345678Z"
 
 
 def is_runnable(spec: CommandSpec) -> bool:
@@ -101,13 +109,38 @@ def seed_probe_profile(runtime_profile: TestRuntimeProfile) -> None:
             facts=(
                 UserProfileFact(path="identity.name", value="Ana"),
                 UserProfileFact(path="identity.surnames", value="Perez"),
-                UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                UserProfileFact(path="identity.tax_id", value=PROBE_PROFILE_TAX_ID),
                 UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
                 UserProfileFact(path="provenance.source", value="manual_cli"),
             ),
             context=profile_creation_context_for_test(),
         )
         seed_test_profile_record(record, root=runtime_profile.storage_root, label=PROBE_PROFILE_LABEL)
+
+
+@contextmanager
+def synthetic_aeat_credentials(workdir: Path) -> Iterator[Path]:
+    """Configure a real, self-signed certificate naming the seeded profile's taxpayer.
+
+    A session-gated AEAT flow refuses at credential loading when nothing is
+    configured, before it ever builds a Sede session. With this certificate the
+    flow loads its credentials and reaches the Sede client, where a sealed run
+    stops at the browser launch. The bundle is synthetic and never leaves the
+    test's directory.
+    """
+    now = datetime.now(UTC)
+    bundle = build_pkcs12_bundle(
+        workdir,
+        not_valid_before=now - timedelta(days=1),
+        not_valid_after=now + timedelta(days=365),
+        name="probe-certificate",
+        subject_cn=f"PROBE HOLDER - {PROBE_PROFILE_TAX_ID}",
+    )
+    with override_settings(
+        cadrumo_certificate_path=bundle,
+        cadrumo_certificate_password_secret=SecretStr(CERTIFICATE_BUNDLE_INPUT),
+    ):
+        yield bundle
 
 
 def free_monitoring_tool() -> int:
@@ -132,10 +165,12 @@ def handler_code(target: DeferredTarget) -> CodeType:
 __all__ = [
     "PROBE_PROFILE_ID",
     "PROBE_PROFILE_LABEL",
+    "PROBE_PROFILE_TAX_ID",
     "command_path",
     "free_monitoring_tool",
     "handler_code",
     "is_runnable",
     "seed_probe_profile",
+    "synthetic_aeat_credentials",
     "synthetic_argv",
 ]

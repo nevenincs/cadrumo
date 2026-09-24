@@ -74,6 +74,7 @@ from ....domain.calculations.registry.governed_fact_scope import (
     outside_governed_fact_validation,
 )
 from ....domain.calculations.registry.m347_threshold import resolve_m347_counterparty_annual_threshold
+from ....tests.offline_seal import OfflineGuard, offline_guard_fixture
 from .._command_runtime import build_command_app, runs_in_governed_fact_scope
 from ..command_spec import (
     BindingState,
@@ -97,7 +98,6 @@ from ._command_drive_support import (
     seed_probe_profile,
     synthetic_argv,
 )
-from ._offline_seal_fixture import OfflineGuard, offline_guard_fixture
 from .cli_runner import invoke_cached_cli, invoke_uncached_typer_app
 
 __all__ = ["offline_guard_fixture"]

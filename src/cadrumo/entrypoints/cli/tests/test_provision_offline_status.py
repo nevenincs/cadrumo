@@ -19,8 +19,8 @@ from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_s
 from ....application.provisioning_runtime import forget_runtime_unreachable
 from ....core.config import override_settings
 from ....tests.cli_envelope import require_schema_envelope
+from ....tests.offline_seal import OfflineGuard, offline_guard_fixture
 from ..command_specs import COMMAND_GRAPH
-from ._offline_seal_fixture import OfflineGuard, offline_guard_fixture
 from .cli_runner import invoke_cached_cli
 
 __all__ = ["offline_guard_fixture"]
