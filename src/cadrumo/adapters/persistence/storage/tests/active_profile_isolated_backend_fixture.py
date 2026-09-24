@@ -75,6 +75,11 @@ def _seeded_world(
             resolved_overrides = dict(settings_overrides)
         else:
             resolved_overrides = settings_overrides(root)
+        for field_name, value in resolved_overrides.items():
+            # A directory override is an operator's dependency: the CLI
+            # validates it and never creates it, so the test provisions it.
+            if field_name.endswith("_dir") and isinstance(value, Path):
+                value.mkdir(parents=True, exist_ok=True)
         settings_cm = override_settings(**resolved_overrides) if resolved_overrides else nullcontext()
         with (
             settings_cm,

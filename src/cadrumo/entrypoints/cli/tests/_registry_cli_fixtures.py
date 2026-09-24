@@ -37,6 +37,10 @@ _SESSION_OPENED_AT = datetime(2099, 5, 28, 15, 55, tzinfo=UTC)
 @pytest.fixture(scope="module", autouse=True)
 def _isolated_registry_cli_backend(tmp_path_factory: pytest.TempPathFactory) -> Iterator[None]:
     tmp_path = tmp_path_factory.mktemp("registry-cli")
+    # Explicit directory overrides are the operator's to provision; the CLI
+    # validates them and never creates them.
+    for directory in ("probe-blobs", "probe-live-state"):
+        (tmp_path / directory).mkdir()
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as runtime:
         _set_cli_env(
             {

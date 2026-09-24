@@ -80,7 +80,9 @@ _live_read_origin, _isolated_backend = seeded_isolated_backend_fixture(
 @pytest.fixture(autouse=True)
 def _isolated_live_state(_isolated_backend: None, tmp_path: Path) -> Iterator[None]:
     """Keep the live-state directory private to each test, beside its own root."""
-    with override_settings(cadrumo_live_state_dir=tmp_path / "probe-live-state"):
+    live_state_dir = tmp_path / "probe-live-state"
+    live_state_dir.mkdir(exist_ok=True)
+    with override_settings(cadrumo_live_state_dir=live_state_dir):
         yield
 
 

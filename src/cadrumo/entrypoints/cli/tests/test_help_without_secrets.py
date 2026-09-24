@@ -86,6 +86,10 @@ def _passphraseless_env(tmp_path: Path) -> dict[str, str]:
     """
     env = {key: value for key, value in os.environ.items() if not key.startswith("AEAT_")}
     env.pop(_CREDENTIAL_ENV_VAR, None)
+    # Explicit directory overrides are the operator's to provision; the CLI
+    # validates them and never creates them.
+    for directory in ("probe-tokens", "probe-runs", "storage/fallback-store"):
+        (tmp_path / directory).mkdir(parents=True, exist_ok=True)
     env.update(
         {
             "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "storage"),

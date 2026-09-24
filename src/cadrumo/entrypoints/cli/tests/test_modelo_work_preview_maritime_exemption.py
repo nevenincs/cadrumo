@@ -44,9 +44,11 @@ _BUCKET_ID = "70707070-7070-4507-8507-070707070707"
 
 @pytest.fixture
 def isolated_backend(tmp_path: Path) -> Iterator[None]:
+    live_state_dir = tmp_path / "probe-live-state"
+    live_state_dir.mkdir()
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
-        override_settings(cadrumo_live_state_dir=tmp_path / "probe-live-state"),
+        override_settings(cadrumo_live_state_dir=live_state_dir),
         open_test_profile_session(_BUCKET_ID),
     ):
         yield
