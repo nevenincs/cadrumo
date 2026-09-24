@@ -2258,14 +2258,33 @@ article = "17"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2025-26458#a1-9"
 published_at = 2025-12-24
 effective_from = 2025-12-25
+effective_to = 2026-01-27
 review_status = "agent_reviewed"
 reviewed_at = 2026-09-24
 reviewed_by = "agent-prepared from the BOE consolidated-text article endpoint (block a1-9); pending operator re-stamp"
-notes = "RDL 16/2025 art. 17.Uno: con efectos para los periodos impositivos que se inicien a partir de 1 de enero de 2025, redacta de nuevo la disposicion adicional decimoseptima LIS y anade la letra c) (periodos que se inicien o concluyan en 2025, entrada en funcionamiento en 2025), manteniendo la plantilla media, la exclusion de edificios y la inversion maxima de 500.000 euros. En vigor desde el 25 de diciembre de 2025; el Congreso acordo su derogacion el 27 de enero de 2026 (Resolucion publicada en el BOE de 28 de enero de 2026, BOE-A-2026-2024). La AEAT (nota de 1 de abril de 2026 y Manual de Renta 2025) aplica sus medidas al devengo de 2025 por estar vigentes en esa fecha; esta entrada cita el instrumento modificativo, no afirma que siga en vigor."
+notes = "RDL 16/2025 art. 17.Uno: con efectos para los periodos impositivos que se inicien a partir de 1 de enero de 2025, redacta de nuevo la disposicion adicional decimoseptima LIS y anade la letra c) (periodos que se inicien o concluyan en 2025, entrada en funcionamiento en 2025), manteniendo la plantilla media, la exclusion de edificios y la inversion maxima de 500.000 euros. En vigor desde el 25 de diciembre de 2025 (entrada en vigor que publica el BOE). Derogado: la Resolucion de 27 de enero de 2026 (BOE-A-2026-2024, catalogada como resolucion-congreso-2026-01-27-derogacion-rdl-16-2025:acuerdo) publica que el Congreso, en su sesion de 27 de enero de 2026, acordo derogarlo; fecha de publicacion 28 de enero de 2026. La resolucion no fija otra fecha de efectos, y la derogacion de un real decreto-ley no convalidado surte efecto con la publicacion del acuerdo, de modo que su ultimo dia de vigencia es el 27 de enero de 2026. Que la letra c) siga rigiendo el periodo impositivo 2025 no descansa en esta entrada sino en la posicion de la AEAT (Manual de Renta 2025), citada por separado en los parametros que la aplican."
 required_text = [
     "Con efectos para los períodos impositivos que se inicien a partir de 1 de enero de 2025, la disposición adicional decimoséptima queda redactada de la siguiente forma:",
     "c) Que se inicien o concluyan en 2025, cuando la entrada en funcionamiento de los elementos a que se refiere este apartado se produzca en 2025.",
     "La cuantía máxima de la inversión que podrá beneficiarse del régimen de libertad de amortización será de 500.000 euros.",
+]
+
+[legal."resolucion-congreso-2026-01-27-derogacion-rdl-16-2025:acuerdo"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instruction"
+corpus_ref = "corpus/normatives/html/boe-a-2026-2024-derogacion-rdl-16-2025.html#textoxslt"
+document_id = "BOE-A-2026-2024"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-2024"
+published_at = 2026-01-28
+effective_from = 2026-01-28
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-24
+reviewed_by = "agent-prepared from BOE-A-2026-2024 downloaded from boe.es; pending operator re-stamp"
+notes = "Resolucion de 27 de enero de 2026 del Congreso de los Diputados que ordena publicar el acuerdo de derogacion del Real Decreto-ley 16/2025 (art. 86.2 CE). Fecha de disposicion 27/01/2026, fecha de publicacion 28/01/2026. Su analisis deja sin efecto, entre otras, la modificacion de las disposiciones adicionales 17 y 18 de la LIS. Fija el fin de vigencia de rdl-16-2025:art-17."
+required_text = [
+    "el Congreso de los Diputados, en su sesión del día de hoy, acordó derogar el Real Decreto-ley",
+    "Palacio del Congreso de los Diputados, 27 de enero de 2026.",
 ]
 
 [legal."ley-27-2014:art-102"]
@@ -2635,3 +2654,16 @@ applies_to = 2025-12-31
 source_url = "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2025-26458/texto/bloque/a1-9"
 review_status = "agent_reviewed"
 corpus_tier = "provision_excerpt"
+
+[sources."boe-derogacion-rdl-16-2025"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/boe-a-2026-2024-derogacion-rdl-16-2025.html"
+sha256 = "6db4efa9d24b67dc263f7250150ac4f49ea5bdd70480d503afa93e5b4711c38a"
+bytes = 41299
+retrieved_at = 2026-09-24
+published_at = 2026-01-28
+applies_from = 2026-01-28
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-2024"
+review_status = "agent_reviewed"

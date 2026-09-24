@@ -1044,8 +1044,10 @@ source_ref = "aeat-renta-2025-manual-parte1"
 required_text = ["beneficiarse del régimen de libertad de amortización será de 500.000 euros."]
 
 # LIS DA 17a.1 letter c): the 2025 period admits installations entering
-# service in 2025 only. Letter c) was added for 2025 by RDL 16/2025 art. 17.Uno;
-# the AEAT 2025 manual applies it to the 2025 IRPF period on that basis.
+# service in 2025 only. Letter c) was added for 2025 by RDL 16/2025 art. 17.Uno,
+# in force from 25 December 2025 until the Congreso derogated it on 27 January
+# 2026. Its application to the 2025 IRPF period rests on the AEAT 2025 manual,
+# which applies it to that accrual; the manual is cited here as its own source.
 [[revisions."2025".parameters]]
 id = "renta-actividad-inmovilizado-amortizacion-renovables-primer-ejercicio"
 data_type = "integer"
@@ -1058,7 +1060,7 @@ valid_from = 2025-01-01
 valid_to = 2025-12-31
 [[revisions."2025".parameters.source_citations]]
 source_ref = "aeat-renta-2025-manual-parte1"
-required_text = ["Atención: el artículo 17 Uno del Real Decreto-ley 16/2025, de 23 de diciembre (BOE de", "impositivos que se inicien o concluyan en 2025, cuando la entrada en funcionamiento se"]
+required_text = ["Atención: el artículo 17 Uno del Real Decreto-ley 16/2025, de 23 de diciembre (BOE de", "impositivos que se inicien o concluyan en 2025, cuando la entrada en funcionamiento se", "Se podrán amortizar libremente en el período impositivo 2025 las inversiones en"]
 
 [[revisions."2025".parameters]]
 id = "renta-actividad-inmovilizado-amortizacion-renovables-ultimo-ejercicio"
@@ -1072,7 +1074,7 @@ valid_from = 2025-01-01
 valid_to = 2025-12-31
 [[revisions."2025".parameters.source_citations]]
 source_ref = "aeat-renta-2025-manual-parte1"
-required_text = ["Atención: el artículo 17 Uno del Real Decreto-ley 16/2025, de 23 de diciembre (BOE de", "impositivos que se inicien o concluyan en 2025, cuando la entrada en funcionamiento se"]
+required_text = ["Atención: el artículo 17 Uno del Real Decreto-ley 16/2025, de 23 de diciembre (BOE de", "impositivos que se inicien o concluyan en 2025, cuando la entrada en funcionamiento se", "Se podrán amortizar libremente en el período impositivo 2025 las inversiones en"]
 
 # LIS DA 17a.1: only installations made available to the taxpayer from the
 # entry into force of RDL 18/2022 (20 October 2022) qualify. 1 admits, 0
