@@ -184,6 +184,38 @@ def test_docs_build_cleanup_removes_noncanonical_entries(tmp_path: Path) -> None
     assert html_root.is_dir()
 
 
+def test_an_isolated_full_build_reads_a_private_copy_it_discards(tmp_path: Path) -> None:
+    """Generated pages written by one root's build never reach the shared tree or another root."""
+    from ..build import _full_build_source
+
+    docs_root = tmp_path / "docs"
+    (docs_root / "_build" / "html").mkdir(parents=True)
+    (docs_root / "_build" / "html" / "index.html").write_text("built\n", encoding="utf-8")
+    (docs_root / "index.md").write_text("# Home\n", encoding="utf-8")
+
+    with _full_build_source(docs_root, isolated=True) as first, _full_build_source(docs_root, isolated=True) as second:
+        assert first != second
+        assert (first / "index.md").read_text(encoding="utf-8") == "# Home\n"
+        assert not (first / "_build").exists()
+        (first / "_generated").mkdir()
+        (first / "_generated" / "glossary.rst").write_text("es\n", encoding="utf-8")
+        assert not (second / "_generated").exists()
+    assert not (docs_root / "_generated").exists()
+    assert not first.exists()
+    assert not second.exists()
+
+    with _full_build_source(docs_root, isolated=False) as shared:
+        assert shared == docs_root
+
+
+def test_an_isolated_source_is_refused_for_a_named_target() -> None:
+    """Only a whole-scope build copies the tree; a named target already builds in a temporary copy."""
+    from ..build import main
+
+    with pytest.raises(SystemExit, match="--isolated-source applies to a whole-scope build"):
+        main(["--isolated-source", "docs/index.md"])
+
+
 def test_docs_build_jobs_accepts_only_serial_or_auto_settings() -> None:
     """The deployment override pins serial or parallel Sphinx workers."""
     from ..build import docs_build_jobs

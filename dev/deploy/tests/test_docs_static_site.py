@@ -8,6 +8,7 @@ import gzip
 import http.server
 import inspect
 import json
+import sys
 import textwrap
 import threading
 from collections.abc import Callable, Iterator
@@ -20,6 +21,7 @@ import dev.docs.i18n as _docs_i18n
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.tests.env_scope import scoped_env_var
+from dev._paths import REPO_ROOT
 from dev.docs.build import pagefind_index_mode
 from dev.docs.pagefind_index import DECIDED_INJECTED_RECORD_KINDS
 from dev.docs.sequence_build_gate import SEQUENCE_CHECK_SKIP_ENV, should_check_sequences
@@ -30,6 +32,7 @@ from ..docs_static_site import (
     _DOWNLOAD_LATEST_STATIC_PATH,
     _REQUIRED_ARTIFACTS,
     CANONICAL_DOCS_BASE_URL,
+    _build_language_roots,
     _clear_apex,
     _compose_apex,
     _dry_run,
@@ -181,6 +184,7 @@ def test_language_build_command_reuses_the_driver_language_and_out_dir_flags(tmp
         "-m",
         "dev.docs.build",
         "--strict",
+        "--isolated-source",
         "--scope",
         "user",
         "--language",
@@ -188,6 +192,51 @@ def test_language_build_command_reuses_the_driver_language_and_out_dir_flags(tmp
         "--out-dir",
         str(out_dir),
     ]
+
+
+# Each stand-in root records the storage root it was given, then waits until
+# every root has started: roots built one after another never all start, so the
+# wait times out and the root fails. ``ca`` then fails on purpose.
+_ROOT_STAND_IN = textwrap.dedent(
+    """
+    import os, pathlib, sys, time
+    out = pathlib.Path(sys.argv[1])
+    started = out.parent / "started"
+    started.mkdir(parents=True, exist_ok=True)
+    (started / out.name).touch()
+    deadline = time.monotonic() + 60
+    while len(list(started.iterdir())) < int(sys.argv[2]):
+        if time.monotonic() > deadline:
+            sys.exit(9)
+        time.sleep(0.05)
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "storage.txt").write_text(os.environ["CADRUMO_LOCAL_STORAGE_ROOT"], encoding="utf-8")
+    print(f"built {out.name}")
+    sys.exit(3 if out.name == "ca" else 0)
+    """,
+)
+
+
+def test_the_language_roots_build_at_once_each_with_its_own_storage_and_every_failure_named(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Every root runs concurrently, in its own storage root, and a failed root stops the publish by name."""
+    html_root = tmp_path / "html"
+    languages = localized_languages()
+
+    def stand_in(_language: str, out_dir: Path) -> list[str]:
+        return [sys.executable, "-c", _ROOT_STAND_IN, str(out_dir), str(len(languages))]
+
+    with pytest.raises(SystemExit, match=r"failed for ca \(3\); refusing to publish") as refused:
+        _build_language_roots(REPO_ROOT, html_root, command_for=stand_in)
+
+    assert "9)" not in str(refused.value), "the roots did not all run at once"
+    storage_roots = {(html_root / language / "storage.txt").read_text(encoding="utf-8") for language in languages}
+    assert len(storage_roots) == len(languages)
+    output = capsys.readouterr().out
+    for language in languages:
+        assert f"built {language}" in output
 
 
 def test_language_build_environment_points_the_base_url_at_the_language_root() -> None:

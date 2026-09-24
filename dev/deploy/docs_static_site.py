@@ -18,8 +18,10 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 import time
 from collections.abc import Callable, Mapping, Sequence
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from http.client import HTTPConnection, HTTPException, HTTPSConnection
@@ -131,7 +133,6 @@ def _run(
     *,
     cwd: Path,
     env: dict[str, str] | None = None,
-    stream_output: bool = False,
 ) -> CommandResult:
     """Run one local command and stop on its real exit status."""
     print(f"+ {_command_label(command)}", flush=True)
@@ -141,16 +142,10 @@ def _run(
         cwd=cwd,
         environment=env,
     )
-    if stream_output:
-        if completed.stdout:
-            print(completed.stdout, end="" if completed.stdout.endswith("\n") else "\n", flush=True)
-        if completed.stderr:
-            print(completed.stderr, end="" if completed.stderr.endswith("\n") else "\n", file=sys.stderr, flush=True)
-    else:
-        if completed.stdout:
-            print(completed.stdout, end="" if completed.stdout.endswith("\n") else "\n", flush=True)
-        if completed.stderr:
-            print(completed.stderr, end="" if completed.stderr.endswith("\n") else "\n", file=sys.stderr, flush=True)
+    if completed.stdout:
+        print(completed.stdout, end="" if completed.stdout.endswith("\n") else "\n", flush=True)
+    if completed.stderr:
+        print(completed.stderr, end="" if completed.stderr.endswith("\n") else "\n", file=sys.stderr, flush=True)
     if completed.returncode != 0:
         raise SystemExit(completed.returncode)
     return completed
@@ -182,8 +177,7 @@ def site_build_environment(*, base_environment: Mapping[str, str] | None = None)
     return {
         **base,
         "CADRUMO_DOCS_BASE_URL": CANONICAL_DOCS_BASE_URL,
-        # Five strict roots, two of them full-scope with the API reference, run
-        # back to back; serially they exceed a release job's time budget. The
+        # Serially, the strict roots exceed a release job's time budget. The
         # prove phase already builds and checks the same site in parallel.
         "CADRUMO_DOCS_JOBS": "auto",
         "CADRUMO_DOCS_PAGEFIND_MODE": "full",
@@ -438,9 +432,11 @@ def language_build_command(language: str, out_dir: Path) -> list[str]:
     it has no catalogue to select, and passing the flag would force the user
     scope and drop the API autodoc tree. It therefore keeps the full scope and
     carries ``api/`` inside its own root, while every translated root is a
-    strict user-scope build of the operator surface.
+    strict user-scope build of the operator surface. Every root reads its own
+    copy of the sources (``--isolated-source``), because the roots build at the
+    same time and each renders its generated pages in its own language.
     """
-    command = [sys.executable, "-m", "dev.docs.build", "--strict"]
+    command = [sys.executable, "-m", "dev.docs.build", "--strict", "--isolated-source"]
     if language == _docs_i18n.DEFAULT_SOURCE_LANGUAGE:
         command += ["--out-dir", str(out_dir)]
         return command
@@ -493,27 +489,63 @@ def _language_build_environments() -> tuple[tuple[str, dict[str, str]], ...]:
     return environments
 
 
-def _build_language_roots(repo_root: Path, html_root: Path) -> None:
+def _build_language_roots(
+    repo_root: Path,
+    html_root: Path,
+    *,
+    command_for: Callable[[str, Path], list[str]] = language_build_command,
+) -> None:
     """Build every site root into its own subdirectory.
 
     ``/en/``, ``/es/``, ``/ca/`` and ``/hu/`` are peers, each carrying its own
     Pagefind index. English holds no privileged position: the readers here file
     Spanish tax, so it sits at ``/en/`` like the rest and ``/`` resolves to the
     reader's own language instead (:func:`_write_language_entry`).
+
+    The roots build at the same time. Each reads its own copy of the sources
+    and writes only below its own directory, and each gets its own scratch
+    product-storage root, so no two builds share a file they write. A root's
+    output is printed whole once it finishes; the publish stops, naming every
+    failed root, after all of them have finished.
+
+    Args:
+        repo_root: Repository root the builds run from.
+        html_root: The composed HTML root; each root builds into its own
+            subdirectory.
+        command_for: DI seam for tests. Production runs the real build driver;
+            a test passes a small real command to prove the concurrency and
+            isolation without paying for four Sphinx builds.
     """
-    for language, environment in _language_build_environments():
-        out_dir = html_root / language
-        try:
-            _run(
-                language_build_command(language, out_dir),
+    environments = _language_build_environments()
+    print(
+        f"Building the {', '.join(language for language, _ in environments)} roots at once on {os.cpu_count()} CPUs.",
+        flush=True,
+    )
+    with tempfile.TemporaryDirectory(prefix="cadrumo-docs-roots-") as scratch:
+
+        def build(language: str, environment: dict[str, str]) -> CommandResult:
+            storage_root = Path(scratch) / language
+            storage_root.mkdir()
+            command = command_for(language, html_root / language)
+            return run_command(
+                command,
                 cwd=repo_root,
-                env=environment,
-                stream_output=True,
+                environment={**environment, "CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root)},
             )
-        except SystemExit as exc:
-            raise SystemExit(
-                f"Localized docs build for {language!r} failed; refusing to publish ({exc.code}).",
-            ) from exc
+
+        with ThreadPoolExecutor(max_workers=len(environments)) as pool:
+            futures = {language: pool.submit(build, language, environment) for language, environment in environments}
+            failed: list[str] = []
+            for language, future in futures.items():
+                result = future.result()
+                print(f"+ [{language}] {_command_label(result.argv)} ({result.duration_seconds:.0f}s)", flush=True)
+                for stream, text in ((sys.stdout, result.stdout), (sys.stderr, result.stderr)):
+                    if text:
+                        print(text, end="" if text.endswith("\n") else "\n", file=stream, flush=True)
+                if result.returncode != 0:
+                    failed.append(f"{language} ({result.returncode})")
+    if failed:
+        raise SystemExit(f"Localized docs build failed for {', '.join(failed)}; refusing to publish.")
 
 
 def _write_language_entry(html_root: Path) -> Path:
