@@ -384,3 +384,34 @@ def test_an_archive_exported_before_a_reset_restores_under_the_old_passphrase(tm
         assert unlock_profile_custody_password(material, password=_CURRENT).dek is not None
         with pytest.raises(ProfileCustodyPasswordError):
             unlock_profile_custody_password(material, password=_REPLACEMENT)
+
+
+def test_logging_out_leaves_the_failed_attempt_backoff_in_place(tmp_path: Path) -> None:
+    """A backoff any caller can reset between guesses protects nothing: logout ends sessions only."""
+    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
+        profile_id = _register()
+        code = _enroll(profile_id)
+        logout_active_profile()
+        bucket_id = str(profile_id)
+        # Five failures owe a 32-second wait: far longer than this test runs.
+        for _ in range(5):
+            record_login_failure(storage_root=storage_root, bucket_id=bucket_id, now=_now())
+
+        # Selecting a profile needs no secret, and logout revokes whatever is
+        # selected: exactly the sequence a guesser could run between guesses.
+        ProfileCapsuleLifecycle().select(bucket_id)
+        logout_active_profile()
+
+        assert (
+            evaluate_login_throttle(storage_root=storage_root, bucket_id=bucket_id, now=_now()).consecutive_failures
+            == 5
+        )
+        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+        with pytest.raises(ProfileLoginThrottledError):
+            login_profile(
+                name=_LABEL,
+                passphrase_callback=lambda: _CURRENT,
+                profile_decode_context=_profile_decode_context_for_test,
+            )
+        with pytest.raises(ProfileLoginThrottledError):
+            _reset(profile_id, code)

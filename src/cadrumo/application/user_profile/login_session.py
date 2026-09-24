@@ -342,8 +342,12 @@ def _revoke_profile_session_artefacts(*, storage_root: Path, bucket_id: str) -> 
 
     The single authority for "this profile's stored session is void": deletes
     the on-disk session record AND its OS-keychain session key (split
-    knowledge, so either alone is already useless) and clears the failed-login
-    backoff.
+    knowledge, so either alone is already useless).
+
+    It leaves the failed-attempt backoff alone. Selecting a profile needs no
+    secret, so a revocation that cleared the counter would let anyone reset
+    the backoff between guesses; only a successful proof clears it, and its
+    own expiry bounds the wait.
 
     Deliberately owns no process-local state. A caller that already holds the
     exact session objects it must close -- the cross-profile handover, which
@@ -357,7 +361,6 @@ def _revoke_profile_session_artefacts(*, storage_root: Path, bucket_id: str) -> 
         bucket_id: Identifier of the profile whose stored session to revoke.
     """
     _profile_login_sessions().delete_acceleration_receipt(storage_root=storage_root, profile_id=UUID(bucket_id))
-    _profile_login_sessions().reset_throttle(storage_root=storage_root, bucket_id=bucket_id)
 
 
 def close_profile_session_artefacts(*, storage_root: Path, bucket_id: str) -> None:
@@ -454,10 +457,17 @@ def remove_profile_session_acceleration_for_custody_delete(
     storage_root: Path,
     bucket_id: str,
 ) -> ProfileCustodySessionOwnerEffect:
-    """Remove the actual persisted session acceleration and verify its absence."""
+    """Remove the actual persisted session acceleration and verify its absence.
+
+    Deletion also retires the profile's failed-attempt backoff, which a mere
+    revocation deliberately keeps: it lives outside the capsule, so leaving it
+    would charge a later profile reusing the identity for attempts against one
+    that no longer exists.
+    """
     path = _profile_login_sessions().acceleration_receipt_path(storage_root=storage_root, profile_id=UUID(bucket_id))
     was_present = os.path.lexists(path)
     close_profile_session_artefacts(storage_root=storage_root, bucket_id=bucket_id)
+    _profile_login_sessions().reset_throttle(storage_root=storage_root, bucket_id=bucket_id)
     if os.path.lexists(path):
         raise UserProfileError(
             translated_message="errors.integrity.integrity_storage_profile_custody_record",
