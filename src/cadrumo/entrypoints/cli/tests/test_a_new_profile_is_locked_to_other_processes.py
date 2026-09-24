@@ -24,6 +24,7 @@ import pytest
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 
 from ....core.config import load_settings, override_settings
+from ....core.i18n.render import tr
 from ....tests.call_time_refusing_keyring import CALL_TIME_REFUSING_KEYRING
 from ....tests.in_memory_keyring import IN_MEMORY_KEYRING
 from .subprocess_cli import run_cadrumo_subprocess
@@ -54,6 +55,11 @@ def _list_in_a_fresh_process(
         stdin_payload="" if credential is None else json.dumps({"profile_passphrase": credential}),
         timeout=180.0,
     )
+
+
+def _english(key: str) -> str:
+    with override_settings(cadrumo_output_language="en"):
+        return tr(key)
 
 
 def _refused_as_unauthenticated(listed: subprocess.CompletedProcess[str]) -> bool:
@@ -97,6 +103,12 @@ def test_the_unauthenticated_check_fails_when_a_fresh_process_does_read_the_prof
 
     assert listed.returncode == 0, listed.stdout + listed.stderr
     assert not _refused_as_unauthenticated(listed)
+    # The keychain here works; the process-scoped notice must say why the
+    # session is not kept without claiming the keychain is missing.
+    notices = json.loads(listed.stdout)["notices"]
+    assert [(notice["code"], notice["message"]) for notice in notices] == [
+        ("config.login.session_not_persisted", _english("cli.config.login.notices.session_invocation_scoped")),
+    ]
 
 
 @pytest.mark.parametrize(

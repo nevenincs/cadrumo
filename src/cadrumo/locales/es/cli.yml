@@ -2121,6 +2121,9 @@ cli:
           la sesión existente sin cambios.
         closed_previous_session: Se cerró la sesión del perfil anterior antes de iniciar
           esta.
+        session_invocation_scoped: La autenticación del perfil proporcionada a este
+          comando solo se aplica a este proceso; vuelva a proporcionarla al proceso
+          siguiente.
         session_not_persisted: No hay un almacén de claves del sistema utilizable,
           así que este comando solo autenticó su propio proceso; vuelva a proporcionar
           la autenticación del perfil al proceso siguiente.

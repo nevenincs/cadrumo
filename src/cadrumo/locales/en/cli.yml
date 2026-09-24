@@ -1955,6 +1955,8 @@ cli:
           was resumed unchanged.
         closed_previous_session: The previously logged-in profile was signed out before
           this login.
+        session_invocation_scoped: Profile authentication supplied to this command
+          applies to this process only; supply it again to the next process.
         session_not_persisted: No usable OS keychain found, so this command authenticated
           only its own process; supply profile authentication again to the next process.
       passphrase_channel_absent: No passphrase channel is available. Run this verb

@@ -2104,6 +2104,9 @@ cli:
           la sessió existent sense canvis.
         closed_previous_session: S'ha tancat la sessió del perfil anterior abans d'iniciar
           aquesta.
+        session_invocation_scoped: L'autenticació del perfil proporcionada a aquesta
+          ordre només s'aplica a aquest procés; torneu a proporcionar-la al procés
+          següent.
         session_not_persisted: No hi ha cap magatzem de claus del sistema utilitzable,
           així que aquesta ordre només ha autenticat el seu propi procés; torneu a
           proporcionar l'autenticació del perfil al procés següent.

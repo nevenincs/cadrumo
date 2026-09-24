@@ -13,6 +13,7 @@ from cadrumo.application.operator_surface.command_ports import ProfileAuthentica
 from ....core.config import override_settings
 from ....core.errors.hierarchy import InternalInvariantError
 from ....core.external_constants import OutputLanguage
+from ....core.i18n.render import tr
 from ....core.profile_session import ProfileSessionRefusalReason
 from .._profile_authentication_gate import _preflight_sources
 from .._profile_authentication_notice import (
@@ -125,6 +126,11 @@ def test_non_persistence_notice_is_delivered_on_a_post_login_refusal() -> None:
     )
     payload = json.loads(rendered)
     assert [notice["code"] for notice in payload["notices"]] == ["config.login.session_not_persisted"]
+    # Authentication supplied to one command is process-scoped by design, so the
+    # notice states that and never blames a keychain it did not consult.
+    assert [notice["message"] for notice in payload["notices"]] == [
+        tr("cli.config.login.notices.session_invocation_scoped")
+    ]
     assert payload["error"]["code"] == "REFUSED_CLI_BOUNDARY"
     assert drain_profile_authentication_notices() == ()
 

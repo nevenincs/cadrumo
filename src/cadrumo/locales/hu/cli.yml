@@ -2097,6 +2097,8 @@ cli:
           változatlanul folytatódott.
         closed_previous_session: A korábban bejelentkezett profil munkamenete lezárult
           a bejelentkezés előtt.
+        session_invocation_scoped: A parancsnak megadott profilhitelesítés csak erre
+          a folyamatra érvényes; a következő folyamatnak ismét adja meg.
         session_not_persisted: Nincs használható rendszerkulcstár, ezért ez a parancs
           csak a saját folyamatát hitelesítette; a következő folyamatnak ismét adja
           meg a profilhitelesítést.
