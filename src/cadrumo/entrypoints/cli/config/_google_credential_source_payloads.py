@@ -77,5 +77,5 @@ class GoogleCredentialSourceViewResult(GoogleCredentialSourcePayload):
     factory dispatch applies) from one with a persisted selection.
     """
 
-    operation: str = "config.google.credential_source.show"
+    operation: str = "config.google.credential_source.view"
     configured: bool

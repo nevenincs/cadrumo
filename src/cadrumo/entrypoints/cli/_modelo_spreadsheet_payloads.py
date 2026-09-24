@@ -177,7 +177,7 @@ class ModeloSpreadsheetPullResult(OutputSchema):
     populated operator/binding/relation edits, and optional row-set assemblies.
     Casilla-bearing rows are typed so the CLI cannot emit anonymous string
     casilla references at this boundary. Computing casilla values from pulled
-    edits is a separate verb (``sync calc compute``); this transport payload
+    edits is a separate verb (``app modelo spreadsheet calculate``); this transport payload
     carries no computed block.
     """
 

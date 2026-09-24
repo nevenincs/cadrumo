@@ -428,7 +428,7 @@ def google_sync_probe(
         command="config.google.probe",
         result=probe_result,
         lines=(
-            "operation\tconfig.google.sync.probe",
+            "operation\tconfig.google.probe",
             f"profile\t{active}",
             f"provider_kind\t{report.provider_kind.value}",
             f"reachable\t{report.reachable}",
@@ -1019,7 +1019,7 @@ def _google_sync_push_lines(
     manifest_degraded = mirror_result["degraded_manifests"]
     cleanup_failed = mirror_result["cleanup_failed_objects"]
     lines = [
-        "operation\tconfig.google.sync.push",
+        "operation\tconfig.profile.archive.push",
         f"profile\t{active}",
         f"root_folder_id\t{root_folder_id}",
         f"dry_run\t{dry_run}",
@@ -1040,13 +1040,13 @@ def _google_sync_push_lines(
     return lines
 
 
-def _google_sync_push_notices(mirror_result: _MirrorRowsResult) -> tuple[list[Notice], list[str]]:
+def _profile_archive_push_notices(mirror_result: _MirrorRowsResult) -> tuple[list[Notice], list[str]]:
     cleanup_failed = mirror_result["cleanup_failed_objects"]
     if not cleanup_failed:
         return [], []
     notice = Notice(
         severity=NoticeSeverity.WARNING,
-        code="config.google.sync.push.unmanifested_object",
+        code="config.profile.archive.push.unmanifested_object",
         message=tr(
             "cli.config.profile.archive.push_unmanifested_object_warning",
             count=str(len(cleanup_failed)),
@@ -1098,7 +1098,7 @@ def profile_archive_push(
         limit=limit,
         mirror_result=mirror_result,
     )
-    notices, _unused = _google_sync_push_notices(mirror_result)
+    notices, _unused = _profile_archive_push_notices(mirror_result)
     emit_envelope(ctx, command="config.profile.archive.push", result=push_result, lines=tuple(lines), notices=notices)
 
 

@@ -33,7 +33,19 @@ def test_google_specs_declare_the_complete_operator_subtree() -> None:
     leaves = [spec for spec in GOOGLE_COMMAND_SPECS if spec.kind == "leaf"]
     assert all(spec.handler is not None and spec.handler.state is BindingState.TARGET for spec in leaves)
     assert all(spec.result_schema.state is SchemaState.TARGET for spec in leaves)
-    assert all(spec.result_schema.identity == spec.key.replace("_", ".") for spec in leaves)
+
+    # The identity is the command path, one segment per token, so a hyphenated
+    # group such as ``credential-source`` stays one ``credential_source``
+    # segment; splitting the spec key on ``_`` would break it in two.
+    def command_path(key: str) -> tuple[str, ...]:
+        spec = by_key.get(key)
+        return ("config",) if spec is None else (*command_path(spec.parent_key or ""), spec.token)
+
+    assert {
+        spec.key: spec.result_schema.identity
+        for spec in leaves
+        if spec.result_schema.identity != ".".join(token.replace("-", "_") for token in command_path(spec.key))
+    } == {}
 
 
 def test_google_handler_modules_hold_no_typer_structural_authority() -> None:

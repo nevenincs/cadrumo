@@ -354,9 +354,9 @@ def google_credential_source_view(
     resolved = selection if selection is not None else GoogleCredentialSourceSelection()
     emit_envelope(
         ctx,
-        command="config.google.credential_source.show",
+        command="config.google.credential_source.view",
         result=_view_result(active, configured, resolved),
-        lines=tuple(_selection_lines("config.google.credential_source.show", active, resolved)),
+        lines=tuple(_selection_lines("config.google.credential_source.view", active, resolved)),
     )
 
 

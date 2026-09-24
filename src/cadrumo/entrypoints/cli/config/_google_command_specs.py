@@ -109,6 +109,8 @@ def _leaf(
     schema_name: str,
     policy: ExecutionPolicySpec,
     parameters: tuple[ArgumentSpec | OptionSpec, ...] = (),
+    *,
+    identity: str | None = None,
 ) -> CommandSpec:
     return CommandSpec(
         key=key,
@@ -121,7 +123,7 @@ def _leaf(
         parameters=parameters,
         policy=policy,
         handler=_handler(module, handler),
-        result_schema=_schema(schema_module, schema_name, key.replace("_", ".")),
+        result_schema=_schema(schema_module, schema_name, identity or key.replace("_", ".")),
     )
 
 
@@ -241,6 +243,7 @@ GOOGLE_COMMAND_SPECS = (
                 "cli.config.google.credential_source.lifetime_help",
             ),
         ),
+        identity="config.google.credential_source.set",
     ),
     _leaf(
         "config_google_credential_source_view",
@@ -252,6 +255,7 @@ GOOGLE_COMMAND_SPECS = (
         "_google_credential_source_payloads",
         "GoogleCredentialSourceViewResult",
         GOOGLE_READ,
+        identity="config.google.credential_source.view",
     ),
     state_free_group_spec("config_google_folder", "config_google", "folder", "cli.config.google.folder.help"),
     _leaf(

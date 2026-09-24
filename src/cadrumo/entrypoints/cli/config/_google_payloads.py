@@ -119,7 +119,7 @@ class GoogleSyncProbeResult(OutputSchema):
     can line up probe health with the selected Drive root.
     """
 
-    operation: str = "config.google.sync.probe"
+    operation: str = "config.google.probe"
     profile: str
     provider_kind: ProviderKind
     reachable: bool
