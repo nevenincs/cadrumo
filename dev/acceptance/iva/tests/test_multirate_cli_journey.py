@@ -23,9 +23,11 @@ def test_installed_multirate_cli_journey(tmp_path: Path, installed_wheel_aeat: P
         authority_root=authority_root,
         storage_root=tmp_path / "secure-store",
         artifact_root=tmp_path / "private-source-artifacts",
+        year=2025,
     )
 
     assert receipt.acceptance_ids == ("IVA-CLI-MULTIRATE-2025-1T",)
+    assert receipt.filing_year == 2025
     assert Decimal(receipt.iva_resultado) == Decimal("21.00") + Decimal("5.00") - Decimal("10.50")
     assert len(receipt.transaction_ids) == 3
     assert receipt.issued_invoice_line_rates == ("RATE_21", "RATE_10")

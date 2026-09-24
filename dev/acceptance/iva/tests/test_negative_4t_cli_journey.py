@@ -25,9 +25,11 @@ def test_installed_cli_negative_2025_4t_compensar_generates_wallet_history(
         authority_root=authority_root,
         storage_root=tmp_path / "secure-store",
         artifact_root=tmp_path / "private-source-artifacts",
+        year=2025,
     )
 
     assert receipt.acceptance_ids == ("IVA-01-NEGATIVE-2025-4T-COMPENSAR",)
+    assert receipt.filing_year == 2025
     assert Decimal(receipt.iva_resultado) == Decimal("-10.50")
     assert receipt.filing_origin == "local"
     assert receipt.filing_confirmation == "pendiente"
@@ -74,10 +76,12 @@ def test_installed_cli_negative_2025_4t_devolver_leaves_no_wallet_carry(
         authority_root=authority_root,
         storage_root=tmp_path / "secure-store",
         artifact_root=tmp_path / "private-source-artifacts",
+        year=2025,
         refund_election="devolver",
     )
 
     assert receipt.acceptance_ids == ("IVA-01-NEGATIVE-2025-4T-DEVOLVER",)
+    assert receipt.filing_year == 2025
     assert Decimal(receipt.iva_resultado) == Decimal("-10.50")
     assert receipt.local_refund_election == "devolver"
     assert receipt.filing_origin == "local"

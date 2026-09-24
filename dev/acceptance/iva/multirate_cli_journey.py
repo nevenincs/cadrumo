@@ -25,8 +25,8 @@ from .cli_journey import (
     _run,
     _sha256_path,
 )
+from .filing_year import IvaJourneyYear, require_journey_year
 
-_YEAR: Final = 2025
 _PERIOD: Final = "1T"
 _GENERAL_BASE: Final = Decimal("100.00")
 _GENERAL_IVA: Final = Decimal("21.00")
@@ -58,6 +58,7 @@ class IvaMultirateCliJourneyReceipt:
 
     schema_version: str
     acceptance_ids: tuple[str, ...]
+    filing_year: int
     executable: str
     executable_sha256: str
     source_identity: str
@@ -93,8 +94,15 @@ def run_iva_multirate_cli_journey(
     authority_root: Path,
     storage_root: Path,
     artifact_root: Path,
+    year: int,
 ) -> IvaMultirateCliJourneyReceipt:
-    """Run a fresh 2025/1T M303 case with 21% and 10% issued lines."""
+    """Run a fresh ``year``/1T M303 case with 21% and 10% issued lines.
+
+    Raises:
+        IvaFilingYearUnsupportedError: Before any side effect, when the published
+            authority has no Modelo 303 1T revision authored for ``year``.
+    """
+    journey_year = require_journey_year(authority_root=authority_root, year=year, coordinates=(("303", _PERIOD),))
     if storage_root.exists() and any(storage_root.iterdir()):
         raise IvaCliJourneyError(f"storage root must be fresh and empty: {storage_root}")
     storage_root.mkdir(parents=True, exist_ok=True)
@@ -109,37 +117,40 @@ def run_iva_multirate_cli_journey(
         passphrase=secrets.token_urlsafe(32),
     )
     receipts: list[SanitizedCommandReceipt] = []
-    _create_profile(cli=cli, receipts=receipts, artifact=artifact)
+    _create_profile(cli=cli, receipts=receipts, artifact=artifact, journey_year=journey_year)
 
     evidence_id = _add_purchase_evidence(cli=cli, receipts=receipts, artifact=artifact)
     general_transaction_id = _add_transaction(
         cli=cli,
         receipts=receipts,
         artifact=artifact,
+        journey_year=journey_year,
         amount="121.00",
         description="Synthetic multirate IVA sale at 21 percent",
         taxable_base=_GENERAL_BASE,
         iva_rate="0.21",
         iva_amount=_GENERAL_IVA,
         iva_category="domestic_general",
-        idempotency_key="iva-acceptance-multirate-general-2025-1t",
+        idempotency_key=f"iva-acceptance-multirate-general-{year}-1t",
     )
     reduced_transaction_id = _add_transaction(
         cli=cli,
         receipts=receipts,
         artifact=artifact,
+        journey_year=journey_year,
         amount="55.00",
         description="Synthetic multirate IVA sale at 10 percent",
         taxable_base=_REDUCED_BASE,
         iva_rate="0.10",
         iva_amount=_REDUCED_IVA,
         iva_category="domestic_reduced",
-        idempotency_key="iva-acceptance-multirate-reduced-2025-1t",
+        idempotency_key=f"iva-acceptance-multirate-reduced-{year}-1t",
     )
     issued_invoice_id = _add_issued_invoice(
         cli=cli,
         receipts=receipts,
         artifact=artifact,
+        journey_year=journey_year,
     )
     for transaction_id in (general_transaction_id, reduced_transaction_id):
         _run(
@@ -155,8 +166,11 @@ def run_iva_multirate_cli_journey(
         receipts=receipts,
         artifact=artifact,
         evidence_id=evidence_id,
+        journey_year=journey_year,
     )
-    purchase_invoice_id = _add_purchase_invoice(cli=cli, receipts=receipts, artifact=artifact)
+    purchase_invoice_id = _add_purchase_invoice(
+        cli=cli, receipts=receipts, artifact=artifact, journey_year=journey_year
+    )
     _run(
         cli,
         receipts,
@@ -193,7 +207,7 @@ def run_iva_multirate_cli_journey(
             "iva-wallet",
             "seed",
             "--filing-year",
-            str(_YEAR),
+            str(year),
             "--period",
             _PERIOD,
             "--amount",
@@ -207,7 +221,7 @@ def run_iva_multirate_cli_journey(
             reopened,
             receipts,
             artifact,
-            ("app", "modelo", "work", "create", "--modelo", "303", "--year", str(_YEAR), "--period", _PERIOD),
+            ("app", "modelo", "work", "create", "--modelo", "303", "--year", str(year), "--period", _PERIOD),
             result_keys=("work_unit_id",),
         )
     )
@@ -265,8 +279,9 @@ def run_iva_multirate_cli_journey(
 
     descriptor = authority_root.resolve(strict=True) / "authority.current.json"
     return IvaMultirateCliJourneyReceipt(
-        schema_version="iva-01-installed-cli-multirate-journey-v1",
-        acceptance_ids=("IVA-CLI-MULTIRATE-2025-1T",),
+        schema_version="iva-01-installed-cli-multirate-journey-v2",
+        acceptance_ids=(f"IVA-CLI-MULTIRATE-{year}-1T",),
+        filing_year=year,
         executable=str(cli.executable),
         executable_sha256=_sha256_path(cli.executable),
         source_identity=_checkout_source_identity(),
@@ -293,10 +308,12 @@ def run_iva_multirate_cli_journey(
     )
 
 
-def _create_profile(*, cli: InstalledCli, receipts: list[SanitizedCommandReceipt], artifact: Path) -> None:
+def _create_profile(
+    *, cli: InstalledCli, receipts: list[SanitizedCommandReceipt], artifact: Path, journey_year: IvaJourneyYear
+) -> None:
     profile_start = len(cli.commands)
     try:
-        cli.create_profile(year=_YEAR)
+        cli.create_profile(year=journey_year.year)
     except InstalledCliError as exc:
         raise IvaCliJourneyError("config profile create refused") from exc
     commands = cli.commands[profile_start:]
@@ -304,7 +321,9 @@ def _create_profile(*, cli: InstalledCli, receipts: list[SanitizedCommandReceipt
         raise IvaCliJourneyError("profile setup did not produce its two public command receipts")
     receipts.extend(
         (
-            _command_receipt(args=profile_create_args(_YEAR), evidence=commands[0], artifact=artifact, result_ids=()),
+            _command_receipt(
+                args=profile_create_args(journey_year.year), evidence=commands[0], artifact=artifact, result_ids=()
+            ),
             _command_receipt(
                 args=("config", "profile", "complete-setup"), evidence=commands[1], artifact=artifact, result_ids=()
             ),
@@ -330,6 +349,7 @@ def _add_transaction(
     cli: InstalledCli,
     receipts: list[SanitizedCommandReceipt],
     artifact: Path,
+    journey_year: IvaJourneyYear,
     amount: str,
     description: str,
     taxable_base: Decimal,
@@ -348,7 +368,7 @@ def _add_transaction(
                 "ledger",
                 "add",
                 "--date",
-                "2025-02-15",
+                journey_year.iso_date(2, 15),
                 "--amount",
                 amount,
                 "--direction",
@@ -376,7 +396,9 @@ def _add_transaction(
     return _required_id(transaction, "transaction_id")
 
 
-def _add_issued_invoice(*, cli: InstalledCli, receipts: list[SanitizedCommandReceipt], artifact: Path) -> str:
+def _add_issued_invoice(
+    *, cli: InstalledCli, receipts: list[SanitizedCommandReceipt], artifact: Path, journey_year: IvaJourneyYear
+) -> str:
     first_line = _invoice_line(
         description="Synthetic issued service at 21 percent",
         subtotal=_GENERAL_BASE,
@@ -406,9 +428,9 @@ def _add_issued_invoice(*, cli: InstalledCli, receipts: list[SanitizedCommandRec
                 "--counterparty-nif",
                 "A58818501",
                 "--invoice-number",
-                "IVA-ISS-MULTIRATE-2025-1T",
+                f"IVA-ISS-MULTIRATE-{journey_year.year}-1T",
                 "--invoice-date",
-                "2025-02-15",
+                journey_year.iso_date(2, 15),
                 "--country-code",
                 "ES",
                 "--iva-category",
@@ -425,7 +447,12 @@ def _add_issued_invoice(*, cli: InstalledCli, receipts: list[SanitizedCommandRec
 
 
 def _add_purchase_transaction(
-    *, cli: InstalledCli, receipts: list[SanitizedCommandReceipt], artifact: Path, evidence_id: str
+    *,
+    cli: InstalledCli,
+    receipts: list[SanitizedCommandReceipt],
+    artifact: Path,
+    evidence_id: str,
+    journey_year: IvaJourneyYear,
 ) -> str:
     transaction = _result(
         _run(
@@ -437,7 +464,7 @@ def _add_purchase_transaction(
                 "ledger",
                 "add",
                 "--date",
-                "2025-02-18",
+                journey_year.iso_date(2, 18),
                 "--amount",
                 "60.50",
                 "--direction",
@@ -461,7 +488,7 @@ def _add_purchase_transaction(
                 "--source-jurisdiction",
                 "ES",
                 "--idempotency-key",
-                "iva-acceptance-multirate-purchase-2025-1t",
+                f"iva-acceptance-multirate-purchase-{journey_year.year}-1t",
             ),
             result_keys=("transaction_id",),
         )
@@ -489,7 +516,9 @@ def _add_purchase_transaction(
     return transaction_id
 
 
-def _add_purchase_invoice(*, cli: InstalledCli, receipts: list[SanitizedCommandReceipt], artifact: Path) -> str:
+def _add_purchase_invoice(
+    *, cli: InstalledCli, receipts: list[SanitizedCommandReceipt], artifact: Path, journey_year: IvaJourneyYear
+) -> str:
     invoice = _result(
         _run(
             cli,
@@ -507,9 +536,9 @@ def _add_purchase_invoice(*, cli: InstalledCli, receipts: list[SanitizedCommandR
                 "--counterparty-nif",
                 "A58818501",
                 "--invoice-number",
-                "IVA-REC-MULTIRATE-2025-1T",
+                f"IVA-REC-MULTIRATE-{journey_year.year}-1T",
                 "--invoice-date",
-                "2025-02-18",
+                journey_year.iso_date(2, 18),
                 "--country-code",
                 "ES",
                 "--iva-category",

@@ -19,9 +19,11 @@ def test_installed_tui_captures_classifies_and_reopens_ordinary_iva_rows(tmp_pat
         workspace_root=workspace_root,
         authority_root=workspace_root / ".authority",
         output_root=tmp_path,
+        year=2025,
     )
 
     assert receipt.status == "proven"
+    assert receipt.filing_year == 2025
     assert receipt.partial_acceptance_ids == ("V1", "V2", "V10")
     assert receipt.acceptance_scope == "partial_ledger_capture_classification_reopen"
     assert receipt.product_origin == "site-packages"

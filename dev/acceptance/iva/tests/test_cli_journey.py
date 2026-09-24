@@ -28,9 +28,11 @@ def test_installed_cli_records_product_identity_block_after_verifying_ordinary_2
         authority_root=authority_root,
         storage_root=tmp_path / "secure-store",
         artifact_root=tmp_path / "private-source-artifacts",
+        year=2025,
     )
 
     assert Decimal(receipt.iva_resultado) == Decimal("21.00") - Decimal("10.50")
+    assert receipt.filing_year == 2025
     assert len(receipt.transaction_ids) == 2
     assert len(receipt.invoice_ids) == 2
     assert not any("attest-m303-exonerado-390" in command.argv for command in receipt.commands)

@@ -24,6 +24,7 @@ from .cli_journey import (
     _run,
     _sha256_path,
 )
+from .filing_year import IvaJourneyYear, require_journey_year
 from .multirate_cli_journey import (
     _add_purchase_evidence,
     _add_purchase_invoice,
@@ -32,24 +33,24 @@ from .multirate_cli_journey import (
     _create_profile,
 )
 
-_FOUNDATION_ACCEPTANCE_ID: Final = "IVA-01-ANNUAL-FOUNDATION-2025-1T"
-_YEAR: Final = 2025
 _FOUNDATION_PERIOD: Final = "1T"
 _FOUNDATION_SALE_IVA: Final = Decimal("21.00")
 _FOUNDATION_PURCHASE_IVA: Final = Decimal("10.50")
 _FOUNDATION_EXPECTED_RESULT: Final = _FOUNDATION_SALE_IVA - _FOUNDATION_PURCHASE_IVA
 _QUARTERS: Final = ("1T", "2T", "3T", "4T")
 _FINAL_QUARTER: Final = "4T"
-_FINAL_QUARTER_OBSERVED_AT: Final = "2025-12-31T12:00:00+00:00"
+_ANNUAL_PERIOD: Final = "0A"
+_M390_COORDINATES: Final = (*(("303", quarter) for quarter in _QUARTERS), ("390", _ANNUAL_PERIOD))
 _PRIVATE_ARTIFACT_PLACEHOLDER: Final = "<synthetic-purchase-artifact>"
 
 
 @dataclass(frozen=True, slots=True)
 class IvaAnnualFoundationCliJourneyReceipt:
-    """Sanitized evidence for the preserved ordinary local 2025/1T path."""
+    """Sanitized evidence for the preserved ordinary local 1T path."""
 
     schema_version: str
     acceptance_ids: tuple[str, ...]
+    filing_year: int
     executable: str
     executable_sha256: str
     source_identity: str
@@ -97,10 +98,11 @@ class IvaQuarterlyLocalFilingReceipt:
 
 @dataclass(frozen=True, slots=True)
 class IvaAnnualM390CliJourneyReceipt:
-    """Sanitized evidence for four local 303 records and verified 2025 Modelo 390."""
+    """Sanitized evidence for four local 303 records and one verified annual Modelo 390."""
 
     schema_version: str
     acceptance_ids: tuple[str, ...]
+    filing_year: int
     executable: str
     executable_sha256: str
     source_identity: str
@@ -132,23 +134,33 @@ def run_iva_annual_foundation_cli_journey(
     authority_root: Path,
     storage_root: Path,
     artifact_root: Path,
+    year: int,
 ) -> IvaAnnualFoundationCliJourneyReceipt:
-    """File the preserved ordinary 2025/1T 303 through the installed public CLI."""
-    cli, receipts, artifact = _start(executable, authority_root, storage_root, artifact_root)
+    """File the preserved ordinary ``year``/1T 303 through the installed public CLI.
+
+    Raises:
+        IvaFilingYearUnsupportedError: Before any side effect, when the published
+            authority has no Modelo 303 1T revision authored for ``year``.
+    """
+    journey_year = require_journey_year(
+        authority_root=authority_root, year=year, coordinates=(("303", _FOUNDATION_PERIOD),)
+    )
+    cli, receipts, artifact = _start(executable, authority_root, storage_root, artifact_root, journey_year)
     evidence_id = _add_purchase_evidence(cli=cli, receipts=receipts, artifact=artifact)
     sale_transaction_id = _add_transaction(
         cli=cli,
         receipts=receipts,
         artifact=artifact,
+        journey_year=journey_year,
         amount="121.00",
         description="Synthetic annual-foundation IVA sale",
         taxable_base=Decimal("100.00"),
         iva_rate="0.21",
         iva_amount=_FOUNDATION_SALE_IVA,
         iva_category="domestic_general",
-        idempotency_key="iva-01-annual-foundation-sale-2025-1t",
+        idempotency_key=f"iva-01-annual-foundation-sale-{year}-1t",
     )
-    sale_invoice_id = _add_issued_invoice(cli=cli, receipts=receipts, artifact=artifact)
+    sale_invoice_id = _add_issued_invoice(cli=cli, receipts=receipts, artifact=artifact, journey_year=journey_year)
     _run(
         cli,
         receipts,
@@ -157,9 +169,11 @@ def run_iva_annual_foundation_cli_journey(
         result_keys=(),
     )
     purchase_transaction_id = _add_purchase_transaction(
-        cli=cli, receipts=receipts, artifact=artifact, evidence_id=evidence_id
+        cli=cli, receipts=receipts, artifact=artifact, evidence_id=evidence_id, journey_year=journey_year
     )
-    purchase_invoice_id = _add_purchase_invoice(cli=cli, receipts=receipts, artifact=artifact)
+    purchase_invoice_id = _add_purchase_invoice(
+        cli=cli, receipts=receipts, artifact=artifact, journey_year=journey_year
+    )
     _run(
         cli,
         receipts,
@@ -179,7 +193,7 @@ def run_iva_annual_foundation_cli_journey(
             "iva-wallet",
             "seed",
             "--filing-year",
-            str(_YEAR),
+            str(year),
             "--period",
             _FOUNDATION_PERIOD,
             "--amount",
@@ -201,7 +215,7 @@ def run_iva_annual_foundation_cli_journey(
                 "--modelo",
                 "303",
                 "--year",
-                str(_YEAR),
+                str(year),
                 "--period",
                 _FOUNDATION_PERIOD,
             ),
@@ -297,8 +311,9 @@ def run_iva_annual_foundation_cli_journey(
     )
     descriptor = authority_root.resolve(strict=True) / "authority.current.json"
     return IvaAnnualFoundationCliJourneyReceipt(
-        schema_version="iva-01-annual-foundation-2025-1t-installed-cli-journey-v1",
-        acceptance_ids=(_FOUNDATION_ACCEPTANCE_ID,),
+        schema_version="iva-01-annual-foundation-1t-installed-cli-journey-v2",
+        acceptance_ids=(f"IVA-01-ANNUAL-FOUNDATION-{year}-1T",),
+        filing_year=year,
         executable=str(cli.executable),
         executable_sha256=_sha256_path(cli.executable),
         source_identity=_checkout_source_identity(),
@@ -324,7 +339,9 @@ def run_iva_annual_foundation_cli_journey(
     )
 
 
-def _add_issued_invoice(*, cli: InstalledCli, receipts: list[SanitizedCommandReceipt], artifact: Path) -> str:
+def _add_issued_invoice(
+    *, cli: InstalledCli, receipts: list[SanitizedCommandReceipt], artifact: Path, journey_year: IvaJourneyYear
+) -> str:
     invoice = _result(
         _run(
             cli,
@@ -334,7 +351,8 @@ def _add_issued_invoice(*, cli: InstalledCli, receipts: list[SanitizedCommandRec
                 kind="issued",
                 counterparty_name="Synthetic annual-foundation client SL",
                 counterparty_nif="A58818501",
-                invoice_number="IVA-ISS-ANNUAL-FOUNDATION-2025-1T",
+                invoice_number=f"IVA-ISS-ANNUAL-FOUNDATION-{journey_year.year}-1T",
+                invoice_date=journey_year.iso_date(2, 15),
                 iva_category="domestic_general",
                 line=_invoice_line(
                     description="Synthetic annual-foundation sale",
@@ -373,36 +391,47 @@ def _assert_fresh_process_filing_readback(
 
 
 def run_iva_annual_m390_cli_journey(
-    *, executable: Path, authority_root: Path, storage_root: Path, artifact_root: Path
+    *, executable: Path, authority_root: Path, storage_root: Path, artifact_root: Path, year: int
 ) -> IvaAnnualM390CliJourneyReceipt:
-    """Use the documented four-quarter 2025 source facts to verify Modelo 390."""
-    cli, receipts, artifact = _start(executable, authority_root, storage_root, artifact_root)
+    """Use the documented four-quarter source facts of ``year`` to verify its annual Modelo 390.
+
+    Raises:
+        IvaFilingYearUnsupportedError: Before any side effect, when the published
+            authority lacks a revision authored for ``year`` for any Modelo 303
+            quarter or for the Modelo 390 annual period.
+    """
+    journey_year = require_journey_year(authority_root=authority_root, year=year, coordinates=_M390_COORDINATES)
+    cli, receipts, artifact = _start(executable, authority_root, storage_root, artifact_root, journey_year)
     evidence_id = _add_purchase_evidence(cli=cli, receipts=receipts, artifact=artifact)
     transaction_ids = _add_documented_ledger_facts(
-        cli=cli, receipts=receipts, artifact=artifact, purchase_evidence_id=evidence_id
+        cli=cli, receipts=receipts, artifact=artifact, purchase_evidence_id=evidence_id, journey_year=journey_year
     )
     work_cli = _reopen(cli, authority_root, storage_root)
-    _seed_first_period(cli=work_cli, receipts=receipts, artifact=artifact)
+    _seed_first_period(cli=work_cli, receipts=receipts, artifact=artifact, journey_year=journey_year)
     expected = {"1T": Decimal("315.00"), "2T": Decimal("315.00"), "3T": Decimal("210.00"), "4T": Decimal("525.00")}
     filings = tuple(
         _file_quarter(
             cli=work_cli,
             receipts=receipts,
             artifact=artifact,
+            journey_year=journey_year,
             period=period,
             expected=expected[period],
         )
         for period in _QUARTERS
     )
     annual_work_id, annual_revision_id, annual_report_id, annual_status, annual_values = _calculate_and_verify_m390(
-        cli=work_cli, receipts=receipts, artifact=artifact
+        cli=work_cli, receipts=receipts, artifact=artifact, journey_year=journey_year
     )
     readback = _reopen(cli, authority_root, storage_root)
-    _assert_local_quarter_chain(cli=readback, receipts=receipts, artifact=artifact, filings=filings)
+    _assert_local_quarter_chain(
+        cli=readback, receipts=receipts, artifact=artifact, filings=filings, journey_year=journey_year
+    )
     descriptor = authority_root.resolve(strict=True) / "authority.current.json"
     return IvaAnnualM390CliJourneyReceipt(
-        schema_version="iva-01-annual-m390-2025-installed-cli-journey-v1",
-        acceptance_ids=("IVA-01-ANNUAL-M390-2025-0A",),
+        schema_version="iva-01-annual-m390-installed-cli-journey-v2",
+        acceptance_ids=(f"IVA-01-ANNUAL-M390-{year}-{_ANNUAL_PERIOD}",),
+        filing_year=year,
         executable=str(cli.executable),
         executable_sha256=_sha256_path(cli.executable),
         source_identity=_checkout_source_identity(),
@@ -426,7 +455,7 @@ def run_iva_annual_m390_cli_journey(
 
 
 def _start(
-    executable: Path, authority_root: Path, storage_root: Path, artifact_root: Path
+    executable: Path, authority_root: Path, storage_root: Path, artifact_root: Path, journey_year: IvaJourneyYear
 ) -> tuple[InstalledCli, list[SanitizedCommandReceipt], Path]:
     if storage_root.exists() and any(storage_root.iterdir()):
         raise IvaCliJourneyError(f"storage root must be fresh and empty: {storage_root}")
@@ -439,7 +468,7 @@ def _start(
     )
     receipts: list[SanitizedCommandReceipt] = []
     try:
-        _create_profile(cli=cli, receipts=receipts, artifact=artifact)
+        _create_profile(cli=cli, receipts=receipts, artifact=artifact, journey_year=journey_year)
     except InstalledCliError as exc:
         raise IvaCliJourneyError("config profile create refused") from exc
     return cli, receipts, artifact
@@ -452,13 +481,19 @@ def _reopen(cli: InstalledCli, authority_root: Path, storage_root: Path) -> Inst
 
 
 def _add_documented_ledger_facts(
-    *, cli: InstalledCli, receipts: list[SanitizedCommandReceipt], artifact: Path, purchase_evidence_id: str
+    *,
+    cli: InstalledCli,
+    receipts: list[SanitizedCommandReceipt],
+    artifact: Path,
+    purchase_evidence_id: str,
+    journey_year: IvaJourneyYear,
 ) -> tuple[str, ...]:
+    year = journey_year.year
     sales = (
-        ("1T", "2025-02-10", "2420.00", "2000.00", "420.00"),
-        ("2T", "2025-05-12", "1815.00", "1500.00", "315.00"),
-        ("3T", "2025-08-15", "1210.00", "1000.00", "210.00"),
-        ("4T", "2025-11-20", "3025.00", "2500.00", "525.00"),
+        ("1T", journey_year.iso_date(2, 10), "2420.00", "2000.00", "420.00"),
+        ("2T", journey_year.iso_date(5, 12), "1815.00", "1500.00", "315.00"),
+        ("3T", journey_year.iso_date(8, 15), "1210.00", "1000.00", "210.00"),
+        ("4T", journey_year.iso_date(11, 20), "3025.00", "2500.00", "525.00"),
     )
     rows = tuple(
         _add_documented_transaction(
@@ -471,7 +506,7 @@ def _add_documented_ledger_facts(
             description=f"Synthetic documented annual IVA sale {period}",
             taxable_base=base,
             iva_amount=iva,
-            idempotency_key=f"iva-01-annual-m390-sale-{_YEAR}-{period.lower()}",
+            idempotency_key=f"iva-01-annual-m390-sale-{year}-{period.lower()}",
         )
         for period, date, amount, base, iva in sales
     )
@@ -479,13 +514,13 @@ def _add_documented_ledger_facts(
         cli=cli,
         receipts=receipts,
         artifact=artifact,
-        date="2025-03-05",
+        date=journey_year.iso_date(3, 5),
         amount="605.00",
         direction="OUTGOING",
         description="Synthetic documented annual IVA purchase 1T",
         taxable_base="500.00",
         iva_amount="105.00",
-        idempotency_key="iva-01-annual-m390-purchase-2025-1t",
+        idempotency_key=f"iva-01-annual-m390-purchase-{year}-1t",
         purchase_evidence_id=purchase_evidence_id,
     )
     _classify_purchase(cli=cli, receipts=receipts, artifact=artifact, transaction_id=purchase)
@@ -567,7 +602,9 @@ def _classify_purchase(
     )
 
 
-def _seed_first_period(*, cli: InstalledCli, receipts: list[SanitizedCommandReceipt], artifact: Path) -> None:
+def _seed_first_period(
+    *, cli: InstalledCli, receipts: list[SanitizedCommandReceipt], artifact: Path, journey_year: IvaJourneyYear
+) -> None:
     _run(
         cli,
         receipts,
@@ -578,7 +615,7 @@ def _seed_first_period(*, cli: InstalledCli, receipts: list[SanitizedCommandRece
             "iva-wallet",
             "seed",
             "--filing-year",
-            str(_YEAR),
+            str(journey_year.year),
             "--period",
             "1T",
             "--amount",
@@ -594,6 +631,7 @@ def _file_quarter(
     cli: InstalledCli,
     receipts: list[SanitizedCommandReceipt],
     artifact: Path,
+    journey_year: IvaJourneyYear,
     period: str,
     expected: Decimal,
 ) -> IvaQuarterlyLocalFilingReceipt:
@@ -602,7 +640,18 @@ def _file_quarter(
             cli,
             receipts,
             artifact,
-            ("app", "modelo", "work", "create", "--modelo", "303", "--year", str(_YEAR), "--period", period),
+            (
+                "app",
+                "modelo",
+                "work",
+                "create",
+                "--modelo",
+                "303",
+                "--year",
+                str(journey_year.year),
+                "--period",
+                period,
+            ),
             result_keys=("work_unit_id",),
         )
     )
@@ -620,11 +669,11 @@ def _file_quarter(
                     "work",
                     "attest-m303-exonerado-390",
                     "--year",
-                    str(_YEAR),
+                    str(journey_year.year),
                     "--period",
                     period,
                     "--observed-at",
-                    _FINAL_QUARTER_OBSERVED_AT,
+                    journey_year.noon_utc(12, 31),
                 ),
                 result_keys=("attachment_id", "sha256"),
             )
@@ -720,14 +769,17 @@ def _file_quarter(
 
 
 def _calculate_and_verify_m390(
-    *, cli: InstalledCli, receipts: list[SanitizedCommandReceipt], artifact: Path
+    *, cli: InstalledCli, receipts: list[SanitizedCommandReceipt], artifact: Path, journey_year: IvaJourneyYear
 ) -> tuple[str, str, str, str, dict[str, Decimal]]:
     created = _result(
         _run(
             cli,
             receipts,
             artifact,
-            ("app", "modelo", "work", "create", "--modelo", "390", "--year", str(_YEAR), "--period", "0A"),
+            (
+                *("app", "modelo", "work", "create", "--modelo", "390"),
+                *("--year", str(journey_year.year), "--period", _ANNUAL_PERIOD),
+            ),
             result_keys=("work_unit_id",),
         )
     )
@@ -789,6 +841,7 @@ def _assert_local_quarter_chain(
     receipts: list[SanitizedCommandReceipt],
     artifact: Path,
     filings: tuple[IvaQuarterlyLocalFilingReceipt, ...],
+    journey_year: IvaJourneyYear,
 ) -> None:
     if tuple(item.period for item in filings) not in (("1T",), _QUARTERS):
         raise IvaCliJourneyError("quarterly source chain is incomplete or out of order")
@@ -801,7 +854,7 @@ def _assert_local_quarter_chain(
         record = _unique_row(record_listing, "records", "filing_record_id", filing.filing_record_id)
         if (
             work.get("modelo") != "303"
-            or _period_code(work.get("period")) != filing.period
+            or _period_code(work.get("period"), filing_year=journey_year.year) != filing.period
             or work.get("filed_calculation_revision_id") != filing.calculation_revision_id
             or work.get("current_filing_record_id") != filing.filing_record_id
         ):
@@ -828,8 +881,8 @@ def _decimal_casilla(payload: Mapping[str, object], casilla_id: str) -> Decimal:
         raise IvaCliJourneyError(f"Modelo calculation returned no decimal {casilla_id}") from exc
 
 
-def _period_code(value: object) -> str | None:
-    if not isinstance(value, Mapping) or value.get("filing_year") != _YEAR:
+def _period_code(value: object, *, filing_year: int) -> str | None:
+    if not isinstance(value, Mapping) or value.get("filing_year") != filing_year:
         return None
     code = value.get("code")
     return code if isinstance(code, str) else None

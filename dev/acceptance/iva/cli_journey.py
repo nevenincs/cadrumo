@@ -1,8 +1,9 @@
-"""Exercise one ordinary 2025/1T Modelo 303 path through installed CLI commands.
+"""Exercise one ordinary 1T Modelo 303 path through installed CLI commands.
 
 The journey deliberately owns no repository or product fixture.  It makes each
 write through the installed ``aeat`` command, retains only a sanitized command
-receipt, and independently checks the one expected IVA result.
+receipt, and independently checks the one expected IVA result.  The filing
+year is explicit; every date and synthetic reference is derived from it.
 """
 
 from __future__ import annotations
@@ -28,7 +29,8 @@ from dev.acceptance.installed_cli import (
     profile_create_args,
 )
 
-_YEAR: Final = 2025
+from .filing_year import IvaJourneyYear, require_journey_year, require_m303_developer_header_positions
+
 _PERIOD: Final = "1T"
 _SALE_IVA: Final = Decimal("21.00")
 _PURCHASE_IVA: Final = Decimal("10.50")
@@ -42,8 +44,6 @@ _PRODUCT_IDENTITY_EXPORT_REFUSAL_DIAGNOSTIC: Final = (
     "them. Cadrumo does not fill them with blanks or placeholders. The calculation and its verification "
     "remain valid; exporting needs a reviewed program identifier and developer NIF from the software developer."
 )
-# The 2025 DP30300 record design reserves positions 93-96 and 101-109 for these two fields.
-_PRODUCT_IDENTITY_EXPORT_REFUSAL_POSITIONS: Final = ("DP30300", "93-96", "101-109")
 _AUTHORITY_GENERATION: Final = authority_generation
 
 
@@ -67,6 +67,7 @@ class IvaM303CliJourneyReceipt:
     """Minimal durable evidence of the public ordinary-M303 calculation path."""
 
     schema_version: str
+    filing_year: int
     executable: str
     executable_sha256: str
     source_identity: str
@@ -107,8 +108,17 @@ def run_iva_m303_cli_journey(
     authority_root: Path,
     storage_root: Path,
     artifact_root: Path,
+    year: int,
 ) -> IvaM303CliJourneyReceipt:
-    """Capture and calculate the smallest truthful ordinary 2025/1T IVA case."""
+    """Capture and calculate the smallest truthful ordinary ``year``/1T IVA case.
+
+    Raises:
+        IvaFilingYearUnsupportedError: Before any side effect, when the published
+            authority has no Modelo 303 1T revision authored for ``year``, or its
+            record design is not one whose developer-header positions the journey holds.
+    """
+    journey_year = require_journey_year(authority_root=authority_root, year=year, coordinates=(("303", _PERIOD),))
+    expected_refusal_positions = require_m303_developer_header_positions(journey_year, period=_PERIOD)
     if storage_root.exists() and any(storage_root.iterdir()):
         raise IvaCliJourneyError(f"storage root must be fresh and empty: {storage_root}")
     storage_root.mkdir(parents=True, exist_ok=True)
@@ -125,7 +135,7 @@ def run_iva_m303_cli_journey(
     receipts: list[SanitizedCommandReceipt] = []
     profile_start = len(cli.commands)
     try:
-        cli.create_profile(year=_YEAR)
+        cli.create_profile(year=year)
     except InstalledCliError as exc:
         raise IvaCliJourneyError("config profile create refused") from exc
     profile_commands = cli.commands[profile_start:]
@@ -134,7 +144,7 @@ def run_iva_m303_cli_journey(
     receipts.extend(
         (
             _command_receipt(
-                args=profile_create_args(_YEAR),
+                args=profile_create_args(year),
                 evidence=profile_commands[0],
                 artifact=artifact,
                 result_ids=(),
@@ -169,7 +179,7 @@ def run_iva_m303_cli_journey(
                 "ledger",
                 "add",
                 "--date",
-                "2025-02-15",
+                journey_year.iso_date(2, 15),
                 "--amount",
                 "121.00",
                 "--direction",
@@ -189,7 +199,7 @@ def run_iva_m303_cli_journey(
                 "--source-jurisdiction",
                 "ES",
                 "--idempotency-key",
-                "iva-acceptance-sale-2025-1t",
+                f"iva-acceptance-sale-{year}-1t",
             ),
             result_keys=("transaction_id",),
         )
@@ -204,7 +214,8 @@ def run_iva_m303_cli_journey(
                 kind="issued",
                 counterparty_name="Synthetic client SL",
                 counterparty_nif="A58818501",
-                invoice_number="IVA-ISS-2025-1T",
+                invoice_number=f"IVA-ISS-{year}-1T",
+                invoice_date=journey_year.iso_date(2, 15),
                 iva_category="domestic_general",
                 line=_invoice_line(description="Synthetic sale", subtotal="100.00", iva_amount="21.00"),
             ),
@@ -230,7 +241,7 @@ def run_iva_m303_cli_journey(
                 "ledger",
                 "add",
                 "--date",
-                "2025-02-18",
+                journey_year.iso_date(2, 18),
                 "--amount",
                 "60.50",
                 "--direction",
@@ -254,7 +265,7 @@ def run_iva_m303_cli_journey(
                 "--source-jurisdiction",
                 "ES",
                 "--idempotency-key",
-                "iva-acceptance-purchase-2025-1t",
+                f"iva-acceptance-purchase-{year}-1t",
             ),
             result_keys=("transaction_id",),
         )
@@ -288,7 +299,8 @@ def run_iva_m303_cli_journey(
                 kind="received",
                 counterparty_name="Synthetic supplier SL",
                 counterparty_nif="A58818501",
-                invoice_number="IVA-REC-2025-1T",
+                invoice_number=f"IVA-REC-{year}-1T",
+                invoice_date=journey_year.iso_date(2, 15),
                 iva_category="domestic_general",
                 line=_invoice_line(description="Synthetic purchase", subtotal="50.00", iva_amount="10.50"),
             ),
@@ -329,7 +341,7 @@ def run_iva_m303_cli_journey(
             "iva-wallet",
             "seed",
             "--filing-year",
-            str(_YEAR),
+            str(year),
             "--period",
             _PERIOD,
             "--amount",
@@ -343,7 +355,7 @@ def run_iva_m303_cli_journey(
             reopened,
             receipts,
             artifact,
-            ("app", "modelo", "work", "create", "--modelo", "303", "--year", str(_YEAR), "--period", _PERIOD),
+            ("app", "modelo", "work", "create", "--modelo", "303", "--year", str(year), "--period", _PERIOD),
             result_keys=("work_unit_id",),
         )
     )
@@ -406,7 +418,7 @@ def run_iva_m303_cli_journey(
             f"status={verification_status}; findings={verification.get('finding_count')}"
         )
 
-    export_artifact = artifact_root / "m303-2025-1t.fichero-boe"
+    export_artifact = artifact_root / f"m303-{year}-1t.fichero-boe"
     export_document = _run(
         export_cli,
         receipts,
@@ -424,10 +436,10 @@ def run_iva_m303_cli_journey(
         observed_positions = tuple(
             refusal_context.get(key) for key in ("record", "program_positions", "developer_positions")
         )
-        if observed_positions != _PRODUCT_IDENTITY_EXPORT_REFUSAL_POSITIONS:
+        if observed_positions != expected_refusal_positions:
             raise IvaCliJourneyError(
                 f"export refusal located the developer header fields at {observed_positions}, "
-                f"not the official {_PRODUCT_IDENTITY_EXPORT_REFUSAL_POSITIONS}"
+                f"not the official {expected_refusal_positions}"
             )
         export_status = "verified_export_blocked"
         export_failure_code = _PRODUCT_IDENTITY_EXPORT_REFUSAL_CODE
@@ -452,6 +464,7 @@ def run_iva_m303_cli_journey(
             raise IvaCliJourneyError("Modelo 303 export wrote an empty artifact")
         export_layout_id, parsed_resultado = _parse_exported_iva_resultado(
             authority_root=authority_root,
+            journey_year=journey_year,
             payload=payload,
         )
         if parsed_resultado != _EXPECTED_RESULT:
@@ -470,7 +483,8 @@ def run_iva_m303_cli_journey(
 
     descriptor = authority_root.resolve(strict=True) / "authority.current.json"
     return IvaM303CliJourneyReceipt(
-        schema_version="iva-01-installed-cli-journey-v1",
+        schema_version="iva-01-installed-cli-journey-v2",
+        filing_year=year,
         executable=str(cli.executable),
         executable_sha256=_sha256_path(cli.executable),
         source_identity=_checkout_source_identity(),
@@ -508,6 +522,7 @@ def _invoice_add_args(
     counterparty_name: str,
     counterparty_nif: str,
     invoice_number: str,
+    invoice_date: str,
     iva_category: str,
     line: str,
 ) -> tuple[str, ...]:
@@ -525,7 +540,7 @@ def _invoice_add_args(
         "--invoice-number",
         invoice_number,
         "--invoice-date",
-        "2025-02-15",
+        invoice_date,
         "--country-code",
         "ES",
         "--iva-category",
@@ -681,13 +696,15 @@ def _require_export_receipt(
         raise IvaCliJourneyError("Modelo 303 export digest receipt does not match its artifact")
 
 
-def _parse_exported_iva_resultado(*, authority_root: Path, payload: bytes) -> tuple[str, Decimal]:
+def _parse_exported_iva_resultado(
+    *, authority_root: Path, journey_year: IvaJourneyYear, payload: bytes
+) -> tuple[str, Decimal]:
     """Read the selected official M303 layout and its semantic IVA result field."""
     descriptor = authority_root.resolve(strict=True) / "authority.current.json"
     try:
         authority = IndexedRegistryAuthority(descriptor)
         with authority.operation() as operation:
-            snapshot = operation.snapshot("303", filing_year=_YEAR, period=_PERIOD)
+            snapshot = operation.snapshot("303", filing_year=journey_year.year, period=_PERIOD)
             layout = resolve_export_layout(snapshot).layout
         parsed = parse_export_payload(layout, payload)
     except Exception as exc:

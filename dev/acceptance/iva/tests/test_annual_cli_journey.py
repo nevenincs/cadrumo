@@ -31,9 +31,11 @@ def test_installed_cli_2025_1t_local_filing_establishes_annual_foundation(
         authority_root=authority_root,
         storage_root=tmp_path / "secure-store",
         artifact_root=tmp_path / "private-source-artifacts",
+        year=2025,
     )
 
     assert receipt.acceptance_ids == ("IVA-01-ANNUAL-FOUNDATION-2025-1T",)
+    assert receipt.filing_year == 2025
     assert Decimal(receipt.iva_resultado) == Decimal("21.00") - Decimal("10.50")
     assert receipt.calculation_revision_id
     assert receipt.verification_report_id
@@ -74,9 +76,11 @@ def test_installed_cli_four_local_303_quarters_verify_2025_m390(tmp_path: Path, 
         authority_root=authority_root,
         storage_root=tmp_path / "secure-store",
         artifact_root=tmp_path / "private-source-artifacts",
+        year=2025,
     )
 
     assert receipt.acceptance_ids == ("IVA-01-ANNUAL-M390-2025-0A",)
+    assert receipt.filing_year == 2025
     assert tuple(item.period for item in receipt.quarterly_filings) == ("1T", "2T", "3T", "4T")
     assert tuple(Decimal(item.iva_resultado) for item in receipt.quarterly_filings) == (
         Decimal("315.00"),

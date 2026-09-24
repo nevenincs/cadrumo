@@ -1,7 +1,9 @@
 """Installed TUI IVA capture, classification, and fresh-session reopen proof.
 
 The bounded journey deliberately stops at persisted Ledger facts.  It does not
-create a Modelo 303 work unit, attest, calculate, verify, or export.
+create a Modelo 303 work unit, attest, calculate, verify, or export.  Its two
+synthetic rows fall in the first quarter of the explicit filing year, which the
+published authority must cover for Modelo 303 1T before anything is written.
 """
 
 from __future__ import annotations
@@ -14,6 +16,7 @@ import os
 import secrets
 from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass
+from datetime import date
 from decimal import Decimal
 from importlib import metadata, resources
 from pathlib import Path
@@ -33,7 +36,10 @@ from dev.acceptance.income_tax.installed_tui_child import (
     write_installed_tui_failure_receipt,
 )
 
-_SCHEMA_VERSION: Final = "iva-01-installed-tui-capture-reopen-v1"
+from .filing_year import require_journey_year
+
+_SCHEMA_VERSION: Final = "iva-01-installed-tui-capture-reopen-v2"
+_PERIOD: Final = "1T"
 _N26_HEADER: Final = "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID"
 _SOURCE_MODULES: Final[tuple[tuple[str, str], ...]] = (
     ("cadrumo.application.ledger.actions_manual", "src/cadrumo/application/ledger/actions_manual.py"),
@@ -77,26 +83,28 @@ class _SyntheticIvaRow:
     deduction_fact_kind: str
 
 
-_SYNTHETIC_ROWS: Final[tuple[_SyntheticIvaRow, _SyntheticIvaRow]] = (
-    _SyntheticIvaRow(
-        entry_date="2025-02-15",
-        counterparty="IVA TUI sale",
-        payment_reference="iva-tui-sale",
-        signed_amount="121.00",
-        taxable_base="100.00",
-        iva_amount="21.00",
-        deduction_fact_kind="",
-    ),
-    _SyntheticIvaRow(
-        entry_date="2025-02-18",
-        counterparty="IVA TUI purchase",
-        payment_reference="iva-tui-purchase",
-        signed_amount="-60.50",
-        taxable_base="50.00",
-        iva_amount="10.50",
-        deduction_fact_kind="domestic_current",
-    ),
-)
+def _synthetic_rows(year: int) -> tuple[_SyntheticIvaRow, _SyntheticIvaRow]:
+    """Return the two transient rows, dated inside the first quarter of ``year``."""
+    return (
+        _SyntheticIvaRow(
+            entry_date=date(year, 2, 15).isoformat(),
+            counterparty="IVA TUI sale",
+            payment_reference="iva-tui-sale",
+            signed_amount="121.00",
+            taxable_base="100.00",
+            iva_amount="21.00",
+            deduction_fact_kind="",
+        ),
+        _SyntheticIvaRow(
+            entry_date=date(year, 2, 18).isoformat(),
+            counterparty="IVA TUI purchase",
+            payment_reference="iva-tui-purchase",
+            signed_amount="-60.50",
+            taxable_base="50.00",
+            iva_amount="10.50",
+            deduction_fact_kind="domestic_current",
+        ),
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -134,6 +142,7 @@ class InstalledIvaTuiReceipt:
 
     schema_version: str
     status: Literal["proven"]
+    filing_year: int
     partial_acceptance_ids: tuple[str, ...]
     acceptance_scope: Literal["partial_ledger_capture_classification_reopen"]
     tui_only_path: str
@@ -369,12 +378,12 @@ def _visible_text(widget: Any) -> str:
     return str(widget.render()).strip()
 
 
-def _write_synthetic_statement(scratch: Path) -> Path:
+def _write_synthetic_statement(scratch: Path, synthetic_rows: tuple[_SyntheticIvaRow, ...]) -> Path:
     """Create the private, transient two-row synthetic bank statement."""
     scratch.mkdir(parents=True, exist_ok=True)
     statement = scratch / "iva-installed-tui.csv"
     rows = [_N26_HEADER]
-    for item in _SYNTHETIC_ROWS:
+    for item in synthetic_rows:
         rows.append(
             ",".join(
                 (
@@ -422,7 +431,9 @@ async def _import_statement(pilot: Any, *, statement: Path) -> None:
     await wait_for_public_selector(pilot, "#ledger-import-preview-button", polls=180)
 
 
-async def _resolve_imported_transaction_ids(pilot: Any) -> tuple[str, str]:
+async def _resolve_imported_transaction_ids(
+    pilot: Any, synthetic_rows: tuple[_SyntheticIvaRow, ...]
+) -> tuple[str, str]:
     """Resolve both opaque row identities from their unique visible synthetic labels."""
     from textual.widgets import DataTable
 
@@ -435,13 +446,13 @@ async def _resolve_imported_transaction_ids(pilot: Any) -> tuple[str, str]:
             "installed Ledger Entries projection was empty after confirmed import",
             diagnostic=public_surface_diagnostic(pilot),
         )
-    if table.row_count != len(_SYNTHETIC_ROWS):
+    if table.row_count != len(synthetic_rows):
         raise InstalledTuiChildError(
             "installed Ledger Entries projection count differs from the confirmed import",
             diagnostic=public_surface_diagnostic(pilot),
         )
     resolved: list[str] = []
-    for item in _SYNTHETIC_ROWS:
+    for item in synthetic_rows:
         matches = [
             row_key
             for row_key in table.rows
@@ -565,6 +576,7 @@ def _capture_child(
     profile_label: str,
     passphrase: str,
     scratch: Path,
+    year: int,
     expected_manifest_sha256: str,
     expected_modules: tuple[tuple[str, str], ...],
 ) -> _CaptureChildReceipt:
@@ -576,7 +588,8 @@ def _capture_child(
     )
     authority = _child_authority()
     _assert_bundled_authority(authority)
-    statement = _write_synthetic_statement(scratch)
+    synthetic_rows = _synthetic_rows(year)
+    statement = _write_synthetic_statement(scratch, synthetic_rows)
     transaction_ids: tuple[str, str] | None = None
     classifications = 0
 
@@ -590,8 +603,8 @@ def _capture_child(
     async def drive(pilot: Any) -> None:
         nonlocal classifications, transaction_ids
         await _import_statement(pilot, statement=statement)
-        transaction_ids = await _resolve_imported_transaction_ids(pilot)
-        for transaction_id, scenario_row in zip(transaction_ids, _SYNTHETIC_ROWS, strict=True):
+        transaction_ids = await _resolve_imported_transaction_ids(pilot, synthetic_rows)
+        for transaction_id, scenario_row in zip(transaction_ids, synthetic_rows, strict=True):
             await _classify_transaction(pilot, transaction_id=transaction_id, scenario_row=scenario_row)
             classifications += 1
         pilot.app.exit()
@@ -723,6 +736,7 @@ def _child_parser() -> argparse.ArgumentParser:
     parser.add_argument("--child-mode", required=True, choices=("capture", "reopen"))
     parser.add_argument("--workspace-root", required=True, type=Path)
     parser.add_argument("--receipt", required=True, type=Path)
+    parser.add_argument("--year", required=True, type=int)
     parser.add_argument("--scratch", type=Path)
     parser.add_argument("--profile-label", default="iva-installed-tui")
     parser.add_argument("--source-manifest-sha256", required=True)
@@ -744,6 +758,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 profile_label=args.profile_label,
                 passphrase=read_passphrase_from_stdin(),
                 scratch=args.scratch,
+                year=args.year,
                 expected_manifest_sha256=args.source_manifest_sha256,
                 expected_modules=modules,
             )
@@ -791,6 +806,7 @@ def _readback_canonical_fields(
     authority_root: Path,
     passphrase: str,
     transaction_ids: tuple[str, str],
+    synthetic_rows: tuple[_SyntheticIvaRow, ...],
 ) -> tuple[str, tuple[str, ...]]:
     """Read public persisted fields in fresh installed CLI processes, without writes.
 
@@ -810,7 +826,7 @@ def _readback_canonical_fields(
                 "iva_category": "domestic_general",
             },
         )
-        for transaction_id, scenario_row in zip(transaction_ids, _SYNTHETIC_ROWS, strict=True)
+        for transaction_id, scenario_row in zip(transaction_ids, synthetic_rows, strict=True)
     )
     cli = InstalledCli(
         executable,
@@ -926,8 +942,15 @@ def run_installed_tui_capture_reopen(
     workspace_root: Path,
     authority_root: Path,
     output_root: Path,
+    year: int,
 ) -> InstalledIvaTuiReceipt:
-    """Build/install the current source, then run capture, fresh TUI reopen, and read-only continuation."""
+    """Build/install the current source, then run capture, fresh TUI reopen, and read-only continuation.
+
+    Raises:
+        IvaFilingYearUnsupportedError: Before the output root is created, when the
+            published authority has no Modelo 303 1T revision authored for ``year``.
+    """
+    journey_year = require_journey_year(authority_root=authority_root, year=year, coordinates=(("303", _PERIOD),))
     root = _require_empty_directory(output_root, label="IVA installed-TUI output root")
     workspace = workspace_root.resolve(strict=True)
     authority = _authority_identity(authority_root)
@@ -968,6 +991,8 @@ def run_installed_tui_capture_reopen(
             "capture",
             "--workspace-root",
             str(workspace),
+            "--year",
+            str(journey_year.year),
             "--scratch",
             str(scratch),
             "--receipt",
@@ -1010,6 +1035,8 @@ def run_installed_tui_capture_reopen(
             "reopen",
             "--workspace-root",
             str(workspace),
+            "--year",
+            str(journey_year.year),
             "--receipt",
             str(reopen_path),
             "--source-manifest-sha256",
@@ -1047,10 +1074,12 @@ def run_installed_tui_capture_reopen(
         authority_root=authority_root,
         passphrase=passphrase,
         transaction_ids=transaction_ids,
+        synthetic_rows=_synthetic_rows(journey_year.year),
     )
     return InstalledIvaTuiReceipt(
         schema_version=_SCHEMA_VERSION,
         status="proven",
+        filing_year=journey_year.year,
         partial_acceptance_ids=("V1", "V2", "V10"),
         acceptance_scope="partial_ledger_capture_classification_reopen",
         tui_only_path="installed_tui_capture_classify_then_fresh_tui_entries_reopen",

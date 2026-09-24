@@ -1,9 +1,10 @@
-"""Installed-CLI acceptance for one negative 2025/4T Modelo 303 filing.
+"""Installed-CLI acceptance for one negative 4T Modelo 303 filing.
 
 The scenario records one synthetic deductible purchase and no sale, then proves
 that a locally filed negative result remains local and pending.  ``compensar``
 creates one available IVA compensation lot, while ``devolver`` creates none.
-It never exports or submits anything to AEAT.
+It never exports or submits anything to AEAT.  The filing year is explicit and
+every date and synthetic reference is derived from it.
 """
 
 from __future__ import annotations
@@ -27,15 +28,11 @@ from .cli_journey import (
     _run,
     _sha256_path,
 )
+from .filing_year import require_journey_year
 from .multirate_cli_journey import _create_profile
 
 RefundElection = Literal["compensar", "devolver"]
 
-_ACCEPTANCE_IDS: Final[Mapping[RefundElection, str]] = {
-    "compensar": "IVA-01-NEGATIVE-2025-4T-COMPENSAR",
-    "devolver": "IVA-01-NEGATIVE-2025-4T-DEVOLVER",
-}
-_YEAR: Final = 2025
 _PERIOD: Final = "4T"
 _PRIOR_PERIOD: Final = "3T"
 _PURCHASE_IVA: Final = Decimal("10.50")
@@ -50,6 +47,7 @@ class IvaNegative4TCliJourneyReceipt:
 
     schema_version: str
     acceptance_ids: tuple[str, ...]
+    filing_year: int
     executable: str
     executable_sha256: str
     source_identity: str
@@ -88,9 +86,19 @@ def run_iva_negative_4t_cli_journey(
     authority_root: Path,
     storage_root: Path,
     artifact_root: Path,
+    year: int,
     refund_election: RefundElection = "compensar",
 ) -> IvaNegative4TCliJourneyReceipt:
-    """File one 2025/4T local negative election, then reopen its wallet history."""
+    """File one ``year``/4T local negative election, then reopen its wallet history.
+
+    Raises:
+        IvaFilingYearUnsupportedError: Before any side effect, when the published
+            authority lacks a Modelo 303 revision authored for ``year`` in the
+            seeded 3T or the filed 4T.
+    """
+    journey_year = require_journey_year(
+        authority_root=authority_root, year=year, coordinates=(("303", _PRIOR_PERIOD), ("303", _PERIOD))
+    )
     if storage_root.exists() and any(storage_root.iterdir()):
         raise IvaCliJourneyError(f"storage root must be fresh and empty: {storage_root}")
     storage_root.mkdir(parents=True, exist_ok=True)
@@ -106,7 +114,7 @@ def run_iva_negative_4t_cli_journey(
     )
     receipts: list[SanitizedCommandReceipt] = []
     try:
-        _create_profile(cli=cli, receipts=receipts, artifact=artifact)
+        _create_profile(cli=cli, receipts=receipts, artifact=artifact, journey_year=journey_year)
     except InstalledCliError as exc:
         raise IvaCliJourneyError("config profile create refused") from exc
 
@@ -131,7 +139,7 @@ def run_iva_negative_4t_cli_journey(
                 "ledger",
                 "add",
                 "--date",
-                "2025-12-15",
+                journey_year.iso_date(12, 15),
                 "--amount",
                 "60.50",
                 "--direction",
@@ -155,7 +163,7 @@ def run_iva_negative_4t_cli_journey(
                 "--source-jurisdiction",
                 "ES",
                 "--idempotency-key",
-                "iva-01-negative-2025-4t-purchase",
+                f"iva-01-negative-{year}-4t-purchase",
             ),
             result_keys=("transaction_id",),
         )
@@ -197,9 +205,9 @@ def run_iva_negative_4t_cli_journey(
                 "--counterparty-nif",
                 "A58818501",
                 "--invoice-number",
-                "IVA-REC-NEGATIVE-2025-4T",
+                f"IVA-REC-NEGATIVE-{year}-4T",
                 "--invoice-date",
-                "2025-12-15",
+                journey_year.iso_date(12, 15),
                 "--country-code",
                 "ES",
                 "--iva-category",
@@ -238,7 +246,7 @@ def run_iva_negative_4t_cli_journey(
             "iva-wallet",
             "seed",
             "--filing-year",
-            str(_YEAR),
+            str(year),
             "--period",
             _PRIOR_PERIOD,
             "--amount",
@@ -258,11 +266,11 @@ def run_iva_negative_4t_cli_journey(
                 "work",
                 "attest-m303-exonerado-390",
                 "--year",
-                str(_YEAR),
+                str(year),
                 "--period",
                 _PERIOD,
                 "--observed-at",
-                "2025-12-31T12:00:00+00:00",
+                journey_year.noon_utc(12, 31),
             ),
             result_keys=("attachment_id", "sha256"),
         )
@@ -274,7 +282,7 @@ def run_iva_negative_4t_cli_journey(
             work_cli,
             receipts,
             artifact,
-            ("app", "modelo", "work", "create", "--modelo", "303", "--year", str(_YEAR), "--period", _PERIOD),
+            ("app", "modelo", "work", "create", "--modelo", "303", "--year", str(year), "--period", _PERIOD),
             result_keys=("work_unit_id",),
         )
     )
@@ -368,18 +376,19 @@ def run_iva_negative_4t_cli_journey(
             history_cli,
             receipts,
             artifact,
-            ("app", "live", "iva-wallet", "history", "--as-of-year", str(_YEAR)),
+            ("app", "live", "iva-wallet", "history", "--as-of-year", str(year)),
             result_keys=(),
         )
     )
     wallet_row_count, wallet_generated, wallet_available, wallet_lot_count, wallet_remaining = _assert_wallet_history(
-        history, refund_election=refund_election
+        history, refund_election=refund_election, filing_year=year
     )
 
     descriptor = authority_root.resolve(strict=True) / "authority.current.json"
     return IvaNegative4TCliJourneyReceipt(
-        schema_version="iva-01-negative-2025-4t-installed-cli-journey-v2",
-        acceptance_ids=(_acceptance_id(refund_election),),
+        schema_version="iva-01-negative-4t-installed-cli-journey-v3",
+        acceptance_ids=(_acceptance_id(refund_election, filing_year=year),),
+        filing_year=year,
         executable=str(cli.executable),
         executable_sha256=_sha256_path(cli.executable),
         source_identity=_checkout_source_identity(),
@@ -420,21 +429,21 @@ def _decimal_casilla(calculated: Mapping[str, object], casilla_id: str) -> Decim
 
 
 def _assert_wallet_history(
-    history: Mapping[str, object], *, refund_election: RefundElection
+    history: Mapping[str, object], *, refund_election: RefundElection, filing_year: int
 ) -> tuple[int, Decimal, Decimal, int, Decimal | None]:
     """Validate the required 3T seed and the election-specific 4T wallet result."""
-    if history.get("as_of_year") != _YEAR:
+    if history.get("as_of_year") != filing_year:
         raise IvaCliJourneyError("fresh-process IVA wallet history returned another as-of year")
     rows = history.get("rows")
     row_count = history.get("row_count")
     if not isinstance(rows, list) or not isinstance(row_count, int) or row_count != len(rows):
         raise IvaCliJourneyError("fresh-process IVA wallet history returned an invalid row projection")
-    prior_seed = _unique_history_row(rows, period=_PRIOR_PERIOD, provenance="operator_seed")
+    prior_seed = _unique_history_row(rows, period=_PRIOR_PERIOD, provenance="operator_seed", filing_year=filing_year)
     if _decimal_history_amount(prior_seed, "generated_amount") != _ZERO:
         raise IvaCliJourneyError("fresh-process IVA wallet history did not retain the 3T zero seed")
     if _decimal_history_amount(prior_seed, "available_end_amount") != _ZERO:
         raise IvaCliJourneyError("fresh-process IVA wallet history did not retain the 3T zero availability")
-    filed_row = _unique_history_row(rows, period=_PERIOD, provenance="app_filing")
+    filed_row = _unique_history_row(rows, period=_PERIOD, provenance="app_filing", filing_year=filing_year)
     generated = _decimal_history_amount(filed_row, "generated_amount")
     available = _decimal_history_amount(filed_row, "available_end_amount")
     lot_count = history.get("carry_forward_lot_count")
@@ -455,7 +464,10 @@ def _assert_wallet_history(
     if not isinstance(lots, list) or len(lots) != 1 or not isinstance(lots[0], Mapping):
         raise IvaCliJourneyError("fresh-process IVA wallet history returned no one-lot projection")
     lot = lots[0]
-    if lot.get("source_filing_year") != _YEAR or _period_code(lot.get("source_period")) != _PERIOD:
+    if (
+        lot.get("source_filing_year") != filing_year
+        or _period_code(lot.get("source_period"), filing_year=filing_year) != _PERIOD
+    ):
         raise IvaCliJourneyError("fresh-process IVA wallet lot did not identify the 4T filing")
     if _decimal_history_amount(lot, "generated_amount") != _PURCHASE_IVA:
         raise IvaCliJourneyError("fresh-process IVA wallet lot did not retain the generated credit")
@@ -465,27 +477,27 @@ def _assert_wallet_history(
     return row_count, generated, available, lot_count, remaining
 
 
-def _acceptance_id(refund_election: RefundElection) -> str:
-    """Return the acceptance identifier for the explicit local election."""
-    return _ACCEPTANCE_IDS[refund_election]
+def _acceptance_id(refund_election: RefundElection, *, filing_year: int) -> str:
+    """Return the acceptance identifier for the explicit local election in one filing year."""
+    return f"IVA-01-NEGATIVE-{filing_year}-{_PERIOD}-{refund_election.upper()}"
 
 
-def _unique_history_row(rows: list[object], *, period: str, provenance: str) -> Mapping[str, object]:
+def _unique_history_row(rows: list[object], *, period: str, provenance: str, filing_year: int) -> Mapping[str, object]:
     matches = [
         row
         for row in rows
         if isinstance(row, Mapping)
-        and row.get("year") == _YEAR
+        and row.get("year") == filing_year
         and row.get("provenance") == provenance
-        and _period_code(row.get("period")) == period
+        and _period_code(row.get("period"), filing_year=filing_year) == period
     ]
     if len(matches) != 1:
         raise IvaCliJourneyError(f"fresh-process IVA wallet history did not return one {period} {provenance} row")
     return cast(Mapping[str, object], matches[0])
 
 
-def _period_code(value: object) -> str | None:
-    if not isinstance(value, Mapping) or value.get("filing_year") != _YEAR:
+def _period_code(value: object, *, filing_year: int) -> str | None:
+    if not isinstance(value, Mapping) or value.get("filing_year") != filing_year:
         return None
     code = value.get("code")
     return code if isinstance(code, str) else None
