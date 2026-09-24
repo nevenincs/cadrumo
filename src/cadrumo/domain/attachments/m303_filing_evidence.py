@@ -8,6 +8,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, ValidationError, model_validator
 
+from ...core.filing_year import FilingYear
 from ...core.hashing import canonical_json_bytes, reject_duplicate_json_members, reject_json_constant
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -58,7 +59,7 @@ class M303Exonerado390ApplicabilityAttestation(BaseModel):
     schema_version: Literal[1] = M303_EXONERADO_390_APPLICABILITY_SCHEMA_VERSION
     role: Literal["m303_exonerado_390_applicability"] = M303_EXONERADO_390_APPLICABILITY_ROLE
     asserted_value: M303Exonerado390ApplicabilityAssertion
-    filing_year: int = Field(ge=1)
+    filing_year: FilingYear
     period: Period
     observed_at: UtcInstant
     profile_witness: M303Exonerado390ApplicabilityProfileWitness

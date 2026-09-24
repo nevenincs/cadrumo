@@ -5,8 +5,9 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, model_validator
 
+from ...core.filing_year import FilingYear
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
@@ -61,7 +62,7 @@ class OrdinaryM303FilingEvidenceRequest(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    filing_year: int = Field(ge=1)
+    filing_year: FilingYear
     period: Period
     joint_return_elected: bool
     exonerado_390_applicability_reference: FilingEvidenceReference | None

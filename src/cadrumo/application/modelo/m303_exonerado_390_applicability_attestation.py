@@ -7,8 +7,9 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from pydantic import BaseModel, Field, ValidationError, model_validator
+from pydantic import BaseModel, ValidationError, model_validator
 
+from ...core.filing_year import FilingYear
 from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
@@ -46,7 +47,7 @@ class M303Exonerado390ApplicabilityAttestationRequest(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    filing_year: int = Field(ge=1)
+    filing_year: FilingYear
     period: Period
     asserted_value: M303Exonerado390ApplicabilityAssertion
     observed_at: UtcInstant
