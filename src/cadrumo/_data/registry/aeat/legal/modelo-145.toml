@@ -1,7 +1,7 @@
 [legal."resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
 evidence_tier = "legal_authority"
 authority = "boe"
-kind = "instruction"
+kind = "resolucion"
 corpus_ref = "corpus/normatives/html/boe-a-2011-208-modelo-145.html#primero"
 document_id = "BOE-A-2011-208"
 article = "primero"
@@ -21,7 +21,7 @@ required_text = [
 [legal."resolucion-dgt-2013-12-17-modelo-145:amendment"]
 evidence_tier = "legal_authority"
 authority = "boe"
-kind = "instruction"
+kind = "resolucion"
 corpus_ref = "corpus/normatives/html/boe-a-2014-59-modelo-145-amendment.html#apartado-unico"
 document_id = "BOE-A-2014-59"
 article = "unico"
@@ -41,7 +41,7 @@ required_text = [
 [legal."resolucion-dgt-2014-12-18-modelo-145:amendment"]
 evidence_tier = "legal_authority"
 authority = "boe"
-kind = "instruction"
+kind = "resolucion"
 corpus_ref = "corpus/normatives/html/boe-a-2014-13679-modelo-145-amendment.html#apartado-unico"
 document_id = "BOE-A-2014-13679"
 article = "apartado unico"

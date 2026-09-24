@@ -134,6 +134,10 @@ class LegalReferenceKind(StrEnum):
     DIRECTIVA = auto()
     MANUAL = auto()
     INSTRUCTION = auto()
+    RESOLUCION = auto()
+    """An administrative resolución, such as one approving a form or a non-working-day calendar."""
+    ACUERDO_PARLAMENTARIO = auto()
+    """A parliamentary agreement, such as the Congreso's derogation of a real decreto-ley."""
 
 
 LegalReferenceKindField = Annotated[LegalReferenceKind, BeforeValidator(coerce_enum_member(LegalReferenceKind))]

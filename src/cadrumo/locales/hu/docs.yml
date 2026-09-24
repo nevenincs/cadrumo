@@ -103,8 +103,6 @@ docs:
       informational: csak tájékoztató
       manual: amelyet Ön ad meg
       projection_only: a forrássorából kitöltve
-    legal_kind:
-      instruction: AEAT-útmutató
     length:
       at_least: Legalább {min} karakter
       at_most: Legfeljebb {max} karakter

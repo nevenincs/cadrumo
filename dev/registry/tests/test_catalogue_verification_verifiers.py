@@ -182,6 +182,27 @@ def test_verify_legal_catalogue_rejects_known_bad_roles(
 
 
 @pytest.mark.usefixtures("governed_fact_scope")
+@pytest.mark.parametrize("kind", ["resolucion", "acuerdo_parlamentario"])
+def test_a_kind_with_no_citation_source_is_not_looked_up_in_the_blocklist(kind: str) -> None:
+    """A resolution or parliamentary agreement has no casilla citation category.
+
+    The blocklist is keyed by that category, so these kinds carry no
+    ``legal.source_kind`` mapping and the lookup is skipped rather than asked
+    about a category it does not know, which would refuse every such entry.
+    The same role and article on a ``ley`` is refused (the test above), so the
+    difference here is the kind, not the text.
+    """
+    reference = _legal_reference(
+        ref_id=f"{kind}-probe:art-103",
+        kind=kind,
+        article="103",
+        notes="cuota diferencial",
+    )
+
+    assert verify_legal_catalogue({reference.id: reference}, source_root=bundled_path()) is None
+
+
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_known_bad_citation_matching_is_diacritic_insensitive() -> None:
     reference = _legal_reference()
     blocked = find_known_bad("ley", "77", "cuota integra autonomica", effective_date=reference.effective_from)

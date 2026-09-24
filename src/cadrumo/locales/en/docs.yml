@@ -105,8 +105,6 @@ docs:
       informational: reference only
       manual: you enter
       projection_only: filled from a source row
-    legal_kind:
-      instruction: AEAT instructions
     length:
       at_least: At least {min} characters
       at_most: Up to {max} characters

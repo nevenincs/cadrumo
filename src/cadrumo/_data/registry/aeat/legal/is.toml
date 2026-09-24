@@ -2272,7 +2272,7 @@ required_text = [
 [legal."resolucion-congreso-2026-01-27-derogacion-rdl-16-2025:acuerdo"]
 evidence_tier = "legal_authority"
 authority = "boe"
-kind = "instruction"
+kind = "acuerdo_parlamentario"
 corpus_ref = "corpus/normatives/html/boe-a-2026-2024-derogacion-rdl-16-2025.html#textoxslt"
 document_id = "BOE-A-2026-2024"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-2024"

@@ -10,7 +10,7 @@
 [legal."resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo"]
 evidence_tier = "legal_authority"
 authority = "boe"
-kind = "instruction"
+kind = "resolucion"
 corpus_ref = "corpus/normatives/html/boe-a-2023-23637-dias-inhabiles-2024.html#anexo"
 document_id = "BOE-A-2023-23637"
 article = "anexo"
@@ -32,7 +32,7 @@ required_text = [
 [legal."resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo"]
 evidence_tier = "legal_authority"
 authority = "boe"
-kind = "instruction"
+kind = "resolucion"
 corpus_ref = "corpus/normatives/html/boe-a-2024-26935-dias-inhabiles-2025.html#anexo"
 document_id = "BOE-A-2024-26935"
 article = "anexo"
@@ -54,7 +54,7 @@ required_text = [
 [legal."resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo"]
 evidence_tier = "legal_authority"
 authority = "boe"
-kind = "instruction"
+kind = "resolucion"
 corpus_ref = "corpus/normatives/html/boe-a-2025-23702-dias-inhabiles-2026.html#anexo"
 document_id = "BOE-A-2025-23702"
 article = "anexo"

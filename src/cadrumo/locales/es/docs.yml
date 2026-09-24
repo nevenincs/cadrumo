@@ -104,8 +104,6 @@ docs:
       informational: solo informativas
       manual: que introduce usted
       projection_only: rellenadas desde su fila de origen
-    legal_kind:
-      instruction: Instrucciones AEAT
     length:
       at_least: Al menos {min} caracteres
       at_most: Como máximo {max} caracteres
