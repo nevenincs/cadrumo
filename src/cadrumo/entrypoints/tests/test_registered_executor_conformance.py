@@ -1111,6 +1111,38 @@ def test_every_production_registered_executor_runs_through_the_shared_supervisor
         )
 
 
+@pytest.mark.timeout(90)
+def test_calculate_refused_before_persisting_reports_no_effect(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
+    """A precondition refusal settles REFUSED with NONE, never the open UNKNOWN.
+
+    Modelo 303 filing evidence addressed to a Modelo 130 unit is refused while
+    the executor is still only reading, so nothing can have been written and
+    the truthful effect is NONE.
+    """
+    with _runtime(tmp_path / "calculate-refusal", cleanup=_CloseWitness()) as (driver, registry, profile_id):
+        definition = registry.lookup("modelo.work.calculate")
+        unit = _seeded_modelo_work_unit(profile_id, operation=operation)
+        payload = definition.request_type.model_validate(
+            {
+                "work_unit_id": unit.work_unit_id,
+                "actor": _ACTOR,
+                "ordinary_m303_filing_evidence": {"joint_return_elected": False},
+            },
+            strict=True,
+        )
+
+        _submitted, observed = asyncio.run(
+            driver.run(definition_id=definition.definition_id, subject_ref=unit.work_unit_id, payload=payload)
+        )
+
+        assert observed.projection.lifecycle is OperationLifecycle.TERMINAL
+        assert observed.projection.terminal_condition is OperationTerminalCondition.REFUSED
+        assert observed.projection.refusal_ref == "REFUSED_MODELO_M303_FILING_EVIDENCE"
+        assert observed.projection.effect is OperationEffect.NONE
+
+
 def test_censo_cooperative_cancellation_settles_after_its_irreversible_section(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:

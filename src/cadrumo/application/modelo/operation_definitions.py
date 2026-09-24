@@ -392,7 +392,6 @@ class ModeloWorkCalculateExecutor:
         from .work_lifecycle import ActiveWorkUnitUse, require_active_work_unit
 
         await context.events.phase("modelo.work.calculate.ledger")
-        await context.events.effect(OperationEffect.UNKNOWN)
         payload = request.payload
         ports = self._calculation_action_ports_factory(
             bucket_id=require_active_bucket_id(), operation=context.authority_operation
@@ -408,6 +407,9 @@ class ModeloWorkCalculateExecutor:
             work_unit=work_unit,
             operation=context.authority_operation,
         )
+        # Everything above only reads, so a refusal there truthfully changed
+        # nothing; the outcome is open only once the persisting call begins.
+        await context.events.effect(OperationEffect.UNKNOWN)
         result = await asyncio.to_thread(
             calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
             payload.work_unit_id,
@@ -2355,7 +2357,7 @@ def build_modelo_lifecycle_operation_definitions(
     exported and never composed is capacity nothing can reach, which is the
     shape this population exists to make impossible to ship.
     """
-    return (
+    population = (
         build_modelo_work_calculate_definition(
             calculation_action_ports_factory=calculation_action_ports_factory,
             attachment_store_factory=attachment_store_factory,
@@ -2379,6 +2381,9 @@ def build_modelo_lifecycle_operation_definitions(
             verification_repository_bundle_factory=verification_repository_bundle_factory,
         ),
     )
+    # A registry holds its definitions in definition-id order, so the
+    # population is returned in that order whatever order it is built in.
+    return tuple(sorted(population, key=lambda definition: definition.definition_id))
 
 
 def build_modelo_lifecycle_operation_registrations(
