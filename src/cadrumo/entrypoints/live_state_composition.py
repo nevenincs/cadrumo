@@ -12,9 +12,9 @@ import asyncio
 from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import datetime
 from pathlib import Path
-from typing import Any, Protocol, override
+from typing import Any, override
 
 from ..adapters.outbound.aeat.browser.factory import default_browser_session_factory
 from ..adapters.outbound.aeat.sede.declarations import open_declarations_register, shared_playwright
@@ -67,8 +67,9 @@ from ..application.auth.sessions import AuthenticatedAeatSessionResult, ensure_a
 from ..application.calculations.iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
 from ..application.calculations.observations_repository import iva_wallet_decision_key
 from ..application.live.errors import LiveApplicationError, LiveApplicationInputError
-from ..application.live.filed_data_capture import capture_report_path
+from ..application.live.filed_data_capture import FiledHistoryEventSink, capture_report_path
 from ..application.live.filed_data_ports import FiledDataCapturePort
+from ..application.live.filed_history_operation import FiledHistoryOperationRequest
 from ..application.live.filed_observation_persistence import (
     latest_declarations_by_period,
     persistiva_compensation_history_observations_strict,
@@ -99,7 +100,6 @@ from ..application.live.remote_state_models import (
 from ..application.live.remote_state_outcomes import evidence_ref
 from ..application.live.session import active_verified_session
 from ..application.modelo.work_lifecycle_ports import WorkLifecyclePorts
-from ..application.operations.owner import OperationEventEmitter
 from ..application.storage.sync_runs.records import SyncRunRecordRepositoryProtocol
 from ..core.bucket_pointer import require_active_bucket_id
 from ..core.config import Settings, load_settings
@@ -124,15 +124,6 @@ from ..domain.iva_compensation.reconciliation import (
 )
 
 _WALLET_DIRNAME = Path(storage_location(StorageCategory.LIVE_STATE_IVA_WALLET).subpath).name
-
-
-class _FiledHistoryPullPayload(Protocol):
-    """Fields consumed by the shared filed-history composition boundary."""
-
-    output_root: Path
-    today: date | None
-    limit: int | None
-    dry_run: bool
 
 
 class _SedeNotificationSnapshotQuery(NotificationSnapshotQueryProtocol):
@@ -688,10 +679,10 @@ def aggregate_iva_compensation_history_reports(
 
 
 async def pull_filed_history_with_shared_composition(
-    payload: _FiledHistoryPullPayload,
+    payload: FiledHistoryOperationRequest,
     profile: TaxpayerProfile | None,
     repository: SyncRunRecordRepositoryProtocol | None,
-    events: OperationEventEmitter | None,
+    events: FiledHistoryEventSink | None,
     ports: FiledObservationPersistencePorts,
     filed_data_port: FiledDataCapturePort,
     iva_remote_state_port: IvaRemoteStatePort,

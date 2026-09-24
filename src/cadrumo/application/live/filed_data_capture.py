@@ -56,6 +56,7 @@ from ...core.filing_year import FilingYear
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.operations import OperationEffect
 from ...core.period import Period
 from ...core.register_scoping_signal import RegisterScopingSignal
 from ...core.sync_surface import SyncSurface
@@ -71,8 +72,8 @@ from ..auth.operator_scope_ports import OperatorScopePorts
 from ..calculations.observations_repository import require_observation_envelope_coordinates_current
 from ..calculations.ports import ObservedCasillaValueProtocol
 from ..modelo.filing_chain_reconciliation import FilingReconciliationResult
-from ..operations.events import OperationLogSeverity
-from ..operations.owner import OperationEventEmitter
+from ..operations.events import OperationEventCode, OperationLogSeverity
+from ..operations.models import OperationDiagnosticReference
 from ..storage.sync_runs.persist import record_sync_run
 from ..storage.sync_runs.records import (
     SyncRunRecordReference,
@@ -137,14 +138,51 @@ FILED_HISTORY_NOTIFICATIONS_REFUSAL_CODE = "filed-history.refusal.notifications"
 FILED_HISTORY_STAGE_REFUSAL_CODE = "filed-history.refusal.stage"
 
 
-async def _emit_filed_history_phase(events: OperationEventEmitter | None, phase: str) -> None:
+class FiledHistoryEventSink(Protocol):
+    """Receive the operation facts a supervised filed-history pull publishes.
+
+    Declares only the emitter capabilities filed history uses, so callers that
+    compose the pull need not depend on the executor-owned emitter contract;
+    the supervisor's operation event emitter satisfies it structurally.
+    """
+
+    async def phase(self, phase_code: OperationEventCode) -> None:
+        """Publish a transition to a definition-declared phase."""
+        ...
+
+    async def progress(
+        self,
+        *,
+        completed: int,
+        total: int,
+        unit_code: OperationEventCode | None = None,
+    ) -> None:
+        """Publish bounded unit progress."""
+        del unit_code
+
+    async def log(
+        self,
+        *,
+        code: OperationEventCode,
+        severity: OperationLogSeverity,
+        diagnostic_ref: OperationDiagnosticReference | None = None,
+    ) -> None:
+        """Publish a structured safe-log fact without prose or exceptions."""
+        ...
+
+    async def effect(self, effect: OperationEffect) -> None:
+        """Publish the executor's current truthful effect fact."""
+        ...
+
+
+async def _emit_filed_history_phase(events: FiledHistoryEventSink | None, phase: str) -> None:
     """Publish one operation-declared phase when the composed pull is supervised."""
     if events is not None:
         await events.phase(phase)
 
 
 async def _emit_filed_history_progress(
-    events: OperationEventEmitter | None,
+    events: FiledHistoryEventSink | None,
     *,
     completed: int,
     total: int,
@@ -155,7 +193,7 @@ async def _emit_filed_history_progress(
         await events.progress(completed=completed, total=total, unit_code=unit_code)
 
 
-async def _emit_filed_history_refusal(events: OperationEventEmitter | None, code: str) -> None:
+async def _emit_filed_history_refusal(events: FiledHistoryEventSink | None, code: str) -> None:
     """Publish only a stable failure scope, never local exception prose."""
     if events is not None:
         await events.log(code=code, severity=OperationLogSeverity.WARNING)
@@ -781,7 +819,7 @@ async def _absorb_declarations(
     modelo: str,
     year: int,
     failures: list[FiledDataCaptureFailureRow],
-    events: OperationEventEmitter | None = None,
+    events: FiledHistoryEventSink | None = None,
 ) -> None:
     """Capture and absorb one batch, recording a per-declaration failure as a row.
 
@@ -872,7 +910,7 @@ class _CapturePairPhaseState:
 
 async def _emit_filed_capture_pair_phases(
     *,
-    events: OperationEventEmitter | None,
+    events: FiledHistoryEventSink | None,
     declarations: tuple[FiledRegisterDeclarationProtocol, ...],
     dry_run: bool,
     state: _CapturePairPhaseState,
@@ -902,7 +940,7 @@ async def _capture_filed_data_query_pair(
     limit: int | None,
     dry_run: bool,
     failures: list[FiledDataCaptureFailureRow],
-    events: OperationEventEmitter | None,
+    events: FiledHistoryEventSink | None,
     pair_completed: int,
     pair_total: int,
     phase_state: _CapturePairPhaseState,
@@ -966,7 +1004,7 @@ async def _capture_filed_data_query_pairs(
     limit: int | None,
     dry_run: bool,
     failures: list[FiledDataCaptureFailureRow],
-    events: OperationEventEmitter | None = None,
+    events: FiledHistoryEventSink | None = None,
     pair_completed: int = 0,
     pair_total: int | None = None,
 ) -> int:
@@ -1077,7 +1115,7 @@ async def _announce_bulk_capture_plan(
     *,
     query_pairs: Sequence[tuple[str, int]],
     failures: Sequence[FiledDataCaptureFailureRow],
-    events: OperationEventEmitter | None,
+    events: FiledHistoryEventSink | None,
 ) -> int:
     """Publish initial pair progress and local refusal rows in walk order."""
     pair_total = len(query_pairs) + len(failures)
@@ -1125,7 +1163,7 @@ async def capture_filed_data_bulk(
     limit: int | None = None,
     dry_run: bool = False,
     sync_run_repository: SyncRunRecordRepositoryProtocol | None = None,
-    events: OperationEventEmitter | None = None,
+    events: FiledHistoryEventSink | None = None,
     operation: PinnedAuthorityOperation | None = None,
 ) -> BulkFiledDataCaptureReport:
     """Capture filed declarations across a year range and return a :class:`BulkFiledDataCaptureReport`.
@@ -2036,7 +2074,7 @@ async def _capture_discovered_filed_history(
     limit: int | None,
     dry_run: bool,
     sync_run_repository: SyncRunRecordRepositoryProtocol | None,
-    events: OperationEventEmitter | None = None,
+    events: FiledHistoryEventSink | None = None,
 ) -> BulkFiledDataCaptureReport:
     """Capture the discovered grid with its original modelo order and year span."""
     modelos = tuple(dict.fromkeys(modelo for modelo, _year in walk_pairs))
@@ -2068,7 +2106,7 @@ async def _capture_filed_history_iva_wallet(
     iva_remote_state_port: IvaRemoteStatePort,
     resolved_today: date,
     output_root: Path,
-    events: OperationEventEmitter | None = None,
+    events: FiledHistoryEventSink | None = None,
 ) -> _FiledHistoryIvaWalletStage:
     """Capture the independent IVA wallet stage, retaining its typed partial-failure boundary."""
     try:
@@ -2108,7 +2146,7 @@ async def _capture_filed_history_notifications(
     browser_session_factory: BrowserSessionFactoryPort,
     notifications_ports: NotificationsPorts,
     operator_scope_ports: OperatorScopePorts,
-    events: OperationEventEmitter | None = None,
+    events: FiledHistoryEventSink | None = None,
 ) -> _FiledHistoryNotificationsStage:
     """Capture notifications without allowing an independent failure to erase filed history."""
     try:
@@ -2150,7 +2188,7 @@ async def pull_filed_history(
     dry_run: bool = False,
     discover: FiledHistoryDiscoveryPort = discover_filed_history,
     sync_run_repository: SyncRunRecordRepositoryProtocol | None = None,
-    events: OperationEventEmitter | None = None,
+    events: FiledHistoryEventSink | None = None,
 ) -> FiledHistoryOnboardingRun:
     """Sequence discovery, bulk filed capture, IVA wallet and notificaciones.
 
