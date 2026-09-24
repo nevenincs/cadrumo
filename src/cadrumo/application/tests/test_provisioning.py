@@ -17,10 +17,12 @@ from typing import ClassVar, override
 
 import pytest
 
-from ...core.config import override_settings
+from ...core.config import load_settings, override_settings
 from ...core.errors.hierarchy import CadrumoError, CoreError, CoreValidationError
 from ...core.model_catalogue import ModelRole
 from ...core.optional_extras import OPTIONAL_EXTRAS, MissingOptionalExtraError, OptionalExtra, require_optional_extra
+from ...core.storage_taxonomy import StorageGrouping
+from ...core.storage_taxonomy_locations import storage_tree_targets
 from ...domain.calculations.registry.authority_store import AuthorityDescriptor, AuthorityStoreError
 from ...domain.calculations.registry.errors import AuthorityDescriptorUnavailableError
 from ...tests.loopback_llm import SilentLoopbackHandler, serving_loopback, write_raw_response
@@ -167,8 +169,15 @@ def test_missing_optional_extra_is_not_absorbed_by_an_import_error_handler() -> 
             pytest.fail("the typed refusal was absorbed as an ImportError")
 
 
-def test_storage_provisioning_refuses_missing_explicit_storage_before_materializing_defaults(tmp_path: Path) -> None:
-    """An invalid operator path fails before provisioning creates application-owned paths."""
+@pytest.mark.parametrize("writes_state", [True, False], ids=["writing-command", "side-effect-free-command"])
+def test_storage_provisioning_refuses_missing_explicit_storage_before_materializing_defaults(
+    tmp_path: Path, writes_state: bool
+) -> None:
+    """An invalid operator path fails before provisioning creates application-owned paths.
+
+    A command that writes nothing is still refused: an operator's dependency is
+    checked for every command that runs, not only for the ones that write.
+    """
     root = tmp_path / "state"
     tokens = tmp_path / "operator-tokens"
 
@@ -176,7 +185,7 @@ def test_storage_provisioning_refuses_missing_explicit_storage_before_materializ
         override_settings(cadrumo_local_storage_root=root, cadrumo_token_dir=tokens),
         pytest.raises(CoreValidationError) as refusal,
     ):
-        provision_cli_storage()
+        provision_cli_storage(writes_state=writes_state)
 
     assert refusal.value.context == {
         "state_directory_target": str(tokens),
@@ -185,6 +194,37 @@ def test_storage_provisioning_refuses_missing_explicit_storage_before_materializ
         "explicit_override": True,
     }
     assert not root.exists()
+
+
+def _created_directories(root: Path) -> set[str]:
+    return {path.relative_to(root).as_posix() for path in root.rglob("*") if path.is_dir()}
+
+
+def test_a_side_effect_free_command_is_provisioned_only_its_derived_caches(tmp_path: Path) -> None:
+    """Provisioning a command that writes nothing materialises the cache tree and no state.
+
+    A writing command in a sibling root gets the whole tree, so the narrower
+    result is the scope and not a materialiser that creates nothing.
+    """
+    reading_root = tmp_path / "reading"
+    writing_root = tmp_path / "writing"
+
+    with override_settings(cadrumo_local_storage_root=reading_root):
+        provision_cli_storage(writes_state=False)
+        caches = {
+            target.relative_to(reading_root).as_posix()
+            for target in storage_tree_targets(
+                load_settings(), include_explicit=False, derived_groupings=frozenset({StorageGrouping.CACHE})
+            )
+        }
+    with override_settings(cadrumo_local_storage_root=writing_root):
+        provision_cli_storage(writes_state=True)
+
+    reading = _created_directories(reading_root)
+    assert caches, "the taxonomy must declare caches for this to measure anything"
+    assert caches <= reading
+    assert all(path == "cache" or path.startswith("cache/") for path in reading), sorted(reading)
+    assert _created_directories(writing_root) > reading
 
 
 def test_authority_admission_requires_the_selected_published_authority(tmp_path: Path) -> None:

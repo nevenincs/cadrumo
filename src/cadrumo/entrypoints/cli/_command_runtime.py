@@ -392,11 +392,12 @@ def _invoke_bound_behavior(
         finally:
             clear_staged_machine_secret_payloads()
     if _requires_leaf_preflight(spec):
-        # A runnable command with no context to preflight still needs its
-        # state tree; a group rendering its own help does not.
         from ...application.provisioning import provision_cli_storage
+        from ._profile_authentication_contract import command_needs_state_tree
 
-        provision_cli_storage()
+        # A runnable command with no context to preflight is provisioned here;
+        # a group rendering its own help is not.
+        provision_cli_storage(writes_state=command_needs_state_tree(graph.node(spec.key)))
     try:
         return _invoke_deferred_target(target_ref, bound.arguments)
     except Exception as error:

@@ -84,11 +84,24 @@ def profile_authentication_posture(node: CommandSpecNode) -> ProfileAuthenticati
     return ProfileAuthenticationPosture.RESUME_FALLBACK
 
 
+def command_needs_state_tree(node: CommandSpecNode) -> bool:
+    """Return whether running this command may write state, so its storage tree must exist.
+
+    A command declaring no side effect reads an absent state root as empty.
+    Provisioning it would materialise the very tree such a command reports on,
+    and a profile-reading one would leave that tree behind even when it is
+    refused for want of a profile: a first run would look like an install.
+    Where a profile exists, its registration already provisioned the tree.
+    """
+    return node.spec.policy.side_effects != frozenset({"none"})
+
+
 __all__ = [
     "PROFILE_FREE_CAPABILITIES",
     "ProfileAuthenticationSecrets",
     "ProfileSecretSourceOptions",
     "command_is_profile_free",
+    "command_needs_state_tree",
     "profile_authentication_posture",
     "resolve_profile_secret_model",
     "root_profile_secret_model",

@@ -872,6 +872,7 @@ def storage_tree_targets(
     *,
     include_explicit: bool = True,
     include_derived: bool = True,
+    derived_groupings: frozenset[StorageGrouping] | None = None,
 ) -> tuple[Path, ...]:
     """Return every directory :func:`~core.storage_materialization.ensure_storage_tree` creates.
 
@@ -888,7 +889,8 @@ def storage_tree_targets(
     absent from, :attr:`Settings.model_fields_set`. This lets callers
     distinguish application-owned defaults from operator-owned dependencies
     without maintaining a second taxonomy, including when both resolve to the
-    same path.
+    same path. ``derived_groupings``, when given, narrows the application-owned
+    defaults to those groupings; operator-owned dependencies are never narrowed.
     """
     targets: list[Path] = []
     for location in _ROOT_LOCATIONS:
@@ -896,6 +898,8 @@ def storage_tree_targets(
             continue
         is_explicit = location.settings_field in settings.model_fields_set
         if (is_explicit and not include_explicit) or (not is_explicit and not include_derived):
+            continue
+        if not is_explicit and derived_groupings is not None and location.grouping not in derived_groupings:
             continue
         value = getattr(settings, location.settings_field, None)
         if value is None:

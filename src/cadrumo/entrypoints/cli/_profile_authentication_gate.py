@@ -12,6 +12,7 @@ from ...core.errors.hierarchy import InternalInvariantError
 from ._profile_authentication_contract import (
     ProfileAuthenticationSecrets,
     ProfileSecretSourceOptions,
+    command_needs_state_tree,
     profile_authentication_posture,
     root_profile_secret_model,
 )
@@ -331,10 +332,10 @@ def preflight_parsed_leaf(
     if posture is not ProfileAuthenticationPosture.RESUME_FALLBACK and root is not None:
         _refuse("profile_secrets_inapplicable")
     # The secret-source refusals above are still parse-time refusals and write
-    # nothing; from here on the command runs, so its state tree must exist.
+    # nothing; from here on the command runs, so its storage is provisioned.
     from ...application.provisioning import provision_cli_storage
 
-    provision_cli_storage()
+    provision_cli_storage(writes_state=command_needs_state_tree(node))
     root_state = cast("dict[str, object]", ctx.find_root().ensure_object(dict))
     _configure_root_logging(root_state)
     explicit_target, explicit_label = _resolve_profile_targets(

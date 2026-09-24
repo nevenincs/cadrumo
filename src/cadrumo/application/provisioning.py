@@ -134,17 +134,23 @@ def admit_cli_authority() -> None:
     _LOGGER.debug("CLI authority admitted")
 
 
-def provision_cli_storage() -> None:
+def provision_cli_storage(*, writes_state: bool) -> None:
     """Provision owned storage defaults for a command that parsing has accepted to run.
 
     Explicit storage overrides are dependencies and are validated by the
-    materializer rather than created. Called at dispatch, once parse-time
-    refusals have had their chance, so only a command that will actually run
-    materialises the state tree.
+    materializer rather than created, for every command that runs. Called at
+    dispatch, once parse-time refusals have had their chance. Only a command
+    that may write state materialises the state tree; one that writes nothing
+    gets the derived, rebuildable caches its work may fill, so a first run
+    never looks like a configured install.
     """
     from ..core.storage_materialization import ensure_storage_tree
+    from ..core.storage_taxonomy import StorageGrouping
 
-    ensure_storage_tree(load_settings())
+    ensure_storage_tree(
+        load_settings(),
+        derived_groupings=None if writes_state else frozenset({StorageGrouping.CACHE}),
+    )
 
 
 class DependencyStatus(ProvisioningOutcome):
