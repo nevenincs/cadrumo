@@ -732,6 +732,44 @@ class DescendantRecordBase(DescendantRecordFields):
             return True
         return self.dependencia_economica is True and dependencia_assimilation_available
 
+    def art_58_2_window_anchor_missing(
+        self,
+        filing_year: int,
+        *,
+        context: FamilyFactResolutionContext,
+        dependencia_assimilation_available: bool = False,
+    ) -> bool:
+        """True when an entitling relación has no entry date, so the Art. 58.2 limb cannot fire.
+
+        The coherence validators deliberately accept an adoption or entitling
+        acogimiento recorded before the operator holds its inscription or
+        resolución date. The age-independent increase then has no window to
+        measure from, which under-grants: the safe direction, but a silent one
+        unless something says so.
+
+        Only a state that changes an outcome is reported. A relación the statute
+        excludes from the limb has no anchor to be missing; a descendant failing
+        the Art. 58.1 non-income conditions carries no mínimo for the increase to
+        attach to; and a descendant already under three takes the increase
+        through the ordinary limb regardless. The income ceilings are not applied
+        because an absent rentas figure is non-excluding.
+
+        *dependencia_assimilation_available* is forwarded to the household limb:
+        a non-cohabiting descendant reaching the mínimo through the economic
+        dependency assimilation loses exactly what a cohabiting one does.
+        """
+        if self.relacion not in descendant_relacion_entitling_tokens():
+            return False
+        if not self.meets_non_income_conditions(
+            filing_year,
+            context=context,
+            dependencia_assimilation_available=dependencia_assimilation_available,
+        ):
+            return False
+        if self.age_at_year_end(filing_year) < context.integer("lirpf-art-58-under-three-maximum-age"):
+            return False
+        return self.art_58_2_entry_date() is None
+
     def is_eligible_menor_tres(self, filing_year: int, *, context: FamilyFactResolutionContext) -> bool:
         """True when the descendant is under three at the devengo date and cohabits.
 

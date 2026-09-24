@@ -204,3 +204,41 @@ def test_a_suppressed_household_is_still_excluded_from_both_disclosures() -> Non
 
     assert _rentas_advisories() == ()
     assert _entry_date_advisories() == ()
+
+
+def _kinds() -> set[str]:
+    return {diagnostic.source_kind for diagnostic in _coordinator_diagnostics()}
+
+
+def test_a_granted_assimilation_is_disclosed_and_not_reported_as_suppressed() -> None:
+    """The mínimo rests on a declared dependency, so the operator is shown the judgement."""
+    _write(_assimilated_child())
+
+    kinds = _kinds()
+
+    assert "minimo_descendientes_dependencia_assimilated" in kinds
+    assert "minimo_descendientes_dependencia_suppressed" not in kinds
+
+
+def test_a_suppressed_assimilation_is_disclosed_and_not_reported_as_granted() -> None:
+    """Declared anualidades withhold the assimilation for every descendant; that narrowing is shown."""
+    facts = [
+        *(UserProfileFact(path=p, value=v) for p, v in descendant_facts_from_list([_assimilated_child()])),
+        UserProfileFact(path="renta_family.anualidades_alimentos_euros", value="1200"),
+    ]
+    set_active_test_profile_facts(tuple(facts))
+
+    kinds = _kinds()
+
+    assert "minimo_descendientes_dependencia_suppressed" in kinds
+    assert "minimo_descendientes_dependencia_assimilated" not in kinds
+
+
+def test_a_cohabiting_descendant_raises_neither_dependency_disclosure() -> None:
+    """Cohabitation satisfies the household limb outright; no dependency judgement is involved."""
+    _write(DescendantInfo(birth_date=date(_FILING_YEAR - 10, 5, 1), dependencia_economica=True))
+
+    kinds = _kinds()
+
+    assert "minimo_descendientes_dependencia_assimilated" not in kinds
+    assert "minimo_descendientes_dependencia_suppressed" not in kinds

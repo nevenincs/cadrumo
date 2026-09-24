@@ -140,6 +140,48 @@ class RentaFamilyProfile(BaseModel):
         """
         return not (self.anualidades_alimentos_euros is not None and self.anualidades_alimentos_euros > 0)
 
+    def dependencia_assimilated_indices(
+        self,
+        filing_year: int,
+        *,
+        context: FamilyFactResolutionContext,
+    ) -> tuple[int, ...]:
+        """Indices of descendants reaching the mínimo ONLY through the dependency limb.
+
+        The allowance is then granted to a non-cohabiting filer on a declared
+        economic-dependency fact, which is an assertion rather than an
+        observation, so the calculate path discloses it. Only the non-income
+        conditions are applied: a descendant excluded by a rentas ceiling
+        contributes nothing either way, so the worst case is one extra
+        disclosure rather than a missing one.
+        """
+        available = self.dependencia_assimilation_available
+        return tuple(
+            index
+            for index, descendant in enumerate(self.descendientes)
+            if not descendant.convive_con_contribuyente
+            and descendant.meets_non_income_conditions(
+                filing_year,
+                context=context,
+                dependencia_assimilation_available=available,
+            )
+        )
+
+    def dependencia_suppressed_indices(self) -> tuple[int, ...]:
+        """Indices whose declared dependency is withheld by the anualidades carve-out.
+
+        These descendants would be assimilated but for the filer's declared
+        anualidades, which this profile cannot yet attribute per child. Reported
+        so the narrowing is visible to the filer it costs.
+        """
+        if self.dependencia_assimilation_available:
+            return ()
+        return tuple(
+            index
+            for index, descendant in enumerate(self.descendientes)
+            if descendant.dependencia_economica is True and not descendant.convive_con_contribuyente
+        )
+
     def descendientes_menores_3_year_end(self, filing_year: int, *, context: FamilyFactResolutionContext) -> int:
         """Count of eligible descendientes whose age at year-end < 3 (Art. 58.2)."""
         return sum(1 for d in self.descendientes if d.is_eligible_menor_tres(filing_year, context=context))

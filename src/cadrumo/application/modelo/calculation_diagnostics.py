@@ -157,7 +157,39 @@ def collect_bucket_aggregation_advisory_diagnostics(
             operation=operation,
             profile=profile,
         )
+        minimo_descendientes_prorrata_inferred_diagnostics = collect_minimo_descendientes_prorrata_inferred_diagnostics(
+            revision,
+            casilla_values,
+            modelo=modelo,
+            period_token=period_token,
+            filing_year=filing_year,
+            bucket_id=bucket_id,
+            operation=operation,
+            profile=profile,
+        )
         minimo_descendientes_rentas_undeclared_diagnostics = collect_minimo_descendientes_rentas_undeclared_diagnostics(
+            revision,
+            casilla_values,
+            modelo=modelo,
+            period_token=period_token,
+            filing_year=filing_year,
+            bucket_id=bucket_id,
+            operation=operation,
+            profile=profile,
+        )
+        minimo_descendientes_entry_date_missing_diagnostics = (
+            collect_minimo_descendientes_entry_date_missing_diagnostics(
+                revision,
+                casilla_values,
+                modelo=modelo,
+                period_token=period_token,
+                filing_year=filing_year,
+                bucket_id=bucket_id,
+                operation=operation,
+                profile=profile,
+            )
+        )
+        minimo_descendientes_dependencia_diagnostics = collect_minimo_descendientes_dependencia_diagnostics(
             revision,
             casilla_values,
             modelo=modelo,
@@ -187,6 +219,15 @@ def collect_bucket_aggregation_advisory_diagnostics(
             operation=operation,
             profile=profile,
         )
+        descendientes_count_desync_diagnostics = collect_descendientes_count_desync_diagnostics(
+            revision,
+            modelo=modelo,
+            period_token=period_token,
+            filing_year=filing_year,
+            bucket_id=bucket_id,
+            operation=operation,
+            profile=profile,
+        )
 
     return (
         collect_official_box_unpopulated_diagnostics(revision, casilla_values)
@@ -207,40 +248,13 @@ def collect_bucket_aggregation_advisory_diagnostics(
         )
         + collect_settlement_not_computed_diagnostics(revision)
         + minimo_descendientes_undeclared_diagnostics
-        + collect_minimo_descendientes_prorrata_inferred_diagnostics(
-            revision,
-            casilla_values,
-            modelo=modelo,
-            period_token=period_token,
-            filing_year=filing_year,
-            bucket_id=bucket_id,
-        )
+        + minimo_descendientes_prorrata_inferred_diagnostics
         + minimo_descendientes_rentas_undeclared_diagnostics
-        + collect_minimo_descendientes_entry_date_missing_diagnostics(
-            revision,
-            casilla_values,
-            modelo=modelo,
-            period_token=period_token,
-            filing_year=filing_year,
-            bucket_id=bucket_id,
-        )
-        + collect_minimo_descendientes_dependencia_diagnostics(
-            revision,
-            casilla_values,
-            modelo=modelo,
-            period_token=period_token,
-            filing_year=filing_year,
-            bucket_id=bucket_id,
-        )
+        + minimo_descendientes_entry_date_missing_diagnostics
+        + minimo_descendientes_dependencia_diagnostics
         + guarderia_spend_shape_diagnostics
         + guarderia_madre_meses_undeclared_diagnostics
-        + collect_descendientes_count_desync_diagnostics(
-            revision,
-            modelo=modelo,
-            period_token=period_token,
-            filing_year=filing_year,
-            bucket_id=bucket_id,
-        )
+        + descendientes_count_desync_diagnostics
         + collect_bienes_inversion_regularizacion_diagnostics(
             revision,
             modelo=modelo,

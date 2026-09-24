@@ -48,6 +48,8 @@ __all__ = ["advisory_profile_bucket"]
 _BUCKET_ID = "3d3d3d3d-3d3d-4d3d-8d3d-3d3d3d3d3d3d"
 _FILING_YEAR = 2024
 _ANNUAL_PERIOD = "0A"
+#: A Modelo 303 liquidation period: another modelo is exercised at a coordinate it files.
+_QUARTERLY_PERIOD = "1T"
 _ESTATAL_CASILLA: CasillaId = "0513"
 _KIND = "minimo_descendientes_prorrata_inferred"
 
@@ -73,8 +75,8 @@ def bucket_id() -> str:
     return _BUCKET_ID
 
 
-def _revision() -> ModeloRevision:
-    return published_authority_operation().snapshot("100", filing_year=_FILING_YEAR, period=_ANNUAL_PERIOD).revision
+def _revision(modelo: str = Modelo("100").value, period_token: str = _ANNUAL_PERIOD) -> ModeloRevision:
+    return published_authority_operation().snapshot(modelo, filing_year=_FILING_YEAR, period=period_token).revision
 
 
 def _write(*descendants: DescendantInfo, **profile_facts: str) -> None:
@@ -91,13 +93,14 @@ def _collect(
     casilla_values: dict[CasillaId, Decimal] | None = None,
     *,
     modelo: str = Modelo("100").value,
+    period_token: str = _ANNUAL_PERIOD,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     repositories = advisory_diagnostic_repositories(bucket_id=_BUCKET_ID)
     diagnostics = collect_bucket_aggregation_advisory_diagnostics(
-        _revision(),
+        _revision(modelo, period_token),
         _CLAIMED if casilla_values is None else casilla_values,
         modelo=modelo,
-        period_token=_ANNUAL_PERIOD,
+        period_token=period_token,
         filing_year=_FILING_YEAR,
         bucket_id=_BUCKET_ID,
         observation_repository=repositories.observation,
@@ -210,7 +213,7 @@ def test_silent_when_nothing_is_being_claimed() -> None:
 
 def test_silent_for_another_modelo() -> None:
     _write_household(_child())
-    assert _collect(modelo="303") == ()
+    assert _collect(modelo=Modelo("303").value, period_token=_QUARTERLY_PERIOD) == ()
 
 
 def test_names_only_the_descendants_whose_factor_was_inferred() -> None:

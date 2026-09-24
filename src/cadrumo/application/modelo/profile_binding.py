@@ -325,12 +325,12 @@ def _inject_derived_family_facts(
     if guarderia_key not in declared_selectors and gastos_key not in declared_selectors:
         return
 
-    profile = _renta_family_profile_from_facts(fact_index)
+    profile = renta_family_profile_from_facts(fact_index)
     fact_index[guarderia_key] = Decimal(profile.descendientes_guarderia_count(filing_year, context=context))
     fact_index[gastos_key] = Decimal(profile.gastos_guarderia_reales(filing_year, context=context))
 
 
-def _renta_family_profile_from_facts(
+def renta_family_profile_from_facts(
     fact_index: Mapping[str, UserProfileFactValue],
 ) -> RentaFamilyProfile:
     """Rebuild the canonical family record from the stored profile facts.
@@ -577,7 +577,7 @@ def _resolve_maternidad_meses_from_fact_index(
         return _maternidad_thresholds_unresolved_resolution(
             declares_meses=declares_meses,
         )
-    profile = _renta_family_profile_from_facts(fact_index)
+    profile = renta_family_profile_from_facts(fact_index)
     # The pairing is the DOMAIN's, asked for rather than recomposed here. This
     # resolver used to build it inline while `meses_maternidad_por_descendiente`
     # computed the same thing with no production caller -- two authorities for
@@ -865,7 +865,7 @@ def inject_derived_minimo_descendientes_facts(
         # exists to close, so refusing is the safe direction.
         return
 
-    profile = _renta_family_profile_from_facts(fact_index)
+    profile = renta_family_profile_from_facts(fact_index)
     second_filer_indicated = second_entitled_filer_indicated(fact_index)
 
     birth_order_amounts, menor_tres_supplement, fallecimiento_amount = estatal_tranches
@@ -1245,7 +1245,7 @@ def _inject_derived_incremento_guarderia_facts(
     if thresholds is None:
         return
 
-    profile = _renta_family_profile_from_facts(fact_index)
+    profile = renta_family_profile_from_facts(fact_index)
     fact_index[key] = profile.incremento_guarderia_0613(
         snapshot.filing_year,
         thresholds=thresholds,
@@ -1980,6 +1980,7 @@ __all__ = [
     "is_madrid_resident",
     "madrid_nacimiento_adopcion_candidate_weighted_count",
     "profile_resolved_binding_ids",
+    "renta_family_profile_from_facts",
     "resolve_maternidad_meses",
     "resolve_profile_binding_channels",
     "resolve_profile_binding_value",
