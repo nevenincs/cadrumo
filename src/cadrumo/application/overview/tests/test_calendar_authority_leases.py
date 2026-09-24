@@ -18,12 +18,14 @@ import pytest
 from ....domain.calculations.registry.applicability import (
     REGISTRY_RESOLVED_APPLICABILITY_MODELOS,
     derive_modelo_applicability,
+    iter_modelo_applicability_rules,
 )
 from ....domain.calculations.registry.authority import IndexedRegistryAuthority, PinnedAuthorityOperation
 from ....domain.contribuyente.entity_type import EntityType
 from ....domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, TaxpayerProfile
 from ..calendar import build_overview_calendar
 from ..calendar_models import OverviewCalendarRange
+from ..calendar_warnings import _derive_gating_fields
 from ..coverage import build_obligation_coverage
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -93,9 +95,8 @@ def test_a_calendar_does_not_lease_the_authority_per_obligation(operation: Pinne
         lambda: build_overview_calendar(profile, _RANGE, today=_TODAY, operation=operation, show_suppressed=True)
     )
 
-    # The remaining leases belong to applicability helpers that do not yet take
-    # an operation; they are a constant, not a count per obligation.
-    assert leases <= 60, f"{leases} authority leases for one calendar"
+    # Every applicability helper the calendar reaches takes the held operation.
+    assert leases == 0, f"{leases} authority leases for one calendar"
 
 
 def test_the_counter_detects_a_lease_per_applicability_decision(operation: PinnedAuthorityOperation) -> None:
@@ -125,3 +126,22 @@ def test_the_held_operation_decides_exactly_as_a_fresh_lease_does(operation: Pin
     assert calendar.coverage == build_obligation_coverage(
         profile, {entry.modelo for entry in calendar.entries} | set(calendar.coverage.surfaced), today=_TODAY
     )
+
+
+def test_the_rule_table_is_read_under_one_lease() -> None:
+    """TEETH: resolving the applicability table must not lease the authority per modelo."""
+    rules: list[object] = []
+    leases = _leases_during(lambda: rules.extend(iter_modelo_applicability_rules()))
+
+    assert len([rule for rule in rules if getattr(rule, "modelo", None) in REGISTRY_RESOLVED_APPLICABILITY_MODELOS]) > 1
+    assert leases == 1
+
+
+def test_a_held_operation_reads_the_rule_table_and_gating_keys_without_leasing(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    leases = _leases_during(
+        lambda: (iter_modelo_applicability_rules(operation=operation), _derive_gating_fields(operation=operation))
+    )
+
+    assert leases == 0

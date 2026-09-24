@@ -229,7 +229,7 @@ def _derive_gating_fields(
     key_to_modelos: dict[str, set[str]] = {}
     key_to_meta: dict[str, tuple[str, str]] = {}
 
-    for rule in _iter_modelo_applicability_rules():
+    for rule in _iter_modelo_applicability_rules(operation=operation):
         if rule.required_payer_fact is not None:
             for profile_key in payer_fact_profile_keys(rule.required_payer_fact):
                 _record_gating_field(
@@ -322,7 +322,7 @@ def calendar_applicability_profile_keys_for_modelo(
     """
     keys: set[str] = set()
     estimation_profile_keys = _estimation_regime_profile_key(operation)
-    for rule in _iter_modelo_applicability_rules():
+    for rule in _iter_modelo_applicability_rules(operation=operation):
         if rule.modelo != modelo:
             continue
         keys.add("taxpayer_type.entity_type")
@@ -342,7 +342,7 @@ def calendar_applicability_profile_keys_for_modelo(
             modelo=modelo,
         ).get(modelo, ()),
     )
-    if _modelo_requires_iva_regime(modelo):
+    if _modelo_requires_iva_regime(modelo, operation=operation):
         keys.add("iva.regime")
     keys.update(_CORPORATE_CENSO_ENROLMENT_PROFILE_KEYS.get(modelo, frozenset()))
     return tuple(sorted(keys))

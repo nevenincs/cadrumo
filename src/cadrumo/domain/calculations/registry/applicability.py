@@ -969,21 +969,44 @@ def _modelo_applicability_rule(
     return MODELO_APPLICABILITY_RULES.get(modelo)
 
 
-def iter_modelo_applicability_rules() -> tuple[ModeloApplicabilityRule, ...]:
+def iter_modelo_applicability_rules(
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+) -> tuple[ModeloApplicabilityRule, ...]:
     """Return every registry-resolved or seed-literal :class:`ModeloApplicabilityRule`.
 
     The returned tuple is ordered by modelo id for deterministic audits and
     tests. Callers receive rule objects, not the mutable module-level
     dictionary, so the registry rule table remains read-only from the public
     API.
+
+    Every registry rule is read from one generation: the caller's ``operation``
+    when it holds one, otherwise a single lease taken for the whole table. A
+    lease per modelo re-verified the published database for each of them and
+    could read two modelos from two generations.
     """
     known_modelos = sorted(
         {str(modelo) for modelo in MODELO_APPLICABILITY_RULES} | REGISTRY_RESOLVED_APPLICABILITY_MODELOS,
     )
-    return tuple(rule for modelo in known_modelos if (rule := _modelo_applicability_rule(modelo)) is not None)
+    if operation is None:
+        from .authority import bundled_indexed_authority
+
+        with bundled_indexed_authority().operation() as leased:
+            return _applicability_rules(known_modelos, operation=leased)
+    return _applicability_rules(known_modelos, operation=operation)
 
 
-def modelo_requires_iva_regime(modelo: str) -> bool:
+def _applicability_rules(
+    modelos: list[str],
+    *,
+    operation: PinnedAuthorityOperation,
+) -> tuple[ModeloApplicabilityRule, ...]:
+    return tuple(
+        rule for modelo in modelos if (rule := _modelo_applicability_rule(modelo, operation=operation)) is not None
+    )
+
+
+def modelo_requires_iva_regime(modelo: str, *, operation: PinnedAuthorityOperation | None = None) -> bool:
     """Return whether the modelo's applicability rule depends on IVA regime.
 
     Calendar completeness is a consumer of the same applicability predicate
@@ -991,7 +1014,7 @@ def modelo_requires_iva_regime(modelo: str) -> bool:
     that classification here, where registry-resolved and seed rules already
     meet, rather than maintaining a second calendar or core-constants set.
     """
-    rule = _modelo_applicability_rule(modelo)
+    rule = _modelo_applicability_rule(modelo, operation=operation)
     return rule is not None and bool(rule.applicable_iva_regimes)
 
 
