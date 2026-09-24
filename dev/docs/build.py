@@ -402,7 +402,7 @@ def docs_build_jobs(env: Mapping[str, str]) -> str:
     """Resolve the Sphinx ``-j`` parallelism from the deployment override.
 
     Defaults to ``auto`` (one worker per core) so local and CI builds keep the
-    full-parallel read. The deployment sets ``CADRUMO_DOCS_JOBS=1`` to pin a
+    full-parallel read, the deployment included. ``CADRUMO_DOCS_JOBS=1`` pins a
     single-worker build when a serial run is wanted for reproducibility; the
     post-build sitemap and Pagefind passes run after Sphinx completes and are
     parallel-safe regardless. A set value must be ``auto`` or a positive

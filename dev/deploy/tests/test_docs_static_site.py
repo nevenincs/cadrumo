@@ -201,7 +201,7 @@ def test_language_build_environment_points_the_base_url_at_the_language_root() -
     env = language_build_environment("hu", check_sequences=True)
     assert env["CADRUMO_DOCS_BASE_URL"] == f"{CANONICAL_DOCS_BASE_URL}/hu"
     assert env["CADRUMO_DOCS_PAGEFIND_MODE"] == "full"
-    assert env["CADRUMO_DOCS_JOBS"] == "1"
+    assert env["CADRUMO_DOCS_JOBS"] == "auto"
 
 
 def test_every_deploy_root_pins_the_full_record_injected_search_contract() -> None:

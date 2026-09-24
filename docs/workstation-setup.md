@@ -47,7 +47,6 @@ machine-readable form for scripted setup checks (`--format json` is a global
 flag, so it goes before the command):
 
 ```{cli-sequence} install-confirm
-:verify: Confirm the installed command reports its version and its dependency report resolves.
 ```
 
 ## Install optional extras from the checkout

@@ -178,7 +178,10 @@ def site_build_environment(*, base_environment: Mapping[str, str] | None = None)
     return {
         **base,
         "CADRUMO_DOCS_BASE_URL": CANONICAL_DOCS_BASE_URL,
-        "CADRUMO_DOCS_JOBS": "1",
+        # Five strict roots, two of them full-scope with the API reference, run
+        # back to back; serially they exceed a release job's time budget. The
+        # prove phase already builds and checks the same site in parallel.
+        "CADRUMO_DOCS_JOBS": "auto",
         "CADRUMO_DOCS_PAGEFIND_MODE": "full",
     }
 
@@ -398,7 +401,7 @@ def language_build_command(language: str, out_dir: Path) -> list[str]:
 def language_build_environment(language: str, *, check_sequences: bool) -> dict[str, str]:
     """Return the deploy build environment for one localized site root.
 
-    The shared deployment environment (serial workers, full record-injected
+    The shared deployment environment (parallel workers, full record-injected
     Pagefind contract) with the canonical base URL pointed at the language's own
     root so the per-language sitemap and canonical/OpenGraph URLs are correct.
     Each localized root therefore carries the injected records too: a reader on
