@@ -75,7 +75,7 @@ def _prepare_cli_directories(tmp_path: Path) -> None:
         directory.mkdir(parents=True, exist_ok=True)
 
 
-def _seed_ready_profile(root: Path) -> None:
+def _seed_ready_profile(root: Path, *, extra_facts: tuple[UserProfileFact, ...] = ()) -> None:
     seed_test_profile_record(
         _create_profile_record_for_test(
             setup_state=ProfileSetupState.COMPLETE,
@@ -98,6 +98,7 @@ def _seed_ready_profile(root: Path) -> None:
                 UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
                 UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
                 UserProfileFact(path="withholding.colegio_concertado", value=False),
+                *extra_facts,
             ),
             created_at=_T0,
             updated_at=_T0,
@@ -311,4 +312,22 @@ def test_ledger_payroll_capture_refuses_a_second_transport_and_other_modelos(tmp
 
         assert [code for code, _output in refusals] == [2, 2, 2, 2], refusals
         assert {json.loads(output)["error"]["code"] for _code, output in refusals} == {"REFUSED_CLI_BOUNDARY"}
+        assert _stored_q1_retenciones() == ()
+
+
+def test_ledger_payroll_capture_refuses_a_large_company_whose_modelo_111_is_monthly(tmp_path: Path) -> None:
+    """The stored profile makes Modelo 111 monthly, so the quarterly capture is refused and writes nothing."""
+    _prepare_cli_directories(tmp_path)
+    with isolated_cli_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label="M111 ledger payroll") as profile:
+        _seed_ready_profile(
+            profile.storage_root,
+            extra_facts=(UserProfileFact(path="censo.large_company", value=True),),
+        )
+        transaction = _seed_payroll_payment(profile)
+
+        exit_code, output = _aggregate("111", "--ledger-payment-withholding", _payroll_payload(transaction.transaction_id))
+
+        assert exit_code != 0, output
+        error = json.loads(output)["error"]
+        assert error["code"] == "REFUSED_WITHHOLDING_FILING_CADENCE", output
         assert _stored_q1_retenciones() == ()

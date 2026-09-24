@@ -26,6 +26,11 @@ fact (``no-silent-under-declaration``: the zero is loud, not silent).
 
 A settled prior-accrual Modelo 193 row carries amounts no official source
 settles, so each one surfaces its own non-blocking advisory beside its values.
+
+Both annual compositions read quarterly windows of their periodic modelo only.
+When the filer's canonical filing schedule does not assign that modelo all four
+quarters of the year (a monthly large-company filer, or one no schedule
+covers), the source refuses rather than total the quarters it can see.
 """
 
 from __future__ import annotations
@@ -39,6 +44,7 @@ from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.hashing import sha256_hex
 from ...core.i18n.translatable import Translatable as tr
 from ...core.modelo import Modelo
+from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.withholding_bindings import (
@@ -67,6 +73,10 @@ from .source_mesh import (
     CalculationSourceResolution,
 )
 from .source_resolution_operations import storage_degradation_resolution
+from .withholding_filing_cadence import (
+    require_quarterly_withholding_source,
+    withholding_filer_cadence_for_work_profile,
+)
 
 _WITHHOLDING_SOURCE = BindingSourceKind.WITHHOLDING
 
@@ -84,6 +94,11 @@ class _AnnualWithholdingSource:
 
     periodic_percepciones: Modelo | None = None
     capital_disclosure_retenciones: Modelo | None = None
+
+    @property
+    def periodic_source(self) -> Modelo | None:
+        """Return the periodic modelo whose quarterly windows this composition reads, if any."""
+        return self.periodic_percepciones or self.capital_disclosure_retenciones
 
 
 _OWN_WINDOW = _AnnualWithholdingSource()
@@ -249,6 +264,27 @@ def _refuse_allocation_collisions(
         )
 
 
+def _refuse_unscheduled_quarters(
+    composition: _AnnualWithholdingSource,
+    context: CalculationSourceContext,
+) -> None:
+    """Refuse an annual composition whose periodic modelo the filer does not file quarterly all year."""
+    source_modelo = composition.periodic_source
+    if source_modelo is None:
+        return
+    with bundled_indexed_authority().operation() as operation:
+        cadence = withholding_filer_cadence_for_work_profile(
+            context.profile,
+            filing_year=context.filing_year,
+            operation=operation,
+        )
+    require_quarterly_withholding_source(
+        cadence,
+        annual_modelo=str(context.modelo),
+        source_modelo=source_modelo.value,
+    )
+
+
 class WithholdingSourceResolver:
     """Source mesh resolver for the dedicated per-perceptor-clave withholding store.
 
@@ -299,6 +335,7 @@ class WithholdingSourceResolver:
         if not _revision_declares_withholding_scalar(context.revision):
             return CalculationSourceResolution(resolver_id=self.resolver_id, owned_sources=self.owned_sources)
         composition = _ANNUAL_WITHHOLDING_SOURCES.get(str(context.modelo), _OWN_WINDOW)
+        _refuse_unscheduled_quarters(composition, context)
         try:
             window = self._window(composition, context)
             phase_rows = self._disclosure_phase_rows(composition, context)

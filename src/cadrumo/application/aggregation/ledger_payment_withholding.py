@@ -65,10 +65,10 @@ from ...core.hashing import content_hash_hex
 from ...core.identity.tax_id import TaxIdIdentityToken
 from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.period import Period
 from ...domain.calculations.registry.withholding_bindings import WithholdingObservation
 from ...domain.transactions.enums import TransactionDirection, TransactionLifecycleState
 from .retenciones import Modelo193PendingPaymentEvidence
+from .withholding_filing_cadence import WithholdingFilerCadence, quarterly_withholding_capture_period
 from .withholding_observation_service import (
     SourceLiabilitySnapshot,
     WithholdingMutationMode,
@@ -202,6 +202,7 @@ def build_ledger_payment_withholding_capture(
     catalogue_revision_id: str,
     request: LedgerPaymentWithholdingEvidenceRequest,
     applicable_year: int,
+    cadence: WithholdingFilerCadence,
 ) -> LedgerPaymentWithholdingCapture:
     """Derive one work or capital producer command from the paying ledger transaction.
 
@@ -209,9 +210,13 @@ def build_ledger_payment_withholding_capture(
     amount, recipient and timing check runs before a command exists, so a
     refusal can never leave a partial capture behind. The scheme-to-income
     table and the Modelo 193 detail agreement stay with the shared producer.
+    ``cadence`` is the filer's canonical schedule for ``applicable_year``; a
+    recognition quarter it does not assign is refused.
     """
     if request.transaction_id != transaction.transaction_id:
         raise LedgerPaymentWithholdingEvidenceError("transaction_identity_mismatch")
+    if cadence.filing_year != applicable_year:
+        raise LedgerPaymentWithholdingEvidenceError("filer_cadence_year_mismatch")
     if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
         raise LedgerPaymentWithholdingEvidenceError("transaction_not_active")
     if transaction.direction is not TransactionDirection.OUTGOING:
@@ -256,6 +261,7 @@ def build_ledger_payment_withholding_capture(
         )
     if payment_on.year > recognized_on.year and request.modelo_193_pending_payment is None:
         raise LedgerPaymentWithholdingEvidenceError("capital_paid_after_accrual_year_without_pending_evidence")
+    period = quarterly_withholding_capture_period(cadence, modelo=modelo, recognized_on=recognized_on)
 
     perceptor_nif, perceptor_name = _perceptor(request)
     # The bucket-wide catalogue revision changes whenever any other row is
@@ -309,10 +315,7 @@ def build_ledger_payment_withholding_capture(
     )
     return LedgerPaymentWithholdingCapture(
         command=command,
-        scope=WithholdingWindowScope(
-            modelo=modelo,
-            period=Period.from_year_and_code(recognized_on.year, f"{((recognized_on.month - 1) // 3) + 1}T"),
-        ),
+        scope=WithholdingWindowScope(modelo=modelo, period=period),
         catalogue_read_revision_id=catalogue_revision_id,
     )
 

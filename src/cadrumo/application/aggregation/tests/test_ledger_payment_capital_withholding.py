@@ -37,6 +37,10 @@ from cadrumo.application.aggregation.tests.ledger_capital_support import (
     capital_request,
     withholding_producer,
 )
+from cadrumo.application.aggregation.tests.withholding_filer_profile_support import (
+    quarterly_filer_cadence,
+    quarterly_filer_cadence_for,
+)
 from cadrumo.application.aggregation.withholding_producer import WithholdingProducerError
 from cadrumo.application.aggregation.withholding_recognition import (
     WithholdingIncomeKind,
@@ -65,6 +69,7 @@ def _build(
         catalogue_revision_id="c" * 64,
         request=request,
         applicable_year=year,
+        cadence=quarterly_filer_cadence(year),
     )
 
 
@@ -129,8 +134,12 @@ def test_captured_capital_payment_is_stored_in_the_123_window_only(tmp_path: Pat
     capture = _build(transaction, capital_request(transaction))
 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        result = withholding_producer(profile.repository).capture(capture.command)
-        replay = withholding_producer(profile.repository).capture(capture.command)
+        result = withholding_producer(profile.repository).capture(
+            capture.command, cadence=quarterly_filer_cadence_for(capture.command)
+        )
+        replay = withholding_producer(profile.repository).capture(
+            capture.command, cadence=quarterly_filer_cadence_for(capture.command)
+        )
         stored = RetencionObservationRepositoryAdapter(objects=profile.repository).load_observations("123", _Q2_2025)
         payroll_window = RetencionObservationRepositoryAdapter(objects=profile.repository).load_observations(
             "111", _Q2_2025
@@ -170,7 +179,9 @@ def test_capital_paid_the_next_year_feeds_both_modelo_193_phases(tmp_path: Path)
     capture = _build(transaction, request)
 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        result = withholding_producer(profile.repository).capture(capture.command)
+        result = withholding_producer(profile.repository).capture(
+            capture.command, cadence=quarterly_filer_cadence_for(capture.command)
+        )
         stored = RetencionObservationRepositoryAdapter(objects=profile.repository).load_observations(
             "123", Period.from_year_and_code(2025, "4T")
         )
@@ -261,7 +272,9 @@ def test_capital_payment_under_a_work_scheme_is_refused_by_the_shared_producer(t
 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         with pytest.raises(WithholdingProducerError) as exc_info:
-            withholding_producer(profile.repository).capture(capture.command)
+            withholding_producer(profile.repository).capture(
+                capture.command, cadence=quarterly_filer_cadence_for(capture.command)
+            )
         stored = RetencionObservationRepositoryAdapter(objects=profile.repository).load_observations("123", _Q2_2025)
 
     assert exc_info.value.refusal_code == "scheme_income_kind_mismatch"
@@ -279,7 +292,9 @@ def test_pending_evidence_with_a_same_year_payment_is_refused_by_the_shared_prod
 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         with pytest.raises(WithholdingProducerError) as exc_info:
-            withholding_producer(profile.repository).capture(capture.command)
+            withholding_producer(profile.repository).capture(
+                capture.command, cadence=quarterly_filer_cadence_for(capture.command)
+            )
         stored = RetencionObservationRepositoryAdapter(objects=profile.repository).load_observations("123", _Q2_2025)
 
     assert exc_info.value.refusal_code == "modelo_193_nonpayment_cause_conflicts_with_same_year_settlement"

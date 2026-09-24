@@ -23,6 +23,7 @@ from .....application.aggregation.percepciones_observations_repository import (
 )
 from .....application.aggregation.retencion_observations_repository import RetencionObservationPorts
 from .....application.aggregation.source_mesh import CalculationSourceContext
+from .....application.aggregation.tests.withholding_filer_profile_support import withholding_work_profile
 from .....application.aggregation.withholding_source import WithholdingSourceResolver
 from .....core.aggregation import RetencionClave
 from .....core.casilla_id import validated_casilla_id
@@ -92,6 +93,7 @@ def test_m190_percepciones_count_resolves_distinct_from_store_to_bound_casilla(t
                 filing_year=2024,
                 period=annual_period,
                 revision=snapshot.revision,
+                profile=withholding_work_profile(published_authority_operation(), profile_id=_BUCKET_ID),
             ),
         )
         binding_values = dict(resolution.binding_values)

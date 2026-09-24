@@ -10,6 +10,8 @@ import pytest
 import typer
 from pydantic import ValidationError
 
+from cadrumo.application.aggregation.tests.withholding_filer_profile_support import quarterly_filer_cadence
+
 from ....application.aggregation.invoice_retencion import (
     InvoiceWithholdingEvidenceRequest,
     build_invoice_withholding_capture,
@@ -136,12 +138,14 @@ def test_invoice_liability_revision_is_stable_across_unrelated_catalogue_revisio
         catalogue_revision_id="a" * 64,
         request=_request(invoice),
         applicable_year=2025,
+        cadence=quarterly_filer_cadence(2025),
     )
     later = build_invoice_withholding_capture(
         invoice,
         catalogue_revision_id="b" * 64,
         request=_request(invoice),
         applicable_year=2025,
+        cadence=quarterly_filer_cadence(2025),
     )
 
     assert first.catalogue_read_revision_id != later.catalogue_read_revision_id
@@ -175,6 +179,7 @@ def test_capital_cli_evidence_derives_the_123_exigibility_period_without_a_payme
         catalogue_revision_id="a" * 64,
         request=request,
         applicable_year=2025,
+        cadence=quarterly_filer_cadence(2025),
     )
 
     assert capture.scope.modelo == "123"
@@ -243,6 +248,7 @@ def test_rent_cli_evidence_refuses_missing_property_detail() -> None:
             catalogue_revision_id="a" * 64,
             request=request,
             applicable_year=2025,
+            cadence=quarterly_filer_cadence(2025),
         )
 
 
@@ -257,4 +263,5 @@ def test_professional_cli_evidence_refuses_missing_modelo_190_detail() -> None:
             catalogue_revision_id="a" * 64,
             request=request,
             applicable_year=2025,
+            cadence=quarterly_filer_cadence(2025),
         )

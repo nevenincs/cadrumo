@@ -5,7 +5,8 @@ the resolver reads persisted per-perceptor-clave
 :class:`WithholdingObservation` records and materialises the DISTINCT
 (perceptor, clave, subclave) count for a ``percepcion_count`` binding. Empty
 store -> zero count + a non-blocking advisory (a nil filer must still
-calculate), never a hard refusal.
+calculate), never a hard refusal. A filer whose schedule makes Modelo 111
+monthly is refused instead of receiving a quarterly-only count.
 """
 
 from __future__ import annotations
@@ -23,14 +24,23 @@ from ....core.aggregation import (
     RetencionClave,
 )
 from ....core.period import Period
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_references import PeriodSelector
 from ....domain.calculations.registry.withholding_bindings import WithholdingObservation
+from ....domain.user_profile.values import UserProfileFact
+from ...modelo.work_profile import ModeloWorkProfile
 from ..percepciones_observations_repository import PercepcionObservationPorts
 from ..retencion_observations_repository import RetencionObservationPorts
 from ..retenciones import RetencionObservation
 from ..source_mesh import CalculationSourceContext
+from ..withholding_filing_cadence import WithholdingFilingCadenceError
 from ..withholding_source import WithholdingSourceResolver
+from .withholding_filer_profile_support import (
+    LARGE_COMPANY_FACTS,
+    PUBLIC_ADMINISTRATION_FACTS,
+    withholding_work_profile,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -162,13 +172,14 @@ def _non_withholding_revision() -> ModeloRevision:
     )
 
 
-def _context(revision: ModeloRevision) -> CalculationSourceContext:
+def _context(revision: ModeloRevision, profile: ModeloWorkProfile | None) -> CalculationSourceContext:
     return CalculationSourceContext(
         bucket_id="operator",
         modelo="190",
         filing_year=2024,
         period=Period.from_year_and_code(2024, "0A"),
         revision=revision,
+        profile=profile,
     )
 
 
@@ -194,7 +205,7 @@ def _obs(nif: str, clave: RetencionClave) -> WithholdingObservation:
     )
 
 
-def test_resolver_materialises_distinct_percepcion_count() -> None:
+def test_resolver_materialises_distinct_percepcion_count(authority_operation: PinnedAuthorityOperation) -> None:
     """One perceptor under two claves -> percepciones count of 2 from the store."""
     binding = _percepcion_binding()
     period = Period.from_year_and_code(2024, "1T")
@@ -211,16 +222,14 @@ def test_resolver_materialises_distinct_percepcion_count() -> None:
         source_kind=AggregationCaptureKind.AGGREGATE_PULL,
     )
     resolution = _resolver(repository).resolve(
-        _context(_revision_with(binding)),
+        _context(_revision_with(binding), withholding_work_profile(authority_operation)),
     )
 
     assert resolution.binding_values == {binding.id: Decimal(3)}
     assert resolution.diagnostics == ()
 
 
-def test_m190_resolver_folds_active_quarterly_m111_detail() -> None:
-    """Annual Modelo 190 reads its own detail from the active 111 projections."""
-    binding = _percepcion_binding()
+def _two_quarter_repository() -> _InMemoryPercepcionObservationRepository:
     repository = _InMemoryPercepcionObservationRepository()
     repository.replace_observations(
         modelo="111",
@@ -241,17 +250,57 @@ def test_m190_resolver_folds_active_quarterly_m111_detail() -> None:
         ],
         source_kind=AggregationCaptureKind.AGGREGATE_PULL,
     )
+    return repository
 
-    resolution = _resolver(repository).resolve(_context(_revision_with(binding)))
+
+def test_m190_resolver_folds_active_quarterly_m111_detail(authority_operation: PinnedAuthorityOperation) -> None:
+    """Annual Modelo 190 reads its own detail from the active 111 projections."""
+    binding = _percepcion_binding()
+
+    resolution = _resolver(_two_quarter_repository()).resolve(
+        _context(_revision_with(binding), withholding_work_profile(authority_operation))
+    )
 
     assert resolution.binding_values == {binding.id: Decimal(2)}
     assert len(resolution.provenance) == 3
 
 
-def test_resolver_materialises_zero_with_advisory_on_empty_store() -> None:
+@pytest.mark.parametrize(
+    "facts",
+    [LARGE_COMPANY_FACTS, PUBLIC_ADMINISTRATION_FACTS],
+    ids=["large-company", "public-administration"],
+)
+def test_m190_refuses_a_monthly_m111_filer_instead_of_a_quarterly_only_count(
+    authority_operation: PinnedAuthorityOperation,
+    facts: tuple[UserProfileFact, ...],
+) -> None:
+    """Quarterly windows cannot hold a monthly filer's Modelo 111 detail, so no total is produced."""
+    with pytest.raises(WithholdingFilingCadenceError) as raised:
+        _resolver(_two_quarter_repository()).resolve(
+            _context(_revision_with(_percepcion_binding()), withholding_work_profile(authority_operation, facts=facts))
+        )
+
+    assert raised.value.refusal_code == "withholding_annual_source_not_quarterly"
+    assert raised.value.context["annual_modelo"] == "190"
+    assert raised.value.context["modelo"] == "111"
+    assert raised.value.context["scheduled_periods"] == "01|02|03|04|05|06|07|08|09|10|11|12"
+    assert raised.value.context["unscheduled_quarters"] == "1T|2T|3T|4T"
+
+
+def test_m190_refuses_when_no_filer_profile_was_loaded() -> None:
+    """An unknown cadence is refused rather than read as quarterly."""
+    with pytest.raises(WithholdingFilingCadenceError) as raised:
+        _resolver(_two_quarter_repository()).resolve(_context(_revision_with(_percepcion_binding()), None))
+
+    assert raised.value.refusal_code == "withholding_filer_profile_absent"
+
+
+def test_resolver_materialises_zero_with_advisory_on_empty_store(authority_operation: PinnedAuthorityOperation) -> None:
     """Empty store -> zero count materialised + a non-blocking advisory (not a refusal)."""
     binding = _percepcion_binding()
-    resolution = _resolver(_InMemoryPercepcionObservationRepository()).resolve(_context(_revision_with(binding)))
+    resolution = _resolver(_InMemoryPercepcionObservationRepository()).resolve(
+        _context(_revision_with(binding), withholding_work_profile(authority_operation))
+    )
 
     assert resolution.binding_values == {binding.id: Decimal(0)}
     assert len(resolution.diagnostics) == 1

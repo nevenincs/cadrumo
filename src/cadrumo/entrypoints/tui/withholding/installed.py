@@ -2,7 +2,9 @@
 
 The launcher supplies the active bucket and filing year.  Invoice and ledger
 payment lookups are reads of that bucket's encrypted catalogues; all mutations
-remain in the shared withholding observation service used by the CLI.
+remain in the shared withholding observation service used by the CLI.  The
+filer's schedule is read from the bucket's profile at each capture, so a
+profile change while the screen is open is honoured.
 """
 
 from __future__ import annotations
@@ -10,8 +12,13 @@ from __future__ import annotations
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+from ....application.aggregation.withholding_filing_cadence import (
+    WithholdingFilerCadence,
+    load_bucket_withholding_filer_cadence,
+)
 from ....application.invoices.catalogue_lifecycle import resolve_catalogue_invoice
 from ....core.errors.hierarchy import CadrumoError
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.invoices.errors import InvoiceNotFoundError
 from ....domain.invoices.models import Invoice, InvoiceCatalogue
 from ....domain.transactions.models import TransactionCatalogue
@@ -39,8 +46,19 @@ def compose_installed_withholding_screen(*, bucket_id: str, filing_year: int) ->
     def ledger_payment_lookup(transaction_id: str) -> tuple[TransactionCatalogue, str | None]:
         return _read_ledger_payment(transactions, transaction_id)
 
+    def filer_cadence(year: int) -> WithholdingFilerCadence:
+        with bundled_indexed_authority().operation() as operation:
+            return load_bucket_withholding_filer_cadence(
+                bucket_id=normalized_bucket,
+                filing_year=year,
+                operation=operation,
+            )
+
     return WithholdingEvidenceScreen(
-        door=TuiWithholdingDoor(service=build_withholding_observation_service(bucket_id=normalized_bucket)),
+        door=TuiWithholdingDoor(
+            service=build_withholding_observation_service(bucket_id=normalized_bucket),
+            filer_cadence=filer_cadence,
+        ),
         invoice_lookup=lookup,
         ledger_payment_lookup=ledger_payment_lookup,
         filing_year=filing_year,

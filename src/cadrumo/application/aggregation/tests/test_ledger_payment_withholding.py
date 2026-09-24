@@ -23,6 +23,10 @@ from cadrumo.application.aggregation.ledger_payment_withholding import (
     resolve_ledger_payment_transaction,
 )
 from cadrumo.application.aggregation.tests.ledger_transaction_support import ledger_raw_transaction
+from cadrumo.application.aggregation.tests.withholding_filer_profile_support import (
+    quarterly_filer_cadence,
+    quarterly_filer_cadence_for,
+)
 from cadrumo.application.aggregation.withholding_observation_service import WithholdingObservationService
 from cadrumo.application.aggregation.withholding_producer import WithholdingProducer, WithholdingProducerError
 from cadrumo.application.aggregation.withholding_recognition import (
@@ -126,6 +130,7 @@ def _refusal(transaction: Transaction, request: LedgerPaymentWithholdingEvidence
             catalogue_revision_id="a" * 64,
             request=request,
             applicable_year=year,
+            cadence=quarterly_filer_cadence(year),
         )
     return exc_info.value.refusal_code
 
@@ -139,6 +144,7 @@ def test_ledger_payment_builds_a_work_income_capture_for_its_quarter() -> None:
         catalogue_revision_id="a" * 64,
         request=_request(transaction),
         applicable_year=2025,
+        cadence=quarterly_filer_cadence(2025),
     )
 
     command = capture.command
@@ -166,16 +172,25 @@ def test_source_revision_is_stable_across_unrelated_catalogue_revisions() -> Non
     """Another ledger write cannot strand this payment behind a false liability conflict."""
     transaction = _payroll_payment()
     first = build_ledger_payment_withholding_capture(
-        transaction, catalogue_revision_id="a" * 64, request=_request(transaction), applicable_year=2025
+        transaction,
+        catalogue_revision_id="a" * 64,
+        request=_request(transaction),
+        applicable_year=2025,
+        cadence=quarterly_filer_cadence(2025),
     )
     later = build_ledger_payment_withholding_capture(
-        transaction, catalogue_revision_id="b" * 64, request=_request(transaction), applicable_year=2025
+        transaction,
+        catalogue_revision_id="b" * 64,
+        request=_request(transaction),
+        applicable_year=2025,
+        cadence=quarterly_filer_cadence(2025),
     )
     corrected = build_ledger_payment_withholding_capture(
         transaction,
         catalogue_revision_id="b" * 64,
         request=_request(transaction, gross_base=Decimal("2400.00")),
         applicable_year=2025,
+        cadence=quarterly_filer_cadence(2025),
     )
 
     assert first.command.source_revision_id == later.command.source_revision_id
@@ -191,6 +206,7 @@ def test_settlement_below_gross_less_withholding_is_accepted_and_equality_too() 
         catalogue_revision_id="a" * 64,
         request=_request(transaction, net_settlement=exact_net),
         applicable_year=2025,
+        cadence=quarterly_filer_cadence(2025),
     )
 
     assert capture.command.settlement_amount == Decimal("2125.00")
@@ -319,7 +335,11 @@ def test_payroll_source_revision_keeps_its_liability_fact_set() -> None:
     """Capital support must not re-key payroll captures already stored against this revision."""
     transaction = _payroll_payment()
     capture = build_ledger_payment_withholding_capture(
-        transaction, catalogue_revision_id="a" * 64, request=_request(transaction), applicable_year=2025
+        transaction,
+        catalogue_revision_id="a" * 64,
+        request=_request(transaction),
+        applicable_year=2025,
+        cadence=quarterly_filer_cadence(2025),
     )
 
     assert capture.command.source_revision_id == content_hash_hex(
@@ -364,12 +384,20 @@ def test_captured_payment_projects_a_work_retencion_and_its_annual_row(tmp_path:
     """The shared producer stores one 111 retención and one 190 percepción for the payment."""
     transaction = _payroll_payment()
     capture = build_ledger_payment_withholding_capture(
-        transaction, catalogue_revision_id="a" * 64, request=_request(transaction), applicable_year=2025
+        transaction,
+        catalogue_revision_id="a" * 64,
+        request=_request(transaction),
+        applicable_year=2025,
+        cadence=quarterly_filer_cadence(2025),
     )
 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        result = _producer(profile.repository).capture(capture.command)
-        replay = _producer(profile.repository).capture(capture.command)
+        result = _producer(profile.repository).capture(
+            capture.command, cadence=quarterly_filer_cadence_for(capture.command)
+        )
+        replay = _producer(profile.repository).capture(
+            capture.command, cadence=quarterly_filer_cadence_for(capture.command)
+        )
         retenciones = RetencionObservationRepositoryAdapter(objects=profile.repository).load_observations(
             "111", Period.from_year_and_code(2025, "2T")
         )
@@ -401,11 +429,12 @@ def test_non_work_scheme_is_refused_by_the_shared_producer(tmp_path: Path) -> No
         catalogue_revision_id="a" * 64,
         request=_request(transaction, scheme=RetencionScheme("actividades_profesionales")),
         applicable_year=2025,
+        cadence=quarterly_filer_cadence(2025),
     )
 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         with pytest.raises(WithholdingProducerError) as exc_info:
-            _producer(profile.repository).capture(capture.command)
+            _producer(profile.repository).capture(capture.command, cadence=quarterly_filer_cadence_for(capture.command))
         stored = RetencionObservationRepositoryAdapter(objects=profile.repository).load_observations(
             "111", Period.from_year_and_code(2025, "2T")
         )

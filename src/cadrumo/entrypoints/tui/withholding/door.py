@@ -10,6 +10,7 @@ module can be exercised without a launcher.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Literal
 
@@ -25,6 +26,10 @@ from ....application.aggregation.ledger_payment_withholding import (
     LedgerPaymentWithholdingEvidenceRequest,
     build_ledger_payment_withholding_capture,
     resolve_ledger_payment_transaction,
+)
+from ....application.aggregation.withholding_filing_cadence import (
+    WithholdingFilerCadence,
+    WithholdingFilingCadenceError,
 )
 from ....application.aggregation.withholding_observation_service import (
     WithholdingGenerationAudit,
@@ -94,10 +99,16 @@ class TuiWithholdingCaptureOutcome(BaseModel):
 class TuiWithholdingDoor:
     """Small TUI-facing port onto the shared withholding application services."""
 
-    def __init__(self, *, service: WithholdingObservationService) -> None:
-        """Bind a TUI surface to the already composed atomic service."""
+    def __init__(
+        self,
+        *,
+        service: WithholdingObservationService,
+        filer_cadence: Callable[[int], WithholdingFilerCadence],
+    ) -> None:
+        """Bind a TUI surface to the atomic service and the filer's schedule for a filing year."""
         self._service = service
         self._producer = WithholdingProducer(service=service)
+        self._filer_cadence = filer_cadence
 
     def capture(
         self,
@@ -112,15 +123,18 @@ class TuiWithholdingDoor:
         if request is None:
             return TuiWithholdingCaptureOutcome(status="omitted")
         try:
+            cadence = self._filer_cadence(request.filing_year)
             prepared = build_invoice_withholding_capture(
                 request.invoice,
                 catalogue_revision_id=request.catalogue_revision_id,
                 request=request.evidence,
                 applicable_year=request.filing_year,
+                cadence=cadence,
             )
-            captured = self._producer.capture(prepared.command)
+            captured = self._producer.capture(prepared.command, cadence=cadence)
         except (
             InvoiceWithholdingEvidenceError,
+            WithholdingFilingCadenceError,
             WithholdingProducerError,
             WithholdingObservationMutationError,
         ) as error:
@@ -149,15 +163,18 @@ class TuiWithholdingDoor:
         try:
             if request.catalogue_revision_id is None:
                 raise LedgerPaymentWithholdingEvidenceError("transaction_catalogue_revision_unavailable")
+            cadence = self._filer_cadence(request.filing_year)
             prepared = build_ledger_payment_withholding_capture(
                 resolve_ledger_payment_transaction(request.transactions, request.evidence.transaction_id),
                 catalogue_revision_id=request.catalogue_revision_id,
                 request=request.evidence,
                 applicable_year=request.filing_year,
+                cadence=cadence,
             )
-            captured = self._producer.capture(prepared.command)
+            captured = self._producer.capture(prepared.command, cadence=cadence)
         except (
             LedgerPaymentWithholdingEvidenceError,
+            WithholdingFilingCadenceError,
             WithholdingProducerError,
             WithholdingObservationMutationError,
         ) as error:

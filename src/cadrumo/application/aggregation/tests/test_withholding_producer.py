@@ -28,6 +28,7 @@ from cadrumo.application.aggregation.retenciones import (
     aggregate_retenciones_180,
 )
 from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
+from cadrumo.application.aggregation.tests.withholding_filer_profile_support import quarterly_filer_cadence
 from cadrumo.application.aggregation.withholding_observation_service import (
     ABSENT_WITHHOLDING_GENERATION_ID,
     SourceLiabilitySnapshot,
@@ -283,7 +284,7 @@ def test_professional_payment_producer_reopens_and_feeds_pinned_m111_resolver(tm
     """Two partial 2T payments feed Modelo 111, despite a 1T invoice source."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         producer, _service = _producer_for(profile.repository)
-        first = producer.capture(_command())
+        first = producer.capture(_command(), cadence=quarterly_filer_cadence(2025))
         second = producer.capture(
             _command(
                 allocation_id="allocation-2",
@@ -291,7 +292,8 @@ def test_professional_payment_producer_reopens_and_feeds_pinned_m111_resolver(tm
                 paid_on=date(2025, 6, 30),
                 taxable_base="200.00",
                 retencion_amount="38.00",
-            )
+            ),
+            cadence=quarterly_filer_cadence(2025),
         )
 
         assert first is not None and first.scope.period == Period.from_year_and_code(2025, "2T")
@@ -345,7 +347,8 @@ def test_unpaid_exigible_capital_reopens_and_later_settlement_does_not_duplicate
         unpaid = producer.capture(
             _capital_command(
                 modelo_193_pending_payment=_capital_pending_payment_detail(transaction_date=date(2025, 12, 15))
-            )
+            ),
+            cadence=quarterly_filer_cadence(2025),
         )
 
         assert unpaid is not None
@@ -392,7 +395,7 @@ def test_unpaid_exigible_capital_reopens_and_later_settlement_does_not_duplicate
                 "idempotency_key": "capital-settlement-capture-2026-01",
             }
         )
-        settled = reopened_producer.capture(settled_command)
+        settled = reopened_producer.capture(settled_command, cadence=quarterly_filer_cadence(2025))
 
         assert settled is not None
         assert settled.scope == unpaid.scope
@@ -442,7 +445,7 @@ def test_unpaid_exigible_capital_reopens_and_later_settlement_does_not_duplicate
         assert settled_row.amount_authority_advisory is not None
         assert materialize_modelo_193_disclosure_phases(persisted_after_settlement, filing_year=2027) == ()
 
-        replay = reopened_producer.capture(settled_command)
+        replay = reopened_producer.capture(settled_command, cadence=quarterly_filer_cadence(2025))
         assert replay is not None and replay.mutation.replayed
         assert len(reopened_service.read_window(unpaid.scope).entries) == 1
 
@@ -453,7 +456,7 @@ def test_unpaid_exigible_capital_reopens_and_later_settlement_does_not_duplicate
             }
         )
         with pytest.raises(WithholdingObservationMutationError, match="stale_baseline"):
-            reopened_producer.capture(stale)
+            reopened_producer.capture(stale, cadence=quarterly_filer_cadence(2025))
         assert len(reopened_service.read_window(unpaid.scope).entries) == 1
 
         audit = reopened_service.read_generation(unpaid.scope, settled.mutation.baseline.generation_id)
@@ -500,7 +503,7 @@ def test_modelo_193_unsupported_cause_and_same_year_settlement_refuse_before_mut
         )
 
         with pytest.raises(WithholdingProducerError, match="nonpayment_cause_conflicts_with_same_year_settlement"):
-            producer.capture(contradictory)
+            producer.capture(contradictory, cadence=quarterly_filer_cadence(2025))
 
         scope = WithholdingWindowScope(modelo="123", period=Period.from_year_and_code(2025, "4T"))
         assert service.read_window(scope).entries == ()
@@ -520,7 +523,7 @@ def test_capital_exigibility_is_required_before_a_123_window_is_mutated(tmp_path
         )
 
         with pytest.raises(WithholdingRecognitionError, match="missing_exigibility_evidence"):
-            producer.capture(missing_exigibility)
+            producer.capture(missing_exigibility, cadence=quarterly_filer_cadence(2025))
 
         scope = WithholdingWindowScope(modelo="123", period=Period.from_year_and_code(2025, "4T"))
         assert service.read_window(scope).entries == ()
@@ -536,7 +539,10 @@ def test_capital_producer_refuses_noncapital_scheme_before_a_123_window_is_mutat
         producer, service = _producer_for(profile.repository)
 
         with pytest.raises(WithholdingProducerError, match="scheme_income_kind_mismatch"):
-            producer.capture(_capital_command(scheme=RetencionScheme("actividades_profesionales")))
+            producer.capture(
+                _capital_command(scheme=RetencionScheme("actividades_profesionales")),
+                cadence=quarterly_filer_cadence(2025),
+            )
 
         scope = WithholdingWindowScope(modelo="123", period=Period.from_year_and_code(2025, "4T"))
         assert service.read_window(scope).entries == ()
@@ -549,7 +555,7 @@ def test_invalid_recognition_refuses_before_any_encrypted_projection_write(tmp_p
         command = _command(recipient_status=WithholdingRecipientTaxStatus.NONRESIDENT)
 
         with pytest.raises(WithholdingRecognitionError, match="irnr_unsupported"):
-            producer.capture(command)
+            producer.capture(command, cadence=quarterly_filer_cadence(2025))
 
         scope = Period.from_year_and_code(2025, "2T")
         assert RetencionObservationRepositoryAdapter(objects=profile.repository).load_observations("111", scope) == ()
@@ -568,7 +574,7 @@ def test_omitted_capture_does_not_create_a_window(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         producer, _service = _producer_for(profile.repository)
 
-        assert producer.capture(None) is None
+        assert producer.capture(None, cadence=quarterly_filer_cadence(2025)) is None
         assert (
             RetencionObservationRepositoryAdapter(objects=profile.repository).load_observations(
                 "111", Period.from_year_and_code(2025, "2T")
@@ -583,7 +589,7 @@ def test_missing_modelo_190_detail_refuses_before_any_encrypted_projection_write
         producer, service = _producer_for(profile.repository)
 
         with pytest.raises(ValueError, match="Modelo 190 annual detail"):
-            producer.capture(_command(modelo_190_detail=None))
+            producer.capture(_command(modelo_190_detail=None), cadence=quarterly_filer_cadence(2025))
 
         scope = WithholdingWindowScope(modelo="111", period=Period.from_year_and_code(2025, "2T"))
         assert service.read_window(scope).entries == ()
@@ -600,7 +606,7 @@ def test_correction_replaces_active_m111_and_m190_projections_without_erasing_hi
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         producer, service = _producer_for(profile.repository)
         original_command = _command()
-        original = producer.capture(original_command)
+        original = producer.capture(original_command, cadence=quarterly_filer_cadence(2025))
         assert original is not None
 
         corrected_liability = original_command.liability_snapshot.model_copy(
@@ -626,7 +632,7 @@ def test_correction_replaces_active_m111_and_m190_projections_without_erasing_hi
                 "idempotency_key": "corrected-capture-1",
             }
         )
-        result = producer.capture(corrected)
+        result = producer.capture(corrected, cadence=quarterly_filer_cadence(2025))
         assert result is not None
         state = service.read_window(result.scope)
         assert len(state.entries) == 2
@@ -647,7 +653,9 @@ def test_income_scheme_mismatch_refuses_without_choosing_another_modelo(tmp_path
         producer, _service = _producer_for(profile.repository)
 
         with pytest.raises(WithholdingProducerError, match="scheme_income_kind_mismatch"):
-            producer.capture(_command(scheme=RetencionScheme("arrendamiento_urbano")))
+            producer.capture(
+                _command(scheme=RetencionScheme("arrendamiento_urbano")), cadence=quarterly_filer_cadence(2025)
+            )
 
         assert (
             RetencionObservationRepositoryAdapter(objects=profile.repository).load_observations(
@@ -699,10 +707,13 @@ def test_liability_dimensions_refuse_before_a_second_projection_write(
     """Each monetary dimension is bounded independently at the atomic boundary."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         producer, service = _producer_for(profile.repository)
-        producer.capture(_amounts_command(first))
+        producer.capture(_amounts_command(first), cadence=quarterly_filer_cadence(2025))
 
         with pytest.raises(WithholdingObservationMutationError, match=expected):
-            producer.capture(_amounts_command(second, allocation_id="allocation-2", payment_id="payment-2"))
+            producer.capture(
+                _amounts_command(second, allocation_id="allocation-2", payment_id="payment-2"),
+                cadence=quarterly_filer_cadence(2025),
+            )
 
         scope = WithholdingWindowScope(modelo="111", period=Period.from_year_and_code(2025, "2T"))
         assert len(service.read_window(scope).entries) == 2
@@ -713,8 +724,8 @@ def test_exact_liability_cap_and_replay_do_not_double_count(tmp_path: Path) -> N
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         producer, service = _producer_for(profile.repository)
         first = _command(taxable_base="300.00", retencion_amount="57.00", settlement_amount="300.00")
-        producer.capture(first)
-        replay = producer.capture(first)
+        producer.capture(first, cadence=quarterly_filer_cadence(2025))
+        replay = producer.capture(first, cadence=quarterly_filer_cadence(2025))
         producer.capture(
             _command(
                 allocation_id="allocation-2",
@@ -722,7 +733,8 @@ def test_exact_liability_cap_and_replay_do_not_double_count(tmp_path: Path) -> N
                 taxable_base="200.00",
                 retencion_amount="38.00",
                 settlement_amount="200.00",
-            )
+            ),
+            cadence=quarterly_filer_cadence(2025),
         )
         assert replay is not None and replay.mutation.replayed
         assert len(service.read_window(replay.scope).entries) == 4
@@ -743,7 +755,8 @@ def test_rent_allocations_reopen_as_two_annual_property_rows(tmp_path: Path) -> 
                 income_kind=WithholdingIncomeKind.URBAN_RENT,
                 scheme=RetencionScheme("arrendamiento_urbano"),
                 property_detail=_rent_property("office-a", "1234567VK4713S0001AA"),
-            )
+            ),
+            cadence=quarterly_filer_cadence(2025),
         )
         producer.capture(
             _command(
@@ -756,7 +769,8 @@ def test_rent_allocations_reopen_as_two_annual_property_rows(tmp_path: Path) -> 
                 income_kind=WithholdingIncomeKind.URBAN_RENT,
                 scheme=RetencionScheme("arrendamiento_urbano"),
                 property_detail=_rent_property("office-a", "1234567VK4713S0001AA"),
-            )
+            ),
+            cadence=quarterly_filer_cadence(2025),
         )
         producer.capture(
             _command(
@@ -769,7 +783,8 @@ def test_rent_allocations_reopen_as_two_annual_property_rows(tmp_path: Path) -> 
                 income_kind=WithholdingIncomeKind.URBAN_RENT,
                 scheme=RetencionScheme("arrendamiento_urbano"),
                 property_detail=_rent_property("office-b", "1234567VK4713S0002BB"),
-            )
+            ),
+            cadence=quarterly_filer_cadence(2025),
         )
 
         repository = RetencionObservationRepositoryAdapter(objects=profile.repository)

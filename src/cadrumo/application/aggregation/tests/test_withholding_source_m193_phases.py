@@ -55,11 +55,19 @@ from cadrumo.application.aggregation.tests.ledger_capital_support import (
     capital_request,
     withholding_producer,
 )
+from cadrumo.application.aggregation.tests.withholding_filer_profile_support import (
+    LARGE_COMPANY_FACTS,
+    quarterly_filer_cadence,
+    quarterly_filer_cadence_for,
+    withholding_work_profile,
+)
+from cadrumo.application.aggregation.withholding_filing_cadence import WithholdingFilingCadenceError
 from cadrumo.application.aggregation.withholding_source import WithholdingSourceResolver
 from cadrumo.core.aggregation import AggregationCaptureKind, BindingSourceKind, CalculationSourceLineageRole
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingObservation
+from cadrumo.domain.user_profile.values import UserProfileFact
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -76,7 +84,10 @@ _UNRESOLVED_AMOUNTS = "m193_settled_row_amounts_unresolved_authority"
 
 
 def _capture(capture: LedgerPaymentWithholdingCapture, objects: SecureObjectRepository) -> None:
-    assert withholding_producer(objects).capture(capture.command) is not None
+    assert (
+        withholding_producer(objects).capture(capture.command, cadence=quarterly_filer_cadence_for(capture.command))
+        is not None
+    )
 
 
 def _collected_next_year(coupon: str = "") -> tuple[str, LedgerPaymentWithholdingCapture]:
@@ -107,6 +118,7 @@ def _collected_next_year(coupon: str = "") -> tuple[str, LedgerPaymentWithholdin
         catalogue_revision_id="c" * 64,
         request=request,
         applicable_year=2025,
+        cadence=quarterly_filer_cadence(2025),
     )
     return transaction.transaction_id, capture
 
@@ -119,6 +131,7 @@ def _collected_same_year() -> LedgerPaymentWithholdingCapture:
         catalogue_revision_id="c" * 64,
         request=capital_request(transaction),
         applicable_year=2025,
+        cadence=quarterly_filer_cadence(2025),
     )
 
 
@@ -154,6 +167,7 @@ def _resolve(
     *,
     bucket_id: str,
     filing_year: int,
+    facts: tuple[UserProfileFact, ...] = (),
 ) -> CalculationSourceResolution:
     resolver = WithholdingSourceResolver(
         ports=PercepcionObservationPorts(repository=PercepcionObservationRepositoryAdapter(objects=objects)),
@@ -167,6 +181,7 @@ def _resolve(
             filing_year=filing_year,
             period=Period.from_year_and_code(filing_year, "0A"),
             revision=snapshot.revision,
+            profile=withholding_work_profile(operation, facts=facts, profile_id=bucket_id),
         )
     )
 
@@ -406,3 +421,30 @@ def test_an_ordinary_manual_row_carries_no_unresolved_amount_advisory(
 
     assert _row_values(resolution, _NIF_BINDING) == [_MANUAL_NIF]
     assert resolution.diagnostics == ()
+
+
+def test_a_large_company_193_source_refuses_instead_of_a_quarterly_only_total(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    """No Modelo 123 schedule covers a large company, so its 193 source names the missing quarters and refuses."""
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        _persist_manual(profile.repository, _manual_row(source_id="manual-coupon", source_allocation_id="manual-1"))
+        with pytest.raises(WithholdingFilingCadenceError) as raised:
+            _resolve(
+                profile.repository,
+                authority_operation,
+                bucket_id=profile.bucket_id,
+                filing_year=2025,
+                facts=LARGE_COMPANY_FACTS,
+            )
+
+    assert raised.value.refusal_code == "withholding_annual_source_not_quarterly"
+    assert raised.value.context == {
+        "annual_modelo": "193",
+        "modelo": "123",
+        "filing_year": "2025",
+        "unscheduled_quarters": "1T|2T|3T|4T",
+        "scheduled_periods": "",
+        "monthly_windows_supported": False,
+    }

@@ -124,6 +124,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.aggregation.withholding_filing_cadence.WithholdingFilingCadenceError",
+        ErrorCode(
+            code="REFUSED_WITHHOLDING_FILING_CADENCE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.canonical_withholding_filing_cadence",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.aggregation.withholding_producer.WithholdingProducerError",
         ErrorCode(
             code="REFUSED_WITHHOLDING_PRODUCER",

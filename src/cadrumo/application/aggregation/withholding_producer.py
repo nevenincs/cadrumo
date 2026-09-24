@@ -3,12 +3,13 @@
 This application boundary turns supported underlying evidence into exactly one
 retención projection.  It deliberately has no invoice-date argument and never
 accepts an authored recognition coordinate: :mod:`withholding_recognition`
-remains the only owner of that derivation.
+remains the only owner of that derivation.  The window is the recognition
+quarter, and only when the filer's canonical filing schedule assigns that
+quarter; a monthly filer is refused before anything is written.
 """
 
 from __future__ import annotations
 
-from datetime import date
 from decimal import Decimal
 
 from pydantic import BaseModel, Field, model_validator
@@ -17,7 +18,6 @@ from ...core.aggregation import BindingSourceKind, RetencionScheme, counterpart_
 from ...core.errors.hierarchy import CadrumoError
 from ...core.identity.tax_id import TaxIdIdentityToken
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.period import Period
 from ...domain.calculations.registry.withholding_bindings import WithholdingObservation
 from .retenciones import (
     Modelo180PropertyEvidence,
@@ -25,6 +25,7 @@ from .retenciones import (
     Modelo193PendingPaymentEvidence,
     RetencionObservation,
 )
+from .withholding_filing_cadence import WithholdingFilerCadence, quarterly_withholding_capture_period
 from .withholding_observation_service import (
     EconomicAllocation,
     SourceLiabilitySnapshot,
@@ -129,18 +130,31 @@ class WithholdingProducer:
     def capture(
         self,
         command: WithholdingEvidenceCaptureCommand | None,
+        *,
+        cadence: WithholdingFilerCadence,
     ) -> WithholdingEvidenceCaptureResult | None:
-        """Capture evidence, or leave all persisted evidence untouched when omitted."""
+        """Capture evidence, or leave all persisted evidence untouched when omitted.
+
+        ``cadence`` is the filer's canonical schedule for the command's
+        applicable year; a quarter it does not assign is refused before the
+        atomic service is reached.
+        """
         if command is None:
             return None
         _require_counterpart_source(command.source_kind)
+        if cadence.filing_year != command.recognition_evidence.applicable_year:
+            raise WithholdingProducerError("filer_cadence_year_mismatch")
         modelo = _modelo_for(command.recognition_evidence.income_kind, command.scheme)
         recognition = derive_withholding_recognition(command.recognition_evidence, modelo=modelo)
         if recognition.recognized_on.year != command.recognition_evidence.applicable_year:
             raise WithholdingProducerError("recognition_year_mismatch")
         scope = WithholdingWindowScope(
             modelo=modelo,
-            period=_quarter_for(recognition.recognized_on),
+            period=quarterly_withholding_capture_period(
+                cadence,
+                modelo=modelo,
+                recognized_on=recognition.recognized_on,
+            ),
         )
         modelo_193_capital = _modelo_193_capital_detail(
             pending_payment=command.modelo_193_pending_payment,
@@ -255,16 +269,6 @@ def _modelo_for(income_kind: WithholdingIncomeKind, scheme: RetencionScheme) -> 
     if scheme not in allowed:
         raise WithholdingProducerError("scheme_income_kind_mismatch")
     return modelo
-
-
-def _quarter_for(recognized_on: date) -> Period:
-    """Derive the exact ordinary quarterly filing coordinate from a date."""
-    # ``recognized_on`` is a ``date`` by the typed recognition result.  Keeping
-    # this operation here prevents invoice or caller-selected periods entering
-    # the public producer boundary.
-    year = recognized_on.year
-    quarter = ((recognized_on.month - 1) // 3) + 1
-    return Period.from_year_and_code(year, f"{quarter}T")
 
 
 def _annual_percepcion(

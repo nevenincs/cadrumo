@@ -14,6 +14,10 @@ from cadrumo.adapters.persistence.profile.withholding_observation_workflow impor
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.aggregation.invoice_retencion import InvoiceWithholdingEvidenceRequest
 from cadrumo.application.aggregation.retenciones import Modelo180PropertyEvidence, Modelo180StructuredAddress
+from cadrumo.application.aggregation.tests.withholding_filer_profile_support import (
+    LARGE_COMPANY_FACTS,
+    published_filer_cadence,
+)
 from cadrumo.application.aggregation.withholding_observation_service import (
     WithholdingMutationMode,
     WithholdingObservationService,
@@ -30,6 +34,7 @@ from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus, iva_rate_perce
 from cadrumo.domain.invoices.models import Invoice, InvoiceLine
 from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.domain.iva.schema import IvaCategory
+from cadrumo.domain.user_profile.values import UserProfileFact
 from cadrumo.entrypoints.tui.withholding.door import TuiInvoiceWithholdingCaptureRequest, TuiWithholdingDoor
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
@@ -38,7 +43,8 @@ _PROFESSIONAL = RetencionScheme("actividades_profesionales")
 _RENT = RetencionScheme("arrendamiento_urbano")
 
 
-def _door_for(objects: object) -> TuiWithholdingDoor:
+def _door_for(objects: object, *, facts: tuple[UserProfileFact, ...] = ()) -> TuiWithholdingDoor:
+    """Compose the door over real storage for a synthetic filer, quarterly unless ``facts`` say otherwise."""
     from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 
     assert isinstance(objects, SecureObjectRepository)
@@ -49,7 +55,8 @@ def _door_for(objects: object) -> TuiWithholdingDoor:
                 retenciones=RetencionObservationRepositoryAdapter(objects=objects),
                 percepciones=PercepcionObservationRepositoryAdapter(objects=objects),
             )
-        )
+        ),
+        filer_cadence=lambda year: published_filer_cadence(year, facts=facts),
     )
 
 
@@ -208,6 +215,32 @@ def test_tui_door_captures_and_inspects_professional_annual_detail(tmp_path: Pat
         assert len(annual) == 1
         assert annual[0].source_allocation_id == "professional-1"
 
+
+
+def test_tui_door_refuses_a_large_company_professional_invoice_without_writing(tmp_path: Path) -> None:
+    """A large company files Modelo 111 monthly, so the quarterly window is refused and stays empty."""
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        door = _door_for(profile.repository, facts=LARGE_COMPANY_FACTS)
+        invoice = _invoice(number="TUI-PRO-MONTHLY")
+        outcome = door.capture(
+            _request(
+                invoice,
+                income_kind=WithholdingIncomeKind.PROFESSIONAL,
+                scheme=_PROFESSIONAL,
+                allocation_id="professional-monthly",
+                payment_id="payment-monthly",
+                annual_detail=_professional_detail(
+                    invoice=invoice, paid_on=date(2025, 4, 2), base="500.00", withholding="95.00"
+                ),
+            )
+        )
+        stored = RetencionObservationRepositoryAdapter(objects=profile.repository).load_observations(
+            "111", Period.from_year_and_code(2025, "2T")
+        )
+
+    assert outcome.status == "refused"
+    assert outcome.refusal_code == "withholding_quarterly_window_not_scheduled"
+    assert stored == ()
 
 def test_tui_door_captures_rent_property_detail_and_inspects_it(tmp_path: Path) -> None:
     """The TUI keeps explicit property evidence on the same rent allocation."""

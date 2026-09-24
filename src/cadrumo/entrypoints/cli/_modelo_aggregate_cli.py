@@ -26,6 +26,7 @@ from ...application.aggregation.service import (
     PerModeloAggregationResult,
     aggregate_per_modelo,
 )
+from ...application.aggregation.withholding_filing_cadence import load_bucket_withholding_filer_cadence
 from ...application.aggregation.withholding_observation_service import (
     WithholdingObservationMutationError,
     WithholdingWindowScope,
@@ -93,6 +94,11 @@ def _capture_invoice_withholding_into_command(
     from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
     from ...application.invoices.catalogue_lifecycle import resolve_catalogue_invoice
 
+    cadence = load_bucket_withholding_filer_cadence(
+        bucket_id=bucket_id,
+        filing_year=command.period.filing_year,
+        operation=authority_operation(ctx),
+    )
     catalogue, catalogue_revision_id = InvoiceCatalogueRepository(bucket_id=bucket_id).load_revisioned()
     try:
         invoice = resolve_catalogue_invoice(catalogue, requests[0].invoice_id)
@@ -101,6 +107,7 @@ def _capture_invoice_withholding_into_command(
             catalogue_revision_id=catalogue_revision_id,
             request=requests[0],
             applicable_year=command.period.filing_year,
+            cadence=cadence,
         )
     except (InvoiceWithholdingEvidenceError, WithholdingRecognitionError, ValueError) as exc:
         raise typer.BadParameter(str(exc)) from exc
@@ -110,7 +117,9 @@ def _capture_invoice_withholding_into_command(
     try:
         from ...application.aggregation.withholding_producer import WithholdingProducer
 
-        WithholdingProducer(service=withholding_observation_service(ctx, bucket_id=bucket_id)).capture(capture.command)
+        WithholdingProducer(service=withholding_observation_service(ctx, bucket_id=bucket_id)).capture(
+            capture.command, cadence=cadence
+        )
     except (
         WithholdingProducerError,
         WithholdingRecognitionError,
@@ -140,6 +149,11 @@ def _capture_ledger_payment_withholding_into_command(
 
     bucket_id = active_bucket_id_or_refuse()
     ports = retencion_observation_ports_factory(ctx)(bucket_id=bucket_id)
+    cadence = load_bucket_withholding_filer_cadence(
+        bucket_id=bucket_id,
+        filing_year=command.period.filing_year,
+        operation=authority_operation(ctx),
+    )
     transactions = TransactionCatalogueRepository(bucket_id=bucket_id)
     try:
         catalogue_revision_id = transactions.load_revision()
@@ -151,6 +165,7 @@ def _capture_ledger_payment_withholding_into_command(
             catalogue_revision_id=catalogue_revision_id,
             request=request,
             applicable_year=command.period.filing_year,
+            cadence=cadence,
         )
     except (LedgerPaymentWithholdingEvidenceError, ValueError) as exc:
         raise typer.BadParameter(str(exc)) from exc
@@ -158,7 +173,9 @@ def _capture_ledger_payment_withholding_into_command(
         raise typer.BadParameter(tr("cli.app.modelo.aggregate.ledger_payment_withholding_period_mismatch"))
 
     try:
-        WithholdingProducer(service=withholding_observation_service(ctx, bucket_id=bucket_id)).capture(capture.command)
+        WithholdingProducer(service=withholding_observation_service(ctx, bucket_id=bucket_id)).capture(
+            capture.command, cadence=cadence
+        )
     except (
         WithholdingProducerError,
         WithholdingRecognitionError,

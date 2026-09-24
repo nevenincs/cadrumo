@@ -64,6 +64,7 @@ from ...domain.calculations.registry.withholding_bindings import WithholdingObse
 from ...domain.iva.components import category_components, registry_retencion_role_token
 from .errors import AggregationValidationError
 from .retenciones import Modelo180PropertyEvidence, Modelo193PendingPaymentEvidence, RetencionObservation
+from .withholding_filing_cadence import WithholdingFilerCadence, quarterly_withholding_capture_period
 from .withholding_observation_service import (
     SourceLiabilitySnapshot,
     WithholdingMutationMode,
@@ -293,16 +294,20 @@ def build_invoice_withholding_capture(
     catalogue_revision_id: str,
     request: InvoiceWithholdingEvidenceRequest,
     applicable_year: int,
+    cadence: WithholdingFilerCadence,
 ) -> InvoiceWithholdingCapture:
     """Derive one producer command from the current canonical invoice revision.
 
     This is deliberately the sole invoice-to-withholding translation.  It
     refuses missing catalogue facts rather than accepting caller substitutes
     for a liability limit, source revision, recognition coordinate, or
-    recipient identity.
+    recipient identity.  ``cadence`` is the filer's canonical schedule for
+    ``applicable_year``; a recognition quarter it does not assign is refused.
     """
     if request.invoice_id != invoice.invoice_id:
         raise InvoiceWithholdingEvidenceError("invoice_identity_mismatch")
+    if cadence.filing_year != applicable_year:
+        raise InvoiceWithholdingEvidenceError("filer_cadence_year_mismatch")
     defects = tuple(_defects_for(invoice))
     if defects:
         raise InvoiceWithholdingEvidenceError(defects[0].value)
@@ -382,12 +387,17 @@ def build_invoice_withholding_capture(
         modelo_190_detail=request.modelo_190_detail,
         modelo_193_pending_payment=request.modelo_193_pending_payment,
     )
-    recognition = derive_withholding_recognition(evidence, modelo=_modelo_for_income(request.income_kind))
+    modelo = _modelo_for_income(request.income_kind)
+    recognition = derive_withholding_recognition(evidence, modelo=modelo)
     return InvoiceWithholdingCapture(
         command=command,
         scope=WithholdingWindowScope(
-            modelo=_modelo_for_income(request.income_kind),
-            period=_quarter_for(recognition.recognized_on),
+            modelo=modelo,
+            period=quarterly_withholding_capture_period(
+                cadence,
+                modelo=modelo,
+                recognized_on=recognition.recognized_on,
+            ),
         ),
         catalogue_read_revision_id=catalogue_revision_id,
     )
@@ -401,12 +411,6 @@ def _modelo_for_income(income_kind: WithholdingIncomeKind) -> str:
     if income_kind is WithholdingIncomeKind.ORDINARY_MOVABLE_CAPITAL:
         return "123"
     raise InvoiceWithholdingEvidenceError("unsupported_income_projection")
-
-
-def _quarter_for(recognized_on: date):
-    from ...core.period import Period
-
-    return Period.from_year_and_code(recognized_on.year, f"{((recognized_on.month - 1) // 3) + 1}T")
 
 
 def project_received_invoice_retencion(

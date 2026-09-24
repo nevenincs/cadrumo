@@ -35,6 +35,10 @@ from cadrumo.application.aggregation.tests.ledger_capital_support import (
     capital_request,
     withholding_producer,
 )
+from cadrumo.application.aggregation.tests.withholding_filer_profile_support import (
+    quarterly_filer_cadence,
+    quarterly_filer_cadence_for,
+)
 from cadrumo.application.modelo.calculate_input import WorkCalculateInputBundle, calculate_modelo_work_revision
 from cadrumo.application.modelo.export import ModeloExportCommand, export_modelo_revision
 from cadrumo.application.modelo.filing_actions import file_modelo_revision
@@ -188,10 +192,14 @@ def _capture_capital_coupon(objects: SecureObjectRepository) -> None:
         catalogue_revision_id="d" * 64,
         request=capital_request(transaction),
         applicable_year=2025,
+        cadence=quarterly_filer_cadence(2025),
     )
     assert capture.scope.modelo == "123"
     assert capture.scope.period == _Q2_2025
-    assert withholding_producer(objects).capture(capture.command) is not None
+    assert (
+        withholding_producer(objects).capture(capture.command, cadence=quarterly_filer_cadence_for(capture.command))
+        is not None
+    )
 
 
 def test_captured_capital_evidence_refuses_the_123_calculation_and_persists_nothing(
