@@ -9,7 +9,7 @@ related:
   - '[[2026-09-23-retenciones-workflow-evidence-capture-scope-adr]]'
 modified: '2026-09-24'
 body_schema: body-v2
-body_hash: 'sha256:5e1149fa6bfbd6e73d5c7b05cd828e12b879a0cd6fda1b9e98ae6a71db7e562e'
+body_hash: 'sha256:fd59aef5acc5f51b56a0bb7ff6caa7b7d64d2964f18e5dd8b3b3ebbdb8833526'
 ---
 
 <!-- LINK RULES:
@@ -135,7 +135,7 @@ map their scope to Steps at L1 or the relevant containers at higher tiers. -->
 ## Steps
 
 - [x] `S01` - add a per perceptor, clave, pending flag and accrual year row grouping plus a type-2 record count and base and withholding sum facts to the withholding bindings; `src/cadrumo/domain/calculations/registry/withholding_bindings.py`.
-- [ ] `S02` - compose the Modelo 193 annual source from the manual window and materialised pending and settled phase rows read from Modelo 123 retenciones, refusing allocation collisions and emitting contributor provenance; `src/cadrumo/application/aggregation/withholding_source.py`.
+- [x] `S02` - compose the Modelo 193 annual source from the manual window and materialised pending and settled phase rows read from Modelo 123 retenciones, refusing allocation collisions and emitting contributor provenance; `src/cadrumo/application/aggregation/withholding_source.py`.
 - [ ] `S03` - rebind the 2025 declarant totals to the type-2 record count and row sums and the perceptor rows to the new grouping, keeping the Modelo 123 relation as a reconciliation check, then queue the republish; `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2025-y-siguientes/revision.toml`.
 - [ ] `S04` - prove multi-source rows, exclusions, missing-store advisories, pull and calculate parity and 2025 export byte parity for one pending and one settled row; `src/cadrumo/application/aggregation/tests`.
 - [x] `S05` - ground whether the payment-year settled row repeats the withholding amounts, and lift the filing-export block only when the official design settles it; `src/cadrumo/application/aggregation/m193_phase_materialization.py`.

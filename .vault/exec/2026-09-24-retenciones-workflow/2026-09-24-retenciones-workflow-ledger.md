@@ -5,7 +5,7 @@ tags:
 date: '2026-09-24'
 modified: '2026-09-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:ef3e87edac0ca1e0829eee565ab98296e955e91dc111ec51765ece57e0770b6b'
+body_hash: 'sha256:9a60318bf67d1fa86db50164eea94360d97554819b40f481987f9dd3dbb3511b'
 related:
   - "[[2026-09-24-retenciones-workflow-plan]]"
 ---
@@ -43,7 +43,16 @@ related:
 - `S01` `A` `src/cadrumo/domain/calculations/registry/tests/test_withholding_devengo_grouping.py`
 - `S01` `M` `src/cadrumo/application/calculations/row_set_assembly.py`
 - `S01` `verify:` `pytest test_withholding_devengo_grouping, registry -k withholding, test_withholding_producer, test_row_set_assembly` -> `pass`
+- `S02` `M` `src/cadrumo/application/aggregation/withholding_source.py`
+- `S02` `M` `src/cadrumo/application/aggregation/retencion_observations_repository.py`
+- `S02` `M` `src/cadrumo/adapters/persistence/profile/retencion_observations.py`
+- `S02` `M` `src/cadrumo/application/modelo/calculation_actions.py`
+- `S02` `A` `src/cadrumo/application/aggregation/tests/test_withholding_source_m193_phases.py`
+- `S02` `M` `src/cadrumo/locales/en/common.yml`
+- `S02` `verify:` `pytest m193 phases, withholding source, retenciones resolver, empty-store guard, locale parity` -> `pass`
 
 ## Notes
 
 - `S01` test_grouping_dispatch_coverage fails on per_type2_record from the Modelo 180 row bindings (b7b4e95d20), pre-existing and outside this Step
+- `S02` the 123 loader reads quarterly windows only, matching capture and the 111 loader; monthly 123 filers are an existing wider gap
+
