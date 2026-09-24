@@ -11,7 +11,7 @@
         "--irpf-income-categories",
         "actividad_economica",
         "--activity-start-date",
-        "2026-01-01"
+        "2025-01-01"
       ],
       "captures": [],
       "envelope": null,
@@ -215,7 +215,7 @@
             },
             "code": "censo.enrolment_unverified",
             "context": {
-              "affected_modelos": "100,130,136,303,360,390,714"
+              "affected_modelos": "100,130,303,360,390,714"
             },
             "message": "Censo enrolment unverified",
             "severity": "warning"
@@ -458,6 +458,36 @@
               "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 128 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
+            "severity": "info"
+          },
+          {
+            "action": {
+              "action": {
+                "action_id": "operator.overview.explain",
+                "cli_path": [
+                  "app",
+                  "overview",
+                  "explain"
+                ],
+                "target_command_key": "overview.explain"
+              },
+              "argument_bindings": [
+                {
+                  "argument_name": "modelo",
+                  "source": "operator_action.verdict_context",
+                  "source_evidence_id": null,
+                  "source_key": "modelo",
+                  "status": "resolved",
+                  "value": "136"
+                }
+              ]
+            },
+            "code": "overview.coverage.incomplete",
+            "context": {
+              "modelo": "136",
+              "reason": "applicability_undetermined"
+            },
+            "message": "The filing obligation 136 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
             "severity": "info"
           },
           {
@@ -1449,14 +1479,35 @@
             },
             "message": "The filing obligation 763 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
             "severity": "info"
+          },
+          {
+            "action": {
+              "action": {
+                "action_id": "operator.live.filed.pull_all",
+                "cli_path": [
+                  "app",
+                  "live",
+                  "filed",
+                  "pull-all"
+                ],
+                "target_command_key": "app.live.filed.pull_all"
+              },
+              "argument_bindings": []
+            },
+            "code": "overview.no_aeat_history",
+            "context": {
+              "observation_count": "0"
+            },
+            "message": "This profile holds no filing evidence AEAT confirmed.",
+            "severity": "info"
           }
         ],
         "result": {
+          "as_of": "2026-04-01",
           "completeness": {
             "computable_modelos": [
               "100",
               "130",
-              "136",
               "303",
               "360",
               "390",
@@ -1511,6 +1562,10 @@
               },
               {
                 "modelo": "128",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "136",
                 "reason": "applicability_undetermined"
               },
               {
@@ -1752,7 +1807,6 @@
             "surfaced": [
               "100",
               "130",
-              "136",
               "303",
               "360",
               "390",
@@ -1761,48 +1815,11 @@
           },
           "entries": [
             {
-              "adjusted_closes_on": "2026-01-20",
-              "aeat_submission_state": "not_observed",
-              "censo_enrolment_state": "unverified",
-              "detail_action": {
-                "action": {
-                  "action_id": "operator.overview.explain",
-                  "cli_path": [
-                    "app",
-                    "overview",
-                    "explain"
-                  ],
-                  "target_command_key": "overview.explain"
-                },
-                "argument_bindings": [
-                  {
-                    "argument_name": "modelo",
-                    "source": "operator_action.verdict_context",
-                    "source_evidence_id": null,
-                    "source_key": "modelo",
-                    "status": "resolved",
-                    "value": "136"
-                  },
-                  {
-                    "argument_name": "year",
-                    "source": "operator_action.verdict_context",
-                    "source_evidence_id": null,
-                    "source_key": "year",
-                    "status": "resolved",
-                    "value": 2025
-                  }
-                ]
-              },
-              "justificante_verified": false,
-              "local_filing_state": "not_ready_to_file",
-              "modelo": "136",
-              "period": "2025 4T",
-              "user_state": "late"
-            },
-            {
               "adjusted_closes_on": "2026-01-30",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
+              "closes_on": "2026-01-30",
+              "days_overdue": 61,
               "detail_action": {
                 "action": {
                   "action_id": "operator.overview.explain",
@@ -1832,16 +1849,61 @@
                   }
                 ]
               },
+              "evaluated_on": "2026-04-01",
+              "holiday_coverage": "national_only",
+              "holiday_territory": null,
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
               "modelo": "130",
+              "payment_cutoff_on": "2026-01-27",
               "period": "2025 4T",
+              "recovery_action": {
+                "action": {
+                  "action_id": "operator.modelo.work.create",
+                  "cli_path": [
+                    "app",
+                    "modelo",
+                    "work",
+                    "create"
+                  ],
+                  "target_command_key": "modelo.work.create"
+                },
+                "argument_bindings": [
+                  {
+                    "argument_name": "modelo",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "modelo",
+                    "status": "resolved",
+                    "value": "130"
+                  },
+                  {
+                    "argument_name": "period",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "period",
+                    "status": "resolved",
+                    "value": "4T"
+                  },
+                  {
+                    "argument_name": "year",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "year",
+                    "status": "resolved",
+                    "value": 2025
+                  }
+                ]
+              },
+              "shift_reason": "business_day",
               "user_state": "late"
             },
             {
               "adjusted_closes_on": "2026-01-30",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
+              "closes_on": "2026-01-30",
+              "days_overdue": 61,
               "detail_action": {
                 "action": {
                   "action_id": "operator.overview.explain",
@@ -1871,16 +1933,61 @@
                   }
                 ]
               },
+              "evaluated_on": "2026-04-01",
+              "holiday_coverage": "national_only",
+              "holiday_territory": null,
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
               "modelo": "303",
+              "payment_cutoff_on": "2026-01-27",
               "period": "2025 4T",
+              "recovery_action": {
+                "action": {
+                  "action_id": "operator.modelo.work.create",
+                  "cli_path": [
+                    "app",
+                    "modelo",
+                    "work",
+                    "create"
+                  ],
+                  "target_command_key": "modelo.work.create"
+                },
+                "argument_bindings": [
+                  {
+                    "argument_name": "modelo",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "modelo",
+                    "status": "resolved",
+                    "value": "303"
+                  },
+                  {
+                    "argument_name": "period",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "period",
+                    "status": "resolved",
+                    "value": "4T"
+                  },
+                  {
+                    "argument_name": "year",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "year",
+                    "status": "resolved",
+                    "value": 2025
+                  }
+                ]
+              },
+              "shift_reason": "business_day",
               "user_state": "late"
             },
             {
               "adjusted_closes_on": "2026-01-30",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
+              "closes_on": "2026-01-30",
+              "days_overdue": 61,
               "detail_action": {
                 "action": {
                   "action_id": "operator.overview.explain",
@@ -1910,16 +2017,61 @@
                   }
                 ]
               },
+              "evaluated_on": "2026-04-01",
+              "holiday_coverage": "national_only",
+              "holiday_territory": null,
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
               "modelo": "390",
+              "payment_cutoff_on": null,
               "period": "2025 0A",
+              "recovery_action": {
+                "action": {
+                  "action_id": "operator.modelo.work.create",
+                  "cli_path": [
+                    "app",
+                    "modelo",
+                    "work",
+                    "create"
+                  ],
+                  "target_command_key": "modelo.work.create"
+                },
+                "argument_bindings": [
+                  {
+                    "argument_name": "modelo",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "modelo",
+                    "status": "resolved",
+                    "value": "390"
+                  },
+                  {
+                    "argument_name": "period",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "period",
+                    "status": "resolved",
+                    "value": "0A"
+                  },
+                  {
+                    "argument_name": "year",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "year",
+                    "status": "resolved",
+                    "value": 2025
+                  }
+                ]
+              },
+              "shift_reason": "business_day",
               "user_state": "late"
             },
             {
               "adjusted_closes_on": "2026-04-20",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
+              "closes_on": "2026-04-20",
+              "days_overdue": null,
               "detail_action": {
                 "action": {
                   "action_id": "operator.overview.explain",
@@ -1949,55 +2101,24 @@
                   }
                 ]
               },
+              "evaluated_on": "2026-04-01",
+              "holiday_coverage": "national_only",
+              "holiday_territory": null,
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
               "modelo": "130",
+              "payment_cutoff_on": "2026-04-15",
               "period": "2026 1T",
+              "recovery_action": null,
+              "shift_reason": "business_day",
               "user_state": "due"
             },
             {
               "adjusted_closes_on": "2026-04-20",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
-              "detail_action": {
-                "action": {
-                  "action_id": "operator.overview.explain",
-                  "cli_path": [
-                    "app",
-                    "overview",
-                    "explain"
-                  ],
-                  "target_command_key": "overview.explain"
-                },
-                "argument_bindings": [
-                  {
-                    "argument_name": "modelo",
-                    "source": "operator_action.verdict_context",
-                    "source_evidence_id": null,
-                    "source_key": "modelo",
-                    "status": "resolved",
-                    "value": "136"
-                  },
-                  {
-                    "argument_name": "year",
-                    "source": "operator_action.verdict_context",
-                    "source_evidence_id": null,
-                    "source_key": "year",
-                    "status": "resolved",
-                    "value": 2026
-                  }
-                ]
-              },
-              "justificante_verified": false,
-              "local_filing_state": "not_ready_to_file",
-              "modelo": "136",
-              "period": "2026 1T",
-              "user_state": "due"
-            },
-            {
-              "adjusted_closes_on": "2026-04-20",
-              "aeat_submission_state": "not_observed",
-              "censo_enrolment_state": "unverified",
+              "closes_on": "2026-04-20",
+              "days_overdue": null,
               "detail_action": {
                 "action": {
                   "action_id": "operator.overview.explain",
@@ -2027,16 +2148,24 @@
                   }
                 ]
               },
+              "evaluated_on": "2026-04-01",
+              "holiday_coverage": "national_only",
+              "holiday_territory": null,
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
               "modelo": "303",
+              "payment_cutoff_on": null,
               "period": "2026 1T",
+              "recovery_action": null,
+              "shift_reason": "business_day",
               "user_state": "due"
             },
             {
               "adjusted_closes_on": "2026-06-30",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
+              "closes_on": "2026-06-30",
+              "days_overdue": null,
               "detail_action": {
                 "action": {
                   "action_id": "operator.overview.explain",
@@ -2066,16 +2195,24 @@
                   }
                 ]
               },
+              "evaluated_on": "2026-04-01",
+              "holiday_coverage": "national_only",
+              "holiday_territory": null,
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
               "modelo": "100",
+              "payment_cutoff_on": "2026-06-25",
               "period": "2025 0A",
+              "recovery_action": null,
+              "shift_reason": "business_day",
               "user_state": "due"
             },
             {
               "adjusted_closes_on": "2026-06-30",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
+              "closes_on": "2026-06-30",
+              "days_overdue": null,
               "detail_action": {
                 "action": {
                   "action_id": "operator.overview.explain",
@@ -2105,16 +2242,24 @@
                   }
                 ]
               },
+              "evaluated_on": "2026-04-01",
+              "holiday_coverage": "national_only",
+              "holiday_territory": null,
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
               "modelo": "714",
+              "payment_cutoff_on": null,
               "period": "2025 0A",
+              "recovery_action": null,
+              "shift_reason": "business_day",
               "user_state": "due"
             },
             {
               "adjusted_closes_on": "2026-07-20",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
+              "closes_on": "2026-07-20",
+              "days_overdue": null,
               "detail_action": {
                 "action": {
                   "action_id": "operator.overview.explain",
@@ -2144,55 +2289,24 @@
                   }
                 ]
               },
+              "evaluated_on": "2026-04-01",
+              "holiday_coverage": "national_only",
+              "holiday_territory": null,
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
               "modelo": "130",
+              "payment_cutoff_on": "2026-07-15",
               "period": "2026 2T",
+              "recovery_action": null,
+              "shift_reason": "business_day",
               "user_state": "due"
             },
             {
               "adjusted_closes_on": "2026-07-20",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
-              "detail_action": {
-                "action": {
-                  "action_id": "operator.overview.explain",
-                  "cli_path": [
-                    "app",
-                    "overview",
-                    "explain"
-                  ],
-                  "target_command_key": "overview.explain"
-                },
-                "argument_bindings": [
-                  {
-                    "argument_name": "modelo",
-                    "source": "operator_action.verdict_context",
-                    "source_evidence_id": null,
-                    "source_key": "modelo",
-                    "status": "resolved",
-                    "value": "136"
-                  },
-                  {
-                    "argument_name": "year",
-                    "source": "operator_action.verdict_context",
-                    "source_evidence_id": null,
-                    "source_key": "year",
-                    "status": "resolved",
-                    "value": 2026
-                  }
-                ]
-              },
-              "justificante_verified": false,
-              "local_filing_state": "not_ready_to_file",
-              "modelo": "136",
-              "period": "2026 2T",
-              "user_state": "due"
-            },
-            {
-              "adjusted_closes_on": "2026-07-20",
-              "aeat_submission_state": "not_observed",
-              "censo_enrolment_state": "unverified",
+              "closes_on": "2026-07-20",
+              "days_overdue": null,
               "detail_action": {
                 "action": {
                   "action_id": "operator.overview.explain",
@@ -2222,16 +2336,24 @@
                   }
                 ]
               },
+              "evaluated_on": "2026-04-01",
+              "holiday_coverage": "national_only",
+              "holiday_territory": null,
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
               "modelo": "303",
+              "payment_cutoff_on": null,
               "period": "2026 2T",
+              "recovery_action": null,
+              "shift_reason": "business_day",
               "user_state": "due"
             },
             {
               "adjusted_closes_on": "2026-09-30",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
+              "closes_on": "2026-09-30",
+              "days_overdue": null,
               "detail_action": {
                 "action": {
                   "action_id": "operator.overview.explain",
@@ -2261,16 +2383,24 @@
                   }
                 ]
               },
+              "evaluated_on": "2026-04-01",
+              "holiday_coverage": "national_only",
+              "holiday_territory": null,
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
               "modelo": "360",
+              "payment_cutoff_on": null,
               "period": "2025 AD-HOC",
+              "recovery_action": null,
+              "shift_reason": "business_day",
               "user_state": "due"
             },
             {
               "adjusted_closes_on": "2026-10-20",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
+              "closes_on": "2026-10-20",
+              "days_overdue": null,
               "detail_action": {
                 "action": {
                   "action_id": "operator.overview.explain",
@@ -2300,55 +2430,24 @@
                   }
                 ]
               },
+              "evaluated_on": "2026-04-01",
+              "holiday_coverage": "national_only",
+              "holiday_territory": null,
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
               "modelo": "130",
+              "payment_cutoff_on": "2026-10-15",
               "period": "2026 3T",
+              "recovery_action": null,
+              "shift_reason": "business_day",
               "user_state": "due"
             },
             {
               "adjusted_closes_on": "2026-10-20",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
-              "detail_action": {
-                "action": {
-                  "action_id": "operator.overview.explain",
-                  "cli_path": [
-                    "app",
-                    "overview",
-                    "explain"
-                  ],
-                  "target_command_key": "overview.explain"
-                },
-                "argument_bindings": [
-                  {
-                    "argument_name": "modelo",
-                    "source": "operator_action.verdict_context",
-                    "source_evidence_id": null,
-                    "source_key": "modelo",
-                    "status": "resolved",
-                    "value": "136"
-                  },
-                  {
-                    "argument_name": "year",
-                    "source": "operator_action.verdict_context",
-                    "source_evidence_id": null,
-                    "source_key": "year",
-                    "status": "resolved",
-                    "value": 2026
-                  }
-                ]
-              },
-              "justificante_verified": false,
-              "local_filing_state": "not_ready_to_file",
-              "modelo": "136",
-              "period": "2026 3T",
-              "user_state": "due"
-            },
-            {
-              "adjusted_closes_on": "2026-10-20",
-              "aeat_submission_state": "not_observed",
-              "censo_enrolment_state": "unverified",
+              "closes_on": "2026-10-20",
+              "days_overdue": null,
               "detail_action": {
                 "action": {
                   "action_id": "operator.overview.explain",
@@ -2378,10 +2477,16 @@
                   }
                 ]
               },
+              "evaluated_on": "2026-04-01",
+              "holiday_coverage": "national_only",
+              "holiday_territory": null,
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
               "modelo": "303",
+              "payment_cutoff_on": null,
               "period": "2026 3T",
+              "recovery_action": null,
+              "shift_reason": "business_day",
               "user_state": "due"
             }
           ],
@@ -2592,7 +2697,6 @@
               "affected_modelos": [
                 "100",
                 "130",
-                "136",
                 "303",
                 "360",
                 "390",
@@ -2830,7 +2934,7 @@
             },
             "code": "censo.enrolment_unverified",
             "context": {
-              "affected_modelos": "100,130,136,303,360,390,714",
+              "affected_modelos": "100,130,303,360,390,714",
               "profile": "docs-sequence-sandbox"
             },
             "message": "Censo enrolment unverified",
@@ -3102,6 +3206,37 @@
                   "source_evidence_id": null,
                   "source_key": "modelo",
                   "status": "resolved",
+                  "value": "136"
+                }
+              ]
+            },
+            "code": "overview.coverage.incomplete",
+            "context": {
+              "modelo": "136",
+              "profile": "docs-sequence-sandbox",
+              "reason": "applicability_undetermined"
+            },
+            "message": "The filing obligation 136 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
+            "severity": "info"
+          },
+          {
+            "action": {
+              "action": {
+                "action_id": "operator.overview.explain",
+                "cli_path": [
+                  "app",
+                  "overview",
+                  "explain"
+                ],
+                "target_command_key": "overview.explain"
+              },
+              "argument_bindings": [
+                {
+                  "argument_name": "modelo",
+                  "source": "operator_action.verdict_context",
+                  "source_evidence_id": null,
+                  "source_key": "modelo",
+                  "status": "resolved",
                   "value": "156"
                 }
               ]
@@ -4109,6 +4244,7 @@
           }
         ],
         "result": {
+          "as_of": null,
           "completeness": null,
           "coverage": null,
           "entries": [],
@@ -4118,11 +4254,11 @@
           "incomplete_reason": null,
           "profiles": [
             {
-              "entry_count": 16,
+              "entry_count": 12,
               "event_count": 0,
               "label": "docs-sequence-sandbox",
-              "next_due_closes_on": "2026-01-20",
-              "next_due_modelo": "136",
+              "next_due_closes_on": "2026-01-30",
+              "next_due_modelo": "130",
               "next_due_period": "2025 4T",
               "profile_id": "<profile-id>",
               "suppressed_entry_count": 0,
@@ -4339,7 +4475,7 @@
             },
             "code": "censo.enrolment_unverified",
             "context": {
-              "affected_modelos": "100,130,136,303,360,390,714"
+              "affected_modelos": "100,130,303,360,390,714"
             },
             "message": "Censo enrolment unverified",
             "severity": "warning"
@@ -4602,6 +4738,36 @@
                   "source_evidence_id": null,
                   "source_key": "modelo",
                   "status": "resolved",
+                  "value": "136"
+                }
+              ]
+            },
+            "code": "overview.coverage.incomplete",
+            "context": {
+              "modelo": "136",
+              "reason": "applicability_undetermined"
+            },
+            "message": "The filing obligation 136 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
+            "severity": "info"
+          },
+          {
+            "action": {
+              "action": {
+                "action_id": "operator.overview.explain",
+                "cli_path": [
+                  "app",
+                  "overview",
+                  "explain"
+                ],
+                "target_command_key": "overview.explain"
+              },
+              "argument_bindings": [
+                {
+                  "argument_name": "modelo",
+                  "source": "operator_action.verdict_context",
+                  "source_evidence_id": null,
+                  "source_key": "modelo",
+                  "status": "resolved",
                   "value": "156"
                 }
               ]
@@ -5573,14 +5739,35 @@
             },
             "message": "The filing obligation 763 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
             "severity": "info"
+          },
+          {
+            "action": {
+              "action": {
+                "action_id": "operator.live.filed.pull_all",
+                "cli_path": [
+                  "app",
+                  "live",
+                  "filed",
+                  "pull-all"
+                ],
+                "target_command_key": "app.live.filed.pull_all"
+              },
+              "argument_bindings": []
+            },
+            "code": "overview.no_aeat_history",
+            "context": {
+              "observation_count": "0"
+            },
+            "message": "This profile holds no filing evidence AEAT confirmed.",
+            "severity": "info"
           }
         ],
         "result": {
+          "as_of": "2026-04-01",
           "completeness": {
             "computable_modelos": [
               "100",
               "130",
-              "136",
               "303",
               "360",
               "390",
@@ -5635,6 +5822,10 @@
               },
               {
                 "modelo": "128",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "136",
                 "reason": "applicability_undetermined"
               },
               {
@@ -5876,7 +6067,6 @@
             "surfaced": [
               "100",
               "130",
-              "136",
               "303",
               "360",
               "390",
@@ -5885,48 +6075,11 @@
           },
           "entries": [
             {
-              "adjusted_closes_on": "2026-01-20",
-              "aeat_submission_state": "not_observed",
-              "censo_enrolment_state": "unverified",
-              "detail_action": {
-                "action": {
-                  "action_id": "operator.overview.explain",
-                  "cli_path": [
-                    "app",
-                    "overview",
-                    "explain"
-                  ],
-                  "target_command_key": "overview.explain"
-                },
-                "argument_bindings": [
-                  {
-                    "argument_name": "modelo",
-                    "source": "operator_action.verdict_context",
-                    "source_evidence_id": null,
-                    "source_key": "modelo",
-                    "status": "resolved",
-                    "value": "136"
-                  },
-                  {
-                    "argument_name": "year",
-                    "source": "operator_action.verdict_context",
-                    "source_evidence_id": null,
-                    "source_key": "year",
-                    "status": "resolved",
-                    "value": 2025
-                  }
-                ]
-              },
-              "justificante_verified": false,
-              "local_filing_state": "not_ready_to_file",
-              "modelo": "136",
-              "period": "2025 4T",
-              "user_state": "late"
-            },
-            {
               "adjusted_closes_on": "2026-01-30",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
+              "closes_on": "2026-01-30",
+              "days_overdue": 61,
               "detail_action": {
                 "action": {
                   "action_id": "operator.overview.explain",
@@ -5956,16 +6109,61 @@
                   }
                 ]
               },
+              "evaluated_on": "2026-04-01",
+              "holiday_coverage": "national_only",
+              "holiday_territory": null,
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
               "modelo": "130",
+              "payment_cutoff_on": "2026-01-27",
               "period": "2025 4T",
+              "recovery_action": {
+                "action": {
+                  "action_id": "operator.modelo.work.create",
+                  "cli_path": [
+                    "app",
+                    "modelo",
+                    "work",
+                    "create"
+                  ],
+                  "target_command_key": "modelo.work.create"
+                },
+                "argument_bindings": [
+                  {
+                    "argument_name": "modelo",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "modelo",
+                    "status": "resolved",
+                    "value": "130"
+                  },
+                  {
+                    "argument_name": "period",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "period",
+                    "status": "resolved",
+                    "value": "4T"
+                  },
+                  {
+                    "argument_name": "year",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "year",
+                    "status": "resolved",
+                    "value": 2025
+                  }
+                ]
+              },
+              "shift_reason": "business_day",
               "user_state": "late"
             },
             {
               "adjusted_closes_on": "2026-01-30",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
+              "closes_on": "2026-01-30",
+              "days_overdue": 61,
               "detail_action": {
                 "action": {
                   "action_id": "operator.overview.explain",
@@ -5995,16 +6193,61 @@
                   }
                 ]
               },
+              "evaluated_on": "2026-04-01",
+              "holiday_coverage": "national_only",
+              "holiday_territory": null,
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
               "modelo": "303",
+              "payment_cutoff_on": "2026-01-27",
               "period": "2025 4T",
+              "recovery_action": {
+                "action": {
+                  "action_id": "operator.modelo.work.create",
+                  "cli_path": [
+                    "app",
+                    "modelo",
+                    "work",
+                    "create"
+                  ],
+                  "target_command_key": "modelo.work.create"
+                },
+                "argument_bindings": [
+                  {
+                    "argument_name": "modelo",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "modelo",
+                    "status": "resolved",
+                    "value": "303"
+                  },
+                  {
+                    "argument_name": "period",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "period",
+                    "status": "resolved",
+                    "value": "4T"
+                  },
+                  {
+                    "argument_name": "year",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "year",
+                    "status": "resolved",
+                    "value": 2025
+                  }
+                ]
+              },
+              "shift_reason": "business_day",
               "user_state": "late"
             },
             {
               "adjusted_closes_on": "2026-01-30",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
+              "closes_on": "2026-01-30",
+              "days_overdue": 61,
               "detail_action": {
                 "action": {
                   "action_id": "operator.overview.explain",
@@ -6034,16 +6277,61 @@
                   }
                 ]
               },
+              "evaluated_on": "2026-04-01",
+              "holiday_coverage": "national_only",
+              "holiday_territory": null,
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
               "modelo": "390",
+              "payment_cutoff_on": null,
               "period": "2025 0A",
+              "recovery_action": {
+                "action": {
+                  "action_id": "operator.modelo.work.create",
+                  "cli_path": [
+                    "app",
+                    "modelo",
+                    "work",
+                    "create"
+                  ],
+                  "target_command_key": "modelo.work.create"
+                },
+                "argument_bindings": [
+                  {
+                    "argument_name": "modelo",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "modelo",
+                    "status": "resolved",
+                    "value": "390"
+                  },
+                  {
+                    "argument_name": "period",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "period",
+                    "status": "resolved",
+                    "value": "0A"
+                  },
+                  {
+                    "argument_name": "year",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "year",
+                    "status": "resolved",
+                    "value": 2025
+                  }
+                ]
+              },
+              "shift_reason": "business_day",
               "user_state": "late"
             },
             {
               "adjusted_closes_on": "2026-04-20",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
+              "closes_on": "2026-04-20",
+              "days_overdue": null,
               "detail_action": {
                 "action": {
                   "action_id": "operator.overview.explain",
@@ -6073,55 +6361,24 @@
                   }
                 ]
               },
+              "evaluated_on": "2026-04-01",
+              "holiday_coverage": "national_only",
+              "holiday_territory": null,
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
               "modelo": "130",
+              "payment_cutoff_on": "2026-04-15",
               "period": "2026 1T",
+              "recovery_action": null,
+              "shift_reason": "business_day",
               "user_state": "due"
             },
             {
               "adjusted_closes_on": "2026-04-20",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
-              "detail_action": {
-                "action": {
-                  "action_id": "operator.overview.explain",
-                  "cli_path": [
-                    "app",
-                    "overview",
-                    "explain"
-                  ],
-                  "target_command_key": "overview.explain"
-                },
-                "argument_bindings": [
-                  {
-                    "argument_name": "modelo",
-                    "source": "operator_action.verdict_context",
-                    "source_evidence_id": null,
-                    "source_key": "modelo",
-                    "status": "resolved",
-                    "value": "136"
-                  },
-                  {
-                    "argument_name": "year",
-                    "source": "operator_action.verdict_context",
-                    "source_evidence_id": null,
-                    "source_key": "year",
-                    "status": "resolved",
-                    "value": 2026
-                  }
-                ]
-              },
-              "justificante_verified": false,
-              "local_filing_state": "not_ready_to_file",
-              "modelo": "136",
-              "period": "2026 1T",
-              "user_state": "due"
-            },
-            {
-              "adjusted_closes_on": "2026-04-20",
-              "aeat_submission_state": "not_observed",
-              "censo_enrolment_state": "unverified",
+              "closes_on": "2026-04-20",
+              "days_overdue": null,
               "detail_action": {
                 "action": {
                   "action_id": "operator.overview.explain",
@@ -6151,16 +6408,24 @@
                   }
                 ]
               },
+              "evaluated_on": "2026-04-01",
+              "holiday_coverage": "national_only",
+              "holiday_territory": null,
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
               "modelo": "303",
+              "payment_cutoff_on": null,
               "period": "2026 1T",
+              "recovery_action": null,
+              "shift_reason": "business_day",
               "user_state": "due"
             },
             {
               "adjusted_closes_on": "2026-06-30",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
+              "closes_on": "2026-06-30",
+              "days_overdue": null,
               "detail_action": {
                 "action": {
                   "action_id": "operator.overview.explain",
@@ -6190,16 +6455,24 @@
                   }
                 ]
               },
+              "evaluated_on": "2026-04-01",
+              "holiday_coverage": "national_only",
+              "holiday_territory": null,
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
               "modelo": "100",
+              "payment_cutoff_on": "2026-06-25",
               "period": "2025 0A",
+              "recovery_action": null,
+              "shift_reason": "business_day",
               "user_state": "due"
             },
             {
               "adjusted_closes_on": "2026-06-30",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
+              "closes_on": "2026-06-30",
+              "days_overdue": null,
               "detail_action": {
                 "action": {
                   "action_id": "operator.overview.explain",
@@ -6229,16 +6502,24 @@
                   }
                 ]
               },
+              "evaluated_on": "2026-04-01",
+              "holiday_coverage": "national_only",
+              "holiday_territory": null,
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
               "modelo": "714",
+              "payment_cutoff_on": null,
               "period": "2025 0A",
+              "recovery_action": null,
+              "shift_reason": "business_day",
               "user_state": "due"
             },
             {
               "adjusted_closes_on": "2026-07-20",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
+              "closes_on": "2026-07-20",
+              "days_overdue": null,
               "detail_action": {
                 "action": {
                   "action_id": "operator.overview.explain",
@@ -6268,55 +6549,24 @@
                   }
                 ]
               },
+              "evaluated_on": "2026-04-01",
+              "holiday_coverage": "national_only",
+              "holiday_territory": null,
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
               "modelo": "130",
+              "payment_cutoff_on": "2026-07-15",
               "period": "2026 2T",
+              "recovery_action": null,
+              "shift_reason": "business_day",
               "user_state": "due"
             },
             {
               "adjusted_closes_on": "2026-07-20",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
-              "detail_action": {
-                "action": {
-                  "action_id": "operator.overview.explain",
-                  "cli_path": [
-                    "app",
-                    "overview",
-                    "explain"
-                  ],
-                  "target_command_key": "overview.explain"
-                },
-                "argument_bindings": [
-                  {
-                    "argument_name": "modelo",
-                    "source": "operator_action.verdict_context",
-                    "source_evidence_id": null,
-                    "source_key": "modelo",
-                    "status": "resolved",
-                    "value": "136"
-                  },
-                  {
-                    "argument_name": "year",
-                    "source": "operator_action.verdict_context",
-                    "source_evidence_id": null,
-                    "source_key": "year",
-                    "status": "resolved",
-                    "value": 2026
-                  }
-                ]
-              },
-              "justificante_verified": false,
-              "local_filing_state": "not_ready_to_file",
-              "modelo": "136",
-              "period": "2026 2T",
-              "user_state": "due"
-            },
-            {
-              "adjusted_closes_on": "2026-07-20",
-              "aeat_submission_state": "not_observed",
-              "censo_enrolment_state": "unverified",
+              "closes_on": "2026-07-20",
+              "days_overdue": null,
               "detail_action": {
                 "action": {
                   "action_id": "operator.overview.explain",
@@ -6346,16 +6596,24 @@
                   }
                 ]
               },
+              "evaluated_on": "2026-04-01",
+              "holiday_coverage": "national_only",
+              "holiday_territory": null,
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
               "modelo": "303",
+              "payment_cutoff_on": null,
               "period": "2026 2T",
+              "recovery_action": null,
+              "shift_reason": "business_day",
               "user_state": "due"
             },
             {
               "adjusted_closes_on": "2026-09-30",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
+              "closes_on": "2026-09-30",
+              "days_overdue": null,
               "detail_action": {
                 "action": {
                   "action_id": "operator.overview.explain",
@@ -6385,16 +6643,24 @@
                   }
                 ]
               },
+              "evaluated_on": "2026-04-01",
+              "holiday_coverage": "national_only",
+              "holiday_territory": null,
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
               "modelo": "360",
+              "payment_cutoff_on": null,
               "period": "2025 AD-HOC",
+              "recovery_action": null,
+              "shift_reason": "business_day",
               "user_state": "due"
             },
             {
               "adjusted_closes_on": "2026-10-20",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
+              "closes_on": "2026-10-20",
+              "days_overdue": null,
               "detail_action": {
                 "action": {
                   "action_id": "operator.overview.explain",
@@ -6424,55 +6690,24 @@
                   }
                 ]
               },
+              "evaluated_on": "2026-04-01",
+              "holiday_coverage": "national_only",
+              "holiday_territory": null,
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
               "modelo": "130",
+              "payment_cutoff_on": "2026-10-15",
               "period": "2026 3T",
+              "recovery_action": null,
+              "shift_reason": "business_day",
               "user_state": "due"
             },
             {
               "adjusted_closes_on": "2026-10-20",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
-              "detail_action": {
-                "action": {
-                  "action_id": "operator.overview.explain",
-                  "cli_path": [
-                    "app",
-                    "overview",
-                    "explain"
-                  ],
-                  "target_command_key": "overview.explain"
-                },
-                "argument_bindings": [
-                  {
-                    "argument_name": "modelo",
-                    "source": "operator_action.verdict_context",
-                    "source_evidence_id": null,
-                    "source_key": "modelo",
-                    "status": "resolved",
-                    "value": "136"
-                  },
-                  {
-                    "argument_name": "year",
-                    "source": "operator_action.verdict_context",
-                    "source_evidence_id": null,
-                    "source_key": "year",
-                    "status": "resolved",
-                    "value": 2026
-                  }
-                ]
-              },
-              "justificante_verified": false,
-              "local_filing_state": "not_ready_to_file",
-              "modelo": "136",
-              "period": "2026 3T",
-              "user_state": "due"
-            },
-            {
-              "adjusted_closes_on": "2026-10-20",
-              "aeat_submission_state": "not_observed",
-              "censo_enrolment_state": "unverified",
+              "closes_on": "2026-10-20",
+              "days_overdue": null,
               "detail_action": {
                 "action": {
                   "action_id": "operator.overview.explain",
@@ -6502,10 +6737,16 @@
                   }
                 ]
               },
+              "evaluated_on": "2026-04-01",
+              "holiday_coverage": "national_only",
+              "holiday_territory": null,
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
               "modelo": "303",
+              "payment_cutoff_on": null,
               "period": "2026 3T",
+              "recovery_action": null,
+              "shift_reason": "business_day",
               "user_state": "due"
             }
           ],
@@ -7389,7 +7630,6 @@
               "affected_modelos": [
                 "100",
                 "130",
-                "136",
                 "303",
                 "360",
                 "390",

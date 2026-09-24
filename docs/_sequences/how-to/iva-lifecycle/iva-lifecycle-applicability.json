@@ -48,7 +48,7 @@
           "out_of_plazo_warning": null,
           "profile_facts": {
             "art109_activity_income_withholding_ge_70pct": false,
-            "bienes_extranjero_above_threshold": false,
+            "bienes_extranjero_above_threshold": "",
             "does_intracomunitario": false,
             "entity_type": "natural_person",
             "has_employees": false,
@@ -61,12 +61,14 @@
             "iva.roi_enrolled": false,
             "iva_regime": "GENERAL",
             "legal_entity_form": "",
-            "monedas_virtuales_extranjero_above_threshold": false,
+            "monedas_virtuales_extranjero_above_threshold": "",
             "pays_capital_income_with_retencion": false,
             "pays_professionals_with_retencion": false,
             "pays_rent_with_retencion": false,
+            "premio_loteria_gravamen_especial_sin_retencion": "",
+            "premio_loteria_gravamen_especial_trimestres": "",
             "tax_id": "sha256:1c9f9632",
-            "third_party_transactions_above_347_threshold": false
+            "third_party_transactions_above_347_threshold": ""
           },
           "rationale": "No se puede determinar la aplicabilidad: el tipo de contribuyente no está declarado. Faltan el tipo de entidad y, en su caso, las categorías de renta del IRPF.",
           "scheduling_rationale": "Aplica segun la ventana registral del modelo.",

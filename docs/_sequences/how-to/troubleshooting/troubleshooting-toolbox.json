@@ -449,6 +449,16 @@
                 {
                   "detail": null,
                   "requirement": "optional",
+                  "summary": "obligations.premio_loteria_gravamen_especial_sin_retencion — Lottery or betting prize subject to the gravamen especial obtained without retención or ingreso a cuenta (Modelo 136)"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
+                  "summary": "obligations.premio_loteria_gravamen_especial_trimestres — Quarters in which such a lottery or betting prize was cashed (Modelo 136), as YYYY-nT tokens separated by |"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
                   "summary": "capabilities.llm_vision — Enable on-host LLM vision for reading invoices?"
                 },
                 {
@@ -465,7 +475,7 @@
               "name": "profile.readiness",
               "precondition_action": null,
               "status": "ok",
-              "summary": "12/82 profile keys set."
+              "summary": "12/84 profile keys set."
             },
             {
               "audience": "operator",
@@ -561,7 +571,7 @@
             "missing_required": [],
             "profile_present_keys": 12,
             "profile_ready": true,
-            "profile_total_keys": 82
+            "profile_total_keys": 84
           }
         },
         "schema_version": "2",

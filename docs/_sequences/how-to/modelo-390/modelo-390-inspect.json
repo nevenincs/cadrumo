@@ -12012,12 +12012,12 @@
         {
           "json_path": "result.attachment_id",
           "name": "attestation4",
-          "value": "ce64690c0506d2399f617a5500251ab59295cc7462704d10fbf22277e9aaee20"
+          "value": "0d953599e52c75250bd72ca965049731b11cfea161ed5f969920c3f5594d3ac4"
         },
         {
           "json_path": "result.sha256",
           "name": "attestation_sha256_4",
-          "value": "ce64690c0506d2399f617a5500251ab59295cc7462704d10fbf22277e9aaee20"
+          "value": "0d953599e52c75250bd72ca965049731b11cfea161ed5f969920c3f5594d3ac4"
         }
       ],
       "envelope": {
@@ -12025,14 +12025,14 @@
         "command": "modelo.work.attest-m303-exonerado-390",
         "notices": [],
         "result": {
-          "attachment_id": "ce64690c0506d2399f617a5500251ab59295cc7462704d10fbf22277e9aaee20",
+          "attachment_id": "0d953599e52c75250bd72ca965049731b11cfea161ed5f969920c3f5594d3ac4",
           "filing_year": 2025,
           "operation": "modelo.work.attest-m303-exonerado-390",
           "period": {
             "code": "4T",
             "filing_year": 2025
           },
-          "sha256": "ce64690c0506d2399f617a5500251ab59295cc7462704d10fbf22277e9aaee20"
+          "sha256": "0d953599e52c75250bd72ca965049731b11cfea161ed5f969920c3f5594d3ac4"
         },
         "schema_version": "2",
         "status": "success"
@@ -12055,15 +12055,15 @@
         "16b8f7f898fc8458c8dc67f8cdaf35f8382fc22e9f2e0742869ef82ef1b8e138",
         "--no-joint-return-elected",
         "--m303-exonerado-390-attachment-id",
-        "ce64690c0506d2399f617a5500251ab59295cc7462704d10fbf22277e9aaee20",
+        "0d953599e52c75250bd72ca965049731b11cfea161ed5f969920c3f5594d3ac4",
         "--m303-exonerado-390-sha256",
-        "ce64690c0506d2399f617a5500251ab59295cc7462704d10fbf22277e9aaee20"
+        "0d953599e52c75250bd72ca965049731b11cfea161ed5f969920c3f5594d3ac4"
       ],
       "captures": [
         {
           "json_path": "result.calculation_revision_id",
           "name": "cr4",
-          "value": "6fbc82e271baaad97b267e78dfad3e4c39cef67175bc2f097b02990b8ba4094c"
+          "value": "45179664cf30b90e09704eaeb7d0d32323b033e666826ee07bf578b881505235"
         }
       ],
       "envelope": {
@@ -12137,7 +12137,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "6fbc82e271baaad97b267e78dfad3e4c39cef67175bc2f097b02990b8ba4094c",
+          "calculation_revision_id": "45179664cf30b90e09704eaeb7d0d32323b033e666826ee07bf578b881505235",
           "casilla_values": {
             "01": "0",
             "02": "0",
@@ -15625,7 +15625,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 6fbc82e271baaad97b267e78dfad3e4c39cef67175bc2f097b02990b8ba4094c (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 45179664cf30b90e09704eaeb7d0d32323b033e666826ee07bf578b881505235 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_iva_aggregation",
@@ -15675,7 +15675,7 @@
         "modelo",
         "work",
         "verify",
-        "6fbc82e271baaad97b267e78dfad3e4c39cef67175bc2f097b02990b8ba4094c"
+        "45179664cf30b90e09704eaeb7d0d32323b033e666826ee07bf578b881505235"
       ],
       "captures": [],
       "envelope": {
@@ -15718,7 +15718,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "6fbc82e271baaad97b267e78dfad3e4c39cef67175bc2f097b02990b8ba4094c",
+          "calculation_revision_id": "45179664cf30b90e09704eaeb7d0d32323b033e666826ee07bf578b881505235",
           "completeness_status": "complete",
           "findings": [
             {
@@ -15777,7 +15777,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "3c7f6e11bcc17334d36f4374dee66ca87544779fcb2b79e7e16ebd15f4eef3b3",
+          "verification_report_id": "d267c94e68813665901be3260cea2b135c8859e5317426dc40eacd1716ceffc3",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
@@ -15798,7 +15798,7 @@
         "modelo",
         "work",
         "file",
-        "6fbc82e271baaad97b267e78dfad3e4c39cef67175bc2f097b02990b8ba4094c"
+        "45179664cf30b90e09704eaeb7d0d32323b033e666826ee07bf578b881505235"
       ],
       "captures": [],
       "envelope": {
@@ -15810,13 +15810,13 @@
           "aeat_register": null,
           "amends_filing_record_id": null,
           "bucket_id": "<bucket-id>",
-          "calculation_revision_id": "6fbc82e271baaad97b267e78dfad3e4c39cef67175bc2f097b02990b8ba4094c",
+          "calculation_revision_id": "45179664cf30b90e09704eaeb7d0d32323b033e666826ee07bf578b881505235",
           "confirmation": "pendiente",
           "declaration_kind": "original",
           "external_evidence": null,
           "filed_at": "2026-04-01T09:00:00+00:00",
           "filed_by": "docs-sequence-sandbox",
-          "filing_record_id": "153935b48ad6452b88db71b6b4590776e72405d526ffbbd197f4103e4cb523ac",
+          "filing_record_id": "22a62c0884bc5198d3d2d6c9070e94b88691e9135e313d743b10e19845f86fe1",
           "filing_year": 2025,
           "kind": "internal_filing",
           "live_submission": false,
@@ -25467,7 +25467,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "active_profile\tdocs-sequence-sandbox\noperation\tmodelo.work.list\ninclude_discarded\tFalse\nwork_unit_count\t5\nshort_work_unit_id\twork_unit_id\tmodelo\tyear\tperiod\trevision_id\tstate\tcurrent_revision\tfiled_revision\tname\nf0269e6476b3\t09420aa5c5d838d4a8a8b9198fa2adc02ff2573a0983d696a225f0269e6476b3\t303\t2025\t1T\t2025\tfiled\t316f9ca17065\t316f9ca17065\t303-2025-1T\n7d5697fb590c\taf6d15eead73e8acebfb6efaefcbde65819a23082408d091b4947d5697fb590c\t303\t2025\t2T\t2025\tfiled\te3f5ec7d7e65\te3f5ec7d7e65\t303-2025-2T\n6adc206d0a2c\te214f91933b3bae05a0b032a61021b63be883fd5836372825eb06adc206d0a2c\t303\t2025\t3T\t2025\tfiled\t9ea8038a6a7b\t9ea8038a6a7b\t303-2025-3T\nf82ef1b8e138\t16b8f7f898fc8458c8dc67f8cdaf35f8382fc22e9f2e0742869ef82ef1b8e138\t303\t2025\t4T\t2025\tfiled\t990b8ba4094c\t990b8ba4094c\t303-2025-4T\nb24b688e777b\t66d74724a7f3194144d855c6ccee80b76ca7ed72ad50f7192d7eb24b688e777b\t390\t2025\t0A\t2025\tdraft\t81a768ba4791\t\t390-2025-0A\nnotice\tmodelo.work.list.selection_required\tChoose one work unit before continuing.\n"
+      "text": "active_profile\tdocs-sequence-sandbox\noperation\tmodelo.work.list\ninclude_discarded\tFalse\nwork_unit_count\t5\nshort_work_unit_id\twork_unit_id\tmodelo\tyear\tperiod\trevision_id\tstate\tcurrent_revision\tfiled_revision\tname\nf0269e6476b3\t09420aa5c5d838d4a8a8b9198fa2adc02ff2573a0983d696a225f0269e6476b3\t303\t2025\t1T\t2025\tfiled\t316f9ca17065\t316f9ca17065\t303-2025-1T\n7d5697fb590c\taf6d15eead73e8acebfb6efaefcbde65819a23082408d091b4947d5697fb590c\t303\t2025\t2T\t2025\tfiled\te3f5ec7d7e65\te3f5ec7d7e65\t303-2025-2T\n6adc206d0a2c\te214f91933b3bae05a0b032a61021b63be883fd5836372825eb06adc206d0a2c\t303\t2025\t3T\t2025\tfiled\t9ea8038a6a7b\t9ea8038a6a7b\t303-2025-3T\nf82ef1b8e138\t16b8f7f898fc8458c8dc67f8cdaf35f8382fc22e9f2e0742869ef82ef1b8e138\t303\t2025\t4T\t2025\tfiled\t78b881505235\t78b881505235\t303-2025-4T\nb24b688e777b\t66d74724a7f3194144d855c6ccee80b76ca7ed72ad50f7192d7eb24b688e777b\t390\t2025\t0A\t2025\tdraft\t81a768ba4791\t\t390-2025-0A\nnotice\tmodelo.work.list.selection_required\tChoose one work unit before continuing.\n"
     },
     {
       "argv": [

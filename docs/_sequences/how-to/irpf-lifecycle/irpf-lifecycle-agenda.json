@@ -216,7 +216,7 @@
             },
             "code": "censo.enrolment_unverified",
             "context": {
-              "affected_modelos": "130,136,303,360"
+              "affected_modelos": "130,303,360"
             },
             "message": "Censo enrolment unverified",
             "severity": "warning"
@@ -489,6 +489,36 @@
               "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 128 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
+            "severity": "warning"
+          },
+          {
+            "action": {
+              "action": {
+                "action_id": "operator.overview.explain",
+                "cli_path": [
+                  "app",
+                  "overview",
+                  "explain"
+                ],
+                "target_command_key": "overview.explain"
+              },
+              "argument_bindings": [
+                {
+                  "argument_name": "modelo",
+                  "source": "operator_action.verdict_context",
+                  "source_evidence_id": null,
+                  "source_key": "modelo",
+                  "status": "resolved",
+                  "value": "136"
+                }
+              ]
+            },
+            "code": "overview.coverage.incomplete",
+            "context": {
+              "modelo": "136",
+              "reason": "applicability_undetermined"
+            },
+            "message": "The filing obligation 136 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
             "severity": "warning"
           },
           {
@@ -1568,7 +1598,6 @@
           "completeness": {
             "computable_modelos": [
               "130",
-              "136",
               "303",
               "360"
             ],
@@ -1625,6 +1654,10 @@
               },
               {
                 "modelo": "128",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "136",
                 "reason": "applicability_undetermined"
               },
               {
@@ -1873,7 +1906,6 @@
             ],
             "surfaced": [
               "130",
-              "136",
               "303",
               "360"
             ]
@@ -1921,53 +1953,6 @@
               "local_filing_state": "not_ready_to_file",
               "modelo": "130",
               "payment_cutoff_on": "2026-04-15",
-              "period": "2026 1T",
-              "recovery_action": null,
-              "shift_reason": "business_day",
-              "user_state": "due"
-            },
-            {
-              "adjusted_closes_on": "2026-04-20",
-              "aeat_submission_state": "not_observed",
-              "censo_enrolment_state": "unverified",
-              "closes_on": "2026-04-20",
-              "days_overdue": null,
-              "detail_action": {
-                "action": {
-                  "action_id": "operator.overview.explain",
-                  "cli_path": [
-                    "app",
-                    "overview",
-                    "explain"
-                  ],
-                  "target_command_key": "overview.explain"
-                },
-                "argument_bindings": [
-                  {
-                    "argument_name": "modelo",
-                    "source": "operator_action.verdict_context",
-                    "source_evidence_id": null,
-                    "source_key": "modelo",
-                    "status": "resolved",
-                    "value": "136"
-                  },
-                  {
-                    "argument_name": "year",
-                    "source": "operator_action.verdict_context",
-                    "source_evidence_id": null,
-                    "source_key": "year",
-                    "status": "resolved",
-                    "value": 2026
-                  }
-                ]
-              },
-              "evaluated_on": "2026-04-01",
-              "holiday_coverage": "national_only",
-              "holiday_territory": null,
-              "justificante_verified": false,
-              "local_filing_state": "not_ready_to_file",
-              "modelo": "136",
-              "payment_cutoff_on": null,
               "period": "2026 1T",
               "recovery_action": null,
               "shift_reason": "business_day",
@@ -2062,53 +2047,6 @@
               "local_filing_state": "not_ready_to_file",
               "modelo": "130",
               "payment_cutoff_on": "2026-07-15",
-              "period": "2026 2T",
-              "recovery_action": null,
-              "shift_reason": "business_day",
-              "user_state": "due"
-            },
-            {
-              "adjusted_closes_on": "2026-07-20",
-              "aeat_submission_state": "not_observed",
-              "censo_enrolment_state": "unverified",
-              "closes_on": "2026-07-20",
-              "days_overdue": null,
-              "detail_action": {
-                "action": {
-                  "action_id": "operator.overview.explain",
-                  "cli_path": [
-                    "app",
-                    "overview",
-                    "explain"
-                  ],
-                  "target_command_key": "overview.explain"
-                },
-                "argument_bindings": [
-                  {
-                    "argument_name": "modelo",
-                    "source": "operator_action.verdict_context",
-                    "source_evidence_id": null,
-                    "source_key": "modelo",
-                    "status": "resolved",
-                    "value": "136"
-                  },
-                  {
-                    "argument_name": "year",
-                    "source": "operator_action.verdict_context",
-                    "source_evidence_id": null,
-                    "source_key": "year",
-                    "status": "resolved",
-                    "value": 2026
-                  }
-                ]
-              },
-              "evaluated_on": "2026-04-01",
-              "holiday_coverage": "national_only",
-              "holiday_territory": null,
-              "justificante_verified": false,
-              "local_filing_state": "not_ready_to_file",
-              "modelo": "136",
-              "payment_cutoff_on": null,
               "period": "2026 2T",
               "recovery_action": null,
               "shift_reason": "business_day",
@@ -2250,53 +2188,6 @@
               "local_filing_state": "not_ready_to_file",
               "modelo": "130",
               "payment_cutoff_on": "2026-10-15",
-              "period": "2026 3T",
-              "recovery_action": null,
-              "shift_reason": "business_day",
-              "user_state": "due"
-            },
-            {
-              "adjusted_closes_on": "2026-10-20",
-              "aeat_submission_state": "not_observed",
-              "censo_enrolment_state": "unverified",
-              "closes_on": "2026-10-20",
-              "days_overdue": null,
-              "detail_action": {
-                "action": {
-                  "action_id": "operator.overview.explain",
-                  "cli_path": [
-                    "app",
-                    "overview",
-                    "explain"
-                  ],
-                  "target_command_key": "overview.explain"
-                },
-                "argument_bindings": [
-                  {
-                    "argument_name": "modelo",
-                    "source": "operator_action.verdict_context",
-                    "source_evidence_id": null,
-                    "source_key": "modelo",
-                    "status": "resolved",
-                    "value": "136"
-                  },
-                  {
-                    "argument_name": "year",
-                    "source": "operator_action.verdict_context",
-                    "source_evidence_id": null,
-                    "source_key": "year",
-                    "status": "resolved",
-                    "value": 2026
-                  }
-                ]
-              },
-              "evaluated_on": "2026-04-01",
-              "holiday_coverage": "national_only",
-              "holiday_territory": null,
-              "justificante_verified": false,
-              "local_filing_state": "not_ready_to_file",
-              "modelo": "136",
-              "payment_cutoff_on": null,
               "period": "2026 3T",
               "recovery_action": null,
               "shift_reason": "business_day",
@@ -2556,7 +2447,6 @@
             {
               "affected_modelos": [
                 "130",
-                "136",
                 "303",
                 "360"
               ],
@@ -2619,7 +2509,7 @@
           "out_of_plazo_warning": null,
           "profile_facts": {
             "art109_activity_income_withholding_ge_70pct": false,
-            "bienes_extranjero_above_threshold": false,
+            "bienes_extranjero_above_threshold": "",
             "does_intracomunitario": false,
             "entity_type": "natural_person",
             "has_employees": false,
@@ -2632,12 +2522,14 @@
             "iva.roi_enrolled": false,
             "iva_regime": "GENERAL",
             "legal_entity_form": "",
-            "monedas_virtuales_extranjero_above_threshold": false,
+            "monedas_virtuales_extranjero_above_threshold": "",
             "pays_capital_income_with_retencion": false,
             "pays_professionals_with_retencion": false,
             "pays_rent_with_retencion": false,
+            "premio_loteria_gravamen_especial_sin_retencion": "",
+            "premio_loteria_gravamen_especial_trimestres": "",
             "tax_id": "sha256:1c9f9632",
-            "third_party_transactions_above_347_threshold": false
+            "third_party_transactions_above_347_threshold": ""
           },
           "rationale": "Modelo 130 (pago fraccionado del IRPF): la persona física residente IRPF declara rendimientos de actividades económicas en estimación directa, que generan la obligación del pago fraccionado.",
           "scheduling_rationale": "Autonomo en estimacion directa salvo la excepcion Art. 109 por cobertura de retencion o ingreso a cuenta en actividades profesionales, agricolas, ganaderas o forestales.",
