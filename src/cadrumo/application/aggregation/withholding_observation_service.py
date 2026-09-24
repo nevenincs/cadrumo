@@ -10,13 +10,15 @@ from __future__ import annotations
 import json
 from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated, Literal, Protocol
+from typing import Annotated, Protocol
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core.errors.hierarchy import CadrumoError
+from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.hashing import sha256_hex
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.parsing.codes import IsoCurrencyCode
 from ...core.period import Period
 from ...domain.calculations.registry.withholding_bindings import WithholdingObservation
 from .retenciones import RetencionObservation
@@ -106,10 +108,18 @@ class SourceLiabilitySnapshot(BaseModel):
     source_kind: str = Field(min_length=1, max_length=64)
     source_object_id: str = Field(min_length=1, max_length=128)
     source_revision_id: str = Field(min_length=1, max_length=128)
-    currency: Literal["EUR"] = "EUR"
+    currency: IsoCurrencyCode = DEFAULT_CURRENCY
     liability_base: Decimal = Field(ge=Decimal("0"))
     liability_withholding: Decimal = Field(ge=Decimal("0"))
     liability_settlement: Decimal = Field(ge=Decimal("0"))
+
+    @field_validator("currency")
+    @classmethod
+    def _euro_only(cls, value: str) -> str:
+        """Refuse any other currency: Spanish withholding is declared and paid in euros."""
+        if value != DEFAULT_CURRENCY:
+            raise ValueError(f"withholding liabilities are denominated in {DEFAULT_CURRENCY}")
+        return value
 
     @property
     def source_token(self) -> str:

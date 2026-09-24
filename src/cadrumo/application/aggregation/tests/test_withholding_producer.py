@@ -781,3 +781,33 @@ def test_rent_allocations_reopen_as_two_annual_property_rows(tmp_path: Path) -> 
         assert result.total_taxable_base == Decimal("500.00")
         assert result.total_retencion == Decimal("95.00")
         assert sorted(row.observations_count for row in result.type2_rows) == [1, 2]
+
+
+@pytest.mark.parametrize("currency", ["eur", " EUR "])
+def test_a_liability_currency_is_normalised_to_the_canonical_euro_code(currency: str) -> None:
+    """The canonical currency annotation trims and uppercases before the euro rule reads it."""
+    snapshot = SourceLiabilitySnapshot(
+        source_kind=BindingSourceKind.PAYABLE_INVOICE.value,
+        source_object_id="invoice-currency-case",
+        source_revision_id="invoice-revision-1",
+        currency=currency,
+        liability_base=Decimal("100.00"),
+        liability_withholding=Decimal("15.00"),
+        liability_settlement=Decimal("85.00"),
+    )
+
+    assert snapshot.currency == "EUR"
+
+
+def test_a_liability_in_another_currency_is_refused() -> None:
+    """Spanish withholding is declared and paid in euros; a USD liability never reaches a window."""
+    with pytest.raises(ValidationError, match="denominated in EUR"):
+        SourceLiabilitySnapshot(
+            source_kind=BindingSourceKind.PAYABLE_INVOICE.value,
+            source_object_id="invoice-usd",
+            source_revision_id="invoice-revision-1",
+            currency="USD",
+            liability_base=Decimal("100.00"),
+            liability_withholding=Decimal("15.00"),
+            liability_settlement=Decimal("85.00"),
+        )

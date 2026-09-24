@@ -18,6 +18,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from ...core.aggregation import BindingSourceKind
 from ...core.errors.hierarchy import CadrumoError
+from ...core.filing_year import FilingYear
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.calculations.registry.withholding_bindings import WithholdingObservation
 from .retenciones import Modelo193CapitalDetail, RetencionObservation
@@ -48,7 +49,7 @@ class Modelo193PhaseRow(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     phase: Modelo193DisclosurePhase
-    filing_year: int = Field(ge=2000, le=9999)
+    filing_year: FilingYear
     original_accrual_year: int = Field(ge=2000, le=9999)
     recognized_on: date
     source_kind: BindingSourceKind
