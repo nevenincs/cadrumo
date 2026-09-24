@@ -24,6 +24,7 @@ from .scenario import BRIEF_ID, BRIEF_REVISION, SCENARIO_VERSION, AcceptanceOutc
 
 if TYPE_CHECKING:
     from textual.pilot import Pilot
+    from textual.widget import Widget
 
 _XML_DECLARATION_ENCODING: Final = re.compile(r'encoding="[^"]+"')
 _SHA256_HEX: Final = re.compile(r"[0-9a-f]{64}")
@@ -334,7 +335,13 @@ async def activate_tui_operation(
         from cadrumo.core.i18n.render import tr
 
         notice = _rendered_text(_query_visible_tui_control(pilot, binding.refusal_notice_id or ""))
-        terminal_notices = {
+        terminal_notices: dict[
+            str,
+            tuple[
+                Literal["succeeded", "succeeded_partial", "refused", "failed", "cancelled"],
+                AcceptanceOutcome,
+            ],
+        ] = {
             tr("operation.modal.terminal.succeeded"): ("succeeded", AcceptanceOutcome.PROVEN),
             tr("operation.modal.terminal.succeeded_partial"): ("succeeded_partial", AcceptanceOutcome.FAILED),
             tr("operation.modal.terminal.refused"): ("refused", AcceptanceOutcome.BLOCKED),
@@ -719,6 +726,7 @@ async def _observe_operation_terminal(
     assumes that opening the modal executed the action.
     """
     from textual.css.query import NoMatches
+    from textual.widget import Widget
 
     from cadrumo.core.i18n.render import tr
 
@@ -739,6 +747,7 @@ async def _observe_operation_terminal(
     if terminal_result_id is None:
         raise TuiJourneyError(f"{binding.operation_id} has no terminal result control")
     review_applied = False
+    status: str | None = None
     for _ in range(maximum_polls):
         try:
             status = _rendered_text(modal.query_one(terminal_result_id))
@@ -800,7 +809,12 @@ async def _observe_operation_terminal(
                 apply = modal.query_one("#btn-operation-apply")
             except NoMatches:
                 apply = None
-            if apply is not None and getattr(apply, "disabled", True) is False:
+            if apply is not None and not isinstance(apply, Widget):
+                raise TuiJourneyError(
+                    f"{binding.operation_id} operation modal Apply control is not a Textual widget "
+                    f"({type(apply).__name__})"
+                )
+            if apply is not None and not apply.disabled:
                 apply.focus()
                 await pilot.press("enter")
                 review_applied = True
@@ -825,7 +839,7 @@ def _rendered_text(widget: object) -> str:
     return str(render()).strip()
 
 
-def _query_visible_tui_control(pilot: Pilot[Any], selector: str) -> object:
+def _query_visible_tui_control(pilot: Pilot[Any], selector: str) -> Widget:
     """Resolve a public control from the root before its pushed screen.
 
     The installed workbench can retain a root-level destination while a modal
@@ -883,7 +897,7 @@ def _validate_continuation_state(state: ContinuationStateEvidence) -> None:
         ("export_ready_modelos", state.export_ready_modelos),
         ("exported_modelos", state.exported_modelos),
     ):
-        if any(not isinstance(value, str) or not value for value in values):
+        if any(not value for value in values):
             raise TuiJourneyError(f"continuation state has invalid {label}")
         if values != tuple(sorted(set(values))):
             raise TuiJourneyError(f"continuation state must use sorted unique {label}")
