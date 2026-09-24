@@ -1151,9 +1151,15 @@ class ProfileCustodyPort(Protocol):
         dek: bytes,
         dek_epoch: str,
         salt: bytes,
-        password_generation: int,
+        predecessor: ProfileCustodyEnvelopePort | None,
     ) -> ProfileCustodyRegistrationMaterial:
-        """Mint a password envelope and its DEK sentinel."""
+        """Mint a password envelope and its DEK sentinel.
+
+        ``predecessor`` is the envelope a passphrase replacement supersedes,
+        or ``None`` for a new profile's first envelope. The adapter derives
+        the successor's generation and predecessor digest from it rather
+        than taking them as free values, so the two cannot disagree.
+        """
         ...
 
     def create_recovery_enrollment_material(
@@ -1357,14 +1363,15 @@ def create_profile_custody_registration_material(
     dek: bytes,
     dek_epoch: str,
     salt: bytes,
-    password_generation: int = 1,
+    predecessor: ProfileCustodyEnvelopePort | None = None,
 ) -> ProfileCustodyRegistrationMaterial:
     """Mint the password envelope and DEK sentinel at the custody boundary.
 
-    ``password_generation`` defaults to the first, which is what creation
-    wants. A rotation passes the successor: the same DEK and the same epoch
-    re-wrapped under a new password, which is why this mint serves both doors
-    instead of a rotation growing a parallel one.
+    Without ``predecessor`` this is creation: generation one, no lineage. A
+    passphrase replacement passes the envelope it supersedes, and the mint
+    becomes that envelope's successor -- the next generation, naming the
+    predecessor's self-digest -- over the same DEK and epoch. That is why this
+    mint serves both doors instead of a rotation growing a parallel one.
     """
     return profile_custody_port().create_registration_material(
         profile_id=profile_id,
@@ -1372,7 +1379,7 @@ def create_profile_custody_registration_material(
         dek=dek,
         dek_epoch=dek_epoch,
         salt=salt,
-        password_generation=password_generation,
+        predecessor=predecessor,
     )
 
 

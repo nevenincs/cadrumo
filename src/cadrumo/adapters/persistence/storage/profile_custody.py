@@ -813,7 +813,7 @@ class _PersistenceProfileCustody:
         dek: bytes,
         dek_epoch: str,
         salt: bytes,
-        password_generation: int,
+        predecessor: ProfileCustodyEnvelopePort | None,
     ) -> ProfileCustodyRegistrationMaterial:
         calibration = calibrate_profile_kdf(salt=salt)
         envelope = create_profile_custody_password_envelope(
@@ -822,7 +822,8 @@ class _PersistenceProfileCustody:
             dek=dek,
             dek_epoch=dek_epoch,
             kdf=calibration.parameters,
-            password_generation=password_generation,
+            password_generation=1 if predecessor is None else predecessor.password_generation + 1,
+            previous_envelope_digest=None if predecessor is None else predecessor.self_digest,
         )
         sentinel = create_profile_custody_sentinel(envelope=envelope, dek=dek)
         return ProfileCustodyRegistrationMaterial(envelope=envelope, sentinel=sentinel)

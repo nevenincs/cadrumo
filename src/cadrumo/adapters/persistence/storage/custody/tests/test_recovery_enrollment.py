@@ -15,6 +15,7 @@ import pytest
 
 from cadrumo.adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 from cadrumo.adapters.persistence.storage.custody.errors import ProfileCustodyPasswordError
+from cadrumo.adapters.persistence.storage.master_key.login_throttle import login_throttle_path
 from cadrumo.adapters.persistence.storage.recovery_key import canonical_recovery_code
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
@@ -371,7 +372,13 @@ def test_a_wrong_code_refuses_non_oracularly_and_leaves_the_envelope_untouched(t
         assert refused.value.translated_message == "application.user_profile.errors.recovery_code_rejected"
         assert refused.value.context is None
         assert wrong not in repr(refused.value)
-        assert _storage_snapshot(storage_root) == before
+        # The one write a refused code makes is the failed-attempt count, in
+        # the profile's keystore beside the capsule rather than inside it.
+        keystore = login_throttle_path(storage_root=storage_root, bucket_id=str(profile_id)).parent
+        after = _storage_snapshot(storage_root)
+        changed = {key for key in before.keys() | after.keys() if before.get(key, b"") != after.get(key, b"")}
+        assert changed
+        assert all((storage_root / key).is_relative_to(keystore) for key in changed)
         material = load_committed_profile_password_material(profile_id)
         assert unlock_profile_custody_password(material, password=_CURRENT).dek is not None
 

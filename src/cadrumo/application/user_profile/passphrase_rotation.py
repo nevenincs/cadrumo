@@ -28,6 +28,7 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Mapping
+from enum import StrEnum
 from secrets import token_bytes
 from typing import TYPE_CHECKING
 
@@ -61,6 +62,21 @@ if TYPE_CHECKING:
     from .custody_ports import ProfileCustodyEnvelopePort
 
 _ENVELOPE_KDF_SALT_BYTES = 16
+
+
+class ProfilePassphraseReplacementProof(StrEnum):
+    """Which proof authorised one passphrase replacement.
+
+    Both doors publish the same lifecycle event -- the password wrapper was
+    re-minted over the same data key -- so the proof is a payload descriptor
+    rather than a second event type. Without it a profile's history cannot
+    tell an operator who knew their passphrase from one who used the recovery
+    code because they did not, which is exactly the distinction an audit of
+    custody changes needs.
+    """
+
+    CURRENT_CREDENTIAL = "current_passphrase"
+    RECOVERY_CODE = "recovery_code"
 
 
 class ProfilePassphraseRotationError(CadrumoError):
@@ -178,6 +194,7 @@ def rotate_profile_passphrase(
             dek=unlock.dek,
             current=current,
             new_passphrase=new_passphrase,
+            proof=ProfilePassphraseReplacementProof.CURRENT_CREDENTIAL,
             storage_root=storage_root,
             profile_decode_context=profile_decode_context,
         )
@@ -196,6 +213,7 @@ def rewrap_profile_passphrase_under_lock(
     dek: bytes,
     current: ProfileCustodyEnvelopePort,
     new_passphrase: str,
+    proof: ProfilePassphraseReplacementProof,
     storage_root: Path,
     profile_decode_context: ProfileDecodeContext,
 ) -> ProfileCustodyEnvelopePort:
@@ -205,7 +223,13 @@ def rewrap_profile_passphrase_under_lock(
     the custody transaction lock and has proven ``dek`` through whichever door
     authorises the change: the current passphrase for a rotation, or the
     enrolled recovery code for a reset. Nothing here re-proves anything, so
-    this must not be reachable from a surface that has not.
+    this must not be reachable from a surface that has not. ``proof`` names
+    that door, and is recorded on the lifecycle event so the profile's
+    history says which one was used.
+
+    The replacement is minted as ``current``'s successor: the next password
+    generation, naming ``current``'s self-digest as its predecessor. The
+    custody write refuses anything else.
 
     Returns:
         The committed replacement envelope.
@@ -219,7 +243,7 @@ def rewrap_profile_passphrase_under_lock(
         # silently.
         dek_epoch=current.dek_epoch,
         salt=token_bytes(_ENVELOPE_KDF_SALT_BYTES),
-        password_generation=current.password_generation + 1,
+        predecessor=current,
     ).envelope
 
     # Re-head FIRST, then swap. A crash between the two steps must leave a
@@ -248,6 +272,7 @@ def rewrap_profile_passphrase_under_lock(
             event=ProfileRecordCommandEvent(
                 event_type=BucketEventType.PROFILE_PASSPHRASE_ROTATED,
                 occurred_at=occurred_at.isoformat(),
+                payload={"proof": proof.value},
             ),
         )
         replace_profile_custody_password_envelope(
@@ -263,6 +288,7 @@ def rewrap_profile_passphrase_under_lock(
 
 
 __all__ = [
+    "ProfilePassphraseReplacementProof",
     "ProfilePassphraseRotationError",
     "ProfilePassphraseRotationOutcome",
     "rewrap_profile_passphrase_under_lock",

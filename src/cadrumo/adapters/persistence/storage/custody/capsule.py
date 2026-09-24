@@ -875,6 +875,16 @@ def replace_committed_profile_custody_envelope(
     still reported success. It is refused here, at the write boundary, so the
     invariant cannot be lost by a caller that forgets it.
 
+    The replacement must also be the committed envelope's direct successor: it
+    names the committed envelope's self-digest as ``previous_envelope_digest``
+    and carries exactly the next ``password_generation``. The compare-and-swap
+    witness only proves the caller saw the current bytes; lineage makes the
+    stored envelope itself say what it replaced, so a skipped, repeated or
+    rewound generation, or a successor minted against some other envelope,
+    never becomes the committed wrapper. Reads do not apply this rule: a
+    profile's first envelope, and one written before lineage was recorded,
+    has no predecessor and stays openable.
+
     Args:
         profile_id: The committed capsule's profile UUID.
         payload: Canonical JSON bytes of the re-wrapped envelope.
@@ -885,7 +895,9 @@ def replace_committed_profile_custody_envelope(
     Raises:
         ProfileCustodyRecordError: When no committed capsule is recognized, the
             payload is not a valid envelope for this profile, the payload
-            changes the DEK epoch, or the compare-and-swap witness is stale.
+            changes the DEK epoch, the payload is not the committed
+            envelope's direct successor, or the compare-and-swap witness is
+            stale.
     """
     capsule_path = recognize_current_profile_capsule(profile_id, settings=settings, root=root)
     if capsule_path is None:
@@ -906,6 +918,14 @@ def replace_committed_profile_custody_envelope(
                 "profile custody rotation envelope changes the DEK epoch; a rotation re-wraps the same "
                 "data key, and a new epoch would leave the committed sentinel and an enrolled recovery "
                 "envelope unopenable",
+            )
+        if replacement.previous_envelope_digest != committed.self_digest:
+            raise ProfileCustodyRecordError(
+                "profile custody rotation envelope does not name the committed envelope as its predecessor",
+            )
+        if replacement.password_generation != committed.password_generation + 1:
+            raise ProfileCustodyRecordError(
+                "profile custody rotation envelope does not carry the next password generation",
             )
         _replace_capsule_file(
             custody_path,
