@@ -774,6 +774,9 @@ errors:
     locked_google_keychain: L'anell de claus del sistema operatiu que desa les credencials
       de Google està bloquejat o no és accessible. Desbloqueja l'anell de claus i
       torna-ho a provar.
+    locked_journal_busy: Un altre programa va mantenir en ús un fitxer de registre,
+      així que no s'ha pogut llegir ni escriure. No s'ha perdut res; torna-ho a provar
+      d'aquí a un moment.
     locked_storage_bucket_busy: El bucket d'emmagatzematge l'està utilitzant un altre
       procés. Espera que aquest procés acabi i torna-ho a provar.
     locked_storage_bucket_session: Aquesta operació requereix un bucket d'emmagatzematge

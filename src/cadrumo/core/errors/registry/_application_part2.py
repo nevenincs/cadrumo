@@ -1247,6 +1247,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.journal_repository.JournalBusyError",
+        ErrorCode(
+            code="LOCKED_JOURNAL_BUSY",
+            category=ErrorCategory.LOCKED,
+            message_key="errors.locked.locked_journal_busy",
+            retryable=True,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.operations.errors.OperationUnsettledError",
         ErrorCode(
             code="INTERNAL_OPERATION_UNSETTLED",

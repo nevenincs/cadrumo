@@ -721,6 +721,9 @@ errors:
       meg, amíg befejeződik, és próbálja újra.
     locked_google_keychain: A Google-hitelesítő adatokat tároló operációs rendszer
       kulcstára zárolt vagy elérhetetlen. Oldja fel a kulcstárat, és próbálja újra.
+    locked_journal_busy: Egy naplófájlt egy másik program használatban tartott, ezért
+      nem lehetett olvasni vagy írni. Semmi sem veszett el; próbáld újra egy kis idő
+      múlva.
     locked_storage_bucket_busy: A tárolási bucket egy másik folyamat által van használatban.
       Várja meg, amíg az a folyamat befejeződik, és próbálja újra.
     locked_storage_bucket_session: Ehhez a művelethez feloldott tárolási bucket szükséges.

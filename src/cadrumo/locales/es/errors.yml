@@ -766,6 +766,9 @@ errors:
     locked_google_keychain: El llavero del sistema operativo que guarda las credenciales
       de Google está bloqueado o no es accesible. Desbloquea el llavero y vuelve a
       intentarlo.
+    locked_journal_busy: Otro programa mantuvo en uso un archivo de registro, así
+      que no se pudo leer ni escribir. No se ha perdido nada; vuelve a intentarlo
+      en un momento.
     locked_storage_bucket_busy: El bucket de almacenamiento está en uso por otro proceso.
       Espera a que ese proceso termine y vuelve a intentarlo.
     locked_storage_bucket_session: Esta operación requiere un bucket de almacenamiento

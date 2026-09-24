@@ -704,6 +704,8 @@ errors:
       now. Wait for it to finish and try again.
     locked_google_keychain: The operating-system keychain holding the Google credentials
       is locked or unreachable. Unlock the keychain and try again.
+    locked_journal_busy: A journal file stayed in use by another program, so it could
+      not be read or written. Nothing was lost; try again in a moment.
     locked_storage_bucket_busy: The storage bucket is in use by another process. Wait
       for that process to finish and try again.
     locked_storage_bucket_session: This operation requires an unlocked storage bucket.
