@@ -100,6 +100,7 @@ from ...domain.modelos.errors import ModeloValidationError
 from ...domain.modelos.modelo_fact_context import ModeloFactResolutionContext
 from ...domain.modelos.participation_index import TransactionRevisionParticipation, upsert_transaction_participation
 from ...domain.modelos.perceptor_clave_scope import (
+    PERCEPTOR_CLAVE_SCOPE_MODELO,
     PerceptorClaveScope,
     resolve_perceptor_clave_scope,
     row_field_value_bindings,
@@ -1672,9 +1673,16 @@ def _resolve_verification_snapshot(
 
 
 def _perceptor_clave_scope(work_unit: WorkUnit, *, operation: PinnedAuthorityOperation) -> PerceptorClaveScope | None:
-    """Return the registry clave scope for the work unit's ejercicio, if one is declared."""
+    """Return the registry clave scope for the work unit's ejercicio, if one is declared.
+
+    The scope fact governs one modelo's perceptor records only. Any other
+    modelo has nothing to scope, and its period may be a filing event or an
+    instalment with no calendar span to place on the scope's date axis.
+    """
     from ...domain.calculations.registry.errors import RegistryValidationError
 
+    if str(work_unit.modelo) != PERCEPTOR_CLAVE_SCOPE_MODELO.value:
+        return None
     try:
         return resolve_perceptor_clave_scope(period=work_unit.period, authority=operation)
     except RegistryValidationError:
