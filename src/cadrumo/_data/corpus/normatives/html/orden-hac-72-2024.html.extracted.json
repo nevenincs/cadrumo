@@ -9,10 +9,16 @@
   "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
   "units": [
     {
-      "text": "Orden HAC/72/2024, de 1 de febrero, por la que se aprueba el modelo 238 (BOE-A-2024-2092) - Modelo 238\nOrden HAC/72/2024, de 1 de febrero, por la que se aprueba el modelo 238.\nArticulo 1. Aprobacion del modelo 238.\nSe aprueba el modelo 238, «Declaración informativa para la comunicación de información por parte de operadores de plataformas».\nArticulo 9. Plazo de presentacion.\nLa presentación del modelo 238, «Declaración informativa para la comunicación de información por parte de operadores de plataformas», tendrá carácter anual y su plazo de presentación será el establecido en el apartado 6 del artículo 54 del Reglamento General aprobado por Real Decreto 1065/2007, de 27 de julio.\nProvenance: verbatim excerpt transcribed from the BOE consolidated text (https://www.boe.es/buscar/act.php?id=BOE-A-2024-2092) via agent web fetch during the obligation-enrollment campaign, under explicit operator authorization. Pending operator re-verification.",
-      "title": null,
-      "section": null,
-      "anchor": null
+      "text": "Se aprueba el modelo 238, «Declaración informativa para la comunicación de información por parte de operadores de plataformas».",
+      "title": "Articulo 1. Aprobacion del modelo 238.",
+      "section": "Articulo 1. Aprobacion del modelo 238.",
+      "anchor": "#a1"
+    },
+    {
+      "text": "La presentación del modelo 238, «Declaración informativa para la comunicación de información por parte de operadores de plataformas», tendrá carácter anual y su plazo de presentación será el establecido en el apartado 6 del artículo 54 del Reglamento General aprobado por Real Decreto 1065/2007, de 27 de julio.",
+      "title": "Articulo 9. Plazo de presentacion.",
+      "section": "Articulo 9. Plazo de presentacion.",
+      "anchor": "#a9"
     }
   ]
 }

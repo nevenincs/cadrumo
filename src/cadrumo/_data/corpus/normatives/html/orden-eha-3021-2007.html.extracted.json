@@ -9,10 +9,16 @@
   "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
   "units": [
     {
-      "text": "Orden EHA/3021/2007, de 11 de octubre, por la que se aprueba el modelo 182 (BOE-A-2007-18192) - Modelo 182\nOrden EHA/3021/2007, de 11 de octubre, por la que se aprueba el modelo 182.\nArtículo 1. Aprobación del modelo 182.\nSe aprueba el modelo 182 «Impuesto sobre la Renta de las Personas Físicas, Impuesto sobre la Renta de no Residentes e Impuesto sobre Sociedades. Declaración informativa de donativos, donaciones y aportaciones recibidas y disposiciones realizadas».\nArtículo 5. Plazo de presentación del modelo 182.\nLa presentación de la declaración informativa de donativos, donaciones y aportaciones recibidas y disposiciones realizadas, modelo 182, se realizará en el mes de enero de cada año.\nProvenance: verbatim excerpt transcribed from the BOE consolidated text; the two article headings were re-acquired 2026-09-12 from the same consolidated text after an earlier transcription dropped their diacritics and abbreviated the articulo 5 heading (https://www.boe.es/buscar/act.php?id=BOE-A-2007-18192) via agent web fetch during the obligation-enrollment campaign, under explicit operator authorization. Pending operator re-verification.",
-      "title": null,
-      "section": null,
-      "anchor": null
+      "text": "Se aprueba el modelo 182 «Impuesto sobre la Renta de las Personas Físicas, Impuesto sobre la Renta de no Residentes e Impuesto sobre Sociedades. Declaración informativa de donativos, donaciones y aportaciones recibidas y disposiciones realizadas».",
+      "title": "Artículo 1. Aprobación del modelo 182.",
+      "section": "Artículo 1. Aprobación del modelo 182.",
+      "anchor": "#a1"
+    },
+    {
+      "text": "La presentación de la declaración informativa de donativos, donaciones y aportaciones recibidas y disposiciones realizadas, modelo 182, se realizará en el mes de enero de cada año.",
+      "title": "Artículo 5. Plazo de presentación del modelo 182.",
+      "section": "Artículo 5. Plazo de presentación del modelo 182.",
+      "anchor": "#a5"
     }
   ]
 }

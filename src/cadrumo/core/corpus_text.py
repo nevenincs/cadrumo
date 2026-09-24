@@ -35,6 +35,23 @@ _ARTICLE_ANCHOR_RE = re.compile(r"^(?:a|art|articulo)(\d+)$")
 _ARTICLE_TITLE_RE = re.compile(r"^(?:articulo|a)(\d+)")
 _ARTICLE_BASE_ANCHOR_RE = re.compile(r"^(?:a|arts?|articulos?)[\s._-]*(\d+)$")
 _ARTICLE_SUBSECTION_ANCHOR_RE = re.compile(r"^(?:a|arts?|articulos?)[\s._-]*(\d+)[\s._-]+\d+(?:$|[\s._-])")
+# A numbered apartado plus a lettered or numbered point (``a13-1-h``). BOE's
+# own article fragments add at most ONE numeric disambiguator (``#a1-3`` is a
+# distinct block, not apartado 3 of article 1), so only this deeper form can be
+# read as a point inside an article without colliding with a BOE fragment. The
+# apartado must be numeric so a qualified article (``articulo-9-bis-...``) is
+# never mistaken for a point of its base article.
+_ARTICLE_POINT_ANCHOR_RE = re.compile(r"^(?:a|arts?|articulos?)[\s._-]*(\d+)[\s._-]+\d+(?:[\s._-]+[0-9a-z]+)+$")
+# The canonical key of an anchor that names one article: ``a`` + number, with
+# any qualifier (``a81bis``, ``a163octiesdecies``) kept so it cannot collapse
+# onto its base article.
+_CANONICAL_ARTICLE_KEY_RE = re.compile(r"^a\d+[a-z]*$")
+# A line that opens an article heading, read after ``normalise_corpus_text``:
+# the number or ordinal, an optional single qualifier word, then the heading's
+# period. ``articulo 25.1.f) del texto refundido`` is a citation in running
+# prose, not a heading, and the period-then-space requirement keeps it out. A
+# false positive can only make the check below refuse, never accept.
+_ARTICLE_HEADING_LINE_RE = re.compile(r"^articulo (?:\d+|[a-z]+)(?: [a-z]+)?\s?[.:](?:\s|$)")
 
 _SPANISH_ORDINALS: Final[dict[str, str]] = {
     "primero": "1",
@@ -215,11 +232,15 @@ def resolve_anchored_extracted_unit(
 
     Exact sidecar anchors take precedence.  Legacy article slices without a
     matching persisted fragment remain safe only when their sidecar holds one
-    unit; a requested fragment then cannot select unrelated text.  Multi-unit
-    records may use only a unique structural heading that matches the requested
-    anchor. Missing or duplicate candidates raise instead of silently returning
-    a whole document. ``required_text`` verifies the selected unit at the
-    legal-reference layer; it cannot select a different one here.
+    unit, and for an anchor naming an article only when that unit's sole
+    article heading is the requested article: an unsplit document holding
+    several articles is refused rather than returned whole.  A point inside an
+    article (``a13-1-h``) resolves to the unit anchored at its article.
+    Multi-unit records may otherwise use only a unique structural heading that
+    matches the requested anchor. Missing or duplicate candidates raise instead
+    of silently returning a whole document. ``required_text`` verifies the
+    selected unit at the legal-reference layer; it cannot select a different
+    one here.
     """
     target = _canonical_anchor(anchor)
     if not target:
@@ -235,6 +256,9 @@ def resolve_anchored_extracted_unit(
     if resolved is not None:
         return resolved
     resolved = _resolve_single_unit_anchor(units, anchor, include_title=include_title)
+    if resolved is not None:
+        return resolved
+    resolved = _resolve_article_point_anchor(units, anchor, sidecar_path, include_title=include_title)
     if resolved is not None:
         return resolved
     return _resolve_structural_anchor(units, target, anchor, sidecar_path, include_title=include_title)
@@ -267,13 +291,92 @@ def _resolve_exact_anchor(
 
 
 def _resolve_single_unit_anchor(units: list[tuple[str, str, str]], anchor: str, *, include_title: bool) -> str | None:
-    """Resolve a scoped legacy sidecar whose sole unit covers the citation."""
+    """Resolve a scoped legacy sidecar whose sole unit covers the citation.
+
+    An anchorless sole unit may be a one-article excerpt or a whole document
+    that was never split. For an anchor naming an article the two are told
+    apart by the unit's own headings: it must carry exactly one article
+    heading and that heading must name the requested article, or else a phrase
+    quoted from any other article of the document would verify against it. An
+    anchor naming no article (a document container, a modelo, an ordinal
+    apartado) keeps the whole-unit fallback.
+    """
     if len(units) != 1:
         return None
     unit_anchor, title, text = units[0]
-    if _canonical_anchor(unit_anchor) and not _single_unit_covers_subsection(unit_anchor, anchor):
-        return None
+    if _canonical_anchor(unit_anchor):
+        if not _single_unit_covers_subsection(unit_anchor, anchor):
+            return None
+    else:
+        article = _requested_article_key(anchor)
+        if article is not None and _article_heading_keys(title, text) != [article]:
+            return None
     return _render_unit(title, text, include_title=include_title)
+
+
+def _resolve_article_point_anchor(
+    units: list[tuple[str, str, str]],
+    anchor: str,
+    sidecar_path: Path,
+    *,
+    include_title: bool,
+) -> str | None:
+    """Resolve a point inside an article (``a13-1-h``) to that article's own unit.
+
+    Only reached once no unit declares the point itself, and only a unit whose
+    persisted anchor names the article qualifies: the article is the narrowest
+    extracted unit that contains the point, and it never widens to the
+    document. The unit anchor is read literally, because the canonical key
+    folds BOE's ``#a1-3`` block onto ``a13``.
+    """
+    point = _ARTICLE_POINT_ANCHOR_RE.fullmatch(normalise_corpus_text(anchor).lstrip("#"))
+    if point is None:
+        return None
+    article = point.group(1)
+    owners = [(title, text) for unit_anchor, title, text in units if _literal_article_number(unit_anchor) == article]
+    if len(owners) > 1:
+        raise CorpusAnchorResolutionError(f"anchor {anchor!r} names an article duplicated in {sidecar_path}")
+    if not owners:
+        return None
+    return _render_unit(*owners[0], include_title=include_title)
+
+
+def _literal_article_number(unit_anchor: str) -> str | None:
+    """Return the article number a unit anchor names exactly (``#a13``), else ``None``."""
+    declared = _ARTICLE_BASE_ANCHOR_RE.fullmatch(normalise_corpus_text(unit_anchor).lstrip("#"))
+    if declared is None:
+        return None
+    number = declared.group(1)
+    return number if isinstance(number, str) else None
+
+
+def _requested_article_key(anchor: str) -> str | None:
+    """Return the canonical key of the article ``anchor`` names, or ``None``.
+
+    A point or apartado anchor (``a27-2``, ``a13-1-h``) names its article; an
+    anchor whose canonical key is not ``a`` + number names no article.
+    """
+    subsection = _ARTICLE_SUBSECTION_ANCHOR_RE.match(normalise_corpus_text(anchor).lstrip("#"))
+    if subsection is not None:
+        return f"a{subsection.group(1)}"
+    key = _canonical_anchor(anchor)
+    return key if _CANONICAL_ARTICLE_KEY_RE.fullmatch(key) else None
+
+
+def _article_heading_keys(title: str, text: str) -> list[str]:
+    """Return the canonical key of every article heading a unit carries, in order.
+
+    A titled unit is identified by its title alone; its body may quote other
+    articles' headings as amended text. An untitled unit's heading is a line
+    of its text.
+    """
+    lines = [title] if title else text.splitlines()
+    keys: list[str] = []
+    for line in lines:
+        normalised = normalise_corpus_text(line)
+        if _ARTICLE_HEADING_LINE_RE.match(normalised):
+            keys.append(_canonical_anchor(re.split(r"[.:]", normalised, maxsplit=1)[0]))
+    return keys
 
 
 def _resolve_structural_anchor(

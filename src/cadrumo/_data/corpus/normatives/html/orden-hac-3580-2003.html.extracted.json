@@ -9,10 +9,16 @@
   "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
   "units": [
     {
-      "text": "Orden HAC/3580/2003, de 17 de diciembre, por la que se aprueba el modelo 156 (BOE-A-2003-23509) - Modelo 156\nOrden HAC/3580/2003, de 17 de diciembre, por la que se aprueba el modelo 156.\nArticulo 1. Aprobacion del modelo 156.\nSe aprueba el modelo 156, «Impuesto sobre la Renta de las Personas Físicas. Cotizaciones de afiliados y mutualistas a efectos de la deducción por maternidad. Declaración informativa anual».\nArticulo 4. Plazo de presentacion.\nLa presentación de la declaración informativa anual, modelo 156, se realizará en el período comprendido entre los días 1 y 31 de enero del año siguiente al que corresponda la declaración.\nProvenance: verbatim excerpt transcribed from the BOE consolidated text (https://www.boe.es/buscar/act.php?id=BOE-A-2003-23509) via agent web fetch during the obligation-enrollment campaign, under explicit operator authorization. Pending operator re-verification.",
-      "title": null,
-      "section": null,
-      "anchor": null
+      "text": "Se aprueba el modelo 156, «Impuesto sobre la Renta de las Personas Físicas. Cotizaciones de afiliados y mutualistas a efectos de la deducción por maternidad. Declaración informativa anual».",
+      "title": "Articulo 1. Aprobacion del modelo 156.",
+      "section": "Articulo 1. Aprobacion del modelo 156.",
+      "anchor": "#a1"
+    },
+    {
+      "text": "La presentación de la declaración informativa anual, modelo 156, se realizará en el período comprendido entre los días 1 y 31 de enero del año siguiente al que corresponda la declaración.",
+      "title": "Articulo 4. Plazo de presentacion.",
+      "section": "Articulo 4. Plazo de presentacion.",
+      "anchor": "#a4"
     }
   ]
 }

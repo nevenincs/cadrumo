@@ -36,7 +36,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _IMPOSSIBLE_ANCHOR: Final[str] = "zzz-no-such-anchor-zzz"
 
-_UNVERIFIED_ANCHOR_CEILING: Final[int] = 87
+_UNVERIFIED_ANCHOR_CEILING: Final[int] = 27
 """Entries whose anchor a wrong value would pass, re-measured 2026-08-06.
 
 Shrink-only. The 318 this replaces was inflated by the resolver falling back to
@@ -79,6 +79,15 @@ verified on arrival; orden-hac-529-2026 was authored in that shape from the
 start. The rule for anyone enrolling a new legal reference: author the excerpt
 in BOE's marker-and-classed-heading shape, or the citation joins this population
 by construction and the ceiling forbids the enrollment.
+
+Lowered 87 -> 27 on 2026-09-24, from 80 measured on the preceding commit. The
+constraint above no longer holds for excerpts whose EVERY article heading
+declares its own fragment -- ``<div id="aN"><h2>`` or ``<h1 id="aN">``: the
+extractor now splits those into anchored article units, so 24 excerpts gained
+units and 53 of their citations became verified. The 27 that remain cite
+single-provision excerpts with no internal anchor. Their fallback is also
+narrower than before: an article anchor resolves there only when the file's
+sole article heading is the cited article.
 """
 
 _MINIMUM_CLASSIFIED_ENTRIES: Final[int] = 550
@@ -89,7 +98,7 @@ sidecar suffix -- would classify nothing and satisfy every "no unverified
 anchors" assertion perfectly. The floor makes silence fail.
 """
 
-_STRICT_RESOLUTION_BLOCKER_COUNT: Final[int] = 6
+_STRICT_RESOLUTION_BLOCKER_COUNT: Final[int] = 10
 """How many entries strict anchor resolution still cannot place, measured 2026-08-05.
 
 Pins the SIZE of the recorded set, not its contents. The membership assertion
@@ -111,6 +120,12 @@ resolver's folding rules into the audit of those very rules, and an earlier
 draft that did exactly that got the ordinal folding wrong and mis-reported the
 population. A superset that cannot drift is worth more than an exact figure
 that can.
+
+Held at 79 on 2026-09-24 while the population rose from 75 to meet it. The
+four TRLIRNR point citations added to :data:`_STRICT_RESOLUTION_BLOCKERS`
+were always point-granular; they were uncounted only because their file
+declared no unit ids at all. Once it was split into anchored articles they
+became visible here, so the rise is the population being measured, not grown.
 """
 
 _KNOWN_ABSENT_AT_MEASUREMENT: Final[frozenset[str]] = frozenset[str]()
@@ -124,6 +139,10 @@ _STRICT_RESOLUTION_BLOCKERS: Final[frozenset[str]] = frozenset(
         "ley-35-2006:art-68.4",
         "ley-35-2006:art-68.5",
         "ley-58-2003:art-27.2",
+        "trlirnr-rdleg-5-2004:art-13.1.h",
+        "trlirnr-rdleg-5-2004:art-25.1.a",
+        "trlirnr-rdleg-5-2004:art-25.1.b",
+        "trlirnr-rdleg-5-2004:art-25.1.f",
     },
 )
 """Entries citing an apartado against a unit extracted at article granularity.
@@ -147,6 +166,11 @@ about what the corpus must contain, not a matcher bug. Five nominally distinct
 citations to five different apartados may all be resolving identical
 whole-article text. Correcting it means re-extracting the corpus at apartado
 granularity or re-pointing the citations, and both are the operator's call.
+
+The four TRLIRNR entries cite a lettered point (``#a13-1-h``, ``#a25-1-a``)
+that the excerpt marks on a paragraph, and resolve to the article unit that
+contains it. Their required_text sits in that paragraph, but a phrase from
+another point of the same article would verify too.
 """
 
 

@@ -133,6 +133,21 @@ _BLOQUE_ANCHOR = re.compile(r"\[Bloque\s+\d+:\s*(#[\w-]+)\]", re.IGNORECASE)
 _BLOQUE_MARKER = re.compile(r"\[Bloque\s+\d+:[^\]]*\]", re.IGNORECASE)
 _ARTICLE_HEADING_ANCHOR = re.compile(r"^art[ií]culo\s+(\d+(?:\s*(?:bis|ter|quater|quinquies))?)\b", re.IGNORECASE)
 _HEADING_CLOSE = re.compile(r"</h[1-6]\s*>", re.IGNORECASE)
+
+# Excerpts transcribed outside BOE's classed markup state each article as a
+# plain heading element that carries, or sits directly inside a container
+# carrying, the article's own fragment: ``<h1 id="a2">Articulo 2.`` or
+# ``<div id="a3"><h2>Articulo 3.``.
+_ANY_HEADING = re.compile(
+    r"<h(?P<level>[1-6])\b(?P<attrs>[^>]*)>(?P<inner>.*?)</h(?P=level)\s*>",
+    re.IGNORECASE | re.DOTALL,
+)
+_ID_ATTRIBUTE = re.compile(r"""(?:^|\s)id=["'](?P<fragment>[^"']+)["']""", re.IGNORECASE)
+_OPENING_CONTAINER_AT_END = re.compile(
+    r"""<(?P<tag>div|section|article)\b(?P<attrs>[^>]*)>\s*$""",
+    re.IGNORECASE,
+)
+_FRAGMENT_SEPARATORS = re.compile(r"[\s._-]+")
 _TAG = re.compile(r"<[^>]+>")
 _WS = re.compile(r"[ \t]+")
 _BLANKS = re.compile(r"\n{3,}")
@@ -336,6 +351,86 @@ def _anchor_from_heading(heading: str) -> str:
     return "#a" + re.sub(r"\s+", "", match.group(1)).lower()
 
 
+def _balanced_close(markup: str, tag: str, start: int) -> int | None:
+    """Return the offset of the tag closing an element whose content begins at ``start``."""
+    depth = 1
+    for match in re.finditer(rf"<(/?){tag}\b[^>]*>", markup[start:], re.IGNORECASE):
+        depth += -1 if match.group(1) else 1
+        if depth == 0:
+            return start + match.start()
+    return None
+
+
+def _declared_article_fragment(
+    markup: str,
+    heading: re.Match[str],
+    article_anchor: str,
+) -> tuple[str, int | None]:
+    """Return the literal fragment the source states for one article heading, and its extent.
+
+    The fragment is read from the heading's own ``id`` or from a container
+    opened immediately before it, and is accepted only when it names the same
+    article as the heading text. A wrapper such as ``<div id="modelo-200">``
+    around several articles therefore never lends its fragment to the first
+    article inside it. When the wrapper supplied the fragment its balanced
+    closing tag is returned too, since that is where the source ends the
+    article; a heading's own ``id`` states no end. No accepted fragment yields
+    ``("", None)``.
+    """
+    own_fragment = _id_fragment(heading.group("attrs"))
+    if _fragment_names_article(own_fragment, article_anchor):
+        return "#" + own_fragment, None
+    container = _OPENING_CONTAINER_AT_END.search(markup, 0, heading.start())
+    if container is None:
+        return "", None
+    wrapper_fragment = _id_fragment(container.group("attrs"))
+    if _fragment_names_article(wrapper_fragment, article_anchor):
+        return "#" + wrapper_fragment, _balanced_close(markup, container.group("tag"), container.end())
+    return "", None
+
+
+def _id_fragment(attributes: str) -> str:
+    """Return the ``id`` an element's attribute text declares, else ``""``."""
+    match = _ID_ATTRIBUTE.search(attributes)
+    fragment = match.group("fragment") if match is not None else None
+    return fragment if isinstance(fragment, str) else ""
+
+
+def _fragment_names_article(fragment: str, article_anchor: str) -> bool:
+    return bool(fragment) and "#" + _FRAGMENT_SEPARATORS.sub("", fragment.casefold()) == article_anchor
+
+
+def _declared_fragment_article_units(markup: str) -> list[PreprocessUnit]:
+    """Split plain-heading article excerpts whose every article states its own fragment.
+
+    Returns no units unless each article heading carries a literal fragment
+    naming that article, so a document is split only on boundaries its source
+    declares. The text before the first article is discarded exactly as the
+    classed-heading splitter discards its preamble, and an article ends at
+    the next article heading or at the close of the wrapper that declared its
+    fragment, whichever comes first, so trailing capture notes outside the
+    wrapper are not read as article text.
+    """
+    headings: list[tuple[re.Match[str], str, str, int | None]] = []
+    for match in _ANY_HEADING.finditer(markup):
+        heading = render_normative_prose(match.group("inner"))
+        article_anchor = _anchor_from_heading(heading)
+        if not article_anchor:
+            continue
+        fragment, wrapper_close = _declared_article_fragment(markup, match, article_anchor)
+        if not fragment:
+            return []
+        headings.append((match, heading, fragment, wrapper_close))
+    units: list[PreprocessUnit] = []
+    for index, (match, heading, fragment, wrapper_close) in enumerate(headings):
+        end = headings[index + 1][0].start() if index + 1 < len(headings) else len(markup)
+        if wrapper_close is not None:
+            end = min(end, wrapper_close)
+        body = render_normative_prose(markup[match.end() : end])
+        units.append(PreprocessUnit(text=body or heading, title=heading, section=heading, anchor=fragment))
+    return units
+
+
 def _fold_fragment_heading(text: str) -> str:
     """Fold a source heading for stable boundary recognition."""
     decomposed = unicodedata.normalize("NFKD", text.replace("\xa0", " "))
@@ -512,6 +607,12 @@ def build_outputs(source: Path, *, repo_root: Path) -> list[PreprocessOutput]:
     attribution = _attribution_for(boe_url)
 
     units = legal_markup_units(markup)
+    # With no classed legal heading the splitter returns the whole document as
+    # one anonymous unit, and every article anchor would then be verified
+    # against every article. Plain-heading excerpts that declare a fragment per
+    # article are split on those declared boundaries instead.
+    if len(units) == 1 and units[0].title is None and units[0].anchor is None:
+        units = _declared_fragment_article_units(markup) or units
     if container_anchor and len(units) == 1 and units[0].title is None and units[0].anchor is None:
         units[0] = units[0].model_copy(update={"anchor": container_anchor})
 
