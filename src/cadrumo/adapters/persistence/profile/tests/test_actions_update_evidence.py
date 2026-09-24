@@ -33,8 +33,12 @@ from cadrumo.domain.transactions.errors import TransactionValidationError
 
 from .ledger_action_persistence_support import (
     BUCKET_ID as _BUCKET_ID,
-    repositories as _repositories,
+)
+from .ledger_action_persistence_support import (
     purchase_invoice,
+)
+from .ledger_action_persistence_support import (
+    repositories as _repositories,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]

@@ -13,12 +13,6 @@ from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepos
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from cadrumo.entrypoints.tests.profile_persistence._dormant_resolver_live_support import (
-    _T0,
-    _T1,
-    _revision,
-    _seed_ready_profile,
-)
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
@@ -37,6 +31,12 @@ from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalo
 from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.domain.iva.schema import IvaCategory
 from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
+from cadrumo.entrypoints.tests.profile_persistence._dormant_resolver_live_support import (
+    _T0,
+    _T1,
+    _revision,
+    _seed_ready_profile,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

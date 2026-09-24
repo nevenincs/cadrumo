@@ -42,10 +42,6 @@ from cadrumo.adapters.persistence.profile.tests.cross_period_seeding import (
     SEED_CLOCK,
     seed_clean_cross_period_sources,
 )
-from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
-    build_test_certificate_secret_backend_factory,
-    build_test_verification_repository_bundle,
-)
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.profile.usage_ratios import load_usage_ratios
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
@@ -93,6 +89,10 @@ from cadrumo.domain.user_profile.values import create_user_profile_record as _cr
 from cadrumo.entrypoints.adapter_composition import (
     build_borrador_100_snapshot_repository,
     build_filing_action_ports,
+)
+from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
+    build_test_certificate_secret_backend_factory,
+    build_test_verification_repository_bundle,
 )
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()

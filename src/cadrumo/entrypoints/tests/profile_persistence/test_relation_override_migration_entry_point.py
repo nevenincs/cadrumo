@@ -33,6 +33,16 @@ import pytest
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
 
+from ....adapters.persistence.profile.calculation_revision_override_migration import (
+    rekey_calculation_revision_overrides,
+)
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.profile.relation_binding_join import (
+    bundled_relation_binding_join,
+    bundled_relation_binding_join_targets,
+)
+from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
@@ -46,11 +56,6 @@ from ....domain.modelos.calculation_revision import (
     derive_calculation_revision_id,
 )
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from ....adapters.persistence.profile.calculation_revision_override_migration import rekey_calculation_revision_overrides
-from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....adapters.persistence.profile.relation_binding_join import bundled_relation_binding_join, bundled_relation_binding_join_targets
-from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -200,8 +205,8 @@ def test_calculation_read_path_migrates_the_stored_catalogue(tmp_path: Path) -> 
     repository injected, so the assertion is that the wiring exists rather than
     that the migration works in isolation.
     """
-    from .file_flow_test_support import calculation_ports_for_test
     from ....application.modelo.calculation_actions import list_calculation_revisions
+    from .file_flow_test_support import calculation_ports_for_test
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         _seed_parent_work_unit(profile)

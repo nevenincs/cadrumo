@@ -16,7 +16,6 @@ from pathlib import Path
 
 import pytest
 
-from ...storage.tests.secure_sql import isolated_runtime_profile
 from .....application.aggregation.percepciones_observations_repository import (
     PercepcionObservationPorts,
     persist_percepcion_observations,
@@ -30,6 +29,7 @@ from .....core.casilla_id import validated_casilla_id
 from .....core.period import Period
 from .....domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from .....domain.calculations.registry.withholding_bindings import WithholdingObservation
+from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..percepciones_observations import PercepcionObservationRepositoryAdapter
 from ..retencion_observations import RetencionObservationRepositoryAdapter
 from .published_authority_support import published_authority_operation

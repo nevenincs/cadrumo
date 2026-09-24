@@ -20,17 +20,39 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 
+from ...adapters.outbound.aeat.auth import session_store as _session_store
+from ...adapters.outbound.aeat.sede.errors import ExpedienteNotFoundError
+from ...adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
+from ...adapters.outbound.google import session_store as google_session_store
+from ...adapters.persistence.llm.cache import LLMCache
+from ...adapters.persistence.llm.consent_ledger import EvidenceConsentLedger
+from ...adapters.persistence.llm.run_telemetry import LLMRunTelemetryRecorder
+from ...adapters.persistence.llm.usage import UsageRecorder
 from ...adapters.persistence.profile.apoderado import build_apoderado_config_repository
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.filing_drafts import ModeloDraftRepository
 from ...adapters.persistence.profile.filing_history import FilingHistoryRepositoryAdapter
+from ...adapters.persistence.profile.inventory import InventoryLedgerRepository
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.profile.justificante import JustificanteRepository
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ...adapters.persistence.profile.recipient_replay_guard import RecipientReplayGuardRepository
+from ...adapters.persistence.profile.submission import SubmissionRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ...adapters.persistence.profile.usage_ratios import load_usage_ratios, save_usage_ratios
+from ...adapters.persistence.storage.attachment import AttachmentStore
+from ...adapters.persistence.storage.errors import StorageValidationError
+from ...adapters.persistence.storage.master_key.active_session import activate_session
+from ...adapters.persistence.storage.runtime_readiness import StorageRuntimeReadinessCode
+from ...adapters.persistence.storage.runtime_repository import (
+    secure_object_repository_for_active_bucket_or_default_route,
+    secure_object_repository_for_bucket,
+)
+from ...adapters.persistence.storage.secure_object_namespaces import LLM_USAGE_NAMESPACE
+from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ...application.auth.diagnostics import list_auth_diagnostics
 from ...application.auth.diagnostics_ports import AuthDiagnosticPersistenceError
 from ...application.calculations.observations_repository import ResultDispositionProjection
@@ -63,28 +85,6 @@ from ...domain.modelos.work_unit import WorkUnitCatalogue
 from ...domain.transactions.models import TransactionCatalogue
 from ...domain.usage_ratios.model import UsageRatioProfile
 from ..adapter_composition import build_borrador_100_snapshot_repository
-from ...adapters.outbound.aeat.auth import session_store as _session_store
-from ...adapters.outbound.aeat.sede.errors import ExpedienteNotFoundError
-from ...adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
-from ...adapters.outbound.google import session_store as google_session_store
-from ...adapters.persistence.llm.cache import LLMCache
-from ...adapters.persistence.llm.consent_ledger import EvidenceConsentLedger
-from ...adapters.persistence.llm.run_telemetry import LLMRunTelemetryRecorder
-from ...adapters.persistence.llm.usage import UsageRecorder
-from ...adapters.persistence.profile.inventory import InventoryLedgerRepository
-from ...adapters.persistence.profile.recipient_replay_guard import RecipientReplayGuardRepository
-from ...adapters.persistence.profile.submission import SubmissionRepository
-from ...adapters.persistence.profile.usage_ratios import load_usage_ratios, save_usage_ratios
-from ...adapters.persistence.storage.attachment import AttachmentStore
-from ...adapters.persistence.storage.errors import StorageValidationError
-from ...adapters.persistence.storage.master_key.active_session import activate_session
-from ...adapters.persistence.storage.runtime_readiness import StorageRuntimeReadinessCode
-from ...adapters.persistence.storage.runtime_repository import (
-    secure_object_repository_for_active_bucket_or_default_route,
-    secure_object_repository_for_bucket,
-)
-from ...adapters.persistence.storage.secure_object_namespaces import LLM_USAGE_NAMESPACE
-from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ._runtime_attached_repositories_support import (
     _BUCKET_A_ATTACHMENT_PAYLOAD,
     _BUCKET_A_ID,

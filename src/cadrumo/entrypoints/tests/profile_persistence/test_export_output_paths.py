@@ -27,7 +27,6 @@ from cadrumo.adapters.persistence.profile.modelos_calculation import Calculation
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
-from cadrumo.entrypoints.tests.profile_persistence.modelo_303_export_support import build_verified_modelo_303_revision
 from cadrumo.adapters.persistence.profile.tests.modelo_export_ports_support import modelo_export_ports_for_test
 from cadrumo.application.calculations.observations_repository import ObservationSourceKind, ResultDispositionProjection
 from cadrumo.application.modelo.action_errors import (
@@ -86,6 +85,7 @@ from cadrumo.domain.modelos.filing_record import (
     derive_filing_record_id,
 )
 from cadrumo.domain.modelos.filing_repository import upsert_filing_record
+from cadrumo.entrypoints.tests.profile_persistence.modelo_303_export_support import build_verified_modelo_303_revision
 from cadrumo.tests.aeat_literal_fixtures import justificante_cotejo_url
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

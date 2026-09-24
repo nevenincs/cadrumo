@@ -17,14 +17,6 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
-from ..custody.records import (
-    ProfileCustodyEnvelope,
-    ProfileCustodyKdfParameters,
-    ProfileCustodyWrappedDek,
-)
-from ..custody.sentinel import create_profile_custody_sentinel
-from ..master_key.active_session import close_active_bucket_session
-from ..master_key.bucket_session import BucketSession
 from .....application.state_projection import build_active_profile
 from .....application.user_profile.capsule_record import ProfileRecordSession
 from .....application.user_profile.lifecycle import ProfileCapsuleLifecycle
@@ -36,6 +28,14 @@ from .....application.workflow.state_models import WorkflowState
 from .....core.bucket_pointer import BucketPointer, read_pointer, write_pointer
 from .....core.config import override_settings
 from .....domain.user_profile.values import ProfileSetupState, UserProfileFact
+from ..custody.records import (
+    ProfileCustodyEnvelope,
+    ProfileCustodyKdfParameters,
+    ProfileCustodyWrappedDek,
+)
+from ..custody.sentinel import create_profile_custody_sentinel
+from ..master_key.active_session import close_active_bucket_session
+from ..master_key.bucket_session import BucketSession
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

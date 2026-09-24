@@ -15,11 +15,11 @@ from pathlib import Path
 
 import pytest
 
-from ...storage.tests.secure_sql import isolated_runtime_profile
 from .....domain.transactions.enums import TransactionDirection, TransactionLifecycleState
 from .....domain.transactions.models import Transaction, TransactionCatalogue
 from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ...storage.sql.secure_objects import SecureObjectRepository
+from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..transactions import TransactionCatalogueRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

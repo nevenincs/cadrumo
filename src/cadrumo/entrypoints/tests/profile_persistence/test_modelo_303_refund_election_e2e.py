@@ -43,6 +43,21 @@ from pydantic import SecretStr
 from cadrumo.domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
 from cadrumo.domain.user_profile.values import create_user_profile_record
 
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.calculation_observations import (
+    CalculationObservationRepository,
+    IvaWalletDecisionRepository,
+)
+from ....adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.profile.tests.operator_scope_fakes import (
+    build_inward_operator_scope_ports_for_active_route,
+)
+from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.calculations.binding_prefill import (
     BindingPrefillReport,
     extract_modelo_303_local_iva_compensation_recurrence,
@@ -77,21 +92,6 @@ from ...adapter_composition import (
     build_filing_action_ports,
     build_work_lifecycle_ports,
 )
-from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from ....adapters.persistence.profile.calculation_observations import (
-    CalculationObservationRepository,
-    IvaWalletDecisionRepository,
-)
-from ....adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
-from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....adapters.persistence.profile.tests.operator_scope_fakes import (
-    build_inward_operator_scope_ports_for_active_route,
-)
-from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from .verification_repository_support import (
     build_test_certificate_secret_backend_factory,
     build_test_verification_repository_bundle,

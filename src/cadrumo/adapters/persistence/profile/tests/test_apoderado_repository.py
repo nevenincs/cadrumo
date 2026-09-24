@@ -7,7 +7,6 @@ from pathlib import Path
 
 import pytest
 
-from ...storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .....application.auth.apoderado_service import (
     ApoderadoConfiguration,
     ApoderadoConfigurationIdentityError,
@@ -15,6 +14,7 @@ from .....application.auth.apoderado_service import (
 )
 from .....core.identity.bucket import canonical_bucket_id
 from .....core.time.clock import now
+from ...storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ..apoderado import ApoderadoConfigRepository, build_apoderado_config_repository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

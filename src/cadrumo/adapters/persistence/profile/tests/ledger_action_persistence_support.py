@@ -57,10 +57,10 @@ __all__ = [
     "BUCKET_ID",
     "OTHER_BUCKET_ID",
     "create_manual_row",
-    "repositories",
     "parsed_import_transaction",
     "persist_verified_revision_citing_transaction",
     "purchase_invoice",
+    "repositories",
 ]
 
 

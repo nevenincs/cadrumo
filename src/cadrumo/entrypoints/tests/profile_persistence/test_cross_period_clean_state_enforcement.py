@@ -13,15 +13,15 @@ from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
 
-from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
-from ....application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
-from ....domain.calculations.registry.tests.registry_observations import revision_id_for_observation
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
-from ....adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.tests.modelo_303_filed_disposition import modelo_303_filed_disposition
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from ....adapters.persistence.storage.operator_scope import build_operator_scope_ports
+from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from ....application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
+from ....domain.calculations.registry.tests.registry_observations import revision_id_for_observation
+from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from .verification_repository_support import (
     build_test_certificate_secret_backend_factory,
     build_test_verification_repository_bundle,
@@ -29,6 +29,13 @@ from .verification_repository_support import (
 
 __all__ = ["register_wizard_catalogue"]
 
+from ....adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+from ....adapters.persistence.profile.tests.justificante_metadata import persist_justificante_metadata
+from ....adapters.persistence.profile.tests.modelo_export_ports_support import modelo_export_ports_for_test
+from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.calculations.cross_period_clean_state import cross_period_dependency_requirements
 from ....application.calculations.cross_period_models import (
     CrossPeriodExpectedMemberSet,
@@ -84,15 +91,8 @@ from ....domain.modelos.filing_record import (
 from ....domain.modelos.filing_repository import upsert_filing_record
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
-from ...adapter_composition import build_calculation_action_ports, build_filing_action_ports
 from ....tests.env_scope import ready_clave_settings
-from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from ....adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-from ....adapters.persistence.profile.tests.justificante_metadata import persist_justificante_metadata
-from ....adapters.persistence.profile.tests.modelo_export_ports_support import modelo_export_ports_for_test
+from ...adapter_composition import build_calculation_action_ports, build_filing_action_ports
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 

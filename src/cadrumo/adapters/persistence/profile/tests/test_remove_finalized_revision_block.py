@@ -14,6 +14,8 @@ from cadrumo.domain.transactions.errors import TransactionValidationError
 
 from .ledger_action_persistence_support import (
     BUCKET_ID as _BUCKET_ID,
+)
+from .ledger_action_persistence_support import (
     repositories as _repositories,
 )
 from .remove_draft_revision_support import create_row, seed_revision_citing_transaction

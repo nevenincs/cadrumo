@@ -29,10 +29,10 @@ from pathlib import Path
 
 import pytest
 
-from ...storage.tests.secure_sql import isolated_runtime_profile
 from .....domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from .....domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ...storage.errors import SecureObjectRevisionConflictError
+from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..modelos_calculation import CalculationRevisionCatalogueRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

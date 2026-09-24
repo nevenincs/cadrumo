@@ -18,7 +18,6 @@ import pytest
 
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 
-from ..transactions import TransactionCatalogueRepository
 from .....domain.invoices.enums import IvaRate, PaymentStatus
 from .....domain.invoices.models import Invoice, InvoiceLine
 from .....domain.iva.classification import InvoiceKind
@@ -27,6 +26,7 @@ from .....domain.transactions.models import Transaction, TransactionCatalogue
 from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ...tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ..invoices import InvoiceCatalogueRepository
+from ..transactions import TransactionCatalogueRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

@@ -41,7 +41,6 @@ from cadrumo.adapters.persistence.profile.modelos_calculation import Calculation
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.percepciones_observations import PercepcionObservationRepositoryAdapter
 from cadrumo.adapters.persistence.profile.retencion_observations import RetencionObservationRepositoryAdapter
-from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
 from cadrumo.adapters.persistence.profile.tests.ledger_capital_support import (
     CAPITAL_GROSS,
     CAPITAL_HOLDER_NAME,
@@ -101,6 +100,7 @@ from cadrumo.domain.calculations.registry.formula_runtime import calculate_regis
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
 from cadrumo.domain.identifiers import canonical_decimal_string
+from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

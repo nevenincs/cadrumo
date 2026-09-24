@@ -64,17 +64,21 @@ from cadrumo.entrypoints.ledger_evidence_extraction_composition import invoice_d
 
 from ....adapters.persistence.profile.tests.evidence_test_support import (
     BUCKET_ID as _BUCKET_ID,
-    make_svc as _make_svc,
+)
+from ....adapters.persistence.profile.tests.evidence_test_support import (
     isolated_settings,
     repository,
     secure_objects,
+)
+from ....adapters.persistence.profile.tests.evidence_test_support import (
+    make_svc as _make_svc,
 )
 from ....adapters.persistence.profile.tests.evidence_test_support import runtime_profile as runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 __all__ = ["isolated_settings", "repository", "runtime_profile", "secure_objects"]
 
-_CORPUS = Path(__file__).resolve().parents[4] / "application" / "ledger" / "tests" / "_evidence_corpus"
+_CORPUS = Path(__file__).resolve().parents[3] / "application" / "ledger" / "tests" / "_evidence_corpus"
 
 
 def _registry_legends(operation):

@@ -49,17 +49,21 @@ from cadrumo.domain.iva.classification import require_iva_territorial_scope
 from cadrumo.domain.iva.establishment import territorial_scope_for_spanish_postal_code
 from cadrumo.domain.iva.regime_legend import resolve_regime_legends
 
-from .evidence_test_support import (
-    BUCKET_ID as _BUCKET_ID,
-    make_svc as _make_svc,
-    isolated_settings,
-    secure_objects,
-)
-from .evidence_test_support import runtime_profile as runtime_profile
 from ._invoice_confirmation_test_support import (
     InvoiceAuthorityFixture,
     invoice_draft_extraction_kwargs,
 )
+from .evidence_test_support import (
+    BUCKET_ID as _BUCKET_ID,
+)
+from .evidence_test_support import (
+    isolated_settings,
+    secure_objects,
+)
+from .evidence_test_support import (
+    make_svc as _make_svc,
+)
+from .evidence_test_support import runtime_profile as runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 __all__ = ["isolated_settings", "runtime_profile", "secure_objects"]

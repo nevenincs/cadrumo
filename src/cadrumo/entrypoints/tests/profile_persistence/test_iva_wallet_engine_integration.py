@@ -14,30 +14,6 @@ from cadrumo.adapters.persistence.profile.calculation_observations import (
     IvaWalletDecisionRepository,
 )
 from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
-from cadrumo.entrypoints.tests.profile_persistence._iva_wallet_engine_support import (
-    _DECIDED_AT,
-    _M303_COMPENSACION_APLICADA_CASILLA,
-    _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
-    _M303_DISPONIBLE_CASILLA,
-    _M303_POSTERIOR_CASILLA,
-    _M303_RESULTADO_CASILLA,
-    _TARGET_PERIOD,
-    _TARGET_YEAR,
-    _TAXPAYER_NIF,
-    _create_modelo_303_work_unit,
-    _modelo_303_engine_inputs,
-    _negative_modelo_303_engine_inputs,
-    _period,
-    _secure_backend,
-    _snapshot_303,
-    _store_operator_profile,
-    _store_operator_profile_with_tax_id,
-    _store_prior_303_compensation,
-    _wallet_observation,
-    _work_unit_repositories,
-    _work_unit_repositories_with_modelo_303_work_unit,
-)
-from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
 from cadrumo.application.calculations.binding_prefill import (
     BindingPrefillReport,
     extract_modelo_303_local_iva_compensation_recurrence,
@@ -69,6 +45,30 @@ from cadrumo.domain.iva_compensation.reconciliation import (
     IvaCompensationReconciliationDecision,
 )
 from cadrumo.domain.modelos.work_unit import WorkUnit
+from cadrumo.entrypoints.tests.profile_persistence._iva_wallet_engine_support import (
+    _DECIDED_AT,
+    _M303_COMPENSACION_APLICADA_CASILLA,
+    _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
+    _M303_DISPONIBLE_CASILLA,
+    _M303_POSTERIOR_CASILLA,
+    _M303_RESULTADO_CASILLA,
+    _TARGET_PERIOD,
+    _TARGET_YEAR,
+    _TAXPAYER_NIF,
+    _create_modelo_303_work_unit,
+    _modelo_303_engine_inputs,
+    _negative_modelo_303_engine_inputs,
+    _period,
+    _secure_backend,
+    _snapshot_303,
+    _store_operator_profile,
+    _store_operator_profile_with_tax_id,
+    _store_prior_303_compensation,
+    _wallet_observation,
+    _work_unit_repositories,
+    _work_unit_repositories_with_modelo_303_work_unit,
+)
+from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 

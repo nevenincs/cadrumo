@@ -7,12 +7,6 @@ from typing import NamedTuple
 
 import pytest
 
-from cadrumo.entrypoints.cli.tests.profile_persistence._justificante_reconcile_support import (
-    MODELO_130_FIXTURE,
-    _active_bucket_id,
-    _persist_capture,
-    _seed_work_unit,
-)
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import (
     LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE,
 )
@@ -28,6 +22,12 @@ from cadrumo.application.modelo.reconciliation_records import (
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.modelo import Modelo
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.entrypoints.cli.tests.profile_persistence._justificante_reconcile_support import (
+    MODELO_130_FIXTURE,
+    _active_bucket_id,
+    _persist_capture,
+    _seed_work_unit,
+)
 
 isolated_backend = active_profile_isolated_backend_fixture(profile_overrides={"identity.tax_id": "00000000T"})
 

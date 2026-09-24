@@ -23,16 +23,6 @@ from typing import NoReturn
 
 import pytest
 
-from ..buckets import BucketEventHistoryRepository
-from .llm_saturation_support import (
-    _BUCKET,
-    saturating_subprocess_classifier as _saturating_subprocess_classifier,
-    _seed_unclassified,
-)
-from .llm_saturation_support import (
-    repositories as repositories,
-)
-from ..transactions import TransactionCatalogueRepository
 from .....application.ledger.evidence_textlayer_ports import EvidenceTextLayerPorts
 from .....application.ledger.llm_classification import saturate_llm_classification
 from .....application.ledger.llm_classification_ports import LLMClassificationPorts, LLMSaturatedSuggestion
@@ -45,6 +35,18 @@ from .....domain.calculations.registry.authority import (
     bundled_indexed_authority as _indexed_authority_for_test,
 )
 from .....domain.iva.schema import IvaCategory
+from ..buckets import BucketEventHistoryRepository
+from ..transactions import TransactionCatalogueRepository
+from .llm_saturation_support import (
+    _BUCKET,
+    _seed_unclassified,
+)
+from .llm_saturation_support import (
+    repositories as repositories,
+)
+from .llm_saturation_support import (
+    saturating_subprocess_classifier as _saturating_subprocess_classifier,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 

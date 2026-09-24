@@ -13,12 +13,12 @@ from pathlib import Path
 
 import pytest
 
-from ..bucket.directory_layout import bucket_paths
-from ...tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from .....application.workflow.errors import WorkflowError
 from .....application.workflow.persistence import list_runs, load_run, save_run
 from .....application.workflow.run_models import WorkflowResult, WorkflowStage, WorkflowStep
 from .....core.directory_scan import scan_directory
+from ...tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
+from ..bucket.directory_layout import bucket_paths
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -127,9 +127,9 @@ def test_reset_workflow_state_emit_failure_leaves_row_intact() -> None:
     through the repository's ``emit_reset`` constructor argument.
     """
 
-    from ..secure_object_namespaces import WORKFLOW_STATE_NAMESPACE
     from .....application.workflow.persistence import WorkflowStateRepository
     from .....application.workflow.state_models import WorkflowState
+    from ..secure_object_namespaces import WORKFLOW_STATE_NAMESPACE
 
     def _raise(**_: object) -> None:
         raise _EmitError("simulated downstream emit failure")

@@ -12,7 +12,6 @@ from typing import Any
 import pytest
 from sqlalchemy import update
 
-from ...storage.tests.secure_sql import isolated_runtime_profile
 from .....domain.calculations.registry.authority import bundled_indexed_authority
 from .....domain.transactions import models as transaction_models
 from .....domain.transactions.enums import BusinessClassification, TransactionDirection
@@ -25,6 +24,7 @@ from ...storage.secure_object_namespaces import TRANSACTION_CATALOGUE_NAMESPACE
 from ...storage.sql import orm as _orm
 from ...storage.sql.secure_objects import SecureObjectRepository
 from ...storage.sql.session import session_scope
+from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..transactions import TransactionCatalogueRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

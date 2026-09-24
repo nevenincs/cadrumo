@@ -17,19 +17,6 @@ import pytest
 from cadrumo.adapters.persistence.profile.tests.calculation_catalogue_tamper_support import (
     plant_calculation_revision_unchecked,
 )
-from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import (
-    DEFAULT_180_BINDING_VALUES,
-    DEFAULT_180_RELATION_VALUES,
-    T1,
-    T2,
-    Repos,
-    calculation_ports_for_test,
-    registry_required_manual_casillas,
-    seed_modelo_180_work_unit,
-    seed_modelo_193_work_unit,
-    seed_work_unit,
-    verify_revision,
-)
 from cadrumo.application.modelo.action_errors import StoredRowFieldScalarInputError
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
 from cadrumo.application.modelo.stored_row_field_input_gate import refuse_stored_row_field_scalar_inputs
@@ -44,6 +31,19 @@ from cadrumo.domain.modelos.calculation_revision import (
     derive_calculation_revision_id_from_revision,
 )
 from cadrumo.domain.modelos.work_unit import WorkUnit
+from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import (
+    DEFAULT_180_BINDING_VALUES,
+    DEFAULT_180_RELATION_VALUES,
+    T1,
+    T2,
+    Repos,
+    calculation_ports_for_test,
+    registry_required_manual_casillas,
+    seed_modelo_180_work_unit,
+    seed_modelo_193_work_unit,
+    seed_work_unit,
+    verify_revision,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

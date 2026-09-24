@@ -29,13 +29,13 @@ import pytest
 from sqlalchemy import delete, event, select
 from sqlalchemy import inspect as sa_inspect
 
-from ...storage.tests.secure_sql import isolated_runtime_profile
 from .....domain.iva.schema import IvaCashAccountingPaymentEvidence, IvaCashAccountingTreatment, IvaCategory
 from .....domain.transactions.enums import BusinessClassification, TransactionDirection
 from .....domain.transactions.models import Transaction, TransactionCatalogue
 from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ...storage.sql import orm as _orm
 from ...storage.sql.session import session_scope
+from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..transactions import TransactionCatalogueRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("authority_operation")]

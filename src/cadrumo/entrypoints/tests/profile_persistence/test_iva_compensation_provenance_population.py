@@ -51,6 +51,15 @@ from decimal import Decimal
 import pytest
 from pydantic import AnyHttpUrl
 
+from ....adapters.outbound.aeat.sede.schema import (
+    FiledDeclaracionArtefact,
+    FiledDeclaracionObservation,
+    ObservedCasillaValue,
+)
+from ....adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from ....adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
+from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.calculations.binding_prefill import (
     extract_modelo_303_local_iva_compensation_recurrence,
     observation_from_iva_compensation_history,
@@ -90,15 +99,6 @@ from ....domain.modelos.calculation_revision import (
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ...live_state_composition import compose_filed_observation_persistence_ports
-from ....adapters.outbound.aeat.sede.schema import (
-    FiledDeclaracionArtefact,
-    FiledDeclaracionObservation,
-    ObservedCasillaValue,
-)
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from ....adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from ....adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
-from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

@@ -35,10 +35,18 @@ from cadrumo.entrypoints.ledger_action_composition import compose_ledger_import_
 from ....adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
 from ....adapters.persistence.profile.tests.ledger_action_persistence_support import (
     BUCKET_ID as _BUCKET_ID,
+)
+from ....adapters.persistence.profile.tests.ledger_action_persistence_support import (
     OTHER_BUCKET_ID as _OTHER_BUCKET_ID,
+)
+from ....adapters.persistence.profile.tests.ledger_action_persistence_support import (
     create_manual_row as _create_manual_row,
-    repositories as _repositories,
+)
+from ....adapters.persistence.profile.tests.ledger_action_persistence_support import (
     parsed_import_transaction,
+)
+from ....adapters.persistence.profile.tests.ledger_action_persistence_support import (
+    repositories as _repositories,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]

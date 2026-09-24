@@ -11,7 +11,6 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter, ValidationError
 
-from ...storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .....core.classification.policies import SensitivityClass
 from .....core.period import Period
 from .....core.storage_taxonomy import StorageCategory
@@ -21,6 +20,7 @@ from .....domain.justificante.schema import Justificante
 from .....tests.aeat_literal_fixtures import JUSTIFICANTE_VERIFY_PATH_FIXTURE, aeat_url
 from ...storage.envelope.contract import Envelope
 from ...storage.errors import ClassificationError, PathContainmentError
+from ...storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ..justificante import JustificanteRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("authority_operation")]

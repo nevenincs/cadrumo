@@ -22,8 +22,12 @@ from cadrumo.domain.usage_ratios.model import UsageRatioProfile
 
 from .ledger_action_persistence_support import (
     BUCKET_ID as _BUCKET_ID,
-    repositories as _repositories,
+)
+from .ledger_action_persistence_support import (
     persist_verified_revision_citing_transaction,
+)
+from .ledger_action_persistence_support import (
+    repositories as _repositories,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

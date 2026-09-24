@@ -67,8 +67,12 @@ from cadrumo.domain.usage_ratios.model import UsageRatioProfile as _UsageRatioPr
 
 from .ledger_action_persistence_support import (
     BUCKET_ID as _BUCKET_ID,
-    repositories as _repositories,
+)
+from .ledger_action_persistence_support import (
     purchase_invoice,
+)
+from .ledger_action_persistence_support import (
+    repositories as _repositories,
 )
 
 

@@ -8,16 +8,6 @@ from typing import NoReturn
 
 import pytest
 
-from ..buckets import BucketEventHistoryRepository
-from .llm_saturation_support import (
-    _BUCKET,
-    _NOW,
-    saturating_subprocess_classifier as _saturating_subprocess_classifier,
-    _seed_unclassified,
-)
-from .llm_saturation_support import repositories as repositories
-from .ledger_action_create_support import ledger_ports_for_test
-from ..transactions import TransactionCatalogueRepository
 from .....application.ledger.evidence_textlayer_ports import EvidenceTextLayerPorts
 from .....application.ledger.llm_classification import (
     apply_saturated_llm_classification,
@@ -30,6 +20,18 @@ from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.iva.schema import IvaCategory
 from .....domain.transactions.enums import BusinessClassification
 from .....domain.transactions.errors import TransactionValidationError
+from ..buckets import BucketEventHistoryRepository
+from ..transactions import TransactionCatalogueRepository
+from .ledger_action_create_support import ledger_ports_for_test
+from .llm_saturation_support import (
+    _BUCKET,
+    _NOW,
+    _seed_unclassified,
+)
+from .llm_saturation_support import repositories as repositories
+from .llm_saturation_support import (
+    saturating_subprocess_classifier as _saturating_subprocess_classifier,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 __all__ = ["repositories"]

@@ -12,7 +12,6 @@ from pydantic import BaseModel, Field
 
 from cadrumo.adapters.persistence.storage.tests.namespace_registry_support import lookup_namespace_definition
 
-from ...storage.tests.secure_sql import isolated_runtime_profile, read_db_at_rest_bytes
 from .....core.classification.policies import SensitivityClass
 from .....core.hashing import sha256_hex
 from ...storage.errors import RepositoryError
@@ -20,6 +19,7 @@ from ...storage.namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from ...storage.namespace_taxonomy import StorageCustodyDisposition, StorageNamespaceScope
 from ...storage.secure_object_namespaces import OPERATION_SECURE_REFERENCE_NAMESPACE
 from ...storage.sql.secure_objects import SecureObjectRepository
+from ...storage.tests.secure_sql import isolated_runtime_profile, read_db_at_rest_bytes
 from ..secure_references import OperationSecureReferenceRepository, operation_secure_reference_repository
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]

@@ -40,27 +40,71 @@ from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCata
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
     CAPTURED_AT as _CAPTURED_AT,
+)
+from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
     M303_DECLARATION_TYPE_C as _M303_DECLARATION_TYPE_C,
+)
+from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
     M303_DECLARATION_TYPE_I as _M303_DECLARATION_TYPE_I,
+)
+from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
     M303_DISPONIBLE_CASILLA as _M303_DISPONIBLE_CASILLA,
+)
+from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
     M303_GENERADA_CASILLA as _M303_GENERADA_CASILLA,
+)
+from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
     M303_POSTERIOR_CASILLA as _M303_POSTERIOR_CASILLA,
+)
+from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
     MODELO_130_FIXTURE_CSV as _MODELO_130_FIXTURE_CSV,
+)
+from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
     MODELO_303_FIXTURE_CSV as _MODELO_303_FIXTURE_CSV,
+)
+from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
     SYNTHETIC_EXPEDIENTE_ID as _SYNTHETIC_EXPEDIENTE_ID,
+)
+from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
     SYNTHETIC_PROFILE_ID as _SYNTHETIC_PROFILE_ID,
+)
+from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
     filed_declaration as _declaration,
+)
+from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
     modelo_130_justificante_pdf_bytes as _modelo_130_justificante_pdf_bytes,
+)
+from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
     modelo_303_justificante_pdf_bytes as _modelo_303_justificante_pdf_bytes,
+)
+from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
     parsed_303_submitted_file_observation as _parsed_303_submitted_file_observation,
+)
+from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
     prior_303_observation as _prior_303_observation,
+)
+from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
     profile_backend as _profile_backend,
+)
+from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
     registry_snapshot as _registry_snapshot,
+)
+from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
     secure_backend as _secure_backend,
+)
+from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
     seed_current_130_filing as _seed_current_130_filing,
+)
+from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
     seed_current_303_filing as _seed_current_303_filing,
+)
+from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
     stored_130_justificante_observation as _stored_130_justificante_observation,
+)
+from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
     stored_303_justificante_observation as _stored_303_justificante_observation,
+)
+from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
     stored_justificante_observation as _stored_justificante_observation,
 )
 from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket

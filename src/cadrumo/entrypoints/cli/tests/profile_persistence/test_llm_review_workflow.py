@@ -52,15 +52,19 @@ from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.entrypoints.cli.ledger_llm_composition import compose_ledger_llm
 
+from .....adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
 from .....adapters.persistence.profile.tests.llm_evidence_split_support import (
     single_line_proposal as _single_line_proposal,
+)
+from .....adapters.persistence.profile.tests.llm_evidence_split_support import (
     split_subprocess_proposer as _split_subprocess_proposer,
+)
+from .....adapters.persistence.profile.tests.llm_evidence_split_support import (
     two_line_proposal as _two_line_proposal,
 )
 from .....adapters.persistence.profile.tests.llm_saturation_support import (
     saturating_subprocess_classifier as _saturating_subprocess_classifier,
 )
-from .....adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

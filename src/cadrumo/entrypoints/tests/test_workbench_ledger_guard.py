@@ -21,6 +21,8 @@ import pytest
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from ...application.overview.home import HomeAccountSession, HomeSessionPosture
+from ...application.workbench_generation import SecureProfileWorkbenchGenerationReadDoorV1, WorkbenchGenerationInputsV1
 from ...core.errors.hierarchy import InternalInvariantError
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue
@@ -31,8 +33,6 @@ from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ...domain.user_profile.values import ProfileSetupState, create_user_profile_record
 from ..ledger_action_composition import compose_ledger_action_ports
-from ...application.overview.home import HomeAccountSession, HomeSessionPosture
-from ...application.workbench_generation import SecureProfileWorkbenchGenerationReadDoorV1, WorkbenchGenerationInputsV1
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

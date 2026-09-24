@@ -14,10 +14,6 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ...storage.tests.secure_sql import (
-    isolated_runtime_profile,
-    mutate_encrypted_secure_object_json,
-)
 from .....core.storage_taxonomy import StorageCategory
 from .....core.storage_taxonomy_locations import storage_path
 from .....domain.invoices.enums import IvaRate, PaymentStatus
@@ -25,6 +21,10 @@ from .....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from .....domain.iva.classification import InvoiceKind
 from .....domain.transactions.raw_transaction import RawProvenance, SourceFormat
 from ...storage.secure_object_namespaces import INVOICE_CATALOGUE_NAMESPACE
+from ...storage.tests.secure_sql import (
+    isolated_runtime_profile,
+    mutate_encrypted_secure_object_json,
+)
 from ..invoices import InvoiceCatalogueRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

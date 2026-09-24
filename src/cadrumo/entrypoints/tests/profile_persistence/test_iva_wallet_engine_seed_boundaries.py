@@ -13,6 +13,19 @@ from cadrumo.adapters.persistence.profile.calculation_observations import (
     IvaWalletDecisionRepository,
 )
 from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
+from cadrumo.application.calculations.binding_prefill import BindingPrefillReport
+from cadrumo.application.calculations.iva_compensation_history import seed_iva_compensation_period
+from cadrumo.application.calculations.iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
+from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
+from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
+from cadrumo.application.modelo.iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
+from cadrumo.domain.calculations.registry.authority import (
+    PinnedAuthorityOperation,
+)
+from cadrumo.domain.calculations.registry.authority import (
+    bundled_indexed_authority as _indexed_authority_for_test,
+)
+from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationDecisionReason
 from cadrumo.entrypoints.tests.profile_persistence._iva_wallet_engine_support import (
     _BUCKET_ID,
     _DECIDED_AT,
@@ -30,19 +43,6 @@ from cadrumo.entrypoints.tests.profile_persistence._iva_wallet_engine_support im
     _work_unit_repositories_with_modelo_303_work_unit,
 )
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
-from cadrumo.application.calculations.binding_prefill import BindingPrefillReport
-from cadrumo.application.calculations.iva_compensation_history import seed_iva_compensation_period
-from cadrumo.application.calculations.iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
-from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
-from cadrumo.application.modelo.iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
-from cadrumo.domain.calculations.registry.authority import (
-    PinnedAuthorityOperation,
-)
-from cadrumo.domain.calculations.registry.authority import (
-    bundled_indexed_authority as _indexed_authority_for_test,
-)
-from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationDecisionReason
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

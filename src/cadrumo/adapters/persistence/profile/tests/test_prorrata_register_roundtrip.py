@@ -33,10 +33,6 @@ from pathlib import Path
 import pydantic
 import pytest
 
-from ...storage.tests.secure_sql import (
-    isolated_runtime_profile,
-    mutate_encrypted_secure_object_json,
-)
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.modelo import Modelo
 from .....core.prorrata_register import (
@@ -60,6 +56,10 @@ from .....domain.prorrata_register.register import (
 )
 from ...storage.errors import EnvelopeVersionError, SecureObjectRevisionConflictError
 from ...storage.sql.engine import get_engine
+from ...storage.tests.secure_sql import (
+    isolated_runtime_profile,
+    mutate_encrypted_secure_object_json,
+)
 from ..prorrata_register import ProrrataRegisterRepository
 from .published_authority_support import published_authority_operation
 
@@ -181,13 +181,13 @@ def test_register_outer_secure_schema_matches_the_v2_document(tmp_path: Path) ->
 
     from sqlalchemy import select
 
-    from ...storage.sql.session import session_scope
     from ...storage.crypto.encrypted_columns import decrypt_secure_object_payload, secure_object_payload_aad
     from ...storage.secure_object_namespaces import (
         PROFILE_PRORRATA_REGISTER_NAMESPACE,
         SECURE_OBJECT_SCHEMA_VERSION_V2,
     )
     from ...storage.sql.orm import SecureObjectRow
+    from ...storage.sql.session import session_scope
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="f9d6d231-3774-48bb-a542-0a4bb1d1f5a6") as profile:
         engine = get_engine(profile.settings)
@@ -215,7 +215,6 @@ def test_register_outer_v1_row_refuses_without_a_tolerant_read(tmp_path: Path) -
     """A re-encrypted v1 SQL row is refused; no upgrader or implicit restamp exists."""
     from sqlalchemy import select
 
-    from ...storage.sql.session import session_scope
     from ...storage.crypto.encrypted_columns import (
         decrypt_secure_object_payload,
         encrypt_secure_object_payload,
@@ -223,6 +222,7 @@ def test_register_outer_v1_row_refuses_without_a_tolerant_read(tmp_path: Path) -
     )
     from ...storage.secure_object_namespaces import PROFILE_PRORRATA_REGISTER_NAMESPACE
     from ...storage.sql.orm import SecureObjectRow
+    from ...storage.sql.session import session_scope
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="c791265a-e7b5-4dcb-af93-d28e011972ca") as profile:
         engine = get_engine(profile.settings)

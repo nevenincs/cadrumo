@@ -24,10 +24,10 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from cadrumo.adapters.persistence.profile.tests.operator_scope_fakes import (
     build_inward_operator_scope_ports_for_active_route,
 )
-from cadrumo.adapters.persistence.profile.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from cadrumo.adapters.persistence.storage.tests.profile_storage_root_fixture import bucket_session_storage_fixture
 from cadrumo.application.auth.actions import update_auth

@@ -17,10 +17,14 @@ from cadrumo.core.config import Settings
 
 from .evidence_test_support import (
     BUCKET_ID as _BUCKET_ID,
-    make_svc as _make_svc,
+)
+from .evidence_test_support import (
     isolated_settings,
     pdf_file,
     secure_objects,
+)
+from .evidence_test_support import (
+    make_svc as _make_svc,
 )
 from .evidence_test_support import runtime_profile as runtime_profile
 

@@ -12,7 +12,6 @@ from datetime import UTC, datetime
 
 import pytest
 
-from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import _FILE_FLOW_PROFILE_ID, _Repos
 from cadrumo.application.modelo.history import admitted_modelo_history_event_types, assemble_modelo_lifecycle_history
 from cadrumo.application.modelo.history_ports import ModeloHistoryPorts
 from cadrumo.application.modelo.work_lifecycle import create_work_unit, discard_work_unit
@@ -21,6 +20,7 @@ from cadrumo.core.period import Period
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.modelos.errors import ModeloValidationError
+from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import _FILE_FLOW_PROFILE_ID, _Repos
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 

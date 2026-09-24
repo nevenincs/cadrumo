@@ -8,17 +8,6 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import (
-    DEFAULT_130_BASELINE_INPUTS,
-    DEFAULT_130_BINDING_VALUES,
-    M130_CARRY_FORWARD_CASILLA,
-    M130_INCOME_CASILLA,
-    M130_NET_RESULT_CASILLA,
-    T0,
-    Repos,
-    calculation_ports_for_test,
-    verify_revision,
-)
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     load_test_profile_record,
     replace_test_profile_record,
@@ -64,6 +53,17 @@ from cadrumo.domain.modelos.verification_report import (
 from cadrumo.domain.modelos.verification_repository import upsert_verification_report
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from cadrumo.domain.user_profile.values import UserProfileFact
+from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import (
+    DEFAULT_130_BASELINE_INPUTS,
+    DEFAULT_130_BINDING_VALUES,
+    M130_CARRY_FORWARD_CASILLA,
+    M130_INCOME_CASILLA,
+    M130_NET_RESULT_CASILLA,
+    T0,
+    Repos,
+    calculation_ports_for_test,
+    verify_revision,
+)
 
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 

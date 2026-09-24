@@ -22,10 +22,6 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ..envelope.contract import Envelope
-from ..errors import ClassificationError, EnvelopeVersionError
-from ..secure_object_namespaces import WORKFLOW_RUN_NAMESPACE
-from .secure_sql import isolated_runtime_profile
 from .....application.operator_actions.models import (
     ActionArgumentBinding,
     ActionReference,
@@ -63,6 +59,10 @@ from .....core.storage_taxonomy import StorageCategory
 from .....core.storage_taxonomy_locations import storage_path
 from .....domain.deadlines.models import ObligationStatus
 from .....domain.submission.models import ModeloDraftStatus
+from ..envelope.contract import Envelope
+from ..errors import ClassificationError, EnvelopeVersionError
+from ..secure_object_namespaces import WORKFLOW_RUN_NAMESPACE
+from .secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

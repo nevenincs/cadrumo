@@ -31,14 +31,22 @@ from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCata
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
     CAPTURED_AT as _CAPTURED_AT,
+)
+from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
     M303_RESULTADO_CASILLA as _M303_RESULTADO_CASILLA,
+)
+from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
     MODELO_130_FIXTURE_CSV as _MODELO_130_FIXTURE_CSV,
+)
+from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
     MODELO_303_FIXTURE_CSV as _MODELO_303_FIXTURE_CSV,
+)
+from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
     stored_130_justificante_observation as _stored_130_justificante_observation,
+)
+from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
     stored_303_justificante_observation as _stored_303_justificante_observation,
 )
-from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
-from cadrumo.entrypoints.tests.profile_persistence.import_flow_support import seed_ready_profile
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from cadrumo.application.live.errors import LiveApplicationError
@@ -53,6 +61,8 @@ from cadrumo.core.casilla_value_kind import CasillaValueKind
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
 from cadrumo.entrypoints.adapter_composition import build_amendment_action_ports
+from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
+from cadrumo.entrypoints.tests.profile_persistence.import_flow_support import seed_ready_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

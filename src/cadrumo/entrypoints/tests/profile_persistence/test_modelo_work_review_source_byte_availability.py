@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import T0, Repos
 from cadrumo.application.modelo.work_review import ModeloWorkReview, build_modelo_work_review
 from cadrumo.core.estado_casilla_oficial import EstadoCasillaOficial
 from cadrumo.core.period import Period
@@ -14,6 +13,7 @@ from cadrumo.domain.calculations.registry.schema_base import RegistrySourceKind
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
+from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import T0, Repos
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

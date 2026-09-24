@@ -21,7 +21,11 @@ from cadrumo.domain.transactions.enums import TransactionDirection
 
 from .ledger_action_persistence_support import (
     BUCKET_ID as _BUCKET_ID,
+)
+from .ledger_action_persistence_support import (
     OTHER_BUCKET_ID as _OTHER_BUCKET_ID,
+)
+from .ledger_action_persistence_support import (
     repositories as _repositories,
 )
 

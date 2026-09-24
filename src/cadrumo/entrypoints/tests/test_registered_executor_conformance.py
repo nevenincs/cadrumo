@@ -40,9 +40,6 @@ from ...adapters.persistence.profile.tests.cross_period_seeding import (
     seed_clean_cross_period_sources,
 )
 from ...adapters.persistence.profile.tests.justificante_metadata import persist_justificante_metadata
-from .profile_persistence.verification_repository_support import (
-    build_test_certificate_secret_backend_factory,
-)
 from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ...adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ...application.auth.operation_definitions import build_auth_operation_definitions
@@ -124,6 +121,9 @@ from ..adapter_composition import (
 )
 from ..censal_review import review_censal_with_services
 from ..operation_composition import build_auth_operation_ports, build_production_operation_registry
+from .profile_persistence.verification_repository_support import (
+    build_test_certificate_secret_backend_factory,
+)
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 

@@ -42,6 +42,19 @@ from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
 
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from ....adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
+from ....adapters.persistence.profile.justificante import JustificanteRepository
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.profile.tests.modelo_303_filed_disposition import modelo_303_filed_disposition
+from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from ....adapters.persistence.profile.tests.relation_prefill_support import empty_profile_read_ports
+from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.calculations.observations_repository import APP_FILING_SOURCE_KIND, ResultDispositionProjection
 from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from ....application.modelo.calculation_actions import (
@@ -67,17 +80,6 @@ from ....domain.calculations.registry.tests.registry_observations import (
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
-from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from ....adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from ....adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
-from ....adapters.persistence.profile.justificante import JustificanteRepository
-from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
-from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....adapters.persistence.profile.tests.relation_prefill_support import empty_profile_read_ports
 from .file_flow_test_support import (
     _DEFAULT_130_BINDING_VALUES,
     _M130_AGRARIAN_VOLUME_CASILLA,
@@ -92,8 +94,6 @@ from .file_flow_test_support import (
     _verify_revision,
     calculation_ports_for_test,
 )
-from ....adapters.persistence.profile.tests.modelo_303_filed_disposition import modelo_303_filed_disposition
-from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
@@ -433,12 +433,12 @@ def test_same_year_locally_filed_upstream_admitted_with_advisory(
     cross-YEAR non-official prior still blocks. The within-year reconstruction can reach
     export; the operator files every period with AEAT externally.
     """
+    from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+    from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
     from ....application.calculations.cross_period_models import CrossPeriodCleanStateBlocker
     from ....application.modelo.verification_cross_period import cross_period_clean_state_verdict_for_work_unit
     from ....domain.modelos.calculation_repository import upsert_calculation_revision
     from ....domain.modelos.calculation_revision import CalculationRevisionState
-    from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-    from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 
     wu_repo, cr_repo, fr_repo, _vr_repo, bv_repo = repos
     _seed_first_year_activity_profile(repos)
@@ -916,9 +916,9 @@ def test_first_filer_same_year_chain_is_fully_reachable(
     verdict is clean => the quarter is reachable to verify/export. If suppression did NOT
     cover the previous_filing M100 dep, this verdict would be unclean (a real gap).
     """
-    from ....application.modelo.verification_cross_period import cross_period_clean_state_verdict_for_work_unit
     from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
     from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
+    from ....application.modelo.verification_cross_period import cross_period_clean_state_verdict_for_work_unit
 
     wu_repo, cr_repo, _fr_repo, _vr_repo, bv_repo = repos
     _seed_first_year_activity_profile(repos)

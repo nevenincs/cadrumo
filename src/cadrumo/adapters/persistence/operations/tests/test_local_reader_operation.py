@@ -20,14 +20,6 @@ from typing import ClassVar, override
 import pytest
 from pydantic import ValidationError
 
-from ..journal import OperationJournalRepository
-from ..lease import OperationLeaseFilesystemRepository
-from ..secure_references import operation_secure_reference_repository
-from ...storage.tests.secure_sql import isolated_runtime_profile
-from .....core.config import Settings, override_settings
-from .....core.model_catalogue import ModelRole, default_model_runtime_id
-from .....core.operations import OperationEffect, OperationEventKind, OperationTerminalCondition
-from .....tests.loopback_llm import SilentLoopbackHandler, read_json_body, serving_loopback, write_json_response
 from .....application.local_reader import RoleFitnessOutcome, role_model_targets
 from .....application.local_reader_operation import (
     LOCAL_READER_OPERATION_DEFINITION_ID,
@@ -58,6 +50,14 @@ from .....application.operations.registry import OperationRegistry
 from .....application.operations.tests.authority_test_support import unread_authority_operation
 from .....application.provisioning_contracts import ProvisioningPreconditionCondition
 from .....application.provisioning_host import RuntimeInstaller
+from .....core.config import Settings, override_settings
+from .....core.model_catalogue import ModelRole, default_model_runtime_id
+from .....core.operations import OperationEffect, OperationEventKind, OperationTerminalCondition
+from .....tests.loopback_llm import SilentLoopbackHandler, read_json_body, serving_loopback, write_json_response
+from ...storage.tests.secure_sql import isolated_runtime_profile
+from ..journal import OperationJournalRepository
+from ..lease import OperationLeaseFilesystemRepository
+from ..secure_references import operation_secure_reference_repository
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 

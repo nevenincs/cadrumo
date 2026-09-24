@@ -21,6 +21,8 @@ from cadrumo.entrypoints.ledger_action_composition import compose_ledger_action_
 
 from ....adapters.persistence.profile.tests.ledger_action_persistence_support import (
     BUCKET_ID as _BUCKET_ID,
+)
+from ....adapters.persistence.profile.tests.ledger_action_persistence_support import (
     repositories as _repositories,
 )
 

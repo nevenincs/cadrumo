@@ -45,11 +45,23 @@ from cadrumo.tests.inventory import FIXTURES_DIR
 
 from ...adapters.persistence.operations.tests.test_censal_operation_executor import (
     NOW as _NOW,
+)
+from ...adapters.persistence.operations.tests.test_censal_operation_executor import (
     RESPONSE_TOKEN as _RESPONSE_TOKEN,
+)
+from ...adapters.persistence.operations.tests.test_censal_operation_executor import (
     censal_request_payload as _payload,
-    start as _start,
-    subject as _subject,
+)
+from ...adapters.persistence.operations.tests.test_censal_operation_executor import (
     censal_supervisor as _supervisor,
+)
+from ...adapters.persistence.operations.tests.test_censal_operation_executor import (
+    start as _start,
+)
+from ...adapters.persistence.operations.tests.test_censal_operation_executor import (
+    subject as _subject,
+)
+from ...adapters.persistence.operations.tests.test_censal_operation_executor import (
     wait_for_phase as _wait_for_phase,
 )
 

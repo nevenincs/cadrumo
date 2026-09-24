@@ -12,24 +12,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ...core.operations import OperationCancellation, OperationDurability, OperationEffect
-from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ...domain.deadlines.models import IVARegime, TaxpayerProfile
-from ...domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
-from ..adapter_composition import (
-    build_active_work_lifecycle_ports,
-    build_amendment_action_ports,
-    build_filing_action_ports,
-    build_modelo_export_ports,
-    build_verification_repository_bundle,
-)
 from ...application.auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
-from ...application.operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationConflictScope,
-    OperationRequestStoragePolicy,
-)
-from ...application.operations.models import CredentialFreeOperationRequest
 from ...application.modelo.operation_definitions import (
     MODELO_WORK_RENAME_OPERATION_DEFINITION_ID,
     ModeloExportExecutor,
@@ -64,6 +47,23 @@ from ...application.modelo.operation_definitions import (
 )
 from ...application.modelo.operator_inputs import ModeloExportOperatorInput
 from ...application.modelo.tests.operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
+from ...application.operations.capabilities import (
+    OperationBaselinePolicy,
+    OperationConflictScope,
+    OperationRequestStoragePolicy,
+)
+from ...application.operations.models import CredentialFreeOperationRequest
+from ...core.operations import OperationCancellation, OperationDurability, OperationEffect
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.deadlines.models import IVARegime, TaxpayerProfile
+from ...domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
+from ..adapter_composition import (
+    build_active_work_lifecycle_ports,
+    build_amendment_action_ports,
+    build_filing_action_ports,
+    build_modelo_export_ports,
+    build_verification_repository_bundle,
+)
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 _CERTIFICATE_SECRET_BACKEND_FACTORY = InMemoryCertificateSecretBackendFactory()

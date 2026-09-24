@@ -14,13 +14,6 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
-from ..custody.errors import ProfileCustodyRefusal, ProfileCustodyRefusedError
-from ..custody.records import (
-    ProfileCustodyEnvelope,
-    ProfileCustodyKdfParameters,
-    ProfileCustodyWrappedDek,
-)
-from ..custody.sentinel import create_profile_custody_sentinel
 from .....application.user_profile.capsule_record import ProfileRecordSession
 from .....application.user_profile.custody_transactions import ProfileCustodyTransactionConflictError
 from .....application.user_profile.lifecycle import ProfileCapsuleLifecycle
@@ -31,6 +24,13 @@ from .....application.workflow.state_models import WorkflowState
 from .....core.bucket_pointer import BucketPointer, pointer_path, read_pointer, write_pointer
 from .....core.config import override_settings
 from .....domain.user_profile.values import ProfileSetupState, UserProfileFact
+from ..custody.errors import ProfileCustodyRefusal, ProfileCustodyRefusedError
+from ..custody.records import (
+    ProfileCustodyEnvelope,
+    ProfileCustodyKdfParameters,
+    ProfileCustodyWrappedDek,
+)
+from ..custody.sentinel import create_profile_custody_sentinel
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

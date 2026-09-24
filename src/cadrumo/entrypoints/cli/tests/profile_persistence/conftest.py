@@ -1,6 +1,6 @@
-"""Fixtures for profile persistence integration tests."""
+"""Fixtures for CLI-composed profile persistence integration tests."""
 
-from . import profile_persistence_fixtures
+from .....adapters.persistence.profile.tests import profile_persistence_fixtures
 
 secure_engine = profile_persistence_fixtures.secure_engine
 published_authority_lease = profile_persistence_fixtures.published_authority_lease

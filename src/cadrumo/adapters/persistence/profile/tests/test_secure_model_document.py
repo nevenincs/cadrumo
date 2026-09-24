@@ -12,9 +12,9 @@ import pytest
 from sqlalchemy import event
 from sqlalchemy.engine import Engine
 
-from ...storage.tests.secure_sql import isolated_runtime_profile, read_db_at_rest_bytes
 from .....domain.contribuyente.inventory.records import InventoryLedger, InventoryLedgerDocument, ValuationMethod
 from ...storage.secure_object_namespaces import PROFILE_INVENTORY_LEDGER_NAMESPACE
+from ...storage.tests.secure_sql import isolated_runtime_profile, read_db_at_rest_bytes
 from ..inventory import InventoryLedgerRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

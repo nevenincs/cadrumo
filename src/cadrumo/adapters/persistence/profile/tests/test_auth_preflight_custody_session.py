@@ -15,9 +15,9 @@ from .....application.auth.tests.certificate_secret_fakes import InMemoryCertifi
 from .....core.auth_provider import AuthProviderKind
 from .....core.config import load_settings, override_settings
 from .operator_probe_fakes import fake_operator_probe_ports
-from .operator_scope_fakes import build_inward_operator_scope_ports, build_inward_operator_scope_ports_for_active_route
 from .operator_projection_test_support import build_live_auth_preflight_report
 from .operator_projection_test_support import test_operator_auth as run_operator_auth_test
+from .operator_scope_fakes import build_inward_operator_scope_ports, build_inward_operator_scope_ports_for_active_route
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("operation")]
 

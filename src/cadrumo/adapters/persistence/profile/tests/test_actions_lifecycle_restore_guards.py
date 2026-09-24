@@ -19,7 +19,11 @@ from cadrumo.domain.transactions.models import TransactionCatalogue
 
 from .ledger_action_persistence_support import (
     BUCKET_ID as _BUCKET_ID,
+)
+from .ledger_action_persistence_support import (
     create_manual_row as _create_manual_row,
+)
+from .ledger_action_persistence_support import (
     repositories as _repositories,
 )
 

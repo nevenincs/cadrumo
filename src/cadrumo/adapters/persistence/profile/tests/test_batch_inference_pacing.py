@@ -18,14 +18,6 @@ from pathlib import Path
 import pytest
 from reportlab.pdfgen import canvas
 
-from ..buckets import BucketEventHistoryRepository
-from ..purchase_invoice_evidence import (
-    LedgerEvidenceAttachmentIngestor,
-    LedgerEvidenceRepositoryAdapter,
-)
-from ...storage.attachment import AttachmentStore
-from ...storage.tests.secure_sql import TestRuntimeProfile
-from ...tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from .....application.ledger import tests as ledger_application_tests
 from .....application.ledger.batch_ingest import COMPLETED_BATCH_ITEM_STATUSES, BatchRunResult, run_evidence_batch
 from .....application.ledger.evidence_ports import LedgerEvidencePorts
@@ -42,6 +34,14 @@ from .....core.hardware import AcceleratorKind
 from .....domain.calculations.registry.authority import bundled_indexed_authority
 from .....domain.iva.classification import InvoiceKind
 from .....domain.iva.regime_legend import resolve_regime_legends
+from ...storage.attachment import AttachmentStore
+from ...storage.tests.secure_sql import TestRuntimeProfile
+from ...tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
+from ..buckets import BucketEventHistoryRepository
+from ..purchase_invoice_evidence import (
+    LedgerEvidenceAttachmentIngestor,
+    LedgerEvidenceRepositoryAdapter,
+)
 from ._invoice_confirmation_test_support import _invoice_draft_extraction_ports, serving_a_loopback_reader
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]

@@ -18,7 +18,6 @@ import pytest
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from cadrumo.entrypoints.tests.profile_persistence.import_flow_support import seed_ready_profile
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.calculations.observations_repository import ObservationOverride, ObservationSourceKind
 from cadrumo.application.modelo.action_errors import ModeloLocalObservationError
@@ -34,6 +33,7 @@ from cadrumo.core.period import Period
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from cadrumo.domain.calculations.registry.tests.registry_observations import revision_id_for_observation
+from cadrumo.entrypoints.tests.profile_persistence.import_flow_support import seed_ready_profile
 
 if TYPE_CHECKING:
     from pathlib import Path

@@ -13,7 +13,6 @@ from decimal import Decimal
 
 import pytest
 
-from ...storage.tests.secure_sql import TestRuntimeProfile
 from .....domain.contribuyente.inventory.records import (
     InventoryLedger,
     InventoryLedgerDocument,
@@ -22,6 +21,7 @@ from .....domain.contribuyente.inventory.records import (
     MovementRecord,
     ValuationMethod,
 )
+from ...storage.tests.secure_sql import TestRuntimeProfile
 from ...tests.runtime_profile_fixture import default_bucket_runtime_profile_fixture
 from ..inventory import InventoryLedgerRepository, record_movement
 from ._inventory_acquisition_fixture import (

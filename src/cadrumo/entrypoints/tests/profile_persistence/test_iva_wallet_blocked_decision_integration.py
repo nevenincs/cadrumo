@@ -15,20 +15,6 @@ from cadrumo.adapters.persistence.profile.calculation_observations import (
 )
 from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from cadrumo.entrypoints.tests.profile_persistence._iva_wallet_engine_support import (
-    _DECIDED_AT,
-    _TARGET_PERIOD,
-    _TARGET_YEAR,
-    _TAXPAYER_NIF,
-    _modelo_303_engine_inputs,
-    _period,
-    _secure_backend,
-    _snapshot_303,
-    _store_operator_profile,
-    _store_prior_303_compensation,
-    _wallet_observation,
-    _work_unit_repositories_with_modelo_303_work_unit,
-)
 from cadrumo.application.calculations.binding_prefill import (
     BindingPrefillReport,
     LocalIvaCompensationRecurrence,
@@ -53,6 +39,20 @@ from cadrumo.domain.iva_compensation.reconciliation import (
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision
 from cadrumo.domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
 from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
+from cadrumo.entrypoints.tests.profile_persistence._iva_wallet_engine_support import (
+    _DECIDED_AT,
+    _TARGET_PERIOD,
+    _TARGET_YEAR,
+    _TAXPAYER_NIF,
+    _modelo_303_engine_inputs,
+    _period,
+    _secure_backend,
+    _snapshot_303,
+    _store_operator_profile,
+    _store_prior_303_compensation,
+    _wallet_observation,
+    _work_unit_repositories_with_modelo_303_work_unit,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

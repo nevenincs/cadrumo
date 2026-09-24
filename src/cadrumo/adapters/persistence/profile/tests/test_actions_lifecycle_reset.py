@@ -22,8 +22,12 @@ from cadrumo.domain.transactions.enums import TransactionDirection
 from .ledger_action_create_support import ledger_ports_for_test
 from .ledger_action_persistence_support import (
     BUCKET_ID as _BUCKET_ID,
-    repositories as _repositories,
+)
+from .ledger_action_persistence_support import (
     purchase_invoice,
+)
+from .ledger_action_persistence_support import (
+    repositories as _repositories,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

@@ -24,6 +24,8 @@ import pytest
 
 from .evidence_test_support import (
     make_svc as _make_svc,
+)
+from .evidence_test_support import (
     pdf_file,
 )
 

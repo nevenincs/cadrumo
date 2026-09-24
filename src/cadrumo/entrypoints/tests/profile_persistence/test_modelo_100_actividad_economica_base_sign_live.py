@@ -35,6 +35,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.entrypoints.tests.profile_persistence.test_e2e_ledger_m130_quarters_to_m100_annual import (
     _BUCKET_ID,
     _EXPECTED_M100_ACTIVITY_NET,
@@ -42,8 +44,6 @@ from cadrumo.entrypoints.tests.profile_persistence.test_e2e_ledger_m130_quarters
     _persist_autonoma_style_ledger,
     _seed_prior_year_m100,
 )
-from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

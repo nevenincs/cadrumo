@@ -17,6 +17,7 @@ from pydantic import SecretStr
 from cadrumo.adapters.outbound.aeat.auth import session_store
 from cadrumo.adapters.outbound.aeat.browser.factory import default_browser_session_factory
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from cadrumo.adapters.persistence.profile.tests.operator_projection_test_support import configure_operator_auth
 from cadrumo.adapters.persistence.profile.tests.operator_scope_fakes import (
     build_inward_operator_scope_ports_for_active_route,
 )
@@ -49,7 +50,6 @@ from cadrumo.application.auth.operator_results import (
 )
 from cadrumo.application.auth.operator_scope import auth_mutation_span
 from cadrumo.application.auth.sessions import ensure_authenticated_aeat_session, storage_state_paths
-from cadrumo.adapters.persistence.profile.tests.operator_projection_test_support import configure_operator_auth
 from cadrumo.application.user_profile.profile_keys import profile_keys
 from cadrumo.application.workflow.persistence import WorkflowStateRepository, workflow_state_repository
 from cadrumo.application.workflow.state_models import WorkflowState

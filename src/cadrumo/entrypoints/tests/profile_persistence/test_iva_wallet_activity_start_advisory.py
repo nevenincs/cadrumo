@@ -11,16 +11,6 @@ from cadrumo.adapters.persistence.profile.calculation_observations import (
     IvaWalletDecisionRepository,
 )
 from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
-from cadrumo.entrypoints.tests.profile_persistence._iva_wallet_engine_support import (
-    _BUCKET_ID,
-    _TAXPAYER_NIF,
-    _create_modelo_303_work_unit,
-    _period,
-    _secure_backend,
-    _snapshot_303,
-    _store_operator_profile,
-    _work_unit_repositories,
-)
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     load_test_profile_record,
     replace_test_profile_record,
@@ -34,6 +24,16 @@ from cadrumo.domain.iva_compensation.reconciliation import (
     IvaCompensationReconciliationDecision,
 )
 from cadrumo.domain.modelos.work_unit import WorkUnit
+from cadrumo.entrypoints.tests.profile_persistence._iva_wallet_engine_support import (
+    _BUCKET_ID,
+    _TAXPAYER_NIF,
+    _create_modelo_303_work_unit,
+    _period,
+    _secure_backend,
+    _snapshot_303,
+    _store_operator_profile,
+    _work_unit_repositories,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

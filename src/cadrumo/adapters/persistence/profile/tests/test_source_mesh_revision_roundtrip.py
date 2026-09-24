@@ -37,7 +37,6 @@ from sqlalchemy import select
 
 from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
 
-from ...storage.tests.secure_sql import mutate_encrypted_secure_object_json
 from .....core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
@@ -59,6 +58,7 @@ from .....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ...storage.secure_object_namespaces import MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE
 from ...storage.sql.orm import SecureObjectRow
 from ...storage.sql.secure_objects import SecureObjectRepository
+from ...storage.tests.secure_sql import mutate_encrypted_secure_object_json
 from ..modelos_calculation import CalculationRevisionCatalogueRepository
 from ..modelos_work_units import WorkUnitCatalogueRepository
 from .secure_objects_fixture import secure_objects

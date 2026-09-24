@@ -37,6 +37,9 @@ import pytest
 
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 
+from ....adapters.outbound.fx.tests.recorded_ecb_rates import recorded_ecb_rate_provider
+from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from ....application.filing.draft_construction import build_draft
 from ....application.filing.draft_review import ModeloApprovalStaleReason, approval_stale_reasons, approve_draft
 from ....application.filing.runtime import ModeloOperatorProfile, build_runtime_schema_provider
@@ -49,9 +52,6 @@ from ....domain.invoices.models import Invoice
 from ....domain.iva.classification import InvoiceKind
 from ....domain.submission.models import ModeloDraftStatus
 from ...adapter_composition import build_draft_review_ports
-from ....adapters.outbound.fx.tests.recorded_ecb_rates import recorded_ecb_rate_provider
-from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
-from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

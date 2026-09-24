@@ -9,16 +9,6 @@ import pytest
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.justificante import JustificanteRepository
-from cadrumo.entrypoints.tests.profile_persistence.import_flow_support import (
-    _IMPORT_EXPENSE_CASILLA,
-    _IMPORT_INCOME_CASILLA,
-    _PROFILE_ID,
-    _T1,
-    _T2,
-    _TAX_ID,
-    _Repos,
-    repos,
-)
 from cadrumo.adapters.persistence.storage.errors import SecureObjectRevisionConflictError
 from cadrumo.application.calculations.cross_period_external_evidence import (
     filing_external_evidence_blockers as _filing_external_evidence_blockers,
@@ -45,6 +35,16 @@ from cadrumo.entrypoints.adapter_composition import (
     build_amendment_action_ports,
     build_calculation_action_ports,
     build_work_lifecycle_ports,
+)
+from cadrumo.entrypoints.tests.profile_persistence.import_flow_support import (
+    _IMPORT_EXPENSE_CASILLA,
+    _IMPORT_INCOME_CASILLA,
+    _PROFILE_ID,
+    _T1,
+    _T2,
+    _TAX_ID,
+    _Repos,
+    repos,
 )
 
 __all__ = ["repos"]

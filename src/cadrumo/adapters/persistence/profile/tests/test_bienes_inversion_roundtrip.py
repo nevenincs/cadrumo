@@ -20,10 +20,6 @@ from pathlib import Path
 import pydantic
 import pytest
 
-from ...storage.tests.secure_sql import (
-    isolated_runtime_profile,
-    mutate_encrypted_secure_object_json,
-)
 from .....domain.bienes_inversion.register import (
     BienesInversionIvaRegister,
     BienInversionDisposal,
@@ -31,6 +27,10 @@ from .....domain.bienes_inversion.register import (
 )
 from .....domain.bienes_inversion.vocabulary import BienInversionDisposalRegime, BienInversionKind
 from ...storage.sql.engine import get_engine
+from ...storage.tests.secure_sql import (
+    isolated_runtime_profile,
+    mutate_encrypted_secure_object_json,
+)
 from ..bienes_inversion import BienesInversionIvaRegisterRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

@@ -23,7 +23,6 @@ from cadrumo.adapters.persistence.profile.justificante import JustificanteReposi
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from cadrumo.entrypoints.tests.profile_persistence.import_flow_support import seed_ready_profile
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.calculations.observations_repository import ObservationSourceKind
 from cadrumo.application.modelo.action_errors import ExternalModeloImportError
@@ -56,6 +55,7 @@ from cadrumo.domain.modelos.filing_record import (
 )
 from cadrumo.domain.modelos.filing_repository import upsert_filing_record
 from cadrumo.domain.modelos.work_unit import WorkUnit
+from cadrumo.entrypoints.tests.profile_persistence.import_flow_support import seed_ready_profile
 from cadrumo.tests.aeat_literal_fixtures import justificante_cotejo_url
 
 from ...core.hashing import sha256_hex

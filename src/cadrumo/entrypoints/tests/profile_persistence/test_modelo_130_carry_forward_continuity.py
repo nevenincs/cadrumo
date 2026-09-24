@@ -38,6 +38,18 @@ from typing import Any
 
 import pytest
 
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from ....adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.profile.tests.justificante_metadata import persist_justificante_metadata
+from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from ....adapters.persistence.storage.operator_scope import build_operator_scope_ports
+from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.calculations.binding_prefill import resolve_bindings_from_local_store
 from ....application.modelo.calculation_actions import calculate_modelo_revision
 from ....application.modelo.external_import_actions import import_external_filing_evidence
@@ -66,20 +78,8 @@ from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.modelos.filing_record import ExternalEvidenceKind
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
-from ...adapter_composition import build_calculation_action_ports
 from ....tests.env_scope import ready_clave_settings
-from ....adapters.persistence.storage.operator_scope import build_operator_scope_ports
-from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from ....adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from ....adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
-from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
-from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....adapters.persistence.profile.tests.justificante_metadata import persist_justificante_metadata
-from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from ...adapter_composition import build_calculation_action_ports
 from .verification_repository_support import (
     build_test_certificate_secret_backend_factory,
     build_test_verification_repository_bundle,

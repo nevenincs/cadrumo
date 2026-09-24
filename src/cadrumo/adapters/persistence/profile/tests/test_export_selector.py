@@ -18,6 +18,8 @@ from cadrumo.adapters.persistence.profile.modelos_calculation import Calculation
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.tests.modelo_export_support import (
     _M130_INPUT_CASILLA,
+)
+from cadrumo.adapters.persistence.profile.tests.modelo_export_support import (
     seed_profile as _seed_profile,
 )
 from cadrumo.application.modelo.selectors import ModeloCalculationRevisionSelectorStateError, select_exportable_revision
