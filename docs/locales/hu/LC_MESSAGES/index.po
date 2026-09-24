@@ -17,216 +17,215 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:118
+#: ../../index.md:118
 msgid "Getting started"
 msgstr "Első lépések"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:118
+#: ../../index.md:118
 msgid "Get Cadrumo"
 msgstr "A Cadrumo beszerzése"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:118
+#: ../../index.md:118
 msgid "Install Cadrumo"
 msgstr "A Cadrumo telepítése"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:118
+#: ../../index.md:118
 msgid "Quickstart"
 msgstr "Gyorsindító"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:118
+#: ../../index.md:118
 msgid "Connect an agent (MCP)"
 msgstr "Ügynök csatlakoztatása (MCP)"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:118
+#: ../../index.md:118
 msgid "First quarterly filing"
 msgstr "Az első negyedéves benyújtás"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:118
+#: ../../index.md:118
 msgid "The income-tax year"
 msgstr "A jövedelemadó-év"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:118
+#: ../../index.md:118
 msgid "The IVA year"
 msgstr "Az IVA-év"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:131
+#: ../../index.md:131
 msgid "Set up a profile"
 msgstr "Profil beállítása"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:131
+#: ../../index.md:131
 msgid "Authenticate with AEAT"
 msgstr "Hitelesítés az AEAT-nál"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:131
+#: ../../index.md:131
 msgid "Maintain census facts"
 msgstr "A censo adatainak karbantartása"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:131
+#: ../../index.md:131
 msgid "Which modelos apply to you"
 msgstr "Mely modelók vonatkoznak Önre"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:131
+#: ../../index.md:131
 msgid "Protect data access"
 msgstr "Az adathozzáférés védelme"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:131
+#: ../../index.md:131
 msgid "Your profile"
 msgstr "Az Ön profilja"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:142
+#: ../../index.md:142
 msgid "Filing calendar"
 msgstr "Benyújtási naptár"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:142
+#: ../../index.md:142
 msgid "AEAT notifications"
 msgstr "AEAT-értesítések"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:142
+#: ../../index.md:142
 msgid "Filing readiness"
 msgstr "Benyújtási készenlét"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:142
+#: ../../index.md:142
 msgid "Your calendar"
 msgstr "Az Ön naptára"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:151
+#: ../../index.md:151
 msgid "Work with transactions"
 msgstr "Munka a tranzakciókkal"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:81
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:151
+#: ../../index.md:81 ../../index.md:151
 msgid "Classify transactions"
 msgstr "Tranzakciók besorolása"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:151
+#: ../../index.md:151
 msgid "Classify with an LLM"
 msgstr "Besorolás LLM-mel"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:151
+#: ../../index.md:151
 msgid "Attach invoices and receipts"
 msgstr "Számlák és bizonylatok csatolása"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:151
+#: ../../index.md:151
 msgid "Manage business invoices"
 msgstr "Üzleti számlák kezelése"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:151
+#: ../../index.md:151
 msgid "Correct mistakes"
 msgstr "Hibák javítása"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:151
+#: ../../index.md:151
 msgid "IVA prorrata deductions"
 msgstr "IVA prorrata-levonások"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:151
+#: ../../index.md:151
 msgid "Your ledger"
 msgstr "Az Ön ledgere"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:164
+#: ../../index.md:164
 msgid "The filing workflow"
 msgstr "A benyújtási munkafolyamat"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:164
+#: ../../index.md:164
 msgid "Modelo 036 (censo)"
 msgstr "Modelo 036 (censo): a censo-nyilvántartás"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:164
+#: ../../index.md:164
 msgid "Modelo 100 (Renta)"
 msgstr "Modelo 100 (Renta): a Renta-űrlap"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:164
+#: ../../index.md:164
 msgid "Modelo 130 (IRPF instalment)"
 msgstr "Modelo 130 (IRPF-előleg)"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:164
+#: ../../index.md:164
 msgid "Modelo 303 (IVA)"
 msgstr "Modelo 303 (IVA): az IVA-űrlap"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:164
+#: ../../index.md:164
 msgid "Modelo 349 (intra-community)"
 msgstr "Modelo 349 (közösségen belüli)"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:164
+#: ../../index.md:164
 msgid "Modelo 390 (IVA summary)"
 msgstr "Modelo 390 (IVA-összesítő)"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:164
+#: ../../index.md:164
 msgid "Calculation inputs"
 msgstr "Számítási bemenetek"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:164
+#: ../../index.md:164
 msgid "Google Sheets review"
 msgstr "Felülvizsgálat Google Sheetsben"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:164
+#: ../../index.md:164
 msgid "Verify a filing"
 msgstr "Benyújtás ellenőrzése"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:164
+#: ../../index.md:164
 msgid "File at AEAT"
 msgstr "Benyújtás az AEAT-nál"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:164
+#: ../../index.md:164
 msgid "Reconcile a filing"
 msgstr "Benyújtás egyeztetése"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:164
+#: ../../index.md:164
 msgid "Your filings"
 msgstr "Az Ön benyújtásai"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:182
+#: ../../index.md:182
 msgid "Troubleshooting"
 msgstr "Hibaelhárítás"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:182
+#: ../../index.md:182
 msgid "Publish runtime authority"
 msgstr "Futásidejű hatóság közzététele"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:182
+#: ../../index.md:182
 msgid "Disclaimer"
 msgstr "Jogi nyilatkozat"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:182
+#: ../../index.md:182
 msgid "Help"
 msgstr "Súgó"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:191
+#: ../../index.md:191
 msgid "Cadrumo reference"
 msgstr "Cadrumo referencia"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:191
+#: ../../index.md:191
 msgid "Reference"
 msgstr "Referencia"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:202
+#: ../../index.md:202
 msgid "Overview"
 msgstr "Áttekintés"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:202
+#: ../../index.md:202
 msgid "How it works"
 msgstr "Hogyan működik"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:209
+#: ../../index.md:209
 msgid "Updates and downloads"
 msgstr "Frissítések és letöltések"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:209
+#: ../../index.md:209
 msgid "Architecture"
 msgstr "Architektúra"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:209
+#: ../../index.md:209
 msgid "Authoring guide"
 msgstr "Szerzői útmutató"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:209
+#: ../../index.md:209
 msgid "Project"
 msgstr "Projekt"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:1
+#: ../../index.md:1
 msgid "Cadrumo documentation"
 msgstr "Cadrumo dokumentáció"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:3
+#: ../../index.md:3
 msgid ""
 "Paper tax forms, an envelope, a keyboard, and a calculator arranged on a "
 "desk"
@@ -234,7 +233,7 @@ msgstr ""
 "Papíralapú adóűrlapok, egy boríték, egy billentyűzet és egy számológép "
 "elrendezve egy íróasztalon"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:9
+#: ../../index.md:9
 msgid ""
 "This is the documentation for Cadrumo and its `aeat` command-line "
 "interface (CLI). Cadrumo turns your records into checked modelo figures "
@@ -251,7 +250,7 @@ msgstr ""
 "[GitHubon](https://github.com/nevenincs/cadrumo) érhető el. A Cadrumo "
 "béta állapotú; a felületek még változhatnak a kiadások között."
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:18
+#: ../../index.md:18
 msgid ""
 "Cadrumo is not tax advice, is not affiliated with AEAT, and does not "
 "replace AEAT's official tools or advice from a qualified professional. It"
@@ -267,11 +266,11 @@ msgstr ""
 "benyújtott declaraciónért. Olvassa el a [teljes jogi "
 "nyilatkozatot](disclaimer.md), mielőtt a Cadrumóra támaszkodna."
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:25
+#: ../../index.md:25
 msgid "Where to start"
 msgstr "Hol kezdje"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:27
+#: ../../index.md:27
 msgid ""
 "These guides cover the whole preparation cycle: setting up a taxpayer "
 "profile, importing and classifying bank records, checking what is due, "
@@ -285,21 +284,21 @@ msgstr ""
 "exportálását. A két kidolgozott év - az egyik a jövedelemadóra, a másik "
 "az IVA-ra - valós parancsokkal járja végig a teljes ciklust."
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:37
+#: ../../index.md:37
 msgid "Start from scratch"
 msgstr "Kezdés a nulláról"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:42
+#: ../../index.md:42
 msgid "Take the shortest path from an empty profile to an exported modelo file."
 msgstr ""
 "Tegye meg a legrövidebb utat egy üres profiltól egy exportált modelo "
 "fájlig."
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:45
+#: ../../index.md:45
 msgid "Run through the income-tax year"
 msgstr "Végigfutás a jövedelemadó-éven"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:50
+#: ../../index.md:50
 msgid ""
 "Follow a worked year of Modelo 130 quarters closing into the annual "
 "Modelo 100 Renta declaration, command by command."
@@ -307,11 +306,11 @@ msgstr ""
 "Kövessen végig egy kidolgozott évet, amelyben a Modelo 130 negyedévei az "
 "éves Modelo 100 Renta-bevallásba zárulnak, parancsról parancsra."
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:54
+#: ../../index.md:54
 msgid "Run through the IVA year"
 msgstr "Végigfutás az IVA-éven"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:59
+#: ../../index.md:59
 msgid ""
 "Follow a worked year of Modelo 303 quarters, the Modelo 349 branch, and "
 "the annual Modelo 390 summary, command by command."
@@ -319,11 +318,11 @@ msgstr ""
 "Kövessen végig egy kidolgozott évet a Modelo 303 negyedéveivel, a Modelo "
 "349 ágával és az éves Modelo 390 összesítővel, parancsról parancsra."
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:63
+#: ../../index.md:63
 msgid "Set up your taxpayer profile"
 msgstr "Állítsa be adózói profilját"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:68
+#: ../../index.md:68
 msgid ""
 "Create the taxpayer profile and record the facts that decide which "
 "modelos apply."
@@ -331,11 +330,11 @@ msgstr ""
 "Hozza létre az adózói profilt, és rögzítse azokat a tényeket, amelyek "
 "eldöntik, mely modelók vonatkoznak Önre."
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:72
+#: ../../index.md:72
 msgid "Import and manage transactions"
 msgstr "Tranzakciók importálása és kezelése"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:77
+#: ../../index.md:77
 msgid ""
 "Import bank statements, review the rows, and attach the evidence behind "
 "them."
@@ -343,7 +342,7 @@ msgstr ""
 "Importálja a bankkivonatokat, tekintse át a sorokat, és csatolja a "
 "mögöttük álló bizonyítékokat."
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:86
+#: ../../index.md:86
 msgid ""
 "Decide business, personal, or mixed use and set the category and tax "
 "fields on each row."
@@ -351,21 +350,21 @@ msgstr ""
 "Döntse el az üzleti, személyes vagy vegyes felhasználást, és állítsa be a"
 " kategóriát és az adómezőket minden soron."
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:90
+#: ../../index.md:90
 msgid "Plan your filing calendar"
 msgstr "Tervezze meg benyújtási naptárát"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:95
+#: ../../index.md:95
 msgid "See which modelos are due and which period to prepare next."
 msgstr ""
 "Nézze meg, mely modelók esedékesek, és melyik időszakot készítse elő "
 "legközelebb."
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:98
+#: ../../index.md:98
 msgid "Prepare your filings"
 msgstr "Készítse elő benyújtásait"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:103
+#: ../../index.md:103
 msgid ""
 "Prepare, verify, export, file at AEAT, and reconcile - with a recipe per "
 "modelo: 036, 100 (Renta), 130, 303, 349, and 390."
@@ -373,11 +372,11 @@ msgstr ""
 "Előkészítés, ellenőrzés, exportálás, benyújtás az AEAT-nál és egyeztetés "
 "- modelónként egy-egy recepttel: 036, 100 (Renta), 130, 303, 349 és 390."
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:108
+#: ../../index.md:108
 msgid "Search everything"
 msgstr "Keressen mindenben"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:110
+#: ../../index.md:110
 #, python-brace-format
 msgid ""
 "Press {kbd}`Ctrl+K` ({kbd}`Cmd+K` on macOS) on any page to search tax "

@@ -18,11 +18,11 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:1
+#: ../../how-to/manage-invoices.md:1
 msgid "Manage business invoices"
 msgstr "Gestiona las facturas de tu negocio"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:3
+#: ../../how-to/manage-invoices.md:3
 msgid ""
 "Record the invoices your business issues and receives: the money a "
 "customer owes you and the money you owe a supplier. This guide covers "
@@ -32,7 +32,7 @@ msgstr ""
 "cliente le debe y el dinero que debes a un proveedor. Esta guía cubre "
 "ambos tipos y muestra qué registros alimentan sus cálculos fiscales."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:7
+#: ../../how-to/manage-invoices.md:7
 msgid ""
 "A business invoice is not the same as a purchase receipt you attach as "
 "evidence. Receipts support a deductible expense on a ledger transaction "
@@ -48,15 +48,15 @@ msgstr ""
 "documentos comerciales en sí: una factura *emitida* (facturaste a un "
 "cliente) o una factura *recibida* (un proveedor le facturó)."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:13
+#: ../../how-to/manage-invoices.md:13
 msgid "Before you start"
 msgstr "Antes de empezar"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:15
+#: ../../how-to/manage-invoices.md:15
 msgid "You need:"
 msgstr "Necesita:"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:17
+#: ../../how-to/manage-invoices.md:17
 msgid ""
 "An active taxpayer profile. Every command below works on the active "
 "profile; if none is set, the command refuses. See [Set up your taxpayer "
@@ -67,7 +67,7 @@ msgstr ""
 " continuar. Consulta [Configura tu perfil de contribuyente](profile-"
 "setup.md)."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:20
+#: ../../how-to/manage-invoices.md:20
 msgid ""
 "A master-key passphrase. The tool prompts for it the first time it opens "
 "your encrypted storage in a session."
@@ -75,7 +75,7 @@ msgstr ""
 "Una frase de contraseña de la clave maestra. La herramienta la solicita "
 "la primera vez que abre su almacenamiento cifrado en una sesión."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:23
+#: ../../how-to/manage-invoices.md:23
 msgid ""
 "The `aeat` command-line interface (CLI) emits its help and messages in "
 "Spanish; the English text on this page describes what each step does."
@@ -84,17 +84,17 @@ msgstr ""
 "mensajes en español; el texto en inglés de esta página describe qué hace "
 "cada paso."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:26
+#: ../../how-to/manage-invoices.md:26
 msgid "Two ways to hold an invoice"
 msgstr "Dos formas de guardar una factura"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:28
+#: ../../how-to/manage-invoices.md:28
 msgid "Cadrumo keeps invoices in two separate places, for two different jobs."
 msgstr ""
 "Cadrumo guarda las facturas en dos lugares distintos, para dos cometidos "
 "diferentes."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:30
+#: ../../how-to/manage-invoices.md:30
 msgid ""
 "Your invoices live in one place (`aeat app ledger invoice ...`): a record"
 " of who owes you and whom you owe. Use it to record, list, and edit "
@@ -104,7 +104,7 @@ msgstr ""
 "registro de quién le debe y a quién debe. Úselo para registrar, listar y "
 "editar facturas."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:33
+#: ../../how-to/manage-invoices.md:33
 msgid ""
 "Every invoice you record is linkable and calculable. Match it to a bank "
 "transaction with `aeat app ledger link`, and a calculation reads it "
@@ -116,7 +116,7 @@ msgstr ""
 "directamente: por ejemplo, el Modelo 349, declaración recapitulativa de "
 "operaciones intracomunitarias."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:38
+#: ../../how-to/manage-invoices.md:38
 msgid ""
 "Record every invoice with `invoice add`. There is no second copy to "
 "create."
@@ -124,7 +124,7 @@ msgstr ""
 "Registre cada factura con `invoice add`. No hay una segunda copia que "
 "crear."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:40
+#: ../../how-to/manage-invoices.md:40
 msgid ""
 "Every command takes `--kind issued` or `--kind received`. *Issued* means "
 "a customer owes you (a collectible invoice); *received* means you owe a "
@@ -134,11 +134,11 @@ msgstr ""
 "significa que un cliente le debe (una factura por cobrar); *received* "
 "significa que debes a un proveedor (una factura por pagar)."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:44
+#: ../../how-to/manage-invoices.md:44
 msgid "Record an issued invoice"
 msgstr "Registra una factura emitida"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:46
+#: ../../how-to/manage-invoices.md:46
 msgid ""
 "Record an invoice you sent to a customer. The command returns the new "
 "`invoice_id`, the resolved `source_kind` (`collectible_invoice`), and the"
@@ -148,7 +148,7 @@ msgstr ""
 " `invoice_id`, el `source_kind` resuelto (`collectible_invoice`) y los "
 "valores que introdujo:"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:54
+#: ../../how-to/manage-invoices.md:54
 msgid ""
 "Record the short `invoice_id`; you address the invoice by it (or by an "
 "unambiguous prefix)."
@@ -156,11 +156,11 @@ msgstr ""
 "Anota el `invoice_id` corto; con él (o con un prefijo inequívoco) se "
 "refiere a la factura."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:57
+#: ../../how-to/manage-invoices.md:57
 msgid "Record a received invoice"
 msgstr "Registra una factura recibida"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:59
+#: ../../how-to/manage-invoices.md:59
 msgid ""
 "Record an invoice a supplier sent you. The `source_kind` resolves to "
 "`payable_invoice`:"
@@ -168,11 +168,11 @@ msgstr ""
 "Registra una factura que le envió un proveedor. El `source_kind` se "
 "resuelve a `payable_invoice`:"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:66
+#: ../../how-to/manage-invoices.md:66
 msgid "List, view, update, and remove"
 msgstr "Lista, consulta, actualiza y elimina"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:68
+#: ../../how-to/manage-invoices.md:68
 msgid ""
 "List both kinds or filter to one, add a note to a stored invoice, then "
 "remove it. The view of one invoice takes its id (or an unambiguous "
@@ -182,11 +182,11 @@ msgstr ""
 " y elimínala después. La consulta de una factura toma su id (o un prefijo"
 " inequívoco) y el tipo:"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:75
+#: ../../how-to/manage-invoices.md:75
 msgid "Record an intra-community invoice"
 msgstr "Registra una factura intracomunitaria"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:77
+#: ../../how-to/manage-invoices.md:77
 msgid ""
 "A supply to, or acquisition from, a VAT-registered business in another EU"
 " country is an intra-community operation. Record it on the issued or "
@@ -198,7 +198,7 @@ msgstr ""
 "en la factura emitida o recibida con el país y el número de IVA europeo "
 "de la contraparte, más el tipo de operación del Modelo 349:"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:86
+#: ../../how-to/manage-invoices.md:86
 msgid ""
 "`--operation-type` takes one M349 operation key: `E` supplies of goods, "
 "`M` supplies after an exempt import, `H` the same via a fiscal "
@@ -213,11 +213,11 @@ msgstr ""
 "claves de ventas en consigna `R` (transferencias), `D` (devoluciones) y "
 "`C` (sustituciones)."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:92
+#: ../../how-to/manage-invoices.md:92
 msgid "Feed a calculation from the catalogue"
 msgstr "Alimenta un cálculo desde el catálogo"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:94
+#: ../../how-to/manage-invoices.md:94
 msgid ""
 "To make an invoice reach a modelo calculation, create it in the "
 "catalogue. The catalogue copy is the one a calculation reads and the one "
@@ -233,7 +233,7 @@ msgstr ""
 " la declaración recapitulativa del Modelo 349 para el periodo en el que "
 "cae la factura:"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:104
+#: ../../how-to/manage-invoices.md:104
 msgid ""
 "For an intra-community operation, pass `--operation-type` so the "
 "catalogue stamps the classification the Modelo 349 calculation reads. Use"
@@ -250,7 +250,7 @@ msgstr ""
 "las filas de rectificación usan campos separados de periodo rectificado y"
 " base."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:110
+#: ../../how-to/manage-invoices.md:110
 msgid ""
 "An invoice is counted only in the period its invoice date falls in. "
 "Modelo 349 reads invoices strictly by date, with no carry-forward from "
@@ -260,11 +260,11 @@ msgstr ""
 "factura. El Modelo 349 lee las facturas estrictamente por fecha, sin "
 "arrastre de periodos anteriores."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:113
+#: ../../how-to/manage-invoices.md:113
 msgid "Link a catalogue invoice to a transaction"
 msgstr "Vincula una factura del catálogo a un movimiento"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:115
+#: ../../how-to/manage-invoices.md:115
 msgid ""
 "Link a catalogue invoice to the bank transaction that paid or collected "
 "it. The sequence records a transaction, catalogues an invoice, links "
@@ -274,7 +274,7 @@ msgstr ""
 "cobró. La secuencia registra un movimiento, cataloga una factura, los "
 "vincula y confirma el vínculo en la copia del catálogo:"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:123
+#: ../../how-to/manage-invoices.md:123
 msgid ""
 "Remove a catalogue invoice you created by mistake, confirming with "
 "`--yes`. Unlink the invoice first if it is still linked to a transaction:"
@@ -287,11 +287,11 @@ msgstr ""
 "modo que el movimiento bancario nunca acaba citando una factura que ya no"
 " existe:"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:132
+#: ../../how-to/manage-invoices.md:132
 msgid "Which modelos read your invoices"
 msgstr "Qué modelos leen sus facturas"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:134
+#: ../../how-to/manage-invoices.md:134
 msgid ""
 "Catalogue invoices feed **Modelo 349** (the recapitulative declaration of"
 " intra-community operations) through the operation type you stamp on them"
@@ -303,7 +303,7 @@ msgstr ""
 "operación que les estampas al crearlas. Este es el modelo que sus "
 "facturas emitidas y recibidas impulsan directamente."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:139
+#: ../../how-to/manage-invoices.md:139
 msgid ""
 "Your **IVA returns do not read these invoice records**. Modelo 303 "
 "(quarterly IVA) and Modelo 390 (annual IVA summary) are computed from "
@@ -320,7 +320,7 @@ msgstr ""
 "transactions.md)); las autoliquidaciones de IVA leen el ledger. Registrar"
 " una factura aquí no la añade a un Modelo 303."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:146
+#: ../../how-to/manage-invoices.md:146
 msgid ""
 "Cross-border B2C sales under the One-Stop-Shop scheme (Modelo 369) are a "
 "separate flow not yet reachable from `invoice add`; record those through "
@@ -330,27 +330,27 @@ msgstr ""
 "(Modelo 369) siguen un flujo aparte, todavía no accesible desde `invoice "
 "add`; regístrelas mediante el flujo específico de OSS."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:150
+#: ../../how-to/manage-invoices.md:150
 msgid "Where to go next"
 msgstr "A dónde ir después"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:152
+#: ../../how-to/manage-invoices.md:152
 msgid "[Attach invoices and receipts](ledger-evidence.md)"
 msgstr "[Adjunta facturas y recibos](ledger-evidence.md)"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:153
+#: ../../how-to/manage-invoices.md:153
 msgid "[Import and manage transactions](import-bank-statements.md)"
 msgstr "[Importa y gestiona los movimientos](import-bank-statements.md)"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:154
+#: ../../how-to/manage-invoices.md:154
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
 msgstr "[Revisa y aporta las entradas de cálculo](review-calculation-values.md)"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:155
+#: ../../how-to/manage-invoices.md:155
 msgid "[How to prepare a Modelo 303 quarterly filing](modelo-303.md)"
 msgstr "[Cómo preparar una presentación trimestral del Modelo 303](modelo-303.md)"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:156
+#: ../../how-to/manage-invoices.md:156
 msgid "[CLI reference](../cli/index.rst)"
 msgstr "[Referencia de la CLI](../cli/index.rst)"
 

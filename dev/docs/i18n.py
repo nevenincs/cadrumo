@@ -32,11 +32,10 @@ import hashlib
 import json
 import os
 import re
-import shutil
 import subprocess
 import sys
 from collections.abc import Sequence
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 from tempfile import TemporaryDirectory
 from typing import Final
 
@@ -545,7 +544,7 @@ def update_catalogues(
         return
     with TemporaryDirectory(prefix="cadrumo-docs-pot-") as scoped_text:
         scoped = Path(scoped_text)
-        _stage_selected_templates(templates, validated_pages(docs_root, pages), scoped)
+        _stage_selected_templates(templates, validated_pages(docs_root, pages), scoped, docs_root)
         _run_catalogue_update(repo_root, docs_root, scoped, languages)
     # Pruning is deliberately skipped here. It decides what to remove from the
     # whole authored page set, and a pass that was asked to touch two pages has
@@ -574,6 +573,7 @@ def _run_catalogue_update(
     result = _run_bounded(command, cwd=repo_root, env=None, what="sphinx-intl catalogue update")
     if result.returncode != 0:
         raise SystemExit(result.returncode)
+    sync_catalogue_locations(docs_root, templates, languages)
 
 
 def _run_set_batch(manifest: Path, *, dry_run: bool) -> int:
@@ -622,8 +622,91 @@ def _run_scoped_pages(repo_root: Path, pages: Sequence[str], *, extract_only: bo
     return 0
 
 
-def _stage_selected_templates(templates: Path, pages: Sequence[str], destination: Path) -> None:
-    """Copy exactly *pages*' templates into *destination*.
+def canonical_template_location(filename: str, *, extracted_root: Path, docs_root: Path) -> str:
+    """Return one ``#:`` source location as the committed-tree extraction writes it.
+
+    Sphinx writes each location relative to the directory it extracted into, and
+    falls back to an absolute path when no relative one exists (a temporary
+    directory on another drive). Either way the location then depends on where
+    the extraction ran. Resolving it against that directory and re-expressing it
+    relative to :func:`pot_root` makes a scoped pass produce the same
+    ``../../<docpath>`` references as a full one, and keeps machine paths out of
+    committed catalogues.
+    """
+    source = Path(filename) if Path(filename).is_absolute() else extracted_root / filename
+    return Path(os.path.relpath(os.path.normpath(source), pot_root(docs_root))).as_posix()
+
+
+def relocate_template_locations(template: Path, staged: Path, *, extracted_root: Path, docs_root: Path) -> None:
+    """Write *template* to *staged* with every location in canonical form."""
+    from babel.messages.pofile import read_po, write_po
+
+    with template.open("rb") as handle:
+        catalogue = read_po(handle)
+    for message in catalogue:
+        message.locations = [
+            (canonical_template_location(filename, extracted_root=extracted_root, docs_root=docs_root), line)
+            for filename, line in message.locations
+        ]
+    with staged.open("wb") as handle:
+        write_po(handle, catalogue)
+
+
+#: Line width ``sphinx-intl update`` writes catalogues with when not told otherwise.
+_CATALOGUE_LINE_WIDTH: Final[int] = 76
+
+
+def _is_machine_location(filename: str) -> bool:
+    """Return whether a ``#:`` location names an absolute, machine-specific path."""
+    return filename.startswith("/") or PureWindowsPath(filename).is_absolute()
+
+
+def sync_catalogue_locations(
+    docs_root: Path,
+    templates: Path,
+    languages: tuple[str, ...] = TARGET_LANGUAGES,
+) -> tuple[Path, ...]:
+    """Repair catalogues backed by *templates* that carry a machine-specific location.
+
+    ``sphinx-intl update`` takes every location from the template but writes a
+    catalogue only when its msgid set changes, so an absolute location that
+    once reached a catalogue survives every later update. The templates a pass
+    stages are canonical (:func:`relocate_template_locations`), so such a
+    catalogue takes its locations from them. It is rewritten with the Babel
+    writer and options ``sphinx-intl`` uses. A catalogue with only relative
+    locations is left alone, so a moved line number alone never rewrites one.
+
+    Returns:
+        The catalogues that were rewritten.
+    """
+    from babel.messages.pofile import read_po, write_po
+
+    rewritten: list[Path] = []
+    for template_path in scan_directory(templates, pattern="*.pot", recursive=True, select=DirectoryEntryKind.FILES):
+        with template_path.open("rb") as handle:
+            template = read_po(handle)
+        relative = template_path.relative_to(templates).with_suffix(".po")
+        for language in languages:
+            catalogue_root = _language_catalogue_root(docs_root, language)
+            catalogue_path = None if catalogue_root is None else catalogue_root / relative
+            if catalogue_path is None or not catalogue_path.is_file():
+                continue
+            with catalogue_path.open("rb") as handle:
+                catalogue = read_po(handle)
+            if not any(_is_machine_location(filename) for message in catalogue for filename, _ in message.locations):
+                continue
+            for message in catalogue:
+                source = template.get(message.id, message.context) if message.id else None
+                if source is not None:
+                    message.locations = list(source.locations)
+            with catalogue_path.open("wb") as handle:
+                write_po(handle, catalogue, width=_CATALOGUE_LINE_WIDTH, ignore_obsolete=False)
+            rewritten.append(catalogue_path)
+    return tuple(rewritten)
+
+
+def _stage_selected_templates(templates: Path, pages: Sequence[str], destination: Path, docs_root: Path) -> None:
+    """Stage exactly *pages*' templates into *destination*, locations made canonical.
 
     ``sphinx-intl update`` syncs every template it is pointed at, so the
     selection has to be expressed as the contents of the directory rather than
@@ -640,14 +723,14 @@ def _stage_selected_templates(templates: Path, pages: Sequence[str], destination
             raise SystemExit(f"no extracted template for {page} at {template}; run extraction first.")
         staged = destination / Path(page).with_suffix(".pot")
         staged.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(template, staged)
+        relocate_template_locations(template, staged, extracted_root=templates, docs_root=docs_root)
 
 
 def _scoped_update_from(repo_root: Path, docs_root: Path, templates: Path, pages: Sequence[str]) -> None:
     """Run the catalogue update from a tree narrowed to exactly *pages*."""
     with TemporaryDirectory(prefix="cadrumo-docs-selected-pot-") as selected_text:
         selected = Path(selected_text)
-        _stage_selected_templates(templates, pages, selected)
+        _stage_selected_templates(templates, pages, selected, docs_root)
         _run_catalogue_update(repo_root, docs_root, selected, TARGET_LANGUAGES)
 
 

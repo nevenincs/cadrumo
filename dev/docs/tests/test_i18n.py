@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path, PurePosixPath, PureWindowsPath
 
 import pytest
+from babel.messages.catalog import Catalog
+from babel.messages.pofile import read_po, write_po
 
 from dev._paths import REPO_ROOT
 
-from ..i18n import _EXCLUDED_FILES, prune_orphan_catalogues
+from ..i18n import _EXCLUDED_FILES, prune_orphan_catalogues, relocate_template_locations, sync_catalogue_locations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -108,3 +111,74 @@ def test_every_declared_file_exclusion_names_a_page_that_exists() -> None:
         "these files are excluded from the localized surface but no longer exist, so the "
         f"exemption is inert and unreviewable: {missing}"
     )
+
+
+def _write_template(path: Path, locations: list[tuple[str, int]]) -> None:
+    """Write one POT template whose single message carries *locations*."""
+    catalogue = Catalog()
+    catalogue.add("Listed as the `renta-ledger-*` rows.", locations=locations)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("wb") as handle:
+        write_po(handle, catalogue)
+
+
+def test_scoped_template_locations_match_the_committed_tree_extraction(tmp_path: Path) -> None:
+    """A template extracted anywhere stages with ``../../<docpath>`` locations.
+
+    Sphinx writes a location relative to the directory it extracted into and
+    falls back to an absolute path across drives, so a scoped pass extracting
+    into a temporary directory leaked machine paths into committed catalogues.
+    Both spellings must stage as the committed-tree extraction writes them.
+    """
+    docs_root = tmp_path / "repo" / "docs"
+    source = _source(tmp_path / "repo", "explanation/assembled.md")
+    extracted_root = tmp_path / "elsewhere" / "scoped-pot"
+    template = extracted_root / "explanation" / "assembled.pot"
+    relative_spelling = os.path.relpath(source, extracted_root)
+    _write_template(template, [(source.as_posix(), 34), (relative_spelling, 37)])
+    staged = tmp_path / "staged" / "explanation" / "assembled.pot"
+    staged.parent.mkdir(parents=True)
+
+    relocate_template_locations(template, staged, extracted_root=extracted_root, docs_root=docs_root)
+
+    with staged.open("rb") as handle:
+        messages = [message for message in read_po(handle) if message.id]
+    assert [message.id for message in messages] == ["Listed as the `renta-ledger-*` rows."]
+    assert messages[0].locations == [("../../explanation/assembled.md", 34), ("../../explanation/assembled.md", 37)]
+    raw = staged.read_text(encoding="utf-8")
+    assert source.as_posix() not in raw
+    assert str(tmp_path.as_posix()) not in raw
+
+
+def test_catalogue_takes_the_template_locations_when_no_msgid_changed(tmp_path: Path) -> None:
+    """A leaked location in a committed catalogue is repaired, its translation kept.
+
+    ``sphinx-intl update`` writes a catalogue only when its msgid set changes,
+    so a location from another checkout survived every later update.
+    """
+    docs_root = tmp_path / "docs"
+    msgid = "Listed as the `renta-ledger-*` rows."
+    templates = tmp_path / "staged"
+    _write_template(templates / "explanation" / "assembled.pot", [("../../explanation/assembled.md", 37)])
+    leaked = Catalog(locale="es")
+    leaked.add(
+        msgid, "Las filas `renta-ledger-*`.", locations=[("Y:/code/other-checkout/docs/explanation/assembled.md", 37)]
+    )
+    catalogue = docs_root / "locales" / "es" / "LC_MESSAGES" / "explanation" / "assembled.po"
+    catalogue.parent.mkdir(parents=True)
+    with catalogue.open("wb") as handle:
+        write_po(handle, leaked)
+
+    assert sync_catalogue_locations(docs_root, templates, ("es",)) == (catalogue,)
+
+    with catalogue.open("rb") as handle:
+        repaired = read_po(handle)
+    message = repaired.get(msgid)
+    assert message is not None
+    assert message.locations == [("../../explanation/assembled.md", 37)]
+    assert message.string == "Las filas `renta-ledger-*`."
+    assert "other-checkout" not in catalogue.read_text(encoding="utf-8")
+    assert sync_catalogue_locations(docs_root, templates, ("es",)) == ()
+
+    _write_template(templates / "explanation" / "assembled.pot", [("../../explanation/assembled.md", 40)])
+    assert sync_catalogue_locations(docs_root, templates, ("es",)) == (), "a moved line alone rewrote a catalogue"
