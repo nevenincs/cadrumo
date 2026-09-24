@@ -181,13 +181,9 @@ def activate_profile_session(
     # A refusal the arguments alone settle must precede the profile-bound write
     # gate below. Otherwise an unsupported modelo is answered with "no active
     # profile", sending the operator to build an environment for a request that
-    # is refused regardless of it.
-    if (spec.result_schema.identity or spec.key) == "modelo.work.create":
-        # ``work_create`` parses ``causante_ccaa_raw`` before its ordinary
-        # authority lookup.  Enter the same invocation-owned operation before
-        # the argument-only gate so both parses resolve the CCAA catalogue from
-        # one generation-pinned governed-fact scope.
-        authority_operation(ctx)
+    # is refused regardless of it. Dispatch has already opened the invocation's
+    # governed-fact scope, so an argument-only parse reads the generation the
+    # command itself will.
     refuse_on_arguments_alone(spec, arguments)
 
     from ...adapters.persistence.storage.master_key.active_session import active_bucket_session_serves

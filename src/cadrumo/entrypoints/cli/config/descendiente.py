@@ -319,13 +319,17 @@ def descendiente_add(
     Art. 58/61 LIRPF minimo por descendientes engine
     (:func:`~application.modelo.profile_binding.inject_derived_minimo_descendientes_facts`) has
     real facts to compute from on the next M100 calculate.
+
+    Parsing reads the registry's disability grades and relación default, and
+    the stored rows are validated against the same authority: the governed-fact
+    scope dispatch opens for this command.
     """
-    _activate_subcommand_output_language(ctx, output_language)
     from pydantic import ValidationError
 
     from ....core.errors.hierarchy import ProfileAnswerTypeError
     from ....domain.contribuyente.descendant_facts import parse_descendiente_flag
 
+    _activate_subcommand_output_language(ctx, output_language)
     pointer = _active_profile_pointer()
     existing = _load_descendientes(pointer.bucket_id)
 
