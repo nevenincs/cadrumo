@@ -2343,6 +2343,22 @@ cli:
           pregunta sense resposta i s''ha esborrat. Les obligacions que en depenen
           queden sense determinar fins que responguis amb l''opció {yes_flag} o {no_flag}
           de l''ordre d''edició del perfil.'
+      plantilla_media:
+        average_workforce_help: Plantilla mitjana total de l'any, en equivalents a
+          jornada completa i amb dos decimals com a màxim.
+        average_workforce_not_a_number: El valor de --average-workforce ha de ser
+          un nombre, per exemple 12.50.
+        help: Declarar la plantilla mitjana de l'empresa per any natural (LIS art.
+          102 i DA 17a).
+        list_help: Llistar la plantilla mitjana declarada per any natural al perfil
+          actiu.
+        remove_help: Retirar la plantilla mitjana d'un any natural del perfil actiu.
+        remove_year_help: Any natural que es retira.
+        set_help: Declarar o substituir la plantilla mitjana d'un any natural al perfil
+          actiu.
+        state_help: observed per a un any tancat; committed per a un any encara no
+          tancat, que s'haurà de regularitzar si no es compleix.
+        year_help: Any natural al qual correspon la mitjana.
       recovery:
         channel_absent: Un codi de recuperació només es pot mostrar en un terminal.
           En un host sense terminal, indica --recovery-handoff-fd i --recovery-verification-fd;

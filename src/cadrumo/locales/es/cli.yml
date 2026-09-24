@@ -2368,6 +2368,22 @@ cli:
           sin responder y se ha borrado. Las obligaciones que dependen de él quedan
           sin determinar hasta que respondas con la opción {yes_flag} o {no_flag}
           del comando de edición del perfil.'
+      plantilla_media:
+        average_workforce_help: Plantilla media total del año, en equivalentes a jornada
+          completa y con dos decimales como máximo.
+        average_workforce_not_a_number: El valor de --average-workforce debe ser un
+          número, por ejemplo 12.50.
+        help: Declarar la plantilla media de la empresa por año natural (LIS art.
+          102 y DA 17.ª).
+        list_help: Listar la plantilla media declarada por año natural en el perfil
+          activo.
+        remove_help: Retirar la plantilla media de un año natural del perfil activo.
+        remove_year_help: Año natural que se retira.
+        set_help: Declarar o sustituir la plantilla media de un año natural en el
+          perfil activo.
+        state_help: observed para un año cerrado; committed para un año aún no cerrado,
+          que deberá regularizarse si no se cumple.
+        year_help: Año natural al que corresponde la media.
       recovery:
         channel_absent: Un código de recuperación solo puede mostrarse en un terminal.
           En un host sin terminal, indica --recovery-handoff-fd y --recovery-verification-fd;

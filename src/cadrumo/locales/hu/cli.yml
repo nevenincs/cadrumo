@@ -2344,6 +2344,23 @@ cli:
           a megválaszolatlan kérdéstől, és törlésre került. Az ettől függő kötelezettségek
           meghatározatlanok maradnak, amíg a profilszerkesztő parancs {yes_flag} vagy
           {no_flag} kapcsolójával nem válaszolsz.'
+      plantilla_media:
+        average_workforce_help: Az év teljes átlagos állományi létszáma teljes munkaidős
+          egyenértékben, legfeljebb két tizedesjeggyel.
+        average_workforce_not_a_number: A --average-workforce értékének számnak kell
+          lennie, például 12.50.
+        help: A vállalkozás átlagos állományi létszámának megadása naptári évenként
+          (LIS 102. cikk és 17. kiegészítő rendelkezés).
+        list_help: Az aktív profilban naptári évenként megadott átlagos állományi
+          létszám listázása.
+        remove_help: Egy naptári év átlagos állományi létszámának visszavonása az
+          aktív profilból.
+        remove_year_help: A visszavonandó naptári év.
+        set_help: Egy naptári év átlagos állományi létszámának megadása vagy cseréje
+          az aktív profilban.
+        state_help: observed lezárt évre; committed még le nem zárt évre, amelyet
+          teljesítés hiányában helyesbíteni kell.
+        year_help: Az a naptári év, amelyre az átlag vonatkozik.
       recovery:
         channel_absent: A helyreállítási kód csak terminálon jeleníthető meg. Terminál
           nélküli gépen add meg a --recovery-handoff-fd és --recovery-verification-fd

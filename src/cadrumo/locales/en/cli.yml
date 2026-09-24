@@ -2182,6 +2182,23 @@ cli:
           and has been cleared. Obligations that depend on it stay undetermined until
           you answer it with the {yes_flag} or {no_flag} option of the profile edit
           command.'
+      plantilla_media:
+        average_workforce_help: Average total workforce for the year, as full-time
+          equivalents with at most two decimal places.
+        average_workforce_not_a_number: The --average-workforce value must be a number,
+          such as 12.50.
+        help: Declare the enterprise's average workforce per calendar year (LIS art.
+          102 and DA 17a).
+        list_help: List the average workforce declared per calendar year on the active
+          profile.
+        remove_help: Withdraw one calendar year's average workforce from the active
+          profile.
+        remove_year_help: Calendar year to withdraw.
+        set_help: Declare or replace one calendar year's average workforce on the
+          active profile.
+        state_help: observed for a closed year; committed for a year not yet closed,
+          which must be regularised if not met.
+        year_help: Calendar year the average applies to.
       recovery:
         channel_absent: A recovery code can only be shown on a terminal. On a headless
           host, provide both --recovery-handoff-fd and --recovery-verification-fd;

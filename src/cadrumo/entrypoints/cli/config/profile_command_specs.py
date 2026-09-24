@@ -97,6 +97,7 @@ _HANDLER_MODULES: Final[dict[str, str]] = {
     "_descendiente": ".descendiente",
     "_google": ".google",
     "_manager_dispatch": "._manager_dispatch",
+    "_plantilla_media": ".plantilla_media",
     "_profile_delete": "._profile_delete",
     "_profile_inspect": "._profile_inspect",
     "_profile_repeatable_row": "._profile_repeatable_row",
@@ -148,6 +149,9 @@ def _option(
 
 _LANGUAGE = _option(
     "output_language", ("--output-language", "--language"), _LANG, "cli.config.auth.output_language_help"
+)
+_PLANTILLA_MEDIA_STATE = ValueContract(
+    DeferredTarget("....domain.user_profile.plantilla_media", "PlantillaMediaState", __package__),
 )
 
 
@@ -213,6 +217,36 @@ def _leaf(
         recovery_handoff=recovery_handoff,
         profile_target_parameter=profile_target_parameter,
         profile_authentication=profile_authentication,
+    )
+
+
+def _plantilla_media_leaf(
+    token: str,
+    handler: str,
+    policy: ExecutionPolicySpec,
+    parameters: tuple[ArgumentSpec | OptionSpec, ...],
+) -> CommandSpec:
+    """Build one ``plantilla-media`` leaf under its own ``plantilla_media`` identity.
+
+    :func:`_leaf` derives the identity from the parent key, which would split
+    the subject's name into ``plantilla.media``.
+    """
+    return CommandSpec(
+        f"config_profile_plantilla_media_{token}",
+        "config_profile_plantilla_media",
+        token,
+        CommandNodeKind.LEAF,
+        _key(f"cli.config.profile.plantilla_media.{token}_help"),
+        None,
+        InvocationSpec(context_parameter="ctx"),
+        parameters,
+        policy,
+        _handler("_plantilla_media", handler),
+        _schema(
+            ".._config_plantilla_media_payloads",
+            "ConfigProfilePlantillaMediaResult",
+            f"config.profile.plantilla_media.{token}",
+        ),
     )
 
 
@@ -889,6 +923,48 @@ PROFILE_COMMAND_SPECS = (
         "ConfigProfileDescendienteRemoveResult",
         ENCRYPTED_DESTRUCTIVE,
         (_argument("index", WHOLE_NUMBER_VALUE, "cli.config.profile.descendiente.remove_index_help"), _LANGUAGE),
+    ),
+    _group(
+        "config_profile_plantilla_media",
+        "config_profile",
+        "plantilla-media",
+        "cli.config.profile.plantilla_media.help",
+    ),
+    _plantilla_media_leaf(
+        "set",
+        "plantilla_media_set",
+        ENCRYPTED_WRITE,
+        (
+            _option(
+                "year",
+                ("--year",),
+                WHOLE_NUMBER_VALUE,
+                "cli.config.profile.plantilla_media.year_help",
+                required=True,
+            ),
+            _option(
+                "average_workforce",
+                ("--average-workforce",),
+                TEXT_VALUE,
+                "cli.config.profile.plantilla_media.average_workforce_help",
+                required=True,
+            ),
+            _option(
+                "state",
+                ("--state",),
+                _PLANTILLA_MEDIA_STATE,
+                "cli.config.profile.plantilla_media.state_help",
+                required=True,
+            ),
+            _LANGUAGE,
+        ),
+    ),
+    _plantilla_media_leaf("list", "plantilla_media_list", ENCRYPTED_READ, (_LANGUAGE,)),
+    _plantilla_media_leaf(
+        "remove",
+        "plantilla_media_remove",
+        ENCRYPTED_DESTRUCTIVE,
+        (_argument("year", WHOLE_NUMBER_VALUE, "cli.config.profile.plantilla_media.remove_year_help"), _LANGUAGE),
     ),
     _leaf(
         "config_profile_edit",
