@@ -70,6 +70,9 @@ class IvaCompensationHistoryRepository(
         return _call_storage("load", lambda: self._load_period(period))
 
     def _load_period(self, period: Period) -> IvaCompensationPeriodState | None:
+        # A stored period validates its taxpayer identity against registry
+        # vocabulary, so the decode itself needs the authority, not only the
+        # coordinate check after it.
         with bundled_indexed_authority().operation() as operation:
             state = self.load(iva_compensation_period_key(period))
             if state is not None:

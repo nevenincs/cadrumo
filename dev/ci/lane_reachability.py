@@ -755,11 +755,11 @@ def ci_invoked_recipe_triggers(root: Path) -> Mapping[str, tuple[str, ...]]:
     counts as automatic when EITHER route is -- the union is what keeps a lane
     that a dispatch-only workflow merely also names from reading as manual. But
     the union must be taken over what reaches each invoking JOB, not over the
-    workflow's whole ``on:`` block: ``just test-devcontainer`` is invoked once,
-    from a job guarded to ``workflow_dispatch`` inside a workflow that also
-    fires on push, and attributing the workflow's events to it reported the only
-    build-and-probe of the contributor image as push-triggered when no push has
-    ever run it.
+    workflow's whole ``on:`` block. The case that proved it has since been
+    deleted -- a recipe invoked once, from a job guarded to
+    ``workflow_dispatch`` inside a workflow that also fires on push, which
+    the workflow-level union reported as push-triggered when no push had
+    ever run it. The distinction outlives the example.
     """
     justfile = root / "justfile"
     justfile_text = justfile.read_text(encoding=_UTF_8) if justfile.exists() else ""

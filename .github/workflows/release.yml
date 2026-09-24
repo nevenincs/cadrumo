@@ -12,8 +12,9 @@ on:
         options:
           - prove
           - publish
+          - docs
       ref:
-        description: Git ref to prove (release pull request head) or tag to publish
+        description: Git ref to prove (release pull request head), tag to publish, or ref whose documentation to republish (docs)
         required: true
         type: string
       version:
@@ -223,9 +224,16 @@ jobs:
         if: ${{ !cancelled() }}
         run: just check-docstring-references
 
+      # `just setup` provisions no registry authority, and the documentation
+      # build renders its CLI and casilla references through it.
+      - name: Publish the registry authority
+        id: authority
+        if: ${{ !cancelled() }}
+        run: just registry-publish-authority
+
       - name: Build the documentation site
         id: docs-build
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.authority.outcome == 'success' }}
         run: just docs-build
 
       - name: Documentation conformance
@@ -338,29 +346,6 @@ jobs:
             cadrumo-release-cohort.tar.gz.sha256
           if-no-files-found: error
           retention-days: 30
-
-  runner-queue-watchdog:
-    name: "Check: Runner queue (Linux)"
-    needs: [check-prove-ref, build-cohort, runtime-inventory]
-    if: inputs.phase == 'prove'
-    runs-on: [self-hosted, Linux, X64]
-    timeout-minutes: 20
-    permissions:
-      actions: write
-      contents: read
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: ${{ github.sha }}
-          persist-credentials: false
-
-      - name: Fail fast on a lane no online runner can serve
-        env:
-          GH_TOKEN: ${{ github.token }}
-          THRESHOLD_SECONDS: "300"
-          MAX_WATCH_SECONDS: "480"
-        run: python3 -m dev.ci.runner_queue_watchdog
 
   test-installed-oracles:
     name: "Test: Installed transports (${{ matrix.os }})"
@@ -877,7 +862,6 @@ jobs:
       - test-full
       - check-conformance
       - build-cohort
-      - runner-queue-watchdog
       - test-installed-oracles
       - test-installer-campaign
       - test-homebrew
@@ -1012,10 +996,14 @@ jobs:
       contents: read
       id-token: write
     steps:
+      # The commit locate-cohort proved, not the tag name it proved it through.
+      # A tag is mutable by anyone who can dispatch this workflow, so resolving
+      # the name again here would re-resolve whatever it points at NOW rather
+      # than what carried a passing prove run.
       - name: Checkout the release tag
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ inputs.ref }}
+          ref: ${{ needs.locate-cohort.outputs.tag-commit }}
           persist-credentials: false
 
       - name: Set up toolchain
@@ -1102,10 +1090,14 @@ jobs:
             exit 1
           fi
 
+      # The commit locate-cohort proved, not the tag name it proved it through.
+      # A tag is mutable by anyone who can dispatch this workflow, so resolving
+      # the name again here would re-resolve whatever it points at NOW rather
+      # than what carried a passing prove run.
       - name: Checkout the release tag
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ inputs.ref }}
+          ref: ${{ needs.locate-cohort.outputs.tag-commit }}
           persist-credentials: false
 
       - name: Set up toolchain
@@ -1198,10 +1190,14 @@ jobs:
             exit 1
           fi
 
+      # The commit locate-cohort proved, not the tag name it proved it through.
+      # A tag is mutable by anyone who can dispatch this workflow, so resolving
+      # the name again here would re-resolve whatever it points at NOW rather
+      # than what carried a passing prove run.
       - name: Checkout the release tag
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ inputs.ref }}
+          ref: ${{ needs.locate-cohort.outputs.tag-commit }}
           persist-credentials: false
 
       - name: Set up toolchain
@@ -1283,10 +1279,14 @@ jobs:
       actions: read
       contents: read
     steps:
+      # The commit locate-cohort proved, not the tag name it proved it through.
+      # A tag is mutable by anyone who can dispatch this workflow, so resolving
+      # the name again here would re-resolve whatever it points at NOW rather
+      # than what carried a passing prove run.
       - name: Checkout the release tag
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ inputs.ref }}
+          ref: ${{ needs.locate-cohort.outputs.tag-commit }}
           persist-credentials: false
 
       - name: Set up toolchain
@@ -1333,10 +1333,14 @@ jobs:
             runner: [self-hosted, macOS, ARM64]
             brew: /opt/homebrew/bin/brew
     steps:
+      # The commit locate-cohort proved, not the tag name it proved it through.
+      # A tag is mutable by anyone who can dispatch this workflow, so resolving
+      # the name again here would re-resolve whatever it points at NOW rather
+      # than what carried a passing prove run.
       - name: Checkout the release tag
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ inputs.ref }}
+          ref: ${{ needs.locate-cohort.outputs.tag-commit }}
           persist-credentials: false
 
       - name: Set up toolchain
@@ -1376,10 +1380,14 @@ jobs:
       actions: read
       contents: read
     steps:
+      # The commit locate-cohort proved, not the tag name it proved it through.
+      # A tag is mutable by anyone who can dispatch this workflow, so resolving
+      # the name again here would re-resolve whatever it points at NOW rather
+      # than what carried a passing prove run.
       - name: Checkout the release tag
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ inputs.ref }}
+          ref: ${{ needs.locate-cohort.outputs.tag-commit }}
           persist-credentials: false
 
       - name: Set up toolchain
@@ -1408,71 +1416,56 @@ jobs:
             -BucketSource "https://github.com/$env:BUCKET_REPOSITORY" `
             -EvidenceDir var/acquisition/scoop
 
-  runner-queue-watchdog-publish:
-    name: "Check: Publication runner queue (Linux)"
-    needs: [locate-cohort, publish-homebrew, publish-scoop]
-    if: inputs.phase == 'publish'
-    runs-on: [self-hosted, Linux, X64]
-    timeout-minutes: 20
-    permissions:
-      actions: write
-      contents: read
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: ${{ inputs.ref }}
-          persist-credentials: false
-
-      - name: Fail fast on a lane no online runner can serve
-        env:
-          GH_TOKEN: ${{ github.token }}
-          THRESHOLD_SECONDS: "300"
-          MAX_WATCH_SECONDS: "480"
-        run: python3 -m dev.ci.runner_queue_watchdog
-
   publish-docs:
     name: "Build: Documentation site (Linux)"
-    needs: [publish-pypi, acquire-pypi, acquire-homebrew, acquire-scoop]
-    if: ${{ !cancelled() && inputs.phase == 'publish' && needs.publish-pypi.result == 'success' && needs.acquire-pypi.result == 'success' && needs.acquire-homebrew.result == 'success' && needs.acquire-scoop.result == 'success' }}
+    # locate-cohort is already a transitive ancestor through all four of the
+    # others, so this edge adds no ordering. It is here because reading
+    # `needs.locate-cohort.outputs.*` requires a direct edge.
+    # The `docs` phase republishes the documentation of `ref` alone: every
+    # package job is skipped and none of their results is consulted.
+    needs: [locate-cohort, publish-pypi, acquire-pypi, acquire-homebrew, acquire-scoop]
+    if: ${{ !cancelled() && (inputs.phase == 'docs' || (inputs.phase == 'publish' && needs.publish-pypi.result == 'success' && needs.acquire-pypi.result == 'success' && needs.acquire-homebrew.result == 'success' && needs.acquire-scoop.result == 'success')) }}
     runs-on: [self-hosted, Linux, X64]
-    timeout-minutes: 45
+    # Five strict site roots built serially, each running the full reference
+    # and search-index passes, then an upload of every object.
+    timeout-minutes: 300
     environment: docs
     permissions:
-      id-token: write
       contents: read
     steps:
-      - name: Require the deploy role before anything else
-        env:
-          DOCS_DEPLOY_ROLE: ${{ vars.CADRUMO_DOCS_DEPLOY_ROLE }}
-        run: |
-          if [[ -z "$DOCS_DEPLOY_ROLE" ]]; then
-            cat >&2 <<'EOF'
-          REFUSED: documentation publication is not provisioned.
-
-          Create the OIDC identity provider, a least-privilege docs role trusting
-          this repository and the `docs` environment only, and set the `docs`
-          environment variable CADRUMO_DOCS_DEPLOY_ROLE to the role identifier.
-          EOF
-            exit 1
-          fi
-          echo "Docs deploy role configured; proceeding."
-
-      - name: Checkout the release tag
+      # In the publish phase, the commit locate-cohort proved, not the tag name
+      # it proved it through. A tag is mutable by anyone who can dispatch this
+      # workflow, so resolving the name again here would re-resolve whatever it
+      # points at NOW rather than what carried a passing prove run. The `docs`
+      # phase has no proven cohort and documents `ref` as dispatched.
+      - name: Checkout the documented commit
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ inputs.ref }}
+          ref: ${{ inputs.phase == 'publish' && needs.locate-cohort.outputs.tag-commit || inputs.ref }}
           persist-credentials: false
 
       - name: Set up toolchain
         uses: ./.github/actions/setup
 
+      # `just setup` provisions no registry authority, and the documentation
+      # build renders its CLI and casilla references through it.
+      - name: Publish the registry authority
+        run: just registry-publish-authority
+
+      # The release id is the ref plus the publish instant, so a republished
+      # version never overwrites the bytes an earlier deploy served.
       - name: Publish the documentation site
         env:
-          CADRUMO_DOCS_DEPLOY_ROLE: ${{ vars.CADRUMO_DOCS_DEPLOY_ROLE }}
+          INPUT_REF: ${{ inputs.ref }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CADRUMO_DOCS_R2_BUCKET: ${{ secrets.CADRUMO_DOCS_R2_BUCKET }}
+          CADRUMO_DOCS_R2_ACCESS_KEY_ID: ${{ secrets.CADRUMO_DOCS_R2_ACCESS_KEY_ID }}
+          CADRUMO_DOCS_R2_SECRET_ACCESS_KEY: ${{ secrets.CADRUMO_DOCS_R2_SECRET_ACCESS_KEY }}
         run: |
           uv run --no-sync python -m dev.deploy.docs_static_site publish \
-            --confirm publish-cadrumo-docs
+            --confirm publish-cadrumo-docs \
+            --release-label "${INPUT_REF//\//-}"
 
       - name: Alert on failure without touching the release
         if: ${{ failure() || cancelled() }}

@@ -10,9 +10,11 @@ from typing import Any
 import pytest
 
 from ..python_runtime_matrix import (
+    SMOKE_RUNNERS,
     RuntimeMatrixError,
     RuntimePhase,
     github_matrix,
+    github_smoke_matrix,
     load_runtime_inventory,
     main,
     parse_runtime_inventory,
@@ -133,3 +135,37 @@ def test_cli_returns_nonzero_for_invalid_inventory(tmp_path: Path, capsys: pytes
 
     assert main(["--inventory", str(path)]) == 2
     assert "runtime inventory invalid" in capsys.readouterr().err
+
+
+def test_the_smoke_projection_covers_every_stable_runtime_on_every_runner() -> None:
+    """One row per (runtime, runner), with the OS read out of the label list.
+
+    ``check-name`` takes its OS from the middle member rather than naming it
+    separately, so the title cannot disagree with the runner it ran on.
+    """
+    inventory = parse_runtime_inventory(_live_payload())
+
+    matrix = github_smoke_matrix(inventory)
+
+    rows = matrix["include"]
+    assert len(rows) == len(inventory.stable) * len(SMOKE_RUNNERS)
+    label_sets = [row["os"] for row in rows]
+    assert all(isinstance(labels, list) for labels in label_sets)
+    assert {tuple(labels) for labels in label_sets if isinstance(labels, list)} == set(SMOKE_RUNNERS)
+    for row in rows:
+        os_labels = row["os"]
+        assert isinstance(os_labels, list)
+        assert row["check-name"] == (f"Test: Release artifacts {row['python-minor']} {row['phase']} ({os_labels[1]})")
+
+
+def test_a_stable_inventory_with_no_rows_refuses_rather_than_emitting_nothing() -> None:
+    """An empty matrix is a green job that tested nothing, so it fails closed."""
+    empty = copy.replace(parse_runtime_inventory(_live_payload()), stable=())
+
+    with pytest.raises(RuntimeMatrixError, match="no smoke targets"):
+        github_smoke_matrix(empty)
+
+
+def test_the_cli_emits_the_smoke_phase() -> None:
+    """``--phase smoke`` is reachable from the command line the recipe runs."""
+    assert main(["--phase", "smoke"]) == 0

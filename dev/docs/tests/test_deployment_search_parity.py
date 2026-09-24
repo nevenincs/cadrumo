@@ -56,7 +56,7 @@ from cadrumo.core.external_constants import OutputLanguage
 from dev._paths import REPO_ROOT
 from dev.deploy.docs_static_site import (
     CANONICAL_DOCS_BASE_URL,
-    DeploymentTarget,
+    MIRROR_DOCS_BASE_URL,
     language_build_command,
     language_build_environment,
     localized_languages,
@@ -253,12 +253,13 @@ def test_every_language_root_is_built_and_verified_after_publish() -> None:
     200 — the roots were built but unreachable live for two weeks, so an
     unverified root is the failure mode this pins.
     """
-    checks = dict(public_delivery_checks(DeploymentTarget(bucket="cadrumo-docs-000000000000", distribution_id="E1")))
+    checks = dict(public_delivery_checks())
 
-    assert checks.get(f"{CANONICAL_DOCS_BASE_URL}/") == 200
-    for language in localized_languages():
-        url = f"{CANONICAL_DOCS_BASE_URL}/{language}/"
-        assert checks.get(url) == 200, f"publish does not verify the {language!r} root is reachable ({url})"
+    for base_url in (CANONICAL_DOCS_BASE_URL, MIRROR_DOCS_BASE_URL):
+        assert checks.get(f"{base_url}/") == 200
+        for language in localized_languages():
+            url = f"{base_url}/{language}/"
+            assert checks.get(url) == 200, f"publish does not verify the {language!r} root is reachable ({url})"
 
 
 def test_the_gate_reads_the_artefact_not_the_configuration(tmp_path: Path) -> None:

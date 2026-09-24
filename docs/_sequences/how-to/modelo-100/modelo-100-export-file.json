@@ -220,7 +220,7 @@
             "renta-profile-taxpayer-birth-date": "1985-06-15",
             "renta-profile-unidad-familiar-otros-miembros-base": "0"
           },
-          "calculation_revision_id": "623a3ba760fcc2069d7db7e4ed1103f11b38222d8a9e69fed10b7252fe1084fe",
+          "calculation_revision_id": "50ff08289aae34126f853d2b95de1feb1236992cc4abe46e0707dfd537d9febd",
           "casilla_values": {
             "0001": "0",
             "0002": "0",
@@ -58242,7 +58242,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 623a3ba760fcc2069d7db7e4ed1103f11b38222d8a9e69fed10b7252fe1084fe (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 50ff08289aae34126f853d2b95de1feb1236992cc4abe46e0707dfd537d9febd (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "relation_prefill",
@@ -58355,7 +58355,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "623a3ba760fcc2069d7db7e4ed1103f11b38222d8a9e69fed10b7252fe1084fe",
+          "calculation_revision_id": "50ff08289aae34126f853d2b95de1feb1236992cc4abe46e0707dfd537d9febd",
           "completeness_status": "complete",
           "findings": [
             {
@@ -58443,7 +58443,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "cc626793a20bc8c64af01c44438097e8ba7f60103b51cb70c6987f417b2b53b2",
+          "verification_report_id": "6c27523b6d144ee7280b60a7af7b3608127cfa174baca33b10c7b3a9d7701f46",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
@@ -58491,10 +58491,10 @@
           }
         ],
         "result": {
-          "bucket_event_id": "99e86ad9b1688b9f232239a1032186abee5c5f4e6f4a1bdc39598b6ba6a116d7",
+          "bucket_event_id": "62702594e3b53d4485d3be0568658933b3180491df4306fa561e2c425598479c",
           "bucket_id": "<bucket-id>",
           "byte_size": 2282,
-          "calculation_revision_id": "623a3ba760fcc2069d7db7e4ed1103f11b38222d8a9e69fed10b7252fe1084fe",
+          "calculation_revision_id": "50ff08289aae34126f853d2b95de1feb1236992cc4abe46e0707dfd537d9febd",
           "file_sha256": "c1d2af49eae2e7ff87f92a407ccdc00093fa3e5ca6ce080cf2399d3698e13e70",
           "filing_year": 2025,
           "format": "xml-dictionary",

@@ -7,14 +7,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"POT-Creation-Date: 2026-09-23 17:16+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo localization <docs@cadrumo>\n"
 "Language: hu\n"
 "Language-Team: hu <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
@@ -45,9 +45,9 @@ msgid ""
 "passphrase. Create a profile first with [Set up your taxpayer profile"
 "](profile-setup.md) if you have none."
 msgstr ""
-"Ezek a parancsok az aktív profilt olvassák, és bekérik a "
-"mesterkulcs-jelmondatát. Ha nincs profilja, először hozzon létre egyet "
-"[Az adózói profil beállítása](profile-setup.md) útmutatóval."
+"Ezek a parancsok az aktív profilt olvassák, és bekérik a mesterkulcs-"
+"jelmondatát. Ha nincs profilja, először hozzon létre egyet [Az adózói "
+"profil beállítása](profile-setup.md) útmutatóval."
 
 #: ../../how-to/filing-readiness.md:13
 msgid "Run the readiness report"
@@ -58,25 +58,36 @@ msgid ""
 "Find the resolved revision id first, then report whether the active "
 "profile is ready for that modelo, year, and period:"
 msgstr ""
-"Először keresse meg a feloldott revízióazonosítót, majd jelentse, hogy az "
-"aktív profil készen áll-e arra a modelóra, évre és időszakra:"
+"Először keresse meg a feloldott revízióazonosítót, majd jelentse, hogy az"
+" aktív profil készen áll-e arra a modelóra, évre és időszakra:"
 
 #: ../../how-to/filing-readiness.md:22
+msgid ""
+"The command exits with status 2 while the target is not ready, so a "
+"script detects the gap from the exit status. In this example `ready` is "
+"`false` because the fresh profile still has missing source bindings."
+msgstr ""
+"A parancs 2-es kilépési kóddal fejeződik be, amíg a cél nem kész, így egy"
+" szkript a kilépési kódból észleli a hiányt. Ebben a példában a `ready` "
+"értéke `false`, mert a frissen létrehozott profilból még hiányoznak "
+"forrás-bindingok."
+
+#: ../../how-to/filing-readiness.md:26
 msgid "The report covers two things:"
 msgstr "A jelentés két dolgot tárgyal:"
 
-#: ../../how-to/filing-readiness.md:24
+#: ../../how-to/filing-readiness.md:28
 msgid ""
 "**Profile readiness** - every profile fact the modelo requires. Each "
 "missing fact is listed by its section and field key, so you know exactly "
 "what to fill in with `aeat config profile edit`."
 msgstr ""
-"**Profil-felkészültség** - minden profiladat, amelyet a modelo megkövetel. "
-"Minden hiányzó adat a szakasza és mezőkulcsa szerint van felsorolva, így "
-"pontosan tudja, mit kell kitöltenie az `aeat config profile edit` "
-"paranccsal."
+"**Profil-felkészültség** - minden profiladat, amelyet a modelo "
+"megkövetel. Minden hiányzó adat a szakasza és mezőkulcsa szerint van "
+"felsorolva, így pontosan tudja, mit kell kitöltenie az `aeat config "
+"profile edit` paranccsal."
 
-#: ../../how-to/filing-readiness.md:27
+#: ../../how-to/filing-readiness.md:31
 msgid ""
 "**Ledger readiness** - for ledger-fed modelos, the same source checks as "
 "`aeat app ledger preflight`, listing each transaction that blocks the "
@@ -86,21 +97,21 @@ msgstr ""
 "forrásellenőrzések, mint az `aeat app ledger preflight`-nál, felsorolva "
 "minden tranzakciót, amely blokkolja az időszakot, és hogy miért."
 
-#: ../../how-to/filing-readiness.md:31
+#: ../../how-to/filing-readiness.md:35
 msgid ""
 "Readiness does not check box-level completeness of a draft. That is what "
 "`aeat app modelo work verify` does. See [Verify a filing](verification-"
 "reports.md)."
 msgstr ""
 "A felkészültség nem ellenőrzi egy piszkozat rovatszintű teljességét. Ezt "
-"az `aeat app modelo work verify` teszi. Lásd [Egy benyújtás "
-"ellenőrzése](verification-reports.md)."
+"az `aeat app modelo work verify` teszi. Lásd [Egy benyújtás ellenőrzése"
+"](verification-reports.md)."
 
-#: ../../how-to/filing-readiness.md:35
+#: ../../how-to/filing-readiness.md:39
 msgid "Check what this filing depends on"
 msgstr "Ellenőrizze, mitől függ ez a benyújtás"
 
-#: ../../how-to/filing-readiness.md:37
+#: ../../how-to/filing-readiness.md:41
 msgid ""
 "Some modelos fold in values from other filings. An annual summary reads "
 "its quarters, and a cross-modelo box reads another form's result. List "
@@ -110,10 +121,10 @@ msgstr ""
 "Egyes modelók más benyújtásokból vonnak be értékeket. Egy éves összesítő "
 "beolvassa a negyedéveit, egy modelók közötti rovat pedig egy másik "
 "nyomtatvány eredményét olvassa be. Listázza egy benyújtási év "
-"nyilvántartás által közölt függőségeit, majd szűkítsen egy modelóra, vagy "
-"egy modelóra és időszakra:"
+"nyilvántartás által közölt függőségeit, majd szűkítsen egy modelóra, vagy"
+" egy modelóra és időszakra:"
 
-#: ../../how-to/filing-readiness.md:46
+#: ../../how-to/filing-readiness.md:50
 msgid ""
 "`--period` requires `--modelo`. With both set, the command also evaluates"
 " the current blockers for that exact filing (for example an earlier "
@@ -123,26 +134,26 @@ msgid ""
 "/building-on-earlier-filings.md)."
 msgstr ""
 "A `--period` megköveteli a `--modelo`-t. Ha mindkettő be van állítva, a "
-"parancs kiértékeli az adott benyújtás jelenlegi akadályait is (például egy "
-"korábbi időszakot, amelynek hivatalos bizonyítéka még hiányzik), így "
+"parancs kiértékeli az adott benyújtás jelenlegi akadályait is (például "
+"egy korábbi időszakot, amelynek hivatalos bizonyítéka még hiányzik), így "
 "láthatja, mit kell feloldani, mielőtt ez az időszak biztonságosan "
 "építhetne az előtte lévőkre. A háttérért lásd [Építés a korábbi "
 "benyújtásokra](../explanation/building-on-earlier-filings.md)."
 
-#: ../../how-to/filing-readiness.md:52
+#: ../../how-to/filing-readiness.md:56
 msgid "See everything that happened to a filing"
 msgstr "Tekintsen meg mindent, ami egy benyújtással történt"
 
-#: ../../how-to/filing-readiness.md:54
+#: ../../how-to/filing-readiness.md:58
 msgid ""
 "Stream every recorded lifecycle event for one modelo (calculations, "
 "verification passes and refusals, filings, amendments, imports):"
 msgstr ""
-"Folyamszerűen jelenítse meg egy modelo minden rögzített "
-"életciklus-eseményét (számítások, ellenőrzési sikerek és elutasítások, "
-"benyújtások, önellenőrzések, importok):"
+"Folyamszerűen jelenítse meg egy modelo minden rögzített életciklus-"
+"eseményét (számítások, ellenőrzési sikerek és elutasítások, benyújtások, "
+"önellenőrzések, importok):"
 
-#: ../../how-to/filing-readiness.md:61
+#: ../../how-to/filing-readiness.md:65
 msgid ""
 "Add `--period` to narrow to one period. This is the modelo-wide audit "
 "trail; for the event stream of a single workspace, use `aeat app modelo "
@@ -153,17 +164,17 @@ msgstr ""
 "eseményfolyamához használja az `aeat app modelo work history` parancsot. "
 "Lásd [A benyújtási munkafolyamat](filing-spine.md)."
 
-#: ../../how-to/filing-readiness.md:66
+#: ../../how-to/filing-readiness.md:70
 msgid "Compare two filing years"
 msgstr "Két benyújtási év összehasonlítása"
 
-#: ../../how-to/filing-readiness.md:68
+#: ../../how-to/filing-readiness.md:72
 msgid "See how this year's figures moved against last year's, box by box:"
 msgstr ""
 "Tekintse meg, hogyan mozdultak el az idei év számai a tavalyihoz képest, "
 "rovatonként:"
 
-#: ../../how-to/filing-readiness.md:73
+#: ../../how-to/filing-readiness.md:77
 msgid ""
 "Pass `--year` exactly twice. Each row shows the box, its label and "
 "section, both values, the difference, and the percent change; all-zero "
@@ -174,34 +185,34 @@ msgid ""
 msgstr ""
 "Adja meg a `--year` kapcsolót pontosan kétszer. Minden sor a rovatot, "
 "annak címkéjét és szakaszát, mindkét értéket, a különbséget és a "
-"százalékos változást mutatja; a csupa nulla sorok kimaradnak a "
-"szöveges kimenetből. Az összehasonlítás minden év legutóbbi ellenőrzött "
-"revízióját használja, és a legutóbbi piszkozatra esik vissza, amikor "
-"nincs ellenőrzött revízió. A kimenetben egy piszkozatból összehasonlított "
-"évet `BORRADOR` jelöl."
+"százalékos változást mutatja; a csupa nulla sorok kimaradnak a szöveges "
+"kimenetből. Az összehasonlítás minden év legutóbbi ellenőrzött revízióját"
+" használja, és a legutóbbi piszkozatra esik vissza, amikor nincs "
+"ellenőrzött revízió. A kimenetben egy piszkozatból összehasonlított évet "
+"`BORRADOR` jelöl."
 
-#: ../../how-to/filing-readiness.md:80
+#: ../../how-to/filing-readiness.md:84
 msgid ""
 "Use the comparison as a sanity check before filing: an unexpected jump in"
 " a box is worth tracing back to its transactions before you export."
 msgstr ""
-"Használja az összehasonlítást józansági ellenőrzésként a benyújtás előtt: "
-"egy rovat váratlan ugrását érdemes visszavezetni a tranzakcióira, mielőtt "
-"exportál."
+"Használja az összehasonlítást józansági ellenőrzésként a benyújtás előtt:"
+" egy rovat váratlan ugrását érdemes visszavezetni a tranzakcióira, "
+"mielőtt exportál."
 
-#: ../../how-to/filing-readiness.md:83
+#: ../../how-to/filing-readiness.md:87
 msgid "Look ahead to the year-end Renta"
 msgstr "Tekintsen előre az év végi Rentára"
 
-#: ../../how-to/filing-readiness.md:85
+#: ../../how-to/filing-readiness.md:89
 msgid ""
 "If you file quarterly Modelo 130 instalments, project what the year-end "
 "Modelo 100 would look like from the quarters filed so far:"
 msgstr ""
-"Ha negyedéves Modelo 130 előlegeket nyújt be, vetítse ki, hogyan nézne ki "
-"az év végi Modelo 100 az eddig benyújtott negyedévekből:"
+"Ha negyedéves Modelo 130 előlegeket nyújt be, vetítse ki, hogyan nézne ki"
+" az év végi Modelo 100 az eddig benyújtott negyedévekből:"
 
-#: ../../how-to/filing-readiness.md:91
+#: ../../how-to/filing-readiness.md:95
 msgid ""
 "`--ccaa` names your autonomous community of tax residence, which selects "
 "the regional scale for the Modelo 100 calculation."
@@ -209,7 +220,7 @@ msgstr ""
 "A `--ccaa` megnevezi az adóügyi illetősége szerinti autonóm közösséget, "
 "amely kiválasztja a regionális skálát a Modelo 100 számításhoz."
 
-#: ../../how-to/filing-readiness.md:94
+#: ../../how-to/filing-readiness.md:98
 msgid ""
 "The output shows the accumulated Modelo 130 figures (income, expenses, "
 "net result, instalments paid) and the projected Modelo 100 result: the "
@@ -220,10 +231,10 @@ msgstr ""
 "A kimenet a felhalmozott Modelo 130 számokat (bevétel, kiadások, nettó "
 "eredmény, befizetett előlegek) és a kivetített Modelo 100 eredményt "
 "mutatja: az adóalapot, az állami és regionális bruttó adót (cuota "
-"íntegra), a nettó adót (cuota líquida) és az előlegek utáni "
-"végegyenleget (cuota resultante)."
+"íntegra), a nettó adót (cuota líquida) és az előlegek utáni végegyenleget"
+" (cuota resultante)."
 
-#: ../../how-to/filing-readiness.md:99
+#: ../../how-to/filing-readiness.md:103
 msgid ""
 "**Read the extrapolation flag before trusting the numbers.** With fewer "
 "than four quarters filed, the projection extrapolates a full year from "
@@ -236,10 +247,10 @@ msgstr ""
 "Négynél kevesebb benyújtott negyedév esetén a kivetítés a rendelkezésre "
 "álló negyedévekből extrapolál egy teljes évet, és megjelöli a kimenetet, "
 "például `quarters_filed 2/4 (extrapolated from 2Q)`. Egy extrapolált "
-"kivetítés tervezési becslés, nem Renta-piszkozat: azt feltételezi, hogy a "
-"fennmaradó negyedévek a benyújtottakhoz hasonlóan néznek ki."
+"kivetítés tervezési becslés, nem Renta-piszkozat: azt feltételezi, hogy a"
+" fennmaradó negyedévek a benyújtottakhoz hasonlóan néznek ki."
 
-#: ../../how-to/filing-readiness.md:106
+#: ../../how-to/filing-readiness.md:110
 msgid ""
 "Refine the projection with values the quarters cannot know: withholdings,"
 " personal circumstances, or specific boxes:"
@@ -247,7 +258,7 @@ msgstr ""
 "Finomítsa a kivetítést olyan értékekkel, amelyeket a negyedévek nem "
 "ismerhetnek: forrásadók, személyes körülmények vagy konkrét rovatok:"
 
-#: ../../how-to/filing-readiness.md:112
+#: ../../how-to/filing-readiness.md:116
 msgid ""
 "Withholdings bindings default to zero when not supplied, so a projection "
 "without them overstates the balance due if you had retenciones. Each "
@@ -260,7 +271,7 @@ msgstr ""
 "jogszabályi hivatkozásait a JSON-kimenetben, ugyanazzal a "
 "megalapozottsággal, mint egy valódi számítás."
 
-#: ../../how-to/filing-readiness.md:117
+#: ../../how-to/filing-readiness.md:121
 msgid ""
 "For when the year-end filing actually happens, see [Period tokens and "
 "dates](filing-calendar.md#period-tokens-and-dates)."
@@ -269,11 +280,11 @@ msgstr ""
 "lásd [Időszak-tokenek és dátumok](filing-calendar.md#period-tokens-and-"
 "dates)."
 
-#: ../../how-to/filing-readiness.md:120
+#: ../../how-to/filing-readiness.md:124
 msgid "Trace a value to its legal basis"
 msgstr "Vezessen vissza egy értéket a jogalapjához"
 
-#: ../../how-to/filing-readiness.md:122
+#: ../../how-to/filing-readiness.md:126
 msgid ""
 "Every computed value carries its grounding, and you can surface it at "
 "each review stage:"
@@ -281,45 +292,44 @@ msgstr ""
 "Minden kiszámított érték hordozza a megalapozottságát, és minden "
 "áttekintési szakaszban felszínre hozhatja:"
 
-#: ../../how-to/filing-readiness.md:125
+#: ../../how-to/filing-readiness.md:129
 msgid ""
 "The formula behind each computed box carries its legal and source "
 "references. See [Review and supply calculation inputs](review-"
 "calculation-values.md):"
 msgstr ""
 "Az egyes kiszámított rovatok mögötti képlet hordozza a jogszabályi és "
-"forráshivatkozásait. Lásd [Számítási bemenetek áttekintése és "
-"megadása](review-calculation-values.md):"
+"forráshivatkozásait. Lásd [Számítási bemenetek áttekintése és megadása"
+"](review-calculation-values.md):"
 
-#: ../../how-to/filing-readiness.md:132
+#: ../../how-to/filing-readiness.md:136
 msgid "Two more grounding surfaces round out the trace:"
 msgstr "Két további megalapozási felület teszi teljessé a visszavezetést:"
 
-#: ../../how-to/filing-readiness.md:134
+#: ../../how-to/filing-readiness.md:138
 msgid ""
 "Verification findings name the legal references behind each rule. See "
 "[Verify a filing](verification-reports.md)."
 msgstr ""
 "Az ellenőrzési észrevételek megnevezik az egyes szabályok mögötti "
-"jogszabályi hivatkozásokat. Lásd [Egy benyújtás "
-"ellenőrzése](verification-reports.md)."
+"jogszabályi hivatkozásokat. Lásd [Egy benyújtás ellenőrzése"
+"](verification-reports.md)."
 
-#: ../../how-to/filing-readiness.md:136
+#: ../../how-to/filing-readiness.md:140
 msgid ""
 "`aeat app review queue --explain` - pending findings with their legal "
 "references. See [the review queue](classify-transactions.md#see-"
 "everything-that-still-needs-a-decision)."
 msgstr ""
 "`aeat app review queue --explain` - függőben lévő észrevételek a "
-"jogszabályi hivatkozásaikkal. Lásd [az ellenőrzési "
-"sort](classify-transactions.md#see-everything-that-still-needs-a-"
-"decision)."
+"jogszabályi hivatkozásaikkal. Lásd [az ellenőrzési sort](classify-"
+"transactions.md#see-everything-that-still-needs-a-decision)."
 
-#: ../../how-to/filing-readiness.md:140
+#: ../../how-to/filing-readiness.md:144
 msgid "Next steps"
 msgstr "Következő lépések"
 
-#: ../../how-to/filing-readiness.md:142
+#: ../../how-to/filing-readiness.md:146
 msgid ""
 "[Verify a filing](verification-reports.md) - box-level verification of "
 "the draft."
@@ -327,16 +337,16 @@ msgstr ""
 "[Egy benyújtás ellenőrzése](verification-reports.md) - a piszkozat "
 "rovatszintű ellenőrzése."
 
-#: ../../how-to/filing-readiness.md:144
+#: ../../how-to/filing-readiness.md:148
 msgid ""
 "[Review and supply calculation inputs](review-calculation-values.md) - "
 "fill missing values readiness or verification surfaced."
 msgstr ""
 "[Számítási bemenetek áttekintése és megadása](review-calculation-"
-"values.md) - töltse ki a felkészültség vagy az ellenőrzés által felszínre "
-"hozott hiányzó értékeket."
+"values.md) - töltse ki a felkészültség vagy az ellenőrzés által felszínre"
+" hozott hiányzó értékeket."
 
-#: ../../how-to/filing-readiness.md:146
+#: ../../how-to/filing-readiness.md:150
 msgid ""
 "[Building on earlier filings](../explanation/building-on-earlier-"
 "filings.md) - how cross-period dependencies work."
@@ -344,7 +354,7 @@ msgstr ""
 "[Építés a korábbi benyújtásokra](../explanation/building-on-earlier-"
 "filings.md) - hogyan működnek az időszakok közötti függőségek."
 
-#: ../../how-to/filing-readiness.md:148
+#: ../../how-to/filing-readiness.md:152
 msgid ""
 "[The filing workflow](filing-spine.md) - workspaces, revisions, and per-"
 "workspace history."
@@ -352,6 +362,7 @@ msgstr ""
 "[A benyújtási munkafolyamat](filing-spine.md) - munkaterületek, revíziók "
 "és munkaterületenkénti előzmények."
 
-#: ../../how-to/filing-readiness.md:150
+#: ../../how-to/filing-readiness.md:154
 msgid "[CLI reference](../cli/index.rst) - full option reference."
 msgstr "[CLI-referencia](../cli/index.rst) - teljes kapcsolóreferencia."
+

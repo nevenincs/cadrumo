@@ -78,12 +78,12 @@ operation; the rectification rows aggregate from there.
 
 ## Export and file
 
-Attempt the verified declaration export. The current authoritative layout
-cannot encode every applicable required casilla, so the command refuses rather
-than producing a partial file:
+Export the verified declaration. The command writes a local file in the
+official layout, including the per-operator detail rows, for you to upload
+through the AEAT channel:
 
 ```{cli-sequence} modelo-349-export
-:verify: Confirm export refuses when required casillas would be omitted.
+:verify: Confirm export writes the local file and flags it as not official filing evidence.
 ```
 
 After you file at the portal, record the local marker, then
@@ -96,9 +96,6 @@ obligation on the profile first:
 ```
 
 The marker is optional and only applies while the obligation window is open.
-Until the required-casilla layout is complete, read the verified values and
-present them through the AEAT portal; do not treat a partial export as a finish
-line.
 
 Modelo 349 runs alongside your periodic Modelo 303: the same intra-community
 operations that appear here also feed the 303's intra-community boxes. Keep

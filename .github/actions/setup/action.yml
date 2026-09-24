@@ -28,8 +28,27 @@ runs:
 
     - name: Initialize the worktree
       shell: bash
-      # Self-hosted runner services can carry a workstation authority override.
-      # CI exercises the packaged-default posture from a clean checkout.
+      # Self-hosted runner services can carry a workstation authority override,
+      # and `dev/env/_install.py` only drops the variable when it already
+      # resolves to this checkout, so a foreign absolute path survives that
+      # check. The unset is what removes it.
+      # It does NOT leave the variable unset: `dev/_paths.py` re-seeds it to
+      # this checkout's `.authority` at import time, before any `python -m dev.*`
+      # tool runs. CI therefore exercises the CHECKOUT posture, never the
+      # packaged default.
+      #
+      # `just setup` ends with an advisory `aeat config check`, whose output is
+      # localized product text. A job log is read by whoever is debugging, not
+      # by an operator who chose a language, so a runner resolving a non-English
+      # locale reports its diagnostics in one the reader may not have -- a
+      # Spanish authority-descriptor refusal in run 35521505145 was misread as
+      # evidence of a configured override and cost a debugging cycle. Pinning
+      # the language changes only what is PRINTED: transport tokens,
+      # identifiers and stored data are untranslated either way. Same posture
+      # as `dev/packaging/installed_tax_oracle.py:186`, which pins it because
+      # the packaging oracles read product output as data.
+      env:
+        CADRUMO_OUTPUT_LANGUAGE: en
       run: |
         unset CADRUMO_AUTHORITY_ROOT
         just setup

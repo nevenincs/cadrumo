@@ -72,7 +72,6 @@ from ..conformance.loader_directory_mode_support import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_REPO_ROOT = Path(__file__).resolve().parents[6]
 # Hang guard only, not a performance assertion: each spawned REAL pytest
 # session compiles the bundled registry (~9s on an idle machine) and this
 # suite runs on a heavily loaded shared box (pytest-xdist workers plus

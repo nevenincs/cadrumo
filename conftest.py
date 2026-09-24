@@ -131,7 +131,6 @@ bridge_env_file_into_environ(Path(__file__).resolve().parent / "env" / ".env")
 # top-of-file import statement would run before those lines.
 deselection_hook = import_module("cadrumo.tests.deselection_hook")
 fixture_resolution_hook = import_module("cadrumo.tests.fixture_resolution_hook")
-host_load_hook = import_module("cadrumo.tests.host_load_hook")
 lost_test_hook = import_module("cadrumo.tests.lost_test_hook")
 marker_hook = import_module("cadrumo.tests.marker_hook")
 worker_count_hook = import_module("cadrumo.tests.worker_count_hook")
@@ -270,23 +269,6 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
 def pytest_xdist_auto_num_workers(config: pytest.Config) -> int | None:
     """Delegate to the repository-owned xdist auto-width resolver."""
     return worker_count_hook.resolve_auto_num_workers(config)
-
-
-def pytest_timeout_set_timer(item: pytest.Item, settings: object) -> None:
-    """Delegate to the shared pre-fire host-load stamp.
-
-    Deliberately returns ``None``: the hookspec is ``firstresult`` and
-    pytest-timeout's own implementation is ``trylast``, so returning a value
-    here would stop the call and leave the real timeout ceiling uninstalled.
-    """
-    host_load_hook.arm_pre_timeout_stamp(item, settings)
-    return None
-
-
-def pytest_timeout_cancel_timer(item: pytest.Item) -> None:
-    """Delegate to the shared host-load stamp's cancel counterpart."""
-    host_load_hook.disarm_pre_timeout_stamp(item)
-    return None
 
 
 def pytest_terminal_summary(

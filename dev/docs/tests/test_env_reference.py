@@ -23,6 +23,7 @@ import pytest
 
 from dev._paths import REPO_ROOT
 from dev.cache_root import DEV_CACHE_ROOT_ENV
+from dev.deploy.docs_static_site import DELIVERY_CREDENTIAL_ENV
 
 from ..env_reference import render_environment_reference, target_path
 
@@ -34,7 +35,7 @@ _KEY_RE = re.compile(r"^#?\s*([A-Z][A-Z0-9_]+)=", re.MULTILINE)
 
 #: Template keys for development tooling, which reads them itself rather than
 #: through the product settings model.
-_DEVELOPMENT_TOOLING_KEYS = frozenset({DEV_CACHE_ROOT_ENV})
+_DEVELOPMENT_TOOLING_KEYS = frozenset({DEV_CACHE_ROOT_ENV, *DELIVERY_CREDENTIAL_ENV})
 
 
 def _settings_env_names() -> frozenset[str]:

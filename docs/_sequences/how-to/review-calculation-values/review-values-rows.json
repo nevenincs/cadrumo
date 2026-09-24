@@ -96,9 +96,9 @@
         "calculate",
         "0371dd7cb747105434a07926b17dfe5fb475b9d548121b773bd1815f52bcbc67",
         "--row",
-        "miembro nif=45678912S porcentaje=60 importe=10000 clave=D",
+        "miembro nif=45678912S clave=C porcentaje=60 importe=10000",
         "--row",
-        "miembro nif=00000001R porcentaje=40 importe=5000 clave=D"
+        "miembro nif=00000001R clave=C porcentaje=40 importe=5000"
       ],
       "captures": [],
       "envelope": {
@@ -125,7 +125,7 @@
         "result": {
           "authorization_state": null,
           "binding_overrides": {},
-          "calculation_revision_id": "8c89fa4530dea6df02b054c4df1fbfc3512285f6dfd31e672d5ea0cdfe094179",
+          "calculation_revision_id": "9af0fcbd21db85903765661180415e070f056d859039a089b27e4d426b0946dd",
           "casilla_values": {
             "decl.complementaria-sustitutiva": "0",
             "decl.ejercicio": "2024",
@@ -212,7 +212,7 @@
           "detail_rows": [
             {
               "fields": {
-                "clave": "D",
+                "clave": "C",
                 "clave_declarado": null,
                 "codigo_provincia": null,
                 "dias_arrendamiento": null,
@@ -238,7 +238,7 @@
             },
             {
               "fields": {
-                "clave": "D",
+                "clave": "C",
                 "clave_declarado": null,
                 "codigo_provincia": null,
                 "dias_arrendamiento": null,
@@ -1563,7 +1563,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 8c89fa4530dea6df02b054c4df1fbfc3512285f6dfd31e672d5ea0cdfe094179 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 9af0fcbd21db85903765661180415e070f056d859039a089b27e4d426b0946dd (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [],
           "state": "borrador",
           "superseded_at": null,

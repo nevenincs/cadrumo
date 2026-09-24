@@ -194,7 +194,8 @@ rather than the `--modelo / --year / --period` flags used elsewhere on this page
 
 Use one of these record types:
 
-- `miembro` - an attribution member (Modelo 184).
+- `miembro` - an attribution member (Modelo 184). Each row names the income
+  `clave` it attributes, such as `C` for rendimientos del capital inmobiliario.
 - `vinculada` - a related-party operation (Modelo 232).
 - `contraparte` - a declared counterparty (Modelo 347).
 - `operador` - an intra-community operator (Modelo 349).

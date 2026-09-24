@@ -97,8 +97,8 @@ msgid ""
 msgstr ""
 "**Ledger-aggregációk.** Amit a tevékenysége keresett és költött: az év "
 "osztályozott bevételi és levonható kiadási sorai, casillánként aggregálva"
-" (a `renta-ledger-*` sorok). Ez ugyanaz a ledger, amelyet a negyedéves "
-"bevallásai olvasnak: a Renta egyszerre olvassa az egész évet."
+" és a `renta-ledger-*` sorokként listázva. Ez ugyanaz a ledger, amelyet a"
+" negyedéves bevallásai olvasnak: a Renta egyszerre olvassa az egész évet."
 
 #: ../../explanation/how-renta-is-assembled.md:39
 msgid ""

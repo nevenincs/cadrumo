@@ -308,7 +308,7 @@ def test_the_ci_contracts_recipe_carries_the_substance_the_workflow_delegates() 
     """The workflow names a recipe, so the recipe is where the pin has to bite.
 
     Delegating the step to `just test-ci-contracts` moves the paths and the
-    marker expression out of ci.yml, which is the point -- the recipe becomes
+    marker expression out of the workflow, which is the point -- the recipe becomes
     the one declaration site for the CI/repository contract population. A pin
     that only checked the workflow says "a recipe is invoked" and nothing about
     what it does, so emptying the recipe would pass it while running no gates at
@@ -343,7 +343,10 @@ def test_ci_contracts_builds_real_docs_before_running_deployment_tests() -> None
     CI contract unnecessarily expensive.
     """
     lines = _JUSTFILE.read_text(encoding="utf-8").splitlines()
-    start = lines.index("test-ci-contracts:")
+    # `test-ci-contracts-gate`, not the `test-ci-contracts` aggregate above it:
+    # the aggregate is two `just` calls, and the docs corpus has to exist before
+    # the pytest pass that reads it, which is this recipe's.
+    start = lines.index("test-ci-contracts-gate:")
     body: list[str] = []
     for line in lines[start + 1 :]:
         if line and not line.startswith((" ", "\t")):

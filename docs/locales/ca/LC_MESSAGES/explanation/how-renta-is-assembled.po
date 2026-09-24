@@ -98,9 +98,9 @@ msgid ""
 msgstr ""
 "**Agregacions del ledger.** Què ha ingressat i gastat la teva activitat: "
 "les files d'ingressos classificats i de despeses deduïbles de l'any, "
-"agregades per casella (les files `renta-ledger-*`). Aquest és el mateix "
-"ledger que llegeixen les teves presentacions trimestrals; la Renda "
-"llegeix tot l'any de cop."
+"agregades per casella i llistades com les files `renta-ledger-*`. Aquest "
+"és el mateix ledger que llegeixen les teves presentacions trimestrals; la"
+" Renda llegeix tot l'any de cop."
 
 #: ../../explanation/how-renta-is-assembled.md:39
 msgid ""

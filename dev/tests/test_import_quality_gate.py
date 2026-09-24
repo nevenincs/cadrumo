@@ -1035,6 +1035,143 @@ def _health_verdict(root: Path) -> tuple[int, str]:
     return exit_status, render_import_health(payload) + "\n" + json.dumps(payload, sort_keys=True)
 
 
+def _health_for_graph(tmp_path: Path, linter_output: str, *, linter_returncode: int) -> tuple[int, str]:
+    """Build a verdict over a fixture authority with a CONSTRUCTED linter output.
+
+    The linter itself is not run. The three states this file distinguishes are
+    properties of what the linter REPORTED, so constructing that report is what
+    makes each state reachable -- a repository that really breaks four
+    contracts, and one whose exhaustive layer list is really stale, cannot both
+    be materialised here.
+    """
+    root = _fixture_root(tmp_path)
+    read = read_authority(root)
+    assert read.authority is not None and not read.findings, read.findings
+    payload, exit_status = build_import_health(
+        authority=read.authority,
+        authority_findings=read.findings,
+        linter_returncode=linter_returncode,
+        linter_output=linter_output,
+        checker=check_authority(read.authority),
+        loadability={"attempted": 0, "failed": 0, "loaded": 0, "root_cause_count": 0, "scope": "fixture"},
+        load_returncode=0,
+        source_snapshot_before="fixture",
+        source_snapshot_after="fixture",
+        component_durations={},
+    )
+    return exit_status, render_import_health(payload) + "\n" + json.dumps(payload, sort_keys=True)
+
+
+#: Import Linter's own rendering of an evaluated contract. `_graph_summary`
+#: reads the verdict off these lines, so a constructed output drives the whole
+#: three-state distinction without needing a repository that really breaks a
+#: contract.
+_KEPT_LINE = "Some contract name KEPT"
+_BROKEN_LINE = "Some other contract name BROKEN"
+
+#: What the linter prints when an exhaustive contract names a layer the tree no
+#: longer has. It exits 1 -- the same status a broken contract produces -- and
+#: prints no contract lines at all. That collision is the defect these cases
+#: exist for: `dev/containers` was deleted, this was the entire output, and the
+#: gate reported `status: "authoritative"` over an empty graph.
+_ABORTED_OUTPUT = "Missing layer in container 'dev': module dev.containers does not exist."
+
+
+def _graph_states() -> dict[str, str]:
+    """Return one constructed linter output per state the gate must tell apart."""
+    return {
+        "aborted": _ABORTED_OUTPUT,
+        "all_kept": "\n".join([_KEPT_LINE] * 15),
+        "four_broken": "\n".join([_KEPT_LINE] * 11 + [_BROKEN_LINE] * 4),
+    }
+
+
+def test_a_linter_that_evaluated_no_contracts_is_unavailable_not_authoritative(tmp_path: Path) -> None:
+    """The state the gate could not see: fifteen contracts silently not applied.
+
+    Import Linter exits 1 both when a contract is broken and when it aborts
+    before evaluating any, and an abort prints no contract lines. So the
+    returncode cannot separate them and the contract counts cannot either --
+    both leave ``contracts_broken`` at 0. Evaluating nothing has to be read as
+    a subordinate that did not run, in the same vocabulary the loadability half
+    already uses for that state.
+    """
+    exit_status, output = _health_for_graph(tmp_path, _graph_states()["aborted"], linter_returncode=1)
+    payload = json.loads(output.rsplit("\n", 1)[1])
+
+    assert payload["graph_authority"]["status"] == "unavailable"
+    assert payload["graph_authority"]["contracts_total"] == 0
+    assert any("evaluated no contracts" in reason for reason in payload["graph_authority"]["operational_reasons"])
+    assert payload["verdict"] == "failed"
+    assert exit_status == 7
+
+
+def test_a_broken_contract_is_counted_and_attributed_not_merely_carried(tmp_path: Path) -> None:
+    """Four broken contracts must not read identically to none.
+
+    The verdict here is ``failed``, and that is PRE-EXISTING behaviour rather
+    than anything this change added: a broken contract with no attributable
+    direct occurrence is unexplained, and the gate has always escalated that.
+    This fixture declares no occurrences, so the rule fires. In the live tree
+    the same four contracts are attributable to 207 ratchet-approved,
+    entirely test-scoped occurrences, so the verdict is ``passing_with_debt``
+    and the pass is correct -- whether a broken contract BLOCKS is a policy
+    question this case deliberately does not answer.
+
+    What it does pin is that the graph half reports the four: authoritative,
+    counted, and named. Before this change a run that evaluated nothing
+    reported the same ``authoritative`` with zero counted, and nothing
+    separated them.
+    """
+    exit_status, output = _health_for_graph(tmp_path, _graph_states()["four_broken"], linter_returncode=1)
+    payload = json.loads(output.rsplit("\n", 1)[1])
+    graph = payload["graph_authority"]
+
+    assert graph["status"] == "authoritative"
+    assert graph["contracts_broken"] == 4
+    assert graph["contracts_kept"] == 11
+    assert graph["contracts_total"] == 15
+    assert len(graph["broken_contract_names"]) == 4
+    assert exit_status != 0
+
+
+def test_an_all_kept_graph_still_passes_and_says_nothing_about_broken_contracts(tmp_path: Path) -> None:
+    """The positive control, and the half that proves the case above discriminates.
+
+    Without this, a headline that always mentioned broken contracts would pass
+    the case above while saying the same thing in every state -- which is the
+    defect one level up.
+    """
+    exit_status, output = _health_for_graph(tmp_path, _graph_states()["all_kept"], linter_returncode=0)
+    payload = json.loads(output.rsplit("\n", 1)[1])
+
+    assert payload["graph_authority"]["status"] == "authoritative"
+    assert payload["graph_authority"]["contracts_broken"] == 0
+    assert payload["graph_authority"]["contracts_total"] == 15
+    assert "broken contract" not in payload["headline"]
+    assert exit_status == 0
+
+
+def test_the_three_states_do_not_share_a_verdict(tmp_path: Path) -> None:
+    """The finding, asserted as one proposition rather than three.
+
+    Before this change all three produced exit 0, verdict ``passing_with_debt``
+    and ``status: "authoritative"``. A future change that collapsed any two of
+    them again would pass the individual cases above only if it also passed
+    this one.
+    """
+    verdicts = {
+        name: _health_for_graph(tmp_path, output, linter_returncode=0 if name == "all_kept" else 1)
+        for name, output in _graph_states().items()
+    }
+    signatures = {
+        name: (exit_status, json.loads(text.rsplit("\n", 1)[1])["headline"])
+        for name, (exit_status, text) in verdicts.items()
+    }
+
+    assert len(set(signatures.values())) == 3, signatures
+
+
 def _ratchet_report(output: str) -> tuple[dict[str, object], dict[str, object]]:
     """Return the ratchet counts and details from a ``_health_verdict`` rendering."""
     payload = json.loads(output.rsplit("\n", 1)[1])

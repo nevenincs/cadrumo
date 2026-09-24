@@ -46,6 +46,15 @@ For an ordinary installed-command failure, use [Diagnose and repair](troubleshoo
    refuses rather than guessing a location when none is configured.
    There is no facts-only publication command and no component-selective reuse:
    every successful publication is a fresh, full generation.
+   `--if-stale` publishes only when the existing artifact no longer records the
+   live registry and source evidence, and prints `published=skipped-current`
+   when it already does. Asking that question reads content without compiling,
+   so it costs seconds where a publication costs minutes, which makes the
+   paired recipe safe to run after every registry edit:
+
+   ```powershell
+   just registry-publish-authority-if-authority-stale
+   ```
 3. Do not commit the result. The descriptor and its content-addressed
    database are generated output, and the directory they are published into
    is excluded from version control: the registry change is committed on its

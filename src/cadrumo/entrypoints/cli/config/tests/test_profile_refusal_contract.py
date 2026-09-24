@@ -77,6 +77,17 @@ def test_deleting_the_selected_profile_names_the_command_that_unblocks_it() -> N
     assert _action_id(error) == "operator.profile.logout"
 
 
+def test_a_valid_descendant_is_added() -> None:
+    """The flag's governed vocabularies resolve against the command's own authority.
+
+    Reproduction: every ``descendiente add`` exited 1, including a bare
+    ``NACIMIENTO=`` row, because the flag was parsed before the command opened
+    its pinned authority and the parse needs the registry's vocabularies.
+    """
+    result = profile_cli("descendiente", "add", "--descendiente", "NACIMIENTO=2018-04-01,RELACION=descendiente")
+    assert result.exit_code == 0, result.output
+
+
 @pytest.mark.parametrize(
     ("flag", "key"),
     [

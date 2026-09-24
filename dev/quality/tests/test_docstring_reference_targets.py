@@ -10,6 +10,7 @@ from pathlib import Path
 
 import pytest
 
+from .. import docstring_reference_targets
 from ..docstring_reference_targets import (
     DocstringReferenceScanError,
     collect_defined_names,
@@ -197,15 +198,72 @@ def test_a_package_the_tree_never_imports_is_still_reported(tmp_path: Path) -> N
     assert [item.target for item in dangling_references(root)] == ["nowhere_at_all"]
 
 
-def test_only_module_names_cross_in_from_a_sibling_tree() -> None:
-    """A gate may cite its counterpart in `dev/tests`; that module is real.
+def test_a_symbol_only_a_sibling_tree_defines_does_not_resolve(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The rule the paragraph above argues for, asserted instead of described.
 
-    Pulling in every SYMBOL those trees define was tried and dropped: it would
-    let a shipped docstring resolve against a dev-only function and stop
-    reporting a reference that crosses out of the package, which is a finding
-    rather than noise. Measured at the time, the wider rule found nothing the
-    narrow one missed.
+    This case replaces one whose whole body was
+    ``assert any(tree.name == "dev" for tree in _SIBLING_TREES)`` -- it
+    established that ``dev`` appeared in a list, while its docstring spent four
+    sentences on a design decision nothing checked. Fold ``_sibling_defined``
+    and ``_sibling_imported`` into ``known`` at the call site and that test
+    stayed green; this one goes red, which is the whole difference.
     """
-    from ..docstring_reference_targets import _SIBLING_TREES
+    sibling = tmp_path / "dev"
+    sibling.mkdir()
+    (sibling / "harness.py").write_text(
+        '"""A development-only module."""\n\n\ndef dev_only_helper() -> None:\n    """Dev only."""\n',
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(docstring_reference_targets, "_SIBLING_TREES", (sibling,))
+    root = _package(tmp_path, live='"""Points at :func:`dev_only_helper`."""\n')
 
-    assert any(tree.name == "dev" for tree in _SIBLING_TREES)
+    assert [item.target for item in dangling_references(root)] == ["dev_only_helper"]
+
+
+def test_the_screen_holds_the_sibling_symbols_it_refuses_to_use(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The discard is deliberate, and the discarded values are within reach.
+
+    ``dangling_references`` binds the sibling tree's defined and imported names
+    to ``_sibling_defined`` and ``_sibling_imported`` and drops them on the
+    floor. Two underscore-prefixed values beside a used third read as an
+    oversight rather than a decision, which makes folding them in the obvious
+    good-faith edit for anyone trying to quieten a false positive. This pins
+    that the screen HAS the symbol and reports the crossing anyway.
+    """
+    sibling = tmp_path / "dev"
+    sibling.mkdir()
+    (sibling / "harness.py").write_text(
+        '"""A development-only module."""\n\n\ndef dev_only_helper() -> None:\n    """Dev only."""\n',
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(docstring_reference_targets, "_SIBLING_TREES", (sibling,))
+    sibling_defined, _sibling_imported, sibling_modules = collect_defined_names(sibling)
+    root = _package(tmp_path, live='"""Points at :func:`dev_only_helper`."""\n')
+
+    assert "dev_only_helper" in sibling_defined, "the fixture does not exercise the discard"
+    assert "dev.harness" in sibling_modules, "module names arrive dotted; the leaf is derived later"
+    assert [item.target for item in dangling_references(root)] == ["dev_only_helper"]
+
+
+def test_a_module_name_a_sibling_tree_defines_still_resolves(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The positive control: module names are what the siblings are read for.
+
+    Without this, a screen that ignored the sibling trees entirely would pass
+    the two cases above, and the narrow rule would read as no rule at all.
+    """
+    sibling = tmp_path / "dev"
+    sibling.mkdir()
+    (sibling / "harness.py").write_text('"""A development-only module."""\n', encoding="utf-8")
+    monkeypatch.setattr(docstring_reference_targets, "_SIBLING_TREES", (sibling,))
+    root = _package(tmp_path, live='"""Its counterpart is :mod:`harness`."""\n')
+
+    assert dangling_references(root) == ()

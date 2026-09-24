@@ -19,6 +19,10 @@ ready for that modelo, year, and period:
 :verify: Confirm the readiness report resolves for the modelo, year, and period.
 ```
 
+The command exits with status 2 while the target is not ready, so a script
+detects the gap from the exit status. In this example `ready` is `false`
+because the fresh profile still has missing source bindings.
+
 The report covers two things:
 
 - **Profile readiness** - every profile fact the modelo requires. Each

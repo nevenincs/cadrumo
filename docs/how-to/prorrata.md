@@ -40,10 +40,13 @@ Elect the year's general percentage:
 - `--ejercicio` is the filing year the election covers.
 - `--percentage` is the provisional deduction percentage, 0 to 100 (LIVA
   art. 104.Uno + 105.Uno).
-- The percentage source (`--provenance`) defaults to `carried_prior_definitiva`
-  (the prior year's definitive percentage). Pass `--provenance aeat_autorizada`
-  with `--reference` for an AEAT-authorised percentage, or `--provenance
-  inicio_actividad` with `--reference` for a start-of-activity proposal.
+- `--provenance` and `--reference` name the document the percentage stands on:
+  `inicio_actividad` for a start-of-activity proposal (LIVA art. 105.Tres) or
+  `aeat_autorizada` for an AEAT-authorised percentage (LIVA art. 105.Dos). The
+  tool refuses a typed-in percentage without both.
+- To carry the prior year's definitive percentage (LIVA art. 105.Uno), run
+  `aeat app ledger prorrata seed --ejercicio <year>` instead. It reads the
+  percentage from the filed prior-year Modelo 303 settlement.
 
 ## Elect especial prorrata and classify inputs
 

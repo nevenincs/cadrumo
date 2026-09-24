@@ -1,6 +1,6 @@
 """A packaged tool invoked as a script cannot import its own package.
 
-`python3 dev/ci/runner_queue_watchdog.py` sets `__package__` to None, so a
+`python3 dev/ci/some_tool.py` sets `__package__` to None, so a
 module-level `from .._paths import ...` raises
 
     ImportError: attempted relative import with no known parent package
@@ -8,18 +8,17 @@ module-level `from .._paths import ...` raises
 before the tool's first line of real work. The tool then fails identically on
 every run, for a reason that has nothing to do with what it checks.
 
-This is not hypothetical. `runner_queue_watchdog` was invoked as a script from
-five workflows, since retired, and had therefore never once executed. Its job is to fail a lane
-fast when no online runner can serve it, and its step is named "Fail fast on a
-lane no online runner can serve", so its failures read as the watchdog DOING its
-job. During a real runner outage on 2026-08-31 it produced exactly that
-misreading: the lane looked correctly guarded and was not guarded at all.
+This is not hypothetical. One tool was invoked as a script from five
+workflows and had therefore never once executed, while its step name said
+it was guarding something -- so its failures read as the tool DOING its job,
+and the lane looked correctly guarded when it was not guarded at all. That
+tool has since been deleted for unrelated reasons; the shape it proved has
+not, and every packaged tool a workflow calls is still subject to it.
 """
 
 from __future__ import annotations
 
 import re
-from importlib import import_module
 from pathlib import Path
 from typing import Any
 
@@ -33,7 +32,7 @@ from ..workflow_run_text import executed_text
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 #: `run:` lines invoking a repo-relative .py file directly, e.g.
-#: `python3 dev/ci/runner_queue_watchdog.py`. The `-m` form is not matched
+#: `python3 dev/ci/some_tool.py`. The `-m` form is not matched
 #: because it carries no path.
 _SCRIPT_CALL = re.compile(r"python3?\s+((?:dev|packaging|src)/[\w/]+\.py)")
 
@@ -171,15 +170,3 @@ def test_direct_script_detector_has_detector_teeth(tmp_path: Path) -> None:
 
     offenders = _script_invocation_offenders([workflow], repo_root=tmp_path)
     assert offenders and "offender.py" in offenders[0]
-
-
-def test_the_watchdog_is_importable_as_a_module() -> None:
-    """The specific tool this guard was written for stays importable.
-
-    Import, not invoke: the tool talks to the Actions API and reads environment
-    the test does not have. What must hold is that its module-level imports
-    resolve, which is the exact thing script invocation broke.
-    """
-    module = import_module("dev.ci.runner_queue_watchdog")
-
-    assert module.__package__ == "dev.ci", "the watchdog must resolve as part of its package"

@@ -37,7 +37,7 @@ type = layers
 name = Every repository tooling package has a declared lane
 containers = dev
 layers =
-    _paths : acceptance : actionlint : agent_eval : audit : cache_root : ci :ci_contract : ci_reports : containers : corpus : deploy : docs : env : exit_codes : identity : ingest_harness : init : locales : packaging : quality : readme : registry : release : sanitizer : smoke : source_tree : test_runs : tests : tui
+    _paths : acceptance : actionlint : agent_eval : audit : cache_root : ci :ci_contract : ci_reports : corpus : deploy : docs : env : exit_codes : identity : ingest_harness : init : locales : packaging : quality : readme : registry : release : sanitizer : smoke : source_tree : test_runs : tests : tui
 exhaustive = True
 
 [importlinter:contract:closed-documentation-classification]

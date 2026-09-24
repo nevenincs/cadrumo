@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-25 11:19+0200\n"
+"POT-Creation-Date: 2026-09-23 17:16+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo translation team\n"
 "Language: ca\n"
@@ -192,13 +192,13 @@ msgstr "Exporta i presenta"
 
 #: ../../how-to/modelo-349.md:81
 msgid ""
-"Attempt the verified declaration export. The current authoritative layout"
-" cannot encode every applicable required casilla, so the command refuses "
-"rather than producing a partial file:"
+"Export the verified declaration. The command writes a local file in the "
+"official layout, including the per-operator detail rows, for you to "
+"upload through the AEAT channel:"
 msgstr ""
-"Intenta exportar la declaració verificada. El disseny autoritatiu actual "
-"no pot codificar totes les caselles obligatòries aplicables, de manera "
-"que l'ordre es nega en lloc de produir un fitxer parcial:"
+"Exporta la declaració verificada. L'ordre escriu un fitxer local amb el "
+"disseny oficial, incloses les files de detall per operador, perquè el "
+"presentis pel canal de l'AEAT:"
 
 #: ../../how-to/modelo-349.md:89
 msgid ""
@@ -215,16 +215,12 @@ msgstr ""
 #: ../../how-to/modelo-349.md:98
 msgid ""
 "The marker is optional and only applies while the obligation window is "
-"open. Until the required-casilla layout is complete, read the verified "
-"values and present them through the AEAT portal; do not treat a partial "
-"export as a finish line."
+"open."
 msgstr ""
-"El marcador és opcional i només s'aplica mentre la finestra de "
-"l'obligació és oberta. Fins que es completi el disseny de les caselles "
-"obligatòries, llegeix els valors verificats i presenta'ls a través del "
-"portal de l'AEAT; no prenguis una exportació parcial com una meta."
+"El marcador és opcional i només s'aplica mentre el termini de l'obligació"
+" és obert."
 
-#: ../../how-to/modelo-349.md:103
+#: ../../how-to/modelo-349.md:100
 msgid ""
 "Modelo 349 runs alongside your periodic Modelo 303: the same intra-"
 "community operations that appear here also feed the 303's intra-community"
@@ -239,27 +235,27 @@ msgstr ""
 "Consulta [Prepara una presentació d'IVA amb el Modelo "
 "303](modelo-303.md)."
 
-#: ../../how-to/modelo-349.md:108
+#: ../../how-to/modelo-349.md:105
 msgid "Next steps"
 msgstr "Passos següents"
 
-#: ../../how-to/modelo-349.md:110
+#: ../../how-to/modelo-349.md:107
 msgid "[Manage invoices](manage-invoices.md)"
 msgstr "[Gestiona factures](manage-invoices.md)"
 
-#: ../../how-to/modelo-349.md:111
+#: ../../how-to/modelo-349.md:108
 msgid "[Prepare a Modelo 303 IVA filing](modelo-303.md)"
 msgstr "[Prepara una presentació d'IVA amb el Modelo 303](modelo-303.md)"
 
-#: ../../how-to/modelo-349.md:112
+#: ../../how-to/modelo-349.md:109
 msgid "[Plan your filing calendar](filing-calendar.md)"
 msgstr "[Planifica el teu calendari de presentacions](filing-calendar.md)"
 
-#: ../../how-to/modelo-349.md:113
+#: ../../how-to/modelo-349.md:110
 msgid "[File your modelo at the AEAT portal](file-at-aeat.md)"
 msgstr "[Puja el teu modelo exportat al portal de l'AEAT](file-at-aeat.md)"
 
-#: ../../how-to/modelo-349.md:114
+#: ../../how-to/modelo-349.md:111
 msgid "[Reconcile a filing](reconcile.md)"
 msgstr "[Concilia una presentació](reconcile.md)"
 

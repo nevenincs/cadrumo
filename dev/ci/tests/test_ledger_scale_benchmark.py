@@ -56,6 +56,14 @@ default ``-m unit`` CI lane per the project's marker taxonomy, and run
 explicitly via ``uv run pytest -m integration
 dev/ci/tests/test_ledger_scale_benchmark.py``.
 
+The three budgeted rows additionally carry ``perf``, which is what the marker
+taxonomy reserves for a threshold assertion over measured CPU-time. Without it
+they were selected by the merge gate's serial leg, where a box shared with
+other tenants inflates CPU-time by the contention margin this file's own budget
+derivation names -- so the budget was being asserted in the one place its
+stated derivation does not hold. ``perf`` moves them to the lane that runs
+them on a quiet machine, where the advisory wall numbers mean something too.
+
 The report format follows the honesty mandate: budgeted checks assert their
 threshold, while diagnostics label their budget scope and keep structural
 assertions on the real outputs they exercise.
@@ -705,6 +713,7 @@ def quarterly_iva_samples(
     )
 
 
+@pytest.mark.perf
 @pytest.mark.serial
 def test_iva_quarterly_aggregation_partitioned_p95_cpu_within_budget(
     quarterly_iva_samples: _QuarterlyIvaSamples,
@@ -766,6 +775,7 @@ def test_iva_quarterly_aggregation_partitioned_p95_cpu_within_budget(
     )
 
 
+@pytest.mark.perf
 @pytest.mark.serial
 def test_iva_quarterly_budget_still_fails_without_the_partition(
     quarterly_iva_samples: _QuarterlyIvaSamples,
@@ -791,6 +801,7 @@ def test_iva_quarterly_budget_still_fails_without_the_partition(
     )
 
 
+@pytest.mark.perf
 @pytest.mark.serial
 def test_modelo_130_calculate_p95_cpu_within_budget_and_full_scan_control(
     scale_bucket: SecureObjectRepository,

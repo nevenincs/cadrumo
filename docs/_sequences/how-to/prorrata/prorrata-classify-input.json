@@ -74,6 +74,7 @@
             "description": "compra",
             "direction": "OUTGOING",
             "fx_rate": null,
+            "invoice_id": null,
             "irpf_category": null,
             "iva_amount": "105",
             "iva_category": null,

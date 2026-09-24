@@ -40,6 +40,15 @@ _SCANNED_TREES: Final[tuple[str, ...]] = ("src", "dev")
 #: This file, which must quote the retired name in order to forbid it.
 _THIS_FILE: Final[str] = "dev/tests/test_no_home_directory_cache_paths.py"
 
+#: Files that may SPELL the retired name, and why. Quoting a forbidden string is
+#: not resurrecting it when the quote is what proves it is gone.
+_QUOTES_THE_RETIRED_NAME: Final[dict[str, str]] = {
+    _THIS_FILE: "forbids the name, and cannot forbid what it may not write",
+    "src/cadrumo/core/tests/test_logging_private_helpers.py": (
+        "asserts the redaction removes the name from log output, which needs a sample containing it"
+    ),
+}
+
 #: The retired cache name, spelled as a quoted path segment.
 _RETIRED_SEGMENT: Final[re.Pattern[str]] = re.compile(r"""["']\.cadrumo["']|~/\.cadrumo""")
 
@@ -47,13 +56,29 @@ _RETIRED_SEGMENT: Final[re.Pattern[str]] = re.compile(r"""["']\.cadrumo["']|~/\.
 #: state owned by something OUTSIDE this project, which is the only reason the
 #: home directory is the right place to look.
 _HOME_IS_CORRECT: Final[dict[str, str]] = {
-    "src/cadrumo/application/provisioning.py": (
+    "src/cadrumo/application/provisioning_browser.py": (
         "Playwright's own browser cache, whose location Playwright defines and this project only reads"
+    ),
+    "src/cadrumo/application/provisioning_host.py": (
+        "where each platform's official Ollama installer places the runtime binary, which that "
+        "installer chooses and this project only looks for"
     ),
     "src/cadrumo/core/config_state_root.py": (
         "captures the user's home as one typed input to platform state-root resolution, not as a cache location"
     ),
     "dev/env/temp_reaper.py": "Claude Code's session transcript root, written by the tool this module observes",
+}
+
+#: Modules that name the home directory in order to REMOVE it from output, and
+#: why. Kept apart from `_HOME_IS_CORRECT` because the claims are opposites: that
+#: list means "this external tool's state lives there", and a redaction helper is
+#: asserting the reverse -- that the path must never leave this machine. Listing
+#: a redactor there would record a reason that is not its reason.
+_HOME_IS_REDACTED: Final[dict[str, str]] = {
+    "src/cadrumo/core/logging.py": "derives every spelling of the home directory so log output can be scrubbed of it",
+    "src/cadrumo/core/tests/test_logging_private_helpers.py": (
+        "exercises that scrubbing, so it must build the paths the redaction is meant to remove"
+    ),
 }
 
 
@@ -96,13 +121,13 @@ def _scan(paths: tuple[str, ...], root: Path = REPO_ROOT) -> tuple[list[str], li
         except (OSError, UnicodeDecodeError):
             continue
         examined += 1
-        if relative != _THIS_FILE:
+        if relative not in _QUOTES_THE_RETIRED_NAME:
             retired.extend(
                 f"{relative}:{index}"
                 for index, line in enumerate(source.splitlines(), 1)
                 if _RETIRED_SEGMENT.search(line)
             )
-        if relative in _HOME_IS_CORRECT or relative == _THIS_FILE:
+        if relative in _HOME_IS_CORRECT or relative in _HOME_IS_REDACTED or relative == _THIS_FILE:
             continue
         homed.extend(f"{relative}:{line}" for line in _home_call_lines(source))
     return retired, homed, examined
@@ -133,19 +158,31 @@ def test_no_unlisted_module_builds_a_path_from_the_home_directory() -> None:
 def test_every_listed_home_path_module_still_exists() -> None:
     """A stale entry is an exemption nothing needs and nobody would notice granting."""
     sources = set(_python_sources())
-    missing = sorted(relative for relative in _HOME_IS_CORRECT if relative not in sources)
+    listed = {**_HOME_IS_CORRECT, **_HOME_IS_REDACTED}
+    missing = sorted(relative for relative in listed if relative not in sources)
 
     assert _HOME_IS_CORRECT, "the allowlist is empty; this gate is asserting nothing"
     assert missing == [], f"these allowlisted modules no longer exist: {missing}"
 
     still_calling = sorted(
-        relative
-        for relative in _HOME_IS_CORRECT
-        if not _home_call_lines((REPO_ROOT / relative).read_text(encoding=UTF_8))
+        relative for relative in listed if not _home_call_lines((REPO_ROOT / relative).read_text(encoding=UTF_8))
     )
     assert still_calling == [], (
         f"these modules no longer build a home-directory path, so their exemption is stale: {still_calling}"
     )
+
+    # The same discipline for the other exemption family: a file excused from the
+    # retired-name rule that no longer writes the name is an exemption nothing
+    # needs, and it would silently cover a real resurrection later.
+    quoting = sorted(relative for relative in _QUOTES_THE_RETIRED_NAME if relative not in sources)
+    assert quoting == [], f"these retired-name exemptions name files that no longer exist: {quoting}"
+
+    silent = sorted(
+        relative
+        for relative in _QUOTES_THE_RETIRED_NAME
+        if not _RETIRED_SEGMENT.search((REPO_ROOT / relative).read_text(encoding=UTF_8))
+    )
+    assert silent == [], f"these files no longer spell the retired name, so their exemption is stale: {silent}"
 
 
 def test_a_new_home_cache_is_reported(tmp_path: Path) -> None:

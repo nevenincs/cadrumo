@@ -42,28 +42,56 @@ class TestStandardPeriodCode:
     """Verify StandardPeriodCode enum covers expected members."""
 
     def test_canonical_member_values(self) -> None:
-        expected_values = {
-            StandardPeriodCode.Q1: "1T",
-            StandardPeriodCode.Q2: "2T",
-            StandardPeriodCode.Q3: "3T",
-            StandardPeriodCode.Q4: "4T",
-            StandardPeriodCode.P1: "1P",
-            StandardPeriodCode.P2: "2P",
-            StandardPeriodCode.P3: "3P",
-            StandardPeriodCode.P4: "4P",
-            StandardPeriodCode.ANNUAL: "0A",
-            StandardPeriodCode.JAN: "01",
-            StandardPeriodCode.DEC: "12",
+        """Every member's value, compared as one mapping rather than sampled.
+
+        This replaces a loop over eleven of the twenty-one members followed by
+        ``assert len(StandardPeriodCode) == 21``. The count made the case read
+        as exhaustive while eight members -- APR through NOV -- had their value
+        pinned by nothing in this file, so ``MAY = "5"`` passed. A whole-mapping
+        comparison catches an added member, a removed one and a changed value
+        in one assertion, and cannot drift back to a sample.
+
+        The sibling case below does NOT cover this: ``_STANDARD_PERIOD_SET`` is
+        built from this enum, so feeding ``code.value`` to the validator and
+        asserting the same value returns is true whatever the value is.
+        """
+        assert {member.name: member.value for member in StandardPeriodCode} == {
+            "Q1": "1T",
+            "Q2": "2T",
+            "Q3": "3T",
+            "Q4": "4T",
+            "P1": "1P",
+            "P2": "2P",
+            "P3": "3P",
+            "P4": "4P",
+            "ANNUAL": "0A",
+            "JAN": "01",
+            "FEB": "02",
+            "MAR": "03",
+            "APR": "04",
+            "MAY": "05",
+            "JUN": "06",
+            "JUL": "07",
+            "AUG": "08",
+            "SEP": "09",
+            "OCT": "10",
+            "NOV": "11",
+            "DEC": "12",
         }
-        for member, expected in expected_values.items():
-            assert member == expected
-        assert len(StandardPeriodCode) == 21
 
 
 class TestRegistryPeriodCodeValidator:
     """Verify RegistryPeriodCode validator accepts all valid forms."""
 
     def test_accepts_every_standard_period_code(self) -> None:
+        """The validator admits the whole enum, not a subset of it.
+
+        Deliberately narrow, and kept rather than deleted for that reason:
+        ``_STANDARD_PERIOD_SET`` is derived from the enum, so this says
+        nothing about whether any member's VALUE is correct -- the case
+        above owns that. What it does catch is the set being narrowed to a
+        hand-written subset, which no other case here would see.
+        """
         for code in StandardPeriodCode:
             result = _validate_test_model(code.value)
             assert result == code.value

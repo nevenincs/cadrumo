@@ -27,7 +27,8 @@ provided the remainder has a named owner.
 
 ``perf`` is the one marker-grounded exclusion. Its registered policy in
 ``pyproject.toml`` states it is held out of every per-push lane and enrolled
-explicitly in the dispatch-only ``ci-full`` lane, so it is excluded by that
+explicitly in a selection only a dispatch-triggered release run reaches, so
+it is excluded by that
 declared policy rather than by a per-test allowlist.
 
 Selection is not the only way a test disappears. ``serial`` items are

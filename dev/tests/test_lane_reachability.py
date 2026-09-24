@@ -132,14 +132,16 @@ _CANONICAL_POPULATION_RECIPES: frozenset[str] = frozenset(
         "test-registry-conformance",
         "test-test-policy",
         "test-repository-contracts",
-        "test-ci-contracts",
+        # `test-ci-contracts` itself holds no pytest invocation: it is the
+        # release proof's aggregate over these two, which own the population
+        # between them because the merge gate runs only the first.
+        "test-ci-contracts-gate",
+        "test-ci-perf",
         "test-packaging-contracts",
         "test-packaging-serial",
         "test-installed-oracles",
         "test-channel-artifacts",
         "test-packaging-ci",
-        "test-devcontainer",
-        "test-runner-image",
         "test-windows",
         "test-tui-render",
         "test-os-keychain",

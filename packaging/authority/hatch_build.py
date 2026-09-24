@@ -38,6 +38,8 @@ See Also:
         ``force_include`` map for whichever target is building.
     :func:`_authority_root`
         Source-tree versus embedded-sdist resolver.
+    :func:`_published_authority_is_current`
+        Currency check that decides whether an existing publication is reusable.
     :func:`_selected_pair`
         Descriptor parse and content verification performed before admission.
 """
@@ -143,24 +145,76 @@ def _authority_root(build_root: Path) -> Path:
     tree has no publication yet, the canonical compiler publishes one to its
     repo-root ``.authority/`` before packaging continues.
 
-    A source tree counts as published only when its descriptor exists. A
-    publication that died after creating the directory leaves it without one,
-    and treating that directory as published would refuse every later build
-    instead of completing the publication it interrupted.
+    A source tree that HAS published is verified before it is reused. An
+    existing directory proves a publication happened, never that it still
+    describes the registry and source evidence as they now stand, and the
+    packaged authority is filing-grade input: reusing a superseded generation
+    ships a wheel whose registry answers come from the wrong revision of the
+    law, with nothing downstream to catch it. Only ``check-registry-gate``
+    compares the two, and an ordinary ``uv sync`` does not run it.
     """
+    source_tree = build_root / _SOURCE_TREE_DIRECTORY
     override = os.environ.get(_AUTHORITY_ROOT_ENV)
     if override:
         candidate = Path(override)
         if not candidate.is_dir():
             raise FileNotFoundError(f"configured ${_AUTHORITY_ROOT_ENV} directory is unavailable: {candidate}")
-        return candidate
-    source_tree = build_root / _SOURCE_TREE_DIRECTORY
-    if (source_tree / _DESCRIPTOR_NAME).is_file():
-        return source_tree
-    embedded = build_root / _SDIST_DESTINATION
-    if embedded.is_dir():
-        return embedded
+        # Development tooling seeds this variable with the checkout's own
+        # `.authority` (`dev/_paths.py`, and the repo-root `conftest.py`), so an
+        # override usually names the very directory the branch below resolves.
+        # Reached that way it is not an operator's selection and gets the same
+        # currency treatment; reading it as one let a seeded variable route
+        # around the check entirely. A genuinely foreign path is returned as
+        # named, because republishing into a directory somebody chose
+        # deliberately is a side effect they did not ask for.
+        if candidate.resolve() != source_tree.resolve():
+            return candidate
+    elif not source_tree.is_dir():
+        embedded = build_root / _SDIST_DESTINATION
+        if embedded.is_dir():
+            return embedded
+        return _publish_source_tree_authority(build_root, source_tree)
+    if source_tree.is_dir():
+        if _published_authority_is_current(build_root, source_tree):
+            return source_tree
+        return _publish_source_tree_authority(build_root, source_tree)
     return _publish_source_tree_authority(build_root, source_tree)
+
+
+def _published_authority_is_current(build_root: Path, root: Path) -> bool:
+    """Return whether the publication in ``root`` still describes the live sources.
+
+    Answered by the canonical currency reader, which opens the database and
+    compares the generation it records against a fresh receipt over the registry
+    and source-evidence trees. That receipt is a content read with no
+    compilation, so the question costs seconds where republishing costs minutes,
+    and a current publication is reused untouched.
+
+    A descriptor that is absent, unreadable, or stale all answer the same way:
+    this directory cannot be packaged as-is. The caller republishes rather than
+    refusing, because a build that can compile the authority it needs has no
+    reason to stop, and that is already what an unpublished source tree does.
+    """
+    descriptor = root / _DESCRIPTOR_NAME
+    if not descriptor.is_file():
+        return False
+    import_paths = (str(build_root), str(build_root / "src"))
+    original_path = sys.path.copy()
+    try:
+        sys.path[:0] = import_paths
+        from dev.registry.compiler.authority import AuthoritySourceSet
+        from dev.registry.pipeline.authority_publication import authority_database_currency
+
+        sources = AuthoritySourceSet.bundled()
+        currency = authority_database_currency(
+            descriptor,
+            registry_root=sources.registry_root,
+            source_root=sources.source_evidence_root,
+            profile_schema_path=sources.profile_schema_path,
+        )
+        return currency.is_current
+    finally:
+        sys.path[:] = original_path
 
 
 def _publish_source_tree_authority(build_root: Path, destination: Path) -> Path:
@@ -225,10 +279,25 @@ class CustomBuildHook(_CustomBuildHookBase):
 
     @override
     def initialize(self, version: str, build_data: dict[str, Any]) -> None:
-        """Inject the selected descriptor and database into the force-include map."""
+        """Inject the selected descriptor and database into the force-include map.
+
+        Resolution runs for every target, including an editable one, because it
+        is what publishes a missing or superseded authority and a checkout's
+        first ``uv sync`` depends on that.
+
+        The PAYLOAD is admitted only to a real distribution. An editable
+        install injects the source directory onto the path, so ``cadrumo``
+        resolves to ``src/cadrumo`` and a copy force-included beside it in
+        ``site-packages`` is a namespace portion a regular package always
+        beats -- unreachable, while still costing its full ~80MB in every
+        developer and CI environment. A distribution has no ``src`` tree, so
+        there the same copy is the only authority there is.
+        """
         build_root = Path(self.root)
         root = _authority_root(build_root)
         descriptor, database = _selected_pair(root)
+        if version == "editable":
+            return
         destination = _SDIST_DESTINATION if self.target_name == "sdist" else _WHEEL_DESTINATION
         force_include = build_data.setdefault("force_include", {})
         if not _is_string_mapping(force_include):

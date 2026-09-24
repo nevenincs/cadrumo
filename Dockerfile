@@ -1,29 +1,17 @@
 # syntax=docker/dockerfile:1
 
-# Every Cadrumo container image, declared in one file.
+# The Cadrumo contributor container image.
 #
 #   --target dev      Reproducible headless-Playwright-capable development
 #                     image. Used by `.devcontainer/devcontainer.json`
-#                     ("Reopen in Container") and `just devcontainer-build`.
-#   --target runner   Self-hosted GitHub Actions runner image for the Linux
-#                     fleet. Built by `just runner-image-build`.
+#                     ("Reopen in Container") and by a direct
+#                     `docker build --target dev`; no recipe wraps it.
 #
-# ── How the two container surfaces relate ────────────────────────────────
-# 1. The RUNNER containers execute every workflow job labelled
-#    `[self-hosted, Linux, X64]`. They mount the HOST docker socket.
-# 2. The DEV image is not used by CI at all; it is the contributor
-#    environment. It does not share a base with (1).
-#
-# There was a third surface: nested clean-Linux containers, started on the
-# host daemon through that socket, that proved a built wheel installed from
-# scratch. That lane was retired along with its module, and the install proofs
-# no longer require a container daemon.
-#
-# The runner keeps a SEPARATE base by necessity, not by drift: its upstream
-# image carries the GitHub Actions runner agent itself (`run.sh`,
-# `config.sh`, `Runner.Listener`) built against Ubuntu. There is no version
-# of that agent on the Python base, so the two families are declared
-# separately here and each exactly once.
+# This image is not used by CI. It is the contributor environment, and
+# nothing here describes or provisions the machines CI runs on: how a job
+# is executed is not this repository's concern. A `runner` stage that built
+# a self-hosted fleet machine, and the scripts it baked into it, were
+# removed for that reason.
 #
 # ── One base, declared once ──────────────────────────────────────────────
 # `PYTHON_BASE_IMAGE` is the single declaration point for the Linux base
@@ -51,15 +39,6 @@
 # keeps the explicit package list below truthful.
 ARG PYTHON_BASE_IMAGE=python:3.13-slim-trixie
 ARG UV_VERSION=0.9.7
-
-# Single declaration point for the self-hosted runner family. Pinned to a
-# release tag rather than `:latest`: a runner image that moves under the fleet
-# is how capability drift between the two supposedly-identical Linux runners
-# appears, and that drift reproduces only half the time because a job lands on
-# whichever runner is free.
-ARG RUNNER_BASE_IMAGE=ghcr.io/actions/actions-runner:2.335.1
-ARG GH_VERSION=2.97.0
-ARG JUST_VERSION=1.58.0
 
 FROM ${PYTHON_BASE_IMAGE} AS base
 
@@ -172,141 +151,3 @@ RUN --mount=type=cache,target=/home/${USERNAME}/.cache/uv,uid=${USER_UID},gid=${
 RUN python -m playwright install chromium
 
 CMD ["bash"]
-
-
-# ── Self-hosted GitHub Actions runner image ──────────────────────────────
-# Replaces the hand-provisioned stock container documented in
-# dev/runners/README.md. Everything that made those runners *these* runners
-# lived outside the image — copied into the `cadrumo-runner-state-<n>` named
-# volume by hand — so a rebuild silently lost tools and the two supposedly
-# identical Linux runners could disagree. Each such gap cost a full smoke run
-# to rediscover and reproduced only half the time, because a job lands on
-# whichever runner is free.
-#
-# CRITICAL PLACEMENT RULE: the state volume mounts over `/home/runner`, so
-# ANYTHING this stage writes under `/home/runner` is shadowed at runtime and
-# effectively does not exist. Every tool below is therefore installed OUTSIDE
-# that path (`/usr/local/bin`, `/home/linuxbrew`), which is also why they now
-# survive a container rebuild without living in the volume.
-FROM ${RUNNER_BASE_IMAGE} AS runner
-
-ARG GH_VERSION
-ARG JUST_VERSION
-ARG TARGETARCH
-
-USER root
-
-# build-essential/procps/file/git: Homebrew's declared prerequisites.
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    procps \
-    file \
-    git \
-    ca-certificates \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
-
-# gh: NOT shipped by the upstream runner image, and assumed present the way it
-# is on GitHub-hosted runners. The acquisition and campaign lanes that run on
-# this fleet invoke it directly and no workflow installs it, so its absence
-# surfaces mid-lane as a command-not-found in a step that never names the
-# missing tool. Ubuntu 24.04 ships 2.45; pin the current upstream release
-# instead so the fleet matches GitHub-hosted expectations.
-RUN arch="${TARGETARCH:-amd64}" \
-    && curl -fsSL "https://github.com/cli/cli/releases/download/v${GH_VERSION}/gh_${GH_VERSION}_linux_${arch}.tar.gz" \
-    | tar -xz -C /tmp \
-    && install -m 0755 "/tmp/gh_${GH_VERSION}_linux_${arch}/bin/gh" /usr/local/bin/gh \
-    && rm -rf "/tmp/gh_${GH_VERSION}_linux_${arch}" \
-    && gh --version
-
-# just: workflows install it themselves through an action, but baking it in
-# removes one more "assumed present" from the fleet and makes the container
-# usable for the same recipes contributors run.
-RUN arch="${TARGETARCH:-amd64}" \
-    && case "${arch}" in \
-    amd64) target="x86_64-unknown-linux-musl" ;; \
-    arm64) target="aarch64-unknown-linux-musl" ;; \
-    *) echo "unsupported TARGETARCH: ${arch}" >&2; exit 1 ;; \
-    esac \
-    && curl -fsSL "https://github.com/casey/just/releases/download/${JUST_VERSION}/just-${JUST_VERSION}-${target}.tar.gz" \
-    | tar -xz -C /usr/local/bin just \
-    && chmod 0755 /usr/local/bin/just \
-    && just --version
-
-# Homebrew at the CANONICAL prefix. The acquisition lane runs
-# `/home/linuxbrew/.linuxbrew/bin/brew` and fails its first step
-# (`test -x "$BREW_PATH"`) without it.
-#
-# Do NOT relocate this tree and symlink `/home/linuxbrew` at it. Homebrew
-# computes relative link traversals against the RESOLVED path, so through a
-# symlink the `..` walk climbs too far and `brew link` dies with
-# "Permission denied @ dir_s_mkdir - /linuxbrew" only at the very END of an
-# install, after building every resource. Installing it into the IMAGE at the
-# real path is what finally makes it survive a container rebuild — the one
-# dependency the volume-based scheme could never keep.
-#
-# Full history, not `--depth=1`: a shallow clone leaves `brew --version`
-# reporting "shallow or no git repository" and Homebrew refuses to work.
-RUN mkdir -p /home/linuxbrew \
-    && chown runner:runner /home/linuxbrew \
-    && git clone https://github.com/Homebrew/brew /home/linuxbrew/.linuxbrew/Homebrew \
-    && mkdir -p /home/linuxbrew/.linuxbrew/bin \
-    && ln -sfn ../Homebrew/bin/brew /home/linuxbrew/.linuxbrew/bin/brew \
-    && chown -R runner:runner /home/linuxbrew \
-    && test -z "$(readlink -f /home/linuxbrew/.linuxbrew/bin/brew | grep -v '^/home/linuxbrew/')" \
-    && su runner -c '/home/linuxbrew/.linuxbrew/bin/brew --version'
-
-# Pre-warm Homebrew's first-use state, and keep it OUT of /home/runner.
-#
-# Deliberately NOT `brew update --force`, which the old by-hand sequence ended
-# with: modern Homebrew resolves core formulae through the JSON API, so a fresh
-# clone taps and installs fine and cloning homebrew-core would cost roughly a
-# gigabyte for nothing. Measured on this image: `brew tap` self-provisions
-# portable-ruby and fetches the API data, and `brew info --json=v2` on a core
-# formula resolves with no core tap present at all.
-#
-# What DOES need doing is where that state lands. `HOMEBREW_CACHE` defaults to
-# `~/.cache/Homebrew` — i.e. inside `/home/runner`, which the state volume
-# mounts over — so every runner pays for and stores its own copy. Relocating it
-# under /home/linuxbrew puts it in a shared image layer instead: one copy for
-# the whole fleet rather than one per volume, which is the right trade on
-# space-constrained hosts. Pre-warming here also means the first real job does
-# not stop to download a Ruby.
-ENV HOMEBREW_NO_ANALYTICS=1 \
-    HOMEBREW_CACHE=/home/linuxbrew/.cache
-RUN install -d -o runner -g runner /home/linuxbrew/.cache \
-    && su runner -c 'HOMEBREW_NO_ANALYTICS=1 HOMEBREW_CACHE=/home/linuxbrew/.cache \
-    /home/linuxbrew/.linuxbrew/bin/brew info --json=v2 jq > /dev/null' \
-    && test -d /home/linuxbrew/.linuxbrew/Homebrew/Library/Homebrew/vendor/portable-ruby
-
-# The entrypoint lives in the IMAGE, at a path the state volume cannot
-# shadow. The previous incarnation was bind-mounted from an ephemeral temp
-# directory; when that directory was cleaned up Docker recreated the bind
-# source as an empty DIRECTORY, exec failed, and the container exited 127 and
-# stayed down even with `--restart always`.
-COPY dev/runners/runner-entry-linux.sh /usr/local/bin/cadrumo-runner-entry.sh
-RUN chmod 0755 /usr/local/bin/cadrumo-runner-entry.sh
-
-# The disk-hygiene hook, baked for the same reason as the entrypoint: it must
-# live OUTSIDE /home/runner, which the runner state volume mounts over, or it
-# disappears the moment the volume is attached.
-#
-# These containers mount the host docker socket, so any job that drives the host
-# daemon leaves anonymous volumes and dangling images behind ON THE HOST — as the
-# retired nested-container install proof did — and nothing in the job lifecycle
-# reclaims them: only ACTIONS_RUNNER_HOOK_JOB_COMPLETED fires when a job fails,
-# cancels or times out.
-#
-# dev/runners/README.md already names cleanup-linux.sh as this runner's hygiene
-# script. It was never baked into the image, so the Linux runners have run
-# without it: of the seven runner installs on the shared build host, exactly one
-# has a hygiene hook, and it is the Windows one.
-COPY dev/runners/cleanup-linux.sh /usr/local/bin/cadrumo-cleanup-linux.sh
-RUN chmod 0755 /usr/local/bin/cadrumo-cleanup-linux.sh
-
-USER runner
-WORKDIR /home/runner
-
-ENV PATH="/home/linuxbrew/.linuxbrew/bin:/usr/local/bin:${PATH}"
-
-ENTRYPOINT ["/usr/local/bin/cadrumo-runner-entry.sh"]

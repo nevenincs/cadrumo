@@ -458,6 +458,30 @@ def test_an_absent_legal_catalogue_says_so_instead_of_grounding_nothing(
     assert "no legal catalogue" in capsys.readouterr().err
 
 
+def test_a_docs_copy_outside_the_repository_is_grounded_from_the_named_repository(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """A build reading an isolated copy of docs/ still links every concept to its BOE permalink.
+
+    The copy's parent holds no legal catalogue, so a generator that took the
+    repository to be the docs root's parent rendered the whole glossary
+    ungrounded. The same copy rendered against the named repository matches the
+    in-repository render byte for byte.
+    """
+    copy = tmp_path / "docs"
+    copy.mkdir()
+
+    generate_glossary_reference(copy, repo_root=_REPO_ROOT)
+
+    assert "no legal catalogue" not in capsys.readouterr().err
+    expected, _ = render_glossary(_REPO_ROOT, _load_handbook())
+    assert (copy / "_generated" / "glossary.rst").read_text(encoding="utf-8") == expected
+
+    generate_glossary_reference(copy)
+    assert "no legal catalogue" in capsys.readouterr().err
+
+
 def test_a_malformed_catalogue_fragment_refuses(tmp_path: Path) -> None:
     """A fragment that does not parse silently dropped every citation it declared.
 

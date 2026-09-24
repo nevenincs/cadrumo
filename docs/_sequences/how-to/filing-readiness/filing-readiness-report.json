@@ -27,7 +27,7 @@
         "notices": [],
         "result": {
           "binding_count": 35,
-          "bound_casilla_count": 33,
+          "bound_casilla_count": 35,
           "cadence": "quarterly",
           "casilla_count": 208,
           "code": "303",
@@ -44,8 +44,8 @@
             "orden-eha-3786-2008:art-1",
             "orden-eha-3786-2008:art-7"
           ],
-          "manual_casilla_count": 84,
-          "official_name": "Modelo 303. Impuesto sobre el Valor Añadido. Autoliquidación.",
+          "manual_casilla_count": 82,
+          "official_name": "Modelo 303. Value Added Tax. Self-assessment.",
           "operation": "modelo.describe",
           "period": "1T",
           "periods": [
@@ -82,7 +82,7 @@
             "boe-modelo-303-2008-form"
           ],
           "tax_domain": "iva",
-          "title": "IVA. Autoliquidación (trimestral)",
+          "title": "VAT. Self-assessment (quarterly)",
           "valid_from": "2026-01-01",
           "valid_to": null
         },
@@ -155,25 +155,21 @@
             {
               "binding_id": "modelo-303-autoconsumo-promotor-base",
               "input_channel": "decimal",
-              "operator_action": "set_profile_fact",
               "source": "profile"
             },
             {
               "binding_id": "modelo-303-bienes-inversion-regularizacion-casilla-43",
               "input_channel": "decimal",
-              "operator_action": "complete_document_evidence",
               "source": "bienes_inversion_regularizacion"
             },
             {
               "binding_id": "modelo-303-compensacion-pendiente-anteriores",
               "input_channel": "decimal",
-              "operator_action": "file_prior_period",
               "source": "previous_filing"
             },
             {
               "binding_id": "modelo-303-prorrata-regularizacion-casilla-44",
               "input_channel": "decimal",
-              "operator_action": "complete_document_evidence",
               "source": "prorrata_regularizacion"
             }
           ],
@@ -195,7 +191,7 @@
         "status": "warning"
       },
       "envelope_source": "stdout",
-      "exit_code": 0,
+      "exit_code": 2,
       "kind": "result",
       "stderr_text": null,
       "text": null

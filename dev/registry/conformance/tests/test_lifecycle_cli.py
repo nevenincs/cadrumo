@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from contextlib import contextmanager
 from pathlib import Path
 from types import SimpleNamespace
@@ -12,6 +13,7 @@ from typer.testing import CliRunner
 
 from cadrumo.domain.calculations.registry.authority_artifact import AuthorityComponentCodecError
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from dev._paths import REPO_ROOT
 from dev.registry.analysis import generated_tree_state, registry_status
 from dev.registry.pipeline import cli as pipeline_cli
 from dev.registry.pipeline.authority_publication import AuthorityDatabaseCurrencyStatus
@@ -19,6 +21,11 @@ from dev.registry.pipeline.authority_publication import AuthorityDatabaseCurrenc
 from .. import cli
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+#: The two-character ``\\t`` as it appears in the CLI module's SOURCE, which is what a
+#: scan of that text has to split on. A real tab would match nothing there.
+_SOURCE_TAB_ESCAPE = "\\t"
 
 
 def _authority() -> SimpleNamespace:
@@ -101,8 +108,72 @@ def test_target_mutation_reports_follow_up_currentness_and_publication(monkeypat
     )
 
     assert result.exit_code == 0, result.output
-    assert "next\tcurrentness=check-registry-target-current" in result.output
-    assert "publication=registry-publish-authority-if-authority-stale" in result.output
+    advertised = _advertised_follow_ups(result.output)
+    assert advertised == {
+        "currentness": "check-registry-target-current",
+        "publication": "registry-publish-authority-if-authority-stale",
+    }
+    defined = _justfile_recipe_names()
+    missing = sorted(name for name in advertised.values() if name not in defined)
+    assert not missing, f"the CLI advertises recipes the justfile does not define: {missing}"
+
+
+def _advertised_follow_ups(output: str) -> dict[str, str]:
+    """Return the ``next`` line's advertised follow-up recipes, keyed by role.
+
+    The CLI prints guidance an operator is expected to run verbatim, so these
+    names are a contract with the recipe table rather than decoration.
+    """
+    for line in output.splitlines():
+        if line.startswith("next\t"):
+            return dict(field.split("=", 1) for field in line.split("\t")[1:] if "=" in field)
+    raise AssertionError(f"the command printed no `next` guidance line: {output!r}")
+
+
+def _justfile_recipe_names() -> frozenset[str]:
+    """Return the names the repository's justfile defines at column zero.
+
+    Parsed from the file rather than ``just --summary`` so the check needs no
+    provisioned binary. The parse is deliberately permissive -- assignments
+    match too -- because it is only ever asked whether a specific advertised
+    name is present, and a superset cannot turn a missing recipe into a pass.
+    """
+    text = (REPO_ROOT / "justfile").read_text(encoding="utf-8")
+    pattern = r"^([a-z0-9][a-z0-9-]*)(?:\s+[^:\n]*)?:"
+    return frozenset(str(match.group(1)) for match in re.finditer(pattern, text, re.MULTILINE))
+
+
+def _advertised_recipe_names_in_source() -> frozenset[str]:
+    """Return every recipe name the pipeline CLI's guidance lines advertise.
+
+    Read from the module source rather than by invoking each command, so a
+    guidance line added to a verb no test drives is still covered. The names
+    are what an operator is told to run next, so every one of them has to
+    exist.
+    """
+    source = Path(pipeline_cli.__file__).read_text(encoding="utf-8")
+    names: set[str] = set()
+    for chunk in source.split('"next')[1:]:
+        literal = chunk.split('"', 1)[0]
+        for field in literal.split(_SOURCE_TAB_ESCAPE)[1:]:
+            if "=" in field:
+                names.add(field.split("=", 1)[1])
+    return frozenset(names)
+
+
+def test_every_advertised_follow_up_names_a_live_recipe() -> None:
+    """No guidance line may name a recipe the justfile does not define.
+
+    The CLI has advertised dangling names before, and an assertion on one
+    verb's literal output cannot see the next one: it pins the string rather
+    than resolving it. This resolves every advertised name against the live
+    recipe table instead.
+    """
+    advertised = _advertised_recipe_names_in_source()
+    assert advertised, "no recipe names were scanned out of the guidance lines; the scan is broken"
+    defined = _justfile_recipe_names()
+    missing = sorted(name for name in advertised if name not in defined)
+    assert not missing, f"the pipeline CLI advertises recipes the justfile does not define: {missing}"
 
 
 def test_status_delegates_axes_and_counts_excluded_targets(monkeypatch) -> None:

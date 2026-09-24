@@ -302,7 +302,7 @@
           "created_at": "2026-04-01T09:00:00Z",
           "evidence_id": "5c15a2fb5cc808d5",
           "invoice_date": "2025-03-05",
-          "invoice_number": "C-2025-0087",
+          "invoice_number": "sha256:45c2e503",
           "iva_amount": "105",
           "iva_rate": "0.21",
           "media_kind": "pdf",

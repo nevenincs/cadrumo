@@ -289,18 +289,61 @@ def github_next_matrix(inventory: RuntimeInventory) -> dict[str, list[dict[str, 
     }
 
 
+#: The runner each stable runtime is smoke-tested on, as full label lists.
+#:
+#: Lifted out of a ``python -c`` one-liner inside a YAML scalar, where the
+#: labels were reachable by no import and therefore by no test. A label list is
+#: what ``runs-on:`` consumes, so the members are carried whole rather than as
+#: OS names: the matrix row's ``os`` value IS this list.
+SMOKE_RUNNERS: Final[tuple[tuple[str, ...], ...]] = (
+    ("self-hosted", "Linux", "X64"),
+    ("self-hosted", "macOS", "ARM64"),
+    ("self-hosted", "Windows", "X64"),
+)
+
+
+def github_smoke_matrix(inventory: RuntimeInventory) -> dict[str, list[dict[str, object]]]:
+    """Project every stable runtime across every smoke runner.
+
+    One row per (runtime, runner) pair. ``check-name`` reads the OS out of the
+    MIDDLE of the label list rather than naming it separately, because the two
+    would then be able to disagree and the check run would be titled for a
+    runner it did not use.
+    """
+    include: list[dict[str, object]] = [
+        {
+            "os": list(runner),
+            "runtime-id": row.identifier,
+            "python-version": row.selector,
+            "python-minor": row.minor,
+            "phase": row.phase.value,
+            "check-name": f"Test: Release artifacts {row.minor} {row.phase.value} ({runner[1]})",
+        }
+        for row in inventory.stable
+        for runner in SMOKE_RUNNERS
+    ]
+    if not include:
+        raise RuntimeMatrixError("the stable runtime inventory yielded no smoke targets")
+    return {"include": include}
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     """Validate the inventory and print a compact GitHub matrix document."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--inventory", type=Path, default=_INVENTORY_PATH)
-    parser.add_argument("--phase", choices=("all", "next"), default="all")
+    parser.add_argument("--phase", choices=("all", "next", "smoke"), default="all")
     args = parser.parse_args(argv)
     try:
         inventory = load_runtime_inventory(args.inventory)
     except RuntimeMatrixError as exc:
         print(f"runtime inventory invalid: {exc}", file=sys.stderr)
         return 2
-    matrix = github_next_matrix(inventory) if args.phase == "next" else github_matrix(inventory)
+    projections = {"all": github_matrix, "next": github_next_matrix, "smoke": github_smoke_matrix}
+    try:
+        matrix = projections[args.phase](inventory)
+    except RuntimeMatrixError as exc:
+        print(f"runtime matrix invalid: {exc}", file=sys.stderr)
+        return 2
     print(json.dumps(matrix, indent=2, sort_keys=True))
     return 0
 

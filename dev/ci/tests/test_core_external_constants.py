@@ -30,6 +30,7 @@ from cadrumo.core.config import Settings
 from cadrumo.core.errors.hierarchy import CoreValidationError
 from cadrumo.core.external_constants import (
     AeatSection,
+    AeatSedePathSection,
     ExternalConstants,
     load_external_constants,
 )
@@ -156,27 +157,69 @@ def test_aeat_domains_are_absolute_https_urls() -> None:
         assert "://" in value
 
 
-def test_aeat_sede_paths_are_absolute_paths() -> None:
-    """Every sede service path is rooted at ``/``."""
+#: The one sede field that is legitimately not ``/``-rooted: it is appended to
+#: a path already built, so a leading slash would truncate the result rather
+#: than complete it. Named rather than skipped silently, because a derived
+#: sweep will otherwise trip on it and the next reader will not know why.
+_SEDE_PATH_SUFFIX_FIELD = "irpf_expediente_detail_year_suffix"
 
+
+def _sede_paths_not_rooted(paths: AeatSedePathSection) -> list[str]:
+    """Return every declared sede path field whose value is not ``/``-rooted.
+
+    Derived from the MODEL, never from a hand-written list. The list this
+    replaced held twelve attribute accesses against a model declaring
+    nineteen fields, so six -- notifications_detail, r210_simulator_open_ajax,
+    borrador_100_detail_template, declaracion_consult, clave_movil_login and
+    expediente_detail_template -- were checked by nothing while the docstring
+    claimed "every sede service path". Adding the six would have left the next
+    field unguarded on the day it landed; iterating the declaration cannot lag.
+    """
+    return [
+        name
+        for name in type(paths).model_fields
+        if name != _SEDE_PATH_SUFFIX_FIELD and not str(getattr(paths, name)).startswith("/")
+    ]
+
+
+def test_aeat_sede_paths_are_absolute_paths() -> None:
+    """Every declared sede service path is rooted at ``/``.
+
+    These fragments are concatenated onto a configured origin, so a value that
+    has lost its leading slash does not fail -- it builds a different URL and
+    asks a live AEAT endpoint for it.
+    """
     paths = load_external_constants().aeat.sede_paths
 
-    for value in (
-        paths.auth_gate_4033,
-        paths.expedientes_resumen,
-        paths.declarations_listing,
-        paths.cotejo_query,
-        paths.cotejo_document,
-        paths.notifications_summary,
-        paths.notifications_query,
-        paths.certificate_selector,
-        paths.irpf_expediente_detail_year_prefix,
-        paths.notificaciones,
-        paths.iva_compensation_wallet,
-        paths.censal_datos,
-    ):
-        assert value.startswith("/")
-    assert paths.irpf_expediente_detail_year_suffix
+    assert len(type(paths).model_fields) > 1, "the sweep found no declared fields; the case is vacuous"
+    assert _sede_paths_not_rooted(paths) == []
+    assert paths.irpf_expediente_detail_year_suffix, "the excluded suffix field must still carry a value"
+
+
+def test_a_sede_path_that_lost_its_leading_slash_is_named() -> None:
+    """Teeth, on the field the hand-written list had stopped covering.
+
+    ``declaracion_consult`` is one of the six the previous loop omitted, so
+    this plants the defect exactly where the gap was rather than where the
+    coverage already existed.
+    """
+    paths = load_external_constants().aeat.sede_paths
+    stripped = paths.model_copy(update={"declaracion_consult": paths.declaracion_consult.lstrip("/")})
+
+    assert _sede_paths_not_rooted(stripped) == ["declaracion_consult"]
+
+
+def test_the_suffix_field_is_excluded_rather_than_accidentally_passing() -> None:
+    """The exclusion is a decision, so it is asserted rather than assumed.
+
+    If the suffix ever became ``/``-rooted the exclusion would be silently
+    unnecessary, and a reader would have no way to tell that from a field the
+    sweep forgot.
+    """
+    paths = load_external_constants().aeat.sede_paths
+
+    assert _SEDE_PATH_SUFFIX_FIELD in type(paths).model_fields
+    assert not paths.irpf_expediente_detail_year_suffix.startswith("/")
 
 
 def test_certificate_protected_resource_authority_is_exact_and_composed() -> None:

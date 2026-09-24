@@ -216,6 +216,32 @@ def _norm(path: str) -> str:
 _CHECKER_TIMEOUT_SECONDS = 600
 
 
+#: How much of a failing checker's stream to carry into the exception. Long
+#: enough for a traceback or a usage error, short enough that a checker which
+#: died mid-dump does not bury the rest of the message.
+_STREAM_EXCERPT_CHARS = 2000
+
+
+def _describe_stream(stream: str | bytes | None, name: str) -> str:
+    """Describe a captured stream for a failure message, empty or not.
+
+    The distinction this preserves is the whole point. "See the captured stderr
+    above" is useless when there is no stderr above, and a reader cannot tell
+    an empty stream from a stream nobody printed -- one says the checker died
+    silently, the other says the harness lost the evidence. Saying "stderr
+    empty" in the message itself answers that from one line.
+    """
+    if stream is None:
+        return f"{name} not captured"
+    text = stream.decode("utf-8", errors="replace") if isinstance(stream, bytes) else stream
+    text = text.strip()
+    if not text:
+        return f"{name} empty"
+    if len(text) > _STREAM_EXCERPT_CHARS:
+        return f"{name} ({len(text)} chars, first {_STREAM_EXCERPT_CHARS}): {text[:_STREAM_EXCERPT_CHARS]}"
+    return f"{name}: {text}"
+
+
 def _run(cmd: list[str]) -> subprocess.CompletedProcess[str]:
     """Run a checker, capturing stdout/stderr without raising.
 
@@ -235,7 +261,10 @@ def _run(cmd: list[str]) -> subprocess.CompletedProcess[str]:
     except subprocess.TimeoutExpired as expired:
         spelling = " ".join(cmd)
         raise RuntimeError(
-            f"checker `{spelling}` produced no result within {_CHECKER_TIMEOUT_SECONDS}s and was terminated",
+            f"checker `{spelling}` produced no result within {_CHECKER_TIMEOUT_SECONDS}s "
+            f"and was terminated. Partial output before the kill: "
+            f"{_describe_stream(expired.stdout, 'stdout')}, "
+            f"{_describe_stream(expired.stderr, 'stderr')}.",
         ) from expired
 
 
@@ -255,9 +284,11 @@ def require_report(payload: str, result: subprocess.CompletedProcess[str], check
     """
     if payload:
         return
-    sys.stderr.write(result.stderr)
     raise RuntimeError(
-        f"{checker} produced no report (return code {result.returncode}); see the captured stderr above",
+        f"{checker} produced no report: exit code {result.returncode}, "
+        f"{_describe_stream(result.stdout, 'stdout')}, {_describe_stream(result.stderr, 'stderr')}. "
+        f"A clean run of this checker prints a report rather than nothing, so this is the "
+        f"checker failing to run, not a clean tree.",
     )
 
 

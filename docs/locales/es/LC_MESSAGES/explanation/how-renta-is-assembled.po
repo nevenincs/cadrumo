@@ -97,8 +97,9 @@ msgid ""
 msgstr ""
 "**Agregaciones del ledger.** Lo que tu actividad ingresó y gastó: las "
 "filas de ingresos clasificados y de gastos deducibles del año, agregadas "
-"por casilla (las filas `renta-ledger-*`). Es el mismo ledger que leen tus"
-" presentaciones trimestrales; la renta lee todo el año de una vez."
+"por casilla y listadas como las filas `renta-ledger-*`. Es el mismo "
+"ledger que leen tus presentaciones trimestrales; la renta lee todo el año"
+" de una vez."
 
 #: ../../explanation/how-renta-is-assembled.md:39
 msgid ""

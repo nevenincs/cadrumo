@@ -111,6 +111,15 @@ class RegistryStatus:
     fabricate a census it did not take; the default reads as "walked nothing",
     which its own denominators make visible.
     """
+    target_census_failed: bool = False
+    """Whether the generated-target census refused to produce an answer.
+
+    Distinct from any target state, because "the measurement did not happen" is
+    not a property of a target. ``unreadable`` carries the targets the
+    generated-state owner legitimately excluded, and those are advisory; a
+    census that raised has excluded everything and knows nothing, so it blocks.
+    Without this the two are the same count and a crash reports as a clean run.
+    """
 
 
 def collect_registry_status(
@@ -145,7 +154,9 @@ def collect_registry_status(
         oracles = False
         details.append(f"ORACLES: {type(error).__name__}: {error}")
 
+    target_census_failed = False
     if authority is None:
+        target_census_failed = True
         targets = Counter({"unreadable": 1})
         target_findings = (("unreadable", (("unknown", "unknown", "whole-registry validity failed"),)),)
         details.append("TARGETS: unavailable because whole-registry validity failed")
@@ -153,10 +164,28 @@ def collect_registry_status(
         try:
             from .generated_tree_state import generated_state_inventory
 
-            states, excluded = generated_state_inventory(
-                authority,
-                tuple(str(modelo.id) for modelo in authority.modelos),
-            )
+            # Walked one modelo at a time so a single unrenderable one cannot
+            # blind the census of every other. Asking for the whole corpus in
+            # one call meant modelo 360's literal-field defect aborted all 58,
+            # and the caller then could not say whether the defect was one
+            # field or the first of thousands. A modelo that raises is recorded
+            # and blocks; the rest are still counted.
+            states = []
+            excluded = []
+            unrenderable: list[str] = []
+            for modelo in authority.modelos:
+                try:
+                    modelo_states, modelo_excluded = generated_state_inventory(authority, (str(modelo.id),))
+                except Exception as modelo_error:
+                    unrenderable.append(str(modelo.id))
+                    details.append(f"TARGETS: modelo {modelo.id}: {type(modelo_error).__name__}: {modelo_error}")
+                    continue
+                states.extend(modelo_states)
+                excluded.extend(modelo_excluded)
+            if unrenderable:
+                target_census_failed = True
+                joined = ", ".join(unrenderable)
+                details.append(f"TARGETS: {len(unrenderable)} modelo(s) could not be censused: {joined}")
             expected_target_count = sum(len(modelo.revisions) for modelo in authority.modelos)
             excluded_target_count = max(0, expected_target_count - len(states))
             targets = Counter(
@@ -187,6 +216,7 @@ def collect_registry_status(
                     grouped_findings[projected_state].append((item.modelo, item.revision, item.detail))
             target_findings = tuple((state, tuple(grouped_findings[state])) for state in grouped_findings)
         except Exception as error:
+            target_census_failed = True
             targets = Counter({"unreadable": 1})
             target_findings = (("unreadable", (("unknown", "unknown", str(error)),)),)
             details.append(f"TARGETS: {type(error).__name__}: {error}")
@@ -246,6 +276,7 @@ def collect_registry_status(
         oracles=oracles,
         targets=tuple((state, targets[state]) for state in _TARGET_STATE_NAMES),
         target_findings=target_findings,
+        target_census_failed=target_census_failed,
         authority=authority_status,
         authority_recorded_digest=recorded_digest,
         authority_candidate_digest=candidate_digest,
@@ -389,7 +420,7 @@ def _payload(status: RegistryStatus, *, blocking: bool) -> dict[str, object]:
         "oracle_bindings": "passed" if status.oracles else "failed",
         "registry_validity": "passed" if status.valid else "failed",
         "runtime_loadability": "passed" if status.loadable else "failed",
-        "target_currentness": "passed" if blocking_target_count == 0 else "failed",
+        "target_currentness": "failed" if status.target_census_failed or blocking_target_count else "passed",
         "target_coverage": "partial" if target_counts["unreadable"] else "passed",
         "binding_reference_coverage": "partial" if status.unreferenced_bindings else "passed",
         "export_placement_coverage": _export_placement_lane(status.export_placement),

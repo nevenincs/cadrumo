@@ -383,7 +383,12 @@ def render_glossary(
     return rst, result
 
 
-def generate_glossary_reference(docs_root: Path, *, language: OutputLanguage | None = None) -> GlossaryResult:
+def generate_glossary_reference(
+    docs_root: Path,
+    *,
+    repo_root: Path | None = None,
+    language: OutputLanguage | None = None,
+) -> GlossaryResult:
     """Materialise the generated glossary page under ``docs_root/_generated/``.
 
     Mirrors :func:`~dev.docs.cli_reference.generate_cli_reference`: it loads
@@ -394,15 +399,18 @@ def generate_glossary_reference(docs_root: Path, *, language: OutputLanguage | N
 
     Args:
         docs_root: The documentation root (the directory holding ``index.md``).
+        repo_root: The repository the legal catalogue is read from. A build
+            reading an isolated copy of ``docs/`` passes it, because the copy's
+            parent is not the repository. Defaults to ``docs_root``'s parent.
         language: The language to render in. Defaults to the language this
             docs root is being built for.
 
     Returns:
         A :class:`GlossaryResult` summarising the render.
     """
-    repo_root = docs_root.resolve().parent
+    source_root = (repo_root if repo_root is not None else docs_root.parent).resolve()
     handbook = load_terminology_handbook()
-    rst, result = render_glossary(repo_root, handbook, language)
+    rst, result = render_glossary(source_root, handbook, language)
     output_path = docs_root / _GENERATED_RELPATH
     output_path.parent.mkdir(parents=True, exist_ok=True)
     if not (output_path.is_file() and output_path.read_bytes() == rst.encode(_UTF_8)):

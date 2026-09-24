@@ -93,9 +93,11 @@ transcription is unaffected — it was made while the image was served — but i
 can no longer be checked against its original at that address, and re-deriving
 it would mean finding the annex elsewhere in BOE-A-2008-18497.
 
-The withdrawal is recorded in `dev/corpus/source_url_liveness.py`, which probes
-every registered address and fails when the withdrawal census stops matching
-what the publishers answer.
+The withdrawal is recorded in this project's source repository, where a
+liveness check probes every registered address and fails when the withdrawal
+census stops matching what the publishers answer. That check is development
+tooling and is not part of an installed Cadrumo; this file travels with the
+corpus, so the record of the withdrawal reaches you either way.
 
 ## Re-deriving a transcription
 
