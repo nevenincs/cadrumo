@@ -244,6 +244,9 @@ class DeclarationsWorkspaceScreen(AccountChromeScreen):
         .declarations-page { width: 100%; height: 1fr; }
         .declarations-refusal { color: $warning; text-style: bold; height: auto; }
         .declarations-empty { color: $text-muted; height: auto; }
+        /* The heading above a form insets its text by the cell padding, so
+           the form's labels and fields take the same inset: one left edge. */
+        .declarations-work-form { height: auto; padding-left: $cadrumo-cell-padding; }
         """
     )
 

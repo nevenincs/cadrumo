@@ -6,6 +6,7 @@ import asyncio
 from typing import ClassVar, cast, override
 
 from textual.app import App, ComposeResult
+from textual.containers import Vertical
 from textual.widgets import Button, DataTable, Input, Static
 
 from ....core.errors.hierarchy import CadrumoError
@@ -54,14 +55,15 @@ class DeclarationsOverviewScreen(DeclarationsWorkspaceScreen):
                 classes="cadrumo-heading",
                 markup=False,
             )
-            yield Static(declarations_copy("tui.declarations.work_create.modelo"), markup=False)
-            yield Input(placeholder="111", id="declarations-work-modelo", max_length=8)
-            yield Static(declarations_copy("tui.declarations.work_create.year"), markup=False)
-            yield Input(placeholder="2025", id="declarations-work-year", max_length=4)
-            yield Static(declarations_copy("tui.declarations.work_create.period"), markup=False)
-            yield Input(placeholder="1T / 0A", id="declarations-work-period", max_length=12)
-            yield Button(declarations_copy("tui.declarations.work_create.submit"), id="declarations-work-create")
-            yield Static(id="declarations-work-create-notice", classes="declarations-refusal", markup=False)
+            with Vertical(id="declarations-work-form", classes="declarations-work-form"):
+                yield Static(declarations_copy("tui.declarations.work_create.modelo"), markup=False)
+                yield Input(placeholder="111", id="declarations-work-modelo", max_length=8)
+                yield Static(declarations_copy("tui.declarations.work_create.year"), markup=False)
+                yield Input(placeholder="2025", id="declarations-work-year", max_length=4)
+                yield Static(declarations_copy("tui.declarations.work_create.period"), markup=False)
+                yield Input(placeholder="1T / 0A", id="declarations-work-period", max_length=12)
+                yield Button(declarations_copy("tui.declarations.work_create.submit"), id="declarations-work-create")
+                yield Static(id="declarations-work-create-notice", classes="declarations-refusal", markup=False)
             yield Static(
                 declarations_copy("tui.declarations.overview.declarations"),
                 classes="cadrumo-heading",
@@ -100,9 +102,19 @@ class DeclarationsOverviewScreen(DeclarationsWorkspaceScreen):
         row_index = next((i for i, item in enumerate(table.ordered_rows) if item.key.value == restored), None)
         if row_index is None:
             self.query_one("#declarations-navigation", DataTable).focus()
+            # Focusing scrolls the table into view, which on a page taller than
+            # the terminal scrolls the opening heading away. A fresh arrival
+            # belongs at the top; the restored branch keeps its own position.
+            # After the refresh, because the focus scroll lands once layout
+            # settles and would overwrite a scroll issued here.
+            self.call_after_refresh(self._scroll_to_top)
         else:
             table.move_cursor(row=row_index)
             table.focus()
+
+    def _scroll_to_top(self) -> None:
+        """Return the page to its opening heading after focus has settled."""
+        self.query_one("#declarations-page", ContentScroll).scroll_home(animate=False)
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
         """Route a navigation row or invoke the injected declaration handoff."""
