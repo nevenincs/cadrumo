@@ -137,19 +137,40 @@
           "fx_rate_source": null,
           "grand_total": "2000.00",
           "grand_total_eur": "2000.00",
+          "invoice_class": "ORDINARIA",
           "invoice_id": "74dbc61158fa07888e5c677cd0d01745883b4184f7c5caf7e1e0b9ac1b5f74ca",
           "invoice_number": "EU-CAT-050",
           "issued_at": "2026-02-10",
+          "iva_category": "intra_community_supply",
           "iva_total": "0.00",
           "iva_total_eur": "0.00",
           "kind": "issued",
+          "lines": [
+            {
+              "description": "EU-CAT-050",
+              "iva_amount": "0.00",
+              "iva_rate": "RATE_0",
+              "oss_rate_kind": null,
+              "quantity": "1",
+              "spending_category_id": null,
+              "subtotal": "2000.00",
+              "unit_price": "2000.00"
+            }
+          ],
           "linked_transaction_ids": [],
           "notes": "",
+          "operation_date": null,
+          "operation_date_role": null,
           "operation_type": "E",
           "payment_status": "PENDING",
           "recargo_amount": null,
+          "rectifies_invoice_number": null,
           "retention_amount": null,
-          "retention_rate": null
+          "retention_rate": null,
+          "series": null,
+          "source_filename": null,
+          "source_row_index": null,
+          "source_sha256": null
         },
         "schema_version": "2",
         "status": "success"
@@ -207,21 +228,42 @@
           "fx_rate_source": null,
           "grand_total": "2000.00",
           "grand_total_eur": "2000.00",
+          "invoice_class": "ORDINARIA",
           "invoice_id": "74dbc61158fa07888e5c677cd0d01745883b4184f7c5caf7e1e0b9ac1b5f74ca",
           "invoice_number": "EU-CAT-050",
           "issued_at": "2026-02-10",
+          "iva_category": "intra_community_supply",
           "iva_total": "0.00",
           "iva_total_eur": "0.00",
           "kind": "issued",
+          "lines": [
+            {
+              "description": "EU-CAT-050",
+              "iva_amount": "0.00",
+              "iva_rate": "RATE_0",
+              "oss_rate_kind": null,
+              "quantity": "1",
+              "spending_category_id": null,
+              "subtotal": "2000.00",
+              "unit_price": "2000.00"
+            }
+          ],
           "linked_transaction_ids": [
             "4ea9963064d9ee8b2b6b69349aa94dfeb5298f118bc99cdce546c040ed01d522"
           ],
           "notes": "",
+          "operation_date": null,
+          "operation_date_role": null,
           "operation_type": "E",
           "payment_status": "PENDING",
           "recargo_amount": null,
+          "rectifies_invoice_number": null,
           "retention_amount": null,
-          "retention_rate": null
+          "retention_rate": null,
+          "series": null,
+          "source_filename": null,
+          "source_row_index": null,
+          "source_sha256": null
         },
         "schema_version": "2",
         "status": "success"

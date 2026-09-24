@@ -134,7 +134,7 @@
           "created_at": "2026-04-01T09:00:00Z",
           "evidence_id": "9a075f52dad08e80",
           "invoice_date": "2026-02-11",
-          "invoice_number": "sha256:17853e99",
+          "invoice_number": "C-2026-0087",
           "iva_amount": "105",
           "iva_rate": "0.21",
           "media_kind": "pdf",
@@ -254,7 +254,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "calculation_revision_id",
-          "value": "95f9f2f10aa3fcf106e938a099784f9051be1a8c648e51425560b88838bca37c"
+          "value": "23862cfbc3813b353d2167f1722d1683b3bbc76b85455b2a75ad8b7df8be2fe2"
         }
       ],
       "envelope": {
@@ -299,7 +299,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "95f9f2f10aa3fcf106e938a099784f9051be1a8c648e51425560b88838bca37c",
+          "calculation_revision_id": "23862cfbc3813b353d2167f1722d1683b3bbc76b85455b2a75ad8b7df8be2fe2",
           "casilla_values": {
             "01": "0",
             "02": "0",
@@ -3804,7 +3804,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 95f9f2f10aa3fcf106e938a099784f9051be1a8c648e51425560b88838bca37c (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 23862cfbc3813b353d2167f1722d1683b3bbc76b85455b2a75ad8b7df8be2fe2 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_iva_aggregation",
@@ -3865,7 +3865,7 @@
         "modelo",
         "work",
         "verify",
-        "95f9f2f10aa3fcf106e938a099784f9051be1a8c648e51425560b88838bca37c"
+        "23862cfbc3813b353d2167f1722d1683b3bbc76b85455b2a75ad8b7df8be2fe2"
       ],
       "captures": [],
       "envelope": {
@@ -3906,7 +3906,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "95f9f2f10aa3fcf106e938a099784f9051be1a8c648e51425560b88838bca37c",
+          "calculation_revision_id": "23862cfbc3813b353d2167f1722d1683b3bbc76b85455b2a75ad8b7df8be2fe2",
           "completeness_status": "complete",
           "findings": [
             {
@@ -3956,7 +3956,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "1cc1f3f7135ab19abf0a569af90478d9bd2c6c141b698a09f2fa52fa00a8d91e",
+          "verification_report_id": "9da509f75e5d1fad9375b6496f572e79679588866c048b3b3a968885acb9a081",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
@@ -3994,13 +3994,13 @@
           "aeat_register": null,
           "amends_filing_record_id": null,
           "bucket_id": "<bucket-id>",
-          "calculation_revision_id": "95f9f2f10aa3fcf106e938a099784f9051be1a8c648e51425560b88838bca37c",
+          "calculation_revision_id": "23862cfbc3813b353d2167f1722d1683b3bbc76b85455b2a75ad8b7df8be2fe2",
           "confirmation": "pendiente",
           "declaration_kind": "original",
           "external_evidence": null,
           "filed_at": "2026-04-01T09:00:00+00:00",
           "filed_by": "docs-sequence-sandbox",
-          "filing_record_id": "dbc89a2a0aec31221ac7c1a9e0eb7e5b18be104c27cc1785a3f753dc2158fe8d",
+          "filing_record_id": "d5eee46ecb0f628afe1fe57785a5971f83c010a45e0aa1175662de245e7b7fff",
           "filing_year": 2026,
           "kind": "internal_filing",
           "live_submission": false,
@@ -4053,7 +4053,7 @@
           "category": "REFUSED",
           "code": "REFUSED_MODELO_EXPORT_PRODUCT_IDENTITY_UNAVAILABLE",
           "context": {
-            "calculation_revision_id": "95f9f2f10aa3fcf106e938a099784f9051be1a8c648e51425560b88838bca37c",
+            "calculation_revision_id": "23862cfbc3813b353d2167f1722d1683b3bbc76b85455b2a75ad8b7df8be2fe2",
             "developer_positions": "101-109",
             "modelo": "303",
             "program_positions": "93-96",

@@ -134,7 +134,7 @@
           "created_at": "2026-04-01T09:00:00Z",
           "evidence_id": "9a075f52dad08e80",
           "invoice_date": "2026-02-11",
-          "invoice_number": "sha256:17853e99",
+          "invoice_number": "C-2026-0087",
           "iva_amount": "105",
           "iva_rate": "0.21",
           "media_kind": "pdf",
@@ -298,7 +298,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "95f9f2f10aa3fcf106e938a099784f9051be1a8c648e51425560b88838bca37c",
+          "calculation_revision_id": "23862cfbc3813b353d2167f1722d1683b3bbc76b85455b2a75ad8b7df8be2fe2",
           "casilla_values": {
             "01": "0",
             "02": "0",
@@ -3803,7 +3803,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 95f9f2f10aa3fcf106e938a099784f9051be1a8c648e51425560b88838bca37c (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 23862cfbc3813b353d2167f1722d1683b3bbc76b85455b2a75ad8b7df8be2fe2 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_iva_aggregation",
@@ -3909,9 +3909,9 @@
           "events": [
             {
               "actor": "docs-sequence-sandbox",
-              "event_id": "1fb8fcb7a05032f45174dbc6b49336f1eae54c0d251fceef41d6e29bc02ea7fd",
+              "event_id": "4108cc9e42fe1af1d37453bbb775d5b7dd7e0c93d6f65e0e7e41ab6899defc41",
               "event_type": "modelo.calculation.created",
-              "object_id": "95f9f2f10aa3fcf106e938a099784f9051be1a8c648e51425560b88838bca37c",
+              "object_id": "23862cfbc3813b353d2167f1722d1683b3bbc76b85455b2a75ad8b7df8be2fe2",
               "object_type": "calculation_revision",
               "occurred_at": "2026-04-01T09:00:00+00:00",
               "payload": {
@@ -3919,7 +3919,7 @@
                 "borrador_bindings_trace_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
                 "borrador_participated": "false",
                 "borrador_snapshot_id": "",
-                "calculation_revision_id": "95f9f2f10aa3fcf106e938a099784f9051be1a8c648e51425560b88838bca37c",
+                "calculation_revision_id": "23862cfbc3813b353d2167f1722d1683b3bbc76b85455b2a75ad8b7df8be2fe2",
                 "casilla_count": "146",
                 "filing_year": "2026",
                 "formula_count": "28",

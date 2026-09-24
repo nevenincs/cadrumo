@@ -50,19 +50,40 @@
           "fx_rate_source": null,
           "grand_total": "1210.00",
           "grand_total_eur": "1210.00",
+          "invoice_class": "ORDINARIA",
           "invoice_id": "8156e70ce16a05f4588f7516d49da7ffd4115964a75b079061e624a41ad30211",
           "invoice_number": "FAC-2026-001",
           "issued_at": "2026-02-15",
+          "iva_category": null,
           "iva_total": "210.00",
           "iva_total_eur": "210.00",
           "kind": "issued",
+          "lines": [
+            {
+              "description": "FAC-2026-001",
+              "iva_amount": "210.00",
+              "iva_rate": "RATE_21",
+              "oss_rate_kind": null,
+              "quantity": "1",
+              "spending_category_id": null,
+              "subtotal": "1000.00",
+              "unit_price": "1000.00"
+            }
+          ],
           "linked_transaction_ids": [],
           "notes": "",
+          "operation_date": null,
+          "operation_date_role": null,
           "operation_type": null,
           "payment_status": "PENDING",
           "recargo_amount": null,
+          "rectifies_invoice_number": null,
           "retention_amount": null,
-          "retention_rate": null
+          "retention_rate": null,
+          "series": null,
+          "source_filename": null,
+          "source_row_index": null,
+          "source_sha256": null
         },
         "schema_version": "2",
         "status": "success"
@@ -102,19 +123,40 @@
           "fx_rate_source": null,
           "grand_total": "1210.00",
           "grand_total_eur": "1210.00",
+          "invoice_class": "ORDINARIA",
           "invoice_id": "8156e70ce16a05f4588f7516d49da7ffd4115964a75b079061e624a41ad30211",
           "invoice_number": "FAC-2026-001",
           "issued_at": "2026-02-15",
+          "iva_category": null,
           "iva_total": "210.00",
           "iva_total_eur": "210.00",
           "kind": "issued",
+          "lines": [
+            {
+              "description": "FAC-2026-001",
+              "iva_amount": "210.00",
+              "iva_rate": "RATE_21",
+              "oss_rate_kind": null,
+              "quantity": "1",
+              "spending_category_id": null,
+              "subtotal": "1000.00",
+              "unit_price": "1000.00"
+            }
+          ],
           "linked_transaction_ids": [],
           "notes": "",
+          "operation_date": null,
+          "operation_date_role": null,
           "operation_type": null,
           "payment_status": "PENDING",
           "recargo_amount": null,
+          "rectifies_invoice_number": null,
           "retention_amount": null,
-          "retention_rate": null
+          "retention_rate": null,
+          "series": null,
+          "source_filename": null,
+          "source_row_index": null,
+          "source_sha256": null
         },
         "schema_version": "2",
         "status": "success"

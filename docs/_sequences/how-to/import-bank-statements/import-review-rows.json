@@ -116,7 +116,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "ID\t71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518\nLifecycle state\tACTIVE\nCreated bucket event\t-\nimport_provider\tCSV provider\nimport_source\tmovimientos-2026-1t.csv\nimport_ingested_at\t2026-04-01T09:00:00+00:00\nimport_fingerprint\t924aad06902b61c5d2c34863ac5d8c8768039a38540cd0235e0308d6be767898\n"
+      "text": "ID\t71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518\nLifecycle state\tACTIVE\nCreated bucket event\t-\nimport_provider\tCSV provider\nimport_source\tmovimientos-2026-1t.csv\nimport_source_row\t2\nimport_ingested_at\t2026-04-01T09:00:00+00:00\nimport_fingerprint\t924aad06902b61c5d2c34863ac5d8c8768039a38540cd0235e0308d6be767898\n"
     },
     {
       "argv": [
