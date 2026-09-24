@@ -320,6 +320,9 @@ def collect_minimo_descendientes_prorrata_inferred_diagnostics(
     Fires only when the derivation decided something: a mínimo is claimed, a
     second entitled filer is indicated, and a descendant carries neither an
     explicit ``prorrata_minimo`` answer nor the shared-custody trigger.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
     """
     scope = _minimo_scope(revision, modelo=modelo, filing_year=filing_year, period_token=period_token)
     if scope is None or casilla_values.get(scope.casilla_id, Decimal("0")) == 0:
@@ -514,6 +517,9 @@ def collect_minimo_descendientes_rentas_undeclared_diagnostics(
     declared zero is an answer), and the descendant meets the non-income
     conditions, judged with the filer's dependency-assimilation availability so
     an assimilated descendant is not dropped from the disclosure.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
     """
     scope = _minimo_scope(revision, modelo=modelo, filing_year=filing_year, period_token=period_token)
     if scope is None or casilla_values.get(scope.casilla_id, Decimal("0")) == 0:
@@ -577,6 +583,9 @@ def collect_minimo_descendientes_entry_date_missing_diagnostics(
 
     Independent of the computed mínimo: a withheld increase can leave the
     aggregate at any value, including zero.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
     """
     del casilla_values
     scope = _minimo_scope(revision, modelo=modelo, filing_year=filing_year, period_token=period_token)
@@ -846,6 +855,9 @@ def collect_minimo_descendientes_dependencia_diagnostics(
     declared dependency because this profile cannot yet attribute a payment to
     one descendant, which under-grants where the anualidades are paid for a
     different child.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
     """
     del casilla_values
     scope = _minimo_scope(revision, modelo=modelo, filing_year=filing_year, period_token=period_token)
@@ -916,6 +928,9 @@ def collect_descendientes_count_desync_diagnostics(
     count binding follows the operator's number while the mínimo casillas follow
     the rows, so the filing carries two answers. A count with no rows is a
     supported declaration, and an unreadable count is not evidence of drift.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
     """
     scope = _selected_registry_scope(
         revision,
