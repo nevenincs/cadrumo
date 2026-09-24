@@ -8,6 +8,7 @@ import pytest
 from pydantic import ValidationError
 
 from ..bucket_pointer import POINTER_SCHEMA_VERSION, BucketPointer, pointer_path, read_pointer, write_pointer
+from ..errors.hierarchy import ActiveProfilePointerError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -52,5 +53,6 @@ def test_deleted_transition_revision_refuses_at_the_real_read_boundary(tmp_path)
     )
     target.write_text(stripped, encoding="utf-8")
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(ActiveProfilePointerError) as refused:
         read_pointer(tmp_path)
+    assert isinstance(refused.value.__cause__, ValidationError)

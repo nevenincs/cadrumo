@@ -16,12 +16,12 @@ import time
 from pathlib import Path
 from typing import TYPE_CHECKING, Final, Literal
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, ValidationError, model_validator
 
-from ..core.errors.hierarchy import pydantic_validation_boundary
+from ..core.errors.hierarchy import ActiveProfilePointerError, pydantic_validation_boundary
 from .identity.bucket import BucketId
 from .models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from .toml import parse_toml
+from .toml import TomlDecodeError, parse_toml
 
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Callable
@@ -186,11 +186,24 @@ def _read_pointer_bytes(target: Path) -> bytes | None:
 
 
 def read_pointer(root: Path) -> BucketPointer:
-    """Observe the optional selection and durable current coordinate once."""
-    raw = _read_pointer_bytes(pointer_path(root))
+    """Observe the optional selection and durable current coordinate once.
+
+    A missing record is the clean cold start. A present record whose bytes do
+    not decode, whose text does not parse, or whose shape does not validate is
+    stored-metadata corruption, refused here as the typed pointer error so no
+    caller ever sees a raw decoding or validation failure.
+
+    Raises:
+        ActiveProfilePointerError: The present record is not a valid pointer.
+    """
+    target = pointer_path(root)
+    raw = _read_pointer_bytes(target)
     if raw is None:
         return BucketPointer.absent(transition_revision=0)
-    return BucketPointer.from_toml(raw.decode("utf-8"))
+    try:
+        return BucketPointer.from_toml(raw.decode("utf-8"))
+    except (UnicodeDecodeError, TomlDecodeError, ValidationError) as exc:
+        raise ActiveProfilePointerError(path=target) from exc
 
 
 def _await_uncontended(operation: Callable[[], None]) -> None:
