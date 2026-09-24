@@ -9,7 +9,7 @@ related:
   - '[[2026-09-23-retenciones-workflow-evidence-capture-scope-adr]]'
 modified: '2026-09-24'
 body_schema: body-v2
-body_hash: 'sha256:8a7d7fcee6a22fcaef83242a64562aa6b490b12b4255dc1cd51f3581bb6c5024'
+body_hash: 'sha256:87fc010185314ae5bb8634168b0809f8a9bc50f99dffbf2c3d5bfa14f198c25d'
 ---
 
 <!-- LINK RULES:
@@ -143,6 +143,8 @@ map their scope to Steps at L1 or the relevant containers at higher tiers. -->
 - [ ] `S07` - fail closed for a monthly withholding filer: when the canonical obligation schedule makes the filer's Modelo 111 or 123 monthly, refuse capture into a quarterly window and have the 190 and 193 annual sources return a structured refusal naming the modelo, the monthly periods and the reason instead of a quarterly-only total, proven with a monthly filer; `src/cadrumo/application/aggregation/withholding_source.py and the three capture producers`.
 - [ ] `S08` - support monthly withholding filers end to end: place captured withholding in the filer's monthly window through the canonical period vocabulary and schedule, read monthly and quarterly windows in the 190 and 193 annual sources, and remove the S07 refusal; `src/cadrumo/application/aggregation and the retencion observations adapter`.
 - [x] `S09` - refuse Modelo 193 export at the export boundary while its calculated revision carries a settled-prior-accrual row, with a typed reason and no command action, because the phase row's filing-export flag is read by nothing and so blocks nothing; `src/cadrumo/application/modelo/export.py`.
+- [ ] `S10` - refuse local work file for a Modelo 193 revision carrying a settled row with the export gate's check, and add a non-blocking verify finding so the operator learns before exporting or filing; `src/cadrumo/application/modelo filing and verification actions`.
+- [ ] `S11` - persist the accrual year on each calculation source reference as an additive optional field so the 193 gates detect settled rows exactly, falling back to the conservative accrual-year rule for revisions without it; `src/cadrumo/domain/modelos calculation revision source references`.
 
 <!-- The plan's tier (declared in frontmatter as `tier: L1`, `L2`, `L3`, or
 `L4`) determines the structure under this section:
