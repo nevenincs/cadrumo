@@ -758,6 +758,8 @@ errors:
       is beyond the authoritative anchor.
     canonical_operation_observation_unknown_operation: No observation journal exists
       for the requested operation.
+    canonical_operation_subject_busy: Another operation for this declaration is still
+      running. Wait for it to finish, then try again.
     canonical_previous_filing_observation_absent: The required previous filing has
       not been observed.
     canonical_prorrata_election: The prorrata election does not satisfy LIVA Article

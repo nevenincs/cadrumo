@@ -198,7 +198,7 @@ def _resolve(tmp_path: Path, subject_ref: str):
     observed = asyncio.run(OperationLeaseFilesystemRepository(storage_root=root).acquire(lease, observed_at=_NOW))
     assert observed.current == lease
     asyncio.run(repository.create(running, lease=lease))
-    asyncio.run(repository.commit(terminal, expected_revision=0, lease=lease))
+    asyncio.run(repository.commit_settlement(terminal, expected_revision=0, lease=lease))
 
     contract = registry.lookup_public_contract(_DEFINITION_ID)
     assert contract.workspace_refresh_target_schema is not None

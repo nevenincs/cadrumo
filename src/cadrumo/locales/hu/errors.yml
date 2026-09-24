@@ -776,6 +776,8 @@ errors:
       a hiteles horgonyon.
     canonical_operation_observation_unknown_operation: A kért művelethez nem tartozik
       megfigyelési napló.
+    canonical_operation_subject_busy: Ehhez a bevalláshoz egy másik művelet még folyamatban
+      van. Várja meg, amíg befejeződik, majd próbálja újra.
     canonical_previous_filing_observation_absent: A szükséges korábbi bevallás nem
       került megfigyelésre.
     canonical_prorrata_election: A prorrata-választás nem felel meg a LIVA 105. cikkének.

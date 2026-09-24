@@ -830,6 +830,8 @@ errors:
       supera l'àncora autoritativa.
     canonical_operation_observation_unknown_operation: No existeix cap diari d'observacions
       per a l'operació sol·licitada.
+    canonical_operation_subject_busy: Una altra operació sobre aquesta declaració
+      encara està en curs. Espereu que acabi i torneu-ho a provar.
     canonical_previous_filing_observation_absent: No s'ha observat la presentació
       anterior requerida.
     canonical_prorrata_election: L'elecció de prorrata no compleix l'article 105 de

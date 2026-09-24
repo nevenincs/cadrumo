@@ -40,9 +40,15 @@ class SupervisorReconciliationMixin(SupervisorHost):
     """Own takeover, checkpoint validation, resume, and interruption paths."""
 
     async def reconcile(self, operation_id: OperationId) -> OperationPersistedSnapshot:
-        """Recover one startup entry only through its durable owner evidence."""
+        """Recover one startup entry only through its durable owner evidence.
+
+        A terminal entry needs no recovery of its own, but a process that died
+        inside its settlement can leave the conflict lease behind; that
+        leftover is released so the subject does not stay held forever.
+        """
         snapshot = await self.inspect(operation_id)
         if snapshot.lifecycle is OperationLifecycle.TERMINAL:
+            await self._release_settled_leftover_lease(snapshot)
             return snapshot
         definition = self._require_pinned_definition(snapshot)
         observed, now = await self._inspect_reconciliation_lease(operation_id, snapshot)

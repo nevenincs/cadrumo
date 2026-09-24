@@ -1217,6 +1217,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.operations.errors.OperationSubjectBusyError",
+        ErrorCode(
+            code="REFUSED_OPERATION_SUBJECT_BUSY",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.canonical_operation_subject_busy",
+            retryable=True,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.operations.errors.OperationUnsettledError",
         ErrorCode(
             code="INTERNAL_OPERATION_UNSETTLED",

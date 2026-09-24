@@ -522,7 +522,7 @@ def test_result_resolution_uses_encrypted_operand_and_public_contract(tmp_path: 
         )
         terminal = _terminal_snapshot(registry, result_ref=result_ref)
         _write(root, repository, _running_snapshot(registry))
-        asyncio.run(repository.commit(terminal, expected_revision=0, lease=_lease()))
+        asyncio.run(repository.commit_settlement(terminal, expected_revision=0, lease=_lease()))
         contract = registry.lookup_public_contract(_DEFINITION_ID)
         assert contract.result_schema is not None
         request = OperationResultProjectionRequestV1(
@@ -571,7 +571,7 @@ def test_refresh_target_resolves_only_authoritative_successful_terminal_receipt(
     repository = OperationJournalRepository(storage_root=root)
     terminal = _terminal_snapshot(registry)
     _write(root, repository, _running_snapshot(registry))
-    asyncio.run(repository.commit(terminal, expected_revision=0, lease=_lease()))
+    asyncio.run(repository.commit_settlement(terminal, expected_revision=0, lease=_lease()))
     contract = registry.lookup_public_contract(_DEFINITION_ID)
     assert contract.workspace_refresh_target_schema is not None
     request = OperationWorkspaceRefreshTargetRequestV1(
@@ -683,7 +683,7 @@ def test_projection_services_close_version_unknown_pending_terminal_and_adapter_
         no_adapter_repository = OperationJournalRepository(storage_root=no_adapter_root)
         no_adapter_terminal = _terminal_snapshot(no_adapter_registry)
         _write(no_adapter_root, no_adapter_repository, _running_snapshot(no_adapter_registry))
-        asyncio.run(no_adapter_repository.commit(no_adapter_terminal, expected_revision=0, lease=_lease()))
+        asyncio.run(no_adapter_repository.commit_settlement(no_adapter_terminal, expected_revision=0, lease=_lease()))
         no_adapter_contract = no_adapter_registry.lookup_public_contract(_DEFINITION_ID)
         assert no_adapter_contract.result_schema is not None
         unavailable = asyncio.run(

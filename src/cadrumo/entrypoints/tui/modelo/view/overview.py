@@ -49,6 +49,7 @@ from .....application.modelo.edit_models import (
 from .....core.errors.error_codes import resolve_error_message
 from .....core.errors.hierarchy import CadrumoError
 from .....core.i18n.render import tr
+from .....core.logging import get_logger
 from .....core.operations import OperationTerminalCondition
 from .....core.payment_election import PaymentElection
 from .....core.prior_domiciliation_election import PriorDomiciliationElection
@@ -411,7 +412,12 @@ class ModeloWorkspaceOverviewScreen(TypedAppAccess, AccountChromeScreen):
         *,
         keyword_arguments: dict[str, object],
     ) -> None:
-        """Submit one public action and expose its exact terminal result in the operation modal."""
+        """Submit one public action and expose its exact terminal result in the operation modal.
+
+        A failure the action does not register is logged and shown as a plain
+        failure notice rather than raised: raising would end this worker with
+        the workspace left unable to run any later action.
+        """
         from ...operations.modal import OperationModal
 
         try:
@@ -420,9 +426,15 @@ class ModeloWorkspaceOverviewScreen(TypedAppAccess, AccountChromeScreen):
             self._action_in_flight = False
             self._notice(resolve_error_message(refusal))
             return
-        except Exception:
+        except Exception as failure:
             self._action_in_flight = False
-            raise
+            get_logger(__name__).error(
+                "modelo lifecycle action failed before its operation opened: %s",
+                type(failure).__qualname__,
+                exc_info=True,
+            )
+            self._notice(tr("operation.modal.terminal.failed"))
+            return
         self.app.push_screen(OperationModal(controller), self._on_lifecycle_operation_settled)
 
     def _on_lifecycle_operation_settled(self, outcome: object) -> None:

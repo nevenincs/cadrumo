@@ -7,10 +7,14 @@ from collections.abc import Callable, Coroutine
 from contextlib import suppress
 from datetime import datetime, timedelta
 
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.hex import Hex64Str
+from ...core.operations import OperationLifecycle
+from .errors import OperationSubjectBusyError
 from .models import OperationId, OperationIdentity
 from .persistence.idempotency import OperationIdempotencyClaim
 from .persistence.journal import (
+    OperationEventStream,
     OperationJournal,
     OperationLeaseRepository,
     OperationPersistedSnapshot,
@@ -22,12 +26,14 @@ from .persistence.leases import (
     OperationOwnerLease,
     operation_conflict_scope_reference,
 )
+from .persistence.replay import OperationReplayStatus
 
 
 class OperationSupervisorLeaseMixin:
     """Own local guards and exact durable-lease transitions for a supervisor."""
 
     _journal: OperationJournal
+    _event_stream: OperationEventStream
     _leases: OperationLeaseRepository
     _owner_id: Hex64Str
     _lease_token: OperationLeaseToken
@@ -168,11 +174,83 @@ class OperationSupervisorLeaseMixin:
             return None
         return await self._journal.resolve_idempotency(claim)
 
-    async def _resolve_conflict_submission(self, claim: OperationIdempotencyClaim | None) -> OperationId:
+    async def _acquire_submission_lease(
+        self,
+        candidate: OperationOwnerLease,
+        *,
+        claim: OperationIdempotencyClaim | None,
+    ) -> OperationId | None:
+        """Hold ``candidate`` for a new submission, or name the operation a retry already created.
+
+        Returns ``None`` once the candidate lease is held. A subject held by an
+        operation that has not settled -- live, or lapsed and awaiting
+        reconciliation -- is refused with :class:`OperationSubjectBusyError`.
+        """
+        observed_at = candidate.acquired_at
+        acquired = await self._leases.acquire(candidate, observed_at=observed_at)
+        if acquired.disposition is OperationLeaseDisposition.ACQUIRED:
+            return None
         existing_operation_id = await self._resolve_idempotency(claim)
         if existing_operation_id is not None:
             return existing_operation_id
-        raise ValueError("operation conflict lease was not acquired")
+        holder = (
+            acquired.current if acquired.disposition is OperationLeaseDisposition.CONFLICT else acquired.predecessor
+        )
+        if holder is None or not await self._holder_is_settled(holder):
+            raise OperationSubjectBusyError()
+        # Crash recovery, not the settlement path: settlement clears the lease
+        # in the same critical section that writes the terminal record, so a
+        # settled holder still owning the subject can only be left by a
+        # process that died between those two writes. One exact release and
+        # one retry of the acquisition; any other outcome is a live conflict.
+        await self._release_leftover_lease(holder, observed_at=observed_at)
+        reacquired = await self._leases.acquire(candidate, observed_at=observed_at)
+        if reacquired.disposition is OperationLeaseDisposition.ACQUIRED:
+            return None
+        existing_operation_id = await self._resolve_idempotency(claim)
+        if existing_operation_id is not None:
+            return existing_operation_id
+        raise OperationSubjectBusyError()
+
+    async def _holder_is_settled(self, holder: OperationOwnerLease) -> bool:
+        """Tell whether the operation a subject's lease names has a terminal journal.
+
+        A holder with no journal yet is a submission between its lease and its
+        journal create, which is a live conflict, never a leftover.
+        """
+        probe = await self._event_stream.read_after(holder.operation_id, 0, limit=1)
+        if probe.status is OperationReplayStatus.UNKNOWN_OPERATION:
+            return False
+        snapshot = await self._journal.load(holder.operation_id)
+        return snapshot.lifecycle is OperationLifecycle.TERMINAL
+
+    async def _release_settled_leftover_lease(self, snapshot: OperationPersistedSnapshot) -> None:
+        """Release a lease a terminal operation still owns after a crash inside its settlement.
+
+        Idempotent: a subject that is free, or held by another operation, is
+        left untouched.
+        """
+        if snapshot.lifecycle is not OperationLifecycle.TERMINAL:
+            raise InternalInvariantError("only a terminal operation may give up a leftover conflict lease")
+        observed_at = self._clock()
+        observed = await self._leases.inspect(
+            operation_conflict_scope_reference(
+                definition_id=snapshot.identity.definition_id,
+                subject_ref=snapshot.identity.subject_ref,
+            ),
+            snapshot.identity.operation_id,
+            observed_at=observed_at,
+        )
+        current = observed.current
+        if current is None or current.operation_id != snapshot.identity.operation_id:
+            return
+        await self._release_leftover_lease(current, observed_at=observed_at)
+
+    async def _release_leftover_lease(self, holder: OperationOwnerLease, *, observed_at: datetime) -> None:
+        """Release one settled operation's exact lease; a lost race leaves the winner's lease alone."""
+        await self._leases.release(holder, observed_at=observed_at)
+        if self._leases_by_operation.get(holder.operation_id) == holder:
+            del self._leases_by_operation[holder.operation_id]
 
     def _notify_durable_change(self, snapshot: OperationPersistedSnapshot) -> None:
         """Signal one local durable commit while leaving journal bytes authoritative."""

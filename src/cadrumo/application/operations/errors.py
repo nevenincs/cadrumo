@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ...core.errors.hierarchy import CoreValidationError, InternalInvariantError
+from ...core.errors.hierarchy import CadrumoError, CoreValidationError, InternalInvariantError
 
 if TYPE_CHECKING:
     from .persistence.journal import OperationPersistedSnapshot
@@ -12,6 +12,20 @@ if TYPE_CHECKING:
 
 class OperationDeclarationError(CoreValidationError):
     """An executor attempted behavior outside its registered declaration."""
+
+
+class OperationSubjectBusyError(CadrumoError):
+    """Another operation of the same definition still owns this subject.
+
+    A submission is refused while the definition-and-subject conflict lease
+    belongs to an operation that has not settled -- one still running, or one
+    whose owner lapsed and awaits recovery. The operator waits for it; nothing
+    about the holder is carried, so the refusal exposes no operation internals.
+    """
+
+    def __init__(self) -> None:
+        """Refuse without naming the operation that holds the subject."""
+        super().__init__("another operation still owns this definition subject")
 
 
 class OperationUnsettledError(InternalInvariantError):
@@ -35,4 +49,4 @@ class OperationUnsettledError(InternalInvariantError):
         self.snapshot = snapshot
 
 
-__all__ = ["OperationDeclarationError", "OperationUnsettledError"]
+__all__ = ["OperationDeclarationError", "OperationSubjectBusyError", "OperationUnsettledError"]

@@ -821,6 +821,8 @@ errors:
       supera el ancla autorizada.
     canonical_operation_observation_unknown_operation: No existe un diario de observaciones
       para la operación solicitada.
+    canonical_operation_subject_busy: Otra operación sobre esta declaración sigue
+      en curso. Espere a que termine y vuelva a intentarlo.
     canonical_previous_filing_observation_absent: No se ha observado la presentación
       anterior requerida.
     canonical_prorrata_election: La elección de prorrata no cumple el artículo 105

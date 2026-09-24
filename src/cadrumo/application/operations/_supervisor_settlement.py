@@ -220,15 +220,20 @@ class SupervisorSettlementMixin(SupervisorHost):
         receipt: OperationTerminalReceipt,
         lease: OperationOwnerLease,
     ) -> tuple[OperationPersistedSnapshot | None, bool]:
-        """Complete cleanup and atomically commit terminal events and state."""
+        """Complete cleanup, then commit the terminal state and release its lease as one transition.
+
+        The terminal record and the released conflict lease become durable
+        together, so an operator acting on the settled state can submit again
+        for the same subject at once.
+        """
         try:
             await self._complete_cleanup_before_settlement(snapshot)
         except TimeoutError:
             return None, True
         events = self._settlement_events(snapshot, receipt, receipt.settled_at)
         successor = self._settlement_successor(snapshot, receipt, events)
-        await self._journal.commit(successor, expected_revision=snapshot.revision, lease=lease)
-        await self._release_exact_lease(lease, observed_at=receipt.settled_at)
+        await self._journal.commit_settlement(successor, expected_revision=snapshot.revision, lease=lease)
+        self._leases_by_operation.pop(operation_id, None)
         self._ephemeral_secrets.discard(operation_id)
         return successor, False
 

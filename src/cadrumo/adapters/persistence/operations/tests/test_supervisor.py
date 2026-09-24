@@ -36,7 +36,11 @@ from cadrumo.application.operations.capabilities import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
-from cadrumo.application.operations.errors import OperationDeclarationError, OperationUnsettledError
+from cadrumo.application.operations.errors import (
+    OperationDeclarationError,
+    OperationSubjectBusyError,
+    OperationUnsettledError,
+)
 from cadrumo.application.operations.frontend_requests import (
     OperationObservationRequestV1,
     OperationObservationSuccessV1,
@@ -85,8 +89,9 @@ from cadrumo.application.operations.supervisor_context import SupervisorExecutor
 from cadrumo.application.operations.tests.authority_test_support import unread_authority_operation
 from cadrumo.core.access_gate.errors import AeatLiveReadNotEnabledError
 from cadrumo.core.directory_scan import scan_directory
-from cadrumo.core.errors.error_codes import get_registered_error_code
+from cadrumo.core.errors.error_codes import ErrorCategory, get_registered_error_code, resolve_error_message
 from cadrumo.core.errors.hierarchy import CoreError
+from cadrumo.core.i18n.render import tr
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.core.operations import (
     OperationCancellation,
@@ -1024,7 +1029,7 @@ def test_submit_excludes_only_the_exact_definition_subject_conflict_scope(tmp_pa
         )
 
         first_operation = asyncio.run(first.submit(_request(subject_ref="subject:shared"), operation_id="5" * 64))
-        with pytest.raises(ValueError, match="conflict lease"):
+        with pytest.raises(OperationSubjectBusyError):
             asyncio.run(second.submit(_request(subject_ref="subject:shared"), operation_id="6" * 64))
         separate_operation = asyncio.run(second.submit(_request(subject_ref="subject:separate"), operation_id="7" * 64))
 
@@ -1356,7 +1361,7 @@ def test_submit_conflict_does_not_publish_an_orphan_idempotency_claim(tmp_path: 
         held_operation = asyncio.run(owner.submit(_request(subject_ref="subject:shared"), operation_id="5" * 64))
         retry_request = _request(subject_ref="subject:shared", idempotency_key="retry-after-conflict")
 
-        with pytest.raises(ValueError, match="conflict lease"):
+        with pytest.raises(OperationSubjectBusyError):
             asyncio.run(contender.submit(retry_request, operation_id="6" * 64))
         with pytest.raises(RepositoryError):
             asyncio.run(journal.load("6" * 64))
@@ -1526,7 +1531,7 @@ def test_start_heartbeats_a_quiet_executor_past_the_initial_lease_window(tmp_pat
             assert renewed.current.expires_at > _NOW + timedelta(milliseconds=30)
 
             observed_at[0] = _NOW + timedelta(milliseconds=45)
-            with pytest.raises(ValueError, match="conflict lease"):
+            with pytest.raises(OperationSubjectBusyError):
                 await contender.submit(_request(), operation_id="6" * 64)
 
             release.set()
@@ -2917,3 +2922,318 @@ def test_host_close_asks_a_cancellable_operation_to_stop_and_settles_it(tmp_path
     assert closed.lifecycle is OperationLifecycle.TERMINAL
     assert closed.terminal_condition is OperationTerminalCondition.CANCELLED
     assert executor.resource.close_calls == 1
+
+
+_SHARED_SUBJECT = "subject:shared"
+
+
+def _shared_scope_holder(
+    leases: OperationLeaseFilesystemRepository,
+    *,
+    observed_at: datetime,
+) -> OperationOwnerLease | None:
+    """Return whichever lease currently holds the shared definition subject."""
+    request = _request(subject_ref=_SHARED_SUBJECT)
+    observed = asyncio.run(
+        leases.inspect(
+            operation_conflict_scope_reference(definition_id=request.definition_id, subject_ref=request.subject_ref),
+            "0" * 64,
+            observed_at=observed_at,
+        )
+    )
+    return observed.current
+
+
+def _settle_failed(supervisor: OperationSupervisor, operation_id: str) -> OperationPersistedSnapshot:
+    created = asyncio.run(supervisor.inspect(operation_id))
+    return asyncio.run(
+        supervisor.settle(
+            operation_id,
+            OperationTerminalReceipt(
+                identity=created.identity,
+                revision=created.revision + 1,
+                condition=OperationTerminalCondition.FAILED,
+                effect=OperationEffect.NONE,
+                settled_at=_NOW,
+            ),
+        )
+    )
+
+
+def _leave_settlement_lease_behind(
+    leases: OperationLeaseFilesystemRepository,
+    terminal: OperationPersistedSnapshot,
+) -> OperationOwnerLease:
+    """Recreate the state of a process that died between the terminal write and the lease release.
+
+    Settlement writes both inside one lock hold, so only a crash inside that
+    section reaches this state; the real lease repository writes the owner's
+    lease back beside the real terminal journal.
+    """
+    leftover = OperationOwnerLease(
+        operation_id=terminal.identity.operation_id,
+        scope_ref=operation_conflict_scope_reference(
+            definition_id=terminal.identity.definition_id,
+            subject_ref=terminal.identity.subject_ref,
+        ),
+        owner_id="1" * 64,
+        token="2" * 64,
+        acquired_at=_NOW,
+        expires_at=_NOW + timedelta(minutes=10),
+    )
+    written = asyncio.run(leases.acquire(leftover, observed_at=_NOW))
+    assert written.disposition is OperationLeaseDisposition.ACQUIRED
+    return leftover
+
+
+def test_a_settled_operation_frees_its_subject_for_an_immediate_resubmission(tmp_path: Path) -> None:
+    """The operator can act on a terminal state at once: the lease is already gone when it is visible."""
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        journal, leases, operands = _repositories(
+            storage_root=tmp_path / "durable-state", profile_objects=profile.repository
+        )
+        registry = _registry(executor_type=IdleExecutor, build=IdleExecutor)
+        owner = _supervisor(
+            registry=registry, journal=journal, leases=leases, operands=operands, owner_id="1" * 64, token="2" * 64
+        )
+        contender = _supervisor(
+            registry=registry, journal=journal, leases=leases, operands=operands, owner_id="3" * 64, token="4" * 64
+        )
+        settled_operation = asyncio.run(owner.submit(_request(subject_ref=_SHARED_SUBJECT), operation_id="5" * 64))
+
+        terminal = _settle_failed(owner, settled_operation)
+        assert terminal.lifecycle is OperationLifecycle.TERMINAL
+        assert _shared_scope_holder(leases, observed_at=_NOW) is None
+
+        resubmitted = asyncio.run(contender.submit(_request(subject_ref=_SHARED_SUBJECT), operation_id="6" * 64))
+
+        assert resubmitted == "6" * 64
+        holder = _shared_scope_holder(leases, observed_at=_NOW)
+        assert holder is not None and holder.operation_id == resubmitted
+
+
+def test_a_live_unsettled_holder_refuses_resubmission_with_the_registered_busy_refusal(tmp_path: Path) -> None:
+    """A running operation keeps its subject; the refusal is typed, registered and names nothing internal."""
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        journal, leases, operands = _repositories(
+            storage_root=tmp_path / "durable-state", profile_objects=profile.repository
+        )
+        registry = _registry(executor_type=IdleExecutor, build=IdleExecutor)
+        owner = _supervisor(
+            registry=registry, journal=journal, leases=leases, operands=operands, owner_id="1" * 64, token="2" * 64
+        )
+        contender = _supervisor(
+            registry=registry, journal=journal, leases=leases, operands=operands, owner_id="3" * 64, token="4" * 64
+        )
+        held_operation = asyncio.run(owner.submit(_request(subject_ref=_SHARED_SUBJECT), operation_id="5" * 64))
+        held_lease = _shared_scope_holder(leases, observed_at=_NOW)
+
+        with pytest.raises(OperationSubjectBusyError) as refused:
+            asyncio.run(contender.submit(_request(subject_ref=_SHARED_SUBJECT), operation_id="6" * 64))
+
+        assert not isinstance(refused.value, ValueError)
+        registered = get_registered_error_code(refused.value)
+        assert registered.code == "REFUSED_OPERATION_SUBJECT_BUSY"
+        assert registered.category is ErrorCategory.REFUSED
+        message = resolve_error_message(refused.value)
+        assert message == tr(registered.message_key)
+        assert message != registered.message_key
+        assert held_operation not in message and _SHARED_SUBJECT not in message
+        assert _shared_scope_holder(leases, observed_at=_NOW) == held_lease
+        assert asyncio.run(journal.load(held_operation)).lifecycle is OperationLifecycle.CREATED
+        with pytest.raises(RepositoryError):
+            asyncio.run(journal.load("6" * 64))
+
+
+def test_an_expired_lease_of_an_unsettled_holder_refuses_rather_than_taking_over(tmp_path: Path) -> None:
+    """A lapsed owner that never settled needs reconciliation; submission neither waits nor seizes it."""
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        journal, leases, operands = _repositories(
+            storage_root=tmp_path / "durable-state", profile_objects=profile.repository
+        )
+        registry = _registry(executor_type=IdleExecutor, build=IdleExecutor)
+        owner = _supervisor(
+            registry=registry,
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="1" * 64,
+            token="2" * 64,
+            lease_duration=timedelta(minutes=1),
+        )
+        lapsed_at = _NOW + timedelta(minutes=2)
+        contender = _supervisor(
+            registry=registry,
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="3" * 64,
+            token="4" * 64,
+            clock=lambda: lapsed_at,
+        )
+        unsettled = asyncio.run(owner.submit(_request(subject_ref=_SHARED_SUBJECT), operation_id="5" * 64))
+        expired_lease = _shared_scope_holder(leases, observed_at=lapsed_at)
+        assert expired_lease is not None and expired_lease.expires_at <= lapsed_at
+
+        with pytest.raises(OperationSubjectBusyError) as refused:
+            asyncio.run(contender.submit(_request(subject_ref=_SHARED_SUBJECT), operation_id="6" * 64))
+
+        assert not isinstance(refused.value, ValueError)
+        assert get_registered_error_code(refused.value).code == "REFUSED_OPERATION_SUBJECT_BUSY"
+        assert _shared_scope_holder(leases, observed_at=lapsed_at) == expired_lease
+        assert asyncio.run(journal.load(unsettled)).lifecycle is OperationLifecycle.CREATED
+
+
+def test_a_lease_whose_holder_has_no_journal_yet_is_a_live_conflict(tmp_path: Path) -> None:
+    """A submission between its lease and its journal create is in progress, not a leftover."""
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        journal, leases, operands = _repositories(
+            storage_root=tmp_path / "durable-state", profile_objects=profile.repository
+        )
+        contender = _supervisor(
+            registry=_registry(executor_type=IdleExecutor, build=IdleExecutor),
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="3" * 64,
+            token="4" * 64,
+        )
+        request = _request(subject_ref=_SHARED_SUBJECT)
+        in_flight = OperationOwnerLease(
+            operation_id="9" * 64,
+            scope_ref=operation_conflict_scope_reference(
+                definition_id=request.definition_id, subject_ref=request.subject_ref
+            ),
+            owner_id="1" * 64,
+            token="2" * 64,
+            acquired_at=_NOW,
+            expires_at=_NOW + timedelta(minutes=10),
+        )
+        acquired = asyncio.run(leases.acquire(in_flight, observed_at=_NOW))
+        assert acquired.disposition is OperationLeaseDisposition.ACQUIRED
+
+        with pytest.raises(OperationSubjectBusyError):
+            asyncio.run(contender.submit(request, operation_id="6" * 64))
+
+        assert _shared_scope_holder(leases, observed_at=_NOW) == in_flight
+
+
+@pytest.mark.parametrize("leftover_expired", (False, True), ids=("live-leftover", "expired-leftover"))
+def test_the_next_submission_reclaims_a_lease_left_by_a_crash_after_settlement(
+    tmp_path: Path,
+    leftover_expired: bool,
+) -> None:
+    """A terminal journal beside a lease its operation still owns is a crash leftover, reclaimed once."""
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        journal, leases, operands = _repositories(
+            storage_root=tmp_path / "durable-state", profile_objects=profile.repository
+        )
+        registry = _registry(executor_type=IdleExecutor, build=IdleExecutor)
+        owner = _supervisor(
+            registry=registry, journal=journal, leases=leases, operands=operands, owner_id="1" * 64, token="2" * 64
+        )
+        settled_operation = asyncio.run(owner.submit(_request(subject_ref=_SHARED_SUBJECT), operation_id="5" * 64))
+        terminal = _settle_failed(owner, settled_operation)
+        leftover = _leave_settlement_lease_behind(leases, terminal)
+        submitted_at = leftover.expires_at + timedelta(minutes=1) if leftover_expired else _NOW + timedelta(seconds=1)
+        assert _shared_scope_holder(leases, observed_at=submitted_at) == leftover
+        contender = _supervisor(
+            registry=registry,
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="3" * 64,
+            token="4" * 64,
+            clock=lambda: submitted_at,
+        )
+
+        resubmitted = asyncio.run(contender.submit(_request(subject_ref=_SHARED_SUBJECT), operation_id="6" * 64))
+
+        assert resubmitted == "6" * 64
+        holder = _shared_scope_holder(leases, observed_at=submitted_at)
+        assert holder is not None and holder.operation_id == resubmitted and holder.owner_id == "3" * 64
+        assert asyncio.run(journal.load(settled_operation)) == terminal
+        assert asyncio.run(journal.load(resubmitted)).lifecycle is OperationLifecycle.CREATED
+
+
+def test_reconciling_a_settled_operation_releases_the_lease_its_crash_left_behind(tmp_path: Path) -> None:
+    """Reconciliation frees a leftover of the terminal operation it names, and nothing else."""
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        journal, leases, operands = _repositories(
+            storage_root=tmp_path / "durable-state", profile_objects=profile.repository
+        )
+        registry = _registry(executor_type=IdleExecutor, build=IdleExecutor)
+        owner = _supervisor(
+            registry=registry, journal=journal, leases=leases, operands=operands, owner_id="1" * 64, token="2" * 64
+        )
+        settled_operation = asyncio.run(owner.submit(_request(subject_ref=_SHARED_SUBJECT), operation_id="5" * 64))
+        terminal = _settle_failed(owner, settled_operation)
+        _leave_settlement_lease_behind(leases, terminal)
+        recovered_at = _NOW + timedelta(seconds=1)
+        recovery = _supervisor(
+            registry=registry,
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            owner_id="3" * 64,
+            token="4" * 64,
+            clock=lambda: recovered_at,
+        )
+
+        assert asyncio.run(recovery.reconcile(settled_operation)) == terminal
+        assert _shared_scope_holder(leases, observed_at=recovered_at) is None
+        assert asyncio.run(recovery.reconcile(settled_operation)) == terminal
+        assert _shared_scope_holder(leases, observed_at=recovered_at) is None
+
+        resubmitted = asyncio.run(recovery.submit(_request(subject_ref=_SHARED_SUBJECT), operation_id="6" * 64))
+        successor_lease = _shared_scope_holder(leases, observed_at=recovered_at)
+        assert successor_lease is not None and successor_lease.operation_id == resubmitted
+
+        assert asyncio.run(recovery.reconcile(settled_operation)) == terminal
+        assert _shared_scope_holder(leases, observed_at=recovered_at) == successor_lease
+        assert asyncio.run(journal.load(settled_operation)) == terminal
+
+
+class ImmediateResultExecutor:
+    """Registered executor that returns its result reference as soon as it runs."""
+
+    async def execute(
+        self,
+        request: OperationRequest[BaseModel],
+        context: OperationExecutorContext,
+    ) -> str | None:
+        del request, context
+        return "result:settled-immediately"
+
+
+def test_an_executor_settlement_frees_its_subject_for_an_immediate_same_subject_submit(tmp_path: Path) -> None:
+    """Whatever the definition, settling through its executor releases the subject with the terminal record."""
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        journal, leases, operands = _repositories(
+            storage_root=tmp_path / "durable-state", profile_objects=profile.repository
+        )
+        registry = _registry(executor_type=ImmediateResultExecutor, build=ImmediateResultExecutor)
+        owner = _supervisor(
+            registry=registry, journal=journal, leases=leases, operands=operands, owner_id="1" * 64, token="2" * 64
+        )
+        contender = _supervisor(
+            registry=registry, journal=journal, leases=leases, operands=operands, owner_id="3" * 64, token="4" * 64
+        )
+
+        async def settle_then_resubmit() -> tuple[OperationPersistedSnapshot, OperationPersistedSnapshot, str]:
+            first = await owner.submit(_request(subject_ref=_SHARED_SUBJECT), operation_id="5" * 64)
+            first_terminal = await run_to_settlement(owner, first)
+            again = await owner.submit(_request(subject_ref=_SHARED_SUBJECT), operation_id="6" * 64)
+            again_terminal = await run_to_settlement(owner, again)
+            other = await contender.submit(_request(subject_ref=_SHARED_SUBJECT), operation_id="7" * 64)
+            return first_terminal, again_terminal, other
+
+        first_terminal, again_terminal, other = asyncio.run(settle_then_resubmit())
+
+        for terminal in (first_terminal, again_terminal):
+            assert terminal.lifecycle is OperationLifecycle.TERMINAL
+            assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
+            assert asyncio.run(journal.load(terminal.identity.operation_id)) == terminal
+        assert other == "7" * 64
+        holder = _shared_scope_holder(leases, observed_at=_NOW)
+        assert holder is not None and holder.operation_id == other

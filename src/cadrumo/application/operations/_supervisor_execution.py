@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, override
 from pydantic import BaseModel
 
 from ...core.errors.error_codes import ErrorCategory, get_registered_error_code
-from ...core.errors.hierarchy import CadrumoError
+from ...core.errors.hierarchy import CadrumoError, InternalInvariantError
 from ...core.hashing import content_hash_hex
 from ...core.operations import (
     OperationDeadline,
@@ -52,7 +52,6 @@ from .persistence.idempotency import OperationIdempotencyClaim
 from .persistence.journal import (
     OperationPersistedSnapshot,
 )
-from .persistence.leases import OperationLeaseDisposition
 from .registry import OperationDefinition, OperationReconciliationPolicy
 from .secret_submission import BoundEphemeralSecretAccess, OperationSecretRequirement, zeroize_secret_buffer
 
@@ -187,9 +186,9 @@ class SupervisorExecutionMixin(SupervisorHost):
         if existing_operation_id is not None:
             return existing_operation_id
         lease = self._candidate(identity, now)
-        result = await self._leases.acquire(lease, observed_at=now)
-        if result.disposition is not OperationLeaseDisposition.ACQUIRED:
-            return await self._resolve_conflict_submission(claim)
+        replayed_operation_id = await self._acquire_submission_lease(lease, claim=claim)
+        if replayed_operation_id is not None:
+            return replayed_operation_id
         self._leases_by_operation[identity.operation_id] = lease
         snapshot = OperationPersistedSnapshot(
             identity=identity,
@@ -654,6 +653,8 @@ class SupervisorExecutionMixin(SupervisorHost):
         executor_entered_at: datetime | None = None,
         discard_ephemeral_secret: bool = False,
     ) -> OperationPersistedSnapshot:
+        if lifecycle is OperationLifecycle.TERMINAL:
+            raise InternalInvariantError("a terminal transition is committed only by settlement with its receipt")
         self._require_pinned_definition(snapshot)
         now = self._clock()
         async with self._lease_lock(snapshot.identity.operation_id):
