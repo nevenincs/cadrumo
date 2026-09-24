@@ -26,18 +26,21 @@ from uuid import UUID
 
 import pytest
 
-from ....adapters.persistence.storage.custody.acceleration_receipt import profile_session_path
-from ....adapters.persistence.storage.master_key.active_session import (
+from .....application.user_profile.login_session_port import (
+    profile_current_bucket_session,
+    profile_session_serves_bucket,
+)
+from .....application.user_profile.profile_record_repository import require_profile_record_session
+from .....application.user_profile.registration import register_profile_with_credentials
+from .....core.paths import effective_storage_root
+from .....domain.calculations.registry.authority import bundled_indexed_authority
+from ..custody.acceleration_receipt import profile_session_path
+from ..master_key.active_session import (
     close_active_bucket_session,
     suspend_active_session,
 )
-from ....adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
-from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
-from ....core.paths import effective_storage_root
-from ....domain.calculations.registry.authority import bundled_indexed_authority
-from ..login_session_port import profile_current_bucket_session, profile_session_serves_bucket
-from ..profile_record_repository import require_profile_record_session
-from ..registration import register_profile_with_credentials
+from .profile_capsule_runtime import profile_authority_contexts
+from .secure_sql import isolated_profile_storage_root
 
 if TYPE_CHECKING:
     from pathlib import Path

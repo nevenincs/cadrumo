@@ -18,6 +18,11 @@ from cadrumo.adapters.persistence.profile.modelos_verification_reports import Ve
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.retencion_observations import RetencionObservationRepositoryAdapter
 from cadrumo.adapters.persistence.profile.tests.file_flow_test_support import calculation_ports_for_test
+from cadrumo.adapters.persistence.profile.tests.ledger_capital_support import (
+    capital_payment,
+    capital_request,
+    withholding_producer,
+)
 from cadrumo.adapters.persistence.profile.tests.modelo_export_ports_support import modelo_export_ports_for_test
 from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
@@ -30,11 +35,6 @@ from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObject
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.aggregation.ledger_payment_withholding import build_ledger_payment_withholding_capture
-from cadrumo.application.aggregation.tests.ledger_capital_support import (
-    capital_payment,
-    capital_request,
-    withholding_producer,
-)
 from cadrumo.application.aggregation.tests.withholding_filer_profile_support import (
     quarterly_filer_cadence,
     quarterly_filer_cadence_for,

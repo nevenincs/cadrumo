@@ -27,6 +27,12 @@ from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCata
 from cadrumo.adapters.persistence.profile.percepciones_observations import PercepcionObservationRepositoryAdapter
 from cadrumo.adapters.persistence.profile.retencion_observations import RetencionObservationRepositoryAdapter
 from cadrumo.adapters.persistence.profile.tests.file_flow_test_support import calculation_ports_for_test
+from cadrumo.adapters.persistence.profile.tests.ledger_capital_support import (
+    capital_payment,
+    capital_pending_payment,
+    capital_request,
+    withholding_producer,
+)
 from cadrumo.adapters.persistence.profile.tests.modelo_export_ports_support import modelo_export_ports_for_test
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
@@ -41,12 +47,6 @@ from cadrumo.application.aggregation.percepciones_observations_repository import
     persist_percepcion_observations,
 )
 from cadrumo.application.aggregation.retenciones import RetencionObservation
-from cadrumo.application.aggregation.tests.ledger_capital_support import (
-    capital_payment,
-    capital_pending_payment,
-    capital_request,
-    withholding_producer,
-)
 from cadrumo.application.aggregation.tests.withholding_filer_profile_support import (
     quarterly_filer_cadence,
     quarterly_filer_cadence_for,

@@ -22,6 +22,15 @@ from pydantic import ValidationError
 
 from cadrumo.adapters.persistence.profile.percepciones_observations import PercepcionObservationRepositoryAdapter
 from cadrumo.adapters.persistence.profile.retencion_observations import RetencionObservationRepositoryAdapter
+from cadrumo.adapters.persistence.profile.tests.ledger_capital_support import (
+    CAPITAL_GROSS,
+    CAPITAL_HOLDER_NIF,
+    CAPITAL_IRPF,
+    capital_payment,
+    capital_pending_payment,
+    capital_request,
+    withholding_producer,
+)
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.aggregation.errors import AggregationValidationError
@@ -45,15 +54,6 @@ from cadrumo.application.aggregation.source_mesh import (
     CalculationSourceContext,
     CalculationSourceProvenance,
     CalculationSourceResolution,
-)
-from cadrumo.application.aggregation.tests.ledger_capital_support import (
-    CAPITAL_GROSS,
-    CAPITAL_HOLDER_NIF,
-    CAPITAL_IRPF,
-    capital_payment,
-    capital_pending_payment,
-    capital_request,
-    withholding_producer,
 )
 from cadrumo.application.aggregation.tests.withholding_filer_profile_support import (
     LARGE_COMPANY_FACTS,

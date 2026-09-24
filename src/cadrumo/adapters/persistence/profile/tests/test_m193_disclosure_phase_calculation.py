@@ -42,6 +42,16 @@ from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCata
 from cadrumo.adapters.persistence.profile.percepciones_observations import PercepcionObservationRepositoryAdapter
 from cadrumo.adapters.persistence.profile.retencion_observations import RetencionObservationRepositoryAdapter
 from cadrumo.adapters.persistence.profile.tests.file_flow_test_support import calculation_ports_for_test
+from cadrumo.adapters.persistence.profile.tests.ledger_capital_support import (
+    CAPITAL_GROSS,
+    CAPITAL_HOLDER_NAME,
+    CAPITAL_HOLDER_NIF,
+    CAPITAL_IRPF,
+    capital_payment,
+    capital_pending_payment,
+    capital_request,
+    withholding_producer,
+)
 from cadrumo.adapters.persistence.profile.tests.modelo_export_ports_support import modelo_export_ports_for_test
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
@@ -49,6 +59,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import s
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.aggregation.ledger_payment_withholding import (
     LedgerPaymentWithholdingCapture,
+    LedgerPaymentWithholdingEvidenceError,
     build_ledger_payment_withholding_capture,
 )
 from cadrumo.application.aggregation.m193_phase_materialization import Modelo193PhaseMaterializationError
@@ -56,17 +67,16 @@ from cadrumo.application.aggregation.percepciones_observations_repository import
     PercepcionObservationPorts,
     persist_percepcion_observations,
 )
-from cadrumo.application.aggregation.retencion_observations_repository import RetencionObservationPorts
-from cadrumo.application.aggregation.retenciones import Modelo193NonpaymentCause
-from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
-from cadrumo.application.aggregation.tests.ledger_capital_support import (
-    CAPITAL_GROSS,
-    CAPITAL_IRPF,
-    capital_payment,
-    capital_pending_payment,
-    capital_request,
-    withholding_producer,
+from cadrumo.application.aggregation.retencion_observations_repository import (
+    RetencionObservationPorts,
+    persist_retencion_observations,
 )
+from cadrumo.application.aggregation.retenciones import (
+    Modelo193CapitalDetail,
+    Modelo193NonpaymentCause,
+    RetencionObservation,
+)
+from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
 from cadrumo.application.aggregation.tests.withholding_filer_profile_support import (
     quarterly_filer_cadence,
     quarterly_filer_cadence_for,
@@ -81,7 +91,7 @@ from cadrumo.application.modelo.export import ModeloExportCommand, export_modelo
 from cadrumo.application.modelo.m193_settled_row_gate import Modelo193SettledRowAmountAuthorityUnresolvedError
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
-from cadrumo.core.aggregation import BindingSourceKind, CalculationSourceLineageRole
+from cadrumo.core.aggregation import BindingSourceKind, CalculationSourceLineageRole, RetencionScheme
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.errors.error_codes import get_registered_error_code
 from cadrumo.core.period import Period
@@ -224,6 +234,38 @@ def _persist_manual_2025_row(objects: SecureObjectRepository) -> None:
     )
 
 
+def _persist_pending_2026_accrual_row(objects: SecureObjectRepository) -> None:
+    """Write a pending key B coupon accrued in 2026 straight into the Modelo 123 store.
+
+    Capture refuses a 2026 accrual, so this is the path a row persisted outside
+    capture takes: the annual materialiser is its only remaining guard.
+    """
+    exigible_on, paid_on = date(2026, 12, 15), date(2027, 1, 20)
+    transaction = capital_payment(provider_id=f"coupon-{exigible_on.isoformat()}", booked_date=paid_on)
+    persist_retencion_observations(
+        ports=RetencionObservationPorts(repository=RetencionObservationRepositoryAdapter(objects=objects)),
+        modelo="123",
+        filing_year=exigible_on.year,
+        period=Period.from_year_and_code(exigible_on.year, "4T"),
+        observations=[
+            RetencionObservation(
+                source_kind=BindingSourceKind.LEDGER_TRANSACTION,
+                source_object_id=transaction.transaction_id,
+                perceptor_nif=CAPITAL_HOLDER_NIF,
+                perceptor_name=CAPITAL_HOLDER_NAME,
+                scheme=RetencionScheme("intereses"),
+                taxable_base=CAPITAL_GROSS,
+                retencion_amount=CAPITAL_IRPF,
+                accrued_on=exigible_on.isoformat(),
+                modelo_193_capital=Modelo193CapitalDetail(
+                    pending_payment=capital_pending_payment(transaction, transaction_date=paid_on),
+                    recognition_event_id=f"coupon-exigible-{exigible_on.isoformat()}",
+                ),
+            )
+        ],
+    )
+
+
 def _rows_by_nif(row_binding_values: Mapping[str, Mapping[str, str]]) -> dict[str, dict[str, str]]:
     """Return each persisted type-2 row's binding values, keyed by the row's perceptor NIF."""
     rows: dict[str, dict[str, str]] = {}
@@ -338,15 +380,29 @@ def test_a_key_c_coupon_cannot_carry_pending_payment_evidence_into_capture() -> 
         )
 
 
+def test_the_capture_refuses_a_2026_accrual_and_writes_nothing(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    """Withholding recognition is grounded for 2025 only, so a 2026 accrual never reaches the store."""
+    with _m193_bucket(tmp_path, filing_year=2026, operation=authority_operation) as bucket:
+        with pytest.raises(LedgerPaymentWithholdingEvidenceError) as refused:
+            _coupon_capture(exigible_on=date(2026, 12, 15), paid_on=date(2027, 1, 20), pending=True)
+        stored = RetencionObservationRepositoryAdapter(objects=bucket.objects).load_source_observations_through_year(
+            "123", 2027
+        )
+
+    assert refused.value.refusal_code == "unsupported_applicable_year"
+    assert stored == ()
+
+
 def test_a_2026_accrual_with_pending_evidence_refuses_the_2026_calculation(
     tmp_path: Path,
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    """Pending disclosure is grounded for 2025 accruals only, so a captured 2026 accrual stops the 2026 return."""
+    """Pending disclosure is grounded for 2025 accruals only, so a persisted 2026 accrual stops the 2026 return."""
     with _m193_bucket(tmp_path, filing_year=2026, operation=authority_operation) as bucket:
-        _capture(
-            bucket.objects, _coupon_capture(exigible_on=date(2026, 12, 15), paid_on=date(2027, 1, 20), pending=True)
-        )
+        _persist_pending_2026_accrual_row(bucket.objects)
         with pytest.raises(Modelo193PhaseMaterializationError) as raised:
             _calculate(bucket)
 

@@ -17,6 +17,7 @@ import pytest
 from pydantic import BaseModel
 
 from cadrumo.adapters.outbound.aeat.browser.factory import default_browser_session_factory
+from cadrumo.adapters.outbound.aeat.sede.censal_datos import fetch_censal_datos
 from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
@@ -42,7 +43,6 @@ from cadrumo.core.operations import (
     OperationLifecycle,
     OperationTerminalCondition,
 )
-from cadrumo.entrypoints.adapter_composition import build_censal_fetch_port
 
 from .supervision_support import run_to_settlement
 from .test_censal_operation_executor import _NOW as _CENSAL_NOW
@@ -330,7 +330,7 @@ def test_censal_review_checkpoint_waits_for_its_response_instead_of_failing(tmp_
             certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
             browser_session_factory=default_browser_session_factory,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-            censal_fetch_port=build_censal_fetch_port(),
+            censal_fetch_port=fetch_censal_datos,
             acquire=acquire,
         )
         owner = _censal_supervisor(

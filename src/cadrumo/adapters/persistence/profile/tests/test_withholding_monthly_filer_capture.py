@@ -16,6 +16,12 @@ import pytest
 
 from cadrumo.adapters.persistence.profile.percepciones_observations import PercepcionObservationRepositoryAdapter
 from cadrumo.adapters.persistence.profile.retencion_observations import RetencionObservationRepositoryAdapter
+from cadrumo.adapters.persistence.profile.tests.ledger_capital_support import (
+    capital_payment,
+    capital_request,
+    withholding_producer,
+)
+from cadrumo.adapters.persistence.profile.tests.test_ledger_payment_withholding import _payroll_payment, _request
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.aggregation.invoice_retencion import (
@@ -27,12 +33,6 @@ from cadrumo.application.aggregation.ledger_payment_withholding import (
     build_ledger_payment_withholding_capture,
 )
 from cadrumo.application.aggregation.retenciones import RetencionObservation
-from cadrumo.application.aggregation.tests.ledger_capital_support import (
-    capital_payment,
-    capital_request,
-    withholding_producer,
-)
-from cadrumo.application.aggregation.tests.test_ledger_payment_withholding import _payroll_payment, _request
 from cadrumo.application.aggregation.tests.withholding_filer_profile_support import (
     LARGE_COMPANY_FACTS,
     PUBLIC_ADMINISTRATION_FACTS,

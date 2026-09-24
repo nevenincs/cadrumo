@@ -11,24 +11,24 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 
-from ....adapters.persistence.profile.percepciones_observations import PercepcionObservationRepositoryAdapter
-from ....adapters.persistence.profile.retencion_observations import RetencionObservationRepositoryAdapter
-from ....adapters.persistence.profile.withholding_observation_workflow import WithholdingObservationWorkflowAdapter
-from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ....core.aggregation import RetencionClave, RetencionScheme
-from ....domain.calculations.registry.withholding_bindings import WithholdingObservation
-from ....domain.transactions.enums import TransactionDirection, TransactionLifecycleState
-from ....domain.transactions.models import Transaction
-from ..ledger_payment_withholding import LedgerPaymentWithholdingEvidenceRequest
-from ..retenciones import Modelo193NonpaymentCause, Modelo193PendingPaymentEvidence
-from ..withholding_observation_service import WithholdingObservationService
-from ..withholding_producer import WithholdingProducer
-from ..withholding_recognition import (
+from .....application.aggregation.ledger_payment_withholding import LedgerPaymentWithholdingEvidenceRequest
+from .....application.aggregation.retenciones import Modelo193NonpaymentCause, Modelo193PendingPaymentEvidence
+from .....application.aggregation.tests.ledger_transaction_support import ledger_raw_transaction
+from .....application.aggregation.withholding_observation_service import WithholdingObservationService
+from .....application.aggregation.withholding_producer import WithholdingProducer
+from .....application.aggregation.withholding_recognition import (
     WithholdingIncomeKind,
     WithholdingRecipientTaxRegime,
     WithholdingRecipientTaxStatus,
 )
-from .ledger_transaction_support import ledger_raw_transaction
+from .....core.aggregation import RetencionClave, RetencionScheme
+from .....domain.calculations.registry.withholding_bindings import WithholdingObservation
+from .....domain.transactions.enums import TransactionDirection, TransactionLifecycleState
+from .....domain.transactions.models import Transaction
+from ...storage.sql.secure_objects import SecureObjectRepository
+from ..percepciones_observations import PercepcionObservationRepositoryAdapter
+from ..retencion_observations import RetencionObservationRepositoryAdapter
+from ..withholding_observation_workflow import WithholdingObservationWorkflowAdapter
 
 CAPITAL_GROSS = Decimal("1000.00")
 CAPITAL_IRPF = Decimal("190.00")

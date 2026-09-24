@@ -13,18 +13,7 @@ from pydantic import ValidationError
 
 from cadrumo.adapters.persistence.profile.percepciones_observations import PercepcionObservationRepositoryAdapter
 from cadrumo.adapters.persistence.profile.retencion_observations import RetencionObservationRepositoryAdapter
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.aggregation.ledger_payment_withholding import (
-    LedgerPaymentWithholdingCapture,
-    LedgerPaymentWithholdingEvidenceError,
-    LedgerPaymentWithholdingEvidenceRequest,
-    build_ledger_payment_withholding_capture,
-)
-from cadrumo.application.aggregation.m193_phase_materialization import (
-    Modelo193DisclosurePhase,
-    materialize_modelo_193_disclosure_phases,
-)
-from cadrumo.application.aggregation.tests.ledger_capital_support import (
+from cadrumo.adapters.persistence.profile.tests.ledger_capital_support import (
     CAPITAL_EXIGIBLE_ON,
     CAPITAL_GROSS,
     CAPITAL_HOLDER_NAME,
@@ -36,6 +25,17 @@ from cadrumo.application.aggregation.tests.ledger_capital_support import (
     capital_pending_payment,
     capital_request,
     withholding_producer,
+)
+from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.application.aggregation.ledger_payment_withholding import (
+    LedgerPaymentWithholdingCapture,
+    LedgerPaymentWithholdingEvidenceError,
+    LedgerPaymentWithholdingEvidenceRequest,
+    build_ledger_payment_withholding_capture,
+)
+from cadrumo.application.aggregation.m193_phase_materialization import (
+    Modelo193DisclosurePhase,
+    materialize_modelo_193_disclosure_phases,
 )
 from cadrumo.application.aggregation.tests.withholding_filer_profile_support import (
     quarterly_filer_cadence,

@@ -19,10 +19,7 @@ import pytest
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
-from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
-from ....application.aggregation.retenciones import RetencionObservation
-from ....application.aggregation.tests.ledger_capital_support import (
+from ....adapters.persistence.profile.tests.ledger_capital_support import (
     CAPITAL_EXIGIBLE_ON,
     CAPITAL_GROSS,
     CAPITAL_HOLDER_NIF,
@@ -30,6 +27,9 @@ from ....application.aggregation.tests.ledger_capital_support import (
     capital_payment,
     capital_request,
 )
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
+from ....application.aggregation.retenciones import RetencionObservation
 from ....core.aggregation import BindingSourceKind
 from ....core.period import Period
 from ....core.storage_taxonomy import StorageCategory

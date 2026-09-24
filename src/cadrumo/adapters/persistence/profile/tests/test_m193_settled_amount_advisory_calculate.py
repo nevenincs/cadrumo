@@ -23,17 +23,17 @@ from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueReposi
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.tests.file_flow_test_support import calculation_ports_for_test
-from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_modelo_ready_profile_record
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.aggregation.ledger_payment_withholding import build_ledger_payment_withholding_capture
-from cadrumo.application.aggregation.source_mesh import CallerOverrideDisposition, precedence_ladder_sources
-from cadrumo.application.aggregation.tests.ledger_capital_support import (
+from cadrumo.adapters.persistence.profile.tests.ledger_capital_support import (
     capital_payment,
     capital_pending_payment,
     capital_request,
     withholding_producer,
 )
+from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_modelo_ready_profile_record
+from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.application.aggregation.ledger_payment_withholding import build_ledger_payment_withholding_capture
+from cadrumo.application.aggregation.source_mesh import CallerOverrideDisposition, precedence_ladder_sources
 from cadrumo.application.aggregation.tests.withholding_filer_profile_support import (
     quarterly_filer_cadence,
     quarterly_filer_cadence_for,
@@ -91,9 +91,7 @@ def test_the_settled_row_advisory_reaches_the_modelo_193_2026_calculate_result(
         objects = profile.repository
         seed_modelo_ready_profile_record(_BUCKET_ID, clock=datetime.now(UTC))
         assert (
-            withholding_producer(objects).capture(
-                capture.command, cadence=quarterly_filer_cadence_for(capture.command)
-            )
+            withholding_producer(objects).capture(capture.command, cadence=quarterly_filer_cadence_for(capture.command))
             is not None
         )
         work_unit_repository = WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects)
@@ -125,9 +123,7 @@ def test_the_settled_row_advisory_reaches_the_modelo_193_2026_calculate_result(
                 clock=_T1,
             )
 
-    advisories = [
-        diagnostic for diagnostic in result.source_diagnostics if diagnostic.reason == _UNRESOLVED_AMOUNTS
-    ]
+    advisories = [diagnostic for diagnostic in result.source_diagnostics if diagnostic.reason == _UNRESOLVED_AMOUNTS]
     assert len(advisories) == 1
     (advisory,) = advisories
     assert advisory.binding_source is BindingSourceKind.WITHHOLDING

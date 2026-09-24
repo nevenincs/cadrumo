@@ -39,7 +39,6 @@ from ...core.i18n.render import tr
 from ...core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ..adapter_composition import build_calculation_action_ports
-from ..tui.operations.refusal_explanation import public_refusal_explanation
 from .test_registered_executor_conformance import (
     _ACTOR,
     _FIRST_QUARTER_PRIOR_PERIOD_BINDINGS,
@@ -150,9 +149,10 @@ def test_a_refused_edit_settles_refused_with_its_family_code_and_writes_nothing(
     assert catalogues_after == catalogues_before
 
     registered = get_registered_error_code_by_code(expected_code)
-    explanation = public_refusal_explanation(projection.refusal_ref)
-    assert explanation is not None
-    assert explanation == tr(registered.message_key)
+    # A settled refusal persists only its code, so a surface can explain it
+    # only when the registry declares the code's message as the public text.
+    assert registered.public_message_from_registry
+    explanation = tr(registered.message_key)
     assert explanation.strip()
     assert explanation != registered.message_key
     assert work_unit_id not in explanation
