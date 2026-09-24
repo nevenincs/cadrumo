@@ -38,7 +38,7 @@ from ...core.secure_object_write import SecureObjectWrite
 from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.row_models import ModeloDetailRow
-from .calculate_input import _resolve_binding_overrides
+from .calculate_input import resolve_binding_overrides
 from .calculation_action_ports import CalculationActionPorts
 from .calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
@@ -259,7 +259,7 @@ def _prepare_binding_edit_inputs(
         period=baseline.period.registry_token,
         revision_id=baseline.law_selected_revision_id,
     )
-    return _resolve_binding_overrides(raw, snapshot.revision)
+    return resolve_binding_overrides(raw, snapshot.revision)
 
 
 def _capture_edit_receipt(

@@ -40,9 +40,9 @@ from ..calculate_input import (
     ModeloCalculateBindingInputError,
     ModeloCalculateCasillaInputError,
     ModeloCalculateDecimalInputError,
-    _resolve_binding_overrides,
     _resolve_casilla_overrides,
     _validated_binding_input_channel,
+    resolve_binding_overrides,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -141,7 +141,7 @@ def test_unknown_binding_refusal_carries_its_bindings_list_verdict() -> None:
     assert "no-such-binding-id" not in known
 
     with pytest.raises(ModeloCalculateBindingInputError) as exc_info:
-        _resolve_binding_overrides({"no-such-binding-id": "1"}, revision, work_unit=work_unit)
+        resolve_binding_overrides({"no-such-binding-id": "1"}, revision, work_unit=work_unit)
 
     error = exc_info.value
     assert error.translated_message == "application.modelo.errors.calculate_binding_unknown"
@@ -187,7 +187,7 @@ def test_boolean_binding_encoding_refusal_carries_its_bindings_list_verdict() ->
     accepted = ", ".join(option.encoded_value for option in boolean_binding_encoded_values(binding))
 
     with pytest.raises(ModeloCalculateDecimalInputError) as exc_info:
-        _resolve_binding_overrides({binding.id: "false"}, revision, work_unit=work_unit)
+        resolve_binding_overrides({binding.id: "false"}, revision, work_unit=work_unit)
 
     error = exc_info.value
     assert error.translated_message == "application.modelo.errors.calculate_boolean_binding_encoding_invalid"

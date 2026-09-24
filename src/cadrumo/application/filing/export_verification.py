@@ -33,11 +33,11 @@ from ...domain.calculations.registry.schema_exports import ExportLayoutDefinitio
 from ...domain.filing.errors import FilingExportError, FilingExportValidationError
 from ...domain.filing.schema import ModeloCasillaProvenance, ModeloDraft
 from ._export_xml_dictionary import (
-    _modelo_100_sign_branch_value,
-    _registry_modelo_100_xml_declarations,
     expected_xml_dictionary_root_identity,
     format_xml_dictionary_value,
+    modelo_100_sign_branch_value,
     read_xml_dictionary_root_identity,
+    registry_modelo_100_xml_declarations,
 )
 from .runtime import RegistryModeloSubview, RegistrySchemaAccessor, build_runtime_schema_provider
 
@@ -454,7 +454,7 @@ def _mismatched_xml_dictionary_casilla_ids(
         )
     }
     values = {value.casilla_id: value.value for value in draft.values}
-    modelo_100_declarations = _registry_modelo_100_xml_declarations() if draft.modelo == Modelo("100") else None
+    modelo_100_declarations = registry_modelo_100_xml_declarations() if draft.modelo == Modelo("100") else None
     mismatched: list[CasillaId] = []
     checked: list[CasillaId] = []
     parsed_payload = parse_export_payload(
@@ -507,7 +507,7 @@ def _xml_dictionary_expected_wire_value(
     if modelo == Modelo("100"):
         if modelo_100_declarations is None:
             raise FilingExportValidationError("Modelo 100 XML verification declarations were not resolved")
-        value = _modelo_100_sign_branch_value(
+        value = modelo_100_sign_branch_value(
             entry,
             value,
             declarations=modelo_100_declarations,

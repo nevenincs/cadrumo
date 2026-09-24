@@ -160,7 +160,7 @@ def render_xml_dictionary_layout(
     )
     _append_declaration_aux(root, layout, aux_version=aux_version)
     casilla_values: dict[CasillaId, object] = {value.casilla_id: value.value for value in draft.values}
-    modelo_100_declarations = _registry_modelo_100_xml_declarations() if draft.modelo == Modelo("100") else None
+    modelo_100_declarations = registry_modelo_100_xml_declarations() if draft.modelo == Modelo("100") else None
     unfiled_paths = frozenset[str]()
     if draft.modelo == Modelo("100"):
         declarations = modelo_100_declarations
@@ -505,7 +505,7 @@ def _record_xsd_child_order(
             )
 
 
-def _registry_modelo_100_xml_declarations() -> Mapping[str, str]:
+def registry_modelo_100_xml_declarations() -> Mapping[str, str]:
     """Resolve the selected XML export declarations without a Python copy."""
     authority = governed_facts_in_scope()
     if authority is None:
@@ -552,7 +552,7 @@ def _xml_dictionary_rendered_value(
     if draft.modelo == Modelo("100"):
         if declarations is None:
             raise FilingExportValidationError("Modelo 100 XML declarations were not resolved")
-        raw = _modelo_100_sign_branch_value(entry, raw, declarations=declarations)
+        raw = modelo_100_sign_branch_value(entry, raw, declarations=declarations)
         if raw is None:
             return None
     rendered = format_xml_dictionary_value(entry.data_type, raw)
@@ -735,7 +735,7 @@ def _modelo_100_shared_total_paths(
     return frozenset(entry.path for entry in entries if str(entry.casilla_id) == shared_total)
 
 
-def _modelo_100_sign_branch_value(
+def modelo_100_sign_branch_value(
     entry: XmlDictionaryEntry,
     raw: object,
     *,

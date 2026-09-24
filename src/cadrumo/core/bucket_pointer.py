@@ -13,7 +13,7 @@ import os
 import stat
 import sys
 import time
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from contextvars import ContextVar
 from pathlib import Path
@@ -215,7 +215,7 @@ _CORRUPT_POINTER_READS_AS_UNSELECTED: ContextVar[bool] = ContextVar(
 
 
 @contextmanager
-def corrupt_pointer_reads_as_unselected() -> Iterator[None]:
+def corrupt_pointer_reads_as_unselected() -> Generator[None]:
     """Read a corrupt pointer as selecting no profile, for the command that repairs it.
 
     Settings composition and every "which profile is selected" read go through

@@ -33,7 +33,7 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.export_parse import XmlDictionaryEntry, xml_dictionary_entries
 from ....domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
-from .._export_xml_dictionary import _modelo_100_sign_branch_value, _registry_modelo_100_xml_declarations
+from .._export_xml_dictionary import modelo_100_sign_branch_value, registry_modelo_100_xml_declarations
 from ..export_verification import _xml_dictionary_expected_wire_value
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -49,7 +49,7 @@ _NEGATIVE_BRANCH = "TCNN112"
 def _declarations(operation: PinnedAuthorityOperation) -> Mapping[str, str]:
     """Resolve Modelo 100 XML routing declarations through the pinned authority."""
     with validating_governed_facts(operation):
-        return _registry_modelo_100_xml_declarations()
+        return registry_modelo_100_xml_declarations()
 
 
 def _dictionary_entries() -> tuple[XmlDictionaryEntry, ...]:
@@ -106,11 +106,11 @@ def test_a_positive_amount_reaches_only_the_amount_to_pay_branch(_declarations: 
     """A positive 0695 is money still owed, and no refund is being requested."""
     entries = _branch_entries()
 
-    assert _modelo_100_sign_branch_value(
+    assert modelo_100_sign_branch_value(
         entries[_NON_NEGATIVE_BRANCH], Decimal("1234.56"), declarations=_declarations
     ) == Decimal("1234.56")
     assert (
-        _modelo_100_sign_branch_value(entries[_NEGATIVE_BRANCH], Decimal("1234.56"), declarations=_declarations) is None
+        modelo_100_sign_branch_value(entries[_NEGATIVE_BRANCH], Decimal("1234.56"), declarations=_declarations) is None
     )
 
 
@@ -129,7 +129,7 @@ def test_verifier_matches_the_selected_0695_branch(
         == "1234.56"
     )
     assert (
-        _modelo_100_sign_branch_value(entries[_NEGATIVE_BRANCH], Decimal("1234.56"), declarations=_declarations) is None
+        modelo_100_sign_branch_value(entries[_NEGATIVE_BRANCH], Decimal("1234.56"), declarations=_declarations) is None
     )
 
 
@@ -137,11 +137,11 @@ def test_a_negative_amount_reaches_only_the_refund_branch(_declarations: Mapping
     """A negative 0695 is a refund being requested, and nothing is owed."""
     entries = _branch_entries()
 
-    assert _modelo_100_sign_branch_value(
+    assert modelo_100_sign_branch_value(
         entries[_NEGATIVE_BRANCH], Decimal("-987.65"), declarations=_declarations
     ) == Decimal("-987.65")
     assert (
-        _modelo_100_sign_branch_value(entries[_NON_NEGATIVE_BRANCH], Decimal("-987.65"), declarations=_declarations)
+        modelo_100_sign_branch_value(entries[_NON_NEGATIVE_BRANCH], Decimal("-987.65"), declarations=_declarations)
         is None
     )
 
@@ -150,10 +150,10 @@ def test_zero_uses_the_non_negative_branch(_declarations: Mapping[str, str]) -> 
     """Zero selects the non-negative alternative of the XSD choice."""
     entries = _branch_entries()
 
-    assert _modelo_100_sign_branch_value(
+    assert modelo_100_sign_branch_value(
         entries[_NON_NEGATIVE_BRANCH], Decimal("0"), declarations=_declarations
     ) == Decimal("0")
-    assert _modelo_100_sign_branch_value(entries[_NEGATIVE_BRANCH], Decimal("0"), declarations=_declarations) is None
+    assert modelo_100_sign_branch_value(entries[_NEGATIVE_BRANCH], Decimal("0"), declarations=_declarations) is None
 
 
 @pytest.mark.parametrize("uncoercible", ["abc", "", "1.234,56", True, None])
@@ -171,10 +171,10 @@ def test_a_value_that_will_not_coerce_selects_a_branch_instead_of_raising(
     entries = _branch_entries()
 
     assert (
-        _modelo_100_sign_branch_value(entries[_NON_NEGATIVE_BRANCH], uncoercible, declarations=_declarations)
+        modelo_100_sign_branch_value(entries[_NON_NEGATIVE_BRANCH], uncoercible, declarations=_declarations)
         is uncoercible
     )
-    assert _modelo_100_sign_branch_value(entries[_NEGATIVE_BRANCH], uncoercible, declarations=_declarations) is None
+    assert modelo_100_sign_branch_value(entries[_NEGATIVE_BRANCH], uncoercible, declarations=_declarations) is None
 
 
 def test_the_carry_class_is_left_alone(_declarations: Mapping[str, str]) -> None:
@@ -188,7 +188,7 @@ def test_the_carry_class_is_left_alone(_declarations: Mapping[str, str]) -> None
     assert len(carried) == 4, f"expected two rows each for 0435 and 0460, found {len(carried)}"
     for entry in carried:
         for amount in (Decimal("500.00"), Decimal("-500.00"), Decimal("0")):
-            assert _modelo_100_sign_branch_value(entry, amount, declarations=_declarations) == amount
+            assert modelo_100_sign_branch_value(entry, amount, declarations=_declarations) == amount
 
 
 def test_restoring_all_write_fails_every_branch_assertion() -> None:

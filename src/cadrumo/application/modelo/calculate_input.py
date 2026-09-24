@@ -481,7 +481,7 @@ def _resolve_casilla_overrides(
     )
 
 
-def _resolve_binding_overrides(
+def resolve_binding_overrides(
     binding_overrides: Mapping[BindingId, str],
     revision: ModeloRevision,
     *,
@@ -597,7 +597,7 @@ def build_work_calculate_input_bundle(
         operation=operation,
         work_unit=work_unit,
     )
-    binding_values, enum_binding_values = _resolve_binding_overrides(
+    binding_values, enum_binding_values = resolve_binding_overrides(
         binding_overrides,
         revision,
         work_unit=work_unit,
@@ -1764,4 +1764,5 @@ __all__ = [
     "calculate_modelo_work_revision",
     "is_detail_casilla_override_key",
     "modelo_202_modality_for_work_unit",
+    "resolve_binding_overrides",
 ]
