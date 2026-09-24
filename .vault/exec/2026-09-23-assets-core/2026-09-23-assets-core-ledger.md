@@ -5,7 +5,7 @@ tags:
 date: '2026-09-23'
 modified: '2026-09-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:73028ecf877512603b08698add29da48b53d198d1f79f35cafc393059becdd5b'
+body_hash: 'sha256:704a9e1de7f704aa473d186e953d82c7134edece425ed2ba67492aa354a93245'
 related:
   - "[[2026-09-23-assets-core-plan]]"
 ---
@@ -123,6 +123,10 @@ related:
 - `S11` `M` `dev/registry/tests/test_modelo_100_activity_asset_amortization_parameters.py`
 - `S11` `M` `dev/registry/tests/test_modelo_100_drift_detection.py`
 - `S11` `verify:` `pytest dev/registry/tests 5055 passed, 11 failed outside the activity-asset surface; orphan-parameter gate fixed in this Step` -> `fail`
+- `S12` `verify:` `dev.registry.pipeline publish-authority and dev.acceptance.assets.installed_method_proof at 6d7d32e960, wheel 0f2f1990, generation 9a430d4b, stages cli_export cli_first tui_first proven` -> `pass`
+- `S08` `A` `.agents/session-briefs/handoffs/2026-09-24-assets-workforce-incentives-handoff.md`
+- `S08` `verify:` `asset population 107, drift and parameter gates 65, legal-kind gates 236, inspect_authoring_candidate 0 findings, locale audit ok` -> `pass`
+- `S08` `by:` `assets-core`
 
 ## Notes
 
@@ -133,4 +137,5 @@ related:
 - `S11` An asset whose investment would take its incentive past the LIS 102.1 or DA 17a.1 cap, and a building-code-mandated installation (DA 17a.5), are refused whole rather than split or proportioned.
 - `S11` The RDL 16/2025 art. 17.Uno amending instrument is cited through the Renta 2025 manual; acquiring it as its own legal entry is a follow-up.
 - `S11` Remaining dev/registry reds are other lanes': render_check 390/296 provenance, modelo 190/193 deadline raises, filing capability worklist, two-channel export proof, pinned conformance vector (200), legal heading-only ceiling 37 over 34 (dias-inhabiles resolutions), modelo 345 grounding.
+- `S12` The shared authority was republished by the coordinator at generations 459f6def and 5357961a; the installed run built its own authority from its detached worktree.
 

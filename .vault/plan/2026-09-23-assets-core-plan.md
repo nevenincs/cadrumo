@@ -12,7 +12,7 @@ related:
   - '[[2026-09-24-assets-core-average-workforce-write-path-adr]]'
 modified: '2026-09-24'
 body_schema: body-v2
-body_hash: 'sha256:ef9980d01576887e497da9126ff5bf435e2b231e5c810588b552d5c1f43806a0'
+body_hash: 'sha256:89970fa0831296e13d32d77e4dfd6104e9c259f669de002da7d758b2ae41a1f4'
 ---
 
 # `assets-core` plan
@@ -36,11 +36,11 @@ S09-S12 were added on 2026-09-23 under the operator's instruction that every cri
 - [x] `S05` - Project the election contract through the CLI and TUI adapters; `src/cadrumo/entrypoints/`.
 - [x] `S06` - Prove each method with independent worked examples, boundaries and cited refusals; `src/cadrumo/domain/renta/actividad_asset/tests/`.
 - [x] `S07` - Publish the authority once and prove a non-linear asset through installed CLI and TUI to M130, M100 and the 2025 XSD; `dev/acceptance/assets/`.
-- [ ] `S08` - Run the owning quality gates and write the checkpoint and handoff; `.agents/session-briefs/handoffs/`.
+- [x] `S08` - Run the owning quality gates and write the checkpoint and handoff; `.agents/session-briefs/handoffs/`.
 - [x] `S09` - Admit the table-listed intangible methods, reduced-size acceleration of indefinite-life intangibles and goodwill, and vehicles on a typed affectation declaration with electric-vehicle free depreciation; `src/cadrumo/domain/renta/actividad_asset/vehicle_affectation.py`.
 - [x] `S10` - Give the undeclared-vehicle refusal a typed recovery action to the CLI and TUI correction; `src/cadrumo/application/actividad_asset/`.
 - [x] `S11` - Consume the average-workforce profile fact for job-creating and renewable self-consumption free depreciation; `src/cadrumo/domain/renta/actividad_asset/workforce.py`.
-- [ ] `S12` - Republish the authority once after the format cutover and prove the final tree through one installed run; `dev/acceptance/assets/`.
+- [x] `S12` - Republish the authority once after the format cutover and prove the final tree through one installed run; `dev/acceptance/assets/`.
 - [x] `S13` - Give the average-workforce profile field a typed CLI and TUI write path against the committed schema version 7, ahead of the S11 resolver wiring; `src/cadrumo/entrypoints/cli/config/`.
 
 ## Parallelization
