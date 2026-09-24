@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#registry-authority-artifact-boundary'
 date: '2026-09-10'
-modified: '2026-09-23'
+modified: '2026-09-24'
 body_schema: 'body-v2'
 body_hash: 'sha256:17f33d2c4a8c07379df5e61a2930a38da9a101998f891f7f6bb409bec927d382'
 related:
