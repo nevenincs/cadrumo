@@ -292,6 +292,14 @@ _EXPECTATIONS: Mapping[str, _RegisteredExecutorConformanceCase] = {
             "modelo.work.discard", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
         ),
         _RegisteredExecutorConformanceCase(
+            # Calculated from the unit's (empty) ledger aggregation: the M130
+            # revision marks no casilla required, so one revision is persisted.
+            "modelo.work.calculate",
+            OperationTerminalCondition.SUCCEEDED,
+            OperationEffect.UPDATED,
+            ("modelo.work.calculate.ledger",),
+        ),
+        _RegisteredExecutorConformanceCase(
             "modelo.work.verify", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
         ),
         _RegisteredExecutorConformanceCase(
@@ -845,6 +853,10 @@ def _payload(
                 "reason": "corrected the declared base for the conformance matrix",
                 "actor": _ACTOR,
             }
+        case "modelo.work.calculate":
+            unit = _seeded_modelo_work_unit(profile_id, operation=operation)
+            subject_ref = unit.work_unit_id
+            values = {"work_unit_id": unit.work_unit_id, "actor": _ACTOR}
         case "modelo.work.verify":
             revision_id = _seeded_modelo_calculation_revision(profile_id, operation=operation)
             subject_ref = revision_id
