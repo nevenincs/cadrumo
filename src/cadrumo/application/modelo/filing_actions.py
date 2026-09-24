@@ -90,6 +90,7 @@ from .lifecycle_clock_gate import (
     require_lifecycle_clock_not_before,
 )
 from .m123_count_authority_gate import Modelo123CountAuthorityStage, require_modelo_123_count_authority
+from .m193_settled_row_gate import Modelo193SettledRowStage, require_modelo_193_settled_row_amount_authority
 from .m303_regimen_simplificado_scope import (
     m303_regimen_simplificado_annual_summary_applies_to_profile,
     taxpayer_profile_for_work,
@@ -291,12 +292,14 @@ def file_modelo_revision(
         operation=RevisionParentOperation.FILE,
     )
     # Before the idempotent re-file no-op: a revision verified before evidence
-    # was captured must not be returned as the filed answer beside it.
+    # was captured, or one carrying a Modelo 193 settled prior-accrual row,
+    # must not be returned as the filed answer.
     require_modelo_123_count_authority(
         work_unit,
         retencion_ports=ports.retencion_observation_ports,
         stage=Modelo123CountAuthorityStage.FILE,
     )
+    require_modelo_193_settled_row_amount_authority(work_unit, target, stage=Modelo193SettledRowStage.FILE)
     if profile is None:
         from .profile_readiness_gate import load_modelo_work_profile
 

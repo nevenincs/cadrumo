@@ -181,6 +181,7 @@ from .lifecycle_clock_gate import (
     verification_ordering_instants,
 )
 from .m123_count_authority_gate import Modelo123CountAuthorityStage, require_modelo_123_count_authority
+from .m193_settled_row_gate import modelo_193_settled_row_verification_finding
 from .preconditions import ModeloPreconditionFailure
 from .pulled_filing_reconcile import pulled_filing_divergence_findings
 from .revision_persistence import (
@@ -792,6 +793,11 @@ def _append_model_specific_findings(
             operation=operation,
         ),
     )
+    # Non-blocking and without a precondition failure: filing and export refuse
+    # the revision themselves, and this tells the operator before they try.
+    settled_row_finding = modelo_193_settled_row_verification_finding(work_unit, target)
+    if settled_row_finding is not None:
+        findings.append(settled_row_finding)
 
 
 def verify_modelo_revision_with_preconditions(

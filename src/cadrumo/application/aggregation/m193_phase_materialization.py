@@ -197,9 +197,9 @@ def modelo_193_phase_rows_may_settle_prior_accruals(filing_year: int) -> bool:
 
     A phase row is pending in its accrual year and settled in a later payment
     year, and only the accrual years this module grounds can materialise at
-    all. A persisted phase row keeps no accrual year, so a consumer that holds
-    only the filing year asks here: false means every phase row of that year is
-    pending. Were a later accrual year grounded, a year holding both phases
+    all. A phase row persisted without its accrual year leaves a consumer
+    holding only the filing year, so it asks here: false means every phase row
+    of that year is pending. Were a later accrual year grounded, a year holding both phases
     answers true, which over-refuses rather than lets a settled row through.
     """
     return any(filing_year > accrual_year for accrual_year in _PHASE_ACCRUAL_YEARS)

@@ -286,7 +286,12 @@ def _source_issues_revision_id_payload(
 def _source_provenance_revision_id_payload(
     source_provenance: Sequence[CalculationSourceRef],
 ) -> dict[str, object]:
-    """Build the required, complete order-independent source identity payload."""
+    """Build the required, complete order-independent source identity payload.
+
+    ``source_filing_year`` extends a row only when present. Rows persisted
+    before the field existed carry ``None`` and hash exactly as they did then,
+    so their revisions keep the ids they were stored under.
+    """
     canonical_source_provenance = tuple(
         sorted(
             (
@@ -300,6 +305,7 @@ def _source_provenance_revision_id_payload(
                 ref.fingerprint or "",
                 tuple(sorted(ref.source_casilla_ids)),
                 ref.dependency_treatment,
+                *(() if ref.source_filing_year is None else (ref.source_filing_year,)),
             )
             for ref in source_provenance
         )

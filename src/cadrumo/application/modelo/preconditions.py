@@ -287,10 +287,13 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
     ),
     # No action: a settled prior-accrual Modelo 193 row needs an official
     # source for its payment-year amounts, which only the operator can obtain.
-    _profile(
-        "modelo.export",
-        "modelo.export.m193_settled_row_amount_authority.resolved",
-        "modelo.export.m193_settled_row_amount_authority.unresolved",
+    *(
+        _profile(
+            leaf,
+            f"{leaf}.m193_settled_row_amount_authority.resolved",
+            f"{leaf}.m193_settled_row_amount_authority.unresolved",
+        )
+        for leaf in ("modelo.work.file", "modelo.export")
     ),
     _profile(
         "modelo.work.calculate",

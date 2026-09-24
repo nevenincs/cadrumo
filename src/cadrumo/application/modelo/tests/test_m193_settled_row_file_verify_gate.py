@@ -1,12 +1,13 @@
-"""A Modelo 193 revision carrying a settled prior-accrual row is never written out as a fichero.
+"""A Modelo 193 settled prior-accrual row is refused at local filing and reported at verification.
 
 A key B coupon exigible in 2025 and collected in January 2026 is a pending row
-of the 2025 Modelo 193 and a settled prior-accrual row of the 2026 one. No
-official source settles the base and withholding the payment-year record
-declares, so export refuses that 2026 revision from what it persisted. The
-2025 revision carrying the pending row, and a 2026 revision of manual rows
-only, pass the refusal. Real encrypted store, producer, calculation and export
-services over the published authority.
+of the 2025 Modelo 193 and a settled prior-accrual row of the 2026 one. Local
+filing refuses the 2026 revision with the export gate's typed reason, and
+verification reports the same detection as a non-blocking finding. The
+revision persists the contributor's accrual year, so the gates tell a settled
+row from a pending one exactly; a revision persisted without it falls back to
+the conservative filing-year rule. Real encrypted store, producer, calculation,
+verification and filing services over the published authority.
 """
 
 from __future__ import annotations
@@ -23,19 +24,21 @@ import pytest
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.percepciones_observations import PercepcionObservationRepositoryAdapter
 from cadrumo.adapters.persistence.profile.retencion_observations import RetencionObservationRepositoryAdapter
-from cadrumo.adapters.persistence.profile.tests._modelo_export_ports_support import modelo_export_ports_for_test
 from cadrumo.adapters.persistence.profile.tests.file_flow_test_support import calculation_ports_for_test
+from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
+    build_test_certificate_secret_backend_factory,
+    build_test_verification_repository_bundle,
+)
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.aggregation.ledger_payment_withholding import build_ledger_payment_withholding_capture
-from cadrumo.application.aggregation.m193_phase_materialization import (
-    modelo_193_phase_rows_may_settle_prior_accruals,
-)
 from cadrumo.application.aggregation.percepciones_observations_repository import (
     PercepcionObservationPorts,
     persist_percepcion_observations,
@@ -54,8 +57,12 @@ from cadrumo.application.aggregation.tests.withholding_filer_profile_support imp
 from cadrumo.application.aggregation.withholding_source import WithholdingSourceResolver
 from cadrumo.application.modelo.action_errors import CalculationRevisionStateError
 from cadrumo.application.modelo.calculate_input import WorkCalculateInputBundle, calculate_modelo_work_revision
-from cadrumo.application.modelo.export import ModeloExportCommand, export_modelo_revision
-from cadrumo.application.modelo.m193_settled_row_gate import Modelo193SettledRowAmountAuthorityUnresolvedError
+from cadrumo.application.modelo.filing_actions import file_modelo_revision
+from cadrumo.application.modelo.m193_settled_row_gate import (
+    Modelo193SettledRowAmountAuthorityUnresolvedError,
+    modelo_193_settled_prior_accrual_contributors,
+)
+from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.aggregation import (
@@ -71,16 +78,29 @@ from cadrumo.core.period import Period
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
-from cadrumo.domain.modelos.calculation_revision import CalculationRevision
+from cadrumo.domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationSourceRef,
+    derive_calculation_revision_id_from_revision,
+)
+from cadrumo.domain.modelos.verification_report import (
+    ModeloVerificationFinding,
+    ModeloVerificationFindingKind,
+    ModeloVerificationFindingSeverity,
+    VerificationReport,
+)
+from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
+from cadrumo.entrypoints.adapter_composition import build_filing_action_ports
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _BUCKET_ID = "00000000-0000-4000-8000-000000000193"
 _T0 = datetime(2026, 2, 1, 9, 0, tzinfo=UTC)
-_LEAF = "modelo.export"
+_FILE_LEAF = "modelo.work.file"
 _MANUAL_NIF = "33333333P"
+_FINDING_KEY = "application.modelo.findings.m193_settled_row_amount_authority_unresolved"
 
 
 @dataclass(frozen=True, slots=True)
@@ -244,9 +264,15 @@ def _stored_revision(bucket: _Bucket, revision_id: CalculationRevisionId) -> Cal
     return revision
 
 
-def _phase_contributors(revision: CalculationRevision) -> int:
-    return sum(
-        1
+def _stored_work_unit(bucket: _Bucket) -> WorkUnit:
+    work_unit = WorkUnitCatalogueRepository(objects=bucket.objects).load().get(bucket.work_unit_id)
+    assert work_unit is not None
+    return work_unit
+
+
+def _phase_contributors(revision: CalculationRevision) -> tuple[CalculationSourceRef, ...]:
+    return tuple(
+        ref
         for ref in revision.source_provenance
         if ref.resolver_id == WithholdingSourceResolver.resolver_id
         and ref.lineage_role is CalculationSourceLineageRole.CONTRIBUTOR
@@ -265,98 +291,176 @@ def _workflow_profile() -> TaxpayerProfile:
     )
 
 
-def _export(
-    bucket: _Bucket,
-    revision_id: CalculationRevisionId,
-    output_path: Path,
-    *,
-    operation: PinnedAuthorityOperation,
-) -> None:
-    export_modelo_revision(
-        ModeloExportCommand(calculation_revision_id=revision_id, output_path=output_path, actor="test"),
+def _verify(revision_id: CalculationRevisionId, *, operation: PinnedAuthorityOperation) -> VerificationReport:
+    return verify_modelo_revision_with_preconditions(
+        revision_id,
+        certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+        operator_scope_ports=build_operator_scope_ports(),
+        actor="test",
         workflow_profile=_workflow_profile(),
-        export_ports=modelo_export_ports_for_test(bucket_id=_BUCKET_ID, secure_objects=bucket.objects),
+        verification_repositories=build_test_verification_repository_bundle(),
+        operation=operation,
+    ).report
+
+
+def _file(revision_id: CalculationRevisionId, *, operation: PinnedAuthorityOperation) -> None:
+    file_modelo_revision(
+        revision_id,
+        certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+        operator_scope_ports=build_operator_scope_ports(),
+        ports=build_filing_action_ports(bucket_id=_BUCKET_ID),
+        actor="test",
+        workflow_profile=_workflow_profile(),
         operation=operation,
     )
 
 
-def _exported_events(bucket: _Bucket) -> list[str]:
+def _settled_row_findings(report: VerificationReport) -> list[ModeloVerificationFinding]:
+    return [finding for finding in report.findings if finding.message_locale_key == _FINDING_KEY]
+
+
+def _filed_events(bucket: _Bucket) -> list[str]:
     catalogue = BucketEventHistoryRepository(objects=bucket.objects).load()
     return [
-        event_id for event_id, event in catalogue.events.items() if event.event_type is BucketEventType.MODELO_EXPORTED
+        event_id for event_id, event in catalogue.events.items() if event.event_type is BucketEventType.MODELO_FILED
     ]
 
 
-def test_a_settled_prior_accrual_row_refuses_export_and_writes_nothing(
+def _with_source_filing_years(revision: CalculationRevision, year: int | None) -> CalculationRevision:
+    """Rebuild ``revision`` with every phase contributor's accrual year set to ``year``, under its derived id."""
+    provenance = tuple(
+        ref.model_copy(update={"source_filing_year": year}) if ref in _phase_contributors(revision) else ref
+        for ref in revision.source_provenance
+    )
+    rebuilt = revision.model_copy(update={"source_provenance": provenance})
+    payload = rebuilt.model_dump()
+    payload["calculation_revision_id"] = derive_calculation_revision_id_from_revision(rebuilt)
+    return CalculationRevision.model_validate(payload)
+
+
+def _blocking(report: VerificationReport) -> list[tuple[str, dict[str, object]]]:
+    return sorted(
+        (
+            (finding.message_locale_key, dict(finding.message_facts))
+            for finding in report.findings
+            if finding.severity is ModeloVerificationFindingSeverity.BLOCKING
+        ),
+        key=repr,
+    )
+
+
+def _verify_2026(tmp_path: Path, *, capture: bool, operation: PinnedAuthorityOperation) -> VerificationReport:
+    with _m193_bucket(tmp_path, filing_year=2026, operation=operation) as bucket:
+        _persist_manual_row(bucket.objects, filing_year=2026)
+        if capture:
+            _capture_coupon_collected_next_year(bucket.objects)
+        revision = _calculate(bucket)
+        return _verify(revision.calculation_revision_id, operation=operation)
+
+
+def test_verify_reports_a_settled_row_as_a_warning_that_changes_no_verification_outcome(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
-    """The refusal is typed, has no command action, and leaves no fichero, event or state change."""
-    export_path = tmp_path / "modelo-193-2026-0A.txt"
+    """Beside the same hand-declared row, the captured coupon adds one advisory and nothing that decides granting."""
+    ordinary = _verify_2026(tmp_path / "ordinary", capture=False, operation=operation)
+    settled = _verify_2026(tmp_path / "settled", capture=True, operation=operation)
+
+    (finding,) = _settled_row_findings(settled)
+    assert finding.kind is ModeloVerificationFindingKind.ADVISORY
+    assert finding.severity is ModeloVerificationFindingSeverity.WARNING
+    assert finding.message_facts["settled_prior_accrual_rows"] == 1
+    assert finding.message_facts["filing_year"] == 2026
+    assert _settled_row_findings(ordinary) == []
+    assert _blocking(settled) == _blocking(ordinary)
+    assert settled.completeness_status is ordinary.completeness_status
+    assert settled.granted_verificado_completo is ordinary.granted_verificado_completo
+
+
+def test_file_refuses_a_settled_row_revision_with_a_typed_reason_and_writes_nothing(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
+    """The refusal comes before every lifecycle check and leaves no filing record, pointer, event or state change."""
     with _m193_bucket(tmp_path, filing_year=2026, operation=operation) as bucket:
         _capture_coupon_collected_next_year(bucket.objects)
         revision = _calculate(bucket)
-        assert _phase_contributors(revision) == 1
 
         with pytest.raises(Modelo193SettledRowAmountAuthorityUnresolvedError) as exc_info:
-            _export(bucket, revision.calculation_revision_id, export_path, operation=operation)
+            _file(revision.calculation_revision_id, operation=operation)
 
         after = _stored_revision(bucket, revision.calculation_revision_id)
-        exported = _exported_events(bucket)
+        records = ModeloRecordCatalogueRepository(bucket_id=_BUCKET_ID, objects=bucket.objects).load().records
+        work_unit = _stored_work_unit(bucket)
+        filed = _filed_events(bucket)
 
     error = exc_info.value
     verdict = error.terminal_precondition_verdict
     assert verdict is not None
-    assert verdict.failed_condition_id == f"{_LEAF}.m193_settled_row_amount_authority.resolved"
+    assert verdict.failed_condition_id == f"{_FILE_LEAF}.m193_settled_row_amount_authority.resolved"
     assert verdict.action is None
     assert verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
     assert error.precondition_failure is not None
-    assert error.precondition_failure.subject_leaf_key == _LEAF
-    assert error.precondition_failure.scenario_id == f"{_LEAF}.m193_settled_row_amount_authority.unresolved"
+    assert error.precondition_failure.subject_leaf_key == _FILE_LEAF
+    assert error.precondition_failure.scenario_id == f"{_FILE_LEAF}.m193_settled_row_amount_authority.unresolved"
     (condition_evidence,) = verdict.evidence
     assert condition_evidence.values["settled_prior_accrual_rows"] == 1
     assert condition_evidence.values["amount_authority_resolved"] is False
     assert condition_evidence.values["year"] == 2026
     assert get_registered_error_code(error).code == "REFUSED_MODELO_193_SETTLED_ROW_AMOUNT_AUTHORITY_UNRESOLVED"
-    assert not export_path.exists()
-    assert list(tmp_path.glob("modelo-193-2026-0A*")) == []
-    assert exported == []
     assert after == revision
+    assert records == {}
+    assert work_unit.current_filing_record_id is None
+    assert work_unit.filed_calculation_revision_id is None
+    assert filed == []
 
 
-def test_a_pending_row_in_its_accrual_year_is_not_refused_by_the_settled_row_gate(
+def test_a_pending_row_in_its_accrual_year_draws_no_finding_and_no_filing_refusal(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
-    """The same coupon is a pending row in 2025, so export proceeds past the gate to its later checks."""
+    """The same coupon is a pending row of 2025: its persisted accrual year says so, and nothing refuses it."""
     with _m193_bucket(tmp_path, filing_year=2025, operation=operation) as bucket:
         _capture_coupon_collected_next_year(bucket.objects)
         revision = _calculate(bucket)
-        assert _phase_contributors(revision) == 1
+        report = _verify(revision.calculation_revision_id, operation=operation)
 
         # The draft is unverified, so the lifecycle check that follows the gate refuses it.
         with pytest.raises(CalculationRevisionStateError):
-            _export(bucket, revision.calculation_revision_id, tmp_path / "modelo-193-2025-0A.txt", operation=operation)
+            _file(revision.calculation_revision_id, operation=operation)
+
+        work_unit = _stored_work_unit(bucket)
+
+    (contributor,) = _phase_contributors(revision)
+    assert contributor.source_filing_year == 2025
+    assert modelo_193_settled_prior_accrual_contributors(work_unit, revision) == ()
+    assert _settled_row_findings(report) == []
 
 
-def test_ordinary_rows_in_a_payment_year_are_not_refused_by_the_settled_row_gate(
+def test_the_persisted_accrual_year_decides_the_settled_row_exactly(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
-    """A 2026 revision of hand-declared rows carries no phase contributor, so the gate passes it."""
+    """A 2026 contributor accrued in 2025 is settled; one accrued in 2026 is pending, although 2026 can hold both."""
     with _m193_bucket(tmp_path, filing_year=2026, operation=operation) as bucket:
-        _persist_manual_row(bucket.objects, filing_year=2026)
+        _capture_coupon_collected_next_year(bucket.objects)
         revision = _calculate(bucket)
-        assert _phase_contributors(revision) == 0
+        work_unit = _stored_work_unit(bucket)
 
-        # The draft is unverified, so the lifecycle check that follows the gate refuses it.
-        with pytest.raises(CalculationRevisionStateError):
-            _export(bucket, revision.calculation_revision_id, tmp_path / "modelo-193-2026-0A.txt", operation=operation)
+    (contributor,) = _phase_contributors(revision)
+    assert contributor.source_filing_year == 2025
+    assert modelo_193_settled_prior_accrual_contributors(work_unit, revision) == (contributor,)
+    same_year = _with_source_filing_years(revision, 2026)
+    assert modelo_193_settled_prior_accrual_contributors(work_unit, same_year) == ()
 
 
-@pytest.mark.parametrize(
-    ("filing_year", "may_settle"),
-    [(2024, False), (2025, False), (2026, True), (2027, True)],
-)
-def test_only_a_year_after_the_grounded_accrual_year_can_hold_a_settled_row(
-    filing_year: int, *, may_settle: bool
+@pytest.mark.parametrize(("filing_year", "settled_rows"), [(2025, 0), (2026, 1)])
+def test_a_revision_persisted_without_the_accrual_year_keeps_the_conservative_rule(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation, filing_year: int, settled_rows: int
 ) -> None:
-    """The phase materialisation's accrual-year bound is what tells a settled row from a pending one."""
-    assert modelo_193_phase_rows_may_settle_prior_accruals(filing_year) is may_settle
+    """Without the recorded year, the filing year decides through the grounded accrual-year bound."""
+    with _m193_bucket(tmp_path, filing_year=filing_year, operation=operation) as bucket:
+        _capture_coupon_collected_next_year(bucket.objects)
+        revision = _calculate(bucket)
+        work_unit = _stored_work_unit(bucket)
+
+    legacy = _with_source_filing_years(revision, None)
+    assert [ref.source_filing_year for ref in _phase_contributors(legacy)] == [None]
+    assert legacy.calculation_revision_id != revision.calculation_revision_id
+    assert len(modelo_193_settled_prior_accrual_contributors(work_unit, legacy)) == settled_rows

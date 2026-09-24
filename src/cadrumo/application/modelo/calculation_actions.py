@@ -1011,7 +1011,10 @@ def _source_provenance_refs(
     dropped: it is a subject identity, not grounding, and the anti-
     duplication rationale for ``legal_refs``/``source_refs`` does not extend to
     it -- nothing else on the revision recovers which casilla a general
-    (non-row-materialized) source object explains.
+    (non-row-materialized) source object explains. ``source_filing_year`` is
+    kept for the same reason: it is the only persisted trace of a Modelo 193
+    disclosure phase row's accrual year, which tells a settled prior-accrual
+    row from a pending one.
     """
     return tuple(
         CalculationSourceRef(
@@ -1025,6 +1028,7 @@ def _source_provenance_refs(
             fingerprint=provenance.fingerprint,
             source_casilla_ids=provenance.source_casilla_ids,
             dependency_treatment=provenance.dependency_treatment,
+            source_filing_year=provenance.source_filing_year,
         )
         for provenance in source_resolution.provenance
     )

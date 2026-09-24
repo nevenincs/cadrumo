@@ -239,7 +239,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo.export.Modelo193SettledRowAmountAuthorityUnresolvedError",
+        "cadrumo.application.modelo.m193_settled_row_gate.Modelo193SettledRowAmountAuthorityUnresolvedError",
         ErrorCode(
             code="REFUSED_MODELO_193_SETTLED_ROW_AMOUNT_AUTHORITY_UNRESOLVED",
             category=ErrorCategory.REFUSED,
