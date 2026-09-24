@@ -15,7 +15,7 @@ import pytest
 
 from dev._paths import REPO_ROOT
 from dev.test_runs.logging import RunLog, _redirect_collection_output
-from dev.test_runs.paths import SCRATCH_PATH_BUDGET, SCRATCH_PREFIX
+from dev.test_runs.paths import SCRATCH_PATH_BUDGET, SCRATCH_PREFIX, SCRATCH_SEPARATOR
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.serial]
 
@@ -175,5 +175,5 @@ def test_parallel_workers_each_get_a_private_basetemp_inside_the_run(tmp_path: P
     for worker, basetemp in basetemps.items():
         assert basetemp.name == worker, f"{worker} did not own its basetemp: {basetemp}"
         assert basetemp.parent.name == "pytest"
-        assert basetemp.parent.parent.name.startswith(f"{SCRATCH_PREFIX}-")
+        assert basetemp.parent.parent.name.startswith(f"{SCRATCH_PREFIX}{SCRATCH_SEPARATOR}")
     assert len({basetemp.parent.parent for basetemp in basetemps.values()}) == 1, f"workers split the run: {basetemps}"

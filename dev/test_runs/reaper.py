@@ -27,7 +27,7 @@ from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.link_safety import is_link_like
 from cadrumo.tests.collection_storage_root import process_is_live
 
-from .paths import SCRATCH_PREFIX
+from .paths import SCRATCH_PREFIX, SCRATCH_SEPARATOR
 
 PID_TRUST_CEILING_SECONDS = 24 * 60 * 60
 """Mtime silence after which a directory's PID stops being believed.
@@ -59,7 +59,7 @@ not a retention period -- it never applies to a run that finished.
 """
 
 
-_SCRATCH_NAME = re.compile(rf"{re.escape(SCRATCH_PREFIX)}-\d+-[0-9a-f]+")
+_SCRATCH_NAME = re.compile(rf"{re.escape(SCRATCH_PREFIX)}{SCRATCH_SEPARATOR}\d+{SCRATCH_SEPARATOR}[0-9a-f]+")
 """A run scratch name: prefix, owning PID, random token."""
 
 
@@ -73,10 +73,11 @@ class RunVerdict:
 
 
 def _owner_pid(directory: Path) -> int | None:
-    parts = directory.name.rsplit("-", 2)
-    if len(parts) != 3 or not parts[1].isdigit():
+    """Return the PID a run marker or scratch name carries second from the end."""
+    parts = re.split(rf"[-{SCRATCH_SEPARATOR}]", directory.name)
+    if len(parts) < 3 or not parts[-2].isdigit():
         return None
-    return int(parts[1])
+    return int(parts[-2])
 
 
 def assess_run_directories(root: Path, *, now: float | None = None) -> tuple[RunVerdict, ...]:
@@ -118,7 +119,7 @@ def assess_scratch_directories(base: Path, *, now: float | None = None) -> tuple
     Scratch sits beside the temp base rather than inside its run directory, so it
     carries no completion record: its owner's PID and silence decide alone, under
     the same ceiling and grace a run directory without ``run.json`` gets. Only
-    names shaped ``<prefix>-<pid>-<token>`` are considered; the temp base is
+    names shaped ``<prefix>_<pid>_<token>`` are considered; the temp base is
     shared with every other program on the machine.
     """
     reference = time.time() if now is None else now

@@ -94,7 +94,18 @@ original temp directory, however deeply runs nest.
 """
 
 SCRATCH_PREFIX = "cr"
-"""Leading token of a run scratch directory name: ``cr-<pid>-<token>``."""
+"""Leading token of a run scratch directory name: ``cr_<pid>_<token>``."""
+
+SCRATCH_SEPARATOR = "_"
+"""Joins a scratch name's parts; an underscore, never a hyphen.
+
+Scratch paths appear in command output, and output redaction hashes anything
+shaped like an intra-EU VAT number: two letters, then digits and letters,
+joined by hyphens, dots or spaces. ``cr-60168-a06524`` is that shape, so the
+reported path came back as ``sha256:...`` and every test comparing it failed.
+An underscore is a word character, which leaves the name no boundary for the
+pattern to start at.
+"""
 
 SCRATCH_PATH_BUDGET = 64
 """The longest scratch path a run may hand its processes as ``TEMP``.
@@ -127,7 +138,7 @@ def allocate_scratch_directory() -> Path:
             :data:`SCRATCH_PATH_BUDGET`; handing tools a ``TEMP`` they cannot bind
             sockets under fails later and far less legibly.
     """
-    scratch = scratch_base() / f"{SCRATCH_PREFIX}-{os.getpid()}-{uuid4().hex[:6]}"
+    scratch = scratch_base() / SCRATCH_SEPARATOR.join((SCRATCH_PREFIX, str(os.getpid()), uuid4().hex[:6]))
     if len(str(scratch)) > SCRATCH_PATH_BUDGET:
         raise RuntimeError(
             f"run scratch {scratch} exceeds the {SCRATCH_PATH_BUDGET}-character TEMP budget; "
