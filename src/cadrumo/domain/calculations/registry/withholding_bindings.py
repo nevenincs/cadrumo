@@ -48,7 +48,7 @@ __all__ = [
 # provider remains generic so adding a governed row field does not require a
 # second catalogue in this mechanics module.
 _WithholdingRowField = str
-WithholdingGrouping = Literal["per_perceptor", "per_perceptor_clave"]
+WithholdingGrouping = Literal["per_perceptor", "per_perceptor_clave", "per_perceptor_clave_devengo"]
 
 # These fields carry an economic amount for a repeated payment.  A Modelo 190
 # type-2 record is annual and keyed by the recipient/clave/subclave, so every
@@ -94,6 +94,12 @@ class _WithholdingFactKind(StrEnum):
     PERCIBIDO_SUM = "percibido_sum"
     RETENCION_SUM = "retencion_sum"
     RETENCIONES_INGRESADAS_SUM = "retenciones_ingresadas_sum"
+    GROUPED_ROW_COUNT = "grouped_row_count"
+    """How many annual rows the selector's ``grouping`` emits: one per type-2
+    record, so a perceptor on two records counts twice."""
+    GROUPED_ROW_SUM = "grouped_row_sum"
+    """The sum of one additive ``row_field`` over the rows the selector's
+    ``grouping`` emits, so a declarant total equals its type-2 records."""
 
 
 _WithholdingFact = Literal[
@@ -103,6 +109,8 @@ _WithholdingFact = Literal[
     _WithholdingFactKind.PERCIBIDO_SUM,
     _WithholdingFactKind.RETENCION_SUM,
     _WithholdingFactKind.RETENCIONES_INGRESADAS_SUM,
+    _WithholdingFactKind.GROUPED_ROW_COUNT,
+    _WithholdingFactKind.GROUPED_ROW_SUM,
 ]
 """The selector field's type. The model validates strictly and is built from registry
 TOML, so it takes the literal over the members rather than the bare enum."""
@@ -580,6 +588,33 @@ def _validated_withholding_selector(binding: BindingDefinition) -> WithholdingPr
             )
         if selector.grouping is None:
             raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires a 'grouping' selector key")
+    if selector.fact == _WithholdingFactKind.GROUPED_ROW_COUNT:
+        if op != BindingAggregationOp.COUNT_DISTINCT:
+            raise RegistryValidationError(
+                f"binding {binding.id!r} fact 'grouped_row_count' requires aggregation op 'count_distinct'",
+            )
+        if selector.grouping is None:
+            raise RegistryValidationError(
+                f"binding {binding.id!r} fact 'grouped_row_count' requires a 'grouping' selector key",
+            )
+        if selector.row_field is not None:
+            raise RegistryValidationError(
+                f"binding {binding.id!r} fact 'grouped_row_count' counts rows and must not declare a 'row_field'",
+            )
+    if selector.fact == _WithholdingFactKind.GROUPED_ROW_SUM:
+        if op != BindingAggregationOp.SUM:
+            raise RegistryValidationError(
+                f"binding {binding.id!r} fact 'grouped_row_sum' requires aggregation op 'sum'",
+            )
+        if selector.grouping is None:
+            raise RegistryValidationError(
+                f"binding {binding.id!r} fact 'grouped_row_sum' requires a 'grouping' selector key",
+            )
+        if selector.row_field not in _WITHHOLDING_ADDITIVE_ROW_FIELDS:
+            raise RegistryValidationError(
+                f"binding {binding.id!r} fact 'grouped_row_sum' requires an additive monetary 'row_field', "
+                f"not {selector.row_field!r}",
+            )
     return selector
 
 
@@ -592,6 +627,30 @@ def _filter_withholding_observations(
         if clave_filter and observation.clave not in clave_filter:
             continue
         yield observation
+
+
+def _percepcion_key(observation: WithholdingObservation) -> tuple[str, RetencionClave, str]:
+    """Return one observation's ``(perceptor, clave, subclave)`` percepcion key.
+
+    The one derivation behind :func:`distinct_percepcion_keys` and every
+    clave-bearing row grouping, so the header count and the emitted records
+    cannot disagree on what identifies a percepcion.
+    """
+    return (observation.perceptor_tax_id, observation.clave, observation.subclave)
+
+
+def _devengo_year(observation: WithholdingObservation) -> int:
+    """Return the ejercicio in which the observation's income accrued.
+
+    A declared ``accrual_year`` is a prior-ejercicio devengo, such as the Modelo
+    193 settlement of a pending prior-year row.  Without one the income accrued
+    in its own transaction year: that covers ordinary rows and the pending row,
+    which the design leaves without EJERCICIO DEVENGO because it is filed in its
+    accrual year and is dated on its recognition.
+    """
+    if observation.accrual_year is not None:
+        return observation.accrual_year
+    return observation.transaction_date.year
 
 
 def distinct_percepcion_keys(
@@ -609,7 +668,7 @@ def distinct_percepcion_keys(
     subclave)`` yields the same per-clave counts as this key does across a
     scope, which is why the breakdown can build on it.
     """
-    return {(obs.perceptor_tax_id, obs.clave, obs.subclave) for obs in observations}
+    return {_percepcion_key(observation) for observation in observations}
 
 
 def percibido_total(observations: Iterable[WithholdingObservation]) -> Decimal:
@@ -751,6 +810,10 @@ def resolve_withholding_binding_values(
             resolved[binding.id] = percibido_total(scope_filtered)
         elif selector.fact == "retencion_sum":
             resolved[binding.id] = retencion_total(scope_filtered)
+        elif selector.fact == _WithholdingFactKind.GROUPED_ROW_COUNT:
+            resolved[binding.id] = _grouped_row_count(selector, scope_filtered)
+        elif selector.fact == _WithholdingFactKind.GROUPED_ROW_SUM:
+            resolved[binding.id] = _grouped_row_sum(selector, scope_filtered)
         elif selector.fact == "retenciones_ingresadas_sum":
             if role_declarations is None:
                 role_declarations = _withholding_role_declarations(revision.valid_from, authority=authority)
@@ -802,16 +865,23 @@ def _withholding_row_group_key(
     """Return the registry-declared annual record identity for one observation."""
     if grouping == "per_perceptor":
         return (str(observation.perceptor_tax_id),)
+    perceptor, clave, subclave = _percepcion_key(observation)
     if grouping == "per_perceptor_clave":
-        # Keep this exactly aligned with ``distinct_percepcion_keys``.  The
-        # Modelo 190 header counts its emitted type-2 records, so adding source
-        # or payment identity here would split a record the header does not
-        # count; omitting subclave would merge records the header does count.
-        return (
-            str(observation.perceptor_tax_id),
-            str(observation.clave),
-            observation.subclave,
-        )
+        # Exactly the ``distinct_percepcion_keys`` key.  The Modelo 190 header
+        # counts its emitted type-2 records, so adding source or payment
+        # identity here would split a record the header does not count;
+        # omitting subclave would merge records the header does count.
+        return (str(perceptor), str(clave), subclave)
+    if grouping == "per_perceptor_clave_devengo":
+        # The Modelo 193 PENDIENTE flag (position 117) and EJERCICIO DEVENGO
+        # (118-121) are record identity, not detail: a pending row under the
+        # prescribed 999999999 recipient, a payment-year settlement of an
+        # earlier accrual and an ordinary payment to the same recipient and
+        # clave are three type-2 records, and pending rows of different
+        # accrual years never share one.
+        flag = observation.pendiente_flag
+        pendiente = "" if flag is None or _withholding_row_value_is_absent(flag) else flag
+        return (str(perceptor), str(clave), subclave, pendiente, f"{_devengo_year(observation):04d}")
     raise RegistryValidationError(f"unsupported withholding row grouping {grouping!r}")
 
 
@@ -870,6 +940,45 @@ def _resolve_withholding_row_field(
     if isinstance(first, (Decimal, int, bool)):
         return first
     raise RegistryValidationError(f"withholding row field {row_field!r} has an unsupported value type")
+
+
+def _selector_grouping(selector: WithholdingProvider) -> WithholdingGrouping:
+    """Return a validated selector's grouping, refusing a selector that has none."""
+    if selector.grouping is None:
+        raise RegistryValidationError(f"withholding fact {selector.fact!r} requires a 'grouping' selector key")
+    return selector.grouping
+
+
+def _grouped_row_count(
+    selector: WithholdingProvider,
+    observations: Iterable[WithholdingObservation],
+) -> Decimal:
+    """Count the rows the selector's grouping emits: one per type-2 record, not per NIF."""
+    return Decimal(len(_group_withholding_observations(_selector_grouping(selector), observations)))
+
+
+def _grouped_row_sum(
+    selector: WithholdingProvider,
+    observations: Iterable[WithholdingObservation],
+) -> Decimal:
+    """Sum one additive row field over the rows the selector's grouping emits.
+
+    Each row's amount is projected by the same :func:`_resolve_withholding_row_field`
+    that fills the emitted type-2 field, so the total is the sum of the records
+    rather than a parallel fold over the raw observations.
+    """
+    row_field = selector.row_field
+    if row_field is None or row_field not in _WITHHOLDING_ADDITIVE_ROW_FIELDS:
+        raise RegistryValidationError(
+            f"withholding fact {selector.fact!r} requires an additive monetary 'row_field', not {row_field!r}",
+        )
+    total = Decimal("0")
+    for row in _group_withholding_observations(_selector_grouping(selector), observations):
+        amount = _resolve_withholding_row_field(row, row_field=row_field)
+        if not isinstance(amount, Decimal):
+            raise RegistryValidationError(f"withholding row amount field {row_field!r} is not monetary evidence")
+        total += amount
+    return total
 
 
 def resolve_withholding_binding_row_values(

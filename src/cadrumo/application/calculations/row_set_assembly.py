@@ -95,6 +95,7 @@ __all__ = [
 _GROUPING_DISPATCH: Mapping[str, RowSetGroupingKind] = {
     "per_perceptor": RowSetGroupingKind.WITHHOLDING,
     "per_perceptor_clave": RowSetGroupingKind.WITHHOLDING,
+    "per_perceptor_clave_devengo": RowSetGroupingKind.WITHHOLDING,
     "per_related_party_operation": RowSetGroupingKind.RELATED_PARTY,
     "per_foreign_asset": RowSetGroupingKind.FOREIGN_ASSET,
     "per_atribucion_member": RowSetGroupingKind.ATRIBUCION,
