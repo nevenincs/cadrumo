@@ -15,12 +15,12 @@ from __future__ import annotations
 import json
 import os
 import threading
-import time
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager, suppress
 from dataclasses import replace
 from pathlib import Path
 from typing import Any, cast
+from uuid import UUID
 
 import pytest
 from click.testing import Result
@@ -32,6 +32,11 @@ from .....adapters.persistence.storage.recovery_key import (
     RECOVERY_CODE_SEPARATOR,
 )
 from .....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
+from .....application.user_profile.custody_ports import (
+    load_profile_custody_password_material,
+    profile_custody_recovery_envelope_path,
+)
+from .....core.bucket_pointer import require_active_bucket_id
 from .....core.i18n.render import tr
 from ... import command_specs as _command_specs
 from ...command_spec import ArgumentSpec
@@ -44,15 +49,6 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _CREDENTIAL_INPUT = "a-sufficiently-long-operator-passphrase"
 _ROTATED_CREDENTIAL_INPUT = "a-replacement-passphrase-after-reset"
 _PROFILE = "Recovery Operator"
-
-_BACKOFF_WAIT_SECONDS = 2.5
-"""Long enough to outlast the backoff one failed proof arms.
-
-A refused recovery code is a failed proof against the same per-profile backoff
-login answers to, and the schedule is ``min(2 ** failures, 60)`` seconds, so a
-single refusal imposes two. Waited in real time rather than cleared through
-the throttle authority: the claim is that the surviving passphrase still opens
-the profile, and stepping past the backoff an operator would meet proves less."""
 
 
 def _creation_payload(credential: str = _CREDENTIAL_INPUT) -> str:
@@ -122,6 +118,22 @@ def _reset(name: str, *, code: str, replacement: str = _ROTATED_CREDENTIAL_INPUT
             }
         ),
     )
+
+
+def _committed_custody() -> dict[Path, bytes]:
+    """Every byte of the active profile's committed capsule and its recovery wrapper.
+
+    A refused reset is a failed proof and arms the per-profile login backoff,
+    so a login straight after it meets that backoff for as long as it lasts.
+    Whether the refusal left the passphrase in force is a property of what is
+    committed: an unchanged envelope opens under exactly the passphrase it
+    opened under before, whenever the backoff happens to end.
+    """
+    capsule = load_profile_custody_password_material(UUID(require_active_bucket_id())).capsule_path
+    files = sorted(capsule.rglob("*")) if capsule.is_dir() else [capsule]
+    envelope = profile_custody_recovery_envelope_path(capsule)
+    assert envelope.is_file(), "an enrolled profile keeps its recovery wrapper beside the capsule"
+    return {path: path.read_bytes() for path in [*files, envelope] if path.is_file()}
 
 
 def _login(name: str, *, credential: str) -> Result:
@@ -413,9 +425,13 @@ def test_reset_replaces_a_forgotten_passphrase_with_the_captured_code(tmp_path: 
         with _capturing_descriptors() as (handoff, verification, codes):
             assert _enable(handoff, verification).exit_code == 0
         code = codes[0]
+        committed = _committed_custody()
 
         reset = _reset(_PROFILE, code=code)
         assert reset.exit_code == 0, reset.output
+        # The refusal tests rest on this comparison, so it must see a reset
+        # that did replace the envelope.
+        assert _committed_custody() != committed
         document = json.loads(reset.stdout)
         assert document["command"] == "config.passphrase.reset"
         assert document["result"]["changed"] is True
@@ -463,6 +479,7 @@ def test_reset_refuses_a_wrong_code_and_keeps_the_current_passphrase(tmp_path: P
         _create_profile()
         with _capturing_descriptors() as (handoff, verification, codes):
             assert _enable(handoff, verification).exit_code == 0
+        committed = _committed_custody()
         groups = codes[0].split(RECOVERY_CODE_SEPARATOR)
         groups[0], groups[-1] = groups[-1], groups[0]
         wrong = RECOVERY_CODE_SEPARATOR.join(groups)
@@ -473,13 +490,7 @@ def test_reset_refuses_a_wrong_code_and_keeps_the_current_passphrase(tmp_path: P
             "application.user_profile.errors.recovery_code_rejected"
         )
         assert wrong not in refused.stdout + refused.stderr
-        # Prove the surviving passphrase before the refused one: a failed login
-        # arms the throttle and would mask the success it precedes.
-        _logout()
-        time.sleep(_BACKOFF_WAIT_SECONDS)
-        assert _login(_PROFILE, credential=_CREDENTIAL_INPUT).exit_code == 0
-        _logout()
-        assert _login(_PROFILE, credential=_ROTATED_CREDENTIAL_INPUT).exit_code != 0
+        assert _committed_custody() == committed
 
 
 def test_reset_refuses_a_malformed_code_without_touching_the_capsule(tmp_path: Path) -> None:
@@ -487,13 +498,12 @@ def test_reset_refuses_a_malformed_code_without_touching_the_capsule(tmp_path: P
         _create_profile()
         with scripted_registration_descriptors() as (handoff, verification):
             assert _enable(handoff, verification).exit_code == 0
+        committed = _committed_custody()
 
         refused = _reset(_PROFILE, code="not a recovery code at all")
         assert refused.exit_code != 0
         assert "Traceback" not in refused.stdout + refused.stderr
-        _logout()
-        time.sleep(_BACKOFF_WAIT_SECONDS)
-        assert _login(_PROFILE, credential=_CREDENTIAL_INPUT).exit_code == 0
+        assert _committed_custody() == committed
 
 
 def test_reset_refuses_a_profile_without_recovery(tmp_path: Path) -> None:
