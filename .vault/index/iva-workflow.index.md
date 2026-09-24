@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#iva-workflow'
 date: '2026-09-21'
-modified: '2026-09-23'
+modified: '2026-09-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:3dd8a14051c78e403d1965e6cdcf543c555ca64e1ea3dab1d95e669242f6cf86'
+body_hash: 'sha256:b932ea69616b22543471c5f0ed7a91bc8c2a318ee11ac8745ad7697b45549845'
 related:
   - '[[2026-09-21-iva-workflow-adr]]'
   - '[[2026-09-21-iva-workflow-cli-invoice-lines-adr]]'
@@ -16,6 +16,7 @@ related:
   - '[[2026-09-21-iva-workflow-settlement-lifecycle-adr]]'
   - '[[2026-09-23-iva-workflow-ledger]]'
   - '[[2026-09-23-iva-workflow-plan]]'
+  - '[[2026-09-24-iva-workflow-settlement-wallet-and-export-identity-research]]'
 ---
 
 # `iva-workflow` feature index
@@ -43,3 +44,7 @@ Auto-generated index of all documents tagged with `#iva-workflow`.
 
 - `2026-09-21-iva-workflow-m303-filing-evidence-authoring-reference` - `iva-workflow` reference: `M303 filing evidence production authoring map`
 - `2026-09-21-iva-workflow-reference` - `iva-workflow` reference: `IVA CLI and TUI capability map`
+
+### research
+
+- `2026-09-24-iva-workflow-settlement-wallet-and-export-identity-research` - `iva-workflow` research: `IVA settlement wallet and export identity`

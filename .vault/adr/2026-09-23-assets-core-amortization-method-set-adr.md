@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#assets-core'
 date: '2026-09-23'
-modified: '2026-09-23'
+modified: '2026-09-24'
 body_schema: 'body-v2'
 body_hash: 'sha256:53afdcbd57f06d0c7e9bf6d03de746e2dea7ada31b51c7cbf702de82d7225d47'
 related:
@@ -12,6 +12,7 @@ related:
   - "[[2026-08-23-amortization-casilla-mapping-adr]]"
   - '[[2026-09-23-assets-core-vehicle-affectation-research]]'
   - '[[2026-09-23-assets-core-proration-and-incentive-scope-research]]'
+  - '[[2026-09-24-assets-core-amortization-domain-grounding-research]]'
 ---
 
 # `assets-core` adr: `IRPF activity amortization method set and election contract` | (**status:** `accepted`)

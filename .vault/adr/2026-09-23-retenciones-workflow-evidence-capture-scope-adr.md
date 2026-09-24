@@ -3,12 +3,14 @@ tags:
   - '#adr'
   - '#retenciones-workflow'
 date: '2026-09-23'
-modified: '2026-09-23'
+modified: '2026-09-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:5032404d2798ee221b44bb84f442aa7693af806ca01ba89d4b2fb956bbc0dbdb'
+body_hash: 'sha256:ca022b57a06e53038261362c7afe211b9a971f63c7f0e264a8626d61e3a6349b'
 related:
   - "[[2026-09-21-retenciones-workflow-observation-payment-contract-adr]]"
   - "[[2026-09-21-retenciones-workflow-observation-payment-contract-reference]]"
+  - '[[2026-09-24-retenciones-workflow-modelo-123-count-authority-research]]'
+  - '[[2026-09-24-retenciones-workflow-modelo-193-later-year-design-research]]'
 ---
 
 # `retenciones-workflow` adr: `Withholding evidence capture scope` | (**status:** `accepted`)
@@ -22,8 +24,8 @@ The withholding workflow's public capture was limited to invoice-backed professi
 ## Considerations
 
 - The accepted contract `2026-09-21-retenciones-workflow-observation-payment-contract-adr` already requires invoice, payroll, rent, capital and manual producers to submit typed payment allocations through one shared service, with CLI and TUI as transports.
-- The Modelo 123 count has no official definition. The evidence record is `.agents/session-briefs/handoffs/2026-09-22-retenciones-m123-count-evidence.md`, 22 and 23 Sep sections.
-- Modelo 193 for ejercicio 2025 and later is governed by Orden HAC/1430/2025 with no end year. The evidence record is `.agents/session-briefs/handoffs/2026-09-23-retenciones-m193-later-year-evidence.md`.
+- The Modelo 123 count has no official definition. The evidence record is `2026-09-24-retenciones-workflow-modelo-123-count-authority-research`.
+- Modelo 193 for ejercicio 2025 and later is governed by Orden HAC/1430/2025 with no end year. The evidence record is `2026-09-24-retenciones-workflow-modelo-193-later-year-design-research`.
 - Payroll and capital income do not arrive as received invoices. Their payment is a ledger transaction, and their liability terms are declared by the payer.
 
 ## Considered options
