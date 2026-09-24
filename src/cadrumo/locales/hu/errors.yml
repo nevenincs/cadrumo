@@ -919,6 +919,9 @@ errors:
     refused_access_gate_live_read_not_enabled: Az AEAT élő olvasási hozzáférés le
       van tiltva. Ez a művelet az aktuális konfiguráció alatt nem léphet kapcsolatba
       az AEAT-tal.
+    refused_active_profile_pointer_manual_recovery: Az aktív profil mutatója ({path})
+      nem olvasható, ezért a revíziója elvesztése nélkül nem törölhető; kézi helyreállítást
+      igényel.
     refused_actividad_asset_claim_conflict: Az értékcsökkenési elszámolás ütközik
       az eszköz már rögzített elszámolásaival.
     refused_actividad_asset_incomplete: Az eszköz értékcsökkenési ütemtervéből hiányzik

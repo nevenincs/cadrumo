@@ -13,6 +13,9 @@ import os
 import stat
 import sys
 import time
+from collections.abc import Iterator
+from contextlib import contextmanager
+from contextvars import ContextVar
 from pathlib import Path
 from typing import TYPE_CHECKING, Final, Literal
 
@@ -206,6 +209,45 @@ def read_pointer(root: Path) -> BucketPointer:
         raise ActiveProfilePointerError(path=target) from exc
 
 
+_CORRUPT_POINTER_READS_AS_UNSELECTED: ContextVar[bool] = ContextVar(
+    "corrupt_pointer_reads_as_unselected", default=False
+)
+
+
+@contextmanager
+def corrupt_pointer_reads_as_unselected() -> Iterator[None]:
+    """Read a corrupt pointer as selecting no profile, for the command that repairs it.
+
+    Settings composition and every "which profile is selected" read go through
+    the pointer, so a corrupt record makes every command unrunnable, including
+    the one that repairs it. Inside this scope those selection reads observe a
+    corrupt record as no selection, so the repair runs profile-free. Nothing
+    else is relaxed: :func:`read_pointer` and every pointer transition still
+    refuse the corrupt record, so the repair still sees exactly what it is
+    repairing.
+    """
+    token = _CORRUPT_POINTER_READS_AS_UNSELECTED.set(True)
+    try:
+        yield
+    finally:
+        _CORRUPT_POINTER_READS_AS_UNSELECTED.reset(token)
+
+
+def read_pointer_selection(root: Path) -> BucketPointer:
+    """Observe the pointer for settings composition and profile selection.
+
+    Raises:
+        ActiveProfilePointerError: The present record is not a valid pointer and
+            no :func:`corrupt_pointer_reads_as_unselected` scope is active.
+    """
+    try:
+        return read_pointer(root)
+    except ActiveProfilePointerError:
+        if not _CORRUPT_POINTER_READS_AS_UNSELECTED.get():
+            raise
+        return BucketPointer.absent(transition_revision=0)
+
+
 def _await_uncontended(operation: Callable[[], None]) -> None:
     """Retry a bounded Windows sharing refusal without masking permanent failures."""
     from .windows_contention import is_windows_contention
@@ -248,7 +290,7 @@ def resolve_active_bucket_id() -> str | None:
     override = (settings.cadrumo_active_profile or "").strip()
     if override:
         return override
-    return read_pointer(settings.cadrumo_local_storage_root).bucket_id
+    return read_pointer_selection(settings.cadrumo_local_storage_root).bucket_id
 
 
 def require_active_bucket_id() -> str:
@@ -283,8 +325,10 @@ def resolve_repository_bucket_id(bucket_id: str | None, *, error_type: type[Cadr
 __all__ = [
     "POINTER_SCHEMA_VERSION",
     "BucketPointer",
+    "corrupt_pointer_reads_as_unselected",
     "pointer_path",
     "read_pointer",
+    "read_pointer_selection",
     "require_active_bucket_id",
     "resolve_active_bucket_id",
     "resolve_repository_bucket_id",

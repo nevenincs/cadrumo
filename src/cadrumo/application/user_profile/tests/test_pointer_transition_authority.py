@@ -10,7 +10,9 @@ from typing import Any
 import pytest
 
 from ....core.bucket_pointer import BucketPointer, pointer_path, read_pointer
+from ....core.errors.hierarchy import ActiveProfilePointerError
 from ..profile_pointer import (
+    ActiveProfilePointerManualRecoveryError,
     ActiveProfilePointerTransactionError,
     active_profile_pointer_transaction,
     observe_active_profile_pointer,
@@ -61,6 +63,26 @@ def test_absence_idempotence_and_restore_keep_one_durable_lineage(tmp_path: Path
     assert tombstone == BucketPointer.absent(transition_revision=4)
     assert pointer_path(tmp_path).is_file(), "clear must retain an explicit durable tombstone"
     assert read_pointer(tmp_path) == tombstone
+
+
+def test_clearing_an_unreadable_pointer_refuses_for_manual_recovery_and_writes_nothing(tmp_path: Path) -> None:
+    """A clear has no revision to succeed, so it names the record instead of guessing one."""
+    corrupt = b"not = valid = toml"
+    pointer_path(tmp_path).write_bytes(corrupt)
+
+    with active_profile_pointer_transaction(tmp_path) as transaction:
+        with pytest.raises(ActiveProfilePointerManualRecoveryError) as refused:
+            transaction.clear()
+        # A selection is not a repair: it keeps the plain corruption refusal.
+        with pytest.raises(ActiveProfilePointerError):
+            transaction.select(_A)
+
+    assert refused.value.context == {
+        "path": str(pointer_path(tmp_path)),
+        "pointer_corrupt": True,
+        "manual_recovery_required": True,
+    }
+    assert pointer_path(tmp_path).read_bytes() == corrupt
 
 
 def test_real_child_a_to_b_to_a_advances_every_transition_and_refuses_stale_aba(tmp_path: Path) -> None:

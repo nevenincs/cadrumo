@@ -978,6 +978,9 @@ errors:
     refused_access_gate_live_read_not_enabled: L'accés de lectura en viu a l'AEAT
       està desactivat. Aquesta operació no pot contactar amb l'AEAT amb la configuració
       actual.
+    refused_active_profile_pointer_manual_recovery: El punter de perfil actiu {path}
+      no es pot llegir, així que no es pot esborrar sense perdre'n la revisió; cal
+      recuperar-lo manualment.
     refused_actividad_asset_claim_conflict: L'amortització registrada entra en conflicte
       amb les ja registrades per a l'actiu.
     refused_actividad_asset_incomplete: Al quadre d'amortització de l'actiu li falta

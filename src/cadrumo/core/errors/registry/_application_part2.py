@@ -369,6 +369,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.user_profile.profile_pointer.ActiveProfilePointerManualRecoveryError",
+        ErrorCode(
+            code="REFUSED_ACTIVE_PROFILE_POINTER_MANUAL_RECOVERY",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_active_profile_pointer_manual_recovery",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.user_profile.profile_pointer.ActiveProfilePointerTransactionError",
         ErrorCode(
             code="INTERNAL_ACTIVE_PROFILE_POINTER_TRANSACTION",

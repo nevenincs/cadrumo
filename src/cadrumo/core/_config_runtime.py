@@ -42,6 +42,6 @@ def active_profile_pointer_observation(
             "CADRUMO_LOCAL_STORAGE_ROOT is set but normalises to no path, "
             "so the active-profile pointer has no coordinate to be read from",
         )
-    from .bucket_pointer import read_pointer
+    from .bucket_pointer import read_pointer_selection
 
-    return (root, read_pointer(root))
+    return (root, read_pointer_selection(root))

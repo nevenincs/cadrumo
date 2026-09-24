@@ -207,6 +207,7 @@ CONFIG_REPAIR_COMMAND_SPECS = (
         policy=BOOTSTRAP_WRITE,
         handler=_handler("_repair_profile", "repair_profile"),
         result_schema=_schema("RepairProfileResult", "config.repair.profile"),
+        repairs_active_profile_pointer=True,
     ),
 )
 
