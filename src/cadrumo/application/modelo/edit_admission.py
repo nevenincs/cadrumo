@@ -223,7 +223,6 @@ def admit_modelo_edit_baseline(
         str(work_unit.modelo),
         filing_year=work_unit.filing_year,
         period=work_unit.period.registry_token,
-        revision_id=work_unit.revision_id,
     )
     if snapshot.revision.id != work_unit.revision_id:
         return _refused(

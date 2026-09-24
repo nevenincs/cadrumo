@@ -213,6 +213,21 @@ def test_oversized_edit_surface_refuses_at_admission_before_model_validation() -
     assert outcome.refusal.facts == ("edit_surface_exceeds_contract_limit",)
 
 
+def test_admission_refuses_when_the_law_selected_revision_is_not_the_work_units_pinned_revision() -> None:
+    """The resolver picks the revision; a work unit pinned to another one is refused, not redirected."""
+    moved = _snapshot()
+    snapshot = RegistrySnapshot.model_construct(
+        modelo=moved.modelo,
+        revision=moved.revision.model_copy(update={"id": "2026-y-siguientes"}),
+    )
+
+    outcome, _ = _admit(snapshot=snapshot)
+
+    assert isinstance(outcome, ModeloEditRefusedV1)
+    assert outcome.refusal.code is ModeloEditRefusalCode.REGISTRY_SCHEMA_CONFLICT
+    assert outcome.refusal.facts == ("law_selected_revision_id",)
+
+
 def test_admission_re_resolves_the_work_and_pinned_authority_into_a_value_free_five_minute_baseline() -> None:
     outcome, calls = _admit()
 
@@ -228,7 +243,7 @@ def test_admission_re_resolves_the_work_and_pinned_authority_into_a_value_free_f
             "filing_year": 2025,
             "period": "0A",
             "on": None,
-            "revision_id": "2025-y-siguientes",
+            "revision_id": None,
             "grade": RegistryAuthorityGrade.FILING,
         }
     ]

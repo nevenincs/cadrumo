@@ -257,8 +257,16 @@ def _prepare_binding_edit_inputs(
         str(baseline.modelo),
         filing_year=baseline.filing_year,
         period=baseline.period.registry_token,
-        revision_id=baseline.law_selected_revision_id,
     )
+    if snapshot.revision.id != baseline.law_selected_revision_id:
+        return ModeloEditExecutionNoEffectV1(
+            refusal=ModeloEditDomainRefusalV1(
+                code=ModeloEditRefusalCode.REGISTRY_SCHEMA_CONFLICT,
+                facts=("law_selected_revision_id",),
+                responsible_owner=_RESPONSIBLE_OWNER,
+                reconsideration_condition="refresh the edit baseline against its current authority revision",
+            )
+        )
     return resolve_binding_overrides(raw, snapshot.revision)
 
 
