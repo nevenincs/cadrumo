@@ -1050,7 +1050,7 @@ required_text = ["beneficiarse del régimen de libertad de amortización será d
 id = "renta-actividad-inmovilizado-amortizacion-renovables-primer-ejercicio"
 data_type = "integer"
 unit = "year"
-legal_refs = ["ley-27-2014:da-17"]
+legal_refs = ["ley-27-2014:da-17", "rdl-16-2025:art-17"]
 [[revisions."2025".parameters.values]]
 value = "2025"
 date_axis = "filing_period"
@@ -1064,7 +1064,7 @@ required_text = ["Atención: el artículo 17 Uno del Real Decreto-ley 16/2025, d
 id = "renta-actividad-inmovilizado-amortizacion-renovables-ultimo-ejercicio"
 data_type = "integer"
 unit = "year"
-legal_refs = ["ley-27-2014:da-17"]
+legal_refs = ["ley-27-2014:da-17", "rdl-16-2025:art-17"]
 [[revisions."2025".parameters.values]]
 value = "2025"
 date_axis = "filing_period"

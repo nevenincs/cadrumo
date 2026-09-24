@@ -2248,6 +2248,26 @@ required_text = [
     "Los edificios no podrán acogerse a la libertad de amortización regulada en esta disposición.",
 ]
 
+[legal."rdl-16-2025:art-17"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto_ley"
+corpus_ref = "corpus/normatives/xml/rdl-16-2025-art-17.xml#a1-9"
+document_id = "BOE-A-2025-26458"
+article = "17"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2025-26458#a1-9"
+published_at = 2025-12-24
+effective_from = 2025-12-25
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-24
+reviewed_by = "agent-prepared from the BOE consolidated-text article endpoint (block a1-9); pending operator re-stamp"
+notes = "RDL 16/2025 art. 17.Uno: con efectos para los periodos impositivos que se inicien a partir de 1 de enero de 2025, redacta de nuevo la disposicion adicional decimoseptima LIS y anade la letra c) (periodos que se inicien o concluyan en 2025, entrada en funcionamiento en 2025), manteniendo la plantilla media, la exclusion de edificios y la inversion maxima de 500.000 euros. En vigor desde el 25 de diciembre de 2025; el Congreso acordo su derogacion el 27 de enero de 2026 (Resolucion publicada en el BOE de 28 de enero de 2026, BOE-A-2026-2024). La AEAT (nota de 1 de abril de 2026 y Manual de Renta 2025) aplica sus medidas al devengo de 2025 por estar vigentes en esa fecha; esta entrada cita el instrumento modificativo, no afirma que siga en vigor."
+required_text = [
+    "Con efectos para los períodos impositivos que se inicien a partir de 1 de enero de 2025, la disposición adicional decimoséptima queda redactada de la siguiente forma:",
+    "c) Que se inicien o concluyan en 2025, cuando la entrada en funcionamiento de los elementos a que se refiere este apartado se produzca en 2025.",
+    "La cuantía máxima de la inversión que podrá beneficiarse del régimen de libertad de amortización será de 500.000 euros.",
+]
+
 [legal."ley-27-2014:art-102"]
 evidence_tier = "legal_authority"
 authority = "boe"
@@ -2600,3 +2620,18 @@ applies_from = 2018-01-01
 applies_to = 2018-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/DR202e17v48.xlsx"
 review_status = "pending_review"
+
+[sources."boe-rdl-16-2025-art-17"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/xml/rdl-16-2025-art-17.xml"
+sha256 = "4cb1b338971207b80d15f12f2aaf201c5125676fb8d44ff4a2502695deff5610"
+bytes = 12936
+retrieved_at = 2026-09-24
+published_at = 2025-12-24
+applies_from = 2025-01-01
+applies_to = 2025-12-31
+source_url = "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2025-26458/texto/bloque/a1-9"
+review_status = "agent_reviewed"
+corpus_tier = "provision_excerpt"
