@@ -9,7 +9,7 @@ related:
   - '[[2026-09-23-retenciones-workflow-evidence-capture-scope-adr]]'
 modified: '2026-09-24'
 body_schema: body-v2
-body_hash: 'sha256:9f8c9b59fbc753308cd5fbe4c961d528459d2ef99d6e13cf42aa4f5d46dd1263'
+body_hash: 'sha256:621e7daa49048823e00dbcfa2909bcb1c17c5ae149cb150a45d66a951654ff74'
 ---
 
 <!-- LINK RULES:
@@ -122,6 +122,8 @@ Decision coverage: the observation-payment-contract ADR settles the phase model 
 
 S01 and S02 are code; S03 is registry authoring and ships through the coordinator's republish queue; S04 proves the whole path; S05 keeps the filing-export block in place until the official design settles whether the payment-year settled row repeats the withholding amounts, because repeating them would count a withholding already paid through Modelo 123.
 
+S05 outcome, 2026-09-24: not settled, so the block stays. RIRPF art. 94.1 settles that capital withholding arises at exigibility (or earlier payment) and art. 108.1 that it is declared in that period's Modelo 123, so it is declared in the accrual year. The 2025 record design requires full amounts in the accrual-year pendiente record (pp. 24-25) and sums every type-2 record into the declarant totals without exception (pp. 5-7), but states nothing about the amount fields of the payment-year record beyond reporting the recipient (p. 25) and the accrual year at 118-121 (p. 26). No AEAT note, INFORMA entry or DGT ruling was found on it; the DGT ruling search could not be completed. The materialiser keeps the literal-design amounts with `filing_export_supported=False`, and S06 makes the open question visible on every settled row. The bundled RD 439/2007 extraction attaches each article body one heading late, a corpus defect reported to the coordinator.
+
 <!-- First line after approval: `Approved yyyy-mm-dd`, written by the
 orchestrator after establishing scoped authorization, including an explicit
 advance authorization. Record its basis; ask only when it is absent. Then briefly describe the proposed work.
@@ -136,7 +138,8 @@ map their scope to Steps at L1 or the relevant containers at higher tiers. -->
 - [ ] `S02` - compose the Modelo 193 annual source from the manual window and materialised pending and settled phase rows read from Modelo 123 retenciones, refusing allocation collisions and emitting contributor provenance; `src/cadrumo/application/aggregation/withholding_source.py`.
 - [ ] `S03` - rebind the 2025 declarant totals to the type-2 record count and row sums and the perceptor rows to the new grouping, keeping the Modelo 123 relation as a reconciliation check, then queue the republish; `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2025-y-siguientes/revision.toml`.
 - [ ] `S04` - prove multi-source rows, exclusions, missing-store advisories, pull and calculate parity and 2025 export byte parity for one pending and one settled row; `src/cadrumo/application/aggregation/tests`.
-- [ ] `S05` - ground whether the payment-year settled row repeats the withholding amounts, and lift the filing-export block only when the official design settles it; `src/cadrumo/application/aggregation/m193_phase_materialization.py`.
+- [x] `S05` - ground whether the payment-year settled row repeats the withholding amounts, and lift the filing-export block only when the official design settles it; `src/cadrumo/application/aggregation/m193_phase_materialization.py`.
+- [ ] `S06` - attach a structured advisory naming modelo 193, the base and withholding fields and the missing-authority reason to every settled-prior-accrual row, so the unresolved payment-year amounts reach the handoff instead of reading as settled; `src/cadrumo/application/aggregation/m193_phase_materialization.py`.
 
 <!-- The plan's tier (declared in frontmatter as `tier: L1`, `L2`, `L3`, or
 `L4`) determines the structure under this section:
