@@ -14,21 +14,27 @@ reconstruct a recorded raw-token call.
 
 from __future__ import annotations
 
+import hashlib
 from collections.abc import Iterable
 
 _TOOL_PREFIX = "cadrumo_"
 
 # The client-side namespace prefix a Claude plugin prepends to every tool name
 # (``mcp__plugin_<plugin>_<server>__``). The plugin and the server are both named
-# ``cadrumo``, so the budget accounts for both canonical product segments and
-# the over-length verbs carry declared short forms.
+# ``cadrumo``, so the budget accounts for both canonical product segments.
 CLIENT_NAME_PREFIX = "mcp__plugin_cadrumo_cadrumo__"
 # The practical prefixed-name ceiling clients enforce.
 TOOL_NAME_BUDGET = 64
+# The longest server-side tool name that still fits the client budget.
+_TOOL_NAME_LIMIT = TOOL_NAME_BUDGET - len(CLIENT_NAME_PREFIX)
+# Hex digits of the command-key digest that disambiguate a shortened name.
+_DIGEST_HEX_LENGTH = 8
+_DIGEST_SEPARATOR = "_"
 
-# Declared short forms for the command-key segments that would otherwise overflow
-# the budget. Applied to the underscored key; each is unambiguous (no two keys
-# collapse to one name) and reversible through the forward-match resolver below.
+# Short forms for command-key segments, applied to the underscored key. Clients
+# call tools by name, so these are frozen: editing one renames every tool that
+# already fits the budget. A new over-length key needs no entry here; the digest
+# fallback in :func:`tool_name_for_command` shortens it.
 _SEGMENT_ABBREVIATIONS: tuple[tuple[str, str], ...] = (
     ("profile_archive_reconcile", "prof_arch_recon"),
     ("spreadsheet", "sheet"),
@@ -84,15 +90,22 @@ _SEGMENT_ABBREVIATIONS: tuple[tuple[str, str], ...] = (
 def tool_name_for_command(command_key: str) -> str:
     """Render a registry command key as a namespaced MCP tool name.
 
-    ``modelo.work.calculate`` becomes ``cadrumo_modelo_work_calculate``. Declared
-    short forms shrink the few command keys that would otherwise overflow the
-    client-prefixed name budget (P4), e.g. ``modelo.review_package.verify.signature``
-    becomes ``cadrumo_modelo_rpkg_verify_signature``.
+    ``modelo.work.calculate`` becomes ``cadrumo_modelo_work_calculate``, with the
+    frozen segment short forms applied, e.g. ``modelo.review_package.verify.signature``
+    becomes ``cadrumo_modelo_rpkg_verify_signature``. When that rendering would
+    overflow the client-prefixed budget, it is cut to a prefix and suffixed with
+    the first hex digits of the SHA-256 of the command key, so the name depends on
+    that key alone and stays within budget.
     """
     underscored = command_key.replace(".", "_")
     for long_form, short_form in _SEGMENT_ABBREVIATIONS:
         underscored = underscored.replace(long_form, short_form)
-    return _TOOL_PREFIX + underscored
+    rendered = _TOOL_PREFIX + underscored
+    if len(rendered) <= _TOOL_NAME_LIMIT:
+        return rendered
+    digest = hashlib.sha256(command_key.encode("utf-8")).hexdigest()[:_DIGEST_HEX_LENGTH]
+    stem = rendered[: _TOOL_NAME_LIMIT - len(_DIGEST_SEPARATOR) - _DIGEST_HEX_LENGTH].rstrip("_-")
+    return f"{stem}{_DIGEST_SEPARATOR}{digest}"
 
 
 def prefixed_tool_name_length(command_key: str) -> int:
@@ -103,9 +116,9 @@ def prefixed_tool_name_length(command_key: str) -> int:
 def command_key_for_tool(tool_name: str, *, command_keys: Iterable[str]) -> str | None:
     """Reverse a tool name to its registry command key.
 
-    Segment-internal underscores (``iva_wallet``) make a naive ``_`` -> ``.``
-    inverse ambiguous, so the reverse is resolved against the known command-key
-    set: the unique key whose forward mapping equals ``tool_name``.
+    Segment-internal underscores (``iva_wallet``), short forms, and digest-shortened
+    names make a textual inverse impossible, so the reverse is resolved against the
+    known command-key set: the unique key whose forward mapping equals ``tool_name``.
     """
     return next((key for key in command_keys if tool_name_for_command(key) == tool_name), None)
 
