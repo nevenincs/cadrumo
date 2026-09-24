@@ -1172,6 +1172,11 @@ application:
       ledger_snapshot_drift: 'A(z) %{modelo} %{filing_year} %{period} nyomtatvány
         eltért a rögzített főkönyvi pillanatképétől: %{changed_count} módosult, %{removed_count}
         törlődött.'
+      m193_settled_row_amount_authority_unresolved: A(z) %{filing_year}. évi 193-as
+        modell %{settled_prior_accrual_rows} olyan rekordot tartalmaz, amely korábbi
+        évben keletkezett jövedelmet fizet ki, és egyetlen hivatalos forrás sem határozza
+        meg az általuk bevallott alapot és forrásadó-levonást; a benyújtás és az exportálás
+        elutasítja ezt a revíziót.
       m210_agrupacion_renta_invalid: A(z) %{modelo_id} nyomtatvány %{period_code}
         időszakában érvénytelen jövedelemcsoportosítás szerepel (%{error_type}).
       m210_convenio_lob_advisory: A(z) %{country_code} ország %{tipo_renta_code} jövedelemtípusára

@@ -1103,6 +1103,10 @@ application:
         failed for this revision (scenario %{scenario_id}).
       ledger_snapshot_drift: 'Modelo %{modelo} %{filing_year} %{period} drifted from
         its anchored ledger snapshot: %{changed_count} changed, %{removed_count} removed.'
+      m193_settled_row_amount_authority_unresolved: Modelo 193 for %{filing_year}
+        includes %{settled_prior_accrual_rows} record(s) paying income accrued in
+        an earlier year, and no official source settles the base and withholding they
+        declare; filing and export will refuse this revision.
       m210_agrupacion_renta_invalid: Modelo %{modelo_id} period %{period_code} has
         an invalid income grouping (%{error_type}).
       m210_convenio_lob_advisory: Country %{country_code} income type %{tipo_renta_code}

@@ -141,7 +141,9 @@ errors:
       de declaració no nul.
     parameter_unknown: El paràmetre {parameter_id} no està registrat.
     relation_value_missing: La relació {relation_id} no té cap valor assignat.
-    row_field_template_supplied_as_input: 'Les caselles {casilla_ids} prenen un valor per cada fila de detall de {record_ids}, de manera que no es poden subministrar com un únic valor d''entrada. Indiqueu-les com a files de detall.'
+    row_field_template_supplied_as_input: Les caselles {casilla_ids} prenen un valor
+      per cada fila de detall de {record_ids}, de manera que no es poden subministrar
+      com un únic valor d'entrada. Indiqueu-les com a files de detall.
     text_input_non_text_casillas: 'Entrada de text subministrada per a caselles no
       textuals: %{casilla_ids}.'
     unknown_input_casillas: 'Identificadors de casella d''entrada desconeguts: {casilla_ids}.'
@@ -870,6 +872,9 @@ errors:
       catàleg compatible.
     canonical_tui_unresolved_action_candidate: El candidat d'acció del TUI no té cap
       declaració de catàleg coincident.
+    canonical_withholding_filing_cadence: Les retencions no es poden assignar a un
+      període trimestral que el calendari de presentació del declarant no assigna.
+      Els períodes mensuals de retencions encara no s'admeten.
     canonical_withholding_observation_mutation: S'ha rebutjat el canvi en l'evidència
       de retencions d'aquest període.
     canonical_withholding_producer: L'evidència de retencions no correspon a cap via
@@ -1201,7 +1206,10 @@ errors:
     refused_modelo_refund_election_not_eligible: S'ha sol·licitat una devolució en
       un període on no està disponible; només l'últim període de declaració de l'any
       permet la devolució a un no inscrit a REDEME.
-    refused_modelo_stored_row_field_input: 'La revisió de càlcul {calculation_revision_id} desa un únic valor d''entrada per a les caselles {casilla_ids}, que prenen un valor per cada fila de detall. Torneu a calcular la unitat de treball {work_unit_id} per substituir-la.'
+    refused_modelo_stored_row_field_input: La revisió de càlcul {calculation_revision_id}
+      desa un únic valor d'entrada per a les caselles {casilla_ids}, que prenen un
+      valor per cada fila de detall. Torneu a calcular la unitat de treball {work_unit_id}
+      per substituir-la.
     refused_modeloprior_domiciliation_election: S'ha rebutjat la baixa o modificació
       de la domiciliació prèvia perquè manca o no és vàlida la rectificativa del model
       303 o la prova oficial de la presentació base U.

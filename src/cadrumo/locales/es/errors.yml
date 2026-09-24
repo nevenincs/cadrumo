@@ -139,7 +139,9 @@ errors:
       de declaración no nulo.
     parameter_unknown: El parámetro {parameter_id} no está registrado.
     relation_value_missing: La relación {relation_id} no tiene valor asignado.
-    row_field_template_supplied_as_input: 'Las casillas {casilla_ids} toman un valor por cada fila de detalle de {record_ids}, por lo que no pueden suministrarse como un único valor de entrada. Indíquelas como filas de detalle.'
+    row_field_template_supplied_as_input: Las casillas {casilla_ids} toman un valor
+      por cada fila de detalle de {record_ids}, por lo que no pueden suministrarse
+      como un único valor de entrada. Indíquelas como filas de detalle.
     text_input_non_text_casillas: 'Entrada de texto suministrada para casillas no
       textuales: %{casilla_ids}.'
     unknown_input_casillas: 'Identificadores de casilla de entrada desconocidos: {casilla_ids}.'
@@ -860,6 +862,9 @@ errors:
       compatible.
     canonical_tui_unresolved_action_candidate: El candidato de acción del TUI no tiene
       una declaración de catálogo coincidente.
+    canonical_withholding_filing_cadence: Las retenciones no pueden asignarse a un
+      periodo trimestral que el calendario de presentación del declarante no asigna.
+      Los periodos mensuales de retenciones aún no se admiten.
     canonical_withholding_observation_mutation: Se rechazó el cambio en la evidencia
       de retenciones de este periodo.
     canonical_withholding_producer: La evidencia de retenciones no corresponde a ninguna
@@ -1193,7 +1198,10 @@ errors:
     refused_modelo_refund_election_not_eligible: Se solicitó una devolución en un
       periodo donde no está disponible; solo el último periodo de declaración del
       año permite la devolución a un no inscrito en REDEME.
-    refused_modelo_stored_row_field_input: 'La revisión de cálculo {calculation_revision_id} guarda un único valor de entrada para las casillas {casilla_ids}, que toman un valor por cada fila de detalle. Vuelva a calcular la unidad de trabajo {work_unit_id} para sustituirla.'
+    refused_modelo_stored_row_field_input: La revisión de cálculo {calculation_revision_id}
+      guarda un único valor de entrada para las casillas {casilla_ids}, que toman
+      un valor por cada fila de detalle. Vuelva a calcular la unidad de trabajo {work_unit_id}
+      para sustituirla.
     refused_modeloprior_domiciliation_election: Se ha rechazado la baja o modificación
       de la domiciliacion previa porque falta o no es valida la rectificativa del
       modelo 303 o la prueba oficial de la presentación base U.

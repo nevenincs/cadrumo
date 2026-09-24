@@ -171,6 +171,18 @@ aggregation:
       perceptor_observations_missing: No hi ha observacions de retencions per perceptor
         per al model %{modelo} %{filing_year} %{period}; la font %{source_kind} no
         es pot resoldre.
+      withholding_annual_source_not_quarterly: 'No es pot elaborar el resum anual:
+        el calendari de presentació del declarant no assigna el seu model periòdic
+        de retencions a tots els trimestres de l''any (el presenta mensualment), i
+        sumar només els períodes trimestrals deixaria fora mesos de retencions.'
+      withholding_filer_profile_absent: No s'ha pogut carregar el perfil del declarant
+        per a aquest exercici, de manera que no es pot determinar si les retencions
+        es presenten trimestralment o mensualment. Completeu el perfil i torneu-ho
+        a provar.
+      withholding_quarterly_window_not_scheduled: El calendari de presentació del
+        declarant no assigna aquest trimestre al model de retencions (una gran empresa
+        el presenta mensualment) i els períodes mensuals de retencions encara no s'admeten.
+        No s'ha registrat res.
   service:
     errors:
       currency_conversion_required: L'import en moneda estrangera requereix una conversió

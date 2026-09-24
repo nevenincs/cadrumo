@@ -1215,6 +1215,10 @@ application:
       ledger_snapshot_drift: 'El model %{modelo} %{filing_year} %{period} s''ha desviat
         de la seva instantània de llibre ancorada: %{changed_count} modificades, %{removed_count}
         eliminades.'
+      m193_settled_row_amount_authority_unresolved: El model 193 de %{filing_year}
+        inclou %{settled_prior_accrual_rows} registre(s) que paguen rendiments meritats
+        en un exercici anterior, i cap font oficial no determina la base i la retenció
+        que declaren; la presentació i l'exportació rebutjaran aquesta revisió.
       m210_agrupacion_renta_invalid: El model %{modelo_id} període %{period_code}
         té una agrupació de rendes no vàlida (%{error_type}).
       m210_convenio_lob_advisory: El país %{country_code} i el tipus de renda %{tipo_renta_code}

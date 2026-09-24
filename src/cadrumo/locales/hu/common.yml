@@ -161,6 +161,17 @@ aggregation:
       perceptor_observations_missing: Nincsenek perceptoronkénti retención megfigyelések
         a(z) %{modelo} %{filing_year} %{period} modellhez; a(z) %{source_kind} forrás
         nem oldható fel.
+      withholding_annual_source_not_quarterly: 'Az éves összesítő nem készíthető el:
+        a bevalló benyújtási ütemezése nem rendeli az időszakos forrásadó-levonási
+        modellt az év minden negyedévéhez (havonta nyújtja be), és csak a negyedéves
+        időszakok összegzése hónapoknyi forrásadó-levonást hagyna ki.'
+      withholding_filer_profile_absent: A bevalló profilja nem tölthető be erre az
+        adóévre, így nem állapítható meg, hogy a forrásadó-levonást negyedévente vagy
+        havonta vallja-e be. Töltse ki a profilt, majd próbálja újra.
+      withholding_quarterly_window_not_scheduled: A bevalló benyújtási ütemezése nem
+        rendeli ezt a negyedévet a forrásadó-levonási modellhez (nagyvállalatként
+        havonta nyújtja be), a havi forrásadó-levonási időszakok pedig még nem támogatottak.
+        Semmi sem került rögzítésre.
   service:
     errors:
       currency_conversion_required: A külföldi pénznemű összeget euróra kell váltani,

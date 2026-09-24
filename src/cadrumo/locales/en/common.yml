@@ -160,6 +160,17 @@ aggregation:
       perceptor_observations_missing: No per-perceptor retention observations exist
         for modelo %{modelo} %{filing_year} %{period}; source %{source_kind} cannot
         resolve.
+      withholding_annual_source_not_quarterly: 'The annual summary cannot be built:
+        the filer''s filing schedule does not assign its periodic withholding modelo
+        every quarter of the year (it files monthly), and totalling only the quarterly
+        windows would leave months of withholding out.'
+      withholding_filer_profile_absent: The filer's profile could not be loaded for
+        this filing year, so it cannot be established whether withholding is filed
+        quarterly or monthly. Complete the profile and try again.
+      withholding_quarterly_window_not_scheduled: The filer's filing schedule does
+        not assign this quarter to the withholding modelo (a large company files it
+        monthly), and monthly withholding periods are not supported yet. Nothing was
+        recorded.
   service:
     errors:
       currency_conversion_required: Foreign-currency amount requires an EUR conversion

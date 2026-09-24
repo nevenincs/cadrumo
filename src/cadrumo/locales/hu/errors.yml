@@ -142,7 +142,9 @@ errors:
       bevallási év szükséges.
     parameter_unknown: A(z) {parameter_id} paraméter nincs regisztrálva.
     relation_value_missing: A(z) {relation_id} relációnak nincs megadott értéke.
-    row_field_template_supplied_as_input: 'A(z) {casilla_ids} mezők a(z) {record_ids} minden részletsorában külön értéket kapnak, ezért nem adhatók meg egyetlen bemeneti értékként. Adja meg őket részletsorokként.'
+    row_field_template_supplied_as_input: A(z) {casilla_ids} mezők a(z) {record_ids}
+      minden részletsorában külön értéket kapnak, ezért nem adhatók meg egyetlen bemeneti
+      értékként. Adja meg őket részletsorokként.
     text_input_non_text_casillas: 'Szöveges bemenet érkezett nem szöveges mezőkhöz:
       %{casilla_ids}.'
     unknown_input_casillas: 'Ismeretlen nyilvántartási bemeneti mező-azonosítók: {casilla_ids}.'
@@ -812,6 +814,9 @@ errors:
     canonical_tui_unknown_destination: A kért TUI-célállomás nincs a támogatott katalógusban.
     canonical_tui_unresolved_action_candidate: A TUI-műveletjelöltnek nincs megfelelő
       katalógusdeklarációja.
+    canonical_withholding_filing_cadence: A forrásadó-levonás nem sorolható olyan
+      negyedéves időszakba, amelyet a bevalló benyújtási ütemezése nem rendel hozzá.
+      A havi forrásadó-levonási időszakok még nem támogatottak.
     canonical_withholding_observation_mutation: Az időszak forrásadó-levonási bizonyítékainak
       módosítása elutasítva.
     canonical_withholding_producer: A forrásadó-levonási bizonyítékok nem felelnek
@@ -1133,7 +1138,10 @@ errors:
     refused_modelo_refund_election_not_eligible: Visszatérítést kértek olyan időszakra,
       ahol nem elérhető; csak az év utolsó bevallási időszaka tesz lehetővé nem REDEME
       visszatérítést.
-    refused_modelo_stored_row_field_input: 'A(z) {calculation_revision_id} számítási változat egyetlen bemeneti értéket tárol a(z) {casilla_ids} mezőkhöz, amelyek minden részletsorban külön értéket kapnak. Számítsa újra a(z) {work_unit_id} munkaegységet a lecseréléséhez.'
+    refused_modelo_stored_row_field_input: A(z) {calculation_revision_id} számítási
+      változat egyetlen bemeneti értéket tárol a(z) {casilla_ids} mezőkhöz, amelyek
+      minden részletsorban külön értéket kapnak. Számítsa újra a(z) {work_unit_id}
+      munkaegységet a lecseréléséhez.
     refused_modeloprior_domiciliation_election: A korábbi csoportos beszedés törlését
       vagy módosítását elutasítottuk, mert hiányzik vagy érvénytelen a 303-as helyesbítő
       bevallás, illetve az U alapbevallás hivatalos igazolása.
