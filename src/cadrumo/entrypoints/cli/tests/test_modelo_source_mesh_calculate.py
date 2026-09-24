@@ -664,8 +664,13 @@ def test_work_calculate_modelo_115_classified_rent_row_requires_perceptor_eviden
     assert "115" in envelope["error"]["message"]
 
 
-def test_work_calculate_modelo_180_refuses_string_perceptor_casilla_with_detail_guidance() -> None:
-    """M180 perceptor string fields are refused before the decimal casilla parser."""
+def test_work_calculate_modelo_180_refuses_a_perceptor_row_field_before_parsing_its_value() -> None:
+    """A casilla the perceptor record fills once per row is refused for being a row field.
+
+    The value is a NIF, not a decimal, so the refusal must come from the
+    row-field rule rather than the decimal parser, and it names the casilla and
+    the record whose detail rows carry it.
+    """
 
     _create_profile()
     work_unit = _create_180_work_unit()
@@ -687,10 +692,10 @@ def test_work_calculate_modelo_180_refuses_string_perceptor_casilla_with_detail_
     assert calculated.exit_code != 0, calculated.output
     envelope = json.loads(calculated.output)
     assert envelope["error"]["code"] == "REFUSED_MODELO_CALCULATE_CASILLA_INPUT"
-    assert envelope["error"]["context"]["key"] == "perc.nif"
-    assert "recorded withholding evidence" in envelope["error"]["message"]
-    # The detail comes from evidence no single command can bind, so the
-    # refusal is a typed operator decision rather than prose naming a command.
+    assert envelope["error"]["context"]["casilla_ids"] == "perc.nif"
+    assert envelope["error"]["context"]["record_ids"]
+    # Which detail rows to supply is the operator's call, so the refusal is a
+    # typed operator decision rather than prose naming a command.
     action = envelope["error"]["action"]
     assert action["failed_condition_id"] == "modelo.work.calculate.caller_overrides.casilla_scalar"
     assert action["no_recovery_outcome"] == "operator_decision"

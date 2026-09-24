@@ -870,11 +870,6 @@ application:
         esta revisión.
       calculate_decimal_input_invalid: 'El valor %{flag} de %{key} no es decimal:
         %{value}'
-      calculate_detail_casilla_unsupported: La casilla %{key} nombra un campo de detalle
-        de perceptor/inmueble del Modelo 180, no una casilla decimal escalar. El canal
-        local --casilla solo acepta casillas decimales escalares; el detalle de perceptor/inmueble
-        del Modelo 180 procede de la evidencia de retenciones registrada, no de una
-        casilla indicada a mano.
       calculate_m184_share_sum_invalid: Los porcentajes de participación de las filas
         de miembro del modelo 184 deben sumar exactamente 100%; se obtuvo %{total}
         en %{count} filas.

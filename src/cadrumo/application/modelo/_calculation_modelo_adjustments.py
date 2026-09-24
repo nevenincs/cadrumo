@@ -2,7 +2,8 @@
 
 These private helpers keep model-specific edge cases out of the generic
 calculation action path: M131 fixed-record data-base projections, M390/M303
-cross-period reconciliation refusal, and M349 row-template/display suppression.
+cross-period reconciliation refusal, and the dropping of row-field template
+outputs that a repeated export record fills once per detail row.
 They operate on the already resolved registry snapshot and preserve the typed
 observation contract that the calculation action persists.
 
@@ -17,7 +18,7 @@ See Also:
         Revision whose export layouts, bindings, and relations drive the
         model-specific adjustments.
     :class:`~domain.calculations.registry.bindings.CasillaObservation`
-        Provenance-bearing observation rows filtered with M349 template fields.
+        Provenance-bearing observation rows filtered of row-field template casillas.
     :class:`~WorkUnit`
         Modelo, filing year, and period context selecting each adjustment.
 """
@@ -39,6 +40,7 @@ from ...domain.calculations.registry.binding_aggregation import binding_aggregat
 from ...domain.calculations.registry.binding_selector_utils import manual_input_record_field_selector
 from ...domain.calculations.registry.binding_targets import casillas_by_binding
 from ...domain.calculations.registry.bindings import CasillaObservation
+from ...domain.calculations.registry.casilla_membership import row_field_template_records_by_casilla
 from ...domain.calculations.registry.ids import (
     BindingId,
     RelationId,
@@ -352,15 +354,6 @@ def _m131_objective_estimation_data_base_inputs(
     return _m131_project_data_base_inputs(inputs, target_casillas=target_casillas)
 
 
-def _row_field_template_casilla_ids(revision: ModeloRevision) -> frozenset[CasillaId]:
-    return frozenset(
-        casilla_id
-        for export_layout in revision.export_layouts
-        for record in export_layout.records
-        for casilla_id in record.row_field_casilla_ids.values()
-    )
-
-
 def _calculated_decimal(value: object | None) -> Decimal:
     if value is None:
         return ZERO
@@ -491,14 +484,19 @@ def _raise_if_m390_303_reconciliation_would_save_silent_zero(
     )
 
 
-def _suppress_m349_row_field_template_outputs(
+def drop_row_field_template_outputs(
     *,
-    work_unit: WorkUnit,
     revision: ModeloRevision,
     casilla_values: dict[CasillaId, Decimal],
     observations: tuple[CasillaObservation, ...],
 ) -> tuple[dict[CasillaId, Decimal], tuple[CasillaObservation, ...]]:
-    row_field_casilla_ids = _row_field_template_casilla_ids(revision)
+    """Drop the scalar values and observations of casillas a repeated export record fills per row.
+
+    The engine evaluates every declared casilla, so a row-field template
+    casilla comes out as a scalar with no row behind it; its real values live
+    on the detail rows that the export emits one record for each.
+    """
+    row_field_casilla_ids = frozenset(row_field_template_records_by_casilla(revision))
     if not row_field_casilla_ids:
         return casilla_values, observations
     return (
@@ -555,4 +553,3 @@ calculated_decimal = _calculated_decimal
 detail_row_binding_values_for_calculation = _detail_row_binding_values_for_calculation
 m131_objective_estimation_data_base_inputs = _m131_objective_estimation_data_base_inputs
 raise_if_m390_303_reconciliation_would_save_silent_zero = _raise_if_m390_303_reconciliation_would_save_silent_zero
-suppress_m349_row_field_template_outputs = _suppress_m349_row_field_template_outputs

@@ -218,6 +218,15 @@ class StoredCalculationDriftError(ModeloError):
     """Raised when a persisted calculation revision has drifted from its content-addressed id."""
 
 
+class StoredRowFieldScalarInputError(ModeloError):
+    """Raised when a saved revision holds one scalar input for a casilla detail rows carry.
+
+    Calculate refuses such an input; a revision saved before it did records an
+    operator input with no observation behind it, which no evidence capture can
+    explain. Recalculating the work unit replaces it.
+    """
+
+
 class LedgerEvidenceRecaptureRefusedError(ModeloError):
     """Raised when a sealed revision's evidence cannot be re-bundled from the live ledger.
 

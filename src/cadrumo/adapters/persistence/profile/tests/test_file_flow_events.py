@@ -13,8 +13,6 @@ from cadrumo.adapters.persistence.profile.tests.cross_period_seeding import seed
 from cadrumo.adapters.persistence.profile.tests.file_flow_test_support import (
     DEFAULT_130_BASELINE_INPUTS,
     DEFAULT_130_BINDING_VALUES,
-    DEFAULT_180_BINDING_VALUES,
-    DEFAULT_180_RELATION_VALUES,
     M130_EXPENSE_CASILLA,
     M130_INCOME_CASILLA,
     T1,
@@ -25,7 +23,7 @@ from cadrumo.adapters.persistence.profile.tests.file_flow_test_support import (
     Repos,
     file_revision,
     registry_required_manual_casillas,
-    seed_modelo_180_work_unit,
+    seed_modelo_193_work_unit,
     seed_work_unit,
     verify_revision,
     workflow_profile,
@@ -182,19 +180,21 @@ def test_verify_emits_refused_event_on_missing_casilla(repos: Repos, *, operatio
     stays DRAFT and the refusal lands in the bucket event log."""
 
     wu_repo, cr_repo, fr_repo, _vr_repo, bv_repo = repos
-    required = registry_required_manual_casillas()
+    work_unit = seed_modelo_193_work_unit(wu_repo)
+    required = registry_required_manual_casillas(
+        modelo=work_unit.modelo,
+        filing_year=work_unit.filing_year,
+        period=work_unit.period.registry_token,
+    )
     omitted = required[0]
     supplied = {cid: Decimal("1") for cid in required[1:]}
 
-    work_unit = seed_modelo_180_work_unit(wu_repo)
     with bundled_indexed_authority().operation() as operation:
         revision = calculate_modelo_revision(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
             actor="operator-A",
             casilla_inputs=supplied,
-            binding_values=DEFAULT_180_BINDING_VALUES,
-            relation_values=DEFAULT_180_RELATION_VALUES,
             clock=T1,
         )
     seed_clean_cross_period_sources(

@@ -225,13 +225,12 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.work.calculate.caller_overrides.casilla_unknown",
         action_id="operator.modelo.casillas",
     ),
-    # No action: the supported source for detail-field amounts takes
-    # operator-authored observation data that a refusal cannot bind, so the
-    # operator must drop the detail key and choose how to supply that data.
+    # No action: a row field's values arrive on the detail rows that carry it,
+    # and which rows those are is the operator's to supply, not a refusal's.
     _profile(
         "modelo.work.calculate",
         "modelo.work.calculate.caller_overrides.casilla_scalar",
-        "modelo.work.calculate.caller_overrides.detail_casilla_unsupported",
+        "modelo.work.calculate.caller_overrides.row_field_casilla_refused",
     ),
     _profile(
         "modelo.work.verify",

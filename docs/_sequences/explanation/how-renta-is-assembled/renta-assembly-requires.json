@@ -43,6 +43,7 @@
           }
         ],
         "result": {
+          "detail_row_fields": [],
           "filing_year": 2025,
           "ledger_derivable": [
             {

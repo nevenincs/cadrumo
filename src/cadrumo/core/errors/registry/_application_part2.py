@@ -845,6 +845,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.modelo.action_errors.StoredRowFieldScalarInputError",
+        ErrorCode(
+            code="REFUSED_MODELO_STORED_ROW_FIELD_INPUT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_modelo_stored_row_field_input",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.modelo.action_errors.StoredCalculationDriftError",
         ErrorCode(
             code="INTEGRITY_STORED_CALCULATION_DRIFT",

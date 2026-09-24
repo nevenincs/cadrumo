@@ -132,6 +132,7 @@ errors:
       a non-zero filing year.
     parameter_unknown: Parameter {parameter_id} is not registered.
     relation_value_missing: Relation {relation_id} has no supplied value.
+    row_field_template_supplied_as_input: 'Casillas {casilla_ids} take one value per detail row of {record_ids}, so they cannot be supplied as a single input value. Supply them as detail rows instead.'
     text_input_non_text_casillas: 'Text input supplied for non-text fields: %{casilla_ids}.'
     unknown_input_casillas: 'Unknown registry input casilla ids: {casilla_ids}.'
     unknown_text_input_casillas: 'Unknown text-input field identifiers: %{casilla_ids}.'
@@ -1106,6 +1107,7 @@ errors:
     refused_modelo_refund_election_not_eligible: A refund was requested for a period
       where it is not available; only the year's last filing period permits a non-REDEME
       refund.
+    refused_modelo_stored_row_field_input: 'Calculation revision {calculation_revision_id} stores a single input value for casillas {casilla_ids}, which take one value per detail row. Recalculate work unit {work_unit_id} to replace it.'
     refused_modeloprior_domiciliation_election: The prior-direct-debit cancellation
       or modification was refused because the required Modelo 303 rectificativa and
       official baseline U evidence are incomplete or unavailable.

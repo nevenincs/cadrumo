@@ -1117,7 +1117,8 @@ class ModeloRequiresResult(OutputSchema):
     Composes the registry snapshot for one ``(modelo, filing_year, period)``
     into the operator-facing "what data do I need" checklist: casillas the
     operator must hand-enter (``required_manual``), casillas they may
-    optionally enter (``optional_manual``), casillas the ledger aggregation
+    optionally enter (``optional_manual``), casillas they supply on each detail
+    row of a repeated export record (``detail_row_fields``), casillas the ledger aggregation
     mesh populates once the relevant transactions are imported and classified
     (``ledger_derivable``), and casillas populated from the active taxpayer
     profile (``profile_derivable``). The two cross-filing channels remain
@@ -1142,6 +1143,7 @@ class ModeloRequiresResult(OutputSchema):
     period: str
     required_manual: list[DataInventoryCasillaPayload]
     optional_manual: list[DataInventoryCasillaPayload]
+    detail_row_fields: list[DataInventoryCasillaPayload]
     ledger_derivable: list[DataInventoryCasillaPayload]
     profile_derivable: list[DataInventoryCasillaPayload]
     previous_filing: list[DataInventoryCasillaPayload]

@@ -72,7 +72,10 @@ from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry.applicability import derive_taxpayer_files_economic_activity
 from ...domain.calculations.registry.applicability_modelo202 import derive_modelo_202_modality
 from ...domain.calculations.registry.bindings import CasillaObservation
-from ...domain.calculations.registry.casilla_membership import casillas_by_id, row_template_casilla_ids
+from ...domain.calculations.registry.casilla_membership import (
+    casillas_by_id,
+    row_field_template_records_by_casilla,
+)
 from ...domain.calculations.registry.formula_runtime import RegistryCalculationUnresolvedOutcome
 from ...domain.calculations.registry.formula_runtime_ops import RegistryUnresolvedOutcomeReason
 from ...domain.calculations.registry.ids import (
@@ -157,6 +160,7 @@ from ._m303_m349_reconcile import m303_m349_intracom_reconcile_findings
 from ._m720_redeclaration_gate import modelo_720_redeclaration_findings
 from ._objective_estimation_advisory import _objective_estimation_exclusion_advisory_findings
 from ._registry_helpers import assert_revision_content_integrity as _assert_revision_content_integrity
+from ._registry_helpers import refuse_stored_row_field_scalar_inputs as _refuse_stored_row_field_scalar_inputs
 from ._required_binding_gate import (
     require_persisted_revision_required_bindings_resolved as _require_persisted_required_bindings_resolved,
 )
@@ -943,6 +947,7 @@ def verify_modelo_revision_with_preconditions(
         )
 
     _assert_revision_content_integrity(target)
+    _refuse_stored_row_field_scalar_inputs(target, work_unit=work_unit, operation=operation)
     from .profile_readiness_gate import load_modelo_work_profile, require_profile_ready_for_work_unit
 
     if profile is None:
@@ -2005,17 +2010,18 @@ def _detail_row_template_casilla_is_satisfied(
 ) -> bool:
     """Return whether a per-row template casilla is answered by its row source.
 
-    A casilla whose section names a record that a row-set binding produces is
-    one field of each emitted row, not a scalar the operator types once; its
-    completeness belongs to the row source. Modelo 349 additionally proves its
-    rows are present, since its operador and rectificacion records are the
-    return's whole content.
+    A casilla an export record fills once per detail row is one field of each
+    emitted row, not a scalar the operator types once; its completeness belongs
+    to the row source. The same declared mapping decides which casillas
+    calculate refuses as scalar inputs, so verify never demands one of them.
+    Modelo 349 additionally proves its rows are present, since its operador and
+    rectificacion records are the return's whole content.
     """
     if not casilla.section:
         return False
     section = str(casilla.section[0])
     if str(work_unit.modelo) != Modelo("349").value:
-        return casilla.id in row_template_casilla_ids(revision)
+        return casilla.id in row_field_template_records_by_casilla(revision)
     if section == "operador":
         return any(getattr(row, "row_type", None) == "operador" for row in target.detail_rows)
     if section != "rectificacion":

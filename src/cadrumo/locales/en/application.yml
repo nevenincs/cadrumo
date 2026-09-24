@@ -789,10 +789,6 @@ application:
         this revision.
       calculate_decimal_input_invalid: '%{flag} value for %{key} is not a decimal:
         %{value}'
-      calculate_detail_casilla_unsupported: Casilla %{key} names a Modelo 180 perceptor/property
-        detail field, not a scalar decimal casilla input. The local work --casilla
-        channel only accepts scalar decimal casillas; Modelo 180 perceptor/property
-        detail comes from the recorded withholding evidence, not from a casilla override.
       calculate_m184_share_sum_invalid: Modelo 184 member-row share percentages must
         sum to exactly 100%; got %{total} across %{count} rows.
       calculate_m210_tipo_renta_fetch_gated: 'Modelo 210 tipo de renta code %{value}

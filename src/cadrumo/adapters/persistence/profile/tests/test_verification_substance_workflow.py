@@ -578,9 +578,11 @@ def test_required_manual_checklist_carries_registry_provenance() -> None:
     making provenance invisible at the operator-facing verify surface.
 
     Exercises the application-owned data-inventory seam against the live M180
-    registry. The checklist is the operator-facing source of required manual
-    inputs, and its entries copy the authority's legal/source references rather
-    than exposing the verification implementation.
+    registry. The checklist is the operator-facing source of required inputs,
+    and its entries copy the authority's legal/source references rather than
+    exposing the verification implementation. ``perc.base`` is filled once per
+    perceptor row, so the checklist lists it as a detail-row field and never as
+    a scalar the operator types once, which calculate would refuse.
     """
     checklist = _data_inventory_checklist(
         modelo="180",
@@ -588,7 +590,9 @@ def test_required_manual_checklist_carries_registry_provenance() -> None:
         period=Period.from_year_and_code(2024, "0A"),
         bucket_id=None,
     )
-    required = next(entry for entry in checklist.required_manual if entry.casilla_id == _M180_PERCEPTOR_BASE)
+    assert _M180_PERCEPTOR_BASE not in {entry.casilla_id for entry in checklist.required_manual}
+    assert _M180_PERCEPTOR_BASE not in {entry.casilla_id for entry in checklist.optional_manual}
+    required = next(entry for entry in checklist.detail_row_fields if entry.casilla_id == _M180_PERCEPTOR_BASE)
     snapshot = published_authority_operation().snapshot("180", filing_year=2024, period="0A")
     casilla = next(c for c in snapshot.revision.casillas if c.id == _M180_PERCEPTOR_BASE)
     expected_legal_refs = frozenset(str(r) for r in casilla.legal_refs)

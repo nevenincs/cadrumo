@@ -833,11 +833,6 @@ application:
         a revízióban.
       calculate_decimal_input_invalid: 'A(z) %{flag} érték %{key} kulcshoz nem decimális
         szám: %{value}'
-      calculate_detail_casilla_unsupported: A(z) %{key} rovat a 180-as nyomtatvány
-        kedvezményezett/ingatlan részletsor mezőjét nevezi meg, nem skaláris decimális
-        rovat bemenetet. A helyi --casilla csatorna csak skaláris decimális rovatokat
-        fogad; a 180-as nyomtatvány kedvezményezett/ingatlan részletei a rögzített
-        visszatartási bizonylatokból származnak, nem kézzel megadott rovatból.
       calculate_m184_share_sum_invalid: 'A 184-es modell tag sorainak részesedési
         százalékai pontosan 100%-ot kell adjanak; kapott érték: %{total}, sorok: %{count}.'
       calculate_m210_tipo_renta_fetch_gated: 'A(z) %{value} 210-es nyomtatvány jövedelemtípus-kód

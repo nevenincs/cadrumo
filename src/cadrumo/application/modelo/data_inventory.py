@@ -38,6 +38,7 @@ from ...core.casilla_id import CasillaId
 from ...core.i18n.render import output_language
 from ...core.period import Period
 from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids
+from ...domain.calculations.registry.casilla_membership import row_field_template_records_by_casilla
 from ...domain.calculations.registry.ids import (
     BindingId,
     LegalRefId,
@@ -111,7 +112,9 @@ class DataInventoryChecklist:
     """Composed "what data do I need" checklist for one modelo/year/period.
 
     ``required_manual`` and ``optional_manual`` are the casillas an operator
-    must (or may) hand-enter. ``ledger_derivable`` are casillas the ledger
+    must (or may) hand-enter once. ``detail_row_fields`` are manual casillas an
+    export record fills once per detail row: the operator supplies them on each
+    row, and calculate refuses them as a single scalar. ``ledger_derivable`` are casillas the ledger
     aggregation mesh populates automatically once the relevant transactions
     are imported and classified — the operator imports these rather than
     typing them. ``profile_derivable`` are casillas populated from the active
@@ -133,6 +136,7 @@ class DataInventoryChecklist:
     period: str
     required_manual: tuple[DataInventoryCasilla, ...]
     optional_manual: tuple[DataInventoryCasilla, ...]
+    detail_row_fields: tuple[DataInventoryCasilla, ...]
     ledger_derivable: tuple[DataInventoryCasilla, ...]
     profile_derivable: tuple[DataInventoryCasilla, ...]
     previous_filing: tuple[DataInventoryCasilla, ...]
@@ -152,6 +156,7 @@ class DataInventoryChecklist:
 class _DataInventoryBuckets:
     required_manual: list[DataInventoryCasilla]
     optional_manual: list[DataInventoryCasilla]
+    detail_row_fields: list[DataInventoryCasilla]
     ledger_derivable: list[DataInventoryCasilla]
     profile_derivable: list[DataInventoryCasilla]
     previous_filing: list[DataInventoryCasilla]
@@ -202,7 +207,8 @@ def data_inventory_checklist(
     for ``(modelo, filing_year, period)`` and classifies every casilla:
 
     * ``input_kind == MANUAL`` casillas split into ``required_manual`` /
-      ``optional_manual`` by their ``required`` flag.
+      ``optional_manual`` by their ``required`` flag, except those an export
+      record fills once per detail row, which are ``detail_row_fields``.
     * ``input_kind == BOUND`` casillas are classified by their binding's
       :class:`~core.aggregation.BindingSourceKind`: ledger-aggregation
       sources become ``ledger_derivable``; ``profile`` sources become
@@ -230,11 +236,14 @@ def data_inventory_checklist(
     Returns:
         A :class:`DataInventoryChecklist`.
     """
-    revision = operation.revision_for_context(
+    selected = operation.revision_for_context(
         modelo,
         filing_year=filing_year,
         period=period.registry_token,
     )
+    # The export layouts say which manual casillas are filled once per detail
+    # row, so the revision is read with them.
+    revision = operation.revision_with_export_layouts(modelo, str(selected.id))
     bindings_by_id = {binding.id: binding for binding in revision.bindings}
     buckets = _collect_inventory_buckets(revision, bindings_by_id)
 
@@ -265,6 +274,7 @@ def data_inventory_checklist(
         period=period.registry_token,
         required_manual=tuple(buckets.required_manual),
         optional_manual=tuple(buckets.optional_manual),
+        detail_row_fields=tuple(buckets.detail_row_fields),
         ledger_derivable=tuple(buckets.ledger_derivable),
         profile_derivable=tuple(buckets.profile_derivable),
         previous_filing=tuple(buckets.previous_filing),
@@ -301,6 +311,7 @@ def _collect_inventory_buckets(
     buckets = _DataInventoryBuckets(
         required_manual=[],
         optional_manual=[],
+        detail_row_fields=[],
         ledger_derivable=[],
         profile_derivable=[],
         previous_filing=[],
@@ -309,7 +320,11 @@ def _collect_inventory_buckets(
         unbucketed_sources=[],
         profile_binding_ids=[],
     )
+    row_field_casilla_ids = row_field_template_records_by_casilla(revision)
     for casilla in revision.casillas:
+        if casilla.input_kind == InputKind.MANUAL and casilla.id in row_field_casilla_ids:
+            buckets.detail_row_fields.append(_inventory_entry(casilla))
+            continue
         if casilla.input_kind == InputKind.MANUAL:
             target = buckets.required_manual if casilla.required else buckets.optional_manual
             target.append(_inventory_entry(casilla))

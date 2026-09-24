@@ -21,7 +21,6 @@ from ...application.modelo.action_errors import WorkUnitNotFoundError
 from ...application.modelo.calculate_input import (
     WorkCalculateInputBundle,
     build_work_calculate_input_bundle,
-    is_detail_casilla_override_key,
 )
 from ...application.modelo.calculation_action_ports import CalculationActionPorts
 from ...application.modelo.calculation_actions import get_calculation_revision
@@ -69,7 +68,6 @@ from .errors import CliRefusedBoundaryError
 if TYPE_CHECKING:
     from ...application.modelo.work_lifecycle_ports import WorkLifecyclePorts
     from ...application.modelo.work_profile import ModeloWorkProfile
-    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.modelos.calculation_revision import CalculationRevision
     from ...domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
     from ...domain.modelos.work_unit import WorkUnit
@@ -291,41 +289,6 @@ def parse_casilla_override(spec: str) -> tuple[CasillaId, str]:
     return validated_casilla_id(key, surface="--casilla key"), value
 
 
-def parse_work_calculate_casilla_override(
-    spec: str,
-    *,
-    operation: PinnedAuthorityOperation,
-) -> tuple[str, str]:
-    """Parse a work-calculate ``--casilla`` spec, preserving reserved detail aliases."""
-    key, value = parse_kv_spec(
-        spec,
-        flag="--casilla",
-        key_label="ID",
-        transform=str.strip,
-        key_validator=lambda key, raw_spec: validate_work_calculate_casilla_key(
-            key,
-            raw_spec,
-            operation=operation,
-        ),
-        strip_key=False,
-    )
-    if is_detail_casilla_override_key(key, operation=operation):
-        return key, value
-    return validated_casilla_id(key, surface="--casilla key"), value
-
-
-def validate_work_calculate_casilla_key(
-    key: str,
-    spec: str,
-    *,
-    operation: PinnedAuthorityOperation,
-) -> None:
-    """Validate a work-calculate ``--casilla`` key or pass reserved detail aliases through."""
-    if is_detail_casilla_override_key(key, operation=operation):
-        return
-    validate_casilla_key(key, spec)
-
-
 def _supported_row_type_names() -> tuple[str, ...]:
     return tuple(
         sorted(str(row_model.model_fields["row_type"].default) for row_model in _SUPPORTED_ROW_MODELS),
@@ -490,7 +453,6 @@ def _parse_work_calculate_cli_specs(
     binding: list[str] | None,
     relation: list[str] | None,
     row: list[str] | None,
-    operation: PinnedAuthorityOperation,
 ) -> tuple[
     dict[str, str],
     dict[BindingId, str],
@@ -498,7 +460,7 @@ def _parse_work_calculate_cli_specs(
     tuple[ModeloDetailRow, ...],
 ]:
     return (
-        dict(parse_work_calculate_casilla_override(spec, operation=operation) for spec in (casilla or ())),
+        dict(parse_casilla_override(spec) for spec in (casilla or ())),
         dict(parse_binding_override(spec) for spec in (binding or ())),
         dict(parse_relation_override(spec) for spec in relation or ()),
         tuple(parse_row_spec(spec) for spec in (row or ())),
@@ -535,7 +497,6 @@ def work_calculate_input_bundle_from_cli(
         binding=binding,
         relation=relation,
         row=row,
-        operation=ports.operation,
     )
     try:
         _validate_m349_detail_rows_for_work_unit(work_unit_id, detail_rows, ports=ports)

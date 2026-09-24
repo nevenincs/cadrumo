@@ -36,6 +36,7 @@ from .....application.modelo.action_errors import (
     AmendmentOverrideCasillaError,
     AmendmentTargetStateError,
     CalculationRevisionStateError,
+    StoredRowFieldScalarInputError,
 )
 from .....application.modelo.amendment_actions import amend_modelo_revision
 from .....application.modelo.calculation_actions import calculate_modelo_revision, get_calculation_revision
@@ -250,6 +251,7 @@ def _seed_external_baseline(
     revision_id_value: str = "2019-y-siguientes",
     member_nif: str | None = None,
     filing_instance_evidence: FilingInstanceEvidence | None = None,
+    input_values_by_casilla_id: dict[CasillaId, str] | None = None,
     operation: PinnedAuthorityOperation,
 ) -> tuple[WorkUnit, CalculationRevision, ModeloRecord]:
     """Seed a CURRENT filing record carrying ``external_evidence`` plus
@@ -257,7 +259,9 @@ def _seed_external_baseline(
 
     ``member_nif`` seeds a member-scoped group-filing baseline (e.g. a 322
     imputación member) rather than a single-filer one; omitted, the baseline
-    keeps the existing single-filer shape every other caller relies on."""
+    keeps the existing single-filer shape every other caller relies on.
+    ``input_values_by_casilla_id`` seeds stored operator inputs, as a revision
+    saved under earlier calculate rules may hold; omitted, it stores none."""
 
     wu_repo, cr_repo, fr_repo, _, _ = repos_tuple
     work_unit = _seed_work_unit(
@@ -269,7 +273,7 @@ def _seed_external_baseline(
         operation=operation,
     )
 
-    inputs: dict[CasillaId, str] = {}
+    inputs: dict[CasillaId, str] = {} if input_values_by_casilla_id is None else dict(input_values_by_casilla_id)
     overrides_map: dict[str, str] = {}
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit.work_unit_id,
@@ -1158,3 +1162,79 @@ def test_amendment_event_and_state_are_both_present_after_success(
     assert len(amended_events) == 1
     assert amended_events[0].object_id == amended.filing_record_id
     assert amended_events[0].payload["amends_filing_record_id"] == baseline.filing_record_id
+
+
+def test_amend_refuses_a_baseline_saved_with_a_scalar_row_field_input(
+    repos: _Repos, *, operation: PinnedAuthorityOperation
+) -> None:
+    """A filed revision that stores one scalar for a per-row casilla cannot seed a correction.
+
+    Calculate now refuses such an input. A revision filed before it did holds
+    an operator input no observation explains, and the correction would carry
+    it forward, so amend refuses and names the work unit to recalculate.
+    """
+    row_field = validated_casilla_id("perc.retenciones")
+    work_unit, revision, baseline = _seed_external_baseline(
+        repos,
+        casilla_values={validated_casilla_id("decl.total-perceptores"): Decimal("1")},
+        modelo="180",
+        filing_year=2024,
+        period_code="0A",
+        revision_id_value="2023-y-siguientes",
+        input_values_by_casilla_id={row_field: "150"},
+        operation=operation,
+    )
+
+    with (
+        pytest.raises(StoredRowFieldScalarInputError) as exc_info,
+        bundled_indexed_authority().operation() as amend_operation,
+    ):
+        amend_modelo_revision(
+            ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=amend_operation),
+            from_filing_record_id=baseline.filing_record_id,
+            overrides={validated_casilla_id("decl.total-perceptores"): Decimal("2")},
+            amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+            reason="baseline stored a per-row value as a scalar",
+            actor="operator-A",
+            clock=_T4,
+        )
+
+    assert exc_info.value.translated_message == "errors.refused.refused_modelo_stored_row_field_input"
+    assert exc_info.value.context == {
+        "casilla_ids": row_field,
+        "calculation_revision_id": revision.calculation_revision_id,
+        "work_unit_id": work_unit.work_unit_id,
+    }
+
+
+def test_amend_does_not_demand_row_field_casillas_as_scalars(
+    repos: _Repos, *, operation: PinnedAuthorityOperation
+) -> None:
+    """A clean Modelo 180 correction passes the completeness gate without per-row scalars.
+
+    Every required manual casilla Modelo 180 declares is a perceptor-row field,
+    so a gate demanding them as scalars would refuse every 180 correction,
+    including one whose baseline stores nothing it should not.
+    """
+    _work_unit, _revision, baseline = _seed_external_baseline(
+        repos,
+        casilla_values={validated_casilla_id("decl.total-perceptores"): Decimal("1")},
+        modelo="180",
+        filing_year=2024,
+        period_code="0A",
+        revision_id_value="2023-y-siguientes",
+        operation=operation,
+    )
+
+    with bundled_indexed_authority().operation() as amend_operation:
+        amended = amend_modelo_revision(
+            ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=amend_operation),
+            from_filing_record_id=baseline.filing_record_id,
+            overrides={validated_casilla_id("decl.total-perceptores"): Decimal("2")},
+            amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+            reason="one more perceptor",
+            actor="operator-A",
+            clock=_T4,
+        )
+
+    assert amended is not None

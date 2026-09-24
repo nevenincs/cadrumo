@@ -19,15 +19,13 @@ import pytest
 
 from cadrumo.adapters.persistence.profile.tests.cross_period_seeding import seed_clean_cross_period_sources
 from cadrumo.adapters.persistence.profile.tests.file_flow_test_support import (
-    DEFAULT_180_BINDING_VALUES,
-    DEFAULT_180_RELATION_VALUES,
     T1,
     T2,
     T3,
     Repos,
     calculation_ports_for_test,
     registry_required_manual_casillas,
-    seed_modelo_180_work_unit,
+    seed_modelo_193_work_unit,
     workflow_profile,
 )
 from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
@@ -75,19 +73,23 @@ def _filing_ports_for_test(repos: Repos):
 
 
 def _seed_nongranting_revision(repos: Repos, *, operation: PinnedAuthorityOperation):
-    """Seed an M180 draft that omits one required casilla, so verify refuses.
+    """Seed a Modelo 193 draft that omits one required casilla, so verify refuses.
 
     Returns ``(revision, repos-tuple)``. A non-granting verify leaves the
     revision in ``BORRADOR``, so it can be re-verified - the precondition the
     collapse contract needs.
     """
     wu_repo, cr_repo, fr_repo, _vr_repo, bv_repo = repos
-    required = registry_required_manual_casillas()
-    assert len(required) >= 2
+    work_unit = seed_modelo_193_work_unit(wu_repo)
+    required = registry_required_manual_casillas(
+        modelo=work_unit.modelo,
+        filing_year=work_unit.filing_year,
+        period=work_unit.period.registry_token,
+    )
+    assert required
     # Omit required[0]; supply the rest. The verifier emits a blocking
     # MISSING_REQUIRED_CASILLA finding and does not grant.
     supplied = {cid: Decimal("1") for cid in required[1:]}
-    work_unit = seed_modelo_180_work_unit(wu_repo)
     with calculation_ports_for_test(
         bucket_id=work_unit.bucket_id,
         work_unit_repository=wu_repo,
@@ -97,8 +99,6 @@ def _seed_nongranting_revision(repos: Repos, *, operation: PinnedAuthorityOperat
         revision = calculate_modelo_revision(
             work_unit.work_unit_id,
             casilla_inputs=supplied,
-            binding_values=DEFAULT_180_BINDING_VALUES,
-            relation_values=DEFAULT_180_RELATION_VALUES,
             ports=_calculation_ports_95,
             clock=T1,
         )

@@ -28,6 +28,7 @@ from ....domain.calculations.registry.binding_selector_utils import boolean_bind
 from ....domain.calculations.registry.casilla_membership import (
     casilla_noncanonical_reference_targets,
     declared_casilla_ids,
+    row_field_template_records_by_casilla,
 )
 from ....domain.calculations.registry.runtime_graph import enum_consumed_binding_ids, revision_date_binding_ids
 from ....domain.calculations.registry.schema import ModeloRevision
@@ -54,7 +55,7 @@ _FILING_YEAR = 2025
 _PERIOD_CODE = "0A"
 _LEAF = "modelo.work.calculate"
 _UNDECLARED_CASILLA_KEY = "99999"
-_DETAIL_CASILLA_KEY = "perceptor.nif"
+_ROW_FIELD_CASILLA_KEY = "perc.nif"
 
 
 def _work_unit(modelo: str) -> WorkUnit:
@@ -238,30 +239,53 @@ def test_unknown_casilla_refusal_carries_its_casillas_verdict(*, operation: Pinn
     _assert_registry_listing_action(verdict, action_id="operator.modelo.casillas", modelo="200")
 
 
-def test_detail_casilla_refusal_is_an_operator_decision(*, operation: PinnedAuthorityOperation) -> None:
-    work_unit = _work_unit("200")
-    revision = _revision("200")
+def test_a_row_field_casilla_is_refused_as_one_before_its_value_is_parsed(
+    *, operation: PinnedAuthorityOperation
+) -> None:
+    """A casilla an export record fills once per detail row is refused for being one.
+
+    The value is not a decimal, so a refusal from the value parser would blame
+    the value; the row-field refusal names the casilla and the records carrying
+    it, which is what the operator has to act on.
+    """
+    work_unit = _work_unit("180")
+    revision = _revision("180")
+    records = row_field_template_records_by_casilla(revision)[_ROW_FIELD_CASILLA_KEY]
 
     with pytest.raises(ModeloCalculateCasillaInputError) as exc_info:
         _resolve_casilla_overrides(
-            {_DETAIL_CASILLA_KEY: "1.00"},
+            {_ROW_FIELD_CASILLA_KEY: "B12345678"},
             revision,
             operation=operation,
             work_unit=work_unit,
         )
 
     error = exc_info.value
-    assert error.translated_message == "application.modelo.errors.calculate_detail_casilla_unsupported"
-    assert error.context == {"key": _DETAIL_CASILLA_KEY}
+    assert error.translated_message == "errors.calc.row_field_template_supplied_as_input"
+    assert error.context == {"casilla_ids": _ROW_FIELD_CASILLA_KEY, "record_ids": ",".join(records)}
     verdict = _assert_verdict(
         error,
         work_unit=work_unit,
-        scenario_id="modelo.work.calculate.caller_overrides.detail_casilla_unsupported",
+        scenario_id="modelo.work.calculate.caller_overrides.row_field_casilla_refused",
         condition_id="modelo.work.calculate.caller_overrides.casilla_scalar",
         evidence_id="modelo.work.calculate.casilla_override",
-        facts={"casilla_key": _DETAIL_CASILLA_KEY},
+        facts={"casilla_key": _ROW_FIELD_CASILLA_KEY},
     )
     assert verdict.action is None
-    assert verdict.argument_bindings == ()
-    assert verdict.conditionality is ActionConditionality.NOT_APPLICABLE
     assert verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
+
+
+def test_a_former_detail_alias_is_an_undeclared_casilla(*, operation: PinnedAuthorityOperation) -> None:
+    """No key prefix is reserved any more: a name no revision declares is simply undeclared."""
+    work_unit = _work_unit("180")
+    revision = _revision("180")
+
+    with pytest.raises(ModeloCalculateCasillaInputError) as exc_info:
+        _resolve_casilla_overrides(
+            {"perceptor.nif": "B12345678"},
+            revision,
+            operation=operation,
+            work_unit=work_unit,
+        )
+
+    assert exc_info.value.translated_message == "application.modelo.errors.calculate_casilla_unknown"

@@ -16,8 +16,6 @@ from cadrumo.adapters.persistence.profile.tests.file_flow_test_support import (
     _FILE_FLOW_PROFILE_ID,
     DEFAULT_130_BASELINE_INPUTS,
     DEFAULT_130_BINDING_VALUES,
-    DEFAULT_180_BINDING_VALUES,
-    DEFAULT_180_RELATION_VALUES,
     M111_ACTIVITY_AMOUNT_CASILLA,
     M111_ACTIVITY_COUNT_CASILLA,
     M111_ACTIVITY_WITHHELD_CASILLA,
@@ -39,8 +37,7 @@ from cadrumo.adapters.persistence.profile.tests.file_flow_test_support import (
     Repos,
     canonical_work_unit_period,
     registry_required_manual_casillas,
-    registry_required_manual_casillas_for,
-    seed_modelo_180_work_unit,
+    seed_modelo_193_work_unit,
     seed_work_unit,
     verify_revision,
     workflow_gate,
@@ -331,7 +328,7 @@ def test_verify_grants_when_all_required_casillas_present_real_registry(
 
     wu_repo, cr_repo, _, vr_repo, bv_repo = repos
     work_unit = seed_work_unit(wu_repo)
-    required = registry_required_manual_casillas_for(
+    required = registry_required_manual_casillas(
         modelo=work_unit.modelo,
         filing_year=work_unit.filing_year,
         period=work_unit.period.registry_token,
@@ -396,20 +393,22 @@ def test_verify_refuses_when_required_casilla_missing_real_registry(
     the audit trail records the refusal."""
 
     wu_repo, cr_repo, fr_repo, _vr_repo, bv_repo = repos
-    required = registry_required_manual_casillas()
-    assert len(required) >= 2
+    work_unit = seed_modelo_193_work_unit(wu_repo)
+    required = registry_required_manual_casillas(
+        modelo=work_unit.modelo,
+        filing_year=work_unit.filing_year,
+        period=work_unit.period.registry_token,
+    )
+    assert required
 
     omitted = required[0]
     supplied = {cid: Decimal("1") for cid in required[1:]}
 
-    work_unit = seed_modelo_180_work_unit(wu_repo)
     with bundled_indexed_authority().operation() as operation:
         revision = calculate_modelo_revision(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
             casilla_inputs=supplied,
-            binding_values=DEFAULT_180_BINDING_VALUES,
-            relation_values=DEFAULT_180_RELATION_VALUES,
             clock=T1,
         )
     seed_clean_cross_period_sources(
@@ -699,3 +698,52 @@ def test_list_and_get_verification_reports_real_registry(repos: Repos) -> None:
                 operation=operation,
             )
     assert excinfo.value.translated_message == "application.modelo.errors.verification_report_not_found"
+
+
+def test_verify_takes_modelo_347_counterparty_fields_from_their_rows_real_registry(repos: Repos) -> None:
+    """Modelo 347's counterparty NIF and operation key are answered by the detail rows.
+
+    Both are required manual casillas, and both are fields the counterparty
+    record fills once per row, so calculate refuses them as scalar inputs.
+    Verify has to read them the same way, or a return whose every counterparty
+    row carries them would be refused for want of scalars it cannot accept.
+    """
+    wu_repo, cr_repo, _, vr_repo, bv_repo = repos
+    work_unit = seed_work_unit(wu_repo, modelo="347", filing_year=2024, period="0A", revision_id="2011-2024")
+    counterparty_row = {
+        ("modelo-347-contraparte-row-nif", 1): "B12345674",
+        ("modelo-347-contraparte-row-nombre", 1): "PROVEEDOR EJEMPLO SL",
+        ("modelo-347-contraparte-row-clave", 1): "A",
+        ("modelo-347-contraparte-row-importe", 1): Decimal("12000.00"),
+        ("modelo-347-contraparte-row-importe-q1", 1): Decimal("3000.00"),
+        ("modelo-347-contraparte-row-importe-q2", 1): Decimal("3000.00"),
+        ("modelo-347-contraparte-row-importe-q3", 1): Decimal("3000.00"),
+        ("modelo-347-contraparte-row-importe-q4", 1): Decimal("3000.00"),
+    }
+
+    with bundled_indexed_authority().operation() as operation:
+        revision = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
+            casilla_inputs={},
+            binding_values={
+                "modelo-347-declarante-numero-personas-entidades": Decimal("1"),
+                "modelo-347-declarante-importe-total-anual-operaciones": Decimal("12000.00"),
+            },
+            row_binding_values=counterparty_row,
+            clock=T1,
+        )
+    report = verify_revision(
+        revision.calculation_revision_id,
+        revision=revision,
+        work_unit=work_unit,
+        actor="operator-A",
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        verification_repository=vr_repo,
+        bucket_event_repository=bv_repo,
+        clock=T2,
+    )
+
+    row_fields = {"contraparte.nif", "contraparte.clave-operacion"}
+    assert not row_fields & {str(casilla_id) for casilla_id in report.missing_required_casilla_ids}, report.findings

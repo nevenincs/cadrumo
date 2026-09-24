@@ -22,7 +22,6 @@ from collections.abc import Iterable
 from typing import TYPE_CHECKING
 
 from ....core.casilla_id import CasillaId
-from .binding_value_contract import BindingValueChannel
 from .errors import RegistryValidationError
 from .schema_surfaces import CasillaDefinition
 
@@ -78,25 +77,50 @@ def declared_casilla_ids(revision: ModeloRevision) -> frozenset[CasillaId]:
     return frozenset(casillas_by_id(revision))
 
 
-def row_template_casilla_ids(revision: ModeloRevision) -> frozenset[CasillaId]:
-    """Return the casillas that are one field of a record a row-set binding emits.
+def row_field_template_records_by_casilla(revision: ModeloRevision) -> dict[CasillaId, tuple[str, ...]]:
+    """Return each casilla an export record fills once per detail row, with those records' ids.
 
-    Such a casilla is written once per emitted row, never typed once as a
-    scalar, so its completeness belongs to the row source. The record is named
-    by the casilla's leading section and by the row-set binding's provider.
+    The export layout's ``row_field_casilla_ids`` mapping names the casilla
+    each row field of a repeated record belongs to. That casilla has one
+    value per emitted row, so the calculation neither accepts it as a scalar
+    input nor keeps a scalar output or observation for it; both rules read
+    this one derivation so they cannot disagree about which casillas it
+    covers. A casilla shared by several records lists every one of them.
 
     Core types:
     :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
     """
-    records = {
-        str(record)
-        for binding in revision.bindings
-        if binding.value.channel is BindingValueChannel.ROW_SET
-        and (record := getattr(binding.provider, "record", None)) is not None
-    }
-    return frozenset(
-        casilla.id for casilla in revision.casillas if casilla.section and str(casilla.section[0]) in records
-    )
+    records: dict[CasillaId, set[str]] = {}
+    for layout in revision.export_layouts:
+        for record in layout.records:
+            for casilla_id in record.row_field_casilla_ids.values():
+                records.setdefault(casilla_id, set()).add(str(record.id))
+    return {casilla_id: tuple(sorted(record_ids)) for casilla_id, record_ids in sorted(records.items())}
+
+
+def reject_row_field_template_scalar_inputs(
+    revision: ModeloRevision,
+    casilla_ids: Iterable[CasillaId],
+) -> None:
+    """Refuse scalar inputs for casillas that a repeated export record fills per detail row.
+
+    The calculation drops a row-field casilla's scalar value and observation,
+    so a scalar input for one would persist an operator input with no
+    registry-grounded observation behind it, which no later evidence capture
+    can explain.
+
+    Raises:
+        RegistryValidationError: When any of ``casilla_ids`` is a row-field
+            template casilla of ``revision``; the error names the casillas and
+            the export records whose detail rows carry them.
+    """
+    records_by_casilla = row_field_template_records_by_casilla(revision)
+    offending = sorted(set(casilla_ids).intersection(records_by_casilla))
+    if offending:
+        raise RegistryValidationError.for_row_field_template_scalar_inputs(
+            casilla_ids=offending,
+            record_ids=sorted({record_id for casilla_id in offending for record_id in records_by_casilla[casilla_id]}),
+        )
 
 
 def undeclared_casilla_ids(

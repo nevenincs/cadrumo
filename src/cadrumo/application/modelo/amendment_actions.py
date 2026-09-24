@@ -100,6 +100,7 @@ from ._calculation_helpers import amendment_observations as _amendment_observati
 from ._calculation_helpers import resolve_registry_snapshot_for_work_unit as _resolve_registry_snapshot_for_work_unit
 from ._calculation_modelo_adjustments import detail_row_declaration_modelos
 from ._ledger_anchor_capture import capture_revision_ledger_evidence
+from ._registry_helpers import refuse_stored_row_field_scalar_inputs as _refuse_stored_row_field_scalar_inputs
 from ._registry_helpers import reject_incomplete_amendment_casillas as _reject_incomplete_amendment_casillas
 from ._registry_helpers import reject_unknown_override_casillas as _reject_unknown_override_casillas
 from .action_errors import (
@@ -191,6 +192,10 @@ def _load_amendment_baseline[CasillaKey](
     revisions = ports.calculation_repository.load()
     baseline_revision = _require_revision(revisions, baseline.calculation_revision_id, operation=operation)
     source_revision = _require_revision(revisions, in_force.calculation_revision_id, operation=operation)
+    # Both revisions contribute stored inputs to the correction, so neither may
+    # carry a scalar a detail-row casilla cannot hold.
+    for stored_revision in (source_revision, baseline_revision):
+        _refuse_stored_row_field_scalar_inputs(stored_revision, work_unit=work_unit, operation=operation)
     if work_unit.modelo == Modelo("303").value and source_revision.filing_instance_evidence is None:
         raise AmendmentEvidenceMissingError(
             translated_message="errors.error.error_modelo_amendment_evidence_missing",

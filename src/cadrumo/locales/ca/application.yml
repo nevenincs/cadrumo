@@ -868,11 +868,6 @@ application:
         revisió.
       calculate_decimal_input_invalid: 'El valor %{flag} de %{key} no és decimal:
         %{value}'
-      calculate_detail_casilla_unsupported: La casella %{key} identifica un camp de
-        detall de perceptor/immoble del Model 180, no una casella decimal escalar.
-        El canal local --casilla només accepta caselles decimals escalars; el detall
-        de perceptor/immoble del Model 180 prové de l'evidència de retencions registrada,
-        no d'una casella indicada a mà.
       calculate_m184_share_sum_invalid: Els percentatges de participació de les files
         de membre del model 184 han de sumar exactament 100%; s'ha obtingut %{total}
         en %{count} files.

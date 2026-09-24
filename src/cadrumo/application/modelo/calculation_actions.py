@@ -59,7 +59,7 @@ from ...core.time.clock import now as _utc_now
 from ...domain.calculations.registry.binding_provider_registration import BINDING_PROVIDER_REGISTRATIONS
 from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids
 from ...domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
-from ...domain.calculations.registry.casilla_membership import casillas_by_id
+from ...domain.calculations.registry.casilla_membership import casillas_by_id, reject_row_field_template_scalar_inputs
 from ...domain.calculations.registry.formula_runtime import (
     RegistryCalculationResult,
     calculate_registry_snapshot,
@@ -107,6 +107,9 @@ from ._calculation_modelo_adjustments import (
     detail_row_binding_values_for_calculation as _detail_row_binding_values_for_calculation,
 )
 from ._calculation_modelo_adjustments import (
+    drop_row_field_template_outputs as _drop_row_field_template_outputs,
+)
+from ._calculation_modelo_adjustments import (
     m131_objective_estimation_data_base_inputs as _m131_objective_estimation_data_base_inputs,
 )
 from ._calculation_modelo_adjustments import (
@@ -114,9 +117,6 @@ from ._calculation_modelo_adjustments import (
 )
 from ._calculation_modelo_adjustments import (
     require_detail_rows_declared_for_their_owning_modelo as _require_detail_rows_declared_for_their_owning_modelo,
-)
-from ._calculation_modelo_adjustments import (
-    suppress_m349_row_field_template_outputs as _suppress_m349_row_field_template_outputs,
 )
 from ._calculation_modelo_adjustments import (
     union_detail_rows_by_identity as _union_detail_rows_by_identity,
@@ -533,6 +533,9 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
     resolved_inputs = channel_inputs.casilla_inputs
 
     resolved_text_inputs = validated_text_input_casilla_ids(channel_inputs.text_casilla_inputs)
+    # The row-field template outputs are dropped after the engine runs, so a
+    # scalar input for one would be persisted with no observation to ground it.
+    reject_row_field_template_scalar_inputs(snapshot.revision, (*resolved_inputs, *resolved_text_inputs))
 
     engine_result = _calculate_prepared_registry_snapshot(
         snapshot,
@@ -569,8 +572,7 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
         resolved_binding_values=prepared.channels.bindings,
     )
     typed_observations = _build_typed_observations(engine_result=engine_result, snapshot=snapshot)
-    casilla_values, typed_observations = _suppress_m349_row_field_template_outputs(
-        work_unit=work_unit,
+    casilla_values, typed_observations = _drop_row_field_template_outputs(
         revision=snapshot.revision,
         casilla_values=casilla_values,
         observations=typed_observations,

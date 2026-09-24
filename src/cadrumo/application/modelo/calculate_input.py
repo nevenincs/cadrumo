@@ -33,7 +33,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal, InvalidOperation
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, NoReturn
 
 from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.casilla_id import CasillaId
@@ -48,6 +48,7 @@ from ...domain.calculations.registry.casilla_membership import (
     casilla_noncanonical_reference_targets,
     casillas_by_id,
     declared_casilla_ids,
+    row_field_template_records_by_casilla,
 )
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
@@ -455,12 +456,16 @@ def _resolve_casilla_overrides(
 ) -> tuple[dict[CasillaId, Decimal], dict[CasillaId, str], str | None]:
     """Resolve canonical casilla overrides onto their registry-declared channels."""
     revision_casillas_by_id = casillas_by_id(revision)
+    row_field_records = row_field_template_records_by_casilla(revision)
     casilla_inputs: dict[CasillaId, Decimal] = {}
     text_casilla_inputs: dict[CasillaId, str] = {}
     m210_official_tipo_renta_code: str | None = None
     for raw_key, raw_value in casilla_overrides.items():
-        _refuse_detail_casilla_override(raw_key, operation=operation, work_unit=work_unit)
         key = _validated_canonical_casilla_id(raw_key, revision, work_unit=work_unit)
+        # Before any value parsing: a row field is refused for being one, not
+        # for a value its scalar channel could not have held anyway.
+        if key in row_field_records:
+            _refuse_row_field_casilla_override(key, records=row_field_records[key], work_unit=work_unit)
         casilla_def = revision_casillas_by_id.get(key)
         if casilla_def is not None and registry_scalar_value_type(casilla_def.data_type) == "str":
             text_value, official_code = _validated_string_casilla_override(
@@ -837,43 +842,19 @@ def _validated_m210_official_tipo_renta_code(raw_value: str, *, key: str) -> str
     )
 
 
-def _refuse_detail_casilla_override(
-    key: str,
-    *,
-    operation: PinnedAuthorityOperation,
-    work_unit: WorkUnit,
-) -> None:
-    """Reject detail-row aliases before the decimal-only casilla path parses values."""
-    if not is_detail_casilla_override_key(key, operation=operation):
-        return
+def _refuse_row_field_casilla_override(key: CasillaId, *, records: tuple[str, ...], work_unit: WorkUnit) -> NoReturn:
+    """Refuse a casilla an export record fills once per detail row, naming those records."""
     raise ModeloCalculateCasillaInputError(
-        context={"key": key},
-        translated_message="application.modelo.errors.calculate_detail_casilla_unsupported",
+        context={"casilla_ids": str(key), "record_ids": ",".join(records)},
+        translated_message="errors.calc.row_field_template_supplied_as_input",
         precondition_failure=_caller_override_failure(
             work_unit,
-            scenario_id="modelo.work.calculate.caller_overrides.detail_casilla_unsupported",
+            scenario_id="modelo.work.calculate.caller_overrides.row_field_casilla_refused",
             evidence_id=_CASILLA_OVERRIDE_EVIDENCE_ID,
-            facts={"casilla_key": key},
+            facts={"casilla_key": str(key)},
             with_registry_listing=False,
         ),
     )
-
-
-def is_detail_casilla_override_key(
-    key: str,
-    *,
-    operation: PinnedAuthorityOperation,
-) -> bool:
-    """Return whether *key* names a reserved detail-row alias, not a scalar casilla."""
-    declarations = _registry_calculate_input_declarations(operation=operation)
-    prefixes = tuple(
-        str(entry.value).strip().lower()
-        for entry in declarations.payload.entries
-        if str(entry.key).startswith("detail_override.prefix.") and str(entry.value).strip()
-    )
-    if not prefixes:
-        raise TypeError("calculate-input declarations must define detail override prefixes")
-    return key.strip().lower().startswith(prefixes)
 
 
 def _capture_work_catalogue(
@@ -1762,7 +1743,6 @@ __all__ = [
     "apply_calculation_shortcut_inputs",
     "build_work_calculate_input_bundle",
     "calculate_modelo_work_revision",
-    "is_detail_casilla_override_key",
     "modelo_202_modality_for_work_unit",
     "resolve_binding_overrides",
 ]

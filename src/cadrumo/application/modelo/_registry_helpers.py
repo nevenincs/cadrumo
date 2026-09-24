@@ -39,6 +39,7 @@ from ...domain.calculations.registry.casilla_membership import (
     casilla_noncanonical_reference_targets,
     casillas_by_id,
     format_noncanonical_casilla_reference,
+    row_field_template_records_by_casilla,
     undeclared_casilla_ids,
 )
 from ...domain.calculations.registry.errors import (
@@ -49,6 +50,7 @@ from ...domain.calculations.registry.schema import ModeloRevision, RegistrySnaps
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.modelos.calculation_revision import CalculationRevision, derive_calculation_revision_id_from_revision
+from ...domain.modelos.work_unit import WorkUnit
 from ._registry_resources import (
     reject_unknown_period_for_revision,
     reject_unknown_revision,
@@ -58,6 +60,7 @@ from .action_errors import (
     AmendmentVerificationRefusedError,
     ExternalModeloImportError,
     StoredCalculationDriftError,
+    StoredRowFieldScalarInputError,
 )
 
 # Casilla data types the engine represents on the numeric Decimal channel. This
@@ -181,6 +184,40 @@ def _normalise_registry_casilla_inputs[CasillaKey](
         noncanonical=noncanonical,
         unknown_only=unknown_only,
     )
+
+
+def refuse_stored_row_field_scalar_inputs(
+    revision: CalculationRevision,
+    *,
+    work_unit: WorkUnit,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Refuse a saved revision holding a scalar input for a casilla an export record fills per row.
+
+    Raises:
+        StoredRowFieldScalarInputError: When ``revision`` stores such an input;
+            the error names the casillas, the revision and the work unit to
+            recalculate.
+    """
+    snapshot = _resolve_registry_snapshot(
+        modelo=str(work_unit.modelo),
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+        operation=operation,
+        grade=RegistryAuthorityGrade.CALCULATION,
+    )
+    stored = sorted(
+        set(revision.input_values_by_casilla_id).intersection(row_field_template_records_by_casilla(snapshot.revision))
+    )
+    if stored:
+        raise StoredRowFieldScalarInputError(
+            translated_message="errors.refused.refused_modelo_stored_row_field_input",
+            context={
+                "casilla_ids": ",".join(stored),
+                "calculation_revision_id": revision.calculation_revision_id,
+                "work_unit_id": work_unit.work_unit_id,
+            },
+        )
 
 
 def reject_incomplete_amendment_casillas(
@@ -470,6 +507,20 @@ def reject_unknown_override_casillas[CasillaKey](
                 "casillas": resolved.unknown_only,
             },
         )
+    # An override is one scalar value; a casilla an export record fills once
+    # per detail row has no single value it could replace.
+    records_by_casilla = row_field_template_records_by_casilla(resolved.snapshot.revision)
+    row_fields = sorted(set(resolved.canonical_values).intersection(records_by_casilla))
+    if row_fields:
+        raise AmendmentOverrideCasillaError(
+            translated_message="errors.calc.row_field_template_supplied_as_input",
+            context={
+                "casilla_ids": ",".join(row_fields),
+                "record_ids": ",".join(
+                    sorted({record for casilla in row_fields for record in records_by_casilla[casilla]})
+                ),
+            },
+        )
     return resolved.canonical_values
 
 
@@ -563,7 +614,10 @@ def required_input_casilla_ids_for_revision(
     Returns ``None`` when the registry root or
     :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot` cannot be
     loaded. The first tuple contains required manual casillas from the selected
-    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`; the second
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision` that an
+    operator supplies once, leaving out those an export record fills once per
+    detail row, whose values arrive on the rows exactly as verify reads them;
+    the second
     contains declared manual, bound, and computed
     :class:`~cadrumo.core.casilla_id.CasillaId` values that
     amendment/import paths may need to carry through replay.
@@ -573,10 +627,13 @@ def required_input_casilla_ids_for_revision(
     except (FileNotFoundError, RegistrySnapshotError):
         return None
 
+    row_field_casilla_ids = row_field_template_records_by_casilla(snapshot.revision)
     required: list[CasillaId] = []
     optional: list[CasillaId] = []
     for casilla in snapshot.revision.casillas:
         casilla_id = casilla.id
+        if casilla_id in row_field_casilla_ids:
+            continue
         if casilla.input_kind == InputKind.MANUAL and casilla.required:
             required.append(casilla_id)
         elif casilla.input_kind in (InputKind.MANUAL, InputKind.BOUND, InputKind.COMPUTED):
@@ -626,6 +683,7 @@ def assert_revision_content_integrity(revision: CalculationRevision) -> None:
 __all__ = [
     "NUMERIC_CASILLA_DATA_TYPES",
     "assert_revision_content_integrity",
+    "refuse_stored_row_field_scalar_inputs",
     "reject_incomplete_amendment_casillas",
     "reject_unknown_import_casillas",
     "reject_unknown_override_casillas",

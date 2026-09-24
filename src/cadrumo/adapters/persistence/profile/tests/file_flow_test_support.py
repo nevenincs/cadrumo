@@ -76,6 +76,7 @@ from cadrumo.core.period import Period
 from cadrumo.domain.buckets.event import BucketEventObjectType as BucketEventObjectType
 from cadrumo.domain.buckets.event import BucketEventType as BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.casilla_membership import row_field_template_records_by_casilla
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.tests.cross_period_seeding import resolved_revision
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
@@ -272,8 +273,8 @@ __all__ = [
     "canonical_work_unit_period",
     "file_revision",
     "registry_required_manual_casillas",
-    "registry_required_manual_casillas_for",
     "seed_modelo_180_work_unit",
+    "seed_modelo_193_work_unit",
     "seed_work_unit",
     "target_filing_records",
     "verify_revision",
@@ -318,23 +319,21 @@ _READY_PROFILE_FACTS = (
 )
 
 
-def _registry_required_manual_casillas() -> tuple[CasillaId, ...]:
-    """Return required numeric manual casillas for M180 calculate-input fixtures.
+def _registry_required_manual_casillas(*, modelo: str, filing_year: int, period: str) -> tuple[CasillaId, ...]:
+    """Return the required manual casillas an operator supplies as scalar calculate inputs.
 
-    Modelo 180 also declares required row/detail text fields. Those do not belong
-    on the numeric ``casilla_inputs`` channel; feeding them there correctly raises
-    before verification.
+    A casilla that a repeated export record fills once per detail row is left
+    out: calculate refuses it as a scalar input, and its values arrive on the
+    detail rows. Modelo 180's required manual casillas are all such perceptor
+    row fields, so it yields none.
     """
-
-    revision = resolved_revision(modelo=_VERIFY_MODELO, filing_year=_VERIFY_YEAR, period=_VERIFY_PERIOD)
-    return tuple(
-        c.id for c in revision.casillas if c.required and c.input_kind == InputKind.MANUAL and c.data_type == "money"
-    )
-
-
-def _registry_required_manual_casillas_for(*, modelo: str, filing_year: int, period: str) -> tuple[CasillaId, ...]:
     revision = resolved_revision(modelo=modelo, filing_year=filing_year, period=period)
-    return tuple(c.id for c in revision.casillas if c.required and c.input_kind == InputKind.MANUAL)
+    row_field_casilla_ids = row_field_template_records_by_casilla(revision)
+    return tuple(
+        c.id
+        for c in revision.casillas
+        if c.required and c.input_kind == InputKind.MANUAL and c.id not in row_field_casilla_ids
+    )
 
 
 _DEFAULT_180_RELATION_VALUES: dict[str, Decimal] = {
@@ -649,7 +648,7 @@ def _verify_revision(
         )
 
 
-def _seed_modelo_180_work_unit(wu_repo: WorkUnitCatalogueRepository):
+def _seed_modelo_180_work_unit(wu_repo: WorkUnitCatalogueRepository) -> WorkUnit:
     with bundled_indexed_authority().operation() as operation:
         return create_work_unit(
             bucket_id=_FILE_FLOW_PROFILE_ID,
@@ -664,6 +663,18 @@ def _seed_modelo_180_work_unit(wu_repo: WorkUnitCatalogueRepository):
             operation=operation,
             clock=_T0,
         )
+
+
+def _seed_modelo_193_work_unit(wu_repo: WorkUnitCatalogueRepository):
+    """Seed a Modelo 193 work unit, the fixture for a draft that omits a required scalar casilla.
+
+    Modelo 193 declares a required scalar declarant casilla beside its
+    perceptor row fields, so leaving it out is a missing-required refusal at
+    verify. Modelo 180 cannot serve: every required manual casilla it declares
+    is a perceptor-record row field, answered by the row source rather than
+    by a scalar input.
+    """
+    return _seed_work_unit(wu_repo, modelo="193", filing_year=2024, period="0A", revision_id="2024")
 
 
 DEFAULT_130_BASELINE_INPUTS = _DEFAULT_130_BASELINE_INPUTS
@@ -706,8 +717,8 @@ WorkflowGate = _WorkflowGate
 canonical_work_unit_period = _canonical_work_unit_period
 file_revision = _file_revision
 registry_required_manual_casillas = _registry_required_manual_casillas
-registry_required_manual_casillas_for = _registry_required_manual_casillas_for
 seed_modelo_180_work_unit = _seed_modelo_180_work_unit
+seed_modelo_193_work_unit = _seed_modelo_193_work_unit
 seed_work_unit = _seed_work_unit
 target_filing_records = _target_filing_records
 verify_revision = _verify_revision
