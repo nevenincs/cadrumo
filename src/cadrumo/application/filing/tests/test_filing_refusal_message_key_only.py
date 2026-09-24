@@ -71,7 +71,7 @@ _FILING_OWNED_ERRORS: frozenset[str] = frozenset(
 _SWEPT_MODULES: tuple[str, ...] = (
     "__init__.py",
     "draft_construction.py",
-    "_export_parity.py",
+    "export_parity.py",
     "_m303_exonerado_390.py",
     "_m303_export_applicability.py",
     "draft_review.py",
@@ -125,7 +125,7 @@ _UNSWEPT_MODULES: tuple[str, ...] = tuple(_UNSWEPT_MODULE_RATIONALES)
 #: an undeclared exception type would bypass the registered error taxonomy.
 _OPERATOR_REACHABLE_REFUSAL_ALIASES: dict[str, str] = {
     "draft_construction.py": "_ModeloBuilderError",
-    "_export_parity.py": "FilingExportError",
+    "export_parity.py": "FilingExportError",
     "_m303_exonerado_390.py": "FilingExportError",
     "_m303_export_applicability.py": "FilingExportError",
     "runtime.py": "ModeloBuilderError",

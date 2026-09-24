@@ -9,12 +9,12 @@ import pytest
 from ....core.export_layout_format import ExportLayoutFormat
 from ....domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from ....domain.filing.errors import FilingExportError, FilingExportValidationError
-from .._export_parity import assert_xml_declaration_aux_declared
 from .._export_xml_dictionary import (
     _append_declaration_aux,
     _prune_zero_only_xml_subtrees,
     format_xml_dictionary_value,
 )
+from ..export_parity import assert_xml_declaration_aux_declared
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

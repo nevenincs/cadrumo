@@ -70,7 +70,7 @@ from ...domain.filing.schema import ModeloCasillaProvenance, ModeloDraft
 from ...domain.filing.software_identity import AeatProductSoftwareIdentity, aeat_aux_version
 from ...domain.submission.models import ModeloDraftStatus
 from ._envelope_modelo_policy import filing_envelope_modelo_policy
-from ._export_parity import (
+from .export_parity import (
     assert_export_mirrors_manifest,
     assert_rate_boxes_account_for_total,
     assert_xml_declaration_aux_declared,

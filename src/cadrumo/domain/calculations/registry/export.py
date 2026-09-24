@@ -201,7 +201,7 @@ def fixed_width_record_casilla_ids(records: Sequence[ExportRecordDefinition]) ->
     set, shared by two callers that must never disagree about it:
 
     - the pre-write parity gate
-      (:func:`~application.filing._export_parity.boe_representable_casilla_ids`), which passes
+      (:func:`~application.filing.export_parity.boe_representable_casilla_ids`), which passes
       only the records this filing's disposition actually emits, so a casilla the
       disposition suppresses is not demanded; and
     - the registry-build export-exemption validation, which passes EVERY

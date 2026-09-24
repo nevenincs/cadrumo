@@ -16,7 +16,7 @@ from dataclasses import asdict, dataclass
 from datetime import date
 from typing import Protocol
 
-from cadrumo.application.filing._export_parity import assert_xml_declaration_aux_declared
+from cadrumo.application.filing.export_parity import assert_xml_declaration_aux_declared
 from cadrumo.application.filing.export import export_layout_renderability_reason_code
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.errors import RegistryError

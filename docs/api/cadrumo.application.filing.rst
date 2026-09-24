@@ -14,7 +14,6 @@ Submodules
    :maxdepth: 4
 
    cadrumo.application.filing._envelope_modelo_policy
-   cadrumo.application.filing._export_parity
    cadrumo.application.filing._export_xml_dictionary
    cadrumo.application.filing._m200_projection
    cadrumo.application.filing._m296_projection
@@ -31,6 +30,7 @@ Submodules
    cadrumo.application.filing.errors
    cadrumo.application.filing.export
    cadrumo.application.filing.export_envelope
+   cadrumo.application.filing.export_parity
    cadrumo.application.filing.export_producer
    cadrumo.application.filing.export_verification
    cadrumo.application.filing.history_models
