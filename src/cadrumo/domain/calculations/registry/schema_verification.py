@@ -133,6 +133,11 @@ class ProfilePredicateOp(StrEnum):
 
     EQUALS = "equals"
     NOT_EQUALS = "not_equals"
+    INCLUDES = "includes"
+    """The observed value is a token set that contains the predicate token.
+
+    An absent set contains nothing, so it never matches.
+    """
 
 
 ProfilePredicateOpField = Annotated[ProfilePredicateOp, BeforeValidator(coerce_enum_member(ProfilePredicateOp))]
@@ -277,6 +282,13 @@ class ProfilePredicateDefinition(RegistryModel):
     explanation: str = Field(min_length=1)
     legal_refs: LegalRefs
     source_refs: SourceRefs
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _includes_names_one_token(self) -> ProfilePredicateDefinition:
+        if self.op is ProfilePredicateOp.INCLUDES and (not isinstance(self.value, str) or not self.value.strip()):
+            raise RegistryValidationError(f"profile predicate on {self.field!r} uses 'includes' with a non-token value")
+        return self
 
 
 class LiveCrossReferenceDecision(RegistryModel):

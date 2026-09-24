@@ -80,6 +80,12 @@ profile:
         Model 720
       monedas_virtuales_extranjero_above_threshold: Monedes virtuals a l'estranger
         superen el llindar del Model 721
+      premio_loteria_gravamen_especial_sin_retencion: Premi de loteries o apostes
+        subjecte al gravamen especial obtingut sense retenció ni ingrés a compte (Model
+        136)
+      premio_loteria_gravamen_especial_trimestres: Trimestres en què es va cobrar
+        aquest premi de loteries o apostes (Model 136), com a tokens AAAA-nT separats
+        per |
       third_party_transactions_above_347_threshold: Operacions amb tercers superen
         el llindar del Model 347
     preferences:
@@ -309,6 +315,8 @@ profile:
           label: Ingressos de pagadors secundaris
         pagadores_total_work_income:
           label: Rendiments íntegres del treball
+        plantilla_media:
+          label: Plantilla mitjana per any natural
         professional_income_withholding_ge_70pct:
           label: Retenció professional arriba al 70 %
         special_regime:
@@ -372,6 +380,10 @@ profile:
           label: Llindar del Model 720 superat
         monedas_virtuales_extranjero_above_threshold:
           label: Llindar del Model 721 superat
+        premio_loteria_gravamen_especial_sin_retencion:
+          label: Premi de loteria sense retenció (Model 136)
+        premio_loteria_gravamen_especial_trimestres:
+          label: Trimestres del premi (Model 136)
         third_party_transactions_above_347_threshold:
           label: Llindar del Model 347 superat
       preferences:
@@ -584,6 +596,7 @@ profile:
     derived_field_not_editable: El camp derivat no es pot editar
     effective_window_end_not_enforced: El final de la finestra de vigència no s'aplica
     effective_window_unused: La finestra de vigència no s'utilitza
+    indexed_instance_invalid: La instància indexada no és vàlida
     invalid_date_value: Valor de data no vàlid
     invalid_email_value: Valor de correu electrònic no vàlid
     invalid_enum_value: Valor d'enumeració no vàlid

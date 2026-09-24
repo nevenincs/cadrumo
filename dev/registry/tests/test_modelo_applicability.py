@@ -210,7 +210,7 @@ def _attribution_entity_profile(
     pays_professionals_with_retencion: bool = False,
     pays_rent_with_retencion: bool = False,
     does_intracomunitario: bool = False,
-    third_party_transactions_above_347_threshold: bool = False,
+    third_party_transactions_above_347_threshold: bool | None = None,
 ) -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id="E12345674",
@@ -503,8 +503,6 @@ def test_modelo_721_uses_crypto_abroad_threshold_not_modelo_720_bienes_fact() ->
         entity_type=_NATURAL_PERSON,
         irpf_income_categories=frozenset({_TRABAJO}),
         iva_regime=_IVA_GENERAL,
-        bienes_extranjero_above_threshold=False,
-        monedas_virtuales_extranjero_above_threshold=False,
     )
 
     assert derive_modelo_applicability(base_profile, "720").verdict is ApplicabilityVerdict.INCOMPLETE

@@ -410,6 +410,12 @@ wizard:
         help: Pays professionals with retención
       pays-rent-with-retencion:
         help: Pays local rent with retención
+      premio-loteria-gravamen-especial-sin-retencion:
+        help: Obtained a lottery or betting prize subject to the gravamen especial
+          without retención or ingreso a cuenta (Modelo 136)
+      premio-loteria-gravamen-especial-trimestres:
+        help: Quarters in which the prize was cashed, as YYYY-nT tokens separated
+          by | (for example 2025-1T|2025-3T)
       professional-income-withholding-ge-70pct:
         help: At least 70% of professional income with prior retención
       representante-fiscal-nif:
@@ -617,6 +623,13 @@ wizard:
         prompt: Pays professionals with retención
       pays-rent-with-retencion:
         prompt: Pays local rent with retención
+      premio-loteria-gravamen-especial-sin-retencion:
+        prompt: Obtained a lottery or betting prize subject to the gravamen especial
+          without retención or ingreso a cuenta
+      premio-loteria-gravamen-especial-trimestres:
+        help: One YYYY-nT token per natural quarter, separated by | (for example 2025-1T|2025-3T).
+          Each quarter opens its own Modelo 136 filing.
+        prompt: Quarters in which the prize was cashed
       professional-income-withholding-ge-70pct:
         prompt: At least 70% of professional income with prior retención
       third-party-transactions-above-347-threshold:

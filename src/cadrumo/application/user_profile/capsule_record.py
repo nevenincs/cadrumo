@@ -8,12 +8,13 @@ history through one ``SecureObjectRepository.apply_batch`` transaction.
 
 from __future__ import annotations
 
+import json
 from collections.abc import Generator, Mapping
 from contextlib import contextmanager
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -25,6 +26,13 @@ from ...core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID, Secure
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import append_bucket_event, build_bucket_event
 from ...domain.user_profile.errors import UserProfileError
+from ...domain.user_profile.schema_migration import (
+    LEGACY_PROFILE_SCHEMA_VERSION,
+    MIGRATED_PROFILE_SCHEMA_VERSION,
+    ProfileSchemaMigration,
+    legacy_profile_schema,
+    migrate_profile_facts,
+)
 from ...domain.user_profile.values import ProfileSetupState, UserProfileRecord
 from .custody_ports import (
     ProfileCustodySecureObjectNamespace,
@@ -79,6 +87,24 @@ class ProfileRecordIntegrityError(UserProfileError):
     builtin ancestry would let the inner refusal escape that conversion and
     reach the operator naming a stage it never reached.
     """
+
+
+class ProfileRecordMigrationRequiredError(ProfileRecordIntegrityError):
+    """The stored record was written under an earlier, migratable profile schema.
+
+    Raised by the strict read so no caller can mistake the stored shape for the
+    current one. The record repository catches it, migrates the row forward
+    under the custody lock and reads again; every other door keeps refusing.
+    """
+
+    def __init__(self, stored_version: int, current_version: int) -> None:
+        """Name the stored and the current schema version in the refusal."""
+        super().__init__(
+            f"profile record was written under profile schema {stored_version}; this build reads schema "
+            f"{current_version} and migrates the record when the profile is opened",
+        )
+        self.stored_version = stored_version
+        self.current_version = current_version
 
 
 class ProfileRecordCommandEvent(BaseModel):
@@ -341,12 +367,77 @@ class ProfileRecordStore:
             self._load_from_objects(objects)
 
     def validate_staged_database(self, *, stage_path: Path) -> LoadedProfileRecord:
-        """Refuse a restore stage unless its exact current record is authenticated."""
+        """Refuse a restore stage unless its exact current record is authenticated.
+
+        A stage written under the one migratable earlier schema is authenticated
+        against that schema instead; it is restored as stored and carried
+        forward on the first open, like any other record of that age.
+        """
         database_file = stage_path / "db" / "cadrumo.db"
         if not database_file.is_file() or database_file.is_symlink():
             raise ProfileRecordIntegrityError("restore stage does not contain a regular profile database")
         with _secure_objects_for_record(self.session, root=self._root, database_file=database_file) as objects:
-            return self._load_from_objects(objects)
+            try:
+                return self._load_from_objects(objects)
+            except ProfileRecordMigrationRequiredError:
+                return self._load_from_objects(objects, legacy=True)
+
+    def schema_migrations(self) -> tuple[ProfileSchemaMigration, ...]:
+        """Return every schema migration recorded in this profile's history, oldest first."""
+        return tuple(
+            ProfileSchemaMigration.from_event_payload(event.payload)
+            for event in self.history()
+            if event.event_type is BucketEventType.PROFILE_SCHEMA_MIGRATED
+        )
+
+    def migrate_legacy_schema(self, *, now: datetime) -> ProfileSchemaMigration | None:
+        """Carry a stored earlier-schema record forward; ``None`` when already current.
+
+        The caller holds the custody transaction lock. The legacy row is
+        authenticated against its own schema and lineage exactly as a current
+        row is, then replaced by the next revision under the current schema in
+        one batch with a ``PROFILE_SCHEMA_MIGRATED`` event whose payload names
+        the cleared facts. A second call finds a current record and writes
+        nothing.
+        """
+        with _secure_objects_for_record(self.session, root=self._root) as objects:
+            try:
+                self._load_from_objects(objects)
+            except ProfileRecordMigrationRequiredError:
+                pass
+            else:
+                return None
+            current = self._load_from_objects(objects, legacy=True)
+            kept_facts, migration = migrate_profile_facts(current.record.facts)
+            instant = now.astimezone(UTC)
+            from ...domain.user_profile.values import create_user_profile_record
+
+            replacement = create_user_profile_record(
+                context=self.session.create_context(),
+                profile_id=str(current.record.profile_id),
+                facts=kept_facts,
+                setup_state=current.record.setup_state,
+                record_revision=current.record.record_revision + 1,
+                previous_record_digest=current.record.content_digest,
+                created_at=current.record.created_at,
+                updated_at=max(instant, current.record.updated_at),
+            )
+            self.session.assert_replacement(current.record, replacement)
+            self._write_with_event(
+                objects,
+                record=replacement,
+                expected_row_revision_id=current.row_revision_id,
+                expected_event_revision_id=_event_history_revision(objects),
+                event=ProfileRecordCommandEvent(
+                    event_type=BucketEventType.PROFILE_SCHEMA_MIGRATED,
+                    occurred_at=replacement.updated_at.isoformat(),
+                    payload=migration.to_event_payload(),
+                ),
+            )
+            persisted = self._load_from_objects(objects)
+            if persisted.record != replacement:
+                raise ProfileRecordIntegrityError("migrated profile record did not persist its authenticated value")
+            return migration
 
     def replace(
         self,
@@ -442,10 +533,18 @@ class ProfileRecordStore:
                 raise ProfileRecordIntegrityError("re-headed profile record did not persist its authenticated value")
             return persisted.record
 
-    def _load_from_objects(self, objects: ProfileCustodySecureObjectRepositoryPort) -> LoadedProfileRecord:
+    def _load_from_objects(
+        self,
+        objects: ProfileCustodySecureObjectRepositoryPort,
+        *,
+        legacy: bool = False,
+    ) -> LoadedProfileRecord:
         namespace = profile_custody_secure_object_namespace()
         raw, loaded = _load_profile_record_row(objects, self.session.profile_id, namespace)
-        record = _decode_profile_record(loaded, context=self.session.profile_decode_context)
+        context = self.session.profile_decode_context
+        if legacy:
+            context = replace(context, schema=legacy_profile_schema(context.schema))
+        record = _decode_profile_record(loaded, context=context)
         self.session.assert_row_binding(raw, record)
         event_id, event = _load_profile_record_event(objects, raw)
         _assert_event_binding(self.session, record, event_id, event)
@@ -541,13 +640,36 @@ def _decode_profile_record(
     *,
     context: ProfileDecodeContext,
 ) -> UserProfileRecord:
-    """Decode the strict current profile record payload."""
+    """Decode the strict current profile record payload.
+
+    A payload stamped with the one migratable earlier schema version is refused
+    with :class:`ProfileRecordMigrationRequiredError`, so it is never read as the
+    current schema and the record repository can carry it forward.
+    """
     try:
         from ...domain.user_profile.values import decode_user_profile_record
 
         return decode_user_profile_record(loaded.payload, context=context)
     except ValueError as exc:
+        stored_version = _stored_schema_version(loaded.payload)
+        if (
+            stored_version == LEGACY_PROFILE_SCHEMA_VERSION
+            and context.schema.version == MIGRATED_PROFILE_SCHEMA_VERSION
+        ):
+            raise ProfileRecordMigrationRequiredError(LEGACY_PROFILE_SCHEMA_VERSION, context.schema.version) from exc
         raise ProfileRecordIntegrityError("profile record row is not the current strict record shape") from exc
+
+
+def _stored_schema_version(payload: bytes | str) -> int | None:
+    """Read only the schema version a stored payload claims, or ``None``."""
+    try:
+        decoded: object = json.loads(payload)
+    except ValueError:
+        return None
+    if not isinstance(decoded, dict):
+        return None
+    version = cast("dict[str, object]", decoded).get("schema_version")
+    return version if isinstance(version, int) and not isinstance(version, bool) else None
 
 
 def _replacement_record(
@@ -688,6 +810,7 @@ __all__ = [
     "ProfileRecordCommandEvent",
     "ProfileRecordConflictError",
     "ProfileRecordIntegrityError",
+    "ProfileRecordMigrationRequiredError",
     "ProfileRecordSession",
     "ProfileRecordStore",
     "profile_record_object_key",

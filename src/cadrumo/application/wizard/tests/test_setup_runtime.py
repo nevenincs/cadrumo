@@ -20,7 +20,7 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from ....core.flows import FlowMode
 from ....domain.contribuyente.entity_type import LegalEntityForm
 from ....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH, SetupAnswers
-from ...flows.errors import FlowAnswerError
+from ...flows.errors import FlowAnswerError, FlowSubmitError
 from ...flows.scripted import run_scripted_flow
 from ..commands import (
     _answers_model_from_canonical,
@@ -445,3 +445,64 @@ def test_objetiva_profile_collects_modulos_annual_facts(*, registry_setup_flow: 
     canonical_profile = serialise_answers(registry_setup_flow, answers)
     assert canonical_profile["irpf.objective_estimation_modulos_iae_epigraph"] == "972.1"
     assert canonical_profile["irpf.objective_estimation_modulos_module_1_units"] == "2.50"
+
+
+def test_payer_fact_questions_carry_no_default_so_an_unanswered_walk_stays_undeclared(
+    *, registry_setup_flow: WizardFlow
+) -> None:
+    """A non-interactive walk that omits the payer-fact answers writes no ``false``."""
+    payer_fact_ids = (
+        "third-party-transactions-above-347-threshold",
+        "bienes-extranjero-above-threshold",
+        "monedas-virtuales-extranjero-above-threshold",
+        "premio-loteria-gravamen-especial-sin-retencion",
+    )
+    assert not set(payer_fact_ids) & set(_default_tokens(registry_setup_flow=registry_setup_flow))
+    canonical = {key: value for key, value in _individual_declaration_canonical().items() if key not in payer_fact_ids}
+
+    answers, committed = _drive_scripted(canonical, registry_setup_flow=registry_setup_flow)
+
+    assert answers.third_party_transactions_above_347_threshold == ""
+    assert answers.monedas_virtuales_extranjero_above_threshold == ""
+    assert answers.premio_loteria_gravamen_especial_sin_retencion == ""
+    assert "premio-loteria-gravamen-especial-trimestres" not in committed
+
+
+@pytest.mark.parametrize(("token", "expected"), (("true", True), ("false", False)))
+def test_payer_fact_answers_still_write_a_declared_yes_or_no(
+    token: str,
+    expected: bool,
+    *,
+    registry_setup_flow: WizardFlow,
+) -> None:
+    canonical = {
+        **_individual_declaration_canonical(),
+        "third-party-transactions-above-347-threshold": token,
+        "premio-loteria-gravamen-especial-sin-retencion": token,
+    }
+    if expected:
+        canonical["premio-loteria-gravamen-especial-trimestres"] = "2025-3T|2025-1T"
+
+    answers, committed = _drive_scripted(canonical, registry_setup_flow=registry_setup_flow)
+
+    assert answers.third_party_transactions_above_347_threshold is expected
+    assert answers.premio_loteria_gravamen_especial_sin_retencion is expected
+    if expected:
+        assert answers.premio_loteria_gravamen_especial_trimestres == "2025-1T|2025-3T"
+    else:
+        assert "premio-loteria-gravamen-especial-trimestres" not in committed
+
+
+def test_a_malformed_quarter_answer_is_refused_at_the_boundary(*, registry_setup_flow: WizardFlow) -> None:
+    canonical = {
+        **_individual_declaration_canonical(),
+        "premio-loteria-gravamen-especial-sin-retencion": "true",
+        "premio-loteria-gravamen-especial-trimestres": "2025Q1",
+    }
+
+    with pytest.raises(FlowSubmitError) as refused:
+        _drive_scripted(canonical, registry_setup_flow=registry_setup_flow)
+    assert refused.value.context is not None
+    assert refused.value.context["blocking_count"] == 1
+    # The same walk with a well-formed quarter submits (see the yes/no test above),
+    # so the one blocking issue is the malformed quarter.

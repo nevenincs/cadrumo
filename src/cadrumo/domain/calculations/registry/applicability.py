@@ -116,7 +116,13 @@ from ...deadlines.models import (
     TaxpayerProfile,
 )
 from ._applicability_labels import payer_fact_incomplete_label
-from .applicability_payer_facts import PayerFactValue, payer_fact_holds, resolve_payer_fact
+from .applicability_payer_facts import (
+    PayerFactDeclaration,
+    PayerFactProjection,
+    PayerFactValue,
+    payer_fact_declaration,
+    resolve_payer_fact,
+)
 from .applicability_routes import TaxRoute, tax_route_for_entity_type
 from .errors import RegistryFailureClassification, RegistryFailureCondition, RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact
@@ -327,12 +333,18 @@ class ModeloApplicabilityRule(BaseModel):
         return None
 
     def _payer_fact_result(self, profile: TaxpayerProfile) -> ModeloApplicability | None:
-        if self.required_payer_fact is None or payer_fact_holds(profile, self.required_payer_fact):
+        if self.required_payer_fact is None:
             return None
+        declaration = payer_fact_declaration(profile, self.required_payer_fact)
+        if declaration is PayerFactDeclaration.DECLARED_YES:
+            return None
+        if declaration is PayerFactDeclaration.DECLARED_NO:
+            return self._not_applicable()
         return _undetermined_applicability(
             self.modelo,
             payer_fact=self.required_payer_fact,
             legal_refs=self.legal_refs,
+            periods_missing=declaration is PayerFactDeclaration.PERIODS_UNDECLARED,
         )
 
     def evaluate(self, profile: TaxpayerProfile) -> ModeloApplicability:
@@ -369,10 +381,11 @@ class ModeloApplicabilityRule(BaseModel):
         # it (e.g. Modelo 303 / 390) is not re-gated on those axes.
         if (result := self._natural_person_axes_result(profile)) is not None:
             return result
-        # The payer-fact axis (Modelo 111 / 115 / 349 / 347) can only be
-        # asserted in the positive direction — the underlying boolean has
-        # no tri-state, so an absent fact yields INCOMPLETE rather than a
-        # NOT_APPLICABLE the engine cannot positively justify.
+        # The payer-fact axis: a declared yes is APPLICABLE and a declared
+        # no is NOT_APPLICABLE. An unanswered fact -- and every coded or
+        # two-state fact whose boolean cannot tell "no" from "not asked" --
+        # yields INCOMPLETE rather than a NOT_APPLICABLE the engine cannot
+        # positively justify.
         if (result := self._payer_fact_result(profile)) is not None:
             return result
         return ModeloApplicability(
@@ -643,15 +656,16 @@ def _undetermined_applicability(
     *,
     payer_fact: PayerFactValue,
     legal_refs: tuple[LegalRefId, ...],
+    periods_missing: bool = False,
 ) -> ModeloApplicability:
     """Return the ``INCOMPLETE`` applicability for a fact only the taxpayer can supply.
 
     Used when a modelo gates on a :class:`PayerFactValue` (Modelo
     111 / 115 / 349 / 347 / 720 / 721) and the profile does not positively declare
     the fact. The taxpayer model itself may be fully declared — the
-    entity type and regime are known — but the payer fact has no
-    tri-state, so the engine refuses to guess a ``NOT_APPLICABLE`` it
-    cannot positively justify. The rationale is distinct from the
+    entity type and regime are known — but the payer fact is unanswered
+    (or answered yes without the periods it needs), so the engine refuses
+    to guess a verdict it cannot positively justify. The rationale is distinct from the
     *undeclared taxpayer model* one: it never tells a declared operator
     to declare their taxpayer type.
 
@@ -661,18 +675,23 @@ def _undetermined_applicability(
             establish applicability.
         legal_refs: The concrete rule legal refs that ground the
             payer-fact requirement, pending the taxpayer's own answer.
+        periods_missing: Whether the fact was answered yes without the
+            period set its declaration requires.
 
     Returns:
         A :class:`ModeloApplicability` with ``INCOMPLETE`` verdict and the
         undetermined-payer-fact rationale.
     """
+    reason = (
+        f"{_INCOMPLETE_UNDETERMINED_REASON} "
+        f"Hecho requerido para este modelo: {payer_fact_incomplete_label(payer_fact)}."
+    )
+    if periods_missing and isinstance(payer_fact, PayerFactProjection) and payer_fact.period_companion is not None:
+        reason = f"{reason} Periodos sin declarar: {payer_fact.period_companion.label}."
     return ModeloApplicability(
         modelo=modelo,
         verdict=ApplicabilityVerdict.INCOMPLETE,
-        reason=(
-            f"{_INCOMPLETE_UNDETERMINED_REASON} "
-            f"Hecho requerido para este modelo: {payer_fact_incomplete_label(payer_fact)}."
-        ),
+        reason=reason,
         legal_refs=legal_refs,
     )
 

@@ -665,6 +665,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.user_profile.capsule_record.ProfileRecordMigrationRequiredError",
+        ErrorCode(
+            code="INTEGRITY_PROFILE_RECORD_SCHEMA_MIGRATION_REQUIRED",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.integrity_profile_record_schema_migration_required",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.domain.iva_compensation.errors.IvaWalletReconciliationError",
         ErrorCode(
             code="REFUSED_IVA_WALLET_RECONCILIATION_INVARIANT",

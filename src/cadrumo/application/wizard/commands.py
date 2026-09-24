@@ -352,6 +352,14 @@ SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo | None] = {
         "--monedas-virtuales-extranjero-above-threshold/--no-monedas-virtuales-extranjero-above-threshold",
         help=tr("wizard.setup.flags.monedas-virtuales-extranjero-above-threshold.help"),
     ),
+    "premio-loteria-gravamen-especial-sin-retencion": typer.Option(
+        "--premio-loteria-gravamen-especial-sin-retencion/--no-premio-loteria-gravamen-especial-sin-retencion",
+        help=tr("wizard.setup.flags.premio-loteria-gravamen-especial-sin-retencion.help"),
+    ),
+    "premio-loteria-gravamen-especial-trimestres": typer.Option(
+        "--premio-loteria-gravamen-especial-trimestres",
+        help=tr("wizard.setup.flags.premio-loteria-gravamen-especial-trimestres.help"),
+    ),
     "fiscal-residency": typer.Option(
         "--fiscal-residency",
         click_type=_choice(_FISCAL_RESIDENCY_CHOICE_VALUES),

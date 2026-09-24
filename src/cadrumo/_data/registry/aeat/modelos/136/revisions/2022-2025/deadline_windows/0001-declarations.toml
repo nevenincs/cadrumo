@@ -26,6 +26,12 @@
 # cannot be cited by a window inside this span. boe-modelo-136-base-order is the
 # founding Orden HAP/70/2013 itself (applies_from 2013-02-01) and carries art. 7
 # verbatim.
+#
+# Each window carries one applicability condition: the profile's quarter set
+# (premio_loteria_gravamen_especial_trimestres) must include the window's own
+# YYYY-nT token. Art. 7 ties each filing to "los premios cobrados en el trimestre
+# natural inmediato anterior", so a prize cashed in one quarter does not open the
+# other three windows. The condition's guidance source is one this span can cite.
 
 [[revisions."2022-2025".deadline_windows]]
 id = "modelo-136-2022-1t"
@@ -37,6 +43,14 @@ closes_on = 2022-04-20
 legal_refs = ["orden-hap-70-2013:art-7"]
 source_refs = ["boe-modelo-136-base-order"]
 
+[[revisions."2022-2025".deadline_windows.applicability_conditions]]
+field = "premio_loteria_gravamen_especial_trimestres"
+op = "includes"
+value = "2022-1T"
+explanation = "Premio sujeto al gravamen especial, sin retencion ni ingreso a cuenta, cobrado en el trimestre 1T de 2022."
+legal_refs = ["orden-hap-70-2013:art-6", "orden-hap-70-2013:art-7"]
+source_refs = ["boe-lirpf-lottery-prize-special-levy"]
+
 [[revisions."2022-2025".deadline_windows]]
 id = "modelo-136-2022-2t"
 filing_year = 2022
@@ -46,6 +60,14 @@ opens_on = 2022-07-01
 closes_on = 2022-07-20
 legal_refs = ["orden-hap-70-2013:art-7"]
 source_refs = ["boe-modelo-136-base-order"]
+
+[[revisions."2022-2025".deadline_windows.applicability_conditions]]
+field = "premio_loteria_gravamen_especial_trimestres"
+op = "includes"
+value = "2022-2T"
+explanation = "Premio sujeto al gravamen especial, sin retencion ni ingreso a cuenta, cobrado en el trimestre 2T de 2022."
+legal_refs = ["orden-hap-70-2013:art-6", "orden-hap-70-2013:art-7"]
+source_refs = ["boe-lirpf-lottery-prize-special-levy"]
 
 [[revisions."2022-2025".deadline_windows]]
 id = "modelo-136-2022-3t"
@@ -57,6 +79,14 @@ closes_on = 2022-10-20
 legal_refs = ["orden-hap-70-2013:art-7"]
 source_refs = ["boe-modelo-136-base-order"]
 
+[[revisions."2022-2025".deadline_windows.applicability_conditions]]
+field = "premio_loteria_gravamen_especial_trimestres"
+op = "includes"
+value = "2022-3T"
+explanation = "Premio sujeto al gravamen especial, sin retencion ni ingreso a cuenta, cobrado en el trimestre 3T de 2022."
+legal_refs = ["orden-hap-70-2013:art-6", "orden-hap-70-2013:art-7"]
+source_refs = ["boe-lirpf-lottery-prize-special-levy"]
+
 [[revisions."2022-2025".deadline_windows]]
 id = "modelo-136-2022-4t"
 filing_year = 2022
@@ -66,6 +96,14 @@ opens_on = 2023-01-01
 closes_on = 2023-01-20
 legal_refs = ["orden-hap-70-2013:art-7"]
 source_refs = ["boe-modelo-136-base-order"]
+
+[[revisions."2022-2025".deadline_windows.applicability_conditions]]
+field = "premio_loteria_gravamen_especial_trimestres"
+op = "includes"
+value = "2022-4T"
+explanation = "Premio sujeto al gravamen especial, sin retencion ni ingreso a cuenta, cobrado en el trimestre 4T de 2022."
+legal_refs = ["orden-hap-70-2013:art-6", "orden-hap-70-2013:art-7"]
+source_refs = ["boe-lirpf-lottery-prize-special-levy"]
 
 [[revisions."2022-2025".deadline_windows]]
 id = "modelo-136-2023-1t"
@@ -77,6 +115,14 @@ closes_on = 2023-04-20
 legal_refs = ["orden-hap-70-2013:art-7"]
 source_refs = ["boe-modelo-136-base-order"]
 
+[[revisions."2022-2025".deadline_windows.applicability_conditions]]
+field = "premio_loteria_gravamen_especial_trimestres"
+op = "includes"
+value = "2023-1T"
+explanation = "Premio sujeto al gravamen especial, sin retencion ni ingreso a cuenta, cobrado en el trimestre 1T de 2023."
+legal_refs = ["orden-hap-70-2013:art-6", "orden-hap-70-2013:art-7"]
+source_refs = ["boe-lirpf-lottery-prize-special-levy"]
+
 [[revisions."2022-2025".deadline_windows]]
 id = "modelo-136-2023-2t"
 filing_year = 2023
@@ -86,6 +132,14 @@ opens_on = 2023-07-01
 closes_on = 2023-07-20
 legal_refs = ["orden-hap-70-2013:art-7"]
 source_refs = ["boe-modelo-136-base-order"]
+
+[[revisions."2022-2025".deadline_windows.applicability_conditions]]
+field = "premio_loteria_gravamen_especial_trimestres"
+op = "includes"
+value = "2023-2T"
+explanation = "Premio sujeto al gravamen especial, sin retencion ni ingreso a cuenta, cobrado en el trimestre 2T de 2023."
+legal_refs = ["orden-hap-70-2013:art-6", "orden-hap-70-2013:art-7"]
+source_refs = ["boe-lirpf-lottery-prize-special-levy"]
 
 [[revisions."2022-2025".deadline_windows]]
 id = "modelo-136-2023-3t"
@@ -97,6 +151,14 @@ closes_on = 2023-10-20
 legal_refs = ["orden-hap-70-2013:art-7"]
 source_refs = ["boe-modelo-136-base-order"]
 
+[[revisions."2022-2025".deadline_windows.applicability_conditions]]
+field = "premio_loteria_gravamen_especial_trimestres"
+op = "includes"
+value = "2023-3T"
+explanation = "Premio sujeto al gravamen especial, sin retencion ni ingreso a cuenta, cobrado en el trimestre 3T de 2023."
+legal_refs = ["orden-hap-70-2013:art-6", "orden-hap-70-2013:art-7"]
+source_refs = ["boe-lirpf-lottery-prize-special-levy"]
+
 [[revisions."2022-2025".deadline_windows]]
 id = "modelo-136-2023-4t"
 filing_year = 2023
@@ -106,6 +168,14 @@ opens_on = 2024-01-01
 closes_on = 2024-01-20
 legal_refs = ["orden-hap-70-2013:art-7"]
 source_refs = ["boe-modelo-136-base-order"]
+
+[[revisions."2022-2025".deadline_windows.applicability_conditions]]
+field = "premio_loteria_gravamen_especial_trimestres"
+op = "includes"
+value = "2023-4T"
+explanation = "Premio sujeto al gravamen especial, sin retencion ni ingreso a cuenta, cobrado en el trimestre 4T de 2023."
+legal_refs = ["orden-hap-70-2013:art-6", "orden-hap-70-2013:art-7"]
+source_refs = ["boe-lirpf-lottery-prize-special-levy"]
 
 [[revisions."2022-2025".deadline_windows]]
 id = "modelo-136-2024-1t"
@@ -117,6 +187,14 @@ closes_on = 2024-04-20
 legal_refs = ["orden-hap-70-2013:art-7"]
 source_refs = ["boe-modelo-136-base-order"]
 
+[[revisions."2022-2025".deadline_windows.applicability_conditions]]
+field = "premio_loteria_gravamen_especial_trimestres"
+op = "includes"
+value = "2024-1T"
+explanation = "Premio sujeto al gravamen especial, sin retencion ni ingreso a cuenta, cobrado en el trimestre 1T de 2024."
+legal_refs = ["orden-hap-70-2013:art-6", "orden-hap-70-2013:art-7"]
+source_refs = ["boe-lirpf-lottery-prize-special-levy"]
+
 [[revisions."2022-2025".deadline_windows]]
 id = "modelo-136-2024-2t"
 filing_year = 2024
@@ -126,6 +204,14 @@ opens_on = 2024-07-01
 closes_on = 2024-07-20
 legal_refs = ["orden-hap-70-2013:art-7"]
 source_refs = ["boe-modelo-136-base-order"]
+
+[[revisions."2022-2025".deadline_windows.applicability_conditions]]
+field = "premio_loteria_gravamen_especial_trimestres"
+op = "includes"
+value = "2024-2T"
+explanation = "Premio sujeto al gravamen especial, sin retencion ni ingreso a cuenta, cobrado en el trimestre 2T de 2024."
+legal_refs = ["orden-hap-70-2013:art-6", "orden-hap-70-2013:art-7"]
+source_refs = ["boe-lirpf-lottery-prize-special-levy"]
 
 [[revisions."2022-2025".deadline_windows]]
 id = "modelo-136-2024-3t"
@@ -137,6 +223,14 @@ closes_on = 2024-10-20
 legal_refs = ["orden-hap-70-2013:art-7"]
 source_refs = ["boe-modelo-136-base-order"]
 
+[[revisions."2022-2025".deadline_windows.applicability_conditions]]
+field = "premio_loteria_gravamen_especial_trimestres"
+op = "includes"
+value = "2024-3T"
+explanation = "Premio sujeto al gravamen especial, sin retencion ni ingreso a cuenta, cobrado en el trimestre 3T de 2024."
+legal_refs = ["orden-hap-70-2013:art-6", "orden-hap-70-2013:art-7"]
+source_refs = ["boe-lirpf-lottery-prize-special-levy"]
+
 [[revisions."2022-2025".deadline_windows]]
 id = "modelo-136-2024-4t"
 filing_year = 2024
@@ -146,6 +240,14 @@ opens_on = 2025-01-01
 closes_on = 2025-01-20
 legal_refs = ["orden-hap-70-2013:art-7"]
 source_refs = ["boe-modelo-136-base-order"]
+
+[[revisions."2022-2025".deadline_windows.applicability_conditions]]
+field = "premio_loteria_gravamen_especial_trimestres"
+op = "includes"
+value = "2024-4T"
+explanation = "Premio sujeto al gravamen especial, sin retencion ni ingreso a cuenta, cobrado en el trimestre 4T de 2024."
+legal_refs = ["orden-hap-70-2013:art-6", "orden-hap-70-2013:art-7"]
+source_refs = ["boe-lirpf-lottery-prize-special-levy"]
 
 [[revisions."2022-2025".deadline_windows]]
 id = "modelo-136-2025-1t"
@@ -157,6 +259,14 @@ closes_on = 2025-04-20
 legal_refs = ["orden-hap-70-2013:art-7"]
 source_refs = ["boe-modelo-136-base-order"]
 
+[[revisions."2022-2025".deadline_windows.applicability_conditions]]
+field = "premio_loteria_gravamen_especial_trimestres"
+op = "includes"
+value = "2025-1T"
+explanation = "Premio sujeto al gravamen especial, sin retencion ni ingreso a cuenta, cobrado en el trimestre 1T de 2025."
+legal_refs = ["orden-hap-70-2013:art-6", "orden-hap-70-2013:art-7"]
+source_refs = ["boe-lirpf-lottery-prize-special-levy"]
+
 [[revisions."2022-2025".deadline_windows]]
 id = "modelo-136-2025-2t"
 filing_year = 2025
@@ -166,6 +276,14 @@ opens_on = 2025-07-01
 closes_on = 2025-07-20
 legal_refs = ["orden-hap-70-2013:art-7"]
 source_refs = ["boe-modelo-136-base-order"]
+
+[[revisions."2022-2025".deadline_windows.applicability_conditions]]
+field = "premio_loteria_gravamen_especial_trimestres"
+op = "includes"
+value = "2025-2T"
+explanation = "Premio sujeto al gravamen especial, sin retencion ni ingreso a cuenta, cobrado en el trimestre 2T de 2025."
+legal_refs = ["orden-hap-70-2013:art-6", "orden-hap-70-2013:art-7"]
+source_refs = ["boe-lirpf-lottery-prize-special-levy"]
 
 [[revisions."2022-2025".deadline_windows]]
 id = "modelo-136-2025-3t"
@@ -177,6 +295,14 @@ closes_on = 2025-10-20
 legal_refs = ["orden-hap-70-2013:art-7"]
 source_refs = ["boe-modelo-136-base-order"]
 
+[[revisions."2022-2025".deadline_windows.applicability_conditions]]
+field = "premio_loteria_gravamen_especial_trimestres"
+op = "includes"
+value = "2025-3T"
+explanation = "Premio sujeto al gravamen especial, sin retencion ni ingreso a cuenta, cobrado en el trimestre 3T de 2025."
+legal_refs = ["orden-hap-70-2013:art-6", "orden-hap-70-2013:art-7"]
+source_refs = ["boe-lirpf-lottery-prize-special-levy"]
+
 [[revisions."2022-2025".deadline_windows]]
 id = "modelo-136-2025-4t"
 filing_year = 2025
@@ -186,3 +312,11 @@ opens_on = 2026-01-01
 closes_on = 2026-01-20
 legal_refs = ["orden-hap-70-2013:art-7"]
 source_refs = ["boe-modelo-136-base-order"]
+
+[[revisions."2022-2025".deadline_windows.applicability_conditions]]
+field = "premio_loteria_gravamen_especial_trimestres"
+op = "includes"
+value = "2025-4T"
+explanation = "Premio sujeto al gravamen especial, sin retencion ni ingreso a cuenta, cobrado en el trimestre 4T de 2025."
+legal_refs = ["orden-hap-70-2013:art-6", "orden-hap-70-2013:art-7"]
+source_refs = ["boe-lirpf-lottery-prize-special-levy"]

@@ -13,10 +13,14 @@
 # dependency_classifications family names no in-registry source -- modelo 230 is
 # not carried here.
 #
-# No required_payer_fact is declared. The vocabulary carries no fact for "obtuvo
-# un premio de loteria sujeto al gravamen especial", and omission is the shipped
-# shape for an obligation the profile does not model rather than a gap left open
-# here.
+# required_payer_fact is premio_loteria_gravamen_especial_sin_retencion. Orden
+# HAP/70/2013 art. 6 obliges the contribuyente to file only "cuando tales premios
+# no hubieran sido objeto de la retencion o ingreso a cuenta", so being a
+# resident natural person is not enough. The profile carries that fact: a
+# declared yes with at least one quarter in the companion quarter set is
+# APPLICABLE, a declared no is NOT_APPLICABLE, and an unanswered question -- or a
+# yes without quarters -- is INCOMPLETE. The quarterly windows then open only for
+# the declared quarters.
 #
 # cuota_bearing is true: this edition computes a cuota in casilla 05 and a
 # resultado a ingresar in casilla 07, unlike the informativa resumenes that
@@ -28,4 +32,5 @@ applicable_entity_types = ["natural_person"]
 applicable_reason = "Modelo 136 (IRPF e IRNR, gravamen especial sobre los premios de determinadas loterias y apuestas): el contribuyente que ha obtenido un premio sujeto al gravamen especial autoliquida la cuota cuando no se le ha practicado la retencion o el ingreso a cuenta correspondiente, conforme a la disposicion adicional 33 de la Ley 35/2006."
 not_applicable_reason = "Modelo 136 no aplica: la disposicion adicional 33 de la Ley 35/2006 exime de presentar la autoliquidacion cuando el premio es de cuantia inferior al importe exento o cuando el pagador ha practicado la retencion o el ingreso a cuenta sobre el."
 cuota_bearing = true
-legal_refs = ["ley-35-2006:da-33", "orden-hap-70-2013:art-5"]
+required_payer_fact = "premio_loteria_gravamen_especial_sin_retencion"
+legal_refs = ["ley-35-2006:da-33", "orden-hap-70-2013:art-5", "orden-hap-70-2013:art-6"]

@@ -47,6 +47,7 @@ from ...domain.deadlines.errors import DeadlineValidationError, NoDeadlineWindow
 from ...domain.deadlines.models import TaxpayerProfile
 from ...domain.deadlines.recargo import twelve_month_anniversary
 from ...domain.retention.floor import retention_floor_years
+from ...domain.user_profile.quarter_sets import format_quarter_set
 from .errors import OverviewExplainError
 
 if TYPE_CHECKING:
@@ -160,6 +161,7 @@ _DEADLINE_RELEVANT_FIELDS: tuple[str, ...] = (
     "third_party_transactions_above_347_threshold",
     "bienes_extranjero_above_threshold",
     "monedas_virtuales_extranjero_above_threshold",
+    "premio_loteria_gravamen_especial_sin_retencion",
 )
 
 
@@ -186,6 +188,10 @@ def _extract_profile_facts(profile: TaxpayerProfile) -> dict[str, _ProfileFactVa
     # The IRPF income-category set is the gate for natural persons;
     # surface it as a stable comma-joined token.
     facts["irpf_income_categories"] = ",".join(sorted(category.value for category in profile.irpf_income_categories))
+    # The Modelo 136 quarter set surfaces in its stored token form; an
+    # undeclared set is an explicit empty string like the axes above.
+    quarters = profile.premio_loteria_gravamen_especial_trimestres
+    facts["premio_loteria_gravamen_especial_trimestres"] = "" if quarters is None else format_quarter_set(quarters)
     # The nested IVA + enrolment sub-models also gate applicability.
     # An undeclared IVA sub-model surfaces each fact as an explicit empty
     # string, like the undeclared axes above, rather than dropping the keys.

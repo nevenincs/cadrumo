@@ -170,6 +170,8 @@ _EXPECTED_SETUP_QUESTION_IDS = frozenset(
         "pays-capital-income-with-retencion",
         "pays-professionals-with-retencion",
         "pays-rent-with-retencion",
+        "premio-loteria-gravamen-especial-sin-retencion",
+        "premio-loteria-gravamen-especial-trimestres",
         "representante-fiscal-nif",
         "representante-fiscal-nombre",
         "situacion-familiar",

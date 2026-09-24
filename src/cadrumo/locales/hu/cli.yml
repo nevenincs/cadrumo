@@ -2336,6 +2336,12 @@ cli:
         paranccsal. Bármikor újranyithatod az 'aeat config profile edit' paranccsal.
       no_active_profile: 'Nincs aktív profil. Futtassa: `aeat config profile create
         NÉV --tax-id <NIF/CIF/DNI/NIE>`.'
+      notices:
+        payer_fact_cleared: '{fact}: ez a profil egy „nem” választ tárolt, amelyet
+          a beállítási varázsló alapértelmezésként írt be, ezért nem volt megkülönböztethető
+          a megválaszolatlan kérdéstől, és törlésre került. Az ettől függő kötelezettségek
+          meghatározatlanok maradnak, amíg a profilszerkesztő parancs {yes_flag} vagy
+          {no_flag} kapcsolójával nem válaszolsz.'
       recovery:
         channel_absent: A helyreállítási kód csak terminálon jeleníthető meg. Terminál
           nélküli gépen add meg a --recovery-handoff-fd és --recovery-verification-fd

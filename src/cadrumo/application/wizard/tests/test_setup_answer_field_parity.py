@@ -109,6 +109,7 @@ def test_both_projections_agree_on_a_populated_record(*, registry_setup_flow: Wi
     values["renta_filing.declaration_type"] = ""
     values["taxpayer_type.fiscal_residency"] = ""
     values["tax_residence.ccaa"] = "madrid"
+    values["obligations.premio_loteria_gravamen_especial_trimestres"] = "2025-1T"
     values["taxpayer_type.irpf_income_categories"] = ""
     values["irpf.estimation_regime"] = ""
     values["irpf.special_regime"] = ""

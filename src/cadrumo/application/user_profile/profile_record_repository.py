@@ -26,6 +26,7 @@ from ...core.process_binding import ProcessScopedBinding
 from ...core.time.clock import now as _utc_now
 from ...domain.buckets.event import BucketEventType
 from ...domain.user_profile.errors import ProfileNotFoundError
+from ...domain.user_profile.schema_migration import pending_cleared_payer_fact_paths
 from ...domain.user_profile.values import (
     ProfileSetupState,
     UserProfileFact,
@@ -36,6 +37,7 @@ from .capsule_record import (
     ProfileRecordCommandEvent,
     ProfileRecordConflictError,
     ProfileRecordIntegrityError,
+    ProfileRecordMigrationRequiredError,
     ProfileRecordSession,
     ProfileRecordStore,
 )
@@ -43,6 +45,7 @@ from .custody_ports import (
     profile_custody_record_session_material,
 )
 from .login_session_port import profile_current_bucket_session, profile_session_serves_bucket
+from .profile_schema_migration import migrate_profile_record_on_open
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
@@ -375,7 +378,18 @@ class ProfileRecordRepository:
         identity = UUID(str(profile_id))
         if identity != self.session.profile_id:
             raise ProfileNotFoundError("profile record session does not serve the requested UUID")
-        return ProfileRecordStore(session=self.session, root=self._root).load().record
+        store = ProfileRecordStore(session=self.session, root=self._root)
+        try:
+            return store.load().record
+        except ProfileRecordMigrationRequiredError:
+            migrate_profile_record_on_open(self.session, root=self._root)
+            return store.load().record
+
+    def pending_cleared_payer_fact_paths(self, profile_id: str | UUID) -> tuple[str, ...]:
+        """Return payer-fact paths a schema migration cleared that are still unanswered."""
+        record = self.load(profile_id)
+        migrations = ProfileRecordStore(session=self.session, root=self._root).schema_migrations()
+        return pending_cleared_payer_fact_paths(record, migrations)
 
     def complete_setup(
         self,

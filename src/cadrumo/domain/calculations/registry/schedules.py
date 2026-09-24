@@ -111,7 +111,18 @@ def profile_condition_matches(
         return observed == condition.value
     if condition.op == ProfilePredicateOp.NOT_EQUALS:
         return observed != condition.value
+    if condition.op == ProfilePredicateOp.INCLUDES:
+        return _token_set_includes(observed, condition.value, field=condition.field)
     raise RegistryValidationError(f"profile condition uses unsupported op {str(condition.op)!r}")
+
+
+def _token_set_includes(observed: object, token: object, *, field: str) -> bool:
+    """Return whether an observed token set contains ``token``; an absent set matches nothing."""
+    if observed is None:
+        return False
+    if not isinstance(observed, (frozenset, set, tuple)):
+        raise RegistryValidationError(f"profile condition on {field!r} uses 'includes' against a non-set value")
+    return token in observed
 
 
 def _resolve_direct_profile_fact(profile_facts: object, field: str) -> tuple[bool, object]:

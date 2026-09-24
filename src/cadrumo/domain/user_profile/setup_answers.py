@@ -54,6 +54,7 @@ from ..contribuyente.renta_codes import (
     SituacionFamiliar,
 )
 from ..deadlines.models import IVARegime
+from .quarter_sets import format_quarter_set, parse_quarter_set
 
 
 def _parse_optional_bool_token(value: object, *, field_name: str) -> object:
@@ -227,9 +228,16 @@ class SetupAnswers(BaseModel):
     irpf_special_regime_start_date: str = ""
     """ISO-8601 opt-in election date for the special regime."""
     does_intracomunitario: bool = False
-    third_party_transactions_above_347_threshold: bool = False
-    bienes_extranjero_above_threshold: bool = False
-    monedas_virtuales_extranjero_above_threshold: bool = False
+    third_party_transactions_above_347_threshold: Any = ""
+    """Three-state payer fact: ``True``, ``False`` or blank when unanswered."""
+    bienes_extranjero_above_threshold: Any = ""
+    """Three-state payer fact: ``True``, ``False`` or blank when unanswered."""
+    monedas_virtuales_extranjero_above_threshold: Any = ""
+    """Three-state payer fact: ``True``, ``False`` or blank when unanswered."""
+    premio_loteria_gravamen_especial_sin_retencion: Any = ""
+    """Three-state payer fact: ``True``, ``False`` or blank when unanswered."""
+    premio_loteria_gravamen_especial_trimestres: str = ""
+    """Canonical ``|``-delimited ``YYYY-nT`` quarters in which such prizes were cashed."""
 
     # ── residence ────────────────────────────────────────────────────────
     tax_residence_ccaa: Any = None
@@ -294,6 +302,25 @@ class SetupAnswers(BaseModel):
     @pydantic_validation_boundary
     def _parse_optional_iva_bool(cls, value: object) -> Any:
         return _parse_optional_bool_token(value, field_name="Modelo IVA boolean")
+
+    @field_validator(
+        "third_party_transactions_above_347_threshold",
+        "bienes_extranjero_above_threshold",
+        "monedas_virtuales_extranjero_above_threshold",
+        "premio_loteria_gravamen_especial_sin_retencion",
+        mode="before",
+    )
+    @classmethod
+    @pydantic_validation_boundary
+    def _parse_optional_payer_fact_bool(cls, value: object) -> Any:
+        return _parse_optional_bool_token(value, field_name="payer applicability fact")
+
+    @field_validator("premio_loteria_gravamen_especial_trimestres")
+    @classmethod
+    @pydantic_validation_boundary
+    def _parse_premio_loteria_trimestres(cls, value: str) -> str:
+        parsed = parse_quarter_set(value)
+        return "" if parsed is None else format_quarter_set(parsed)
 
     @field_validator("tax_residence_ccaa", mode="before")
     @classmethod

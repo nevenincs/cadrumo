@@ -81,6 +81,11 @@ profile:
         threshold
       monedas_virtuales_extranjero_above_threshold: Virtual currencies held abroad
         above Modelo 721 threshold
+      premio_loteria_gravamen_especial_sin_retencion: Lottery or betting prize subject
+        to the gravamen especial obtained without retención or ingreso a cuenta (Modelo
+        136)
+      premio_loteria_gravamen_especial_trimestres: Quarters in which such a lottery
+        or betting prize was cashed (Modelo 136), as YYYY-nT tokens separated by |
       third_party_transactions_above_347_threshold: Third-party transactions exceed
         Modelo 347 threshold
     preferences:
@@ -140,7 +145,8 @@ profile:
     withholding:
       has_employees: Has employees and pays salaries subject to withholding
       modelo_111_no_retenciones_periods: Modelo 111 periods with no withholding
-      modelo_115_no_relevant_payment_periods: Modelo 115 periods with no relevant payment
+      modelo_115_no_relevant_payment_periods: Modelo 115 periods with no relevant
+        payment
       pays_capital_income_with_retencion: Pays capital income with withholding
       pays_professionals_with_retencion: Pays professionals with withholding
       pays_rent_with_retencion: Pays local rent with withholding
@@ -311,6 +317,8 @@ profile:
           label: Income from secondary payers
         pagadores_total_work_income:
           label: Total work income
+        plantilla_media:
+          label: Average workforce by calendar year
         professional_income_withholding_ge_70pct:
           label: Professional withholding reaches 70%
         special_regime:
@@ -374,6 +382,10 @@ profile:
           label: Modelo 720 threshold exceeded
         monedas_virtuales_extranjero_above_threshold:
           label: Modelo 721 threshold exceeded
+        premio_loteria_gravamen_especial_sin_retencion:
+          label: Lottery prize without retención (Modelo 136)
+        premio_loteria_gravamen_especial_trimestres:
+          label: Prize quarters (Modelo 136)
         third_party_transactions_above_347_threshold:
           label: Modelo 347 threshold exceeded
       preferences:
@@ -585,6 +597,7 @@ profile:
     derived_field_not_editable: Derived field is not editable
     effective_window_end_not_enforced: Effective-window end is not enforced
     effective_window_unused: Effective window is unused
+    indexed_instance_invalid: Indexed instance is invalid
     invalid_date_value: Invalid date value
     invalid_email_value: Invalid email value
     invalid_enum_value: Invalid enum value

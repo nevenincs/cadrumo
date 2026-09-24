@@ -2359,6 +2359,12 @@ cli:
         modelos. Vuelve a abrirlo cuando quieras con 'aeat config profile edit'.
       no_active_profile: No hay un perfil activo. Ejecuta `aeat config profile create
         NAME --tax-id <NIF/CIF/DNI/NIE>` primero.
+      notices:
+        payer_fact_cleared: '{fact}: este perfil guardaba un «no» que el asistente
+          de configuración escribió por defecto, así que no se distinguía de una pregunta
+          sin responder y se ha borrado. Las obligaciones que dependen de él quedan
+          sin determinar hasta que respondas con la opción {yes_flag} o {no_flag}
+          del comando de edición del perfil.'
       recovery:
         channel_absent: Un código de recuperación solo puede mostrarse en un terminal.
           En un host sin terminal, indica --recovery-handoff-fd y --recovery-verification-fd;

@@ -647,6 +647,9 @@ errors:
       inesperat.
     integrity_profile_bucket_mismatch: El perfil %{profile_id} no pertany al bucket
       %{bucket_id}; un bucket de perfil conté exactament una identitat de perfil.
+    integrity_profile_record_schema_migration_required: El registre del perfil es
+      va desar amb un esquema de perfil anterior i s'ha de migrar abans de poder-lo
+      llegir.
     integrity_profile_snapshot_hash_mismatch: El resum de la instantània del perfil
       no coincideix amb la projecció actual.
     integrity_profile_snapshot_not_found: No existeix cap instantània de perfil amb

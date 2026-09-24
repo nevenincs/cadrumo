@@ -237,6 +237,7 @@ def profile_create_args(year: int) -> tuple[str, ...]:
         "--no-third-party-transactions-above-347-threshold",
         "--no-bienes-extranjero-above-threshold",
         "--no-monedas-virtuales-extranjero-above-threshold",
+        "--no-premio-loteria-gravamen-especial-sin-retencion",
         "--secrets-stdin",
     )
 

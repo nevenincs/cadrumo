@@ -50,6 +50,7 @@ from ..calculations.registry.renta_codes_catalogue import fiscal_residency_requi
 from ..calculations.registry.third_party_declaration_roles import require_third_party_declaration_role
 from ..contribuyente.entity_type import EntityType, LegalEntityForm, entity_type_natural_person_token
 from ..contribuyente.renta_codes import FiscalResidency
+from ..user_profile.quarter_sets import parse_quarter_set
 from ..user_profile.setup_answers import SetupAnswers
 from .errors import ProfileError
 from .festivos import CalendarCCAA
@@ -145,6 +146,10 @@ _BARE_PROFILE_FLAG_KEYS: tuple[tuple[str, str], ...] = (
     ("does_intracomunitario", "iva.does_intracomunitario"),
     ("bienes_extranjero_above_threshold", "obligations.bienes_extranjero_above_threshold"),
     ("monedas_virtuales_extranjero_above_threshold", "obligations.monedas_virtuales_extranjero_above_threshold"),
+    (
+        "premio_loteria_gravamen_especial_sin_retencion",
+        "obligations.premio_loteria_gravamen_especial_sin_retencion",
+    ),
     ("enrollment.large_company", "censo.large_company"),
     ("enrollment.public_administration_budget_gt_6000000", "censo.public_administration_budget_gt_6000000"),
 )
@@ -195,9 +200,11 @@ class _ProfileWithholdingFields(TypedDict):
 
 class _ProfileObligationFields(TypedDict):
     does_intracomunitario: bool
-    third_party_transactions_above_347_threshold: bool
-    bienes_extranjero_above_threshold: bool
-    monedas_virtuales_extranjero_above_threshold: bool
+    third_party_transactions_above_347_threshold: bool | None
+    bienes_extranjero_above_threshold: bool | None
+    monedas_virtuales_extranjero_above_threshold: bool | None
+    premio_loteria_gravamen_especial_sin_retencion: bool | None
+    premio_loteria_gravamen_especial_trimestres: frozenset[str] | None
 
 
 class _ProfileRelationshipFields(TypedDict):
@@ -379,13 +386,28 @@ def _resolve_profile_withholding_fields(typed: SetupAnswers) -> _ProfileWithhold
     }
 
 
+def _declared_bool(value: object) -> bool | None:
+    """Keep a typed yes/no answer and read the blank sentinel as unanswered."""
+    return value if isinstance(value, bool) else None
+
+
 def _resolve_profile_obligation_fields(typed: SetupAnswers) -> _ProfileObligationFields:
     """Project the obligation flags that are already typed by SetupAnswers."""
     return {
         "does_intracomunitario": typed.does_intracomunitario,
-        "third_party_transactions_above_347_threshold": typed.third_party_transactions_above_347_threshold,
-        "bienes_extranjero_above_threshold": typed.bienes_extranjero_above_threshold,
-        "monedas_virtuales_extranjero_above_threshold": typed.monedas_virtuales_extranjero_above_threshold,
+        "third_party_transactions_above_347_threshold": _declared_bool(
+            typed.third_party_transactions_above_347_threshold,
+        ),
+        "bienes_extranjero_above_threshold": _declared_bool(typed.bienes_extranjero_above_threshold),
+        "monedas_virtuales_extranjero_above_threshold": _declared_bool(
+            typed.monedas_virtuales_extranjero_above_threshold,
+        ),
+        "premio_loteria_gravamen_especial_sin_retencion": _declared_bool(
+            typed.premio_loteria_gravamen_especial_sin_retencion,
+        ),
+        "premio_loteria_gravamen_especial_trimestres": parse_quarter_set(
+            typed.premio_loteria_gravamen_especial_trimestres,
+        ),
     }
 
 

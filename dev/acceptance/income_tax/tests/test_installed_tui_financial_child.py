@@ -30,6 +30,7 @@ def test_profile_configuration_uses_canonical_manager_row_paths() -> None:
     assert "renta_taxpayer.birth_date" in paths
     assert "withholding.has_employees" in paths
     assert "obligations.monedas_virtuales_extranjero_above_threshold" in paths
+    assert "obligations.premio_loteria_gravamen_especial_sin_retencion" in paths
     assert all((fact.value is None) != (fact.option_index is None) for fact in facts)
 
 

@@ -84,8 +84,13 @@ def profile_wizard_behavior(mode: WizardPersistMode) -> Callable[..., None]:
     """Run one wizard behavior while its indexed authority operation is leased."""
     from ....application.wizard.catalogue import build_setup_flow
     from ....application.wizard.commands import build_wizard_command
+    from ....core.json_contract import Notice
     from ....domain.calculations.registry.authority import bundled_indexed_authority
+    from .._payer_fact_migration_notice import drain_payer_fact_migration_notices
     from .._profile_authentication_notice import drain_profile_authentication_notices
+
+    def _drain_invocation_notices() -> tuple[Notice, ...]:
+        return (*drain_profile_authentication_notices(), *drain_payer_fact_migration_notices())
 
     def _run(*args: object, **kwargs: object) -> None:
         # Keep the flow, command, and every profile context-dependent action
@@ -100,7 +105,7 @@ def profile_wizard_behavior(mode: WizardPersistMode) -> Callable[..., None]:
                 flow,
                 mode=mode,
                 operation=operation,
-                invocation_notices=drain_profile_authentication_notices,
+                invocation_notices=_drain_invocation_notices,
             )
             projected = with_profile_cli_projection(
                 wizard_command,

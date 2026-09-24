@@ -255,6 +255,7 @@ _WIZARD_CONFIRM_FIELDS = frozenset(
         "third-party-transactions-above-347-threshold",
         "bienes-extranjero-above-threshold",
         "monedas-virtuales-extranjero-above-threshold",
+        "premio-loteria-gravamen-especial-sin-retencion",
         "llm-vision",
         "google-export",
     }
@@ -339,6 +340,8 @@ _WIZARD_FIELDS = (
     "third-party-transactions-above-347-threshold",
     "bienes-extranjero-above-threshold",
     "monedas-virtuales-extranjero-above-threshold",
+    "premio-loteria-gravamen-especial-sin-retencion",
+    "premio-loteria-gravamen-especial-trimestres",
     "llm-vision",
     "google-export",
     "notes",

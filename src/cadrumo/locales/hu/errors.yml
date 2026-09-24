@@ -604,6 +604,8 @@ errors:
     integrity_profile_answer_type: Egy profilválasz-mező váratlan típust kapott.
     integrity_profile_bucket_mismatch: A(z) %{profile_id} profil nem tartozik a(z)
       %{bucket_id} tárolóhoz; egy profiltároló pontosan egy profilazonosítót tartalmaz.
+    integrity_profile_record_schema_migration_required: A profilrekordot egy korábbi
+      profilséma szerint tárolták, ezért olvasás előtt át kell alakítani.
     integrity_profile_snapshot_hash_mismatch: A profil-pillanatkép hashje nem egyezik
       az aktuális vetítéssel.
     integrity_profile_snapshot_not_found: Nem létezik profil-pillanatkép a megadott

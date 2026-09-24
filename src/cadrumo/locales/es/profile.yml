@@ -80,6 +80,12 @@ profile:
         del Modelo 720
       monedas_virtuales_extranjero_above_threshold: Monedas virtuales en el extranjero
         superan el umbral del Modelo 721
+      premio_loteria_gravamen_especial_sin_retencion: Premio de loterías o apuestas
+        sujeto al gravamen especial obtenido sin retención ni ingreso a cuenta (Modelo
+        136)
+      premio_loteria_gravamen_especial_trimestres: Trimestres en que se cobró ese
+        premio de loterías o apuestas (Modelo 136), como tokens AAAA-nT separados
+        por |
       third_party_transactions_above_347_threshold: Operaciones con terceros superan
         el umbral del Modelo 347
     preferences:
@@ -312,6 +318,8 @@ profile:
           label: Ingresos de pagadores secundarios
         pagadores_total_work_income:
           label: Rendimientos íntegros del trabajo
+        plantilla_media:
+          label: Plantilla media por año natural
         professional_income_withholding_ge_70pct:
           label: Retención profesional alcanza el 70 %
         special_regime:
@@ -375,6 +383,10 @@ profile:
           label: Umbral del Modelo 720 superado
         monedas_virtuales_extranjero_above_threshold:
           label: Umbral del Modelo 721 superado
+        premio_loteria_gravamen_especial_sin_retencion:
+          label: Premio de lotería sin retención (Modelo 136)
+        premio_loteria_gravamen_especial_trimestres:
+          label: Trimestres del premio (Modelo 136)
         third_party_transactions_above_347_threshold:
           label: Umbral del Modelo 347 superado
       preferences:
@@ -587,6 +599,7 @@ profile:
     derived_field_not_editable: El campo derivado no se puede editar
     effective_window_end_not_enforced: El final de la ventana de vigencia no se aplica
     effective_window_unused: La ventana de vigencia no se utiliza
+    indexed_instance_invalid: La instancia indexada no es válida
     invalid_date_value: Valor de fecha no válido
     invalid_email_value: Valor de correo electrónico no válido
     invalid_enum_value: Valor de enumeración no válido

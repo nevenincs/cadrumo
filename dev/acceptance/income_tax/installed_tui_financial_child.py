@@ -116,6 +116,7 @@ def required_profile_facts(scenario: IncomeTaxScenario) -> tuple[ProfileFactEntr
         ProfileFactEntry("obligations.third_party_transactions_above_347_threshold", option_index=1),
         ProfileFactEntry("obligations.bienes_extranjero_above_threshold", option_index=1),
         ProfileFactEntry("obligations.monedas_virtuales_extranjero_above_threshold", option_index=1),
+        ProfileFactEntry("obligations.premio_loteria_gravamen_especial_sin_retencion", option_index=1),
     )
 
 

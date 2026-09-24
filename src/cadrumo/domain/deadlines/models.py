@@ -549,12 +549,20 @@ class TaxpayerProfile(BaseModel):
             operaciones intracomunitarias.
         third_party_transactions_above_347_threshold: Whether the
             profile exceeded the applicable third-party transaction
-            threshold during the prior year.
+            threshold during the prior year; ``None`` when unanswered.
         bienes_extranjero_above_threshold: Whether the taxpayer holds
-            bienes en el extranjero above the legal threshold.
+            bienes en el extranjero above the legal threshold; ``None``
+            when unanswered.
         monedas_virtuales_extranjero_above_threshold: Whether the
             taxpayer holds virtual currencies abroad above the Modelo
-            721 threshold.
+            721 threshold; ``None`` when unanswered.
+        premio_loteria_gravamen_especial_sin_retencion: Whether the
+            taxpayer obtained a lottery or betting prize subject to the
+            gravamen especial that was not subject to retención or
+            ingreso a cuenta (Modelo 136); ``None`` when unanswered.
+        premio_loteria_gravamen_especial_trimestres: The ``YYYY-nT``
+            quarters in which such prizes were cashed; ``None`` when
+            undeclared.
         iva: IVA-specific filing facts that can change filing cadence.
         cross_period_group_member_rosters: Expected group-member rosters
             keyed by upstream modelo, filing year, and period. These
@@ -626,9 +634,11 @@ class TaxpayerProfile(BaseModel):
     objective_estimation_modulos_module_6_units: Decimal | None = None
     objective_estimation_modulos_module_7_units: Decimal | None = None
     does_intracomunitario: bool = False
-    third_party_transactions_above_347_threshold: bool = False
-    bienes_extranjero_above_threshold: bool = False
-    monedas_virtuales_extranjero_above_threshold: bool = False
+    third_party_transactions_above_347_threshold: bool | None = None
+    bienes_extranjero_above_threshold: bool | None = None
+    monedas_virtuales_extranjero_above_threshold: bool | None = None
+    premio_loteria_gravamen_especial_sin_retencion: bool | None = None
+    premio_loteria_gravamen_especial_trimestres: frozenset[str] | None = None
     iva: ModeloIVAProfile | None = None
     cross_period_group_member_rosters: tuple[CrossPeriodGroupMemberRoster, ...] = Field(default_factory=tuple)
     enrollment: ModeloEnrollment = Field(default_factory=ModeloEnrollment)

@@ -590,6 +590,8 @@ errors:
     integrity_profile_answer_type: A profile-answer field received an unexpected type.
     integrity_profile_bucket_mismatch: Profile %{profile_id} does not belong to bucket
       %{bucket_id}; a profile bucket holds exactly one profile identity.
+    integrity_profile_record_schema_migration_required: The profile record was stored
+      under an earlier profile schema and must be migrated before it can be read.
     integrity_profile_snapshot_hash_mismatch: The profile snapshot hash does not match
       the current projection.
     integrity_profile_snapshot_not_found: No profile snapshot exists with the identifier

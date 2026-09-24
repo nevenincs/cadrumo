@@ -18,6 +18,7 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 import pytest
+from pydantic import ValidationError
 
 from cadrumo.domain.contribuyente.entity_type import EntityType
 from cadrumo.domain.deadlines.models import IVARegime
@@ -81,6 +82,36 @@ def test_profile_condition_matches_unsupported_op_raises() -> None:
 
     with pytest.raises(RegistryValidationError, match="unsupported op 'contains'"):
         profile_condition_matches(condition, {"residence_ccaa": "madrid"})
+
+
+@pytest.mark.parametrize(
+    ("observed", "expected"),
+    (
+        pytest.param(frozenset({"2025-1T", "2025-3T"}), True, id="member"),
+        pytest.param(frozenset({"2025-2T"}), False, id="other-quarter"),
+        pytest.param(frozenset(), False, id="empty-set"),
+        pytest.param(None, False, id="absent-set"),
+    ),
+)
+def test_profile_condition_includes_matches_only_a_member_token(
+    observed: frozenset[str] | None,
+    expected: bool,
+) -> None:
+    condition = _condition("premio_loteria_gravamen_especial_trimestres", "includes", "2025-1T")
+    facts = SimpleNamespace(premio_loteria_gravamen_especial_trimestres=observed)
+    assert profile_condition_matches(condition, facts) is expected
+
+
+def test_profile_condition_includes_refuses_a_scalar_observation() -> None:
+    condition = _condition("premio_loteria_gravamen_especial_trimestres", "includes", "2025-1T")
+    with pytest.raises(RegistryValidationError, match="non-set value"):
+        profile_condition_matches(condition, {"premio_loteria_gravamen_especial_trimestres": "2025-1T"})
+
+
+@pytest.mark.parametrize("value", (True, 3, "  "), ids=("bool", "int", "blank"))
+def test_profile_condition_includes_requires_one_token_value(value: bool | int | str) -> None:
+    with pytest.raises(ValidationError, match="non-token value"):
+        _condition("premio_loteria_gravamen_especial_trimestres", "includes", value)
 
 
 # ---------------------------------------------------------------------------

@@ -68,7 +68,7 @@ def test_explain_help_advertises_local_only() -> None:
 
 
 def test_explain_721_returns_structured_payload_not_crash() -> None:
-    """M721 explain must return exit 0 and suppress default false profiles.
+    """M721 explain must return exit 0 and keep an unanswered crypto fact incomplete.
 
     Regression guard for the defect-of-record state where Modelo 721 was absent
     from the registry and ``build_overview_explain`` raised
@@ -83,7 +83,9 @@ def test_explain_721_returns_structured_payload_not_crash() -> None:
     assert "could not evaluate" not in result.output, result.output
     assert "applicable\tfalse" in result.output, result.output
     assert "verdict\tincomplete" in result.output, result.output
-    assert "profile_fact\tmonedas_virtuales_extranjero_above_threshold\tFalse" in result.output, result.output
+    # The test profile never answers the Modelo 721 question, so the fact is
+    # surfaced as undeclared rather than as a stored "no".
+    assert "profile_fact\tmonedas_virtuales_extranjero_above_threshold\t\n" in result.output, result.output
     assert "ley-58-2003:da-18" in result.output, result.output
     assert "rd-1065-2007:art-42-quater" in result.output, result.output
     assert "orden-hfp-886-2023:art-2" in result.output, result.output

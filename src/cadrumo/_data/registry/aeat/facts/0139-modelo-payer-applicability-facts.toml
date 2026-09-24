@@ -73,6 +73,8 @@ legal_refs = [
   "ley-58-2003:art-93",
   "ley-7-2012:da-1",
   "orden-hap-72-2013:art-1",
+  "orden-hap-70-2013:art-6",
+  "orden-hap-70-2013:art-7",
   "ley-35-2006:art-25",
   "ley-35-2006:art-99",
   "orden-eha-3377-2011:art-1",
@@ -91,7 +93,7 @@ ownership = "authored"
 [fact.variants.payload]
 kind = "mapping"
 entries = [
-  { key = "payer_fact.order", value = "exceeds_third_party_threshold,bienes_extranjero_above_threshold,pays_capital_income_with_retencion" },
+  { key = "payer_fact.order", value = "exceeds_third_party_threshold,bienes_extranjero_above_threshold,premio_loteria_gravamen_especial_sin_retencion,pays_capital_income_with_retencion" },
   { key = "payer_fact.exceeds_third_party_threshold.value", value = "exceeds_third_party_threshold" },
   { key = "payer_fact.exceeds_third_party_threshold.profile_key", value = "third_party_transactions_above_347_threshold" },
   { key = "payer_fact.exceeds_third_party_threshold.label", value = "supera el umbral anual de operaciones con terceras personas" },
@@ -100,6 +102,12 @@ entries = [
   { key = "payer_fact.bienes_extranjero_above_threshold.profile_key", value = "bienes_extranjero_above_threshold" },
   { key = "payer_fact.bienes_extranjero_above_threshold.label", value = "posee bienes o derechos en el extranjero por encima del umbral" },
   { key = "payer_fact.bienes_extranjero_above_threshold.legal_refs", value = "ley-7-2012:da-1|orden-hap-72-2013:art-1" },
+  { key = "payer_fact.premio_loteria_gravamen_especial_sin_retencion.value", value = "premio_loteria_gravamen_especial_sin_retencion" },
+  { key = "payer_fact.premio_loteria_gravamen_especial_sin_retencion.profile_key", value = "premio_loteria_gravamen_especial_sin_retencion" },
+  { key = "payer_fact.premio_loteria_gravamen_especial_sin_retencion.label", value = "obtuvo un premio de loterías o apuestas sujeto al gravamen especial sin retención ni ingreso a cuenta" },
+  { key = "payer_fact.premio_loteria_gravamen_especial_sin_retencion.period_set_key", value = "premio_loteria_gravamen_especial_trimestres" },
+  { key = "payer_fact.premio_loteria_gravamen_especial_sin_retencion.period_set_label", value = "trimestres naturales en que se cobraron esos premios" },
+  { key = "payer_fact.premio_loteria_gravamen_especial_sin_retencion.legal_refs", value = "orden-hap-70-2013:art-6|orden-hap-70-2013:art-7" },
   { key = "payer_fact.pays_capital_income_with_retencion.value", value = "pays_capital_income_with_retencion" },
   { key = "payer_fact.pays_capital_income_with_retencion.profile_key", value = "pays_capital_income_with_retencion" },
   { key = "payer_fact.pays_capital_income_with_retencion.label", value = "paga rendimientos del capital mobiliario sujetos a retención" },
@@ -134,6 +142,18 @@ required_text = [
     "Declaración sobre bienes y derechos situados en el extranjero",
 ]
 
+# premio_loteria_gravamen_especial_sin_retencion is grounded in Orden HAP/70/2013 art. 6,
+# which names the obligados to file modelo 136 "cuando tales premios no hubieran sido
+# objeto de la retención o ingreso a cuenta". LIRPF DA 33 is not cited in this span: its
+# consolidated text on file applies from 2020, after this variant opens.
+# It cites no procedure page: the modelo 136 page on file applies only from 2026.
+# period_set_key names the companion quarter set, grounded in art. 7: each filing covers
+# "los premios cobrados en el trimestre natural inmediato anterior". A yes counts only
+# with at least one quarter; a yes without quarters, like an unanswered question, leaves
+# modelo 136 undetermined rather than excluded. What is NOT claimed: the prize amount
+# against the exempt portion, or that a declared quarter is correct -- the profile states
+# both facts, this catalogue only says which answers the obligation depends on.
+
 [[fact.variants]]
 variant_id = "modelo-payer-applicability-facts:2023-01-01"
 date_axis = "filing_period"
@@ -150,6 +170,9 @@ legal_refs = [
   "orden-hfp-886-2023:art-1",
   "orden-hfp-886-2023:art-2",
   "orden-hfp-886-2023:art-3",
+  "orden-hap-70-2013:art-6",
+  "orden-hap-70-2013:art-7",
+  "ley-35-2006:da-33",
   "ley-35-2006:art-25",
   "ley-35-2006:art-99",
   "orden-eha-3377-2011:art-1",
@@ -169,7 +192,7 @@ ownership = "authored"
 [fact.variants.payload]
 kind = "mapping"
 entries = [
-  { key = "payer_fact.order", value = "exceeds_third_party_threshold,bienes_extranjero_above_threshold,monedas_virtuales_extranjero_above_threshold,pays_capital_income_with_retencion" },
+  { key = "payer_fact.order", value = "exceeds_third_party_threshold,bienes_extranjero_above_threshold,monedas_virtuales_extranjero_above_threshold,premio_loteria_gravamen_especial_sin_retencion,pays_capital_income_with_retencion" },
   { key = "payer_fact.exceeds_third_party_threshold.value", value = "exceeds_third_party_threshold" },
   { key = "payer_fact.exceeds_third_party_threshold.profile_key", value = "third_party_transactions_above_347_threshold" },
   { key = "payer_fact.exceeds_third_party_threshold.label", value = "supera el umbral anual de operaciones con terceras personas" },
@@ -182,6 +205,12 @@ entries = [
   { key = "payer_fact.monedas_virtuales_extranjero_above_threshold.profile_key", value = "monedas_virtuales_extranjero_above_threshold" },
   { key = "payer_fact.monedas_virtuales_extranjero_above_threshold.label", value = "posee monedas virtuales situadas en el extranjero por encima del umbral" },
   { key = "payer_fact.monedas_virtuales_extranjero_above_threshold.legal_refs", value = "ley-58-2003:da-18|rd-1065-2007:art-42-quater|orden-hfp-886-2023:art-1|orden-hfp-886-2023:art-2|orden-hfp-886-2023:art-3" },
+  { key = "payer_fact.premio_loteria_gravamen_especial_sin_retencion.value", value = "premio_loteria_gravamen_especial_sin_retencion" },
+  { key = "payer_fact.premio_loteria_gravamen_especial_sin_retencion.profile_key", value = "premio_loteria_gravamen_especial_sin_retencion" },
+  { key = "payer_fact.premio_loteria_gravamen_especial_sin_retencion.label", value = "obtuvo un premio de loterías o apuestas sujeto al gravamen especial sin retención ni ingreso a cuenta" },
+  { key = "payer_fact.premio_loteria_gravamen_especial_sin_retencion.period_set_key", value = "premio_loteria_gravamen_especial_trimestres" },
+  { key = "payer_fact.premio_loteria_gravamen_especial_sin_retencion.period_set_label", value = "trimestres naturales en que se cobraron esos premios" },
+  { key = "payer_fact.premio_loteria_gravamen_especial_sin_retencion.legal_refs", value = "orden-hap-70-2013:art-6|orden-hap-70-2013:art-7|ley-35-2006:da-33" },
   { key = "payer_fact.pays_capital_income_with_retencion.value", value = "pays_capital_income_with_retencion" },
   { key = "payer_fact.pays_capital_income_with_retencion.profile_key", value = "pays_capital_income_with_retencion" },
   { key = "payer_fact.pays_capital_income_with_retencion.label", value = "paga rendimientos del capital mobiliario sujetos a retención" },
@@ -222,3 +251,15 @@ source_ref = "aeat-modelo-721-procedure"
 required_text = [
     "Declaración informativa sobre monedas virtuales situadas en el extranjero",
 ]
+
+# premio_loteria_gravamen_especial_sin_retencion is grounded in Orden HAP/70/2013 art. 6,
+# which names the obligados to file modelo 136 "cuando tales premios no hubieran sido
+# objeto de la retención o ingreso a cuenta", and in LIRPF DA 33, which obliges the
+# contribuyente to self-assess the gravamen especial.
+# It cites no procedure page: the modelo 136 page on file applies only from 2026.
+# period_set_key names the companion quarter set, grounded in art. 7: each filing covers
+# "los premios cobrados en el trimestre natural inmediato anterior". A yes counts only
+# with at least one quarter; a yes without quarters, like an unanswered question, leaves
+# modelo 136 undetermined rather than excluded. What is NOT claimed: the prize amount
+# against the exempt portion, or that a declared quarter is correct -- the profile states
+# both facts, this catalogue only says which answers the obligation depends on.

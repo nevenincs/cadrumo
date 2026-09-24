@@ -2174,6 +2174,12 @@ cli:
         it any time with 'aeat config profile edit'.
       no_active_profile: No active profile. Run `aeat config profile create NAME --tax-id
         <NIF/CIF/DNI/NIE>` first.
+      notices:
+        payer_fact_cleared: '{fact}: this profile stored a “no” that the setup wizard
+          wrote as its default, so it could not be told apart from an unanswered question
+          and has been cleared. Obligations that depend on it stay undetermined until
+          you answer it with the {yes_flag} or {no_flag} option of the profile edit
+          command.'
       recovery:
         channel_absent: A recovery code can only be shown on a terminal. On a headless
           host, provide both --recovery-handoff-fd and --recovery-verification-fd;

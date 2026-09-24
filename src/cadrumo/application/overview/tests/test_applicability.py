@@ -638,8 +638,11 @@ def test_modelo_190_tracks_modelo_111_payer_fact() -> None:
 def test_payer_fact_modelos_are_incomplete_when_required_fact_not_declared() -> None:
     """Payer-fact modelos stay INCOMPLETE when their specific fact is not declared."""
 
+    # The shared autónomo answers the Modelo 347 question with a declared "no";
+    # this case needs it unanswered.
+    undeclared = _autonomo().model_copy(update={"third_party_transactions_above_347_threshold": None})
     for modelo in ("115", "123", "349", "347"):
-        result = derive_modelo_applicability(_autonomo(), modelo)
+        result = derive_modelo_applicability(undeclared, modelo)
         assert result.verdict is ApplicabilityVerdict.INCOMPLETE, modelo
 
 
