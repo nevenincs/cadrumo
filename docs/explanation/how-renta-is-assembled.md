@@ -31,10 +31,10 @@ filing year:
 - **Profile facts.** Who you are: tax id, residence comunidad, marital
   status, spouse and descendant data, disability grades, declaration type.
   These come from your taxpayer profile, one binding per fact (the
-  `renta-2025-profile-*` rows in the listing).
+  `renta-profile-*` rows in the listing).
 - **Ledger aggregations.** What your activity earned and spent: the year's
   classified income and deductible expense rows, aggregated per casilla and
-  listed as the `renta-2025-ledger-*` rows. This is the same ledger your quarterly
+  listed as the `renta-ledger-*` rows. This is the same ledger your quarterly
   filings read - Renta reads the whole year at once.
 - **Prior filings folded in.** What you already reported during the year:
   the Modelo 130 or 131 instalments you paid, and the retenciones reported
