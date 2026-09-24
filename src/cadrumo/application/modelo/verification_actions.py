@@ -294,6 +294,14 @@ def _optional_observation_refs(observations: Iterable[CasillaObservation | None]
 #: subject reads differently from one whose id is blank.
 _ABSENT_FACT: Final[str] = "absent"
 
+_REGISTRY_SNAPSHOT_GRADE_INSUFFICIENT_SCENARIO: Final[str] = (
+    "modelo.work.verify.registry_snapshot.authority_grade_insufficient"
+)
+_REGISTRY_SNAPSHOT_UNAVAILABLE_SCENARIO: Final[str] = "modelo.work.verify.registry_snapshot.unavailable"
+_REGISTRY_SNAPSHOT_REFUSAL_SCENARIOS: Final[frozenset[str]] = frozenset(
+    {_REGISTRY_SNAPSHOT_GRADE_INSUFFICIENT_SCENARIO, _REGISTRY_SNAPSHOT_UNAVAILABLE_SCENARIO},
+)
+
 #: Legal grounding for missing IVA evidence. Deducting input IVA requires the
 #: original factura (LIVA art. 97, RD 1619/2012 art. 2). Output-IVA evidence
 #: gaps stay advisory until the transaction model can distinguish every valid
@@ -975,17 +983,24 @@ def verify_modelo_revision_with_preconditions(
             work_profile=checked_profile,
         )
     )
-    _append_model_specific_findings(
-        findings,
-        failures_by_finding_id=failures_by_finding_id,
-        work_unit=work_unit,
-        target=target,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        observation_repository=repos.observation,
-        iva_history_repository=repos.iva_compensation_history,
-        operation=operation,
+    # A registry-snapshot refusal already stands as a blocking finding, and
+    # without a valid snapshot the model-specific checks have nothing to compare
+    # against; running them would only re-request the refused snapshot.
+    registry_snapshot_refused = any(
+        failure.scenario_id in _REGISTRY_SNAPSHOT_REFUSAL_SCENARIOS for failure in failures_by_finding_id.values()
     )
+    if not registry_snapshot_refused:
+        _append_model_specific_findings(
+            findings,
+            failures_by_finding_id=failures_by_finding_id,
+            work_unit=work_unit,
+            target=target,
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            observation_repository=repos.observation,
+            iva_history_repository=repos.iva_compensation_history,
+            operation=operation,
+        )
     completeness, granted = _classify_verification_outcome(
         findings=findings,
         missing_required=missing_required_casilla_ids,
@@ -1615,7 +1630,7 @@ def _resolve_verification_snapshot(
             calculation_revision_id=target.calculation_revision_id,
             work_unit_id=target.work_unit_id,
             condition_id="modelo.work.verify.registry_snapshot.filing_authority",
-            scenario_id="modelo.work.verify.registry_snapshot.authority_grade_insufficient",
+            scenario_id=_REGISTRY_SNAPSHOT_GRADE_INSUFFICIENT_SCENARIO,
             evidence_id="modelo.work.verify.registry_snapshot",
             evidence_values={
                 "modelo": str(work_unit.modelo),
@@ -1644,7 +1659,7 @@ def _resolve_verification_snapshot(
             calculation_revision_id=target.calculation_revision_id,
             work_unit_id=target.work_unit_id,
             condition_id="modelo.work.verify.registry_snapshot.available",
-            scenario_id="modelo.work.verify.registry_snapshot.unavailable",
+            scenario_id=_REGISTRY_SNAPSHOT_UNAVAILABLE_SCENARIO,
             evidence_id="modelo.work.verify.registry_snapshot",
             evidence_values={
                 "modelo": str(work_unit.modelo),
