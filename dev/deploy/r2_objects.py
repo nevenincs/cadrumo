@@ -20,6 +20,7 @@ from datetime import UTC, datetime
 from fnmatch import fnmatch
 from http.client import HTTPException, HTTPSConnection
 from pathlib import Path
+from types import MappingProxyType
 from typing import Final
 from urllib.parse import quote
 
@@ -32,6 +33,7 @@ _SERVICE: Final[str] = "s3"
 _TIMEOUT_SECONDS: Final[int] = 60
 _ATTEMPTS: Final[int] = 3
 _S3_NAMESPACE: Final[str] = "{http://s3.amazonaws.com/doc/2006-03-01/}"
+_NO_QUERY: Final[Mapping[str, str]] = MappingProxyType(dict[str, str]())
 
 #: Content types decided here rather than read from the host's MIME registry,
 #: which differs between platforms (Windows maps ``.js`` from the registry) and
@@ -151,13 +153,12 @@ def _request(
     *,
     method: str,
     path: str,
-    query: Mapping[str, str] | None = None,
+    query: Mapping[str, str] = _NO_QUERY,
     body: bytes = b"",
     extra_headers: Mapping[str, str] | None = None,
     connection: HTTPSConnection | None = None,
 ) -> tuple[int, bytes]:
     """Send one signed request, retrying transport failures, and return status and body."""
-    query = query or {}
     target = path
     if query:
         target += "?" + "&".join(f"{quote(k, safe='-_.~')}={quote(v, safe='-_.~')}" for k, v in sorted(query.items()))
@@ -254,13 +255,16 @@ def upload_tree(
     prefix: str,
     cache_control: str,
     excludes: Iterable[str] = (),
-    workers: int = 16,
+    workers: int = 64,
     report: Callable[[int, int], None] | None = None,
 ) -> set[str]:
     """Upload every file under ``root`` below ``prefix`` and return the written keys.
 
     Each worker thread keeps one connection, so a release of thousands of small
-    files costs one TLS handshake per thread rather than one per object.
+    files costs one TLS handshake per thread rather than one per object. A
+    release is tens of thousands of small objects, most of them search-index
+    fragments, and each PUT waits a round trip on R2 rather than on bandwidth or
+    CPU, so the throughput scales with the number of requests in flight.
     """
     files = files_to_publish(root, excludes=excludes)
     local = threading.local()
