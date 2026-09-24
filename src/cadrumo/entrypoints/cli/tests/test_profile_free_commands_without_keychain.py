@@ -40,7 +40,6 @@ def _run(storage_root: Path, *args: str, stdin_payload: str | None = None) -> su
         args,
         settings={
             "cadrumo_local_storage_root": storage_root,
-            "cadrumo_secret_store_dir": storage_root / "fallback-store",
             "cadrumo_secret_passphrase": _passphrase(),
             "cadrumo_output_language": "en",
             "cadrumo_llm_ollama_chat_url": _CLOSED_RUNTIME,
