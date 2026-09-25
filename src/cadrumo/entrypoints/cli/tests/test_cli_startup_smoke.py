@@ -12,6 +12,8 @@ import pytest
 
 from cadrumo.tests.audited_process import run_audited_process
 
+from ....core.storage_taxonomy import StorageCategory
+from ....core.storage_taxonomy_locations import storage_location
 from ....tests.inventory import REPO_ROOT
 from .subprocess_cli import as_text_completed_process
 
@@ -89,8 +91,8 @@ def test_app_modelo_list_starts_without_unlocking_active_profile(tmp_path: Path)
     _assert_no_startup_crash(output)
     assert "code\ttitle\tcadence\tdomain\trevisions\tlocal_work\tlocal_work_guidance" in output
     assert "303" in output
-    assert (tmp_path / "cache" / "llm-cache").is_dir()
-    assert (tmp_path / "cache" / "corpus-search").is_dir()
+    assert (tmp_path / storage_location(StorageCategory.LLM_CACHE).relative_path()).is_dir()
+    assert (tmp_path / storage_location(StorageCategory.CORPUS_SEARCH_CACHE).relative_path()).is_dir()
 
 
 def test_normal_startup_refuses_a_missing_environment_directory_override(

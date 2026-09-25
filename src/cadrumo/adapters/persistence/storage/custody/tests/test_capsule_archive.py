@@ -14,6 +14,7 @@ from uuid import UUID
 import pytest
 
 from cadrumo.adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
+from cadrumo.adapters.persistence.storage.custody.paths import profile_custody_path
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
 )
@@ -29,6 +30,7 @@ from cadrumo.application.user_profile.capsule_restore import restore_profile_cap
 from cadrumo.application.user_profile.custody_ports import profile_custody_recovery_envelope_path
 from cadrumo.application.user_profile.recovery_custody import enroll_profile_recovery
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
+from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.domain.user_profile.values import UserProfileFact
 
 if TYPE_CHECKING:
@@ -142,7 +144,9 @@ def test_the_recovery_wrapper_is_excluded_from_archive_and_import(tmp_path: Path
         )
 
         assert restored.recovery_enrolled is False
-        carried = destination / "buckets" / profile_id / "custody" / "recovery.v1.json"
+        carried = profile_custody_path(
+            UUID(profile_id), StorageCategory.PROFILE_CAPSULE_RECOVERY_ENVELOPE, root=destination
+        )
         assert not carried.exists()
 
 

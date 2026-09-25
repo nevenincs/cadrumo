@@ -29,6 +29,7 @@ import pytest
 from .....core.config import override_settings
 from .....core.config_support import LLMProvider
 from .....core.storage_taxonomy import StorageCategory
+from .....core.storage_taxonomy_locations import storage_location
 from .....tests.storage_scope import storage_overrides
 from ....persistence.llm.cache import LLMCache
 from ....persistence.llm.run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
@@ -115,6 +116,6 @@ def test_a_non_conforming_usage_filename_is_rejected_by_the_grammar(tmp_path: Pa
 
 def test_a_non_conforming_cache_path_is_rejected_by_the_grammar(tmp_path: Path) -> None:
     """Positive control: a cache path missing the provider/model nesting fails."""
-    malformed = tmp_path / "cache" / "llm-cache" / "not-nested-enough.json"
+    malformed = tmp_path / storage_location(StorageCategory.LLM_CACHE).relative_path() / "not-nested-enough.json"
     with pytest.raises(AssertionError):
         assert_path_matches_grammar(key="llm_cache_entry", root=tmp_path, produced=malformed)

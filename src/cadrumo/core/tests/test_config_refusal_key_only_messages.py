@@ -25,6 +25,8 @@ from ..config import load_settings, override_settings
 from ..errors.error_codes import get_registered_error_code
 from ..errors.hierarchy import CoreValidationError
 from ..storage_materialization import ensure_storage_tree
+from ..storage_taxonomy import StorageCategory
+from ..storage_taxonomy_locations import storage_location
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -176,16 +178,20 @@ def test_storage_tree_mkdir_failure_refusal_is_key_only(tmp_path: Path) -> None:
     the second of the two refusal branches: the tree could not be completed,
     rather than a target being occupied outright.
     """
+    llm_cache_relative = storage_location(StorageCategory.LLM_CACHE).relative_path()
     root = tmp_path / "unmakeable-root"
     root.mkdir()
-    (root / "cache").write_text("a file blocking the nested taxonomy branch", encoding="utf-8")
+    (root / llm_cache_relative.parent).write_text(
+        "a file blocking the nested taxonomy branch",
+        encoding="utf-8",
+    )
 
     with override_settings(cadrumo_local_storage_root=str(root)), pytest.raises(CoreValidationError) as excinfo:
         ensure_storage_tree(load_settings())
 
     context = excinfo.value.context
     assert context is not None
-    assert context["state_directory_target"] == str(root / "cache" / "llm-cache")
+    assert context["state_directory_target"] == str(root / llm_cache_relative)
     assert context["occupied_by_file"] is False
     assert context["directory_created"] is False
     assert isinstance(context["mkdir_error_type"], str)

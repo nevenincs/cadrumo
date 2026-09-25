@@ -10,6 +10,8 @@ from uuid import UUID, uuid4
 from sqlalchemy.exc import SQLAlchemyError
 
 from ...core.profile_publication import ProfilePublicationKind
+from ...core.storage_taxonomy import StorageCategory
+from ...core.storage_taxonomy_locations import storage_location
 from ...domain.user_profile.values import UserProfileRecord
 from .aggregate import CommittedProfileView, ProfileRestoreAuthority
 from .capsule_record import (
@@ -186,7 +188,7 @@ class ProfileCapsuleLifecycle:
         database_bytes: bytes,
     ) -> None:
         """Stage a supplied canonical DB and authenticate it before publication."""
-        database = stage_path / "db" / "cadrumo.db"
+        database = stage_path / storage_location(StorageCategory.BUCKET_DATABASE_FILE).relative_path()
         database.parent.mkdir(mode=0o700, exist_ok=False)
         database.write_bytes(database_bytes)
         (stage_path / "blobs").mkdir(mode=0o700, exist_ok=False)

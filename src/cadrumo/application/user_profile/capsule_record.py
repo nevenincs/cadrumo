@@ -23,6 +23,8 @@ from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import canonical_json_bytes, sha256_hex
 from ...core.paths import effective_storage_root
 from ...core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID, SecureObjectWrite
+from ...core.storage_taxonomy import StorageCategory
+from ...core.storage_taxonomy_locations import storage_location
 from ...core.type_guards import is_object_dict
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import append_bucket_event, build_bucket_event
@@ -352,7 +354,7 @@ class ProfileRecordStore:
         :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
         """
         self.session.assert_initial_record(record)
-        database_file = stage_path / "db" / "cadrumo.db"
+        database_file = stage_path / storage_location(StorageCategory.BUCKET_DATABASE_FILE).relative_path()
         (stage_path / "blobs").mkdir(mode=0o700, exist_ok=False)
         with _secure_objects_for_record(self.session, root=self._root, database_file=database_file) as objects:
             self._write_with_event(
@@ -374,7 +376,7 @@ class ProfileRecordStore:
         against that schema instead; it is restored as stored and carried
         forward on the first open, like any other record of that age.
         """
-        database_file = stage_path / "db" / "cadrumo.db"
+        database_file = stage_path / storage_location(StorageCategory.BUCKET_DATABASE_FILE).relative_path()
         if not database_file.is_file() or database_file.is_symlink():
             raise ProfileRecordIntegrityError("restore stage does not contain a regular profile database")
         with _secure_objects_for_record(self.session, root=self._root, database_file=database_file) as objects:

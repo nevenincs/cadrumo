@@ -29,6 +29,8 @@ from cadrumo.application.user_profile.profile_schema_migration import (
     migrate_profile_record_on_open,
 )
 from cadrumo.application.user_profile.projections import projection_for_taxpayer
+from cadrumo.core.storage_taxonomy import StorageCategory
+from cadrumo.core.storage_taxonomy_locations import storage_location
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.calculations.registry.applicability import ApplicabilityVerdict, derive_modelo_applicability
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
@@ -254,7 +256,7 @@ def test_a_restored_v6_capsule_is_accepted_and_migrates_on_first_open(
 ) -> None:
     session, stored, root = v6_capsule
     store = ProfileRecordStore(session=session, root=root)
-    database = root / "restore-stage" / "db" / "cadrumo.db"
+    database = root / "restore-stage" / storage_location(StorageCategory.BUCKET_DATABASE_FILE).relative_path()
     database.parent.mkdir(parents=True)
     source = next(root.rglob("cadrumo.db"))
     database.write_bytes(source.read_bytes())

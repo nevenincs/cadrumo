@@ -18,6 +18,8 @@ from pathlib import Path
 import pytest
 
 from .....core.secure_object_write import SecureObjectWrite
+from .....core.storage_taxonomy import StorageCategory
+from .....core.storage_taxonomy_locations import storage_location
 from ..errors import StorageError, StorageValidationError
 from ..master_key.active_session import activate_session
 from ..master_key.bucket_session import BucketSession
@@ -49,7 +51,12 @@ def _session(bucket_id: str) -> BucketSession:
 
 def _staging_database(tmp_path: Path) -> Path:
     """Return a staging path shaped like the one capsule creation writes."""
-    return tmp_path / "capsules" / f".{_BUCKET_ID}.staging-transaction" / "db" / "cadrumo.db"
+    return (
+        tmp_path
+        / "capsules"
+        / f".{_BUCKET_ID}.staging-transaction"
+        / storage_location(StorageCategory.BUCKET_DATABASE_FILE).relative_path()
+    )
 
 
 def test_staged_repository_round_trips_a_real_row_before_publication(tmp_path: Path) -> None:
@@ -159,7 +166,12 @@ def test_staged_repository_refuses_a_path_inside_an_unpublished_bucket(tmp_path:
     creating the directory here would occupy the destination publication has
     to claim.
     """
-    database_file = tmp_path / "buckets" / _BUCKET_ID / "db" / "cadrumo.db"
+    database_file = (
+        tmp_path
+        / storage_location(StorageCategory.BUCKETS).relative_path()
+        / _BUCKET_ID
+        / storage_location(StorageCategory.BUCKET_DATABASE_FILE).relative_path()
+    )
 
     with (
         EphemeralBucketSession(),

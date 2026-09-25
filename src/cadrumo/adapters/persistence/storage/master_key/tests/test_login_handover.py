@@ -70,6 +70,8 @@ from cadrumo.core import config as config_module
 from cadrumo.core.bucket_pointer import BucketPointer, read_pointer, write_pointer
 from cadrumo.core.config import Settings
 from cadrumo.core.profile_session import ProfileSessionRefusalReason
+from cadrumo.core.storage_taxonomy import StorageCategory
+from cadrumo.core.storage_taxonomy_locations import storage_location
 from cadrumo.core.time.clock import now as _now
 from cadrumo.domain.buckets.event_repository import BucketEventHistoryPersistenceError
 from cadrumo.tests.os_keychain_hook import require_os_credential_store
@@ -1031,7 +1033,13 @@ def test_invalid_b_candidate_material_leaves_active_a_and_pointer_bytes_intact(t
                 profile_a, profile_decode_context=_profile_decode_context_for_test
             )
             pointer_a = read_pointer(storage_root)
-            sentinel_path = storage_root / "buckets" / profile_b / "data" / PROFILE_CUSTODY_SENTINEL_FILENAME
+            sentinel_path = (
+                storage_root
+                / storage_location(StorageCategory.BUCKETS).relative_path()
+                / profile_b
+                / storage_location(StorageCategory.PROFILE_CAPSULE_DATA).relative_path()
+                / PROFILE_CUSTODY_SENTINEL_FILENAME
+            )
             sentinel_path.write_bytes(b"not-a-current-custody-sentinel")
 
             with pytest.raises(ProfileCustodyRecordError):
@@ -1072,7 +1080,12 @@ def test_corrupt_b_activation_store_rolls_back_every_a_authority(tmp_path: Path)
             a_session_path = profile_session_path(storage_root=storage_root, profile_id=UUID(profile_a))
             a_session_before = a_session_path.read_bytes() if a_session_path.is_file() else None
             b_session_path = profile_session_path(storage_root=storage_root, profile_id=UUID(profile_b))
-            database_path = storage_root / "buckets" / profile_b / "db" / "cadrumo.db"
+            database_path = (
+                storage_root
+                / storage_location(StorageCategory.BUCKETS).relative_path()
+                / profile_b
+                / storage_location(StorageCategory.BUCKET_DATABASE_FILE).relative_path()
+            )
             assert database_path.is_file(), "B must have the committed current event store registration created"
             database_path.write_bytes(b"corrupt-current-b-event-store")
 

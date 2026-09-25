@@ -31,12 +31,13 @@ produces a location, and only the declared producers may do that.
 This is deliberately narrower than "the storage root has exactly one reader":
 reading the root is legitimate, so that property would be false by design.
 
-**A second, different property is not covered here at all**: that a test must
-not hardcode a taxonomy-governed directory or file name. That is literal
-vocabulary, not join provenance, and it lives in the settings-lifecycle gate,
-which scans production modules only. Extending it across the test corpus is
-its own burndown. Neither gate subsumes the other -- a literal scan cannot see
-a path built by joining, and this gate cannot see a name spelled out in full.
+**A second, different property is not covered here at all**: that a module
+must not hardcode a taxonomy-governed directory or file name. That is literal
+vocabulary, not join provenance, and it lives in
+:mod:`~core.tests.test_settings_lifecycle_gate`, which scans production code
+and the test corpus alike. Neither gate subsumes the other -- a literal scan
+cannot see a path built by joining, and this gate cannot see a name spelled
+out in full.
 
 Following a rebind
 ------------------

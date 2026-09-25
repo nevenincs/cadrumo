@@ -46,6 +46,8 @@ import pytest
 
 from ....core.errors.error_codes import ErrorEnvelope
 from ....core.json_contract import ENVELOPE_SCHEMA_VERSION
+from ....core.storage_taxonomy import StorageCategory
+from ....core.storage_taxonomy_locations import storage_location
 from ....tests.cli_envelope import require_error_document
 from ._isolated_profile_storage_fixtures import active_profile_isolated_backend
 from .cli_runner import invoke_cached_cli
@@ -274,7 +276,7 @@ def test_crash_funnel_replaces_traceback_with_error_document(tmp_path: Path) -> 
     )
     assert logged_run.returncode == 6, logged_run.stderr
     assert "Traceback" not in logged_run.stderr
-    diagnostic_log = state_root / "logs" / "cadrumo.log"
+    diagnostic_log = state_root / storage_location(StorageCategory.LOG_FILE).relative_path()
     assert diagnostic_log.is_file(), f"no diagnostic log under {state_root}"
     logged = diagnostic_log.read_text(encoding="utf-8", errors="replace")
     assert "Traceback" in logged, "the crash traceback must reach the diagnostic log"

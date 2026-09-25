@@ -43,6 +43,8 @@ from ......application.user_profile.profile_record_repository import close_activ
 from ......application.user_profile.registration import register_profile_with_credentials
 from ......application.workflow.persistence import workflow_state_repository
 from ......core.bucket_pointer import resolve_active_bucket_id
+from ......core.storage_taxonomy import StorageCategory
+from ......core.storage_taxonomy_locations import storage_location
 from ......domain.user_profile.values import ProfileSetupState
 from ...custody.errors import ProfileCustodyRecordError
 from ...errors import StorageValidationError
@@ -149,7 +151,12 @@ def test_readback_depends_on_the_on_disk_custody_envelope(tmp_path: Path) -> Non
             profile_decode_context=_profile_decode_context_for_test,
         )
 
-        envelope = storage_root / "buckets" / outcome.bucket_id / "custody" / "envelope.v1.json"
+        envelope = (
+            storage_root
+            / storage_location(StorageCategory.BUCKETS).relative_path()
+            / outcome.bucket_id
+            / storage_location(StorageCategory.PROFILE_CAPSULE_PASSWORD_ENVELOPE).relative_path()
+        )
         assert envelope.is_file()
         envelope.write_text("{}", encoding="utf-8")
 

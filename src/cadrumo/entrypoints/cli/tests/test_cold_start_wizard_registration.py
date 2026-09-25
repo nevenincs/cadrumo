@@ -45,6 +45,8 @@ from pathlib import Path
 import pytest
 
 from ....core.config import Settings
+from ....core.storage_taxonomy import StorageCategory
+from ....core.storage_taxonomy_locations import storage_location
 from ....tests.inventory import REPO_ROOT
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -66,7 +68,7 @@ _SECRET_STORE_FILES: tuple[str, ...] = (
 
 
 def _workspace_secret_store_fingerprint() -> dict[str, tuple[int, int] | None]:
-    secret_root = REPO_ROOT / "var" / "secrets"
+    secret_root = REPO_ROOT / "var" / storage_location(StorageCategory.SECRETS).relative_path()
     fingerprint: dict[str, tuple[int, int] | None] = {}
     for filename in _SECRET_STORE_FILES:
         path = secret_root / filename

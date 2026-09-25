@@ -18,6 +18,7 @@ from ......core.directory_scan import scan_directory
 from ......core.hashing import prefixed_digest
 from ......core.profile_publication import ProfilePublicationKind
 from ......core.storage_taxonomy import StorageCategory
+from ......core.storage_taxonomy_locations import storage_location
 from ......tests.path_obstruction import obstructed_path
 from ..capsule import (
     install_committed_profile_custody_recovery_envelope,
@@ -409,8 +410,8 @@ def test_capsule_summary_witness_observes_only_validated_commit_and_uuid_bound_l
     )
     # If the summary path crosses custody or sentinel boundaries, these real
     # non-regular members make the accidental read fail loudly.
-    (capsule / "custody" / "envelope.v1.json").unlink()
-    (capsule / "custody" / "envelope.v1.json").mkdir()
+    (capsule / storage_location(StorageCategory.PROFILE_CAPSULE_PASSWORD_ENVELOPE).relative_path()).unlink()
+    (capsule / storage_location(StorageCategory.PROFILE_CAPSULE_PASSWORD_ENVELOPE).relative_path()).mkdir()
     (capsule / "data" / PROFILE_CUSTODY_SENTINEL_FILENAME).unlink()
     (capsule / "data" / PROFILE_CUSTODY_SENTINEL_FILENAME).mkdir()
 
@@ -651,7 +652,12 @@ def test_uncommitted_or_identity_mixed_capsules_are_not_usable(tmp_path: Path) -
 def test_discovery_refuses_a_retired_manifest_by_stat_only_without_opening_its_bytes(tmp_path: Path) -> None:
     """Retired custody is a typed refusal; its untrusted contents are never read."""
     settings = _settings(tmp_path)
-    retired = tmp_path / "buckets" / str(_PROFILE_ID) / "manifest.toml"
+    retired = (
+        tmp_path
+        / storage_location(StorageCategory.BUCKETS).relative_path()
+        / str(_PROFILE_ID)
+        / storage_location(StorageCategory.BUCKET_MANIFEST).relative_path()
+    )
     retired.parent.mkdir(parents=True)
     retired.write_bytes(b"retired manifest bytes must never be parsed")
     opened_retired_paths: list[object] = []
@@ -742,7 +748,12 @@ def test_a_store_retired_in_both_roots_pairs_each_match_with_the_root_it_was_fou
     observed.
     """
     settings = _settings(tmp_path)
-    retired_manifest = tmp_path / "buckets" / str(_PROFILE_ID) / "manifest.toml"
+    retired_manifest = (
+        tmp_path
+        / storage_location(StorageCategory.BUCKETS).relative_path()
+        / str(_PROFILE_ID)
+        / storage_location(StorageCategory.BUCKET_MANIFEST).relative_path()
+    )
     retired_manifest.parent.mkdir(parents=True)
     retired_manifest.write_bytes(b"retired manifest bytes must never be parsed")
     retired_dek = tmp_path / "keystore" / str(_PROFILE_ID) / "bucket.dek.json"
@@ -773,7 +784,12 @@ def test_the_refusal_never_names_the_candidate_directory_it_found_a_retired_memb
     whole of what the operator gets, and it must remain unresolved.
     """
     settings = _settings(tmp_path)
-    retired_manifest = tmp_path / "buckets" / str(_PROFILE_ID) / "manifest.toml"
+    retired_manifest = (
+        tmp_path
+        / storage_location(StorageCategory.BUCKETS).relative_path()
+        / str(_PROFILE_ID)
+        / storage_location(StorageCategory.BUCKET_MANIFEST).relative_path()
+    )
     retired_manifest.parent.mkdir(parents=True)
     retired_manifest.write_bytes(b"retired manifest bytes must never be parsed")
 
@@ -817,7 +833,7 @@ def test_a_current_store_with_live_keystore_sidecars_is_not_refused(tmp_path: Pa
 def test_discovery_refuses_an_invalid_current_marker_instead_of_skipping_it(tmp_path: Path) -> None:
     """A UUID candidate with a marker is current-format integrity state, never absence."""
     settings = _settings(tmp_path)
-    marker = tmp_path / "buckets" / str(_PROFILE_ID) / "profile.commit.v1.json"
+    marker = profile_custody_path(_PROFILE_ID, StorageCategory.PROFILE_CAPSULE_COMMIT, root=tmp_path)
     marker.parent.mkdir(parents=True)
     marker.write_bytes(b"not a current profile commit")
 

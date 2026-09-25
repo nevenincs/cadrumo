@@ -27,6 +27,8 @@ from .....application.workflow.profile_health import assess_active_profile_healt
 from .....application.workflow.state_models import WorkflowState
 from .....core.bucket_pointer import BucketPointer, read_pointer, write_pointer
 from .....core.config import override_settings
+from .....core.storage_taxonomy import StorageCategory
+from .....core.storage_taxonomy_locations import storage_location
 from .....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ..custody.records import (
     ProfileCustodyEnvelope,
@@ -42,6 +44,16 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 _PROFILE_ID = "31313131-3131-4313-8313-313131313131"
 _PROFILE_LABEL = "Operator"
 _DEK = bytes(range(32))
+
+
+def _bucket_relative_path(bucket_id: str, category: StorageCategory) -> Path:
+    """Compose a bucket-relative path from the taxonomy, without a hand-typed layout."""
+    return (
+        storage_location(StorageCategory.BUCKETS).relative_path()
+        / bucket_id
+        / storage_location(category).relative_path()
+    )
+
 
 _READY_FACTS: tuple[UserProfileFact, ...] = (
     UserProfileFact(path="identity.tax_id", value="00000000T"),
@@ -179,7 +191,7 @@ def test_pointer_to_malformed_current_marker_is_reported_as_capsule_integrity_no
     tmp_path: Path,
 ) -> None:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        marker = tmp_path / "buckets" / _PROFILE_ID / "profile.commit.v1.json"
+        marker = tmp_path / _bucket_relative_path(_PROFILE_ID, StorageCategory.PROFILE_CAPSULE_COMMIT)
         marker.parent.mkdir(parents=True)
         malformed = b"not a current commit"
         marker.write_bytes(malformed)
@@ -224,16 +236,16 @@ def test_health_observes_current_or_degraded_state_without_provider_or_recovery_
         ready_record_session.close()
         cold_record_session.close()
 
-        malformed_marker = malformed_root / "buckets" / _PROFILE_ID / "profile.commit.v1.json"
+        malformed_marker = malformed_root / _bucket_relative_path(_PROFILE_ID, StorageCategory.PROFILE_CAPSULE_COMMIT)
         malformed_marker.parent.mkdir(parents=True)
         malformed_marker.write_bytes(b"malformed current marker")
         write_pointer(malformed_root, BucketPointer.selected(bucket_id=_PROFILE_ID, transition_revision=1))
 
         secret_paths = tuple(root / "secrets" for root in (ready_root, absent_root, malformed_root, cold_root))
         recovery_paths = (
-            ready_root / "buckets" / _PROFILE_ID / "custody" / "recovery.v1.json",
-            cold_root / "buckets" / _PROFILE_ID / "custody" / "recovery.v1.json",
-            malformed_root / "buckets" / _PROFILE_ID / "custody" / "recovery.v1.json",
+            ready_root / _bucket_relative_path(_PROFILE_ID, StorageCategory.PROFILE_CAPSULE_RECOVERY_ENVELOPE),
+            cold_root / _bucket_relative_path(_PROFILE_ID, StorageCategory.PROFILE_CAPSULE_RECOVERY_ENVELOPE),
+            malformed_root / _bucket_relative_path(_PROFILE_ID, StorageCategory.PROFILE_CAPSULE_RECOVERY_ENVELOPE),
         )
         for path in secret_paths:
             path.mkdir(parents=True, exist_ok=True)
