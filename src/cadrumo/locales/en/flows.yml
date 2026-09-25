@@ -54,6 +54,7 @@ flows:
       running: Checking the profile and completing setup…
     edit:
       cancel: Cancel
+      choose_one: Choose one of the options, or cancel to leave the value unchanged.
       clear: Clear
       masked_kept: This value is hidden, so the box starts empty. Leave it empty to
         keep the value on record, or type a new one to replace it.
@@ -88,10 +89,10 @@ flows:
         wait.
       progress: '{answered} of {total} required answers'
       question: Question {number} of {total} · {section}
-      ready: All required answers are in. Press Continue to finish setup.
-      required_only: Show only required answers
+      ready: All required answers are in. Finish setup to start preparing your declarations.
+      required_only: Required only
       search_empty: No setting matches “{query}”.
-      search_placeholder: Search settings by name or value
+      search_placeholder: Search settings
       section_done: ✓ {title} - {present}/{total}
       section_pending: ✖ {title} - {missing} required
       sources_summary: Fill the profile from AEAT records or your own documents instead

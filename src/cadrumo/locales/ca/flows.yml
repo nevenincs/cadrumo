@@ -55,6 +55,7 @@ flows:
       running: Comprovant el perfil i completant la configuració…
     edit:
       cancel: Cancel·la
+      choose_one: Tria una de les opcions, o cancel·la per deixar el valor sense canvis.
       clear: Esborra
       masked_kept: Aquest valor està ocult, per això el camp comença buit. Deixa'l
         buit per conservar el valor desat o escriu-ne un de nou per substituir-lo.
@@ -89,11 +90,11 @@ flows:
         pot esperar.
       progress: '{answered} de {total} respostes obligatòries'
       question: Pregunta {number} de {total} · {section}
-      ready: Ja tens totes les respostes obligatòries. Prem Continua per acabar la
-        configuració.
-      required_only: Mostra només les respostes obligatòries
+      ready: Ja tens totes les respostes obligatòries. Acaba la configuració per començar
+        a preparar les teves declaracions.
+      required_only: Només obligatòries
       search_empty: Cap ajust no coincideix amb «{query}».
-      search_placeholder: Cerca ajustos per nom o valor
+      search_placeholder: Cercar ajustos
       section_done: ✓ {title} - {present}/{total}
       section_pending: ✖ {title} - {missing} obligatòries
       sources_summary: Omple el perfil a partir dels registres de l'AEAT o dels teus

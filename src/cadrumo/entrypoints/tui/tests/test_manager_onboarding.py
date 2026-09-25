@@ -166,6 +166,8 @@ async def test_continue_walks_every_required_answer_then_finishes_setup(tmp_path
             assert not app.overview.missing_required
             button = app.query_one("#onboarding-continue", Button)
             assert str(button.label) == tr("flows.manager.onboarding.finish")
+            await pilot.pause()
+            assert button.size.width >= len(str(button.label)), "the new action label is clipped to the old width"
 
             await pilot.click("#onboarding-continue")
             await wait_until_settled(app, pilot)
@@ -250,4 +252,41 @@ async def test_a_finished_profile_opens_without_the_walk(tmp_path) -> None:
             assert not app.query("#manager-onboarding")
             assert not app.query_one("#manager-required-only", Checkbox).value
             assert len(_visible_rows(app)) == overview.total_count
+            pilot.app.exit(None)
+
+
+@pytest.mark.asyncio
+async def test_a_choice_question_offers_words_and_refuses_an_empty_save(tmp_path) -> None:
+    """Choices read as labels, and Save with nothing picked asks for a pick instead of cancelling."""
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        _register()
+        overview = _live_overview()
+        app = ProfileManagerScreen(overview, persist=_persist, complete_setup=_complete_setup)
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
+            await pilot.pause()
+            await pilot.click("#onboarding-continue")
+            await pilot.pause()
+            # The first required question is typed; answer it to reach a choice.
+            for _ in range(len(overview.missing_required)):
+                dialog = app.app.screen
+                assert isinstance(dialog, FieldEditScreen)
+                if dialog._field.choices:
+                    break
+                await _answer(app, pilot)
+                await pilot.pause()
+            dialog = app.app.screen
+            assert isinstance(dialog, FieldEditScreen)
+            field = dialog._field
+            assert field.choices, "the walk must reach a choice question, or this proves nothing"
+            options = dialog.query_one("#edit-options", OptionList)
+            prompts = [str(options.get_option_at_index(index).prompt) for index in range(options.option_count)]
+            assert prompts == [choice.label for choice in field.choices]
+            assert not {choice.value for choice in field.choices} & set(prompts), "raw tokens offered as labels"
+
+            options.highlighted = None
+            await pilot.click("#btn-edit-save")
+            await pilot.pause()
+            assert app.app.screen is dialog
+            assert str(dialog.query_one("#edit-refusal", Static).content) == tr("flows.manager.edit.choose_one")
+            assert app._walking
             pilot.app.exit(None)

@@ -160,6 +160,11 @@ profile:
           label: Epígraf IAE
       attribution_entity:
         legal_form:
+          choices:
+            comunidad_bienes: Comunitat de béns
+            herencia_yacente: Herència jacent
+            other: Una altra
+            sociedad_civil: Societat civil
           label: Forma jurídica de l'entitat en atribució
       attribution_entity_socios:
         base_imponible_assigned:
@@ -199,6 +204,10 @@ profile:
         rendimiento_neto_previo_eo:
           label: Rendiment net previ (estimació objectiva)
         role:
+          choices:
+            comunero: Comuner
+            participe: Partícip
+            socio: Soci
           label: Paper del membre
         share_pct:
           label: Percentatge de participació
@@ -245,12 +254,20 @@ profile:
         elected_withholding_pct:
           label: Tipus de retenció triat
         establecimiento_type:
+          choices:
+            arrendado: Arrendat
+            cedido_gratuitamente: Cedit gratuïtament
+            propio: Propi
           label: Tipus d'establiment
         large_company:
           label: Condició de gran empresa
         public_administration_budget_gt_6000000:
           label: Pressupost d'administració pública superior a 6.000.000 EUR
         status:
+          choices:
+            alta: Alta
+            baja: Baixa
+            modificacion: Modificació
           label: Estat del cens
       contact:
         contact_person_name:
@@ -280,10 +297,17 @@ profile:
           label: NIF/NIE/CIF d'identificació
       irpf:
         activity_kind:
+          choices:
+            profesional: Activitat professional
+            sectorial: Activitat sectorial (tipus de l'art. 95 RIRPF)
           label: Tipus d'activitat
         art109_activity_income_withholding_ge_70pct:
           label: Compleix l'excepció del 70 % de l'art. 109 RIRPF
         estimation_regime:
+          choices:
+            directa_normal: Estimació directa normal
+            directa_simplificada: Estimació directa simplificada
+            objetiva: Estimació objectiva (mòduls)
           label: Règim d'estimació
         objective_estimation_modulos_iae_epigraph:
           label: Epígraf IAE (mòduls)
@@ -320,6 +344,9 @@ profile:
         professional_income_withholding_ge_70pct:
           label: Retenció professional arriba al 70 %
         special_regime:
+          choices:
+            general: Règim general
+            impatriado: Règim d'impatriats (art. 93 LIRPF)
           label: Règim especial
         special_regime_start_date:
           label: Data d'inici del règim especial
@@ -339,12 +366,22 @@ profile:
         intracommunity_operations_exceed_50000_eur:
           label: Operacions intracomunitàries superiors a 50.000 EUR
         m303_regime_composition:
+          choices:
+            general: Només règim general
+            mixed: Règim general i simplificat
+            simplified: Només règim simplificat
           label: Composició de règims del Model 303
         oss_enrolled:
           label: Inscripció a l'OSS/IOSS
         redeme_enrolled:
           label: Inscripció al REDEME
         regime:
+          choices:
+            EXENTO: Exempt
+            GENERAL: General
+            REAGP: Règim especial de l'agricultura, ramaderia i pesca (REAGP)
+            RECARGO_EQUIVALENCIA: Recàrrec d'equivalència
+            SIMPLIFICADO: Simplificat
           label: Règim d'IVA
         roi_enrolled:
           label: Inscripció al ROI/VIES
@@ -368,12 +405,25 @@ profile:
         tuna_fleet:
           label: Flota tonyinaire
         vessel_flag:
+          choices:
+            ES: Pavelló espanyol
+            foreign: Pavelló estranger
           label: Pavelló del vaixell
         vessel_registry:
+          choices:
+            REBECA: Registre Especial de Vaixells de Canàries (REBECA)
+            other: Una altra
+            rebeca_eu_eea: Naviliera REBECA amb vaixell en un altre registre UE/EEE
+            scheduled_canary_route: Línia regular Canàries - península
           label: Registre del vaixell
         waters_type:
+          choices:
+            international: Aigües internacionals
+            national: Aigües nacionals
           label: Tipus d'aigües
         worker_class:
+          choices:
+            trabajador_del_mar: Treballador del mar
           label: Classificació de treballador del mar
       obligations:
         bienes_extranjero_above_threshold:
@@ -393,9 +443,22 @@ profile:
         cadastral_reference:
           label: Referència cadastral
         use_type:
+          choices:
+            habitual: Habitatge habitual
+            imputed_income: Imputació de rendes (sense llogar)
+            mixed: Ús mixt
+            other: Una altra
+            rental: Llogat
           label: Ús de l'immoble
       provenance:
         source:
+          choices:
+            aeat_censo_read: Llegit del cens de l'AEAT
+            censo_artefact_g313: Llegit d'un certificat de situació censal aportat
+            manual_cli: Introduït a mà
+            modelo_036_import: Importat del model 036
+            registry_inference: Deduït de les regles del registre
+            setup_wizard: Assistent de configuració
           label: Origen de la dada
         valid_from:
           label: Vàlid des de
@@ -422,6 +485,12 @@ profile:
         minor_children_in_unit:
           label: Fills menors a la unitat familiar
         situacion_familiar:
+          choices:
+            casado: Casat o casada
+            pareja_hecho_no_registrada: Parella de fet no registrada
+            pareja_hecho_registrada: Parella de fet registrada
+            separado_divorciado: Separat o divorciat
+            soltero: Solter o soltera
           label: Situació familiar
         unidad_familiar_otros_miembros_base:
           label: Base imposable d'altres membres de la unitat familiar (Madrid)
@@ -430,6 +499,11 @@ profile:
           label: Tipus de declaració
       renta_rental:
         reduccion_art_23_2_tier_2024:
+          choices:
+            tier-50: Reducció del 50 %
+            tier-60: Reducció del 60 %
+            tier-70: Reducció del 70 %
+            tier-90: Reducció del 90 %
           label: Tram de reducció per lloguer (art. 23.2)
       renta_spouse:
         birth_date:
@@ -445,6 +519,9 @@ profile:
         non_resident_irpf:
           label: Cònjuge no resident (no contribuent IRPF)
         sex:
+          choices:
+            H: Home
+            M: Dona
           label: Sexe del cònjuge
         surnames:
           label: Cognoms del cònjuge
@@ -468,11 +545,33 @@ profile:
         marriage_month_start:
           label: Mes d'inici del matrimoni (calculat)
         sex:
+          choices:
+            H: Home
+            M: Dona
           label: Sexe
       tax_residence:
         ccaa:
+          choices:
+            andalucia: Andalusia
+            aragon: Aragó
+            asturias: Astúries
+            baleares: Illes Balears
+            canarias: Canàries
+            cantabria: Cantàbria
+            castilla_la_mancha: Castella-la Manxa
+            castilla_y_leon: Castella i Lleó
+            cataluna: Catalunya
+            comunidad_valenciana: Comunitat Valenciana
+            extremadura: Extremadura
+            galicia: Galícia
+            la_rioja: La Rioja
+            madrid: Comunitat de Madrid
+            murcia: Regió de Múrcia
           label: Comunitat autònoma de residència
         jurisdiction_scope:
+          choices:
+            common_regime: Territori comú
+            foral_unsupported: Territori foral (País Basc o Navarra) - encara no admès
           label: Règim territorial
       taxpayer_type:
         country_of_fiscal_residence:
@@ -480,14 +579,30 @@ profile:
         declaration_roles:
           label: Rols declarants de tercers (model 347)
         entity_type:
+          choices:
+            attribution_entity: Entitat en atribució de rendes
+            legal_entity: Persona jurídica (societat)
+            natural_person: Persona física
           label: Tipus de contribuent
         fiscal_residency:
+          choices:
+            non_resident_irnr: No resident (IRNR)
+            resident_irpf: Resident a Espanya (IRPF)
           label: Residència fiscal del contribuent
         incn_prior_12_months:
           label: INCN dels 12 mesos anteriors
         irpf_income_categories:
           label: Categories de renda IRPF
         legal_entity_form:
+          choices:
+            cooperativa: Cooperativa
+            other: Una altra
+            sa: Societat anònima (S.A.)
+            sal: Societat anònima laboral (S.A.L.)
+            sin_fines_lucrativos: Entitat sense finalitat lucrativa
+            sl: Societat limitada (S.L.)
+            sll: Societat limitada laboral (S.L.L.)
+            sociedad_civil_mercantil: Societat civil amb objecte mercantil
           label: Forma jurídica de l'entitat
         ley_49_2002_special_regime_option_date:
           label: Data d'opció pel règim de la Llei 49/2002

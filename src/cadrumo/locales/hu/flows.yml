@@ -54,6 +54,8 @@ flows:
       running: A profil ellenőrzése és a beállítás befejezése…
     edit:
       cancel: Mégse
+      choose_one: Válasszon egy lehetőséget, vagy a mégse gombbal hagyja változatlanul
+        az értéket.
       clear: Törlés
       masked_kept: Ez az érték rejtett, ezért a mező üresen indul. Hagyd üresen a
         megőrzéshez, vagy írj be egy újat a cseréhez.
@@ -88,11 +90,11 @@ flows:
         és ráér később.
       progress: '{answered} / {total} kötelező válasz'
       question: '{number}. kérdés / {total} · {section}'
-      ready: Minden kötelező válasz megvan. A beállítás befejezéséhez nyomja meg a
-        Tovább gombot.
-      required_only: Csak a kötelező válaszok mutatása
+      ready: Minden kötelező válasz megvan. Fejezze be a beállítást, és kezdje el
+        a bevallások elkészítését.
+      required_only: Csak kötelezők
       search_empty: 'Egyetlen beállítás sem egyezik ezzel: „{query}”.'
-      search_placeholder: Beállítások keresése név vagy érték szerint
+      search_placeholder: Beállítások keresése
       section_done: ✓ {title} - {present}/{total}
       section_pending: ✖ {title} - {missing} kötelező
       sources_summary: Töltse ki a profilt az AEAT nyilvántartásaiból vagy saját dokumentumaiból

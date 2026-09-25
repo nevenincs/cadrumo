@@ -214,7 +214,7 @@ class FieldEditScreen(ModalScreen[str | None]):
                 hint = profile_field_shape_hint(self._field.field_type)
                 if hint:
                     yield Static(hint, id="edit-hint")
-                yield Static(id="edit-refusal")
+            yield Static(id="edit-refusal")
             if self._box_hides_a_value:
                 yield Static(tr("flows.manager.edit.masked_kept"), id="edit-masked-note")
             with Horizontal(id="edit-actions"):
@@ -270,7 +270,15 @@ class FieldEditScreen(ModalScreen[str | None]):
     def _dismiss_highlighted_option(self) -> None:
         highlighted = self.query_one("#edit-options", OptionList).highlighted
         if highlighted is None:
-            self.dismiss(None)
+            if self._field.masked and self._field.present:
+                # A hidden answer pre-selects nothing, so an empty save is how
+                # the operator keeps it.
+                self.dismiss(None)
+                return
+            # Otherwise nothing chosen is not a cancellation: say what is
+            # missing and keep the question open, rather than closing it as
+            # though the operator had asked to leave the value alone.
+            self.query_one("#edit-refusal", Static).update(tr("flows.manager.edit.choose_one"))
             return
         self.dismiss(self._field.choices[highlighted].value)
 
@@ -453,7 +461,15 @@ class ProfileManagerScreen(AccountChromeScreen):
         + tokenised("""
     #manager-onboarding { height: auto; padding: $cadrumo-space-0 $cadrumo-gutter; }
     #onboarding-heading { text-style: bold; }
-    #onboarding-intro { color: $text-muted; }
+    #onboarding-intro { color: $text-muted; margin-bottom: $cadrumo-space-1; }
+    #onboarding-actions { height: auto; }
+    #onboarding-continue { width: auto; }
+    #onboarding-step {
+        width: 1fr;
+        height: auto;
+        padding-left: $cadrumo-control-gap;
+        content-align: left middle;
+    }
     #onboarding-progress { width: 100%; }
     #onboarding-progress Bar { width: 1fr; }
     #manager-tools { height: auto; padding: $cadrumo-space-0 $cadrumo-gutter; }
@@ -633,16 +649,21 @@ class ProfileManagerScreen(AccountChromeScreen):
         yield Static(id="manager-banner", classes="cadrumo-banner")
         yield PinnedStatusBar(id="manager-status")
         if self._onboarding:
+            # Only what the operator acts on stays pinned: where they are and
+            # the one control that moves them on. The explanation scrolls with
+            # the page, so a short terminal still has room for the questions.
             with Vertical(id="manager-onboarding"):
                 yield Static(id="onboarding-heading", markup=False)
-                yield Static(id="onboarding-intro", markup=False)
                 yield ProgressBar(id="onboarding-progress", show_eta=False)
-                yield Static(id="onboarding-step", markup=False)
-                yield Button("", id=_CONTINUE_BUTTON_ID, classes="-primary", compact=True)
+                with Horizontal(id="onboarding-actions"):
+                    yield Button("", id=_CONTINUE_BUTTON_ID, classes="-primary", compact=True)
+                    yield Static(id="onboarding-step", markup=False)
         with Horizontal(id="manager-tools"):
             yield Input(id=_SEARCH_ID, compact=True)
             yield Checkbox("", value=self._required_only, id=_REQUIRED_ONLY_ID, compact=True)
         with ContentScroll(id="manager-body", classes="cadrumo-scroll"), Vertical(classes="cadrumo-column"):
+            if self._onboarding:
+                yield Static(id="onboarding-intro", markup=False)
             yield Vertical(id="manager-context")
             yield Static(id="manager-search-empty", classes="cadrumo-note", markup=False)
             # Filled by :meth:`_redraw`, not here: a card's text is fixed when
@@ -1112,7 +1133,12 @@ class ProfileManagerScreen(AccountChromeScreen):
         self.query_one("#onboarding-heading", Static).update(tr("flows.manager.onboarding.heading"))
         self.query_one("#onboarding-intro", Static).update(tr("flows.manager.onboarding.intro"))
         self.query_one("#onboarding-step", Static).update(f"{progress} · {step}")
-        self.query_one(f"#{_CONTINUE_BUTTON_ID}", Button).label = action
+        button = self.query_one(f"#{_CONTINUE_BUTTON_ID}", Button)
+        if str(button.label) != action:
+            button.label = action
+            # The label can change while a question covers the page; measure
+            # the button again so its new label is not clipped to the old width.
+            button.refresh(layout=True)
 
     async def _apply_overview(self, updated: ProfileOverview) -> None:
         """Show ``updated`` by repainting only what differs from the page on screen.

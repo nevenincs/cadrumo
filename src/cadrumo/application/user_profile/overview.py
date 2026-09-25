@@ -49,7 +49,12 @@ from ...core.identity.profile import ProfileId
 from ...core.json_contract import Notice
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.redaction.rules import ALWAYS_REDACT_KEY_TERMS
-from ...domain.user_profile.labels import profile_field_label, profile_section_summary, profile_section_title
+from ...domain.user_profile.labels import (
+    profile_choice_label,
+    profile_field_label,
+    profile_section_summary,
+    profile_section_title,
+)
 
 # ``ProfileSetupState`` is a pydantic FIELD type below, so it must resolve at
 # runtime; deferring it to TYPE_CHECKING leaves the model undefined and every
@@ -225,6 +230,12 @@ def profile_field_choices(
                 ClaveMovilRoute.APP_REQUEST.value: "flows.manager.action.auth_clave_movil_route_app_request",
             }
             return tuple(ProfileFieldChoice(value=token, label=tr(route_keys[token])) for token in field.enum_values)
+        if path is not None and "." in path:
+            section_key, field_key = path.split(".", 1)
+            return tuple(
+                ProfileFieldChoice(value=token, label=profile_choice_label(section_key, field_key, token))
+                for token in field.enum_values
+            )
         return tuple(ProfileFieldChoice(value=token, label=token) for token in field.enum_values)
     return ()
 

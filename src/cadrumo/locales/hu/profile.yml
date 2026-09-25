@@ -163,6 +163,11 @@ profile:
           label: IAE-epigrafus
       attribution_entity:
         legal_form:
+          choices:
+            comunidad_bienes: Közös tulajdon (comunidad de bienes)
+            herencia_yacente: Hagyaték (herencia yacente)
+            other: Egyéb
+            sociedad_civil: Polgári jogi társaság (sociedad civil)
           label: Hozzárendelő entitás jogi formája
       attribution_entity_socios:
         base_imponible_assigned:
@@ -203,6 +208,10 @@ profile:
         rendimiento_neto_previo_eo:
           label: Előzetes nettó jövedelem (objektív becslés)
         role:
+          choices:
+            comunero: Tulajdonostárs
+            participe: Részes
+            socio: Társ
           label: Tagi szerepkör
         share_pct:
           label: Részesedés aránya
@@ -249,12 +258,20 @@ profile:
         elected_withholding_pct:
           label: Választott forrásadókulcs
         establecimiento_type:
+          choices:
+            arrendado: Bérelt
+            cedido_gratuitamente: Ingyenesen átengedett
+            propio: Saját tulajdonú
           label: Telephely típusa
         large_company:
           label: Nagyvállalati minősítés
         public_administration_budget_gt_6000000:
           label: Közigazgatási költségvetés 6.000.000 EUR felett
         status:
+          choices:
+            alta: Bejelentkezett
+            baja: Kijelentkezett
+            modificacion: Adatmódosítás
           label: Censo állapota
       contact:
         contact_person_name:
@@ -284,10 +301,17 @@ profile:
           label: Adóazonosító (NIF/NIE/CIF)
       irpf:
         activity_kind:
+          choices:
+            profesional: Szakmai tevékenység
+            sectorial: Ágazati tevékenység (RIRPF 95. cikk szerinti kulcsok)
           label: Tevékenység típusa
         art109_activity_income_withholding_ge_70pct:
           label: Megfelel a RIRPF 109. cikk 70%-os kivételének
         estimation_regime:
+          choices:
+            directa_normal: Normál közvetlen becslés
+            directa_simplificada: Egyszerűsített közvetlen becslés
+            objetiva: Objektív becslés (módulos)
           label: Becslési rendszer
         objective_estimation_modulos_iae_epigraph:
           label: IAE-epigrafus (modulok)
@@ -324,6 +348,9 @@ profile:
         professional_income_withholding_ge_70pct:
           label: Szakmai forrásadó eléri a 70%-ot
         special_regime:
+          choices:
+            general: Általános rendszer
+            impatriado: Beköltözők különleges rendszere (LIRPF 93. cikk)
           label: Különleges adózási rend
         special_regime_start_date:
           label: Különleges rendszer kezdő dátuma
@@ -343,12 +370,23 @@ profile:
         intracommunity_operations_exceed_50000_eur:
           label: Közösségen belüli ügyletek 50.000 EUR felett
         m303_regime_composition:
+          choices:
+            general: Csak általános rendszer
+            mixed: Általános és egyszerűsített rendszer együtt
+            simplified: Csak egyszerűsített rendszer
           label: A 303-es nyomtatvány rendszerösszetétele
         oss_enrolled:
           label: OSS/IOSS-regisztráció
         redeme_enrolled:
           label: REDEME-regisztráció
         regime:
+          choices:
+            EXENTO: Adómentes
+            GENERAL: Általános
+            REAGP: Mezőgazdasági, állattenyésztési és halászati különleges rendszer
+              (REAGP)
+            RECARGO_EQUIVALENCIA: Kiegyenlítő pótlék (recargo de equivalencia)
+            SIMPLIFICADO: Egyszerűsített
           label: IVA-rendszer
         roi_enrolled:
           label: ROI/VIES-regisztráció
@@ -372,12 +410,25 @@ profile:
         tuna_fleet:
           label: Tonhalflotta
         vessel_flag:
+          choices:
+            ES: Spanyol lobogó
+            foreign: Külföldi lobogó
           label: Hajó lobogója
         vessel_registry:
+          choices:
+            REBECA: Kanári-szigeteki különleges hajólajstrom (REBECA)
+            other: Egyéb
+            rebeca_eu_eea: REBECA-társaság, más EU/EGT-lajstromban lévő hajó
+            scheduled_canary_route: Menetrendszerű Kanári-szigetek - szárazföld járat
           label: Hajólajstrom
         waters_type:
+          choices:
+            international: Nemzetközi vizek
+            national: Belföldi vizek
           label: Vízterület típusa
         worker_class:
+          choices:
+            trabajador_del_mar: Tengerész
           label: Trabajador del mar (besorolás)
       obligations:
         bienes_extranjero_above_threshold:
@@ -397,9 +448,22 @@ profile:
         cadastral_reference:
           label: Kataszteri hivatkozás
         use_type:
+          choices:
+            habitual: Fő lakóhely
+            imputed_income: Vélelmezett jövedelem (nem bérbe adott)
+            mixed: Vegyes használat
+            other: Egyéb
+            rental: Bérbe adott
           label: Ingatlan hasznosítása
       provenance:
         source:
+          choices:
+            aeat_censo_read: Az AEAT nyilvántartásából olvasva
+            censo_artefact_g313: Az ön által benyújtott adózói igazolásból olvasva
+            manual_cli: Kézzel megadva
+            modelo_036_import: 036-os nyomtatványból importálva
+            registry_inference: Nyilvántartási szabályokból levezetve
+            setup_wizard: Beállítási varázsló
           label: Adat eredete
         valid_from:
           label: Érvényes ettől
@@ -425,6 +489,12 @@ profile:
         minor_children_in_unit:
           label: Kiskorú gyermekek a családi egységben
         situacion_familiar:
+          choices:
+            casado: Házas
+            pareja_hecho_no_registrada: Nem bejegyzett élettársi kapcsolat
+            pareja_hecho_registrada: Bejegyzett élettársi kapcsolat
+            separado_divorciado: Különélő vagy elvált
+            soltero: Egyedülálló
           label: Családi helyzet
         unidad_familiar_otros_miembros_base:
           label: A családi egység többi tagjának adóalapja (Madrid)
@@ -433,6 +503,11 @@ profile:
           label: Bevallás típusa
       renta_rental:
         reduccion_art_23_2_tier_2024:
+          choices:
+            tier-50: 50 %-os csökkentés
+            tier-60: 60 %-os csökkentés
+            tier-70: 70 %-os csökkentés
+            tier-90: 90 %-os csökkentés
           label: Bérbeadási kedvezmény sávja (art. 23.2)
       renta_spouse:
         birth_date:
@@ -448,6 +523,9 @@ profile:
         non_resident_irpf:
           label: Házastárs nem rezidens (nem IRPF-adózó)
         sex:
+          choices:
+            H: Férfi
+            M: Nő
           label: Házastárs neme
         surnames:
           label: Házastárs vezetéknevei
@@ -471,11 +549,34 @@ profile:
         marriage_month_start:
           label: Házasság kezdő hónapja (számított)
         sex:
+          choices:
+            H: Férfi
+            M: Nő
           label: Nem
       tax_residence:
         ccaa:
+          choices:
+            andalucia: Andalúzia
+            aragon: Aragónia
+            asturias: Asztúria
+            baleares: Baleár-szigetek
+            canarias: Kanári-szigetek
+            cantabria: Kantábria
+            castilla_la_mancha: Kasztília-La Mancha
+            castilla_y_leon: Kasztília és León
+            cataluna: Katalónia
+            comunidad_valenciana: Valenciai Közösség
+            extremadura: Extremadura
+            galicia: Galicia
+            la_rioja: La Rioja
+            madrid: Madrid
+            murcia: Murcia
           label: Lakóhely szerinti autonóm közösség
         jurisdiction_scope:
+          choices:
+            common_regime: Közös területi rendszer
+            foral_unsupported: Forális terület (Baszkföld vagy Navarra) - még nem
+              támogatott
           label: Területi adórendszer
       taxpayer_type:
         country_of_fiscal_residence:
@@ -483,14 +584,30 @@ profile:
         declaration_roles:
           label: Harmadik feles bevallói szerepkörök (347-es modell)
         entity_type:
+          choices:
+            attribution_entity: Jövedelem-hozzárendelési jogalany
+            legal_entity: Jogi személy (társaság)
+            natural_person: Magánszemély
           label: Adózó típusa
         fiscal_residency:
+          choices:
+            non_resident_irnr: Nem spanyolországi illetőségű (IRNR)
+            resident_irpf: Spanyolországi illetőségű (IRPF)
           label: Adóügyi illetőség
         incn_prior_12_months:
           label: Előző 12 hónap nettó árbevétele
         irpf_income_categories:
           label: IRPF-jövedelemkategóriák
         legal_entity_form:
+          choices:
+            cooperativa: Szövetkezet
+            other: Egyéb
+            sa: Részvénytársaság (S.A.)
+            sal: Munkavállalói részvénytársaság (S.A.L.)
+            sin_fines_lucrativos: Nonprofit szervezet
+            sl: Korlátolt felelősségű társaság (S.L.)
+            sll: Munkavállalói korlátolt felelősségű társaság (S.L.L.)
+            sociedad_civil_mercantil: Kereskedelmi célú polgári jogi társaság
           label: Jogi forma
         ley_49_2002_special_regime_option_date:
           label: Ley 49/2002 választásának dátuma
