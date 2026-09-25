@@ -242,15 +242,16 @@ class Modelo200ProjectionRows(BaseModel):
 class Modelo200ProfileFacts(BaseModel):
     """The header facts modelo 200's export layout cites as operator-supplied.
 
-    All 132 ``m200.*`` producer keys resolved to nothing, so every one of these fields
-    rendered blank on a filed Impuesto sobre Sociedades return.
+    Every ``m200.*`` producer key the layout cites as a header arrives here, so a key
+    the operator never supplies renders blank on a filed Impuesto sobre Sociedades
+    return.
 
-    Two groups inside them are worth naming, because they are not operator facts at all
-    and the categorisation belongs to the layout rather than to this type. SIX are
-    ``identificador_de_fin_de_registro*`` at length 12 -- the record terminator, envelope
-    mechanics. TWENTY-ONE are period and date components the snapshot's :class:`Period`
-    and the draft's filing year already determine. Both are declared here because the
-    layout cites them as header producers; correcting that belongs in the semantic map.
+    One group inside them is still worth naming, because it is not an operator fact at
+    all and the categorisation belongs to the layout rather than to this type:
+    TWENTY-ONE are period and date components the snapshot's :class:`Period` and the
+    draft's filing year already determine. They are declared here because the layout
+    cites them as header producers; correcting that belongs in the semantic map, as the
+    record terminators' correction did.
 
     Six field names carry an ``apartado_`` prefix because AEAT numbers those apartados and
     the key tail begins with a digit, which is not a legal Python identifier. The prefix
@@ -322,12 +323,6 @@ class Modelo200ProfileFacts(BaseModel):
     fecha_de_nacimiento: str | None = None
     identificacion_ejercicio: str | None = None
     identificacion_tipo_de_ejercicio: str | None = None
-    identificador_de_fin_de_registro: str | None = None
-    identificador_de_fin_de_registro_2: str | None = None
-    identificador_de_fin_de_registro_3: str | None = None
-    identificador_de_fin_de_registro_4: str | None = None
-    identificador_de_fin_de_registro_5: str | None = None
-    identificador_de_fin_de_registro_6: str | None = None
     importe_a_devolver: str | None = None
     importe_a_ingresar: str | None = None
     importe_neto_de_la_cifra_de_negocios_de_los: str | None = None
