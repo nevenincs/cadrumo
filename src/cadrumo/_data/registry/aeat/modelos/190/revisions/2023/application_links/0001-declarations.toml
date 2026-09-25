@@ -1,0 +1,20 @@
+# The two links whose grounding is edition-specific, restated on this
+# edition's own record design. Every other link this edition carries is
+# inherited unchanged: they cite the AEAT modelo 190 procedure, which
+# applies across both exercises, or nothing edition-specific at all.
+
+[[revisions."2023".application_links]]
+id = "modelo-190-calculation"
+surface = "calculation"
+consumer = "cadrumo.domain.calculations.registry.calculate_registry_snapshot"
+requires_snapshot = true
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2023", "aeat-modelo-190-procedure"]
+
+[[revisions."2023".application_links]]
+id = "modelo-190-export"
+surface = "export"
+consumer = "cadrumo.application.filing.export_draft"
+requires_snapshot = true
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2023"]

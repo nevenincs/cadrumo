@@ -46,6 +46,9 @@ orden_aplicabilidad = [
 ]
 source_refs = ["aeat-dr-193-2024", "aeat-modelo-193-procedure"]
 family_storage_baseline = "2023"
+restated_families = [
+    { family = "bindings", cause = "official_structure_differs", reason = "Stated in full: this edition's binding family was authored end to end against aeat-dr-193-2024 and routes its declarante resumen through the modelo 123 annual relation prefills. The 2022 and 2023 editions carry own-record row-sum and row-count bindings instead, because the note that grounds the relation-prefill route opens in 2024 and covers no day of those exercises. Inheriting them would ADD to this edition members its own document never declares, citing designs whose applicability closed before this exercise began -- a capability change, not a refactor." },
+]
 
 [revisions."2024".family_dispositions.parameters]
 reason = """

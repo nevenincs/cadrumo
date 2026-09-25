@@ -155,7 +155,7 @@ id = "modelo-190-perceptor-row-territorial-deduccion"
 provider = { kind = "withholding", fact = "row_field", row_field = "territorial_deduction_clave", grouping = "per_perceptor_clave", record = "perceptor", data_type = "text" }
 value = { data_type = "text", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
-legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93", "ley-35-2006:art-68.4", "real-decreto-ley-4-2024:art-3", "real-decreto-ley-13-2025:art-2"]
+legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93", "ley-35-2006:art-68.4"]
 source_refs = ["aeat-dr-190-2020", "aeat-modelo-190-procedure"]
 
 [[revisions."2022".bindings.source_citations]]
@@ -251,7 +251,7 @@ id = "modelo-190-perceptor-row-reducciones"
 provider = { kind = "withholding", fact = "row_field", row_field = "reducciones_aplicables", grouping = "per_perceptor_clave", record = "perceptor", data_type = "money" }
 value = { data_type = "money", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
-legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-18", "ley-35-2006:art-32", "ley-58-2003:art-93"]
+legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-18", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-190-2020", "aeat-modelo-190-procedure"]
 
 [[revisions."2022".bindings.source_citations]]

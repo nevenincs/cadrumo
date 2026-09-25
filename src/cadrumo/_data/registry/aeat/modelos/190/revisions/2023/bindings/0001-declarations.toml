@@ -156,7 +156,7 @@ id = "modelo-190-perceptor-row-territorial-deduccion"
 provider = { kind = "withholding", fact = "row_field", row_field = "territorial_deduction_clave", grouping = "per_perceptor_clave", record = "perceptor", data_type = "text" }
 value = { data_type = "text", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
-legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93", "ley-35-2006:art-68.4", "real-decreto-ley-4-2024:art-3", "real-decreto-ley-13-2025:art-2"]
+legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93", "ley-35-2006:art-68.4"]
 source_refs = ["aeat-dr-190-2023", "aeat-modelo-190-procedure"]
 
 [[revisions."2023".bindings.source_citations]]
@@ -730,6 +730,136 @@ required_text = ["modelo 190"]
 [[revisions."2023".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
 required_text = ["modelo 190"]
+
+[[revisions."2023".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+# DECLARANTE RESUMEN TOTALS. The three type-1 summary fields are defined by the
+# design's own Contenido text as sums over this file's type-2 records, so they
+# are bound here rather than left operator-supplied:
+#   136-144 NUMERO TOTAL DE PERCEPCIONES -- "(Numero de registros de tipo 2.)"
+#   145-160 IMPORTE TOTAL DE LAS PERCEPCIONES -- "la suma de las cantidades ...
+#           reflejadas en las percepciones integras satisfechas (posiciones 82 a
+#           94, 109 a 121, 256 a 268 y 283-295 ...)"
+#   161-175 IMPORTE TOTAL DE LAS RETENCIONES E INGRESOS A CUENTA -- "la suma de
+#           las cantidades reflejadas en los campos ... (posiciones 95 a 107,
+#           122 a 134, y 269 a 281 y 296 a 308 ...)"
+# One binding per summed position range; the two money totals are assembled by
+# this revision's own formulas.
+
+[[revisions."2023".bindings]]
+id = "modelo-190-percepciones-anual"
+# Design positions 136-144: the count of type-2 records this declaration emits.
+provider = { kind = "withholding", fact = "percepcion_count" }
+value = { data_type = "integer", channel = "integer" }
+aggregation = { op = "count_distinct" }
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2023", "aeat-modelo-190-procedure"]
+
+[[revisions."2023".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2023".bindings]]
+id = "modelo-190-perceptor-rows-percepcion-dineraria-total"
+# Design positions 82-94 summed over the type-2 records.
+provider = { kind = "withholding", fact = "grouped_row_sum", grouping = "per_perceptor_clave", row_field = "percibido_dinerario" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2023", "aeat-modelo-190-procedure"]
+
+[[revisions."2023".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2023".bindings]]
+id = "modelo-190-perceptor-rows-percepcion-especie-total"
+# Design positions 109-121 summed over the type-2 records.
+provider = { kind = "withholding", fact = "grouped_row_sum", grouping = "per_perceptor_clave", row_field = "percibido_especie" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2023", "aeat-modelo-190-procedure"]
+
+[[revisions."2023".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2023".bindings]]
+id = "modelo-190-perceptor-rows-incapacidad-dineraria-total"
+# Design positions 256-268 summed over the type-2 records.
+provider = { kind = "withholding", fact = "grouped_row_sum", grouping = "per_perceptor_clave", row_field = "incapacity_cash_perception" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2023", "aeat-modelo-190-procedure"]
+
+[[revisions."2023".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2023".bindings]]
+id = "modelo-190-perceptor-rows-incapacidad-especie-total"
+# Design positions 283-295 summed over the type-2 records.
+provider = { kind = "withholding", fact = "grouped_row_sum", grouping = "per_perceptor_clave", row_field = "incapacity_kind_value" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2023", "aeat-modelo-190-procedure"]
+
+[[revisions."2023".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2023".bindings]]
+id = "modelo-190-perceptor-rows-retencion-practicada-total"
+# Design positions 95-107 summed over the type-2 records.
+provider = { kind = "withholding", fact = "grouped_row_sum", grouping = "per_perceptor_clave", row_field = "retencion_practicada" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2023", "aeat-modelo-190-procedure"]
+
+[[revisions."2023".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2023".bindings]]
+id = "modelo-190-perceptor-rows-ingreso-a-cuenta-total"
+# Design positions 122-134 summed over the type-2 records.
+provider = { kind = "withholding", fact = "grouped_row_sum", grouping = "per_perceptor_clave", row_field = "ingreso_a_cuenta" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2023", "aeat-modelo-190-procedure"]
+
+[[revisions."2023".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2023".bindings]]
+id = "modelo-190-perceptor-rows-incapacidad-retencion-total"
+# Design positions 269-281 summed over the type-2 records.
+provider = { kind = "withholding", fact = "grouped_row_sum", grouping = "per_perceptor_clave", row_field = "incapacity_cash_withholding" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2023", "aeat-modelo-190-procedure"]
+
+[[revisions."2023".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2023".bindings]]
+id = "modelo-190-perceptor-rows-incapacidad-ingreso-a-cuenta-total"
+# Design positions 296-308 summed over the type-2 records.
+provider = { kind = "withholding", fact = "grouped_row_sum", grouping = "per_perceptor_clave", row_field = "incapacity_kind_ingreso_a_cuenta" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2023", "aeat-modelo-190-procedure"]
 
 [[revisions."2023".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"

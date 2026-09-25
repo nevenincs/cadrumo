@@ -274,8 +274,8 @@ def build_validated_snapshot(
             legal_ids,
             filing_date=on or date(filing_year, 12, 31),
         )
-    _check_revision_scoped_legal_windows(modelo, revision, catalogues)
-    _check_revision_scoped_source_windows(modelo, revision, catalogues, endpoint_directory)
+    check_revision_scoped_legal_windows(modelo, revision, catalogues)
+    check_revision_scoped_source_windows(modelo, revision, catalogues, endpoint_directory)
     snapshot = RegistrySnapshot(
         modelo=modelo,
         revision=revision,
@@ -538,7 +538,7 @@ def legal_window_covers_devengo(revision: ModeloRevision, reference: LegalRefere
     return governs_to is None or governs_to >= revision.valid_to
 
 
-def _check_revision_scoped_legal_windows(
+def check_revision_scoped_legal_windows(
     modelo: ModeloDefinition,
     revision: ModeloRevision,
     catalogues: RegistryCatalogues,
@@ -754,7 +754,7 @@ def _construct_source_ids_without_deadline_closure(revision: ModeloRevision) -> 
     return source_ids
 
 
-def _check_revision_scoped_source_windows(
+def check_revision_scoped_source_windows(
     modelo: ModeloDefinition,
     revision: ModeloRevision,
     catalogues: RegistryCatalogues,
@@ -1028,6 +1028,8 @@ __all__ = [
     "SUBSTANTIVE_LAW_KINDS",
     "build_validated_snapshot",
     "check_snapshot_filing_capability",
+    "check_revision_scoped_legal_windows",
+    "check_revision_scoped_source_windows",
     "check_snapshot_filing_review_tier",
     "collect_snapshot_ref_ids",
     "legal_window_covers_devengo",

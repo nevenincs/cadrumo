@@ -86,6 +86,9 @@ legal_refs = [
 orden_aplicabilidad = ["orden-eha-3127-2009:art-1"]
 source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 family_storage_baseline = "2023"
+restated_families = [
+    { family = "bindings", cause = "official_structure_differs", reason = "Stated in full: this edition's binding family was authored end to end against aeat-dr-190-2024 and routes its declarante resumen through the modelo 111 annual relation prefills. The 2022 and 2023 editions carry per-position row-sum bindings instead, because the instruction sources that ground the relation-prefill route open in 2025 and cover no day of those exercises. Inheriting them would ADD to this edition eight members its own document never declares, each citing aeat-dr-190-2020, whose applicability closed 2022-12-31 -- a capability change, not a refactor." },
+]
 
 [revisions."2024".family_dispositions.projection_endpoints]
 reason = """

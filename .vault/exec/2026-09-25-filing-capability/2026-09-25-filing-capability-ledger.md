@@ -5,7 +5,7 @@ tags:
 date: '2026-09-25'
 modified: '2026-09-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:e1d44c77aefb239a9f8d96d4c2932ca4aa653aa22cea38ed7c62892d36e03f27'
+body_hash: 'sha256:31b544061fb29abbd9bd31866cdb7a5d8d4e592612af7d3379b762945a7dc8cd'
 related:
   - "[[2026-09-25-filing-capability-plan]]"
 ---
@@ -114,6 +114,22 @@ related:
 - `S15` `by:` `implementation-engineer-high`
 - `S40` `M` `src/cadrumo/_data/registry/aeat/modelos/576/revisions/2007/revision.toml`
 - `S40` `by:` `implementation-engineer-high`
+- `S22` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2024/revision.toml`
+- `S22` `M` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2024/revision.toml`
+- `S22` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2022/export_layouts/0001-declarations.toml`
+- `S22` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2022/bindings/0001-declarations.toml`
+- `S22` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2023/bindings/0001-declarations.toml`
+- `S22` `A` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2023/formulas/0001-declarations.toml`
+- `S22` `A` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2023/application_links/0001-declarations.toml`
+- `S22` `A` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2023/application_links/0001-declarations.toml`
+- `S22` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2022/constructs/0001-declarations.toml`
+- `S22` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2023/constructs/0001-declarations.toml`
+- `S22` `M` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2022/constructs/0001-declarations.toml`
+- `S22` `M` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2023/constructs/0001-declarations.toml`
+- `S22` `M` `src/cadrumo/_data/registry/aeat/facts/0146-m190-perceptor-casilla-clave-scope.toml`
+- `S22` `M` `src/cadrumo/domain/modelos/tests/test_perceptor_clave_scope.py`
+- `S22` `A` `dev/registry/tests/test_every_revision_cites_authority_inside_its_window.py`
+- `S22` `verify:` `uv run --no-sync python -m pytest src/cadrumo/adapters -q` -> `pass`
 
 ## Notes
 
@@ -127,3 +143,5 @@ related:
 - `S30` one artefact aeat-dr-222-2023-2024 governs both editions, so 2024 inherits the 2023 casilla, formula, parameter and manifest families and states only its own generated tree; grade reached calculation, not filing
 - `S15` blocked: no official pre-2023 anexo V with positional geometry. Checked BOE-A-1999-22372 (annex published as images, no field table), BOE-A-2017-15845 (partial, three fields only), BOE-A-2015-11074 (partial), BOE-A-2007-18192 (anexo IV hoja and instrucciones only) and the AEAT disenos-de-registro index for modelos 100-199, which lists DR_Mod_188_2023.pdf alone. No offset authored; step left open.
 - `S40` open: the pre-2008 row-19 reading is unsettled. The widened source, the 36-casilla surface and a 53-field layout tiling 1-1517 exactly once were staged and compiled clean, then withdrawn: the completeness gate refused because the 40-position parent at 514 writes over positions 520-527, which the design marks RESERVADO para AEAT inside its post-2008 desglose. Whether that reservation holds for devengo < 2008 is not stated anywhere in the design, and splitting the parent around it would be an invented layout. Nothing was promoted to the live tree.
+- `S22` Regression repair for 85fffd019e: the 2022/2023 families flowed forward into 2024/2025. Fixed with restated_families on the 2024 editions' binding family, per-edition re-grounding of the 2023 members, two out-of-window citations corrected, and the modelo 190 perceptor clave scope given its 2022 and 2023 editions. The registry gate that should have caught the citation defect did not exist; it does now.
+

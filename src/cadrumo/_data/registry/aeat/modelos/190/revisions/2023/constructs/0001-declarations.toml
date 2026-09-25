@@ -8,8 +8,8 @@
 
 [[revisions."2023".constructs]]
 id = "modelo-190-annual-summary"
-legal_refs = ["ley-35-2006:art-101", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-32", "ley-35-2006:art-58", "ley-35-2006:art-59", "ley-35-2006:art-60", "ley-35-2006:art-68.4", "ley-35-2006:art-99", "ley-58-2003:art-93", "orden-eha-3127-2009:art-1", "orden-eha-3127-2009:art-5", "rd-439-2007:art-108", "rd-439-2007:art-80", "rd-439-2007:art-86", "real-decreto-ley-13-2025:art-2", "real-decreto-ley-4-2024:art-3"]
-source_refs = ["aeat-dr-190-2020", "aeat-dr-190-2023", "aeat-modelo-190-procedure"]
+legal_refs = ["ley-35-2006:art-101", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-32", "ley-35-2006:art-58", "ley-35-2006:art-59", "ley-35-2006:art-60", "ley-35-2006:art-68.4", "ley-35-2006:art-99", "ley-58-2003:art-93", "orden-eha-3127-2009:art-1", "orden-eha-3127-2009:art-5", "rd-439-2007:art-108", "rd-439-2007:art-80", "rd-439-2007:art-86"]
+source_refs = ["aeat-dr-190-2023", "aeat-modelo-190-procedure"]
 casilla_ids = ["decl.percepciones-total", "decl.retenciones-total", "decl.total-percepciones"]
 formulas = ["modelo-190-percepciones-total", "modelo-190-retenciones-total"]
 bindings = [
