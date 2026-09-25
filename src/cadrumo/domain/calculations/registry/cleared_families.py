@@ -25,14 +25,13 @@ while reading as though it did.
 
 from __future__ import annotations
 
-from collections.abc import Iterable
 from enum import StrEnum
-from typing import Annotated, Final, cast
+from typing import Annotated, Final
 
 from pydantic import BeforeValidator, Field, field_validator
 
 from ....core.errors.hierarchy import pydantic_validation_boundary
-from ....core.type_guards import is_object_mapping
+from ....core.type_guards import is_object_collection, is_object_mapping
 from .errors import RegistryValidationError
 from .keyed_families import CASILLAS_FAMILY
 from .keyed_families import KEYED_FAMILY_SPECS as _CANONICAL_KEYED_FAMILY_SPECS
@@ -73,11 +72,10 @@ def cleared_family_names(declarations: object) -> frozenset[str]:
     nothing declines nothing and lets the edition be refused with the schema's
     error rather than a consumer's.
     """
-    if isinstance(declarations, str) or not isinstance(declarations, Iterable):
+    if not is_object_collection(declarations):
         return frozenset[str]()
-    entries = cast("Iterable[object]", declarations)
     names: set[str] = set()
-    for declaration in entries:
+    for declaration in declarations:
         family = declaration.get("family") if is_object_mapping(declaration) else getattr(declaration, "family", None)
         if isinstance(family, str):
             names.add(family)

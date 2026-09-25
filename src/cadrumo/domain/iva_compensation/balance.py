@@ -12,7 +12,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from datetime import date
 from decimal import Decimal
-from typing import Annotated, cast
+from typing import Annotated
 
 from pydantic import BaseModel, Field, NonNegativeInt
 
@@ -129,16 +129,15 @@ def _resolve_carry_window_years(
         raise RegistryValidationError(
             "IVA compensation carry-window resolution requires an explicit authority operation or scope",
         )
-    resolved = cast(
-        "ResolvedScalarFact",
-        authority.resolve_governed_fact(
-            ScalarFactQuery(
-                fact_id=_CARRY_WINDOW_FACT_ID,
-                date_axis=DateAxis.FILING_PERIOD,
-                effective_date=effective_date,
-            ),
+    resolved = authority.resolve_governed_fact(
+        ScalarFactQuery(
+            fact_id=_CARRY_WINDOW_FACT_ID,
+            date_axis=DateAxis.FILING_PERIOD,
+            effective_date=effective_date,
         ),
     )
+    if not isinstance(resolved, ResolvedScalarFact):
+        raise RegistryValidationError("IVA compensation carry-window fact must resolve as a scalar fact")
     value = resolved.payload.value
     if isinstance(value, bool) or not isinstance(value, int):
         raise RegistryValidationError(

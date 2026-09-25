@@ -17,7 +17,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from datetime import date, datetime
-from typing import Protocol, cast, runtime_checkable
+from typing import Protocol, runtime_checkable
 
 from pydantic import BaseModel, Field, NonNegativeInt
 
@@ -45,16 +45,15 @@ def retention_floor_years(
         raise RegistryValidationError(
             "retention-floor resolution requires an explicit authority operation or scope",
         )
-    resolved = cast(
-        "ResolvedScalarFact",
-        authority.resolve_governed_fact(
-            ScalarFactQuery(
-                fact_id=_RETENTION_FLOOR_FACT_ID,
-                date_axis=DateAxis.FILING_PERIOD,
-                effective_date=effective_date,
-            ),
+    resolved = authority.resolve_governed_fact(
+        ScalarFactQuery(
+            fact_id=_RETENTION_FLOOR_FACT_ID,
+            date_axis=DateAxis.FILING_PERIOD,
+            effective_date=effective_date,
         ),
     )
+    if not isinstance(resolved, ResolvedScalarFact):
+        raise RegistryValidationError("retention floor fact must resolve as a scalar fact")
     value = resolved.payload.value
     if isinstance(value, bool) or not isinstance(value, int):
         raise RegistryValidationError(

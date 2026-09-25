@@ -17,7 +17,7 @@ from datetime import date
 from decimal import Decimal
 from pathlib import Path
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Final, Self, cast, override
+from typing import TYPE_CHECKING, Final, Self, override
 
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
@@ -1098,10 +1098,8 @@ def _normalise_linked_transaction_ids(value: object) -> tuple[str, ...]:
     )
     seen: dict[str, None] = {}
     for item in OBJECT_TUPLE_ADAPTER.validate_python(value):
-        _normalization.raise_first_invoice_violation(
-            ((not isinstance(item, str), "each linked_transaction_id must be a string"),),
-        )
-        normalized = cast(str, item).strip().lower()
+        text = _normalization.require_invoice_text(item, "each linked_transaction_id must be a string")
+        normalized = text.strip().lower()
         _normalization.raise_first_invoice_violation(
             (
                 (

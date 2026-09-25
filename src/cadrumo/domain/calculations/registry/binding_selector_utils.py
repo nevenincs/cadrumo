@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from decimal import Decimal
-from typing import TYPE_CHECKING, Literal, Protocol, cast
+from typing import TYPE_CHECKING, Literal, Protocol
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -12,6 +12,7 @@ from ....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
+from ....core.type_guards import is_str_keyed_dict
 from .binding_aggregation import binding_aggregation_op
 from .errors import RegistryValidationError
 from .manual_input_selector import ManualInputProvider
@@ -335,8 +336,8 @@ def _restored_member_dump(member: BaseModel, dumped: dict[str, object]) -> dict[
     restored: dict[str, object] = dict(dumped)
     for name, value in dumped.items():
         child = getattr(member, name, None)
-        if isinstance(child, BaseModel) and isinstance(value, dict):
-            restored[name] = _restored_member_dump(child, cast("dict[str, object]", value))
+        if isinstance(child, BaseModel) and is_str_keyed_dict(value):
+            restored[name] = _restored_member_dump(child, value)
     tag = getattr(member, "kind", None)
     if tag is not None and "kind" not in restored:
         restored["kind"] = tag
@@ -360,8 +361,8 @@ def _restore_nested_discriminators(provider: BaseModel, dumped: dict[str, object
     restored: dict[str, object] = dict(dumped)
     for name, value in dumped.items():
         member = getattr(provider, name, None)
-        if isinstance(member, BaseModel) and isinstance(value, dict):
-            restored[name] = _restored_member_dump(member, cast("dict[str, object]", value))
+        if isinstance(member, BaseModel) and is_str_keyed_dict(value):
+            restored[name] = _restored_member_dump(member, value)
     return restored
 
 

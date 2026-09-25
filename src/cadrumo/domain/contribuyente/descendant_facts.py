@@ -52,7 +52,7 @@ import re
 from collections.abc import Mapping, Sequence
 from datetime import date
 from decimal import Decimal
-from typing import Final, Literal, TypedDict, cast
+from typing import Final, Literal, TypedDict, TypeIs
 
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.descendant_relacion import DescendantRelacion
@@ -163,6 +163,13 @@ def _disability_band_declarations(*, authority: GovernedFactSource | None = None
 
 type _DisabilityGrade = Literal[0, 33, 65]
 
+_DISABILITY_GRADES: Final[frozenset[_DisabilityGrade]] = frozenset({0, 33, 65})
+
+
+def _is_disability_grade(value: int) -> TypeIs[_DisabilityGrade]:
+    """Narrow a declared integer to the three statutory disability bands."""
+    return value in _DISABILITY_GRADES
+
 
 def _accepted_disability_grades(*, authority: GovernedFactSource | None = None) -> frozenset[_DisabilityGrade]:
     declarations = _disability_band_declarations(authority=authority)
@@ -174,9 +181,9 @@ def _accepted_disability_grades(*, authority: GovernedFactSource | None = None) 
         parsed = frozenset(int(token.strip()) for token in accepted.split(",") if token.strip())
     except ValueError as exc:
         raise RegistryValidationError("descendant disability catalogue has invalid accepted_grades") from exc
-    if not parsed.issubset({0, 33, 65}):
+    if not parsed.issubset(_DISABILITY_GRADES):
         raise RegistryValidationError("descendant disability catalogue declares unsupported accepted_grades")
-    return frozenset(cast(_DisabilityGrade, grade) for grade in parsed)
+    return frozenset(grade for grade in parsed if _is_disability_grade(grade))
 
 
 def _discapacidad_grade(

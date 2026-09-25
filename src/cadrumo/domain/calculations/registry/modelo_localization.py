@@ -6,11 +6,12 @@ import base64
 import re
 from collections.abc import Callable, Mapping
 from enum import StrEnum
-from typing import Final, Literal, cast
+from typing import Final, Literal
 
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.i18n.render import MissingTranslationError, lookup_translation
 from ....core.type_adapters import OBJECT_TUPLE_ADAPTER
+from ....core.type_guards import is_object_mapping
 from ._toml_helpers import as_toml_table as _as_toml_table
 from .ids import RevisionId
 
@@ -141,9 +142,14 @@ def casilla_alias_locale_key(
 
 
 def _passthrough_localization_row(raw: object) -> dict[str, object]:
-    """Carry malformed locale-owned rows through to the schema validator."""
-    if isinstance(raw, Mapping):
-        return dict(cast(Mapping[str, object], raw))
+    """Carry malformed locale-owned rows through to the schema validator.
+
+    A row reaching this helper already failed table narrowing, so a key that is
+    not text is rendered as text rather than dropped: the schema validator, not
+    this projection, owns the refusal.
+    """
+    if is_object_mapping(raw):
+        return {str(key): value for key, value in raw.items()}
     return {"value": raw}
 
 

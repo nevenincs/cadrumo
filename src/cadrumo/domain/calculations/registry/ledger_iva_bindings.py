@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from datetime import date
 from decimal import Decimal
-from typing import TYPE_CHECKING, Annotated, Literal, NamedTuple, Protocol, cast
+from typing import TYPE_CHECKING, Annotated, Literal, NamedTuple, Protocol
 
 from pydantic import BaseModel, BeforeValidator, Field, StringConstraints, field_validator, model_validator
 
@@ -17,6 +17,7 @@ from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.iva_deduction_fact import IvaDeductionFactKind
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.time.clock import today_madrid
+from ....core.type_guards import is_object_list_or_tuple
 from ....core.unit_proportion import UnitProportion
 from ...iva.components import registry_category_projection
 from ...iva.deduction_facts import IvaDeductionClassificationProvenance, validate_iva_deduction_fact
@@ -85,8 +86,8 @@ in this module.
 
 def _coerce_cash_accounting_treatment_codes(value: object) -> object:
     """Hydrate TOML arrays before strict tuple validation."""
-    if isinstance(value, (tuple, list)):
-        return tuple(cast("Sequence[object]", value))
+    if is_object_list_or_tuple(value):
+        return tuple(value)
     return value
 
 

@@ -72,6 +72,7 @@ _logger = get_logger(__name__)
 if TYPE_CHECKING:
     from ..calculations.registry.authority import PinnedAuthorityOperation
     from ..calculations.registry.facts.resolution import ResolvedMappingFact
+    from ..calculations.registry.governed_fact_scope import GovernedFactSource
     from ..calculations.registry.iva_category_catalogue import IvaCategoryCatalogue
     from ..calculations.registry.iva_rate_kind_catalogue import IvaRateKindCatalogue
 
@@ -445,7 +446,7 @@ def customer_tax_status_alias(
 def resolve_transaction_kind_catalogue(
     effective_date: date,
     *,
-    operation: PinnedAuthorityOperation,
+    operation: GovernedFactSource,
 ) -> TransactionKindCatalogue:
     """Resolve all transaction-kind membership through the 0083 fact query."""
     resolved = _registry_iva_classification_catalogue(effective_date, operation=operation)
@@ -479,7 +480,7 @@ def require_transaction_kind(
     value: object,
     *,
     effective_date: date,
-    operation: PinnedAuthorityOperation,
+    operation: GovernedFactSource,
 ) -> TransactionKind:
     """Return one registry-declared transaction-kind token or refuse it."""
     return resolve_transaction_kind_catalogue(effective_date, operation=operation).require(value)
@@ -1055,7 +1056,7 @@ def resolve_iva_classification_inputs(
 def _registry_iva_classification_catalogue(
     effective_date: date,
     *,
-    operation: PinnedAuthorityOperation,
+    operation: GovernedFactSource,
 ) -> ResolvedMappingFact:
     """Resolve the dated IVA catalogue consumed by the generic evaluator."""
     from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
