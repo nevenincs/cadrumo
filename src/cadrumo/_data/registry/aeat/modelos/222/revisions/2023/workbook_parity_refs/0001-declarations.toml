@@ -7,9 +7,12 @@
 # design file governs both 2023 and 2024, so both editions name the same
 # fixture, while the 2025 layout -- a different geometry -- keeps its own.
 #
-# runner_required is false: this applicability-grade edition carries no
-# formulas, so the anchor pins the official layout provenance without asserting
-# a numeric parity run.
+# runner_required stays false: the anchor pins the official LAYOUT provenance,
+# which is what a record-design fixture proves, and asserts no numeric parity
+# run. An earlier note here justified that by saying the edition carries no
+# formulas; it now carries fourteen, and the reason is unchanged -- a record
+# design states positions, not arithmetic. The formulas are reconciled through
+# this edition's verification expectation instead.
 
 [[revisions."2023".workbook_parity_refs]]
 id = "modelo-222-record-design"

@@ -80,7 +80,7 @@ independent_check_coverage is n/a: NO CLAIM, not zero. No human operator has cou
 this edition."""
 reviewed_at = 2026-09-12
 family_storage_baseline = "2023"
-scoped_families = ["workbook_parity_refs", "completeness_manifest"]
+scoped_families = ["workbook_parity_refs", "completeness_manifest", "verification_expectations"]
 
 [[revisions."2024".lineage_attestations]]
 family = "casillas"
