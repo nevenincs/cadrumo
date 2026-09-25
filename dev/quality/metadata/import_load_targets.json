@@ -2758,6 +2758,7 @@
         "dev.registry.compiler.record_design",
         "dev.registry.compiler.record_design_cache",
         "dev.registry.compiler.record_design_layout_markers",
+        "dev.registry.compiler.record_design_pdf_columns",
         "dev.registry.compiler.record_design_pdf_orchestration",
         "dev.registry.compiler.record_design_pdf_repairs",
         "dev.registry.compiler.record_design_pdf_rows",
