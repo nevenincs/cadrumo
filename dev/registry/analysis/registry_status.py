@@ -11,7 +11,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
-from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import (
     ValidatedRegistryAuthority,
@@ -32,13 +31,11 @@ from ..maintenance_support import OracleEnvironment
 from ..parity.maintenance import audit_registry_oracles
 from ..pipeline.authority_publication import AuthorityDatabaseCurrencyStatus, authority_database_currency
 from ..pipeline.generated_tree_dispositions import (
-    GeneratedTreeBelowPublicationGradeDisposition,
     GeneratedTreeBelowSupportedFilingYearsDisposition,
     GeneratedTreeRecordDriftDisposition,
     GeneratedTreeRenderRefusalDisposition,
     GeneratedTreeTypeColumnContradictionDisposition,
     below_floor_dispositions,
-    below_publication_grade_dispositions,
     disposition_ledger_from_path,
     record_drift_dispositions,
 )
@@ -47,8 +44,7 @@ if TYPE_CHECKING:
     from .generated_tree_state import GeneratedTreeState
 
 type GeneratedTreeDispositionRow = (
-    GeneratedTreeBelowPublicationGradeDisposition
-    | GeneratedTreeBelowSupportedFilingYearsDisposition
+    GeneratedTreeBelowSupportedFilingYearsDisposition
     | GeneratedTreeRecordDriftDisposition
     | GeneratedTreeRenderRefusalDisposition
     | GeneratedTreeTypeColumnContradictionDisposition
@@ -180,14 +176,13 @@ def explain_target_drift(
     *,
     declared_floor: int,
     revision_filing_years: tuple[int, ...],
-    revision_authority_grade: RegistryAuthorityGrade | None,
 ) -> TargetDriftExplanation | None:
     """Judge whether the ledger row keyed to exactly this target explains its drift.
 
     Returns ``None`` when no row names the target, or the target is in a state no
     row can explain, so the target keeps the verdict it already had.
 
-    Three classes explain a difference from a fresh render, matching how the
+    Two classes explain a difference from a fresh render, matching how the
     reproduction gate and the publisher read them:
 
     - ``below_floor``: republication is unreachable because every filing year
@@ -195,14 +190,10 @@ def explain_target_drift(
       Honoured only while the row's recorded floor equals the floor the legal
       tree declares, and the revision's own newest filing year still equals the
       row's and lies below that floor.
-    - ``below_publication_grade``: republication is refused because the
-      revision's declared grade lies below the static-publication floor.
-      Honoured only for manifest-only staleness, and only while the revision
-      still declares exactly the grade the row records.
     - ``record_drift``: honoured only for record drift, and only while the
       number of differing records equals the count the row states.
 
-    Every row is honoured only while its design pin equals the source the
+    Either row is honoured only while its design pin equals the source the
     committed tree attests and the fresh render did not move that pin: a
     reissued design is a different drift from the one the row was written for.
     ``render_refusal`` rows describe trees that never reach the comparison and
@@ -214,8 +205,6 @@ def explain_target_drift(
         dispositions: Ledger rows loaded through the canonical ledger loader.
         declared_floor: The supported-filing-years floor the legal tree declares.
         revision_filing_years: Every filing year the target revision declares.
-        revision_authority_grade: The grade the target revision declares, or
-            ``None`` when it declares none.
     """
     if state.state not in _EXPLAINABLE_TREE_STATES:
         return None
@@ -226,10 +215,7 @@ def explain_target_drift(
             for item in dispositions
             if item.subject == subject
             and isinstance(
-                item,
-                GeneratedTreeBelowPublicationGradeDisposition
-                | GeneratedTreeBelowSupportedFilingYearsDisposition
-                | GeneratedTreeRecordDriftDisposition,
+                item, GeneratedTreeBelowSupportedFilingYearsDisposition | GeneratedTreeRecordDriftDisposition
             )
         ),
         None,
@@ -270,27 +256,6 @@ def explain_target_drift(
             ),
         )
 
-    if isinstance(row, GeneratedTreeBelowPublicationGradeDisposition):
-        if state.state != "manifest_only_stale":
-            return refused(
-                "below_publication_grade row explains manifest-only staleness, the comparison reports record drift"
-            )
-        if revision_authority_grade is not row.authority_grade:
-            declared = "no grade" if revision_authority_grade is None else repr(revision_authority_grade.value)
-            return refused(
-                f"below_publication_grade row pins grade {row.authority_grade.value!r}, the revision declares "
-                f"{declared}",
-            )
-        return TargetDriftExplanation(
-            subject=subject,
-            kind=row.kind,
-            honoured=True,
-            detail=(
-                f"explained by below_publication_grade disposition: {row.authority_grade.value!r} authority "
-                f"lies below the static-publication grade; {state.detail}"
-            ),
-        )
-
     if state.state != "record_drift":
         return refused("record_drift row stands but only the generation manifest differs")
     observed = len(state.record_differing)
@@ -309,7 +274,7 @@ def explain_target_drift(
 def _explaining_dispositions(ledger_path: Path | None) -> tuple[GeneratedTreeDispositionRow, ...]:
     """Load the ledger rows through the canonical loader; the live ledger by default."""
     if ledger_path is None:
-        return (*below_floor_dispositions(), *below_publication_grade_dispositions(), *record_drift_dispositions())
+        return (*below_floor_dispositions(), *record_drift_dispositions())
     return disposition_ledger_from_path(ledger_path)
 
 
@@ -337,7 +302,6 @@ def project_target_states(
     dispositions: tuple[GeneratedTreeDispositionRow, ...],
     declared_floor: Callable[[], int],
     revision_filing_years: Callable[[str, str], tuple[int, ...]],
-    revision_authority_grade: Callable[[str, str], RegistryAuthorityGrade | None],
     excluded_count: int,
 ) -> ProjectedTargets:
     """Bucket each classified target, moving a drift its ledger row explains to ``explained``.
@@ -367,7 +331,6 @@ def project_target_states(
                 dispositions,
                 declared_floor=floor,
                 revision_filing_years=revision_filing_years(item.modelo, item.revision),
-                revision_authority_grade=revision_authority_grade(item.modelo, item.revision),
             )
             if explanation is not None and explanation.honoured:
                 bucket = "explained"
@@ -463,11 +426,6 @@ def collect_registry_status(
                 declared_floor=lambda: declared_supported_filing_years_floor(registry_root=resolved_registry_root),
                 revision_filing_years=lambda modelo_id, revision_id: next(
                     tuple(revision.period_selector.years)
-                    for candidate_id, revision in validated_authority.modelo(modelo_id).revisions.items()
-                    if str(candidate_id) == revision_id
-                ),
-                revision_authority_grade=lambda modelo_id, revision_id: next(
-                    revision.effective_authority_grade if revision.is_graded else None
                     for candidate_id, revision in validated_authority.modelo(modelo_id).revisions.items()
                     if str(candidate_id) == revision_id
                 ),

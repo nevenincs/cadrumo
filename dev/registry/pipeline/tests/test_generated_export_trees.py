@@ -52,11 +52,7 @@ from ..export_fragment_provenance import (
     load_export_fragment_provenance_manifest,
     loader_semantic_digest,
 )
-from ..generated_tree_dispositions import (
-    below_publication_grade_dispositions,
-    record_drift_dispositions,
-    render_refusal_dispositions,
-)
+from ..generated_tree_dispositions import record_drift_dispositions, render_refusal_dispositions
 from ..generated_tree_inventory import GeneratedExportTree, generated_export_trees
 from ..joined_record_design import design_view
 from ..render_check import compare_revision_against_committed, parsed_tree_file
@@ -69,20 +65,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.usefixtures("g
 _GENERATED_TREES = generated_export_trees()
 _RECORD_DRIFT_DISPOSITIONS = {item.subject: item for item in record_drift_dispositions()}
 _RENDER_REFUSAL_DISPOSITIONS = {item.subject: item for item in render_refusal_dispositions()}
-#: Trees whose records reproduce but whose revision grade the publisher refuses,
-#: keyed the way the generated-tree inventory names them. The ledger row is the
-#: single home of the pin; this suite only projects it.
-_REPRODUCTION_PENDING = {f"m{row.modelo}-{row.revision}": row for row in below_publication_grade_dispositions()}
-#: Check mode validates a candidate as a filing snapshot, so a revision below the
-#: publication grade is refused there for the same grade shortfall.
-_BELOW_PUBLICATION_GRADE_CHECK_MODE_REFUSAL = "cannot satisfy the requested 'filing' snapshot authority"
-
-
-#: Check mode's exact current refusal, projected from the same source-bound pins
-#: that govern pending republication. A changed refusal makes the owning row red.
+#: Check mode's exact current refusal. A changed refusal makes the owning row red.
 _CHECK_MODE_PENDING: dict[str, str] = {
-    subject: _BELOW_PUBLICATION_GRADE_CHECK_MODE_REFUSAL for subject in _REPRODUCTION_PENDING
-} | {
     # The tree is published at calculation grade and reproduces exactly, but check
     # mode validates the candidate as a filing snapshot, and the revision's
     # relationship families are not yet resolved to filing grade. Retires, by
@@ -123,54 +107,6 @@ def test_every_pending_check_mode_entry_names_an_enrolled_tree() -> None:
     )
 
 
-def test_every_reproduction_pending_pin_is_live_and_source_bound() -> None:
-    """A publication exclusion names current evidence and retires when its cause does."""
-    enrolled = {str(tree): tree for tree in _GENERATED_TREES}
-    assert set(_REPRODUCTION_PENDING) <= set(enrolled), (
-        f"reproduction pins name no enrolled tree: {sorted(set(_REPRODUCTION_PENDING) - set(enrolled))}"
-    )
-    authority = compiled_bundled_authority()
-    for subject, pin in _REPRODUCTION_PENDING.items():
-        tree = enrolled[subject]
-        assert tree.source_ref == pin.source_ref
-        source = authority.catalogues.sources.get(pin.source_ref)
-        assert source is not None
-        assert source.sha256 == pin.source_sha256, f"{subject}: source was reissued; reconsider the pin"
-        revision = authority.modelo(tree.modelo).revisions.get(tree.revision)
-        assert revision is not None
-        assert revision.is_graded and revision.effective_authority_grade is pin.authority_grade, (
-            f"{subject}: the revision's declared grade moved from {pin.authority_grade.value!r}; retire or "
-            "re-derive the ledger row"
-        )
-        # A pin states that a tree differs from a fresh render only in its
-        # attestation. Once the tree also differs in its RECORDS it has a
-        # disposition row saying so, and that row is the stronger statement:
-        # source-pinned, self-retiring, and consulted by the reproduction gate
-        # before the pin ever is. The pin is not deleted, because it still
-        # carries the check-mode refusal this suite expects, but its class
-        # assertion defers to the disposition and resumes the day the row
-        # retires. The row is asserted source-bound in its place, so the pin is
-        # superseded by a declaration rather than left merely unchecked.
-        comparison = compare_revision_against_committed(
-            authority,
-            modelo=tree.modelo,
-            revision=tree.revision,
-        )
-        # The pin table is keyed by the tree's own name; the ledger is keyed by
-        # modelo/revision. Look the row up the way the ledger spells it.
-        disposition = _RECORD_DRIFT_DISPOSITIONS.get(f"{tree.modelo}/{tree.revision}")
-        if disposition is not None:
-            assert disposition.source_ref == pin.source_ref
-            assert disposition.source_sha256 == pin.source_sha256
-            assert comparison.disposition_class == "record_drift", (
-                f"{subject}: a disposition row stands but the tree no longer drifts in its records"
-            )
-            continue
-        assert comparison.disposition_class == "provenance_only", (
-            f"{subject}: reproduction pin is dormant or its failure class changed"
-        )
-
-
 def _published_layout(tree: GeneratedExportTree, root: Path) -> ExportLayoutDefinition:
     """Load the committed tree's layout exactly as check mode loads its published witness."""
     staged = stage_published_modelo(root, modelo=tree.modelo, revision=tree.revision)
@@ -196,13 +132,11 @@ def test_every_committed_manifest_attests_the_current_loader_semantics(tmp_path:
     The reproduction gate reaches this question only after a full render and
     reports one tree at a time. This asks it directly and names every stale tree
     at once, so a projection or loader change that re-attests the corpus reads
-    as one list of trees to republish. A tree pinned as reproduction-pending is
-    excluded by its pin, which states why it cannot yet be republished.
+    as one list of trees to republish.
     """
     stale = _stale_loader_attestations(
         (str(tree), tree.committed, _published_layout(tree, tmp_path / str(tree)))
         for tree in _GENERATED_TREES
-        if str(tree) not in _REPRODUCTION_PENDING
     )
 
     assert stale == [], (
@@ -413,14 +347,9 @@ def test_committed_tree_is_reproducible_and_check_mode_refuses_only_for_its_name
                 "widening it; a second cause needs its own declaration."
             )
             return
-        reproduction_pin = _REPRODUCTION_PENDING.get(str(tree))
-        assert reproduction_pin is not None, (
+        raise AssertionError(
             f"{tree}: committed export fragment(s) differ from a fresh render: {differing}; "
             f"differing manifest members: {list(comparison.provenance_fields)}"
-        )
-        assert reproduction_pin.source_ref == tree.source_ref
-        assert comparison.disposition_class == "provenance_only", (
-            f"{tree}: reproduction pin is dormant or its failure class changed"
         )
 
     candidate_root = tmp_path / "candidate"

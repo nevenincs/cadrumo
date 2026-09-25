@@ -2874,7 +2874,6 @@
         "dev.registry.pipeline.generated_tree_inventory",
         "dev.registry.pipeline.joined_record_design",
         "dev.registry.pipeline.m390_auxiliary_envelope",
-        "dev.registry.pipeline.publication_grade",
         "dev.registry.pipeline.pydantic_error_detail",
         "dev.registry.pipeline.record_design_intermediate",
         "dev.registry.pipeline.render_check",

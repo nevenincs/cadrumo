@@ -18,6 +18,26 @@ required_text = [
     "Declaración informativa mensual de cotizaciones de afiliados y mutualistas",
 ]
 
+[legal."orden-hac-1197-2025:art-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-1197-2025.html#a2"
+document_id = "BOE-A-2025-21726"
+article = "2"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2025-21726#a2"
+published_at = 2025-10-21
+effective_from = 2026-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-25
+reviewed_by = "agent-prepared (corpus-grounded against the bundled BOE-A-2025-21726 art 2; pending operator re-stamp)"
+corpus_tier = "full_consolidated"
+notes = "Orden HAC/1197/2025 art 2: obligados a presentar el modelo 185, de acuerdo con el articulo 69.6 del Reglamento del IRPF: los organos o entidades gestores de la Seguridad Social y las Mutualidades alternativas a la Seguridad Social."
+required_text = [
+    "Obligados a presentar el modelo 185",
+    "Las Mutualidades alternativas a la Seguridad Social",
+]
+
 [legal."orden-hac-1197-2025:art-4"]
 evidence_tier = "legal_authority"
 authority = "boe"

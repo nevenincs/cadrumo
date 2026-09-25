@@ -2,10 +2,9 @@
 
 A disposition is a source-pinned declaration explaining why a generated tree is
 in a state other than "reproduces its inputs and agrees with its design": its
-records drift from the inputs, its design refuses to render, it reproduces while
-the inputs contradict the official type column, or its revision lies below the
-floor or grade the publisher admits. Each kind carries the fact that falsifies
-it, so a row cannot outlive the condition it describes.
+records drift from the inputs, its design refuses to render, or it reproduces
+while the inputs contradict the official type column. Each kind carries the fact
+that falsifies it, so a row cannot outlive the condition it describes.
 
 The renderer reads the type-column rulings to adjudicate a field's verdict, and
 the comparison and publication tools read the rest, so the ledger stands apart
@@ -21,18 +20,12 @@ from typing import Annotated, Literal, Self
 import rtoml
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from cadrumo.core.authority_grade import RegistryAuthorityGrade
-
-from .publication_grade import reaches_static_publication_grade, static_publication_authority_grade
-
 __all__ = [
-    "GeneratedTreeBelowPublicationGradeDisposition",
     "GeneratedTreeBelowSupportedFilingYearsDisposition",
     "GeneratedTreeRecordDriftDisposition",
     "GeneratedTreeRenderRefusalDisposition",
     "GeneratedTreeTypeColumnContradictionDisposition",
     "below_floor_dispositions",
-    "below_publication_grade_dispositions",
     "disposition_ledger_from_path",
     "record_drift_dispositions",
     "render_refusal_dispositions",
@@ -229,53 +222,8 @@ class GeneratedTreeBelowSupportedFilingYearsDisposition(_StrictModel):
         return f"{self.modelo}/{self.revision}"
 
 
-class GeneratedTreeBelowPublicationGradeDisposition(_StrictModel):
-    """One declaration that a reproducing tree's revision grade puts republication out of reach.
-
-    The publisher validates every candidate at the static-publication grade, so a
-    revision declaring a lower authority grade is refused before anything is
-    written, even when its records reproduce and only the generation manifest
-    has aged. Republishing is not withheld here by judgement; it is refused by
-    the grade ladder. Modelo 185's 2025-y-siguientes edition is the live case: it
-    earns applicability authority, below the calculation floor.
-
-    The row explains manifest-only staleness and nothing else. Record drift in
-    such a tree is a different question and stays a failure. ``authority_grade``
-    is compared with the revision's live declared grade, so a revision that earns
-    the publication grade, or whose grade moves at all, retires the row instead
-    of leaving a permanent exemption behind.
-    """
-
-    kind: Literal["below_publication_grade"]
-    modelo: str = Field(pattern=r"^[0-9]{3}$")
-    revision: str = Field(min_length=1)
-    source_ref: str = Field(min_length=1)
-    source_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
-    authority_grade: RegistryAuthorityGrade
-    """The grade the revision declares, which must stay below the publication floor."""
-    reason: str = Field(min_length=1)
-    reconsideration_condition: str = Field(min_length=1)
-
-    @model_validator(mode="after")
-    def _grade_lies_below_the_publication_floor(self) -> Self:
-        """Refuse a row whose recorded grade the publisher would accept."""
-        if reaches_static_publication_grade(self.authority_grade):
-            raise ValueError(
-                f"{self.modelo}/{self.revision}: authority_grade {self.authority_grade.value!r} reaches the "
-                f"static-publication grade {static_publication_authority_grade().value!r}; the row explains a "
-                "refusal that no longer holds and must be retired rather than kept",
-            )
-        return self
-
-    @property
-    def subject(self) -> str:
-        """Return the canonical modelo/revision disposition identity."""
-        return f"{self.modelo}/{self.revision}"
-
-
 _GeneratedTreeDisposition = Annotated[
-    GeneratedTreeBelowPublicationGradeDisposition
-    | GeneratedTreeBelowSupportedFilingYearsDisposition
+    GeneratedTreeBelowSupportedFilingYearsDisposition
     | GeneratedTreeRecordDriftDisposition
     | GeneratedTreeRenderRefusalDisposition
     | GeneratedTreeTypeColumnContradictionDisposition,
@@ -320,13 +268,6 @@ def below_floor_dispositions() -> tuple[GeneratedTreeBelowSupportedFilingYearsDi
         item
         for item in _load_disposition_ledger()
         if isinstance(item, GeneratedTreeBelowSupportedFilingYearsDisposition)
-    )
-
-
-def below_publication_grade_dispositions() -> tuple[GeneratedTreeBelowPublicationGradeDisposition, ...]:
-    """Return the rows whose revision grade lies below the static-publication floor."""
-    return tuple(
-        item for item in _load_disposition_ledger() if isinstance(item, GeneratedTreeBelowPublicationGradeDisposition)
     )
 
 

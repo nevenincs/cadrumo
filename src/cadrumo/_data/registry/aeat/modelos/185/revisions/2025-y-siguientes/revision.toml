@@ -2,15 +2,13 @@
 predecessor = "2003-2025"
 casilla_source_refs = ["aeat-dr-185-2026"]
 application_link_source_refs = ["enrolled-modelo-185-procedure"]
-reviewed_against = "2003-2025"
-authority_grade = "applicability"
+authority_grade = "filing"
 # Modelo 185 declaración informativa. Approved by orden-hac-1197-2025 art 1
 # and its filing plazo grounded verbatim in orden-hac-1197-2025 art 4 (now the
 # real bundled 43910-byte instrument, replacing a 1091-byte excerpt that
-# omitted the disposición final). Scheduling/applicability-grade: declaration-
-# header casillas only; no authoritative Modelo 185 diseño de registro from
-# THIS era is bundled beyond the AEAT design file, so no numbered form casilla
-# is fabricated.
+# omitted the disposición final). Filing-grade: the declarante and declarado
+# records are authored from the bundled design aeat-dr-185-2026, the monthly
+# schedule from art 4, and each unpopulated family carries a disposition.
 #
 # valid_from/period_selector corrected from 2025 to 2026: orden-hac-1197-2025's
 # own fetched text states "entrará en vigor el 1 de enero de 2026, y será de
@@ -35,36 +33,72 @@ source_refs = [
     "enrolled-modelo-185-layout",
     "aeat-dr-185-2026",
 ]
-review_status = "agent_reviewed"
-reviewed_by = """\
-agent: applicability-grade review of the declaracion informativa mensual de cotizaciones \
-de afiliados y mutualistas. VERIFIED -- WHEN DUE: orden-hac-1197-2025 art. 4 reads \
-verbatim in the bundled corpus \"La presentacion del modelo 185 ... tendra caracter \
-mensual, y se realizara en el plazo de los diez dias naturales siguientes a la \
-finalizacion del mes al que se refiera la declaracion\", and the declared windows close on \
-the 10th of the month following each declared month, reproducing it exactly and stored \
-NOMINAL. VERIFIED -- TO WHOM: art. 1 is the dedicated approving clause, \"Se aprueba el \
-modelo 185, «Declaracion informativa mensual de cotizaciones de afiliados y mutualistas», \
-cuyos disenos de registro figuran en el anexo\", carrying no year bound; the legal entry's \
-effective_from of 2026-01-01 matches this revision's valid_from exactly, and the sibling \
-revision 2003-2025 closes on 2025-12-31, so the pair is gap-free and overlap-free at the \
-boundary. NOTED, NOT FIXED -- the revision id reads 2025-y-siguientes while valid_from is \
-2026-01-01. The id names the ORDEN's year (HAC/1197/2025, de 21 de octubre) rather than \
-the coverage year. Revision resolution is law-determined from dates and never from the id \
-string, so this is a naming defect and not a resolution one, but it is misleading to a \
-reader and is NOT corrected by this review. NOT CLAIMED -- independent_check_coverage is \
-n/a: NO CLAIM, not zero. NOT CLAIMED -- SPAN: \
-test_every_modelo_revision_span_is_corpus_proven reports 0 comparable bundled design \
-year(s) inside this claimed span. That is an ABSENCE of comparable evidence rather than \
-evidence against the revision, unlike the contrary-evidence class the same gate reports \
-for m220 and m763; closing it needs AEAT acquisition and is not something this review \
-does. NOT CLAIMED -- this revision declares 2 casillas and the anexo's record detail is \
-not modelled; no export layout of either kind is declared. This review reaches scheduling \
-and applicability only, which is what the applicability rung asserts. NOT CLAIMED -- all 3 \
-locales are complete for the 2 labels, but the strings were not audited for accuracy."""
-reviewed_at = 2026-08-21
 family_storage_baseline = "2003-2025"
 scoped_families = ["workbook_parity_refs"]
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared-pending-operator"
+reviewed_at = 2026-09-25
+reviewed_against = "2003-2025"
+
+[revisions."2025-y-siguientes".family_dispositions.applicability]
+reason = """
+Orden HAC/1197/2025 art. 2 names the obligados: the organos o entidades gestores de la Seguridad Social, including those managing the special regimes of civil servants, the Fuerzas Armadas and Administracion de Justicia staff, and the Mutualidades alternativas a la Seguridad Social. The declarante is such an entity reporting on its afiliados or mutualistas, not the taxpayer whose profile this application models, so there is no taxpayer-profile predicate and no alternative applicability branch to encode. The obligation is carried by this revision's temporal selector. Empty because the predicate does not exist here, not because it is unbuilt."""
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-2", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure", "aeat-dr-185-2026"]
+
+[revisions."2025-y-siguientes".family_dispositions.bindings]
+reason = """
+The design supplies fixed wire positions for an informative declaration of third-party data. The type-2 declarado records report each afiliado or mutualista's NIF, name, numero de afiliacion and monthly situacion, regimen de cotizacion, dias de alta and tipo de jornada for the month and the two before it, which no ledger, profile, relation or calculated source of this application holds. No binding source or selector exists to author, so the casillas are entered manually and no binding reference is left dangling."""
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-2", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure", "aeat-dr-185-2026"]
+
+[revisions."2025-y-siguientes".family_dispositions.dependency_classifications]
+reason = """
+A dependency classification records how another modelo's declarations reach this one. This edition declares no relation and no relation-prefill binding, and the one declarante figure its design derives, NUMERO TOTAL DE REGISTROS, is taken over its own type-2 records rather than over another modelo, so no cross-modelo edge exists to classify."""
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-2", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure", "aeat-dr-185-2026"]
+
+[revisions."2025-y-siguientes".family_dispositions.extraction_profiles]
+reason = """
+An extraction profile reads values back out of a filed declaration, and its label patterns must be authored against a specimen of the printed layout for the edition they claim. The bundled aeat-dr-185-2026 is a wire record design, not a completed modelo 185 justificante, and the corpus holds no such justificante. Authoring patterns from the wire design would claim a reading capability against a printed layout nobody checked."""
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-2", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure", "aeat-dr-185-2026"]
+
+[revisions."2025-y-siguientes".family_dispositions.formulas]
+reason = """
+The design states one derived figure on the declarante record: NUMERO TOTAL DE REGISTROS (138-146) is the count of type-2 records, so this family is not inapplicable by the modelo's nature. It is empty for a narrower and checkable reason: a formula must range over a declared binding, this edition declares none because the application holds no source for the declarado rows, and a count over absent rows would report zero where the true figure is unknown. The filer supplies the total as a manual casilla, which keeps an absence visible instead of resolving it to a silent zero."""
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-2", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure", "aeat-dr-185-2026"]
+
+[revisions."2025-y-siguientes".family_dispositions.live_cross_references]
+reason = """
+A live cross-reference records an AEAT surface this application reads at runtime, and the registry requires a portal application link beside it. This edition declares no portal link and no guarded adapter for any modelo 185 consultation service, so declaring a surface here would assert a runtime read capability the application has not built. Empty because the adapter does not exist."""
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-2", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure", "aeat-dr-185-2026"]
+
+[revisions."2025-y-siguientes".family_dispositions.parameters]
+reason = """
+A parameter holds a regulatory value a formula of this revision applies, such as a rate, a threshold or a coefficient. This edition declares no formula, and the one figure its design derives is a record count, which applies nothing to what it counts. Empty by the shape of this modelo rather than by omission."""
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-2", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure", "aeat-dr-185-2026"]
+
+[revisions."2025-y-siguientes".family_dispositions.projection_endpoints]
+reason = """
+A projection endpoint admits one typed filing endpoint that an export record repeats. This revision's export layout declares no record with repeat = 'projection_rows' and no field of kind 'projection', so there is no repeated endpoint for the family to admit."""
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-2", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure", "aeat-dr-185-2026"]
+
+[revisions."2025-y-siguientes".family_dispositions.verification_expectations]
+reason = """
+A verification expectation compares a declared calculation outcome against an independent figure. This edition declares no formula and no binding, and the corpus holds no official worked modelo 185 example, so there is no computed outcome and no independent oracle to assert one against."""
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-2", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure", "aeat-dr-185-2026"]
+
+[revisions."2025-y-siguientes".family_dispositions.verification_predicates]
+reason = """
+A verification predicate expresses a conditional check over verification expectations. With no expectation declared in this edition there is no predicate subject to state."""
+legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-2", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-185-procedure", "aeat-dr-185-2026"]
 
 [[revisions."2025-y-siguientes".lineage_attestations]]
 family = "casillas"
