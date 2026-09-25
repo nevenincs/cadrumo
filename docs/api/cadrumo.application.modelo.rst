@@ -103,6 +103,7 @@ Submodules
    cadrumo.application.modelo.m145_communication_period
    cadrumo.application.modelo.m145_communication_records
    cadrumo.application.modelo.m145_communication_records_ports
+   cadrumo.application.modelo.m193_settled_row_gate
    cadrumo.application.modelo.m303_exonerado_390_applicability_attestation
    cadrumo.application.modelo.m303_filing_evidence
    cadrumo.application.modelo.m303_ordinary_evidence_coordinate
@@ -148,6 +149,7 @@ Submodules
    cadrumo.application.modelo.selectors
    cadrumo.application.modelo.semantic_role_resolution
    cadrumo.application.modelo.settlement_casilla
+   cadrumo.application.modelo.stored_row_field_input_gate
    cadrumo.application.modelo.taxation_comparison
    cadrumo.application.modelo.taxation_comparison_ports
    cadrumo.application.modelo.verification_actions

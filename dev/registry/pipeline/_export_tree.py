@@ -363,6 +363,16 @@ _OFFICIAL_UNQUOTED_LITERAL_RE: Final[re.Pattern[str]] = re.compile(
     r"^\s*constante\s+(?P<literal>[^\s'\"]+?)\.?\s*$",
     re.IGNORECASE,
 )
+#: A single bare token that IS the whole of a printed Contenido cell. Modelo 360
+#: writes its design version ``000100`` in that cell with neither the
+#: ``Constante`` label nor quotes. The cell is the design's statement of the
+#: field's content, so a lone token filling it states the constant as surely as
+#: the label does. Admitted ONLY when the reader located the text in that column
+#: (``content_in_contenido_column``): the same token arriving as text the line
+#: parser merely attributed to a field could be the tail of a description, and
+#: stays refused. One token, so a cell listing alternatives ("0" "1") or carrying
+#: prose never matches.
+_OFFICIAL_BARE_CELL_LITERAL_RE: Final[re.Pattern[str]] = re.compile(r"[^\s'\"]+")
 #: The quotation marks AEAT wraps a constant in. A workbook prints straight
 #: quotes; a PDF design prints guillemets, and typographic pairs appear in both
 #: -- "Constante «D»." is Modelo 347's, and it read as an ambiguous
@@ -991,6 +1001,8 @@ def _literal_derivation(
             official_literal = folded_content
         elif (unquoted := _OFFICIAL_UNQUOTED_LITERAL_RE.fullmatch(folded_content)) is not None:
             official_literal = unquoted.group("literal")
+        elif parser_field.content_in_contenido_column and _OFFICIAL_BARE_CELL_LITERAL_RE.fullmatch(folded_content):
+            official_literal = folded_content
         elif _OFFICIAL_ALTERNATIVE_LITERALS_RE.fullmatch(folded_content) is not None:
             raise RegistryValidationError(
                 f"literal field {joined_field.semantic_entry.export_field_id!r} has ambiguous official constant "

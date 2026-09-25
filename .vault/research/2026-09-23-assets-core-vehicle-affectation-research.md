@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#assets-core'
 date: '2026-09-23'
-modified: '2026-09-23'
+modified: '2026-09-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:43cea05d48cb1782aa88029ba941b19bdbec0a2dd153f1da4acb9597665648a2'
+body_hash: 'sha256:a29668b26530decf8ce4fb01ec0590c4a4941149680efb6a326868b973e167d1'
 related:
   - "[[2026-09-21-assets-core-lifecycle-contract-adr]]"
   - "[[2026-09-23-assets-core-amortization-method-set-adr]]"

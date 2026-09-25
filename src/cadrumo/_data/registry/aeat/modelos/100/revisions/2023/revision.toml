@@ -664,7 +664,7 @@ fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0153" }
-fields = { constraints = { sign = "non_negative",  source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }, source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { constraints = {   source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }, source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0154" }
@@ -992,11 +992,11 @@ fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0246" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary y aeat-dr-100-2023-dictionary: campo PMESINI5; mismo concepto y ruta XML en ambas ediciones, con tipo y alcance conservados. Las variaciones de texto anual y agrupacion se declaran como evoluciones de presentacion.", constraints = { sign = "non_negative", max_value = "12",  source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }, source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary y aeat-dr-100-2023-dictionary: campo PMESINI5; mismo concepto y ruta XML en ambas ediciones, con tipo y alcance conservados. Las variaciones de texto anual y agrupacion se declaran como evoluciones de presentacion.", constraints = {  max_value = "12",  source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }, source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0247" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary y aeat-dr-100-2023-dictionary: campo PMESFIN5; mismo concepto y ruta XML en ambas ediciones, con tipo y alcance conservados. Las variaciones de texto anual y agrupacion se declaran como evoluciones de presentacion.", constraints = { sign = "non_negative", max_value = "12",  source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }, source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2022-dictionary y aeat-dr-100-2023-dictionary: campo PMESFIN5; mismo concepto y ruta XML en ambas ediciones, con tipo y alcance conservados. Las variaciones de texto anual y agrupacion se declaran como evoluciones de presentacion.", constraints = {  max_value = "12",  source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }, source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0248" }
@@ -2408,7 +2408,7 @@ fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0618" }
-fields = { constraints = { sign = "non_negative", min_value = "1", max_value = "9",  source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }, source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { constraints = {  min_value = "1", max_value = "9",  source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }, source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0619" }
@@ -2452,7 +2452,7 @@ fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0629" }
-fields = { constraints = { sign = "non_negative", max_value = "99",  source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }, source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { constraints = {  max_value = "99",  source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }, source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0630" }
@@ -2544,7 +2544,7 @@ fields = { source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0652" }
-fields = { constraints = { sign = "non_negative", max_value = "99",  source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }, source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
+fields = { constraints = {  max_value = "99",  source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }, source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"] }
 
 [[revisions."2023".casilla_overrides]]
 selector = { revision = "2022", id = "0653" }

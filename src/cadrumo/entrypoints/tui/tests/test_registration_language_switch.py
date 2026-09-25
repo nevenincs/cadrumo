@@ -18,6 +18,11 @@ so a catalogue that translated nothing could not pass either.
 
 from __future__ import annotations
 
+import sys
+import threading
+import time
+import traceback
+
 import pytest
 from textual.widgets import Button, Input, Label, Select, Static
 from textual.widgets._select import SelectOverlay
@@ -32,6 +37,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.user_profile.login_session import login_profile
 from ....core.bucket_pointer import require_active_bucket_id
+from ....core.config import override_settings
 from ....core.credentials import assess_profile_password
 from ....core.i18n.render import output_language, tr
 from ....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
@@ -63,22 +69,58 @@ def _screen() -> RegistrationScreen:
     )
 
 
-async def _wait_for_screen(pilot, screen_type: type, *, composed: str, polls: int = 300) -> bool:
+def _thread_stacks() -> str:
+    """Every live thread's stack, so a wait that expires says what it waited on."""
+    frames = sys._current_frames()
+    names = {thread.ident: thread.name for thread in threading.enumerate()}
+    return "\n".join(
+        f"--- {names.get(ident, ident)} ---\n{''.join(traceback.format_stack(frame)[-12:])}"
+        for ident, frame in frames.items()
+    )
+
+
+async def _wait_for_screen(pilot, screen_type: type, *, composed: str, deadline_seconds: float = 120.0) -> bool:
     """Pause until ``screen_type`` is active and ``composed`` is queryable on it.
 
-    Creation runs real key derivation, and a pushed screen is active before
-    its ``compose`` has run, so both the screen and one of its widgets are
-    awaited before the page's words are read.
+    Creation and recovery enrolment run real key derivation, and a pushed
+    screen is active before its ``compose`` has run, so both the screen and one
+    of its widgets are awaited before the page's words are read. The bound is
+    wall-clock rather than a poll count: key derivation on a contended host
+    outlasted a fixed thirty-second budget, and a slow host is not a failure
+    of the screen under test.
     """
 
     def _ready() -> bool:
         return isinstance(pilot.app.screen, screen_type) and bool(pilot.app.screen.query(composed))
 
-    for _ in range(polls):
+    deadline = time.monotonic() + deadline_seconds
+    while time.monotonic() < deadline:
         if _ready():
             return True
         await pilot.pause(0.1)
-    return _ready()
+    if _ready():
+        return True
+    # Below the per-test timeout on purpose: an expiring wait reports what every
+    # thread was doing instead of the timeout killing the worker silently.
+    print(f"{screen_type.__name__} did not appear within {deadline_seconds:g}s\n{_thread_stacks()}", file=sys.stderr)
+    return False
+
+
+async def _click_when_laid_out(pilot, selector: str, *, deadline_seconds: float = 120.0) -> None:
+    """Click ``selector`` once it occupies screen space, retrying only a click that missed.
+
+    A composed widget can still have no region until the next layout pass; on a
+    loaded host the click then lands on nothing and the flow silently stalls.
+    ``Pilot.click`` reports whether it hit the target, so a miss is retried and a
+    hit is never repeated.
+    """
+    deadline = time.monotonic() + deadline_seconds
+    while time.monotonic() < deadline:
+        matches = pilot.app.screen.query(selector)
+        if matches and matches.first().region.area > 0 and await pilot.click(selector):
+            return
+        await pilot.pause(0.1)
+    raise AssertionError(f"{selector} never became clickable within {deadline_seconds:g}s")
 
 
 def _text(app: RegistrationScreen, selector: str) -> str:
@@ -232,7 +274,7 @@ async def test_the_chosen_language_is_the_one_the_profile_is_created_with(tmp_pa
             app.query_one("#field-password", Input).value = _CREDENTIAL_INPUT
             app.query_one("#field-confirm", Input).value = _CREDENTIAL_INPUT
             await pilot.pause()
-            await pilot.click("#btn-create")
+            await _click_when_laid_out(pilot, "#btn-create")
 
             # The offer that follows creation is still the first surface, so
             # it must answer in the language the chooser was left on. Each
@@ -261,7 +303,7 @@ async def test_the_chosen_language_is_the_one_the_profile_is_created_with(tmp_pa
             for selector, key in offer_buttons.items():
                 assert str(offer.query_one(selector, Button).label) == tr(key, locale=_TARGET_LANGUAGE), selector
 
-            await pilot.click("#btn-setup-recovery")
+            await _click_when_laid_out(pilot, "#btn-setup-recovery")
             assert await _wait_for_screen(pilot, RecoveryCodeScreen, composed="#btn-confirm-code"), (
                 f"setting up must show the code screen, but {type(pilot.app.screen).__name__} is active: "
                 f"{[str(widget.render()) for widget in pilot.app.screen.query(Static)][:6]}"
@@ -295,7 +337,7 @@ async def test_the_chosen_language_is_the_one_the_profile_is_created_with(tmp_pa
             code = str(code_screen.query_one("#code-value", Static).content)
             assert code, "the code must be on screen before it can be typed back"
             verification.value = code
-            await pilot.click("#btn-confirm-code")
+            await _click_when_laid_out(pilot, "#btn-confirm-code")
             await pilot.app.workers.wait_for_complete()
             for _ in range(300):
                 if app.outcome is not None:
@@ -343,7 +385,13 @@ async def test_the_chosen_language_does_not_outlive_the_screen(tmp_path) -> None
     override was live inside the screen, an unchanged caller language
     would be equally consistent with a chooser that never worked at all.
     """
-    with isolated_profile_storage_root(tmp_path=tmp_path):
+    # The caller's language is pinned in its own settings scope, so what this
+    # test measures is the screen and never a language an earlier test left
+    # resolved in the process.
+    with (
+        isolated_profile_storage_root(tmp_path=tmp_path),
+        override_settings(cadrumo_output_language=_STARTING_LANGUAGE),
+    ):
         before = output_language()
         assert before != _TARGET_LANGUAGE, (
             "the caller must not already be speaking the target language, or this test proves nothing"

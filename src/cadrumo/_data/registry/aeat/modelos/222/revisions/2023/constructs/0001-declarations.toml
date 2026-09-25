@@ -1,9 +1,38 @@
+# A revision that carries formulas must be reviewable, approvable,
+# reconcilable and driven through the workflow, so this construct owns every
+# formula this edition declares and links all five snapshot surfaces beside the
+# deadline and filing ones it already carried.
 [[revisions."2023".constructs]]
 id = "modelo-222-declaration-construct"
-legal_refs = ["orden-hfp-227-2017:art-2", "orden-hfp-227-2017:art-5", "ley-27-2014:art-40"]
-source_refs = ["boe-modelo-202-base-order", "aeat-modelo-222-instructions"]
+legal_refs = ["orden-hfp-227-2017:art-2", "orden-hfp-227-2017:art-5", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024", "boe-modelo-202-base-order", "aeat-modelo-222-instructions", "aeat-modelo-222-instructions-2023-2024"]
 casilla_ids = ["decl.ejercicio", "decl.tipo-declaracion"]
-application_links = ["modelo-222-deadline", "modelo-222-filing", "modelo-222-workflow"]
+application_links = [
+    "modelo-222-approval",
+    "modelo-222-calculation",
+    "modelo-222-deadline",
+    "modelo-222-filing",
+    "modelo-222-reconciliation",
+    "modelo-222-review",
+    "modelo-222-workflow",
+]
+formulas = [
+    "modelo-222-modalidad-40-2-a-ingresar",
+    "modelo-222-total-correcciones-aumentos",
+    "modelo-222-total-correcciones-disminuciones",
+    "modelo-222-suma-bases-imponibles-individuales",
+    "modelo-222-base-imponible-previa",
+    "modelo-222-base-pago-fraccionado-b1",
+    "modelo-222-resultado-previo-b1",
+    "modelo-222-base-pago-fraccionado-b2",
+    "modelo-222-base-a-tipo-2-b2",
+    "modelo-222-importe-pago-fraccionado-b2-tipo-1",
+    "modelo-222-importe-pago-fraccionado-b2-tipo-2",
+    "modelo-222-resultado-previo-b2",
+    "modelo-222-modalidad-40-3-resultado",
+    "modelo-222-cantidad-a-ingresar",
+]
+
 deadline_windows = [
     "modelo-222-2023-1p",
     "modelo-222-2023-2p",

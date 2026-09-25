@@ -42,6 +42,7 @@ review_status = "agent_reviewed"
 reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-09-12
 family_storage_baseline = "2024"
+scoped_families = ["export_layouts", "workbook_parity_refs"]
 
 [revisions."2025".family_dispositions.formulas]
 reason = "This is an informational declaration reporting third-party data to AEAT; it computes no taxpayer liability of its own, so the formula family is inapplicable by this modelo's nature rather than merely absent."
@@ -221,6 +222,20 @@ selector = {revision = "2024", id = "modelo-189-deadline"}
 sequence_additions = {source_refs = ["aeat-modelo-189-procedure"]}
 sequence_order = {source_refs = [1, 0]}
 
+[[revisions."2025".family_overrides]]
+family = "constructs"
+selector = {revision = "2024", id = "modelo-189-informative"}
+sequence_additions = {deadline_windows = ["modelo-189-2025-0a", "modelo-189-2026-0a"], legal_refs = ["orden-hac-132-2026:art-unico"], source_refs = ["boe-modelo-189-2025-values"], workbook_parity_refs = ["modelo-189-current-static-layout"]}
+sequence_removals = {deadline_windows = [0], workbook_parity_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 4, 2, 3], source_refs = [3, 4, 1, 2, 5, 0]}
+[[revisions."2025".family_overrides]]
+family = "application_links"
+selector = {revision = "2024", id = "modelo-189-export"}
+fields = {consumer = "cadrumo.application.filing.export_draft"}
+sequence_removals = {legal_refs = [1, 2], source_refs = [0, 1, 2, 4]}
 [[revisions."2025".family_removals]]
 family = "deadline_windows"
 selector = {revision = "2024", id = "modelo-189-2024-0a"}
+[[revisions."2025".family_removals]]
+family = "workbook_parity_refs"
+selector = {revision = "2024", id = "modelo-189-dr-pdf"}

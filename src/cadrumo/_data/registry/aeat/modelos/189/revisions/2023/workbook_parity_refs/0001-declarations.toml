@@ -1,0 +1,16 @@
+# Record-design parity anchor for the modelo 189 ejercicio-2023 fichero.
+#
+# The row records which official design this edition's layout was transcribed
+# from, which is what the parity family is read for here. runner_required is
+# false and no fixture of this name exists, so nothing dereferences the label:
+# NOT CLAIMED is a verified byte-position parity run against the design.
+
+[[revisions."2023".workbook_parity_refs]]
+id = "modelo-189-dr-pdf"
+workbook_source = "aeat-dr-189-2023"
+fixture_id = "modelo-189-2023-record-design-layout"
+formula_coverage = "record_design_layout"
+runner_required = false
+tolerance = "0.00"
+legal_refs = ["orden-eha-3481-2008:art-1", "orden-hfp-1180-2023:art-primero", "orden-hfp-1284-2023:art-11"]
+source_refs = ["aeat-dr-189-2023"]

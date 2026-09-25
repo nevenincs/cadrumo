@@ -11,8 +11,10 @@ for a reason that has nothing to do with the code under test.
 
 A run therefore reads a private copy of the generation that was current when it
 started. The copy keeps the ``.authority`` directory name the seed contract
-checks, and it lives under the process's collection storage root so the existing
-exit cleanup and stale-root sweep reclaim it.
+checks. It lives in the process's own ``cadrumo-frozen-authority-<pid>`` directory,
+beside the collection storage root rather than inside it, where the collection
+root's exit cleanup and stale-root sweep reclaim it; the stem's docstring in
+``collection_storage_root`` records why it must not sit in the storage tree.
 
 Pure-stdlib on purpose, for the same reason as ``collection_storage_root``: it
 runs before any Cadrumo import may resolve ``Settings``.

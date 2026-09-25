@@ -15,9 +15,11 @@ from pydantic import ValidationError
 from ...config import override_settings
 from ...json_contract import (
     ActionConditionEvidence,
+    OutputSchemaError,
     ResolvedActionArgument,
     ResolvedActionReference,
     ResolvedPreconditionAction,
+    validate_registered_envelope_document,
 )
 from ...locks_errors import LockAcquisitionError
 from ...operator_action_enums import (
@@ -118,6 +120,31 @@ def test_error_envelope_carries_resolved_precondition_action_through_json() -> N
             "value": "example",
         },
     ]
+
+
+def test_a_parsed_error_document_with_a_recovery_action_passes_the_registered_contract() -> None:
+    """A consumer that parses the emitted document validates it as the JSON it is.
+
+    The action carries tuples and enums, which JSON writes as arrays and
+    strings; a validator that checked the parsed document in strict Python mode
+    refused every error naming a recovery action, so machine consumers such as
+    the MCP harness received an unparsed ``raw`` body instead.
+    """
+    document = json.loads(
+        render_error_json(LockAcquisitionError(), action=_resolved_recovery_action(), command="config.auth.status")
+    )
+
+    assert validate_registered_envelope_document(document, None) == document
+
+
+def test_a_parsed_error_document_with_an_invalid_recovery_action_is_refused() -> None:
+    document = json.loads(
+        render_error_json(LockAcquisitionError(), action=_resolved_recovery_action(), command="config.auth.status")
+    )
+    document["error"]["action"]["conditionality"] = "not-a-conditionality"
+
+    with pytest.raises(OutputSchemaError):
+        validate_registered_envelope_document(document, None)
 
 
 def test_active_profile_pointer_error_carries_only_keyed_facts_before_application_projection() -> None:

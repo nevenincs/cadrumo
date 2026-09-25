@@ -138,4 +138,3 @@ related:
 - `S11` The RDL 16/2025 art. 17.Uno amending instrument is cited through the Renta 2025 manual; acquiring it as its own legal entry is a follow-up.
 - `S11` Remaining dev/registry reds are other lanes': render_check 390/296 provenance, modelo 190/193 deadline raises, filing capability worklist, two-channel export proof, pinned conformance vector (200), legal heading-only ceiling 37 over 34 (dias-inhabiles resolutions), modelo 345 grounding.
 - `S12` The shared authority was republished by the coordinator at generations 459f6def and 5357961a; the installed run built its own authority from its detached worktree.
-

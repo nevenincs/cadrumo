@@ -3,12 +3,13 @@ tags:
   - '#adr'
   - '#retenciones-workflow'
 date: '2026-09-21'
-modified: '2026-09-21'
+modified: '2026-09-24'
 body_schema: 'body-v2'
 body_hash: 'sha256:61ab703548420d5b176bd980ee1513aba65c1cbe71f84aef8463bb21272ff142'
 related:
   - "[[2026-09-21-retenciones-workflow-observation-payment-contract-reference]]"
   - "[[2026-09-21-retenciones-recognition-property-authority-research]]"
+  - '[[2026-09-24-retenciones-workflow-withholding-domain-grounding-research]]'
 ---
 
 # `retenciones-workflow` adr: `observation payment contract` | (**status:** `accepted`)

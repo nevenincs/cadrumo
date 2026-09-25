@@ -28,48 +28,75 @@ def _resolve_fill_column_key(keys: Sequence[ColumnKey], fill_column: int | None)
         return None
 
 
-def _current_column_widths(columns: Sequence[tuple[ColumnKey, int, int, int]]) -> dict[ColumnKey, int]:
-    """Return current widths, preserving the no-shrink part of the policy."""
-    return {key: current_width for key, current_width, _header_width, _natural_width in columns}
+def _declared_floor_widths(columns: Sequence[tuple[ColumnKey, int, int, int]]) -> dict[ColumnKey, int]:
+    """Return the widths the owner declared, used when there is none to allocate."""
+    return {key: declared_width for key, declared_width, _header_width, _natural_width in columns}
 
 
 def _header_floor_widths(columns: Sequence[tuple[ColumnKey, int, int, int]]) -> dict[ColumnKey, int]:
-    """Raise each current width to its header floor."""
-    return {key: max(current_width, header_width) for key, current_width, header_width, _ in columns}
+    """Raise each declared floor to its header floor."""
+    return {key: max(declared_width, header_width) for key, declared_width, header_width, _ in columns}
 
 
-def _natural_non_fill_width(columns: Sequence[tuple[ColumnKey, int, int, int]], fill_key: ColumnKey | None) -> int:
-    """Sum natural widths for every column except the fill target."""
-    return sum(natural_width for key, _current, _header, natural_width in columns if key is not fill_key)
+def _fill_floor_width(columns: Sequence[tuple[ColumnKey, int, int, int]], fill_key: ColumnKey | None) -> int:
+    """Return the fill column's floor, or zero when there is no target.
 
-
-def _fill_header_width(columns: Sequence[tuple[ColumnKey, int, int, int]], fill_key: ColumnKey | None) -> int:
-    """Return the fill column's header floor, or zero when there is no target."""
+    Its declared width counts as well as its header: a fill column the owner
+    sized is not free to be squeezed below that size, and a budget that
+    pretends otherwise hands the other columns width the table does not have.
+    """
     return next(
-        (header_width for key, _current, header_width, _natural in columns if key is fill_key),
+        (max(declared_width, header_width) for key, declared_width, header_width, _ in columns if key is fill_key),
         0,
     )
 
 
-def _grow_non_fill_widths(
+def _grown_non_fill_widths(
     widths: dict[ColumnKey, int],
     columns: Sequence[tuple[ColumnKey, int, int, int]],
     fill_key: ColumnKey | None,
-) -> None:
-    """Grow non-fill columns to natural widths without shrinking any column."""
-    for key, _current, _header, natural_width in columns:
-        if key is not fill_key and widths[key] < natural_width:
-            widths[key] = natural_width
+) -> dict[ColumnKey, int]:
+    """Non-fill columns raised to their natural widths, never below their floor."""
+    return {
+        key: max(widths[key], natural_width) if key is not fill_key else widths[key]
+        for key, _declared, _header, natural_width in columns
+    }
 
 
-def _current_non_fill_width(
+def _allocated_non_fill_width(
     widths: dict[ColumnKey, int],
     columns: Sequence[tuple[ColumnKey, int, int, int]],
     fill_key: ColumnKey,
     cell_padding: int,
 ) -> int:
     """Sum rendered non-fill widths, including both cell-padding sides."""
-    return sum(widths[key] + cell_padding * 2 for key, _current, _header, _natural in columns if key is not fill_key)
+    return sum(widths[key] + cell_padding * 2 for key, _declared, _header, _natural in columns if key is not fill_key)
+
+
+def _rendered_width(
+    widths: dict[ColumnKey, int],
+    columns: Sequence[tuple[ColumnKey, int, int, int]],
+    cell_padding: int,
+) -> int:
+    """Sum every column's rendered width, including both cell-padding sides."""
+    return sum(widths[key] for key, _declared, _header, _natural in columns) + cell_padding * 2 * len(columns)
+
+
+def _header_floors_fit(
+    headers: dict[ColumnKey, int],
+    columns: Sequence[tuple[ColumnKey, int, int, int]],
+    available: int,
+    *,
+    fill_key: ColumnKey | None,
+    cell_padding: int,
+) -> bool:
+    """Whether holding every header open still leaves the table inside its row.
+
+    The fill column is measured at one cell rather than at its own header,
+    because it is the column that absorbs whatever the others leave.
+    """
+    candidate = headers if fill_key is None else {**headers, fill_key: 1}
+    return _rendered_width(candidate, columns, cell_padding) <= available
 
 
 def _allocate_column_widths(
@@ -81,26 +108,46 @@ def _allocate_column_widths(
 ) -> dict[ColumnKey, int]:
     """Apply the table's deterministic header, natural, and surplus width policy.
 
-    Each column tuple carries ``(key, current_width, header_width,
-    natural_width)``. Header widths are floors for every column. Non-fill
-    columns grow to their natural widths only when doing so leaves the fill
-    column's header visible; remaining width then belongs to the configured
-    fill column alone. The returned mapping never shrinks a current width.
+    Each column tuple carries ``(key, declared_width, header_width,
+    natural_width)``. The declared width is the one the table's owner asked
+    for, never a width this policy assigned on an earlier pass: a result fed
+    back in as a floor would pin the table to the widest terminal it has ever
+    been shown at and overflow every narrower one.
+
+    Header widths are floors only while the row can afford all of them at
+    once; a terminal too narrow to name every column falls back to the
+    declared widths and shortens the headers, which is what the operator can
+    still read. Non-fill columns then grow to their natural widths only when
+    doing so leaves the fill column its floor, and the remaining width belongs
+    to the configured fill column alone.
+
+    Each of those two steps is measured on the widths it would actually
+    produce rather than on the inputs it is derived from. A column whose floor
+    already exceeds its natural width grows by nothing, and a budget that
+    counted the natural width instead would hand the difference away twice.
     """
     if available <= 0:
-        return _current_column_widths(columns)
+        return _declared_floor_widths(columns)
 
-    widths = _header_floor_widths(columns)
-    padding = cell_padding * 2 * len(columns)
-    natural_non_fill_width = _natural_non_fill_width(columns, fill_key)
-    fill_floor = _fill_header_width(columns, fill_key)
-    if fill_key is None or available - natural_non_fill_width - padding >= fill_floor:
-        _grow_non_fill_widths(widths, columns, fill_key)
+    headers = _header_floor_widths(columns)
+    widths = (
+        headers
+        if _header_floors_fit(headers, columns, available, fill_key=fill_key, cell_padding=cell_padding)
+        else _declared_floor_widths(columns)
+    )
+    fill_floor = _fill_floor_width(columns, fill_key)
+    grown = _grown_non_fill_widths(widths, columns, fill_key)
+    if fill_key is None or _rendered_width({**grown, fill_key: fill_floor}, columns, cell_padding) <= available:
+        widths = grown
 
     if fill_key is not None:
-        surplus = available - _current_non_fill_width(widths, columns, fill_key, cell_padding) - cell_padding * 2
-        if surplus > widths[fill_key]:
-            widths[fill_key] = surplus
+        # Exactly the width the other columns left, even when that is less
+        # than the fill column asked for. Taking the larger of the two instead
+        # keeps the table wider than the row it is rendered into, and an
+        # overflowing table scrolls its right-hand columns out of sight
+        # altogether rather than shortening one cell.
+        surplus = available - _allocated_non_fill_width(widths, columns, fill_key, cell_padding) - cell_padding * 2
+        widths[fill_key] = max(surplus, 1)
     return widths
 
 
@@ -133,6 +180,7 @@ class ContentDataTable[CellType](DataTable[CellType]):
         """Apply the shared density unless a caller states its own."""
         kwargs.setdefault("cell_padding", self.DEFAULT_CELL_PADDING)
         super().__init__(*args, **kwargs)
+        self._declared_widths: dict[ColumnKey, int] = {}
 
     def watch_virtual_size(self, size: Size) -> None:
         """Keep the layout box equal to the current rows and header."""
@@ -151,8 +199,17 @@ class ContentDataTable[CellType](DataTable[CellType]):
         """
         self._absorb_surplus_width()
 
+    def _declared_width(self, key: ColumnKey, column: Column) -> int:
+        """The width the owner asked for, remembered before this policy writes one.
+
+        An auto-sized column declares nothing, so its floor is zero and only
+        its header holds it open. Recorded on first sight because every later
+        pass reads a width this policy itself assigned.
+        """
+        return self._declared_widths.setdefault(key, 0 if column.auto_width else column.width)
+
     def _absorb_surplus_width(self) -> None:
-        """Apply the deterministic width policy and refresh only after growth."""
+        """Apply the deterministic width policy and refresh only after a change."""
         if not self.columns:
             return
         available = self.container_size.width - self.scrollbar_size_vertical
@@ -160,22 +217,35 @@ class ContentDataTable[CellType](DataTable[CellType]):
             return
 
         columns = list(self.columns.items())
+        # A rebuilt column set retires its keys; the floors it declared go with it.
+        self._declared_widths = {key: width for key, width in self._declared_widths.items() if key in self.columns}
         natural = {key: self._natural_width(key, column) for key, column in columns}
         fill_key = _resolve_fill_column_key([key for key, _column in columns], self.fill_column)
         allocated = _allocate_column_widths(
             available,
-            [(key, column.width, len(str(column.label)), natural[key]) for key, column in columns],
+            [(key, self._declared_width(key, column), len(str(column.label)), natural[key]) for key, column in columns],
             fill_key=fill_key,
             cell_padding=self.cell_padding,
         )
 
-        widened = False
+        changed = False
         for key, column in columns:
-            if column.width < allocated[key]:
+            # Textual renders an auto-width column from its measured content and
+            # ignores `width` entirely, so assigning the allocation without
+            # clearing `auto_width` leaves this whole policy inert: a long cell
+            # still sets the column's render width and pushes the table past the
+            # row it was given. Taking the width means taking it away from the
+            # measurement.
+            if column.width != allocated[key] or column.auto_width:
                 column.width = allocated[key]
-                widened = True
+                column.auto_width = False
+                changed = True
 
-        if widened:
+        if changed:
+            # The same signal Textual's own column mutators raise: the table
+            # re-measures its virtual size on the next idle, so the scroll
+            # extent describes the widths just assigned.
+            self._require_update_dimensions = True
             self.refresh()
 
     def _natural_width(self, key: ColumnKey, column: Column) -> int:

@@ -71,6 +71,11 @@ def _prohibited_aeat_product_forms(surface: str) -> tuple[str, ...]:
 
 
 _REPOSITORY_ROOT = REPO_ROOT
+
+# A hang guard, not a speed budget: each nested `uv run pytest --collect-only`
+# starts an interpreter and collects in a fresh process, which under the merge
+# gate's full xdist lane outlasted thirty seconds without anything being wrong.
+_NESTED_COLLECTION_HANG_GUARD_SECONDS = 180
 _PYPROJECT = _REPOSITORY_ROOT / "pyproject.toml"
 #: Per-test wall ceiling for the harness lane's combined real-proof pass, in
 #: seconds. Deliberately above the ini default: this lane's subject is a real
@@ -286,7 +291,7 @@ def test_harness_member_preflight_rejects_empty_collection_even_when_another_mem
     aggregate = run_command(
         [*invocation, str(populated_member), str(empty_member)],
         cwd=_REPOSITORY_ROOT,
-        timeout_seconds=30,
+        timeout_seconds=_NESTED_COLLECTION_HANG_GUARD_SECONDS,
     )
     assert aggregate.returncode == 0, (
         "the populated control must make aggregate collection non-empty\n"
@@ -297,7 +302,7 @@ def test_harness_member_preflight_rejects_empty_collection_even_when_another_mem
     empty_preflight = run_command(
         [*invocation, str(empty_member)],
         cwd=_REPOSITORY_ROOT,
-        timeout_seconds=30,
+        timeout_seconds=_NESTED_COLLECTION_HANG_GUARD_SECONDS,
     )
     assert empty_preflight.returncode == 5, (
         "the per-member collect preflight must preserve pytest exit 5 for an empty member\n"
@@ -672,3 +677,98 @@ def test_aeat_human_cli_and_authority_forms_are_allowed(surface: str) -> None:
 def test_former_aeat_product_forms_are_rejected(surface: str, expected_family: str) -> None:
     """Former import, package, install, and source families remain prohibited."""
     assert expected_family in _prohibited_aeat_product_forms(surface)
+
+
+_RELEASE = _WORKFLOWS_DIR / "release.yml"
+
+#: The dispatched commit. A run's cache token writes into the scope of the ref it
+#: was dispatched on, so this is the only commit whose code a release job may run
+#: without proof that the dispatched ref already carries it.
+_DISPATCHED_COMMIT = "${{ github.sha }}"
+_STEP_OUTPUT_REF = re.compile(r"^\$\{\{\s*steps\.([\w-]+)\.outputs\.[\w-]+\s*\}\}$")
+#: A step that compares a resolved commit against the dispatched one, so the
+#: commit it outputs is the dispatched commit or one of its ancestors.
+_ANCESTRY_REFUSAL = re.compile(r"compare/\S*\.\.\.\$\{GITHUB_SHA\}")
+
+
+def _foreign_commit_checkouts(documents: tuple[tuple[Path, dict[str, Any]], ...]) -> list[str]:
+    """Return own-repository checkouts of a commit the dispatched ref is not proven to carry."""
+    offenders: list[str] = []
+    for path, document in documents:
+        for job_name, job in document["jobs"].items():
+            guarded: set[str] = set()
+            for step in job.get("steps") or ():
+                if step.get("id") and _ANCESTRY_REFUSAL.search(str(step.get("run") or "")):
+                    guarded.add(str(step["id"]))
+                if not str(step.get("uses", "")).startswith("actions/checkout@"):
+                    continue
+                arguments = step.get("with") or {}
+                if "repository" in arguments:
+                    continue
+                ref = str(arguments.get("ref") or "")
+                if ref == _DISPATCHED_COMMIT:
+                    continue
+                guard = _STEP_OUTPUT_REF.match(ref)
+                if guard is not None and guard.group(1) in guarded:
+                    continue
+                offenders.append(f"{path.name}: {job_name}: {ref or '<dispatched ref name>'}")
+    return offenders
+
+
+def test_release_jobs_run_only_code_the_dispatched_ref_carries() -> None:
+    """No release job runs a tag's or input's code with the dispatched ref's cache token."""
+    assert _foreign_commit_checkouts(_lane_documents((_RELEASE,))) == []
+
+
+@pytest.mark.parametrize(
+    ("steps", "expected"),
+    (
+        pytest.param(
+            [{"uses": "actions/checkout@v7", "with": {"ref": "${{ needs.locate-cohort.outputs.tag-commit }}"}}],
+            ["fixture.yml: lane: ${{ needs.locate-cohort.outputs.tag-commit }}"],
+            id="proven-tag-of-another-ref",
+        ),
+        pytest.param(
+            [{"uses": "actions/checkout@v7", "with": {"ref": "${{ inputs.ref }}"}}],
+            ["fixture.yml: lane: ${{ inputs.ref }}"],
+            id="input-ref",
+        ),
+        pytest.param(
+            [{"uses": "actions/checkout@v7"}],
+            ["fixture.yml: lane: <dispatched ref name>"],
+            id="re-resolved-ref-name",
+        ),
+        pytest.param(
+            [
+                {"id": "resolved", "run": 'gh api "repos/r/commits/${INPUT_REF}" --jq .sha'},
+                {"uses": "actions/checkout@v7", "with": {"ref": "${{ steps.resolved.outputs.commit }}"}},
+            ],
+            ["fixture.yml: lane: ${{ steps.resolved.outputs.commit }}"],
+            id="resolved-without-ancestry-refusal",
+        ),
+        pytest.param(
+            [
+                {"uses": "actions/checkout@v7", "with": {"ref": "${{ steps.documented.outputs.commit }}"}},
+                {"id": "documented", "run": 'gh api "repos/r/compare/${commit}...${GITHUB_SHA}" --jq .status'},
+            ],
+            ["fixture.yml: lane: ${{ steps.documented.outputs.commit }}"],
+            id="refusal-after-the-checkout",
+        ),
+        pytest.param(
+            [
+                {"id": "documented", "run": 'gh api "repos/r/compare/${commit}...${GITHUB_SHA}" --jq .status'},
+                {"uses": "actions/checkout@v7", "with": {"ref": "${{ steps.documented.outputs.commit }}"}},
+                {"uses": "actions/checkout@v7", "with": {"ref": "${{ github.sha }}"}},
+                {"uses": "actions/checkout@v7", "with": {"repository": "o/tap", "path": "var/tap"}},
+            ],
+            [],
+            id="dispatched-or-ancestry-proven",
+        ),
+    ),
+)
+def test_the_foreign_commit_gate_reports_every_unproven_checkout(
+    steps: list[dict[str, Any]], expected: list[str]
+) -> None:
+    """Teeth: a checkout of a commit the dispatched ref is not proven to carry is reported."""
+    document = {"jobs": {"lane": {"steps": steps}}}
+    assert _foreign_commit_checkouts(((Path("fixture.yml"), document),)) == expected

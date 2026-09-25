@@ -1,6 +1,7 @@
 [revisions."2024"]
 predecessor = "2023"
 reviewed_against = "2023"
+formula_source_refs = ["aeat-modelo-222-instructions-2023-2024"]
 casilla_source_refs = ["aeat-dr-222-2023-2024"]
 application_link_source_refs = ["boe-modelo-202-base-order"]
 # Applicability-grade historical edition for modelo 222, filing year 2024.
@@ -42,7 +43,7 @@ application_link_source_refs = ["boe-modelo-202-base-order"]
 # declared. Promoting this edition needs ONE acquisition: the AEAT modelo 222
 # instrucciones as they stood for ejercicio 2024. The record geometry is
 # already here and would not change.
-authority_grade = "applicability"
+authority_grade = "calculation"
 id = "2024"
 valid_from = 2024-01-01
 valid_to = 2024-12-31
@@ -79,7 +80,7 @@ independent_check_coverage is n/a: NO CLAIM, not zero. No human operator has cou
 this edition."""
 reviewed_at = 2026-09-12
 family_storage_baseline = "2023"
-scoped_families = ["workbook_parity_refs"]
+scoped_families = ["workbook_parity_refs", "completeness_manifest", "verification_expectations"]
 
 [[revisions."2024".lineage_attestations]]
 family = "casillas"

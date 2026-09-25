@@ -53,6 +53,11 @@ modelo:
             label: Valoració
           m189-valoracion-total:
             label: Valoració total
+      construct:
+        modelo-189-informative:
+          field:
+            title: Model 189. Declaració informativa anual sobre valors, assegurances
+              i rendes
       field:
         official_name: Modelo 189. Declaració informativa anual sobre valors, assegurances
           i rendes.

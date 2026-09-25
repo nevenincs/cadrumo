@@ -1,0 +1,36 @@
+# Modelo 222's 2023-2024 instructions make these results automatic, but B.1 and
+# B.2 are alternative calculation lanes. Reconcile each result when a returned
+# declaration prints it; do not add alternative-lane outputs to the coverage
+# denominator.
+#
+# The list is exactly this edition's computed casillas. It differs from the
+# 2025 edition's in both directions: [23] is computed here and filer input
+# there, because this era's instructions state "La clave [23] sera = clave [19]
+# - clave [20]", while [63] and [66] are absent here, being importes of the
+# third and fourth B.2 rate tiers the 2023 design does not print.
+
+[[revisions."2023".verification_expectations]]
+id = "modelo-222-reconcile-when-present"
+computed_casilla_ids = []
+reconcile_when_present_casilla_ids = [
+    "03",
+    "10",
+    "13",
+    "16",
+    "18",
+    "19",
+    "22",
+    "23",
+    "25",
+    "26",
+    "32",
+    "34",
+    "38",
+    "39",
+]
+tolerance = "0.01"
+rounding = "money-2"
+min_coverage = "0"
+discrepancy_causes = ["extraction_unreliable", "unmodelled_rule", "rounding", "correctness_divergence"]
+legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
+source_refs = ["aeat-modelo-222-instructions-2023-2024", "aeat-dr-222-2023-2024"]

@@ -1,0 +1,9 @@
+[[revisions.2023.export_layouts]]
+id = 'generated-modelo-296-2023-fichero'
+format = 'fixed_width'
+source_refs = ['aeat-dr-296-2023']
+legal_refs = [
+    'orden-eha-3290-2008:art-6',
+    'trlirnr-rdleg-5-2004:art-24',
+]
+dictionary_path_overrides = []

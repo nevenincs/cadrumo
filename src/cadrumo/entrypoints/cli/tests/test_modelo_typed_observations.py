@@ -172,9 +172,10 @@ def test_cli_refuses_caller_authored_retenciones_for_invoice_withholding_modelos
 
     assert result.exit_code == 2, result.output
     if modelo == "123":
-        # Modelo 123 is refused before the transport check: its official
-        # "Número de rentas" count is unresolved, so no capture path is open.
-        assert "Número de rentas" in result.output
+        # Modelo 123 takes withholding only from its paying ledger transaction,
+        # so the refusal names that one accepted transport.
+        assert "--ledger-payment-withholding" in result.output
+        assert "nothing was written" in result.output
     else:
         assert f"--retencion-observation is not accepted for Modelo {modelo}" in result.output
         assert "use invoice evidence" in result.output

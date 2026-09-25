@@ -84,6 +84,16 @@ def _wrapper_path(profile_id: UUID) -> Path:
     return profile_custody_recovery_envelope_path(load_committed_profile_password_material(profile_id).capsule_path)
 
 
+def _mismatching_proof(code: str) -> str:
+    """Return ``code`` with its last character replaced by one it is guaranteed not to be.
+
+    A fixed replacement left the proof unchanged whenever the random code
+    already ended in that character, so the refusal case occasionally supplied
+    the true code and was rightly admitted.
+    """
+    return code[:-1] + ("Y" if code[-1] == "Z" else "Z")
+
+
 def _storage_snapshot(root: Path) -> dict[str, bytes | None]:
     """Capture capsule, inventory, session, record and envelope state exactly."""
     return {
@@ -140,7 +150,7 @@ def test_a_mismatching_handover_proof_installs_nothing(tmp_path: Path) -> None:
             enroll_profile_recovery(
                 profile_id=profile_id,
                 current_passphrase=_CURRENT,
-                recovery_handover=lambda enrollment: enrollment.recovery_key.code[:-1] + "Z",
+                recovery_handover=lambda enrollment: _mismatching_proof(enrollment.recovery_key.code),
             )
 
         assert refused.value.translated_message == "application.user_profile.errors.recovery_possession_mismatch"
@@ -358,7 +368,7 @@ def test_a_wrong_code_refuses_non_oracularly_and_leaves_the_envelope_untouched(t
         code = _enroll(profile_id)
         logout_active_profile()
         before = _storage_snapshot(storage_root)
-        wrong = code[:-1] + ("Z" if code[-1] != "Z" else "Y")
+        wrong = _mismatching_proof(code)
 
         with pytest.raises(ProfileRecoveryError) as refused:
             reset_profile_passphrase_with_recovery(

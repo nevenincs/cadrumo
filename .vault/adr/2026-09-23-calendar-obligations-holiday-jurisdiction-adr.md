@@ -3,12 +3,13 @@ tags:
   - '#adr'
   - '#calendar-obligations'
 date: '2026-09-23'
-modified: '2026-09-23'
+modified: '2026-09-24'
 body_schema: 'body-v2'
 body_hash: 'sha256:89bb307bccd9729b348afc8691a147f56bb4fa867d0c0d3950fd089b0a6c44a9'
 related:
   - "[[2026-09-21-calendar-obligations-plan]]"
   - '[[2026-09-23-calendar-obligations-holiday-jurisdiction-research]]'
+  - '[[2026-09-24-calendar-obligations-obligation-evidence-domain-grounding-research]]'
 ---
 
 # `calendar-obligations` adr: `Deadline holiday jurisdiction` | (**status:** `accepted`)

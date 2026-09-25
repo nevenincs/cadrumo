@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#assets-core'
 date: '2026-09-23'
-modified: '2026-09-23'
+modified: '2026-09-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:b1de4f96b753e56645de2e428db6bd136d2cbe4ccdae3be83cca0eefb5b7a39e'
+body_hash: 'sha256:1bb552a5b7bdaf1c445958503f507e3d869a7f5040dc1fd2030aef13e88b8e03'
 related:
   - "[[2026-09-23-assets-core-vehicle-affectation-research]]"
   - "[[2026-09-21-assets-core-lifecycle-contract-adr]]"

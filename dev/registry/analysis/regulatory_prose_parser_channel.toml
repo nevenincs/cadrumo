@@ -26,6 +26,11 @@
 ##
 
 [[parser]]
+module = "dev/registry/compiler/record_design_pdf_columns.py"
+corpus = "AEAT diseños de registro (PDF)"
+reason = """The column half of the PDF record-design reader. Assigns each word of a published diseño table to its printed column (Descripción, Validación, Contenido) from word positions and drawn borders, so a field's constant or enumeration comes from the cell the design prints it in rather than from flattened text. It only re-partitions text the line reader already parsed for that field; positions, widths and naturaleza stay owned by the line reader."""
+
+[[parser]]
 module = "dev/registry/compiler/record_design_pdf_repairs.py"
 corpus = "AEAT diseños de registro (PDF)"
 reason = """\

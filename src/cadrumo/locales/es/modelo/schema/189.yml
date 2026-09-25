@@ -53,6 +53,11 @@ modelo:
             label: Valoración
           m189-valoracion-total:
             label: Valoración total
+      construct:
+        modelo-189-informative:
+          field:
+            title: Modelo 189. Declaración informativa anual acerca de valores, seguros
+              y rentas
       field:
         official_name: Modelo 189. Declaración informativa anual acerca de valores,
           seguros y rentas.

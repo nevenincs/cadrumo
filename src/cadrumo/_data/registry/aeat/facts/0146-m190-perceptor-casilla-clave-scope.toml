@@ -8,6 +8,141 @@
 fact_id = "m190-perceptor-casilla-clave-scope"
 family = "mapping"
 
+# Ejercicio 2022, from aeat-dr-190-2020. Two entries differ from the 2024 edition and both are
+# stated by this design: the REDUCCIONES APLICABLES field at 171-183 reads "Solo para percepciones
+# correspondientes a las claves A, B.01, B.03 y C", without the E, F, G, H and I claves the 2024
+# design adds; and the empresas-emergentes casilla does not exist in this edition, whose perceptor
+# record ends at 322. Every other scope statement is word for word the 2024 one.
+[[fact.variants]]
+variant_id = "m190-perceptor-casilla-clave-scope:2022-01-01"
+date_axis = "filing_period"
+valid_from = 2022-01-01
+valid_to = 2022-12-31
+legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-190-2020"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-190-2020"
+required_text = ["Solo para percepciones correspondientes a las claves A, B.01, B.03 y C", "Solo para percepciones correspondientes a la clave A"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+    { key = "modelo", value = "190" },
+    { key = "row_clave_binding", value = "modelo-190-perceptor-row-clave" },
+    { key = "row_subclave_binding", value = "modelo-190-perceptor-row-subclave" },
+    { key = "casilla:perc.ano-nacimiento", value = "A,B.01,B.03,C" },
+    { key = "casilla:perc.situacion-familiar", value = "A,B.01,B.03,C" },
+    { key = "casilla:perc.nif-conyuge-titular-unidad", value = "A,B.01,B.03,C,L.29" },
+    { key = "casilla:perc.discapacidad", value = "A,B.01,B.03,C" },
+    { key = "casilla:perc.contrato-relacion", value = "A" },
+    { key = "casilla:perc.titular-unidad-convivencia", value = "L.29" },
+    { key = "casilla:perc.complemento-ayuda-infancia", value = "L.29" },
+    { key = "casilla:perc.movilidad-geografica", value = "A" },
+    { key = "casilla:perc.reducciones-aplicables", value = "A,B.01,B.03,C" },
+    { key = "casilla:perc.gastos-deducibles", value = "A,B.01,B.03,C,E.01,E.02" },
+    { key = "casilla:perc.pension-compensatoria", value = "A,B.01,B.03,C" },
+    { key = "casilla:perc.anualidades-alimentos", value = "A,B.01,B.03,C" },
+    { key = "casilla:perc.descendientes-menores-3-total", value = "A,B.01,B.03,C" },
+    { key = "casilla:perc.descendientes-menores-3-entero", value = "A,B.01,B.03,C" },
+    { key = "casilla:perc.descendientes-resto-total", value = "A,B.01,B.03,C" },
+    { key = "casilla:perc.descendientes-resto-entero", value = "A,B.01,B.03,C" },
+    { key = "casilla:perc.descendientes-discapacidad-33-65-total", value = "A,B.01,B.03,C" },
+    { key = "casilla:perc.descendientes-discapacidad-33-65-entero", value = "A,B.01,B.03,C" },
+    { key = "casilla:perc.descendientes-discapacidad-movilidad-total", value = "A,B.01,B.03,C" },
+    { key = "casilla:perc.descendientes-discapacidad-movilidad-entero", value = "A,B.01,B.03,C" },
+    { key = "casilla:perc.descendientes-discapacidad-65-total", value = "A,B.01,B.03,C" },
+    { key = "casilla:perc.descendientes-discapacidad-65-entero", value = "A,B.01,B.03,C" },
+    { key = "casilla:perc.ascendientes-menores-75-total", value = "A,B.01,B.03,C" },
+    { key = "casilla:perc.ascendientes-menores-75-entero", value = "A,B.01,B.03,C" },
+    { key = "casilla:perc.ascendientes-75-mas-total", value = "A,B.01,B.03,C" },
+    { key = "casilla:perc.ascendientes-75-mas-entero", value = "A,B.01,B.03,C" },
+    { key = "casilla:perc.ascendientes-discapacidad-33-65-total", value = "A,B.01,B.03,C" },
+    { key = "casilla:perc.ascendientes-discapacidad-33-65-entero", value = "A,B.01,B.03,C" },
+    { key = "casilla:perc.ascendientes-discapacidad-movilidad-total", value = "A,B.01,B.03,C" },
+    { key = "casilla:perc.ascendientes-discapacidad-movilidad-entero", value = "A,B.01,B.03,C" },
+    { key = "casilla:perc.ascendientes-discapacidad-65-total", value = "A,B.01,B.03,C" },
+    { key = "casilla:perc.ascendientes-discapacidad-65-entero", value = "A,B.01,B.03,C" },
+    { key = "casilla:perc.computo-hijo-1", value = "A,B.01,B.03,C" },
+    { key = "casilla:perc.computo-hijo-2", value = "A,B.01,B.03,C" },
+    { key = "casilla:perc.computo-hijo-3", value = "A,B.01,B.03,C" },
+    { key = "casilla:perc.prestamos-vivienda-clave", value = "A,B.01,B.03,C" },
+    { key = "casilla:perc.incapacidad-dineraria-percepcion", value = "A,B.01" },
+    { key = "casilla:perc.incapacidad-dineraria-retenciones", value = "A,B.01" },
+    { key = "casilla:perc.incapacidad-especie-valoracion", value = "A" },
+    { key = "casilla:perc.incapacidad-especie-ingresos-a-cuenta", value = "A" },
+    { key = "casilla:perc.incapacidad-especie-repercutidos", value = "A" },
+]
+
+# Ejercicio 2023, from aeat-dr-190-2023. The scope statements are the 2022 ones unchanged: this
+# design adds the clave-E foral retention split at 323-387, which carries no clave scope, and it
+# still reads "Solo para percepciones correspondientes a las claves A, B.01, B.03 y C" at the
+# REDUCCIONES APLICABLES field. The empresas-emergentes casilla arrives with the 2024 design.
+[[fact.variants]]
+variant_id = "m190-perceptor-casilla-clave-scope:2023-01-01"
+date_axis = "filing_period"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-190-2023"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-190-2023"
+required_text = ["Solo para percepciones correspondientes a las claves A, B.01, B.03 y C", "Solo para percepciones correspondientes a la clave A"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+    { key = "modelo", value = "190" },
+    { key = "row_clave_binding", value = "modelo-190-perceptor-row-clave" },
+    { key = "row_subclave_binding", value = "modelo-190-perceptor-row-subclave" },
+    { key = "casilla:perc.ano-nacimiento", value = "A,B.01,B.03,C" },
+    { key = "casilla:perc.situacion-familiar", value = "A,B.01,B.03,C" },
+    { key = "casilla:perc.nif-conyuge-titular-unidad", value = "A,B.01,B.03,C,L.29" },
+    { key = "casilla:perc.discapacidad", value = "A,B.01,B.03,C" },
+    { key = "casilla:perc.contrato-relacion", value = "A" },
+    { key = "casilla:perc.titular-unidad-convivencia", value = "L.29" },
+    { key = "casilla:perc.complemento-ayuda-infancia", value = "L.29" },
+    { key = "casilla:perc.movilidad-geografica", value = "A" },
+    { key = "casilla:perc.reducciones-aplicables", value = "A,B.01,B.03,C" },
+    { key = "casilla:perc.gastos-deducibles", value = "A,B.01,B.03,C,E.01,E.02" },
+    { key = "casilla:perc.pension-compensatoria", value = "A,B.01,B.03,C" },
+    { key = "casilla:perc.anualidades-alimentos", value = "A,B.01,B.03,C" },
+    { key = "casilla:perc.descendientes-menores-3-total", value = "A,B.01,B.03,C" },
+    { key = "casilla:perc.descendientes-menores-3-entero", value = "A,B.01,B.03,C" },
+    { key = "casilla:perc.descendientes-resto-total", value = "A,B.01,B.03,C" },
+    { key = "casilla:perc.descendientes-resto-entero", value = "A,B.01,B.03,C" },
+    { key = "casilla:perc.descendientes-discapacidad-33-65-total", value = "A,B.01,B.03,C" },
+    { key = "casilla:perc.descendientes-discapacidad-33-65-entero", value = "A,B.01,B.03,C" },
+    { key = "casilla:perc.descendientes-discapacidad-movilidad-total", value = "A,B.01,B.03,C" },
+    { key = "casilla:perc.descendientes-discapacidad-movilidad-entero", value = "A,B.01,B.03,C" },
+    { key = "casilla:perc.descendientes-discapacidad-65-total", value = "A,B.01,B.03,C" },
+    { key = "casilla:perc.descendientes-discapacidad-65-entero", value = "A,B.01,B.03,C" },
+    { key = "casilla:perc.ascendientes-menores-75-total", value = "A,B.01,B.03,C" },
+    { key = "casilla:perc.ascendientes-menores-75-entero", value = "A,B.01,B.03,C" },
+    { key = "casilla:perc.ascendientes-75-mas-total", value = "A,B.01,B.03,C" },
+    { key = "casilla:perc.ascendientes-75-mas-entero", value = "A,B.01,B.03,C" },
+    { key = "casilla:perc.ascendientes-discapacidad-33-65-total", value = "A,B.01,B.03,C" },
+    { key = "casilla:perc.ascendientes-discapacidad-33-65-entero", value = "A,B.01,B.03,C" },
+    { key = "casilla:perc.ascendientes-discapacidad-movilidad-total", value = "A,B.01,B.03,C" },
+    { key = "casilla:perc.ascendientes-discapacidad-movilidad-entero", value = "A,B.01,B.03,C" },
+    { key = "casilla:perc.ascendientes-discapacidad-65-total", value = "A,B.01,B.03,C" },
+    { key = "casilla:perc.ascendientes-discapacidad-65-entero", value = "A,B.01,B.03,C" },
+    { key = "casilla:perc.computo-hijo-1", value = "A,B.01,B.03,C" },
+    { key = "casilla:perc.computo-hijo-2", value = "A,B.01,B.03,C" },
+    { key = "casilla:perc.computo-hijo-3", value = "A,B.01,B.03,C" },
+    { key = "casilla:perc.prestamos-vivienda-clave", value = "A,B.01,B.03,C" },
+    { key = "casilla:perc.incapacidad-dineraria-percepcion", value = "A,B.01" },
+    { key = "casilla:perc.incapacidad-dineraria-retenciones", value = "A,B.01" },
+    { key = "casilla:perc.incapacidad-especie-valoracion", value = "A" },
+    { key = "casilla:perc.incapacidad-especie-ingresos-a-cuenta", value = "A" },
+    { key = "casilla:perc.incapacidad-especie-repercutidos", value = "A" },
+]
+
 [[fact.variants]]
 variant_id = "m190-perceptor-casilla-clave-scope:2024-01-01"
 date_axis = "filing_period"

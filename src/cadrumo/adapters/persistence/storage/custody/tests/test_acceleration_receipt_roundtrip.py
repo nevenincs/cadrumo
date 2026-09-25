@@ -468,6 +468,40 @@ print(outcome.refusal.value if outcome.refusal is not None else 'resumed')
         assert isinstance(completed.stdout, str)
         return completed.stdout.strip()
 
+    def test_revocation_removes_an_unrecovered_journal_so_resume_reports_absent(self, tmp_path: Path) -> None:
+        """The strong close removes the journal whether or not the keychain answers.
+
+        The journal carries the wrapped DEK, so it is an on-disk half of the
+        session. Where the keychain cannot retire the entry it names, recovery
+        defers; revocation must still leave nothing a resume could reach.
+        """
+        profile_id = _profile_id()
+        self._prepare_sidecar(tmp_path, profile_id)
+        successor = _receipt_bytes(
+            _wrap(session_key=secrets.token_bytes(32), dek=secrets.token_bytes(32), profile_id=profile_id),
+        )
+        journal_path = _profile_session_retirement_path(storage_root=tmp_path, profile_id=profile_id)
+        compare_and_replace_profile_custody_local_record(
+            journal_path,
+            expected=None,
+            replacement=_pending_retirement_bytes(profile_id=profile_id, predecessor=None, successor=successor),
+            maximum_bytes=24 * 1024,
+        )
+        assert journal_path.exists(), "the journal must exist, or its removal proves nothing"
+
+        delete_profile_session(storage_root=tmp_path, profile_id=profile_id)
+
+        assert not journal_path.exists()
+        outcome, dek = resume_profile_session(
+            storage_root=tmp_path,
+            profile_id=profile_id,
+            custody_generation=1,
+            dek_epoch=_EPOCH,
+            now=_NOW,
+        )
+        assert outcome.refusal is ProfileSessionRefusalReason.ABSENT
+        assert dek is None
+
     def test_crash_before_successor_key_storage_preserves_or_converges_the_prepared_receipt(
         self,
         tmp_path: Path,

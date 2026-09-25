@@ -1,9 +1,12 @@
-"""Generic advisory seams for registry-selected family declarations.
+"""Calculate-path advisories for the Modelo 100 family casillas.
 
-Revision-specific descendant predicates, profile identifiers, legal
-references, and bounded-detail policy belong to the selected Modelo 100
-registry revision. This module retains generic diagnostic mechanics and the
-unrelated childcare advisory helpers.
+The mínimo por descendientes (Art. 58/61 LIRPF) and the Art. 81.2 guardería
+increase are computed from the active profile's ``renta_family.*`` facts. Each
+collector here discloses one state in which that computation rests on an
+absent, inferred or staged fact the operator can see and correct, rather than
+leaving it silent. Revision-specific bounded-detail policy is read from the
+selected Modelo 100 registry revision; the descendant predicates are the
+domain's own.
 """
 
 from __future__ import annotations
@@ -14,17 +17,22 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, NamedTuple
 
 from ...core.casilla_id import CasillaId
+from ...core.decimal.coercion import coerce_decimal
 from ...core.modelo import Modelo
 from ...domain.calculations.registry.authority import bundled_indexed_authority
+from ...domain.calculations.registry.casilla_membership import casillas_by_id
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.formula_runtime_ops import resolve_dated_value
+from ...domain.calculations.registry.ids import LegalRefId
 from ...domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.contribuyente.descendant import DescendantInfo
 from ...domain.contribuyente.descendant_facts import descendant_list_from_facts
 from ...domain.contribuyente.family_fact_context import FamilyFactResolutionContext
+from ...domain.contribuyente.family_profile import RentaFamilyProfile
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
+from .profile_binding import renta_family_profile_from_facts, second_entitled_filer_indicated
 from .semantic_role_resolution import casilla_id_for_unambiguous_revision_semantic_role
 
 if TYPE_CHECKING:
@@ -51,7 +59,20 @@ _MINIMO_ESTATAL_SEMANTIC_ROLE = "irpf_minimo_descendientes_estatal"
 _DESCENDANT_FACT_PREFIX = "renta_family.descendiente."
 _DESCENDANTS_COUNT_PATH = "renta_family.descendientes_count"
 _UNDECLARED_SOURCE_KIND = "minimo_descendientes_undeclared"
+_COUNT_DESYNC_SOURCE_KIND = "descendientes_count_desync"
+_PRORRATA_INFERRED_SOURCE_KIND = "minimo_descendientes_prorrata_inferred"
 _RENTAS_UNDECLARED_SOURCE_KIND = "minimo_descendientes_rentas_undeclared"
+_ENTRY_DATE_MISSING_SOURCE_KIND = "minimo_descendientes_entry_date_missing"
+_DEPENDENCIA_ASSIMILATED_SOURCE_KIND = "minimo_descendientes_dependencia_assimilated"
+_DEPENDENCIA_SUPPRESSED_SOURCE_KIND = "minimo_descendientes_dependencia_suppressed"
+
+#: Tax-reviewed provisions the rentas advisory's message states: the Art. 58.1
+#: rentas ceiling and the Art. 61 norma 2ª own-return exclusion. Casilla 0513
+#: carries only the whole-article refs, which are coarser than that claim.
+_RENTAS_UNDECLARED_ASSERTED_LEGAL_REFS: tuple[LegalRefId, ...] = (
+    "ley-35-2006:art-58-1",
+    "ley-35-2006:art-61-norma-2",
+)
 
 #: The Art. 81.2 guardería increase (Modelo 100 casilla 0613).
 _INCREMENTO_GUARDERIA_SEMANTIC_ROLE = "irpf_incremento_maternidad_guarderia"
@@ -75,52 +96,6 @@ class _RegistryScope(NamedTuple):
     bindings: tuple[BindingDefinition, ...]
     filing_year: int
     period_token: str
-
-
-def _registry_minimo_descendientes_diagnostics(
-    revision: ModeloRevision,
-    *,
-    modelo: str,
-    filing_year: int,
-    period_token: str,
-) -> tuple[CalculationSourceDiagnostic, ...]:
-    """Resolve the selected revision's typed verification declarations.
-
-    The advisory predicates themselves remain generic mechanics. Their
-    revision-specific profile, formula and legal/source declarations are read
-    from the scope selected by the calculation, so a latest-revision lookup
-    cannot accidentally author a historical filing.
-    """
-    scope = _selected_registry_scope(
-        revision,
-        modelo=modelo,
-        filing_year=filing_year,
-        period_token=period_token,
-    )
-    if scope is None:
-        return ()
-    _validate_binding_report(scope)
-    return ()
-
-
-def _registry_minimo_descendientes_count_diagnostics(
-    revision: ModeloRevision,
-    *,
-    modelo: str,
-    filing_year: int,
-    period_token: str,
-) -> tuple[CalculationSourceDiagnostic, ...]:
-    """Resolve the selected revision before checking count consistency."""
-    scope = _selected_registry_scope(
-        revision,
-        modelo=modelo,
-        filing_year=filing_year,
-        period_token=period_token,
-    )
-    if scope is None:
-        return ()
-    _validate_binding_report(scope)
-    return ()
 
 
 def _selected_registry_scope(
@@ -201,6 +176,65 @@ def _family_fact_context(
     )
 
 
+class _MinimoScope(NamedTuple):
+    """The selected registry scope and the mínimo casilla an advisory addresses."""
+
+    registry: _RegistryScope
+    casilla_id: CasillaId
+
+
+def _minimo_scope(
+    revision: ModeloRevision,
+    *,
+    modelo: str,
+    filing_year: int,
+    period_token: str,
+) -> _MinimoScope | None:
+    """Select the Modelo 100 scope and its estatal mínimo casilla, or ``None`` elsewhere."""
+    scope = _selected_registry_scope(
+        revision,
+        modelo=modelo,
+        filing_year=filing_year,
+        period_token=period_token,
+    )
+    if scope is None:
+        return None
+    _validate_binding_report(scope)
+    casilla_id = casilla_id_for_unambiguous_revision_semantic_role(
+        revision,
+        _MINIMO_ESTATAL_SEMANTIC_ROLE,
+        modelo_id=modelo,
+    )
+    if casilla_id is None:
+        return None
+    return _MinimoScope(registry=scope, casilla_id=casilla_id)
+
+
+def _casilla_legal_refs(revision: ModeloRevision, casilla_id: CasillaId) -> tuple[LegalRefId, ...]:
+    """Read the casilla's own grounding, and its binding's, off the selected revision.
+
+    The casilla-derived path, for an advisory whose subject IS the casilla's own
+    computation. Empty when the revision carries no such casilla.
+    """
+    casilla = casillas_by_id(revision).get(casilla_id)
+    if casilla is None:
+        return ()
+    binding = next((candidate for candidate in revision.bindings if candidate.id == casilla.binding), None)
+    binding_legal = binding.legal_refs if binding is not None else ()
+    return tuple(dict.fromkeys((*casilla.legal_refs, *binding_legal)))
+
+
+def _family_profile(facts: Mapping[str, str]) -> RentaFamilyProfile:
+    """Rebuild the family record through the same reconstruction the figure path uses.
+
+    The descendant rows alone cannot answer the Art. 58 household limb: the
+    dependency assimilation turns on the filer-level anualidades figure. Judging
+    descendants without it drops every assimilated descendant from a disclosure
+    while the computed mínimo still grants them.
+    """
+    return renta_family_profile_from_facts(facts)
+
+
 def collect_minimo_descendientes_undeclared_diagnostics(
     revision: ModeloRevision,
     casilla_values: Mapping[CasillaId, Decimal],
@@ -212,22 +246,15 @@ def collect_minimo_descendientes_undeclared_diagnostics(
     operation: PinnedAuthorityOperation,
     profile: ModeloWorkProfile | None = None,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
-    """Disclose the ambiguous zero for the selected :class:`ModeloRevision`."""
-    scope = _selected_registry_scope(
-        revision,
-        modelo=modelo,
-        filing_year=filing_year,
-        period_token=period_token,
-    )
-    if scope is None:
-        return ()
-    _validate_binding_report(scope)
-    casilla_id = casilla_id_for_unambiguous_revision_semantic_role(
-        revision,
-        _MINIMO_ESTATAL_SEMANTIC_ROLE,
-        modelo_id=modelo,
-    )
-    if casilla_id is None or casilla_values.get(casilla_id, Decimal("0")) != 0:
+    """Disclose the ambiguous zero for the selected :class:`ModeloRevision`.
+
+    A genuinely childless profile and one that never declared its descendants
+    both resolve the mínimo to zero. A per-descendant fact or an explicit
+    ``renta_family.descendientes_count`` (even ``0``) is a declaration and is
+    silent.
+    """
+    scope = _minimo_scope(revision, modelo=modelo, filing_year=filing_year, period_token=period_token)
+    if scope is None or casilla_values.get(scope.casilla_id, Decimal("0")) != 0:
         return ()
     facts = _profile_fact_strings(bucket_id, operation=operation, profile=profile)
     if facts is None:
@@ -239,11 +266,12 @@ def collect_minimo_descendientes_undeclared_diagnostics(
             reason="source_issue",
             source_kind=_UNDECLARED_SOURCE_KIND,
             message=(
-                f"casilla {casilla_id!r} (mínimo por descendientes, parte estatal) resolved to zero and "
+                f"casilla {scope.casilla_id!r} (mínimo por descendientes, parte estatal) resolved to zero and "
                 "the active profile declares no descendant facts"
             ),
             remedy="Declare the family situation with `descendiente add --descendiente NACIMIENTO=YYYY-MM-DD`.",
-            casilla_id=casilla_id,
+            casilla_id=scope.casilla_id,
+            legal_refs=_casilla_legal_refs(revision, scope.casilla_id),
         ),
     )
 
@@ -278,25 +306,63 @@ def collect_minimo_descendientes_prorrata_inferred_diagnostics(
     filing_year: int,
     period_token: str,
     bucket_id: str,
+    operation: PinnedAuthorityOperation,
+    profile: ModeloWorkProfile | None = None,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
-    """Delegate inferred-proration verification declarations to the registry.
+    """Advise when the Art. 61 norma 1ª prorrata was INFERRED rather than answered.
+
+    Where the profile signals a second entitled contribuyente (marital status,
+    a spouse record, the declaration type) and the operator gave no
+    per-descendant answer, the engine prorates rather than claiming the full
+    mínimo. That under-claiming default is defensible only because it is
+    disclosed here and correctable.
+
+    Fires only when the derivation decided something: a mínimo is claimed, a
+    second entitled filer is indicated, and a descendant carries neither an
+    explicit ``prorrata_minimo`` answer nor the shared-custody trigger.
 
     Core types:
     :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
     """
-    del casilla_values, bucket_id
-    return _registry_minimo_descendientes_diagnostics(
-        revision,
-        modelo=modelo,
-        filing_year=filing_year,
-        period_token=period_token,
+    scope = _minimo_scope(revision, modelo=modelo, filing_year=filing_year, period_token=period_token)
+    if scope is None or casilla_values.get(scope.casilla_id, Decimal("0")) == 0:
+        return ()
+    facts = _profile_fact_strings(bucket_id, operation=operation, profile=profile)
+    if facts is None or not second_entitled_filer_indicated(facts):
+        return ()
+    inferred = [
+        index
+        for index, descendant in enumerate(_family_profile(facts).descendientes)
+        if descendant.prorrata_minimo is None and not descendant.custodia_compartida
+    ]
+    if not inferred:
+        return ()
+    return (
+        CalculationSourceDiagnostic(
+            reason="source_issue",
+            source_kind=_PRORRATA_INFERRED_SOURCE_KIND,
+            message=(
+                f"casilla {scope.casilla_id!r} (mínimo por descendientes) was HALVED under Art. 61 norma 1ª "
+                f"LIRPF for {_name_indices(inferred, scope.registry)}: the profile indicates a second "
+                "entitled contribuyente (marital status, spouse record or declaration type) and no "
+                "explicit answer was given. That is an inference, not a declared fact"
+            ),
+            remedy=(
+                "State it with `descendiente add --descendiente PRORRATA=false` to claim the full "
+                "mínimo, or PRORRATA=true to confirm the split."
+            ),
+            casilla_id=scope.casilla_id,
+            # Casilla-derived: the whole-article art-61 ref the casilla carries
+            # already grounds the norma 1ª prorrateo clause at this granularity.
+            legal_refs=_casilla_legal_refs(revision, scope.casilla_id),
+        ),
     )
 
 
 def _name_indices(indices: list[int], scope: _RegistryScope) -> str:
-    """Render generic descendant labels using the registry-selected cardinality."""
+    """Name descendants by the profile fact path the operator edits, bounded by the registry cardinality."""
     limit = _registry_named_descendant_limit(scope)
-    shown = ", ".join(f"descendant[{index}]" for index in indices[:limit])
+    shown = ", ".join(f"{_DESCENDANT_FACT_PREFIX}{index}" for index in indices[:limit])
     remainder = len(indices) - limit
     return f"{shown} and {remainder} more" if remainder > 0 else shown
 
@@ -440,32 +506,39 @@ def collect_minimo_descendientes_rentas_undeclared_diagnostics(
     operation: PinnedAuthorityOperation,
     profile: ModeloWorkProfile | None = None,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
-    """Disclose an absent rentas figure for the selected :class:`ModeloRevision`."""
-    scope = _selected_registry_scope(
-        revision,
-        modelo=modelo,
-        filing_year=filing_year,
-        period_token=period_token,
-    )
-    if scope is None:
-        return ()
-    _validate_binding_report(scope)
-    casilla_id = casilla_id_for_unambiguous_revision_semantic_role(
-        revision,
-        _MINIMO_ESTATAL_SEMANTIC_ROLE,
-        modelo_id=modelo,
-    )
-    if casilla_id is None or casilla_values.get(casilla_id, Decimal("0")) == 0:
+    """Advise when a descendant claims the mínimo with no rentas figure on record.
+
+    Art. 58.1 and Art. 61 norma 2ª both read an ABSENT rentas figure as
+    non-excluding, which is correct for the young child with nothing to declare.
+    It leaves a descendant who genuinely earns above the ceiling contributing a
+    full tranche with nothing said: the over-claiming direction of the gap.
+
+    Narrow by construction: a mínimo is claimed, the descendant has no figure (a
+    declared zero is an answer), and the descendant meets the non-income
+    conditions, judged with the filer's dependency-assimilation availability so
+    an assimilated descendant is not dropped from the disclosure.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
+    """
+    scope = _minimo_scope(revision, modelo=modelo, filing_year=filing_year, period_token=period_token)
+    if scope is None or casilla_values.get(scope.casilla_id, Decimal("0")) == 0:
         return ()
     facts = _profile_fact_strings(bucket_id, operation=operation, profile=profile)
     if facts is None:
         return ()
-    context = _family_fact_context(filing_year, operation=operation)
+    family = _family_profile(facts)
+    context = _family_fact_context(scope.registry.filing_year, operation=operation)
+    available = family.dependencia_assimilation_available
     undeclared = [
         index
-        for index, descendant in enumerate(descendant_list_from_facts(facts))
+        for index, descendant in enumerate(family.descendientes)
         if descendant.rentas_anuales_euros is None
-        and descendant.meets_non_income_conditions(filing_year, context=context)
+        and descendant.meets_non_income_conditions(
+            scope.registry.filing_year,
+            context=context,
+            dependencia_assimilation_available=available,
+        )
     ]
     if not undeclared:
         return ()
@@ -474,11 +547,17 @@ def collect_minimo_descendientes_rentas_undeclared_diagnostics(
             reason="source_issue",
             source_kind=_RENTAS_UNDECLARED_SOURCE_KIND,
             message=(
-                f"casilla {casilla_id!r} claims a mínimo por descendientes for "
-                f"{_name_indices(undeclared, scope)} with no annual-rentas figure on record"
+                f"casilla {scope.casilla_id!r} (mínimo por descendientes) claims a full tranche for "
+                f"{_name_indices(undeclared, scope.registry)} with no annual-rentas figure on record. "
+                "Art. 58.1 LIRPF withdraws it above the rentas ceiling, and Art. 61 norma 2ª when the "
+                "descendant files their own return above that figure; an absent figure exceeds neither"
             ),
-            remedy="Declare the figure with `descendiente add --descendiente RENTAS=N`; RENTAS=0 is explicit.",
-            casilla_id=casilla_id,
+            remedy=(
+                "Declare it with `descendiente add --descendiente RENTAS=N`. RENTAS=0 is a valid "
+                "answer and silences this advisory."
+            ),
+            casilla_id=scope.casilla_id,
+            asserted_legal_refs=_RENTAS_UNDECLARED_ASSERTED_LEGAL_REFS,
         ),
     )
 
@@ -491,18 +570,61 @@ def collect_minimo_descendientes_entry_date_missing_diagnostics(
     filing_year: int,
     period_token: str,
     bucket_id: str,
+    operation: PinnedAuthorityOperation,
+    profile: ModeloWorkProfile | None = None,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
-    """Delegate entry-date verification declarations to the registry.
+    """Advise when an adopted or fostered descendant has no Art. 58.2 entry date.
+
+    Art. 58.2 grants the under-three increase regardless of age for an adopción
+    or an acogimiento preadoptivo o permanente, in the entry period and the two
+    following. A relación recorded without its date leaves that window without
+    an anchor, so the household the clause was written for receives nothing.
+    That under-grant is the safe direction only while it is disclosed.
+
+    Independent of the computed mínimo: a withheld increase can leave the
+    aggregate at any value, including zero.
 
     Core types:
     :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
     """
-    del casilla_values, bucket_id
-    return _registry_minimo_descendientes_diagnostics(
-        revision,
-        modelo=modelo,
-        filing_year=filing_year,
-        period_token=period_token,
+    del casilla_values
+    scope = _minimo_scope(revision, modelo=modelo, filing_year=filing_year, period_token=period_token)
+    if scope is None:
+        return ()
+    facts = _profile_fact_strings(bucket_id, operation=operation, profile=profile)
+    if facts is None:
+        return ()
+    family = _family_profile(facts)
+    context = _family_fact_context(scope.registry.filing_year, operation=operation)
+    available = family.dependencia_assimilation_available
+    missing = [
+        index
+        for index, descendant in enumerate(family.descendientes)
+        if descendant.art_58_2_window_anchor_missing(
+            scope.registry.filing_year,
+            context=context,
+            dependencia_assimilation_available=available,
+        )
+    ]
+    if not missing:
+        return ()
+    return (
+        CalculationSourceDiagnostic(
+            reason="source_issue",
+            source_kind=_ENTRY_DATE_MISSING_SOURCE_KIND,
+            message=(
+                f"casilla {scope.casilla_id!r} withholds the Art. 58.2 LIRPF increase for "
+                f"{_name_indices(missing, scope.registry)}: the relación is an adopción or entitling "
+                "acogimiento, granted regardless of age in the entry period and the two following, but "
+                "no entry date is on record so the window cannot be measured"
+            ),
+            remedy=(
+                "Declare INSCRIPCION=YYYY-MM-DD (Registro Civil, or the resolución if none required) "
+                "or ACOGIMIENTO=YYYY-MM-DD via `descendiente add`. The missing fact is the entry date, "
+                "not the birth date."
+            ),
+            casilla_id=scope.casilla_id,
+        ),
     )
 
 
@@ -722,19 +844,70 @@ def collect_minimo_descendientes_dependencia_diagnostics(
     filing_year: int,
     period_token: str,
     bucket_id: str,
+    operation: PinnedAuthorityOperation,
+    profile: ModeloWorkProfile | None = None,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
-    """Delegate dependency verification declarations to the registry.
+    """Disclose the Art. 58 dependency assimilation, in both directions.
+
+    GRANTED: a non-cohabiting filer takes the mínimo on a declared
+    economic-dependency fact, a judgement the operator made rather than an
+    observation. SUPPRESSED: declared judicial anualidades withhold every
+    declared dependency because this profile cannot yet attribute a payment to
+    one descendant, which under-grants where the anualidades are paid for a
+    different child.
 
     Core types:
     :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
     """
-    del casilla_values, bucket_id
-    return _registry_minimo_descendientes_diagnostics(
-        revision,
-        modelo=modelo,
-        filing_year=filing_year,
-        period_token=period_token,
+    del casilla_values
+    scope = _minimo_scope(revision, modelo=modelo, filing_year=filing_year, period_token=period_token)
+    if scope is None:
+        return ()
+    facts = _profile_fact_strings(bucket_id, operation=operation, profile=profile)
+    if facts is None:
+        return ()
+    family = _family_profile(facts)
+    diagnostics: list[CalculationSourceDiagnostic] = []
+    granted = family.dependencia_assimilated_indices(
+        scope.registry.filing_year,
+        context=_family_fact_context(scope.registry.filing_year, operation=operation),
     )
+    if granted:
+        diagnostics.append(
+            CalculationSourceDiagnostic(
+                reason="source_issue",
+                source_kind=_DEPENDENCIA_ASSIMILATED_SOURCE_KIND,
+                message=(
+                    f"casilla {scope.casilla_id!r} (mínimo por descendientes) grants the Art. 58 allowance "
+                    f"for {_name_indices(list(granted), scope.registry)} on DECLARED economic dependency "
+                    "rather than cohabitation. The authority allows this for a progenitor without custody "
+                    "who pays no judicial anualidades and still contributes to the descendant's upkeep"
+                ),
+                remedy="Confirm the declaration holds for the filing year before filing.",
+                casilla_id=scope.casilla_id,
+            ),
+        )
+    suppressed = family.dependencia_suppressed_indices()
+    if suppressed:
+        diagnostics.append(
+            CalculationSourceDiagnostic(
+                reason="source_issue",
+                source_kind=_DEPENDENCIA_SUPPRESSED_SOURCE_KIND,
+                message=(
+                    f"casilla {scope.casilla_id!r} (mínimo por descendientes) WITHHOLDS the Art. 58 "
+                    f"dependency assimilation for {_name_indices(list(suppressed), scope.registry)} because "
+                    "the profile declares judicial anualidades por alimentos. The statutory carve-out is "
+                    "per-child, but this profile cannot yet attribute a payment to one descendant, so a "
+                    "declared amount suppresses the assimilation for all of them"
+                ),
+                remedy=(
+                    "Where the anualidades are paid for a different descendant this under-grants the "
+                    "mínimo, so check the figure before filing."
+                ),
+                casilla_id=scope.casilla_id,
+            ),
+        )
+    return tuple(diagnostics)
 
 
 def collect_descendientes_count_desync_diagnostics(
@@ -744,16 +917,54 @@ def collect_descendientes_count_desync_diagnostics(
     filing_year: int,
     period_token: str,
     bucket_id: str,
+    operation: PinnedAuthorityOperation,
+    profile: ModeloWorkProfile | None = None,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
-    """Delegate descendant-count verification declarations to the registry.
+    """Advise when the stored descendientes count contradicts the rows it aggregates.
+
+    ``renta_family.descendientes_count`` is derived from the
+    ``renta_family.descendiente.{n}.*`` rows and rewritten with them, but it is
+    also an ordinary editable profile field. Edited apart from the rows, the
+    count binding follows the operator's number while the mínimo casillas follow
+    the rows, so the filing carries two answers. A count with no rows is a
+    supported declaration, and an unreadable count is not evidence of drift.
 
     Core types:
     :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
     """
-    del bucket_id
-    return _registry_minimo_descendientes_count_diagnostics(
+    scope = _selected_registry_scope(
         revision,
         modelo=modelo,
         filing_year=filing_year,
         period_token=period_token,
+    )
+    if scope is None:
+        return ()
+    _validate_binding_report(scope)
+    facts = _profile_fact_strings(bucket_id, operation=operation, profile=profile)
+    if facts is None:
+        return ()
+    rows = len(
+        {path.split(".")[2] for path in facts if path.startswith(_DESCENDANT_FACT_PREFIX) and path.count(".") >= 3},
+    )
+    if not rows:
+        return ()
+    stored = coerce_decimal(facts.get(_DESCENDANTS_COUNT_PATH))
+    if stored is None or stored == Decimal(rows):
+        return ()
+    return (
+        CalculationSourceDiagnostic(
+            reason="source_issue",
+            source_kind=_COUNT_DESYNC_SOURCE_KIND,
+            message=(
+                f"profile fact {_DESCENDANTS_COUNT_PATH!r} declares {stored} but the profile carries "
+                f"{rows} renta_family.descendiente row(s). The count feeds its own Modelo 100 binding "
+                "while the mínimo por descendientes casillas are computed from the rows, so the filing "
+                "would carry two different answers"
+            ),
+            remedy=(
+                "Re-enter the descendants with `descendiente add` on the active profile, which rewrites "
+                "the count and the rows together."
+            ),
+        ),
     )

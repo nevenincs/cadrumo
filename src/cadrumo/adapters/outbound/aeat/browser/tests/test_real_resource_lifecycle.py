@@ -253,7 +253,8 @@ def test_supervisor_settles_a_real_browser_navigation_and_releases_the_runtime(t
                     ),
                     operation_id=operation_id,
                 )
-                terminal = await supervisor.start(operation_id)
+                await supervisor.start(operation_id)
+                terminal = await supervisor.settled(operation_id)
                 replay = await journal.read_after(operation_id, 0, limit=64)
 
                 browser = executor.browser
@@ -318,7 +319,8 @@ def test_a_real_sensitive_redirect_never_reaches_any_persisted_byte(tmp_path: Pa
                     ),
                     operation_id=operation_id,
                 )
-                terminal = await supervisor.start(operation_id)
+                await supervisor.start(operation_id)
+                terminal = await supervisor.settled(operation_id)
 
                 browser = executor.browser
                 assert browser is not None

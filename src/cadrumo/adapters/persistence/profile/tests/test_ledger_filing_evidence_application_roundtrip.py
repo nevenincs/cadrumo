@@ -29,13 +29,15 @@ from .....domain.modelos.calculation_revision import (
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
+from .....domain.modelos.codes import ModeloCode
 from .....domain.modelos.ledger_filing_snapshot import LedgerFilingEvidence, ManualFactBasisEntry
-from .....domain.modelos.work_unit import derive_work_unit_id
+from .....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from .....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from .....domain.transactions.models import Transaction, TransactionCatalogue
 from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ...storage.sql.secure_objects import SecureObjectRepository
 from ..modelos_calculation import CalculationRevisionCatalogueRepository
+from ..modelos_work_units import WorkUnitCatalogueRepository
 from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
@@ -86,18 +88,42 @@ def _txn() -> Transaction:
     )
 
 
+def _seed_parent_work_unit(secure_objects: SecureObjectRepository, *, revision_id: str) -> str:
+    """Persist the WorkUnit a saved revision must belong to and return its id."""
+    period = Period.from_year_and_code(2025, "1T")
+    work_unit = WorkUnit(
+        work_unit_id=derive_work_unit_id(
+            bucket_id=_BUCKET_ID,
+            modelo="303",
+            filing_year=2025,
+            period=period,
+            revision_id=revision_id,
+        ),
+        bucket_id=_BUCKET_ID,
+        modelo=ModeloCode("303"),
+        filing_year=2025,
+        period=period,
+        revision_id=revision_id,
+        name="303-2025-1T",
+        created_at=_NOW,
+        updated_at=_NOW,
+    )
+    WorkUnitCatalogueRepository(objects=secure_objects).save(
+        WorkUnitCatalogue(work_units={work_unit.work_unit_id: work_unit}),
+    )
+    return work_unit.work_unit_id
+
+
 def _revision_with_evidence(
-    *, evidence: LedgerFilingEvidence, tx_id: str, operation: PinnedAuthorityOperation
+    *,
+    evidence: LedgerFilingEvidence,
+    tx_id: str,
+    operation: PinnedAuthorityOperation,
+    secure_objects: SecureObjectRepository,
 ) -> CalculationRevision:
     period = Period.from_year_and_code(2025, "1T")
     registry_snapshot_ref = published_authority_operation().snapshot("303", filing_year=2025, period="1T").snapshot_ref
-    work_unit_id = derive_work_unit_id(
-        bucket_id=_BUCKET_ID,
-        modelo="303",
-        filing_year=2025,
-        period=period,
-        revision_id=registry_snapshot_ref.revision_id,
-    )
+    work_unit_id = _seed_parent_work_unit(secure_objects, revision_id=registry_snapshot_ref.revision_id)
     filing_instance_evidence = general_m303_filing_evidence(
         period, reference="test:ledger-filing-evidence", operation=operation
     )
@@ -162,7 +188,12 @@ def test_evidence_roundtrips_through_encrypted_revision(
             ),
         ),
     )
-    original = _revision_with_evidence(evidence=evidence, tx_id=txn.transaction_id, operation=operation)
+    original = _revision_with_evidence(
+        evidence=evidence,
+        tx_id=txn.transaction_id,
+        operation=operation,
+        secure_objects=secure_objects,
+    )
     repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     repo.save(CalculationRevisionCatalogue(revisions={original.calculation_revision_id: original}))
 

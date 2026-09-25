@@ -208,11 +208,15 @@ M189_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
 }
 #: The annual period each Modelo 190 edition is rendered for.
 M190_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
+    "2022": Period.from_year_and_code(2022, "0A"),
+    "2023": Period.from_year_and_code(2023, "0A"),
     "2024": Period.from_year_and_code(2024, "0A"),
     "2025-y-siguientes": Period.from_year_and_code(2025, "0A"),
 }
 #: The annual period each Modelo 193 edition is rendered for.
 M193_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
+    "2022": Period.from_year_and_code(2022, "0A"),
+    "2023": Period.from_year_and_code(2023, "0A"),
     "2024": Period.from_year_and_code(2024, "0A"),
     "2025-y-siguientes": Period.from_year_and_code(2025, "0A"),
 }

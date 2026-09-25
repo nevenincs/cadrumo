@@ -61,6 +61,7 @@ Submodules
    cadrumo.application.aggregation.source_profile
    cadrumo.application.aggregation.source_resolution_operations
    cadrumo.application.aggregation.terminal_origin_audit
+   cadrumo.application.aggregation.withholding_filing_cadence
    cadrumo.application.aggregation.withholding_observation_service
    cadrumo.application.aggregation.withholding_producer
    cadrumo.application.aggregation.withholding_recognition

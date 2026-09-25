@@ -54,6 +54,11 @@ modelo:
             label: Valuation
           m189-valoracion-total:
             label: Total valuation
+      construct:
+        modelo-189-informative:
+          field:
+            title: Modelo 189. Annual informative return on securities, insurance
+              and annuities
       field:
         official_name: Modelo 189. Annual informative return on securities, insurance
           and annuities.

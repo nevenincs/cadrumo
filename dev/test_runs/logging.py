@@ -21,6 +21,8 @@ _SILENT_COLLECTION_KEY = pytest.StashKey[bool]()
 _COLLECTION_SUMMARY_KEY = pytest.StashKey[str]()
 _collection_errors = 0
 _ACTIVE: RunLog | None = None
+_INHERITED_RUN = False
+"""Whether this process joined a run another process started, rather than minting one."""
 _RUN_SCRATCH_ENV: Final = "CADRUMO_TEST_RUN_SCRATCH"
 
 
@@ -82,6 +84,8 @@ def prepare_environment(repository: Path) -> None:
     inherited_root = os.environ.get("CADRUMO_TEST_RUN_ROOT")
     if inherited_root:
         root = Path(inherited_root).resolve()
+        global _INHERITED_RUN
+        _INHERITED_RUN = True
         _apply_run_environment(root, Path(os.environ[_RUN_SCRATCH_ENV]))
         product_logs = root / "artifacts" / "product-logs" / f"pid-{os.getpid()}"
         product_logs.mkdir(parents=True, exist_ok=True)
@@ -176,6 +180,15 @@ def configure(config: pytest.Config) -> None:
     """Create and announce the controller's unique run directory."""
     root = Path(os.environ["CADRUMO_TEST_RUN_ROOT"]).resolve()
     scratch = Path(os.environ[_RUN_SCRATCH_ENV])
+    if _INHERITED_RUN and _worker_id(config) is None:
+        # A pytest that a test launched joins the run but is a controller of its
+        # own. In the run's scratch it would take the run controller's
+        # ``scratch/pytest`` basetemp -- which pytest empties at start, deleting
+        # every live worker's tmp_path -- and its own workers' ids would match
+        # the run's. It gets its own scratch before any worker of its starts,
+        # and its workers inherit that through the environment.
+        scratch = allocate_scratch_directory()
+        _apply_run_environment(root, scratch)
     _confine_pytest_storage(config, root, scratch)
     if hasattr(config, "workerinput"):
         return

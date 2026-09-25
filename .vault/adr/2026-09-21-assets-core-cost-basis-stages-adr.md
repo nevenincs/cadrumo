@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#assets-core'
 date: '2026-09-21'
-modified: '2026-09-23'
+modified: '2026-09-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:e4670fd33085a292a7691aab03a467dad360f5f6fc7984f270e65a399bdaa200'
+body_hash: 'sha256:ea3ba57d3b9de2d3c442894d7dbfdb0237cd8a2beecb4064e7146111c9eda0ac'
 related:
   - "[[2026-09-21-assets-core-lifecycle-contract-adr]]"
   - "[[2026-09-21-assets-core-lifecycle-and-integration-research]]"

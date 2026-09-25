@@ -1,7 +1,0 @@
-[[revisions."2025".application_links]]
-id = "modelo-189-export"
-surface = "export"
-consumer = "cadrumo.application.filing.export_draft"
-requires_snapshot = true
-legal_refs = ["orden-eha-3481-2008:art-1"]
-source_refs = ["aeat-dr-189-2023"]

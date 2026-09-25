@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#calendar-obligations'
 date: '2026-09-21'
-modified: '2026-09-23'
+modified: '2026-09-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:26bd00d47a442d924a07fed5fc918d8738a5de839aec80196449c230ab40a670'
+body_hash: 'sha256:f2e5d4f3680f2d2ef1e00154e87f7a91724ee1c708046f19da15862dbae204d5'
 related:
   - '[[2026-09-21-calendar-obligations-audit]]'
   - '[[2026-09-21-calendar-obligations-ledger]]'
@@ -17,6 +17,7 @@ related:
   - '[[2026-09-23-calendar-obligations-payer-fact-declaration-state-adr]]'
   - '[[2026-09-23-calendar-obligations-payer-fact-declaration-state-reference]]'
   - '[[2026-09-23-calendar-obligations-plan]]'
+  - '[[2026-09-24-calendar-obligations-obligation-evidence-domain-grounding-research]]'
 ---
 
 # `calendar-obligations` feature index
@@ -51,3 +52,4 @@ Auto-generated index of all documents tagged with `#calendar-obligations`.
 ### research
 
 - `2026-09-23-calendar-obligations-holiday-jurisdiction-research` - `calendar-obligations` research: `Deadline holiday jurisdiction grounding`
+- `2026-09-24-calendar-obligations-obligation-evidence-domain-grounding-research` - `calendar-obligations` research: `Obligation and filing-evidence domain grounding`

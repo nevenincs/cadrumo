@@ -231,6 +231,9 @@ _EXCLUDED_FROM_EQUALITY: Final = frozenset(
         "family_positions",
         "cleared_families",
         "scoped_families",
+        # A restatement only stops inheritance; lifting it into the ordinary
+        # delta keeps every hydrated member, which the member comparison proves.
+        "restated_families",
         # Migration may move row-level continuity claims into a typed sidecar.
         # The hydrated casilla fields remain fully compared below, including
         # continuity identity, origin, evidence, legal refs and source refs.

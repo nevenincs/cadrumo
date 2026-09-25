@@ -1,6 +1,7 @@
 [revisions."2022"]
+formula_source_refs = ["aeat-dr-193-2019", "aeat-modelo-193-procedure"]
 casilla_source_refs = ["aeat-dr-193-2019", "boe-modelo-193-2011-form"]
-# Applicability-grade historical epoch for modelo 193, filing year 2022.
+# Filing-grade historical epoch for modelo 193, filing year 2022.
 #
 # The gap this closes was authoring debt, not a legal absence: modelo 193 was
 # approved by Orden EHA/3377/2011 and filed for 2022, and the record design
@@ -18,22 +19,26 @@ casilla_source_refs = ["aeat-dr-193-2019", "boe-modelo-193-2011-form"]
 #     315-339 by later editions are absent here rather than omitted;
 #   - and that every legal_ref it cites is in force across the whole exercise.
 #
-# Why the grade is 'applicability' and NOT 'filing': the calculation surface of
-# this modelo -- the modelo 123 relation prefills and the base and retenciones
-# formulas built on them -- is grounded in the corpus by
-# aeat-modelo-193-procedure and aeat-modelo-193-296-note-2025, both of which
-# open on 2024-01-01 and so cannot be cited by a 2022 revision. Rather than
-# cite a source outside its own window or mint an id for evidence the corpus
-# does not hold, this revision declares no bindings, formulas, export layout
-# or completeness manifest, and its resumen totals are operator-supplied.
+# WHAT THE FILING GRADE CLAIMS HERE, and what it does not. The grade asserts
+# that this revision can back a filing draft and its export for ejercicio 2022:
+# the fichero BOE layout is transcribed position by position from
+# aeat-dr-193-2019, and the row bindings that fill its type-2 and gastos records are
+# grounded on that design for geometry and on aeat-modelo-193-procedure for the
+# filing route. That procedure applies from 2020-01-01, so it covers the whole
+# exercise.
 #
-# Promoting this to filing grade needs ONE acquisition: AEAT's modelo 193
-# procedure or instrucciones as they stood for ejercicio 2022, registered as
-# its own source. The record geometry is already here and would not change.
+# It does NOT claim the 2024-grounded calculation route. The modelo 123 relation
+# prefills the 2024 sibling totals its resumen through are grounded in the
+# corpus only by aeat-modelo-193-296-note-2025, which opens on 2024-01-01 and
+# cannot be cited by a 2022 revision. This edition instead totals its own
+# type-2 records, which is what the design's own Contenido text states for
+# positions 136-144, 145-159 and 160-174, so the whole calculation closes inside
+# this exercise's authority. The gastos total at 220-234 stays
+# operator-supplied, exactly as the filing-grade 2024 sibling leaves it.
 review_status = "agent_reviewed"
-reviewed_by = "agent: authored from the bundled hash-pinned aeat-dr-193-2019 record design. Casilla positions were verified row by row against the design's own position table and against the 2024 revision, and the additive deltas separating the epochs were confirmed in the design text. No human operator has countersigned it."
-reviewed_at = 2026-09-12
-authority_grade = "applicability"
+reviewed_by = "agent: authored from the bundled hash-pinned aeat-dr-193-2019 record design. Casilla positions were verified row by row against the design's own position table and against the 2024 revision, the export layout was derived from the same design record by record, and the additive deltas separating the epochs were confirmed in the design text. No human operator has countersigned it."
+reviewed_at = 2026-09-25
+authority_grade = "filing"
 id = "2022"
 valid_from = 2022-01-01
 valid_to = 2022-12-31
@@ -48,4 +53,28 @@ legal_refs = [
     "ley-58-2003:art-93",
 ]
 orden_aplicabilidad = ["orden-eha-3377-2011:art-1"]
-source_refs = ["aeat-dr-193-2019", "boe-modelo-193-2011-form"]
+source_refs = ["aeat-dr-193-2019", "aeat-modelo-193-procedure", "boe-modelo-193-2011-form"]
+
+[revisions."2022".family_dispositions.dependency_classifications]
+reason = """
+A dependency classification records how another modelo's declarations reach this one. This edition's declarante resumen takes none: its totals are the sums the record design itself states over this declaration's own type-2 perceptor records, so the whole calculation closes inside the edition. The 2024 sibling classifies a modelo 123 dependency because it routes the same totals through annual relation prefills grounded on a 2024 nota informativa, and that opens after this exercise ends. Empty because no cross-modelo edge exists here, not because one is unbuilt."""
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019", "aeat-modelo-193-procedure"]
+
+[revisions."2022".family_dispositions.extraction_profiles]
+reason = """
+An extraction profile reads values back out of a filed declaration PDF, and its label patterns must be authored against a specimen of the printed layout for the edition they claim. The corpus holds no modelo 193 justificante for this exercise. Authoring patterns for this edition from a later specimen would claim a reading capability against a layout nobody checked, so the family is declared empty rather than filled with unevidenced patterns."""
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019", "aeat-modelo-193-procedure"]
+
+[revisions."2022".family_dispositions.parameters]
+reason = """
+A parameter holds a regulatory value a formula of this revision applies -- a rate, a threshold, a coefficient. This edition applies none: both of its formulas are op = 'copy', carrying the per-record sums into the resumen casillas, and a copy applies nothing to what it copies. The retention rates that produced those amounts were set by the retenedor at payment time under RD 439/2007 art. 90 and are already recorded on each perceptor record. Empty by the shape of this modelo's calculation rather than by omission."""
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019", "aeat-modelo-193-procedure"]
+
+[revisions."2022".family_dispositions.projection_endpoints]
+reason = """
+A projection endpoint admits one typed filing endpoint that an export record REPEATS. This revision's export layout (modelo-193-fichero-boe) declares no record with repeat = 'projection_rows' and no field of kind 'projection', so there is no repeated endpoint for the family to admit and nothing an entry here could name. Empty by construction: authoring a projection row into the layout is what would make this family apply."""
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019", "aeat-modelo-193-procedure"]

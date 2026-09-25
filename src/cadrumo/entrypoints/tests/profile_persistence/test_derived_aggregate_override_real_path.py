@@ -109,7 +109,7 @@ def _descendants() -> tuple[DescendantInfo, ...]:
 
 #: The single binding the M100 estimación-directa régimen predicate needs set for
 #: the annual revision to reach the mínimo casillas at all.
-_ESTIMACION_DIRECTA_NORMAL: BindingId = f"renta-{_YEAR}-modelo-100-estimacion-directa-es-normal"
+_ESTIMACION_DIRECTA_NORMAL: BindingId = "renta-modelo-100-estimacion-directa-es-normal"
 
 #: Sources the live mesh resolves from bucket state. Bindings owned by these are
 #: left to the mesh; everything else is zero-defaulted so the calculation reaches
@@ -134,9 +134,9 @@ _MESH_OWNED_SOURCES = frozenset(
 #: two mínimo bindings are deliberately NOT in this set: caller-supplying either
 #: would decide the very question the probe asks.
 _UNRELATED_PROFILE_BINDINGS: tuple[BindingId, ...] = (
-    f"renta-{_YEAR}-profile-guarderia-gastos-reales",
-    f"renta-{_YEAR}-profile-cotizaciones-ss-madre",
-    f"renta-{_YEAR}-profile-descendientes-guarderia",
+    "renta-profile-guarderia-gastos-reales",
+    "renta-profile-cotizaciones-ss-madre",
+    "renta-profile-descendientes-guarderia",
 )
 
 

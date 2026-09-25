@@ -12,6 +12,7 @@ from dev._paths import REPO_ROOT
 from ..paths import (
     SCRATCH_BASE_ENV,
     SCRATCH_PATH_BUDGET,
+    SCRATCH_SEPARATOR,
     allocate_run_directory,
     allocate_scratch_directory,
     run_log_bases,
@@ -89,7 +90,7 @@ def test_run_scratch_is_short_owned_and_beside_the_pinned_base() -> None:
     try:
         assert scratch.is_dir()
         assert scratch.parent == base
-        assert scratch.name.split("-")[1] == str(os.getpid())
+        assert scratch.name.split(SCRATCH_SEPARATOR)[1] == str(os.getpid())
         assert sibling != scratch
         assert len(str(scratch)) <= SCRATCH_PATH_BUDGET
     finally:

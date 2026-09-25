@@ -53,7 +53,13 @@ class LedgerReviewScreen(LedgerWorkspaceScreen):
                 ledger_copy("tui.ledger.review.filter_all"),
                 markup=False,
             )
-            yield ContentDataTable[str](id="ledger-review", cursor_type="row", zebra_stripes=True)
+            # The entry names itself with its date and description, and it is
+            # the one cell here the operator cannot reconstruct from the
+            # others: the status is a state word and the next step is fixed
+            # copy. The spare width belongs to it, not to the last column.
+            review_table = ContentDataTable[str](id="ledger-review", cursor_type="row", zebra_stripes=True)
+            review_table.fill_column = 0
+            yield review_table
             yield Static(id="ledger-empty", classes="ledger-empty", markup=False)
             if self.controller.can_exclude():
                 yield Static(ledger_copy("tui.ledger.review.exclude_hint"), classes="ledger-empty", markup=False)

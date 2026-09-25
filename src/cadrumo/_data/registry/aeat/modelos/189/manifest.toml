@@ -31,11 +31,20 @@ source_refs = [
 # VALORACION (108-123). Orden HFP/1180/2023 quotes only its replacement text, so the
 # superseded wording is not derivable from anything in the corpus.
 #
-# ACQUIRABLE DEBT -- promotion of 189/2023 and 189/2024 from applicability to filing
-# grade. Geometry is grounded verbatim and would not change; the blocker is the
-# calculation layer, since aeat-modelo-189-procedure opens 2025-01-01. Needed:
-#   - AEAT modelo 189 procedure/instrucciones as they stood for ejercicio 2023
-#   - AEAT modelo 189 procedure/instrucciones as they stood for ejercicio 2024
+# SETTLED -- 189/2023 and 189/2024 are at filing grade. The debt recorded here
+# was that aeat-modelo-189-procedure opens 2025-01-01 and so left both editions
+# without the official_source_guidance evidence the filing rung requires. That
+# premise was already false when it was written: the catalogue entry for that
+# source carries an explicit correction moving applies_from to 2020-01-01, on the
+# bundled page's own link title "Modelo 189. Ejercicio 2020 y siguientes.
+# Consultas y bajas de declaraciones" -- the same string the modelo 190
+# correction was made on. Nothing had to be acquired. Both editions now declare
+# an export layout transcribed from aeat-dr-189-2023 and cite that procedure
+# source, and their revision headers carry the same correction.
+#
+# STILL NOT CLAIMED for either edition: no binding and no formula. The
+# application holds no source for the declarado rows, so the filer supplies both
+# declarante totals; each affected family says so in its own disposition.
 [modelo.inception.unauthored]
 earliest_authored = 2023
 reason = "Approved by Orden EHA/3481/2008 art. 1, which carries no year bound; filing years below 2023 existed in law and are not yet authored. Editions 2023 and 2024 were authored 2026-09-12 at applicability grade on aeat-dr-189-2023, the epoch opened by Orden HFP/1180/2023 whose DF unica applies it por primera vez al ejercicio 2023. 2022 is a genuine epoch boundary rather than missing paper: NUMERO DE VALORES then occupied 130-145 and NOMINAL 146-163, and Orden HFP/1284/2023 states the fields pasaran a ocupar 130-146. Authoring it needs Orden HFP/115/2022 registered as a source and orden-hfp-1351-2021:art-6 as a legal id."

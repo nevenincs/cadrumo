@@ -1,0 +1,242 @@
+[[revisions.2023.export_layouts]]
+id = 'generated-modelo-296-2023-fichero'
+
+[[revisions.2023.export_layouts.records]]
+id = 'm296-anexo-desglose'
+record_type = 'anexo-desglose'
+order = 2
+encoding = 'iso-8859-1'
+line_ending = 'crlf'
+required = true
+repeat = 'projection_rows'
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'm296-2023.anexo-desglose.f001'
+offset = 1
+length = 1
+kind = 'literal'
+literal = '2'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-eha-3290-2008:art-6',
+]
+source_refs = ['aeat-dr-296-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'm296-2023.anexo-desglose.f002'
+offset = 2
+length = 3
+kind = 'literal'
+literal = '296'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-eha-3290-2008:art-6',
+]
+source_refs = ['aeat-dr-296-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'm296-2023.anexo-desglose.f003'
+offset = 5
+length = 4
+kind = 'projection'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'four-digit-year'
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-eha-3290-2008:art-6',
+]
+source_refs = ['aeat-dr-296-2023']
+
+[revisions.2023.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_perceptor_intereses'
+field = 'ejercicio'
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'm296-2023.anexo-desglose.f004'
+offset = 9
+length = 9
+kind = 'projection'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-eha-3290-2008:art-6',
+]
+source_refs = ['aeat-dr-296-2023']
+
+[revisions.2023.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_perceptor_intereses'
+field = 'nif_del_declarante'
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'm296-2023.anexo-desglose.f005'
+offset = 18
+length = 9
+kind = 'projection'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-eha-3290-2008:art-6',
+]
+source_refs = ['aeat-dr-296-2023']
+
+[revisions.2023.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_perceptor_intereses'
+field = 'nif_del_perceptor'
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'm296-2023.anexo-desglose.f006'
+offset = 27
+length = 9
+kind = 'projection'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-eha-3290-2008:art-6',
+]
+source_refs = ['aeat-dr-296-2023']
+
+[revisions.2023.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_perceptor_intereses'
+field = 'nif_del_representante_legal'
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'm296-2023.anexo-desglose.f007'
+offset = 36
+length = 1
+kind = 'projection'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-eha-3290-2008:art-6',
+]
+source_refs = ['aeat-dr-296-2023']
+
+[revisions.2023.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_perceptor_intereses'
+field = 'f_j'
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'm296-2023.anexo-desglose.f008'
+offset = 37
+length = 40
+kind = 'projection'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-eha-3290-2008:art-6',
+]
+source_refs = ['aeat-dr-296-2023']
+
+[revisions.2023.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_perceptor_intereses'
+field = 'apellidos_y_nombre_razon_social_o_deno'
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'm296-2023.anexo-desglose.f009'
+offset = 77
+length = 8
+kind = 'projection'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-eha-3290-2008:art-6',
+]
+source_refs = ['aeat-dr-296-2023']
+
+[revisions.2023.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_perceptor_intereses'
+field = 'identificador_de_registro_o_numero_de'
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'm296-2023.anexo-desglose.f010'
+offset = 85
+length = 65
+kind = 'projection'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'unsigned-integer'
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-eha-3290-2008:art-6',
+]
+source_refs = ['aeat-dr-296-2023']
+
+[revisions.2023.export_layouts.records.fields.projection_ref]
+projection_kind = 'm296_perceptor_intereses'
+field = 'retenciones_e_ingresos_a_cuenta_ingres'
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'm296-2023.anexo-desglose.f011'
+offset = 150
+length = 350
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-eha-3290-2008:art-6',
+]
+source_refs = ['aeat-dr-296-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'm296-2023.anexo-desglose.f012'
+offset = 500
+length = 1
+kind = 'literal'
+literal = 'F'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'trlirnr-rdleg-5-2004:art-24',
+    'orden-eha-3290-2008:art-6',
+]
+source_refs = ['aeat-dr-296-2023']
+
+[revisions.2023.export_layouts.records.row_field_casilla_ids]

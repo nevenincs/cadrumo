@@ -394,13 +394,18 @@ def check_sequences(
     return tuple(all_problems), tuple(advisories)
 
 
-def _english_pinned_env() -> dict[str, str]:
-    """Return the scrubbed, English-pinned environment for a check child.
+def english_pinned_environment() -> dict[str, str]:
+    """Return the scrubbed, English-pinned environment for a sequence child.
 
     CLI help strings are resolved while the command tree is imported, so the
     language premise must hold BEFORE the child's first CLI import; ambient
     ``CADRUMO_*`` / ``AEAT_*`` operator state is dropped for the same
     determinism reason the sandbox scrubs it.
+
+    Public because every child interpreter that executes a sequence needs the
+    same premise, not only the check children launched here: a gate that
+    composed its own environment would drift from this one and measure a
+    differently-configured product.
     """
     environment = {key: value for key, value in os.environ.items() if not key.upper().startswith(("CADRUMO_", "AEAT_"))}
     environment["CADRUMO_OUTPUT_LANGUAGE"] = "en"
@@ -447,7 +452,7 @@ def _run_check_child(command: list[str], *, timeout: float) -> tuple[str, ...]:
     """
     with TemporaryDirectory(prefix="cli-sequence-progress-", ignore_cleanup_errors=True) as tmp:
         journal = Path(tmp) / "last-frame.json"
-        environment = _english_pinned_env()
+        environment = english_pinned_environment()
         environment[_PROGRESS_JOURNAL_ENV] = str(journal)
         try:
             result = run_command(

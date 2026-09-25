@@ -1120,6 +1120,27 @@ applies_from = 2018-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/impuestos-tasas/impuesto-sobre-sociedades/modelo-222-is-regimen-consolidacion-fraccionado_/instrucciones.html"
 review_status = "pending_review"
 
+# Modelo 222 instrucciones for the era AEAT publishes as its own page,
+# "Instrucciones para periodos impositivos iniciados en 2023 y 2024". The
+# sibling "aeat-modelo-222-instructions" is the 2025-y-siguientes page: its
+# index LINKS to the other three eras, and this is one of the linked documents
+# rather than a section inside it. Registered separately for the same reason
+# modelo 202 registers "aeat-modelo-202-instructions-2023-2024" separately --
+# one corpus file per era, so a formula cites the text actually in force for
+# the ejercicio it computes.
+[sources."aeat-modelo-222-instructions-2023-2024"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_222/files/modelo-222-instrucciones-2023-2024.html"
+sha256 = "4950559f078987479d132cae0cc8a013aec37e659a11ff7ffad656f369f151a9"
+bytes = 96810
+retrieved_at = 2026-09-25
+applies_from = 2023-01-01
+applies_to = 2024-12-31
+source_url = "https://sede.agenciatributaria.gob.es/Sede/todas-gestiones/impuestos-tasas/impuesto-sobre-sociedades/modelo-222-is-regimen-consolidacion-fraccionado_/instrucciones/instrucciones-periodos-impositivos-iniciados-2023-siguientes.html"
+review_status = "pending_review"
+
 [sources."aeat-dr-222-2025"]
 evidence_tier = "layout_authority"
 authority = "aeat"

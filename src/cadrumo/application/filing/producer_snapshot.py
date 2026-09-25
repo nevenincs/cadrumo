@@ -256,6 +256,11 @@ class Modelo222ProfileFacts(BaseModel):
     regimen_reducida_dimension: str | None = None
     cifra_negocios_grupo_doce_meses: str | None = None
     cooperativa_fiscalmente_protegida: str | None = None
+    #: The 2023-2024 diseño's single enumerated slot covering both the cooperativa
+    #: fiscalmente protegida and the "dos tipos impositivos" question: "0" no consta,
+    #: "1" grupo de cooperativas, "2" otros grupos fiscales. The 2025 diseño asks the
+    #: two questions separately through the fields above and below.
+    cooperativa_o_multiples_tipos: str | None = None
     regimen_entidades_capital_riesgo: str | None = None
     circunstancia_concurrente: str | None = None
     cifra_negocios_periodo_anterior_tramo: str | None = None

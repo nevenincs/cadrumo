@@ -80,7 +80,7 @@ def test_each_design_edition_carries_its_own_subclave_list(operation: PinnedAuth
 
 def test_an_ejercicio_before_every_variant_resolves_no_scope(operation: PinnedAuthorityOperation) -> None:
     with pytest.raises(RegistryValidationError):
-        _scope(operation, 2022)
+        _scope(operation, 2021)
 
 
 def test_row_casillas_map_to_the_row_bindings_that_fill_them(operation: PinnedAuthorityOperation) -> None:
@@ -185,16 +185,33 @@ def test_a_revision_judged_by_a_later_edition_reports_the_casillas_it_lacks(
 def test_a_year_without_a_scope_edition_is_refused_once_the_revision_declares_bindings(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    """A binding-free revision has no perceptor rows; a binding-bearing one needs an edition.
+    """A binding-free surface has no perceptor rows; a binding-bearing one needs an edition.
 
-    The 2023 revision declares no binding, so it carries no perceptor record
-    for the scope to govern, and no scope edition covers 2023. Give the same
-    year the 2024 revision's bindings and the missing edition is a finding,
-    not a pass.
+    The ungoverned year this once used, 2022, is now governed by its own edition,
+    and so is every other supported filing year -- which is the first assertion
+    here, derived from the registry rather than listed. That leaves no supported
+    year for the refusal branch to be reached through, so the case it guarded is
+    reachable only from a year the envelope itself rejects, which
+    ``test_an_ejercicio_before_every_variant_resolves_no_scope`` covers at the
+    resolver.
+
+    What remains live, and is asserted below, is the other direction: a surface
+    declaring no binding carries no perceptor record for the scope to govern, so
+    the check has no claim over it whatever year it is asked about.
     """
-    casillas_2023, bindings_2023 = _revision_surface(operation, 2023)
-    _, bindings_2024 = _revision_surface(operation, 2024)
-    assert bindings_2023 == frozenset()
+    casillas, bindings = _revision_surface(operation, 2022)
+    assert bindings
 
-    (failure,) = check_perceptor_clave_scope("190", casillas_2023, frozenset(), bindings_2024, filing_year=2023)
-    assert failure.startswith("no perceptor clave scope edition governs filing year 2023")
+    supported = operation.modelo_directory("190").supported_filing_years
+    assert supported is not None
+    ungoverned = [
+        year
+        for year in range(supported.floor, supported.horizon + 1)
+        if any(
+            failure.startswith("no perceptor clave scope edition governs")
+            for failure in check_perceptor_clave_scope("190", casillas, frozenset(), bindings, filing_year=year)
+        )
+    ]
+    assert ungoverned == [], f"supported filing year(s) {ungoverned} have no perceptor clave scope edition"
+
+    assert check_perceptor_clave_scope("190", casillas, frozenset(), frozenset(), filing_year=2022) == []

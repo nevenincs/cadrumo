@@ -1,8 +1,9 @@
 [revisions."2023"]
+formula_source_refs = ["aeat-dr-193-2023", "aeat-modelo-193-procedure"]
 predecessor = "2022"
 reviewed_against = "2022"
 casilla_source_refs = ["aeat-dr-193-2023", "boe-modelo-193-2011-form"]
-# Applicability-grade historical epoch for modelo 193, filing year 2023.
+# Filing-grade historical epoch for modelo 193, filing year 2023.
 #
 # The gap this closes was authoring debt, not a legal absence: modelo 193 was
 # approved by Orden EHA/3377/2011 and filed for 2023, and the record design
@@ -20,22 +21,26 @@ casilla_source_refs = ["aeat-dr-193-2023", "boe-modelo-193-2011-form"]
 #     edition carries at 315-339 are absent here rather than omitted;
 #   - and that every legal_ref it cites is in force across the whole exercise.
 #
-# Why the grade is 'applicability' and NOT 'filing': the calculation surface of
-# this modelo -- the modelo 123 relation prefills and the base and retenciones
-# formulas built on them -- is grounded in the corpus by
-# aeat-modelo-193-procedure and aeat-modelo-193-296-note-2025, both of which
-# open on 2024-01-01 and so cannot be cited by a 2023 revision. Rather than
-# cite a source outside its own window or mint an id for evidence the corpus
-# does not hold, this revision declares no bindings, formulas, export layout
-# or completeness manifest, and its resumen totals are operator-supplied.
+# WHAT THE FILING GRADE CLAIMS HERE, and what it does not. The grade asserts
+# that this revision can back a filing draft and its export for ejercicio 2023:
+# the fichero BOE layout is transcribed position by position from
+# aeat-dr-193-2023, and the row bindings that fill its type-2 and gastos records are
+# grounded on that design for geometry and on aeat-modelo-193-procedure for the
+# filing route. That procedure applies from 2020-01-01, so it covers the whole
+# exercise.
 #
-# Promoting this to filing grade needs ONE acquisition: AEAT's modelo 193
-# procedure or instrucciones as they stood for ejercicio 2023, registered as
-# its own source. The record geometry is already here and would not change.
+# It does NOT claim the 2024-grounded calculation route. The modelo 123 relation
+# prefills the 2024 sibling totals its resumen through are grounded in the
+# corpus only by aeat-modelo-193-296-note-2025, which opens on 2024-01-01 and
+# cannot be cited by a 2023 revision. This edition instead totals its own
+# type-2 records, which is what the design's own Contenido text states for
+# positions 136-144, 145-159 and 160-174, so the whole calculation closes inside
+# this exercise's authority. The gastos total at 220-234 stays
+# operator-supplied, exactly as the filing-grade 2024 sibling leaves it.
 review_status = "agent_reviewed"
-reviewed_by = "agent: authored from the bundled hash-pinned aeat-dr-193-2023 record design. Casilla positions were verified row by row against the design's own position table and against the 2024 revision, and the additive deltas separating the epochs were confirmed in the design text. No human operator has countersigned it."
-reviewed_at = 2026-09-12
-authority_grade = "applicability"
+reviewed_by = "agent: authored from the bundled hash-pinned aeat-dr-193-2023 record design. Casilla positions were verified row by row against the design's own position table and against the 2024 revision, the export layout was derived from the same design record by record, and the additive deltas separating the epochs were confirmed in the design text. No human operator has countersigned it."
+reviewed_at = 2026-09-25
+authority_grade = "filing"
 id = "2023"
 valid_from = 2023-01-01
 valid_to = 2023-12-31
@@ -50,8 +55,33 @@ legal_refs = [
     "ley-58-2003:art-93",
 ]
 orden_aplicabilidad = ["orden-eha-3377-2011:art-1"]
-source_refs = ["aeat-dr-193-2023", "boe-modelo-193-2011-form"]
+source_refs = ["aeat-dr-193-2023", "aeat-modelo-193-procedure", "boe-modelo-193-2011-form"]
 family_storage_baseline = "2022"
+scoped_families = ["export_layouts", "workbook_parity_refs", "verification_expectations", "completeness_manifest"]
+
+[revisions."2023".family_dispositions.dependency_classifications]
+reason = """
+A dependency classification records how another modelo's declarations reach this one. This edition's declarante resumen takes none: its totals are the sums the record design itself states over this declaration's own type-2 perceptor records, so the whole calculation closes inside the edition. The 2024 sibling classifies a modelo 123 dependency because it routes the same totals through annual relation prefills grounded on a 2024 nota informativa, and that opens after this exercise ends. Empty because no cross-modelo edge exists here, not because one is unbuilt."""
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2023", "aeat-modelo-193-procedure"]
+
+[revisions."2023".family_dispositions.extraction_profiles]
+reason = """
+An extraction profile reads values back out of a filed declaration PDF, and its label patterns must be authored against a specimen of the printed layout for the edition they claim. The corpus holds no modelo 193 justificante for this exercise. Authoring patterns for this edition from a later specimen would claim a reading capability against a layout nobody checked, so the family is declared empty rather than filled with unevidenced patterns."""
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2023", "aeat-modelo-193-procedure"]
+
+[revisions."2023".family_dispositions.parameters]
+reason = """
+A parameter holds a regulatory value a formula of this revision applies -- a rate, a threshold, a coefficient. This edition applies none: both of its formulas are op = 'copy', carrying the per-record sums into the resumen casillas, and a copy applies nothing to what it copies. The retention rates that produced those amounts were set by the retenedor at payment time under RD 439/2007 art. 90 and are already recorded on each perceptor record. Empty by the shape of this modelo's calculation rather than by omission."""
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2023", "aeat-modelo-193-procedure"]
+
+[revisions."2023".family_dispositions.projection_endpoints]
+reason = """
+A projection endpoint admits one typed filing endpoint that an export record REPEATS. This revision's export layout (modelo-193-fichero-boe) declares no record with repeat = 'projection_rows' and no field of kind 'projection', so there is no repeated endpoint for the family to admit and nothing an entry here could name. Empty by construction: authoring a projection row into the layout is what would make this family apply."""
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2023", "aeat-modelo-193-procedure"]
 
 [[revisions."2023".family_overrides]]
 family = "deadline_windows"
@@ -60,3 +90,260 @@ replacement_id = "modelo-193-2023-0a"
 fields = {closes_on = 2024-01-31, filing_year = 2023, opens_on = 2024-01-01, period = "2023 0A"}
 sequence_additions = {source_refs = ["aeat-calendario-contribuyente-2024"]}
 sequence_removals = {source_refs = [1]}
+[[revisions."2023".family_overrides]]
+family = "formulas"
+selector = {revision = "2022", id = "modelo-193-base-total"}
+sequence_additions = {source_refs = ["aeat-dr-193-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+[[revisions."2023".family_overrides]]
+family = "formulas"
+selector = {revision = "2022", id = "modelo-193-retenciones-total"}
+sequence_additions = {source_refs = ["aeat-dr-193-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+[[revisions."2023".family_overrides]]
+family = "constructs"
+selector = {revision = "2022", id = "modelo-193-annual-summary"}
+sequence_additions = {bindings = ["modelo-193-perceptor-row-foral-estatal", "modelo-193-perceptor-row-foral-navarra", "modelo-193-perceptor-row-foral-araba", "modelo-193-perceptor-row-foral-gipuzkoa", "modelo-193-perceptor-row-foral-bizkaia", "modelo-193-perceptor-row-ceuta"], deadline_windows = ["modelo-193-2023-0a"], source_refs = ["aeat-calendario-contribuyente-2024", "aeat-dr-193-2023"]}
+sequence_removals = {deadline_windows = [0], source_refs = [0, 1]}
+sequence_order = {source_refs = [2, 3, 0, 1]}
+[[revisions."2023".family_overrides]]
+family = "application_links"
+selector = {revision = "2022", id = "modelo-193-calculation"}
+sequence_additions = {source_refs = ["aeat-dr-193-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+[[revisions."2023".family_overrides]]
+family = "application_links"
+selector = {revision = "2022", id = "modelo-193-export"}
+sequence_additions = {source_refs = ["aeat-dr-193-2023"]}
+sequence_removals = {source_refs = [0]}
+[[revisions."2023".family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-193-gasto-row-importe"}
+sequence_additions = {source_refs = ["aeat-dr-193-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+[[revisions."2023".family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-193-gasto-row-nif"}
+sequence_additions = {source_refs = ["aeat-dr-193-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+[[revisions."2023".family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-193-gasto-row-nif-representante"}
+sequence_additions = {source_refs = ["aeat-dr-193-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+[[revisions."2023".family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-193-gasto-row-nombre"}
+sequence_additions = {source_refs = ["aeat-dr-193-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+[[revisions."2023".family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-193-perceptor-row-base"}
+sequence_additions = {source_refs = ["aeat-dr-193-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+[[revisions."2023".family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-193-perceptor-row-clave"}
+sequence_additions = {source_refs = ["aeat-dr-193-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+[[revisions."2023".family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-193-perceptor-row-clave-codigo"}
+sequence_additions = {source_refs = ["aeat-dr-193-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+[[revisions."2023".family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-193-perceptor-row-codigo-cuenta"}
+sequence_additions = {source_refs = ["aeat-dr-193-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+[[revisions."2023".family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-193-perceptor-row-codigo-emisor"}
+sequence_additions = {source_refs = ["aeat-dr-193-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+[[revisions."2023".family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-193-perceptor-row-compensaciones"}
+sequence_additions = {source_refs = ["aeat-dr-193-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+[[revisions."2023".family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-193-perceptor-row-ejercicio-devengo"}
+sequence_additions = {source_refs = ["aeat-dr-193-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+[[revisions."2023".family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-193-perceptor-row-fecha-inicio"}
+sequence_additions = {source_refs = ["aeat-dr-193-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+[[revisions."2023".family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-193-perceptor-row-fecha-vencimiento"}
+sequence_additions = {source_refs = ["aeat-dr-193-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+[[revisions."2023".family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-193-perceptor-row-garantias"}
+sequence_additions = {source_refs = ["aeat-dr-193-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+[[revisions."2023".family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-193-perceptor-row-mediador"}
+sequence_additions = {source_refs = ["aeat-dr-193-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+[[revisions."2023".family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-193-perceptor-row-name"}
+sequence_additions = {source_refs = ["aeat-dr-193-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+[[revisions."2023".family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-193-perceptor-row-naturaleza"}
+sequence_additions = {source_refs = ["aeat-dr-193-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+[[revisions."2023".family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-193-perceptor-row-naturaleza-declarante"}
+sequence_additions = {source_refs = ["aeat-dr-193-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+[[revisions."2023".family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-193-perceptor-row-nif"}
+sequence_additions = {source_refs = ["aeat-dr-193-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+[[revisions."2023".family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-193-perceptor-row-nif-representante"}
+sequence_additions = {source_refs = ["aeat-dr-193-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+[[revisions."2023".family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-193-perceptor-row-pago"}
+sequence_additions = {source_refs = ["aeat-dr-193-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+[[revisions."2023".family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-193-perceptor-row-penalizaciones"}
+sequence_additions = {source_refs = ["aeat-dr-193-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+[[revisions."2023".family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-193-perceptor-row-pendiente"}
+sequence_additions = {source_refs = ["aeat-dr-193-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+[[revisions."2023".family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-193-perceptor-row-percibido"}
+sequence_additions = {source_refs = ["aeat-dr-193-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+[[revisions."2023".family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-193-perceptor-row-porcentaje"}
+sequence_additions = {source_refs = ["aeat-dr-193-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+[[revisions."2023".family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-193-perceptor-row-provincia"}
+sequence_additions = {source_refs = ["aeat-dr-193-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+[[revisions."2023".family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-193-perceptor-row-reducciones"}
+sequence_additions = {source_refs = ["aeat-dr-193-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+[[revisions."2023".family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-193-perceptor-row-retencion"}
+sequence_additions = {source_refs = ["aeat-dr-193-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+[[revisions."2023".family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-193-perceptor-row-tipo-codigo"}
+sequence_additions = {source_refs = ["aeat-dr-193-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+[[revisions."2023".family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-193-perceptor-row-tipo-percepcion"}
+sequence_additions = {source_refs = ["aeat-dr-193-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+[[revisions."2023".family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-193-perceptor-rows-base-total"}
+sequence_additions = {source_refs = ["aeat-dr-193-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+[[revisions."2023".family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-193-perceptor-rows-retenciones-total"}
+sequence_additions = {source_refs = ["aeat-dr-193-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+[[revisions."2023".family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-193-perceptores-anual"}
+sequence_additions = {source_refs = ["aeat-dr-193-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+[[revisions."2023".family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-193-retenciones-ingresadas"}
+sequence_additions = {source_refs = ["aeat-dr-193-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+[[revisions."2023".family_overrides]]
+family = "export_layouts"
+selector = {revision = "2022", id = "modelo-193-fichero-boe"}
+sequence_additions = {records = [{id = "modelo-193-declarante", record_type = "declarante", order = 0, encoding = "iso-8859-1", line_ending = "none", required = true, fields = [{id = "modelo-193-decl-record-type", offset = 1, length = 1, kind = "literal", literal = "1", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-decl-modelo", offset = 2, length = 3, kind = "literal", literal = "193", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-decl-year", offset = 5, length = 4, kind = "draft", draft_attribute = "filing_year", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-decl-nif", offset = 9, length = 9, kind = "header", producer_key = "presenter.tax_id", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-decl-apellidos-razon-social", offset = 18, length = 40, kind = "header", producer_key = "taxpayer.full_name", data_type = "text", required = true, padding = "right_space", justification = "left", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-decl-tipo-soporte", offset = 58, length = 1, kind = "literal", literal = "T", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-decl-persona-contacto-telefono", offset = 59, length = 9, kind = "casilla", casilla_id = "decl.persona-contacto-telefono", data_type = "text", required = false, padding = "none", justification = "none", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-decl-persona-contacto-nombre", offset = 68, length = 40, kind = "casilla", casilla_id = "decl.persona-contacto-nombre", data_type = "text", required = false, padding = "right_space", justification = "left", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-decl-num-identificativo", offset = 108, length = 13, kind = "casilla", casilla_id = "decl.num-identificativo", data_type = "text", required = false, padding = "none", justification = "none", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-decl-complementaria", offset = 121, length = 1, kind = "casilla", casilla_id = "decl.complementaria", data_type = "text", required = false, padding = "none", justification = "none", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-decl-sustitutiva", offset = 122, length = 1, kind = "casilla", casilla_id = "decl.sustitutiva", data_type = "text", required = false, padding = "none", justification = "none", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-decl-num-identificativo-anterior", offset = 123, length = 13, kind = "casilla", casilla_id = "decl.num-identificativo-anterior", data_type = "text", required = false, padding = "left_zero", justification = "right", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-decl-total-perceptores", offset = 136, length = 9, kind = "casilla", casilla_id = "decl.total-perceptores", data_type = "integer", required = true, padding = "left_zero", justification = "right", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-decl-base-total", offset = 145, length = 15, kind = "casilla", casilla_id = "decl.base-total", data_type = "money", required = true, padding = "left_zero", justification = "right", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-decl-retenciones-total", offset = 160, length = 15, kind = "casilla", casilla_id = "decl.retenciones-total", data_type = "money", required = true, padding = "left_zero", justification = "right", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-decl-retenciones-ingresadas", offset = 175, length = 15, kind = "casilla", casilla_id = "decl.retenciones-ingresadas", data_type = "money", required = true, padding = "left_zero", justification = "right", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-decl-gastos-total", offset = 220, length = 15, kind = "casilla", casilla_id = "decl.gastos-total", data_type = "money", required = true, padding = "left_zero", justification = "right", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-decl-naturaleza-declarante", offset = 235, length = 1, kind = "casilla", casilla_id = "decl.naturaleza-declarante", data_type = "text", required = false, padding = "none", justification = "none", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-decl-reserved-tail", offset = 236, length = 265, kind = "filler", data_type = "text", required = false, padding = "right_space", justification = "left", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}]}, {id = "modelo-193-perceptor", record_type = "perceptor", order = 1, encoding = "iso-8859-1", line_ending = "none", required = false, repeat = "binding_rows", binding_record = "perceptor", fields = [{id = "modelo-193-perc-record-type", offset = 1, length = 1, kind = "literal", literal = "2", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-perc-modelo", offset = 2, length = 3, kind = "literal", literal = "193", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-perc-year", offset = 5, length = 4, kind = "draft", draft_attribute = "filing_year", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-perc-declarante-nif", offset = 9, length = 9, kind = "header", producer_key = "presenter.tax_id", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-perc-nif", offset = 18, length = 9, kind = "binding", binding = "modelo-193-perceptor-row-nif", data_type = "text", required = false, padding = "none", justification = "none", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-perc-nif-representante", offset = 27, length = 9, kind = "binding", binding = "modelo-193-perceptor-row-nif-representante", data_type = "text", required = false, padding = "none", justification = "none", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-perc-nombre", offset = 36, length = 40, kind = "binding", binding = "modelo-193-perceptor-row-name", data_type = "text", required = false, padding = "right_space", justification = "left", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-perc-mediador", offset = 76, length = 1, kind = "binding", binding = "modelo-193-perceptor-row-mediador", data_type = "text", required = false, padding = "none", justification = "none", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-perc-provincia", offset = 77, length = 2, kind = "binding", binding = "modelo-193-perceptor-row-provincia", data_type = "text", required = false, padding = "left_zero", justification = "right", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-perc-clave-codigo", offset = 79, length = 1, kind = "binding", binding = "modelo-193-perceptor-row-clave-codigo", data_type = "text", required = false, padding = "none", justification = "none", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-perc-codigo-emisor", offset = 80, length = 12, kind = "binding", binding = "modelo-193-perceptor-row-codigo-emisor", data_type = "text", required = false, padding = "none", justification = "none", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-perc-clave", offset = 92, length = 1, kind = "binding", binding = "modelo-193-perceptor-row-clave", data_type = "text", required = false, padding = "none", justification = "none", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-perc-naturaleza", offset = 93, length = 2, kind = "binding", binding = "modelo-193-perceptor-row-naturaleza", data_type = "text", required = false, padding = "none", justification = "none", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-perc-pago", offset = 95, length = 1, kind = "binding", binding = "modelo-193-perceptor-row-pago", data_type = "text", required = false, padding = "none", justification = "none", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-perc-tipo-codigo", offset = 96, length = 1, kind = "binding", binding = "modelo-193-perceptor-row-tipo-codigo", data_type = "text", required = false, padding = "none", justification = "none", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-perc-codigo-cuenta", offset = 97, length = 20, kind = "binding", binding = "modelo-193-perceptor-row-codigo-cuenta", data_type = "text", required = false, padding = "none", justification = "none", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-perc-pendiente", offset = 117, length = 1, kind = "binding", binding = "modelo-193-perceptor-row-pendiente", data_type = "text", required = false, padding = "none", justification = "none", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-perc-ejercicio-devengo", offset = 118, length = 4, kind = "binding", binding = "modelo-193-perceptor-row-ejercicio-devengo", data_type = "text", required = false, padding = "left_zero", justification = "right", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-perc-tipo-percepcion", offset = 122, length = 1, kind = "binding", binding = "modelo-193-perceptor-row-tipo-percepcion", data_type = "text", required = false, padding = "none", justification = "none", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-perc-percepciones", offset = 123, length = 13, kind = "binding", binding = "modelo-193-perceptor-row-percibido", data_type = "money", required = false, padding = "left_zero", justification = "right", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-perc-reducciones", offset = 139, length = 13, kind = "binding", binding = "modelo-193-perceptor-row-reducciones", data_type = "money", required = false, padding = "left_zero", justification = "right", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-perc-base", offset = 152, length = 13, kind = "binding", binding = "modelo-193-perceptor-row-base", data_type = "money", required = false, padding = "left_zero", justification = "right", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-perc-porcentaje", offset = 165, length = 4, kind = "binding", binding = "modelo-193-perceptor-row-porcentaje", data_type = "money", required = false, padding = "left_zero", justification = "right", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-perc-retenciones", offset = 169, length = 13, kind = "binding", binding = "modelo-193-perceptor-row-retencion", data_type = "money", required = false, padding = "left_zero", justification = "right", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-perc-penalizaciones", offset = 182, length = 11, kind = "binding", binding = "modelo-193-perceptor-row-penalizaciones", data_type = "money", required = false, padding = "left_zero", justification = "right", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-perc-naturaleza-declarante", offset = 208, length = 1, kind = "binding", binding = "modelo-193-perceptor-row-naturaleza-declarante", data_type = "text", required = false, padding = "none", justification = "none", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-perc-fecha-inicio", offset = 209, length = 8, kind = "binding", binding = "modelo-193-perceptor-row-fecha-inicio", data_type = "text", required = false, padding = "none", justification = "none", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-perc-fecha-vencimiento", offset = 217, length = 8, kind = "binding", binding = "modelo-193-perceptor-row-fecha-vencimiento", data_type = "text", required = false, padding = "none", justification = "none", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-perc-compensaciones", offset = 225, length = 12, kind = "binding", binding = "modelo-193-perceptor-row-compensaciones", data_type = "money", required = false, padding = "left_zero", justification = "right", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-perc-garantias", offset = 237, length = 12, kind = "binding", binding = "modelo-193-perceptor-row-garantias", data_type = "money", required = false, padding = "left_zero", justification = "right", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-perc-foral-estatal", offset = 249, length = 13, kind = "binding", binding = "modelo-193-perceptor-row-foral-estatal", data_type = "money", required = false, padding = "left_zero", justification = "right", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-perc-foral-navarra", offset = 262, length = 13, kind = "binding", binding = "modelo-193-perceptor-row-foral-navarra", data_type = "money", required = false, padding = "left_zero", justification = "right", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-perc-foral-araba", offset = 275, length = 13, kind = "binding", binding = "modelo-193-perceptor-row-foral-araba", data_type = "money", required = false, padding = "left_zero", justification = "right", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-perc-foral-gipuzkoa", offset = 288, length = 13, kind = "binding", binding = "modelo-193-perceptor-row-foral-gipuzkoa", data_type = "money", required = false, padding = "left_zero", justification = "right", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-perc-foral-bizkaia", offset = 301, length = 13, kind = "binding", binding = "modelo-193-perceptor-row-foral-bizkaia", data_type = "money", required = false, padding = "left_zero", justification = "right", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-perc-ceuta", offset = 314, length = 1, kind = "binding", binding = "modelo-193-perceptor-row-ceuta", data_type = "text", required = false, padding = "none", justification = "none", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-perc-reserved-tail", offset = 315, length = 186, kind = "filler", data_type = "text", required = false, padding = "right_space", justification = "left", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}], discriminator = {offset = 208,length = 293,requires = "non_blank"}, row_field_casilla_ids = {perceptor_tax_id = "perc.nif",perceptor_legal_name = "perc.nombre",representative_tax_id = "perc.nif-representante",perceptor_mediador_flag = "perc.mediador",province_code = "perc.provincia",clave_codigo = "perc.clave-codigo",codigo_emisor = "perc.codigo-emisor",clave = "perc.clave",naturaleza = "perc.naturaleza",pago = "perc.pago",tipo_codigo = "perc.tipo-codigo",codigo_cuenta = "perc.codigo-cuenta",pendiente_flag = "perc.pendiente",accrual_year = "perc.ejercicio-devengo",tipo_percepcion = "perc.tipo-percepcion",percibido_dinerario = "perc.percepciones",reducciones = "perc.reducciones",base_retenciones = "perc.base",porcentaje_retencion = "perc.porcentaje",retencion_practicada = "perc.retenciones",penalizaciones = "perc.penalizaciones",naturaleza_declarante = "perc.naturaleza-declarante",fecha_inicio_prestamo = "perc.fecha-inicio-prestamo",fecha_vencimiento_prestamo = "perc.fecha-vencimiento-prestamo",compensaciones = "perc.compensaciones",garantias = "perc.garantias",foral_retention_estatal = "perc.retenciones-forales-estatal",foral_retention_navarra = "perc.retenciones-forales-navarra",foral_retention_araba = "perc.retenciones-forales-araba",foral_retention_gipuzkoa = "perc.retenciones-forales-gipuzkoa",foral_retention_bizkaia = "perc.retenciones-forales-bizkaia",territorial_deduction_clave = "perc.ceuta-melilla"}}, {id = "modelo-193-gastos", record_type = "gastos", order = 2, encoding = "iso-8859-1", line_ending = "none", required = false, repeat = "binding_rows", binding_record = "gastos", fields = [{id = "modelo-193-gasto-record-type", offset = 1, length = 1, kind = "literal", literal = "2", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-gasto-modelo", offset = 2, length = 3, kind = "literal", literal = "193", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-gasto-year", offset = 5, length = 4, kind = "draft", draft_attribute = "filing_year", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-gasto-declarante-nif", offset = 9, length = 9, kind = "header", producer_key = "presenter.tax_id", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-gasto-nif", offset = 18, length = 9, kind = "binding", binding = "modelo-193-gasto-row-nif", data_type = "text", required = true, padding = "none", justification = "none", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-gasto-nif-representante", offset = 27, length = 9, kind = "binding", binding = "modelo-193-gasto-row-nif-representante", data_type = "text", required = false, padding = "none", justification = "none", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-gasto-nombre", offset = 36, length = 40, kind = "binding", binding = "modelo-193-gasto-row-nombre", data_type = "text", required = true, padding = "right_space", justification = "left", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-gasto-importe", offset = 195, length = 13, kind = "binding", binding = "modelo-193-gasto-row-importe", data_type = "money", required = true, padding = "left_zero", justification = "right", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}, {id = "modelo-193-gastos-reserved-tail", offset = 208, length = 293, kind = "filler", data_type = "text", required = false, padding = "right_space", justification = "left", signed = false, legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2023"]}], discriminator = {offset = 208,length = 293,requires = "blank"}, row_field_casilla_ids = {contributor_tax_id = "gasto.nif",contributor_legal_name = "gasto.nombre",representative_tax_id = "gasto.nif-representante",importe_gastos = "gasto.importe"}}], source_refs = ["aeat-dr-193-2023"]}
+sequence_removals = {records = [0, 1, 2], source_refs = [0]}
+[[revisions."2023".family_overrides]]
+family = "workbook_parity_refs"
+selector = {revision = "2022", id = "modelo-193-dr-pdf"}
+fields = {fixture_id = "modelo-193-2023-record-design-layout", workbook_source = "aeat-dr-193-2023"}
+sequence_additions = {source_refs = ["aeat-dr-193-2023"]}
+sequence_removals = {source_refs = [0]}
+[[revisions."2023".family_overrides]]
+family = "verification_expectations"
+selector = {revision = "2022", id = "modelo-193-annual-summary-verification"}
+sequence_additions = {source_refs = ["aeat-dr-193-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+[[revisions."2023".family_overrides]]
+family = "completeness_manifest"
+selector = {revision = "2022", id = "aeat-dr-193-2019"}
+replacement_id = "aeat-dr-193-2023"
+sequence_additions = {source_refs = ["aeat-dr-193-2023"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}

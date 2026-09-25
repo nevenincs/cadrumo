@@ -134,7 +134,7 @@ import sys
 from collections import Counter
 from collections.abc import Mapping, MutableMapping, Sequence
 from dataclasses import asdict, dataclass
-from enum import StrEnum
+from enum import Enum, StrEnum
 from pathlib import Path
 from typing import Final, cast
 
@@ -208,6 +208,8 @@ _MANIFEST: Final = "revision.toml"
 _ROW_SOURCE: Final = "source_refs"
 _ROW_SOURCE_ADDITIONS: Final = "additional_source_refs"
 _ROW_LEGAL: Final = "legal_refs"
+#: Row fields an edition default fills when the row does not state them.
+_EDITION_DEFAULTED_FIELDS: Final = frozenset({_ROW_SOURCE, _ROW_LEGAL})
 _LINEAGE_CLAIMS: Final = frozenset({"continuidad_origin", "continuidad_evidence"})
 _CONSTRAINTS: Final = "constraints"
 _REPORT_FAMILY: Final = "audit-runs"
@@ -222,7 +224,6 @@ _RETIRED: Final = "retired"
 _REVISION_SEGMENT: Final = r'(?:"[^"\n]+"|[^".\]\n]+)'
 _ROW_HEADER: Final = re.compile(rf"^\[\[revisions\.{_REVISION_SEGMENT}\.casillas\]\]\s*$")
 _CONSTRAINTS_HEADER: Final = re.compile(rf"^\[revisions\.{_REVISION_SEGMENT}\.casillas\.constraints\]\s*$")
-_FILENAME_SUBSTITUTIONS: Final[Mapping[str, str]] = {":": "+"}
 _TOML_ESCAPES: Final[Mapping[str, str]] = {
     "\\": "\\\\",
     '"': '\\"',
@@ -450,6 +451,7 @@ _STORAGE_REPRESENTATION_FIELDS: Final[frozenset[str]] = frozenset(
         "family_positions",
         "cleared_families",
         "scoped_families",
+        "restated_families",
     }
 )
 
@@ -494,7 +496,15 @@ def _leaf_values(value: object, prefix: tuple[str, ...] = ()) -> dict[tuple[str,
 
 
 def _typed_equal(left: object, right: object) -> bool:
-    """Compare registry values without Python's bool/int or container coercions."""
+    """Compare registry values without Python's bool/int or container coercions.
+
+    An enum compares by its value: authored TOML states ``"computed"`` where the
+    typed model holds ``InputKind.COMPUTED``, and the two are the same fact.
+    """
+    if isinstance(left, Enum):
+        left = left.value
+    if isinstance(right, Enum):
+        right = right.value
     if isinstance(left, Mapping) or isinstance(right, Mapping):
         return (
             isinstance(left, Mapping)
@@ -663,7 +673,7 @@ def _prune_redundant_override_leaves(modelo_dir: Path) -> int:
                 targets.setdefault((finding_family, member), set()).update(
                     tuple(field.split("."))
                     for field in fields
-                    if isinstance(field, str) and field.split(".")[-1] != _ROW_SOURCE
+                    if isinstance(field, str) and field.split(".")[-1] not in _EDITION_DEFAULTED_FIELDS
                 )
             kept = []
             for operation in operations:
@@ -682,7 +692,11 @@ def _prune_redundant_override_leaves(modelo_dir: Path) -> int:
                     if isinstance(operation, Mapping)
                     else None
                 )
-                paths = targets.get((str(operation_family), str(effective_member)), ())
+                # Casilla override findings name the selector id; renamed family
+                # members are reported under their successor id. Accept either.
+                paths = targets.get((str(operation_family), str(effective_member)), set()) | targets.get(
+                    (str(operation_family), str(member)), set()
+                )
                 for path in paths:
                     removed += int(_remove_toml_leaf(fields, path))
                 has_non_field_effect = any(
@@ -961,6 +975,20 @@ def assess_migration_state(modelo_dir: Path) -> MigrationAssessment:
                         if inherited is None:
                             row["additions"] += 1
                             continue
+                        # A casilla that reuses a predecessor's id under a different
+                        # continuity chain is a new member, as the planner and the
+                        # lineage minimality screen treat it; fields it happens to
+                        # share with the retired row are not inherited payload.
+                        stated_lineage = member.get(_LINEAGE)
+                        inherited_lineage = getattr(inherited, _LINEAGE, None)
+                        if (
+                            spec.section == CASILLAS_FAMILY
+                            and stated_lineage is not None
+                            and inherited_lineage is not None
+                            and str(stated_lineage) != str(inherited_lineage)
+                        ):
+                            row["additions"] += 1
+                            continue
                         left = dict(member)
                         if hasattr(inherited, "model_dump"):
                             right = cast(
@@ -982,7 +1010,7 @@ def assess_migration_state(modelo_dir: Path) -> MigrationAssessment:
                         authored_leaves = {
                             path: value
                             for path, value in _leaf_values(left).items()
-                            if path and path[0] not in _STRUCTURAL_FIELDS
+                            if path and path[0] not in _STRUCTURAL_FIELDS and path[0] not in _LINEAGE_CLAIMS
                         }
                         baseline_leaves = _leaf_values(right)
                         typed_current = _model_value(current_by_id.get(identity))
@@ -1131,6 +1159,20 @@ def assess_migration_state(modelo_dir: Path) -> MigrationAssessment:
                             baseline_leaves = _leaf_values(baseline_value)
                             for path, value in _leaf_values(fields).items():
                                 location = ".".join(path)
+                                # A lineage claim is this edition's provenance, restated
+                                # on purpose; equal to the predecessor's, it still does
+                                # not inherit, so it is never redundant payload.
+                                if path and path[0] in _LINEAGE_CLAIMS:
+                                    row["genuine_overrides"] += 1
+                                    continue
+                                # An override's source_refs or legal_refs pins the value
+                                # against this edition's own default (casilla_source_refs,
+                                # orden_aplicabilidad). Equal to the predecessor's hydrated
+                                # value, it still differs from what the row would resolve
+                                # to here without it, so it is not redundant.
+                                if path and path[-1] in _EDITION_DEFAULTED_FIELDS:
+                                    row["genuine_overrides"] += 1
+                                    continue
                                 if path in baseline_leaves and _typed_equal(value, baseline_leaves[path]):
                                     row["redundant_overrides"] += 1
                                     unresolved.append(
@@ -1753,24 +1795,18 @@ def _edition_lift(source: _EditionSource) -> _EditionLift:
     )
 
 
-def _stem(casilla_id: str) -> str:
-    for hostile, safe in _FILENAME_SUBSTITUTIONS.items():
-        casilla_id = casilla_id.replace(hostile, safe)
-    return casilla_id
-
-
-def _fragment_name(ids: Sequence[str]) -> str:
-    first, last = _stem(ids[0]), _stem(ids[-1])
-    return f"c{first}.toml" if len(ids) == 1 or first == last else f"c{first}__c{last}.toml"
-
-
 def _stated_layout(source: _EditionSource, stated: frozenset[str]) -> list[tuple[str, list[_Block]]]:
-    """The fragments that remain once only ``stated`` rows are kept, named and ordered as the loader reads them."""
+    """The fragments that remain once only ``stated`` rows are kept, ordered as the loader reads them.
+
+    Each fragment keeps its authored file name. Casilla sections are packed into
+    one ``0001-declarations.toml`` per edition, and dropping rows from it does
+    not change what the file is.
+    """
     layout: list[tuple[str, list[_Block]]] = []
     for fragment in source.fragments:
         kept = [block for block in fragment.blocks if _row_id(block.row) in stated]
         if kept:
-            layout.append((_fragment_name([_row_id(block.row) for block in kept]), kept))
+            layout.append((fragment.path.name, kept))
     names = [name for name, _ in layout]
     duplicated = sorted(name for name, count in Counter(names).items() if count > 1)
     if duplicated:
@@ -1834,6 +1870,12 @@ def _plan(
             drops, kept, not_exact, _overrides, attestations = _choose_existing_drops(
                 revision_id=revision_id,
                 predecessor=predecessor,
+                # A delta-authored predecessor keeps its operations verbatim, so
+                # its stored rows are what the loader patches; a full-copy one is
+                # rewritten in lifted form, which ``inherited`` already holds.
+                storage_rows=(
+                    _storage_rows(sources[predecessor]) if _storage_authored(sources[predecessor].manifest) else {}
+                ),
                 inherited=materialised[predecessor],
                 full_rows=full_rows,
                 lifts=lift.lifts,
@@ -2137,6 +2179,7 @@ def _choose_existing_drops(
     *,
     revision_id: str,
     predecessor: str,
+    storage_rows: Mapping[str, _Row],
     inherited: Sequence[_Placed],
     full_rows: Sequence[_Row],
     lifts: Mapping[str, _Lift],
@@ -2164,6 +2207,9 @@ def _choose_existing_drops(
     not_exact: list[str] = []
     overrides: list[_Row] = []
     attestations: list[LineageAttestation] = []
+    # Existing overrides are preserved verbatim, so a predecessor row one of them
+    # already patches cannot also be the baseline of a new override.
+    claimed = _authored_override_selectors(source.manifest)
     for authored in source.stated_rows():
         row_id = _row_id(authored)
         row = effective_by_id[row_id]
@@ -2175,6 +2221,9 @@ def _choose_existing_drops(
             kept[KeptReason.NEW_LINEAGE] += 1
             continue
         (candidate,) = candidates
+        if _row_id(candidate.row) in claimed:
+            kept[KeptReason.NEW_LINEAGE] += 1
+            continue
         if not lineage_candidates and lineage is None and _lineage(candidate.row) is not None:
             kept[KeptReason.NEW_LINEAGE] += 1
             continue
@@ -2218,8 +2267,9 @@ def _choose_existing_drops(
         ).row
         fields, removed_fields = _storage_difference(comparison_baseline, target)
         removed_fields = _existing_storage_removals(baseline, removed_fields)
-        if _ROW_SOURCE in fields:
-            removed_fields = tuple(field for field in removed_fields if field != _ROW_SOURCE_ADDITIONS)
+        removed_fields = _reconcile_row_source_removals(
+            fields, removed_fields, storage_rows.get(_row_id(candidate.row), baseline)
+        )
         unsupported_nested = tuple(
             field
             for field in removed_fields
@@ -2244,6 +2294,56 @@ def _choose_existing_drops(
         overrides.append(override)
         drops.add(row_id)
     return drops, kept, not_exact, tuple(overrides), tuple(attestations)
+
+
+def _storage_rows(source: _EditionSource) -> Mapping[str, _Row]:
+    """The edition's casilla rows as the loader stores them, by id, before lifting."""
+    raw = source.table.get(_CASILLAS, ())
+    rows: dict[str, _Row] = {}
+    if not isinstance(raw, list | tuple):
+        return rows
+    for row in raw:
+        if isinstance(row, Mapping):
+            stored = _as_row(row)
+            rows[_row_id(stored)] = stored
+    return rows
+
+
+def _reconcile_row_source_removals(
+    fields: Mapping[str, object], removed_fields: tuple[str, ...], raw_baseline: Mapping[str, object]
+) -> tuple[str, ...]:
+    """Keep a row stating exactly one of ``source_refs`` and ``additional_source_refs``.
+
+    ``source_refs`` replaces the edition default whole and already displaces any
+    inherited additions, so those are not removed twice. ``additional_source_refs``
+    only extends the default, so a baseline that states ``source_refs`` must have
+    it removed, or the patched row would state both, which the loader refuses.
+    """
+    if _ROW_SOURCE in fields:
+        return tuple(field for field in removed_fields if field != _ROW_SOURCE_ADDITIONS)
+    if _ROW_SOURCE_ADDITIONS in fields and _ROW_SOURCE in raw_baseline and _ROW_SOURCE not in removed_fields:
+        return (*removed_fields, _ROW_SOURCE)
+    return removed_fields
+
+
+def _authored_override_selectors(manifest: Mapping[str, object]) -> frozenset[str]:
+    """Predecessor row ids the edition's authored casilla operations already claim.
+
+    An override already patches its row. A removal paired with a restated row
+    relocates that row, which a rename in place cannot express. Either way the
+    predecessor row is not free to become the baseline of a new override.
+    """
+    claimed: set[str] = set()
+    for operation_name in ("casilla_overrides", "casilla_removals"):
+        raw = manifest.get(operation_name, ())
+        if not isinstance(raw, list | tuple):
+            continue
+        claimed.update(
+            str(selector.get("id"))
+            for operation in raw
+            if isinstance(operation, Mapping) and isinstance((selector := operation.get("selector")), Mapping)
+        )
+    return frozenset(claimed)
 
 
 def _choose_drops(
@@ -2294,6 +2394,9 @@ def _choose_drops(
     overrides: list[_Row] = []
     lineage_attestations: list[LineageAttestation] = []
     matched_storage_ids: set[str] = set()
+    # A predecessor row can be patched once: a row an authored override already
+    # patches cannot also be renamed onto another successor.
+    claimed = _authored_override_selectors(source.manifest)
     for row in full_rows:
         row_id, lineage = _row_id(row), _lineage(row)
         lineage_candidates = by_lineage.get(lineage, []) if lineage is not None else []
@@ -2304,6 +2407,9 @@ def _choose_drops(
             kept[KeptReason.NEW_LINEAGE] += 1
             continue
         (candidate,) = candidates
+        if _row_id(candidate.row) in claimed and _row_id(candidate.row) != row_id:
+            kept[KeptReason.NEW_LINEAGE] += 1
+            continue
         if matched_by_storage_id and _lineage(candidate.row) is not None:
             kept[KeptReason.NEW_LINEAGE] += 1
             continue
@@ -2340,9 +2446,9 @@ def _choose_drops(
                 orden=defaults.orden,
             ).row
             fields, removed_fields = _storage_difference(baseline, target)
-            removed_fields = _existing_storage_removals(_without_lineage_claims(candidate.row), removed_fields)
-            if _ROW_SOURCE in fields:
-                removed_fields = tuple(field for field in removed_fields if field != _ROW_SOURCE_ADDITIONS)
+            raw_baseline = _without_lineage_claims(candidate.row)
+            removed_fields = _existing_storage_removals(raw_baseline, removed_fields)
+            removed_fields = _reconcile_row_source_removals(fields, removed_fields, raw_baseline)
             unsupported_nested = tuple(
                 field
                 for field in removed_fields
@@ -2756,9 +2862,7 @@ def _write_edition(edition_dir: Path, work: _EditionWork) -> None:
     stated = frozenset(work.plan.stated_ids)
     layout = _stated_layout(work.source, stated)
     preambles = {
-        _fragment_name([_row_id(block.row) for block in fragment.blocks if _row_id(block.row) in stated]): (
-            fragment.preamble
-        )
+        fragment.path.name: fragment.preamble
         for fragment in work.source.fragments
         if any(_row_id(block.row) in stated for block in fragment.blocks)
     }
@@ -2772,7 +2876,7 @@ def _write_edition(edition_dir: Path, work: _EditionWork) -> None:
         if name not in rendered:
             (casillas / name).unlink()
     for name, text in rendered.items():
-        if Path(name).name != name or not name.startswith("c"):
+        if name not in originals:
             raise MigrationRefusedError(f"refusing to write fragment name {name!r}")
         if originals.get(name) == text:
             continue
@@ -2901,13 +3005,17 @@ def _chain_materialisation(source: _EditionSource) -> bytes:
 
     Keys are emitted in sorted order and sequences in their own, so the
     comparison is blind to where a declaration was inserted in a manifest and
-    exact about the order of members.
+    exact about the order of members. A keyed family with no members is the
+    same whether an edition omits it or inherits it empty, so an empty family
+    is left out on both sides rather than read as a difference.
     """
     effective_table = _family_defaults_inlined(source.table)
+    family_sections = {spec.section for spec in CANONICAL_FAMILY_SPECS}
     table = {
         key: _comparable(value, revision_id=source.revision_id, path=f"table.{key}")
         for key, value in effective_table.items()
         if key not in _DECLARED_DEFAULT_KEYS | _STORAGE_REPRESENTATION_FIELDS
+        and not (key in family_sections and isinstance(value, list | tuple) and not value)
     }
     effective_rows = [dict(row) for row in _effective_rows(source)]
     raw_attestations = source.manifest.get("lineage_attestations", ())
@@ -3387,21 +3495,7 @@ def _rewrite_family_fragment(fragment: _MemberFragment, family: _DroppableFamily
         return
     if kept:
         text = fragment.preamble + "".join(block.text for block in kept)
-        path = fragment.path
-        if family.section == _CASILLAS:
-            # Casilla fragments are named for the rows they hold, so dropping a
-            # row from one renames it. Leaving the authored name would state a
-            # span the fragment no longer covers, which is the same drift the
-            # migration's own writer avoids by deriving the name from content.
-            renamed = fragment.path.with_name(_fragment_name([_row_id(block.row) for block in kept]))
-            if renamed != path and renamed.exists():
-                raise MigrationRefusedError(
-                    f"{fragment.path}: dropping rows would rename it to {renamed.name!r}, which already exists",
-                )
-            path = renamed
-        path.write_text(text.rstrip("\n") + "\n", encoding="utf-8", newline="\n")
-        if path != fragment.path:
-            fragment.path.unlink()
+        fragment.path.write_text(text.rstrip("\n") + "\n", encoding="utf-8", newline="\n")
         return
     if fragment.preamble.strip() and not all(
         not line.strip() or line.lstrip().startswith("#") for line in fragment.preamble.splitlines()

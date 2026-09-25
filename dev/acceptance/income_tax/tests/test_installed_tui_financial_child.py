@@ -45,7 +45,7 @@ def test_transaction_csv_is_n26_compatible_transient_scenario_input(tmp_path: Pa
 
 def test_annual_artifact_parser_checks_financial_meaning_and_official_schema() -> None:
     root = Path(__file__).resolve().parents[4]
-    xml = root / (".agents/session-briefs/handoffs/artifacts/income-01/cli-baseline-8c3a40fecf/modelo-100-2025-0A.xml")
+    xml = Path(__file__).resolve().parent / "fixtures" / "modelo-100-2025-0A-synthetic.xml"
     schema = root / (
         "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_100/files/"
         "03-100-esquema-xsd-ejercicio-2025-actualizado-24-06-2026-793-kb-ejecutable.xsd"

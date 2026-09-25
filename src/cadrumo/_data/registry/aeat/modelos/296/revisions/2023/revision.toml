@@ -7,10 +7,25 @@ application_link_source_refs = ["aeat-modelo-296-procedure"]
 # countersigned it, and 'agent_reviewed' plus this reviewer token record that
 # state honestly rather than claiming the operator's own sign-off.
 #
-# What the review covered: all 136 design fields across the five records, each
-# classified from the design's own text, and 69 reviewed numeric rules authored
-# from the wording of the field they govern -- this being a PDF design, which
-# carries no Contenido column for the generator to derive from.
+# What the review covered: all 68 design fields across the THREE records
+# aeat-dr-296-2023 declares -- the declarante record, the perceptor record and
+# the "Anexo de desglose de retenciones e ingresos a cuenta" (tipo de hoja "F")
+# -- each classified from the design's own text, plus 40 reviewed numeric rules
+# authored from the wording of the field they govern, this being a PDF design
+# which carries no Contenido column for the generator to derive from.
+#
+# THE RECORD SET IS THIS DESIGN'S, NOT ITS SUCCESSOR'S. The 2024 design adds the
+# two "Anexo - Valores Negociables" records and five perceptor fields, and an
+# earlier version of this edition declared projection endpoints for all of them
+# while citing aeat-dr-296-2023 as their source. Those 53 endpoints are removed:
+# the 2023 design declares positions 85-90 and 402-432 of the perceptor record
+# as BLANCOS and carries no Valores Negociables record at all.
+#
+# FILING AUTHORITY IS CLAIMED for this edition. The export layout is the
+# generated tree under `export/`, derived by the canonical generator from
+# aeat-dr-296-2023, whose declared window (2023-01-01..2023-12-31) covers this
+# filing year exactly. The grade was raised from 'applicability' once that tree
+# validated and every family this edition enrols resolved.
 #
 # One binding deserves an operator's eye specifically. Casilla 05 is bound to
 # positions 175-189, RETENCIONES E INGRESOS A CUENTA INGRESADOS, on the reading
@@ -24,7 +39,7 @@ application_link_source_refs = ["aeat-modelo-296-procedure"]
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-08-19
-authority_grade = "applicability"
+authority_grade = "filing"
 valid_from = 2023-01-01
 valid_to = 2023-12-31
 period_selector = { year_from = 2023, year_to = 2023, periods = ["0A"] }

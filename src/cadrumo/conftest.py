@@ -162,7 +162,7 @@ def source_tree_ast() -> Mapping[Path, ast.AST]:
     return cache
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="package", autouse=True)
 def _skip_profile_kdf_grid_measurement() -> Iterator[None]:
     """Stop every profile registration re-benchmarking this host's KDF grid.
 
@@ -181,10 +181,17 @@ def _skip_profile_kdf_grid_measurement() -> Iterator[None]:
     every custody envelope a test opens is wrapped at a strength production
     also accepts.
 
-    Session-scoped and outermost, which is what makes it survive: a nested
-    ``override_settings`` setting other fields keeps this value (checked), so
-    the many tests that override a storage root do not silently re-enable
-    measurement.
+    Outermost for every test in this package, which is what makes it survive: a
+    nested ``override_settings`` setting other fields keeps this value
+    (checked), so the many tests that override a storage root do not silently
+    re-enable measurement.
+
+    Package-scoped, not session-scoped. An override is a frozen snapshot of
+    every field, the storage root included, and a session-long one outlived
+    this package: an xdist worker that went on to ``src/cadrumo_harness`` kept
+    it, so the harness tests, which isolate themselves through the environment,
+    silently ran against this package's collection root. Leaving the package
+    now ends it.
 
     It cannot reach the calibration gate. ``calibrate_profile_kdf`` consults
     ``settings or load_settings()``, and

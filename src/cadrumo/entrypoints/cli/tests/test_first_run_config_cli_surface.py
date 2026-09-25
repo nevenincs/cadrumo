@@ -12,11 +12,21 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
 )
 
-from ....adapters.persistence.storage.tests.secure_sql import dev_test_database_password, isolated_profile_storage_root
+from ....adapters.persistence.storage.tests.secure_sql import (
+    dev_test_database_password,
+    isolated_profile_storage,
+    isolated_profile_storage_root,
+)
 from ....application.user_profile.registration import register_profile_with_credentials
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
+
+# Every case gets its own storage root. The ``CADRUMO_LOCAL_STORAGE_ROOT`` the
+# runner env carries is not enough: in-process settings are held per
+# active-profile pointer, so a case that registers or selects a profile would
+# otherwise write that selection into the worker's shared root.
+__all__ = ["isolated_profile_storage"]
 
 
 def _env(tmp_path: Path) -> dict[str, str]:

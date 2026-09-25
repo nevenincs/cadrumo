@@ -56,7 +56,7 @@ from ..common import cli_policy_refusal_projection
 from ..errors import CliRefusedBoundaryError, suspend_error_boundary
 from .cli_runner import cadrumo_click_command, invoke_cached_cli, semantic_cli_output
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
 
 _LABEL = "session-operator"
@@ -103,13 +103,15 @@ def _create_profile(label: str = _LABEL, *, tax_id: str = "12345678Z") -> str:
     return created.bucket_id
 
 
-def _login() -> None:
-    """Establish the persisted session through the application login door."""
+def _login(label: str | None = None) -> None:
+    """Establish the session through the application login door, for ``label`` or the active profile."""
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     from ....application.user_profile.login_session import login_profile
 
     login_profile(
-        passphrase_callback=lambda: _CREDENTIAL_INPUT, profile_decode_context=_profile_decode_context_for_test
+        name=label,
+        passphrase_callback=lambda: _CREDENTIAL_INPUT,
+        profile_decode_context=_profile_decode_context_for_test,
     )
 
 
@@ -262,7 +264,6 @@ class TestProfileDiscoveryStaysReachableWhileLoggedOut:
         assert "aeat config login" in semantic_cli_output(result)
 
 
-@pytest.mark.os_keychain
 class TestFailClosedRefusals:
     """Absent and expired sessions refuse, naming the verb that fixes it."""
 
@@ -303,31 +304,35 @@ class TestFailClosedRefusals:
         assert document["result"]["bucket_id"] == "<bucket-id>", document
 
     def test_explicit_history_reads_the_requested_profile_repository(self) -> None:
+        # A credential-registered profile's bucket key is its own, so it is
+        # opened through the real login door rather than a test-derived key,
+        # which would read a different (empty) history.
         first_bucket_id = _create_profile("history-first")
         from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
         from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 
-        with open_test_profile_session(first_bucket_id):
-            first_catalogue = BucketEventHistoryRepository(
-                objects=secure_object_repository_for_bucket(first_bucket_id),
-            ).load()
+        _login("history-first")
+        first_catalogue = BucketEventHistoryRepository(
+            objects=secure_object_repository_for_bucket(first_bucket_id),
+        ).load()
+        close_active_bucket_session()
         assert first_catalogue.events
         first_event = next(iter(first_catalogue.events.values()))
 
         _create_profile("history-second", tax_id="87654321X")
-        with open_test_profile_session(first_bucket_id):
-            result = invoke_cached_cli(
-                [
-                    "--format",
-                    "json",
-                    "config",
-                    "profile",
-                    "history",
-                    "history-first",
-                    "--object-id",
-                    first_event.object_id,
-                ],
-            )
+        _login("history-first")
+        result = invoke_cached_cli(
+            [
+                "--format",
+                "json",
+                "config",
+                "profile",
+                "history",
+                "history-first",
+                "--object-id",
+                first_event.object_id,
+            ],
+        )
 
         assert result.exit_code == 0, result.output
         document = json.loads(semantic_cli_output(result))
@@ -406,7 +411,7 @@ class TestFailClosedRefusals:
         document = json.loads(json_text)
         action = document["error"]["action"]
         assert document["active_profile"] == _LABEL
-        assert action["action"]["action"]["action_id"] == "operator.profile.login"
+        assert action["action"]["action_id"] == "operator.profile.login"
         assert action["evidence"][0]["values"]["profile_name"] == _LABEL
         assert action["argument_bindings"] == [
             {
@@ -457,6 +462,7 @@ class TestFailClosedRefusals:
         assert projection.precondition_action.action.action_id == "operator.profile.login"
         assert projection.precondition_action.argument_bindings[0].value == _LABEL
 
+    @pytest.mark.os_keychain
     def test_idle_expiry_refuses(self, _isolated_root: Path) -> None:
         require_os_credential_store()
         bucket_id, dek = self._aged_session_material(storage_root=_isolated_root, minutes=20)
@@ -478,6 +484,7 @@ class TestFailClosedRefusals:
         assert "aeat config login" in semantic_cli_output(result)
         assert not profile_session_path(storage_root=_isolated_root, profile_id=UUID(bucket_id)).is_file()
 
+    @pytest.mark.os_keychain
     def test_absolute_cap_refuses(self, _isolated_root: Path) -> None:
         require_os_credential_store()
         # Aged well past the 240-minute cap. Mint clamps the idle deadline to the

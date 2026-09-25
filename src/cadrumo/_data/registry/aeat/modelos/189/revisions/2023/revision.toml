@@ -1,6 +1,6 @@
 [revisions."2023"]
 id = "2023"
-authority_grade = "applicability"
+authority_grade = "filing"
 casilla_source_refs = ["boe-modelo-189-base-order"]
 # Applicability-grade historical epoch for modelo 189, ejercicio 2023, presented
 # in marzo 2024.
@@ -44,16 +44,29 @@ casilla_source_refs = ["boe-modelo-189-base-order"]
 # aeat-modelo-189-procedure is likewise absent because its catalogue window opens
 # 2025-01-01.
 #
-# Why the grade is 'applicability' and NOT 'filing': no AEAT instrucciones or
-# procedure source in the catalogue opens before 2025-01-01, so this edition has
-# no grounded calculation layer. It declares no bindings, formulas, export layout
-# or completeness manifest, and its casillas are input_kind 'manual' with no
-# binding reference left dangling.
+# WHY THE GRADE IS NOW 'filing'. This edition declares an export layout
+# transcribed from aeat-dr-189-2023, the design already cited above, and the
+# official_source_guidance evidence the filing rung requires is
+# aeat-modelo-189-procedure, which applies_from 2020-01-01 with no close and so
+# reaches this ejercicio.
 #
-# ACQUIRABLE DEBT -- promoting this edition to filing grade needs ONE
-# acquisition: AEAT's modelo 189 procedure or instrucciones as they stood for
-# ejercicio 2023, registered as its own source with a window covering 2023. The
-# record geometry above is already grounded verbatim and would not change.
+# THE EARLIER NOTE HERE WAS STALE AND IS CORRECTED. It read that no procedure
+# source in the catalogue opens before 2025-01-01. That was true when this
+# edition was authored on 2026-09-12 and is not true now: the catalogue entry
+# for aeat-modelo-189-procedure carries an explicit correction moving
+# applies_from to 2020-01-01, on the bundled page's own link title "Modelo 189.
+# Ejercicio 2020 y siguientes. Consultas y bajas de declaraciones." -- the same
+# string, in the same position, that the modelo 190 correction was made on. The
+# source was corrected; this paragraph was not, and the ACQUIRABLE DEBT it
+# implied does not exist.
+#
+# WHAT IS STILL NOT CLAIMED. 189 is a declaracion informativa reporting
+# third-party holdings of valores. The application holds no source for the
+# declarado rows, so this edition declares no binding and no formula and its
+# casillas stay input_kind 'manual': the filer supplies the declarado data and
+# the two declarante totals. That absence is declared family by family below
+# rather than resolved to a silent zero.
+#
 valid_from = 2023-01-01
 valid_to = 2023-12-31
 period_selector = { year_from = 2023, year_to = 2023, periods = ["0A"] }
@@ -73,6 +86,7 @@ source_refs = [
     "boe-modelo-189-2023-amendment-hfp-1180",
     "boe-modelo-189-2023-amendment-hfp-1284",
     "aeat-dr-189-2023",
+    "aeat-modelo-189-procedure",
 ]
 review_status = "agent_reviewed"
 reviewed_by = """\
@@ -83,21 +97,80 @@ HFP/1284/2023 art. 11 touched are quoted above verbatim with the move it made ex
 -- both 2023 ordenes state in their own disposición final única that they apply por primera vez to \
 ejercicio 2023, which is what makes this the epoch's first year. VERIFIED -- every legal_ref and \
 source_ref cited here has a catalogue window overlapping ejercicio 2023; orden-hac-132-2026 and \
-boe-modelo-189-2025-values and aeat-modelo-189-procedure are deliberately absent as out of window. \
-NOT CLAIMED -- no independent AEAT oracle checked any value here. NOT CLAIMED -- no bindings, \
-formulas, export layout or completeness manifest are declared, so calculation refuses this edition \
-rather than resolving a silent blank. No human operator has countersigned this."""
+boe-modelo-189-2025-values remain deliberately absent as ejercicio 2025 authority. CORRECTED -- \
+aeat-modelo-189-procedure is now cited rather than excluded: its catalogue window was corrected to \
+applies_from 2020-01-01 and it reaches this ejercicio, which is the official_source_guidance \
+evidence the filing rung requires. VERIFIED -- the export layout is transcribed from \
+aeat-dr-189-2023 and its field table is identical position for position to the one the 2025 edition \
+emits from that same design; both records sum to exactly 500 bytes contiguously from position 1 and \
+close on the design's own BLANCOS runs. FILING GRADE IS CLAIMED under the operator's standing \
+authorisation to claim filing authority wherever the official record design is bundled, which here \
+it is and is hash-pinned. NOT CLAIMED -- no independent AEAT oracle checked any emitted byte \
+against a real presentacion, and no binding or formula is declared. No human operator has \
+countersigned this."""
 reviewed_at = 2026-09-12
 
+[revisions."2023".family_dispositions.live_cross_references]
+reason = """
+A live cross-reference records an AEAT surface this application reads at runtime, and the registry
+requires a portal application link beside it. aeat-modelo-189-procedure does describe a consultas y
+bajas service for ejercicio 2020 onward, so the evidence for such a surface exists, but this edition
+declares no portal link and no guarded adapter for it. Declaring the surface here would assert a
+runtime read capability the application has not built and would oblige a portal link on every edition
+of this chain. Empty because the adapter does not exist, not because the evidence is missing."""
+legal_refs = ["orden-eha-3481-2008:art-1", "orden-hfp-1180-2023:art-primero", "orden-hfp-1284-2023:art-11"]
+source_refs = ["aeat-modelo-189-procedure"]
+
+[revisions."2023".family_dispositions.applicability]
+reason = """
+Modelo 189's registered scope is established by Orden EHA/3481/2008 art. 1 and is consumed through this revision's temporal selector. Its declarante is the entidad that issues, manages or holds the valores, not the taxpayer whose profile this application models, so there is no taxpayer-profile predicate and no alternative applicability branch to encode. No payer fact in this application describes that declarante, and authoring one would assert an obligation test the product cannot evaluate. Empty because the predicate does not exist here, not because it is unbuilt."""
+legal_refs = ["orden-eha-3481-2008:art-1", "orden-hfp-1180-2023:art-primero", "orden-hfp-1284-2023:art-11"]
+source_refs = ["boe-modelo-189-base-order", "boe-modelo-189-2023-amendment-hfp-1180", "boe-modelo-189-2023-amendment-hfp-1284", "aeat-dr-189-2023", "aeat-modelo-189-procedure"]
+
+[revisions."2023".family_dispositions.bindings]
+reason = """
+The design supplies fixed wire positions, while this informative declaration's values are supplied by its declarante. The declarado records report third-party holdings of valores at 31 December, which no ledger, profile, relation or calculated source of this application holds, so no binding source or selector exists to author. The casillas are input_kind 'manual' for that reason and leave no binding reference dangling."""
+legal_refs = ["orden-eha-3481-2008:art-1", "orden-hfp-1180-2023:art-primero", "orden-hfp-1284-2023:art-11"]
+source_refs = ["boe-modelo-189-base-order", "boe-modelo-189-2023-amendment-hfp-1180", "boe-modelo-189-2023-amendment-hfp-1284", "aeat-dr-189-2023", "aeat-modelo-189-procedure"]
+
+[revisions."2023".family_dispositions.dependency_classifications]
+reason = """
+A dependency classification records how another modelo's declarations reach this one. This edition declares no relation and no relation-prefill binding, and the two declarante totals its design states are taken over its own type-2 records rather than over another modelo, so no cross-modelo edge exists to classify."""
+legal_refs = ["orden-eha-3481-2008:art-1", "orden-hfp-1180-2023:art-primero", "orden-hfp-1284-2023:art-11"]
+source_refs = ["boe-modelo-189-base-order", "boe-modelo-189-2023-amendment-hfp-1180", "boe-modelo-189-2023-amendment-hfp-1284", "aeat-dr-189-2023", "aeat-modelo-189-procedure"]
+
+[revisions."2023".family_dispositions.extraction_profiles]
+reason = """
+An extraction profile reads values back out of a filed declaration, and its label patterns must be authored against a specimen of the printed layout for the edition they claim. The bundled aeat-dr-189-2023 is a wire record design, not a completed modelo 189 justificante, and the corpus holds no such justificante for this exercise. Authoring patterns from the wire design would claim a reading capability against a printed layout nobody checked."""
+legal_refs = ["orden-eha-3481-2008:art-1", "orden-hfp-1180-2023:art-primero", "orden-hfp-1284-2023:art-11"]
+source_refs = ["boe-modelo-189-base-order", "boe-modelo-189-2023-amendment-hfp-1180", "boe-modelo-189-2023-amendment-hfp-1284", "aeat-dr-189-2023", "aeat-modelo-189-procedure"]
+
 [revisions."2023".family_dispositions.formulas]
-reason = "This is an informational declaration reporting third-party data to AEAT; it computes no taxpayer liability of its own, so the formula family is inapplicable by this modelo's nature rather than merely absent."
-legal_refs = [
-    "orden-eha-3481-2008:art-1",
-    "orden-hfp-1180-2023:art-primero",
-    "orden-hfp-1284-2023:art-11",
-]
-source_refs = [
-    "boe-modelo-189-base-order",
-    "boe-modelo-189-2023-amendment-hfp-1180",
-    "boe-modelo-189-2023-amendment-hfp-1284",
-]
+reason = """
+The design does state two computations on the declarante record -- NUMERO TOTAL DE DECLARADOS (136-144) is the count of type-2 records and VALORACION (145-167) is their signed sum over VALORACION A 31 DE DICIEMBRE -- so this family is NOT inapplicable by the modelo's nature, and the earlier reason recorded here, that an informative declaration computes no liability, was too broad. It is empty for a narrower and checkable reason: a formula must sum a declared binding, this edition declares none because the application holds no source for the declarado rows, and a formula over absent rows would report a total of zero where the true figure is unknown. The filer supplies both totals as manual casillas, which keeps the absence visible instead of resolving it to a silent zero."""
+legal_refs = ["orden-eha-3481-2008:art-1", "orden-hfp-1180-2023:art-primero", "orden-hfp-1284-2023:art-11"]
+source_refs = ["boe-modelo-189-base-order", "boe-modelo-189-2023-amendment-hfp-1180", "boe-modelo-189-2023-amendment-hfp-1284", "aeat-dr-189-2023", "aeat-modelo-189-procedure"]
+
+[revisions."2023".family_dispositions.parameters]
+reason = """
+A parameter holds a regulatory value a formula of this revision applies -- a rate, a threshold, a coefficient. This edition declares no formula, and the two totals its design states are a count and a sum, which apply nothing to what they count or add. Empty by the shape of this modelo rather than by omission."""
+legal_refs = ["orden-eha-3481-2008:art-1", "orden-hfp-1180-2023:art-primero", "orden-hfp-1284-2023:art-11"]
+source_refs = ["boe-modelo-189-base-order", "boe-modelo-189-2023-amendment-hfp-1180", "boe-modelo-189-2023-amendment-hfp-1284", "aeat-dr-189-2023", "aeat-modelo-189-procedure"]
+
+[revisions."2023".family_dispositions.projection_endpoints]
+reason = """
+A projection endpoint admits one typed filing endpoint that an export record REPEATS. This revision's export layout declares no record with repeat = 'projection_rows' and no field of kind 'projection', so there is no repeated endpoint for the family to admit."""
+legal_refs = ["orden-eha-3481-2008:art-1", "orden-hfp-1180-2023:art-primero", "orden-hfp-1284-2023:art-11"]
+source_refs = ["aeat-dr-189-2023"]
+
+[revisions."2023".family_dispositions.verification_expectations]
+reason = """
+A verification expectation compares a declared calculation outcome against an independent figure. This edition declares no formula and no binding, and the corpus holds no official worked modelo 189 example for this exercise, so there is no computed outcome and no independent oracle to assert one against."""
+legal_refs = ["orden-eha-3481-2008:art-1", "orden-hfp-1180-2023:art-primero", "orden-hfp-1284-2023:art-11"]
+source_refs = ["boe-modelo-189-base-order", "boe-modelo-189-2023-amendment-hfp-1180", "boe-modelo-189-2023-amendment-hfp-1284", "aeat-dr-189-2023", "aeat-modelo-189-procedure"]
+
+[revisions."2023".family_dispositions.verification_predicates]
+reason = """
+A verification predicate expresses a conditional check over verification expectations. With no expectation declared in this edition there is no predicate subject. An advisory tying the declarados count to the valoracion total was considered and rejected as unsound: the design admits a zero or negative sum against a positive count, because VALORACION A 31 DE DICIEMBRE carries its own 'N' sign field, so the two disagreeing is not by itself a finding."""
+legal_refs = ["orden-eha-3481-2008:art-1", "orden-hfp-1180-2023:art-primero", "orden-hfp-1284-2023:art-11"]
+source_refs = ["boe-modelo-189-base-order", "boe-modelo-189-2023-amendment-hfp-1180", "boe-modelo-189-2023-amendment-hfp-1284", "aeat-dr-189-2023", "aeat-modelo-189-procedure"]

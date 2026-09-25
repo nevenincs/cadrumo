@@ -29,11 +29,12 @@ from .....application.provisioning import (
     SystemMemoryReading,
     probe_hardware_profile,
 )
-from .....core.config import load_settings
+from .....core.config import load_settings, override_settings
 from .....core.hardware import AcceleratorKind
 from .....domain.calculations.registry.authority import bundled_indexed_authority
 from .....domain.iva.classification import InvoiceKind
 from .....domain.iva.regime_legend import resolve_regime_legends
+from .....tests.loopback_llm import SilentLoopbackHandler, serving_loopback
 from ...storage.attachment import AttachmentStore
 from ...storage.tests.secure_sql import TestRuntimeProfile
 from ...tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
@@ -174,8 +175,18 @@ def test_a_contended_machine_parks_the_model_work_and_completes_the_rest(
     runtime_profile: TestRuntimeProfile,
     mixed_batch: Path,
 ) -> None:
-    """The property: deterministic progress continues while inference-bearing work parks."""
-    result = _run(runtime_profile, mixed_batch, free_vram_bytes=3 * _GIB, safety_margin_bytes=4 * _GIB)
+    """The property: deterministic progress continues while inference-bearing work parks.
+
+    The runtime is served here rather than left to the host: which contention
+    verdict a shortfall earns depends on whether the resident set could be read,
+    and a runtime the host happens to be running would answer that differently.
+    This endpoint answers but refuses to report its resident set.
+    """
+    with (
+        serving_loopback(SilentLoopbackHandler, path="/api/chat") as chat_url,
+        override_settings(cadrumo_llm_ollama_chat_url=chat_url),
+    ):
+        result = _run(runtime_profile, mixed_batch, free_vram_bytes=3 * _GIB, safety_margin_bytes=4 * _GIB)
 
     assert result.deterministic_completed == 1
     assert result.paced == 1

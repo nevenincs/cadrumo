@@ -44,6 +44,8 @@ __all__ = ["advisory_profile_bucket"]
 _BUCKET_ID = "9a9a9a9a-9a9a-4a9a-8a9a-9a9a9a9a9a9a"
 _FILING_YEAR = 2024
 _ANNUAL_PERIOD = "0A"
+#: A Modelo 303 liquidation period: another modelo is exercised at a coordinate it files.
+_QUARTERLY_PERIOD = "1T"
 _COUNT_PATH = "renta_family.descendientes_count"
 _COUNT_KIND = "descendientes_count_desync"
 
@@ -53,8 +55,8 @@ def bucket_id() -> str:
     return _BUCKET_ID
 
 
-def _revision() -> ModeloRevision:
-    return published_authority_operation().snapshot("100", filing_year=_FILING_YEAR, period=_ANNUAL_PERIOD).revision
+def _revision(modelo: str, period_token: str) -> ModeloRevision:
+    return published_authority_operation().snapshot(modelo, filing_year=_FILING_YEAR, period=period_token).revision
 
 
 def _write(*facts: UserProfileFact) -> None:
@@ -66,13 +68,13 @@ def _two_descendants() -> tuple[UserProfileFact, ...]:
     return tuple(UserProfileFact(path=p, value=v) for p, v in descendant_facts_from_list(kids))
 
 
-def _diagnostics(*, modelo: str = Modelo("100").value) -> tuple[CalculationSourceDiagnostic, ...]:
+def _diagnostics(*, modelo: str, period_token: str) -> tuple[CalculationSourceDiagnostic, ...]:
     repositories = advisory_diagnostic_repositories(bucket_id=_BUCKET_ID)
     return collect_bucket_aggregation_advisory_diagnostics(
-        _revision(),
+        _revision(modelo, period_token),
         {},
         modelo=modelo,
-        period_token=_ANNUAL_PERIOD,
+        period_token=period_token,
         filing_year=_FILING_YEAR,
         bucket_id=_BUCKET_ID,
         observation_repository=repositories.observation,
@@ -82,7 +84,7 @@ def _diagnostics(*, modelo: str = Modelo("100").value) -> tuple[CalculationSourc
     )
 
 
-def _advise(*, modelo: str = Modelo("100").value) -> tuple[str, ...]:
+def _advise(*, modelo: str = Modelo("100").value, period_token: str = _ANNUAL_PERIOD) -> tuple[str, ...]:
     """The text an OPERATOR sees, not the message field alone.
 
     A diagnostic states the problem in ``message`` and the fix in ``remedy``,
@@ -92,7 +94,7 @@ def _advise(*, modelo: str = Modelo("100").value) -> tuple[str, ...]:
     """
     return tuple(
         d.message if d.remedy is None else f"{d.message} {d.remedy}"
-        for d in _diagnostics(modelo=modelo)
+        for d in _diagnostics(modelo=modelo, period_token=period_token)
         if d.source_kind == _COUNT_KIND
     )
 
@@ -147,4 +149,4 @@ def test_another_modelo_is_left_alone() -> None:
     _write(*_two_descendants())
     _write(UserProfileFact(path=_COUNT_PATH, value="7"))
 
-    assert _advise(modelo=Modelo("303").value) == ()
+    assert _advise(modelo=Modelo("303").value, period_token=_QUARTERLY_PERIOD) == ()

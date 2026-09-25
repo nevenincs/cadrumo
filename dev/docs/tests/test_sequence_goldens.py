@@ -33,6 +33,10 @@ from __future__ import annotations
 import io
 import json
 import re
+import subprocess
+import sys
+import textwrap
+import time
 from collections.abc import Iterator, Mapping
 from pathlib import Path
 
@@ -42,12 +46,14 @@ from sphinx.errors import SphinxError
 
 from cadrumo.tests.env_scope import scoped_env_var
 from cadrumo.tests.golden_comparison import GOLDEN_MASK_FIELDS, differing_paths
+from dev._paths import REPO_ROOT
 
 from ..sequences.checks import (
     check_page_coherence_in_subprocess,
     check_sequences,
     check_sequences_in_subprocess,
     discover_sequences,
+    english_pinned_environment,
     refresh_sequences,
 )
 from ..sequences.cli import main as sequences_cli_main
@@ -75,7 +81,41 @@ _SUBPROCESS_POOL_TIMEOUT = 1800
 _PAGE = "tutorials/anti-tautology-gate"
 _PROFILE_DELETE_SEQUENCE_ID = "profile-setup-delete"
 _PROFILE_DELETE_DIGEST_PATH = "result.fingerprint.digest"
-_WORKSTATION_SEQUENCE_ID = "install-confirm"
+
+#: The workstation gate's own sequence, parsed here rather than taken from the
+#: enrolled docs tree. ``install-confirm`` -- the page that shows these very
+#: commands -- is deliberately display-only: every command that confirms an
+#: installation reports host facts, so no golden of it is reproducible on a
+#: second machine and all its frames carry a nondeterministic-output reason. A
+#: display-only sequence has no executed frames at all, so it cannot carry this
+#: gate. The gate does not need a committed golden: it compares two transcripts
+#: captured on the SAME host minutes apart, which is exactly the comparison the
+#: free-memory mask exists for.
+_WORKSTATION_SEQUENCE_ID = "workstation-mask-honesty"
+_WORKSTATION_BODY = "\n".join(
+    [
+        "@step Turn off a capability whose dependency this sandbox does not provision.",
+        "@setup aeat config profile capabilities set llm_vision off",
+        "@step Ask what is installed and what is missing.",
+        "@result aeat --format json config check",
+        "@expect exit_code == 0",
+    ],
+)
+
+#: A dependency row whose facts carry the live free-RAM reading the mask hides,
+#: alongside the total-RAM reading it must NOT hide.
+_WORKSTATION_HARDWARE_SERVICE = "local-inference-hardware"
+
+#: A preflight row `config check` really emits whose health is a deterministic
+#: product fact, not a host reading: it reports whether the bundled legal
+#: normatives corpus resolved. Inverting it must red, proving the host mask
+#: did not swallow the product evidence beside it.
+_WORKSTATION_DETERMINISTIC_CHECK = "corpus:normatives"
+
+#: The docs page these commands document. Used only as the comparison's page
+#: coordinate in diagnostics; this gate compares two live transcripts and
+#: consults no committed golden.
+_WORKSTATION_PAGE = "workstation-setup"
 
 #: The representative sequence: a real capture-threaded JSON read chain. The
 #: ``app diagnostics runs`` frame is deliberate: its payload is the one
@@ -143,18 +183,76 @@ def _mutated_transcript(transcript: SequenceTranscript, key: str, value: str) ->
     return SequenceTranscript.model_validate_json(json.dumps(document))
 
 
+#: Executes one enrolled sequence in a child interpreter and writes its page and
+#: transcript to the file named as ``argv[2]``. The gate below needs two runs
+#: that are independent AT THE PROCESS level: the sandbox profile is published
+#: once per process and every later sandbox in that process is a clone of that
+#: published state, so two in-process runs delete byte-identical encrypted
+#: profiles and the delete fingerprint over them no longer differs. Two
+#: processes provision independently, which is where the residual this gate
+#: measures actually lives -- and is the level a docs build, a CI shard and a
+#: developer's machine each compare at.
+#:
+#: The payload travels through a FILE rather than stdout: the child runs real
+#: CLI frames, and anything they or the logging stack write to stdout would be
+#: indistinguishable from the payload.
+_TRANSCRIPT_CHILD_PROGRAM = textwrap.dedent(
+    """
+    import json
+    import sys
+    import tempfile
+    from pathlib import Path
+
+    from dev.docs.sequences.checks import discover_sequences
+    from dev.docs.sequences.runner import execute_sequence
+
+    discovered, problems = discover_sequences(sequence_id=sys.argv[1])
+    if problems or len(discovered) != 1:
+        raise SystemExit(f"discovery of {sys.argv[1]!r} failed: {problems} ({len(discovered)} found)")
+    enrolled = discovered[0]
+    with tempfile.TemporaryDirectory(prefix="cli-sequence-gate-", ignore_cleanup_errors=True) as sandbox:
+        transcript = execute_sequence(enrolled.sequence, sandbox_root=Path(sandbox))
+    payload = json.dumps({"page": enrolled.page, "transcript": transcript.model_dump_json()})
+    Path(sys.argv[2]).write_text(payload, encoding="utf-8")
+    """,
+)
+
+
+def _execute_in_child_interpreter(sequence_id: str, payload_path: Path) -> tuple[str, SequenceTranscript]:
+    """Execute one enrolled sequence in its own interpreter; return page + transcript.
+
+    The transcript crosses the process boundary as the model's OWN serialised
+    form and is rehydrated with ``model_validate_json``, the round trip the
+    rest of this module uses. A plain ``model_dump``/``model_validate`` pair
+    does not round-trip here: the transcript's strict field types reject the
+    JSON surrogates (a list where a tuple is declared, a string where a
+    datetime is) that the dump produces.
+    """
+    result = subprocess.run(  # noqa: S603 - fixed argv, no shell
+        [sys.executable, "-c", _TRANSCRIPT_CHILD_PROGRAM, sequence_id, str(payload_path)],
+        cwd=REPO_ROOT,
+        env=english_pinned_environment(),
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        check=False,
+    )
+    assert result.returncode == 0, f"sequence child failed (exit {result.returncode}):\n{result.stderr}"
+    payload = json.loads(payload_path.read_text(encoding="utf-8"))
+    page = payload["page"]
+    assert isinstance(page, str), f"sequence child reported a non-text page: {page!r}"
+    return page, SequenceTranscript.model_validate_json(payload["transcript"])
+
+
 @pytest.fixture(scope="module")
 def profile_delete_double_run(
     tmp_path_factory: pytest.TempPathFactory,
 ) -> tuple[str, SequenceTranscript, SequenceTranscript]:
-    """Execute the real logout/delete contract twice in fresh sandboxes."""
-    discovered, problems = discover_sequences(sequence_id=_PROFILE_DELETE_SEQUENCE_ID)
-    assert problems == ()
-    assert len(discovered) == 1
-    enrolled = discovered[0]
-    first = execute_sequence(enrolled.sequence, sandbox_root=tmp_path_factory.mktemp("delete-a"))
-    second = execute_sequence(enrolled.sequence, sandbox_root=tmp_path_factory.mktemp("delete-b"))
-    return enrolled.page, first, second
+    """Execute the real logout/delete contract twice in independent interpreters."""
+    payloads = tmp_path_factory.mktemp("delete-transcripts")
+    page, first = _execute_in_child_interpreter(_PROFILE_DELETE_SEQUENCE_ID, payloads / "first.json")
+    _page, second = _execute_in_child_interpreter(_PROFILE_DELETE_SEQUENCE_ID, payloads / "second.json")
+    return page, first, second
 
 
 def _set_delete_fingerprint_leaf(
@@ -169,18 +267,23 @@ def _set_delete_fingerprint_leaf(
     return type(value).model_validate_json(json.dumps(document))
 
 
+def _workstation_sequence() -> ParsedSequence:
+    return parse_sequence(
+        sequence_id=_WORKSTATION_SEQUENCE_ID,
+        options={"verify": "Verify the workstation check reports its dependency and preflight rows."},
+        body=_WORKSTATION_BODY,
+    )
+
+
 @pytest.fixture(scope="module")
 def workstation_double_run(
     tmp_path_factory: pytest.TempPathFactory,
 ) -> tuple[str, SequenceTranscript, SequenceTranscript]:
     """Execute the real workstation diagnostic contract twice in fresh sandboxes."""
-    discovered, problems = discover_sequences(sequence_id=_WORKSTATION_SEQUENCE_ID)
-    assert problems == ()
-    assert len(discovered) == 1
-    enrolled = discovered[0]
-    first = execute_sequence(enrolled.sequence, sandbox_root=tmp_path_factory.mktemp("workstation-a"))
-    second = execute_sequence(enrolled.sequence, sandbox_root=tmp_path_factory.mktemp("workstation-b"))
-    return enrolled.page, first, second
+    sequence = _workstation_sequence()
+    first = execute_sequence(sequence, sandbox_root=tmp_path_factory.mktemp("workstation-a"))
+    second = execute_sequence(sequence, sandbox_root=tmp_path_factory.mktemp("workstation-b"))
+    return _WORKSTATION_PAGE, first, second
 
 
 def _set_workstation_fact(
@@ -193,16 +296,29 @@ def _set_workstation_fact(
     """Return a real workstation transcript with one dependency fact changed."""
     document = transcript.model_dump(mode="json")
     dependencies = document["frames"][-1]["envelope"]["result"]["dependencies"]
-    row = next(item for item in dependencies if item["service"] == service)
+    row = next((item for item in dependencies if item["service"] == service), None)
+    assert row is not None, (
+        f"the workstation check no longer reports a {service!r} dependency row, so this gate has no "
+        f"host-volatile fact to tamper with; it reports {sorted(item['service'] for item in dependencies)}"
+    )
+    assert fact in row["facts"], (
+        f"the {service!r} row no longer carries the {fact!r} fact this gate tampers with; "
+        f"it carries {sorted(row['facts'])}"
+    )
     row["facts"][fact] = replacement
     return SequenceTranscript.model_validate_json(json.dumps(document))
 
 
-def _invert_registry_health(transcript: SequenceTranscript) -> SequenceTranscript:
-    """Return a real workstation transcript with registry integrity changed."""
+def _invert_deterministic_health(transcript: SequenceTranscript) -> SequenceTranscript:
+    """Return a real workstation transcript with one deterministic preflight row flipped."""
     document = transcript.model_dump(mode="json")
     checks = document["frames"][-1]["envelope"]["result"]["preflight"]
-    row = next(item for item in checks if item["check"] == "registry:referential-integrity")
+    row = next((item for item in checks if item["check"] == _WORKSTATION_DETERMINISTIC_CHECK), None)
+    assert row is not None, (
+        f"the workstation check no longer emits the {_WORKSTATION_DETERMINISTIC_CHECK!r} preflight row, so "
+        "this gate cannot prove the host mask leaves deterministic product evidence biting; it emits "
+        f"{sorted(item['check'] for item in checks)}"
+    )
     row["healthy"] = not bool(row["healthy"])
     return SequenceTranscript.model_validate_json(json.dumps(document))
 
@@ -220,13 +336,13 @@ class TestWorkstationFreeMemoryMaskHonesty:
         self,
         workstation_double_run: tuple[str, SequenceTranscript, SequenceTranscript],
     ) -> None:
-        """The real compare path masks free RAM but retains host and registry evidence."""
+        """The real compare path masks free RAM but retains host and product evidence."""
         page, first, second = workstation_double_run
         golden = build_golden(first)
 
         volatile = _set_workstation_fact(
             second,
-            service="local-inference-hardware",
+            service=_WORKSTATION_HARDWARE_SERVICE,
             fact="free_memory_bytes",
             replacement=1,
         )
@@ -234,14 +350,14 @@ class TestWorkstationFreeMemoryMaskHonesty:
 
         total_memory = _set_workstation_fact(
             second,
-            service="local-inference-hardware",
+            service=_WORKSTATION_HARDWARE_SERVICE,
             fact="total_memory_bytes",
             replacement=1,
         )
         assert compare_transcript_to_golden(total_memory, golden, page=page)
 
-        registry_changed = _invert_registry_health(second)
-        assert compare_transcript_to_golden(registry_changed, golden, page=page)
+        corpus_changed = _invert_deterministic_health(second)
+        assert compare_transcript_to_golden(corpus_changed, golden, page=page)
 
 
 class TestProfileDeletePathMaskHonesty:
@@ -249,7 +365,14 @@ class TestProfileDeletePathMaskHonesty:
         self,
         profile_delete_double_run: tuple[str, SequenceTranscript, SequenceTranscript],
     ) -> None:
-        """Two real runs flap at the one centrally enrolled path, and nowhere else."""
+        """Two independently provisioned runs flap at the one enrolled path, and nowhere else.
+
+        Independence is taken at the PROCESS level (see
+        :data:`_TRANSCRIPT_CHILD_PROGRAM`). Two sandboxes inside one process are
+        clones of one published profile, so the delete fingerprint over its
+        encrypted bytes is identical between them and this measurement would
+        read an empty residual and prove nothing about the enrolled mask.
+        """
         _page, first, second = profile_delete_double_run
         residual: set[str] = set()
         for left, right in zip(first.frames, second.frames, strict=True):
@@ -573,12 +696,21 @@ class TestBothSurfacesRedOnDivergence:
     ) -> None:
         """The public bounded check reports a real child runner's last frame.
 
-        The enrolled lifecycle page is the measured long-running surface. The
+        The enrolled lifecycle page is the longest-running enrolled surface. The
         check launches its real child interpreter and the bounded supervisor
         expires after the runner has journalled one of that page's actual
         frames. The assertion resolves the reported coordinate against current
         discovery, proving the parent/child receipt without pinning which frame
         scheduling reaches before expiry.
+
+        The bound is MEASURED rather than pinned: the page's own clean duration
+        is timed first, and the bounded run is given half of it. A pinned
+        constant is what rotted this gate once -- the sandbox stopped being
+        republished per sequence, the page's duration fell under the 30s
+        constant, and the supervisor this test exists for never fired while the
+        test reported a clean check as a failure. Half a measured duration
+        tracks the machine instead: it is always well inside the page and well
+        past the child's first journalled frame.
         """
         seed_sequence_id = "irpf-lifecycle-position"
         seed, discovery_problems = discover_sequences(sequence_id=seed_sequence_id)
@@ -587,7 +719,13 @@ class TestBothSurfacesRedOnDivergence:
         page = seed[0].page
         discovered, discovery_problems = discover_sequences(page=page)
         assert discovery_problems == ()
-        timeout = 30.0
+
+        started = time.monotonic()
+        clean_exit = sequences_cli_main(["check", "--page", page])
+        clean_duration = time.monotonic() - started
+        capsys.readouterr()
+        assert clean_exit == 0, "the bound is measured against a CLEAN run of this page"
+        timeout = round(clean_duration / 2, 3)
 
         exit_code = sequences_cli_main(
             [
@@ -599,9 +737,15 @@ class TestBothSurfacesRedOnDivergence:
             ],
         )
 
-        assert exit_code == 1
+        assert exit_code == 1, (
+            f"a {timeout}s bound did not expire on a page measured at {clean_duration:.1f}s; "
+            "the supervisor under test never ran"
+        )
         stderr = capsys.readouterr().err
-        assert f"timeout after {timeout}s while executing page {page!r}" in stderr
+        assert f"timeout after {timeout}s while executing page {page!r}" in stderr, (
+            f"the bound expired before the child journalled any frame, so the receipt under test "
+            f"was never produced (page measured at {clean_duration:.1f}s): {stderr}"
+        )
         sequence_match = re.search(r" sequence '(?P<sequence_id>[^']+)' frame ", stderr)
         assert sequence_match is not None
         enrolled = next(item for item in discovered if item.sequence_id == sequence_match.group("sequence_id"))

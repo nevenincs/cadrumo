@@ -10,7 +10,6 @@ related:
   - "[[2026-09-23-calendar-obligations-plan]]"
 ---
 
-
 # `calendar-obligations` ledger
 
 ## Changes
@@ -96,4 +95,3 @@ related:
 - `S08` profile of the installed first workbench generation: gating fields decoded 441 revisions x3 (15.8s), 61 holiday loads with 5,027 catalogue resolutions (5s); modelo workspace static inspection 11.3s belongs to the modelo workspace owner
 - `S09` each casilla label re-read and re-hashed the whole locale shard directory twice (208 labels, about 11 s per workbench generation); assigned to this lane by the coordinator
 - `S07` format v2 cutover under coordinator freeze 18:21-18:30; logical_generation 1022f65320ddd012ae398efc420361d2efdb08157ef570d1e0f8e02df7837bb2
-

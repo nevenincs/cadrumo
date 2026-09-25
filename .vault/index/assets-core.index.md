@@ -6,7 +6,7 @@ tags:
 date: '2026-09-23'
 modified: '2026-09-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:672fbb7a48d4e012aaa631258c5e71cf905d7b8f7b62f6df4356ce02c89f4580'
+body_hash: 'sha256:76a355eae35d3367a7b9227efbe85acd4b2ca96b824eace85cb4136c6b0f4d53'
 related:
   - '[[2026-09-21-assets-core-audit]]'
   - '[[2026-09-21-assets-core-cost-basis-stages-adr]]'
@@ -22,6 +22,7 @@ related:
   - '[[2026-09-23-assets-core-proration-and-incentive-scope-research]]'
   - '[[2026-09-23-assets-core-vehicle-affectation-adr]]'
   - '[[2026-09-23-assets-core-vehicle-affectation-research]]'
+  - '[[2026-09-24-assets-core-amortization-domain-grounding-research]]'
   - '[[2026-09-24-assets-core-average-workforce-write-path-adr]]'
   - '[[2026-09-24-assets-core-profile-indexed-object-write-path-reference]]'
 ---
@@ -65,3 +66,4 @@ Auto-generated index of all documents tagged with `#assets-core`.
 - `2026-09-23-assets-core-amortization-method-set-research` - `assets-core` research: `IRPF activity amortization method set for 2025`
 - `2026-09-23-assets-core-proration-and-incentive-scope-research` - `assets-core` research: `Mid-year proration unit, LIS 103.5 reading and DA 17a/18a windows for IRPF 2025`
 - `2026-09-23-assets-core-vehicle-affectation-research` - `assets-core` research: `IRPF vehicle affectation and LIS DA 18a vehicle free depreciation`
+- `2026-09-24-assets-core-amortization-domain-grounding-research` - `assets-core` research: `Amortization domain grounding`
