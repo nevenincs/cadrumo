@@ -21,10 +21,10 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
-from typing import cast
 
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.filing_projection_ref import FilingProjectionRef
+from ...core.type_guards import is_object_tuple
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...domain.calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from ...domain.calculations.registry.schema import RegistrySnapshot
@@ -107,9 +107,9 @@ def _rows_for(profile: object, kind: str, *, catalogue: _M200ProjectionCatalogue
     if family is None:
         raise InternalInvariantError(f"Modelo 200 projection kind {kind!r} has no registry row-family declaration")
     rows: object = getattr(profile.projection_rows, family, None)
-    if not isinstance(rows, tuple):
+    if not is_object_tuple(rows):
         raise InternalInvariantError(f"Modelo 200 projection row family {family!r} is not carried by the typed profile")
-    return tuple(cast("tuple[object, ...]", rows))
+    return rows
 
 
 def _m200_projection_refs(record: ExportRecordDefinition) -> tuple[FilingProjectionRef, ...]:

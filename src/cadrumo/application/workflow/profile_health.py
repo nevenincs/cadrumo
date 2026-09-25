@@ -27,7 +27,7 @@ See Also:
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import TYPE_CHECKING, Final, Literal, cast
+from typing import TYPE_CHECKING, Final, Literal
 
 from pydantic import BaseModel, PrivateAttr, ValidationError
 
@@ -306,13 +306,11 @@ def _locked_profile_precondition_verdict(health: ActiveProfileHealth) -> Precond
 
 def _unavailable_profile_precondition_verdict(health: ActiveProfileHealth) -> PreconditionVerdict:
     """Build the typed outcome for one of the two unavailable-record statuses."""
-    status = cast(
-        Literal[
-            ProfileHealthStatus.MISSING_PROFILE_RECORD,
-            ProfileHealthStatus.PROFILE_RECORD_UNREADABLE,
-        ],
-        health.status,
-    )
+    status = health.status
+    if status is not ProfileHealthStatus.MISSING_PROFILE_RECORD and (
+        status is not ProfileHealthStatus.PROFILE_RECORD_UNREADABLE
+    ):
+        raise InternalInvariantError("unavailable-profile routing received a different health status")
     return unavailable_profile_record_verdict(
         status=status,
         source=health.source,

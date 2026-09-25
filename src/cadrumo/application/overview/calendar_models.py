@@ -19,7 +19,7 @@ from __future__ import annotations
 from datetime import date, datetime
 from enum import StrEnum
 from types import MappingProxyType
-from typing import Annotated, Literal, Protocol, Self, cast
+from typing import Annotated, Literal, Protocol, Self, runtime_checkable
 
 from pydantic import BaseModel, BeforeValidator, Field, NonNegativeInt, PlainSerializer, model_validator
 
@@ -162,6 +162,7 @@ def user_state_for(obligation_status: _ObligationStatus) -> OverviewPeriodState:
     return _USER_STATE_FOR_OBLIGATION_STATUS[obligation_status]
 
 
+@runtime_checkable
 class _CalendarJustificanteStateCarrier(Protocol):
     """Fields governed by the calendar justificante evidence invariant."""
 
@@ -175,7 +176,9 @@ class _CalendarJustificanteStateInvariant(BaseModel):
 
     @model_validator(mode="after")
     def _enforce_justificante_state_consistency(self) -> Self:
-        value = cast(_CalendarJustificanteStateCarrier, self)
+        if not isinstance(self, _CalendarJustificanteStateCarrier):
+            raise ValueError("calendar justificante invariant requires the governed evidence fields")
+        value = self
         if value.aeat_submission_state is None and value.justificante_verified is None:
             return self
         if value.aeat_submission_state is OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED:

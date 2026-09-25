@@ -29,8 +29,8 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
-from typing import cast, override
+from collections.abc import Mapping
+from typing import TYPE_CHECKING, override
 
 from ...core.errors.not_found import CoreNotFoundError
 from ...core.operator_action_enums import ActionEvidenceProvenance
@@ -65,7 +65,17 @@ class WorkUnitNotFoundError(ModeloError):
     """Raised when a work-unit lookup or mutation targets a missing id."""
 
 
-class ModeloPreconditionErrorMixin:
+if TYPE_CHECKING:
+    # The mixin is always declared ahead of a registered ``ModeloError``, and
+    # that sibling owns the initializer this one delegates to. Naming it here
+    # types the delegation; inheriting it at runtime would bind an error code
+    # to the mixin itself.
+    _ModeloPreconditionErrorBase = ModeloError
+else:
+    _ModeloPreconditionErrorBase = object
+
+
+class ModeloPreconditionErrorMixin(_ModeloPreconditionErrorBase):
     """Attach one locale-neutral application decision to a registered error."""
 
     def __init__(
@@ -76,8 +86,7 @@ class ModeloPreconditionErrorMixin:
         translated_message: str | None = None,
         precondition_failure: ModeloPreconditionFailure | None = None,
     ) -> None:
-        parent_init = cast(Callable[..., None], super().__init__)
-        parent_init(
+        super().__init__(
             message,
             context=context,
             translated_message=translated_message,

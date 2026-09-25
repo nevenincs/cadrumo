@@ -245,7 +245,7 @@ def test_controller_drives_a_review_operation_to_public_terminal_settlement(tmp_
             assert view_model.interaction_affordance == "review_available"
             assert view_model.spinner_visible is True
 
-            interaction = await resolve_modal_interaction_state(controller, projection)
+            interaction = await resolve_modal_interaction_state(controller, projection, CensalReviewProjectionV1)
             assert isinstance(interaction, OperationModalReviewInteractionV1)
             assert isinstance(interaction.projection, CensalReviewProjectionV1)
             assert interaction.apply_enabled is True
@@ -422,7 +422,7 @@ def test_review_unavailable_disposition_for_a_stale_reference(tmp_path: Path) ->
             pending = waiting.projection.pending_interaction
             assert isinstance(pending, OperationReviewAvailableInteractionV1)
             stale_reference = pending.review_reference.model_copy(update={"revision": pending.revision + 1})
-            resolved = await controller.resolve_review(stale_reference)
+            resolved = await controller.resolve_review(stale_reference, CensalReviewProjectionV1)
 
             assert isinstance(resolved, OperationReviewProjectionRefusalV1)
 

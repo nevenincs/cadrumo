@@ -89,6 +89,7 @@ from ...application.user_profile.censal_operation import (
     CensalOperationAcquisition,
     CensalProfileBaseline,
     CensalReviewedFieldIntent,
+    CensalReviewProjectionV1,
     build_censal_operation_definition,
 )
 from ...application.user_profile.censo_sync import CENSAL_ADOPTABLE_PATHS
@@ -431,7 +432,8 @@ class _ExecutionDriver:
                     definition_contract_digest=review_contract.definition_contract_digest,
                     expires_at=None,
                 )
-            )
+            ),
+            CensalReviewProjectionV1,
         )
         assert isinstance(result, OperationReviewProjectionRefusalV1)
         assert result.code is OperationReviewProjectionRefusalCode.REVIEW_NOT_PENDING

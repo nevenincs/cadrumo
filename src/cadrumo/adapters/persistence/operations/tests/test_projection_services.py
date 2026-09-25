@@ -449,12 +449,13 @@ def test_review_resolution_uses_encrypted_operand_and_is_read_only(tmp_path: Pat
             clock=lambda: _NOW,
         )
 
-        result = asyncio.run(service.resolve(request))
+        result = asyncio.run(service.resolve(request, SafeReviewProjection))
         stale = asyncio.run(
             service.resolve(
                 request.model_copy(
                     update={"reference": request.reference.model_copy(update={"interaction_id": "9" * 64})}
-                )
+                ),
+                SafeReviewProjection,
             )
         )
         expired = asyncio.run(
@@ -463,13 +464,14 @@ def test_review_resolution_uses_encrypted_operand_and_is_read_only(tmp_path: Pat
                 registry=registry,
                 operands=operands,
                 clock=lambda: _NOW + timedelta(hours=1),
-            ).resolve(request)
+            ).resolve(request, SafeReviewProjection)
         )
         digest_mismatch = asyncio.run(
             service.resolve(
                 request.model_copy(
                     update={"reference": request.reference.model_copy(update={"definition_contract_digest": "a" * 64})}
-                )
+                ),
+                SafeReviewProjection,
             )
         )
         assert contract.result_schema is not None
@@ -481,7 +483,8 @@ def test_review_resolution_uses_encrypted_operand_and_is_read_only(tmp_path: Pat
                             update={"review_projection_schema": contract.result_schema}
                         )
                     }
-                )
+                ),
+                SafeReviewProjection,
             )
         )
         unsafe_output = asyncio.run(
@@ -490,7 +493,7 @@ def test_review_resolution_uses_encrypted_operand_and_is_read_only(tmp_path: Pat
                 registry=_registry(review_projector=_unsafe_review_projection),
                 operands=operands,
                 clock=lambda: _NOW,
-            ).resolve(request)
+            ).resolve(request, SafeReviewProjection)
         )
 
         assert isinstance(result, OperationReviewProjectionSuccessV1)
@@ -533,13 +536,19 @@ def test_result_resolution_uses_encrypted_operand_and_public_contract(tmp_path: 
         )
         service = OperationResultProjectionService(reader=repository, registry=registry, operands=operands)
 
-        result = asyncio.run(service.resolve(request))
-        stale = asyncio.run(service.resolve(request.model_copy(update={"terminal_revision": terminal.revision + 1})))
+        result = asyncio.run(service.resolve(request, PublicProjectionResult))
+        stale = asyncio.run(
+            service.resolve(
+                request.model_copy(update={"terminal_revision": terminal.revision + 1}), PublicProjectionResult
+            )
+        )
         digest_mismatch = asyncio.run(
-            service.resolve(request.model_copy(update={"definition_contract_digest": "a" * 64}))
+            service.resolve(request.model_copy(update={"definition_contract_digest": "a" * 64}), PublicProjectionResult)
         )
         schema_mismatch = asyncio.run(
-            service.resolve(request.model_copy(update={"result_schema": contract.request_schema}))
+            service.resolve(
+                request.model_copy(update={"result_schema": contract.request_schema}), PublicProjectionResult
+            )
         )
         unsafe_output = asyncio.run(
             OperationResultProjectionService(
@@ -549,7 +558,7 @@ def test_result_resolution_uses_encrypted_operand_and_public_contract(tmp_path: 
                     result_schema_type=PublicProjectionResult,
                 ),
                 operands=operands,
-            ).resolve(request)
+            ).resolve(request, PublicProjectionResult)
         )
 
         assert isinstance(result, OperationResultProjectionSuccessV1)
@@ -585,17 +594,21 @@ def test_refresh_target_resolves_only_authoritative_successful_terminal_receipt(
         registry=registry,
     )
 
-    result = asyncio.run(service.resolve(request))
-    stale = asyncio.run(service.resolve(request.model_copy(update={"terminal_revision": terminal.revision + 1})))
-    digest_mismatch = asyncio.run(service.resolve(request.model_copy(update={"definition_contract_digest": "a" * 64})))
+    result = asyncio.run(service.resolve(request, WorkspaceRefreshTarget))
+    stale = asyncio.run(
+        service.resolve(request.model_copy(update={"terminal_revision": terminal.revision + 1}), WorkspaceRefreshTarget)
+    )
+    digest_mismatch = asyncio.run(
+        service.resolve(request.model_copy(update={"definition_contract_digest": "a" * 64}), WorkspaceRefreshTarget)
+    )
     schema_mismatch = asyncio.run(
-        service.resolve(request.model_copy(update={"target_schema": contract.request_schema}))
+        service.resolve(request.model_copy(update={"target_schema": contract.request_schema}), WorkspaceRefreshTarget)
     )
     unsafe_output = asyncio.run(
         OperationWorkspaceRefreshTargetService(
             reader=repository,
             registry=_registry(refresh_adapter=_unsafe_refresh_target),
-        ).resolve(request)
+        ).resolve(request, WorkspaceRefreshTarget)
     )
 
     assert isinstance(result, OperationWorkspaceRefreshTargetSuccessV1)
@@ -637,7 +650,8 @@ def test_projection_services_close_version_unknown_pending_terminal_and_adapter_
                         definition_contract_digest=contract.definition_contract_digest,
                         expires_at=None,
                     )
-                )
+                ),
+                SafeReviewProjection,
             )
         )
         unknown = asyncio.run(
@@ -651,11 +665,14 @@ def test_projection_services_close_version_unknown_pending_terminal_and_adapter_
                         definition_contract_digest=contract.definition_contract_digest,
                         expires_at=None,
                     )
-                )
+                ),
+                SafeReviewProjection,
             )
         )
         unsupported = asyncio.run(
-            review_service.resolve(OperationReviewProjectionVersionHeader(review_projection_version=2))
+            review_service.resolve(
+                OperationReviewProjectionVersionHeader(review_projection_version=2), SafeReviewProjection
+            )
         )
 
         assert isinstance(not_pending, OperationReviewProjectionRefusalV1)
@@ -673,9 +690,11 @@ def test_projection_services_close_version_unknown_pending_terminal_and_adapter_
             target_schema=contract.workspace_refresh_target_schema,
         )
         refresh_service = OperationWorkspaceRefreshTargetService(reader=running_repository, registry=registry)
-        not_terminal = asyncio.run(refresh_service.resolve(refresh_request))
+        not_terminal = asyncio.run(refresh_service.resolve(refresh_request, WorkspaceRefreshTarget))
         refresh_unsupported = asyncio.run(
-            refresh_service.resolve(OperationWorkspaceRefreshTargetVersionHeader(refresh_target_version=2))
+            refresh_service.resolve(
+                OperationWorkspaceRefreshTargetVersionHeader(refresh_target_version=2), WorkspaceRefreshTarget
+            )
         )
 
         no_adapter_registry = _registry(include_refresh=False)
@@ -696,7 +715,8 @@ def test_projection_services_close_version_unknown_pending_terminal_and_adapter_
                     terminal_revision=1,
                     definition_contract_digest=no_adapter_contract.definition_contract_digest,
                     target_schema=no_adapter_contract.result_schema,
-                )
+                ),
+                WorkspaceRefreshTarget,
             )
         )
 

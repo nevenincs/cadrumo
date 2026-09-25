@@ -50,7 +50,7 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
-from typing import TYPE_CHECKING, cast, override
+from typing import TYPE_CHECKING, override
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -61,7 +61,7 @@ if TYPE_CHECKING:
     from ..modelo.reconciliation import ModeloReconciliationReport
 
 from ...core.aeat_csv import normalise_aeat_csv
-from ...core.errors.hierarchy import CoreValidationError, pydantic_validation_boundary
+from ...core.errors.hierarchy import CoreValidationError, InternalInvariantError, pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.hashing import content_hash_hex, sha256_hex
 from ...core.identity.aeat_csv import AeatCsv
@@ -331,6 +331,18 @@ def resolve_period_expediente(
     )
 
 
+def _captured_snapshot(record: object) -> JustificanteCaptureSnapshot:
+    """Return one persisted record as the capture snapshot this bucket stores.
+
+    The persistence port is declared over an opaque record so the encrypted
+    store stays snapshot-agnostic. This boundary states what the repository
+    reads back, and refuses a foreign record instead of passing it on.
+    """
+    if not isinstance(record, JustificanteCaptureSnapshot):
+        raise InternalInvariantError("justificante snapshot persistence returned a foreign record")
+    return record
+
+
 class JustificanteCaptureSnapshotRepository:
     """Secure-DB repository for captured justificante snapshots in one bucket.
 
@@ -371,20 +383,20 @@ class JustificanteCaptureSnapshotRepository:
 
     def load(self, snapshot_id: str) -> JustificanteCaptureSnapshot:
         """Execute this public contract operation."""
-        return cast(JustificanteCaptureSnapshot, self._persistence.load(snapshot_id))
+        return _captured_snapshot(self._persistence.load(snapshot_id))
 
     def list_snapshots(self) -> tuple[JustificanteCaptureSnapshot, ...]:
         """Execute this public contract operation."""
         return tuple(
             sorted(
-                cast(Sequence[JustificanteCaptureSnapshot], self._persistence.list_snapshots()),
+                (_captured_snapshot(record) for record in self._persistence.list_snapshots()),
                 key=lambda item: (item.captured_at, item.snapshot_id),
             ),
         )
 
     def resolve(self, snapshot_id: str) -> JustificanteCaptureSnapshot:
         """Execute this public contract operation."""
-        return cast(JustificanteCaptureSnapshot, self._persistence.resolve(snapshot_id))
+        return _captured_snapshot(self._persistence.resolve(snapshot_id))
 
     def save(self, snapshot: JustificanteCaptureSnapshot) -> None:
         """Execute this public contract operation."""

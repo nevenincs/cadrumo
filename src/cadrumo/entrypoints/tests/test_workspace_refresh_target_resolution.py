@@ -212,7 +212,7 @@ def _resolve(tmp_path: Path, subject_ref: str):
         reader=OperationJournalRepository(storage_root=root),
         registry=registry,
     )
-    return asyncio.run(service.resolve(request))
+    return asyncio.run(service.resolve(request, ModeloWorkspaceRefreshTargetV1))
 
 
 def test_a_real_enrolled_operation_resolves_a_genuine_modelo_target(tmp_path: Path) -> None:

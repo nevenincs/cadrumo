@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from enum import StrEnum
-from typing import Annotated, Final, Literal, cast, get_args
+from typing import Annotated, Final, Literal, TypeIs, cast, get_args
 
 from pydantic import BaseModel, Field, TypeAdapter, model_validator
 
@@ -1116,6 +1116,15 @@ _TYPED_FILING_PROJECTION_REFS: Final[tuple[type, ...]] = _projection_ref_support
 )
 
 
+def is_typed_filing_projection_ref(value: object) -> TypeIs[FilingProjectionRef]:
+    """Report whether ``value`` is already one of the compiled reference members.
+
+    The members come from the union itself, so a boundary that narrows with this
+    predicate cannot fall behind a newly declared reference kind.
+    """
+    return isinstance(value, _TYPED_FILING_PROJECTION_REFS)
+
+
 def _normalise_filing_projection_ref_payload(value: object) -> dict[str, object]:
     """Copy persisted values while retaining the compiler's primitive guards."""
     if not isinstance(value, Mapping):
@@ -1187,8 +1196,8 @@ def hydrate_filing_projection_ref(value: object) -> FilingProjectionRef:
     instead of one path and one dead end, and a malformed mapping still refuses
     exactly as it always did, because the compiler is unchanged.
     """
-    if isinstance(value, _TYPED_FILING_PROJECTION_REFS):
-        return cast(FilingProjectionRef, value)
+    if is_typed_filing_projection_ref(value):
+        return value
     return compile_filing_projection_ref(value)
 
 
@@ -1260,4 +1269,5 @@ __all__ = [
     "compile_filing_projection_ref",
     "filing_projection_ref_casilla_id",
     "hydrate_filing_projection_ref",
+    "is_typed_filing_projection_ref",
 ]

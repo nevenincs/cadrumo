@@ -6,10 +6,9 @@ verification, export, or local filing lets deductible input IVA proceed.
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from decimal import Decimal
 from enum import Enum, StrEnum, auto
-from typing import Final, cast
+from typing import Final
 
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...domain.iva.components import registry_category_projection
@@ -21,7 +20,6 @@ from ...domain.iva.flow import (
 )
 from ...domain.iva.schema import IvaCategory
 from ...domain.modelos.calculation_revision import CalculationRevision
-from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.ledger_filing_snapshot import LedgerEvidenceRow
 from ...domain.transactions.enums import (
     BUSINESS_BEARING_STATES,
@@ -30,6 +28,7 @@ from ...domain.transactions.enums import (
     TransactionLifecycleState,
 )
 from ..aggregation.invoice_kind import invoice_kind_for_direction
+from .action_errors import ModeloPreconditionErrorMixin
 from .preconditions import build_modelo_precondition_failure
 
 
@@ -225,20 +224,20 @@ def deductible_iva_evidence_gap_transaction_ids(revision: CalculationRevision) -
 def raise_if_deductible_iva_evidence_missing(
     revision: CalculationRevision,
     *,
-    error_type: type[ModeloError],
+    error_type: type[ModeloPreconditionErrorMixin],
 ) -> None:
     """Raise a typed file refusal when a finalized revision has unsupported input IVA.
 
     Args:
         revision: :class:`CalculationRevision` whose bundled ledger evidence is
             checked before the lifecycle finish line.
-        error_type: Modelo error class raised when deductible IVA lacks evidence.
+        error_type: Precondition-carrying modelo error class raised when
+            deductible IVA lacks evidence.
     """
     transaction_ids = deductible_iva_evidence_gap_transaction_ids(revision)
     if not transaction_ids:
         return
-    error_factory = cast(Callable[..., ModeloError], error_type)
-    raise error_factory(
+    raise error_type(
         translated_message="application.modelo.errors.deductible_iva_evidence_missing",
         context={
             "calculation_revision_id": revision.calculation_revision_id,

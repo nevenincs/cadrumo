@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, MutableMapping, MutableSequence, MutableSet, Sequence, Set
-from typing import TypeAliasType, cast, get_args, get_origin, is_typeddict
+from typing import TypeAliasType, get_args, get_origin, is_typeddict
 
 from pydantic import BaseModel
+
+from ...core.type_guards import is_object_dict
 
 _NONSTRUCTURAL_JSON_SCHEMA_EXTRA_KEYS = frozenset({"deprecated", "description", "examples", "title"})
 
@@ -170,9 +172,9 @@ def _require_no_custom_core_schema_hook(annotation: object, *, path: str) -> Non
 def _require_nonstructural_json_schema_extra(extra: object, *, path: str) -> None:
     if extra is None:
         return
-    if not isinstance(extra, dict):
+    if not is_object_dict(extra):
         raise ValueError(f"operation {path} must not use callable JSON schema customization")
-    typed_extra = cast(dict[object, object], extra)
+    typed_extra = extra
     unsupported = {
         key for key in typed_extra if not isinstance(key, str) or key not in _NONSTRUCTURAL_JSON_SCHEMA_EXTRA_KEYS
     }
@@ -232,20 +234,21 @@ def _require_annotation_class_contract(
 ) -> bool:
     """Validate class annotations and report whether recursion is complete."""
     if isinstance(annotation, type):
-        if issubclass(annotation, BaseModel):
+        annotation_type: type[object] = annotation
+        if issubclass(annotation_type, BaseModel):
             _require_model_graph(
-                annotation,
+                annotation_type,
                 path=path,
                 visiting=visiting,
                 reject_mutable_annotations=reject_mutable_annotations,
                 require_validated_defaults=require_validated_defaults,
             )
             return True
-        if is_typeddict(cast(type[object], annotation)):
+        if is_typeddict(annotation_type):
             if reject_mutable_annotations:
                 raise ValueError(f"operation {path} must not declare a mutable TypedDict")
             return True
-        _require_no_custom_core_schema_hook(cast(object, annotation), path=path)
+        _require_no_custom_core_schema_hook(annotation_type, path=path)
     return False
 
 

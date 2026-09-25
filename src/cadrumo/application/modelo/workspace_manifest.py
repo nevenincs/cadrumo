@@ -16,7 +16,6 @@ from typing import (
     TypeAliasType,
     TypeGuard,
     Union,
-    cast,
     get_args,
     get_origin,
     get_type_hints,
@@ -680,7 +679,7 @@ def _model_annotations(model_type: type[BaseModel]) -> dict[str, object]:
     field named, so callers cannot publish a partial manifest.
     """
     try:
-        resolved = cast(dict[str, object], get_type_hints(model_type, include_extras=True))
+        resolved: dict[str, object] = dict(get_type_hints(model_type, include_extras=True))
     except (NameError, TypeError, SyntaxError) as exc:
         resolved = {}
         resolution_error = exc

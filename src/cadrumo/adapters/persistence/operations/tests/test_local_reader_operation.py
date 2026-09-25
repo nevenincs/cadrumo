@@ -240,7 +240,8 @@ def _run(tmp_path: Path, ports: _Ports, request: OperationRequest[LocalReaderPro
                     terminal_revision=projection.revision,
                     definition_contract_digest=projection.definition_contract.definition_contract_digest,
                     result_schema=schema,
-                )
+                ),
+                LocalReaderProvisionPublicResultV1,
             )
         finally:
             await services.shutdown()

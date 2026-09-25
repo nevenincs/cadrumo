@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import TYPE_CHECKING, cast, override
+from typing import TYPE_CHECKING, TypeIs, override
 
 from pydantic import BaseModel
 
@@ -34,6 +34,11 @@ from .secret_submission import BoundEphemeralSecretAccess
 
 if TYPE_CHECKING:
     pass
+
+
+def _is_resumable_executor(executor: object) -> TypeIs[OperationResumableExecutor[BaseModel]]:
+    """Report whether the executor structurally declares the durable resume contract."""
+    return isinstance(executor, OperationResumableExecutor)
 
 
 class SupervisorReconciliationMixin(SupervisorHost):
@@ -217,10 +222,9 @@ class SupervisorReconciliationMixin(SupervisorHost):
         checkpoint: OperationPendingInteraction | OperationConsumedInteraction,
     ) -> OperationPersistedSnapshot:
         """Re-enter one registered executor from its declared durable checkpoint."""
-        executor = definition.executor_factory.create()
-        if not isinstance(executor, OperationResumableExecutor):
+        resumable_executor = definition.executor_factory.create()
+        if not _is_resumable_executor(resumable_executor):
             raise ValueError("checkpoint reconciliation executor is not resumable")
-        resumable_executor = cast(OperationResumableExecutor[BaseModel], executor)
         payload = await self._resolve_request_payload(snapshot, definition)
         request = OperationRequest(
             definition_id=snapshot.identity.definition_id,

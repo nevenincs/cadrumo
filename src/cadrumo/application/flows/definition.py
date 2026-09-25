@@ -21,7 +21,6 @@ gates) so existing catalogues migrate by extension.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import cast
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -35,6 +34,7 @@ from ...core.flows import (
 )
 from ...core.hashing import content_hash_hex
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.type_guards import is_object_dict, is_object_list, is_object_tuple
 
 _CHOICE_WIDGETS = frozenset(
     {FlowWidgetKind.SELECT, FlowWidgetKind.CHECKBOX, FlowWidgetKind.COMPARE_SELECT},
@@ -333,15 +333,12 @@ def _normalise_fingerprint_types(value: object) -> object:
     """Replace the definition's type declarations with their stable domain tokens."""
     if isinstance(value, type):
         return f"{value.__module__}.{value.__qualname__}"
-    if isinstance(value, dict):
-        payload = cast(dict[str, object], value)
-        return {key: _normalise_fingerprint_types(item) for key, item in payload.items()}
-    if isinstance(value, tuple):
-        values = cast(tuple[object, ...], value)
-        return tuple(_normalise_fingerprint_types(item) for item in values)
-    if isinstance(value, list):
-        values = cast(list[object], value)
-        return [_normalise_fingerprint_types(item) for item in values]
+    if is_object_dict(value):
+        return {key: _normalise_fingerprint_types(item) for key, item in value.items()}
+    if is_object_tuple(value):
+        return tuple(_normalise_fingerprint_types(item) for item in value)
+    if is_object_list(value):
+        return [_normalise_fingerprint_types(item) for item in value]
     return value
 
 

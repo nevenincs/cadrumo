@@ -38,7 +38,7 @@ from collections.abc import Awaitable, Mapping, Sequence
 from dataclasses import dataclass, field
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
-from typing import TYPE_CHECKING, Protocol, TypedDict, cast
+from typing import TYPE_CHECKING, Protocol, TypedDict
 
 if TYPE_CHECKING:
     from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
@@ -50,7 +50,7 @@ from pydantic import BaseModel, Field, field_validator
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.casilla_id import CasillaId
 from ...core.casilla_value_kind import CasillaValueKind
-from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
+from ...core.errors.hierarchy import CadrumoError, InternalInvariantError, pydantic_validation_boundary
 from ...core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
 from ...core.filing_year import FilingYear
 from ...core.i18n.render import tr
@@ -1683,8 +1683,13 @@ def casillas_a_recapture_would_change(
             continue
         if observed.value_kind is not CasillaValueKind.NUMERIC:
             continue
+        # The amount is read through the observation's own numeric accessor, so
+        # a carrier that does not offer one is reported rather than converted by
+        # hand from its lexical value.
+        if not isinstance(observed, ObservedCasillaValueProtocol):
+            raise InternalInvariantError("filed casilla observation carries no numeric accessor")
         try:
-            fresh_value = cast(ObservedCasillaValueProtocol, observed).decimal_value()
+            fresh_value = observed.decimal_value()
         except InvalidOperation:
             # An unreadable fresh token is not evidence of a CHANGED value, and
             # claiming one would put a false amendment in front of the operator.

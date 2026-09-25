@@ -22,11 +22,13 @@ survive draft/export replay without synthetic binding ids.
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 from ...core.aggregation import OBSERVATION_BACKED_BINDING_SOURCE_KINDS
 from ...core.casilla_id import CasillaId
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.modelo import Modelo
 from ...domain.calculations.registry.applicability import (
     ApplicabilityVerdict,
@@ -278,7 +280,12 @@ def _m349_row_binding_value(
 ) -> ModeloInputScalar:
     if attr == "nif_comunitario":
         return m349_nif_number_for_export(row.nif_comunitario, row.codigo_pais)
-    return cast(ModeloInputScalar, getattr(row, attr))
+    value = getattr(row, attr)
+    # The binding map names row attributes, so a mapped attribute that is not a
+    # filing scalar is a registry or row defect rather than a replayable value.
+    if not isinstance(value, str | int | Decimal | bool | date):
+        raise InternalInvariantError(f"Modelo 349 replay attribute {attr!r} is not a filing scalar")
+    return value
 
 
 def _m349_row_binding_replay_inputs(

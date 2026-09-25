@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Literal, cast
+from typing import Literal
 
 from ...core.aggregation import BindingSourceKind
 from ...core.errors.hierarchy import InternalInvariantError
@@ -108,7 +108,7 @@ def _resolver_ownership(
     )
 
 
-_CANONICAL_RESOLVER_STAGES: tuple[tuple[CalculationRouteStage, type[ModeloSourceResolver]], ...] = (
+_CANONICAL_RESOLVER_STAGES: tuple[tuple[CalculationRouteResolverStage, type[ModeloSourceResolver]], ...] = (
     ("pre_mesh", ProfileSourceResolver),
     ("pre_mesh", Modelo100BorradorSourceResolver),
     ("pre_mesh", IvaWalletDecisionSourceResolver),
@@ -156,7 +156,7 @@ CALCULATION_ROUTE_RESOLVER_OWNERSHIP: tuple[CalculationRouteOwnership, ...] = (
 def _canonical_stage_map() -> dict[type[ModeloSourceResolver], CalculationRouteResolverStage]:
     """Return the canonical executable-resolver stage map after checking its shape."""
     canonical_stages: dict[type[ModeloSourceResolver], CalculationRouteResolverStage] = {
-        resolver_type: cast(CalculationRouteResolverStage, stage) for stage, resolver_type in _CANONICAL_RESOLVER_STAGES
+        resolver_type: stage for stage, resolver_type in _CANONICAL_RESOLVER_STAGES
     }
     if len(canonical_stages) != len(_CANONICAL_RESOLVER_STAGES):
         raise InternalInvariantError("canonical calculation route repeats a resolver type")

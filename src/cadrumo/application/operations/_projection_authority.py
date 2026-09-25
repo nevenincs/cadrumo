@@ -6,7 +6,7 @@ import secrets
 from collections.abc import Callable
 from datetime import datetime
 from threading import RLock
-from typing import TYPE_CHECKING, Any, Protocol
+from typing import TYPE_CHECKING, Protocol
 
 from ...core.hashing import content_hash_hex
 from ...core.identity.digest import ContentDigest
@@ -24,6 +24,7 @@ from .secret_submission import zeroize_secret_buffer
 if TYPE_CHECKING:
     from .projection_services import (
         OperationResponseCapability,
+        OperationSecureResponseAuthority,
     )
 
 
@@ -39,8 +40,7 @@ class _AuthorityHost:
         clock: Callable[[], datetime]
         _token: bytearray
         _closed: bool
-
-        def __getattr__(self, name: str) -> Any: ...
+        _capability_issuer: object
 
 
 class _BoundAuthorityHost(Protocol):
@@ -132,7 +132,7 @@ class OperationResponseAuthorityBrokerMixin(_AuthorityHost):
         capability: OperationResponseCapability,
         *,
         clock: Callable[[], datetime],
-    ) -> Any:
+    ) -> OperationSecureResponseAuthority:
         """Transfer one exact live bearer into an actor-bound response service."""
         from .projection_services import (
             BoundOperationSecureResponseAuthority,

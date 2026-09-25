@@ -65,6 +65,7 @@ from ...application.live.filed_history_operation import (
     FILED_HISTORY_PHASE_SETTLEMENT,
     FiledHistoryComposition,
     FiledHistoryOperationRequest,
+    FiledHistoryPublicResultV1,
     FiledHistoryPull,
     build_filed_history_operation_definition,
     build_filed_history_operation_registration,
@@ -725,7 +726,8 @@ def test_frontend_projects_the_public_result_without_the_private_type(tmp_path: 
                     terminal_revision=terminal.revision,
                     definition_contract_digest=contract.definition_contract_digest,
                     result_schema=contract.result_schema,
-                )
+                ),
+                FiledHistoryPublicResultV1,
             )
             return resolved
 

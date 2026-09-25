@@ -329,7 +329,8 @@ def execute_google_sheets_export(
                         terminal_revision=projection.revision,
                         definition_contract_digest=projection.definition_contract.definition_contract_digest,
                         result_schema=result_schema,
-                    )
+                    ),
+                    GoogleSheetsExportPublicResultV1,
                 )
                 if not isinstance(resolved, OperationResultProjectionSuccessV1) or not isinstance(
                     resolved.projection, GoogleSheetsExportPublicResultV1

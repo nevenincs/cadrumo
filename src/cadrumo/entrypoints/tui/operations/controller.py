@@ -84,9 +84,17 @@ class OperationController:
     async def resolve_review[ReviewProjectionT: BaseModel](
         self,
         reference: OperationReviewProjectionReferenceV1,
+        projection_type: type[ReviewProjectionT],
     ) -> OperationReviewProjectionResultV1[ReviewProjectionT]:
-        """Resolve the exact registered safe REVIEW projection or a refusal."""
-        return await self.services.review.resolve(OperationReviewProjectionRequestV1(reference=reference))
+        """Resolve the exact registered safe REVIEW projection or a refusal.
+
+        ``projection_type`` names the model the caller renders. A caller that
+        renders any registered projection passes :class:`~pydantic.BaseModel`.
+        """
+        return await self.services.review.resolve(
+            OperationReviewProjectionRequestV1(reference=reference),
+            projection_type,
+        )
 
     async def response_control(
         self,

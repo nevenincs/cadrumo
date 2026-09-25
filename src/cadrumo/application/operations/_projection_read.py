@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import TYPE_CHECKING, TypeGuard, cast
+from typing import TYPE_CHECKING, TypeGuard
 
 from pydantic import BaseModel, TypeAdapter, ValidationError
 
@@ -200,8 +200,16 @@ async def _resolve_review_projection[ReviewProjectionT: BaseModel](
     registry: OperationRegistry,
     operands: OperationSecureReferenceStore,
     bound: _ReviewRegistration,
+    projection_type: type[ReviewProjectionT],
 ) -> OperationReviewProjectionResultV1[ReviewProjectionT]:
-    """Resolve, project, and strictly validate one registered REVIEW model."""
+    """Resolve, project, and strictly validate one registered REVIEW model.
+
+    ``projection_type`` is the model the caller asked for, and the validated
+    projection is checked against it, so the returned projection carries the
+    requested type by proof rather than by assertion. A caller that can render
+    any registered projection passes :class:`~pydantic.BaseModel` and still
+    receives the exact registered model the binding validated.
+    """
     projector = bound.registration.review_projector
     operand_type = bound.registration.reviewed_operand_type
     if projector is None or operand_type is None:
@@ -217,10 +225,12 @@ async def _resolve_review_projection[ReviewProjectionT: BaseModel](
         if type(projected) is not binding.model_type:
             raise TypeError("REVIEW projector returned an unregistered model")
         validated = binding.model_type.model_validate(projected.model_dump(mode="python"))
+        if not isinstance(validated, projection_type):
+            raise TypeError("registered REVIEW projection is not the requested model")
         return OperationReviewProjectionSuccessV1[ReviewProjectionT](
             projection_schema=binding.identity,
             definition_contract_digest=bound.registration.contract.definition_contract_digest,
-            projection=cast(ReviewProjectionT, validated),
+            projection=validated,
         )
     except Exception:
         return _review_refusal(
@@ -334,18 +344,25 @@ def _lookup_refresh_registration(
 async def _resolve_refresh_target[RefreshTargetT: BaseModel](
     registry: OperationRegistry,
     bound: _RefreshRegistration,
+    target_type: type[RefreshTargetT],
 ) -> OperationWorkspaceRefreshTargetResultV1[RefreshTargetT]:
-    """Resolve, adapt, and strictly validate one registered refresh target."""
+    """Resolve, adapt, and strictly validate one registered refresh target.
+
+    ``target_type`` is the model the caller asked for, and the validated target
+    is checked against it before it is returned.
+    """
     try:
         binding = registry.lookup_public_schema_binding(bound.context.request.target_schema)
         target = bound.adapter(bound.context.receipt)
         if type(target) is not binding.model_type:
             raise TypeError("Workspace refresh adapter returned an unregistered model")
         validated = binding.model_type.model_validate(target.model_dump(mode="python"))
+        if not isinstance(validated, target_type):
+            raise TypeError("registered workspace refresh target is not the requested model")
         return OperationWorkspaceRefreshTargetSuccessV1[RefreshTargetT](
             target_schema=binding.identity,
             definition_contract_digest=bound.registration.contract.definition_contract_digest,
-            target=cast(RefreshTargetT, validated),
+            target=validated,
         )
     except Exception:
         return _refresh_refusal(
@@ -481,8 +498,13 @@ async def _resolve_result_projection[ResultProjectionT: BaseModel](
     operands: OperationSecureReferenceStore,
     bound: _ResultRegistration,
     digest: ContentDigest,
+    projection_type: type[ResultProjectionT],
 ) -> OperationResultProjectionResultV1[ResultProjectionT]:
-    """Resolve, project, and strictly validate one registered result model."""
+    """Resolve, project, and strictly validate one registered result model.
+
+    ``projection_type`` is the model the caller asked for, and the validated
+    projection is checked against it before it is returned.
+    """
     try:
         binding = registry.lookup_public_schema_binding(bound.context.request.result_schema)
         definition = registry.lookup(bound.context.snapshot.identity.definition_id)
@@ -494,10 +516,12 @@ async def _resolve_result_projection[ResultProjectionT: BaseModel](
         if type(projected) is not binding.model_type:
             raise TypeError("result projector returned an unregistered model")
         validated = binding.model_type.model_validate(projected.model_dump(mode="python"))
+        if not isinstance(validated, projection_type):
+            raise TypeError("registered result projection is not the requested model")
         return OperationResultProjectionSuccessV1[ResultProjectionT](
             result_schema=binding.identity,
             definition_contract_digest=bound.registration.contract.definition_contract_digest,
-            projection=cast(ResultProjectionT, validated),
+            projection=validated,
         )
     except Exception:
         return _result_projection_refusal(

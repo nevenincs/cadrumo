@@ -39,7 +39,7 @@ from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
-from typing import Final, Literal, Protocol, cast, runtime_checkable
+from typing import Final, Literal, Protocol, runtime_checkable
 
 from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_validator
 
@@ -57,6 +57,7 @@ from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.result_disposition import ResultDisposition
 from ...core.secure_object_write import SecureObjectWrite
 from ...core.time.utc import UtcInstant
+from ...core.type_guards import is_object_mapping
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.bindings import RegistryModeloObservation
 from ...domain.calculations.registry.casilla_membership import undeclared_casilla_ids
@@ -349,9 +350,8 @@ class ObservationEnvelopePayload(BaseModel):
         if str(self.observation.modelo) != "303":
             return self
         ingress_candidate = False
-        if isinstance(info.context, Mapping):
-            context = cast(Mapping[str, object], info.context)
-            ingress_candidate = context.get("canonical_m303_ingress_candidate") is True
+        if is_object_mapping(info.context):
+            ingress_candidate = info.context.get("canonical_m303_ingress_candidate") is True
         if ingress_candidate:
             return self
         if self.result_disposition is None or self.m303_compensation_basis is None:
@@ -402,11 +402,25 @@ class ObservationLayers(BaseModel):
         return self
 
 
-def require_observation_envelope_coordinates_current(
-    payload: ObservationEnvelopePayload,
+class ObservationCoordinateCarrier(Protocol):
+    """Structural shape of a stored payload that names its registry coordinate.
+
+    Callers that hold the envelope only through a structural shape re-confirm
+    the same coordinate as holders of the concrete payload, so the gate is
+    declared against the one property it reads.
+    """
+
+    @property
+    def registry_snapshot_ref(self) -> RegistrySnapshotRef:
+        """Return the one canonical coordinate this payload was produced at."""
+        ...
+
+
+def require_observation_envelope_coordinates_current[PayloadT: ObservationCoordinateCarrier](
+    payload: PayloadT,
     *,
     operation: PinnedAuthorityOperation,
-) -> ObservationEnvelopePayload:
+) -> PayloadT:
     """Return a persisted observation only when its producing coordinate re-confirms."""
     outcome = revision_carry_outcome(payload.registry_snapshot_ref, operation=operation)
     if outcome.refused:
@@ -813,6 +827,7 @@ __all__ = [
     "CalculationObservationStorageProtocol",
     "IvaWalletDecisionEnvelopePayload",
     "IvaWalletDecisionRepositoryProtocol",
+    "ObservationCoordinateCarrier",
     "ObservationEnvelopePayload",
     "ObservationLayers",
     "ObservationOverride",

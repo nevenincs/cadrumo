@@ -8,11 +8,12 @@ validation unit.
 
 from __future__ import annotations
 
-from typing import cast
+from collections.abc import Mapping
 
 from pydantic import BaseModel, PydanticInvalidForJsonSchema
 
 from ...core.hex import HEX_PATTERN_64
+from ...core.type_guards import is_object_dict, is_object_list, is_str_keyed_dict
 from ._model_contract import require_strict_frozen_operation_model_graph
 
 #: Field-name tokens a credential-free journal request may not carry.
@@ -78,7 +79,7 @@ HEX64_DIGEST_PATTERN = HEX_PATTERN_64
 def is_hex64_shaped_schema(
     value: object,
     *,
-    definitions: dict[str, object] | None = None,
+    definitions: Mapping[str, object] | None = None,
     _seen_refs: frozenset[str] = frozenset(),
 ) -> bool:
     """Report whether one field's JSON-schema fragment matches Hex64 shape.
@@ -93,9 +94,9 @@ def is_hex64_shaped_schema(
     ``items`` (a ``tuple[X, ...]`` field) to reach the underlying string
     schema.
     """
-    if not isinstance(value, dict):
+    if not is_str_keyed_dict(value):
         return False
-    mapping = cast(dict[str, object], value)
+    mapping = value
     resolved = _resolve_local_schema_ref(mapping, definitions)
     if resolved is not None:
         ref, target = resolved
@@ -110,9 +111,9 @@ def is_hex64_shaped_schema(
 
 
 def _resolve_local_schema_ref(
-    mapping: dict[str, object],
-    definitions: dict[str, object] | None,
-) -> tuple[str, dict[str, object]] | None:
+    mapping: Mapping[str, object],
+    definitions: Mapping[str, object] | None,
+) -> tuple[str, Mapping[str, object]] | None:
     """Resolve one local ``$defs`` reference without following external schemas."""
     ref = mapping.get("$ref")
     if definitions is None or not isinstance(ref, str) or not ref.startswith("#/$defs/"):
@@ -122,12 +123,12 @@ def _resolve_local_schema_ref(
         return None
     definition_name = encoded_name.replace("~1", "/").replace("~0", "~")
     target = definitions.get(definition_name)
-    if not isinstance(target, dict):
+    if not is_str_keyed_dict(target):
         return None
-    return ref, cast(dict[str, object], target)
+    return ref, target
 
 
-def is_hex64_string_schema(mapping: dict[str, object]) -> bool:
+def is_hex64_string_schema(mapping: Mapping[str, object]) -> bool:
     """Recognize the direct JSON-schema shape of one lowercase Hex64 value."""
     return (
         mapping.get("type") == "string"
@@ -138,42 +139,41 @@ def is_hex64_string_schema(mapping: dict[str, object]) -> bool:
 
 
 def is_hex64_any_of_schema(
-    mapping: dict[str, object],
+    mapping: Mapping[str, object],
     *,
-    definitions: dict[str, object] | None = None,
+    definitions: Mapping[str, object] | None = None,
     _seen_refs: frozenset[str] = frozenset(),
 ) -> bool:
     """Search non-null branches of an optional JSON-schema value for Hex64."""
     any_of = mapping.get("anyOf")
-    if not isinstance(any_of, list):
+    if not is_object_list(any_of):
         return False
-    non_null_branches: list[dict[str, object]] = []
-    for item in cast(list[object], any_of):
-        if not isinstance(item, dict):
+    non_null_branches: list[Mapping[str, object]] = []
+    for item in any_of:
+        if not is_str_keyed_dict(item):
             return False
-        branch = cast(dict[str, object], item)
-        if branch.get("type") == "null":
+        if item.get("type") == "null":
             continue
-        non_null_branches.append(branch)
+        non_null_branches.append(item)
     return bool(non_null_branches) and all(
         is_hex64_shaped_schema(branch, definitions=definitions, _seen_refs=_seen_refs) for branch in non_null_branches
     )
 
 
 def is_hex64_items_schema(
-    mapping: dict[str, object],
+    mapping: Mapping[str, object],
     *,
-    definitions: dict[str, object] | None = None,
+    definitions: Mapping[str, object] | None = None,
     _seen_refs: frozenset[str] = frozenset(),
 ) -> bool:
     """Search a homogeneous tuple/array item schema for Hex64."""
     items = mapping.get("items")
-    if isinstance(items, dict):
-        return is_hex64_shaped_schema(cast(dict[str, object], items), definitions=definitions, _seen_refs=_seen_refs)
+    if is_str_keyed_dict(items):
+        return is_hex64_shaped_schema(items, definitions=definitions, _seen_refs=_seen_refs)
     return False
 
 
-def validate_credential_free_schema(schema: object, *, definitions: dict[str, object] | None = None) -> None:
+def validate_credential_free_schema(schema: object, *, definitions: Mapping[str, object] | None = None) -> None:
     """Reject request schemas capable of carrying credentials or transports.
 
     A field name matching ONLY the ``digest`` forbidden token (no other
@@ -187,41 +187,51 @@ def validate_credential_free_schema(schema: object, *, definitions: dict[str, ob
     root_document = definitions is None
     if definitions is None:
         definitions = {}
-    if isinstance(schema, list):
-        validate_credential_free_schema_items(cast(list[object], schema), definitions=definitions)
+    if is_object_list(schema):
+        validate_credential_free_schema_items(schema, definitions=definitions)
         return
-    if not isinstance(schema, dict):
+    if not is_object_dict(schema):
         return
-    mapping = cast(dict[str, object], schema)
+    # Every JSON object names its members with strings; a mapping that does not
+    # cannot be walked by name, so it is refused rather than skipped unread.
+    if not is_str_keyed_dict(schema):
+        raise ValueError("credential-free journal request schema has a non-string field name")
+    mapping = schema
     local_definitions = mapping.get("$defs")
-    if root_document and isinstance(local_definitions, dict):
-        definitions = cast(dict[str, object], local_definitions)
+    if root_document and is_str_keyed_dict(local_definitions):
+        definitions = local_definitions
     validate_credential_free_schema_format(mapping)
     validate_credential_free_schema_properties(mapping, definitions=definitions)
     for value in mapping.values():
         validate_credential_free_schema(value, definitions=definitions)
 
 
-def validate_credential_free_schema_items(items: list[object], *, definitions: dict[str, object] | None = None) -> None:
+def validate_credential_free_schema_items(
+    items: list[object], *, definitions: Mapping[str, object] | None = None
+) -> None:
     """Recursively inspect every branch in a JSON-schema list container."""
     for item in items:
         validate_credential_free_schema(item, definitions=definitions)
 
 
-def validate_credential_free_schema_format(mapping: dict[str, object]) -> None:
+def validate_credential_free_schema_format(mapping: Mapping[str, object]) -> None:
     """Reject schema formats that can carry credentials in journal input."""
     if mapping.get("format") in FORBIDDEN_OPERATION_SCHEMA_FORMATS:
         raise ValueError("credential-free journal request schema contains a secret-capable format")
 
 
 def validate_credential_free_schema_properties(
-    mapping: dict[str, object], *, definitions: dict[str, object] | None = None
+    mapping: Mapping[str, object], *, definitions: Mapping[str, object] | None = None
 ) -> None:
     """Reject forbidden names while admitting only digest-shaped exceptions."""
     properties = mapping.get("properties")
-    if not isinstance(properties, dict):
+    if not is_object_dict(properties):
         return
-    for field_name, field_schema in cast(dict[str, object], properties).items():
+    # A non-string property name cannot be token-matched against the forbidden
+    # set, so the tripwire refuses it rather than walking past it unexamined.
+    if not is_str_keyed_dict(properties):
+        raise ValueError("credential-free journal request schema has a non-string field name")
+    for field_name, field_schema in properties.items():
         parts = set(field_name.lower().replace("-", "_").split("_"))
         matched = parts & FORBIDDEN_CREDENTIAL_FREE_FIELD_PARTS
         if not matched:
@@ -234,6 +244,8 @@ def validate_credential_free_schema_properties(
 def strict_model_json_schema(model_type: type[BaseModel]) -> dict[str, object]:
     """Return one exact closed schema after enforcing the public model baseline."""
     require_strict_frozen_operation_model_graph(model_type, path="public schema")
+    validation_schema: object
+    serialization_schema: object
     try:
         validation_schema = model_type.model_json_schema(mode="validation")
         serialization_schema = model_type.model_json_schema(mode="serialization")
@@ -241,12 +253,14 @@ def strict_model_json_schema(model_type: type[BaseModel]) -> dict[str, object]:
         raise ValueError("public operation schema model must have a closed JSON schema") from error
     if validation_schema != serialization_schema:
         raise ValueError("public operation schema validation and serialization shapes must be identical")
-    closed_schema = cast(dict[str, object], validation_schema)
+    if not is_str_keyed_dict(validation_schema):
+        raise ValueError("public operation schema model must have a closed JSON schema")
+    closed_schema = validation_schema
     validate_closed_json_schema(closed_schema, path=model_type.__name__)
     return closed_schema
 
 
-def validate_closed_json_schema(schema: dict[str, object], *, path: str) -> None:
+def validate_closed_json_schema(schema: Mapping[str, object], *, path: str) -> None:
     """Refuse every untyped or open branch of one generated public schema."""
     reject_secret_capable_schema_branch(schema, path=path)
     validate_schema_definitions(schema, path=path)
@@ -265,83 +279,85 @@ def validate_closed_json_schema(schema: dict[str, object], *, path: str) -> None
         validate_closed_array_schema(schema, path=path)
 
 
-def reject_secret_capable_schema_branch(schema: dict[str, object], *, path: str) -> None:
+def reject_secret_capable_schema_branch(schema: Mapping[str, object], *, path: str) -> None:
     """Reject public schema branches that can carry opaque secrets."""
     if schema.get("format") in FORBIDDEN_OPERATION_SCHEMA_FORMATS or schema.get("writeOnly") is True:
         raise ValueError(f"public operation schema {path} contains a secret-capable branch")
 
 
-def validate_schema_definitions(schema: dict[str, object], *, path: str) -> None:
+def validate_schema_definitions(schema: Mapping[str, object], *, path: str) -> None:
     """Validate every named schema definition recursively."""
     definitions = schema.get("$defs")
-    if not isinstance(definitions, dict):
+    if not is_object_dict(definitions):
         return
-    for definition_name, definition in cast(dict[str, object], definitions).items():
-        if not isinstance(definition, dict):
+    if not is_str_keyed_dict(definitions):
+        raise ValueError(f"public operation schema {path} has an invalid definition")
+    for definition_name, definition in definitions.items():
+        if not is_str_keyed_dict(definition):
             raise ValueError(f"public operation schema {path} has an invalid definition")
         validate_closed_json_schema(
-            cast(dict[str, object], definition),
+            definition,
             path=f"{path}.$defs.{definition_name}",
         )
 
 
-def validate_schema_combinator(schema: dict[str, object], *, path: str) -> bool:
+def validate_schema_combinator(schema: Mapping[str, object], *, path: str) -> bool:
     """Validate the first declared JSON-schema combinator and its branches."""
     for combinator in ("anyOf", "oneOf", "allOf"):
         branches = schema.get(combinator)
         if branches is None:
             continue
-        if not isinstance(branches, list) or not branches:
+        if not is_object_list(branches) or not branches:
             raise ValueError(f"public operation schema {path} has an invalid {combinator}")
-        for index, branch in enumerate(cast(list[object], branches)):
-            if not isinstance(branch, dict):
+        for index, branch in enumerate(branches):
+            if not is_str_keyed_dict(branch):
                 raise ValueError(f"public operation schema {path} has an invalid {combinator} branch")
             validate_closed_json_schema(
-                cast(dict[str, object], branch),
+                branch,
                 path=f"{path}.{combinator}[{index}]",
             )
         return True
     return False
 
 
-def validate_closed_object_schema(schema: dict[str, object], *, path: str) -> None:
+def validate_closed_object_schema(schema: Mapping[str, object], *, path: str) -> None:
     """Require an object branch to enumerate and close every property."""
     if schema.get("additionalProperties") is not False:
         raise ValueError(f"public operation schema {path} contains an open object branch")
     properties = schema.get("properties", {})
-    if not isinstance(properties, dict):
+    if not is_str_keyed_dict(properties):
         raise ValueError(f"public operation schema {path} has invalid properties")
-    for field_name, field_schema in cast(dict[str, object], properties).items():
-        if not isinstance(field_schema, dict):
+    for field_name, field_schema in properties.items():
+        if not is_str_keyed_dict(field_schema):
             raise ValueError(f"public operation schema {path}.{field_name} is invalid")
         validate_closed_json_schema(
-            cast(dict[str, object], field_schema),
+            field_schema,
             path=f"{path}.{field_name}",
         )
 
 
-def validate_closed_array_schema(schema: dict[str, object], *, path: str) -> None:
+def validate_closed_array_schema(schema: Mapping[str, object], *, path: str) -> None:
     """Require a homogeneous array or a fully fixed tuple to be closed."""
     prefix_items = schema.get("prefixItems")
     if prefix_items is not None:
         validate_closed_tuple_schema(schema, prefix_items, path=path)
         return
     items = schema.get("items")
-    if not isinstance(items, dict):
+    if not is_str_keyed_dict(items):
         raise ValueError(f"public operation schema {path} contains an untyped array")
-    validate_closed_json_schema(cast(dict[str, object], items), path=f"{path}.items")
+    validate_closed_json_schema(items, path=f"{path}.items")
 
 
 def validate_closed_tuple_schema(
-    schema: dict[str, object],
+    schema: Mapping[str, object],
     prefix_items: object,
     *,
     path: str,
 ) -> None:
     """Require fixed tuple bounds and recursively validate each item."""
-    if not isinstance(prefix_items, list) or not prefix_items:
+    if not is_object_list(prefix_items) or not prefix_items:
         raise ValueError(f"public operation schema {path} has invalid fixed tuple items")
-    typed_prefix_items = cast(list[object], prefix_items)
+    typed_prefix_items = prefix_items
     item_count = len(typed_prefix_items)
     if schema.get("minItems") != item_count or schema.get("maxItems") != item_count:
         raise ValueError(f"public operation schema {path} contains an open fixed tuple")
@@ -349,10 +365,10 @@ def validate_closed_tuple_schema(
     if trailing_items is not None and trailing_items is not False:
         raise ValueError(f"public operation schema {path} permits undeclared trailing tuple items")
     for index, item in enumerate(typed_prefix_items):
-        if not isinstance(item, dict):
+        if not is_str_keyed_dict(item):
             raise ValueError(f"public operation schema {path} has an invalid fixed tuple item")
         validate_closed_json_schema(
-            cast(dict[str, object], item),
+            item,
             path=f"{path}.prefixItems[{index}]",
         )
 

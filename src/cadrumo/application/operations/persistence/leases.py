@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import StrEnum
-from typing import Literal, cast
+from typing import Literal
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -12,6 +12,7 @@ from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.hashing import content_hash_hex
 from ....core.hex import Hex64Str
 from ....core.identity.digest import ContentDigest
+from ....core.json_shapes import model_json_object
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.time.utc import validate_utc_aware
 from ..models import OperationId
@@ -84,7 +85,7 @@ class OperationOwnerLease(BaseModel):
 
 def _lease_payload(lease: OperationOwnerLease | None) -> dict[str, object] | None:
     """Project one lease into the fixed JSON shape used for evidence identities."""
-    return None if lease is None else cast(dict[str, object], lease.model_dump(mode="json"))
+    return None if lease is None else model_json_object(lease)
 
 
 def _validate_evidence_ref(*, supplied: ContentDigest, expected: ContentDigest) -> None:
