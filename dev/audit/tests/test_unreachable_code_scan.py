@@ -14,18 +14,36 @@ from dev._paths import REPO_ROOT
 
 from ..unreachable_code import ModuleReach, UnreachableCodeOutcome, run_unreachable_code_scan
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
+# One real scan walks every shipped, test and tooling module; the ceiling is the
+# one the sibling whole-tree scans carry, not the per-unit-test default.
+pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.timeout(900)]
 
 _REPO_ROOT = REPO_ROOT
 
 
-def test_real_scan_over_the_tree_returns_a_typed_outcome_with_real_findings() -> None:
+def test_real_scan_over_the_tree_returns_a_typed_outcome_with_real_findings(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
     """A real scan classifies to CLEAN or FINDINGS, never a crash, and names real paths.
 
     No self-skip on a clean tree (forbidden by ``test_no_skip_xfail``): both
     branches are asserted inside one test, matching the vulture gate.
+
+    The same scan also proves the reference walk read every file. If that ever
+    fails, the findings were computed over a corpus missing the named files, and
+    the run should be repeated rather than acted on.
     """
     result = run_unreachable_code_scan(_REPO_ROOT)
+
+    # The absence claim below is satisfied by an EMPTY stderr, so a scan that
+    # read nothing at all - a mis-resolved root, a walk that short-circuits -
+    # reports exactly as clean as a healthy one. The result carries how much
+    # was actually walked and was discarded. Floors, not pinned counts: live
+    # the scan sees 2,108 shipped modules across 4 roots.
+    assert result.roots, result
+    assert result.shipped_modules > 1500, result.shipped_modules
+    assert result.reachable_modules > 1500, result.reachable_modules
+    assert "were unreadable during the reference walk" not in capsys.readouterr().err
 
     assert result.outcome in {UnreachableCodeOutcome.CLEAN, UnreachableCodeOutcome.FINDINGS}, result.reason
     assert result.headline()

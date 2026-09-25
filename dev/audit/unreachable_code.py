@@ -80,6 +80,7 @@ import re
 import sys
 from collections import deque
 from collections.abc import Iterable, Iterator, Mapping
+from contextvars import ContextVar
 from dataclasses import dataclass, field
 from enum import StrEnum
 from pathlib import Path
@@ -652,9 +653,44 @@ def iter_python_files(root: Path) -> Iterator[Path]:
             yield path
 
 
+@dataclass
+class _ScanMemo:
+    """Parses and node walks shared by every pass of one scan.
+
+    The passes read the same few thousand trees independently, and each used to
+    re-parse and re-walk them, which made one scan minutes of repeated work. The
+    memo lives only for one :func:`scan_unreachable_code` call, so a file edited
+    between scans is read afresh. Trees are never mutated, so sharing is safe.
+    """
+
+    trees: dict[Path, ast.Module] = field(default_factory=dict)
+    walks: dict[int, tuple[ast.AST, tuple[ast.AST, ...]]] = field(default_factory=dict)
+
+
+_SCAN_MEMO: ContextVar[_ScanMemo | None] = ContextVar("unreachable_code_scan_memo", default=None)
+
+
+def _walked(tree: ast.AST) -> Iterable[ast.AST]:
+    """Every node under ``tree`` in ``ast.walk`` order, walked once per scan."""
+    memo = _SCAN_MEMO.get()
+    if memo is None:
+        return ast.walk(tree)
+    entry = memo.walks.get(id(tree))
+    if entry is None or entry[0] is not tree:
+        entry = (tree, tuple(ast.walk(tree)))
+        memo.walks[id(tree)] = entry
+    return entry[1]
+
+
 def parse_module(path: Path) -> ast.Module:
-    """Parse one source file into a module tree."""
-    return ast.parse(path.read_text(encoding=_UTF_8), filename=str(path))
+    """Parse one source file into a module tree, once per scan."""
+    memo = _SCAN_MEMO.get()
+    if memo is not None and (cached := memo.trees.get(path)) is not None:
+        return cached
+    tree = ast.parse(path.read_text(encoding=_UTF_8), filename=str(path))
+    if memo is not None:
+        memo.trees[path] = tree
+    return tree
 
 
 def is_module_execution_surface(path: Path) -> bool:
@@ -771,7 +807,7 @@ def _spawn_edges(module: ShippedModule, known: frozenset[str]) -> frozenset[str]
     for any other reason draws nothing, because the flag will be absent.
     """
     literals = {
-        node.value for node in ast.walk(module.tree) if isinstance(node, ast.Constant) and isinstance(node.value, str)
+        node.value for node in _walked(module.tree) if isinstance(node, ast.Constant) and isinstance(node.value, str)
     }
     if _MODULE_EXEC_FLAG not in literals:
         return frozenset[str]()
@@ -788,7 +824,7 @@ def module_edges(module: ShippedModule, known: frozenset[str]) -> tuple[frozense
     guarded = type_checking_guarded_nodes(module.tree)
     runtime: set[str] = set()
     type_only: set[str] = set()
-    for node in ast.walk(module.tree):
+    for node in _walked(module.tree):
         targets: list[str] = []
         if isinstance(node, ast.Import):
             for alias in node.names:
@@ -865,7 +901,7 @@ def non_reference_nodes(tree: ast.Module) -> set[int]:
             targets = node.targets if isinstance(node, ast.Assign) else [node.target]
             if any(isinstance(t, ast.Name) and t.id == "__all__" for t in targets):
                 skipped.update(id(child) for child in ast.walk(node))
-    for node in ast.walk(tree):
+    for node in _walked(tree):
         # A bare string expression statement is a docstring or commented-out
         # prose; it is never an expression whose value anything consumes.
         if isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
@@ -901,7 +937,7 @@ def assembled_reference_names(tree: ast.Module) -> Iterator[str]:
     command leaf, so prose and dotted paths are excluded.
     """
     prefixes: set[str] = set()
-    for node in ast.walk(tree):
+    for node in _walked(tree):
         if not isinstance(node, ast.JoinedStr) or not node.values:
             continue
         head = node.values[0]
@@ -916,7 +952,7 @@ def assembled_reference_names(tree: ast.Module) -> Iterator[str]:
     # strippers are read; they are total functions of the literal they apply to,
     # so the derived name is exact rather than guessed.
     strippers: list[tuple[str, str]] = []
-    for node in ast.walk(tree):
+    for node in _walked(tree):
         if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Attribute):
             continue
         if node.func.attr not in {"removeprefix", "removesuffix"} or len(node.args) != 1:
@@ -928,7 +964,7 @@ def assembled_reference_names(tree: ast.Module) -> Iterator[str]:
         return
     tokens = {
         node.value
-        for node in ast.walk(tree)
+        for node in _walked(tree)
         if isinstance(node, ast.Constant) and isinstance(node.value, str) and _COMMAND_TOKEN.fullmatch(node.value)
     }
     for prefix in prefixes:
@@ -988,7 +1024,7 @@ def _type_position_strings(tree: ast.Module) -> Iterator[str]:
     Two positions are unambiguous: the first argument of a ``cast`` call, and
     an annotation written as a string literal.
     """
-    for node in ast.walk(tree):
+    for node in _walked(tree):
         if isinstance(node, ast.Call) and node.args:
             func = node.func
             name = func.attr if isinstance(func, ast.Attribute) else getattr(func, "id", None)
@@ -1009,7 +1045,7 @@ def _references(tree: ast.Module) -> set[str]:
     """Every bare identifier the module loads, accesses, keywords, imports, or spells."""
     skipped = non_reference_nodes(tree)
     names: set[str] = set()
-    for node in ast.walk(tree):
+    for node in _walked(tree):
         if id(node) in skipped:
             continue
         if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load):
@@ -1154,7 +1190,7 @@ def _collection_uses(tree: ast.Module) -> set[str]:
         if isinstance(node, ast.Name):
             names.add(node.id)
 
-    for node in ast.walk(tree):
+    for node in _walked(tree):
         if isinstance(node, ast.Call):
             note(node.func)
             for arg in node.args:
@@ -1229,7 +1265,7 @@ def _import_aliases(module: ShippedModule, known: frozenset[str]) -> dict[str, s
     importing module's own position, so a package-relative alias is not lost.
     """
     aliases: dict[str, str] = {}
-    for node in ast.walk(module.tree):
+    for node in _walked(module.tree):
         if isinstance(node, ast.Import):
             for alias in node.names:
                 if alias.name in known:
@@ -1254,14 +1290,14 @@ def resolved_symbol_uses(module: ShippedModule, known: frozenset[str]) -> set[tu
     it says nothing about which module defined the name.
     """
     uses: set[tuple[str, str]] = set()
-    for node in ast.walk(module.tree):
+    for node in _walked(module.tree):
         if isinstance(node, ast.ImportFrom):
             base = resolve_relative_import(module.name, module.is_package, node.level, node.module)
             if base in known:
                 uses.update((base, alias.name) for alias in node.names)
     aliases = _import_aliases(module, known)
     if aliases:
-        for node in ast.walk(module.tree):
+        for node in _walked(module.tree):
             if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name):
                 owner = aliases.get(node.value.id)
                 if owner is not None:
@@ -1277,7 +1313,7 @@ def _string_tokens(tree: ast.Module) -> set[str]:
     """
     skipped = non_reference_nodes(tree)
     tokens: set[str] = set()
-    for node in ast.walk(tree):
+    for node in _walked(tree):
         if id(node) in skipped:
             continue
         if isinstance(node, ast.Constant) and isinstance(node.value, str):
@@ -1627,7 +1663,7 @@ def _test_subjects(test: ShippedModule, known: frozenset[str]) -> tuple[frozense
     """Return ``(module subjects, (module, name) symbol subjects)`` a test imports from the shipped tree."""
     modules: set[str] = set()
     symbols: set[tuple[str, str]] = set()
-    for node in ast.walk(test.tree):
+    for node in _walked(test.tree):
         if isinstance(node, ast.Import):
             modules.update(alias.name for alias in node.names if alias.name in known)
         elif isinstance(node, ast.ImportFrom):
@@ -1664,7 +1700,7 @@ def _support_hop_subjects(
     """
     reached_modules: set[str] = set()
     reached_symbols: set[tuple[str, str]] = set()
-    for node in ast.walk(test.tree):
+    for node in _walked(test.tree):
         if not isinstance(node, ast.ImportFrom):
             continue
         base = resolve_relative_import(test.name, test.is_package, node.level, node.module)
@@ -1748,6 +1784,14 @@ def _test_findings(
 
 def scan_unreachable_code(spec: ShippedTreeSpec) -> UnreachableCodeResult:
     """Run the two-layer reachability scan over the tree ``spec`` describes."""
+    token = _SCAN_MEMO.set(_ScanMemo())
+    try:
+        return _scan_with_memo(spec)
+    finally:
+        _SCAN_MEMO.reset(token)
+
+
+def _scan_with_memo(spec: ShippedTreeSpec) -> UnreachableCodeResult:
     try:
         modules = shipped_modules(spec)
     except SyntaxError as exc:
