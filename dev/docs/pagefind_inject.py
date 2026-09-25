@@ -83,7 +83,15 @@ class InjectionStats:
     legal_provisions: int = 0
     cli_commands: int = 0
     cli_options: int = 0
+    #: Index entries actually written. One per reachable DESTINATION, not one
+    #: per projected record: records sharing a destination are merged into a
+    #: single Pagefind custom record (see :func:`_index_entries`).
     custom_records_written: int = 0
+    #: Projected records folded into an entry owned by another record. The
+    #: difference between the corpus size and the entries written is reported
+    #: rather than left implicit, so a build never claims more index entries
+    #: than the shipped index holds.
+    records_sharing_a_destination: int = 0
     languages: tuple[str, ...] = ()
     cli_skipped_reason: str | None = None
     relevance_boosts_applied: int = 0
@@ -430,6 +438,103 @@ def _filters_for(record: SearchRecord) -> dict[str, list[str]]:
     return filters
 
 
+@dataclass(frozen=True)
+class _IndexEntry:
+    """One Pagefind custom record: the destination and every record reaching it.
+
+    Pagefind identifies a custom record by its ``url``, so two records sharing a
+    destination are ONE index entry. ``primary`` is the record that owns the
+    destination; ``members`` is every record whose searchable text belongs to
+    it, ``primary`` first.
+    """
+
+    primary: SearchRecord
+    members: tuple[SearchRecord, ...]
+    weight: float
+
+
+def _group_content(members: tuple[SearchRecord, ...]) -> str:
+    """Build the searchable content for every record sharing one destination.
+
+    Each member contributes its own cross-lingual blob; identical lines are kept
+    once so a shared title or description is not repeated per member.
+    """
+    seen: set[str] = set()
+    unique: list[str] = []
+    for member in members:
+        for part in _content_for(member).split("\n"):
+            if part and part not in seen:
+                seen.add(part)
+                unique.append(part)
+    return "\n".join(unique)
+
+
+def _group_filters(members: tuple[SearchRecord, ...]) -> dict[str, list[str]]:
+    """Union the members' filter values so the palette narrows to every one of them."""
+    filters: dict[str, list[str]] = {}
+    for member in members:
+        for axis, values in _filters_for(member).items():
+            existing = filters.setdefault(axis, [])
+            for value in values:
+                if value not in existing:
+                    existing.append(value)
+    return filters
+
+
+def _index_entries(
+    records: list[SearchRecord],
+    relevance: dict[str, float],
+) -> list[_IndexEntry]:
+    """Collapse records that deep-link to the same destination into one entry each.
+
+    A CLI option renders inside its owning command's reference section and
+    therefore carries that command's anchor as its target (the shared-anchor
+    contract :class:`~dev.docs.terminology.cli_projection.CliOptionRecord`
+    declares). Handing Pagefind one custom record per projected record then
+    wrote several records under one ``url``: the indexer keeps the LAST one, so
+    every command record in the corpus was overwritten by whichever of its
+    options happened to be injected last -- the command's own help text became
+    unsearchable, its card rendered the option's title, and the 966 options that
+    lost the race never reached the index at all while the stats reported them
+    written.
+
+    Grouping by destination makes the collapse explicit and lossless instead:
+    one entry per reachable destination, carrying the searchable text of every
+    record that deep-links there. The reader's palette already dedupes results
+    by href, so a separate entry per option could never have rendered a second
+    row anyway; what it owes the reader is RECALL, and the merged content is
+    what delivers it.
+
+    The primary -- the record whose identity, title, and meta the entry carries
+    -- is the first record projected for that destination. The projections emit
+    a destination's own record before any record that deep-links into it
+    (:func:`_materialise_records` appends commands before options), so the
+    primary is the command, not one of its options.
+
+    The entry's weight is the GREATEST effective weight among its members: a
+    strongly relevant option must still float its command's card, and a member
+    can only ever raise the destination it shares.
+    """
+    order: list[str] = []
+    grouped: dict[str, list[SearchRecord]] = {}
+    for record in records:
+        if record.target not in grouped:
+            grouped[record.target] = []
+            order.append(record.target)
+        grouped[record.target].append(record)
+    entries: list[_IndexEntry] = []
+    for target in order:
+        members = tuple(grouped[target])
+        entries.append(
+            _IndexEntry(
+                primary=members[0],
+                members=members,
+                weight=max(_effective_weight(member, relevance) for member in members),
+            ),
+        )
+    return entries
+
+
 async def _inject_records(
     index: PagefindIndex,
     materialised: _Materialised,
@@ -437,26 +542,24 @@ async def _inject_records(
     language: OutputLanguage = _DEFAULT_INJECTION_LANGUAGE,
 ) -> InjectionStats:
     written = 0
-    boosts = 0
     languages: set[str] = set()
-    for record in materialised.records:
-        weight = _effective_weight(record, relevance)
-        if record.id in relevance:
-            boosts += 1
-        meta = _meta_for(record, weight, language)
-        filters = _filters_for(record)
-        sort = {"weight": _sort_key(weight)}
+    entries = _index_entries(materialised.records, relevance)
+    boosts = sum(1 for record in materialised.records if record.id in relevance)
+    for entry in entries:
+        meta = _meta_for(entry.primary, entry.weight, language)
+        filters = _group_filters(entry.members)
+        sort = {"weight": _sort_key(entry.weight)}
         # Inject once, into the index this ROOT's pages are indexed under -- the
         # only index the reader's palette loads -- with content carrying every
         # language's description, so the record is reachable from this root's
         # pages and still matchable by the Spanish term and the other-language
         # forms.
-        content = _content_for(record)
+        content = _group_content(entry.members)
         if not content:
             continue
         # Sequential: the indexer drops records added concurrently to one index.
         await index.add_custom_record(
-            url=record.target,
+            url=entry.primary.target,
             content=content,
             language=language.value,
             meta=meta,
@@ -472,6 +575,7 @@ async def _inject_records(
         cli_commands=materialised.cli_commands,
         cli_options=materialised.cli_options,
         custom_records_written=written,
+        records_sharing_a_destination=len(materialised.records) - len(entries),
         languages=tuple(sorted(languages)),
         cli_skipped_reason=materialised.cli_skipped_reason,
         relevance_boosts_applied=boosts,
