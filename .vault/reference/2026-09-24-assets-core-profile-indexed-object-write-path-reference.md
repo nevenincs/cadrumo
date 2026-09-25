@@ -5,7 +5,7 @@ tags:
 date: '2026-09-24'
 modified: '2026-09-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:1217883334450aed1cec8bdd95c6d46ce779d511b067230db935682fd6a6800d'
+body_hash: 'sha256:c45368419091a7a6881337cbab2e6fadcac6b0f122d212cca1a9ca9eec2cd51f'
 related:
   - "[[2026-09-23-assets-core-plan]]"
 ---

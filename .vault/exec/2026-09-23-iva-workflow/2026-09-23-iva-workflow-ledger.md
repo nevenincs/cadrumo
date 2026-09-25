@@ -5,40 +5,15 @@ tags:
 date: '2026-09-23'
 modified: '2026-09-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:4e1f70ec304126fd70917938a8cc48fa8af4339d34df76fffc0019dc3ea5c296'
+body_hash: 'sha256:589f28c76668b17099d724c630146b13a1316fa49b77b9c8da77123e8952e66c'
 related:
   - "[[2026-09-23-iva-workflow-plan]]"
 ---
-
-<!-- Machine-owned, whole file: `vaultspec-core vault exec log` creates it
-     on first use and appends every row; never hand-edit it. Add no
-     frontmatter fields. Wiki-links belong in `related:` only.
-
-     ONE ledger per plan, the only execution artifact. Each row's first
-     column names its Step. -->
 
 # `iva-workflow` ledger
 
 ## Changes
 
-<!-- MECHANICAL LOG, append-only, one row per path touched per Step, written
-     by `--row`:
-       - `S##` `A` `path`   added
-       - `S##` `M` `path`   modified
-       - `S##` `D` `path`   deleted
-       - `S##` `R` `old` -> `new`   renamed
-     Paths are repo-relative, in backticks. No prose: the Step row states the
-     intent and the commit carries the diff.
-
-     Optional per-Step rows, written by `--verify` and `--by`:
-       - `S##` `verify:` `<command>` -> `pass` | `fail`
-       - `S##` `by:` `<persona>`
-
-     Rows are appended in Step order and never rewritten. Only rows in this
-     section register a Step as covered. `--note` adds a `## Notes` section
-     ONLY on exception (data loss, skipped work, a scaffold left in code, a
-     persistent failure), one `S##`-prefixed line each; it is otherwise
-     omitted. -->
 - `S01` `M` `src/cadrumo/domain/modelos/calculation_revision_m303_handoff.py`
 - `S01` `M` `src/cadrumo/application/filing/producer_snapshot.py`
 - `S01` `M` `src/cadrumo/application/filing/export_producer.py`
@@ -131,4 +106,3 @@ related:
 - `S05` Whether a period asks the Modelo 390 exemption is a governed fact; the overview first called it outside a pinned scope, which raises in the real TUI. The lifecycle door now resolves it under the pinned authority.
 - `S07` committed 12ede7d99d
 - `S06` fixes found by earlier attempts landed in ba73e0945f, 9ea5028fa4, 0e46b2a89a, 70fdb5c85b; notice-delivery intermittent seen 2 of 5 runs remains open
-

@@ -115,4 +115,3 @@ related:
 - `S10` target canonical import gate exit 7: external findings and concurrent source drift; no PROFILE-01 finding
 - `S10` stable repository gates at snapshot 1f0761810f remain red; classified external findings pending owners
 - `S10` stable snapshot at 1f0761810f: repository style/format/types/import remain red under assigned owner packets
-

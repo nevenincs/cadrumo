@@ -5,7 +5,7 @@ tags:
 date: '2026-09-24'
 modified: '2026-09-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:d2eae0c43b35c9ef96dad39466b0f78d8000f3a7282f8697b45d3cd71266aa38'
+body_hash: 'sha256:9a966672e91205f6c19908f595ddd360a9b26a534faedffef651b618d43b8839'
 related:
   - "[[2026-09-24-assets-core-profile-indexed-object-write-path-reference]]"
   - "[[2026-09-23-assets-core-amortization-method-set-adr]]"
