@@ -30,3 +30,15 @@ legal_refs = ["orden-eha-3481-2008:art-5"]
 # the field is required, and naming a document that does state the plazo is
 # better than naming a guidance page that does not.
 source_refs = ["boe-modelo-189-base-order"]
+
+# The export surface this edition's fichero is emitted through. Declared when
+# the export layout landed: a layout without an export link is a record design
+# the application has no route to write.
+
+[[revisions."2023".application_links]]
+id = "modelo-189-export"
+surface = "export"
+consumer = "cadrumo.application.filing"
+requires_snapshot = true
+legal_refs = ["orden-eha-3481-2008:art-1", "orden-hfp-1180-2023:art-primero", "orden-hfp-1284-2023:art-11"]
+source_refs = ["boe-modelo-189-base-order", "boe-modelo-189-2023-amendment-hfp-1180", "boe-modelo-189-2023-amendment-hfp-1284", "aeat-dr-189-2023", "aeat-modelo-189-procedure"]
