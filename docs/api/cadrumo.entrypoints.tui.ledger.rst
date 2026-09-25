@@ -25,7 +25,6 @@ Submodules
    cadrumo.entrypoints.tui.ledger.models_actividad_asset
    cadrumo.entrypoints.tui.ledger.overview
    cadrumo.entrypoints.tui.ledger.reconciliation
-   cadrumo.entrypoints.tui.ledger.record_doors
    cadrumo.entrypoints.tui.ledger.record_views
    cadrumo.entrypoints.tui.ledger.review
    cadrumo.entrypoints.tui.ledger.routes
