@@ -427,11 +427,17 @@ check-dependency-vulnerabilities:
 
 # Same semgrep invocation as the correctness workflow's blocking scan
 # (`--error` fails on any finding), scoped to what changed since BASE via
-# `--baseline-commit`.
-[doc('Run the blocking semgrep scan scoped to the diff since BASE; read-only.')]
+# `--baseline-commit`. Semgrep implements `--baseline-commit` with
+# `git reset --hard`, so the scan runs in a throwaway detached worktree
+# instead of the caller's tree: nothing here is reset, staged, or otherwise
+# mutated, and the scratch worktree is always removed afterward.
+# Uses the same pre-toolchain, stdlib-only invocation as `init`/`setup`: the
+# CI gate job runs this before its "Set up toolchain" step, so no synced
+# project environment is assumed to exist yet.
+[doc('Run the blocking semgrep scan scoped to the diff since BASE, in a scratch worktree; read-only.')]
 [group('check')]
 check-security-diff base="origin/main":
-    @uvx --from semgrep==1.168.0 semgrep --config .semgrep/rules/ --error src/cadrumo/ --baseline-commit $(git merge-base {{base}} HEAD)
+    @uv run --isolated --no-project --python 3.13.11 -- python -m dev.ci.security_diff_scan {{base}}
 
 [doc('Run the blocking semgrep scan against the full source tree; read-only.')]
 [group('check')]

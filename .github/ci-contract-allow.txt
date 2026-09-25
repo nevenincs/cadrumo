@@ -21,6 +21,9 @@ release-please.yml:Dispatch release publication
 release-please.yml:Refuse a deadlocked release state
 release.yml:Require every prove job to succeed
 release.yml:Locate the successful prove run for this version and commit
+# Resolves which commit to check out, so it runs before any checkout exists and
+# a recipe cannot be reached; it only reads commit and compare state via `gh`.
+release.yml:Resolve the documented commit
 release.yml:Require the tap token
 release.yml:Require the bucket repository and token
 release.yml:Stage the formula unless the tap already serves it
