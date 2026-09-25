@@ -134,6 +134,10 @@ class RecordDesignIntermediateField(_StrictModel):
     normalized_description: str = Field(min_length=1)
     validation: str | None = None
     content: str | None = None
+    #: Mirrors :attr:`RecordDesignField.content_in_contenido_column`. Left out
+    #: of serialised provenance while false, so fields whose content was never
+    #: located in a printed Contenido column serialise exactly as before.
+    content_in_contenido_column: bool = Field(default=False, exclude_if=lambda value: not value)
 
 
 class RecordDesignIntermediateAuxiliaryEnvelopeHeaderField(_StrictModel):
@@ -393,6 +397,7 @@ def _intermediate_sheet(
                 normalized_description=field.description,
                 validation=field.validation,
                 content=field.content,
+                content_in_contenido_column=field.content_in_contenido_column,
             )
             for field in _wire_positions(sheet.fields)
         ),
@@ -459,6 +464,7 @@ def _intermediate_variable_envelope(
                 normalized_description=field.description,
                 validation=field.validation,
                 content=field.content,
+                content_in_contenido_column=field.content_in_contenido_column,
             )
             for field in envelope.prefix_fields
         ),
@@ -508,6 +514,7 @@ def _intermediate_auxiliary_envelope_header(
                     normalized_description=item.field.description,
                     validation=item.field.validation,
                     content=item.field.content,
+                    content_in_contenido_column=item.field.content_in_contenido_column,
                 ),
             )
             for item in header.fields

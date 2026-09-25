@@ -155,5 +155,7 @@ def test_modelo_360_constants_come_from_the_contenido_column() -> None:
         ("Identificador de fin de registro.", "obligatorio", "</T360020>"),
     ]
     assert fields["Pág. 1", "3"].content == "000100"
+    assert fields["Pág. 1", "3"].content_in_contenido_column
+    assert not fields["Pág. 1", "12"].content_in_contenido_column
     assert fields["Pág. 1", "114"].content == '"A" Solicitante "R" Representante'
     assert not [key for key, field in fields.items() if "obligatorio" in field.description]

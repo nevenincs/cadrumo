@@ -406,6 +406,7 @@ def apply_pdf_column_cells(
                     "description": join_pdf_parts([*row.lead, *row.description]),
                     "validation": join_pdf_parts(list(row.validation)) or None,
                     "content": join_pdf_parts(list(row.content)) or None,
+                    "content_in_contenido_column": bool(row.content),
                 },
             )
         if replacements:

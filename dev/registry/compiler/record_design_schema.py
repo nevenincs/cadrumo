@@ -65,6 +65,11 @@ class RecordDesignField(RegistryModel):
     description: str
     validation: str | None = None
     content: str | None = None
+    #: Whether ``content`` was read from the design's own printed Contenido
+    #: column -- a PDF table cell located by page geometry -- rather than from
+    #: text the line parser attributed to the field. Only then is ``content``
+    #: known to be the cell AEAT filled and nothing else.
+    content_in_contenido_column: bool = False
     #: Sub-fields AEAT desglosa (breaks out) from this field's own printed span,
     #: e.g. Modelo 576's ``19.1``..``19.8`` under parent ordinal ``19``.
     #:

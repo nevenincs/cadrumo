@@ -1445,6 +1445,67 @@ def test_renderer_refuses_missing_or_ambiguous_official_literal_without_output(
     assert not target.exists()
 
 
+def _intermediate_with_first_content(content: str, *, in_contenido_column: bool):
+    intermediate = _intermediate()
+    first_sheet = intermediate.sheets[0]
+    first_field = first_sheet.fields[0].model_copy(
+        update={"content": content, "content_in_contenido_column": in_contenido_column},
+    )
+    return intermediate.model_copy(
+        update={
+            "sheets": (
+                first_sheet.model_copy(update={"fields": (first_field, *first_sheet.fields[1:])}),
+                *intermediate.sheets[1:],
+            ),
+        },
+    )
+
+
+def test_bare_constant_is_the_literal_only_when_it_fills_the_printed_contenido_column(tmp_path) -> None:
+    """A lone unlabelled token states the constant when the reader located it in the Contenido cell."""
+    semantic_map = _semantic_map()
+    tree = render_complete_export_tree(
+        _write_modelo_shell(tmp_path / "modelos" / "130") / "export",
+        revision_id="2025",
+        joined=join_record_design_semantics(
+            semantic_map,
+            _intermediate_with_first_content("<T", in_contenido_column=True),
+            _m130_inspection(),
+        ),
+        semantic_map=semantic_map,
+        transport_profile=_profile(),
+        render_profile=_wire_profile(),
+        render_profile_source_evidence=_wire_evidence(),
+    )
+
+    assert tree.field_derivations[0].derivation_code == "literal-exact-v1"
+
+
+@pytest.mark.parametrize("official_content", ("<T", '"<T" "ZZ"', "<T ZZ"))
+def test_bare_constant_not_proven_in_the_contenido_column_is_refused(tmp_path, official_content: str) -> None:
+    """The same token as text merely attributed to the field, or a multi-token cell, is no constant."""
+    in_column = official_content != "<T"
+    semantic_map = _semantic_map()
+    target = tmp_path / "export"
+
+    with pytest.raises(RegistryValidationError, match="ambiguous official constant"):
+        render_complete_export_tree(
+            target,
+            revision_id="2025",
+            joined=join_record_design_semantics(
+                semantic_map,
+                _intermediate_with_first_content(official_content, in_contenido_column=in_column),
+                _m130_inspection(),
+            ),
+            semantic_map=semantic_map,
+            transport_profile=_profile(),
+            render_profile=_wire_profile(),
+            render_profile_source_evidence=_wire_evidence(),
+        )
+
+    assert not target.exists()
+
+
 def test_labelled_official_literal_accepts_the_m184_sentence_stop_but_not_an_alternative() -> None:
     """M184 2025 prints the constant before a merged explanatory sentence."""
     labelled = _export_tree._OFFICIAL_LABELLED_LITERAL_RE.fullmatch(
