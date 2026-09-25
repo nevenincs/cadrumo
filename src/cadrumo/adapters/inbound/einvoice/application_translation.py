@@ -68,6 +68,7 @@ def translate_parsed_einvoice(parsed: ParsedEInvoice) -> StructuredInvoiceRecord
             for line in parsed.lines
         ),
         iva_breakdown=tuple(parsed.iva_breakdown),
+        element_paths=dict(parsed.element_paths),
     )
 
 

@@ -8,10 +8,12 @@ syntax-neutral in-memory records before it crosses into the application.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import StrEnum
-from typing import Protocol
+from types import MappingProxyType
+from typing import Final, Protocol
 
 from ...core.document_shape import DocumentShape
 
@@ -44,6 +46,12 @@ class StructuredInvoiceLine:
     iva_amount: Decimal | None
 
 
+#: The location report of a reader whose fields all sit where the format fixes
+#: them. Read-only so one shared default cannot be mutated into another record's
+#: report.
+_NO_ELEMENT_PATHS: Final[Mapping[str, str]] = MappingProxyType[str, str]({})
+
+
 @dataclass(frozen=True, slots=True)
 class StructuredInvoiceRecord:
     """The structured-record facts consumed by ledger extraction."""
@@ -74,6 +82,12 @@ class StructuredInvoiceRecord:
     record_text: str
     lines: tuple[StructuredInvoiceLine, ...]
     iva_breakdown: tuple[tuple[Decimal | None, Decimal | None, Decimal | None], ...]
+    #: Where a field was read from, keyed by field name, for the fields whose
+    #: location the document shape alone does not settle. A reader supplies an
+    #: entry only when the format offers alternative elements for the same fact;
+    #: provenance falls back to the per-shape location otherwise. An absent entry
+    #: therefore means "the usual place", never "unknown".
+    element_paths: Mapping[str, str] = _NO_ELEMENT_PATHS
 
 
 class StructuredInvoiceReader(Protocol):

@@ -732,10 +732,21 @@ _STATED_COUNTRY_FIELDS: Final[tuple[tuple[str, str], ...]] = (
 )
 
 
-def _structured_element_path(field: str, *, shape: DocumentShape) -> str:
-    """Return where in the record *field* was read from, for the operator's note."""
-    known = _STRUCTURED_ELEMENT_PATHS.get(field, {}).get(shape)
-    return known if known is not None else f"the {shape.value} record's {field}"
+def _structured_element_path(field: str, *, record: StructuredInvoiceRecord) -> str:
+    """Return where in the record *field* was read from, for the operator's note.
+
+    The reader's own report wins over the per-shape table. The table can only
+    name one location per shape, which is correct wherever a format states a
+    fact in exactly one element and wrong wherever it offers alternatives: a
+    Facturae party states its country in its Spanish address block or in its
+    overseas one, and naming the wrong one sends an operator to an element the
+    document does not contain.
+    """
+    stated = record.element_paths.get(field)
+    if stated is not None:
+        return stated
+    known = _STRUCTURED_ELEMENT_PATHS.get(field, {}).get(record.shape)
+    return known if known is not None else f"the {record.shape.value} record's {field}"
 
 
 def structured_provenance(
@@ -761,7 +772,7 @@ def structured_provenance(
             ground_structured_value(
                 field=field,
                 value=value,
-                element_path=_structured_element_path(field, shape=parsed.shape),
+                element_path=_structured_element_path(field, record=parsed),
                 source_text=source_text,
             ),
         )
@@ -773,7 +784,7 @@ def structured_provenance(
             ground_structured_value(
                 field=stated_field,
                 value=stated,
-                element_path=_structured_element_path(resolved_field, shape=parsed.shape),
+                element_path=_structured_element_path(resolved_field, record=parsed),
                 source_text=source_text,
             ),
         )
@@ -787,7 +798,7 @@ def structured_provenance(
                 value=value,
                 anchor=stated,
                 derive=lambda value: country_code_for_stated_country_code(value, operation=operation),
-                element_path=_structured_element_path(field, shape=parsed.shape),
+                element_path=_structured_element_path(field, record=parsed),
                 source_text=source_text,
             ),
         )

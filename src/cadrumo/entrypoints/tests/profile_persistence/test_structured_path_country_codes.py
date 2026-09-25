@@ -623,27 +623,23 @@ class TestTheStructuredPathOpensThePostalRung:
             assert resolved.rung is None
 
 
-class TestTheOverseasAddressIsNotConsulted:
-    """The one Facturae address block this reader deliberately does not read.
+class TestTheOverseasAddressIsRead:
+    """Either Facturae address block states the party's country, and both are read.
 
     Facturae states a party's address in one of two mutually exclusive blocks:
     ``AddressInSpain`` for a party established here, ``OverseasAddress`` for one
-    established abroad. The reader consults only the first, and the reasoning is
-    sound -- a party established abroad has no Spanish IVA territory to resolve,
-    and the overseas block states its code jointly with the town
-    (``PostCodeAndTown``), which is a composite this reader is forbidden to split
-    because splitting it would be an inference rather than a read.
+    established abroad. Both name the country through the same ``CountryCode``
+    element, so a reader opening only the first recovers no country from exactly
+    the documents whose country decides the treatment -- a foreign-established
+    counterparty would state France and resolve no territory at all.
 
-    **The reasoning was sound and untested, which is the gap this closes.** It
-    lived in a docstring one line from the walk it justifies, and a reader who
-    does not open that file sees only a country element the parser ignores. The
-    consequence is live rather than theoretical: a foreign-established
-    counterparty states its country in that block, so the ladder exhausts on a
-    document that plainly names France.
-
-    **These assert a GAP, not a contract.** They are expected to fail the day the
-    overseas block is read, and that failure is the notification. Replace them
-    with gates asserting the rung now fires; never relax them.
+    The postal code is asymmetric on purpose, and that is a property of the
+    format rather than a remaining gap: ``OverseasAddress`` has no element
+    corresponding to ``PostCode``. It states the code jointly with the town as
+    ``PostCodeAndTown``, a composite whose separator and ordering vary by
+    country, so splitting it would be an inference rather than a read. Nothing
+    downstream needs it: the postal rung is consulted only where the country
+    evidence positively named Spain, which the overseas block never does.
     """
 
     @staticmethod
@@ -675,7 +671,7 @@ class TestTheOverseasAddressIsNotConsulted:
         assert xml.count(spanish) == 1, "the specimen's seller address block has drifted"
         return xml.replace(spanish, overseas, 1)
 
-    def test_asserted_gap_the_overseas_block_states_a_country_the_reader_skips(
+    def test_the_overseas_block_states_a_country_that_reaches_the_draft(
         self,
         isolated_settings: Settings,
         secure_objects: SecureObjectRepository,
@@ -683,7 +679,12 @@ class TestTheOverseasAddressIsNotConsulted:
         *,
         operation: PinnedAuthorityOperation,
     ) -> None:
-        """The document states France and the draft carries no country at all."""
+        """The document states France in its overseas block and the draft carries ``FR``.
+
+        Asserted as the alpha-2 for the same reason every case above is: the
+        record states ``FRA``, and a draft carrying that string back would prove
+        the element was read while establishing no country the resolver can use.
+        """
         document = self._overseas(_corpus(_FACTURAE_WITH_ADDRESSES))
         assert "<CountryCode>FRA</CountryCode>" in document
 
@@ -697,15 +698,19 @@ class TestTheOverseasAddressIsNotConsulted:
 
         draft = _draft(evidence_id, isolated_settings, operation=operation)
 
-        assert draft.supplier_country_code is None
-        # The postal side is skipped by the same scoping, asserted together so a
-        # future widening of one walk without the other is visible here.
+        assert draft.supplier_country_code == "FR"
+        # No postal code, and that is the format rather than a shortfall: the
+        # overseas block states 75001 only inside PostCodeAndTown, jointly with
+        # the town, and separating a composite is an inference this reader is
+        # forbidden to make. Asserted rather than left unstated so a later
+        # reader that starts splitting that element fails here.
         assert draft.supplier_postal_code is None
         # The customer keeps its Spanish block, so this is a statement about the
-        # BLOCK and not about the document having become unreadable.
+        # two blocks coexisting in one document and not about the reader having
+        # swapped one walk for the other.
         assert draft.customer_country_code == "ES"
 
-    def test_asserted_gap_a_foreign_established_counterparty_exhausts_the_ladder(
+    def test_a_foreign_established_counterparty_resolves_through_the_country_rung(
         self,
         isolated_settings: Settings,
         secure_objects: SecureObjectRepository,
@@ -714,12 +719,14 @@ class TestTheOverseasAddressIsNotConsulted:
         *,
         operation: PinnedAuthorityOperation,
     ) -> None:
-        """The live consequence: France is stated, and no territory is resolved.
+        """The load-bearing consequence: France is stated, and France is resolved.
 
-        The identifier rung cannot rescue it -- the specimen's seller carries a
+        The identifier rung cannot supply this -- the specimen's seller carries a
         Spanish fiscal identifier, which contributes nothing to establishment by
-        design -- so the country the document actually states is the only
-        evidence available, and it is in the block the reader does not open.
+        design -- and neither can the postal rung, which this document gives no
+        code for and which the stated country would close anyway. So the country
+        element in the overseas block is the only evidence available, and the
+        territory coming out the far end is what proves it was read.
         """
         with _indexed_authority_for_test().operation() as _authority_operation_for_test:
             evidence_id = _stored(
@@ -739,14 +746,47 @@ class TestTheOverseasAddressIsNotConsulted:
                 operation=_authority_operation_for_test,
             )
 
-            assert resolved.scope is None
-            assert resolved.rung is None
-            # And the answer the ladder WOULD give from that country, so this reads
-            # as a statement about unread evidence rather than about France being
-            # unresolvable.
+            assert resolved.scope == IvaTerritorialScope.from_registry("eu_member")
+            assert resolved.rung is EstablishmentRung.ADDRESS_COUNTRY
+            # The same answer reached from the country alone, so the case reads
+            # as a statement about the ladder's source rather than about France.
             assert territorial_scope_for_country(
                 "FR", operation=_authority_operation_for_test
             ) == IvaTerritorialScope.from_registry("eu_member")
+
+    def test_the_envelope_names_the_overseas_block_it_was_read_from(
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
+        tmp_path: Path,
+        *,
+        operation: PinnedAuthorityOperation,
+    ) -> None:
+        """The note points at the block the document HAS, not the one it does not.
+
+        The two blocks are alternatives, so a location fixed per format names
+        ``AddressInSpain`` for every Facturae record -- including this one, which
+        contains no such element. An operator following that note finds nothing
+        and cannot tell a mislabelled read from a misread document.
+        """
+        evidence_id = _stored(
+            self._overseas(_corpus(_FACTURAE_WITH_ADDRESSES)),
+            settings=isolated_settings,
+            objects=secure_objects,
+            tmp_path=tmp_path,
+            name="facturae_overseas_note.xml",
+        )
+
+        draft = _draft(evidence_id, isolated_settings, operation=operation)
+        envelopes = [envelope for envelope in draft.provenance if envelope.field == "supplier_country_code"]
+
+        assert len(envelopes) == 1
+        assert "SellerParty/OverseasAddress/CountryCode" in envelopes[0].note
+        # The customer's own block is unaffected, so the path follows each
+        # party's document rather than the record as a whole.
+        customer = [envelope for envelope in draft.provenance if envelope.field == "customer_country_code"]
+        assert len(customer) == 1
+        assert "BuyerParty/AddressInSpain/CountryCode" in customer[0].note
 
 
 class TestTheProvenanceTellsTheTwoApart:
