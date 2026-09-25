@@ -53,6 +53,11 @@ modelo:
             label: Értékelés
           m189-valoracion-total:
             label: Teljes értékelés
+      construct:
+        modelo-189-informative:
+          field:
+            title: 189-es modell. Éves adatszolgáltatás értékpapírokról, biztosításokról
+              és járadékokról
       field:
         official_name: Modelo 189. Éves adatszolgáltatási bevallás értékpapírokról,
           biztosításokról és járadékokról.
