@@ -148,8 +148,16 @@ def isolated_authorities(
     render_profile = load_render_profile(
         _REPOSITORY_ROOT / "dev" / "registry" / "render_profiles" / f"modelo_{tree.modelo}" / tree.epoch
     )
-    _modelos, catalogues = _bundled_registry()
+    modelos, catalogues = _bundled_registry()
     inspection = bundled_revision_inspection(tree.modelo, tree.revision)
+    # The transport's line ending is the committed layout's own, read the way the
+    # publisher reads it; a design that declares no terminator must not be rendered
+    # with one.
+    definition = next(item for item in modelos if str(item.id) == tree.modelo)
+    layouts = definition.revisions[tree.revision].export_layouts
+    if len(layouts) != 1:
+        raise AssertionError(f"{tree}: expected exactly one committed export layout, found {len(layouts)}")
+    line_ending = layouts[0].records[0].line_ending.value
     intermediate = load_record_design_intermediate(
         bundled_path(),
         catalogues.sources,
@@ -166,7 +174,7 @@ def isolated_authorities(
         layout_id=tree.layout_id,
         format="fixed_width",
         encoding=ExportEncoding.ISO_8859_1,
-        line_ending="crlf",
+        line_ending=line_ending,
         serializer_convention="rtoml-pretty-v1",
     )
     claims_official = any(
