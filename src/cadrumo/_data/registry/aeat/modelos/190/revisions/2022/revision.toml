@@ -8,7 +8,7 @@
 # says it is the correct authority, and this comment exists so the next reader
 # does not "fix" it.
 casilla_source_refs = ["aeat-dr-190-2020"]
-# Applicability-grade historical epoch for modelo 190, filing year 2022.
+# Filing-grade historical epoch for modelo 190, filing year 2022.
 #
 # The gap this closes was authoring debt, not a legal absence: modelo 190 was
 # approved by Orden EHA/3127/2009 and filed for 2022, and the record design
@@ -27,24 +27,26 @@ casilla_source_refs = ["aeat-dr-190-2020"]
 #     an addition of the 2023 design;
 #   - and that every legal_ref it cites is in force across the whole exercise.
 #
-# Why the grade is 'applicability' and NOT 'filing': the calculation surface of
-# this modelo -- the modelo 111 relation prefills, the two declarante-total
-# formulas, and the verification expectations built on them -- is grounded in
-# the corpus ONLY by aeat-modelo-190-instructions-2025 and
-# boe-modelo-190-2025-form, both of which open on 2025-01-01 and so cannot be
-# cited by a 2022 revision. The bundled aeat-modelo-190-procedure carries none
-# of the required_text those citations depend on. Rather than cite a source
-# outside its own window or mint an id for evidence the corpus does not hold,
-# this revision declares no bindings, formulas, export layout or completeness
-# manifest, and its three declarante totals are operator-supplied.
+# WHAT THE FILING GRADE CLAIMS HERE, and what it does not. The grade asserts
+# that this revision can back a filing draft and its export for ejercicio 2022:
+# the fichero BOE layout is transcribed position by position from
+# aeat-dr-190-2020, and the type-2 row bindings that fill it are grounded on
+# that design for geometry and on aeat-modelo-190-procedure for the filing
+# route. Both sources are in force across the whole exercise.
 #
-# Promoting this to filing grade needs ONE acquisition: the AEAT modelo 190
-# instrucciones for ejercicio 2022, registered as its own source. The record
-# geometry is already here and would not change.
+# It does NOT claim the 2025-grounded calculation surface. The modelo 111
+# relation prefills, the two declarante-total formulas and the verification
+# expectations built on them are grounded in the corpus only by
+# aeat-modelo-190-instructions-2025 and boe-modelo-190-2025-form, which open on
+# 2025-01-01 and cannot be cited by a 2022 revision. Rather than cite a source
+# outside its own window, this revision declares none of them and its three
+# declarante totals stay operator-supplied. Acquiring the AEAT modelo 190
+# instrucciones for ejercicio 2022 is what would add that surface; it would not
+# change the record geometry below.
 review_status = "agent_reviewed"
-reviewed_by = "agent: authored from the bundled hash-pinned aeat-dr-190-2020 record design. Casilla positions were verified row by row against the design's own position table and against the 2024 revision, and the three additive deltas separating the epochs were confirmed in the design text. No human operator has countersigned it."
-reviewed_at = 2026-09-12
-authority_grade = "applicability"
+reviewed_by = "agent: authored from the bundled hash-pinned aeat-dr-190-2020 record design. Casilla positions were verified row by row against the design's own position table and against the 2024 revision, and the three additive deltas separating the epochs were confirmed in the design text. The export layout was derived from the same design, record by record, and its perceptor extent was checked against the design's own blancos boundary at 323. No human operator has countersigned it."
+reviewed_at = 2026-09-25
+authority_grade = "filing"
 id = "2022"
 valid_from = 2022-01-01
 valid_to = 2022-12-31
@@ -59,4 +61,28 @@ legal_refs = [
     "ley-58-2003:art-93",
 ]
 orden_aplicabilidad = ["orden-eha-3127-2009:art-1"]
+source_refs = ["aeat-dr-190-2020", "aeat-modelo-190-procedure"]
+
+[revisions."2022".family_dispositions.dependency_classifications]
+reason = """
+A dependency classification records how another modelo's declarations reach this one. This edition's declarante resumen takes none: its three totals are the sums the record design itself states over this declaration's own type-2 perceptor records, so the whole calculation closes inside the edition. The 2024 sibling classifies a modelo 111 dependency because it routes the same totals through annual relation prefills grounded on the 2025 instrucciones, and those open after this exercise ends. Empty because no cross-modelo edge exists here, not because one is unbuilt."""
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2020", "aeat-modelo-190-procedure"]
+
+[revisions."2022".family_dispositions.extraction_profiles]
+reason = """
+An extraction profile reads values back out of a filed declaration PDF, and its label patterns must be authored against a specimen of the printed layout for the edition they claim. The corpus holds no modelo 190 justificante for this exercise: the only fixture in the tree reproduces the current printed resumen. Authoring patterns for this edition from that fixture would claim a reading capability against a layout nobody checked, so the family is declared empty rather than filled with unevidenced patterns."""
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2020", "aeat-modelo-190-procedure"]
+
+[revisions."2022".family_dispositions.parameters]
+reason = """
+A parameter holds a regulatory value a formula of this revision applies -- a rate, a threshold, a coefficient. This edition applies none: both of its formulas are op = 'add', totalling the per-position row sums the record design names, and an addition applies nothing to what it adds. The retention rates that produced those amounts were set by the retenedor at payment time under RD 439/2007 and are already recorded on each perceptor record. Empty by the shape of this modelo's calculation rather than by omission."""
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2020", "aeat-modelo-190-procedure"]
+
+[revisions."2022".family_dispositions.projection_endpoints]
+reason = """
+A projection endpoint admits one typed filing endpoint that an export record REPEATS. This revision's export layout (modelo-190-fichero-boe) declares no record with repeat = 'projection_rows' and no field of kind 'projection', so there is no repeated endpoint for the family to admit and nothing an entry here could name. Empty by construction: authoring a projection row into the layout is what would make this family apply, and that change reaches this declaration through the same revision."""
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-190-2020", "aeat-modelo-190-procedure"]

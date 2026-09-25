@@ -73,8 +73,22 @@ _UNCHECKED_PER_REVISION: dict[str, dict[str, int]] = {
     "131/2026": {"unmatched": 1},
     "180/2019-2022": {"unmatched": 2},
     "180/2023-y-siguientes": {"unmatched": 2},
+    # Modelo 190's two records carry the same unmatched condition in every
+    # edition: the layout subdivides design rows -- the 27- and 40-byte
+    # percepcion groups become signo plus importe pairs -- so no sheet carries
+    # every slot of either record. The 2022 and 2023 editions repeat the 2024
+    # geometry position for position, so they inherit the same open question
+    # rather than raising a new one.
+    "190/2022": {"unmatched": 2},
+    "190/2023": {"unmatched": 2},
     "190/2024": {"unmatched": 2},
     "190/2025-y-siguientes": {"unmatched": 2},
+    # Modelo 193's perceptor record subdivides design rows the same way in every
+    # edition, so it matches no single sheet. The 2022 edition's declarante
+    # record DOES align against the 2019 design and is compared; 2023 and 2024
+    # leave two records unmatched apiece.
+    "193/2022": {"unmatched": 1},
+    "193/2023": {"unmatched": 2},
     "193/2024": {"unmatched": 2},
     "193/2025-y-siguientes": {"unmatched": 2},
     "216/2024-y-siguientes": {"unmatched": 1},

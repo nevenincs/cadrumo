@@ -1,0 +1,25 @@
+# Calculation-completeness manifest for revision 2023: the declarante resumen
+# casillas this edition's calculation closure reaches, keyed by canonical
+# casilla_id with the design's own positional range.
+
+[revisions."2023".completeness_manifest]
+source_ref = "aeat-dr-193-2023"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2023", "aeat-modelo-193-procedure"]
+
+[[revisions."2023".completeness_manifest.casillas]]
+casilla_id = "decl.total-perceptores"
+number = "136-144"
+
+[[revisions."2023".completeness_manifest.casillas]]
+casilla_id = "decl.base-total"
+number = "145-159"
+
+[[revisions."2023".completeness_manifest.casillas]]
+casilla_id = "decl.retenciones-total"
+number = "160-174"
+
+[[revisions."2023".completeness_manifest.casillas]]
+casilla_id = "decl.retenciones-ingresadas"
+number = "175-189"
+segmento = "declarante"
