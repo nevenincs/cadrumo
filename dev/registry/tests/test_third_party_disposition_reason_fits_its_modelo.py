@@ -39,9 +39,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _THIRD_PARTY_CLAIM = "third-party data"
 
 #: Modelos whose declarant genuinely reports OTHER people's data, with the
-#: official name that settles it. A financial entity or declarant files these
-#: about its clients, partícipes or counterparties, never about itself.
+#: official name that settles it. A financial entity, social security body or
+#: declarant files these about its clients, afiliados, partícipes or
+#: counterparties, never about itself.
 _REPORTS_OTHERS: dict[str, str] = {
+    "185": "Declaración informativa mensual de cotizaciones de afiliados y mutualistas",
     "189": "Declaración informativa anual acerca de valores, seguros y rentas",
     "280": "Declaración informativa anual de Planes de Ahorro a Largo Plazo",
     "345": ("Declaración informativa anual de planes y fondos de pensiones, partícipes, aportaciones y contribuciones"),
