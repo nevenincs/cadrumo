@@ -12,7 +12,11 @@ from collections.abc import Callable, Mapping
 from textual.screen import Screen
 
 from ....application.modelo.declarations_workspace import DeclarationsWorkspaceDeclarationRefV1
-from ....application.modelo.workspace_models import ModeloWorkspaceLifecycleProjectionV1, ModeloWorkspaceProjectionV1
+from ....application.modelo.workspace_models import (
+    ModeloWorkspaceDomainRefusalV1,
+    ModeloWorkspaceLifecycleProjectionV1,
+    ModeloWorkspaceProjectionV1,
+)
 from ....core.errors.hierarchy import CadrumoError
 from ....core.identity.bucket import BucketId
 from ..declarations.models import ModeloWorkspaceScreenFactoryV1
@@ -24,12 +28,16 @@ class ModeloWorkspaceDeclarationAdmissionError(CadrumoError):
     """An installed declaration cannot open a workspace from this generation."""
 
 
+_NO_GRADED_REFUSALS: dict[str, ModeloWorkspaceDomainRefusalV1] = {}
+
+
 def compose_installed_modelo_workspace_factory(
     *,
     bucket_id: BucketId,
     declarations: tuple[DeclarationsWorkspaceDeclarationRefV1, ...],
     projections: tuple[ModeloWorkspaceProjectionV1, ...],
     lifecycle_projections: tuple[ModeloWorkspaceLifecycleProjectionV1, ...] = (),
+    graded_refusals: Mapping[str, ModeloWorkspaceDomainRefusalV1] = _NO_GRADED_REFUSALS,
     lifecycle_actions_factory: Callable[[ModeloWorkspaceLifecycleProjectionV1], object] | None = None,
 ) -> ModeloWorkspaceScreenFactoryV1:
     """Bind one generation's admitted declarations to canonical read sessions.
@@ -39,6 +47,12 @@ def compose_installed_modelo_workspace_factory(
     address.  The relation is deliberately total in both directions: a stale
     declaration, an unrelated projection, or a duplicate target is refused
     before any Textual screen is constructed.
+
+    ``graded_refusals`` names, by ``work_unit_id``, every declaration whose
+    projection is a STATIC_INSPECTION fallback because its GRADED_SNAPSHOT
+    admission was refused. A work unit absent from this mapping was admitted
+    at its requested grade; the projection alone cannot say which, since both
+    admissions share one shape.
     """
     declaration_by_work_unit = _admitted_declarations(declarations)
     session_by_work_unit = _admitted_sessions(
@@ -46,6 +60,7 @@ def compose_installed_modelo_workspace_factory(
         declarations=declaration_by_work_unit,
         projections=projections,
         lifecycle_projections=lifecycle_projections,
+        graded_refusals=graded_refusals,
         lifecycle_actions_factory=lifecycle_actions_factory,
     )
 
@@ -81,6 +96,7 @@ def _admitted_sessions(
     declarations: Mapping[str, DeclarationsWorkspaceDeclarationRefV1],
     projections: tuple[ModeloWorkspaceProjectionV1, ...],
     lifecycle_projections: tuple[ModeloWorkspaceLifecycleProjectionV1, ...],
+    graded_refusals: Mapping[str, ModeloWorkspaceDomainRefusalV1],
     lifecycle_actions_factory: Callable[[ModeloWorkspaceLifecycleProjectionV1], object] | None,
 ) -> Mapping[str, ModeloWorkspaceReadSession]:
     lifecycle_by_work_unit = {
@@ -121,6 +137,7 @@ def _admitted_sessions(
             projection,
             lifecycle=lifecycle,
             lifecycle_actions=actions,
+            graded_refusal=graded_refusals.get(str(work_unit_id)),
         )
     return sessions
 

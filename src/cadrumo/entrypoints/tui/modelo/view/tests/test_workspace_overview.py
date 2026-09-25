@@ -17,9 +17,17 @@ from textual.widgets.select import InvalidSelectValueError
 
 from ......adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ......application.modelo.edit_models import ModeloEditWritableScalarSurfaceEntryV1
+from ......application.modelo.work_addressing import ModeloExactWorkUnitTarget
+from ......application.modelo.workspace import graded_snapshot_refusal, modelo_workspace_recovery_action
 from ......application.modelo.workspace_models import (
     ModeloWorkspaceCapabilityName,
+    ModeloWorkspaceDomainRefusalV1,
+    ModeloWorkspaceEvidenceFactV1,
+    ModeloWorkspaceExactWorkUnitTargetV1,
+    ModeloWorkspaceLegalEvidenceReferenceV1,
     ModeloWorkspaceLifecycleProjectionV1,
+    ModeloWorkspaceRefusalCode,
+    ModeloWorkspaceTextFactValueV1,
 )
 from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import tr
@@ -28,9 +36,15 @@ from ......core.prior_domiciliation_election import PriorDomiciliationElection
 from ......core.refund_election import RefundElection
 from ....components.dialogs import ConfirmScreen
 from ....components.host import ScreenHostApp
-from ....components.widgets import ContentDataTable
+from ....components.widgets import ContentDataTable, NoticeBand
 from ...lifecycle import ModeloLifecycleActionUnavailableError
 from ..controller import ModeloWorkspaceReadSession, open_workspace_read_session
+from ..models import (
+    evidence_reference_label,
+    recovery_action_label,
+    workspace_refusal_fact_label,
+    workspace_refusal_reason_label,
+)
 from ..overview import (
     PAYMENT_ELECTION_LOCALE_KEYS,
     PRIOR_DOMICILIATION_ELECTION_LOCALE_KEYS,
@@ -45,6 +59,40 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 def _session(bucket_id: str, repository: WorkUnitCatalogueRepository) -> ModeloWorkspaceReadSession:
     return open_workspace_read_session(resolve_real_result(bucket_id, repository, OutputLanguage.ES).projection)
+
+
+def _graded_refusal(
+    session: ModeloWorkspaceReadSession,
+    *,
+    code: ModeloWorkspaceRefusalCode,
+    capability: ModeloWorkspaceCapabilityName,
+    facts: tuple[ModeloWorkspaceEvidenceFactV1, ...],
+    recovery_action_id: str,
+    with_evidence: bool = False,
+) -> ModeloWorkspaceDomainRefusalV1:
+    """Build one domain refusal through the exact producer function that ships it.
+
+    Reusing :func:`graded_snapshot_refusal` and :func:`modelo_workspace_recovery_action`
+    -- rather than hand-assembling :class:`ModeloWorkspaceDomainRefusalV1` --
+    keeps the fixture a faithful proxy for what ``resolve_graded_snapshot_result``
+    actually returns for these three taxpayer-facing codes.
+    """
+    target = session.projection.target
+    assert target.work_unit_id is not None
+    result = graded_snapshot_refusal(
+        code,
+        requested_target=ModeloWorkspaceExactWorkUnitTargetV1(
+            target=ModeloExactWorkUnitTarget(work_unit_id=target.work_unit_id, bucket_id=target.bucket_id)
+        ),
+        selected_target=target,
+        capability=capability,
+        reconsideration_condition="test reconsideration condition, never rendered directly",
+        facts=facts,
+        evidence=(ModeloWorkspaceLegalEvidenceReferenceV1(legal_ref_id="test-legal-ref"),) if with_evidence else (),
+        source_disposition=None,
+        recovery_action=modelo_workspace_recovery_action(recovery_action_id, work_unit_id=target.work_unit_id),
+    )
+    return result.refusal
 
 
 class _UnavailableLifecycleActions:
@@ -67,23 +115,147 @@ def _lifecycle_session(bucket_id: str, repository: WorkUnitCatalogueRepository) 
 
 
 @pytest.mark.asyncio
-async def test_absent_recovery_actions_are_stated_not_rendered_as_an_empty_list(
+async def test_a_session_without_a_graded_refusal_mounts_no_notice(
     bucket_and_repository: tuple[str, WorkUnitCatalogueRepository],
 ) -> None:
-    """An empty actions panel would claim there is nothing the operator can do.
+    """The static fallback stays reachable and unexplained when it was never a fallback.
 
-    The truth is that this producer does not say what can be done. The
-    screen must carry the second claim, never the first.
+    A session opened directly at STATIC_INSPECTION -- no graded read was ever
+    attempted for it -- carries ``graded_refusal=None``, and the overview must
+    not invent an explanation for a gap that never occurred.
     """
     bucket_id, repository = bucket_and_repository
     session = _session(bucket_id, repository)
-    assert all(capability.recovery_action is None for capability in session.projection.capabilities)
+    assert session.graded_refusal is None
+    app = ScreenHostApp(ModeloWorkspaceOverviewScreen(session))
+
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        assert not app.screen.query("#workspace-overview-graded-refusal")
+
+
+@pytest.mark.parametrize(
+    ("code", "capability", "fact_name", "fact_value", "recovery_action_id", "with_evidence"),
+    [
+        (
+            ModeloWorkspaceRefusalCode.TARGET_NOT_FOUND,
+            ModeloWorkspaceCapabilityName.CALCULATION_MATERIALIZATION,
+            "modelo",
+            "130",
+            "operator.modelo.work.create",
+            False,
+        ),
+        (
+            ModeloWorkspaceRefusalCode.AUTHORITY_GRADE_UNAVAILABLE,
+            ModeloWorkspaceCapabilityName.SCHEMA_INSPECTION,
+            "required_grade",
+            "calculation",
+            "operator.modelo.work.status",
+            False,
+        ),
+        (
+            ModeloWorkspaceRefusalCode.CALCULATION_UNAVAILABLE,
+            ModeloWorkspaceCapabilityName.CALCULATION_MATERIALIZATION,
+            "work_unit_id",
+            "test-work-unit",
+            "operator.modelo.work.calculate",
+            True,
+        ),
+    ],
+)
+@pytest.mark.asyncio
+async def test_each_taxpayer_facing_refusal_code_renders_its_reason_facts_and_recovery_action(
+    bucket_and_repository: tuple[str, WorkUnitCatalogueRepository],
+    code: ModeloWorkspaceRefusalCode,
+    capability: ModeloWorkspaceCapabilityName,
+    fact_name: str,
+    fact_value: str,
+    recovery_action_id: str,
+    with_evidence: bool,
+) -> None:
+    """The graded refusal renders honestly instead of a silent static fallback.
+
+    Every one of the three codes ``resolve_graded_snapshot_result`` actually
+    returns (``TARGET_NOT_FOUND``, ``AUTHORITY_GRADE_UNAVAILABLE``,
+    ``CALCULATION_UNAVAILABLE``) must show its own translated reason, its
+    facts, its recovery action, and -- underneath -- the same static content
+    a fallback-free session shows, so the operator sees both what happened
+    and what the page is showing instead.
+    """
+    bucket_id, repository = bucket_and_repository
+    base_session = _session(bucket_id, repository)
+    fact = ModeloWorkspaceEvidenceFactV1(name=fact_name, value=ModeloWorkspaceTextFactValueV1(value=fact_value))
+    refusal = _graded_refusal(
+        base_session,
+        code=code,
+        capability=capability,
+        facts=(fact,),
+        recovery_action_id=recovery_action_id,
+        with_evidence=with_evidence,
+    )
+    assert refusal.code is code
+    assert refusal.recovery_action is not None
+    session = open_workspace_read_session(base_session.projection, graded_refusal=refusal)
+    app = ScreenHostApp(ModeloWorkspaceOverviewScreen(session))
+
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        band = app.screen.query_one("#workspace-overview-graded-refusal", NoticeBand)
+        rendered = " | ".join(str(static.content) for static in band.query(Static))
+
+        assert workspace_refusal_reason_label(code) in rendered
+        assert recovery_action_label(refusal.recovery_action) in rendered
+        assert workspace_refusal_fact_label(fact) in rendered
+        assert tr("tui.modelo.workspace_refusal.static_fallback") in rendered
+        if with_evidence:
+            assert refusal.evidence
+            for reference in refusal.evidence:
+                assert evidence_reference_label(reference) in rendered
+
+        # The static content underneath stays reachable: this session's
+        # capability denominator still renders in full, exactly as the
+        # fallback-free session's does.
+        table = app.screen.query_one("#workspace-overview-capability-table", ContentDataTable)
+        assert table.row_count == len(ModeloWorkspaceCapabilityName)
+
+
+@pytest.mark.asyncio
+async def test_the_actions_line_names_the_catalogued_steps_the_producers_attached(
+    bucket_and_repository: tuple[str, WorkUnitCatalogueRepository],
+) -> None:
+    """The line reports the projection's own recovery actions, in both directions.
+
+    The expected sentence is derived from the capabilities rather than pinned,
+    because which steps are addressable depends on whether the target carries
+    a work unit. Pinning the empty sentence would keep passing on a screen that
+    had stopped reading ``recovery_action`` at all.
+
+    Deduplication is asserted separately from presence: two capabilities share
+    the status action, and listing it twice would read as two different things
+    to do.
+    """
+    bucket_id, repository = bucket_and_repository
+    session = _session(bucket_id, repository)
+    labels: list[str] = []
+    for capability in session.projection.capabilities:
+        if capability.recovery_action is None:
+            continue
+        label = recovery_action_label(capability.recovery_action)
+        if label not in labels:
+            labels.append(label)
+    expected = (
+        tr("flows.modelo_workspace_overview.actions_none")
+        if not labels
+        else tr("flows.modelo_workspace_overview.actions_suggested", actions="; ".join(labels))
+    )
 
     app = ScreenHostApp(ModeloWorkspaceOverviewScreen(session))
     async with app.run_test() as pilot:
         await pilot.pause()
         notice = app.screen.query_one("#workspace-overview-actions", Static)
-        assert str(notice.content) == tr("flows.modelo_workspace_overview.actions_not_carried")
+        assert str(notice.content) == expected
+        for label in labels:
+            assert str(notice.content).count(label) == 1
 
 
 @pytest.mark.asyncio

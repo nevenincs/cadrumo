@@ -609,8 +609,12 @@ errors:
       té un format incorrecte i no es pot interpretar.
     canonical_manifest_payload_validation: La càrrega útil del manifest del corpus
       no ha superat la validació.
+    canonical_modelo_workspace_absent_readiness_projection: La captura de disponibilitat
+      s'ha retornat sense l'informe promès.
     canonical_modelo_workspace_absent_registry_projection: La captura del registre
       s'ha retornat sense la projecció promesa.
+    canonical_modelo_workspace_materialization_provenance_missing: Un valor de fila
+      repetida emmagatzemat no indica la seva vinculació d'origen.
     canonical_relation_binding_join: No s'ha pogut llegir d'acord amb el que s'ha
       declarat la correspondència inclosa entre relacions i bindings.
     canonical_tampered_manifest_payload: El resum del manifest del corpus no coincideix
@@ -968,6 +972,8 @@ errors:
       pertany a una altra revisió.
     modelo_workspace_manifest_capture_not_current: El manifest de camps ha canviat
       mentre es llegia; torneu a capturar-lo.
+    producer_capture_not_current: Una projecció de productor ha canviat mentre es
+      llegia; torneu a capturar-la.
     profile_capsule_archive: No s'ha pogut escriure o llegir l'arxiu de còpia del
       perfil
     profile_capsule_source: L'origen indicat no és una càpsula de perfil llegible

@@ -26,28 +26,21 @@ Construction is counted through keyword arguments AND through the string keys
 of a dict passed to ``model_validate``, because both are real ways a payload
 gets built and a scan that saw only one would report a filled field as unfilled.
 
-WHAT THIS CANNOT SEE, stated because the findings it produces look identical to
-real ones. A model built through a type passed as a PARAMETER -- the generic
-factory shape, ``def build(model_type: type[T]) -> T: return model_type(...)``
--- carries no model name at its call site, so every field it supplies reads as
-unsupplied. Recognising it needs dataflow this does not do. The bounded facet
-is exactly that shape and its three pagination fields ARE filled in production.
-
-So a finding here is a CANDIDATE, not a verdict. The register that consumes it
-records which candidates are real and which the scan simply cannot reach, and
-that division is the point: a scan good enough to need no adjudication would
-not need a register, and one whose gaps go unrecorded turns its own blind spots
-into work items.
+CONSTRUCTION THROUGH A TYPE PARAMETER is followed, because the generic factory
+shape ``def build(model_type: type[Model]) -> Model: return model_type(...)``
+carries no model name at the call site and every field it supplies would
+otherwise read as unsupplied. The annotation IS the name: a parameter annotated
+``type[Model]`` or ``type[Model[Record]]`` binds that parameter to ``Model`` for
+the body of the function declaring it, and a call on that parameter supplies
+the model's fields. The bounded facet is exactly this shape, and its page,
+cursor and overflow flag are supplied by the one paginator every facet routes
+through.
 
 TESTS DO NOT COUNT AS FILLING, and the scope is deliberate rather than
 convenient. The question this answers is whether the PAYLOAD an operator
 receives carries the field; a fixture constructing it proves the model accepts
 a value, not that anything ever produces one. Counting tests would mark a field
 filled on the strength of the test written to describe the gap.
-
-That choice is what the manual walk this replaces could not make explicitly,
-and it moved the number: three bounded-facet fields are constructed by a
-generic in a test and by nothing in production.
 """
 
 from __future__ import annotations
@@ -92,6 +85,66 @@ def _constructed_name(func: ast.expr, known: set[str]) -> str | None:
     if isinstance(func, ast.Subscript) and isinstance(func.value, ast.Name) and func.value.id in known:
         return func.value.id
     return None
+
+
+def _type_parameter_model(annotation: ast.expr, known: set[str]) -> str | None:
+    """The model a ``type[...]`` annotation binds its parameter to, if any.
+
+    ``type[Model]`` and ``type[Model[Record]]`` both name ``Model``; anything
+    else names nothing. Reading the annotation rather than the argument passed
+    at each call site keeps the answer local to the function that will do the
+    constructing, which is where the fields are actually supplied.
+    """
+    if (
+        isinstance(annotation, ast.Subscript)
+        and isinstance(annotation.value, ast.Name)
+        and annotation.value.id == "type"
+    ):
+        return _constructed_name(annotation.slice, known)
+    return None
+
+
+def _type_parameter_models(
+    function: ast.FunctionDef | ast.AsyncFunctionDef,
+    known: set[str],
+) -> dict[str, str]:
+    """Bind each ``type[Model]``-annotated parameter name to its model."""
+    arguments = function.args
+    candidates = (
+        *arguments.posonlyargs,
+        *arguments.args,
+        *arguments.kwonlyargs,
+        arguments.vararg,
+        arguments.kwarg,
+    )
+    bound: dict[str, str] = {}
+    for argument in candidates:
+        if argument is None or argument.annotation is None:
+            continue
+        model = _type_parameter_model(argument.annotation, known)
+        if model is not None:
+            bound[argument.arg] = model
+    return bound
+
+
+def _record_generic_factory_construction(
+    tree: ast.AST,
+    known: set[str],
+    supplied: defaultdict[str, set[str]],
+) -> None:
+    """Record the fields every generic factory supplies through its type parameter."""
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
+            continue
+        bound = _type_parameter_models(node, known)
+        if not bound:
+            continue
+        for inner in ast.walk(node):
+            if not isinstance(inner, ast.Call) or not isinstance(inner.func, ast.Name):
+                continue
+            model = bound.get(inner.func.id)
+            if model is not None:
+                supplied[model].update(keyword.arg for keyword in inner.keywords if keyword.arg)
 
 
 def _declared_fields(models_module: Path) -> dict[str, dict[str, bool]]:
@@ -147,6 +200,7 @@ def _supplied_fields(source_root: Path, models_module: Path, known: set[str]) ->
                     for key in node.args[0].keys
                     if isinstance(key, ast.Constant) and isinstance(key.value, str)
                 )
+        _record_generic_factory_construction(tree, known, supplied)
     return supplied
 
 

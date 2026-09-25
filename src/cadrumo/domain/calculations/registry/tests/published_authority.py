@@ -25,6 +25,7 @@ from ..governed_fact_scope import governed_facts_in_scope
 from ..ids import RevisionId
 from ..schema import ModeloDefinition, ModeloRevision, RegistrySnapshot, SupportedFilingYearsCatalogue
 from ..schema_references import LegalReference, SourceReference
+from ..static_inspection import RegistryRevisionInspection
 
 
 @dataclass(frozen=True, slots=True)
@@ -66,6 +67,31 @@ def published_snapshot(
             revision_id=revision_id,
             grade=grade,
         )
+
+
+def published_inspection(
+    modelo_id: str,
+    *,
+    filing_year: int,
+    period: str,
+) -> RegistryRevisionInspection:
+    """Project one static inspection from the published generation.
+
+    Taken through the same law-selected capture product runtime uses, so the
+    inspection a test reads is the one a workspace read would be admitted
+    through rather than a separately assembled equivalent.
+    """
+    with bundled_indexed_authority().operation() as operation:
+        capture = operation.capture_law_selected_projection(
+            modelo_id,
+            filing_year=filing_year,
+            period=period,
+            grade=None,
+        )
+    projection = capture.projection
+    if not isinstance(projection, RegistryRevisionInspection):
+        raise TypeError("a gradeless law-selected capture must return a static inspection")
+    return projection
 
 
 def published_authored_revision(modelo_id: str, *, year: int) -> ModeloRevision:

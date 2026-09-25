@@ -218,7 +218,8 @@ flows:
     values_unmeasured: Ez az oldal csak a nyomtatvány felépítését mutatja; számított
       értékeket még nem.
   modelo_workspace_overview:
-    actions_not_carried: Ez az oldal még nem javasol következő lépéseket.
+    actions_none: Ebből a munkaterületből még nem érhető el következő lépés.
+    actions_suggested: 'Javasolt következő lépések: {actions}'
     column:
       capability: Képesség
       disposition: Diszpozíció
@@ -279,8 +280,9 @@ flows:
       message: Megállapítás
       severity: Súlyosság
       value: Érték
-    evidence_not_carried: Ez az oldal még nem mutat alátámasztó bizonylatokat vagy
-      javasolt következő lépéseket.
+    evidence_carried: 'Alátámasztó hivatkozások és következő lépés: {entries}'
+    evidence_none: Ez az ellenőrzési képesség nem hivatkozik nyilvántartási forrásra,
+      és nem nevez meg elérhető következő lépést.
     findings_none: A munkafelülvizsgálat nem rögzített megállapítást.
     findings_unmeasured: Ez az oldal még nem mutatja az ellenőrzés megállapításait.
     readiness_unmeasured: Ez az oldal még nem mutatja, hogy a bevallás kész-e.

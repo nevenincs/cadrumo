@@ -21,15 +21,15 @@ exposes one law-selected revision plus two independently evaluated point
 assertions; it has no sequence over time, so a screen presenting a timeline
 would author a temporal claim no producer made.
 
-The ACTIONS line says in one plain sentence that this page suggests no
-next steps yet, rather than rendering an empty list. An empty actions panel reads as "there is nothing
-you can do"; the truth is "this producer does not say what you can do".
-Those are different claims, and only the second is true --
-:class:`ModeloWorkspaceCapabilityV1` and the refusal types declare
-``recovery_action`` and no producer populates it, while the surrounding
-application layer attaches ``ActionReference`` to comparable verdicts
-routinely. So the silence here is an omission upstream, not an absence of
-actions in the system, and the screen must not convert one into the other.
+The ACTIONS line names the catalogued next steps the producers actually
+attached, and says plainly when there are none addressable rather than
+rendering an empty list. The distinction the line has to keep is between "no
+step is suggested" and "no step can be addressed from here": a capability
+whose catalogued action binds a ``work_unit_id`` this target does not carry
+has a remedy that exists and is not reachable, and offering it would name a
+command the operator cannot run. Each action shown is the canonical
+:data:`OPERATOR_ACTION_CATALOGUE` entry the producer named, never a label
+invented on this screen.
 """
 
 from __future__ import annotations
@@ -52,12 +52,13 @@ from .....core.i18n.render import tr
 from .....core.logging import get_logger
 from .....core.operations import OperationTerminalCondition
 from .....core.payment_election import PaymentElection
+from .....core.presentation import NoticePresentation
 from .....core.prior_domiciliation_election import PriorDomiciliationElection
 from .....core.refund_election import RefundElection
 from ...components.account_chrome import AccountChromeScreen
 from ...components.dialogs import ConfirmScreen
 from ...components.theme import toggle_appearance
-from ...components.widgets import ContentDataTable, ContentScroll, DisclosureGroup
+from ...components.widgets import ContentDataTable, ContentScroll, DisclosureGroup, NoticeBand
 from ...operations.controller import OperationController
 from ...operations.refusal_explanation import public_refusal_explanation
 from ..m303_evidence import OrdinaryM303FilingEvidenceScreen, OrdinaryM303FilingEvidenceSubmission
@@ -67,8 +68,12 @@ from .models import (
     capability_label,
     capability_row,
     disposition_label,
+    evidence_reference_label,
+    recovery_action_label,
     review_status_label,
     work_state_label,
+    workspace_refusal_fact_label,
+    workspace_refusal_reason_label,
 )
 from .technical_details import TechnicalDetailRowV1, mount_technical_details, producer_row
 
@@ -207,12 +212,57 @@ class ModeloWorkspaceOverviewScreen(AccountChromeScreen):
         self.query_one("#workspace-overview-header", Static).update(
             tr("flows.modelo_workspace_overview.title", modelo=target.modelo)
         )
+        self._mount_graded_refusal_notice()
         self._mount_destinations()
         self._mount_address()
         self._mount_revision()
         self._mount_capabilities()
         self._mount_actions_disclosure()
         self._mount_technical_details()
+
+    def _mount_graded_refusal_notice(self) -> None:
+        """Show why this session's calculated view fell back to the form layout, when it did.
+
+        ``graded_refusal`` is present only when a GRADED_SNAPSHOT admission
+        was actually tried and refused for this exact work unit; a session
+        opened directly at STATIC_INSPECTION (no calculated view was ever
+        requested) carries none, and this mounts nothing for it. Reuses the
+        shared :class:`NoticeBand`/:class:`NoticePresentation` the rest of the
+        TUI already renders inert, already-resolved notices through, rather
+        than a page-specific widget: the reason is the refusal code's own
+        translated sentence, never its raw ``reconsideration_condition``
+        text, and the recovery action is the same catalogued
+        :func:`recovery_action_label` capability refusals already show.
+        """
+        refusal = self._session.graded_refusal
+        if refusal is None:
+            return
+        notices = [
+            NoticePresentation(
+                severity="warning",
+                message=workspace_refusal_reason_label(refusal.code),
+                action_target=None
+                if refusal.recovery_action is None
+                else recovery_action_label(refusal.recovery_action),
+            )
+        ]
+        if refusal.facts:
+            notices.append(
+                NoticePresentation(
+                    severity="info",
+                    message=", ".join(workspace_refusal_fact_label(fact) for fact in refusal.facts),
+                )
+            )
+        if refusal.evidence:
+            notices.append(
+                NoticePresentation(
+                    severity="info",
+                    message=", ".join(evidence_reference_label(reference) for reference in refusal.evidence),
+                )
+            )
+        notices.append(NoticePresentation(severity="info", message=tr("tui.modelo.workspace_refusal.static_fallback")))
+        body = self.query_one("#workspace-overview-body", ContentScroll)
+        body.mount(NoticeBand(notices, id="workspace-overview-graded-refusal"))
 
     def _mount_destinations(self) -> None:
         """List the declaration's other read pages; this page is the way into them.
@@ -551,10 +601,25 @@ class ModeloWorkspaceOverviewScreen(AccountChromeScreen):
             )
 
     def _mount_actions_disclosure(self) -> None:
-        """Say plainly that this page suggests no next steps yet."""
-        self.query_one("#workspace-overview-actions", Static).update(
-            tr("flows.modelo_workspace_overview.actions_not_carried")
-        )
+        """Name the catalogued next steps the producers attached, or say there are none.
+
+        Deduplicated across capabilities while preserving first appearance:
+        two capabilities may name the same remedy, and listing it twice would
+        read as two different things to do.
+        """
+        seen: list[str] = []
+        for capability in self._session.projection.capabilities:
+            action = capability.recovery_action
+            if action is None:
+                continue
+            label = recovery_action_label(action)
+            if label not in seen:
+                seen.append(label)
+        notice = self.query_one("#workspace-overview-actions", Static)
+        if not seen:
+            notice.update(tr("flows.modelo_workspace_overview.actions_none"))
+            return
+        notice.update(tr("flows.modelo_workspace_overview.actions_suggested", actions="; ".join(seen)))
 
     def _mount_technical_details(self) -> None:
         """Keep the raw identities and producer attribution, collapsed.

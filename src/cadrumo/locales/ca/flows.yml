@@ -219,7 +219,8 @@ flows:
     values_unmeasured: Aquesta pàgina només mostra l'estructura del formulari; encara
       no mostra valors calculats.
   modelo_workspace_overview:
-    actions_not_carried: Aquesta pàgina encara no suggereix passos següents.
+    actions_none: Encara no es pot fer cap pas següent des d'aquest espai de treball.
+    actions_suggested: 'Passos següents suggerits: {actions}'
     column:
       capability: Capacitat
       disposition: Disposició
@@ -280,8 +281,9 @@ flows:
       message: Què s'ha trobat
       severity: Severitat
       value: Valor
-    evidence_not_carried: Aquesta pàgina encara no mostra justificants ni passos següents
-      suggerits.
+    evidence_carried: 'Referències de suport i pas següent: {entries}'
+    evidence_none: Aquesta capacitat de verificació no cita cap referència del registre
+      ni indica cap pas següent realitzable.
     findings_none: La revisió de treball no ha registrat cap troballa.
     findings_unmeasured: Aquesta pàgina encara no mostra les troballes de la verificació.
     readiness_unmeasured: Aquesta pàgina encara no mostra si la declaració està a

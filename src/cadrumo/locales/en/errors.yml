@@ -556,8 +556,12 @@ errors:
     canonical_malformed_manifest_payload: The corpus manifest payload is malformed
       and cannot be parsed.
     canonical_manifest_payload_validation: The corpus manifest payload failed validation.
+    canonical_modelo_workspace_absent_readiness_projection: The readiness capture
+      returned without its promised report.
     canonical_modelo_workspace_absent_registry_projection: The registry capture returned
       without its promised projection.
+    canonical_modelo_workspace_materialization_provenance_missing: A stored repeated-row
+      value names no source binding.
     canonical_relation_binding_join: The bundled relation-to-binding join could not
       be read as declared.
     canonical_tampered_manifest_payload: The corpus manifest digest does not match
@@ -889,6 +893,8 @@ errors:
       to a different revision.
     modelo_workspace_manifest_capture_not_current: The field manifest changed while
       it was being read; capture it again.
+    producer_capture_not_current: A producer projection changed while it was being
+      read; capture it again.
     profile_capsule_archive: The profile archive could not be written or read
     profile_capsule_source: The given source is not a readable profile capsule
     profile_import_collision: The imported profile identifier collides with an existing

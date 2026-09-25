@@ -21,9 +21,10 @@ from pydantic import Field, model_validator
 from ....core.casilla_id import CasillaId
 from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.frozen_mapping import FROZEN_MAPPING, FrozenMapping
+from ....core.identity.continuidad import ContinuidadId
 from ....core.revision_review import RevisionReviewStatus
 from .casilla_membership import casillas_by_id
-from .ids import BindingId, LegalRefId, ModeloId, RevisionId, SourceRefId
+from .ids import BindingId, ExportFieldId, LegalRefId, ModeloId, RevisionId, SourceRefId
 from .schema import (
     BindingDefinition,
     FormulaDefinition,
@@ -215,6 +216,29 @@ class RegistryRevisionInspection(RegistryModel):
     projection exists to avoid. Read from the same casilla definitions the id
     set is derived from, so the two cannot disagree.
     """
+    casilla_continuity: Annotated[Mapping[CasillaId, ContinuidadId], FROZEN_MAPPING] = Field(
+        default_factory=lambda: FrozenMapping({})
+    )
+    """Each casilla's declared cross-revision continuity key, where it declares one.
+
+    A casilla without a ``continuidad_id`` is absent from this mapping rather
+    than present under a placeholder value: the registry's own distinction
+    between "this row continues a predecessor concept" and "no continuity is
+    declared" is the whole content of the field, and a filler would assert a
+    continuity chain the revision never claimed.
+    """
+    casilla_export_refs: Annotated[Mapping[CasillaId, tuple[ExportFieldId, ...]], FROZEN_MAPPING] = Field(
+        default_factory=lambda: FrozenMapping({})
+    )
+    """Each addressed casilla's compiler-derived export field ids, in emission order.
+
+    Copied from the same ``CasillaDefinition.export_refs`` the compiler derived
+    through
+    :func:`~cadrumo.domain.calculations.registry.export_field_casilla.derive_casilla_export_refs`,
+    so a static consumer reads which official record fields carry a casilla
+    without being handed the layout itself. A casilla no export field addresses
+    is absent from the mapping.
+    """
     binding_ids: frozenset[BindingId]
     projection_endpoints: tuple[ProjectionEndpointDeclaration, ...]
     # These declaration tuples are the non-filing evidence surface consumed by
@@ -280,6 +304,20 @@ class RegistryRevisionInspection(RegistryModel):
             ),
             casilla_localization_keys=MappingProxyType(
                 {casilla_id: tuple(casilla.localization_keys) for casilla_id, casilla in revision_casillas.items()}
+            ),
+            casilla_continuity=MappingProxyType(
+                {
+                    casilla_id: casilla.continuidad_id
+                    for casilla_id, casilla in revision_casillas.items()
+                    if casilla.continuidad_id is not None
+                }
+            ),
+            casilla_export_refs=MappingProxyType(
+                {
+                    casilla_id: tuple(casilla.export_refs)
+                    for casilla_id, casilla in revision_casillas.items()
+                    if casilla.export_refs
+                }
             ),
             binding_ids=frozenset(binding.id for binding in revision.bindings),
             projection_endpoints=revision.projection_endpoints,

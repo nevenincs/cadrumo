@@ -217,7 +217,8 @@ flows:
     values_unmeasured: This page shows the form's layout only; it does not show calculated
       values yet.
   modelo_workspace_overview:
-    actions_not_carried: This page does not suggest next steps yet.
+    actions_none: No suggested next step can be addressed from this workspace yet.
+    actions_suggested: 'Suggested next steps: {actions}'
     column:
       capability: Capability
       disposition: Disposition
@@ -278,8 +279,9 @@ flows:
       message: What was found
       severity: Severity
       value: Value
-    evidence_not_carried: This page does not show supporting evidence or suggested
-      next steps yet.
+    evidence_carried: 'Supporting references and next step: {entries}'
+    evidence_none: This verification capability cites no registry reference and names
+      no addressable next step.
     findings_none: The work review recorded no findings.
     findings_unmeasured: This page does not show verification findings yet.
     readiness_unmeasured: This page does not show whether the declaration is ready

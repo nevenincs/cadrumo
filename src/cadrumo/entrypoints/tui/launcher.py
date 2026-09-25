@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING
 from ...application.search.installed_workbench import InstalledWorkbenchSearchInputsV1
 from ...application.search.workbench import WorkbenchDestinationAdmission, WorkbenchDestinationAdmissionState
 from ...application.workbench_generation import (
+    ModeloWorkspaceProjectedReadV1,
     WorkbenchGenerationAvailability,
     WorkbenchGenerationProjectionResultV1,
     WorkbenchGenerationV1,
@@ -35,7 +36,7 @@ if TYPE_CHECKING:
     from ...application.ledger.workspace import LedgerWorkspaceProjectionV1
     from ...application.modelo.declarations_calendar import DeclarationsCalendarEntryRefV1
     from ...application.modelo.workspace_models import (
-        ModeloWorkspaceProjectionV1,
+        ModeloWorkspaceResultV1,
         ModeloWorkspaceStaticInspectionResultV1,
     )
     from ...application.operations.composition import OperationComposedServices
@@ -44,6 +45,7 @@ if TYPE_CHECKING:
     from ...application.overview.home import HomeAccountSession, HomeProjectionV1
     from ...application.user_profile.login_interaction import ProfileLoginAttempt, ProfileLoginChoice
     from ...application.user_profile.overview import ProfileOverview
+    from ...core.authority_grade import RegistryAuthorityGrade
     from ...core.credentials import ProfilePasswordAssessment
     from ...core.external_constants import OutputLanguage
     from ...core.period import Period
@@ -364,25 +366,68 @@ def _declaration_result_casilla_reader(
 
 def _modelo_projection_reader(
     operation: PinnedAuthorityOperation,
-) -> Callable[[WorkUnit], ModeloWorkspaceProjectionV1]:
-    """Read one work unit's canonical workspace projection for search.
+) -> Callable[[WorkUnit], ModeloWorkspaceProjectedReadV1]:
+    """Read one work unit's canonical workspace projection for the whole session.
 
-    The read is the same static inspection the Modelo workspace itself is
-    admitted through, so a searchable declaration and an opened one cannot
-    describe different registry state. The output language is resolved per
-    read rather than closed over: a profile language change clears the
-    resolver cache, and a projection captured under the previous language
-    would leave the workbench half-translated until sign-out.
+    The read every Modelo destination and the workbench search share, so a
+    searchable declaration and an opened one cannot describe different
+    registry state. The output language is resolved per read rather than
+    closed over: a profile language change clears the resolver cache, and a
+    projection captured under the previous language would leave the workbench
+    half-translated until sign-out.
+
+    GRADED FIRST, static inspection second, and the order is the product
+    behaviour rather than an optimisation. A graded snapshot is the admission
+    that carries materialized values, their provenance and the canonical
+    readiness report; a static inspection carries the form's layout and says
+    plainly that it measured no values. Asking for the static one first would
+    leave every destination showing a layout for a declaration that has been
+    calculated.
+
+    The graded arm is MATCHED, never assumed: a target with no calculation
+    yet, or a revision whose declared authority cannot satisfy the requested
+    grade, is answered with a typed refusal rather than an exception, and this
+    seam answers it by reading the same target at the admission that CAN
+    answer.
+
+    STATIC FALLBACK IS ALWAYS VALID HERE, and that is a property of the one
+    resolver this reads rather than a blanket policy: `resolve_graded_snapshot_result`'s
+    own module comment enumerates exactly three taxpayer-facing refusals it
+    ever returns -- no work unit yet, no calculation yet, or a declared
+    authority below the requested grade -- and every one of them leaves the
+    revision itself resolvable at STATIC_INSPECTION's lower, no-grade,
+    no-calculation admission. A refusal this function cannot enumerate would
+    be a defect in that resolver, not a case to silently paper over here.
+
+    The refusal is never discarded on that fallback: it travels back on
+    :class:`ModeloWorkspaceProjectedReadV1` beside the static projection, for
+    whichever destination later opens this exact work unit to render
+    honestly -- reason, evidence, facts and the catalogued recovery action --
+    instead of a plain, unexplained static page.
     """
+    from ...core.authority_grade import RegistryAuthorityGrade as _RegistryAuthorityGrade
     from ...core.external_constants import OutputLanguage as _OutputLanguage
     from ...core.i18n.render import output_language as resolve_output_language
+    from .modelo.view.controller import ModeloWorkspaceRefusedReadV1, admit_modelo_workspace_result
 
-    def project(unit: WorkUnit) -> ModeloWorkspaceProjectionV1:
-        return resolve_modelo_workspace_static_inspection(
-            unit,
-            operation=operation,
-            output_language=_OutputLanguage(resolve_output_language()),
-        ).projection
+    def project(unit: WorkUnit) -> ModeloWorkspaceProjectedReadV1:
+        language = _OutputLanguage(resolve_output_language())
+        admission = admit_modelo_workspace_result(
+            resolve_modelo_workspace_graded_snapshot(
+                unit,
+                operation=operation,
+                output_language=language,
+                required_grade=_RegistryAuthorityGrade.CALCULATION,
+            )
+        )
+        if isinstance(admission, ModeloWorkspaceRefusedReadV1):
+            static_projection = resolve_modelo_workspace_static_inspection(
+                unit,
+                operation=operation,
+                output_language=language,
+            ).projection
+            return ModeloWorkspaceProjectedReadV1(projection=static_projection, graded_refusal=admission.refusal)
+        return ModeloWorkspaceProjectedReadV1(projection=admission.projection)
 
     return project
 
@@ -922,6 +967,7 @@ def _declarations_generation_factory(
                 lifecycle_projections=_required_projection(current[0].modelo_lifecycle, "Modelo lifecycle")
                 if current[0].modelo_lifecycle.projection is not None
                 else (),
+                graded_refusals=current[0].modelo_graded_refusals.projection or {},
                 lifecycle_actions_factory=lambda lifecycle: _modelo_lifecycle_door(
                     operation_runtime,
                     lifecycle,
@@ -1206,6 +1252,52 @@ def resolve_modelo_workspace_static_inspection(
         bucket_id=unit.bucket_id,
         catalogue_repository=WorkUnitCatalogueRepository(bucket_id=unit.bucket_id),
         authority=operation,
+        output_language=output_language,
+    )
+
+
+def resolve_modelo_workspace_graded_snapshot(
+    unit: WorkUnit,
+    *,
+    operation: PinnedAuthorityOperation,
+    output_language: OutputLanguage,
+    required_grade: RegistryAuthorityGrade,
+) -> ModeloWorkspaceResultV1:
+    """Admit one already-resolved unit at a declared authority grade, or return its refusal.
+
+    The graded admission is the one that carries materialized values, their
+    provenance and the canonical readiness report, so it is the read a
+    destination needs before it can show anything beyond the form's layout.
+    It is addressed exactly like the static admission -- by the unit's own
+    identity, on the unit's own bucket -- for the same reason: a coordinate
+    request is ambiguous across two units at one address.
+
+    The result is the full three-arm ``ModeloWorkspaceResultV1``, not just its
+    successful arm. A graded read legitimately refuses (no calculation yet, a
+    grade the selected revision cannot satisfy), and those refusals are the
+    producer's typed answer rather than an error: narrowing the return type
+    here would force this seam to invent an exception for an outcome the
+    contract already spells out.
+    """
+    from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+    from ...application.modelo.work_addressing import ModeloExactWorkUnitTarget
+    from ...application.modelo.workspace import resolve_graded_snapshot_result
+    from ...application.modelo.workspace_models import ModeloWorkspaceExactWorkUnitTargetV1
+    from ..adapter_composition import build_calculation_action_ports, build_state_projection_read_ports
+
+    return resolve_graded_snapshot_result(
+        ModeloWorkspaceExactWorkUnitTargetV1(
+            target=ModeloExactWorkUnitTarget(
+                work_unit_id=unit.work_unit_id,
+                bucket_id=unit.bucket_id,
+            )
+        ),
+        required_grade=required_grade,
+        bucket_id=unit.bucket_id,
+        catalogue_repository=WorkUnitCatalogueRepository(bucket_id=unit.bucket_id),
+        calculation_ports=build_calculation_action_ports(bucket_id=unit.bucket_id, operation=operation),
+        readiness_read_ports=build_state_projection_read_ports(),
+        operation=operation,
         output_language=output_language,
     )
 
@@ -1564,6 +1656,7 @@ __all__ = [
     "main",
     "operation_services_scope",
     "profile_storage_scope",
+    "resolve_modelo_workspace_graded_snapshot",
     "resolve_modelo_workspace_static_inspection",
     "run_authenticated_workbench_sessions",
     "run_module",

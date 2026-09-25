@@ -1941,6 +1941,9 @@ tui:
       apply: Apply declared values
       binding: Declared input {binding}
       scalar: Box {casilla}
+    evidence_kind:
+      legal: Legal reference
+      source: Source reference
     export:
       payment_election:
         cuenta_corriente: Tax current account (cuenta corriente tributaria)
@@ -1999,6 +2002,14 @@ tui:
       formulas: Formulas
       parameters: Parameters
       relations: Links to other forms
+    recovery_action:
+      operator:
+        modelo:
+          work:
+            calculate: Calculate this work unit
+            create: Create the work unit for this declaration
+            status: Review this work unit's status
+            verify: Verify this work unit
     review_status:
       agent_reviewed: Reviewed automatically
       operator_reviewed: Reviewed by a person
@@ -2011,6 +2022,32 @@ tui:
       producer_of: Source of "{capability}"
       record_family: Section
     technical_details: Technical details
+    workspace_refusal:
+      facts:
+        modelo: Modelo
+        period: Period
+        required_grade: Required grade
+        work_unit_id: Work unit
+      reason:
+        authority_grade_unavailable: The selected revision's authority does not yet
+          support the requested calculated view.
+        bucket_assertion_mismatch: The declaration's stored identity does not match
+          what was requested.
+        calculation_unavailable: This declaration has not been calculated yet, so
+          no values are available.
+        consistency_unavailable: The declaration's consistency could not be confirmed.
+        locale_unavailable: The declaration's translated labels could not be read.
+        schema_unavailable: The declaration's schema could not be read.
+        static_inspection_unavailable: The form layout itself could not be read for
+          this declaration.
+        target_not_found: No work exists yet for this declaration, so there is nothing
+          to calculate.
+        visible_target_ambiguous: More than one declaration matches this address,
+          so none can be opened as one.
+        workspace_changed: This declaration changed while it was open; reopen it to
+          see the current state.
+      static_fallback: Showing the form layout only. No calculated values are shown
+        below.
   root:
     account:
       appearance: Appearance

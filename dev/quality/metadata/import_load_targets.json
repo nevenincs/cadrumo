@@ -975,6 +975,7 @@
         "cadrumo.application.overview.status_report",
         "cadrumo.application.persistence_errors",
         "cadrumo.application.preflight",
+        "cadrumo.application.producer_capture",
         "cadrumo.application.profile_deletion_hold_contract",
         "cadrumo.application.profile_preconditions",
         "cadrumo.application.prorrata_register",

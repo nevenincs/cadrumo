@@ -1983,6 +1983,9 @@ tui:
       apply: Aplica els valors declarats
       binding: Dada declarada {binding}
       scalar: Casella {casilla}
+    evidence_kind:
+      legal: Referència legal
+      source: Referència d'origen
     export:
       payment_election:
         cuenta_corriente: Compte corrent tributari
@@ -2041,6 +2044,14 @@ tui:
       formulas: Fórmules
       parameters: Paràmetres
       relations: Vincles amb altres models
+    recovery_action:
+      operator:
+        modelo:
+          work:
+            calculate: Calculeu aquesta unitat de treball
+            create: Creeu la unitat de treball d'aquesta declaració
+            status: Reviseu l'estat d'aquesta unitat de treball
+            verify: Verifiqueu aquesta unitat de treball
     review_status:
       agent_reviewed: Revisat automàticament
       operator_reviewed: Revisat per una persona
@@ -2053,6 +2064,32 @@ tui:
       producer_of: Origen de «{capability}»
       record_family: Secció
     technical_details: Detalls tècnics
+    workspace_refusal:
+      facts:
+        modelo: Model
+        period: Període
+        required_grade: Grau requerit
+        work_unit_id: Unitat de treball
+      reason:
+        authority_grade_unavailable: L'autoritat de la revisió seleccionada encara
+          no admet la vista calculada sol·licitada.
+        bucket_assertion_mismatch: La identitat emmagatzemada de la declaració no
+          coincideix amb la sol·licitada.
+        calculation_unavailable: Aquesta declaració encara no s'ha calculat, així
+          que no hi ha valors disponibles.
+        consistency_unavailable: No s'ha pogut confirmar la coherència de la declaració.
+        locale_unavailable: No s'han pogut llegir les etiquetes traduïdes de la declaració.
+        schema_unavailable: No s'ha pogut llegir l'esquema de la declaració.
+        static_inspection_unavailable: No s'ha pogut llegir el disseny del formulari
+          d'aquesta declaració.
+        target_not_found: Encara no existeix treball per a aquesta declaració, així
+          que no hi ha res a calcular.
+        visible_target_ambiguous: Més d'una declaració coincideix amb aquesta adreça,
+          així que cap es pot obrir com una de sola.
+        workspace_changed: Aquesta declaració ha canviat mentre estava oberta; torneu-la
+          a obrir per veure l'estat actual.
+      static_fallback: Només es mostra el disseny del formulari. No es mostren valors
+        calculats a continuació.
   root:
     account:
       appearance: Aparença

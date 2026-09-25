@@ -1,19 +1,19 @@
-"""The declared-but-never-filled Workspace fields, as a burndown with teeth.
+"""Every declared Workspace field must be supplied by some production construction.
 
-This exists because the measurement behind it was taken BY HAND six times and
-grew on five of them, and every intermediate version would have passed its own
-closure check. A hand-walk that has to be repeated is a hand-walk that will
-disagree with itself; a scan disagrees only when the tree changes.
+A field with a default can be omitted at every construction site and still
+validate, so the payload advertises a capability it never carries and no test
+fails: nothing asserted a value nobody promised. This gate asserts that no such
+field exists, and proves on an isolated fixture that it can still detect one.
 
-The assertion is on MEMBERS, never on a count. A count would go green the
-moment somebody populated one field and introduced another, which is exactly
-the substitution this campaign keeps finding. Each entry below is an address a
-reader can search for, and the failure message says which direction the set
-moved -- because a NEW unfilled field and a POPULATED one need opposite
-responses and a bare inequality would not distinguish them.
+There is no allowed set, and adding one would be the defect this gate exists to
+find. A field nothing supplies is either filled at its producer or deleted with
+its consumers; recording it here as expected converts a gap into a fixture and
+makes the gate green over exactly the state it was written to report.
 
-Populating a field is expected to fail this gate. That is the burndown working:
-remove the entry in the same change that fills it.
+The assertion is one-directional: filling a field, deleting it, or teaching the
+scan to see a construction it was missing can never fail this gate. A gate that
+goes red when a defect is FIXED trains its readers to edit the gate instead of
+the code.
 """
 
 from __future__ import annotations
@@ -30,105 +30,9 @@ _ROOT = Path(__file__).resolve().parents[2]
 _SOURCE_ROOT = _ROOT / "src" / "cadrumo"
 _MODELS_MODULE = _SOURCE_ROOT / "application" / "modelo" / "workspace_models.py"
 
-_OUTSTANDING: frozenset[str] = frozenset(
-    {
-        # Bounded-facet pagination. NOT a gap: all three are supplied in
-        # production by `paginate_modelo_workspace_facet`, which computes the
-        # page, `has_more` and `next_cursor` and builds the facet. They are
-        # listed only because the scan cannot SEE that construction: the
-        # callee there is `facet_type`, a type passed in as a PARAMETER, so
-        # the call site carries no model name to match on. Recognising it
-        # would need dataflow the scan does not do.
-        #
-        # Kept here rather than removed, because removing them would make the
-        # gate fail on their reappearance every run. The register is the right
-        # home for a fact the scan cannot reach -- the same role it plays for
-        # DomainRefusal.capability below, which is correctly None rather than
-        # missing.
-        "ModeloWorkspaceBoundedFacetV1.has_more",
-        "ModeloWorkspaceBoundedFacetV1.next_cursor",
-        "ModeloWorkspaceBoundedFacetV1.records",
-        # Capability explanation surface. ONE cause, measured at both builders
-        # rather than three separate gaps: the capability denominator is
-        # assembled from a static (capability, producer-contract, disposition)
-        # table plus, on the graded path, a CalculationRevision. The producer
-        # contract carries contributor identity, projection discriminator,
-        # version and fingerprint -- and no evidence, no facts, and no registry
-        # family disposition. So none of these three has a source at the call
-        # site, and filling them means threading the registry authority into
-        # the denominator, which is a design change and not a population.
-        # `recovery_action` is blocked differently and for a harder reason:
-        # the canonical action vocabulary has no member meaning "re-request
-        # with graded admission", which is what the UNMEASURED rows would have
-        # to point at, and those rows are unmeasured because the CALLER chose
-        # static admission.
-        "ModeloWorkspaceCapabilityV1.evidence",
-        "ModeloWorkspaceCapabilityV1.facts",
-        "ModeloWorkspaceCapabilityV1.recovery_action",
-        "ModeloWorkspaceCapabilityV1.source_disposition",
-        # The refused result arm. No production site constructs a domain
-        # refusal at all: its only producer was graded-snapshot admission,
-        # which was removed because nothing in production reached it, and
-        # static inspection raises instead of refusing. So every refusal field
-        # beyond the required ones is unfilled for ONE cause. They return with
-        # graded admission and its launcher reader; capability, evidence and
-        # source disposition additionally need a refusal outside the admission
-        # boundary, which even the graded path never built.
-        "ModeloWorkspaceDomainRefusalV1.capability",
-        "ModeloWorkspaceDomainRefusalV1.evidence",
-        "ModeloWorkspaceDomainRefusalV1.facts",
-        "ModeloWorkspaceDomainRefusalV1.recovery_action",
-        "ModeloWorkspaceDomainRefusalV1.selected_target",
-        "ModeloWorkspaceDomainRefusalV1.source_disposition",
-        # Graded-only projection facets. Static inspection deliberately carries
-        # no calculation, no readiness read and no provenance: those are what
-        # the calculation-grade admission adds, and that admission has no
-        # production caller until the launcher admits calculated units through
-        # it. The readiness record and the profile requirements inside it are
-        # built only there, so every field below has the same single source.
-        # Remove them in the change that restores graded admission.
-        "ModeloWorkspaceProjectionV1.materialization_facet",
-        "ModeloWorkspaceProjectionV1.provenance_facet",
-        "ModeloWorkspaceProjectionV1.readiness",
-        "ModeloWorkspaceReadinessV1.binding_ready",
-        "ModeloWorkspaceReadinessV1.ledger_checked_transaction_count",
-        "ModeloWorkspaceReadinessV1.ledger_issues",
-        "ModeloWorkspaceReadinessV1.ledger_period",
-        "ModeloWorkspaceReadinessV1.ledger_preflight_required",
-        "ModeloWorkspaceReadinessV1.ledger_ready",
-        "ModeloWorkspaceReadinessV1.missing",
-        "ModeloWorkspaceReadinessV1.missing_bindings",
-        "ModeloWorkspaceReadinessV1.profile_refusal",
-        "ModeloWorkspaceReadinessV1.registry_ready",
-        "ModeloWorkspaceReadinessV1.registry_refusal",
-        "ModeloWorkspaceProfileRequirementV1.legal_refs",
-        "ModeloWorkspaceProfileRequirementV1.modelos",
-        # Casilla-definition facts. A casilla's continuity identity and export
-        # references live on its full definition, which static inspection does
-        # not carry -- it is bounded to casilla identity, which is also why its
-        # casilla records set legal_refs and constraints to None. Bindings
-        # carry neither fact. The graded builder read the full definition and
-        # filled both, so they return with graded admission.
-        "ModeloWorkspaceSchemaRecordV1.continuity",
-        "ModeloWorkspaceSchemaRecordV1.export_exposure",
-        # Not populatable, and the reason is structural rather than a missing
-        # field. Applicability is declared on the REVISION and expressed against
-        # TAXPAYER conditions -- entity types, income categories, estimation
-        # regimes, fiscal residencies, IVA regimes, a payer fact. An
-        # applicability rule names no casillas at all, so there is no
-        # record-to-rule relation in the registry to project. This field asks
-        # for one, which makes it a per-record shape over a revision-level
-        # concept.
-        #
-        # That matters because the governing ruling says POPULATE. It cannot be
-        # satisfied as the registry is modelled: filling it would mean either
-        # attaching every revision-level rule to every casilla, which is false,
-        # or inventing a mapping nothing declares. The ruling needs revisiting
-        # by its author -- delete the field, or extend the registry to carry a
-        # real per-casilla applicability relation. Nothing reads it today.
-        "ModeloWorkspaceSchemaRecordV1.applicability",
-    }
-)
+
+def _unfilled(source_root: Path, models_module: Path) -> set[str]:
+    return {str(finding) for finding in scan_unfilled_workspace_fields(source_root, models_module)}
 
 
 def test_the_scan_finds_the_declaring_module_at_all() -> None:
@@ -139,22 +43,15 @@ def test_the_scan_finds_the_declaring_module_at_all() -> None:
     )
 
 
-def test_no_workspace_field_is_unfilled_beyond_the_recorded_set() -> None:
-    """New unfilled fields fail; populated ones fail until their entry goes."""
-    found = {str(finding) for finding in scan_unfilled_workspace_fields(_SOURCE_ROOT, _MODELS_MODULE)}
+def test_no_declared_workspace_field_is_left_unsupplied() -> None:
+    """A declared field no production construction supplies fails here."""
+    unfilled = sorted(_unfilled(_SOURCE_ROOT, _MODELS_MODULE))
 
-    appeared = sorted(found - _OUTSTANDING)
-    assert not appeared, (
+    assert not unfilled, (
         "these Workspace fields are declared with a default and supplied by no construction site, "
         "so the payload advertises them and never carries them:\n"
-        + "\n".join(f"  {entry}" for entry in appeared)
-        + "\nFill them, delete them, or record them here with the reason they cannot be filled."
-    )
-
-    populated = sorted(_OUTSTANDING - found)
-    assert not populated, (
-        "these fields are now supplied somewhere, so their entries here are stale and this gate is "
-        "protecting nothing for them:\n" + "\n".join(f"  {entry}" for entry in populated)
+        + "\n".join(f"  {entry}" for entry in unfilled)
+        + "\nFill each one at its producer, or delete it with its consumers if nothing can produce it."
     )
 
 
@@ -162,8 +59,8 @@ def test_the_scan_reports_a_field_no_caller_supplies(tmp_path: Path) -> None:
     """Teeth, over a fixture tree rather than the live one.
 
     Driven over a temporary module so the proof does not depend on the live
-    inventory happening to contain an example, and so it keeps working after
-    the burndown reaches zero -- which is when a gate most needs to still be
+    inventory happening to contain an example, and so it keeps working while
+    the live tree carries none -- which is when a gate most needs to still be
     able to fail.
     """
     models = tmp_path / "workspace_models.py"
@@ -182,12 +79,39 @@ def test_the_scan_reports_a_field_no_caller_supplies(tmp_path: Path) -> None:
     caller.write_text("Thing(required='x', supplied='y')\n", encoding="utf-8")
     assert caller.exists()
 
-    found = {str(entry) for entry in scan_unfilled_workspace_fields(tmp_path, models)}
+    found = _unfilled(tmp_path, models)
 
     assert found == {"Thing.never"}, (
         "the scan must report only the optional field nobody supplies: a supplied one is not a "
         "finding, a required one cannot be omitted, and a Literal discriminator is filled by its "
         f"own default -- got {sorted(found)}"
+    )
+
+
+def test_a_generic_factory_supplies_through_its_type_parameter(tmp_path: Path) -> None:
+    """A model built through a ``type[...]`` parameter supplies its fields.
+
+    The paginator every bounded facet routes through is exactly this shape, and
+    a scan blind to it reports three filled pagination fields as unfilled. The
+    fixture proves both directions at once: the field the factory passes is not
+    a finding, and the one it omits still is -- so following the annotation has
+    not simply silenced the model.
+    """
+    models = tmp_path / "workspace_models.py"
+    models.write_text(
+        "class Page:\n    supplied: str | None = None\n    never: str | None = None\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "factory.py").write_text(
+        "def build(page_type: type[Page[str]], value: str) -> Page:\n    return page_type(supplied=value)\n",
+        encoding="utf-8",
+    )
+
+    found = _unfilled(tmp_path, models)
+
+    assert found == {"Page.never"}, (
+        "a field supplied through a type parameter is supplied, and one the factory omits is still "
+        f"a finding -- got {sorted(found)}"
     )
 
 
@@ -202,7 +126,7 @@ def test_a_file_being_rewritten_does_not_abort_the_scan(tmp_path: Path) -> None:
     models.write_text("class Thing:\n    never: str | None = None\n", encoding="utf-8")
     (tmp_path / "broken.py").write_text("def unfinished(:\n", encoding="utf-8")
 
-    found = {str(entry) for entry in scan_unfilled_workspace_fields(tmp_path, models)}
+    found = _unfilled(tmp_path, models)
 
     assert found == {"Thing.never"}
 
@@ -219,6 +143,6 @@ def test_a_file_the_walk_listed_but_cannot_read_does_not_abort_the_scan(tmp_path
     # A directory named like a module: the walk lists it and the read refuses it.
     (tmp_path / "vanished.py").mkdir()
 
-    found = {str(entry) for entry in scan_unfilled_workspace_fields(tmp_path, models)}
+    found = _unfilled(tmp_path, models)
 
     assert found == {"Thing.never"}

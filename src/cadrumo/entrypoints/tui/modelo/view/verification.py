@@ -2,7 +2,7 @@
 
 Shows the canonical verification findings, the readiness axes, and the
 verification capability's own disposition. It derives NO second readiness
-verdict: ``ModeloWorkspaceReadinessV1.ready`` is the answer, produced by the
+verdict: ``ProjectionModeloReadiness.ready`` is the answer, produced by the
 one canonical readiness producer and passed through unmodified, and this
 screen renders the axes beside it rather than recomputing agreement between
 them. A screen that recombined the axes could disagree with ``ready`` and
@@ -14,13 +14,13 @@ rather than shown as transport tokens or ``True``/``False``. The producer
 attribution and each finding's legal references stay reachable in a
 collapsed technical-details group.
 
-Evidence and recovery actions are STATED AS NOT CARRIED -- in one plain
-sentence -- rather than shown as empty columns. ``ModeloWorkspaceCapabilityV1`` and the refusal types declare
-``evidence``, ``facts`` and ``recovery_action``, and no producer populates
-them on those types -- while the surrounding application layer attaches
-``ActionReference`` to comparable verdicts routinely. So the emptiness is an
-upstream omission, not a finding that no evidence exists, and two empty
-columns would quietly convert the first into the second.
+Evidence and the recovery action are shown as what the verification
+capability actually carries: the registry references the revision cited for
+this capability's own schema family, and the catalogued next step the
+producer attached. When the capability carries neither, the screen says so in
+one sentence rather than rendering two empty columns -- an empty column reads
+as "there is no evidence", and the honest claim is "this capability cites
+none".
 
 Only the VERIFICATION_READINESS capability is shown here. The complete
 denominator belongs to the overview destination; repeating it would put the
@@ -39,6 +39,7 @@ from textual.widgets import Static
 from .....application.modelo.workspace_models import (
     ModeloWorkspaceCapabilityDisposition,
     ModeloWorkspaceCapabilityName,
+    ModeloWorkspaceCapabilityV1,
 )
 from .....core.i18n.render import tr
 from ...components.account_chrome import AccountChromeScreen
@@ -48,9 +49,11 @@ from .controller import ModeloWorkspaceReadSession
 from .models import (
     capability_row,
     disposition_label,
+    evidence_reference_label,
     finding_kind_label,
     finding_message,
     finding_severity_label,
+    recovery_action_label,
 )
 from .technical_details import TechnicalDetailRowV1, mount_technical_details, producer_row
 
@@ -110,7 +113,7 @@ class ModeloWorkspaceVerificationScreen(AccountChromeScreen):
             yield Static(id="workspace-verification-capability")
             yield Static(id="workspace-verification-findings-disposition")
             yield Static(id="workspace-verification-readiness-disposition")
-            yield Static(id="workspace-verification-evidence-not-carried")
+            yield Static(id="workspace-verification-evidence")
 
     def on_mount(self) -> None:
         """Populate the header, the capability line, and each axis or its disposition."""
@@ -120,21 +123,40 @@ class ModeloWorkspaceVerificationScreen(AccountChromeScreen):
         self._mount_capability()
         self._mount_findings()
         self._mount_readiness()
-        self.query_one("#workspace-verification-evidence-not-carried", Static).update(
-            tr("flows.modelo_workspace_verification.evidence_not_carried")
-        )
+        self._mount_evidence()
         self._mount_technical_details()
 
     def _mount_capability(self) -> None:
         """Show the verification capability's own producer-declared disposition."""
-        capability = next(
+        row = capability_row(self._verification_capability())
+        self.query_one("#workspace-verification-capability", Static).update(
+            tr("flows.modelo_workspace_verification.capability_line", disposition=disposition_label(row.disposition))
+        )
+
+    def _mount_evidence(self) -> None:
+        """Show this capability's cited evidence and its catalogued next step.
+
+        Both come from the capability row itself; neither is derived here. A
+        capability citing no reference and naming no addressable step gets one
+        sentence saying exactly that, which is a narrower claim than "there is
+        no evidence for this verification".
+        """
+        capability = self._verification_capability()
+        parts: list[str] = [evidence_reference_label(reference) for reference in capability.evidence]
+        if capability.recovery_action is not None:
+            parts.append(recovery_action_label(capability.recovery_action))
+        notice = self.query_one("#workspace-verification-evidence", Static)
+        if not parts:
+            notice.update(tr("flows.modelo_workspace_verification.evidence_none"))
+            return
+        notice.update(tr("flows.modelo_workspace_verification.evidence_carried", entries="; ".join(parts)))
+
+    def _verification_capability(self) -> ModeloWorkspaceCapabilityV1:
+        """Return the one capability row this destination is about."""
+        return next(
             capability
             for capability in self._session.projection.capabilities
             if capability.capability is ModeloWorkspaceCapabilityName.VERIFICATION_READINESS
-        )
-        row = capability_row(capability)
-        self.query_one("#workspace-verification-capability", Static).update(
-            tr("flows.modelo_workspace_verification.capability_line", disposition=disposition_label(row.disposition))
         )
 
     def _mount_findings(self) -> None:
@@ -192,12 +214,7 @@ class ModeloWorkspaceVerificationScreen(AccountChromeScreen):
 
     def _mount_technical_details(self) -> None:
         """Keep the producer and each finding's legal grounding, collapsed."""
-        capability = next(
-            capability
-            for capability in self._session.projection.capabilities
-            if capability.capability is ModeloWorkspaceCapabilityName.VERIFICATION_READINESS
-        )
-        rows: list[TechnicalDetailRowV1] = [producer_row(capability_row(capability))]
+        rows: list[TechnicalDetailRowV1] = [producer_row(capability_row(self._verification_capability()))]
         review = self._session.projection.work_review.review
         for index, finding in enumerate(() if review is None else review.findings):
             rows.append(

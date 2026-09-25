@@ -1966,6 +1966,9 @@ tui:
       apply: Bevallott értékek alkalmazása
       binding: 'Bevallott adat: {binding}'
       scalar: '{casilla}. rovat'
+    evidence_kind:
+      legal: Jogszabályi hivatkozás
+      source: Forráshivatkozás
     export:
       payment_election:
         cuenta_corriente: Adófolyószámla (cuenta corriente tributaria)
@@ -2024,6 +2027,14 @@ tui:
       formulas: Képletek
       parameters: Paraméterek
       relations: Kapcsolatok más nyomtatványokkal
+    recovery_action:
+      operator:
+        modelo:
+          work:
+            calculate: Számítsa ki ezt a munkaegységet
+            create: Hozza létre a bevalláshoz tartozó munkaegységet
+            status: Tekintse át ennek a munkaegységnek az állapotát
+            verify: Ellenőrizze ezt a munkaegységet
     review_status:
       agent_reviewed: Automatikusan átnézve
       operator_reviewed: Ember nézte át
@@ -2036,6 +2047,32 @@ tui:
       producer_of: „{capability}” forrása
       record_family: Szakasz
     technical_details: Technikai részletek
+    workspace_refusal:
+      facts:
+        modelo: Modell
+        period: Időszak
+        required_grade: Szükséges szint
+        work_unit_id: Munkaegység
+      reason:
+        authority_grade_unavailable: A kiválasztott revízió hatósági szintje még nem
+          támogatja a kért számított nézetet.
+        bucket_assertion_mismatch: A bevallás tárolt azonossága nem egyezik a kért
+          azonossággal.
+        calculation_unavailable: Ezt a bevallást még nem számították ki, ezért nincsenek
+          elérhető értékek.
+        consistency_unavailable: A bevallás konzisztenciáját nem sikerült megerősíteni.
+        locale_unavailable: A bevallás lefordított feliratait nem sikerült beolvasni.
+        schema_unavailable: A bevallás sémáját nem sikerült beolvasni.
+        static_inspection_unavailable: Ennek a bevallásnak az űrlap-elrendezését nem
+          sikerült beolvasni.
+        target_not_found: Ehhez a bevalláshoz még nem létezik munka, így nincs mit
+          kiszámítani.
+        visible_target_ambiguous: Egynél több bevallás felel meg ennek a címnek, ezért
+          egyik sem nyitható meg egyetlenként.
+        workspace_changed: Ez a bevallás megváltozott, amíg nyitva volt; nyissa meg
+          újra az aktuális állapot megtekintéséhez.
+      static_fallback: Csak az űrlap elrendezése látható. Az alábbiakban nem jelennek
+        meg számított értékek.
   root:
     account:
       appearance: Megjelenés

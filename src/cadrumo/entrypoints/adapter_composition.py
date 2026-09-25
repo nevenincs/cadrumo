@@ -140,16 +140,7 @@ class ProfileAdapterComposition:
     @cached_property
     def state_projection_read_ports(self) -> StateProjectionReadPorts:
         """Resolve the state projection read ports on first read."""
-        from ..adapters.persistence.profile.state_projection import StateProjectionPersistenceAdapter
-        from ..adapters.persistence.profile.usage_ratios import load_usage_ratios
-        from ..application.state_projection_ports import StateProjectionReadPorts
-
-        projection_adapter = StateProjectionPersistenceAdapter(diagnostics_ports=self.diagnostics_ports)
-        return StateProjectionReadPorts(
-            workspace=projection_adapter,
-            profile=projection_adapter,
-            usage_ratio_profile_loader=load_usage_ratios,
-        )
+        return build_state_projection_read_ports(diagnostics_ports=self.diagnostics_ports)
 
     @cached_property
     def diagnostics_ports(self) -> DiagnosticsPorts:
@@ -966,6 +957,31 @@ def build_attachment_store(bucket_id: str) -> AttachmentStoreProtocol:
     return AttachmentStore(objects=secure_object_repository_for_bucket(normalized_bucket_id))
 
 
+def build_state_projection_read_ports(
+    *,
+    diagnostics_ports: DiagnosticsPorts | None = None,
+) -> StateProjectionReadPorts:
+    """Compose the state-projection read ports over the persistence adapters.
+
+    Module-level so a caller that is not holding a
+    :class:`ProfileAdapterComposition` -- the TUI's own workspace admission,
+    for one -- reaches the same composition rather than assembling a second
+    one from the same adapters.
+    """
+    from ..adapters.persistence.profile.state_projection import StateProjectionPersistenceAdapter
+    from ..adapters.persistence.profile.usage_ratios import load_usage_ratios
+    from ..application.state_projection_ports import StateProjectionReadPorts
+
+    projection_adapter = StateProjectionPersistenceAdapter(
+        diagnostics_ports=diagnostics_ports or build_diagnostics_ports()
+    )
+    return StateProjectionReadPorts(
+        workspace=projection_adapter,
+        profile=projection_adapter,
+        usage_ratio_profile_loader=load_usage_ratios,
+    )
+
+
 def build_calculation_action_ports(
     *,
     bucket_id: str,
@@ -1436,6 +1452,7 @@ __all__ = [
     "build_percepcion_observation_ports",
     "build_prorrata_register_repository",
     "build_retencion_observation_ports",
+    "build_state_projection_read_ports",
     "build_verification_repository_bundle",
     "build_work_lifecycle_ports",
     "profile_adapter_composition",

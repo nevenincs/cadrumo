@@ -220,7 +220,9 @@ flows:
     values_unmeasured: Esta página solo muestra la estructura del formulario; aún
       no muestra valores calculados.
   modelo_workspace_overview:
-    actions_not_carried: Esta página aún no sugiere pasos siguientes.
+    actions_none: Todavía no se puede realizar ningún paso siguiente desde este espacio
+      de trabajo.
+    actions_suggested: 'Pasos siguientes sugeridos: {actions}'
     column:
       capability: Capacidad
       disposition: Disposición
@@ -281,8 +283,9 @@ flows:
       message: Qué se encontró
       severity: Severidad
       value: Valor
-    evidence_not_carried: Esta página aún no muestra justificantes ni pasos siguientes
-      sugeridos.
+    evidence_carried: 'Referencias de respaldo y paso siguiente: {entries}'
+    evidence_none: Esta capacidad de verificación no cita ninguna referencia del registro
+      ni indica ningún paso siguiente realizable.
     findings_none: La revisión de trabajo no ha registrado hallazgos.
     findings_unmeasured: Esta página aún no muestra los hallazgos de la verificación.
     readiness_unmeasured: Esta página aún no muestra si la declaración está lista.

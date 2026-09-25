@@ -87,6 +87,8 @@ _INSPECTION_ROOT_FIELDS = frozenset(
         "casilla_ids",
         "casilla_sections",
         "casilla_localization_keys",
+        "casilla_continuity",
+        "casilla_export_refs",
         "binding_ids",
         "projection_endpoints",
         "formulas",
@@ -213,6 +215,7 @@ _ROOT_CLASSIFICATION_RULES: tuple[_RootClassificationRule, ...] = (
 _PROJECTED_PATH_DESTINATION_RULES: tuple[tuple[str, frozenset[_SchemaType], _Destination], ...] = (
     (".constraint", frozenset({"CasillaId"}), "ModeloWorkspaceConstraintReferenceV1"),
     (".export", frozenset({"CasillaId", "ExportFieldId"}), "ModeloWorkspaceExportExposureReferenceV1"),
+    (".casilla_export_refs", frozenset({"CasillaId", "ExportFieldId"}), "ModeloWorkspaceExportExposureReferenceV1"),
     (".relation", frozenset({"BindingId", "CasillaId"}), "ModeloWorkspaceRelationEndpointReferenceV1"),
 )
 _PROJECTED_SCHEMA_DESTINATIONS: dict[_SchemaType, _Destination] = {

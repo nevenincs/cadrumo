@@ -1995,6 +1995,9 @@ tui:
       apply: Aplicar valores declarados
       binding: Dato declarado {binding}
       scalar: Casilla {casilla}
+    evidence_kind:
+      legal: Referencia legal
+      source: Referencia de origen
     export:
       payment_election:
         cuenta_corriente: Cuenta corriente tributaria
@@ -2053,6 +2056,14 @@ tui:
       formulas: Fórmulas
       parameters: Parámetros
       relations: Vínculos con otros modelos
+    recovery_action:
+      operator:
+        modelo:
+          work:
+            calculate: Calcule esta unidad de trabajo
+            create: Cree la unidad de trabajo de esta declaración
+            status: Revise el estado de esta unidad de trabajo
+            verify: Verifique esta unidad de trabajo
     review_status:
       agent_reviewed: Revisado automáticamente
       operator_reviewed: Revisado por una persona
@@ -2065,6 +2076,32 @@ tui:
       producer_of: Origen de «{capability}»
       record_family: Sección
     technical_details: Detalles técnicos
+    workspace_refusal:
+      facts:
+        modelo: Modelo
+        period: Periodo
+        required_grade: Grado requerido
+        work_unit_id: Unidad de trabajo
+      reason:
+        authority_grade_unavailable: La autoridad de la revisión seleccionada todavía
+          no admite la vista calculada solicitada.
+        bucket_assertion_mismatch: La identidad almacenada de la declaración no coincide
+          con la solicitada.
+        calculation_unavailable: Esta declaración aún no se ha calculado, así que
+          no hay valores disponibles.
+        consistency_unavailable: No se pudo confirmar la coherencia de la declaración.
+        locale_unavailable: No se pudieron leer las etiquetas traducidas de la declaración.
+        schema_unavailable: No se pudo leer el esquema de la declaración.
+        static_inspection_unavailable: No se pudo leer el diseño del formulario de
+          esta declaración.
+        target_not_found: Todavía no existe trabajo para esta declaración, así que
+          no hay nada que calcular.
+        visible_target_ambiguous: Más de una declaración coincide con esta dirección,
+          así que ninguna puede abrirse como una sola.
+        workspace_changed: Esta declaración cambió mientras estaba abierta; vuelva
+          a abrirla para ver el estado actual.
+      static_fallback: Solo se muestra el diseño del formulario. No se muestran valores
+        calculados a continuación.
   root:
     account:
       appearance: Apariencia

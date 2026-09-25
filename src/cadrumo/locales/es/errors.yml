@@ -603,8 +603,12 @@ errors:
       está mal formada y no se puede interpretar.
     canonical_manifest_payload_validation: La carga útil del manifiesto del corpus
       no superó la validación.
+    canonical_modelo_workspace_absent_readiness_projection: La captura de disponibilidad
+      se devolvió sin el informe prometido.
     canonical_modelo_workspace_absent_registry_projection: La captura del registro
       se devolvió sin la proyección prometida.
+    canonical_modelo_workspace_materialization_provenance_missing: Un valor de fila
+      repetida almacenado no indica su vinculación de origen.
     canonical_relation_binding_join: No se pudo leer conforme a lo declarado la correspondencia
       incluida entre relaciones y bindings.
     canonical_tampered_manifest_payload: El resumen del manifiesto del corpus no coincide
@@ -960,6 +964,8 @@ errors:
       pertenece a otra revisión.
     modelo_workspace_manifest_capture_not_current: El manifiesto de campos cambió
       durante la lectura; vuelva a capturarlo.
+    producer_capture_not_current: Una proyección de productor cambió mientras se leía;
+      vuelva a capturarla.
     profile_capsule_archive: No se ha podido escribir o leer el archivo de copia del
       perfil
     profile_capsule_source: El origen indicado no es una cápsula de perfil legible

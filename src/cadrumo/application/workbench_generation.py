@@ -94,7 +94,11 @@ from .modelo.declarations_workspace import (
     DeclarationsWorkspaceZoneObservationV1,
     project_declarations_workspace,
 )
-from .modelo.workspace_models import ModeloWorkspaceLifecycleProjectionV1, ModeloWorkspaceProjectionV1
+from .modelo.workspace_models import (
+    ModeloWorkspaceDomainRefusalV1,
+    ModeloWorkspaceLifecycleProjectionV1,
+    ModeloWorkspaceProjectionV1,
+)
 from .operations.registry import OperationPublicContractSetV1
 from .overview.agenda import OverviewAgenda, build_overview_agenda
 from .overview.calendar import build_overview_calendar
@@ -135,6 +139,24 @@ WORKBENCH_GENERATION_CONTRACT_VERSION: Literal[1] = 1
 
 _AEAT_SYNC_READER_UNAVAILABLE: Final[str] = "workbench.aeat_sync.reader_unavailable"
 _AEAT_SYNC_SNAPSHOT_PROJECTOR_UNAVAILABLE: Final[str] = "workbench.aeat_sync.snapshot_projector_unavailable"
+
+
+@dataclass(frozen=True, slots=True)
+class ModeloWorkspaceProjectedReadV1:
+    """One work unit's shared read: its projection, plus a graded refusal it fell back from.
+
+    The Modelo projection reader tries GRADED_SNAPSHOT first and falls back to
+    STATIC_INSPECTION on a taxpayer-facing refusal (``projection`` is always
+    the admitted result, graded or static). ``graded_refusal`` carries that
+    refusal honestly rather than discarding it: ``None`` means the graded
+    admission succeeded, and a refusal means it named why the calculated view
+    is unavailable and what would change that, for whichever destination
+    later opens this exact work unit to show.
+    """
+
+    projection: ModeloWorkspaceProjectionV1
+    graded_refusal: ModeloWorkspaceDomainRefusalV1 | None = None
+
 
 if TYPE_CHECKING:
     from ..domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -436,6 +458,11 @@ class WorkbenchGenerationInputsV1(BaseModel):
             refusal="workbench.modelo.lifecycle_not_captured",
         )
     )
+    modelo_graded_refusals: WorkbenchGenerationSourceResultV1[Mapping[str, ModeloWorkspaceDomainRefusalV1]] = (
+        WorkbenchGenerationSourceResultV1[Mapping[str, ModeloWorkspaceDomainRefusalV1]].never_captured(
+            refusal="workbench.modelo.graded_refusal_not_captured",
+        )
+    )
     ledger_admission: WorkbenchDestinationAdmission
     declarations_admission: WorkbenchDestinationAdmission
     aeat_sync_admission: WorkbenchDestinationAdmission
@@ -477,6 +504,7 @@ class WorkbenchGenerationV1(BaseModel):
     aeat_sync: WorkbenchGenerationProjectionResultV1[AeatSyncWorkspaceProjectionV1]
     modelo: WorkbenchGenerationProjectionResultV1[tuple[ModeloWorkspaceProjectionV1, ...]]
     modelo_lifecycle: WorkbenchGenerationProjectionResultV1[tuple[ModeloWorkspaceLifecycleProjectionV1, ...]]
+    modelo_graded_refusals: WorkbenchGenerationProjectionResultV1[Mapping[str, ModeloWorkspaceDomainRefusalV1]]
     search: WorkbenchGenerationProjectionResultV1[InstalledWorkbenchSearchSnapshotV1]
     ledger_admission: WorkbenchDestinationAdmission
     declarations_admission: WorkbenchDestinationAdmission
@@ -537,7 +565,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
     settlement role produces -- not a zero.
     """
     operation_contracts: OperationPublicContractSetV1 | None = None
-    modelo_projection_reader: Callable[[WorkUnit], ModeloWorkspaceProjectionV1] | None = None
+    modelo_projection_reader: Callable[[WorkUnit], ModeloWorkspaceProjectedReadV1] | None = None
     ledger_action_ports: LedgerActionPorts | None = None
     """Outer-composed ledger ports for this profile, when the ledger is bound."""
     capture_memory: WorkbenchCaptureMemory | None = None
@@ -612,7 +640,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             if ledger_ports is None
             else self._read_ledger(revisions.revisions, work_units, sources=ledger_sources, ports=ledger_ports)
         )
-        modelo = self._read_modelo(work_units)
+        modelo, modelo_graded_refusals = self._read_modelo(work_units)
         modelo_lifecycle = self._read_modelo_lifecycle(
             modelo,
             work_units=work_units,
@@ -649,6 +677,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             aeat_sync_refusal=aeat_sync_refusal,
             modelo=modelo,
             modelo_lifecycle=modelo_lifecycle,
+            modelo_graded_refusals=modelo_graded_refusals,
             work_units=work_units,
             verification=verification,
         )
@@ -772,7 +801,9 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             invoices=sources[1],
         )
 
-    def _read_modelo(self, work_units: WorkUnitCatalogue) -> tuple[ModeloWorkspaceProjectionV1, ...] | None:
+    def _read_modelo(
+        self, work_units: WorkUnitCatalogue
+    ) -> tuple[tuple[ModeloWorkspaceProjectionV1, ...] | None, Mapping[str, ModeloWorkspaceDomainRefusalV1] | None]:
         """Project every current work unit, or refuse the whole Modelo source.
 
         A profile holding no work yields an empty tuple, which is a proven
@@ -782,14 +813,28 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         session: a partial tuple would silently omit a declaration the profile
         holds, and letting the failure escape would take Home, Ledger,
         Declarations and AEAT Sync down with it for one unsupported modelo.
+
+        The refusal map is keyed by ``work_unit_id`` and carries only the
+        units whose read fell back from GRADED_SNAPSHOT to STATIC_INSPECTION;
+        a unit admitted at its requested grade has no entry. It shares the
+        Modelo source's own availability rather than a second one of its own,
+        since it is read from the exact same reader call and can never
+        disagree about whether the source was read at all.
         """
         if self.modelo_projection_reader is None:
-            return None
+            return None, None
         reader = self.modelo_projection_reader
         try:
-            return tuple(reader(unit) for unit in work_units.values())
+            reads = tuple(reader(unit) for unit in work_units.values())
         except (ValueError, LookupError):
-            return None
+            return None, None
+        projections = tuple(read.projection for read in reads)
+        refusals = {
+            str(unit.work_unit_id): read.graded_refusal
+            for unit, read in zip(work_units.values(), reads, strict=True)
+            if read.graded_refusal is not None
+        }
+        return projections, refusals
 
     def _read_modelo_lifecycle(
         self,
@@ -1547,6 +1592,7 @@ def _build_workbench_generation_inputs(
     aeat_sync_refusal: NamespacedId,
     modelo: tuple[ModeloWorkspaceProjectionV1, ...] | None,
     modelo_lifecycle: tuple[ModeloWorkspaceLifecycleProjectionV1, ...] | None,
+    modelo_graded_refusals: Mapping[str, ModeloWorkspaceDomainRefusalV1] | None,
     work_units: WorkUnitCatalogue,
     verification: VerificationReportCatalogue | None,
 ) -> WorkbenchGenerationInputsV1:
@@ -1589,6 +1635,11 @@ def _build_workbench_generation_inputs(
             modelo_lifecycle,
             observed_at=observed_at,
             refusal="workbench.modelo.lifecycle_reader_unavailable",
+        ),
+        modelo_graded_refusals=_source_result(
+            modelo_graded_refusals,
+            observed_at=observed_at,
+            refusal="workbench.modelo.graded_refusal_reader_unavailable",
         ),
         ledger_admission=_source_admission(
             "workbench.ledger",
@@ -1638,6 +1689,7 @@ def assemble_workbench_generation(inputs: WorkbenchGenerationInputsV1) -> Workbe
     aeat_sync = _carry_projection(inputs.aeat_sync)
     modelo = _carry_projection(inputs.modelo)
     modelo_lifecycle = _carry_projection(inputs.modelo_lifecycle)
+    modelo_graded_refusals = _carry_projection(inputs.modelo_graded_refusals)
     search = _assemble_search(
         ledger=ledger,
         declarations=declarations,
@@ -1656,6 +1708,7 @@ def assemble_workbench_generation(inputs: WorkbenchGenerationInputsV1) -> Workbe
         aeat_sync=aeat_sync,
         modelo=modelo,
         modelo_lifecycle=modelo_lifecycle,
+        modelo_graded_refusals=modelo_graded_refusals,
         search=search,
         ledger_admission=inputs.ledger_admission,
         declarations_admission=inputs.declarations_admission,
@@ -1810,6 +1863,7 @@ def _missing_search(
 
 __all__ = [
     "InstalledWorkbenchGenerationProviderV1",
+    "ModeloWorkspaceProjectedReadV1",
     "ProfileRecordReadRepositoryV1",
     "SecureProfileWorkbenchGenerationReadDoorV1",
     "WorkbenchGenerationAvailability",

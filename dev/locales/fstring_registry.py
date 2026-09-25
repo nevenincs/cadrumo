@@ -186,6 +186,7 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
     from cadrumo.application.modelo.workspace_models import (
         ModeloWorkspaceCapabilityDisposition,
         ModeloWorkspaceCapabilityName,
+        ModeloWorkspaceRefusalCode,
         ModeloWorkspaceRevisionAssertionDisposition,
     )
     from cadrumo.application.operations.frontend_requests import (
@@ -335,7 +336,19 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
                 ("input_kind", InputKind),
                 ("finding_kind", ModeloVerificationFindingKind),
                 ("finding_severity", ModeloVerificationFindingSeverity),
+                ("workspace_refusal.reason", ModeloWorkspaceRefusalCode),
             )
+        ),
+        FStringKeyRegistration(
+            # Bounded set: the only ``ModeloWorkspaceEvidenceFactV1.name`` values
+            # `graded_snapshot_refusal` call sites in
+            # application/modelo/workspace.py actually populate. ``name`` is a
+            # free-form bounded code on the typed record, not an enum, so this
+            # is pinned to that call-site inventory like
+            # ``tui.modelo.destination.*`` below rather than derived from a type.
+            description="tui.modelo.workspace_refusal.facts.* (ModeloWorkspaceEvidenceFactV1.name)",
+            key_factory=lambda v: f"tui.modelo.workspace_refusal.facts.{v}",
+            values=("modelo", "period", "required_grade", "work_unit_id"),
         ),
         FStringKeyRegistration(
             # Pinned to _OTHER_DESTINATIONS in entrypoints/tui/modelo/view/overview.py.

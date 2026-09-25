@@ -569,8 +569,12 @@ errors:
       ezért nem elemezhetők.
     canonical_manifest_payload_validation: A korpusz manifesztjének adatai nem mentek
       át az érvényesítésen.
+    canonical_modelo_workspace_absent_readiness_projection: A készültségi rögzítés
+      az ígért jelentés nélkül tért vissza.
     canonical_modelo_workspace_absent_registry_projection: A nyilvántartási rögzítés
       az ígért vetítés nélkül tért vissza.
+    canonical_modelo_workspace_materialization_provenance_missing: Egy tárolt ismétlődő
+      sor értéke nem nevezi meg a forráskötését.
     canonical_relation_binding_join: A csomagolt reláció–kötés megfeleltetés nem olvasható
       a deklarált módon.
     canonical_tampered_manifest_payload: A korpusz manifesztjének kivonata nem egyezik
@@ -910,6 +914,8 @@ errors:
     modelo_work_selector_revision_conflict: A kiválasztott modell munkaegység másik
       revízióhoz tartozik.
     modelo_workspace_manifest_capture_not_current: A mezőjegyzék olvasás közben megváltozott;
+      rögzítse újra.
+    producer_capture_not_current: Egy termelői vetület megváltozott olvasás közben;
       rögzítse újra.
     profile_capsule_archive: A profil archívumát nem sikerült írni vagy olvasni
     profile_capsule_source: A megadott forrás nem olvasható profilkapszula
