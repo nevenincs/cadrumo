@@ -6,8 +6,9 @@ tags:
 date: '2026-09-25'
 modified: '2026-09-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:f860c10526d3988be4a32ed66858d16b9d7454e723c228ea758ac940261b11aa'
+body_hash: 'sha256:8241a6c015ac28fcf2ffff9e2b36c9e1297e8ad81b1002998af0dd6e08456e00'
 related:
+  - '[[2026-09-25-filing-capability-ledger]]'
   - '[[2026-09-25-filing-capability-plan]]'
 ---
 
@@ -16,6 +17,10 @@ related:
 Auto-generated index of all documents tagged with `#filing-capability`.
 
 ## Documents
+
+### exec
+
+- `2026-09-25-filing-capability-ledger` - `filing-capability` ledger
 
 ### plan
 

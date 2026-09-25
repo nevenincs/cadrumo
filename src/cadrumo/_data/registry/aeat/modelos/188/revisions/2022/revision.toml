@@ -36,6 +36,29 @@ application_link_source_refs = ["aeat-modelo-188-procedure"]
 # from the 2023-y-siguientes edition, applies to both epochs equally, and is
 # recorded here rather than silently carried.
 #
+# NOT CLAIMED -- and RE-CHECKED against the official sources rather than
+# assumed. The anexo V in force for ejercicio 2022 is not obtainable from the
+# publications that carry it:
+#   - BOE-A-1999-22372, consolidated text: the ANEXO V heading carries no
+#     field, position, length or naturaleza content. BOE published this orden's
+#     annexes as images.
+#   - BOE-A-2017-15845 (Orden HFP/1308/2017), articulo tercero: a PARTIAL
+#     amendment stating three changes to the registro de tipo 2 -- the
+#     INFORMACION ADICIONAL field at positions 92-104 (subdivided 92 signo,
+#     93-104 importe), the % RETENCION field at positions 131-134 (subdivided
+#     131-132 entero, 133-134 decimal) and the CLAVE field at position 152.
+#     Nothing else of the record appears.
+#   - BOE-A-2015-11074 (Orden HAP/2118/2015): partial, adds one field.
+#   - BOE-A-2007-18192 (Orden EHA/3021/2007): replaces the hoja interior of
+#     anexo IV and edits instrucciones text; it does not republish anexo V.
+#   - AEAT's own diseños-de-registro index for modelos 100-199 lists exactly
+#     one Modelo 188 artefact, DR_Mod_188_2023.pdf, labelled "188 - Orden
+#     EHA/3021/2007 (actualizado por Orden HFP/1284/2023 de 28 de noviembre)".
+#     There is no "ejercicios anteriores" entry for this modelo.
+# Stitching an image-only 1999 base to three partial amendments would produce a
+# reconstruction, not an official record design, so no offset is authored from
+# it and this edition still declares no export layout.
+#
 # NOT CLAIMED -- no record geometry. aeat-dr-188-2023 declares applies_from
 # 2023-01-01 and so cannot be cited by this edition; the anexo V in force for
 # ejercicio 2022 (as amended by Orden HFP/1308/2017) is not in the corpus.
