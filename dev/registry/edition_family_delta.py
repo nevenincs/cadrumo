@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import shutil
-from collections.abc import Mapping
+from collections.abc import Mapping, MutableMapping
 from pathlib import Path
 
 import tomlkit
@@ -13,6 +13,7 @@ from cadrumo.domain.calculations.registry.cleared_families import cleared_family
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 from cadrumo.domain.calculations.registry.keyed_families import (
     KEYED_FAMILY_SPECS,
+    family_source_default_fields,
     inline_family_source_default,
 )
 from cadrumo.domain.calculations.registry.revision_order import ordered_revisions
@@ -35,6 +36,11 @@ _REPRESENTATION_FIELDS = {
     "family_positions",
     "cleared_families",
     "scoped_families",
+    "restated_families",
+    # An edition-level ``<family>_source_refs`` only defaults its members'
+    # ``source_refs``; the hydrated members carry the resolved references, so
+    # lifting a shared run into the default changes representation, not meaning.
+    *(field for _section, field in family_source_default_fields(include_casillas=True)),
 }
 
 
@@ -182,6 +188,27 @@ def _authored_member_ids(revision_dir: Path, revision_id: str, family: str, iden
     return identities
 
 
+def _restated_sections(revision: Mapping[str, object]) -> set[str]:
+    """Return the keyed families one edition restates in full rather than inherits."""
+    declared = revision.get("restated_families") or ()
+    if not isinstance(declared, list | tuple):
+        return set()
+    return {str(entry["family"]) for entry in declared if isinstance(entry, Mapping) and "family" in entry}
+
+
+def _drop_restatement(revision: MutableMapping[str, object], section: str) -> None:
+    """Remove one family's restatement, and the declaration once it restates nothing."""
+    declared = revision["restated_families"]
+    if not isinstance(declared, list):
+        raise RuntimeError(f"restated_families is not an array while lifting {section!r}")
+    retained = [entry for entry in declared if not (isinstance(entry, Mapping) and entry.get("family") == section)]
+    if retained:
+        declared.clear()
+        declared.extend(retained)
+    else:
+        del revision["restated_families"]
+
+
 def collapse_keyed_families(source: Path, candidate: Path) -> dict[str, object]:
     """Collapse every eligible keyed family and prove hydrated equality."""
     if not candidate.exists():
@@ -240,6 +267,7 @@ def collapse_keyed_families(source: Path, candidate: Path) -> dict[str, object]:
             for operation in positions
             if isinstance(operation, Mapping)
         }
+        restated_sections = _restated_sections(revision)
         scoped_families = list(revision.get("scoped_families", ()))
         scoped_sections = {spec.section for spec in KEYED_FAMILY_SPECS if spec.scoped}
         operated_sections = {
@@ -255,6 +283,14 @@ def collapse_keyed_families(source: Path, candidate: Path) -> dict[str, object]:
             section_dir = revision_dir / spec.section
             if spec.identity is None or not section_dir.is_dir():
                 continue
+            # A restated family inherits nothing, so collapsing its members
+            # without also lifting the restatement would delete them. The
+            # restatement is converted into the ordinary delta instead: the
+            # predecessor-only members become explicit removals below, and the
+            # closing equality check proves the hydrated family unchanged.
+            if spec.section in restated_sections:
+                _drop_restatement(revision, spec.section)
+                revision_changed = True
             old_raw = predecessor.get(spec.section)
             new_raw = current.get(spec.section)
             old_members = (
