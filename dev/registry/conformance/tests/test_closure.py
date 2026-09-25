@@ -22,6 +22,7 @@ from ..closure import (
     _TEMPORAL_WORK_ITEMS,
     RegistryClosurePredicateRefusal,
     RegistryClosurePredicateRefusalReason,
+    RegistryClosureReport,
     _render_filing_channels,
     build_registry_closure_report,
     check_registry_closure_release,
@@ -491,3 +492,21 @@ def test_one_channel_cannot_be_refused_twice_in_the_same_refusal() -> None:
                 RegistryClosureFilingChannelRefusal(channel="conformance", reason="proof_validation_failed"),
             ),
         )
+
+
+def test_cli_names_a_composition_failure_on_its_diagnostic_stream(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A report that cannot be composed exits 1 and says why, never silently."""
+    from .. import closure as closure_module
+
+    def refuse(**_: object) -> RegistryClosureReport:
+        raise ValueError("vector validation refused the pinned manifest digest")
+
+    monkeypatch.setattr(closure_module, "load_registry_closure_report", refuse)
+
+    result = CliRunner().invoke(app, ["closure", "--offline", "--check"])
+
+    assert result.exit_code == 1
+    assert result.stdout == ""
+    assert "closure\tstatus=failed\tdetail=ValueError: vector validation refused the pinned manifest digest" in (
+        result.stderr
+    )

@@ -481,21 +481,31 @@ def closure(
     """
     from .closure import load_registry_closure_report
 
-    if offline:
-        report = load_registry_closure_report()
-    else:
-        # Closure alone needs filing-proof composition. Keeping this import at
-        # the command boundary lets the integrity gate compile mutable source
-        # inputs without importing product runtime dependencies, which are
-        # deliberately artifact-backed.
-        from .authorities import canonical_live_registry_closure_authorities
+    try:
+        if offline:
+            report = load_registry_closure_report()
+        else:
+            # Closure alone needs filing-proof composition. Keeping this import at
+            # the command boundary lets the integrity gate compile mutable source
+            # inputs without importing product runtime dependencies, which are
+            # deliberately artifact-backed.
+            from .authorities import canonical_live_registry_closure_authorities
 
-        repository_root = Path(__file__).resolve().parents[3]
-        authorities = canonical_live_registry_closure_authorities(repository_root)
-        report = load_registry_closure_report(
-            registry_authority=authorities.registry,
-            filing_proof_authority=authorities.filing_export,
-        )
+            repository_root = Path(__file__).resolve().parents[3]
+            authorities = canonical_live_registry_closure_authorities(repository_root)
+            report = load_registry_closure_report(
+                registry_authority=authorities.registry,
+                filing_proof_authority=authorities.filing_export,
+            )
+    except Exception as error:
+        # A composition failure is the command's refusal, not a crash: name it on
+        # the diagnostic stream so an exit 1 is never silent.
+        detail = f"{type(error).__name__}: {error}"
+        if as_json:
+            typer.echo(json.dumps({"status": "failed", "detail": detail}, indent=2), err=True)
+        else:
+            typer.echo(f"closure\tstatus=failed\tdetail={detail}", err=True)
+        raise typer.Exit(code=1) from error
     emit_registry_closure_command(report, check=check, as_json=as_json)
 
 

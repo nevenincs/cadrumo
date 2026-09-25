@@ -22,9 +22,10 @@ import pytest
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
 from ..compiler.authority import compiled_bundled_authority
-from ..conformance.closure_models import RegistryClosureLimb, RegistryClosureLimbOutcomeKind
+from ..conformance.closure_models import RegistryClosureLimb
 from ..conformance.filing_export_coverage import compose_filing_export_coverage
 from ..filing_export_proof import canonical_two_channel_filing_export_proof_authority
 from ..maintenance_support import coverage_assessment_floor, coverage_assessment_horizon, revision_selection_coordinates
@@ -104,29 +105,42 @@ def test_every_filing_grade_revision_has_one_law_selected_export_limb_and_an_hon
         proof_authority=proof_authority,
     )
     limbs = _limbs_by_coordinate(report)
-    coordinates = {(modelo.id, revision.id) for modelo, revision in filing_revisions}
-
-    assert set(limbs) == {
-        (modelo.id, revision.id) for modelo in authority.modelos for revision in modelo.revisions.values()
-    }
-    assert coordinates <= set(limbs)
-
     assessment_horizon = coverage_assessment_horizon(authority.catalogues)
     assessment_floor = coverage_assessment_floor(authority.catalogues)
+
+    def selectable(revision: ModeloRevision) -> bool:
+        return bool(
+            revision_selection_coordinates(
+                revision,
+                assessment_horizon=assessment_horizon,
+                assessment_floor=assessment_floor,
+            )
+        )
+
+    # The denominator is exactly the law-selectable set temporal coverage
+    # enumerates. A historical declaration wholly below the support floor has no
+    # coordinate this product can file, so it carries no limb at all rather than
+    # a limb the closure join could not match to a temporal row.
+    assert set(limbs) == {
+        (modelo.id, revision.id)
+        for modelo in authority.modelos
+        for revision in modelo.revisions.values()
+        if selectable(revision)
+    }
+    assert any(not selectable(revision) for modelo in authority.modelos for revision in modelo.revisions.values()), (
+        "no revision lies outside the support envelope; the exclusion above is untested"
+    )
+
     for modelo, revision in filing_revisions:
         coordinates_for_revision = revision_selection_coordinates(
             revision,
             assessment_horizon=assessment_horizon,
             assessment_floor=assessment_floor,
         )
-        limb = limbs[(modelo.id, revision.id)]
         if not coordinates_for_revision:
-            # A historical filing-grade declaration below the product support
-            # floor has no coordinate this product can file.  Its retained limb
-            # must remain explicitly non-applicable rather than impersonating
-            # an evidence refusal for a filing that cannot be selected.
-            assert limb.outcome is RegistryClosureLimbOutcomeKind.NOT_APPLICABLE
+            assert (modelo.id, revision.id) not in limbs
             continue
+        limb = limbs[(modelo.id, revision.id)]
         for filing_year, period in coordinates_for_revision:
             inspection = authority.inspect_revision(
                 modelo.id,

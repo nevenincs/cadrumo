@@ -72,7 +72,7 @@ class FilingExportCoverageReport(BaseModel):
     def _require_one_filing_limb_per_revision(self) -> FilingExportCoverageReport:
         coordinates = tuple((limb.modelo, limb.revision) for limb in self.limbs)
         if len(coordinates) != len(set(coordinates)):
-            raise ValueError("filing-export coverage requires one limb per registry revision")
+            raise ValueError("filing-export coverage requires one limb per law-selectable revision")
         if any(limb.name != "filing_export" for limb in self.limbs):
             raise ValueError("filing-export coverage may contain only filing-export limbs")
         return self
@@ -98,13 +98,20 @@ def compose_filing_export_coverage(
 ) -> FilingExportCoverageReport:
     """Compose filing-layout evidence from validated law-selected snapshots.
 
-    A revision below filing grade is a deliberate non-filing capability and is
-    retained as such.  A filing-grade revision is selected without a revision-id
-    override, admitted through the filing snapshot boundary, and then checked
-    against the byte-exact official layout sources its materialised layouts cite.
+    The denominator is the one temporal coverage uses: every revision with at
+    least one selection coordinate inside the supported assessment envelope. A
+    revision wholly outside it has no coordinate the product files, so it has no
+    limb here, just as it has no temporal row; the closure join then compares
+    two projections of one set. A revision below filing grade is a deliberate
+    non-filing capability and is retained as such.  A filing-grade revision is
+    selected without a revision-id override, admitted through the filing
+    snapshot boundary, and then checked against the byte-exact official layout
+    sources its materialised layouts cite.
     """
     authority.validate_registry()
     current_assessment_at = now() if assessment_at is None else assessment_at
+    assessment_horizon = coverage_assessment_horizon(authority.catalogues)
+    assessment_floor = coverage_assessment_floor(authority.catalogues)
     limbs = tuple(
         _compose_revision_limb(
             authority=authority,
@@ -115,6 +122,11 @@ def compose_filing_export_coverage(
         )
         for modelo in sorted(authority.modelos, key=lambda item: item.id)
         for revision in sorted(modelo.revisions.values(), key=lambda item: item.id)
+        if revision_selection_coordinates(
+            revision,
+            assessment_horizon=assessment_horizon,
+            assessment_floor=assessment_floor,
+        )
     )
     return FilingExportCoverageReport(limbs=limbs)
 
@@ -159,18 +171,6 @@ def _compose_revision_limb(
             detail="filing-grade snapshots require a reviewed revision",
             work_item="aeat-export-fragment-generator-authority:reviewed-layout",
             reconsideration_condition="Record a valid review for the exact revision and its official layout authority.",
-        )
-    if not revision_selection_coordinates(
-        revision,
-        assessment_horizon=coverage_assessment_horizon(authority.catalogues),
-        assessment_floor=coverage_assessment_floor(authority.catalogues),
-    ):
-        # Wholly below the supported floor: no coordinate the product files.
-        return RegistryClosureLimb(
-            modelo=modelo_id,
-            revision=revision.id,
-            name="filing_export",
-            outcome=RegistryClosureLimbOutcomeKind.NOT_APPLICABLE,
         )
     layout_result = _filing_layout_evidence(
         authority=authority,
