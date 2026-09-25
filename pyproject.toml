@@ -876,8 +876,6 @@ convention = "google"
 "dev/release/preview.py" = ["S603", "S607"]
 "dev/ci/python_runtime_sweep.py" = ["S603", "S607"]
 "dev/ci/change_scope.py" = ["S603"]
-"dev/ci/security_diff_scan.py" = ["S603"]
-"dev/ci/tests/test_security_diff_scan.py" = ["S603", "S607"]
 # `password_env_var` is an env-var NAME, not a password; S106 false-positives
 # on cert-auth tests.
 "src/cadrumo/adapters/outbound/aeat/auth/tests/test_*.py" = ["S105", "S106"]

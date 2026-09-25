@@ -33,7 +33,6 @@ _LOCK_FREE_OPTION: Final = "--no-optional-locks"
 _OWN_REPOSITORY_ONLY: Final[dict[str, str]] = {
     "dev/packaging/smoke_homebrew.py": "initialises, commits and pulls inside a temporary tap repository it creates",
     "dev/env/tests/test_clean.py": "builds a temporary fixture repository under tmp_path and runs git only there",
-    "dev/ci/tests/test_security_diff_scan.py": "builds a fixture repository under tmp_path and runs git only there",
     "dev/packaging/tests/test_smoke_homebrew.py": "the only git-shaped literal is the Homebrew formula name ['git']",
 }
 

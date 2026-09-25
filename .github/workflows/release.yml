@@ -53,8 +53,6 @@ jobs:
     needs: check-prove-ref
     if: inputs.phase == 'prove'
     uses: ./.github/workflows/merge-gate.yml
-    with:
-      full: true
 
   runtime-inventory:
     name: "Check: Runtime inventory (Linux)"
