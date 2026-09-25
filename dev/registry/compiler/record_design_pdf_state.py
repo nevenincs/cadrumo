@@ -17,6 +17,7 @@ from dev.registry.compiler.record_design_schema import (
     RecordDesignSkippedSheet,
 )
 
+from .record_design_pdf_columns import PdfColumnRow, apply_pdf_column_cells
 from .record_design_pdf_repairs import REVERSED_ROW_TAIL_RE
 from .record_design_pdf_rows import (
     PdfRow,
@@ -376,6 +377,7 @@ def _finalise_extraction(
     source_label: str,
     results: list[_PdfSheetResult],
     corrections: Mapping[tuple[str, int], RecordDesignRangeStartCorrection],
+    column_rows: tuple[PdfColumnRow, ...] = (),
 ) -> RecordDesignExtraction:
     """Finish post-recovery transforms and classify unread or broken sheets."""
     read = _identified_sheets(results)
@@ -397,7 +399,10 @@ def _finalise_extraction(
     # returned -- the contiguity pass below already routes it to `skipped`. Only
     # the moment it is judged moved, to after that routing, so a body the read
     # does not return can no longer refuse the whole document.
-    read = _recover_inline_constants(read)
+    parsed_any_content = any(existing.content for sheet in read for existing in sheet.fields)
+    read = apply_pdf_column_cells(read, column_rows)
+    if not parsed_any_content:
+        read = _recover_inline_constants(read)
     read = _apply_range_start_corrections(read, corrections)
     broken = _contiguity_failures(read)
     returned = tuple(sheet for sheet in read if sheet.name not in broken)
@@ -588,6 +593,7 @@ class PdfParseState:
     """
 
     __slots__ = (
+        "column_rows",
         "corrections",
         "current",
         "in_table",
@@ -604,6 +610,7 @@ class PdfParseState:
         source_label: str,
         corrections: CorrectionIndex = EMPTY_CORRECTIONS,
         repair_glued_rows: bool = False,
+        column_rows: tuple[PdfColumnRow, ...] = (),
     ) -> None:
         """Initialise an empty parse with no current sheet and no records read yet.
 
@@ -611,7 +618,10 @@ class PdfParseState:
         ``corrections`` supplies any declared single-position or range-start fixes for
         this source, and ``repair_glued_rows`` opts into recovering the glued
         ordinal-position row shape via :func:`split_glued_ordinal_position`.
+        ``column_rows`` are the design's table rows read from page geometry,
+        whose cells replace a field's flattened text where they agree with it.
         """
+        self.column_rows = column_rows
         self.repair_glued_rows = repair_glued_rows
         self.results: list[_PdfSheetResult] = []
         self.current: _PdfSheetDraft | None = None
@@ -645,6 +655,7 @@ class PdfParseState:
             self.source_label,
             self.results,
             self.corrections.range_start_corrections,
+            self.column_rows,
         )
 
     def _recover_unidentified_bodies(self) -> None:
@@ -907,12 +918,14 @@ def extract_pdf_lines(
     source_label: str,
     corrections: CorrectionIndex = EMPTY_CORRECTIONS,
     repair_glued_rows: bool = False,
+    column_rows: tuple[PdfColumnRow, ...] = (),
 ) -> RecordDesignExtraction:
     """Feed every source line through :class:`PdfParseState` and return the finalised extraction."""
     state = PdfParseState(
         source_label=source_label,
         corrections=corrections,
         repair_glued_rows=repair_glued_rows,
+        column_rows=column_rows,
     )
     for row_number, raw_line in enumerate(lines, start=1):
         state.feed(clean_pdf_line(raw_line), row_number)
@@ -1038,14 +1051,19 @@ def _recover_inline_constants(sheets: tuple[RecordDesignSheet, ...]) -> tuple[Re
     given content to 1,625 fields across 13 modelos -- including modelo 210, where the
     quoted text is an enumeration of alternatives ("Transferencia cuenta bancaria en
     Espana"-"Transferencia...") and not a constant at all.
+
+    The caller takes that document-level decision on the text the line parser
+    read, BEFORE column geometry separates a design's Contenido cells, and this
+    only fills a field whose Contenido cell is empty. Modelo 840 is why: it
+    prints a Contenido column but states its record tags inside the description
+    cell, so once its other rows carry their own Contenido the old whole-document
+    test would have stopped recovering exactly the constants it exists for.
     """
-    if any(existing.content for sheet in sheets for existing in sheet.fields):
-        return sheets
     recovered: list[RecordDesignSheet] = []
     for sheet in sheets:
         fields: list[RecordDesignField] = []
         for design_field in sheet.fields:
-            match = _INLINE_CONSTANT_RE.search(design_field.description or "")
+            match = None if design_field.content else _INLINE_CONSTANT_RE.search(design_field.description or "")
             if match is None:
                 fields.append(design_field)
                 continue
