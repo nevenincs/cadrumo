@@ -183,6 +183,7 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
     """
     from cadrumo.application.calculations.m303_carry_ingress import M303_CARRY_ERROR_NAMESPACE
     from cadrumo.application.live.errors import LiveIvaAcquisitionFailureMode
+    from cadrumo.application.modelo.workspace import MODELO_WORKSPACE_RECOVERY_ACTION_IDS
     from cadrumo.application.modelo.workspace_models import (
         ModeloWorkspaceCapabilityDisposition,
         ModeloWorkspaceCapabilityName,
@@ -349,6 +350,14 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
             description="tui.modelo.workspace_refusal.facts.* (ModeloWorkspaceEvidenceFactV1.name)",
             key_factory=lambda v: f"tui.modelo.workspace_refusal.facts.{v}",
             values=("modelo", "period", "required_grade", "work_unit_id"),
+        ),
+        FStringKeyRegistration(
+            # Bounded set declared once in application/modelo/workspace.py, which
+            # refuses any other id; entrypoints/tui/modelo/view/models.py names
+            # each offered action through this key.
+            description="tui.modelo.recovery_action.* (MODELO_WORKSPACE_RECOVERY_ACTION_IDS)",
+            key_factory=lambda v: f"tui.modelo.recovery_action.{v}",
+            values=tuple(sorted(MODELO_WORKSPACE_RECOVERY_ACTION_IDS)),
         ),
         FStringKeyRegistration(
             # Pinned to _OTHER_DESTINATIONS in entrypoints/tui/modelo/view/overview.py.

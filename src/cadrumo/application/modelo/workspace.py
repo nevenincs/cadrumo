@@ -32,7 +32,7 @@ from typing import TYPE_CHECKING, Final
 
 from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.casilla_id import CasillaId
-from ...core.errors.hierarchy import CadrumoError
+from ...core.errors.hierarchy import CadrumoError, InternalInvariantError
 from ...core.external_constants import OutputLanguage
 from ...core.hashing import content_hash_hex
 from ...core.identity.continuidad import ContinuidadId
@@ -539,6 +539,18 @@ _WORKSPACE_CAPABILITY_SOURCE_FAMILIES: Final[dict[ModeloWorkspaceCapabilityName,
     ModeloWorkspaceCapabilityName.FILING_DRAFT_READINESS: "export_layouts",
 }
 
+#: Every catalogued action the workspace may offer as a recovery step. This is
+#: the one home of that closed set: the TUI names each through a locale key built
+#: from its id, so the locale registration enumerates exactly these ids.
+MODELO_WORKSPACE_RECOVERY_ACTION_IDS: Final[frozenset[str]] = frozenset(
+    {
+        "operator.modelo.work.calculate",
+        "operator.modelo.work.create",
+        "operator.modelo.work.status",
+        "operator.modelo.work.verify",
+    }
+)
+
 #: The catalogued operator action that advances each capability when it is not
 #: available. These are catalogue ids, resolved through the sole
 #: :data:`OPERATOR_ACTION_CATALOGUE` authority rather than spelled at a call
@@ -571,6 +583,8 @@ def modelo_workspace_recovery_action(
     target does not carry is not. Offering it anyway would name a remedy the
     operator cannot invoke, which is worse than offering none.
     """
+    if action_id not in MODELO_WORKSPACE_RECOVERY_ACTION_IDS:
+        raise InternalInvariantError(f"{action_id} is not a declared workspace recovery action")
     entry = OPERATOR_ACTION_CATALOGUE.lookup(action_id)
     requires_work_unit = any(
         specification.argument_name == _WORK_UNIT_ACTION_ARGUMENT for specification in entry.argument_specifications
