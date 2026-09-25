@@ -1,0 +1,20 @@
+# The modelo 189 ejercicio-2024 informative declaration: the casillas its two
+# records carry, the surfaces the application consumes, and the design its
+# layout was transcribed from.
+#
+# Declared per edition because 'constructs' is not a scoped family: an enclosing
+# construct names its own edition's deadline window and parity anchor, so it
+# cannot be inherited from a neighbouring ejercicio unchanged.
+#
+# The ref lists are the union of the refs of every member named below, which is
+# what the construct-closure rule requires of an enclosing construct.
+
+[[revisions."2024".constructs]]
+id = "modelo-189-informative"
+legal_refs = ["orden-eha-3481-2008:art-1", "orden-eha-3481-2008:art-5", "orden-hfp-1180-2023:art-primero", "orden-hfp-1284-2023:art-11"]
+source_refs = ["boe-modelo-189-base-order", "boe-modelo-189-2023-amendment-hfp-1180", "boe-modelo-189-2023-amendment-hfp-1284", "aeat-dr-189-2023", "aeat-modelo-189-procedure"]
+casilla_ids = ["declarante-nif", "ejercicio-declaracion", "declarado-nif", "declarado-nombre", "codigo-pais", "clave-valor", "valoracion", "numero-valores", "nominal-unitario-valores", "declarante-razon-social", "tipo-soporte", "persona-relacion", "numero-justificante", "declaracion-complementaria-sustitutiva", "numero-identificativo-anterior", "numero-total-declarados", "valoracion-total", "representante-legal-nif", "codigo-provincia", "clave-mercado", "clave-identificacion", "identificacion-valores", "clave-representacion", "porcentaje-participacion", "clave-titularidad"]
+application_links = ["modelo-189-filing", "modelo-189-deadline", "modelo-189-export"]
+workbook_parity_refs = ["modelo-189-dr-pdf"]
+deadline_windows = ["modelo-189-2024-0a"]
+filing_schedules = ["modelo-189-anual"]
