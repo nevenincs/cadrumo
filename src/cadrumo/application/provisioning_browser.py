@@ -22,13 +22,13 @@ import sys
 from collections.abc import Callable, Mapping
 from importlib.util import find_spec
 from pathlib import Path
-from typing import cast
 
 from pydantic import BaseModel, model_validator
 
 from ..core.errors.hierarchy import pydantic_validation_boundary
 from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance
+from ..core.type_guards import is_object_dict, is_object_list
 from .operator_actions.models import ActionReference, ConditionEvidence, PreconditionVerdict
 from .provisioning import DependencyStatus
 from .provisioning_contracts import (
@@ -133,16 +133,15 @@ def required_browser_builds(manifest_path: Path | None = None) -> tuple[BrowserB
         document: object = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return None
-    if not isinstance(document, dict):
+    if not is_object_dict(document):
         return None
-    entries = cast(dict[object, object], document).get("browsers")
-    if not isinstance(entries, list):
+    entries = document.get("browsers")
+    if not is_object_list(entries):
         return None
     by_name: dict[object, dict[object, object]] = {}
-    for entry in cast(list[object], entries):
-        if isinstance(entry, dict):
-            typed_entry = cast(dict[object, object], entry)
-            by_name[typed_entry.get("name")] = typed_entry
+    for entry in entries:
+        if is_object_dict(entry):
+            by_name[entry.get("name")] = entry
     builds: list[BrowserBuild] = []
     for name in _REQUIRED_MANIFEST_NAMES:
         found = by_name.get(name)

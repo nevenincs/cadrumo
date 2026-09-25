@@ -13,7 +13,7 @@ and `src/cadrumo/application/`.
 | `no-dict-str-any.yml` | `src/cadrumo/domain/`, `src/cadrumo/application/` | ERROR |
 | `no-cast-in-domain.yml` | `src/cadrumo/domain/`, `src/cadrumo/application/` | ERROR |
 | `no-mapping-str-decimal-on-registry.yml` | Registry-tier models | ERROR |
-| `no-duplicate-ccaa-enum.yml` | Outside `domain/contribuyente/_ccaa.py` | ERROR |
+| `no-duplicate-ccaa-enum.yml` | Outside `domain/contribuyente/ccaa.py` | ERROR |
 | `no-duplicate-concept-models.yml` | `src/cadrumo/` (excludes tests) | WARNING |
 
 ## CI invocation

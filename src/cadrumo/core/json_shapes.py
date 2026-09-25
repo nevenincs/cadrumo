@@ -10,13 +10,33 @@ re-deriving it per call site.
 A value that fails a check is absent, not empty: the helpers return an empty
 result so the caller sees "no rows" rather than a partially typed value. They
 never coerce a malformed value into a plausible one.
+
+A model's own JSON dump is the exception: it is produced here, not received, so
+a non-object result is a defect and :func:`model_json_object` raises instead.
 """
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from .type_guards import is_object_list, is_str_keyed_dict
 
-__all__ = ["str_keyed_mapping", "str_keyed_rows"]
+if TYPE_CHECKING:
+    from pydantic import BaseModel
+
+__all__ = ["model_json_object", "str_keyed_mapping", "str_keyed_rows"]
+
+
+def model_json_object(model: BaseModel) -> dict[str, object]:
+    """Return ``model``'s JSON-mode dump as the string-keyed object it must be.
+
+    Pydantic types the dump loosely; this proves the shape once so a caller that
+    digests or edits the payload works on checked keys rather than a cast.
+    """
+    dumped: object = model.model_dump(mode="json")
+    if not is_str_keyed_dict(dumped):
+        raise TypeError(f"{type(model).__name__} did not dump to a JSON object")
+    return dumped
 
 
 def str_keyed_mapping(value: object) -> dict[str, object]:

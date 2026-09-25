@@ -13,7 +13,7 @@ import os
 from datetime import datetime
 from enum import StrEnum
 from pathlib import Path
-from typing import Any, ClassVar, Literal, TypeVar, cast
+from typing import ClassVar, Literal, TypeVar
 from uuid import UUID
 
 from pydantic import BaseModel, Field, TypeAdapter, ValidationError, field_validator, model_validator
@@ -28,6 +28,7 @@ from ...core.hashing import (
 from ...core.hex import Hex64Str
 from ...core.identity.digest import PrefixedContentDigest
 from ...core.identity.profile_label import ProfileLabel
+from ...core.json_shapes import model_json_object
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.utc import validate_utc_aware
 from .custody_hold_models import (
@@ -122,7 +123,7 @@ def canonical_payload_digest(payload: object, *, maximum_bytes: int, subject: st
 
 
 def _payload_without_self_digest(model: BaseModel) -> dict[str, object]:
-    payload = cast(dict[str, object], model.model_dump(mode="json"))
+    payload = model_json_object(model)
     payload.pop("self_digest", None)
     return payload
 
@@ -133,17 +134,16 @@ def _computed_self_digest(model: BaseModel, *, maximum_bytes: int, subject: str)
     )
 
 
-# KWARGS-ANY-RATIONALE-CUSTODY-DIGEST-FACTORY: shared field-construction helper
-# behind three unrelated pydantic models (journal, receipt, owner receipt),
-# each with its own field shapes; the caller's model_type pins the real types.
+# Shared by three unrelated models (journal, receipt, owner receipt), each with
+# its own field shapes; ``model_type`` validates the real field types.
 def _model_json_with_self_digest(
     model_type: type[BaseModel],
-    values: dict[str, Any],
+    values: dict[str, object],
     *,
     maximum_bytes: int,
     subject: str,
 ) -> bytes:
-    payload = cast(dict[str, object], model_type.model_construct(**values, self_digest="").model_dump(mode="json"))
+    payload = model_json_object(model_type.model_construct(None, **values, self_digest=""))
     payload["self_digest"] = prefixed_digest(
         _canonical_bytes(
             {key: value for key, value in payload.items() if key != "self_digest"},
@@ -193,9 +193,8 @@ class ProfileCustodyDigestModel(BaseModel):
             subject=self._digest_subject,
         )
 
-    # KWARGS-ANY-RATIONALE-CUSTODY-DIGEST-FACTORY: shared by three concrete models; caller's own type pins field shapes.
     @classmethod
-    def _create_with_self_digest(cls: type[_ModelT], values: dict[str, Any], error_message: str) -> _ModelT:
+    def _create_with_self_digest(cls: type[_ModelT], values: dict[str, object], error_message: str) -> _ModelT:
         try:
             return cls.model_validate_json(
                 _model_json_with_self_digest(
@@ -384,9 +383,8 @@ class ProfileCustodyTransactionJournal(ProfileCustodyDigestModel):
         """Return the journal payload excluding the self-digest field."""
         return _payload_without_self_digest(self)
 
-    # KWARGS-ANY-RATIONALE-CUSTODY-DIGEST-FACTORY: passthrough to the shared digest factory; see its own marker.
     @classmethod
-    def create(cls, **values: Any) -> ProfileCustodyTransactionJournal:
+    def create(cls, **values: object) -> ProfileCustodyTransactionJournal:
         """Construct a journal with a canonical self-digest."""
         return cls._create_with_self_digest(values, "cannot construct custody journal")
 
@@ -431,9 +429,8 @@ class ProfileCustodyTransactionReceipt(ProfileCustodyDigestModel):
             raise ValueError("custody receipt self digest does not match")
         return self
 
-    # KWARGS-ANY-RATIONALE-CUSTODY-DIGEST-FACTORY: passthrough to the shared digest factory; see its own marker.
     @classmethod
-    def create(cls, **values: Any) -> ProfileCustodyTransactionReceipt:
+    def create(cls, **values: object) -> ProfileCustodyTransactionReceipt:
         """Construct a receipt with a canonical self-digest."""
         return cls._create_with_self_digest(values, "cannot construct custody receipt")
 
@@ -482,9 +479,8 @@ class ProfileCustodyOwnerReceipt(ProfileCustodyDigestModel):
             raise ValueError("custody owner receipt self digest does not match")
         return self
 
-    # KWARGS-ANY-RATIONALE-CUSTODY-DIGEST-FACTORY: passthrough to the shared digest factory; see its own marker.
     @classmethod
-    def create(cls, **values: Any) -> ProfileCustodyOwnerReceipt:
+    def create(cls, **values: object) -> ProfileCustodyOwnerReceipt:
         return cls._create_with_self_digest(values, "cannot construct custody owner receipt")
 
 

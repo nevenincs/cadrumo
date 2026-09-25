@@ -38,7 +38,7 @@ from __future__ import annotations
 
 from base64 import b64decode, b64encode
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING, Final, cast
+from typing import TYPE_CHECKING, Final
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -50,6 +50,7 @@ from ...core.identity.bucket import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.product_identity import PRODUCT_IDENTITY
 from ...core.time.clock import now as _now
+from ...core.type_guards import is_str_keyed_dict
 from .capsule_restore import ProfileCapsuleSource, read_profile_capsule_source
 from .custody_ports import (
     ProfileCapsuleArchiveHeaderMaterial,
@@ -253,9 +254,9 @@ def _decode_payload(payload_bytes: bytes, *, expected_bucket_id: str) -> Profile
         decoded_payload: object = json.loads(payload_bytes.decode(UTF_8_ENCODING))
     except (UnicodeDecodeError, ValueError) as exc:
         raise ProfileCapsuleArchiveError("archive payload is not readable canonical JSON") from exc
-    if not isinstance(decoded_payload, dict):
+    if not is_str_keyed_dict(decoded_payload):
         raise ProfileCapsuleArchiveError("archive payload is not a canonical JSON object")
-    payload = cast(dict[str, object], decoded_payload)
+    payload = decoded_payload
     if payload.get("schema_version") != _CAPSULE_ARCHIVE_PAYLOAD_SCHEMA_VERSION:
         raise ProfileCapsuleArchiveError("archive payload does not declare the current layout")
     if payload.get("profile_id") != expected_bucket_id:

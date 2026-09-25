@@ -7,7 +7,7 @@ import time
 from collections.abc import Callable, Mapping
 from datetime import datetime
 from time import monotonic
-from typing import TYPE_CHECKING, TypedDict, cast
+from typing import TYPE_CHECKING, TypedDict
 
 import httpx
 from pydantic import BaseModel, Field, NonNegativeInt, model_validator
@@ -17,6 +17,7 @@ from ..core.errors.hierarchy import pydantic_validation_boundary
 from ..core.hardware import AcceleratorKind, ContentionCause
 from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.time.clock import now
+from ..core.type_guards import is_object_dict, is_object_list
 from .provisioning_contracts import (
     OLLAMA_LOAD_KEEP_ALIVE,
     OLLAMA_PROBE_CACHE_TTL_S,
@@ -100,10 +101,9 @@ def _read_runtime_json(settings: Settings, path: str) -> object | None:
     return payload
 
 
-def _resident_from_entry(entry: object) -> RuntimeResident | None:
-    if not isinstance(entry, dict):
+def _resident_from_entry(row: object) -> RuntimeResident | None:
+    if not is_object_dict(row):
         return None
-    row = cast(dict[str, object], entry)
     name = row.get("name") or row.get("model")
     if not isinstance(name, str) or not name:
         return None
@@ -117,13 +117,13 @@ def _resident_from_entry(entry: object) -> RuntimeResident | None:
 
 
 def _residents_from_payload(payload: object) -> tuple[RuntimeResident, ...] | None:
-    if not isinstance(payload, dict):
+    if not is_object_dict(payload):
         return None
-    entries = cast(dict[str, object], payload).get("models")
-    if not isinstance(entries, list):
+    entries = payload.get("models")
+    if not is_object_list(entries):
         return None
     residents: list[RuntimeResident] = []
-    for entry in cast(list[object], entries):
+    for entry in entries:
         resident = _resident_from_entry(entry)
         if resident is None:
             return None
@@ -995,15 +995,11 @@ def _pull_progress(line: str) -> PullProgress | None:
         payload = json.loads(text)
     except ValueError:
         return None
-    if not isinstance(payload, dict):
+    if not is_object_dict(payload):
         return None
-    # CAST-RATIONALE-OLLAMA-PULL-PAYLOAD: json.loads returns Any; isinstance
-    # narrows to dict but not its type parameters.
-    # nosemgrep: no-cast-in-domain-application
-    row = cast(dict[str, object], payload)
-    completed = row.get("completed")
-    total = row.get("total")
-    status = row.get("status")
+    completed = payload.get("completed")
+    total = payload.get("total")
+    status = payload.get("status")
     return PullProgress(
         status=status if isinstance(status, str) else "",
         completed_bytes=completed if isinstance(completed, int) and completed >= 0 else None,
@@ -1145,16 +1141,15 @@ class InstalledModel(BaseModel):
 
 
 def _installed_from_payload(payload: object) -> tuple[InstalledModel, ...] | None:
-    if not isinstance(payload, dict):
+    if not is_object_dict(payload):
         return None
-    entries = cast(dict[str, object], payload).get("models")
-    if not isinstance(entries, list):
+    entries = payload.get("models")
+    if not is_object_list(entries):
         return None
     installed: list[InstalledModel] = []
-    for entry in cast(list[object], entries):
-        if not isinstance(entry, dict):
+    for row in entries:
+        if not is_object_dict(row):
             return None
-        row = cast(dict[str, object], entry)
         name = row.get("name") or row.get("model")
         if not isinstance(name, str) or not name:
             return None

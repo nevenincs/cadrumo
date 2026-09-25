@@ -1,7 +1,7 @@
 rules:
   - id: no-duplicate-ccaa-enum
     message: |
-      A new enum class outside `cadrumo.domain.contribuyente._ccaa` appears to declare
+      A new enum class outside `cadrumo.domain.contribuyente.ccaa` appears to declare
       Spanish autonomous-community members (`ANDALUCIA`, `ARAGON`, `MADRID`, …).
       The canonical geographic identity type is `cadrumo.domain.contribuyente.CCAA`.
       Import it instead of declaring a parallel geographic enum. `CalendarCCAA` is
@@ -14,7 +14,7 @@ rules:
       include:
         - "src/cadrumo/**"
       exclude:
-        - "src/cadrumo/domain/contribuyente/_ccaa.py"
+        - "src/cadrumo/domain/contribuyente/ccaa.py"
         - "src/cadrumo/**/tests/**"
         - "src/cadrumo/**/test_*.py"
         - "src/cadrumo/**/_test_*.py"

@@ -1896,9 +1896,9 @@ def assert_no_novel_source_kinds(revision: ModeloRevision) -> None:
         )
 
 
-def _registered_disposition(source: object) -> str | None:
+def _registered_disposition(source: BindingSourceKind) -> str | None:
     """Return the registered disposition for ``source``, or ``None`` when unregistered."""
-    registration = BINDING_PROVIDER_REGISTRATIONS.get(source)  # type: ignore[arg-type]
+    registration = BINDING_PROVIDER_REGISTRATIONS.get(source)
     return None if registration is None else registration.disposition
 
 

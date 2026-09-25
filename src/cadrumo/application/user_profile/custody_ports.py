@@ -14,13 +14,14 @@ from contextvars import ContextVar
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, NoReturn, Protocol, Self, cast
+from typing import TYPE_CHECKING, NoReturn, Protocol, Self
 from uuid import UUID
 
 from pydantic import BaseModel, Field
 
 from ...core.classification.policies import SensitivityClass
 from ...core.errors.hierarchy import CoreError, InternalInvariantError
+from ...core.json_shapes import model_json_object
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.profile_publication import ProfilePublicationKindValue
 from ...core.secure_object_write import SecureObjectWrite
@@ -424,7 +425,7 @@ class ProfileCustodyLocalRecordStore(Protocol):
 
 def canonical_snapshot_payload(model: BaseModel) -> dict[str, object]:
     """Return a snapshot's canonical digest payload without its self-digest."""
-    payload = cast(dict[str, object], model.model_dump(mode="json"))
+    payload = model_json_object(model)
     del payload["self_digest"]
     return payload
 

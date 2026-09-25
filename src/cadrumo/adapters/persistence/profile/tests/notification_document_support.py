@@ -172,7 +172,7 @@ def stored_document_row(profile: TestRuntimeProfile, *, certificado_id: str = CE
     """
     object_key = notification_document_object_key(BUCKET_ID, certificado_id)
     session: Session
-    with session_scope(profile.repository._engine) as session:  # type: ignore[attr-defined]
+    with session_scope(profile.repository.engine) as session:
         stmt = select(SecureObjectRow).where(
             SecureObjectRow.namespace == DOCUMENT_NAMESPACE,
             SecureObjectRow.object_key == object_key,
