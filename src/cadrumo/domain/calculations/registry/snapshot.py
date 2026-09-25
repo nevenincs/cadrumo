@@ -1038,9 +1038,9 @@ def collect_snapshot_ref_ids(
 __all__ = [
     "SUBSTANTIVE_LAW_KINDS",
     "build_validated_snapshot",
-    "check_snapshot_filing_capability",
     "check_revision_scoped_legal_windows",
     "check_revision_scoped_source_windows",
+    "check_snapshot_filing_capability",
     "check_snapshot_filing_review_tier",
     "collect_snapshot_ref_ids",
     "legal_window_covers_devengo",
