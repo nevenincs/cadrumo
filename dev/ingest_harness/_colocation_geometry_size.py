@@ -1,9 +1,11 @@
 """Sizing for the co-location geometry question: can the pipeline segment a column?
 
-The co-location ceiling is zero because a two-column invoice header reaches the
-resolver as one line: the text extractor emits reading order, and the visual gap
-between the issuer block and the recipient block leaves no character behind.
-The obvious remedy is to preserve spatial information, which is a pipeline-shaped
+A two-column invoice header reaches the resolver as one line: the text extractor
+emits reading order, and the visual gap between the issuer block and the
+recipient block survives only as whatever spacing that extractor happened to
+emit. The resolver now segments such a line where that gap left a printed
+gutter; what stays unpartitionable is the page whose gap left nothing. The
+remedy for THAT is to preserve spatial information, which is a pipeline-shaped
 change rather than a resolver-shaped one, so it is SIZED here before anyone
 commits to it. **This module measures; it changes no pipeline.**
 

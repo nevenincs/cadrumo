@@ -22,34 +22,23 @@ internally consistent, anchored throughout, blocking nothing -- and places both
 parties in territories neither is established in, which the criteria then consume
 as an established fact. There is no red anywhere.
 
-**This module is the operating mechanism for prose documents, not an interim.**
-It was written as one. The intended successor is deterministic co-location: an
+**This module is the fallback, and the fallback is where a document's layout
+answers nothing.** The structural answer is deterministic co-location: an
 address block containing a role-evidenced identity anchors the whole block to
 that party, and its postal and country values inherit attribution by
-containment. That resolver shipped, and it does not fire.
+containment. That resolver segments a stacked header vertically and a
+two-column header at the gutter its columns are printed with, and it clears the
+stamp on every value it places.
 
-Measured against authored truth rather than against its own reader: of the
-documents carrying a hand-written reference transcription AND a hand-written
-identity for both parties, NONE could be partitioned by any authored anchor
-pair, and every one failed for the same cause. A two-column invoice header --
-issuer left, recipient right -- reaches the resolver as a SINGLE line carrying
-both parties, because the text extractor emits reading order and the visual gap
-between the two blocks leaves no character behind. Two anchors on one line
-produce a zero-width span that the region builder drops by design.
-
-Because that ceiling was measured with authored anchors, and a perfect reader is
-an upper bound on every real one, **no prompt, larger model or second pass moves
-it.** It is not a coverage gap that better reading closes. Segmenting a
-two-column header needs spatial information discarded before the resolver is
-reached, which is a change to the transcription pipeline rather than to this
-package.
-
-So the stamp is not waiting to be retired. On a prose document it is what the
-operator actually gets, and the advisory at the review gate is the control, not
-a placeholder for one. The successor still clears the stamp on any document
-whose layout it can partition -- the wiring is real and its gates pass on that
-shape -- so this is a statement about which documents exist, never about the
-resolver being unwired.
+What it cannot place keeps the stamp, and that population is real rather than
+theoretical: a header whose columns the text extractor flattened into ordinary
+word spacing, a value printed across the column boundary, a full-width remark
+line, a document quoting one party heading or none. Those lines state no
+separation, so the resolver attributes nothing from them -- see
+:func:`~application.ledger.party_colocation.party_regions` -- and the stamp plus
+the advisory at the review gate is what the operator gets. The failure direction
+stays safe in both halves: what the layout answers is cleared, what it does not
+answer stays warned.
 
 See Also:
     :class:`~application.ledger.invoice_draft_records.FieldProvenance`

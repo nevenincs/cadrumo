@@ -23,15 +23,18 @@ The verdict is never computed here. Every document is put through
 :func:`~application.ledger.party_colocation.party_regions`, the production partition itself, so
 this module cannot drift into a second implementation of the rule it is scoring.
 
-**The dominant real layout defeats line containment, and that is the finding.**
-A two-column invoice header -- issuer on the left, recipient on the right -- is
-emitted by a reading-order text extractor as ONE line carrying both parties.
-Both candidate anchor kinds collapse together: the labels share a line
-(``EMISOR  DESTINATARIO / CLIENTE``) and so do the names printed under them.
-Two anchors on one line yield one zero-width span, which ``_regions`` drops by
-design, so the partition is empty. The resolver's own docstring anticipated
-"two headings printed on one line" as an edge case; on this corpus it is the
-norm rather than the exception.
+**The finding that produced this instrument has been acted on.** A two-column
+invoice header -- issuer on the left, recipient on the right -- is emitted by a
+reading-order text extractor as ONE line carrying both parties, and that shared
+line once collapsed the partition for every scored document. The resolver now
+segments such a header at the gutter its columns are printed with, so the
+shared-line population is no longer automatically unpartitionable and the
+instrument must be re-run rather than quoted.
+
+What remains in ``ANCHORS_SHARE_A_LINE`` is the narrower case the resolver still
+cannot answer: a shared line whose column gap the extractor did not preserve, so
+nothing on the line states a boundary. That is a question about the extraction
+pipeline, and it is sized in ``_colocation_geometry_size``.
 
 **A count alone would not have shown that.** Every unpartitionable document
 therefore carries a stated :class:`CeilingOutcome` reason, so a new failure mode
@@ -43,7 +46,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from enum import StrEnum
-from typing import Final
+from typing import Final, cast
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -85,8 +88,10 @@ class CeilingOutcome(StrEnum):
         PARTITIONED: Some authored pair yields two non-empty regions. A perfect
             reader quoting that pair would clear the bar.
         ANCHORS_SHARE_A_LINE: Both anchors were located and landed on the same
-            line, so one region is zero-width and is dropped. The two-column
-            header case, and the commonest one measured.
+            line, and the resolver could not cut that line into one column per
+            party -- the columns were printed with no surviving gutter, or the
+            headings did not sit one per column. A two-column header whose
+            gutter the extractor DID preserve is ``PARTITIONED`` instead.
         ANCHOR_NOT_PRINTED: At least one side of every authored pair does not
             occur in the transcription at all.
         UNPARTITIONED_FOR_ANOTHER_REASON: Both anchors were located on DIFFERENT
@@ -294,12 +299,10 @@ def colocation_ceiling(key_documents: Sequence[Mapping[str, object]]) -> Ceiling
     """
     rows: list[CeilingRow] = []
     for entry in documents_with_authored_transcription(key_documents):
-        ground_truth = entry.get("ground_truth")
-        rows.append(
-            _row_for(
-                str(entry["doc_id"]),
-                str(entry["stage1_reference_text"]),
-                ground_truth if isinstance(ground_truth, Mapping) else {},
-            ),
+        raw_truth = entry.get("ground_truth")
+        # The corpus key is JSON, so a mapping here has string keys.
+        ground_truth: Mapping[str, object] = (
+            cast("Mapping[str, object]", raw_truth) if isinstance(raw_truth, Mapping) else {}
         )
+        rows.append(_row_for(str(entry["doc_id"]), str(entry["stage1_reference_text"]), ground_truth))
     return CeilingReport(rows=tuple(rows))

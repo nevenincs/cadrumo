@@ -6,25 +6,22 @@ copies values and quotes role evidence for the two identity fields, exactly as
 before. CODE attributes, which is where every other attribution in this design
 already lives.
 
-**Measured, no real document's layout carries it, and that is stated here
-because this is where a reader meets the resolver.** Scored against authored
-anchors rather than against the reader whose output would otherwise be being
-graded: of the documents carrying a hand-written reference transcription and a
-hand-written identity for both parties, NONE could be partitioned by any
-authored anchor pair, and every one failed for the single cause described under
-:func:`_regions` -- a two-column header arriving as one line. The zero is a
-ceiling rather than a rate, since a perfect reader bounds every real one, so no
-prompt, model or second pass raises it. Segmenting such a header needs spatial
-information the extractor discards before this module is reached.
+**Two layouts are partitioned, because real documents print both.** A STACKED
+header states one heading per line and its region runs to the next heading; that
+is :func:`_regions`. A TWO-COLUMN header -- issuer left, recipient right -- is
+emitted by a reading-order text extractor as ONE line carrying both parties, and
+it was for a long time the measured reason no real document could be partitioned
+at all. It is now segmented by :func:`_side_by_side_regions`, which reads the
+column boundary off the printed gutter between the two headings and cuts the
+following lines at the same boundary, so each party gets only its own column.
 
-Two consequences, and neither is that this module is unwired. It attributes
-correctly on a stacked header and its gates prove it, so the finding is about
-which documents exist, not about the code. And on a prose document the
-unverified-attribution stamp and its review-gate advisory are the operating
-control rather than a placeholder -- see
-:func:`~application.ledger.party_attribution.stamp_unverified_party_attribution`, whose own
-docstring carries the same correction. The failure direction stays safe:
-unresolved keeps the warning.
+**Neither path guesses.** A line that does not present exactly one column per
+party -- no gutter where the boundary is, or content running across it --
+contributes to no region at all. Values printed only on such lines stay
+unresolved, which keeps the unverified-attribution stamp and the operator
+advisory on exactly the part of the document that could not be separated. See
+:func:`~application.ledger.party_attribution.stamp_unverified_party_attribution`.
+The failure direction stays safe: unresolved keeps the warning.
 
 **The mechanism is containment, never proximity.** A party's role evidence is a
 printed heading the reader copied -- ``FACTURAR A``, ``Verkaufer``, the label a
@@ -34,13 +31,15 @@ party whose region contains it. A nearest-neighbour or reading-order-distance
 rule would be inference dressed as determinism: it would answer confidently on
 a two-column layout where the nearest heading belongs to the other party.
 
-**Segmentation is by line, not by blank line.** Measured against the real
-evidence corpus, not assumed: every text-layer transcription in it carries zero
-blank lines, because a PDF text extractor emits reading-order lines and the
-visual gap between two address blocks leaves no character behind. A
-blank-line-delimited implementation would have been correct-looking and dead --
-never firing on any real document, which is the same failure as evidence no
-resolver consumes, in mirror image.
+**Segmentation is by line and by printed gutter, never by blank line.** Measured
+against the real evidence corpus, not assumed: every text-layer transcription in
+it carries zero blank lines, because a PDF text extractor emits reading-order
+lines and the visual gap between two address blocks leaves no character behind.
+A blank-line-delimited implementation would have been correct-looking and dead
+-- never firing on any real document, which is the same failure as evidence no
+resolver consumes, in mirror image. The horizontal gap between two columns does
+leave characters behind, a run of two or more spaces, and that run is the only
+thing the two-column path reads.
 
 **Three outcomes, and the third is the honest one.** A value found in exactly
 its own party's region is ATTRIBUTED. A value found only in the OTHER party's
@@ -65,6 +64,7 @@ See Also:
 
 from __future__ import annotations
 
+import re
 from enum import StrEnum
 from typing import TYPE_CHECKING, Final
 
@@ -76,6 +76,8 @@ from .grounding_anchor import printed_excerpt_occurs_in_text
 from .party_attribution import PARTY_ATTRIBUTED_ADDRESS_FIELDS, party_addresses
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
+
     from .document_transcription import DocumentTranscription
     from .invoice_draft_records import DraftDiscrepancyFinding, FieldProvenance, InvoiceDraft
 
@@ -174,19 +176,17 @@ def _regions(
 
     A party whose region would be empty is dropped rather than kept as a
     zero-width span, so two headings printed on one line cannot produce a region
-    that matches nothing and reads as a clean negative.
+    that matches nothing and reads as a clean negative. Keeping such a span
+    would attribute one party's values to the other, which is the transposition
+    this module exists to refuse.
 
-    **That drop is the single cause of every unresolved real document measured,
-    and it is not an edge case.** A two-column invoice header reaches this
-    function as ONE line carrying both parties, because the extractor emits
-    reading order; both anchors resolve to the same index, the earlier span is
-    zero-width, and the partition comes back empty. Every scored document failed
-    here and no other cause appeared. The drop is still right -- keeping the
-    zero-width span would attribute one party's values to the other, which is
-    the transposition this module exists to refuse -- so this is a statement
-    about the primitive rather than about the guard. Line containment cannot
-    segment a layout whose separation is horizontal, and the spatial information
-    that could is discarded upstream.
+    **This function answers the VERTICAL layout only, by design.** A two-column
+    header reaches the resolver as one line carrying both parties, so both
+    anchors resolve to the same index and no vertical span separates them.
+    That layout is segmented horizontally instead, by
+    :func:`_side_by_side_regions`, and :func:`party_regions` routes between the
+    two on whether the anchors share a line. Widening this function to cover it
+    would make one primitive answer two different questions about the page.
     """
     ordered = sorted(anchors.items(), key=lambda item: item[1])
     spans: dict[str, tuple[int, int]] = {}
@@ -195,6 +195,102 @@ def _regions(
         if end > start:
             spans[role] = (start, end)
     return spans
+
+
+#: A run of two or more spaces INSIDE a line: what a reading-order text
+#: extractor leaves behind where a document printed two columns side by side.
+#: A single space is ordinary word spacing and is never a column boundary, which
+#: is what keeps ``EMISOR DESTINATARIO`` -- a header whose gap the extractor did
+#: not preserve -- unsegmentable rather than split on a guess.
+_COLUMN_GUTTER: Final = re.compile(r"[^\S\n]{2,}")
+
+
+def _columns_on(line: str) -> tuple[str, ...]:
+    """Return *line* cut at its printed gutters, or an empty tuple for a blank line.
+
+    Leading and trailing whitespace is trimmed before the cut rather than read as
+    a gutter. An indented line is one column that was indented, not an empty
+    column followed by a full one, and reading it as the latter would invent a
+    party's silence out of the document's margin.
+    """
+    body = line.strip()
+    if not body:
+        return ()
+    columns: list[str] = []
+    cut = 0
+    for gutter in _COLUMN_GUTTER.finditer(body):
+        columns.append(body[cut : gutter.start()])
+        cut = gutter.end()
+    columns.append(body[cut:])
+    return tuple(columns)
+
+
+def _column_order(line: str, *, excerpts: Mapping[str, str]) -> tuple[str, ...] | None:
+    """Return the roles in printed column order, or ``None`` when the line is unusable.
+
+    The whole boundary derivation. Every role's heading must sit in its own
+    column of the same line, which is what makes the gutter between them a
+    boundary the DOCUMENT states rather than one this function chose. Anything
+    else -- a heading found in two columns, two headings sharing one column, a
+    third column between them, a column carrying no heading at all -- returns
+    ``None`` and leaves the whole page unpartitioned, because a boundary that
+    cannot be located cannot be used to attribute anything.
+    """
+    columns = _columns_on(line)
+    if len(columns) != len(excerpts):
+        return None
+    placed: dict[int, str] = {}
+    for role, excerpt in excerpts.items():
+        located = [
+            index for index, column in enumerate(columns) if printed_excerpt_occurs_in_text(excerpt, text=column)
+        ]
+        if len(located) != 1 or located[0] in placed:
+            return None
+        placed[located[0]] = role
+    return tuple(placed[index] for index in sorted(placed))
+
+
+def _side_by_side_regions(
+    *,
+    lines: list[str],
+    header: int,
+    excerpts: Mapping[str, str],
+) -> dict[str, str]:
+    """Return each party's region text for a header printing every party on one line.
+
+    The two-column answer. The header line's own gutters fix how many columns the
+    page has and which party owns each one; every line from the header onwards is
+    cut the same way, and a line's Nth column joins the Nth party's region.
+
+    **A line that does not present exactly one column per party contributes to
+    NOBODY.** No gutter where the boundary is, a value running across it, an
+    extra column, a full-width footer: each of those is a line the document did
+    not separate, and assigning it to the party whose column it happens to start
+    under would be proximity dressed as containment -- the inference this module
+    refuses everywhere else. Dropping it costs only resolution: the values
+    printed there stay unresolved and keep their stamp and advisory.
+
+    Args:
+        lines: The transcription's lines, in reading order.
+        header: Index of the line carrying every party's heading.
+        excerpts: Each party's role-evidence heading, keyed by role.
+
+    Returns:
+        Region text per role, or an empty mapping when the header states no
+        usable column boundary or a party's column stayed empty.
+    """
+    order = _column_order(lines[header], excerpts=excerpts)
+    if order is None:
+        return {}
+    columns: dict[str, list[str]] = {role: [] for role in order}
+    for line in lines[header:]:
+        cut = _columns_on(line)
+        if len(cut) != len(order):
+            continue
+        for role, column in zip(order, cut, strict=True):
+            columns[role].append(column)
+    regions = {role: "\n".join(text) for role, text in columns.items() if text}
+    return regions if len(regions) == len(order) else {}
 
 
 def _region_text(lines: list[str], span: tuple[int, int]) -> str:
@@ -227,8 +323,8 @@ def resolve_party_attribution_by_colocation(
     Returns:
         :class:`PartyColocationResolution`: an outcome per enrolled address field
         the draft carried a value for. Empty when the document states no usable
-        party heading, which leaves every value on the unverified-attribution
-        stamp. Measured, that is the outcome on every real document scored.
+        party heading, or states them in a layout whose columns it does not
+        separate, which leaves every value on the unverified-attribution stamp.
     """
     region_text = party_regions(draft=draft, transcription=transcription)
     if len(region_text) < 2:
@@ -329,8 +425,14 @@ def party_regions(
     **Both sides are required.** One heading partitions nothing: with a single
     anchor every value on the page falls inside its region by construction,
     which would attribute the other party's values to it. Fewer than two usable
-    regions yields an empty mapping, and that is the commonest honest unresolved
-    case rather than an error.
+    regions yields an empty mapping, and that is an honest unresolved case
+    rather than an error.
+
+    **The layout decides which segmentation runs, and the document states which
+    layout it is.** Headings on different lines are a stacked header, segmented
+    vertically by :func:`_regions`. Headings on the SAME line are a two-column
+    header, segmented horizontally by :func:`_side_by_side_regions`. The choice
+    is read off the anchor line indices, never guessed from the page's shape.
 
     Args:
         draft: The read draft, carrying identity role evidence on its envelopes.
@@ -343,6 +445,7 @@ def party_regions(
     lines = transcription.text.split("\n")
     role_evidence = _role_evidence_by_field(draft.provenance)
     anchors: dict[str, int] = {}
+    excerpts: dict[str, str] = {}
     for party in party_addresses():
         excerpt = role_evidence.get(party.tax_id_field)
         if excerpt is None:
@@ -350,8 +453,13 @@ def party_regions(
         start = _region_start(excerpt, lines=lines)
         if start is not None:
             anchors[party.role] = start
+            excerpts[party.role] = excerpt
     if len(anchors) < 2:
         return {}
+    if len(set(anchors.values())) == 1:
+        # Every heading on one line: the page separates its parties horizontally,
+        # so the boundary is the printed gutter rather than the next heading.
+        return _side_by_side_regions(lines=lines, header=next(iter(anchors.values())), excerpts=excerpts)
     spans = _regions(lines=lines, anchors=anchors)
     if len(spans) < 2:
         return {}

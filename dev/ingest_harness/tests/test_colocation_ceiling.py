@@ -31,8 +31,8 @@ from .._colocation_ceiling import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-# A stacked header: each party's anchor on its own line. This is the layout the
-# resolver was designed against, and the only shape known to clear the bar.
+# A stacked header: each party's anchor on its own line. One of the two layouts
+# the resolver segments.
 _STACKED = "\n".join(
     (
         "FACTURA",
@@ -47,7 +47,8 @@ _STACKED = "\n".join(
 )
 
 # The same two parties in a two-column header, as a reading-order text extractor
-# emits it: both labels on one line, both names on the next.
+# emits it: both labels on one line, both names on the next, the horizontal gap
+# surviving as a run of spaces. The resolver segments this at that gutter.
 _TWO_COLUMN = "\n".join(
     (
         "FACTURA",
@@ -57,6 +58,12 @@ _TWO_COLUMN = "\n".join(
         "TOTAL 815,16 EUR",
     ),
 )
+
+# The same page from an extractor that did NOT preserve the horizontal gap: the
+# columns are separated by ordinary word spacing, so the line states no boundary
+# and nothing can be attributed from it. This is the population the geometry
+# question is still open for.
+_FLATTENED_TWO_COLUMN = _TWO_COLUMN.replace("  ", " ")
 
 
 def test_the_instrument_partitions_a_stacked_header() -> None:
@@ -76,23 +83,41 @@ def test_the_instrument_partitions_a_stacked_header() -> None:
     assert len(regions) == 2
 
 
-def test_the_instrument_refuses_a_two_column_header() -> None:
-    """The negative control, on the SAME two parties as the positive one.
+def test_the_instrument_partitions_a_gutter_separated_two_column_header() -> None:
+    """The second positive control: a two-column header is no longer a refusal.
 
-    Holding the parties fixed and varying only the layout is what makes this a
+    The resolver reads the column boundary off the gutter the two headings are
+    printed with, so this layout now clears the bar. An instrument still scoring
+    it as unpartitionable would report a ceiling the product does not have.
+    """
+    assert (
+        len(party_regions(draft=_draft("EMISOR", "DESTINATARIO / CLIENTE"), transcription=_transcription(_TWO_COLUMN)))
+        == 2
+    )
+    # And the names partition the same way, so a reader quoting names instead of
+    # labels reaches the same verdict.
+    assert (
+        len(
+            party_regions(
+                draft=_draft("Suministros Iberia SA", "Lucia Fernandez Ortega"),
+                transcription=_transcription(_TWO_COLUMN),
+            ),
+        )
+        == 2
+    )
+
+
+def test_the_instrument_refuses_a_header_whose_gutter_was_flattened() -> None:
+    """The negative control, on the SAME two parties as the positive ones.
+
+    Holding the parties fixed and varying only the spacing is what makes this a
     control rather than a second example: the difference in outcome can only be
-    the line structure, which is the property the measurement claims to be
-    sensitive to.
+    whether the extractor preserved the gap, which is the property the remaining
+    ceiling is about.
     """
     assert not party_regions(
         draft=_draft("EMISOR", "DESTINATARIO / CLIENTE"),
-        transcription=_transcription(_TWO_COLUMN),
-    )
-    # And the names collapse the same way, so a reader quoting names instead of
-    # labels is not a way around it.
-    assert not party_regions(
-        draft=_draft("Suministros Iberia SA", "Lucia Fernandez Ortega"),
-        transcription=_transcription(_TWO_COLUMN),
+        transcription=_transcription(_FLATTENED_TWO_COLUMN),
     )
 
 
@@ -118,8 +143,8 @@ def test_a_shared_line_verdict_is_measured_rather_than_assumed() -> None:
     report = colocation_ceiling(
         [
             {
-                "doc_id": "TWO-COLUMN",
-                "stage1_reference_text": _TWO_COLUMN,
+                "doc_id": "FLATTENED-COLUMNS",
+                "stage1_reference_text": _FLATTENED_TWO_COLUMN,
                 "ground_truth": {"issuer": "Suministros Iberia SA", "counterparty_name": "Lucia Fernandez Ortega"},
             },
             {
@@ -142,7 +167,7 @@ def test_a_shared_line_verdict_is_measured_rather_than_assumed() -> None:
 
     outcomes = {row.doc_id: row.outcome for row in report.rows}
 
-    assert outcomes["TWO-COLUMN"] is CeilingOutcome.ANCHORS_SHARE_A_LINE
+    assert outcomes["FLATTENED-COLUMNS"] is CeilingOutcome.ANCHORS_SHARE_A_LINE
     assert outcomes["STACKED"] is CeilingOutcome.PARTITIONED
     assert outcomes["ABSENT-ANCHOR"] is CeilingOutcome.ANCHOR_NOT_PRINTED
     assert outcomes["NO-TRUTH"] is CeilingOutcome.NO_AUTHORED_ANCHORS
