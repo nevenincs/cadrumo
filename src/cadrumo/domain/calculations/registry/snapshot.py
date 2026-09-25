@@ -767,12 +767,6 @@ def check_revision_scoped_source_windows(
 ) -> None:
     """Refuse a snapshot whose revision cites a source stale for that revision.
 
-    Args:
-        modelo: The :class:`ModeloDefinition` whose own ``source_refs`` stay exempt.
-        revision: The :class:`ModeloRevision` whose cited sources are checked.
-        catalogues: The source catalogue the refs resolve against.
-        revision_directory: The revision's endpoint directory, when one exists.
-
     ``SourceReference.applies_from`` / ``applies_to`` previously validated only
     that the two dates were internally ordered: nothing intersected the window
     with the revision it was cited by, so a source that had expired before the
@@ -788,8 +782,10 @@ def check_revision_scoped_source_windows(
     filing has to be able to defend.
 
     Args:
-        modelo: The modelo owning the revision, named in the failure message.
-        revision: The selected revision whose scoped source refs are checked.
+        modelo: The :class:`ModeloDefinition` owning the revision, named in the
+            failure message.
+        revision: The selected :class:`ModeloRevision` whose scoped source refs
+            are checked.
         catalogues: Catalogues supplying the referenced source records.
         revision_directory: Complete endpoint metadata from the pinned directory,
             or ``None`` when the caller holds the complete in-memory modelo.
