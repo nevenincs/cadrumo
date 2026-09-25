@@ -37,3 +37,35 @@ consumer = "cadrumo.domain.portals.Portal.PORTAL_M193_RESUMEN_CAPITAL"
 requires_snapshot = true
 legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-193-procedure"]
+
+[[revisions."2022".application_links]]
+id = "modelo-193-review"
+surface = "review"
+consumer = "cadrumo.application.review"
+requires_snapshot = true
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-modelo-193-procedure"]
+
+[[revisions."2022".application_links]]
+id = "modelo-193-approval"
+surface = "approval"
+consumer = "cadrumo.application.workflow.approval"
+requires_snapshot = true
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-modelo-193-procedure"]
+
+[[revisions."2022".application_links]]
+id = "modelo-193-reconciliation"
+surface = "reconciliation"
+consumer = "cadrumo.application.reconciliation"
+requires_snapshot = true
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-modelo-193-procedure"]
+
+[[revisions."2022".application_links]]
+id = "modelo-193-workflow"
+surface = "workflow"
+consumer = "cadrumo.application.workflow"
+requires_snapshot = true
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-modelo-193-procedure"]

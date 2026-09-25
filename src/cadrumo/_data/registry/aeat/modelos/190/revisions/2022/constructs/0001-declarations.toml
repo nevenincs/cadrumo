@@ -86,6 +86,10 @@ application_links = [
     "modelo-190-calculation",
     "modelo-190-export",
     "modelo-190-portal",
+    "modelo-190-review",
+    "modelo-190-approval",
+    "modelo-190-reconciliation",
+    "modelo-190-workflow",
 ]
 deadline_windows = ["modelo-190-2022-0a"]
 filing_schedules = ["modelo-190-anual"]

@@ -1,12 +1,13 @@
 # Modelo 190 application links for filing year 2022.
 #
-# FIVE LINKS, NOT THE TEN THE 2024 EDITION DECLARES. This edition carries a
+# NINE LINKS, NOT THE TEN THE 2024 EDITION DECLARES. This edition carries a
 # fichero BOE layout and the two declarante-resumen formulas, so the export
 # and calculation surfaces are wired beside the filing and deadline ones, and
-# the portal surface the read-only cross-reference requires. The remaining
-# 2024 surfaces -- extractor, review, approval, reconciliation, workflow --
-# would each assert that a consumer handles this era, which nothing here
-# establishes.
+# the portal surface the read-only cross-reference requires. A revision with
+# formulas must also be reviewable, approvable, reconcilable and driven through
+# the workflow, and those consumers read the revision snapshot rather than any
+# era-specific shape, so they are wired too. Only the extractor, which reads
+# a filed declaration of a known layout, is left to the editions that ground it.
 #
 # EVERY REF IS ONE THIS REVISION ALREADY CARRIES. legal_refs are the
 # revision.toml set verbatim, and the 2024 links deliberately are NOT copied:
@@ -53,6 +54,38 @@ source_refs = ["aeat-dr-190-2020"]
 id = "modelo-190-portal"
 surface = "portal"
 consumer = "cadrumo.domain.portals.Portal.PORTAL_M190_RESUMEN_TRABAJO"
+requires_snapshot = true
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+source_refs = ["aeat-modelo-190-procedure"]
+
+[[revisions."2022".application_links]]
+id = "modelo-190-review"
+surface = "review"
+consumer = "cadrumo.application.review"
+requires_snapshot = true
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+source_refs = ["aeat-modelo-190-procedure"]
+
+[[revisions."2022".application_links]]
+id = "modelo-190-approval"
+surface = "approval"
+consumer = "cadrumo.application.workflow.approval"
+requires_snapshot = true
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+source_refs = ["aeat-modelo-190-procedure"]
+
+[[revisions."2022".application_links]]
+id = "modelo-190-reconciliation"
+surface = "reconciliation"
+consumer = "cadrumo.application.reconciliation"
+requires_snapshot = true
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+source_refs = ["aeat-modelo-190-procedure"]
+
+[[revisions."2022".application_links]]
+id = "modelo-190-workflow"
+surface = "workflow"
+consumer = "cadrumo.application.workflow"
 requires_snapshot = true
 legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-190-procedure"]
