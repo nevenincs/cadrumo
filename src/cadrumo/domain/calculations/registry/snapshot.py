@@ -550,6 +550,11 @@ def check_revision_scoped_legal_windows(
     its nested records cites it is a filing-specific grounding claim, checked by
     :func:`legal_window_covers_devengo` -- devengo-anchored for substantive law,
     presentation-window-tolerant for procedural/administrative kinds.
+
+    Args:
+        modelo: The :class:`ModeloDefinition` whose own refs stay exempt.
+        revision: The :class:`ModeloRevision` whose cited refs are checked.
+        catalogues: The legal and source catalogues the refs resolve against.
     """
     revision_legal_ids, _revision_source_ids = collect_snapshot_ref_ids(modelo, revision)
     elsewhere_legal_ids, _elsewhere_source_ids = collect_snapshot_ref_ids(
@@ -761,6 +766,12 @@ def check_revision_scoped_source_windows(
     revision_directory: ModeloRevisionDirectory | None = None,
 ) -> None:
     """Refuse a snapshot whose revision cites a source stale for that revision.
+
+    Args:
+        modelo: The :class:`ModeloDefinition` whose own ``source_refs`` stay exempt.
+        revision: The :class:`ModeloRevision` whose cited sources are checked.
+        catalogues: The source catalogue the refs resolve against.
+        revision_directory: The revision's endpoint directory, when one exists.
 
     ``SourceReference.applies_from`` / ``applies_to`` previously validated only
     that the two dates were internally ordered: nothing intersected the window
