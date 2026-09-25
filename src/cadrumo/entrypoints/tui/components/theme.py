@@ -200,6 +200,10 @@ CADRUMO_CSS_TOKENS: Final[Mapping[str, str]] = MappingProxyType(
         "cadrumo-cell-padding": "1",
         # -- Chrome ---------------------------------------------------------
         "cadrumo-scrollbar": "1",
+        # The field-help panel docked under a page: tall enough for a short
+        # what/why/where explanation, short enough to leave an 80x24 page its
+        # content. Longer help scrolls within it.
+        "cadrumo-help-max-height": "6",
     },
 )
 """The canonical presentation tokens every Cadrumo surface is built from.

@@ -54,6 +54,7 @@ flows:
       running: Checking the profile and completing setup…
     edit:
       cancel: Cancel
+      choose_one: Choose one of the options, or cancel to leave the value unchanged.
       clear: Clear
       masked_kept: This value is hidden, so the box starts empty. Leave it empty to
         keep the value on record, or type a new one to replace it.
@@ -74,6 +75,11 @@ flows:
       write_in_flight: Saving the previous field. Wait for it to finish, then try
         again.
     field_unavailable: Unavailable profile field
+    help:
+      about: 'About this setting:'
+      what: 'What it is:'
+      where: 'Where to find it:'
+      why: 'Why it is needed:'
     language:
       unavailable: This profile does not offer a language setting.
     namespace_detail: detail {number}
@@ -88,10 +94,10 @@ flows:
         wait.
       progress: '{answered} of {total} required answers'
       question: Question {number} of {total} · {section}
-      ready: All required answers are in. Press Continue to finish setup.
-      required_only: Show only required answers
+      ready: All required answers are in. Finish setup to start preparing your declarations.
+      required_only: Required only
       search_empty: No setting matches “{query}”.
-      search_placeholder: Search settings by name or value
+      search_placeholder: Search settings
       section_done: ✓ {title} - {present}/{total}
       section_pending: ✖ {title} - {missing} required
       sources_summary: Fill the profile from AEAT records or your own documents instead

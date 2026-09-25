@@ -49,7 +49,13 @@ from ...core.identity.profile import ProfileId
 from ...core.json_contract import Notice
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.redaction.rules import ALWAYS_REDACT_KEY_TERMS
-from ...domain.user_profile.labels import profile_field_label, profile_section_summary, profile_section_title
+from ...domain.user_profile.labels import (
+    profile_choice_label,
+    profile_field_help,
+    profile_field_label,
+    profile_section_summary,
+    profile_section_title,
+)
 
 # ``ProfileSetupState`` is a pydantic FIELD type below, so it must resolve at
 # runtime; deferring it to TYPE_CHECKING leaves the model undefined and every
@@ -225,6 +231,12 @@ def profile_field_choices(
                 ClaveMovilRoute.APP_REQUEST.value: "flows.manager.action.auth_clave_movil_route_app_request",
             }
             return tuple(ProfileFieldChoice(value=token, label=tr(route_keys[token])) for token in field.enum_values)
+        if path is not None and "." in path:
+            section_key, field_key = path.split(".", 1)
+            return tuple(
+                ProfileFieldChoice(value=token, label=profile_choice_label(section_key, field_key, token))
+                for token in field.enum_values
+            )
         return tuple(ProfileFieldChoice(value=token, label=token) for token in field.enum_values)
     return ()
 
@@ -256,6 +268,13 @@ class ProfileFieldView(BaseModel):
     form reads, so the two surfaces cannot offer different editors for one
     declaration.
     """
+    help: tuple[str, ...] | None = Field(default=None)
+    """What the field is, why it is asked and where to find it, or ``None``.
+
+    Present only for fields the catalogue explains in those three parts;
+    :attr:`about` explains every other field."""
+    about: str = Field(default="")
+    """The schema's own description of the field, the explanation of last resort."""
     row_index: str | None = Field(default=None)
     """Which instance of a repeated fact this row belongs to, if any.
 
@@ -437,6 +456,8 @@ def _field_view(
         required=field.required or path in conditionally_required,
         field_type=field.type,
         choices=profile_field_choices(field, path=f"{section_key}.{field.key}"),
+        help=profile_field_help(section_key, field.key),
+        about=field.description,
         row_index=row_index,
     )
 

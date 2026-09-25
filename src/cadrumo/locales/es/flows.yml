@@ -54,6 +54,7 @@ flows:
       running: Comprobando el perfil y completando la configuración…
     edit:
       cancel: Cancelar
+      choose_one: Elige una de las opciones, o cancela para dejar el valor sin cambios.
       clear: Borrar
       masked_kept: Este valor está oculto, por eso el campo empieza vacío. Déjalo
         vacío para conservar el valor guardado o escribe uno nuevo para sustituirlo.
@@ -74,6 +75,11 @@ flows:
       write_in_flight: Se está guardando el campo anterior. Espera a que termine y
         vuelve a intentarlo.
     field_unavailable: Campo de perfil no disponible
+    help:
+      about: 'Sobre este ajuste:'
+      what: 'Qué es:'
+      where: 'Dónde encontrarlo:'
+      why: 'Por qué se pide:'
     language:
       unavailable: Este perfil no ofrece un ajuste de idioma.
     namespace_detail: detalle {number}
@@ -88,11 +94,11 @@ flows:
         esperar.
       progress: '{answered} de {total} respuestas obligatorias'
       question: Pregunta {number} de {total} · {section}
-      ready: Ya tienes todas las respuestas obligatorias. Pulsa Continuar para terminar
-        la configuración.
-      required_only: Mostrar solo respuestas obligatorias
+      ready: Ya tienes todas las respuestas obligatorias. Termina la configuración
+        para empezar a preparar tus declaraciones.
+      required_only: Solo obligatorias
       search_empty: Ningún ajuste coincide con «{query}».
-      search_placeholder: Busca ajustes por nombre o valor
+      search_placeholder: Buscar ajustes
       section_done: ✓ {title} - {present}/{total}
       section_pending: ✖ {title} - {missing} obligatorias
       sources_summary: Rellena el perfil a partir de los registros de la AEAT o de

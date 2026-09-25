@@ -25,7 +25,7 @@ from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.user_profile.values import ProfileSetupState
 from ..components.host import ScreenHostApp
 from ..components.widgets import DisclosureGroup
-from ..profile.overview import FieldEditScreen, ProfileManagerScreen
+from ..profile.overview import FieldEditScreen, ProfileManagerScreen, field_help_text
 from .manager_pilot import wait_until_settled
 from .test_manager_screen import _CREDENTIAL_INPUT, _live_overview, _persist
 
@@ -166,6 +166,8 @@ async def test_continue_walks_every_required_answer_then_finishes_setup(tmp_path
             assert not app.overview.missing_required
             button = app.query_one("#onboarding-continue", Button)
             assert str(button.label) == tr("flows.manager.onboarding.finish")
+            await pilot.pause()
+            assert button.size.width >= len(str(button.label)), "the new action label is clipped to the old width"
 
             await pilot.click("#onboarding-continue")
             await wait_until_settled(app, pilot)
@@ -250,4 +252,77 @@ async def test_a_finished_profile_opens_without_the_walk(tmp_path) -> None:
             assert not app.query("#manager-onboarding")
             assert not app.query_one("#manager-required-only", Checkbox).value
             assert len(_visible_rows(app)) == overview.total_count
+            pilot.app.exit(None)
+
+
+@pytest.mark.asyncio
+async def test_a_choice_question_offers_words_and_refuses_an_empty_save(tmp_path) -> None:
+    """Choices read as labels, and Save with nothing picked asks for a pick instead of cancelling."""
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        _register()
+        overview = _live_overview()
+        app = ProfileManagerScreen(overview, persist=_persist, complete_setup=_complete_setup)
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
+            await pilot.pause()
+            await pilot.click("#onboarding-continue")
+            await pilot.pause()
+            # The first required question is typed; answer it to reach a choice.
+            for _ in range(len(overview.missing_required)):
+                dialog = app.app.screen
+                assert isinstance(dialog, FieldEditScreen)
+                if dialog._field.choices:
+                    break
+                await _answer(app, pilot)
+                await pilot.pause()
+            dialog = app.app.screen
+            assert isinstance(dialog, FieldEditScreen)
+            field = dialog._field
+            assert field.choices, "the walk must reach a choice question, or this proves nothing"
+            options = dialog.query_one("#edit-options", OptionList)
+            prompts = [str(options.get_option_at_index(index).prompt) for index in range(options.option_count)]
+            assert prompts == [choice.label for choice in field.choices]
+            assert not {choice.value for choice in field.choices} & set(prompts), "raw tokens offered as labels"
+
+            options.highlighted = None
+            await pilot.click("#btn-edit-save")
+            await pilot.pause()
+            assert app.app.screen is dialog
+            assert str(dialog.query_one("#edit-refusal", Static).content) == tr("flows.manager.edit.choose_one")
+            assert app._walking
+            pilot.app.exit(None)
+
+
+@pytest.mark.asyncio
+async def test_every_setup_question_explains_itself_and_the_page_explains_the_cursor_row(tmp_path) -> None:
+    """Each question says what it is, why it is asked and where to find it; so does the page."""
+    headings = [tr(f"flows.manager.help.{part}") for part in ("what", "why", "where")]
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        _register()
+        overview = _live_overview()
+        app = ProfileManagerScreen(overview, persist=_persist, complete_setup=_complete_setup)
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
+            await pilot.pause()
+            table = app._table_by_section["identity"]
+            table.focus()
+            table.move_cursor(row=0)
+            await pilot.pause()
+            panel = app.query_one("#manager-field-help", Static)
+            assert panel.display
+            assert all(heading in str(panel.content) for heading in headings)
+            # The row under the cursor, not whichever section happened to be built last.
+            assert str(panel.content) == field_help_text(app._field_by_key["identity.tax_id"])
+
+            await pilot.click("#onboarding-continue")
+            await pilot.pause()
+            asked = 0
+            for _ in range(20):
+                dialog = app.app.screen
+                if not isinstance(dialog, FieldEditScreen):
+                    break
+                help_text = str(dialog.query_one("#edit-help", Static).content)
+                assert [line.split(":", 1)[0] + ":" for line in help_text.splitlines()] == headings, dialog._field.path
+                asked += 1
+                await _answer(app, pilot)
+                await pilot.pause()
+            assert asked >= len(overview.missing_required)
             pilot.app.exit(None)
