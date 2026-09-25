@@ -40,6 +40,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _PROFILE_ID = UUID("06648eb9-e60e-46d2-bd35-9aaf55a92e24")
 _CREDENTIAL_INPUT = "orphan-matrix operator passphrase clearing the verifier minimum"
+_RECOVERY_UNLOCK_DEADLINE_SECONDS = 120.0
 
 _ORPHAN_CHILD = r"""
 import sys
@@ -135,10 +136,14 @@ def test_killed_supervisor_leaves_no_stuck_lease_and_the_next_run_reacquires_and
         time.sleep(0.05)
     assert not pid_is_alive(worker_pid), "orphaned KDF worker outlived its bounded reaping window"
 
+    # The subject is lease recovery, not KDF speed: the fixed fallback hash can
+    # exceed the production deadline on a saturated host, while a stuck lease
+    # is never re-acquired however long the deadline is.
     unlock = unlock_profile_custody(
         envelope,
         _CREDENTIAL_INPUT,
         sentinel=sentinel,
         settings=Settings(cadrumo_local_storage_root=tmp_path),
+        timeout_seconds=_RECOVERY_UNLOCK_DEADLINE_SECONDS,
     )
     assert unlock.dek == dek
