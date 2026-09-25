@@ -1,18 +1,32 @@
 """Real-behaviour tests for the delta-minimality screen.
 
-Every edition in the corpus is a full copy today, so the live corpus proves the
-screen can name restatement. It cannot prove the other half - that a correctly
-minimal delta edition is NOT named, including one restating its whole
-completeness manifest - because no such edition exists yet. Those are
-constructed here on copies of real revisions, through the real loaded
-definitions, and each defect is shown both present and removed.
+No edition in the corpus restates an inherited row today, so the live corpus
+cannot prove that the screen names restatement. The restating edition is built
+here instead, and built by the loader rather than by hand: modelo 131's 2025
+edition overrides every row it inherits, so dropping one override from a copy of
+its authored source makes the loader materialise the row that edition would
+inherit. Stating that materialised row verbatim is restatement, exactly as the
+loader defines it; leaving it inherited is the minimal delta. Each defect is
+shown both present and removed.
+
+The same copy carries the other half: 131's 2025 overrides cite the orden that
+approves the 2025 edition where 2024 cites the orden that approved its own, and
+the loader proves that dropping such an override hydrates the predecessor's
+citation. Such an override is a statement inheritance cannot reproduce, never a
+restatement.
 """
 
 from __future__ import annotations
 
+import shutil
+from dataclasses import dataclass
+from pathlib import Path
+
 import pytest
 
+from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from cadrumo.domain.calculations.registry.casilla_lineage import CasillaLineageOrigin
 from cadrumo.domain.calculations.registry.revision_contracts import DeclaredPredecessor
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
@@ -34,14 +48,30 @@ from ..analysis.delta_minimality import (
     stated_casillas,
 )
 from ..compiler.authority import compiled_bundled_authority
+from ..compiler.loader import load_modelo_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 #: A real pair of adjacent editions that both carry a completeness manifest and
-#: share lineage-bearing rows, some restated and some genuinely changed.
+#: share lineage-bearing rows, every one of them overridden by the successor.
 _MODELO = "131"
 _PREDECESSOR = "2024"
 _SUCCESSOR = "2025"
+
+#: One real row of that pair, whose 2025 override states nothing but the legal
+#: references that cite the orden approving the 2025 edition.
+_ROW = "modulos-epigrafe"
+
+#: The authored text the copies remove, each asserted present before removal so
+#: a corpus edit retires the proof loudly rather than silently weakening it.
+_OVERRIDE = (
+    '[[revisions."2025".casilla_overrides]]\n'
+    'selector = { revision = "2024", id = "modulos-epigrafe" }\n'
+    'fields = { legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:art-4"] }\n'
+    "removed_fields = []\n\n"
+)
+_NEXT_ROW = '[[revisions."2024".casillas]]\nid = "modulos-1-unidades"'
+_PREDECESSOR_LEGAL_REFS = f'legal_refs = ["ley-35-2006:art-31", "orden-hfp-1359-2023:art-4"]\n\n{_NEXT_ROW}'
 
 
 @pytest.fixture(scope="module")
@@ -55,151 +85,194 @@ def pair(authority: ValidatedRegistryAuthority) -> tuple[ModeloDefinition, Model
     return definition, definition.revisions[_PREDECESSOR], definition.revisions[_SUCCESSOR]
 
 
-def _two_edition_definition(
-    definition: ModeloDefinition, predecessor: ModeloRevision, successor: ModeloRevision
-) -> ModeloDefinition:
-    # The pair stands alone, so the predecessor becomes its root: a declaration
-    # naming an edition outside the pair would point at nothing.
-    root = predecessor.model_copy(update={"predecessor": None})
-    return definition.model_copy(update={"revisions": {root.id: root, successor.id: successor}})
+def _partial_tree(destination: Path) -> Path:
+    """Copy the one modelo and the catalogues it loads against, and return its directory."""
+    bundled_root = Path(bundled_path("registry", "aeat"))
+    registry_root = destination / "aeat"
+    for catalogue in ("facts", "legal"):
+        shutil.copytree(bundled_root / catalogue, registry_root / catalogue)
+    shutil.copytree(bundled_root / "modelos" / _MODELO, registry_root / "modelos" / _MODELO)
+    return registry_root / "modelos" / _MODELO
 
 
-def _judgements_by_casilla(definition: ModeloDefinition) -> dict[str, RowJudgement]:
+def _rewrite(path: Path, old: str, new: str) -> None:
+    current = path.read_text(encoding="utf-8")
+    assert old in current, f"{path} no longer states {old!r}"
+    path.write_text(current.replace(old, new, 1), encoding="utf-8")
+
+
+@dataclass(frozen=True, slots=True)
+class _Inheritance:
+    """Modelo 131 as the loader materialises it once the 2025 override is dropped.
+
+    ``delta`` is the minimal form: its 2025 edition inherits the row. ``row`` is
+    the row the loader materialised for it, the value a restating edition would
+    have to state. ``redefaulted`` is the same tree with the 2024 row's own
+    ``legal_refs`` dropped too, so that row takes its edition's ordenes and the
+    inheriting edition re-defaults it to its own.
+    """
+
+    delta: ModeloDefinition
+    row: CasillaDefinition
+    redefaulted: ModeloDefinition
+    redefaulted_row: CasillaDefinition
+
+
+def _row_of(definition: ModeloDefinition, revision_id: str, casilla_id: str) -> CasillaDefinition:
+    return next(item for item in definition.revisions[revision_id].casillas if str(item.id) == casilla_id)
+
+
+@pytest.fixture(scope="module")
+def inheritance(tmp_path_factory: pytest.TempPathFactory) -> _Inheritance:
+    modelo_dir = _partial_tree(tmp_path_factory.mktemp("registry"))
+    _rewrite(modelo_dir / "revisions" / _SUCCESSOR / "revision.toml", _OVERRIDE, "")
+    delta = load_modelo_directory(modelo_dir)
+
+    predecessor_rows = modelo_dir / "revisions" / _PREDECESSOR / "casillas" / "0001-declarations.toml"
+    _rewrite(predecessor_rows, _PREDECESSOR_LEGAL_REFS, _NEXT_ROW)
+    redefaulted = load_modelo_directory(modelo_dir)
+    return _Inheritance(
+        delta=delta,
+        row=_row_of(delta, _SUCCESSOR, _ROW),
+        redefaulted=redefaulted,
+        redefaulted_row=_row_of(redefaulted, _SUCCESSOR, _ROW),
+    )
+
+
+def _stating(definition: ModeloDefinition, row: CasillaDefinition) -> ModeloDefinition:
+    """Return the definition with its 2025 edition stating ``row`` instead of inheriting it."""
+    successor = definition.revisions[_SUCCESSOR]
+    stated = row.model_copy(update={"inherited_from": None})
+    return _with_rows(definition, tuple(stated if str(item.id) == str(row.id) else item for item in successor.casillas))
+
+
+def _with_rows(definition: ModeloDefinition, rows: tuple[CasillaDefinition, ...]) -> ModeloDefinition:
+    successor = definition.revisions[_SUCCESSOR].model_copy(update={"casillas": rows})
+    return definition.model_copy(update={"revisions": {**definition.revisions, _SUCCESSOR: successor}})
+
+
+def _successor_judgements(definition: ModeloDefinition) -> dict[str, RowJudgement]:
     return {
         item.casilla: item for item in judge_definition(definition, modelo_id=_MODELO) if item.revision == _SUCCESSOR
     }
 
 
-def _minimal_delta(
-    definition: ModeloDefinition, predecessor: ModeloRevision, successor: ModeloRevision
-) -> tuple[ModeloRevision, dict[str, RowJudgement]]:
-    """Return the successor as a delta edition stating only what it changes.
+def test_the_loader_proves_the_inherited_row_and_the_screen_names_the_edition_that_restates_it(
+    inheritance: _Inheritance,
+) -> None:
+    """The row the loader materialises by inheritance, stated verbatim, is named restatement.
 
-    It declares its predecessor, keeps every row the screen judges a genuine
-    change or genuinely new, drops every row it would inherit unchanged, and
-    keeps its whole completeness manifest - which is what a migrated edition
-    carries, because the manifest does not inherit.
+    The minimal form - the same tree, the row left inherited - is named nothing,
+    so the marker on one row is the whole difference between the two verdicts.
     """
-    verdicts = _judgements_by_casilla(_two_edition_definition(definition, predecessor, successor))
-    stated = tuple(
-        casilla
-        for casilla in successor.casillas
-        if verdicts[str(casilla.id)].kind in {"stated_difference", "new_in_edition"}
-    )
-    delta = successor.model_copy(
-        update={"predecessor": DeclaredPredecessor(revision_id=predecessor.id), "casillas": stated}
-    )
-    return delta, verdicts
+    assert inheritance.row.inherited_from == _PREDECESSOR
+    assert definition_findings(inheritance.delta, modelo_id=_MODELO) == ()
+
+    restating = _stating(inheritance.delta, inheritance.row)
+    findings = definition_findings(restating, modelo_id=_MODELO)
+    assert [(item.revision, item.casilla, item.kind) for item in findings] == [(_SUCCESSOR, _ROW, "restated_unchanged")]
+    assert restating_modelos(findings) == (_MODELO,)
 
 
-def test_the_live_corpus_names_modelos_that_restate_their_casillas(authority: ValidatedRegistryAuthority) -> None:
-    """A full-copy modelo restating rows is named; a delta-migrated one is not.
+def test_an_override_citing_this_editions_orden_is_a_statement_inheritance_cannot_reproduce(
+    pair: tuple[ModeloDefinition, ModeloRevision, ModeloRevision], inheritance: _Inheritance
+) -> None:
+    """131's 2025 legal-reference overrides are differences, because dropping them changes the row.
 
-    Held by identity, not by a corpus count that would freeze today's backlog as
-    a contract: 131's successor editions are still full copies of their
-    predecessors, while 303's editions inherit their unchanged rows and so
-    restate none of them.
+    The loader settles it: without the override the row hydrates the 2024
+    orden, so the stated value is the only thing that puts the 2025 orden on the
+    row. The schema has no additive legal-reference form, so an inherited row
+    carries the predecessor's array whole.
     """
-    findings = screen_authority(authority, ("303", "131"))
-    assert set(restating_modelos(findings)) == {"131"}
-    restated = [item for item in findings if item.kind == "restated_unchanged"]
-    assert all(item.predecessor is not None for item in restated)
+    definition, _predecessor, _successor = pair
+    stated = _row_of(definition, _SUCCESSOR, _ROW)
+    inherited = inheritance.row
+    assert "orden-hac-1347-2024:art-4" in stated.legal_refs
+    assert "orden-hfp-1359-2023:art-4" in inherited.legal_refs
+    assert set(stated.legal_refs) != set(inherited.legal_refs)
+
+    judgement = _successor_judgements(definition)[_ROW]
+    assert judgement.kind == "stated_difference"
+    assert judgement.detail == "differs in legal_refs"
+    assert restating_modelos(definition_findings(definition, modelo_id=_MODELO)) == ()
 
 
-def _edition_keyed_pair(
-    definition: ModeloDefinition, predecessor_id: str, successor_id: str
-) -> tuple[ModeloDefinition, str, str]:
-    """Plant a binding identifier re-keyed to each edition on one real restated row pair.
+def test_the_live_corpus_carries_no_edition_restating_an_inherited_row(
+    authority: ValidatedRegistryAuthority,
+) -> None:
+    """Held by identity: no modelo restates, and 131's judged rows are differences, not copies."""
+    findings = screen_authority(authority, ("303", _MODELO))
+    assert restating_modelos(findings) == ()
+    kinds = {item.kind for item in judge_definition(authority.modelo(_MODELO), modelo_id=_MODELO)}
+    assert "restated_unchanged" not in kinds
+    assert "stated_difference" in kinds
 
-    Binding identifiers in the corpus are edition-free, so a restated row's
-    binding is already equal as written. The plant appends each edition's own
-    key as a whole identifier segment to the successor row and to the
-    predecessor row it continues, which is the form an edition-keyed identifier
-    takes. Returns the planted definition, the planted casilla id, and the
-    edition-free binding the plant started from.
+
+def test_a_predecessor_row_taking_its_editions_ordenes_re_defaults_on_inheriting(
+    inheritance: _Inheritance,
+) -> None:
+    """A row that stated no legal references takes the ordenes of the edition it lands in.
+
+    The loader proves it on the same tree: with the 2024 row's own references
+    dropped it carries 2024's ordenes, and the row 2025 inherits carries 2025's.
+    Stating that re-defaulted value is therefore restatement, while stating the
+    predecessor's ordenes is a difference.
     """
-    predecessor, successor = definition.revisions[predecessor_id], definition.revisions[successor_id]
-    chains = {str(item.continuidad_id): item for item in predecessor.casillas if item.continuidad_id}
-    restated = {
-        item.casilla
-        for item in judge_definition(definition, modelo_id=_MODELO)
-        if item.revision == successor_id and item.kind == "restated_unchanged"
-    }
-    row = next(
-        item
-        for item in successor.casillas
-        if str(item.id) in restated
-        and item.continuidad_id is not None
-        and chains[str(item.continuidad_id)].binding == item.binding
-    )
-    inherited = chains[str(row.continuidad_id)]
-    # A restated row may bind nothing; the plant then supplies the shared
-    # edition-free identifier both rows start from.
-    binding = row.binding or "modelo-131-planted-binding"
-    assert successor_id not in binding and predecessor_id not in binding, "the chosen binding already embeds an edition"
+    predecessor = inheritance.redefaulted.revisions[_PREDECESSOR]
+    successor = inheritance.redefaulted.revisions[_SUCCESSOR]
+    inherited = _row_of(inheritance.redefaulted, _PREDECESSOR, _ROW)
+    row = inheritance.redefaulted_row
+    assert inherited.legal_refs == predecessor.orden_aplicabilidad
+    assert row.legal_refs == successor.orden_aplicabilidad
+    assert row.legal_refs != inherited.legal_refs
 
-    def _rekeyed(revision: ModeloRevision, target: str, edition: str) -> ModeloRevision:
-        casillas = tuple(
-            item.model_copy(update={"binding": f"{binding}-{edition}"}) if str(item.id) == target else item
-            for item in revision.casillas
-        )
-        return revision.model_copy(update={"casillas": casillas})
+    findings = definition_findings(_stating(inheritance.redefaulted, row), modelo_id=_MODELO)
+    assert [(item.casilla, item.kind) for item in findings] == [(_ROW, "restated_unchanged")]
 
-    planted = definition.model_copy(
-        update={
-            "revisions": {
-                **definition.revisions,
-                predecessor.id: _rekeyed(predecessor, str(inherited.id), predecessor_id),
-                successor.id: _rekeyed(successor, str(row.id), successor_id),
-            }
-        }
-    )
-    return planted, str(row.id), binding
+    kept = row.model_copy(update={"legal_refs": inherited.legal_refs})
+    assert restatement_differences(kept, successor, inherited, predecessor) == ("legal_refs",)
 
 
 def test_restatement_is_found_through_the_edition_tokens_not_in_spite_of_them(
-    authority: ValidatedRegistryAuthority,
+    inheritance: _Inheritance,
 ) -> None:
-    """A row named as restated differs from its inherited row as written.
+    """A row named as restated may differ from its inherited row as written.
 
     Only edition restatement separates them - here a binding identifier carrying
     its own edition key - which is exactly what a raw comparison would have
     reported as a change. The screen names the row; the raw dumps disagree.
     """
-    planted, casilla_id, binding = _edition_keyed_pair(authority.modelo(_MODELO), _PREDECESSOR, _SUCCESSOR)
-    successor, predecessor = planted.revisions[_SUCCESSOR], planted.revisions[_PREDECESSOR]
-    by_id = {str(item.id): item for item in successor.casillas}
-    chains = {str(item.continuidad_id): item for item in predecessor.casillas if item.continuidad_id}
-    restated = [
-        item
-        for item in judge_definition(planted, modelo_id=_MODELO)
-        if item.revision == _SUCCESSOR and item.kind == "restated_unchanged"
-    ]
-    assert restated
-    raw_differs = [
-        item
-        for item in restated
-        if (row := by_id[item.casilla]).model_dump() != chains[str(row.continuidad_id)].model_dump()
-    ]
-    assert raw_differs, "every restated row was already identical as written, so normalisation was never exercised"
-    rekeyed = [
-        by_id[item.casilla]
-        for item in raw_differs
-        if by_id[item.casilla].binding != chains[str(by_id[item.casilla].continuidad_id)].binding
-    ]
-    assert [str(item.id) for item in rekeyed] == [casilla_id], (
-        "the restated rows re-keyed to their own edition must be exactly the planted one"
+    definition = inheritance.delta
+    binding = inheritance.row.binding or "modelo-131-planted-binding"
+    assert _SUCCESSOR not in binding and _PREDECESSOR not in binding, "the chosen binding already embeds an edition"
+
+    predecessor = definition.revisions[_PREDECESSOR].model_copy(
+        update={
+            "casillas": tuple(
+                item.model_copy(update={"binding": f"{binding}-{_PREDECESSOR}"}) if str(item.id) == _ROW else item
+                for item in definition.revisions[_PREDECESSOR].casillas
+            )
+        }
     )
-    row = rekeyed[0]
-    inherited = chains[str(row.continuidad_id)]
-    assert row.binding == f"{binding}-{_SUCCESSOR}"
-    assert inherited.binding == f"{binding}-{_PREDECESSOR}"
-    assert inheritable_value(row, successor)["binding"] == inheritable_value(inherited, predecessor)["binding"]
+    row = inheritance.row.model_copy(update={"binding": f"{binding}-{_SUCCESSOR}", "inherited_from": None})
+    planted = _with_rows(
+        definition.model_copy(update={"revisions": {**definition.revisions, _PREDECESSOR: predecessor}}),
+        tuple(row if str(item.id) == _ROW else item for item in definition.revisions[_SUCCESSOR].casillas),
+    )
+    successor = planted.revisions[_SUCCESSOR]
+    planted_inherited = _row_of(planted, _PREDECESSOR, _ROW)
+
+    assert row.model_dump() != planted_inherited.model_dump(), "the rows were already identical as written"
+    assert _successor_judgements(planted)[_ROW].kind == "restated_unchanged"
+    assert (
+        inheritable_value(row, successor, inheriting=successor)["binding"]
+        == inheritable_value(planted_inherited, predecessor, inheriting=successor)["binding"]
+    )
 
     # Normalisation removes the edition token and nothing else: a binding
     # re-pointed at a different identifier is still a change.
     repointed = row.model_copy(update={"binding": f"{row.binding}-otro"})
-    assert inheritable_value(repointed, successor)["binding"] != inheritable_value(inherited, predecessor)["binding"]
+    assert restatement_differences(repointed, successor, planted_inherited, predecessor) == ("binding",)
 
 
 def test_every_edition_local_field_is_a_real_casilla_field() -> None:
@@ -207,51 +280,30 @@ def test_every_edition_local_field_is_a_real_casilla_field() -> None:
     assert set(CasillaDefinition.model_fields) >= EDITION_LOCAL_FIELDS | LINEAGE_CLAIM_FIELDS | {"inherited_from"}
 
 
-def _restated_rows(
-    definition: ModeloDefinition, predecessor: ModeloRevision, successor: ModeloRevision
-) -> list[CasillaDefinition]:
-    verdicts = _judgements_by_casilla(_two_edition_definition(definition, predecessor, successor))
-    return [item for item in successor.casillas if verdicts[str(item.id)].kind == "restated_unchanged"]
-
-
 def test_rows_marked_inherited_are_never_judged_and_the_marker_is_what_spares_them(
-    pair: tuple[ModeloDefinition, ModeloRevision, ModeloRevision],
+    inheritance: _Inheritance,
 ) -> None:
-    """A delta edition's loaded rows include what it inherits; only the rows it states are judged.
+    """A delta edition's loaded rows include what it inherits; only the rows it states are judged."""
+    successor = inheritance.delta.revisions[_SUCCESSOR]
+    assert len(stated_casillas(successor)) == len(successor.casillas) - 1
+    assert _ROW not in _successor_judgements(inheritance.delta)
 
-    The successor declares its predecessor and marks every restated row as
-    inherited from it, the shape the loader gives an edition that dropped those
-    rows. Without the markers the very same rows are named.
-    """
-    definition, predecessor, successor = pair
-    restated = {str(item.id) for item in _restated_rows(definition, predecessor, successor)}
-    assert restated
-    declared = successor.model_copy(update={"predecessor": DeclaredPredecessor(revision_id=predecessor.id)})
-    marked = declared.model_copy(
-        update={
-            "casillas": tuple(
-                item.model_copy(update={"inherited_from": predecessor.id}) if str(item.id) in restated else item
-                for item in declared.casillas
-            )
-        }
-    )
-
-    spared = _two_edition_definition(definition, predecessor, marked)
-    assert definition_findings(spared, modelo_id=_MODELO) == ()
-    assert {item.casilla for item in judge_definition(spared, modelo_id=_MODELO)}.isdisjoint(restated)
-
-    unmarked = definition_findings(_two_edition_definition(definition, predecessor, declared), modelo_id=_MODELO)
-    assert {item.casilla for item in unmarked if item.kind == "restated_unchanged"} == restated
+    restating = _stating(inheritance.delta, inheritance.row)
+    assert _successor_judgements(restating)[_ROW].kind == "restated_unchanged"
 
 
 def test_a_stated_lineage_claim_is_a_statement_inheritance_cannot_reproduce(
-    pair: tuple[ModeloDefinition, ModeloRevision, ModeloRevision],
+    inheritance: _Inheritance,
 ) -> None:
     """An inherited row carries no lineage claim, so a row stating one differs even from an identical claim."""
-    definition, predecessor, successor = pair
-    row = _restated_rows(definition, predecessor, successor)[0]
-    inherited = next(item for item in predecessor.casillas if item.continuidad_id == row.continuidad_id)
-    claims = {"continuidad_origin": "grounded", "continuidad_evidence": "Diseño de registro, campo 1."}
+    definition = inheritance.delta
+    successor, predecessor = definition.revisions[_SUCCESSOR], definition.revisions[_PREDECESSOR]
+    row = inheritance.row.model_copy(update={"inherited_from": None})
+    inherited = _row_of(definition, _PREDECESSOR, _ROW)
+    claims = {
+        "continuidad_origin": CasillaLineageOrigin.GROUNDED,
+        "continuidad_evidence": "Diseño de registro, campo 1.",
+    }
 
     assert restatement_differences(row, successor, inherited, predecessor) == ()
     claimed = row.model_copy(update=claims)
@@ -262,18 +314,16 @@ def test_a_stated_lineage_claim_is_a_statement_inheritance_cannot_reproduce(
 
 
 def test_source_refs_are_compared_net_of_each_editions_default_only_when_both_declare_one(
-    pair: tuple[ModeloDefinition, ModeloRevision, ModeloRevision],
+    inheritance: _Inheritance,
 ) -> None:
     """With both defaults declared, what remains is the row's own additions, and those must match."""
-    definition, predecessor, successor = pair
-    row = _restated_rows(definition, predecessor, successor)[0]
+    definition = inheritance.delta
+    row = inheritance.row.model_copy(update={"inherited_from": None})
     own, other = "aeat-instrucciones-own", "aeat-instrucciones-other"
-    inherited = next(item for item in predecessor.casillas if item.continuidad_id == row.continuidad_id).model_copy(
-        update={"source_refs": ("aeat-dr-2024", own)}
-    )
+    inherited = _row_of(definition, _PREDECESSOR, _ROW).model_copy(update={"source_refs": ("aeat-dr-2024", own)})
     with_defaults = (
-        successor.model_copy(update={"casilla_source_refs": ("aeat-dr-2025",)}),
-        predecessor.model_copy(update={"casilla_source_refs": ("aeat-dr-2024",)}),
+        definition.revisions[_SUCCESSOR].model_copy(update={"casilla_source_refs": ("aeat-dr-2025",)}),
+        definition.revisions[_PREDECESSOR].model_copy(update={"casilla_source_refs": ("aeat-dr-2024",)}),
     )
 
     def differences(
@@ -288,90 +338,63 @@ def test_source_refs_are_compared_net_of_each_editions_default_only_when_both_de
     # Without a default on both sides nothing separates the edition's grounding
     # from the row's, so the references are not compared at all.
     without_defaults = (
-        successor.model_copy(update={"casilla_source_refs": ()}),
-        predecessor.model_copy(update={"casilla_source_refs": ()}),
+        definition.revisions[_SUCCESSOR].model_copy(update={"casilla_source_refs": ()}),
+        definition.revisions[_PREDECESSOR].model_copy(update={"casilla_source_refs": ()}),
     )
     assert differences(row.model_copy(update={"source_refs": ("aeat-dr-2025", other)}), without_defaults) == ()
 
 
 def test_a_minimal_delta_restating_its_whole_manifest_is_not_named(
-    pair: tuple[ModeloDefinition, ModeloRevision, ModeloRevision],
+    inheritance: _Inheritance,
 ) -> None:
     """The manifest does not inherit, so restating it must never make an edition non-minimal.
 
-    The planted edition restates its completeness manifest in full - asserted
+    The delta edition restates its completeness manifest in full - asserted
     first, so the proof cannot pass on an edition that happens to carry none -
-    and states only the casilla rows it changes. A screen spanning both
-    families would name it; this one must not.
+    and inherits the one row it does not change. A screen spanning both families
+    would name it; this one must not.
     """
-    definition, predecessor, successor = pair
-    delta, _ = _minimal_delta(definition, predecessor, successor)
-    assert delta.completeness_manifest is not None
-    assert delta.completeness_manifest == successor.completeness_manifest
-    assert len(delta.casillas) < len(successor.casillas)
-
-    planted = _two_edition_definition(definition, predecessor, delta)
-    assert [(item.revision, item.basis) for item in edition_predecessors(planted)] == [
-        (_PREDECESSOR, "first_in_order"),
+    definition = inheritance.delta
+    successor, predecessor = definition.revisions[_SUCCESSOR], definition.revisions[_PREDECESSOR]
+    assert successor.completeness_manifest is not None
+    assert len(stated_casillas(successor)) < len(successor.casillas)
+    assert [(item.revision, item.basis) for item in edition_predecessors(definition)][1:3] == [
+        (_PREDECESSOR, "declared"),
         (_SUCCESSOR, "declared"),
     ]
-    findings = definition_findings(planted, modelo_id=_MODELO)
-    assert findings == ()
-    assert restating_modelos(findings) == ()
+    assert definition_findings(definition, modelo_id=_MODELO) == ()
 
     # The sharpest form: a manifest identical to the one it would have
     # inherited, had the manifest inherited at all.
     assert predecessor.completeness_manifest is not None
-    copied = delta.model_copy(update={"completeness_manifest": predecessor.completeness_manifest})
-    assert copied.completeness_manifest == predecessor.completeness_manifest
-    assert definition_findings(_two_edition_definition(definition, predecessor, copied), modelo_id=_MODELO) == ()
+    copied = successor.model_copy(update={"completeness_manifest": predecessor.completeness_manifest})
+    planted = definition.model_copy(update={"revisions": {**definition.revisions, _SUCCESSOR: copied}})
+    assert definition_findings(planted, modelo_id=_MODELO) == ()
 
 
 def test_a_delta_restating_one_identical_row_is_named_and_stops_when_it_is_removed(
-    pair: tuple[ModeloDefinition, ModeloRevision, ModeloRevision],
+    inheritance: _Inheritance,
 ) -> None:
     """One restated row in an otherwise minimal delta is named, by row, and nothing else is.
 
-    Then both removals of the defect: dropping the row, and changing it so it is
-    a genuine statement rather than a copy.
+    Then both removals of the defect: inheriting the row again, and changing it
+    so it is a genuine statement rather than a copy.
     """
-    definition, predecessor, successor = pair
-    delta, verdicts = _minimal_delta(definition, predecessor, successor)
-    copy_row = next(item for item in successor.casillas if verdicts[str(item.id)].kind == "restated_unchanged")
+    restating = _stating(inheritance.delta, inheritance.row)
+    findings = definition_findings(restating, modelo_id=_MODELO)
+    assert [(item.revision, item.casilla, item.kind) for item in findings] == [(_SUCCESSOR, _ROW, "restated_unchanged")]
+    assert definition_findings(inheritance.delta, modelo_id=_MODELO) == ()
 
-    defective = delta.model_copy(update={"casillas": (*delta.casillas, copy_row)})
-    findings = definition_findings(_two_edition_definition(definition, predecessor, defective), modelo_id=_MODELO)
-    assert [(item.revision, item.casilla, item.kind) for item in findings] == [
-        (_SUCCESSOR, str(copy_row.id), "restated_unchanged")
-    ]
-    assert restating_modelos(findings) == (_MODELO,)
-
-    assert definition_findings(_two_edition_definition(definition, predecessor, delta), modelo_id=_MODELO) == ()
-
-    changed_row = copy_row.model_copy(update={"section": (*copy_row.section, "planted")})
-    changed = delta.model_copy(update={"casillas": (*delta.casillas, changed_row)})
-    planted = _two_edition_definition(definition, predecessor, changed)
-    assert definition_findings(planted, modelo_id=_MODELO) == ()
-    assert _judgements_by_casilla(planted)[str(copy_row.id)].detail == "differs in section"
+    changed = _stating(inheritance.delta, inheritance.row.model_copy(update={"section": ("planted",)}))
+    assert definition_findings(changed, modelo_id=_MODELO) == ()
+    assert _successor_judgements(changed)[_ROW].detail == "differs in section"
 
 
-def test_a_row_without_lineage_is_unchecked_never_minimal(
-    pair: tuple[ModeloDefinition, ModeloRevision, ModeloRevision],
-) -> None:
-    """Stripping a restated row's lineage turns its verdict to unchecked, not to clean.
-
-    The row is unchanged in every other respect, so the only thing the screen
-    lost is the key that says which row it would inherit.
-    """
-    definition, predecessor, successor = pair
-    delta, verdicts = _minimal_delta(definition, predecessor, successor)
-    copy_row = next(item for item in successor.casillas if verdicts[str(item.id)].kind == "restated_unchanged")
-    unlinked = copy_row.model_copy(update={"continuidad_id": None, "continuidad_origin": None})
-    planted = _two_edition_definition(
-        definition, predecessor, delta.model_copy(update={"casillas": (*delta.casillas, unlinked)})
-    )
-    findings = definition_findings(planted, modelo_id=_MODELO)
-    assert [(item.casilla, item.kind) for item in findings] == [(str(copy_row.id), "unchecked_no_lineage")]
+def test_a_row_without_lineage_is_unchecked_never_minimal(inheritance: _Inheritance) -> None:
+    """Stripping a restated row's lineage turns its verdict to unchecked, not to clean."""
+    unlinked = inheritance.row.model_copy(update={"continuidad_id": None, "continuidad_origin": None})
+    findings = definition_findings(_stating(inheritance.delta, unlinked), modelo_id=_MODELO)
+    assert [(item.casilla, item.kind) for item in findings] == [(_ROW, "unchecked_no_lineage")]
     assert restating_modelos(findings) == ()
 
 
@@ -402,33 +425,35 @@ def test_every_unlineaged_successor_row_in_the_corpus_is_reported_unchecked(
     assert census.root_editions > 0
 
 
-def test_an_ambiguous_chain_in_the_predecessor_is_unchecked(
-    pair: tuple[ModeloDefinition, ModeloRevision, ModeloRevision],
-) -> None:
+def test_an_ambiguous_chain_in_the_predecessor_is_unchecked(inheritance: _Inheritance) -> None:
     """Two predecessor rows on one chain leave the inherited row undecided."""
-    definition, predecessor, successor = pair
-    delta, verdicts = _minimal_delta(definition, predecessor, successor)
-    copy_row = next(item for item in successor.casillas if verdicts[str(item.id)].kind == "restated_unchanged")
-    twin = next(item for item in predecessor.casillas if item.continuidad_id == copy_row.continuidad_id)
-    doubled = predecessor.model_copy(
-        update={"casillas": (*predecessor.casillas, twin.model_copy(update={"id": f"{twin.id}-twin"}))}
+    definition = inheritance.delta
+    twin = _row_of(definition, _PREDECESSOR, _ROW)
+    doubled = definition.revisions[_PREDECESSOR].model_copy(
+        update={
+            "casillas": (
+                *definition.revisions[_PREDECESSOR].casillas,
+                twin.model_copy(update={"id": f"{twin.id}-twin"}),
+            )
+        }
     )
-    planted = _two_edition_definition(
-        definition, doubled, delta.model_copy(update={"casillas": (*delta.casillas, copy_row)})
+    planted = _stating(
+        definition.model_copy(update={"revisions": {**definition.revisions, _PREDECESSOR: doubled}}), inheritance.row
     )
     findings = definition_findings(planted, modelo_id=_MODELO)
-    assert [(item.casilla, item.kind) for item in findings] == [(str(copy_row.id), "unchecked_ambiguous_lineage")]
+    assert [(item.casilla, item.kind) for item in findings] == [(_ROW, "unchecked_ambiguous_lineage")]
 
 
 def test_an_undeclared_edition_overlapping_its_neighbour_is_unchecked_unless_declared(
-    pair: tuple[ModeloDefinition, ModeloRevision, ModeloRevision],
+    inheritance: _Inheritance,
 ) -> None:
     """Overlapping editions may be parallel variants, so order alone cannot pair them.
 
-    Every row of the undeclaring edition is reported unchecked; declaring the
-    predecessor resolves it, and the same full copy is then judged and named.
+    Every row the undeclaring edition states is reported unchecked; declaring
+    the predecessor resolves it, and the restated row is then named.
     """
-    definition, predecessor, successor = pair
+    restating = _stating(inheritance.delta, inheritance.row)
+    predecessor, successor = restating.revisions[_PREDECESSOR], restating.revisions[_SUCCESSOR]
     # Simultaneity needs both a shared period and an intersecting validity window.
     overlapping = successor.model_copy(
         update={
@@ -438,15 +463,16 @@ def test_an_undeclared_edition_overlapping_its_neighbour_is_unchecked_unless_dec
             "valid_to": predecessor.valid_to,
         }
     )
-    planted = _two_edition_definition(definition, predecessor, overlapping)
-    findings = definition_findings(planted, modelo_id=_MODELO)
-    assert {item.kind for item in findings} == {"unchecked_predecessor_undecidable"}
-    assert len(findings) == len(successor.casillas)
+    planted = restating.model_copy(update={"revisions": {**restating.revisions, _SUCCESSOR: overlapping}})
+    undecidable = [item for item in definition_findings(planted, modelo_id=_MODELO) if item.revision == _SUCCESSOR]
+    assert {item.kind for item in undecidable} == {"unchecked_predecessor_undecidable"}
+    assert len(undecidable) == len(stated_casillas(successor))
 
     declared = overlapping.model_copy(update={"predecessor": DeclaredPredecessor(revision_id=predecessor.id)})
-    resolved = definition_findings(_two_edition_definition(definition, predecessor, declared), modelo_id=_MODELO)
-    assert "restated_unchanged" in {item.kind for item in resolved}
-    assert "unchecked_predecessor_undecidable" not in {item.kind for item in resolved}
+    resolved = definition_findings(
+        restating.model_copy(update={"revisions": {**restating.revisions, _SUCCESSOR: declared}}), modelo_id=_MODELO
+    )
+    assert {item.kind for item in resolved} == {"restated_unchanged"}
 
 
 def test_editions_declaring_no_predecessor_are_roots_and_are_not_judged(

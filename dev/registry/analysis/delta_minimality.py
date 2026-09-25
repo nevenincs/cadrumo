@@ -49,10 +49,15 @@ the row sits in:
   side only: they state a row's relationship to its predecessor and are never
   inherited, so a stated row carrying either is a statement inheritance cannot
   reproduce. ``continuidad_id`` is the match key and is equal.
-- ``legal_refs`` are compared as a set after removing the edition's own
-  ``orden_aplicabilidad`` entries, top level and inside ``constraints``: an orden
-  reissued with the edition re-cites the same content, and array order is not
-  meaningful to any consumer.
+- ``legal_refs`` are compared as a set, top level and inside ``constraints``,
+  against the value the inheriting edition would hydrate rather than against the
+  predecessor's own. The schema has no additive legal-ref form: a stated array
+  is kept whole, so an inherited row carries the predecessor's array unchanged
+  and a successor citing a different orden states a value inheritance cannot
+  reproduce. The one value that does change on inheriting is the one the loader
+  fills: a predecessor row whose ``legal_refs`` are exactly its edition's
+  ``orden_aplicabilidad`` stated none of its own and takes the inheriting
+  edition's ordenes instead. Array order is not meaningful to any consumer.
 - ``formula``, ``binding`` and ``alternate_bindings`` are compared by lineage,
   the edition's own revision identifier replaced by a placeholder wherever it
   sits as a whole segment, because those identifiers embed the edition key.
@@ -75,6 +80,11 @@ Where it stops:
   predecessor's row states its ``source_refs`` in full or as additions. Where it
   states them in full, inheriting would carry the predecessor's design citation
   forward, yet the row reads as a restatement once both defaults are removed.
+- A loaded value equal to its edition's ``orden_aplicabilidad`` is read as a row
+  that stated no ``legal_refs``, which is how the loader produces it and what
+  the converter's lift leaves behind. A row authoring that array by hand would
+  inherit it verbatim instead of re-defaulting, and is read here as the
+  defaulted row it is indistinguishable from.
 - An edition declaring no predecessor is measured against the adjacent earlier
   edition by validity order - the pairing a declared predecessor must agree with
   wherever the two editions do not overlap. A declared predecessor is always
@@ -91,10 +101,10 @@ from __future__ import annotations
 
 import collections
 import sys
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Final
+from typing import Final, TypeIs
 
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.revision_contracts import DeclaredPredecessor, NoPredecessor
@@ -234,15 +244,60 @@ def edition_predecessors(definition: ModeloDefinition) -> tuple[EditionPredecess
     return tuple(resolved)
 
 
+def _is_array(value: object) -> TypeIs[Sequence[object]]:
+    """Whether a field of the typed dump is one of its arrays, whose entries are values like any other."""
+    return isinstance(value, tuple | list)
+
+
+def _is_tuple(value: object) -> TypeIs[tuple[object, ...]]:
+    """Whether a field of the typed dump is a tuple, the shape a model dump gives a sequence field."""
+    return isinstance(value, tuple)
+
+
+def _is_table(value: object) -> TypeIs[dict[str, object]]:
+    """Whether a field of the typed dump is a nested table, which a model dump keys by field name."""
+    return isinstance(value, dict)
+
+
+def _entries(values: object) -> tuple[object, ...]:
+    """Return an array field's entries; a field that is not an array has none."""
+    return tuple(values) if _is_array(values) else ()
+
+
+def _table(value: object) -> dict[str, object] | None:
+    """Return a nested table of the typed dump, the same object so a caller's edit lands in the dump."""
+    return value if _is_table(value) else None
+
+
 def _refs_net_of(values: object, own: frozenset[str]) -> frozenset[str]:
-    if not isinstance(values, tuple | list):
-        return frozenset[str]()
-    return frozenset(str(value) for value in values) - own
+    return frozenset(_refs(values)) - own
 
 
 def _source_default(revision: ModeloRevision) -> frozenset[str] | None:
     default = revision.casilla_source_refs
     return None if not default else frozenset(str(ref) for ref in default)
+
+
+def _orden_default(revision: ModeloRevision) -> tuple[str, ...]:
+    return tuple(str(ref) for ref in revision.orden_aplicabilidad)
+
+
+def _refs(values: object) -> tuple[str, ...]:
+    return tuple(str(entry) for entry in _entries(values))
+
+
+def _inherited_legal_refs(values: object, revision: ModeloRevision, inheriting: ModeloRevision) -> frozenset[str]:
+    """Return the ``legal_refs`` an inheriting edition's copy of this row would hydrate to.
+
+    A stated array is kept whole by the loader and so travels with the row. Only
+    a row that stated none is filled, from the ``orden_aplicabilidad`` of the
+    edition it lands in; a loaded value equal to its own edition's ordenes is
+    that row.
+    """
+    stated = _refs(values)
+    if not stated or stated == _orden_default(revision):
+        return frozenset(_orden_default(inheriting))
+    return frozenset(stated)
 
 
 def stated_value(
@@ -256,26 +311,26 @@ def stated_value(
     The row's typed dump normalised as the module docstring lists. Its
     ``source_refs`` are kept net of ``source_default`` when one is given and
     dropped otherwise; the caller passes the edition's default only when both
-    editions of a comparison declare one.
+    editions of a comparison declare one. Its ``legal_refs`` are kept whole, as
+    a set, because the schema has no additive form for them.
     """
     revision_id = str(revision.id)
-    own_ordenes = frozenset(str(ref) for ref in revision.orden_aplicabilidad)
     value: dict[str, object] = dict(casilla.model_dump(mode="python", exclude=set(EDITION_LOCAL_FIELDS)))
-    value["legal_refs"] = _refs_net_of(value.get("legal_refs"), own_ordenes)
+    value["legal_refs"] = frozenset(_refs(value.get("legal_refs")))
     if source_default is not None:
         value["source_refs"] = _refs_net_of(casilla.source_refs, source_default)
-    constraints = value.get("constraints")
-    if isinstance(constraints, dict):
+    constraints = _table(value.get("constraints"))
+    if constraints is not None:
         constraint_sources = constraints.pop("source_refs", None)
         if source_default is not None:
             constraints["source_refs"] = _refs_net_of(constraint_sources, source_default)
-        constraints["legal_refs"] = _refs_net_of(constraints.get("legal_refs"), own_ordenes)
+        constraints["legal_refs"] = frozenset(_refs(constraints.get("legal_refs")))
     for name in _IDENTIFIER_FIELDS:
         current = value.get(name)
         if isinstance(current, str):
             value[name] = identifier_lineage(current, revision_id)
-        elif isinstance(current, tuple):
-            value[name] = tuple(identifier_lineage(str(item), revision_id) for item in current)
+        elif _is_tuple(current):
+            value[name] = tuple(identifier_lineage(str(entry), revision_id) for entry in current)
     return value
 
 
@@ -283,16 +338,23 @@ def inheritable_value(
     casilla: CasillaDefinition,
     revision: ModeloRevision,
     *,
+    inheriting: ModeloRevision,
     source_default: frozenset[str] | None = None,
 ) -> dict[str, object]:
-    """Return the part of a casilla row an inheriting edition would carry.
+    """Return the part of a casilla row the edition ``inheriting`` would carry.
 
     :func:`stated_value` with the row's lineage claims unset, as an inherited
-    row materialises. A stated row restates its inherited row exactly when its
-    stated value equals the inherited row's inheritable value.
+    row materialises, and its ``legal_refs`` resolved against ``inheriting``,
+    whose ordenes fill a row that stated none. A stated row restates its
+    inherited row exactly when its stated value equals the inherited row's
+    inheritable value.
     """
     value = stated_value(casilla, revision, source_default=source_default)
     value.update(dict.fromkeys(LINEAGE_CLAIM_FIELDS))
+    value["legal_refs"] = _inherited_legal_refs(casilla.legal_refs, revision, inheriting)
+    constraints = _table(value.get("constraints"))
+    if constraints is not None and casilla.constraints is not None:
+        constraints["legal_refs"] = _inherited_legal_refs(casilla.constraints.legal_refs, revision, inheriting)
     return value
 
 
@@ -306,7 +368,12 @@ def restatement_differences(
     own_default, predecessor_default = _source_default(revision), _source_default(predecessor)
     compare_sources = own_default is not None and predecessor_default is not None
     left = stated_value(stated, revision, source_default=own_default if compare_sources else None)
-    right = inheritable_value(inherited, predecessor, source_default=predecessor_default if compare_sources else None)
+    right = inheritable_value(
+        inherited,
+        predecessor,
+        inheriting=revision,
+        source_default=predecessor_default if compare_sources else None,
+    )
     return tuple(sorted(name for name in set(left) | set(right) if left.get(name) != right.get(name)))
 
 
