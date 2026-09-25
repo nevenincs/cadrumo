@@ -203,6 +203,7 @@ def test_a_year_without_a_scope_edition_is_refused_once_the_revision_declares_bi
     assert bindings
 
     supported = operation.modelo_directory("190").supported_filing_years
+    assert supported is not None
     ungoverned = [
         year
         for year in range(supported.floor, supported.horizon + 1)
