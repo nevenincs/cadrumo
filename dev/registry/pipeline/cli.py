@@ -21,7 +21,6 @@ from typing import Annotated, Literal, cast
 
 import typer
 
-from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.i18n.render import locale_map, override_locales_root
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
@@ -57,6 +56,7 @@ from .candidate_staging import (
 )
 from .export_fragment_provenance import SHA256_PATTERN, ExportFragmentTarget
 from .generated_tree_dispositions import GeneratedTreeRecordDriftDisposition, record_drift_dispositions
+from .publication_grade import static_publication_authority_grade
 from .render_check import (
     GeneratedExportBootstrapTransport,
     RenderComparison,
@@ -488,7 +488,7 @@ def check_prepared_invocation(
 
 def _bootstrap_validation(context: GeneratedExportTreeValidationContext) -> GeneratedExportTreeValidationContext:
     """Lower only the static-publication proof to its honest authority grade."""
-    return replace(context, required_grade=RegistryAuthorityGrade.CALCULATION)
+    return replace(context, required_grade=static_publication_authority_grade())
 
 
 def publish_prepared_invocation(

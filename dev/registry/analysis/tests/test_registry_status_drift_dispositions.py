@@ -15,6 +15,9 @@ from pathlib import Path
 
 import pytest
 import rtoml
+from pydantic import ValidationError
+
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
 
 from ...compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from ...pipeline.generated_tree_dispositions import disposition_ledger_from_path
@@ -67,6 +70,21 @@ def _record_drift_row(**overrides: object) -> dict[str, object]:
     return row
 
 
+def _below_publication_grade_row(**overrides: object) -> dict[str, object]:
+    row: dict[str, object] = {
+        "kind": "below_publication_grade",
+        "modelo": "232",
+        "revision": "2016-2017",
+        "source_ref": _SOURCE_REF,
+        "source_sha256": _SOURCE_SHA256,
+        "authority_grade": "applicability",
+        "reason": "the revision grade lies below the static-publication floor",
+        "reconsideration_condition": "the revision earns calculation authority",
+    }
+    row.update(overrides)
+    return row
+
+
 def _ledger(tmp_path: Path, *rows: dict[str, object]) -> tuple[GeneratedTreeDispositionRow, ...]:
     """Write an isolated ledger and load it through the canonical loader."""
     path = tmp_path / "generated_tree_dispositions.toml"
@@ -94,6 +112,7 @@ def _project(
     *,
     floor: Callable[[], int] = lambda: _FLOOR,
     years: tuple[int, ...] = _REVISION_YEARS,
+    grade: RegistryAuthorityGrade | None = RegistryAuthorityGrade.APPLICABILITY,
 ) -> ProjectedTargets:
     return project_target_states(
         (state,),
@@ -101,7 +120,18 @@ def _project(
         dispositions=dispositions,
         declared_floor=floor,
         revision_filing_years=lambda _modelo, _revision: years,
+        revision_authority_grade=lambda _modelo, _revision: grade,
         excluded_count=0,
+    )
+
+
+def _manifest_only_stale(**overrides: object) -> GeneratedTreeState:
+    return _drifting(
+        state="manifest_only_stale",
+        differing=("0002-dr23201.toml", EXPORT_FRAGMENT_PROVENANCE_FILENAME),
+        serialization_only=("0002-dr23201.toml",),
+        detail="1 meaningful of 2 differing file(s)",
+        **overrides,
     )
 
 
@@ -252,3 +282,54 @@ def test_classes_that_describe_no_drift_do_not_explain_one(tmp_path: Path, row: 
 
     assert dict(projected.counts)["drifted"] == 1
     assert _currentness(projected) == "failed"
+
+
+def test_below_publication_grade_row_explains_manifest_only_staleness(tmp_path: Path) -> None:
+    projected = _project(_manifest_only_stale(), _ledger(tmp_path, _below_publication_grade_row()))
+
+    assert dict(projected.counts)["explained"] == 1
+    assert dict(projected.counts)["stale"] == 0
+    assert _currentness(projected) == "passed"
+    explained = dict(projected.findings)["explained"]
+    assert "'applicability' authority lies below the static-publication grade" in explained[0][2]
+
+
+def test_the_same_staleness_without_a_row_fails(tmp_path: Path) -> None:
+    projected = _project(_manifest_only_stale(), _ledger(tmp_path), floor=_floor_never_read)
+
+    assert dict(projected.counts)["stale"] == 1
+    assert _currentness(projected) == "failed"
+
+
+@pytest.mark.parametrize(
+    ("state", "grade", "reason"),
+    [
+        (_drifting(), RegistryAuthorityGrade.APPLICABILITY, "comparison reports record drift"),
+        (_manifest_only_stale(), RegistryAuthorityGrade.CALCULATION, "the revision declares 'calculation'"),
+        (_manifest_only_stale(), None, "the revision declares no grade"),
+        (
+            _manifest_only_stale(committed_source=(_SOURCE_REF, "b" * 64)),
+            RegistryAuthorityGrade.APPLICABILITY,
+            "committed tree attests",
+        ),
+    ],
+    ids=["record-drift", "grade-raised", "grade-undeclared", "design-digest-moved"],
+)
+def test_a_below_publication_grade_row_whose_evidence_no_longer_matches_fails(
+    tmp_path: Path,
+    state: GeneratedTreeState,
+    grade: RegistryAuthorityGrade | None,
+    reason: str,
+) -> None:
+    projected = _project(state, _ledger(tmp_path, _below_publication_grade_row()), grade=grade)
+
+    assert dict(projected.counts)["explained"] == 0
+    assert _currentness(projected) == "failed"
+    (detail,) = projected.details
+    assert "disposition not honoured" in detail
+    assert reason in detail
+
+
+def test_a_below_publication_grade_row_at_the_publication_grade_is_refused(tmp_path: Path) -> None:
+    with pytest.raises(ValidationError, match="reaches the static-publication grade 'calculation'"):
+        _ledger(tmp_path, _below_publication_grade_row(authority_grade="calculation"))

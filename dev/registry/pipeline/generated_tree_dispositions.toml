@@ -25,6 +25,12 @@
 # this file that is load-bearing: it is the size of the contradiction being
 # explained, and it fails when the population moves in either direction.
 #
+# A fourth class, `below_publication_grade`, carries a tree whose records
+# reproduce and whose manifest has aged, but whose revision declares an authority
+# grade below the publisher's static-publication floor, so republication is
+# refused before anything is written. The row names the grade it relies on and
+# retires when the revision's declared grade moves.
+#
 # This is not a ratchet. It stores no counts and no ceilings, and shrinking it
 # is not the measure of progress.
 
@@ -39,3 +45,12 @@ supported_filing_years_floor = 2022
 revision_last_filing_year = 2017
 reason = '''Every filing year this revision declares (2016 and 2017) lies below the registry-wide supported-filing-years floor of 2022 declared in the legal tree's supported-filing-years declaration, so revision selection admits no coordinate for it: the publisher refuses with "modelo 232: no revision for year=... period='0A' revision='2016-2017'" before it renders or compares anything. Its shipped records still quote binding identifier spellings that were re-spelled to drop record-design span and offset segments - the identifiers are semantic and the record layout, offsets and widths are unchanged - but that difference cannot be regenerated away while the revision is unreachable, so it is a listed non-issue rather than an unexplained one.'''
 reconsideration_condition = 'The supported-filing-years floor is lowered to admit this revision, or the revision is retired.'
+[[dispositions]]
+kind = 'below_publication_grade'
+modelo = '185'
+revision = '2025-y-siguientes'
+source_ref = 'aeat-dr-185-2026'
+source_sha256 = '102dc91b4e9484b830c81e790cf08569be95e2854fee1138f63f363d35d2bcae'
+authority_grade = 'applicability'
+reason = '''The revision declares applicability authority, below the calculation grade the static-publication path validates every candidate at, so republish-target refuses with "declares 'applicability' authority grade, which cannot satisfy the requested 'calculation' snapshot authority" before it writes anything. Its records reproduce semantically from the pinned design and only the generation manifest attests an older generator and loader, so the difference is a listed non-issue rather than an unexplained one.'''
+reconsideration_condition = 'The revision earns calculation authority, its declared grade changes, or the generated tree is withdrawn.'

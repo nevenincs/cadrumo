@@ -23,7 +23,6 @@ from __future__ import annotations
 import filecmp
 import shutil
 from collections.abc import Iterable
-from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
@@ -53,7 +52,11 @@ from ..export_fragment_provenance import (
     load_export_fragment_provenance_manifest,
     loader_semantic_digest,
 )
-from ..generated_tree_dispositions import record_drift_dispositions, render_refusal_dispositions
+from ..generated_tree_dispositions import (
+    below_publication_grade_dispositions,
+    record_drift_dispositions,
+    render_refusal_dispositions,
+)
 from ..generated_tree_inventory import GeneratedExportTree, generated_export_trees
 from ..joined_record_design import design_view
 from ..render_check import compare_revision_against_committed, parsed_tree_file
@@ -63,37 +66,22 @@ from ._generated_tree_test_support import isolated_authorities, isolated_authori
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.usefixtures("governed_fact_scope")]
 
 
-@dataclass(frozen=True)
-class _ReproductionPendingPin:
-    """One source-bound reason a semantically reproducible tree cannot yet be republished."""
-
-    source_ref: str
-    source_sha256: str
-    reason: str
-    reconsideration_condition: str
-    check_mode_refusal: str
-
-
 _GENERATED_TREES = generated_export_trees()
 _RECORD_DRIFT_DISPOSITIONS = {item.subject: item for item in record_drift_dispositions()}
 _RENDER_REFUSAL_DISPOSITIONS = {item.subject: item for item in render_refusal_dispositions()}
-_REPRODUCTION_PENDING = {
-    "m185-2025-y-siguientes": _ReproductionPendingPin(
-        source_ref="aeat-dr-185-2026",
-        source_sha256="102dc91b4e9484b830c81e790cf08569be95e2854fee1138f63f363d35d2bcae",
-        reason="revision earns applicability authority, below the publisher's calculation-grade floor",
-        reconsideration_condition=(
-            "Reconsider when the revision earns calculation authority or the generated tree is withdrawn."
-        ),
-        check_mode_refusal="cannot satisfy the requested 'filing' snapshot authority",
-    ),
-}
+#: Trees whose records reproduce but whose revision grade the publisher refuses,
+#: keyed the way the generated-tree inventory names them. The ledger row is the
+#: single home of the pin; this suite only projects it.
+_REPRODUCTION_PENDING = {f"m{row.modelo}-{row.revision}": row for row in below_publication_grade_dispositions()}
+#: Check mode validates a candidate as a filing snapshot, so a revision below the
+#: publication grade is refused there for the same grade shortfall.
+_BELOW_PUBLICATION_GRADE_CHECK_MODE_REFUSAL = "cannot satisfy the requested 'filing' snapshot authority"
 
 
 #: Check mode's exact current refusal, projected from the same source-bound pins
 #: that govern pending republication. A changed refusal makes the owning row red.
 _CHECK_MODE_PENDING: dict[str, str] = {
-    subject: pin.check_mode_refusal for subject, pin in _REPRODUCTION_PENDING.items()
+    subject: _BELOW_PUBLICATION_GRADE_CHECK_MODE_REFUSAL for subject in _REPRODUCTION_PENDING
 } | {
     # The tree is published at calculation grade and reproduces exactly, but check
     # mode validates the candidate as a filing snapshot, and the revision's
@@ -148,7 +136,12 @@ def test_every_reproduction_pending_pin_is_live_and_source_bound() -> None:
         source = authority.catalogues.sources.get(pin.source_ref)
         assert source is not None
         assert source.sha256 == pin.source_sha256, f"{subject}: source was reissued; reconsider the pin"
-        assert pin.reason.strip() and pin.reconsideration_condition.strip()
+        revision = authority.modelo(tree.modelo).revisions.get(tree.revision)
+        assert revision is not None
+        assert revision.is_graded and revision.effective_authority_grade is pin.authority_grade, (
+            f"{subject}: the revision's declared grade moved from {pin.authority_grade.value!r}; retire or "
+            "re-derive the ledger row"
+        )
         # A pin states that a tree differs from a fresh render only in its
         # attestation. Once the tree also differs in its RECORDS it has a
         # disposition row saying so, and that row is the stronger statement:
