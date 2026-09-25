@@ -246,6 +246,15 @@ class FilingProducerKey(StrEnum):
     M222_REGIMEN_REDUCIDA_DIMENSION = "m222.regimen_reducida_dimension"
     M222_CIFRA_NEGOCIOS_GRUPO_DOCE_MESES = "m222.cifra_negocios_grupo_doce_meses"
     M222_COOPERATIVA_FISCALMENTE_PROTEGIDA = "m222.cooperativa_fiscalmente_protegida"
+    #: The 2023-2024 diseño prints ONE enumerated slot, "Grupo de coperativas
+    #: fiscalmente protegida u Otros grupos fiscales con posibilidad de aplicar dos
+    #: tipos impositivos (ej. entidades ZEC)", whose values are "0" no consta, "1"
+    #: grupo cooperativas and "2" otros grupos fiscales. The 2025 diseño splits the
+    #: same question into the two independent X-marks above. Modelo 202's twin slot
+    #: is named on the same pattern for the same reason: naming this for the
+    #: cooperativa alone would drop the half of the slot that decides whether a
+    #: second tipo applies at all.
+    M222_COOPERATIVA_O_MULTIPLES_TIPOS = "m222.cooperativa_o_multiples_tipos"
     M222_REGIMEN_ENTIDADES_CAPITAL_RIESGO = "m222.regimen_entidades_capital_riesgo"
     M222_CIRCUNSTANCIA_CONCURRENTE = "m222.circunstancia_concurrente"
     M222_CIFRA_NEGOCIOS_PERIODO_ANTERIOR_TRAMO = "m222.cifra_negocios_periodo_anterior_tramo"
