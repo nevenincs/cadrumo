@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import importlib.util
+import json
+import os
+import shutil
 from pathlib import Path
 from types import ModuleType
 from typing import Generic, TypeVar
@@ -42,22 +45,48 @@ def test_fresh_source_tree_bootstraps_repo_root_authority(
     assert calls == [(tmp_path, expected)]
 
 
-def test_a_published_source_tree_is_read_without_publishing(
+def test_a_current_publication_is_read_without_publishing(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    """A copy of the session's current publication describes the live sources, so it is reused."""
     hook = _hook_module()
+    current = Path(os.environ["CADRUMO_AUTHORITY_ROOT"])
+    descriptor = json.loads((current / "authority.current.json").read_text(encoding="utf-8"))
     published = tmp_path / ".authority"
     published.mkdir()
-    (published / "authority.current.json").write_text("{}", encoding="utf-8")
+    shutil.copy2(current / "authority.current.json", published / "authority.current.json")
+    shutil.copy2(current / descriptor["database"], published / descriptor["database"])
     monkeypatch.delenv("CADRUMO_AUTHORITY_ROOT", raising=False)
     monkeypatch.setattr(
         hook,
         "_publish_source_tree_authority",
-        lambda *_args: pytest.fail("a published source tree must be read, not republished"),
+        lambda *_args: pytest.fail("a current publication must be read, not republished"),
     )
 
     assert hook._authority_root(tmp_path) == published
+
+
+def test_a_descriptor_that_describes_no_current_generation_is_republished(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A directory holding a descriptor proves a publication happened, not that it is current."""
+    hook = _hook_module()
+    published = tmp_path / ".authority"
+    published.mkdir()
+    (published / "authority.current.json").write_text("{}", encoding="utf-8")
+    calls: list[tuple[Path, Path]] = []
+
+    def publish(build_root: Path, destination: Path) -> Path:
+        calls.append((build_root, destination))
+        return destination
+
+    monkeypatch.delenv("CADRUMO_AUTHORITY_ROOT", raising=False)
+    monkeypatch.setattr(hook, "_publish_source_tree_authority", publish)
+
+    assert hook._authority_root(tmp_path) == published
+    assert calls == [(tmp_path, published)]
 
 
 def test_an_interrupted_publication_is_completed_rather_than_read(
