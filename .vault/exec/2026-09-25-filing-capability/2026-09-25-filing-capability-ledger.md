@@ -5,7 +5,7 @@ tags:
 date: '2026-09-25'
 modified: '2026-09-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:ea23b0c3c9b733d4499f1bc55a90e46be493d184de7f1844113b397ab47f5737'
+body_hash: 'sha256:ea4a09e41b59b9602c15a5183ee1ac66191f5c8416bb0bc1b26376f5106857bd'
 related:
   - "[[2026-09-25-filing-capability-plan]]"
 ---
@@ -134,6 +134,11 @@ related:
 - `S17` `verify:` `pytest dev/registry/tests/test_filing_capability_worklist.py (189 absent)` -> `pass`
 - `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/189`
 - `S18` `verify:` `pytest dev/registry/tests/test_filing_capability_worklist.py (189 absent)` -> `pass`
+- `S29` `M` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2023/constructs/0001-declarations.toml`
+- `S29` `A` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2023/verification_expectations/0001-declarations.toml`
+- `S29` `M` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2023/workbook_parity_refs/0001-declarations.toml`
+- `S29` `M` `src/cadrumo/_data/registry/aeat/modelos/222/revisions/2024/revision.toml`
+- `S29` `verify:` `pytest dev/registry/tests in thirds -m '(unit or integration) and not serial'` -> `pass`
 
 ## Notes
 
@@ -148,4 +153,4 @@ related:
 - `S15` blocked: no official pre-2023 anexo V with positional geometry. Checked BOE-A-1999-22372 (annex published as images, no field table), BOE-A-2017-15845 (partial, three fields only), BOE-A-2015-11074 (partial), BOE-A-2007-18192 (anexo IV hoja and instrucciones only) and the AEAT disenos-de-registro index for modelos 100-199, which lists DR_Mod_188_2023.pdf alone. No offset authored; step left open.
 - `S40` open: the pre-2008 row-19 reading is unsettled. The widened source, the 36-casilla surface and a 53-field layout tiling 1-1517 exactly once were staged and compiled clean, then withdrawn: the completeness gate refused because the 40-position parent at 514 writes over positions 520-527, which the design marks RESERVADO para AEAT inside its post-2008 desglose. Whether that reservation holds for devengo < 2008 is not stated anywhere in the design, and splitting the parent around it would be an invented layout. Nothing was promoted to the live tree.
 - `S22` Regression repair for 85fffd019e: the 2022/2023 families flowed forward into 2024/2025. Fixed with restated_families on the 2024 editions' binding family, per-edition re-grounding of the 2023 members, two out-of-window citations corrected, and the modelo 190 perceptor clave scope given its 2022 and 2023 editions. The registry gate that should have caught the citation defect did not exist; it does now.
-
+- `S29` conformance follow-up: the construct now owns all 14 formulas and links calculation, review, approval, reconciliation and workflow with requires_snapshot; the 14 computed casillas are enrolled reconcile-when-present, inherited by 2024 through the verification_expectations assertion scope
