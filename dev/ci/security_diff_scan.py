@@ -81,7 +81,7 @@ def merge_base(base: str, *, root: Path = REPO_ROOT, git: str | None = None) -> 
     git = git or _require_git()
     try:
         completed = subprocess.run(
-            [git, "merge-base", base, "HEAD"],
+            [git, "--no-optional-locks", "merge-base", base, "HEAD"],
             cwd=root,
             check=True,
             capture_output=True,
@@ -97,7 +97,7 @@ def merge_base(base: str, *, root: Path = REPO_ROOT, git: str | None = None) -> 
 def _add_scratch_worktree(git: str, worktree_dir: Path, *, root: Path) -> None:
     try:
         subprocess.run(
-            [git, "worktree", "add", "--detach", str(worktree_dir), "HEAD"],
+            [git, "--no-optional-locks", "worktree", "add", "--detach", str(worktree_dir), "HEAD"],
             cwd=root,
             check=True,
             capture_output=True,
@@ -114,7 +114,7 @@ def _add_scratch_worktree(git: str, worktree_dir: Path, *, root: Path) -> None:
 def _remove_scratch_worktree(git: str, worktree_dir: Path, *, root: Path) -> None:
     """Best-effort cleanup. Runs from a ``finally`` block, so it never raises."""
     subprocess.run(
-        [git, "worktree", "remove", "--force", str(worktree_dir)],
+        [git, "--no-optional-locks", "worktree", "remove", "--force", str(worktree_dir)],
         cwd=root,
         check=False,
         capture_output=True,
@@ -126,7 +126,7 @@ def _remove_scratch_worktree(git: str, worktree_dir: Path, *, root: Path) -> Non
     # (for example the directory was already gone), so a scratch worktree
     # never lingers in `git worktree list`.
     subprocess.run(
-        [git, "worktree", "prune"],
+        [git, "--no-optional-locks", "worktree", "prune"],
         cwd=root,
         check=False,
         capture_output=True,
