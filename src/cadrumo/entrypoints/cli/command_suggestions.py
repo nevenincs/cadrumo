@@ -60,7 +60,7 @@ from typer.core import TyperGroup
 from typer.main import get_command as _typer_get_command
 
 from ...core.errors.hierarchy import InternalInvariantError
-from ...core.i18n.render import tr
+from ...core.i18n.render import output_language, tr
 
 #: Per-group synonym tables keyed by the group's command ``name``.
 #: Each inner mapping projects an unknown command token onto the
@@ -204,8 +204,9 @@ class LazySubcommand:
     """
 
     __slots__ = (
-        "_command",
+        "_commands",
         "_decorate",
+        "_decorated",
         "_help",
         "_hidden",
         "_optional_unavailable",
@@ -238,7 +239,8 @@ class LazySubcommand:
         self._help = help
         self._hidden = hidden
         self._short_help = short_help
-        self._command: TyCommand | None = None
+        self._commands: dict[str, TyCommand] = {}
+        self._decorated: list[typer.Typer] = []
 
     def load(self) -> TyCommand:
         """Import the module, decorate the Typer, return the Click command.
@@ -247,8 +249,16 @@ class LazySubcommand:
         within a single process (help rendering then dispatch, or
         ``resolve_command`` then ``get_command``) imports the module
         exactly once.
+
+        The cache is keyed by the output language, because materializing a
+        node renders its help text through ``tr()`` at that moment. A console
+        run resolves one language per process, so it materializes once; a
+        process that serves several invocations in different languages would
+        otherwise keep rendering whichever language first reached the node.
         """
-        if self._command is None:
+        language = output_language()
+        command = self._commands.get(language)
+        if command is None:
             try:
                 typer_instance = self._target.load()
             except ModuleNotFoundError as error:
@@ -268,12 +278,15 @@ class LazySubcommand:
                 else:
                     self._required_unavailable(self.name, error)
                     raise InternalInvariantError("required lazy-target refusal returned instead of raising") from error
-            if self._decorate is not None:
+            # An import target hands back the same module-level Typer for every
+            # language; the error boundary must wrap it only once.
+            if self._decorate is not None and not any(seen is typer_instance for seen in self._decorated):
                 self._decorate(typer_instance)
+                self._decorated.append(typer_instance)
             command = _typer_get_command(typer_instance)
             command.name = self.name
-            self._command = command
-        return self._command
+            self._commands[language] = command
+        return command
 
     @property
     def loader_owner(self) -> str:

@@ -65,3 +65,31 @@ def test_root_callback_language_flag_does_not_mutate_process_env() -> None:
         "rather than mutating os.environ. "
         f"pre={pre_value!r} post={post_value!r}"
     )
+
+
+def test_a_leaf_help_follows_each_invocations_language_in_one_process() -> None:
+    """A lazily loaded leaf renders its help in the language of the invocation reaching it.
+
+    Loading a subtree renders its help through ``tr()`` at that moment. One
+    process serving several invocations must not keep answering in whichever
+    language first reached the leaf, so the same leaf is asked for in Spanish,
+    then English, then Spanish again, and each answer is checked against the
+    catalogue value for its own language.
+    """
+    from ....core.config import override_settings
+    from ....core.i18n.render import tr
+
+    expected: dict[str, str] = {}
+    for language in ("es", "en"):
+        with override_settings(cadrumo_output_language=language):
+            expected[language] = tr("cli.ledger.add.help")
+    assert expected["es"] != expected["en"], expected
+
+    for language, other in (("es", "en"), ("en", "es"), ("es", "en")):
+        result = invoke_cached_cli(
+            ["--language", language, "app", "ledger", "add", "--help"],
+            env={**_NO_FORCED_LANGUAGE_ENV, "COLUMNS": "260"},
+        )
+        assert result.exit_code == 0, result.output
+        assert expected[language] in result.output, result.output
+        assert expected[other] not in result.output, result.output
