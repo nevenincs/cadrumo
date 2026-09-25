@@ -333,3 +333,8 @@ family = "deadline_windows"
 selector = {revision = "2023", id = "modelo-189-2023-0a"}
 replacement_id = "modelo-189-2024-0a"
 fields = {closes_on = 2025-03-31, filing_year = 2024, opens_on = 2025-03-01, period = "2024 0A"}
+[[revisions."2024".family_overrides]]
+family = "constructs"
+selector = {revision = "2023", id = "modelo-189-informative"}
+sequence_additions = {deadline_windows = ["modelo-189-2024-0a"]}
+sequence_removals = {deadline_windows = [0]}

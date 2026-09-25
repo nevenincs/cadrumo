@@ -50,25 +50,22 @@ def _copy_modelo(tmp_path: Path, modelo_id: str) -> Path:
     return destination
 
 
-def _unique_fragment(tree: Path, anchor: str, *, revision: str | None = None) -> Path:
+def _unique_fragment(tree: Path, anchor: str) -> Path:
     """Return the one authored fragment in the copied tree that contains ``anchor``.
 
     Fragments are located by content rather than by filename, because edition
     compaction moves declarations between files and into inherited baselines.
-    ``revision`` confines the search to one edition when several editions state
-    the same declaration.
     """
-    root = tree if revision is None else tree / "revisions" / revision
-    matches = [path for path in sorted(root.rglob("*.toml")) if anchor in path.read_text(encoding="utf-8")]
+    matches = [path for path in sorted(tree.rglob("*.toml")) if anchor in path.read_text(encoding="utf-8")]
     if len(matches) != 1:
         message = f"fixture anchor {anchor!r} is authored in {len(matches)} fragments: {matches}"
         raise AssertionError(message)
     return matches[0]
 
 
-def _rewrite(tree: Path, old: str, new: str, *, revision: str | None = None) -> None:
+def _rewrite(tree: Path, old: str, new: str) -> None:
     """Replace one exact authored line that occurs once across the copied tree."""
-    path = _unique_fragment(tree, old, revision=revision)
+    path = _unique_fragment(tree, old)
     text = path.read_text(encoding="utf-8")
     if text.count(old) != 1:
         message = f"fixture edit is not unique in {path}: {old!r} appears {text.count(old)} times"
@@ -193,7 +190,6 @@ def test_a_rows_aggregation_on_a_scalar_channel_is_refused(tmp_path: Path) -> No
         'id = "modelo-190-perceptor-row-nif"\nprovider = { kind = "withholding", fact = "row_field", '
         'row_field = "perceptor_tax_id", grouping = "per_perceptor_clave", record = "perceptor", '
         'data_type = "text" }\nvalue = { data_type = "money", channel = "decimal" }',
-        revision="2024",
     )
 
     failures = _failures(tree, "2024")
