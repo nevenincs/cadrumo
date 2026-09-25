@@ -8,7 +8,7 @@ related:
   - '[[2026-06-04-fichero-boe-export-layouts-adr]]'
 modified: '2026-09-25'
 body_schema: body-v2
-body_hash: 'sha256:5dbbf7cfc7ad342d4137acbcefefd6d38906d35f07276c98bfbd54f6f781a911'
+body_hash: 'sha256:f22dec9ba90202307c1ffdef66d4dd7e5cd55a7090e269a9a73ada99f2c1d7d6'
 ---
 
 # `filing-capability` plan
@@ -92,8 +92,8 @@ Author the export layouts Modelo 188's official record designs define and promot
 
 Author the export layouts Modelo 189's official record designs define and promote each revision to filing grade under the operator's approval, so every listed revision leaves the worklist.
 
-- [ ] `P10.S17` - Author and verify the 189/2023 export layout from its record design and promote the revision to filing grade; `src/cadrumo/_data/registry/aeat/modelos/189/revisions/2023/`.
-- [ ] `P10.S18` - Author and verify the 189/2024 export layout from its record design and promote the revision to filing grade; `src/cadrumo/_data/registry/aeat/modelos/189/revisions/2024/`.
+- [x] `P10.S17` - Author and verify the 189/2023 export layout from its record design and promote the revision to filing grade; `src/cadrumo/_data/registry/aeat/modelos/189/revisions/2023/`.
+- [x] `P10.S18` - Author and verify the 189/2024 export layout from its record design and promote the revision to filing grade; `src/cadrumo/_data/registry/aeat/modelos/189/revisions/2024/`.
 
 ### Phase `P11` - Modelo 190 filing capability
 

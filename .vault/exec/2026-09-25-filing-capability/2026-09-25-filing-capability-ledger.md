@@ -5,7 +5,7 @@ tags:
 date: '2026-09-25'
 modified: '2026-09-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:31b544061fb29abbd9bd31866cdb7a5d8d4e592612af7d3379b762945a7dc8cd'
+body_hash: 'sha256:ea23b0c3c9b733d4499f1bc55a90e46be493d184de7f1844113b397ab47f5737'
 related:
   - "[[2026-09-25-filing-capability-plan]]"
 ---
@@ -130,6 +130,10 @@ related:
 - `S22` `M` `src/cadrumo/domain/modelos/tests/test_perceptor_clave_scope.py`
 - `S22` `A` `dev/registry/tests/test_every_revision_cites_authority_inside_its_window.py`
 - `S22` `verify:` `uv run --no-sync python -m pytest src/cadrumo/adapters -q` -> `pass`
+- `S17` `M` `src/cadrumo/_data/registry/aeat/modelos/189`
+- `S17` `verify:` `pytest dev/registry/tests/test_filing_capability_worklist.py (189 absent)` -> `pass`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/modelos/189`
+- `S18` `verify:` `pytest dev/registry/tests/test_filing_capability_worklist.py (189 absent)` -> `pass`
 
 ## Notes
 
