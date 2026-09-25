@@ -539,56 +539,88 @@ profile:
           label: Pays rent with withholding
     section:
       activities:
+        summary: The economic activities you carry out, one row per activity.
         title: Business activities
       attribution_entity:
+        summary: The legal form of an entity under income attribution (comunidad de
+          bienes, sociedad civil) that you run.
         title: Attribution entity legal shape
       attribution_entity_socios:
+        summary: The partners of that entity and the share of income attributed to
+          each.
         title: Attribution entity socios
       attribution_received:
+        summary: Income attributed to you by entities in which you are a partner.
         title: Attribution received from entities
       auth:
+        summary: 'How you identify yourself to the AEAT: certificate, Cl@ve Móvil
+          or Cl@ve PIN.'
         title: AEAT authentication
       capabilities:
+        summary: Which optional services this profile may use, such as reading scanned
+          documents on this machine.
         title: Service capabilities
       censo:
+        summary: Your registration in the AEAT census (modelo 036/037) and its dates.
         title: Censo and enrollment
       contact:
+        summary: Where the AEAT can reach you and your fiscal address.
         title: Contact and fiscal address
       identity:
+        summary: 'Your name and NIF: who the declarations are prepared for.'
         title: Identity
       irpf:
+        summary: How your personal income tax is calculated and how much tax is withheld
+          from your income.
         title: IRPF and withholding
       iva:
+        summary: Your IVA (VAT) regime and how often you file it.
         title: IVA profile
       maritime_worker:
+        summary: 'Only for seafarers: the classification that decides special deductions.'
         title: Maritime worker classification
       obligations:
+        summary: Thresholds that decide whether you must file certain declarations.
         title: Filing obligation thresholds
       preferences:
+        summary: How the application talks to you, such as the language of every screen.
         title: Operator preferences
       properties:
+        summary: Properties you own or rent out, one row per property.
         title: Properties and rental
       provenance:
+        summary: Where the profile data came from and from when it applies.
         title: Provenance and effective dating
       renta_family:
+        summary: Children and other relatives who can give you family allowances.
         title: Family (Renta)
       renta_filing:
+        summary: How you file your annual income tax return (Renta).
         title: Filing context (Renta)
       renta_rental:
+        summary: Context for rental income in your annual return.
         title: Rental context (Renta)
       renta_spouse:
+        summary: Your spouse's details, needed for a joint return.
         title: Spouse (Renta)
       renta_taxpayer:
+        summary: Personal circumstances of the taxpayer used in the annual return.
         title: Taxpayer (Renta)
       tax_residence:
+        summary: Where you are tax resident, which decides the rules and territory
+          that apply.
         title: Tax residence and jurisdiction
       taxpayer_type:
+        summary: What kind of taxpayer you are and which types of income you receive.
         title: Taxpayer entity type and income categories
       usage_ratios:
+        summary: The business-use share of shared assets such as a car or a phone.
         title: Usage ratios and deductibility
       vivienda_office:
+        summary: Whether part of your main home is used as an office for your activity.
         title: Home-office use of the habitual residence
       withholding:
+        summary: Tax you must withhold when you pay others, such as employees or landlords.
         title: Withholding payer obligations
   validation:
     boolean_field_invalid: Boolean field is invalid

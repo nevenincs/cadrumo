@@ -19,6 +19,7 @@ from uuid import UUID
 from textual.command import DiscoveryHit, Hit, Hits, Provider
 
 from ...core.errors.hierarchy import CadrumoError
+from ...domain.user_profile.values import ProfileSetupState
 from .components.account_chrome import AccountActionV1, TuiAccountHostV1, account_action_help, account_action_label
 from .components.theme import toggle_appearance
 from .navigation import TuiScreenContextV1
@@ -94,6 +95,8 @@ class AccountFactoriesV1:
     appearance: AccountAppearanceFactoryV1
     language: AccountLanguageFactoryV1
     sign_out: AccountSignOutFactoryV1
+    onboarding_pending: bool = False
+    """Whether the profile still needs setup, so the session opens on the setup walk."""
 
 
 def compose_account_factories(
@@ -169,6 +172,7 @@ def compose_account_factories(
         appearance=appearance,
         language=language,
         sign_out=sign_out,
+        onboarding_pending=complete_setup is not None and profile_overview.setup_state is ProfileSetupState.INCOMPLETE,
     )
 
 

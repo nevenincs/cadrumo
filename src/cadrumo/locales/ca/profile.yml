@@ -538,56 +538,91 @@ profile:
           label: Paga lloguers amb retenció
     section:
       activities:
+        summary: Les activitats econòmiques que fas, una fila per activitat.
         title: Activitats econòmiques
       attribution_entity:
+        summary: La forma jurídica de l'entitat en atribució de rendes (comunitat
+          de béns, societat civil) que gestiones.
         title: Forma jurídica de l'entitat en atribució
       attribution_entity_socios:
+        summary: Els socis d'aquesta entitat i la part de la renda atribuïda a cadascun.
         title: Socis de l'entitat en atribució
       attribution_received:
+        summary: Rendes que t'atribueixen les entitats de les quals ets soci.
         title: Rendes atribuïdes rebudes
       auth:
+        summary: 'Com t''identifiques davant l''AEAT: certificat, Cl@ve Móvil o Cl@ve
+          PIN.'
         title: Autenticació amb l'AEAT
       capabilities:
+        summary: Quins serveis opcionals pot fer servir aquest perfil, com llegir
+          documents escanejats en aquest equip.
         title: Capacitats del servei
       censo:
+        summary: La teva alta al cens de l'AEAT (model 036/037) i les seves dates.
         title: Cens i alta
       contact:
+        summary: On et pot contactar l'AEAT i el teu domicili fiscal.
         title: Contacte i domicili fiscal
       identity:
+        summary: 'El teu nom i NIF: per a qui es preparen les declaracions.'
         title: Identitat
       irpf:
+        summary: Com es calcula el teu IRPF i quines retencions suportes.
         title: IRPF i retencions
       iva:
+        summary: El teu règim d'IVA i amb quina freqüència el presentes.
         title: Perfil d'IVA
       maritime_worker:
+        summary: 'Només per a treballadors del mar: la classificació que decideix
+          deduccions especials.'
         title: Classificació de treballador del mar
       obligations:
+        summary: Llindars que decideixen si has de presentar determinades declaracions.
         title: Llindars d'obligació de declarar
       preferences:
+        summary: Com es comunica amb tu l'aplicació, per exemple l'idioma de cada
+          pantalla.
         title: Preferències de l'operador
       properties:
+        summary: Immobles que tens o llogues, una fila per immoble.
         title: Immobles i lloguer
       provenance:
+        summary: D'on procedeixen les dades del perfil i des de quan s'apliquen.
         title: Origen i vigència
       renta_family:
+        summary: Fills i altres familiars que et poden donar dret a mínims familiars.
         title: Família (Renda)
       renta_filing:
+        summary: Com presentes la teva declaració anual de la Renda.
         title: Context de presentació (Renda)
       renta_rental:
+        summary: Context dels lloguers a la teva declaració anual.
         title: Context de lloguer (Renda)
       renta_spouse:
+        summary: Les dades del teu cònjuge, necessàries per a la declaració conjunta.
         title: Cònjuge (Renda)
       renta_taxpayer:
+        summary: Circumstàncies personals del contribuent que fa servir la declaració
+          anual.
         title: Contribuent (Renda)
       tax_residence:
+        summary: On tens la residència fiscal, cosa que decideix les normes i el territori
+          aplicables.
         title: Residència fiscal i jurisdicció
       taxpayer_type:
+        summary: Quin tipus de contribuent ets i quins tipus de renda obtens.
         title: Tipus de contribuent i categories de renda
       usage_ratios:
+        summary: La part d'ús professional de béns compartits, com un cotxe o un telèfon.
         title: Ràtios d'ús i deduïbilitat
       vivienda_office:
+        summary: Si fas servir part del teu habitatge habitual com a oficina per a
+          la teva activitat.
         title: Afectació de l'habitatge habitual
       withholding:
+        summary: Retencions que has de practicar quan pagues a altres, com ara empleats
+          o arrendadors.
         title: Obligacions com a pagador amb retenció
   validation:
     boolean_field_invalid: El camp booleà no és vàlid

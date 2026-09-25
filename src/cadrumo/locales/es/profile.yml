@@ -541,56 +541,92 @@ profile:
           label: Paga alquileres con retención
     section:
       activities:
+        summary: Las actividades económicas que realizas, una fila por actividad.
         title: Actividades económicas
       attribution_entity:
+        summary: La forma jurídica de la entidad en atribución de rentas (comunidad
+          de bienes, sociedad civil) que gestionas.
         title: Forma jurídica de la entidad en atribución
       attribution_entity_socios:
+        summary: Los socios de esa entidad y la parte de la renta atribuida a cada
+          uno.
         title: Socios de la entidad en atribución
       attribution_received:
+        summary: Rentas que te atribuyen las entidades de las que eres socio.
         title: Rentas atribuidas recibidas
       auth:
+        summary: 'Cómo te identificas ante la AEAT: certificado, Cl@ve Móvil o Cl@ve
+          PIN.'
         title: Autenticación con la AEAT
       capabilities:
+        summary: Qué servicios opcionales puede usar este perfil, como leer documentos
+          escaneados en este equipo.
         title: Capacidades del servicio
       censo:
+        summary: Tu alta en el censo de la AEAT (modelo 036/037) y sus fechas.
         title: Censo y alta
       contact:
+        summary: Dónde puede contactarte la AEAT y tu domicilio fiscal.
         title: Contacto y domicilio fiscal
       identity:
+        summary: 'Tu nombre y NIF: para quién se preparan las declaraciones.'
         title: Identidad
       irpf:
+        summary: Cómo se calcula tu IRPF y qué retenciones soportas.
         title: IRPF y retenciones
       iva:
+        summary: Tu régimen de IVA y con qué frecuencia lo presentas.
         title: Perfil de IVA
       maritime_worker:
+        summary: 'Solo para trabajadores del mar: la clasificación que decide deducciones
+          especiales.'
         title: Clasificación de trabajador del mar
       obligations:
+        summary: Umbrales que deciden si debes presentar determinadas declaraciones.
         title: Umbrales de obligación de declarar
       preferences:
+        summary: Cómo se comunica contigo la aplicación, por ejemplo el idioma de
+          cada pantalla.
         title: Preferencias del operador
       properties:
+        summary: Inmuebles que posees o alquilas, una fila por inmueble.
         title: Inmuebles y alquiler
       provenance:
+        summary: De dónde proceden los datos del perfil y desde cuándo se aplican.
         title: Origen y vigencia
       renta_family:
+        summary: Hijos y otros familiares que pueden darte derecho a mínimos familiares.
         title: Familia (Renta)
       renta_filing:
+        summary: Cómo presentas tu declaración anual de la Renta.
         title: Contexto de presentación (Renta)
       renta_rental:
+        summary: Contexto de los alquileres en tu declaración anual.
         title: Contexto de alquiler (Renta)
       renta_spouse:
+        summary: Los datos de tu cónyuge, necesarios para la declaración conjunta.
         title: Cónyuge (Renta)
       renta_taxpayer:
+        summary: Circunstancias personales del contribuyente que usa la declaración
+          anual.
         title: Contribuyente (Renta)
       tax_residence:
+        summary: Dónde tienes tu residencia fiscal, lo que decide las normas y el
+          territorio aplicables.
         title: Residencia fiscal y jurisdicción
       taxpayer_type:
+        summary: Qué tipo de contribuyente eres y qué tipos de renta obtienes.
         title: Tipo de contribuyente y categorías de renta
       usage_ratios:
+        summary: La parte de uso profesional de bienes compartidos, como un coche
+          o un teléfono.
         title: Ratios de uso y deducibilidad
       vivienda_office:
+        summary: Si usas parte de tu vivienda habitual como oficina para tu actividad.
         title: Afectación de la vivienda habitual como oficina
       withholding:
+        summary: Retenciones que debes practicar cuando pagas a otros, como empleados
+          o arrendadores.
         title: Obligaciones como pagador con retención
   validation:
     boolean_field_invalid: El campo booleano no es válido

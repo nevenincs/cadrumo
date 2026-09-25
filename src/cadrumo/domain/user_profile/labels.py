@@ -70,6 +70,22 @@ def profile_section_title_key(section_key: str) -> str:
     return f"{_KEY_ROOT}.{_SECTION_INFIX}.{section_key}.title"
 
 
+def profile_section_summary_key(section_key: str) -> str:
+    """Return the locale key carrying one section's one-sentence explanation.
+
+    The title names a section; the summary tells the operator what it is
+    for, so a page that folds sections away can still say what each one
+    holds before it is opened.
+
+    Args:
+        section_key: Canonical section key, e.g. ``identity``.
+
+    Returns:
+        The dotted locale key, e.g. ``profile.schema.section.identity.summary``.
+    """
+    return f"{_KEY_ROOT}.{_SECTION_INFIX}.{section_key}.summary"
+
+
 def profile_field_label_key(section_key: str, field_key: str) -> str:
     """Return the locale key carrying one field's operator-facing label.
 
@@ -99,6 +115,19 @@ def profile_section_title(section: ProfileSectionDefinition, *, locale: str | No
         profile_section_title_key(section.key),
         locale=locale,
     )
+
+
+def profile_section_summary(section: ProfileSectionDefinition, *, locale: str | None = None) -> str:
+    """Return one section's explanation in ``locale``.
+
+    Args:
+        section: The declared section.
+        locale: Language code; the active output language when ``None``.
+
+    Returns:
+        The catalogue summary for the section.
+    """
+    return tr(profile_section_summary_key(section.key), locale=locale)
 
 
 def profile_field_label(
@@ -135,11 +164,13 @@ def profile_schema_locale_keys(schema: ProfileSchemaDefinition) -> set[str]:
         schema: The loaded schema to enumerate.
 
     Returns:
-        Every section-title and field-label key declared by ``schema``.
+        Every section-title, section-summary and field-label key declared
+        by ``schema``.
     """
     keys: set[str] = set()
     for section in schema.sections:
         keys.add(profile_section_title_key(section.key))
+        keys.add(profile_section_summary_key(section.key))
         for field in section.fields:
             keys.add(profile_field_label_key(section.key, field.key))
     return keys
@@ -149,6 +180,8 @@ __all__ = [
     "profile_field_label",
     "profile_field_label_key",
     "profile_schema_locale_keys",
+    "profile_section_summary",
+    "profile_section_summary_key",
     "profile_section_title",
     "profile_section_title_key",
 ]
