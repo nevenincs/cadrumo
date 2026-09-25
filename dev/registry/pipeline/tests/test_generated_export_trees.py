@@ -135,8 +135,7 @@ def test_every_committed_manifest_attests_the_current_loader_semantics(tmp_path:
     as one list of trees to republish.
     """
     stale = _stale_loader_attestations(
-        (str(tree), tree.committed, _published_layout(tree, tmp_path / str(tree)))
-        for tree in _GENERATED_TREES
+        (str(tree), tree.committed, _published_layout(tree, tmp_path / str(tree))) for tree in _GENERATED_TREES
     )
 
     assert stale == [], (
