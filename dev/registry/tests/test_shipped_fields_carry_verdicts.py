@@ -20,12 +20,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 #: Trees whose manifests predate verdicts, each with why it cannot be republished
 #: to gain them. Checked in both directions: a tree gaining its verdicts must
 #: leave this table, and no other tree may be missing them.
-_UNATTESTED: dict[str, str] = {
-    "185/2025-y-siguientes": (
-        "publication demands a calculation-grade revision and this one is honestly graded "
-        "applicability; raising the grade to publish would be the under-declaration it prevents"
-    ),
-}
+_UNATTESTED: dict[str, str] = {}
 
 
 def _manifest_verdict_coverage() -> dict[str, tuple[int, int]]:
