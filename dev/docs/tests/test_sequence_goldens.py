@@ -239,7 +239,9 @@ def _execute_in_child_interpreter(sequence_id: str, payload_path: Path) -> tuple
     )
     assert result.returncode == 0, f"sequence child failed (exit {result.returncode}):\n{result.stderr}"
     payload = json.loads(payload_path.read_text(encoding="utf-8"))
-    return payload["page"], SequenceTranscript.model_validate_json(payload["transcript"])
+    page = payload["page"]
+    assert isinstance(page, str), f"sequence child reported a non-text page: {page!r}"
+    return page, SequenceTranscript.model_validate_json(payload["transcript"])
 
 
 @pytest.fixture(scope="module")
