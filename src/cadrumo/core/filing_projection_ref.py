@@ -570,6 +570,19 @@ class M200IncnGrupoSociedadProjectionRef(BaseModel):
     field: M200IncnGrupoSociedadField
 
 
+class M200IncnEstablecimientoPermanenteField(StrEnum):
+    """Closed fields of one permanent-establishment row of the INCN communication.
+
+    The block repeats exactly one datum per numbered establishment: "Comunicación
+    importe neto cifra negocios - No residentes más de un establecimiento
+    permanente. NIF de los establecimientos permanentes [1..5]".  The importe
+    neto and the count of establishments that precede it are single header
+    fields of the sheet, not members of the repeated row.
+    """
+
+    NIF = "nif"
+
+
 class M200IncnEstablecimientoPermanenteProjectionRef(BaseModel):
     """One numbered permanent establishment of a non-resident in the INCN block.
 
@@ -582,6 +595,7 @@ class M200IncnEstablecimientoPermanenteProjectionRef(BaseModel):
 
     projection_kind: Literal["m200_incn_establecimiento_permanente"]
     slot: int = Field(ge=1, le=5)
+    field: M200IncnEstablecimientoPermanenteField
 
 
 class M200OperacionReestructuracionField(StrEnum):
@@ -1195,6 +1209,7 @@ __all__ = [
     "M200EntidadParticipadaProjectionRef",
     "M200EstablecimientoPermanenteField",
     "M200EstablecimientoPermanenteProjectionRef",
+    "M200IncnEstablecimientoPermanenteField",
     "M200IncnEstablecimientoPermanenteProjectionRef",
     "M200IncnGrupoSociedadField",
     "M200IncnGrupoSociedadProjectionRef",

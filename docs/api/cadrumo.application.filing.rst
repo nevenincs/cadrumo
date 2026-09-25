@@ -20,7 +20,6 @@ Submodules
    cadrumo.application.filing._m303_exonerado_390
    cadrumo.application.filing._m303_export_applicability
    cadrumo.application.filing._producer_ownership
-   cadrumo.application.filing._producer_snapshot_m200
    cadrumo.application.filing._producer_snapshot_m390
    cadrumo.application.filing._record_field_renderer
    cadrumo.application.filing.draft_construction
@@ -37,6 +36,7 @@ Submodules
    cadrumo.application.filing.history_ports
    cadrumo.application.filing.history_repository
    cadrumo.application.filing.producer_snapshot
+   cadrumo.application.filing.producer_snapshot_m200
    cadrumo.application.filing.projection
    cadrumo.application.filing.record_renderer
    cadrumo.application.filing.record_types

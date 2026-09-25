@@ -99,6 +99,24 @@ from cadrumo.application.filing.producer_snapshot import (
     TaxpayerIdentityFacts,
     build_filing_producer_snapshot,
 )
+from cadrumo.application.filing.producer_snapshot_m200 import (
+    Modelo200AdministradorRow,
+    Modelo200EntidadMenorDependienteRow,
+    Modelo200EntidadParticipadaRow,
+    Modelo200EstablecimientoPermanenteRow,
+    Modelo200IncnEstablecimientoPermanenteRow,
+    Modelo200IncnGrupoSociedadRow,
+    Modelo200OperacionReestructuracionRow,
+    Modelo200ParticipacionDirectaRow,
+    Modelo200ParticipacionSocioRow,
+    Modelo200ParticipeAieUteRow,
+    Modelo200ProfileFacts,
+    Modelo200ProjectionRows,
+    Modelo200RepresentanteLegalRow,
+    Modelo200SecretarioConsejoRow,
+    Modelo200SocioSicavDisolucionRow,
+    Modelo200TransparenciaFiscalInternacionalRow,
+)
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.filing_projection_ref import M303RegimenSimplificadoFact
 from cadrumo.core.modelo import Modelo
@@ -861,6 +879,13 @@ def m200_export_scenario(period: Period) -> EditionExportScenario:
     the tributacion-estado-porcentaje profile binding. None of the three is a
     draft input the operator supplies through a casilla, so an empty draft
     leaves them unresolved.
+
+    Six records of the layout -- pages 2, 2b, 21, 23, 24b and 25 -- are required
+    and consist of projection fields alone, so each needs at least one row of
+    every family it prints. The snapshot below supplies exactly one synthetic
+    row per family, carrying the identity the row is about and leaving every
+    monetary member absent, which is what AEAT's blancos rule prescribes for an
+    unsupplied alphanumeric field.
     """
     return EditionExportScenario(
         period=period,
@@ -868,10 +893,97 @@ def m200_export_scenario(period: Period) -> EditionExportScenario:
             "modelo-200-profile-new-entity-flag": True,
             "modelo-200-profile-legal-entity-form": "sl",
             "modelo-200-profile-tributacion-estado-porcentaje": Decimal("100"),
+            # DP200012 casilla 00501, "Resultado de la cuenta de pérdidas y
+            # ganancias": the edition declares it required, and the base
+            # determination starts from it, so no draft can omit it.
+            "00501": Decimal("0.00"),
         },
-        producer_snapshot=partial(_general_producer_snapshot, "200"),
+        producer_snapshot=_m200_producer_snapshot,
         prior_domiciliation_election=PriorDomiciliationElection.KEEP,
         product_software_identity_factory=partial(_scenario_software_identity, "200"),
+    )
+
+
+#: The synthetic NIF every Modelo 200 projected party is identified by. Nine
+#: characters, the width the diseño gives each of those NIF fields.
+_M200_SYNTHETIC_NIF: Final = "B00000000"
+#: The synthetic country/province code the two-character ``codigo`` members take.
+_M200_SYNTHETIC_COUNTRY: Final = "ES"
+
+
+def _m200_projection_rows() -> Modelo200ProjectionRows:
+    """One synthetic row of every repeated family modelo 200's layout projects."""
+    return Modelo200ProjectionRows(
+        administrador=(Modelo200AdministradorRow(nif=_M200_SYNTHETIC_NIF, apellidos_nombre_razon_social="Ana Prueba"),),
+        entidad_menor_dependiente=(
+            Modelo200EntidadMenorDependienteRow(nif=_M200_SYNTHETIC_NIF, nombre_o_razon_social="Prueba SL"),
+        ),
+        entidad_participada=(
+            Modelo200EntidadParticipadaRow(nif=_M200_SYNTHETIC_NIF, nombre_o_razon_social="Prueba SL"),
+        ),
+        establecimiento_permanente=(
+            Modelo200EstablecimientoPermanenteRow(
+                identificacion="Prueba EP",
+                pais_residencia_fiscal=_M200_SYNTHETIC_COUNTRY,
+            ),
+        ),
+        incn_establecimiento_permanente=(Modelo200IncnEstablecimientoPermanenteRow(nif=_M200_SYNTHETIC_NIF),),
+        incn_grupo_sociedad=(
+            Modelo200IncnGrupoSociedadRow(
+                nif_entidad_grupo=_M200_SYNTHETIC_NIF,
+                codigo_pais=_M200_SYNTHETIC_COUNTRY,
+            ),
+        ),
+        operacion_reestructuracion=(
+            Modelo200OperacionReestructuracionRow(
+                transmitente_nif=_M200_SYNTHETIC_NIF,
+                adquirente_nif=_M200_SYNTHETIC_NIF,
+            ),
+        ),
+        participacion_directa=(
+            Modelo200ParticipacionDirectaRow(nif=_M200_SYNTHETIC_NIF, nombre_o_razon_social="Prueba SL"),
+        ),
+        participacion_socio=(
+            Modelo200ParticipacionSocioRow(nif=_M200_SYNTHETIC_NIF, apellidos_nombre_razon_social="Ana Prueba"),
+        ),
+        participe_aie_ute=(
+            Modelo200ParticipeAieUteRow(nif=_M200_SYNTHETIC_NIF, apellidos_nombre_razon_social="Ana Prueba"),
+        ),
+        representante_legal=(Modelo200RepresentanteLegalRow(nif=_M200_SYNTHETIC_NIF, apellidos_y_nombre="Ana Prueba"),),
+        secretario_consejo=(Modelo200SecretarioConsejoRow(nif=_M200_SYNTHETIC_NIF, apellidos_y_nombre="Ana Prueba"),),
+        socio_sicav_disolucion=(
+            Modelo200SocioSicavDisolucionRow(
+                nif_sociedad_disuelta=_M200_SYNTHETIC_NIF,
+                nif_iic_reinversion=_M200_SYNTHETIC_NIF,
+            ),
+        ),
+        transparencia_fiscal_internacional=(
+            Modelo200TransparenciaFiscalInternacionalRow(
+                nombre_o_razon_social="Prueba SL",
+                clave_pais_territorio=_M200_SYNTHETIC_COUNTRY,
+            ),
+        ),
+    )
+
+
+def _m200_producer_snapshot() -> FilingProducerSnapshot:
+    """The Modelo 200 snapshot whose typed rows feed the layout's projection pages."""
+    return build_filing_producer_snapshot(
+        modelo=Modelo("200"),
+        taxpayer_tax_id=SYNTHETIC_TAX_ID,
+        taxpayer_identity=_TAXPAYER,
+        presenter=_presenter(),
+        model_profile=Modelo200ProfileFacts(projection_rows=_m200_projection_rows()),
+        elections=FilingElectionFacts(
+            result_disposition=ResultDisposition.NEGATIVA,
+            payment=PaymentElection.INGRESO,
+            refund=RefundElection.COMPENSAR,
+            prior_domiciliation=PriorDomiciliationElection.KEEP,
+        ),
+        amendment_evidence=None,
+        m303_filing_facts=None,
+        refund_account=None,
+        charge_account=None,
     )
 
 

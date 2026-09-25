@@ -450,7 +450,7 @@ record_identity = "DP200021"
 [[entries]]
 export_field_id = "m200-2024.dp200021.f0035"
 kind = "projection"
-projection_ref = { projection_kind = "m200_incn_establecimiento_permanente", slot = 1 }
+projection_ref = { projection_kind = "m200_incn_establecimiento_permanente", slot = 1, field = "nif" }
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [entries.anchor]
@@ -463,7 +463,7 @@ record_identity = "DP200021"
 [[entries]]
 export_field_id = "m200-2024.dp200021.f0036"
 kind = "projection"
-projection_ref = { projection_kind = "m200_incn_establecimiento_permanente", slot = 2 }
+projection_ref = { projection_kind = "m200_incn_establecimiento_permanente", slot = 2, field = "nif" }
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [entries.anchor]
@@ -476,7 +476,7 @@ record_identity = "DP200021"
 [[entries]]
 export_field_id = "m200-2024.dp200021.f0037"
 kind = "projection"
-projection_ref = { projection_kind = "m200_incn_establecimiento_permanente", slot = 3 }
+projection_ref = { projection_kind = "m200_incn_establecimiento_permanente", slot = 3, field = "nif" }
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [entries.anchor]
@@ -489,7 +489,7 @@ record_identity = "DP200021"
 [[entries]]
 export_field_id = "m200-2024.dp200021.f0038"
 kind = "projection"
-projection_ref = { projection_kind = "m200_incn_establecimiento_permanente", slot = 4 }
+projection_ref = { projection_kind = "m200_incn_establecimiento_permanente", slot = 4, field = "nif" }
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [entries.anchor]
@@ -502,7 +502,7 @@ record_identity = "DP200021"
 [[entries]]
 export_field_id = "m200-2024.dp200021.f0039"
 kind = "projection"
-projection_ref = { projection_kind = "m200_incn_establecimiento_permanente", slot = 5 }
+projection_ref = { projection_kind = "m200_incn_establecimiento_permanente", slot = 5, field = "nif" }
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [entries.anchor]

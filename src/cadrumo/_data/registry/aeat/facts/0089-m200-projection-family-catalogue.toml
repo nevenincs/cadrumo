@@ -24,7 +24,7 @@ entries = [
     { key = "modelo.200.projection.m200_entidad_menor_dependiente.family", value = "entidad_menor_dependiente" },
     { key = "modelo.200.projection.m200_entidad_participada.family", value = "entidad_participada" },
     { key = "modelo.200.projection.m200_establecimiento_permanente.family", value = "establecimiento_permanente" },
-    { key = "modelo.200.projection.m200_incn_establecimiento_permanente.family", value = "none" },
+    { key = "modelo.200.projection.m200_incn_establecimiento_permanente.family", value = "incn_establecimiento_permanente" },
     { key = "modelo.200.projection.m200_incn_grupo_sociedad.family", value = "incn_grupo_sociedad" },
     { key = "modelo.200.projection.m200_operacion_reestructuracion.family", value = "operacion_reestructuracion" },
     { key = "modelo.200.projection.m200_participacion_directa.family", value = "participacion_directa" },

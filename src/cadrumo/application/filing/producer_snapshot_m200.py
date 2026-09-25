@@ -78,6 +78,20 @@ class Modelo200EstablecimientoPermanenteRow(BaseModel):
     suma_deducciones_di_internacional_anteriores: str | None = None
 
 
+class Modelo200IncnEstablecimientoPermanenteRow(BaseModel):
+    """One INCN permanent-establishment row, projected into modelo 200's layout at slot 1..5.
+
+    The block repeats exactly one datum per numbered establishment: the NIF of
+    each establecimiento permanente a non-resident with more than one of them
+    communicates.  The importe neto and the number of establishments that
+    precede it on the sheet are single header fields, not members of this row.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    nif: str | None = None
+
+
 class Modelo200IncnGrupoSociedadRow(BaseModel):
     """One incn grupo sociedad row, projected into modelo 200's layout at slot 1..12."""
 
@@ -228,6 +242,7 @@ class Modelo200ProjectionRows(BaseModel):
     entidad_menor_dependiente: tuple[Modelo200EntidadMenorDependienteRow, ...] = ()
     entidad_participada: tuple[Modelo200EntidadParticipadaRow, ...] = ()
     establecimiento_permanente: tuple[Modelo200EstablecimientoPermanenteRow, ...] = ()
+    incn_establecimiento_permanente: tuple[Modelo200IncnEstablecimientoPermanenteRow, ...] = ()
     incn_grupo_sociedad: tuple[Modelo200IncnGrupoSociedadRow, ...] = ()
     operacion_reestructuracion: tuple[Modelo200OperacionReestructuracionRow, ...] = ()
     participacion_directa: tuple[Modelo200ParticipacionDirectaRow, ...] = ()
@@ -397,6 +412,7 @@ __all__ = [
     "Modelo200EntidadMenorDependienteRow",
     "Modelo200EntidadParticipadaRow",
     "Modelo200EstablecimientoPermanenteRow",
+    "Modelo200IncnEstablecimientoPermanenteRow",
     "Modelo200IncnGrupoSociedadRow",
     "Modelo200OperacionReestructuracionRow",
     "Modelo200ParticipacionDirectaRow",

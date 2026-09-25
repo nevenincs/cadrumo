@@ -32688,31 +32688,31 @@ sequence_removals = {source_refs = [0]}
 
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "projection_endpoints"
-selector = {revision = "2024", id = "m200-incn-establecimiento-permanente:slot-1"}
+selector = {revision = "2024", id = "m200-incn-establecimiento-permanente:field-nif.slot-1"}
 sequence_additions = {source_refs = ["aeat-dr-200-2025"]}
 sequence_removals = {source_refs = [0]}
 
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "projection_endpoints"
-selector = {revision = "2024", id = "m200-incn-establecimiento-permanente:slot-2"}
+selector = {revision = "2024", id = "m200-incn-establecimiento-permanente:field-nif.slot-2"}
 sequence_additions = {source_refs = ["aeat-dr-200-2025"]}
 sequence_removals = {source_refs = [0]}
 
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "projection_endpoints"
-selector = {revision = "2024", id = "m200-incn-establecimiento-permanente:slot-3"}
+selector = {revision = "2024", id = "m200-incn-establecimiento-permanente:field-nif.slot-3"}
 sequence_additions = {source_refs = ["aeat-dr-200-2025"]}
 sequence_removals = {source_refs = [0]}
 
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "projection_endpoints"
-selector = {revision = "2024", id = "m200-incn-establecimiento-permanente:slot-4"}
+selector = {revision = "2024", id = "m200-incn-establecimiento-permanente:field-nif.slot-4"}
 sequence_additions = {source_refs = ["aeat-dr-200-2025"]}
 sequence_removals = {source_refs = [0]}
 
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "projection_endpoints"
-selector = {revision = "2024", id = "m200-incn-establecimiento-permanente:slot-5"}
+selector = {revision = "2024", id = "m200-incn-establecimiento-permanente:field-nif.slot-5"}
 sequence_additions = {source_refs = ["aeat-dr-200-2025"]}
 sequence_removals = {source_refs = [0]}
 

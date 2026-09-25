@@ -23,7 +23,6 @@ from ...domain.iva.refund_eligibility import is_last_filing_period_of_year
 from ...domain.modelos.calculation_revision_amendment import M303RectificativaMotive
 from ...domain.modelos.calculation_revision_m303_evidence import M303InsolvencyFilingSubtype
 from ._producer_ownership import filing_producer_ownership as _filing_producer_ownership
-from ._producer_snapshot_m200 import Modelo200ProfileFacts
 from .producer_snapshot import (
     AmendmentEvidence,
     ChargeAccountSelection,
@@ -38,6 +37,7 @@ from .producer_snapshot import (
     Modelo353ProfileFacts,
     RefundAccountSelection,
 )
+from .producer_snapshot_m200 import Modelo200ProfileFacts
 
 
 @dataclass(frozen=True)

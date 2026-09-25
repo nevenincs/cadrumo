@@ -58,8 +58,8 @@ from ..aggregation.m303_arrivals import (
     M303ProrrataTransitionArrival,
     M303SupplierRegimeArrival,
 )
-from ._producer_snapshot_m200 import Modelo200ProfileFacts as _Modelo200ProfileFacts
 from ._producer_snapshot_m390 import M390FilingFacts as _M390FilingFacts
+from .producer_snapshot_m200 import Modelo200ProfileFacts
 
 _NonBlankName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
 _AeatReceiptNumber = Annotated[str, StringConstraints(pattern=r"^\d{13}$")]
@@ -1026,7 +1026,7 @@ type FilingModelProfileFacts = (
     GeneralFilingProfileFacts
     | Modelo111ProfileFacts
     | Modelo202ProducerProfile
-    | _Modelo200ProfileFacts
+    | Modelo200ProfileFacts
     | Modelo210ProfileFacts
     | Modelo222ProfileFacts
     | Modelo296ProfileFacts
@@ -1087,6 +1087,9 @@ def _validate_snapshot_modelo_profile(snapshot: FilingProducerSnapshot) -> None:
     if snapshot.modelo == Modelo("111"):
         _validate_modelo_111_snapshot(snapshot)
         return
+    if snapshot.modelo == Modelo("200"):
+        _validate_modelo_200_snapshot(snapshot)
+        return
     if snapshot.modelo == Modelo("202"):
         _validate_modelo_202_snapshot(snapshot)
         return
@@ -1103,6 +1106,20 @@ def _validate_snapshot_modelo_profile(snapshot: FilingProducerSnapshot) -> None:
         _validate_modelo_353_snapshot(snapshot)
         return
     _validate_general_modelo_snapshot(snapshot)
+
+
+def _validate_modelo_200_snapshot(snapshot: FilingProducerSnapshot) -> None:
+    """Modelo 200 carries repeated party, holding and establishment pages of its own.
+
+    Six records of the return are made entirely of projection fields -- the
+    administradores, the participaciones, the establecimientos permanentes, the
+    INCN communication, the operaciones de reestructuración and the
+    transparencia fiscal internacional -- and their rows exist nowhere but this
+    profile.  A general profile resolves none of them, so the return would
+    render with every one of those pages absent.
+    """
+    if not isinstance(snapshot.model_profile, Modelo200ProfileFacts):
+        raise ValueError("modelo 200 requires Modelo200ProfileFacts")
 
 
 def _validate_modelo_296_snapshot(snapshot: FilingProducerSnapshot) -> None:
