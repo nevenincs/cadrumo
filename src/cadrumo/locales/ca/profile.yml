@@ -294,6 +294,13 @@ profile:
         surnames:
           label: Cognoms
         tax_id:
+          help:
+            what: 'El teu número d''identificació fiscal: el NIF del teu DNI, el NIE
+              si ets estranger, o el NIF d''una entitat.'
+            where: Al teu DNI o targeta de NIE, o a la targeta de NIF emesa per l'AEAT.
+              També apareix en qualsevol declaració anterior o carta de l'AEAT.
+            why: Totes les declaracions es presenten amb aquest número; és com t'identifica
+              l'AEAT.
           label: NIF/NIE/CIF d'identificació
       irpf:
         activity_kind:
@@ -354,6 +361,12 @@ profile:
         autoconsumo_promotor_base:
           label: Base imposable de l'autoconsum (promotor)
         cash_accounting_regime_enrolled:
+          help:
+            what: Si vas optar pel règim especial del criteri de caixa de l'IVA.
+            where: S'escull al model 036 i figura a les teves dades censals. Si no
+              hi vas optar, la resposta és No.
+            why: Amb aquest règim, l'IVA es merita en cobrar o pagar les factures
+              i no en emetre-les, cosa que canvia les xifres de cada període.
           label: Inscripció al criteri de caixa
         does_intracomunitario:
           label: Operacions intracomunitàries
@@ -362,6 +375,13 @@ profile:
         group_member_enrolled:
           label: Membre de grup d'IVA (Model 322)
         hydrocarbon_deposit_advance_payment_deduction_entitled:
+          help:
+            what: Si pots deduir els pagaments anticipats d'IVA fets en treure hidrocarburs
+              d'un règim de dipòsit fiscal.
+            where: Només afecta empreses que treuen combustible d'un dipòsit fiscal.
+              La majoria de contribuents respon No.
+            why: Aquests pagaments anticipats es dedueixen a la declaració d'IVA,
+              així que el dret canvia l'import a ingressar.
           label: Dret a deduir bestretes de dipòsits d'hidrocarburs
         intracommunity_operations_exceed_50000_eur:
           label: Operacions intracomunitàries superiors a 50.000 EUR
@@ -370,10 +390,24 @@ profile:
             general: Només règim general
             mixed: Règim general i simplificat
             simplified: Només règim simplificat
+          help:
+            what: 'Quins règims d''IVA combina el teu model 303: només el general,
+              només el simplificat o tots dos.'
+            where: Es dedueix del règim d'IVA de cadascuna de les teves activitats
+              a la teva declaració censal.
+            why: El model 303 té una part diferent per a cada règim; això decideix
+              quines parts s'omplen.
           label: Composició de règims del Model 303
         oss_enrolled:
           label: Inscripció a l'OSS/IOSS
         redeme_enrolled:
+          help:
+            what: Si estàs inscrit al REDEME, el registre de devolució mensual de
+              l'IVA.
+            where: Se sol·licita al model 036 i figura a les teves dades censals.
+              Si no ho has demanat mai, la resposta és No.
+            why: La inscripció fa que la teva declaració d'IVA sigui mensual en lloc
+              de trimestral i obliga al SII.
           label: Inscripció al REDEME
         regime:
           choices:
@@ -382,12 +416,25 @@ profile:
             REAGP: Règim especial de l'agricultura, ramaderia i pesca (REAGP)
             RECARGO_EQUIVALENCIA: Recàrrec d'equivalència
             SIMPLIFICADO: Simplificat
+          help:
+            what: El règim d'IVA en què està donada d'alta la teva activitat.
+            where: A la teva declaració censal (model 036 o 037), o a les teves dades
+              censals a la seu electrònica de l'AEAT.
+            why: Decideix quines declaracions d'IVA presentes i com es calcula l'IVA
+              de les teves vendes i compres.
           label: Règim d'IVA
         roi_enrolled:
           label: Inscripció al ROI/VIES
         sii_enrolled:
           label: Inscripció al SII
         voluntary_sii_enrolled:
+          help:
+            what: Si et vas adherir voluntàriament al SII, el subministrament immediat
+              dels teus llibres registre d'IVA a l'AEAT.
+            where: L'adhesió voluntària se sol·licita al model 036 i figura a les
+              teves dades censals. Si no l'has demanada mai, la resposta és No.
+            why: Qui és al SII porta els llibres d'IVA en línia amb l'AEAT, cosa que
+              canvia algunes obligacions i terminis.
           label: Inscripció voluntària al SII
       maritime_worker:
         annual_salary:
@@ -572,6 +619,14 @@ profile:
           choices:
             common_regime: Territori comú
             foral_unsupported: Territori foral (País Basc o Navarra) - encara no admès
+          help:
+            what: Si els teus impostos es regeixen pel territori comú o per un territori
+              foral (País Basc o Navarra).
+            where: 'Es dedueix del teu domicili fiscal: un domicili a Àlaba, Biscaia,
+              Guipúscoa o Navarra és foral; a la resta d''Espanya és territori comú.'
+            why: Decideix quina administració tributària i quines normes s'apliquen.
+              Els territoris forals presenten davant la seva pròpia Hisenda, cosa
+              que encara no s'admet.
           label: Règim territorial
       taxpayer_type:
         country_of_fiscal_residence:

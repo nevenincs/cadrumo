@@ -76,6 +76,11 @@ flows:
       write_in_flight: S'està desant el camp anterior. Espera que acabi i torna-ho
         a provar.
     field_unavailable: Camp de perfil no disponible
+    help:
+      about: 'Sobre aquest ajust:'
+      what: 'Què és:'
+      where: 'On trobar-ho:'
+      why: 'Per què es demana:'
     language:
       unavailable: Aquest perfil no ofereix cap configuració d'idioma.
     namespace_detail: detall {number}

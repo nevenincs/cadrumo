@@ -18,9 +18,12 @@ from ....core.i18n.render import tr
 from ..labels import (
     PROFILE_CODED_CHOICE_PATHS,
     PROFILE_ELSEWHERE_LABELLED_CHOICE_PATHS,
+    PROFILE_FIELD_HELP_PARTS,
+    PROFILE_FIELD_HELP_PATHS,
     profile_choice_is_worded,
     profile_choice_label,
     profile_choice_label_key,
+    profile_field_help_key,
     profile_field_label,
     profile_field_label_key,
     profile_schema_locale_keys,
@@ -177,3 +180,31 @@ def test_a_worded_choice_reads_as_language_and_a_coded_choice_as_its_code() -> N
     assert english != spanish
     assert "RECARGO_EQUIVALENCIA" not in (english, spanish)
     assert profile_choice_label("attribution_entity_socios", "clave", "A") == "A"
+
+
+def test_every_question_setup_can_ask_carries_its_three_part_help(schema) -> None:
+    """A schema-required field, or one the IVA block obliges, is never asked unexplained."""
+    from ...deadlines.profiles import MODELO_IVA_BLOCK_REQUIRED_PATHS
+
+    setup_paths = {
+        f"{section.key}.{field.key}"
+        for section in schema.sections
+        if not section.repeatable
+        for field in section.fields
+        if field.required
+    } | set(MODELO_IVA_BLOCK_REQUIRED_PATHS)
+    assert setup_paths, "the schema must declare setup questions, or this proves nothing"
+    assert setup_paths <= PROFILE_FIELD_HELP_PATHS, sorted(setup_paths - PROFILE_FIELD_HELP_PATHS)
+
+
+def test_help_is_enrolled_only_for_declared_fields_that_exist(schema) -> None:
+    """Each help path names a real field, and parity demands all three parts of it."""
+    declared = {f"{section.key}.{field.key}" for section in schema.sections for field in section.fields}
+    assert declared >= PROFILE_FIELD_HELP_PATHS, sorted(PROFILE_FIELD_HELP_PATHS - declared)
+    enrolled = profile_schema_locale_keys(schema)
+    for path in PROFILE_FIELD_HELP_PATHS:
+        section_key, field_key = path.split(".", 1)
+        for part in PROFILE_FIELD_HELP_PARTS:
+            key = profile_field_help_key(section_key, field_key, part)
+            assert key in enrolled
+            assert tr(key, locale="es") != tr(key, locale="en"), key

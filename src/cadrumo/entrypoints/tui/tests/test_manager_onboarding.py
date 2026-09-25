@@ -25,7 +25,7 @@ from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.user_profile.values import ProfileSetupState
 from ..components.host import ScreenHostApp
 from ..components.widgets import DisclosureGroup
-from ..profile.overview import FieldEditScreen, ProfileManagerScreen
+from ..profile.overview import FieldEditScreen, ProfileManagerScreen, field_help_text
 from .manager_pilot import wait_until_settled
 from .test_manager_screen import _CREDENTIAL_INPUT, _live_overview, _persist
 
@@ -289,4 +289,40 @@ async def test_a_choice_question_offers_words_and_refuses_an_empty_save(tmp_path
             assert app.app.screen is dialog
             assert str(dialog.query_one("#edit-refusal", Static).content) == tr("flows.manager.edit.choose_one")
             assert app._walking
+            pilot.app.exit(None)
+
+
+@pytest.mark.asyncio
+async def test_every_setup_question_explains_itself_and_the_page_explains_the_cursor_row(tmp_path) -> None:
+    """Each question says what it is, why it is asked and where to find it; so does the page."""
+    headings = [tr(f"flows.manager.help.{part}") for part in ("what", "why", "where")]
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        _register()
+        overview = _live_overview()
+        app = ProfileManagerScreen(overview, persist=_persist, complete_setup=_complete_setup)
+        async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
+            await pilot.pause()
+            table = app._table_by_section["identity"]
+            table.focus()
+            table.move_cursor(row=0)
+            await pilot.pause()
+            panel = app.query_one("#manager-field-help", Static)
+            assert panel.display
+            assert all(heading in str(panel.content) for heading in headings)
+            # The row under the cursor, not whichever section happened to be built last.
+            assert str(panel.content) == field_help_text(app._field_by_key["identity.tax_id"])
+
+            await pilot.click("#onboarding-continue")
+            await pilot.pause()
+            asked = 0
+            for _ in range(20):
+                dialog = app.app.screen
+                if not isinstance(dialog, FieldEditScreen):
+                    break
+                help_text = str(dialog.query_one("#edit-help", Static).content)
+                assert [line.split(":", 1)[0] + ":" for line in help_text.splitlines()] == headings, dialog._field.path
+                asked += 1
+                await _answer(app, pilot)
+                await pilot.pause()
+            assert asked >= len(overview.missing_required)
             pilot.app.exit(None)

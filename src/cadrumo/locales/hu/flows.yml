@@ -76,6 +76,11 @@ flows:
       write_in_flight: Az előző mező mentése folyamatban. Várd meg, amíg befejeződik,
         majd próbáld újra.
     field_unavailable: Nem elérhető profilmező
+    help:
+      about: 'Erről a beállításról:'
+      what: 'Mi ez:'
+      where: 'Hol találja:'
+      why: 'Miért kell:'
     language:
       unavailable: Ez a profil nem kínál nyelvi beállítást.
     namespace_detail: '{number}. részlet'

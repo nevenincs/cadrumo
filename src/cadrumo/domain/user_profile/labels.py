@@ -77,6 +77,25 @@ The operator reads these codes on the AEAT form and its instructions, so the
 code is the label; a catalogue gloss would be a second, ungrounded claim about
 what each code means."""
 
+PROFILE_FIELD_HELP_PATHS: frozenset[str] = frozenset(
+    {
+        "identity.tax_id",
+        "tax_residence.jurisdiction_scope",
+        "iva.regime",
+        "iva.m303_regime_composition",
+        "iva.redeme_enrolled",
+        "iva.cash_accounting_regime_enrolled",
+        "iva.voluntary_sii_enrolled",
+        "iva.hydrocarbon_deposit_advance_payment_deduction_entitled",
+    }
+)
+"""Fields whose catalogue help says what they are, why they are asked, and where to find them.
+
+Every other field is explained by its schema description instead."""
+
+PROFILE_FIELD_HELP_PARTS: tuple[str, ...] = ("what", "why", "where")
+"""The three questions a field's help answers, in the order they are shown."""
+
 PROFILE_ELSEWHERE_LABELLED_CHOICE_PATHS: frozenset[str] = frozenset(
     {"preferences.output_language", "auth.provider", "auth.clave_movil_route"}
 )
@@ -151,6 +170,39 @@ def profile_choice_label(section_key: str, field_key: str, token: str, *, locale
     if not profile_choice_is_worded(section_key, field_key):
         return token
     return tr(profile_choice_label_key(section_key, field_key, token), locale=locale)
+
+
+def profile_field_help_key(section_key: str, field_key: str, part: str) -> str:
+    """Return the locale key for one part of a field's help.
+
+    Args:
+        section_key: Canonical section key, e.g. ``identity``.
+        field_key: Canonical field key within that section, e.g. ``tax_id``.
+        part: One of :data:`PROFILE_FIELD_HELP_PARTS`.
+
+    Returns:
+        The dotted locale key, e.g. ``profile.schema.field.identity.tax_id.help.why``.
+    """
+    return f"{_KEY_ROOT}.{_FIELD_INFIX}.{section_key}.{field_key}.help.{part}"
+
+
+def profile_field_help(section_key: str, field_key: str, *, locale: str | None = None) -> tuple[str, ...] | None:
+    """Return a field's help, one sentence per part, or ``None`` when it carries none.
+
+    Args:
+        section_key: Canonical section key.
+        field_key: Canonical field key within that section.
+        locale: Language code; the active output language when ``None``.
+
+    Returns:
+        What the field is, why it is asked and where to find it, in that
+        order, or ``None`` for a field outside :data:`PROFILE_FIELD_HELP_PATHS`.
+    """
+    if f"{section_key}.{field_key}" not in PROFILE_FIELD_HELP_PATHS:
+        return None
+    return tuple(
+        tr(profile_field_help_key(section_key, field_key, part), locale=locale) for part in PROFILE_FIELD_HELP_PARTS
+    )
 
 
 def profile_field_label_key(section_key: str, field_key: str) -> str:
@@ -240,6 +292,8 @@ def profile_schema_locale_keys(schema: ProfileSchemaDefinition) -> set[str]:
         keys.add(profile_section_summary_key(section.key))
         for field in section.fields:
             keys.add(profile_field_label_key(section.key, field.key))
+            if f"{section.key}.{field.key}" in PROFILE_FIELD_HELP_PATHS:
+                keys.update(profile_field_help_key(section.key, field.key, part) for part in PROFILE_FIELD_HELP_PARTS)
             if field.enum_values and profile_choice_is_worded(section.key, field.key):
                 keys.update(profile_choice_label_key(section.key, field.key, token) for token in field.enum_values)
     return keys
@@ -248,9 +302,13 @@ def profile_schema_locale_keys(schema: ProfileSchemaDefinition) -> set[str]:
 __all__ = [
     "PROFILE_CODED_CHOICE_PATHS",
     "PROFILE_ELSEWHERE_LABELLED_CHOICE_PATHS",
+    "PROFILE_FIELD_HELP_PARTS",
+    "PROFILE_FIELD_HELP_PATHS",
     "profile_choice_is_worded",
     "profile_choice_label",
     "profile_choice_label_key",
+    "profile_field_help",
+    "profile_field_help_key",
     "profile_field_label",
     "profile_field_label_key",
     "profile_schema_locale_keys",

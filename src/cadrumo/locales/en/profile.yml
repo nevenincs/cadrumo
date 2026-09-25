@@ -296,6 +296,13 @@ profile:
         surnames:
           label: Surnames
         tax_id:
+          help:
+            what: 'Your tax identification number: the NIF of your DNI, your NIE if
+              you are a foreign national, or the NIF of an entity.'
+            where: On your DNI or NIE card, or on the NIF card issued by the AEAT.
+              It also appears on any past declaration or AEAT letter.
+            why: Every declaration is filed under this number; it is how the AEAT
+              identifies you.
           label: Tax ID (NIF/NIE/CIF)
       irpf:
         activity_kind:
@@ -356,6 +363,13 @@ profile:
         autoconsumo_promotor_base:
           label: Self-supply taxable base (developer)
         cash_accounting_regime_enrolled:
+          help:
+            what: Whether you opted into the special cash-accounting IVA regime (criterio
+              de caja).
+            where: It is chosen on modelo 036 and shows in your census details. If
+              you did not opt in, the answer is No.
+            why: Under it, IVA is due when invoices are paid rather than when they
+              are issued, which changes each period's figures.
           label: Cash-accounting regime enrolment
         does_intracomunitario:
           label: Intracommunity operations
@@ -364,6 +378,13 @@ profile:
         group_member_enrolled:
           label: IVA group member (Modelo 322)
         hydrocarbon_deposit_advance_payment_deduction_entitled:
+          help:
+            what: Whether you may deduct IVA advance payments made when taking hydrocarbons
+              out of a tax-deposit regime.
+            where: It only concerns businesses that take fuel out of a tax warehouse
+              (depósito fiscal). Most taxpayers answer No.
+            why: Those advance payments are deducted in the IVA declaration, so the
+              entitlement changes the amount due.
           label: Hydrocarbon tax-deposit advance-payment deduction entitlement
         intracommunity_operations_exceed_50000_eur:
           label: Intracommunity operations over 50,000 EUR
@@ -372,10 +393,24 @@ profile:
             general: General regime only
             mixed: General and simplified together
             simplified: Simplified regime only
+          help:
+            what: 'Which IVA regimes your modelo 303 combines: general only, simplified
+              only, or both.'
+            where: It follows from the IVA regime of each of your activities in your
+              census registration.
+            why: Modelo 303 has a separate part for each regime; this decides which
+              parts are filled in.
           label: Modelo 303 regime composition
         oss_enrolled:
           label: OSS/IOSS enrolment
         redeme_enrolled:
+          help:
+            what: Whether you are registered in REDEME, the register for monthly IVA
+              refunds.
+            where: It is requested on modelo 036 and shows in your census details.
+              If you never requested it, the answer is No.
+            why: Registration makes your IVA declaration monthly instead of quarterly
+              and makes SII mandatory.
           label: REDEME enrolment
         regime:
           choices:
@@ -384,12 +419,25 @@ profile:
             REAGP: Agriculture, livestock and fishing special regime (REAGP)
             RECARGO_EQUIVALENCIA: Equivalence surcharge
             SIMPLIFICADO: Simplified
+          help:
+            what: The IVA (VAT) regime your activity is registered under.
+            where: On your census registration (modelo 036 or 037), or in your census
+              details at the AEAT electronic office.
+            why: It decides which IVA declarations you file and how IVA is calculated
+              on your sales and purchases.
           label: IVA regime
         roi_enrolled:
           label: ROI/VIES enrolment
         sii_enrolled:
           label: SII enrolment
         voluntary_sii_enrolled:
+          help:
+            what: Whether you voluntarily joined SII, the immediate electronic supply
+              of your IVA record books to the AEAT.
+            where: Voluntary membership is requested on modelo 036 and shows in your
+              census details. If you never requested it, the answer is No.
+            why: SII members keep their IVA books online with the AEAT, which changes
+              some obligations and deadlines.
           label: Voluntary SII enrolment
       maritime_worker:
         annual_salary:
@@ -574,6 +622,13 @@ profile:
             common_regime: Common territory
             foral_unsupported: Foral territory (Basque Country or Navarre) - not supported
               yet
+          help:
+            what: Whether your taxes follow the common territory or a foral territory
+              (Basque Country or Navarre).
+            where: 'It follows from your fiscal address: an address in Álava, Bizkaia,
+              Gipuzkoa or Navarre is foral; elsewhere in Spain it is common territory.'
+            why: It decides which tax administration and rules apply. Foral territories
+              file with their own tax office, which is not supported yet.
           label: Territorial regime
       taxpayer_type:
         country_of_fiscal_residence:

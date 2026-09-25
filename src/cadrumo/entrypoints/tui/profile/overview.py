@@ -36,6 +36,7 @@ from typing import TYPE_CHECKING, ClassVar, cast, override
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
+from textual.events import DescendantFocus
 from textual.screen import ModalScreen, Screen
 from textual.widgets import Button, Checkbox, DataTable, Footer, Input, Label, OptionList, ProgressBar, Static
 from textual.worker import Worker, WorkerState
@@ -142,12 +143,31 @@ _EDIT_DIALOG_CSS = tokenised("""
 #edit-context { color: $text-muted; margin-bottom: $cadrumo-space-1; }
 #edit-label { text-style: bold; }
 #edit-hint { color: $text-muted; }
+#edit-help { color: $text-muted; margin-bottom: $cadrumo-space-1; }
 #edit-refusal { color: $error; text-style: bold; }
 #edit-masked-note { color: $text-muted; }
 #edit-dialog Input { margin: $cadrumo-space-0; }
 #edit-actions { height: auto; align-horizontal: right; margin: $cadrumo-space-0; }
 #edit-actions Button { margin: $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-0 $cadrumo-control-gap; }
 """)
+
+
+def field_help_text(field: ProfileFieldView) -> str:
+    """Explain one field: what it is, why it is asked, where to find it.
+
+    A field without catalogue help is explained by its schema description,
+    so no question is ever asked without saying what it is about.
+    """
+    if field.help:
+        headings = (
+            tr("flows.manager.help.what"),
+            tr("flows.manager.help.why"),
+            tr("flows.manager.help.where"),
+        )
+        return "\n".join(f"{heading} {part}" for heading, part in zip(headings, field.help, strict=True))
+    if field.about:
+        return f"{tr('flows.manager.help.about')} {field.about}"
+    return ""
 
 
 class FieldEditScreen(ModalScreen[str | None]):
@@ -204,6 +224,9 @@ class FieldEditScreen(ModalScreen[str | None]):
             if self._question_context:
                 yield Static(self._question_context, id="edit-context", markup=False)
             yield Label(self._prompt, id="edit-label")
+            help_text = field_help_text(self._field)
+            if help_text:
+                yield Static(help_text, id="edit-help", markup=False)
             if self._field.choices:
                 yield OptionList(
                     *[self._label_for(choice.value) for choice in self._field.choices],
@@ -477,6 +500,15 @@ class ProfileManagerScreen(AccountChromeScreen):
     #manager-required-only { width: auto; }
     #manager-search-empty { height: auto; }
     .manager-section-summary { color: $text-muted; }
+    #manager-field-help {
+        dock: bottom;
+        height: auto;
+        max-height: $cadrumo-help-max-height;
+        padding: $cadrumo-space-0 $cadrumo-gutter;
+        color: $text-muted;
+        background: $surface;
+        display: none;
+    }
     """)
     )
 
@@ -681,6 +713,9 @@ class ProfileManagerScreen(AccountChromeScreen):
                 with DisclosureGroup(title="", collapsed=not owing, id=f"fold-{section.key}"):
                     yield Static(id=f"summary-{section.key}", classes="manager-section-summary", markup=False)
                     yield Static(id=f"section-{section.key}", classes="manager-section cadrumo-panel")
+        # Explains whichever row the cursor is on, so the page answers "what
+        # is this and where do I find it" without opening anything.
+        yield Static(id="manager-field-help", markup=False)
         yield Footer()
 
     async def on_mount(self) -> None:
@@ -1364,6 +1399,31 @@ class ProfileManagerScreen(AccountChromeScreen):
 
     # ── editing ─────────────────────────────────────────────────────────
 
+    def on_data_table_row_highlighted(self, event: DataTable.RowHighlighted) -> None:
+        """Explain the field under the cursor of the table the operator is in.
+
+        Every table reports a highlight as it is built, so only the focused
+        one may speak; otherwise the last section built would explain itself
+        whatever row the operator is on.
+        """
+        if event.data_table.has_focus:
+            self._explain_cursor_row(event.data_table)
+
+    def on_descendant_focus(self, event: DescendantFocus) -> None:
+        """Explain the cursor row of a section table the moment it takes focus."""
+        if isinstance(event.widget, DataTable):
+            self._explain_cursor_row(cast("DataTable[str]", event.widget))
+
+    def _explain_cursor_row(self, table: DataTable[str]) -> None:
+        panel = self.query_one("#manager-field-help", Static)
+        field = None
+        if table.row_count and table.is_valid_row_index(table.cursor_row):
+            row_key = table.coordinate_to_cell_key(table.cursor_coordinate).row_key.value
+            field = self._field_by_key.get(str(row_key)) if row_key is not None else None
+        text = "" if field is None else field_help_text(field)
+        panel.display = bool(text)
+        panel.update(text)
+
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
         """Open the edit dialog for the selected field.
 
@@ -1897,4 +1957,5 @@ class ProfileManagerScreen(AccountChromeScreen):
 __all__ = [
     "ProfileFieldPersist",
     "ProfileManagerScreen",
+    "field_help_text",
 ]

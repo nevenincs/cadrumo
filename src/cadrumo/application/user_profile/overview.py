@@ -51,6 +51,7 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.redaction.rules import ALWAYS_REDACT_KEY_TERMS
 from ...domain.user_profile.labels import (
     profile_choice_label,
+    profile_field_help,
     profile_field_label,
     profile_section_summary,
     profile_section_title,
@@ -267,6 +268,13 @@ class ProfileFieldView(BaseModel):
     form reads, so the two surfaces cannot offer different editors for one
     declaration.
     """
+    help: tuple[str, ...] | None = Field(default=None)
+    """What the field is, why it is asked and where to find it, or ``None``.
+
+    Present only for fields the catalogue explains in those three parts;
+    :attr:`about` explains every other field."""
+    about: str = Field(default="")
+    """The schema's own description of the field, the explanation of last resort."""
     row_index: str | None = Field(default=None)
     """Which instance of a repeated fact this row belongs to, if any.
 
@@ -448,6 +456,8 @@ def _field_view(
         required=field.required or path in conditionally_required,
         field_type=field.type,
         choices=profile_field_choices(field, path=f"{section_key}.{field.key}"),
+        help=profile_field_help(section_key, field.key),
+        about=field.description,
         row_index=row_index,
     )
 
