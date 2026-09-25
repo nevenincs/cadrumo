@@ -14,7 +14,7 @@ on:
           - publish
           - docs
       ref:
-        description: Git ref to prove (release pull request head), tag to publish, or ref whose documentation to republish (docs)
+        description: Git ref to prove (release pull request head; dispatch on it), tag to publish (dispatch on it), or ref reachable from the dispatched commit whose documentation to republish (docs)
         required: true
         type: string
       version:
@@ -896,7 +896,6 @@ jobs:
       contents: read
     outputs:
       run-id: ${{ steps.locate.outputs.run-id }}
-      tag-commit: ${{ steps.locate.outputs.tag-commit }}
     steps:
       - name: Locate the successful prove run for this version and commit
         id: locate
@@ -915,6 +914,14 @@ jobs:
           tag_sha="$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/${tag}" --jq .object.sha)"
           if [ "$tag_type" = tag ]; then
             tag_sha="$(gh api "repos/${GITHUB_REPOSITORY}/git/tags/${tag_sha}" --jq .object.sha)"
+          fi
+          # Every publish job runs the code it checks out with the dispatched
+          # ref's cache token, so it checks out the dispatched commit and never
+          # the tag: a tag other than the dispatched commit would put its code
+          # in the dispatching ref's cache scope.
+          if [ "$tag_sha" != "$GITHUB_SHA" ]; then
+            echo "::error::tag ${tag} is ${tag_sha}, not the dispatched commit ${GITHUB_SHA}; dispatch publish with --ref ${tag}"
+            exit 1
           fi
           tag_tree="$(gh api "repos/${GITHUB_REPOSITORY}/git/commits/${tag_sha}" --jq .tree.sha)"
           runs="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow release.yml \
@@ -943,7 +950,7 @@ jobs:
       - name: Checkout the release tag
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ inputs.ref }}
+          ref: ${{ github.sha }}
           persist-credentials: false
 
       - name: Set up toolchain
@@ -996,14 +1003,14 @@ jobs:
       contents: read
       id-token: write
     steps:
-      # The commit locate-cohort proved, not the tag name it proved it through.
+      # The dispatched commit, which locate-cohort proved is the tag's commit.
       # A tag is mutable by anyone who can dispatch this workflow, so resolving
       # the name again here would re-resolve whatever it points at NOW rather
       # than what carried a passing prove run.
       - name: Checkout the release tag
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ needs.locate-cohort.outputs.tag-commit }}
+          ref: ${{ github.sha }}
           persist-credentials: false
 
       - name: Set up toolchain
@@ -1090,14 +1097,14 @@ jobs:
             exit 1
           fi
 
-      # The commit locate-cohort proved, not the tag name it proved it through.
+      # The dispatched commit, which locate-cohort proved is the tag's commit.
       # A tag is mutable by anyone who can dispatch this workflow, so resolving
       # the name again here would re-resolve whatever it points at NOW rather
       # than what carried a passing prove run.
       - name: Checkout the release tag
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ needs.locate-cohort.outputs.tag-commit }}
+          ref: ${{ github.sha }}
           persist-credentials: false
 
       - name: Set up toolchain
@@ -1190,14 +1197,14 @@ jobs:
             exit 1
           fi
 
-      # The commit locate-cohort proved, not the tag name it proved it through.
+      # The dispatched commit, which locate-cohort proved is the tag's commit.
       # A tag is mutable by anyone who can dispatch this workflow, so resolving
       # the name again here would re-resolve whatever it points at NOW rather
       # than what carried a passing prove run.
       - name: Checkout the release tag
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ needs.locate-cohort.outputs.tag-commit }}
+          ref: ${{ github.sha }}
           persist-credentials: false
 
       - name: Set up toolchain
@@ -1279,14 +1286,14 @@ jobs:
       actions: read
       contents: read
     steps:
-      # The commit locate-cohort proved, not the tag name it proved it through.
+      # The dispatched commit, which locate-cohort proved is the tag's commit.
       # A tag is mutable by anyone who can dispatch this workflow, so resolving
       # the name again here would re-resolve whatever it points at NOW rather
       # than what carried a passing prove run.
       - name: Checkout the release tag
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ needs.locate-cohort.outputs.tag-commit }}
+          ref: ${{ github.sha }}
           persist-credentials: false
 
       - name: Set up toolchain
@@ -1333,14 +1340,14 @@ jobs:
             runner: [self-hosted, macOS, ARM64]
             brew: /opt/homebrew/bin/brew
     steps:
-      # The commit locate-cohort proved, not the tag name it proved it through.
+      # The dispatched commit, which locate-cohort proved is the tag's commit.
       # A tag is mutable by anyone who can dispatch this workflow, so resolving
       # the name again here would re-resolve whatever it points at NOW rather
       # than what carried a passing prove run.
       - name: Checkout the release tag
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ needs.locate-cohort.outputs.tag-commit }}
+          ref: ${{ github.sha }}
           persist-credentials: false
 
       - name: Set up toolchain
@@ -1380,14 +1387,14 @@ jobs:
       actions: read
       contents: read
     steps:
-      # The commit locate-cohort proved, not the tag name it proved it through.
+      # The dispatched commit, which locate-cohort proved is the tag's commit.
       # A tag is mutable by anyone who can dispatch this workflow, so resolving
       # the name again here would re-resolve whatever it points at NOW rather
       # than what carried a passing prove run.
       - name: Checkout the release tag
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ needs.locate-cohort.outputs.tag-commit }}
+          ref: ${{ github.sha }}
           persist-credentials: false
 
       - name: Set up toolchain
@@ -1418,12 +1425,9 @@ jobs:
 
   publish-docs:
     name: "Build: Documentation site (Linux)"
-    # locate-cohort is already a transitive ancestor through all four of the
-    # others, so this edge adds no ordering. It is here because reading
-    # `needs.locate-cohort.outputs.*` requires a direct edge.
     # The `docs` phase republishes the documentation of `ref` alone: every
     # package job is skipped and none of their results is consulted.
-    needs: [locate-cohort, publish-pypi, acquire-pypi, acquire-homebrew, acquire-scoop]
+    needs: [publish-pypi, acquire-pypi, acquire-homebrew, acquire-scoop]
     if: ${{ !cancelled() && (inputs.phase == 'docs' || (inputs.phase == 'publish' && needs.publish-pypi.result == 'success' && needs.acquire-pypi.result == 'success' && needs.acquire-homebrew.result == 'success' && needs.acquire-scoop.result == 'success')) }}
     runs-on: [self-hosted, Linux, X64]
     # Five strict site roots built serially, each running the full reference
@@ -1433,15 +1437,37 @@ jobs:
     permissions:
       contents: read
     steps:
-      # In the publish phase, the commit locate-cohort proved, not the tag name
-      # it proved it through. A tag is mutable by anyone who can dispatch this
-      # workflow, so resolving the name again here would re-resolve whatever it
-      # points at NOW rather than what carried a passing prove run. The `docs`
-      # phase has no proven cohort and documents `ref` as dispatched.
+      # The job runs the code it checks out with the dispatched ref's cache
+      # token, so it builds only a commit that ref already carries: the
+      # dispatched commit itself in the publish phase (locate-cohort proved it
+      # is the tag's commit), and in the `docs` phase the commit `ref` names,
+      # refused unless it is the dispatched commit or one of its ancestors.
+      # The name is resolved once, here; a tag is mutable by anyone who can
+      # dispatch this workflow, so the checkout reads the resolved commit.
+      - name: Resolve the documented commit
+        id: documented
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INPUT_PHASE: ${{ inputs.phase }}
+          INPUT_REF: ${{ inputs.ref }}
+        run: |
+          set -euo pipefail
+          if [ "$INPUT_PHASE" = publish ]; then
+            commit="$GITHUB_SHA"
+          else
+            commit="$(gh api "repos/${GITHUB_REPOSITORY}/commits/${INPUT_REF}" --jq .sha)"
+            status="$(gh api "repos/${GITHUB_REPOSITORY}/compare/${commit}...${GITHUB_SHA}" --jq .status)"
+            case "$status" in
+              identical|ahead) ;;
+              *) echo "::error::docs ref ${INPUT_REF} (${commit}) is not reachable from the dispatched commit ${GITHUB_SHA} (${status})"; exit 1 ;;
+            esac
+          fi
+          echo "commit=${commit}" >> "$GITHUB_OUTPUT"
+
       - name: Checkout the documented commit
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ inputs.phase == 'publish' && needs.locate-cohort.outputs.tag-commit || inputs.ref }}
+          ref: ${{ steps.documented.outputs.commit }}
           persist-credentials: false
 
       - name: Set up toolchain
