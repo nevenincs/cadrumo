@@ -23,6 +23,20 @@ import pytest
 from cadrumo.tests.env_scope import scoped_product_storage_environment
 
 
+@pytest.fixture(autouse=True, scope="module")
+def _contain_module_fixture_storage_pins() -> Iterator[None]:
+    """Restore the product storage environment after each documentation module.
+
+    Module-scoped fixtures that run a real sequence pin the environment during
+    their setup, which pytest performs before any function-scoped fixture. The
+    per-test scope below would snapshot the already pinned values and restore
+    them, so the pin outlived the module. Autouse fixtures are set up first
+    within their scope, so this one snapshots before any module fixture runs.
+    """
+    with scoped_product_storage_environment():
+        yield
+
+
 @pytest.fixture(autouse=True)
 def _contain_docs_engine_storage_pins() -> Iterator[None]:
     """Restore the product storage environment after each documentation test."""
