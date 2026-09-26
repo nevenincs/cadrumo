@@ -24,7 +24,7 @@ import os
 import secrets
 from collections.abc import Callable, Iterator, Sequence
 from dataclasses import asdict, dataclass, field
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import Any, Final
@@ -41,11 +41,13 @@ from .scenario import (
     IssuedInvoice,
     ReceivedInvoice,
     WithholdingDuty,
+    activity_year,
     build_year,
 )
 
 RECEIPT_SCHEMA: Final = "export-parity.seed-receipt/v1"
 _ACTOR: Final = "export-parity-seed"
+_UNCHANGED_UPDATE: Final = "must change at least one ledger field"
 _PROFILE: Final = f"income-{YEARS[0]}"
 _PERIODIC: Final = ("303", "130", "111", "115")
 _ANNUAL: Final = ("390", "190", "180", "100")
@@ -102,11 +104,15 @@ class SeedReceipt:
 
 
 class _Seeder:
-    def __init__(self, cli: InstalledCli, *, receipt: SeedReceipt, receipt_path: Path, artifact_dir: Path) -> None:
+    def __init__(
+        self, cli: InstalledCli, *, receipt: SeedReceipt, receipt_path: Path, artifact_dir: Path, first_year: int
+    ) -> None:
         self.cli = cli
         self.receipt = receipt
         self.receipt_path = receipt_path
         self.artifact_dir = artifact_dir
+        #: The earliest seeded year; assets in service before it enter with their known opening history.
+        self.first_year = first_year
 
     # -- plumbing ---------------------------------------------------------------
 
@@ -134,6 +140,32 @@ class _Seeder:
             return False
         return True
 
+    def _stored_transaction(self, description: str) -> str | None:
+        """Find a transaction an interrupted run already added, so a resume never replays the add."""
+        listed = self._result(("app", "ledger", "list"), stage="lookup.transactions")
+        rows = listed.get("rows")
+        matches = [
+            row["transaction_id"]
+            for row in (rows if isinstance(rows, list) else ())
+            if isinstance(row, dict) and row.get("description") == description
+        ]
+        if len(matches) > 1:
+            raise SeedError(f"{len(matches)} stored transactions carry the description {description!r}")
+        return matches[0] if matches else None
+
+    def _stored_invoice(self, kind: str, number: str) -> str | None:
+        """Find an invoice an interrupted run already recorded under its deterministic number."""
+        listed = self._result(("app", "ledger", "invoice", "list", "--kind", kind), stage="lookup.invoices")
+        rows = listed.get("rows")
+        matches = [
+            row["invoice_id"]
+            for row in (rows if isinstance(rows, list) else ())
+            if isinstance(row, dict) and row.get("invoice_number") == number
+        ]
+        if len(matches) > 1:
+            raise SeedError(f"{len(matches)} stored {kind} invoices carry the number {number!r}")
+        return matches[0] if matches else None
+
     def _remember(self, key: str, value: object) -> str:
         text = str(value)
         self.receipt.identifiers[key] = text
@@ -145,6 +177,9 @@ class _Seeder:
 
     def _complete(self, key: str) -> None:
         self.receipt.identifiers[f"done:{key}"] = "1"
+        # A refusal an interrupted run left for this item is resolved once the item completes.
+        for stage in [stage for stage in self.receipt.blocked if stage.rsplit(".", 1)[-1] == key]:
+            self.receipt.blocked.pop(stage)
         self.receipt.save(self.receipt_path)
 
     def _stage(self, name: str) -> bool:
@@ -226,79 +261,93 @@ class _Seeder:
             )
             self._complete(f"reta-{month:%Y-%m}")
         for asset in ASSETS:
-            if asset.in_service.year == year and self._pending(f"register-{asset.asset_id}"):
-                self._asset(asset)
+            carried_in = year == self.first_year and asset.in_service.year < year
+            if (asset.in_service.year == year or carried_in) and self._pending(f"register-{asset.asset_id}"):
+                self._asset(asset, carried_in=carried_in)
                 self._complete(f"register-{asset.asset_id}")
         self._done(stage)
 
     def _issued(self, item: IssuedInvoice) -> None:
         stage = f"ledger.issued.{item.key}"
-        transaction = self._result(
-            (
-                "app",
-                "ledger",
-                "add",
-                "--date",
-                item.payment_date.isoformat(),
-                "--amount",
-                _money(item.receipt),
-                "--direction",
-                "INCOMING",
-                "--description",
-                f"Synthetic fees {item.key}",
-                "--classification",
-                "BUSINESS",
-                "--taxable-base",
-                _money(item.base),
-                "--iva-rate",
-                "0.21",
-                "--iva-amount",
-                _money(item.iva),
-                "--iva-category",
-                "domestic_general",
-                "--irpf-category",
-                "actividad_economica",
-                "--source-jurisdiction",
-                "ES",
-                "--idempotency-key",
-                item.key,
-            ),
-            stage=stage,
+        description = f"Synthetic fees {item.key}"
+        transaction_id = self.receipt.identifiers.get(f"tx:{item.key}") or self._stored_transaction(description)
+        if transaction_id is None:
+            added = self._result(
+                (
+                    "app",
+                    "ledger",
+                    "add",
+                    "--date",
+                    item.payment_date.isoformat(),
+                    "--amount",
+                    _money(item.receipt),
+                    "--direction",
+                    "INCOMING",
+                    "--description",
+                    description,
+                    "--classification",
+                    "BUSINESS",
+                    "--taxable-base",
+                    _money(item.base),
+                    "--iva-rate",
+                    "0.21",
+                    "--iva-amount",
+                    _money(item.iva),
+                    "--iva-category",
+                    "domestic_general",
+                    "--irpf-category",
+                    "actividad_economica",
+                    "--source-jurisdiction",
+                    "ES",
+                    "--idempotency-key",
+                    item.key,
+                ),
+                stage=stage,
+            )
+            transaction_id = str(added["transaction_id"])
+        self._remember(f"tx:{item.key}", transaction_id)
+        self.receipt.save(self.receipt_path)
+        invoice_id = self.receipt.identifiers.get(f"invoice:{item.key}") or self._stored_invoice(
+            "issued", item.key.upper()
         )
-        invoice = self._result(
-            (
-                "app",
-                "ledger",
-                "invoice",
-                "add",
-                "--kind",
-                "issued",
-                "--counterparty-name",
-                CLIENT.name,
-                "--counterparty-nif",
-                CLIENT.tax_id,
-                "--invoice-number",
-                item.key.upper(),
-                "--invoice-date",
-                item.invoice_date.isoformat(),
-                "--taxable-base",
-                _money(item.base),
-                "--iva-rate",
-                "21",
-                "--country-code",
-                "ES",
-                "--retention-rate",
-                _rate(item.withholding_rate),
-                "--retention-amount",
-                _money(item.withholding),
-                "--iva-category",
-                "domestic_general",
-            ),
-            stage=f"{stage}.invoice",
-        )
-        transaction_id = self._remember(f"tx:{item.key}", transaction["transaction_id"])
-        invoice_id = self._remember(f"invoice:{item.key}", invoice["invoice_id"])
-        self._result(("app", "ledger", "link", transaction_id, "--invoice-id", invoice_id), stage=f"{stage}.link")
+        if invoice_id is None:
+            added = self._result(
+                (
+                    "app",
+                    "ledger",
+                    "invoice",
+                    "add",
+                    "--kind",
+                    "issued",
+                    "--counterparty-name",
+                    CLIENT.name,
+                    "--counterparty-nif",
+                    CLIENT.tax_id,
+                    "--invoice-number",
+                    item.key.upper(),
+                    "--invoice-date",
+                    item.invoice_date.isoformat(),
+                    "--taxable-base",
+                    _money(item.base),
+                    "--iva-rate",
+                    "21",
+                    "--country-code",
+                    "ES",
+                    "--retention-rate",
+                    _rate(item.withholding_rate),
+                    "--retention-amount",
+                    _money(item.withholding),
+                    "--iva-category",
+                    "domestic_general",
+                ),
+                stage=f"{stage}.invoice",
+            )
+            invoice_id = str(added["invoice_id"])
+        self._remember(f"invoice:{item.key}", invoice_id)
+        self.receipt.save(self.receipt_path)
+        if self._pending(f"link:{item.key}"):
+            self._result(("app", "ledger", "link", transaction_id, "--invoice-id", invoice_id), stage=f"{stage}.link")
+            self._complete(f"link:{item.key}")
 
     def _evidence_pdf(self, item: ReceivedInvoice) -> Path:
         self.artifact_dir.mkdir(parents=True, exist_ok=True)
@@ -354,92 +403,124 @@ class _Seeder:
             WithholdingDuty.PROFESSIONAL: ("--irpf-category", "actividad_economica"),
             WithholdingDuty.URBAN_RENT: ("--irpf-category", "arrendamiento_local"),
         }[item.duty]
-        transaction = self._result(
-            (
-                "app",
-                "ledger",
-                "add",
-                "--date",
-                item.payment_date.isoformat(),
-                "--amount",
-                _money(item.payment),
-                "--direction",
-                "OUTGOING",
-                "--description",
-                f"Synthetic purchase {item.key}",
-                "--classification",
-                "BUSINESS",
-                "--category-id",
-                item.category,
-                *iva_args,
-                *irpf_args,
-                "--purchase-invoice-evidence-id",
-                evidence_id,
-                "--source-jurisdiction",
-                "ES",
-                "--idempotency-key",
-                item.key,
-            ),
-            stage=stage,
-        )
+        description = f"Synthetic purchase {item.key}"
+        transaction_id = self.receipt.identifiers.get(f"tx:{item.key}") or self._stored_transaction(description)
+        if transaction_id is None:
+            transaction_id = self._remember(
+                f"tx:{item.key}",
+                self._result(
+                    (
+                        "app",
+                        "ledger",
+                        "add",
+                        "--date",
+                        item.payment_date.isoformat(),
+                        "--amount",
+                        _money(item.payment),
+                        "--direction",
+                        "OUTGOING",
+                        "--description",
+                        description,
+                        "--classification",
+                        "BUSINESS",
+                        "--category-id",
+                        item.category,
+                        *iva_args,
+                        *irpf_args,
+                        "--purchase-invoice-evidence-id",
+                        evidence_id,
+                        "--source-jurisdiction",
+                        "ES",
+                        "--idempotency-key",
+                        item.key,
+                    ),
+                    stage=stage,
+                )["transaction_id"],
+            )
+            self.receipt.save(self.receipt_path)
+        self._remember(f"tx:{item.key}", transaction_id)
         withholding_args: tuple[str, ...] = (
             ("--retention-rate", _rate(item.withholding / item.base), "--retention-amount", _money(item.withholding))
             if item.withholding
             else ()
         )
-        invoice = self._result(
-            (
-                "app",
-                "ledger",
-                "invoice",
-                "add",
-                "--kind",
-                "received",
-                "--counterparty-name",
-                item.counterparty.name,
-                "--counterparty-nif",
-                item.counterparty.tax_id,
-                "--invoice-number",
-                item.key.upper(),
-                "--invoice-date",
-                item.invoice_date.isoformat(),
-                "--taxable-base",
-                _money(item.base),
-                "--iva-rate",
-                _rate(item.iva_rate * 100),
-                "--country-code",
-                "ES",
-                *withholding_args,
-                "--iva-category",
-                "domestic_general" if item.iva_rate else "domestic_exempt",
-            ),
-            stage=f"{stage}.invoice",
+        invoice_id = self.receipt.identifiers.get(f"invoice:{item.key}") or self._stored_invoice(
+            "received", item.key.upper()
         )
-        transaction_id = self._remember(f"tx:{item.key}", transaction["transaction_id"])
-        invoice_id = self._remember(f"invoice:{item.key}", invoice["invoice_id"])
-        self._result(("app", "ledger", "link", transaction_id, "--invoice-id", invoice_id), stage=f"{stage}.link")
-        if item.iva_rate:
-            self._result(
+        if invoice_id is None:
+            invoice_id = self._result(
                 (
                     "app",
                     "ledger",
-                    "classify",
-                    transaction_id,
-                    "--classification",
-                    "BUSINESS",
-                    "--deduction-kind",
-                    "domestic_investment" if _is_investment_good(item) else "domestic_current",
-                    "--counterparty-country",
+                    "invoice",
+                    "add",
+                    "--kind",
+                    "received",
+                    "--counterparty-name",
+                    item.counterparty.name,
+                    "--counterparty-nif",
+                    item.counterparty.tax_id,
+                    "--invoice-number",
+                    item.key.upper(),
+                    "--invoice-date",
+                    item.invoice_date.isoformat(),
+                    "--taxable-base",
+                    _money(item.base),
+                    "--iva-rate",
+                    _rate(item.iva_rate * 100),
+                    "--country-code",
                     "ES",
-                    "--reaffirm",
+                    *withholding_args,
+                    "--iva-category",
+                    "domestic_general" if item.iva_rate else "domestic_exempt",
                 ),
-                stage=f"{stage}.classify",
-            )
+                stage=f"{stage}.invoice",
+            )["invoice_id"]
+        self._remember(f"invoice:{item.key}", invoice_id)
+        self.receipt.save(self.receipt_path)
+        if self._pending(f"link:{item.key}"):
+            self._result(("app", "ledger", "link", transaction_id, "--invoice-id", invoice_id), stage=f"{stage}.link")
+            self._complete(f"link:{item.key}")
+        if item.iva_rate and self._pending(f"classify:{item.key}"):
+            try:
+                self._result(
+                    (
+                        "app",
+                        "ledger",
+                        "classify",
+                        transaction_id,
+                        "--classification",
+                        "BUSINESS",
+                        "--deduction-kind",
+                        "domestic_investment" if _is_investment_good(item) else "domestic_current",
+                        "--counterparty-country",
+                        "ES",
+                        "--reaffirm",
+                    ),
+                    stage=f"{stage}.classify",
+                )
+            except SeedRefusalError:
+                # An interrupted run already applied this classification; the product
+                # refuses a no-op update, which on resume is the expected answer.
+                if _UNCHANGED_UPDATE not in self.receipt.blocked.get(f"{stage}.classify", ""):
+                    raise
+                self.receipt.blocked.pop(f"{stage}.classify")
+            self._complete(f"classify:{item.key}")
 
-    def _asset(self, asset: ActivityAsset) -> None:
+    def _asset(self, asset: ActivityAsset, *, carried_in: bool = False) -> None:
+        """Register one asset; a carried-in asset predates the store and brings its accumulated history."""
         stage = f"asset.{asset.asset_id}"
-        transaction_id = self.receipt.identifiers[f"tx:asset-{asset.asset_id}"]
-        evidence_id = self.receipt.identifiers[f"evidence:asset-{asset.asset_id}"]
+        if carried_in:
+            # Acquired in a year this store does not hold: its purchase is outside the
+            # ledger, so the register names a stable synthetic acquisition reference.
+            transaction_id = hashlib.sha256(f"prior-acquisition:{asset.asset_id}".encode("ascii")).hexdigest()
+            evidence_id = f"synthetic-prior-{asset.asset_id}"
+        else:
+            transaction_id = self.receipt.identifiers[f"tx:asset-{asset.asset_id}"]
+            evidence_id = self.receipt.identifiers[f"evidence:asset-{asset.asset_id}"]
+        accumulated = sum(
+            (asset.charge_for(year) for year in range(asset.in_service.year, self.first_year)), Decimal("0")
+        )
         revision = {
             "asset_id": asset.asset_id,
             "revision_number": 1,
@@ -456,14 +537,14 @@ class _Seeder:
                 "prior_allocation_provenance": "synthetic export-parity allocation",
             },
             "in_service_date": asset.in_service.isoformat(),
-            "opening_history": {"status": "known", "accumulated_amount": "0.00"},
+            "opening_history": {"status": "known", "accumulated_amount": _money(accumulated)},
             "acquired_condition": "new",
             "amortization": {"regime": "normal", "method": asset.method, "authority_class_key": asset.class_key},
         }
         self._result(
             ("app", "ledger", "actividad-asset", "create", json.dumps(revision, separators=(",", ":"))), stage=stage
         )
-        if asset.is_iva_investment_good:
+        if asset.is_iva_investment_good and not carried_in:
             self._result(
                 (
                     "app",
@@ -486,6 +567,54 @@ class _Seeder:
                 ),
                 stage=f"{stage}.bienes_inversion",
             )
+
+    # -- amortization claims -------------------------------------------------------
+
+    def amortization(self, year: int) -> None:
+        """Forecast and claim each registered asset's charge for ``year``, as the operator would."""
+        stage = f"amortization:{year}"
+        if not self._stage(stage):
+            return
+        settled = True
+        for asset in ASSETS:
+            if asset.in_service.year > year or not self._pending(f"claim-{asset.asset_id}-{year}"):
+                continue
+            settled &= self._attempt(lambda asset=asset: self._claim(asset, year))
+        if settled:
+            self._done(stage)
+
+    def _claim(self, asset: ActivityAsset, year: int) -> None:
+        stage = f"amortization:{year}.{asset.asset_id}"
+        covered_from = max(asset.in_service, date(year, 1, 1))
+        forecast = self._result(
+            (
+                "app",
+                "ledger",
+                "actividad-asset",
+                "forecast",
+                asset.asset_id,
+                "--covered-from",
+                covered_from.isoformat(),
+                "--covered-until",
+                date(year + 1, 1, 1).isoformat(),
+            ),
+            stage=f"{stage}.forecast",
+        )
+        claimed = self._result(
+            (
+                "app",
+                "ledger",
+                "actividad-asset",
+                "claim",
+                json.dumps(forecast, separators=(",", ":")),
+                "--creating-operation",
+                _ACTOR,
+            ),
+            stage=f"{stage}.claim",
+        )
+        claim = claimed.get("claim")
+        self._remember(f"claim:{asset.asset_id}:{year}", claim.get("claim_id", "") if isinstance(claim, dict) else "")
+        self._complete(f"claim-{asset.asset_id}-{year}")
 
     # -- withholding the declarant practises ------------------------------------
 
@@ -539,6 +668,71 @@ class _Seeder:
             stage=f"{stage}.{item.key}",
         )
         self._complete(f"withholding-{item.key}")
+
+    # -- prior-year carries ingested as AEAT register evidence --------------------
+
+    def carry_in(self, year: int) -> None:
+        """Import the prior year's Renta as a synthetic AEAT CSV register filing record.
+
+        The lane that does not seed ``year - 1`` still needs the prior-year facts
+        the cross-period gate reads (Modelo 130's prior-year activity yield, the
+        Renta carry-forward balance). They enter through the product's own
+        external-filing ingestion, a ``casilla_code;value`` manifest, under an
+        evidence id that is visibly synthetic.
+        """
+        stage = f"carry:{year}"
+        if not self._stage(stage):
+            return
+        prior = year - 1
+        work_key = f"work:100:{prior}:0A"
+        if self._pending(f"{stage}.create"):
+            created = self._result(
+                (
+                    "app",
+                    "modelo",
+                    "work",
+                    "create",
+                    "--modelo",
+                    "100",
+                    "--year",
+                    str(prior),
+                    "--period",
+                    "0A",
+                    "--by",
+                    _ACTOR,
+                ),
+                stage=f"{stage}.create",
+            )
+            self._remember(work_key, created["work_unit_id"])
+            self._complete(f"{stage}.create")
+        if self._pending(f"{stage}.import"):
+            self.artifact_dir.mkdir(parents=True, exist_ok=True)
+            manifest = self.artifact_dir / f"modelo-100-{prior}-synthetic-aeat-register.csv"
+            manifest.write_text(
+                f"casilla_code;value\n0224;{_money(activity_year(prior).net)}\n1391;0.00\n",
+                encoding="utf-8",
+            )
+            imported = self._result(
+                (
+                    "app",
+                    "modelo",
+                    "filing-record",
+                    "import",
+                    self.receipt.identifiers[work_key],
+                    "--evidence-kind",
+                    "aeat_csv_register",
+                    "--evidence-id",
+                    f"CADRUMOSYNTHETIC{prior}M100",
+                    "--file",
+                    str(manifest),
+                    "--by",
+                    _ACTOR,
+                ),
+                stage=f"{stage}.import",
+            )
+            self._remember(f"filing-record:100:{prior}:0A", imported.get("filing_record_id", ""))
+            self._complete(f"{stage}.import")
+        self._done(stage)
 
     # -- modelo lifecycle ---------------------------------------------------------
 
@@ -769,7 +963,7 @@ def run_seed(
     authority_root: Path,
     run_dir: Path,
     years: Sequence[int] = YEARS,
-    stages: Sequence[str] = ("ledger", "withholding", "modelos"),
+    stages: Sequence[str] = ("ledger", "amortization", "withholding", "modelos"),
     carry_evidence: str = "none",
 ) -> SeedReceipt:
     """Seed ``years`` into ``run_dir/store`` and return the receipt, raising :class:`SeedError` on a refusal."""
@@ -784,9 +978,15 @@ def run_seed(
     )
     if receipt.authority_generation != generation:
         raise SeedError("authority generation changed since this store was seeded; seed a fresh store")
-    seeder = _Seeder(cli, receipt=receipt, receipt_path=receipt_path, artifact_dir=run_dir / "evidence")
+    if receipt.carry_evidence != carry_evidence:
+        raise SeedError(f"this store was seeded with carry evidence {receipt.carry_evidence!r}; seed a fresh store")
+    seeder = _Seeder(
+        cli, receipt=receipt, receipt_path=receipt_path, artifact_dir=run_dir / "evidence", first_year=min(years)
+    )
     seeder.profile()
     for year in years:
+        if carry_evidence == "synthetic_csv_register" and year - 1 not in years and "modelos" in stages:
+            seeder.carry_in(year)
         for stage in stages:
             getattr(seeder, stage)(year)
     receipt.save(receipt_path)
@@ -800,7 +1000,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--authority-root", required=True, type=Path)
     parser.add_argument("--run-dir", required=True, type=Path)
     parser.add_argument("--years", type=int, nargs="+", default=list(YEARS))
-    parser.add_argument("--stages", nargs="+", default=["ledger", "withholding", "modelos"])
+    parser.add_argument("--stages", nargs="+", default=["ledger", "amortization", "withholding", "modelos"])
     parser.add_argument("--carry-evidence", choices=("none", "synthetic_csv_register"), default="none")
     args = parser.parse_args(argv)
     try:

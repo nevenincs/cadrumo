@@ -2329,6 +2329,7 @@
         "dev.acceptance.calendar",
         "dev.acceptance.calendar.installed_parity",
         "dev.acceptance.export_parity",
+        "dev.acceptance.export_parity.completeness",
         "dev.acceptance.export_parity.scenario",
         "dev.acceptance.export_parity.seed",
         "dev.acceptance.income_tax",
