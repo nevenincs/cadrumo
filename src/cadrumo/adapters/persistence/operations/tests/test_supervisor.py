@@ -1905,9 +1905,13 @@ def test_await_terminal_sustained_wait_uses_bounded_real_journal_reads(tmp_path:
         operation_id = asyncio.run(supervisor.submit(_request(), operation_id="3" * 64))
         journal_path = (storage_root / "operation-journals" / f"{operation_id}.json").resolve()
         journal_opens = [0]
+        # An audit hook cannot be removed, so it outlives this test in the worker.
+        # Disarmed after the measurement, it returns before resolving anything, so
+        # no later test pays for or observes the resolve this hook performs.
+        recording = [True]
 
         def audit_open(event: str, arguments: tuple[object, ...]) -> None:
-            if event != "open" or not arguments:
+            if not recording[0] or event != "open" or not arguments:
                 return
             opened_argument = arguments[0]
             if not isinstance(opened_argument, str):
@@ -1930,7 +1934,10 @@ def test_await_terminal_sustained_wait_uses_bounded_real_journal_reads(tmp_path:
             with pytest.raises(asyncio.CancelledError):
                 await waiter
 
-        asyncio.run(sustain_non_terminal_wait())
+        try:
+            asyncio.run(sustain_non_terminal_wait())
+        finally:
+            recording[0] = False
 
 
 def test_token_mismatch_refuses_interaction_mutation_before_consumption(tmp_path: Path) -> None:
