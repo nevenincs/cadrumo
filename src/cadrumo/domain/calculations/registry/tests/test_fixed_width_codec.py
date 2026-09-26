@@ -184,6 +184,31 @@ def test_allowed_integer_domain_is_enforced_symmetrically_after_wire_normalizati
         parse_fixed_width_export_field(field, "02")
 
 
+def test_absent_enumerated_slot_round_trips_as_absence_when_zero_is_not_an_allowed_value() -> None:
+    """AEAT zero-fills an empty numeric field, so a zero fill a rate domain excludes can only mean absence."""
+    field = _field(value_policy=ExportValuePolicy.ENUMERATED_DIGITS, allowed_values=("50",))
+
+    rendered = render_fixed_width_export_field(field, None)
+
+    assert rendered == "00000"
+    assert parse_fixed_width_export_field(field, rendered) is None
+    assert parse_fixed_width_export_field(field, "00050") == Decimal(50)
+    with pytest.raises(RegistryValidationError, match="outside allowed_values"):
+        render_fixed_width_export_field(field, 0)
+    with pytest.raises(RegistryValidationError, match="outside allowed_values"):
+        parse_fixed_width_export_field(field, "00049")
+
+
+def test_zero_fill_stays_a_value_where_zero_is_allowed_and_refuses_where_the_slot_is_required() -> None:
+    """Only an optional slot whose domain excludes zero may read a zero fill back as absence."""
+    zero_allowed = _field(value_policy=ExportValuePolicy.ENUMERATED_DIGITS, allowed_values=("0",))
+    required = _field(value_policy=ExportValuePolicy.ENUMERATED_DIGITS, allowed_values=("50",), required=True)
+
+    assert parse_fixed_width_export_field(zero_allowed, "00000") == Decimal(0)
+    with pytest.raises(RegistryValidationError, match="outside allowed_values"):
+        parse_fixed_width_export_field(required, "00000")
+
+
 def test_schema_refuses_allowed_values_under_any_other_value_policy() -> None:
     """Enumerated digits is the one POLICY a closed domain may be paired with.
 

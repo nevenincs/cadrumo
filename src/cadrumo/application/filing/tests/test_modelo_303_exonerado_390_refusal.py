@@ -27,6 +27,8 @@ from ....domain.bienes_inversion.regularizacion_parameters import (
     BienesInversionParameterProvenance,
     BienesInversionRegularizacionParameters,
 )
+from ....domain.calculations.registry.errors import RegistryValidationError
+from ....domain.calculations.registry.export_parse import parse_export_payload
 from ....domain.calculations.registry.iva_schema_vocabulary import m303_regime_composition_simplified_scope
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ....domain.calculations.registry.schema_base import ThresholdComparison
@@ -289,8 +291,17 @@ def test_exonerado_complete_revision_evidence_exports_page_four_without_override
         schema_provider=provider,
     )
 
-    assert b"<T30304000>" in output.read_bytes()
+    written = output.read_bytes()
+    assert b"<T30304000>" in written
     assert not output.with_suffix(output.suffix + ".tmp").exists()
+    layout = provider.get_subview("303").export_layouts[0]
+    parsed = parse_export_payload(layout, written)
+    assert "m303-exonerado-390" in {field.record_id for field in parsed.fields}
+    closer = b"</T303020254T0000>"
+    assert written.endswith(closer)
+    for malformed in (written[:-1], written[: -len(closer)] + b"</T303020253T0000>"):
+        with pytest.raises(RegistryValidationError, match="does not end with its relative closer"):
+            parse_export_payload(layout, malformed)
 
 
 def test_exonerado_numeric_payload_refuses_before_target_while_atomic_unit_is_incomplete(tmp_path: Path) -> None:

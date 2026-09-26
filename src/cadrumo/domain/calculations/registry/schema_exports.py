@@ -305,6 +305,23 @@ class FilingEnvelopeDefinition(RegistryModel):
             )
         return self
 
+    @property
+    def opening_tag_extent(self) -> int:
+        """Byte extent of the opening tag the prefix begins with, composed or built from its six components."""
+        tag_roles = {FilingEnvelopePrefixRole.COMPOSED_OPENING_TAG, *_OPENING_TAG_COMPONENT_ROLES}
+        return sum(field.length for field in self.prefix_fields if field.role in tag_roles)
+
+    def closer_for(self, opening_tag: bytes) -> bytes:
+        """Derive the closing identifier that answers ``opening_tag`` under the declared closer derivation."""
+        if len(opening_tag) != self.opening_tag_extent or not opening_tag.startswith(b"<"):
+            raise RegistryValidationError(
+                f"filing envelope {self.record_identity!r} opening tag must be {self.opening_tag_extent} bytes "
+                "starting with '<'",
+            )
+        match self.closer_derivation:
+            case FilingEnvelopeCloserDerivation.RELATIVE_CLOSER_V1:
+                return b"</" + opening_tag[1:]
+
 
 #: Wire version of the auxiliary-envelope header declaration. Named rather than
 #: written as a bare default so the number has one home: a reader can find every
