@@ -1266,6 +1266,11 @@ cli:
           refused_stale: 'Elutasítva: nem számít olyan munkafüzet ellen, amelynek
             metaadatbélyegei nem egyeznek a megadott pillanatképpel (metadata_match={metadata_match});
             exportálja újra, majd töltse vissza újra.'
+        export:
+          output_help: Az .xlsx munkafüzet célútvonala; a meglévő fájlt elutasítja,
+            hacsak nincs megadva a --replace
+        export_help: Egy modell és időszak nyilvántartási számítási felületének exportálása
+          helyi .xlsx munkafüzetbe élő képletekkel (a push offline megfelelője)
         modelo_help: Az exportálandó nyomtatvány azonosítója (pl. 130, 303, 100).
         period_help: Benyújtási időszak kódja (pl. 1T, 2T, 0A).
         pull:

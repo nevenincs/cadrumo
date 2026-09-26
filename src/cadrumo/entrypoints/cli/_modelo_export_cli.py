@@ -19,11 +19,11 @@ from ...application.modelo.export import (
     ModeloExportCommand,
     ModeloExportCrossBucketRefusedError,
     ModeloExportNoActiveBucketError,
-    ModeloExportOutputPathError,
     ModeloExportResult,
     export_modelo_revision,
 )
 from ...application.modelo.export_ports import ModeloExportPorts
+from ...application.modelo.export_sink import ModeloExportOutputPathError
 from ...application.modelo.iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
 from ...application.modelo.operator_inputs import ModeloExportOperatorInput
 from ...application.workflow.persistence import workflow_state_repository

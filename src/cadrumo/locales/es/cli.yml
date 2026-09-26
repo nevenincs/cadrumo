@@ -1282,6 +1282,12 @@ cli:
           refused_stale: rechazó a calcular contra un libro cuyas marcas de metadatos
             no coinciden con el snapshot suministrado (metadata_match={metadata_match});
             reexporte y vuelva a recuperar
+        export:
+          output_help: Ruta en la que escribir el libro .xlsx; un archivo existente
+            se rechaza salvo que se indique --replace
+        export_help: Exporta la superficie de cálculo del registro de un modelo y
+          periodo a un libro .xlsx local con fórmulas activas (la contrapartida sin
+          conexión de push)
         modelo_help: Identificador del modelo a exportar (p. ej. 130, 303, 100)
         period_help: Código de período (p. ej. 1T, 2T, 0A)
         pull:

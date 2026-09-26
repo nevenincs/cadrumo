@@ -47,7 +47,7 @@ from typing import NamedTuple
 
 from pydantic import BaseModel, Field, NonNegativeInt
 
-from ...core.atomic_write import StagedPublication, hardened_staged_publication
+from ...core.atomic_write import StagedPublication
 from ...core.casilla_id import validated_casilla_id
 from ...core.export_layout_format import ExportLayoutFormat
 from ...core.filing_producer_key import FilingProducerKey
@@ -154,6 +154,7 @@ from .action_errors import (
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
 from .export_amendment_evidence import resolve_persisted_amendment_export_evidence
 from .export_ports import ModeloExportPorts
+from .export_sink import LocalFileExportSink
 from .iva_wallet_gate import require_persisted_iva_compensation_decision_matches_revision
 from .m123_count_authority_gate import Modelo123CountAuthorityStage, require_modelo_123_count_authority
 from .m193_settled_row_gate import Modelo193SettledRowStage, require_modelo_193_settled_row_amount_authority
@@ -315,18 +316,6 @@ class ModeloExportUnsupportedError(ModeloExportError):
     """Raised when a modelo revision has no renderable local fichero-BOE export layout."""
 
 
-class ModeloExportOutputPathError(ModeloExportError):
-    """Raised when the operator-supplied ``--output`` path cannot receive the artefact.
-
-    Validated up front, before any fichero-BOE bytes are written, so an
-    unusable destination (empty path, an existing directory, a missing or
-    unwritable parent directory) is refused with a typed, operator-facing
-    message instead of surfacing a raw ``OSError`` traceback from the
-    staged write — and crucially before any cleartext financial bytes
-    touch disk.
-    """
-
-
 class ModeloExportCommand(BaseModel):
     """Strict input contract for :func:`~cadrumo.application.modelo.export.export_modelo_revision`.
 
@@ -456,48 +445,8 @@ def _sha256_ref(value: str) -> str:
     return f"sha256:{sha256_hex(value.encode('utf-8'))}"
 
 
-def _validate_output_path(output_path: Path, *, replace_existing: bool) -> None:
-    """Refuse an unusable ``--output`` destination before writing any bytes.
-
-    A clean typed refusal here is the only safe place to reject a bad
-    destination: once the staged write has run, real fichero-BOE financial
-    bytes already exist in the staging sibling, and a late ``OSError`` at
-    publication would surface a raw traceback for a destination that was
-    unusable before a single byte was rendered.
-
-    Raises:
-        ModeloExportOutputPathError: When the path is empty, names an
-            existing directory, names an existing file the operator did not
-            choose to replace, or its parent directory is missing or not a
-            directory.
-    """
-    raw = str(output_path).strip()
-    if not raw or raw == ".":
-        raise ModeloExportOutputPathError(
-            translated_message="application.modelo.errors.export_output_path_invalid",
-            context={"output_path": raw or "(empty)", "reason": "path is empty"},
-        )
-    if output_path.is_dir():
-        raise ModeloExportOutputPathError(
-            translated_message="application.modelo.errors.export_output_path_invalid",
-            context={"output_path": str(output_path), "reason": "path is an existing directory"},
-        )
-    if output_path.exists() and not replace_existing:
-        raise ModeloExportOutputPathError(
-            translated_message="application.modelo.errors.export_output_path_invalid",
-            context={"output_path": str(output_path), "reason": "path is an existing file"},
-        )
-    parent = output_path.parent
-    if not parent.exists():
-        raise ModeloExportOutputPathError(
-            translated_message="application.modelo.errors.export_output_path_invalid",
-            context={"output_path": str(output_path), "reason": "parent directory does not exist"},
-        )
-    if not parent.is_dir():
-        raise ModeloExportOutputPathError(
-            translated_message="application.modelo.errors.export_output_path_invalid",
-            context={"output_path": str(output_path), "reason": "parent path is not a directory"},
-        )
+def _export_sink(command: ModeloExportCommand) -> LocalFileExportSink:
+    return LocalFileExportSink(path=command.output_path, replace_existing=command.replace_existing)
 
 
 def _iva_wallet_decision_export_provenance(
@@ -1071,7 +1020,8 @@ def _persist_exported_draft(
     # which discards it on EVERY exit that does not publish -- including an
     # operator interrupt -- so cleartext financial data cannot outlive a failed
     # export next to the destination the operator chose.
-    with hardened_staged_publication(command.output_path) as staged:
+    sink = _export_sink(command)
+    with sink.staged() as staged:
         receipt = _write_export_staging(
             staged=staged,
             command=command,
@@ -1092,24 +1042,10 @@ def _persist_exported_draft(
             exported_at=exported_at,
             bucket_event_repository=export_ports.bucket_event,
         )
-        # Defence in depth: even though _validate_output_path refused an
-        # existing-directory / unwritable destination up front, a concurrent
-        # change to the destination (a TOCTOU race) can still make the
-        # publication fail with an OSError. Translate it to the same typed
-        # refusal that destination check raises, rather than surfacing a raw
-        # traceback from inside the write substrate.
-        try:
-            staged.publish(replace_existing=command.replace_existing)
-        except FileExistsError as exc:
-            raise ModeloExportOutputPathError(
-                translated_message="application.modelo.errors.export_output_path_invalid",
-                context={"output_path": str(command.output_path), "reason": "path is an existing file"},
-            ) from exc
-        except OSError as exc:
-            raise ModeloExportOutputPathError(
-                translated_message="application.modelo.errors.export_output_path_invalid",
-                context={"output_path": str(command.output_path), "reason": str(exc)},
-            ) from exc
+        # Defence in depth: the sink re-checks the path before staging and
+        # translates a destination that changed underneath it (a TOCTOU race,
+        # a file that appeared after the check) into the same typed refusal.
+        sink.publish(staged)
 
     # The receipt below was measured against the staging file, and the result and
     # the durable MODELO_EXPORTED event both publish those numbers against
@@ -1590,7 +1526,7 @@ def export_modelo_revision(
             refund election.
         :func:`~cadrumo.application.filing.producer_snapshot.build_filing_producer_snapshot`:
             Builds the sole typed producer boundary consumed by the renderer.
-        :func:`~cadrumo.application.modelo.export._validate_output_path`:
+        :meth:`~cadrumo.application.modelo.export_sink.LocalFileExportSink.require_writable`:
             Refuses unsafe destinations before fichero bytes are written.
     """
     from ...core.bucket_pointer import resolve_active_bucket_id
@@ -1605,7 +1541,7 @@ def export_modelo_revision(
     # bytes: an unusable --output (empty, existing directory, missing parent)
     # is a clean typed refusal here, never a raw OSError traceback at the
     # late publication — and never after cleartext financial bytes exist.
-    _validate_output_path(command.output_path, replace_existing=command.replace_existing)
+    _export_sink(command).require_writable()
 
     prepared = _prepare_modelo_export(
         command,
@@ -1657,7 +1593,6 @@ __all__ = [
     "ModeloExportCrossBucketRefusedError",
     "ModeloExportEvidenceMissingError",
     "ModeloExportNoActiveBucketError",
-    "ModeloExportOutputPathError",
     "ModeloExportResult",
     "ModeloExportUnsupportedError",
     "ModeloIvaWalletDecisionProvenance",

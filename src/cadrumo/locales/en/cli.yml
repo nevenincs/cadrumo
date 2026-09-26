@@ -1184,6 +1184,11 @@ cli:
           refused_stale: refusing to compute against a workbook whose metadata stamps
             do not match the supplied snapshot (metadata_match={metadata_match});
             re-export, then re-pull
+        export:
+          output_help: Path to write the .xlsx workbook to; an existing file is refused
+            unless --replace is given
+        export_help: Export the registry calculation surface for a modelo+period to
+          a local .xlsx workbook with live formulas (the offline counterpart of push)
         modelo_help: Modelo id to export (e.g. 130, 303, 100)
         period_help: Filing period code (e.g. 1T, 2T, 0A)
         pull:

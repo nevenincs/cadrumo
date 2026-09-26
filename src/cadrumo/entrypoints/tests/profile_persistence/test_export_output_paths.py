@@ -37,10 +37,10 @@ from cadrumo.application.modelo.action_errors import (
 )
 from cadrumo.application.modelo.export import (
     ModeloExportCommand,
-    ModeloExportOutputPathError,
     ModeloExportResult,
     export_modelo_revision,
 )
+from cadrumo.application.modelo.export_sink import ModeloExportOutputPathError
 from cadrumo.application.modelo.revision_persistence import persist_filed_revision
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.directory_scan import (

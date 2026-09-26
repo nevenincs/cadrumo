@@ -299,7 +299,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo.export.ModeloExportOutputPathError",
+        "cadrumo.application.modelo.export_sink.ModeloExportOutputPathError",
         ErrorCode(
             code="REFUSED_MODELO_EXPORT_OUTPUT_PATH",
             category=ErrorCategory.REFUSED,

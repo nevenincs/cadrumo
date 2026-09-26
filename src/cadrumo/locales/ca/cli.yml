@@ -1266,6 +1266,12 @@ cli:
           refused_stale: rebutjant calcular contra un llibre les marques de metadades
             del qual no coincideixen amb el snapshot subministrat (metadata_match={metadata_match});
             reexporteu i torneu a recuperar
+        export:
+          output_help: Ruta on escriure el llibre .xlsx; un fitxer existent es rebutja
+            tret que s'indiqui --replace
+        export_help: Exporta la superfície de càlcul del registre d'un model i període
+          a un llibre .xlsx local amb fórmules actives (la contrapartida fora de línia
+          de push)
         modelo_help: Identificador del model a exportar (p. ex. 130, 303, 100)
         period_help: Codi de període (p. ex. 1T, 2T, 0A)
         pull:
