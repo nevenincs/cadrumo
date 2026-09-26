@@ -36,7 +36,9 @@ jobs:
     name: "Check: Prove ref commit (Linux)"
     if: inputs.phase == 'prove'
     runs-on: [self-hosted, Linux, X64]
-    timeout-minutes: 5
+    timeout-minutes: 125
+    env:
+      CI_EXEC_BUDGET_MINUTES: 5
     steps:
       - name: Require the prove ref to be the dispatched commit
         env:
@@ -59,7 +61,9 @@ jobs:
     needs: check-prove-ref
     if: inputs.phase == 'prove'
     runs-on: [self-hosted, Linux, X64]
-    timeout-minutes: 20
+    timeout-minutes: 140
+    env:
+      CI_EXEC_BUDGET_MINUTES: 20
     outputs:
       next-python: ${{ steps.next.outputs.python }}
       smoke-matrix: ${{ steps.smoke.outputs.matrix }}
@@ -104,12 +108,13 @@ jobs:
     needs: check-prove-ref
     if: inputs.phase == 'prove'
     runs-on: [self-hosted, Linux, X64]
-    timeout-minutes: 240
+    timeout-minutes: 360
     strategy:
       fail-fast: false
       matrix:
         python: ["3.13", "3.14"]
     env:
+      CI_EXEC_BUDGET_MINUTES: 240
       CADRUMO_PYTEST_WORKERS: "8"
     steps:
       - name: Checkout repository
@@ -153,9 +158,10 @@ jobs:
     needs: runtime-inventory
     if: inputs.phase == 'prove'
     runs-on: [self-hosted, Linux, X64]
-    timeout-minutes: 240
+    timeout-minutes: 360
     continue-on-error: true
     env:
+      CI_EXEC_BUDGET_MINUTES: 240
       CADRUMO_PYTEST_WORKERS: "8"
     steps:
       - name: Checkout repository
@@ -199,7 +205,9 @@ jobs:
     needs: check-prove-ref
     if: inputs.phase == 'prove'
     runs-on: [self-hosted, Linux, X64]
-    timeout-minutes: 120
+    timeout-minutes: 240
+    env:
+      CI_EXEC_BUDGET_MINUTES: 120
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -274,7 +282,9 @@ jobs:
     needs: [merge-gate, test-full, check-conformance]
     if: inputs.phase == 'prove'
     runs-on: [self-hosted, Linux, X64]
-    timeout-minutes: 60
+    timeout-minutes: 180
+    env:
+      CI_EXEC_BUDGET_MINUTES: 60
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -350,7 +360,9 @@ jobs:
     needs: build-cohort
     if: inputs.phase == 'prove'
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: 90
+    timeout-minutes: 210
+    env:
+      CI_EXEC_BUDGET_MINUTES: 90
     strategy:
       fail-fast: false
       matrix:
@@ -411,7 +423,9 @@ jobs:
     needs: build-cohort
     if: inputs.phase == 'prove'
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: 120
+    timeout-minutes: 240
+    env:
+      CI_EXEC_BUDGET_MINUTES: 120
     strategy:
       fail-fast: false
       matrix:
@@ -439,6 +453,7 @@ jobs:
           persist-credentials: false
 
       - name: Set up toolchain
+        id: setup
         uses: ./.github/actions/setup
 
       - name: Download the sealed release cohort
@@ -467,7 +482,7 @@ jobs:
             --cohort-dir var/release-cohort/python
 
       - name: Checkpoint packaging evidence
-        if: always()
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
         run: uv run --no-sync python -m dev.packaging.evidence
 
   test-homebrew:
@@ -475,7 +490,9 @@ jobs:
     needs: build-cohort
     if: inputs.phase == 'prove'
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: 90
+    timeout-minutes: 210
+    env:
+      CI_EXEC_BUDGET_MINUTES: 90
     strategy:
       fail-fast: false
       max-parallel: 2
@@ -791,7 +808,9 @@ jobs:
     needs: [build-cohort, runtime-inventory]
     if: inputs.phase == 'prove'
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 120
+    timeout-minutes: 240
+    env:
+      CI_EXEC_BUDGET_MINUTES: 120
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.runtime-inventory.outputs.smoke-matrix) }}
@@ -869,6 +888,8 @@ jobs:
     if: ${{ !cancelled() && inputs.phase == 'prove' }}
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 5
+    env:
+      CI_RESOURCE_CLASS: verdict
     steps:
       - name: Require every prove job to succeed
         env:
@@ -888,7 +909,9 @@ jobs:
     name: "Check: Proven release cohort (Linux)"
     if: inputs.phase == 'publish'
     runs-on: [self-hosted, Linux, X64]
-    timeout-minutes: 30
+    timeout-minutes: 150
+    env:
+      CI_EXEC_BUDGET_MINUTES: 30
     permissions:
       actions: read
       contents: read
@@ -992,7 +1015,9 @@ jobs:
     needs: locate-cohort
     if: inputs.phase == 'publish'
     runs-on: [self-hosted, Linux, X64]
-    timeout-minutes: 30
+    timeout-minutes: 150
+    env:
+      CI_EXEC_BUDGET_MINUTES: 30
     environment:
       name: pypi
     permissions:
@@ -1079,11 +1104,12 @@ jobs:
     needs: [locate-cohort, publish-pypi]
     if: inputs.phase == 'publish'
     runs-on: [self-hosted, Linux, X64]
-    timeout-minutes: 20
+    timeout-minutes: 140
     permissions:
       actions: read
       contents: read
     env:
+      CI_EXEC_BUDGET_MINUTES: 20
       TAP_REPOSITORY: ${{ vars.HOMEBREW_TAP_REPOSITORY || 'nevenincs/homebrew-tap' }}
     steps:
       - name: Require the tap token
@@ -1179,11 +1205,12 @@ jobs:
     needs: [locate-cohort, publish-pypi]
     if: inputs.phase == 'publish'
     runs-on: [self-hosted, Linux, X64]
-    timeout-minutes: 20
+    timeout-minutes: 140
     permissions:
       actions: read
       contents: read
     env:
+      CI_EXEC_BUDGET_MINUTES: 20
       BUCKET_REPOSITORY: ${{ vars.SCOOP_BUCKET_REPOSITORY }}
     steps:
       - name: Require the bucket repository and token
@@ -1279,7 +1306,9 @@ jobs:
     needs: [locate-cohort, publish-pypi]
     if: inputs.phase == 'publish'
     runs-on: [self-hosted, Linux, X64]
-    timeout-minutes: 30
+    timeout-minutes: 150
+    env:
+      CI_EXEC_BUDGET_MINUTES: 30
     permissions:
       actions: read
       contents: read
@@ -1323,7 +1352,9 @@ jobs:
     needs: [locate-cohort, publish-homebrew]
     if: inputs.phase == 'publish'
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: 60
+    timeout-minutes: 180
+    env:
+      CI_EXEC_BUDGET_MINUTES: 60
     permissions:
       actions: read
       contents: read
@@ -1430,7 +1461,9 @@ jobs:
     runs-on: [self-hosted, Linux, X64]
     # Five strict site roots built serially, each running the full reference
     # and search-index passes, then an upload of every object.
-    timeout-minutes: 300
+    timeout-minutes: 420
+    env:
+      CI_EXEC_BUDGET_MINUTES: 300
     environment: docs
     permissions:
       contents: read
@@ -1469,6 +1502,7 @@ jobs:
           persist-credentials: false
 
       - name: Set up toolchain
+        id: setup
         uses: ./.github/actions/setup
 
       # `just setup` provisions no registry authority, and the documentation
@@ -1492,7 +1526,9 @@ jobs:
             --release-label "${INPUT_REF//\//-}"
 
       - name: Alert on failure without touching the release
-        if: ${{ failure() || cancelled() }}
+        # The alert runs checked-out code: without this job's own setup, the
+        # workspace still holds a previous job's tree.
+        if: ${{ (failure() || cancelled()) && steps.setup.outcome == 'success' }}
         env:
           GH_TOKEN: ${{ github.token }}
           CADRUMO_ALERT_WEBHOOK: ${{ vars.CADRUMO_ALERT_WEBHOOK }}
