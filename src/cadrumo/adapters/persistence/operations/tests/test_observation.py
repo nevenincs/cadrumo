@@ -664,7 +664,7 @@ def test_observation_projects_every_safe_event_and_terminal_axis_independently(t
             }
         ).model_dump()
     )
-    asyncio.run(repository.commit(terminal, expected_revision=enriched.revision, lease=_lease()))
+    asyncio.run(repository.commit_settlement(terminal, expected_revision=enriched.revision, lease=_lease()))
     result = asyncio.run(
         OperationObservationService(reader=repository, registry=registry).observe(
             OperationObservationRequestV1(operation_id=_OPERATION_ID, after_cursor=10, page_limit=1)

@@ -11,8 +11,8 @@ from pydantic import TypeAdapter, ValidationError
 from ....core.period import Period
 from ....core.result_disposition import ResultDisposition
 from ...calculations.registry.irnr_tipo_renta import m210_tipo_renta_code_projection
-from ...calculations.registry.schema import ModeloRevision
 from ...calculations.registry.schema_deadlines import DeadlineWindowDefinition
+from ...calculations.registry.temporal import RevisionSelectionMetadata
 from ..errors import DeadlineValidationError
 from ..plazo import _resolve_projected_filing_window, resolve_filing_window
 
@@ -20,7 +20,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures(
 
 _YEAR = 2025
 _PERIOD = Period.from_year_and_code(_YEAR, "0A")
-_PROVENANCE = cast(ModeloRevision, object())
+_PROVENANCE = cast(RevisionSelectionMetadata, object())
 
 
 def _window(
@@ -44,7 +44,9 @@ def _window(
     )
 
 
-def _projection(*windows: DeadlineWindowDefinition) -> tuple[tuple[str, ModeloRevision, DeadlineWindowDefinition], ...]:
+def _projection(
+    *windows: DeadlineWindowDefinition,
+) -> tuple[tuple[str, RevisionSelectionMetadata, DeadlineWindowDefinition], ...]:
     return tuple(("210", _PROVENANCE, window) for window in windows)
 
 

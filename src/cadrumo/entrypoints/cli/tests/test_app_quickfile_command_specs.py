@@ -24,11 +24,15 @@ def test_quickfile_is_one_executable_group_with_resolvable_targets() -> None:
     assert resolve_deferred_target(spec.result_schema.target)
 
 
-def test_quickfile_runtime_preserves_required_repeatable_and_election_options() -> None:
+def test_quickfile_runtime_preserves_explicit_m303_elections_without_plaintext_evidence_file() -> None:
     graph = CommandSpecGraph((*ROOT_COMMAND_SPECS, *QUICKFILE_COMMAND_SPECS))
     result = CliRunner().invoke(build_command_subtree(graph, "app_quickfile"), ["--help"])
 
     assert result.exit_code == 0, result.output
     assert "--modelo" in result.output and "[required]" in result.output
     assert "--casilla" in result.output and "--binding" in result.output
-    assert "--refund-election <compensar|devolver>" in result.output
+    assert "--refund-elect" in result.output
+    assert "--joint-return" in result.output
+    assert "--annual-volum" not in result.output
+    assert "--m303-exonera" in result.output
+    assert "--m303-filing-evidence" not in result.output

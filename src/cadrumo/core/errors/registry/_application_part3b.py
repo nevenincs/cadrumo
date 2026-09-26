@@ -118,6 +118,26 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.modelo.workspace.ModeloWorkspaceAbsentReadinessProjectionError",
+        ErrorCode(
+            code="INTEGRITY_MODELO_WORKSPACE_ABSENT_READINESS_PROJECTION",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.canonical_modelo_workspace_absent_readiness_projection",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.modelo.workspace.ModeloWorkspaceMaterializationProvenanceMissingError",
+        ErrorCode(
+            code="INTEGRITY_MODELO_WORKSPACE_MATERIALIZATION_PROVENANCE_MISSING",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.canonical_modelo_workspace_materialization_provenance_missing",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.modelo.workspace.ModeloWorkspaceUnresolvedWorkError",
         ErrorCode(
             code="REFUSED_MODELO_WORKSPACE_UNRESOLVED_WORK",

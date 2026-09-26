@@ -63,7 +63,18 @@ _BUCKET_ID = "6b6b6b6b-6b6b-4b6b-8b6b-6b6b6b6b6b6b"
 _FILING_YEAR = 2024
 _GUARDERIA_CASILLA: CasillaId = "0613"
 _ANNUAL_PERIOD = "0A"
+#: A Modelo 303 liquidation period: another modelo is exercised at a coordinate it files.
+_QUARTERLY_PERIOD = "1T"
 _KIND = "guarderia_spend_needs_monthly_detail"
+#: Every kind the shape collector raises. The sibling mother's-months advisory
+#: reads the same casilla and has its own subject, so it is not this file's channel.
+_SHAPE_COLLECTOR_KINDS = frozenset(
+    {
+        _KIND,
+        "guarderia_segundo_ciclo_month_undeclared",
+        "guarderia_cotizaciones_ceiling_unbounded",
+    },
+)
 
 #: A child who turns three DURING the filing year: the extension's own period.
 _TURNS_THREE = date(_FILING_YEAR - 3, 4, 15)
@@ -78,8 +89,8 @@ def bucket_id() -> str:
     return _BUCKET_ID
 
 
-def _revision() -> ModeloRevision:
-    return published_authority_operation().snapshot("100", filing_year=_FILING_YEAR, period=_ANNUAL_PERIOD).revision
+def _revision(modelo: str = Modelo("100").value, period_token: str = _ANNUAL_PERIOD) -> ModeloRevision:
+    return published_authority_operation().snapshot(modelo, filing_year=_FILING_YEAR, period=period_token).revision
 
 
 def _write(*descendants: DescendantInfo) -> None:
@@ -87,21 +98,25 @@ def _write(*descendants: DescendantInfo) -> None:
     set_active_test_profile_facts(tuple(facts))
 
 
-def _collect(*, modelo: str = Modelo("100").value) -> tuple[CalculationSourceDiagnostic, ...]:
+def _collect(
+    *,
+    modelo: str = Modelo("100").value,
+    period_token: str = _ANNUAL_PERIOD,
+) -> tuple[CalculationSourceDiagnostic, ...]:
     repositories = advisory_diagnostic_repositories(bucket_id=_BUCKET_ID)
     diagnostics = collect_bucket_aggregation_advisory_diagnostics(
-        _revision(),
+        _revision(modelo, period_token),
         {_GUARDERIA_CASILLA: Decimal("0")},
         modelo=modelo,
         bucket_id=_BUCKET_ID,
-        period_token=_ANNUAL_PERIOD,
+        period_token=period_token,
         filing_year=_FILING_YEAR,
         observation_repository=repositories.observation,
         prorrata_register_repository=repositories.prorrata_register,
         bienes_inversion_repository=repositories.bienes_inversion,
         transaction_repository=repositories.transactions,
     )
-    return tuple(diagnostic for diagnostic in diagnostics if diagnostic.source_kind.startswith("guarderia_"))
+    return tuple(diagnostic for diagnostic in diagnostics if diagnostic.source_kind in _SHAPE_COLLECTOR_KINDS)
 
 
 def _monthly(raw: str) -> tuple[GuarderiaMonthSpend, ...]:
@@ -232,7 +247,7 @@ def test_silent_for_another_modelo() -> None:
     """Only Modelo 100 declares the Art. 81.2 increase."""
     _write(DescendantInfo(birth_date=_TURNS_THREE, gastos_guarderia_euros=2400))
 
-    assert _collect(modelo=Modelo("303").value) == ()
+    assert _collect(modelo=Modelo("303").value, period_token=_QUARTERLY_PERIOD) == ()
 
 
 def test_it_names_every_affected_child_in_a_mixed_household() -> None:

@@ -25,8 +25,12 @@ from ..pagefind_inject import (
     SearchInjectionError,
     SearchRecordProjection,
     _bounded_to_sample,
+    _content_for,
     _effective_weight,
     _filters_for,
+    _group_content,
+    _group_filters,
+    _index_entries,
     _Materialised,
     _meta_for,
     _sort_key,
@@ -189,6 +193,53 @@ def test_the_bounded_sample_reports_exactly_the_records_it_carries() -> None:
     assert len(bounded.records) == bounded.cli_commands + bounded.cli_options
     carried_options = sum(1 for record in bounded.records if record.id.startswith("cli-option:"))
     assert carried_options == bounded.cli_options
+
+
+def test_records_sharing_a_destination_collapse_into_one_lossless_entry() -> None:
+    """Options folded into their command's entry keep their text, filters and weight.
+
+    Pagefind identifies a custom record by its ``url``, and a CLI option
+    deliberately carries its owning command's anchor because options render
+    inside that command's reference section. One custom record per projected
+    record therefore wrote several records under one ``url``, of which the
+    indexer keeps only the last: the command's own help text became
+    unsearchable and every option that lost the race never reached the index
+    while the stats went on reporting it written.
+
+    Asserted against the real live command tree, over a command that really
+    owns options: the entry count is the DESTINATION count, the surviving
+    entry is owned by the command rather than one of its options, and no
+    member's searchable text, filter value or weight is dropped on the way in.
+    """
+    commands, options, _stats = project_cli_search_records()
+    owned = {command.target for command in commands} & {option.target for option in options}
+    assert owned, "the live command tree projects no option sharing its command's anchor"
+    target = sorted(owned)[0]
+
+    records = [to_search_record(record) for record in (*commands, *options)]
+    members = [record for record in records if record.target == target]
+    assert len(members) > 1
+
+    entries = _index_entries(records, {})
+
+    assert len({record.target for record in records}) == len(entries)
+    entry = next(item for item in entries if item.primary.target == target)
+    command_ids = {to_search_record(command).id for command in commands}
+    assert entry.primary.id in command_ids, (
+        "the entry's identity, title and meta must come from the destination's own record, "
+        f"not from one of the options deep-linking into it: {entry.primary.id}"
+    )
+    assert {record.id for record in entry.members} == {record.id for record in members}
+    assert entry.weight == max(record.ranking_weight for record in members)
+
+    content = _group_content(entry.members)
+    for member in members:
+        for line in _content_for(member).splitlines():
+            assert line in content, f"record {member.id!r} lost its searchable line {line!r} in the merge"
+    merged_filters = _group_filters(entry.members)
+    for member in members:
+        for axis, values in _filters_for(member).items():
+            assert set(values) <= set(merged_filters[axis])
 
 
 #: The distinguishing fragment of each refusal, so neither arm can pass by

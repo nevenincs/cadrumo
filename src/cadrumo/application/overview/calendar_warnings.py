@@ -19,7 +19,9 @@ See Also:
 
 from __future__ import annotations
 
+from collections import OrderedDict
 from collections.abc import Iterable, Mapping
+from threading import RLock
 from types import MappingProxyType
 from typing import TYPE_CHECKING
 
@@ -50,6 +52,7 @@ from .next_actions import declare_next_action
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.calculations.registry.schema import ModeloRevision
+    from ...domain.calculations.registry.schema_deadlines import DeadlineWindowDefinition
 
 #: Every profile-fact gap this module reports is answered by one surface, so the
 #: warnings name that surface's catalogue action rather than nine copies of a
@@ -129,11 +132,11 @@ def _record_gating_field(
 
 
 def _collect_deadline_window_profile_keys(
-    revisions: Iterable[tuple[str, ModeloRevision]],
+    windows_by_modelo: Iterable[tuple[str, Iterable[DeadlineWindowDefinition]]],
 ) -> MappingProxyType[str, tuple[str, ...]]:
     keys_by_modelo: dict[str, set[str]] = {}
-    for modelo, revision in revisions:
-        for window in revision.deadline_windows:
+    for modelo, windows in windows_by_modelo:
+        for window in windows:
             for condition in window.applicability_conditions:
                 if condition.field in _PROFILE_FIELD_WARNING_META:
                     keys_by_modelo.setdefault(modelo, set()).add(condition.field)
@@ -146,32 +149,38 @@ def _deadline_window_profile_keys_by_modelo(
     revision_inventory: Iterable[tuple[str, ModeloRevision]] | None = None,
     modelo: str | None = None,
 ) -> MappingProxyType[str, tuple[str, ...]]:
-    """Return deadline condition keys from explicit metadata or point loads.
+    """Return deadline condition keys from an explicit inventory or the modelo directory.
 
-    A pinned operation answers one modelo by walking its compact directory and
-    loading each revision component. Whole-registry callers may provide an
-    explicit revision inventory, but still supply the operation owned by the
-    surrounding workflow.
+    A pinned operation answers one modelo from its compact directory, whose
+    selection metadata carries every revision's deadline windows with their
+    applicability conditions, so no revision is hydrated. Whole-registry
+    callers may provide an explicit revision inventory, but still supply the
+    operation owned by the surrounding workflow.
     """
     if revision_inventory is not None:
-        return _collect_deadline_window_profile_keys(revision_inventory)
+        return _collect_deadline_window_profile_keys(
+            (inventory_modelo, revision.deadline_windows) for inventory_modelo, revision in revision_inventory
+        )
     if modelo is None:
         raise ValueError("calendar deadline metadata requires modelo or an explicit revision inventory")
-    directory = operation.modelo_directory(modelo)
-    return _collect_deadline_window_profile_keys(
-        (modelo, operation.revision(modelo, str(metadata.id))) for metadata in directory.revisions
-    )
+    return _collect_deadline_window_profile_keys(_operation_deadline_windows(operation, (modelo,)))
 
 
-def _operation_revision_inventory(
+def _operation_deadline_windows(
     operation: PinnedAuthorityOperation,
     modelos: Iterable[str],
-) -> Iterable[tuple[str, ModeloRevision]]:
-    """Enumerate only the revision components named by the warning surface."""
+) -> Iterable[tuple[str, tuple[DeadlineWindowDefinition, ...]]]:
+    """Enumerate each revision's deadline windows from the directory metadata alone."""
     for modelo in modelos:
-        directory = operation.modelo_directory(modelo)
-        for metadata in directory.revisions:
-            yield modelo, operation.revision(modelo, str(metadata.id))
+        for metadata in operation.modelo_directory(modelo).revisions:
+            yield modelo, metadata.deadline_windows
+
+
+_GATING_FIELDS_CACHE_SIZE = 4
+_registry_gating_fields_cache: OrderedDict[object, MappingProxyType[str, tuple[tuple[str, ...], str, str]]] = (
+    OrderedDict()
+)
+_registry_gating_fields_cache_lock = RLock()
 
 
 def _gating_fields(
@@ -180,14 +189,47 @@ def _gating_fields(
     revision_inventory: Iterable[tuple[str, ModeloRevision]] | None = None,
     modelos: Iterable[str] | None = None,
 ) -> MappingProxyType[str, tuple[tuple[str, ...], str, str]]:
+    """Return every profile key that gates an obligation, with its modelos and warning metadata.
+
+    The whole-registry answer depends only on the authority generation, yet
+    deriving it decodes every revision; it is reused per generation pin so one
+    workbench generation, which builds several calendars, pays for it once.
+    """
+    if revision_inventory is not None or modelos is not None:
+        return _derive_gating_fields(operation=operation, revision_inventory=revision_inventory, modelos=modelos)
+    key = operation.pin()
+    with _registry_gating_fields_cache_lock:
+        cached = _registry_gating_fields_cache.get(key)
+        if cached is not None:
+            _registry_gating_fields_cache.move_to_end(key)
+            return cached
+    derived = _derive_gating_fields(operation=operation)
+    with _registry_gating_fields_cache_lock:
+        _registry_gating_fields_cache[key] = derived
+        _registry_gating_fields_cache.move_to_end(key)
+        while len(_registry_gating_fields_cache) > _GATING_FIELDS_CACHE_SIZE:
+            _registry_gating_fields_cache.popitem(last=False)
+    return derived
+
+
+def _derive_gating_fields(
+    *,
+    operation: PinnedAuthorityOperation,
+    revision_inventory: Iterable[tuple[str, ModeloRevision]] | None = None,
+    modelos: Iterable[str] | None = None,
+) -> MappingProxyType[str, tuple[tuple[str, ...], str, str]]:
+    windows_by_modelo: Iterable[tuple[str, Iterable[DeadlineWindowDefinition]]]
     if revision_inventory is None:
-        if modelos is None:
-            modelos = operation.modelo_ids()
-        revision_inventory = _operation_revision_inventory(operation, modelos)
+        windows_by_modelo = _operation_deadline_windows(
+            operation,
+            operation.modelo_ids() if modelos is None else modelos,
+        )
+    else:
+        windows_by_modelo = ((modelo, revision.deadline_windows) for modelo, revision in revision_inventory)
     key_to_modelos: dict[str, set[str]] = {}
     key_to_meta: dict[str, tuple[str, str]] = {}
 
-    for rule in _iter_modelo_applicability_rules():
+    for rule in _iter_modelo_applicability_rules(operation=operation):
         if rule.required_payer_fact is not None:
             for profile_key in payer_fact_profile_keys(rule.required_payer_fact):
                 _record_gating_field(
@@ -216,10 +258,7 @@ def _gating_fields(
                 key_to_meta=key_to_meta,
             )
 
-    deadline_keys = _deadline_window_profile_keys_by_modelo(
-        operation=operation,
-        revision_inventory=revision_inventory,
-    )
+    deadline_keys = _collect_deadline_window_profile_keys(windows_by_modelo)
     for modelo, profile_keys in deadline_keys.items():
         for profile_key in profile_keys:
             _record_gating_field(
@@ -283,7 +322,7 @@ def calendar_applicability_profile_keys_for_modelo(
     """
     keys: set[str] = set()
     estimation_profile_keys = _estimation_regime_profile_key(operation)
-    for rule in _iter_modelo_applicability_rules():
+    for rule in _iter_modelo_applicability_rules(operation=operation):
         if rule.modelo != modelo:
             continue
         keys.add("taxpayer_type.entity_type")
@@ -303,7 +342,7 @@ def calendar_applicability_profile_keys_for_modelo(
             modelo=modelo,
         ).get(modelo, ()),
     )
-    if _modelo_requires_iva_regime(modelo):
+    if _modelo_requires_iva_regime(modelo, operation=operation):
         keys.add("iva.regime")
     keys.update(_CORPORATE_CENSO_ENROLMENT_PROFILE_KEYS.get(modelo, frozenset()))
     return tuple(sorted(keys))

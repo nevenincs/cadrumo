@@ -17,22 +17,27 @@ gap sits one link earlier: casilla ``00500`` (RESULTADO DE LA CUENTA DE PÉRDIDA
 GANANCIAS, after-tax) and casilla ``00501`` (resultado antes de IS, the fiscal-base
 starting point) are BOTH free-standing manual inputs with no formula between them,
 so an operator who enters a positive ``00500`` and leaves ``00501`` untouched still
-cascades to a zero base and a zero cuota. The M200 2024 revision guards this EXACT
+cascades to a zero base and a zero cuota. The M200 registry guards this EXACT
 handoff with the ADVISORY predicate
 ``modelo-200-resultado-antes-impuesto-determinado-cuando-resultado-contable-positivo``
 = ``implies_nonzero(["00500", "00501"])`` (declared in
-``_data/registry/aeat/modelos/200/revisions/2024/verification_expectations/
-0001-verification_predicates.toml``), confirmed live at HEAD by
+``_data/registry/aeat/modelos/200/revisions/2024/verification_predicates/
+0001-declarations.toml``), confirmed by
 ``domain/calculations/registry/tests/test_modelo_200_registry.py::
 test_modelo_200_carries_manual_handoff_under_declaration_advisory_predicates``.
+
+The scenario runs at ejercicio 2025 (revision ``2025-y-siguientes``), which
+inherits that predicate from its 2024 storage baseline and declares filing
+authority. Verify evaluates registry predicates only against a filing-grade
+snapshot; the 2024 revision declares calculation authority, so a 2024 draft
+stops at the authority-grade refusal and never reaches the predicate.
 
 This module dispatches the REAL CLI (``modelo work create`` -> ``calculate`` ->
 ``verify``) and proves the real dispatched response surfaces that ADVISORY finding -
 not merely that the predicate exists in the registry.
 
 No mocks: every seeded profile fact and every response value is what the real
-registry engine plus the real CLI envelope serializer produced
-(``aeat-quality-gates``, ``aeat-quality-gates``).
+registry engine plus the real CLI envelope serializer produced.
 """
 
 from __future__ import annotations
@@ -42,13 +47,15 @@ from typing import Any
 
 import pytest
 
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    profile_authority_contexts,
+    seed_test_profile_record,
+)
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli
 from cadrumo.entrypoints.cli.tests.modelo_cli import create_modelo_work_unit_via_cli
 from cadrumo.tests.cli_envelope import parse_json_object, require_error_document, require_schema_envelope
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from .._models import UnderDeclarationScenario
 from .._runner import check_under_declaration_scenario
@@ -56,9 +63,9 @@ from .._runner import check_under_declaration_scenario
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _PROFILE_ID = "0ac1e000-0000-4000-8000-0000000002bb"
-_FILING_YEAR = 2024
+_FILING_YEAR = 2025
 _PERIOD = "0A"
-_REVISION = "2024"
+_REVISION = "2025-y-siguientes"
 # legal_refs on the "modelo-200-resultado-antes-impuesto-determinado-cuando-
 # resultado-contable-positivo" ADVISORY predicate (verification_predicates.toml).
 _EXPECTED_LEGAL_REFS = ("ley-27-2014:art-10", "ley-27-2014:art-30")
@@ -87,16 +94,8 @@ def _seed_legal_entity_profile(runtime_profile: TestRuntimeProfile) -> None:
     does not fire - this scenario reproduces the free-standing-manual-input
     under-declaration, not the ledger-aggregation one.
     """
-    # Both identity fields come from the loaded schema rather than from
-    # literals. The record pins each to exactly what the schema declares, so a
-    # literal is a copy of the authority that goes stale the moment the schema
-    # moves -- and reading them from one loaded object also keeps the pair
-    # self-consistent, since two literals can drift into naming different
-    # schemas.
-    schema = load_user_profile_schema()
-    record = UserProfileRecord(
-        schema_id=schema.id,
-        schema_version=schema.version,
+    record = create_user_profile_record(
+        context=profile_authority_contexts()[0],
         profile_id=_PROFILE_ID,
         setup_state=ProfileSetupState.COMPLETE,
         facts=(
@@ -131,20 +130,24 @@ def _dispatch_m200_calculate_positive_resultado_zero_base(runtime_profile: TestR
     """Dispatch a REAL ``modelo.work.calculate`` for a positive-00500/zero-00501 draft.
 
     Casilla ``00500`` (RESULTADO DE LA CUENTA DE PÉRDIDAS Y GANANCIAS, after-tax)
-    is set to a positive 140.000,00 EUR - the round-30 repro figure. Casilla
+    is set to a positive 140.000,00 EUR. Casilla
     ``00501`` (resultado antes de IS, the fiscal-base starting point) is
     deliberately left UNSET (defaults to manual zero), and no correcciones,
     reserva de capitalización, or compensación BIN casilla is supplied either -
     "no offsetting reduction is declared". The cascade this produces:
     ``00501 = 0`` -> ``00550 (base previa) = 0`` -> ``DP200014:00552 (base
     imponible) = 0`` -> ``DP200014:00562 (cuota íntegra) = 0``, exactly the
-    round-30 silent-zero-tax shape on a EUR 140.000 profit company.
+    silent-zero-tax shape on a EUR 140.000 profit company.
 
     The binding/relation set mirrors
     ``test_modelo_calculation_through_real_cli.py::
     test_modelo_200_micro_empresa_pyme_cuota_2024`` (a confirmed-passing real-CLI
     M200 dispatch), minus the base-chain casilla overrides that test supplies for
     ``00501``/correcciones/reserva/BIN - this scenario deliberately omits them.
+    ``modelo-200-profile-new-entity-flag`` is a profile-sourced boolean-channel
+    binding, so it is not passed as ``--binding``: the calculate path refuses a
+    truth value on the Decimal channel, and the profile resolver reads it from
+    the seeded ``taxpayer_type.new_entity_first_two_profit_periods = False``.
     """
     _seed_legal_entity_profile(runtime_profile)
     work_unit_id = create_modelo_work_unit_via_cli(
@@ -160,7 +163,6 @@ def _dispatch_m200_calculate_positive_resultado_zero_base(runtime_profile: TestR
             "app", "modelo", "work", "calculate", work_unit_id,
             "--casilla", "00500=140000.00",
             "--binding", "modelo-200-profile-legal-entity-form=sl",
-            "--binding", "modelo-200-profile-new-entity-flag=0",
             "--binding", "modelo-200-profile-incn-prior-12-months=500000",
             "--binding", "modelo-200-profile-tributacion-estado-porcentaje=100",
             "--binding", "modelo-200-bin-pendiente-ejercicios-anteriores=0",
@@ -246,7 +248,7 @@ def test_runner_rejects_a_clean_verify_claim_for_the_same_case(
 ) -> None:
     """Anti-tautology: claiming a clean (zero-finding) verify for this draft MUST fail.
 
-    Reproduces the exact round-30 silent-under-declaration defect this dimension
+    Reproduces the silent-under-declaration defect this dimension
     closes: a positive-input/zero-base draft whose verify response is asserted to
     carry zero findings (the pre-remediation behaviour: ``granted_verificado_completo =
     true, finding_count = 0`` on a EUR 140.000-profit company). Takes the SAME

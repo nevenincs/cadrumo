@@ -55,7 +55,7 @@ from ...domain.calculations.registry.authority import (
     bundled_indexed_authority,
 )
 from ...domain.calculations.registry.authority_artifact import AuthorityComponentCodecError, AuthorityEvidenceProjection
-from ...domain.calculations.registry.casilla_membership import row_template_casilla_ids
+from ...domain.calculations.registry.casilla_membership import row_field_template_records_by_casilla
 from ...domain.calculations.registry.errors import (
     RegistryFailureCondition,
     RegistrySnapshotError,
@@ -778,11 +778,14 @@ def collection_from_snapshot(snapshot: RegistrySnapshot) -> RegistryCasillaColle
     formulas_by_target: dict[CasillaId, FormulaDefinition] = {}
     for formula in revision.formulas:
         formulas_by_target.setdefault(formula.target_casilla_id, formula)
-    # Per-row template casillas are answered by the rows their record emits, so
-    # the scalar required-ness check does not demand them. Modelo 349 keeps them
-    # required: the validator proves its operador and rectificacion rows exist.
+    # A casilla an export record fills once per detail row is answered by those
+    # rows, so the scalar required-ness check does not demand it. Modelo 349
+    # keeps them required: the validator proves its operador and rectificacion
+    # rows exist.
     row_owned: frozenset[CasillaId] = (
-        frozenset[CasillaId]() if str(modelo.id) == Modelo("349").value else row_template_casilla_ids(revision)
+        frozenset[CasillaId]()
+        if str(modelo.id) == Modelo("349").value
+        else frozenset(row_field_template_records_by_casilla(revision))
     )
     casillas = tuple(
         sorted(

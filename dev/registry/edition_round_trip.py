@@ -19,7 +19,7 @@ How equality is defined
 -----------------------
 Models are never compared with ``==``. Pydantic equality also compares the
 locale identity fields the dump excludes, and an inherited casilla row
-legitimately carries one extra entry in ``localization_keys``: the occurrence
+legitimately carries an extra entry in ``localization_keys``: the occurrence
 key of the edition that last stated it, placed directly after its own key so
 its label still resolves. ``==`` would report that as a difference. Equality
 is instead two explicit parts:
@@ -28,10 +28,20 @@ is instead two explicit parts:
   minus the ``predecessor`` declaration;
 - locale identity, compared separately so a real change is not hidden by the
   dump's omission: the edition, construct and alias keys must be equal; a
-  casilla's key chain must be equal, or equal with exactly one key inserted
-  after the first where that key is the same casilla's occurrence key in a
-  sibling edition; and every casilla label must resolve to the same text in
-  every supported output language.
+  casilla's key chain must be equal once its origin tier is set aside; and
+  every casilla label AND help must resolve to the same text in every
+  supported output language.
+
+The origin tier is the run of keys directly after a row's own occurrence key
+that are the same casilla's occurrence keys in sibling editions. It names where
+the row's text is authored, which is the edition that last states the row -- a
+fact about storage, and therefore a fact this move is allowed to change.
+Compacting an intermediate edition into a technical root moves the statement
+one edition back, so a row inheriting through that edition takes the earlier
+edition's occurrence key in place of the one it had. The identity tiers the
+chain ends in -- the row's own key and its lineage key -- must still be equal,
+and the text every locale resolves must still be the same, which is what makes
+the moved origin key inert rather than assumed harmless.
 
 How order is defined
 -------------------
@@ -95,12 +105,12 @@ import shutil
 import subprocess
 import tarfile
 from collections import Counter, deque
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 from io import BytesIO
 from pathlib import Path, PurePosixPath
-from typing import Final
+from typing import Final, TypeIs
 
 from cadrumo.application.filing.draft_construction import build_draft
 from cadrumo.application.filing.export import export_draft
@@ -231,6 +241,9 @@ _EXCLUDED_FROM_EQUALITY: Final = frozenset(
         "family_positions",
         "cleared_families",
         "scoped_families",
+        # A restatement only stops inheritance; lifting it into the ordinary
+        # delta keeps every hydrated member, which the member comparison proves.
+        "restated_families",
         # Migration may move row-level continuity claims into a typed sidecar.
         # The hydrated casilla fields remain fully compared below, including
         # continuity identity, origin, evidence, legal refs and source refs.
@@ -385,7 +398,13 @@ def run_git(repo_root: Path, *arguments: str) -> subprocess.CompletedProcess[byt
     executable = shutil.which("git")
     if executable is None:
         raise RuntimeError("git executable is required for edition round-trip checks")
-    command = (str(Path(executable).resolve(strict=True)), "-c", "core.autocrlf=false", *arguments)
+    command = (
+        str(Path(executable).resolve(strict=True)),
+        "--no-optional-locks",
+        "-c",
+        "core.autocrlf=false",
+        *arguments,
+    )
     returncode, stdout, stderr = asyncio.run(
         _run_git_process(command, repo_root=repo_root, environment=environment),
     )
@@ -621,20 +640,19 @@ def _remove_projected_lineage_attestations(revision: dict[str, object]) -> None:
     """
     rows = revision.get("casillas")
     claims = revision.get("lineage_attestations")
-    if not isinstance(rows, list | tuple) or not isinstance(claims, list | tuple):
+    if not _is_dump_array(rows) or not _is_dump_array(claims):
         return
-    by_lineage = {
-        row.get("continuidad_id"): row
-        for row in rows
-        if isinstance(row, dict) and row.get("continuidad_id") is not None
-    }
+    by_lineage: dict[object, dict[str, object]] = {}
+    for row in rows:
+        if _is_dump_table(row) and row.get("continuidad_id") is not None:
+            by_lineage[row.get("continuidad_id")] = row
     retained: list[object] = []
     for claim in claims:
-        if not isinstance(claim, dict) or claim.get("family") != "casillas":
+        if not _is_dump_table(claim) or claim.get("family") != "casillas":
             retained.append(claim)
             continue
         target = by_lineage.get(claim.get("continuidad_id"))
-        projected = isinstance(target, dict) and all(
+        projected = target is not None and all(
             claim.get(claim_field) == target.get(row_field)
             for claim_field, row_field in (
                 ("origin", "continuidad_origin"),
@@ -646,6 +664,16 @@ def _remove_projected_lineage_attestations(revision: dict[str, object]) -> None:
         if not projected:
             retained.append(claim)
     revision["lineage_attestations"] = tuple(retained)
+
+
+def _is_dump_array(value: object) -> TypeIs[Sequence[object]]:
+    """Whether a field of a model dump is one of its arrays, whose entries are values like any other."""
+    return isinstance(value, list | tuple)
+
+
+def _is_dump_table(value: object) -> TypeIs[dict[str, object]]:
+    """Whether a field of a model dump is a nested table, which a model dump keys by field name."""
+    return isinstance(value, dict)
 
 
 def _casilla_row_differences(reference_rows: list[dict[str, object]], live_rows: list[dict[str, object]]) -> list[str]:
@@ -702,10 +730,23 @@ def localization_differences(
         if chain is not None:
             differences.append(f"casilla {casilla.id!r} {chain}")
         for language in SUPPORTED_OUTPUT_LANGUAGES:
-            before = resolve_modelo_localization(casilla.localization_keys, locale=language)
-            after = resolve_modelo_localization(live_casilla.localization_keys, locale=language)
-            if before != after:
-                differences.append(f"casilla {casilla.id!r} label in {language!r} changed from {before!r} to {after!r}")
+            # The label is resolved from the keys rather than through
+            # ``get_label``, which raises where a chain resolves nowhere; that
+            # is a difference to report, not an error to raise. Help has no
+            # such accessor and is read through the row's own.
+            texts = (
+                ("label", resolve_modelo_localization(casilla.localization_keys, locale=language)),
+                ("help", casilla.get_help(language)),
+            )
+            live_texts = (
+                ("label", resolve_modelo_localization(live_casilla.localization_keys, locale=language)),
+                ("help", live_casilla.get_help(language)),
+            )
+            for (field, before), (_field, after) in zip(texts, live_texts, strict=True):
+                if before != after:
+                    differences.append(
+                        f"casilla {casilla.id!r} {field} in {language!r} changed from {before!r} to {after!r}"
+                    )
     return differences
 
 
@@ -719,18 +760,30 @@ def _key_chain_difference(
 ) -> str | None:
     if live_keys == reference_keys:
         return None
-    inherited_fallbacks = {
+    inherited_fallbacks = frozenset(
         casilla_occurrence_locale_key(modelo_id, sibling, casilla_id, ModeloLocalizationFieldKind.LABEL)
         for sibling in sibling_revision_ids
-    }
-    if (
-        len(live_keys) == len(reference_keys) + 1
-        and live_keys[:1] == reference_keys[:1]
-        and live_keys[2:] == reference_keys[1:]
-        and live_keys[1] in inherited_fallbacks
-    ):
+    )
+    if _identity_tiers(live_keys, inherited_fallbacks) == _identity_tiers(reference_keys, inherited_fallbacks):
         return None
     return f"key chain {list(reference_keys)!r} became {list(live_keys)!r}"
+
+
+def _identity_tiers(keys: tuple[str, ...], inherited_fallbacks: frozenset[str]) -> tuple[str, ...]:
+    """Return the chain without its origin tier: the row's own key, then every tier below the origins.
+
+    The origin tier is the run of sibling occurrence keys directly after the
+    row's own key. It says which edition's catalogue holds the row's text,
+    which is the edition that last states the row, so an edition compacted into
+    a technical root moves it and an edition that starts inheriting gains it.
+    An occurrence key anywhere else in the chain is left in place and so is
+    still compared: only the tier the materialiser owns is set aside.
+    """
+    head, rest = keys[:1], keys[1:]
+    origins = 0
+    while origins < len(rest) and rest[origins] in inherited_fallbacks:
+        origins += 1
+    return (*head, *rest[origins:])
 
 
 def _export_findings(

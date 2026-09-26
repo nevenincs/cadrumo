@@ -28,8 +28,10 @@ from ..modelos_calculation import CalculationRevisionCatalogueRepository
 from ..modelos_work_units import WorkUnitCatalogueRepository
 from .ledger_action_create_support import ledger_ports_for_test
 from .ledger_action_persistence_support import (
-    _BUCKET_ID,
-    _repositories,
+    BUCKET_ID as _BUCKET_ID,
+)
+from .ledger_action_persistence_support import (
+    repositories as _repositories,
 )
 
 _REVISION_CASILLA: CasillaId = validated_casilla_id("01")

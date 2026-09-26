@@ -36,8 +36,14 @@ from typing import Final
 
 from .....application.modelo.workspace_models import (
     ModeloWorkspaceCursorV1,
+    ModeloWorkspaceDomainRefusalV1,
     ModeloWorkspaceFacetName,
+    ModeloWorkspaceGradedSnapshotResultV1,
+    ModeloWorkspaceLifecycleProjectionV1,
     ModeloWorkspaceProjectionV1,
+    ModeloWorkspaceRefusedResultV1,
+    ModeloWorkspaceResultV1,
+    ModeloWorkspaceStaticInspectionResultV1,
 )
 from .....core.errors.hierarchy import CadrumoError
 from .models import (
@@ -96,6 +102,20 @@ class ModeloWorkspaceReadSession:
 
     projection: ModeloWorkspaceProjectionV1
     identity: ModeloWorkspaceSemanticIdentityV1
+    lifecycle: ModeloWorkspaceLifecycleProjectionV1 | None = None
+    lifecycle_actions: object | None = None
+    graded_refusal: ModeloWorkspaceDomainRefusalV1 | None = None
+    """The GRADED_SNAPSHOT refusal ``projection`` fell back from, when it did.
+
+    ``None`` means ``projection`` IS the requested admission -- graded when a
+    graded read was requested and static when only a static one was. A
+    non-``None`` value means ``projection`` is a STATIC_INSPECTION admission
+    standing in for a GRADED_SNAPSHOT that this refusal explains: the code,
+    the resolved target where one exists, the safe facts and evidence behind
+    it, and the catalogued action that advances it, exactly as the producer
+    measured them. Never inferred here; always copied from the read that
+    opened this session.
+    """
 
     @property
     def output_language(self) -> str:
@@ -153,13 +173,71 @@ class ModeloWorkspaceReadSession:
         return ModeloWorkspaceBoundedPageV1(shown=len(bounded.records), page_size=bounded.page_size)
 
 
-def open_workspace_read_session(projection: ModeloWorkspaceProjectionV1) -> ModeloWorkspaceReadSession:
+@dataclass(frozen=True, slots=True)
+class ModeloWorkspaceRefusedReadV1:
+    """The typed refusal a result carried instead of an admitted projection.
+
+    A refusal is an ANSWER, not a failure: the producer measured the target and
+    reported that a graded read of it is not possible yet, together with the
+    condition that would change that and the catalogued step that reaches it.
+    Represented as its own arm rather than as ``None`` or an exception so a
+    caller has to decide what to do with it, and so the reason survives to
+    whatever renders it.
+    """
+
+    refusal: ModeloWorkspaceDomainRefusalV1
+
+
+type ModeloWorkspaceAdmissionV1 = ModeloWorkspaceReadSession | ModeloWorkspaceRefusedReadV1
+"""The two outcomes admitting one workspace result can have."""
+
+
+def admit_modelo_workspace_result(
+    result: ModeloWorkspaceResultV1,
+    *,
+    lifecycle: ModeloWorkspaceLifecycleProjectionV1 | None = None,
+    lifecycle_actions: object | None = None,
+) -> ModeloWorkspaceAdmissionV1:
+    """Match a producer result on its own outcome arm and admit or refuse accordingly.
+
+    The one place this cohort turns a three-arm
+    :data:`ModeloWorkspaceResultV1` into something a renderer can hold. Both
+    successful arms open the identical session -- a static inspection and a
+    graded snapshot differ in what the projection CARRIES, never in how a
+    session is opened over it -- and the refused arm is returned as itself
+    rather than flattened into ``None``, which would lose the code, the
+    condition and the remedy the producer attached.
+    """
+    match result:
+        case ModeloWorkspaceRefusedResultV1():
+            return ModeloWorkspaceRefusedReadV1(refusal=result.refusal)
+        case ModeloWorkspaceStaticInspectionResultV1() | ModeloWorkspaceGradedSnapshotResultV1():
+            return open_workspace_read_session(
+                result.projection,
+                lifecycle=lifecycle,
+                lifecycle_actions=lifecycle_actions,
+            )
+
+
+def open_workspace_read_session(
+    projection: ModeloWorkspaceProjectionV1,
+    *,
+    lifecycle: ModeloWorkspaceLifecycleProjectionV1 | None = None,
+    lifecycle_actions: object | None = None,
+    graded_refusal: ModeloWorkspaceDomainRefusalV1 | None = None,
+) -> ModeloWorkspaceReadSession:
     """Open the canonical immutable session from an already-admitted projection.
 
     Installed composition receives projections from its one captured generation,
     rather than re-wrapping them as synthetic application outcomes.  Both
     admission paths therefore share the exact version and semantic-identity
     checks before a renderer can receive the session.
+
+    ``graded_refusal`` is the composing caller's own fact, not something this
+    function infers from ``projection``: a STATIC_INSPECTION projection reads
+    identically whether it was the only admission ever requested or a
+    fallback from a refused GRADED_SNAPSHOT, so only whoever tried the graded
+    read first -- and holds the refusal it got back -- can honestly pass one.
     """
     if projection.contract_version != SUPPORTED_WORKSPACE_CONTRACT_VERSION:
         raise ModeloWorkspaceSessionAdmissionError(
@@ -167,14 +245,27 @@ def open_workspace_read_session(projection: ModeloWorkspaceProjectionV1) -> Mode
             f"which this read cohort does not read; it reads exactly "
             f"{SUPPORTED_WORKSPACE_CONTRACT_VERSION}"
         )
-    return ModeloWorkspaceReadSession(projection=projection, identity=semantic_identity(projection))
+    if lifecycle is not None and lifecycle.target != projection.target:
+        raise ModeloWorkspaceSessionAdmissionError("lifecycle projection does not name this workspace target")
+    if lifecycle_actions is not None and lifecycle is None:
+        raise ModeloWorkspaceSessionAdmissionError("workspace lifecycle actions require a lifecycle projection")
+    return ModeloWorkspaceReadSession(
+        projection=projection,
+        identity=semantic_identity(projection),
+        lifecycle=lifecycle,
+        lifecycle_actions=lifecycle_actions,
+        graded_refusal=graded_refusal,
+    )
 
 
 __all__ = [
     "SUPPORTED_WORKSPACE_CONTRACT_VERSION",
+    "ModeloWorkspaceAdmissionV1",
     "ModeloWorkspaceReadSession",
+    "ModeloWorkspaceRefusedReadV1",
     "ModeloWorkspaceSemanticIdentityV1",
     "ModeloWorkspaceSessionAdmissionError",
+    "admit_modelo_workspace_result",
     "open_workspace_read_session",
     "semantic_identity",
 ]

@@ -29,6 +29,7 @@ from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
 from ..compiler.loader import load_modelo_directory
 from ..conformance.loader_directory_mode_support import write_standard_manifest
+from ..edition_family_delta import collapse_keyed_families
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -398,3 +399,21 @@ def test_formula_operand_identity_preserves_valid_declarations(tmp_path: Path, *
         )
     modelo = load_modelo_directory(modelo_dir)
     assert modelo.revisions["2026"].formulas[0].expression.casilla_id == ("0002" if changed else "0001")
+
+
+def test_collapsing_a_restated_family_lifts_the_restatement_without_losing_members(tmp_path: Path) -> None:
+    """The family collapse turns a restatement into the ordinary delta, member for member.
+
+    A restated family inherits nothing, so dropping its members while leaving the
+    declaration in place would delete them; the collapse must lift the
+    declaration and state the predecessor-only member as an explicit removal.
+    """
+    source = _build_modelo(tmp_path / "source", successor_extra=_RESTATED_FORMULAS)
+    candidate = tmp_path / "candidate" / _MODELO_ID
+
+    collapse_keyed_families(source, candidate)
+
+    manifest = (candidate / "revisions" / _SUCCESSOR / "revision.toml").read_text(encoding="utf-8")
+    assert "restated_families" not in manifest
+    assert "family_removals" in manifest
+    assert _successor(candidate).formulas == _successor(source).formulas

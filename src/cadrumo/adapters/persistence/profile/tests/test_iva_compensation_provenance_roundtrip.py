@@ -41,8 +41,11 @@ from cadrumo.application.calculations.iva_compensation_history_ports import IvaC
 from cadrumo.core.iva_compensation_provenance import IvaCompensationStateProvenance
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.governed_fact_scope import outside_governed_fact_validation
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.iva_compensation.carry_forward import IvaCompensationPeriodState
+
+from .iva_compensation_history_support import _state
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -94,6 +97,29 @@ def test_the_provenance_pair_survives_a_strict_round_trip(tmp_path: Path) -> Non
     assert loaded.provenance is IvaCompensationStateProvenance.AEAT_CAPTURE
     assert loaded.expediente_id == _EXPEDIENTE
     assert loaded.status == "presentada"
+
+
+def test_app_filing_history_round_trips_through_list_and_load_under_a_bundled_authority_scope(
+    tmp_path: Path,
+) -> None:
+    """A local 2025 filing must decode through the repository's own authority lease.
+
+    The profile-persistence package scopes its tests to a session authority
+    operation.  Leaving only that validation scope preserves the
+    real isolated storage runtime while making this a regression for the
+    adapter boundary rather than an accidental consumer of its caller's lease.
+    """
+    original = _state(filing_year=2025, period="4T", generated=Decimal("75.00"))
+
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        repository = IvaCompensationHistoryRepository()
+        repository.save_period(original)
+        with outside_governed_fact_validation():
+            listed = repository.list_periods()
+            loaded = repository.load_period(original.period)
+
+    assert listed == (original,)
+    assert loaded == original
 
 
 def test_every_defaultable_field_carries_a_non_default_value() -> None:

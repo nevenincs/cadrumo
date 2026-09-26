@@ -31,6 +31,8 @@ from ....application.overview.calendar_models import (
     OverviewPeriodState,
 )
 from ....application.overview.home import HomeAvailability
+from ....core.errors.error_codes import resolve_error_message
+from ....core.errors.hierarchy import CadrumoError
 from ....core.i18n.render import lookup_translation, output_language, tr
 from ....core.text_fold import fold_diacritics
 from ....domain.deadlines.models import ObligationStatus
@@ -49,6 +51,7 @@ from .models import (
     DeclarationsDestinationIdV1,
     DeclarationsRouteTargetV1,
     FilingHandoffV1,
+    ModeloWorkCreateHandoffV1,
     ModeloWorkspaceScreenFactoryV1,
     RevisionHandoffV1,
 )
@@ -82,9 +85,23 @@ _EVIDENCE_KEYS: Final = {
 }
 
 
+_WORK_CREATE_REFUSAL_KEYS: Final = {
+    # The application's wording names the CLI command; here the same fix is a key away.
+    "application.modelo.errors.profile_readiness_setup_incomplete": (
+        "tui.declarations.calendar.recovery.setup_incomplete"
+    ),
+}
+
+
 def declarations_copy(key: str, **values: object) -> str:
     """Resolve authored display copy through the canonical catalogue."""
     return tr(key, **values)
+
+
+def work_create_refusal_message(refusal: CadrumoError) -> str:
+    """Render a work-creation refusal as its own reason, worded for the TUI where the fix differs."""
+    tui_key = _WORK_CREATE_REFUSAL_KEYS.get(refusal.translated_message or "")
+    return declarations_copy(tui_key) if tui_key is not None else resolve_error_message(refusal)
 
 
 def natural_address(modelo: object, year: object, period: object) -> str:
@@ -144,6 +161,7 @@ class DeclarationsWorkspaceController:
         calendar_projection: DeclarationsCalendarProjectionV1 | None = None,
         calendar_entry_handoff: CalendarEntryHandoffV1 | None = None,
         calendar_recovery_handoff: CalendarRecoveryHandoffV1 | None = None,
+        work_create_handoff: ModeloWorkCreateHandoffV1 | None = None,
     ) -> None:
         """Validate the context, projection version, and declared read actions."""
         if context.destination != "workbench.declarations":
@@ -171,6 +189,7 @@ class DeclarationsWorkspaceController:
         self.calendar_projection = calendar_projection
         self.calendar_entry_handoff = calendar_entry_handoff
         self.calendar_recovery_handoff = calendar_recovery_handoff
+        self.work_create_handoff = work_create_handoff
 
     def zone_state(self, zone: DeclarationsWorkspaceZone) -> DeclarationsWorkspaceZoneStateV1:
         """Return one closed zone state."""
@@ -225,6 +244,9 @@ class DeclarationsWorkspaceScreen(AccountChromeScreen):
         .declarations-page { width: 100%; height: 1fr; }
         .declarations-refusal { color: $warning; text-style: bold; height: auto; }
         .declarations-empty { color: $text-muted; height: auto; }
+        /* The heading above a form insets its text by the cell padding, so
+           the form's labels and fields take the same inset: one left edge. */
+        .declarations-work-form { height: auto; padding-left: $cadrumo-cell-padding; }
         """
     )
 
@@ -438,8 +460,12 @@ def _calendar_search_text(row: DeclarationsCalendarEntryRefV1) -> str:
         calendar_local_label(row.local_filing_state),
         calendar_aeat_label(row.aeat_submission_state),
         calendar_date_label(row.opens_on),
+        calendar_date_label(row.closes_on),
         calendar_date_label(row.adjusted_closes_on),
         calendar_date_label(row.payment_cutoff_on),
+        calendar_date_label(row.evaluated_on),
+        str(row.days_overdue) if row.days_overdue is not None else "",
+        row.shift_reason,
     )
     return _fold(" ".join(values))
 
@@ -503,5 +529,6 @@ __all__ = [
     "natural_address",
     "revision_state_label",
     "timestamp_label",
+    "work_create_refusal_message",
     "work_state_label",
 ]

@@ -43,6 +43,7 @@ def test_live_write_detector_bites_on_a_planted_policy() -> None:
         handoff=False,
         live_write=True,
         open_world=True,
+        reaches_aeat=True,
     )
     assert confirmation_for_policy(planted) is ConfirmationPolicy.BLOCK
 

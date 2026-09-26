@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 from collections.abc import Sequence
 from datetime import UTC, datetime
@@ -15,9 +16,13 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import s
 
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....application.modelo.operation_definitions import MODELO_EXPORT_OPERATION_DEFINITION_ID, ModeloExportRequest
 from ....application.modelo.tests.registry_revision import active_registry_revision_id
+from ....application.operations.frontend_requests import OperationObservationRequestV1, OperationObservationSuccessV1
+from ....application.operations.models import OperationRequest
 from ....application.workflow.persistence import workflow_state_repository
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.operations import OperationTerminalCondition
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
@@ -34,6 +39,7 @@ from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.cli_envelope import unwrap_envelope_notices as _notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
+from ...operation_composition import compose_operation_dependencies
 from ._modelo_review_package_support import seed_exportable_modelo_revision
 from ._strict_cli_fixture_support import binding_isolated_backend
 from .cli_runner import invoke_cached_cli
@@ -500,6 +506,8 @@ def test_export_modelo_202_2024_emilio_refuses_missing_product_software_identity
 
     result = _invoke(
         [
+            "--format",
+            "json",
             "app",
             "modelo",
             "export",
@@ -516,10 +524,100 @@ def test_export_modelo_202_2024_emilio_refuses_missing_product_software_identity
         ],
     )
 
-    assert result.exit_code == 5, result.output
-    assert "product/software identity" in result.output.lower(), result.output
-    assert f"calculation revision id: {calculation_revision_id}" in result.output.lower(), result.output
+    assert result.exit_code == 2, result.output
+    error = json.loads(result.output)["error"]
+    assert error["code"] == "REFUSED_MODELO_EXPORT_PRODUCT_IDENTITY_UNAVAILABLE"
+    assert error["category"] == "REFUSED"
+    assert error["context"]["calculation_revision_id"] == calculation_revision_id
+    assert error["context"]["modelo"] == "202"
+    assert "Versión del Programa" in error["message"]
+    assert "NIF del desarrollador" in error["message"]
+    assert error["context"]["record"]
+    assert error["context"]["program_positions"]
+    assert error["context"]["developer_positions"]
     assert not out.exists()
+
+
+def _export_through_the_operation(
+    *, work_unit_id: str, calculation_revision_id: str, output_path: Path, operation: PinnedAuthorityOperation
+) -> tuple[OperationTerminalCondition | None, str | None]:
+    """Submit the registered export operation the TUI uses and return its terminal condition and code."""
+
+    async def run() -> tuple[OperationTerminalCondition | None, str | None]:
+        services = compose_operation_dependencies(authority_operation=operation)
+        try:
+            submitted = await services.submission.submit(
+                OperationRequest(
+                    definition_id=MODELO_EXPORT_OPERATION_DEFINITION_ID,
+                    subject_ref=work_unit_id,
+                    payload=ModeloExportRequest(
+                        calculation_revision_id=calculation_revision_id,
+                        output_path=str(output_path),
+                        actor="Emilio",
+                    ),
+                ),
+                actor_ref="operator:export-parity",
+            )
+            await services.submission.start(submitted.receipt.operation_id)
+            await services.submission.settled(submitted.receipt.operation_id)
+            observed = await services.observation.observe(
+                OperationObservationRequestV1(
+                    operation_id=submitted.receipt.operation_id, after_cursor=0, page_limit=64
+                )
+            )
+            assert isinstance(observed, OperationObservationSuccessV1)
+            projection = observed.projection
+            return projection.terminal_condition, projection.refusal_ref or projection.failure_error_code
+        finally:
+            await services.shutdown()
+
+    return asyncio.run(run())
+
+
+def test_the_export_operation_and_the_command_line_reach_the_same_gate_for_one_revision(
+    tmp_path: Path,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Both surfaces carry the same elections, so one revision meets the same export gate from either.
+
+    Every envelope-bearing export currently ends at the missing reviewed
+    product identity; the operation once failed earlier than that for a
+    Modelo 303, because it forwarded none of the elections the command line
+    supplies.
+    """
+    _set_emilio_legal_entity_export_profile()
+    work_unit_id, calculation_revision_id = _seed_exportable_modelo_202_2024_revision(operation=operation)
+    cli_out = tmp_path / "cli.boe"
+    operation_out = tmp_path / "operation.boe"
+
+    cli = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "export",
+            work_unit_id,
+            "--output",
+            str(cli_out),
+            "--by",
+            "Emilio",
+        ],
+    )
+    condition, operation_code = _export_through_the_operation(
+        work_unit_id=work_unit_id,
+        calculation_revision_id=calculation_revision_id,
+        output_path=operation_out,
+        operation=operation,
+    )
+
+    assert cli.exit_code == 2, cli.output
+    assert json.loads(cli.output)["error"]["code"] == "REFUSED_MODELO_EXPORT_PRODUCT_IDENTITY_UNAVAILABLE"
+    assert condition is OperationTerminalCondition.REFUSED
+    assert operation_code == "REFUSED_MODELO_EXPORT_PRODUCT_IDENTITY_UNAVAILABLE"
+    assert not cli_out.exists()
+    assert not operation_out.exists()
 
 
 def test_export_keeps_raw_revision_and_selector_refusals_distinct(tmp_path: Path) -> None:

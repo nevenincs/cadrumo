@@ -16,10 +16,16 @@ import pytest
 from .....application.ledger.actions_manual import create_manual_transaction, update_manual_transaction_fields
 from .....application.ledger.models import ManualLedgerTransactionCommand, ManualLedgerTransactionPatch
 from .....domain.transactions.enums import BusinessClassification, TransactionDirection
+from .....domain.transactions.errors import TransactionValidationError
 from .....domain.transactions.service import link_invoice
 from ...storage.sql.secure_objects import SecureObjectRepository
 from .ledger_action_create_support import ledger_ports_for_test
-from .ledger_action_persistence_support import _BUCKET_ID, _repositories
+from .ledger_action_persistence_support import (
+    BUCKET_ID as _BUCKET_ID,
+)
+from .ledger_action_persistence_support import (
+    repositories as _repositories,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
@@ -92,3 +98,32 @@ def test_repeating_the_classify_stays_a_no_op(secure_objects: SecureObjectReposi
 
     assert first_events > 0
     assert repeat_events == 0
+
+
+def test_changing_a_linked_rows_identity_refuses_without_replacing_it(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    transaction_id = _linked_row(secure_objects)
+    transaction_repository, event_repository = _repositories(secure_objects)
+    before = transaction_repository.load()
+
+    with (
+        ledger_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            objects=secure_objects,
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+        ) as ports,
+        pytest.raises(TransactionValidationError, match="invoice link"),
+    ):
+        update_manual_transaction_fields(
+            bucket_id=_BUCKET_ID,
+            transaction_id=transaction_id,
+            patch=ManualLedgerTransactionPatch(amount=Decimal("60.00")),
+            actor="test",
+            source_command="aeat app ledger update",
+            ports=ports,
+            occurred_at=datetime(2026, 1, 10, 9, 0, tzinfo=UTC),
+        )
+
+    assert transaction_repository.load() == before

@@ -23,13 +23,13 @@ from pathlib import Path
 
 import pytest
 
-from .._acquire_common import venv_bin_dir, venv_executable
-from .._installed_wheel_binding import (
+from ..acquire_common import venv_bin_dir, venv_executable
+from ..command_execution import run_command
+from ..installed_wheel_binding import (
     installed_distribution_payload_sha256,
     installed_python_for_cli,
     sealed_wheel_payload_sha256,
 )
-from ..command_execution import run_command
 from ..release_cohort_support import _real_product_wheel, _uv_executable, client_venv_template
 
 # Serial and integration for the same reason as the sibling evidence suite:

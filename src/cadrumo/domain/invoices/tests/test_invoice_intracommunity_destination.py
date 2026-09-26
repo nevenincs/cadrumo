@@ -34,9 +34,9 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from ....domain.iva.classification import InvoiceKind
-from ....domain.iva.schema import EUMemberState, IvaCategory
 from ...calculations.registry.authority import bundled_indexed_authority
+from ...iva.classification import InvoiceKind
+from ...iva.schema import EUMemberState, IvaCategory
 from ..enums import IvaRate, PaymentStatus
 from ..models import Invoice, InvoiceLine
 

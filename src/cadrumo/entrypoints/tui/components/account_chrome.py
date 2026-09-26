@@ -17,6 +17,7 @@ from textual.widgets import Footer, Static
 
 from ....application.overview.home import HomeSessionPosture
 from ....core.i18n.render import tr
+from .app_access import TypedAppAccess
 from .theme import tokenised
 
 if TYPE_CHECKING:
@@ -109,7 +110,7 @@ def account_status_line(session: HomeAccountSession | None) -> str:
     )
 
 
-class AccountBar(Static):
+class AccountBar(TypedAppAccess, Static):
     """One status line above every destination: the signed-in profile and its session.
 
     The controls themselves are reached through the key footer and the
@@ -144,7 +145,7 @@ class AccountBar(Static):
         self.update(account_status_line(session))
 
 
-class AccountChromeScreen(Screen[None]):
+class AccountChromeScreen(TypedAppAccess, Screen[None]):
     """A workbench destination: the account bar above it, the key footer below.
 
     The chrome is mounted from a decorated ``Mount`` handler rather than an

@@ -31,6 +31,7 @@ from ...domain.attachments.protocols import AttachmentStoreProtocol as _Attachme
 from ...domain.attachments.service import link_attachment_transaction
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import bucket_event_history_write
+from ...domain.calculations.registry.iva_category_catalogue import require_iva_category
 from ...domain.calculations.registry.iva_deduction_catalogue import invoice_evidence_authority
 from ...domain.currency.service import CurrencyNormalizationService
 from ...domain.invoices.errors import InvoiceLinkError
@@ -155,6 +156,7 @@ def create_manual_transaction(
                 "movement, or omit --idempotency-key to append a deliberate duplicate",
                 translated_message="application.ledger.errors.idempotency_key_conflict",
             )
+    _require_declared_iva_category(command, ports=ports)
     transaction_base = _transaction_from_command(
         command,
         occurred_at=now,
@@ -751,6 +753,7 @@ def update_manual_transaction(
     ports: LedgerActionPorts,
     occurred_at: datetime | None = None,
     catalogue: TransactionCatalogue | None = None,
+    expected_current: Transaction | None = None,
     _evidence_authority: bool = False,
 ) -> ManualLedgerTransactionResult:
     """Replace one manual ledger transaction from a validated command payload.
@@ -770,6 +773,11 @@ def update_manual_transaction(
     already decrypted; nothing writes between that load and this replacement,
     so decrypting the whole catalogue again would only repeat the read.
 
+    When supplied, ``expected_current`` is the immutable transaction snapshot
+    the caller opened for editing. It must still equal the loaded record before
+    this service admits the replacement. The persistence adapter retains its
+    own write-time concurrency guard.
+
     Returns a :class:`~cadrumo.application.ledger.models.ManualLedgerTransactionResult`.
 
     Core types:
@@ -783,6 +791,7 @@ def update_manual_transaction(
     if catalogue is None:
         catalogue = repository.load()
     current = require_transaction(catalogue, transaction_id)
+    _require_expected_current_transaction(current=current, expected_current=expected_current)
     if current.lifecycle_state is not TransactionLifecycleState.ACTIVE:
         raise TransactionValidationError(
             "only active ledger transactions can be edited; archived, stashed, and split-parent rows are immutable",
@@ -837,10 +846,19 @@ def update_manual_transaction(
         event_repository=event_repository,
         catalogue=replace_transaction(catalogue, old_transaction_id=transaction_id, replacement=replacement),
         events=events,
+        expected_current=expected_current,
+        replacement=replacement,
     )
+    new_attachment_ids = tuple(
+        attachment_id for attachment_id in replacement.attachment_ids if attachment_id not in current.attachment_ids
+    )
+    # Existing manifests were validated before the atomic catalogue/event commit.
+    # Re-reading them after that commit would let an unrelated attachment-store
+    # failure report this already-durable edit as unsuccessful.
     _record_attachment_back_references(
         replacement,
         attachment_store=ports.attachment_store,
+        attachment_ids=new_attachment_ids,
     )
     return build_manual_ledger_result(
         command.bucket_id,
@@ -850,12 +868,26 @@ def update_manual_transaction(
     )
 
 
+def _require_expected_current_transaction(
+    *,
+    current: Transaction,
+    expected_current: Transaction | None,
+) -> None:
+    """Refuse a detail edit whose opened transaction no longer matches storage."""
+    if expected_current is not None and current != expected_current:
+        raise TransactionValidationError(
+            "transaction changed since it was opened; reopen it before editing",
+            context={"transaction_id": current.transaction_id},
+        )
+
+
 def _record_attachment_back_references(
     transaction: Transaction,
     *,
     attachment_store: _AttachmentStoreProtocol | None,
+    attachment_ids: tuple[str, ...] | None = None,
 ) -> None:
-    """Record the transaction on every attachment manifest the transaction cites.
+    """Record the transaction on selected attachment manifests it cites.
 
     The transaction side of the link is written by the catalogue save above.
     Without this, the manifest side stayed empty, so
@@ -869,11 +901,16 @@ def _record_attachment_back_references(
     that was never written. :func:`~domain.attachments.service.link_attachment_transaction`
     is idempotent, so a re-attach re-converges the pair rather than duplicating
     the reference.
+
+    ``attachment_ids`` lets an update reconcile only newly introduced evidence
+    after its transaction/event co-commit. Creation omits it and links every
+    declared attachment.
     """
-    if not transaction.attachment_ids:
+    target_attachment_ids = transaction.attachment_ids if attachment_ids is None else attachment_ids
+    if not target_attachment_ids:
         return
     store = resolve_attachment_store(attachment_store)
-    for attachment_id in transaction.attachment_ids:
+    for attachment_id in target_attachment_ids:
         link_attachment_transaction(
             store,
             attachment_id=attachment_id,
@@ -900,6 +937,7 @@ def _prepare_manual_transaction_update(
     contract). Lifecycle and blocking-modelo guards remain the caller's
     responsibility before invoking this builder.
     """
+    _require_declared_iva_category(command, ports=ports)
     replacement = _transaction_from_command(
         command,
         occurred_at=now,
@@ -989,6 +1027,7 @@ def update_manual_transaction_fields(
     ports: LedgerActionPorts,
     occurred_at: datetime | None = None,
     catalogue: TransactionCatalogue | None = None,
+    expected_current: Transaction | None = None,
     _evidence_authority: bool = False,
 ) -> ManualLedgerTransactionResult:
     """Apply a typed field patch to one active bucket-scoped ledger transaction.
@@ -1010,6 +1049,10 @@ def update_manual_transaction_fields(
     passed through so the whole catalogue is not decrypted a second time. The
     caller must not write between its load and this call, so the view is current.
 
+    ``expected_current`` optionally carries a detail screen's opened snapshot.
+    It is compared before command construction, so even a would-be
+    re-affirmation no-op refuses when the screen is stale.
+
     Returns a :class:`~cadrumo.application.ledger.models.ManualLedgerTransactionResult`
     reflecting the updated transaction state after the patch is applied.
     """
@@ -1026,6 +1069,7 @@ def update_manual_transaction_fields(
     if catalogue is None:
         catalogue = repository.load()
     current = require_transaction(catalogue, transaction_id)
+    _require_expected_current_transaction(current=current, expected_current=expected_current)
     command = _command_from_patch(
         bucket_id=bucket_id,
         current=current,
@@ -1052,6 +1096,7 @@ def update_manual_transaction_fields(
         ports=ports,
         occurred_at=occurred_at,
         catalogue=catalogue,
+        expected_current=expected_current,
         _evidence_authority=_evidence_authority,
     )
 
@@ -1414,6 +1459,20 @@ def _invoice_evidence_provenance(
         source_locator=record.evidence_id,
         evidence_digest=record.attachment_id,
     )
+
+
+def _require_declared_iva_category(
+    command: ManualLedgerTransactionCommand,
+    *,
+    ports: LedgerActionPorts,
+) -> None:
+    """Refuse a non-canonical IVA category before a ledger write is built."""
+    if command.iva_category is not None:
+        require_iva_category(
+            command.iva_category,
+            effective_date=command.booked_date,
+            authority=ports.operation,
+        )
 
 
 def _transaction_from_command(

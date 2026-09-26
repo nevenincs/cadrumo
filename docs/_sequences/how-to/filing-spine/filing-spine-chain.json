@@ -134,7 +134,7 @@
           "created_at": "2026-04-01T09:00:00Z",
           "evidence_id": "9a075f52dad08e80",
           "invoice_date": "2026-02-11",
-          "invoice_number": "sha256:17853e99",
+          "invoice_number": "C-2026-0087",
           "iva_amount": "105",
           "iva_rate": "0.21",
           "media_kind": "pdf",
@@ -247,8 +247,7 @@
         "2026",
         "--period",
         "1T",
-        "--m303-filing-evidence",
-        "fixtures/m303-filing-evidence-2026-1T.json"
+        "--no-joint-return-elected"
       ],
       "captures": [],
       "envelope": {
@@ -293,7 +292,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "f976ec3e454a1fa1c12c1f41d30947cc66821ffa5ee62c4f871ec039ba694b92",
+          "calculation_revision_id": "23862cfbc3813b353d2167f1722d1683b3bbc76b85455b2a75ad8b7df8be2fe2",
           "casilla_values": {
             "01": "0",
             "02": "0",
@@ -3798,7 +3797,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision f976ec3e454a1fa1c12c1f41d30947cc66821ffa5ee62c4f871ec039ba694b92 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 23862cfbc3813b353d2167f1722d1683b3bbc76b85455b2a75ad8b7df8be2fe2 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_iva_aggregation",
@@ -3905,7 +3904,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "f976ec3e454a1fa1c12c1f41d30947cc66821ffa5ee62c4f871ec039ba694b92",
+          "calculation_revision_id": "23862cfbc3813b353d2167f1722d1683b3bbc76b85455b2a75ad8b7df8be2fe2",
           "completeness_status": "complete",
           "findings": [
             {
@@ -3955,7 +3954,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "26ac92bf9912bdc00bfa827e8c7d2958c91455fa9e0f5dfe55a797bfed58508d",
+          "verification_report_id": "9da509f75e5d1fad9375b6496f572e79679588866c048b3b3a968885acb9a081",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
@@ -3990,12 +3989,16 @@
         "command": "modelo.export",
         "error": {
           "action": null,
-          "category": "FAIL",
-          "code": "FAIL_MODELO_EXPORT",
+          "category": "REFUSED",
+          "code": "REFUSED_MODELO_EXPORT_PRODUCT_IDENTITY_UNAVAILABLE",
           "context": {
-            "calculation_revision_id": "f976ec3e454a1fa1c12c1f41d30947cc66821ffa5ee62c4f871ec039ba694b92"
+            "calculation_revision_id": "23862cfbc3813b353d2167f1722d1683b3bbc76b85455b2a75ad8b7df8be2fe2",
+            "developer_positions": "101-109",
+            "modelo": "303",
+            "program_positions": "93-96",
+            "record": "DP30300"
           },
-          "message": "Modelo 303 export requires explicit product/software identity authority",
+          "message": "Official export is unavailable: the record design reserves the header fields \"Versión del Programa\" and \"NIF del desarrollador\" for the software developer, and no reviewed product identity exists for them. Cadrumo does not fill them with blanks or placeholders. The calculation and its verification remain valid; exporting needs a reviewed program identifier and developer NIF from the software developer.",
           "retryable": false,
           "runbook_id": null,
           "trace_id": null
@@ -4005,7 +4008,7 @@
         "status": "error"
       },
       "envelope_source": "stderr",
-      "exit_code": 5,
+      "exit_code": 2,
       "kind": "result",
       "stderr_text": null,
       "text": null

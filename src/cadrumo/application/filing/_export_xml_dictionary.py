@@ -94,6 +94,11 @@ _XSD_MODEL_GROUP_TAGS = frozenset({"complexType", "complexContent", "sequence", 
 _DATE_DICTIONARY_TYPE = "FEC"
 _DATE_DICTIONARY_TEXT = re.compile(r"[0-9]{1,2}/[0-9]{1,2}/[0-9]{4}")
 
+_HOLDER_DICTIONARY_TYPE = "TIT"
+_HOLDER_CODES: Mapping[str, str] = MappingProxyType(
+    {"declarante": "2", "conyuge": "3", "hijo1": "4", "hijo2": "5", "hijo3": "6", "hijo4": "7"}
+)
+
 # The dictionary's numeric type codes are self-describing: ``P<width><scale>``
 # and ``N<width><scale>`` name the field's integer width and its fractional-digit
 # count, so the trailing digit is the scale to render at. Confirmed against every
@@ -111,6 +116,7 @@ def render_xml_dictionary_layout(
     *,
     draft: ModeloDraft,
     headers: Mapping[FilingProducerKey, object],
+    aux_version: str,
     dictionary_values: Mapping[str, object] | None = None,
     schema_provider: RegistrySchemaAccessor,
 ) -> bytes:
@@ -123,6 +129,8 @@ def render_xml_dictionary_layout(
         draft: Approved :class:`~domain.filing.schema.ModeloDraft` supplying casilla
             values, modelo, and period metadata.
         headers: Normalized declaration header values such as identity fields.
+        aux_version: Product build token for the mandatory ``Aux/VERSION``
+            element, resolved at the export boundary from ``PACKAGE_VERSION``.
         dictionary_values: Values addressed by the dictionary field id AEAT
             declares for them, each still carrying its own Python type. Absent
             (or ``None``) means the caller declares no such values, which is how
@@ -146,9 +154,13 @@ def render_xml_dictionary_layout(
         _xml_dictionary_xsd_source(layout, schema_provider.sources),
         source_payloads=schema_provider.source_payloads,
     )
-    _append_declaration_aux(root, layout)
+    optional_element_paths = _xml_dictionary_optional_element_paths(
+        _xml_dictionary_xsd_source(layout, schema_provider.sources),
+        source_payloads=schema_provider.source_payloads,
+    )
+    _append_declaration_aux(root, layout, aux_version=aux_version)
     casilla_values: dict[CasillaId, object] = {value.casilla_id: value.value for value in draft.values}
-    modelo_100_declarations = _registry_modelo_100_xml_declarations() if draft.modelo == Modelo("100") else None
+    modelo_100_declarations = registry_modelo_100_xml_declarations() if draft.modelo == Modelo("100") else None
     unfiled_paths = frozenset[str]()
     if draft.modelo == Modelo("100"):
         declarations = modelo_100_declarations
@@ -175,6 +187,7 @@ def render_xml_dictionary_layout(
         _set_xml_dictionary_path(root, entry.path, rendered, element_order=element_order)
     if draft.modelo == Modelo("100"):
         _stamp_toma_datos_nif(root, draft)
+        _prune_zero_only_xml_subtrees(root, optional_element_paths=optional_element_paths)
     rendered = ElementTree.tostring(root, encoding=_UTF_8, xml_declaration=True)
     if not isinstance(rendered, bytes):
         raise FilingExportError(f"the XML dictionary serialiser returned {type(rendered).__name__}, not bytes")
@@ -283,23 +296,28 @@ def _latest_xml_dictionary_xsd_version(source: SourceReference, *, source_payloa
     return sorted(versions, key=lambda item: tuple(int(part) for part in item.split(".")))[-1]
 
 
-def _append_declaration_aux(root: ElementTree.Element[str], layout: ExportLayoutDefinition) -> None:
-    """Write the declaration's ``Aux`` identity block from the layout's declaration.
+def _append_declaration_aux(
+    root: ElementTree.Element[str],
+    layout: ExportLayoutDefinition,
+    *,
+    aux_version: str,
+) -> None:
+    """Write the declaration's ``Aux`` identity block from its two authorities.
 
     The block is mandatory and first in every AEAT Modelo 100 XSD, and no bundled
     dictionary describes a single one of its rows, so it cannot be reached by the
     dictionary-driven walk that writes everything else here.
 
-    Both children are ``minOccurs="1"``, so a block missing either is invalid and
-    is not worth writing: when ``aux_version`` is undeclared this writes nothing,
-    and :func:`~application.filing._export_parity.assert_xml_declaration_aux_declared` refuses
-    the export at the write door rather than letting a partial block reach disk.
+    ``Idioma`` is a selected-revision declaration because AEAT's schema gives it
+    an enum. ``VERSION`` identifies the developer software, so it is supplied by
+    the canonical product version at the export boundary. Both children are
+    ``minOccurs="1"`` and are preflighted before rendering.
     """
-    if layout.aux_idioma is None or layout.aux_version is None:
-        return
+    if layout.aux_idioma is None:
+        raise FilingExportValidationError("XML dictionary layout omits mandatory Aux/Idioma")
     aux = ElementTree.SubElement(root, _AUX_TAG)
     ElementTree.SubElement(aux, "Idioma").text = layout.aux_idioma.value
-    ElementTree.SubElement(aux, "VERSION").text = layout.aux_version
+    ElementTree.SubElement(aux, "VERSION").text = aux_version
 
 
 def _stamp_toma_datos_nif(root: ElementTree.Element[str], draft: ModeloDraft) -> None:
@@ -414,6 +432,32 @@ def _xml_dictionary_element_order(
     return order
 
 
+def _xml_dictionary_optional_element_paths(
+    source: SourceReference, *, source_payloads: Mapping[str, bytes]
+) -> frozenset[str]:
+    """Return the absolute paths whose XSD element declaration is optional."""
+    root = _xml_dictionary_xsd_root(source, source_payloads=source_payloads)
+    named_types = {name: node for node in root.iter(f"{_XSD_NS}complexType") if (name := node.get("name"))}
+    declaration = next(
+        (node for node in root if node.tag == f"{_XSD_NS}element" and node.get("name") == _XML_DICTIONARY_ROOT_TAG),
+        None,
+    )
+    if declaration is None:
+        raise FilingExportValidationError(
+            f"XML dictionary XSD source {source.id!r} declares no {_XML_DICTIONARY_ROOT_TAG!r} root element",
+        )
+    optional_paths: set[str] = set()
+    _record_xsd_child_order(
+        "",
+        declaration.find(f"{_XSD_NS}complexType"),
+        named_types=named_types,
+        order={},
+        seen=frozenset(),
+        optional_paths=optional_paths,
+    )
+    return frozenset(optional_paths)
+
+
 def _record_xsd_child_order(
     path: str,
     type_node: ElementTree.Element[str] | None,
@@ -421,6 +465,7 @@ def _record_xsd_child_order(
     named_types: Mapping[str, ElementTree.Element[str]],
     order: dict[str, tuple[str, ...]],
     seen: frozenset[str],
+    optional_paths: set[str] | None = None,
 ) -> None:
     """Record ``path``'s declared child order into ``order``, then descend into each child's type.
 
@@ -435,6 +480,8 @@ def _record_xsd_child_order(
     order[path] = tuple(str(child.get("name")) for child in children)
     for child in children:
         child_path = f"{path}/{child.get('name')}"
+        if optional_paths is not None and child.get("minOccurs", "1") == "0":
+            optional_paths.add(child_path)
         declared_type = child.get("type")
         if declared_type is None or declared_type not in named_types:
             _record_xsd_child_order(
@@ -443,6 +490,7 @@ def _record_xsd_child_order(
                 named_types=named_types,
                 order=order,
                 seen=seen,
+                optional_paths=optional_paths,
             )
         elif declared_type not in seen:
             # A type that reaches itself would recurse without end; its
@@ -453,10 +501,11 @@ def _record_xsd_child_order(
                 named_types=named_types,
                 order=order,
                 seen=seen | {declared_type},
+                optional_paths=optional_paths,
             )
 
 
-def _registry_modelo_100_xml_declarations() -> Mapping[str, str]:
+def registry_modelo_100_xml_declarations() -> Mapping[str, str]:
     """Resolve the selected XML export declarations without a Python copy."""
     authority = governed_facts_in_scope()
     if authority is None:
@@ -503,8 +552,12 @@ def _xml_dictionary_rendered_value(
     if draft.modelo == Modelo("100"):
         if declarations is None:
             raise FilingExportValidationError("Modelo 100 XML declarations were not resolved")
-        raw = _modelo_100_sign_branch_value(entry, raw, declarations=declarations)
+        raw = modelo_100_sign_branch_value(entry, raw, declarations=declarations)
+        if raw is None:
+            return None
     rendered = format_xml_dictionary_value(entry.data_type, raw)
+    if draft.modelo == Modelo("100") and entry.field_id in {"DP_APENOM_D", "DP_APENOM_C"}:
+        rendered = rendered.upper()
     converter_name = declarations.get(f"xml.converter.{entry.field_id}") if declarations is not None else None
     if converter_name is not None:
         converter = _XML_VALUE_CONVERTERS.get(converter_name)
@@ -520,6 +573,42 @@ def _xml_dictionary_rendered_value(
         except ValueError as exc:
             raise FilingExportValidationError(str(exc)) from exc
     return rendered
+
+
+def _prune_zero_only_xml_subtrees(root: ElementTree.Element[str], *, optional_element_paths: frozenset[str]) -> None:
+    """Omit optional Modelo 100 branches containing only calculated zero placeholders.
+
+    Modelo 100 calculations deliberately retain zero-valued casillas for audit and
+    formula traceability. The AEAT XML uses optional branches for those same facts;
+    materialising every retained zero selects mutually exclusive XSD branches and
+    creates incomplete repeated records. A subtree with no non-zero text and no
+    non-zero attribute carries no filing fact, so remove it before serialisation.
+    Required children of a populated branch remain the exporter's responsibility
+    and are exercised by whole-document XSD validation in acceptance.
+    """
+
+    def is_zero_token(value: str | None) -> bool:
+        if value is None or not value.strip():
+            return True
+        parsed = coerce_decimal(value.strip())
+        return parsed is not None and parsed.is_zero()
+
+    def prune(node: ElementTree.Element[str], path: str) -> bool:
+        retained_child_states: list[bool] = []
+        for child in tuple(node):
+            child_path = f"{path}/{child.tag}"
+            child_is_zero_only = prune(child, child_path)
+            if child_is_zero_only and child_path in optional_element_paths:
+                node.remove(child)
+            else:
+                retained_child_states.append(child_is_zero_only)
+        return (
+            all(retained_child_states)
+            and is_zero_token(node.text)
+            and all(is_zero_token(value) for value in node.attrib.values())
+        )
+
+    prune(root, "")
 
 
 def _modelo_100_comunidad_block(path: str, *, declarations: Mapping[str, str]) -> str | None:
@@ -646,13 +735,13 @@ def _modelo_100_shared_total_paths(
     return frozenset(entry.path for entry in entries if str(entry.casilla_id) == shared_total)
 
 
-def _modelo_100_sign_branch_value(
+def modelo_100_sign_branch_value(
     entry: XmlDictionaryEntry,
     raw: object,
     *,
     declarations: Mapping[str, str],
-) -> object:
-    """Return ``raw`` for the sign branch it belongs to, and zero for the other.
+) -> object | None:
+    """Return ``raw`` for the sign branch it belongs to and omit the other.
 
     Args:
         entry: Dictionary row being rendered.
@@ -660,8 +749,8 @@ def _modelo_100_sign_branch_value(
         declarations: Generation-pinned XML sign-branch declarations.
 
     Returns:
-        ``raw`` when the row's branch matches its sign, ``Decimal("0")`` when the
-        row is the opposite branch, and ``raw`` unchanged for every other row.
+        ``raw`` when the row's branch matches its sign, ``None`` when the row is
+        the opposite branch, and ``raw`` unchanged for every other row.
 
         A value that will not coerce carries no sign to route on, so it is read
         as zero for the purpose of choosing a branch. This selects a branch
@@ -679,7 +768,7 @@ def _modelo_100_sign_branch_value(
     if not negative_branch and entry.field_id != non_negative_field:
         return raw
     amount = coerce_decimal(raw, default=Decimal("0"))
-    return raw if (amount < 0) is negative_branch else Decimal("0")
+    return raw if (amount < 0) is negative_branch else None
 
 
 def _xml_dictionary_non_casilla_value(
@@ -745,6 +834,16 @@ def format_xml_dictionary_value(data_type: str, value: object) -> str:
     numeric = _NUMERIC_DICTIONARY_TYPE.match(normalized_type)
     if numeric is not None:
         return _format_xml_dictionary_numeric_value(data_type, value, numeric)
+    if normalized_type == _HOLDER_DICTIONARY_TYPE:
+        holder = str(value).strip().casefold()
+        if holder in _HOLDER_CODES.values():
+            return holder
+        try:
+            return _HOLDER_CODES[holder]
+        except KeyError as exc:
+            raise FilingExportValidationError(
+                f"holder for a {data_type} row must be one of {', '.join(_HOLDER_CODES)}, got {value!r}"
+            ) from exc
     return _format_xml_dictionary_text_value(data_type, normalized_type, value)
 
 

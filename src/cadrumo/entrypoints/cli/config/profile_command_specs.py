@@ -97,6 +97,7 @@ _HANDLER_MODULES: Final[dict[str, str]] = {
     "_descendiente": ".descendiente",
     "_google": ".google",
     "_manager_dispatch": "._manager_dispatch",
+    "_plantilla_media": ".plantilla_media",
     "_profile_delete": "._profile_delete",
     "_profile_inspect": "._profile_inspect",
     "_profile_repeatable_row": "._profile_repeatable_row",
@@ -148,6 +149,9 @@ def _option(
 
 _LANGUAGE = _option(
     "output_language", ("--output-language", "--language"), _LANG, "cli.config.auth.output_language_help"
+)
+_PLANTILLA_MEDIA_STATE = ValueContract(
+    DeferredTarget("....domain.user_profile.plantilla_media", "PlantillaMediaState", __package__),
 )
 
 
@@ -216,6 +220,37 @@ def _leaf(
     )
 
 
+def _plantilla_media_leaf(
+    token: str,
+    handler: str,
+    help_key: str,
+    policy: ExecutionPolicySpec,
+    parameters: tuple[ArgumentSpec | OptionSpec, ...],
+) -> CommandSpec:
+    """Build one ``plantilla-media`` leaf under its own ``plantilla_media`` identity.
+
+    :func:`_leaf` derives the identity from the parent key, which would split
+    the subject's name into ``plantilla.media``.
+    """
+    return CommandSpec(
+        f"config_profile_plantilla_media_{token}",
+        "config_profile_plantilla_media",
+        token,
+        CommandNodeKind.LEAF,
+        _key(help_key),
+        None,
+        InvocationSpec(context_parameter="ctx"),
+        parameters,
+        policy,
+        _handler("_plantilla_media", handler),
+        _schema(
+            ".._config_plantilla_media_payloads",
+            "ConfigProfilePlantillaMediaResult",
+            f"config.profile.plantilla_media.{token}",
+        ),
+    )
+
+
 _PAYLOADS = "..config_payloads"
 _PAYLOADS_ARCHIVE_RECONCILE = "._archive_reconcile_payloads"
 _PAYLOADS_ARCHIVE_PUSH = "._archive_push_payloads"
@@ -255,6 +290,7 @@ _WIZARD_CONFIRM_FIELDS = frozenset(
         "third-party-transactions-above-347-threshold",
         "bienes-extranjero-above-threshold",
         "monedas-virtuales-extranjero-above-threshold",
+        "premio-loteria-gravamen-especial-sin-retencion",
         "llm-vision",
         "google-export",
     }
@@ -323,6 +359,7 @@ _WIZARD_FIELDS = (
     "pays-rent-with-retencion",
     "pays-capital-income-with-retencion",
     "modelo-111-no-retenciones-periods",
+    "modelo-115-no-relevant-payment-periods",
     "irpf-estimation-regime",
     "objective-estimation-modulos-iae-epigraph",
     "objective-estimation-modulos-module-1-units",
@@ -338,6 +375,8 @@ _WIZARD_FIELDS = (
     "third-party-transactions-above-347-threshold",
     "bienes-extranjero-above-threshold",
     "monedas-virtuales-extranjero-above-threshold",
+    "premio-loteria-gravamen-especial-sin-retencion",
+    "premio-loteria-gravamen-especial-trimestres",
     "llm-vision",
     "google-export",
     "notes",
@@ -403,6 +442,18 @@ _WIZARD_BASE_PARAMETERS: tuple[ArgumentSpec | OptionSpec, ...] = (
         FLAG_VALUE,
         "cli.config.setup.accept_defaults_help",
         default=False,
+        flag=True,
+    ),
+    # Modelo 111 requires an explicit declaration, but this is deliberately
+    # not a wizard question: a wizard confirm has to choose a default and
+    # cannot honestly distinguish an unasked question from an explicit no.
+    # Keep the narrow attestation on the same scripted create/edit boundary,
+    # with both spellings carrying an actual boolean rather than an absence.
+    _option(
+        "colegio_concertado",
+        ("--colegio-concertado", "--no-colegio-concertado"),
+        FLAG_VALUE,
+        "cli.config.setup.colegio_concertado_help",
         flag=True,
     ),
     *(_wizard_option(token) for token in _WIZARD_FIELDS),
@@ -500,6 +551,40 @@ PROFILE_COMMAND_SPECS = (
                 required=True,
                 multiple=True,
             ),
+            _LANGUAGE,
+        ),
+    ),
+    _leaf(
+        "config_profile_edit_row",
+        "config_profile",
+        "edit-row",
+        "cli.config.profile.edit_row.help",
+        "_profile_repeatable_row",
+        "profile_edit_row",
+        _PAYLOADS,
+        "ConfigProfileRowChangeResult",
+        ENCRYPTED_WRITE,
+        (
+            _argument("section", TEXT_VALUE, "cli.config.profile.row.section_help"),
+            _argument("row", TEXT_VALUE, "cli.config.profile.row.row_help"),
+            _option("value", ("--value",), TEXT_VALUE, "cli.config.profile.edit_row.value_help", multiple=True),
+            _option("clear", ("--clear",), TEXT_VALUE, "cli.config.profile.edit_row.clear_help", multiple=True),
+            _LANGUAGE,
+        ),
+    ),
+    _leaf(
+        "config_profile_remove_row",
+        "config_profile",
+        "remove-row",
+        "cli.config.profile.remove_row.help",
+        "_profile_repeatable_row",
+        "profile_remove_row",
+        _PAYLOADS,
+        "ConfigProfileRowChangeResult",
+        ENCRYPTED_WRITE,
+        (
+            _argument("section", TEXT_VALUE, "cli.config.profile.row.section_help"),
+            _argument("row", TEXT_VALUE, "cli.config.profile.row.row_help"),
             _LANGUAGE,
         ),
     ),
@@ -839,6 +924,56 @@ PROFILE_COMMAND_SPECS = (
         "ConfigProfileDescendienteRemoveResult",
         ENCRYPTED_DESTRUCTIVE,
         (_argument("index", WHOLE_NUMBER_VALUE, "cli.config.profile.descendiente.remove_index_help"), _LANGUAGE),
+    ),
+    _group(
+        "config_profile_plantilla_media",
+        "config_profile",
+        "plantilla-media",
+        "cli.config.profile.plantilla_media.help",
+    ),
+    _plantilla_media_leaf(
+        "set",
+        "plantilla_media_set",
+        "cli.config.profile.plantilla_media.set_help",
+        ENCRYPTED_WRITE,
+        (
+            _option(
+                "year",
+                ("--year",),
+                WHOLE_NUMBER_VALUE,
+                "cli.config.profile.plantilla_media.year_help",
+                required=True,
+            ),
+            _option(
+                "average_workforce",
+                ("--average-workforce",),
+                TEXT_VALUE,
+                "cli.config.profile.plantilla_media.average_workforce_help",
+                required=True,
+            ),
+            _option(
+                "state",
+                ("--state",),
+                _PLANTILLA_MEDIA_STATE,
+                "cli.config.profile.plantilla_media.state_help",
+                required=True,
+            ),
+            _LANGUAGE,
+        ),
+    ),
+    _plantilla_media_leaf(
+        "list",
+        "plantilla_media_list",
+        "cli.config.profile.plantilla_media.list_help",
+        ENCRYPTED_READ,
+        (_LANGUAGE,),
+    ),
+    _plantilla_media_leaf(
+        "remove",
+        "plantilla_media_remove",
+        "cli.config.profile.plantilla_media.remove_help",
+        ENCRYPTED_DESTRUCTIVE,
+        (_argument("year", WHOLE_NUMBER_VALUE, "cli.config.profile.plantilla_media.remove_year_help"), _LANGUAGE),
     ),
     _leaf(
         "config_profile_edit",

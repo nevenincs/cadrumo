@@ -24,13 +24,13 @@ from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.user_profile.fact_write import apply_manager_profile_field_mutation
 from ....application.user_profile.login_session import login_profile
-from ....application.user_profile.overview import build_profile_overview
+from ....application.user_profile.overview import ProfileOverview, build_profile_overview
 from ....application.user_profile.registration import register_profile_with_credentials
 from ....core.bucket_pointer import require_active_bucket_id
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ..components.host import ScreenHostApp
 from ..components.status import PinnedStatusBar
-from ..profile.overview import ProfileManagerScreen
+from ..profile.overview import ProfileFieldPersist, ProfileManagerScreen
 from .manager_pilot import wait_until_settled
 
 pytestmark = [
@@ -72,7 +72,9 @@ def _live_overview(label: str = _LABEL):
         return build_profile_overview(record, label=label, schema=_profile_contexts_for_test()[1].schema)
 
 
-def _persist(path: str, value: str):
+def _write(
+    path: str, value: str, expected_revision: int | None = None, expected_content_digest: str | None = None
+) -> ProfileOverview:
     """The production write door, so an edit here travels the real path."""
     # Building the overview validates facts against registry authority; lease it here, on whatever thread runs this.
     with bundled_indexed_authority().operation():
@@ -82,9 +84,19 @@ def _persist(path: str, value: str):
             profile_id=require_active_bucket_id(),
             path=path,
             value=value,
+            expected_revision=expected_revision,
+            expected_content_digest=expected_content_digest,
             profile_decode_context=_profile_decode_context_for_test,
         )
         return build_profile_overview(record, label=_LABEL, schema=_profile_contexts_for_test()[1].schema)
+
+
+def _persist_door(path: str, value: str, expected_revision: int, expected_content_digest: str) -> ProfileOverview:
+    """The screen's door, bound to its declared signature so a change fails type-checking, not a run."""
+    return _write(path, value, expected_revision, expected_content_digest)
+
+
+_persist: ProfileFieldPersist = _persist_door
 
 
 def _stored() -> dict[str, object | None]:
@@ -122,7 +134,7 @@ async def test_a_blank_submission_on_a_required_field_does_not_clear_it(tmp_path
                 profile_create_context=_profile_create_context_for_test,
                 profile_decode_context=_profile_decode_context_for_test,
             )
-        _persist(_REQUIRED_PATH, "12345678Z")
+        _write(_REQUIRED_PATH, "12345678Z")
         assert _stored().get(_REQUIRED_PATH) == "12345678Z", "fixture must start with a value to lose"
 
         app = ProfileManagerScreen(_live_overview(), persist=_persist)
@@ -148,7 +160,7 @@ async def test_a_whitespace_only_submission_on_a_required_field_does_not_clear_i
                 profile_create_context=_profile_create_context_for_test,
                 profile_decode_context=_profile_decode_context_for_test,
             )
-        _persist(_REQUIRED_PATH, "12345678Z")
+        _write(_REQUIRED_PATH, "12345678Z")
 
         app = ProfileManagerScreen(_live_overview(), persist=_persist)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
@@ -177,7 +189,7 @@ async def test_a_blank_submission_on_an_optional_field_still_clears_it(tmp_path)
                 profile_create_context=_profile_create_context_for_test,
                 profile_decode_context=_profile_decode_context_for_test,
             )
-        _persist(_OPTIONAL_PATH, "Ada Lovelace")
+        _write(_OPTIONAL_PATH, "Ada Lovelace")
         assert _stored().get(_OPTIONAL_PATH) == "Ada Lovelace"
 
         app = ProfileManagerScreen(_live_overview(), persist=_persist)
@@ -215,7 +227,12 @@ async def test_a_write_door_refusal_is_reported_rather_than_taking_the_screen_do
         app = ProfileManagerScreen(_live_overview(), persist=_persist)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
-            app._persist(_MALFORMED_PATH, "not-a-date")
+            app._persist(
+                _MALFORMED_PATH,
+                "not-a-date",
+                app.overview.record_revision,
+                app.overview.content_digest,
+            )
             # The write runs on a worker thread and the refusal reaches the
             # notice line only when its completion is delivered back, so a
             # bare `pause` reads the page a beat early and finds it empty --

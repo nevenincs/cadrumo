@@ -499,8 +499,8 @@ application:
           {missing_columns}'
         unreadable_table: 'The bulk invoice import file carries no readable table:
           {detail}'
-        unsupported_extension: The bulk invoice import file must be .csv or .xlsx
-          (got {extension}).
+        unsupported_extension: The bulk invoice import file must be .csv, .tsv, .xlsx,
+          .xlsm or .xls (got {extension}).
     creation:
       errors:
         duplicate_invoice: 'An invoice with the same identity already exists in the
@@ -775,12 +775,10 @@ application:
         it cannot be supplied through --binding, which carries only decimal and enum
         values. Set it as a profile fact and recalculate.
       calculate_binding_unknown: '--binding %{key} does not match any binding id in
-        this revision. Accepted binding ids: %{accepted}. Use `aeat app modelo bindings
-        list <MODELO>` to list valid binding ids.'
+        this revision. Accepted binding ids: %{accepted}.'
       calculate_boolean_binding_encoding_invalid: 'Binding value for %{key} is a decimal-encoded
         boolean flag and must be one of: %{accepted}. Received %{value}. Accepted
-        encoding: %{mapping}. Run ''aeat app modelo bindings list <MODELO>'' to see
-        each binding''s decimal encoding.'
+        encoding: %{mapping}.'
       calculate_casilla_noncanonical_ambiguous: '--casilla %{key} is not a canonical
         casilla.id and is ambiguous. Candidate casilla.id values: %{accepted}. Supply
         the exact canonical casilla.id'
@@ -788,16 +786,9 @@ application:
         number or form number or export reference, not a canonical casilla.id. Use
         the canonical casilla.id instead: %{accepted}'
       calculate_casilla_unknown: --casilla %{key} is not a canonical casilla.id in
-        this revision. Use `aeat app modelo casillas <MODELO>` to list valid casilla.id
-        values.
+        this revision.
       calculate_decimal_input_invalid: '%{flag} value for %{key} is not a decimal:
         %{value}'
-      calculate_detail_casilla_unsupported: Casilla %{key} names a Modelo 180 perceptor/property
-        detail field, not a scalar decimal casilla input. The local work --casilla
-        channel only accepts scalar decimal casillas; Modelo 180 perceptor/property
-        detail rows are not supported on the public --row surface yet. Use aeat app
-        modelo aggregate --modelo 180 --retencion-observation for the supported annual
-        perceptor count/base/retenciones source.
       calculate_m184_share_sum_invalid: Modelo 184 member-row share percentages must
         sum to exactly 100%; got %{total} across %{count} rows.
       calculate_m210_tipo_renta_fetch_gated: 'Modelo 210 tipo de renta code %{value}
@@ -936,10 +927,9 @@ application:
         for Modelo 303: this is the first period and a zero prior compensation has
         no evidence behind it. Seed the opening balance explicitly, or pull the wallet
         from AEAT, so the zero is stated rather than assumed.'
-      iva_wallet_not_seeded: 'Modelo 303 calculation requires a seeded IVA compensation
-        history. For the first M303 filing of a fresh profile, seed the opening balance
-        with zero: `aeat app modelo iva-wallet seed --filing-year YEAR --period PERIOD
-        --amount 0 --confirm`.'
+      iva_wallet_not_seeded: Modelo 303 calculation requires a seeded IVA compensation
+        history. For the first M303 filing of a fresh profile, seed the IVA compensation
+        opening balance for the filing period with an amount of zero and confirm it.
       iva_wallet_registry_snapshot_unavailable: 'IVA wallet reconciliation is blocked
         for Modelo 303: the registry snapshot for this filing year and period could
         not be resolved, so a first-period zero cannot be proven. Confirm the modelo,
@@ -961,8 +951,8 @@ application:
       iva_wallet_unsupported_decision_type: 'Unsupported IVA wallet decision type:
         %{decision_type}.'
       ledger_preflight_blocked: 'ledger preflight blocks modelo calculation: transaction
-        %{transaction_id} %{reason}: %{detail}. Run `aeat app ledger preflight --period
-        %{period}` before calculating.'
+        %{transaction_id} %{reason}: %{detail}. Run the ledger preflight for period
+        %{period} and resolve its findings before calculating.'
       local_observation_actor_blank: A manual observation override must name the operator
         who records it.
       local_observation_override_missing: Modelo %{modelo} %{filing_year} %{period}
@@ -993,7 +983,7 @@ application:
       profile_readiness_profile_missing: No persisted active profile exists for this
         modelo work target; create or repair the profile before continuing.
       profile_readiness_setup_incomplete: Profile setup has not yet been declared
-        complete; run `aeat config profile complete-setup` before working on modelos.
+        complete; declare the profile setup complete before working on modelos.
       profile_readiness_setup_incomplete_missing: 'Profile setup is incomplete; finish
         the setup flow before working on modelos. Outstanding fields: %{missing}.'
       recipient_decryption_failed: The recipient-encrypted package could not be decrypted;
@@ -1009,7 +999,7 @@ application:
       recipient_registry_not_found: No recipient is registered under id %{recipient_id}.
       reconcile_declaration_unsupported: Declaration-PDF casilla-level reconcile is
         not yet enrolled for this modelo; reconcile a downloaded justificante via
-        aeat app modelo reconcile file, or wait for this modelo to be enrolled.
+        aeat app modelo reconcile import, or wait for this modelo to be enrolled.
       reconcile_no_active_bucket: No active profile bucket; run `aeat config profile
         create NAME` before reconciling a work unit.
       refund_election_not_eligible: Refund (devolver) was elected for Modelo %{modelo}
@@ -1032,6 +1022,9 @@ application:
       work_unit_already_discarded: The work unit is already discarded.
       work_unit_create_discarded: This filing target was discarded. Creating it again
         resolves to the same discarded work unit, so the target cannot be resumed.
+      work_unit_create_superseded_modelo: Modelo %{modelo} is superseded by modelo
+        %{superseded_by} and no longer accepts a filing. Nothing was created; open
+        the filing under modelo %{superseded_by}.
       work_unit_discarded_cannot_calculate: Work unit %{work_unit_id} is in state
         %{work_unit_state} and cannot be calculated.
       work_unit_discarded_cannot_import: Work unit %{work_unit_id} is in state %{work_unit_state}
@@ -1099,10 +1092,21 @@ application:
         asset %{position_key} in group %{group_code} rose from %{prior_value_eur}
         EUR to %{current_value_eur} EUR, an increase of %{delta_value_eur} EUR above
         the %{redeclaration_increase_threshold_eur} EUR redeclaration threshold.'
+      iva_compensation_annual_source_evidence_failure: Required Modelo 303 annual
+        source evidence for Modelo 390 is unresolved (%{source_issue_count} issue(s));
+        completion is blocked.
+      iva_selected_scope_evidence_failure: 'Selected-scope IVA evidence is incomplete
+        (%{source_ref_count} source references; %{unidentified_source_count} unidentified),
+        so verification is blocked. Source-reference identifiers, not financial values:
+        %{source_ref_ids}.'
       iva_wallet_precondition_failed: The IVA compensation wallet precondition %{condition_id}
         failed for this revision (scenario %{scenario_id}).
       ledger_snapshot_drift: 'Modelo %{modelo} %{filing_year} %{period} drifted from
         its anchored ledger snapshot: %{changed_count} changed, %{removed_count} removed.'
+      m193_settled_row_amount_authority_unresolved: Modelo 193 for %{filing_year}
+        includes %{settled_prior_accrual_rows} record(s) paying income accrued in
+        an earlier year, and no official source settles the base and withholding they
+        declare; filing and export will refuse this revision.
       m210_agrupacion_renta_invalid: Modelo %{modelo_id} period %{period_code} has
         an invalid income grouping (%{error_type}).
       m210_convenio_lob_advisory: Country %{country_code} income type %{tipo_renta_code}
@@ -1163,6 +1167,24 @@ application:
       seed_negative_amount: The seed amount cannot be negative.
       seed_no_nif: No NIF defined for the seed operation; associate one with the active
         profile before seeding.
+    lifecycle:
+      calculate: Calculate
+      export: Export
+      export_destination_placeholder: Export destination path
+      file: Record local filing
+      file_cancelled: Local filing was cancelled; nothing was recorded.
+      file_confirm_accept: Record local filing
+      file_confirm_cancel: Cancel
+      file_confirm_message: This records the verified declaration in this application's
+        local filing history. It does not submit anything to AEAT.
+      file_confirm_title: Record a local filing?
+      refusal:
+        calculation_required: Calculate this declaration before continuing.
+        edit_unavailable: This declaration offers no editable values right now; recalculate
+          or reopen it before editing.
+        export_destination_required: Enter an export destination path.
+        verification_required: Verify this calculation before recording a local filing.
+      verify: Verify
     profile_binding:
       errors:
         boolean_value_channel_mismatch: The profile fact for binding {binding_id}
@@ -1177,7 +1199,27 @@ application:
           has unsupported value type %{value_type}.
         enum_boolean_invalid: Profile fact for enum-channel binding %{binding_id}
           resolved to a boolean; boolean facts are not valid enum dispatch keys.
+    quickfile:
+      stage_incomplete: The quickfile %{stage} stage finished with status %{status}.
+      stage_refused: 'Quickfile stopped at the %{stage} stage: the stage was refused
+        with %{error_code}.'
   overview:
+    calendar:
+      holiday_coverage:
+        calendar_unavailable: holiday calendar unavailable; the original close date
+          is unverified
+        national_and_territory: national and %{territory} holidays checked; local
+          holidays not checked
+        national_only: national holidays only; regional and local holidays not checked
+        not_shifted: this modelo's deadline does not move for non-working days
+        territory_unverified: national holidays only; %{territory} regional holidays
+          for this year are not verified, and local holidays are not checked
+      shift:
+        business_day: Business day
+        calendar_unavailable: Calendar unavailable
+        domingo: Sunday
+        modelo_exception: Modelo exception
+        sabado: Saturday
     errors:
       horizon_days_not_positive: horizon_days must be positive; got %{horizon_days}
     explain:
@@ -1200,8 +1242,8 @@ application:
             audits each calculated casilla, and ''Tarifas'' mirrors the active parameters
             used by formulas.'
           period: '%{modelo_title} - period %{period} / %{filing_year}.'
-          pull_command: To pull your edits into local storage, run 'aeat config google
-            sync calc pull' from the CLI.
+          pull_command: To pull your edits into local storage, run 'aeat app modelo
+            spreadsheet pull' from the CLI.
           title: '%{modelo_title} - %{period}/%{filing_year}'
         labels:
           casilla: Casilla
@@ -1312,6 +1354,8 @@ application:
         is newer than this application supports.
       row_all_values_blank: 'No value was supplied for the ''%{section}'' row. Populate
         at least one of: %{fields}.'
+      row_not_found: Row '%{row}' does not exist in section '%{section}'; nothing
+        was written.
       row_unknown_field: 'Section ''%{section}'' declares no such fields: %{unknown}.
         Available fields: %{fields}.'
     notices:

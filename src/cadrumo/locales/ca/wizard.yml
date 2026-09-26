@@ -384,6 +384,10 @@ wizard:
         help: Períodes Model 111 sense obligació, separats per comes, format AAAA:Període
           (per exemple 2025:2T,2025:3T). Useu-ho només quan no es van pagar rendes
           subjectes.
+      modelo-115-no-relevant-payment-periods:
+        help: Períodes Model 115 sense pagament rellevant de lloguer urbà, separats
+          per comes, format AAAA:Període (per exemple 2025:3T,2025:4T). És evidència
+          local explícita, no evidència de presentació a l'AEAT.
       monedas-virtuales-extranjero-above-threshold:
         help: Monedes virtuals a l'estranger superen el llindar del Model 721
       name:
@@ -418,6 +422,12 @@ wizard:
         help: Paga a professionals amb retenció
       pays-rent-with-retencion:
         help: Paga lloguer de local amb retenció
+      premio-loteria-gravamen-especial-sin-retencion:
+        help: Va obtenir un premi de loteries o apostes subjecte al gravamen especial
+          sense retenció ni ingrés a compte (Model 136)
+      premio-loteria-gravamen-especial-trimestres:
+        help: Trimestres en què es va cobrar el premi, com a tokens AAAA-nT separats
+          per | (per exemple 2025-1T|2025-3T)
       professional-income-withholding-ge-70pct:
         help: Almenys 70% dels ingressos professionals amb retenció prèvia
       representante-fiscal-nif:
@@ -596,6 +606,11 @@ wizard:
         help: Períodes AAAA:Període en què no es van pagar rendes subjectes a retenció
           o ingrés a compte, de manera que no es presenta un Model 111 en blanc.
         prompt: Períodes Model 111 sense retencions
+      modelo-115-no-relevant-payment-periods:
+        help: Períodes AAAA:Període en què no hi va haver cap pagament rellevant de
+          lloguer urbà subjecte a retenció, que permeten un càlcul local a zero del
+          Model 115.
+        prompt: Períodes Model 115 sense pagament rellevant
       monedas-virtuales-extranjero-above-threshold:
         prompt: Monedes virtuals a l'estranger superen el llindar del Model 721
       objective-estimation-modulos-iae-epigraph:
@@ -626,6 +641,14 @@ wizard:
         prompt: Paga a professionals amb retenció
       pays-rent-with-retencion:
         prompt: Paga lloguer de local amb retenció
+      premio-loteria-gravamen-especial-sin-retencion:
+        prompt: Va obtenir un premi de loteries o apostes subjecte al gravamen especial
+          sense retenció ni ingrés a compte
+      premio-loteria-gravamen-especial-trimestres:
+        help: Un token AAAA-nT per trimestre natural, separats per | (per exemple
+          2025-1T|2025-3T). Cada trimestre obre la seva pròpia presentació del Model
+          136.
+        prompt: Trimestres en què es va cobrar el premi
       professional-income-withholding-ge-70pct:
         prompt: Almenys 70% dels ingressos professionals amb retenció prèvia
       third-party-transactions-above-347-threshold:

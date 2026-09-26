@@ -34,7 +34,11 @@ from cadrumo.adapters.persistence.storage.master_key.active_session import (
     close_active_bucket_session,
     current_active_bucket_session,
 )
-from cadrumo.adapters.persistence.storage.master_key.login_throttle import login_throttle_path, record_login_failure
+from cadrumo.adapters.persistence.storage.master_key.login_throttle import (
+    evaluate_login_throttle,
+    login_throttle_path,
+    record_login_failure,
+)
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
 )
@@ -141,23 +145,24 @@ def test_logout_seals_the_live_session_it_evicts(tmp_path: Path) -> None:
             _close_live_login()
 
 
-def test_logout_clears_the_failed_login_backoff(tmp_path: Path) -> None:
-    """A successful sign-out retires the profile's accumulated backoff.
+def test_logout_leaves_the_failed_login_backoff_in_place(tmp_path: Path) -> None:
+    """Signing out never retires the backoff; only a successful proof or its own expiry does.
 
-    The backoff is keyed by profile and survives process exit, so leaving it
-    behind on a clean logout charges the next operator for attempts that were
-    already resolved.
+    Selecting a profile needs no secret and logout revokes whatever is
+    selected, so a logout that cleared the counter would let anyone reset the
+    backoff between guesses.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         try:
             profile_id = _register_and_login(storage_root)
             record_login_failure(storage_root=storage_root, bucket_id=profile_id, now=_now())
             throttle_path = login_throttle_path(storage_root=storage_root, bucket_id=profile_id)
-            assert throttle_path.is_file(), "the backoff must exist, or its removal proves nothing"
+            assert throttle_path.is_file(), "the backoff must exist, or its survival proves nothing"
 
             logout_active_profile()
 
-            assert not throttle_path.is_file()
+            evaluation = evaluate_login_throttle(storage_root=storage_root, bucket_id=profile_id, now=_now())
+            assert evaluation.consecutive_failures == 1
         finally:
             _close_live_login()
 

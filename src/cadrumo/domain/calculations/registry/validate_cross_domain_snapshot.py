@@ -46,6 +46,12 @@ class CrossDomainSnapshotCheck(Protocol):
     reddens where it has no claim trains its readers to work around it.
     ``revision_binding_ids`` carries a default so a registered check that
     predates it stays callable, which keeps the widening additive.
+
+    ``filing_year`` is the snapshot's own filing year. A check that reads
+    dated registry authority resolves it for the revision being validated,
+    never for the wall-clock date: validating an earlier revision against the
+    edition in force today asserts a later design over a year it never
+    governed.
     """
 
     def __call__(
@@ -54,6 +60,8 @@ class CrossDomainSnapshotCheck(Protocol):
         casilla_ids: frozenset[CasillaId],
         renta_first_slice_binding_targets: frozenset[CasillaId],
         revision_binding_ids: frozenset[BindingId] = ...,
+        *,
+        filing_year: int,
     ) -> list[str]:
         """Return the snapshot-routing failures detected by this peer-domain check."""
         ...
@@ -192,5 +200,6 @@ def check_cross_domain_snapshot_routing(
             casilla_ids,
             renta_first_slice_binding_targets,
             revision_binding_ids,
+            filing_year=snapshot.filing_year,
         ):
             checker.failures.append(f"{checker.prefix}: {failure}")

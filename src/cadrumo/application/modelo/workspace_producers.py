@@ -7,6 +7,7 @@ Core types:
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from datetime import date
 from enum import StrEnum
 from typing import TYPE_CHECKING, Annotated, Literal, Protocol, Self, TypedDict
@@ -24,14 +25,21 @@ from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.static_inspection import RegistryRevisionInspection
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
-from ..state_projection import ProjectionModeloReadiness
+from ..state_projection import ModeloReadinessRequest, ProjectionModeloReadiness
+from ..state_projection_ports import StateProjectionReadPorts
 from .work_review import ModeloWorkReview
 from .work_selection import ModeloWorkResolution, ModeloWorkSelectionMode, ModeloWorkSelectorRequest
 from .workspace_manifest import ModeloWorkspaceFieldManifestV1
 from .workspace_models import ModeloWorkspaceContributorIdentityV1
 
 if TYPE_CHECKING:
-    from ...domain.calculations.registry.authority import RegistryAuthorityCapture, RegistryAuthorityCurrentCoordinate
+    from ...core.identity.hex_ids import CalculationRevisionId
+    from ...domain.calculations.registry.authority import (
+        PinnedAuthorityOperation,
+        RegistryAuthorityCapture,
+        RegistryAuthorityCurrentCoordinate,
+    )
+    from .calculation_action_ports import CalculationActionPorts
 
 _PRODUCER_CONTRACT_VERSION = 1
 _EPOCH_SCHEMA_VERSION = 2
@@ -488,6 +496,79 @@ class ModeloWorkspaceWorkPortV1:
         )
 
 
+class ModeloWorkspaceCalculationPortV1:
+    """Application-owned port realization delegating to the sole CALCULATION capture."""
+
+    def __init__(
+        self,
+        *,
+        calculation_revision_id: CalculationRevisionId,
+        ports: CalculationActionPorts,
+    ) -> None:
+        """Bind the calculation revision id and authorities this port materializes over."""
+        self._calculation_revision_id = calculation_revision_id
+        self._ports = ports
+
+    @property
+    def producer_contract(self) -> ModeloWorkspaceProducerContractV1:
+        """Return the frozen CALCULATION contributor contract."""
+        return MODELO_WORKSPACE_CALCULATION_PRODUCER_CONTRACT_V1
+
+    def capture_projection_with_epoch(self) -> ModeloWorkspaceContributingProjectionV1[CalculationRevision]:
+        """Atomically capture one calculation revision and stamp it with its epoch."""
+        from .calculation import capture_modelo_calculation
+
+        capture = capture_modelo_calculation(self._calculation_revision_id, ports=self._ports)
+        return _contributing_projection(
+            self.producer_contract,
+            projection=capture.value,
+            comparison_domain=capture.comparison_domain,
+            generation=capture.generation,
+        )
+
+
+class ModeloWorkspaceReadinessPortV1:
+    """Application-owned port realization delegating to the sole READINESS capture."""
+
+    def __init__(
+        self,
+        *,
+        requests: tuple[ModeloReadinessRequest, ...],
+        active_profile_id: str,
+        read_ports: StateProjectionReadPorts,
+        operation: PinnedAuthorityOperation,
+    ) -> None:
+        """Bind the readiness requests, profile and authorities this port resolves against."""
+        self._requests = requests
+        self._active_profile_id = active_profile_id
+        self._read_ports = read_ports
+        self._operation = operation
+
+    @property
+    def producer_contract(self) -> ModeloWorkspaceProducerContractV1:
+        """Return the frozen READINESS contributor contract."""
+        return MODELO_WORKSPACE_READINESS_PRODUCER_CONTRACT_V1
+
+    def capture_projection_with_epoch(
+        self,
+    ) -> ModeloWorkspaceContributingProjectionV1[ModeloWorkspaceReadinessProjectionV1]:
+        """Atomically capture the readiness report set and stamp it with its epoch."""
+        from ..state_projection import capture_modelo_readiness
+
+        capture = capture_modelo_readiness(
+            self._requests,
+            active_profile_id=self._active_profile_id,
+            read_ports=self._read_ports,
+            operation=self._operation,
+        )
+        return _contributing_projection(
+            self.producer_contract,
+            projection=ModeloWorkspaceReadinessProjectionV1(reports=capture.value),
+            comparison_domain=capture.comparison_domain,
+            generation=capture.generation,
+        )
+
+
 class ModeloWorkspaceLocaleCataloguePortV1:
     """Application-owned port realization delegating to the sole LOCALE_CATALOGUE capture."""
 
@@ -519,6 +600,42 @@ class ModeloWorkspaceLocaleCataloguePortV1:
             ),
             comparison_domain=capture.comparison_domain,
             generation=capture.generation,
+        )
+
+
+class ModeloWorkspaceLocaleCatalogueBatchPortV1:
+    """Application-owned port capturing many LOCALE_CATALOGUE entries over one catalogue window."""
+
+    def __init__(self, *, translation_keys: Sequence[str], locale: str) -> None:
+        """Bind the translation keys and locale this port resolves against."""
+        self._translation_keys = tuple(translation_keys)
+        self._locale = locale
+
+    @property
+    def producer_contract(self) -> ModeloWorkspaceProducerContractV1:
+        """Return the frozen LOCALE_CATALOGUE contributor contract."""
+        return MODELO_WORKSPACE_LOCALE_CATALOGUE_PRODUCER_CONTRACT_V1
+
+    def capture_projections_with_epoch(
+        self,
+    ) -> tuple[ModeloWorkspaceContributingProjectionV1[ModeloWorkspaceLocaleCatalogueProjectionV1], ...]:
+        """Capture every bound entry in one window, each stamped with that window's epoch."""
+        from ...core.i18n.locale_catalogue import capture_locale_catalogue_entries
+
+        return tuple(
+            _contributing_projection(
+                self.producer_contract,
+                projection=ModeloWorkspaceLocaleCatalogueProjectionV1(
+                    locale=capture.locale,
+                    translation_key=capture.translation_key,
+                    present=capture.present,
+                    value=capture.value,
+                    catalogue_digest=capture.catalogue_digest,
+                ),
+                comparison_domain=capture.comparison_domain,
+                generation=capture.generation,
+            )
+            for capture in capture_locale_catalogue_entries(self._translation_keys, locale=self._locale)
         )
 
 
@@ -586,15 +703,18 @@ __all__ = [
     "MODELO_WORKSPACE_READINESS_PRODUCER_CONTRACT_V1",
     "MODELO_WORKSPACE_REGISTRY_PRODUCER_CONTRACT_V1",
     "MODELO_WORKSPACE_WORK_PRODUCER_CONTRACT_V1",
+    "ModeloWorkspaceCalculationPortV1",
     "ModeloWorkspaceContributingProjectionV1",
     "ModeloWorkspaceContributorKindV1",
     "ModeloWorkspaceEpochKindV1",
     "ModeloWorkspaceEpochV1",
     "ModeloWorkspaceFieldManifestPortV1",
+    "ModeloWorkspaceLocaleCatalogueBatchPortV1",
     "ModeloWorkspaceLocaleCataloguePortV1",
     "ModeloWorkspaceLocaleCatalogueProjectionV1",
     "ModeloWorkspaceProducerContractV1",
     "ModeloWorkspaceProducerStampV1",
+    "ModeloWorkspaceReadinessPortV1",
     "ModeloWorkspaceReadinessProjectionV1",
     "ModeloWorkspaceRegistryPortV1",
     "ModeloWorkspaceRegistryProjectionV1",

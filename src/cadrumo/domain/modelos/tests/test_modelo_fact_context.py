@@ -7,8 +7,8 @@ from decimal import Decimal
 
 import pytest
 
-from ....domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ...calculations.registry.errors import RegistryValidationError
+from ...calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ..modelo_fact_context import ModeloFactResolutionContext
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

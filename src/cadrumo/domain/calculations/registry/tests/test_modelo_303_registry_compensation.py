@@ -8,7 +8,6 @@ from decimal import Decimal
 import pytest
 
 from .....core.resources.bundled_data import bundled_path
-from .....domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
 from ..binding_temporal import TargetPeriodOffset
 from ..bindings import resolve_available_bound_inputs_by_casilla_id
 from ..bindings_previous_filing import previous_filing_binding_source_casilla_ids
@@ -21,6 +20,7 @@ from ._modelo_303_registry_support import (
     _M303_RESULTADO_CASILLA,
     load_modelo_303,
 )
+from .registry_observations import registry_grounded_modelo_observation
 from .snapshot_support import build_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

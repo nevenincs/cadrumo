@@ -37,7 +37,6 @@ def _profile_storage_env(*, storage_root: Path, tmp_path: Path) -> dict[str, str
     env.update(
         {
             "CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root),
-            "CADRUMO_SECRET_STORE_DIR": str(tmp_path / "fallback-store"),
             "CADRUMO_SECRET_PASSPHRASE": dev_test_database_password(),
         },
     )

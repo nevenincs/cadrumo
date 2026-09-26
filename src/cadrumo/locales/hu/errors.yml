@@ -142,6 +142,9 @@ errors:
       bevallási év szükséges.
     parameter_unknown: A(z) {parameter_id} paraméter nincs regisztrálva.
     relation_value_missing: A(z) {relation_id} relációnak nincs megadott értéke.
+    row_field_template_supplied_as_input: A(z) {casilla_ids} mezők a(z) {record_ids}
+      minden részletsorában külön értéket kapnak, ezért nem adhatók meg egyetlen bemeneti
+      értékként. Adja meg őket részletsorokként.
     text_input_non_text_casillas: 'Szöveges bemenet érkezett nem szöveges mezőkhöz:
       %{casilla_ids}.'
     unknown_input_casillas: 'Ismeretlen nyilvántartási bemeneti mező-azonosítók: {casilla_ids}.'
@@ -161,6 +164,8 @@ errors:
       műveletet.
     error_access_gate_submission_preflight: A hozzáférési kapu előzetes ellenőrzése
       elutasított egy írási műveletet.
+    error_actividad_asset: Egy IRPF gazdasági tevékenységi eszközművelet sikertelen
+      volt.
     error_aggregation_config: Az összesítési szolgáltatás összetételi invariáns megsértése.
     error_application_live: Az élő AEAT-olvasási vezénylés meghiúsult.
     error_application_live_iva_surface_timeout: Az élő IVA-olvasási felület időtúllépett,
@@ -538,6 +543,8 @@ errors:
     validate_expects_str: Az azonosítóérvényesítés szöveges értéket vár; {got_type}
       érkezett.
   integrity:
+    canonical_actividad_asset_history_persistence: A titkosított eszköztörténet nem
+      nyitható meg újra biztonságosan.
     canonical_aeat_sync_workspace_projection: A már betöltött AEAT-forrásokból nem
       állítható össze biztonságos pillanatkép.
     canonical_authority_component_codec: Egy hatósági komponenst nem lehet kanonikus
@@ -548,6 +555,8 @@ errors:
       komponenskészlet váratlanul megváltozott.
     canonical_authority_store_cutover: A hatósági tároló rögzített hivatkozása más
       olvasógenerációra mutat.
+    canonical_authority_store_format: A közzétett hatósági tároló formátumát ez a
+      verzió nem olvassa; tegye közzé újra a hatóságot.
     canonical_declarations_calendar_projection: A megadott naptári forrásokból nem
       állítható össze koherens, biztonságos nézet.
     canonical_declarations_workspace_projection: A megadott forrásokból nem állítható
@@ -560,8 +569,12 @@ errors:
       ezért nem elemezhetők.
     canonical_manifest_payload_validation: A korpusz manifesztjének adatai nem mentek
       át az érvényesítésen.
+    canonical_modelo_workspace_absent_readiness_projection: A készültségi rögzítés
+      az ígért jelentés nélkül tért vissza.
     canonical_modelo_workspace_absent_registry_projection: A nyilvántartási rögzítés
       az ígért vetítés nélkül tért vissza.
+    canonical_modelo_workspace_materialization_provenance_missing: Egy tárolt ismétlődő
+      sor értéke nem nevezi meg a forráskötését.
     canonical_relation_binding_join: A csomagolt reláció–kötés megfeleltetés nem olvasható
       a deklarált módon.
     canonical_tampered_manifest_payload: A korpusz manifesztjének kivonata nem egyezik
@@ -598,6 +611,8 @@ errors:
     integrity_profile_answer_type: Egy profilválasz-mező váratlan típust kapott.
     integrity_profile_bucket_mismatch: A(z) %{profile_id} profil nem tartozik a(z)
       %{bucket_id} tárolóhoz; egy profiltároló pontosan egy profilazonosítót tartalmaz.
+    integrity_profile_record_schema_migration_required: A profilrekordot egy korábbi
+      profilséma szerint tárolták, ezért olvasás előtt át kell alakítani.
     integrity_profile_snapshot_hash_mismatch: A profil-pillanatkép hashje nem egyezik
       az aktuális vetítéssel.
     integrity_profile_snapshot_not_found: Nem létezik profil-pillanatkép a megadott
@@ -679,6 +694,9 @@ errors:
     internal_operation_declaration_breach: 'Belső hiba: egy művelet-végrehajtó olyan
       fázist, hatást, erőforrást vagy interakciót igényelt, amelyet a definíciója
       nem deklarál.'
+    internal_operation_executor_returned_no_result: 'Belső hiba: a művelet eredmény
+      nélkül állt le, és semmire sem vár, ezért sikertelenként lezárult. Többé nem
+      történik vele semmi; az okot a diagnosztikai naplókban találja.'
     internal_operation_unsettled: 'Belső hiba: a művelet leállt, mielőtt az eredményét
       rögzíteni lehetett volna. Nyitva marad, és a tulajdonosi zárolás lejártakor
       automatikusan lezárul; az okot a diagnosztikai naplókban találja.'
@@ -710,6 +728,9 @@ errors:
       meg, amíg befejeződik, és próbálja újra.
     locked_google_keychain: A Google-hitelesítő adatokat tároló operációs rendszer
       kulcstára zárolt vagy elérhetetlen. Oldja fel a kulcstárat, és próbálja újra.
+    locked_journal_busy: Egy naplófájlt egy másik program használatban tartott, ezért
+      nem lehetett olvasni vagy írni. Semmi sem veszett el; próbáld újra egy kis idő
+      múlva.
     locked_storage_bucket_busy: A tárolási bucket egy másik folyamat által van használatban.
       Várja meg, amíg az a folyamat befejeződik, és próbálja újra.
     locked_storage_bucket_session: Ehhez a művelethez feloldott tárolási bucket szükséges.
@@ -744,10 +765,26 @@ errors:
       elutasított a jelenlegi hozzáférési hatókörben.
     canonical_inventory_closing_authority_conflict: Már rögzítve van egy másik, megváltoztathatatlan
       készletzárási hatóság.
+    canonical_invoice_withholding_evidence: A számla bizonyítékai alapján a forrásadó-levonás
+      nem rögzíthető.
+    canonical_ledger_payment_withholding_evidence: A főkönyvi kifizetés alapján a
+      forrásadó-levonás nem rögzíthető.
     canonical_m036_declaration_ambiguous: A 036-os nyomtatvány-bevallás azonosítójának
       előtagja több rekordra illeszkedik.
     canonical_m036_declaration_not_found: A kért azonosítónak megfelelő 036-os nyomtatvány-bevallás
       nem található.
+    canonical_m193_phase_materialization: Az aktív tőkebizonyítékok alapján nem vezethető
+      le a 193-as nyomtatvány közzétételi szakasza.
+    canonical_modelo_123_count_authority_unresolved: 'A 123-as nyomtatvány továbbra
+      is elutasított: ehhez az időszakhoz forrásadó-adat van rögzítve, de hivatalos
+      szabály nem határozza meg a „Número de rentas” számolását, ezért nem számítható
+      ki, nem ellenőrizhető és nem nyújtható be.'
+    canonical_modelo_193_settled_row_amount_authority_unresolved: 'A 193-as nyomtatvány
+      nem exportálható: olyan tételt tartalmaz, amely korábbi évben keletkezett jövedelmet
+      fizet ki, és egyetlen hivatalos forrás sem határozza meg, milyen alapot és forrásadót
+      kell ebben a tételben bevallani.'
+    canonical_modelo_lifecycle_clock_precedes: A művelet órája korábbi egy frissítendő
+      rekordnál, ezért semmi sem lett mentve. Próbálja újra az aktuális idővel.
     canonical_modelo_workspace_stale_cursor: A rögzített kurzor már nem egyezik az
       aktuális alappal; indítsa újra a lekérdezést.
     canonical_modelo_workspace_unresolved_work: A munkaterület olvasása feloldatlan
@@ -756,6 +793,8 @@ errors:
       a hiteles horgonyon.
     canonical_operation_observation_unknown_operation: A kért művelethez nem tartozik
       megfigyelési napló.
+    canonical_operation_subject_busy: Ehhez a bevalláshoz egy másik művelet még folyamatban
+      van. Várja meg, amíg befejeződik, majd próbálja újra.
     canonical_previous_filing_observation_absent: A szükséges korábbi bevallás nem
       került megfigyelésre.
     canonical_prorrata_election: A prorrata-választás nem felel meg a LIVA 105. cikkének.
@@ -779,6 +818,15 @@ errors:
     canonical_tui_unknown_destination: A kért TUI-célállomás nincs a támogatott katalógusban.
     canonical_tui_unresolved_action_candidate: A TUI-műveletjelöltnek nincs megfelelő
       katalógusdeklarációja.
+    canonical_withholding_filing_cadence: A forrásadó-levonás nem sorolható olyan
+      negyedéves időszakba, amelyet a bevalló benyújtási ütemezése nem rendel hozzá.
+      A havi forrásadó-levonási időszakok még nem támogatottak.
+    canonical_withholding_observation_mutation: Az időszak forrásadó-levonási bizonyítékainak
+      módosítása elutasítva.
+    canonical_withholding_producer: A forrásadó-levonási bizonyítékok nem felelnek
+      meg egyetlen támogatott nyomtatvány-útvonalnak sem.
+    canonical_withholding_recognition: A megadott bizonyítékokból nem határozható
+      meg a forrásadó-levonás elszámolási időpontja.
     censal_read_identity: A nyilvántartási olvasás nem ehhez a profilhoz tartozó adózóé.
     clave_credentials_incomplete: A kiválasztott Cl@ve hitelesítési módból hiányzik
       egy szükséges hitelesítő adat.
@@ -834,6 +882,15 @@ errors:
       ehhez a művelethez használható állapotban.
     modelo_compare_need_two_years: Az összehasonlításhoz két különböző benyújtási
       év szükséges.
+    modelo_edit_baseline_stale: A bevallás a megnyitása óta megváltozott, ezért a
+      szerkesztés nem lett alkalmazva. Nyissa meg újra, és szerkessze ismét.
+    modelo_edit_contract_incompatible: A szerkesztés olyan formátumban készült, amelyet
+      ez a verzió nem fogad el, ezért semmi sem változott. Nyissa meg újra a bevallást,
+      és szerkessze ismét.
+    modelo_edit_intent_unsupported: Ez a fajta szerkesztés még nem érhető el, ezért
+      semmi sem változott.
+    modelo_edit_refused: A szerkesztést elutasította a rendszer, és semmi sem változott.
+      Ellenőrizze az értékeket, majd próbálja újra.
     modelo_export_cross_bucket: A megcímzett revízió egy másik bucket-hez tartozik,
       nem az aktív profil bucket-jéhez. Az export csak az aktív profil bucket-en belül
       működik.
@@ -858,6 +915,8 @@ errors:
       revízióhoz tartozik.
     modelo_workspace_manifest_capture_not_current: A mezőjegyzék olvasás közben megváltozott;
       rögzítse újra.
+    producer_capture_not_current: Egy termelői vetület megváltozott olvasás közben;
+      rögzítse újra.
     profile_capsule_archive: A profil archívumát nem sikerült írni vagy olvasni
     profile_capsule_source: A megadott forrás nem olvasható profilkapszula
     profile_import_collision: Az importált profil azonosítója ütközik egy meglévővel.
@@ -874,11 +933,22 @@ errors:
       a bevallások között. A folytatás előtt tekintse át az összegeket.
     reconciliation_evidence_invalid: A PDF nem olvasható. Ellenőrizze, hogy a fájl
       az AEAT justificante és nem más dokumentum, és hogy nem sérült. Futtassa újra
-      a(z) `aeat app modelo reconcile file WORK_UNIT_ID --file PATH` parancsot a helyes
-      fájllal.
+      a(z) `aeat app modelo reconcile import WORK_UNIT_ID --file PATH` parancsot a
+      helyes fájllal.
     refused_access_gate_live_read_not_enabled: Az AEAT élő olvasási hozzáférés le
       van tiltva. Ez a művelet az aktuális konfiguráció alatt nem léphet kapcsolatba
       az AEAT-tal.
+    refused_active_profile_pointer_manual_recovery: Az aktív profil mutatója ({path})
+      nem olvasható, ezért a revíziója elvesztése nélkül nem törölhető; kézi helyreállítást
+      igényel.
+    refused_actividad_asset_claim_conflict: Az értékcsökkenési elszámolás ütközik
+      az eszköz már rögzített elszámolásaival.
+    refused_actividad_asset_incomplete: Az eszköz értékcsökkenési ütemtervéből hiányzik
+      egy szükséges adat, például a nyitó halmozott értékcsökkenés.
+    refused_actividad_asset_unsupported: A kért értékcsökkenéshez ebben az esetben
+      nincs nyilvántartott jogforrás.
+    refused_actividad_asset_validation: Egy eszközadat vagy értékcsökkenési kérés
+      nem felelt meg az ellenőrzésnek.
     refused_apoderado_invalid_represented_nif: A képviselt fél adóazonosítója nem
       érvényes NIF, NIE vagy CIF.
     refused_apoderado_live_check_unavailable: A képviselők élő ellenőrzése nem érhető
@@ -1040,10 +1110,27 @@ errors:
       táblázatot.
     refused_modelo_charge_account_missing: Csoportos beszedési bevallást választottak,
       de nincs rögzített terhelési számla.
+    refused_modelo_export_prior_domiciliation_election_required: A 303-as nyomtatvány
+      exportálásához döntés szükséges a korábbi csoportos beszedésről (megtartás,
+      illetve visszavonás vagy módosítás); ilyen nem érkezett, ezért semmi sem íródott
+      ki. Válasszon egyet, és exportáljon újra.
+    refused_modelo_export_product_identity_unavailable: 'A hivatalos export nem érhető
+      el: a rekordterv a „Versión del Programa” és a „NIF del desarrollador” fejlécmezőt
+      a szoftverfejlesztőnek tartja fenn, és ezekhez nincs ellenőrzött termékazonosító.
+      A Cadrumo nem tölti ki őket szóközökkel vagy helyettesítő értékekkel. A számítás
+      és annak ellenőrzése érvényes marad; az exporthoz a szoftverfejlesztőtől származó,
+      ellenőrzött programazonosító és fejlesztői NIF szükséges.'
     refused_modelo_ledger_evidence_recapture: A bevallás bizonyítékai nem csomagolhatók
       újra, mert a mögöttes főkönyvi tételek a lezárás óta megváltoztak. Számold újra
       a bevallást; az újrarögzítés csak a változatlan tételekhez csatolt bizonyítékot
       veszi fel.
+    refused_modelo_m303_exonerado_390_attestation_unadmissible: 'A 390-es nyomtatvány
+      alkalmazhatóságáról szóló nyilatkozat nem használható ehhez a 303-as nyomtatványhoz:
+      az azonosítója és SHA-256 értéke hibás formátumú vagy nem egyezik, vagy a nyilatkozat
+      nem szerepel ebben a profilban, másik negyedévhez tartozik, már nem egyezik
+      a jelenlegi profillal, vagy ellentmond a negyedév egy másik nyilatkozatának.
+      Semmi sem lett kiszámítva; rögzítsen új nyilatkozatot erre a negyedévre, és
+      próbálja újra.'
     refused_modelo_m303_rectificativa_motive: A 303-as rectificativa egyetlen kanonikus
       indokot követel meg egy alkalmazható és felülvizsgált rekordtervnél; az indok
       minden más esetben tiltott.
@@ -1057,6 +1144,10 @@ errors:
     refused_modelo_refund_election_not_eligible: Visszatérítést kértek olyan időszakra,
       ahol nem elérhető; csak az év utolsó bevallási időszaka tesz lehetővé nem REDEME
       visszatérítést.
+    refused_modelo_stored_row_field_input: A(z) {calculation_revision_id} számítási
+      változat egyetlen bemeneti értéket tárol a(z) {casilla_ids} mezőkhöz, amelyek
+      minden részletsorban külön értéket kapnak. Számítsa újra a(z) {work_unit_id}
+      munkaegységet a lecseréléséhez.
     refused_modeloprior_domiciliation_election: A korábbi csoportos beszedés törlését
       vagy módosítását elutasítottuk, mert hiányzik vagy érvénytelen a 303-as helyesbítő
       bevallás, illetve az U alapbevallás hivatalos igazolása.
@@ -1168,6 +1259,8 @@ errors:
       hagyja jóvá újra a tervezetet.
     submission_preflight_error_findings: A tervezetben {finding_count} ERROR súlyosságú
       megállapítás van; javítsa ezeket benyújtás előtt.
+    tui_modelo_lifecycle_action_unavailable: A kiválasztott Modelo-életciklusművelet
+      nem érhető el.
     unsupported_currency: A megadott devizakód nem támogatott.
   snapshot:
     ambiguous_revision_selection: 'Egynél több nyilvántartási revízió illeszkedik

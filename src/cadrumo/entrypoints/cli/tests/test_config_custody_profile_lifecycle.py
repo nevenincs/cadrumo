@@ -32,11 +32,22 @@ from cadrumo.adapters.persistence.profile.tests.profile_registration import regi
 from ....core.config import load_settings, override_settings
 from ....core.directory_scan import DirectoryEntryKind, scan_directory
 from ....core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
+from ....tests.call_time_refusing_keyring import CALL_TIME_REFUSING_KEYRING
 from ....tests.inventory import REPO_ROOT
 from ....tests.os_keychain_hook import require_os_credential_store
 from .subprocess_cli import run_cadrumo_subprocess
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+# The two ways a host cannot custody a session key: no usable backend at all,
+# and a backend that passes the usability probe and then refuses every call
+# with a non-keyring exception, as a Windows process without a logon session
+# does (error 1312). Both must degrade to the same typed, process-scoped login.
+_KEYCHAIN_REFUSALS = pytest.mark.parametrize(
+    "keychain_backend",
+    ["keyring.backends.fail.Keyring", CALL_TIME_REFUSING_KEYRING],
+    ids=["no-usable-backend", "call-time-logon-session-refusal"],
+)
 
 
 def _run_cadrumo(
@@ -52,7 +63,6 @@ def _run_cadrumo(
         args,
         settings={
             "cadrumo_local_storage_root": storage_root,
-            "cadrumo_secret_store_dir": storage_root / "fallback-store",
             "cadrumo_secret_passphrase": resolved_passphrase,
             "cadrumo_output_language": "en",
         },
@@ -352,7 +362,8 @@ def test_config_passphrase_change_self_authenticates_without_a_keychain(tmp_path
     assert rotated_again.returncode == 0, _combined_output(rotated_again)
 
 
-def test_profile_root_secret_authenticates_keychain_free_read_in_process(tmp_path: Path) -> None:
+@_KEYCHAIN_REFUSALS
+def test_profile_root_secret_authenticates_keychain_free_read_in_process(tmp_path: Path, keychain_backend: str) -> None:
     """A parsed resume-fallback leaf can authenticate and continue in one process."""
     _register_profile(
         tmp_path,
@@ -377,7 +388,7 @@ def test_profile_root_secret_authenticates_keychain_free_read_in_process(tmp_pat
     shown = _run_cadrumo(
         tmp_path,
         ("--profile-secrets-stdin", "config", "profile", "view", "custody"),
-        extra_env={"PYTHON_KEYRING_BACKEND": "keyring.backends.fail.Keyring"},
+        extra_env={"PYTHON_KEYRING_BACKEND": keychain_backend},
         stdin_payload=json.dumps({"profile_passphrase": passphrase}),
     )
 
@@ -390,14 +401,15 @@ def test_profile_root_secret_authenticates_keychain_free_read_in_process(tmp_pat
         result = _run_cadrumo(
             tmp_path,
             ("--profile-secrets-stdin", *command),
-            extra_env={"PYTHON_KEYRING_BACKEND": "keyring.backends.fail.Keyring"},
+            extra_env={"PYTHON_KEYRING_BACKEND": keychain_backend},
             stdin_payload=json.dumps({"profile_passphrase": passphrase}),
         )
         assert result.returncode == 0, _combined_output(result)
         assert passphrase not in _combined_output(result)
 
 
-def test_keychain_free_root_login_notice_survives_a_real_leaf_refusal(tmp_path: Path) -> None:
+@_KEYCHAIN_REFUSALS
+def test_keychain_free_root_login_notice_survives_a_real_leaf_refusal(tmp_path: Path, keychain_backend: str) -> None:
     """A refusal after real Argon2 login carries the staged Notice on stderr."""
     _register_profile(tmp_path, "custody")
     passphrase = load_settings().cadrumo_dev_test_database_password.get_secret_value()
@@ -413,7 +425,7 @@ def test_keychain_free_root_login_notice_survives_a_real_leaf_refusal(tmp_path: 
             "view",
             "transaction-does-not-exist",
         ),
-        extra_env={"PYTHON_KEYRING_BACKEND": "keyring.backends.fail.Keyring"},
+        extra_env={"PYTHON_KEYRING_BACKEND": keychain_backend},
         stdin_payload=json.dumps({"profile_passphrase": passphrase}),
     )
 

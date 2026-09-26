@@ -9,6 +9,7 @@ from cadrumo.application.operator_surface.command_ports import (
 
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 from .command_spec import (
+    FLAG_VALUE,
     PATH_VALUE,
     TEXT_VALUE,
     WHOLE_NUMBER_VALUE,
@@ -58,6 +59,19 @@ def _option(
         transport_locus=transport_locus,
         transport_shape=transport_shape,
         transport_role=transport_role,
+    )
+
+
+def _boolean_choice(name: str, declaration: str, help_key: TranslationKey) -> OptionSpec:
+    """Declare a tri-state operator choice without silently choosing false."""
+    return OptionSpec(
+        name,
+        (declaration, f"--no-{declaration.removeprefix('--')}"),
+        FLAG_VALUE,
+        ParameterDefault.value(None),
+        help_key,
+        is_flag=True,
+        flag_value=True,
     )
 
 
@@ -118,14 +132,22 @@ QUICKFILE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 "cli.app.modelo.work.prior_domiciliation_election_help",
                 default="keep",
             ),
+            _boolean_choice(
+                "joint_return_elected",
+                "--joint-return-elected",
+                TranslationKey("cli.app.modelo.work.joint_return_elected_help"),
+            ),
             _option(
-                "m303_filing_evidence",
-                ("--m303-filing-evidence",),
-                PATH_VALUE,
-                "cli.app.modelo.work.m303_filing_evidence_help",
-                transport_locus=TransportLocus.LOCAL_IN,
-                transport_shape=TransportShape.FILE,
-                transport_role=TransportRole.AUXILIARY,
+                "m303_exonerado_390_attachment_id",
+                ("--m303-exonerado-390-attachment-id",),
+                TEXT_VALUE,
+                "cli.app.modelo.work.m303_exonerado_390_attachment_id_help",
+            ),
+            _option(
+                "m303_exonerado_390_sha256",
+                ("--m303-exonerado-390-sha256",),
+                TEXT_VALUE,
+                "cli.app.modelo.work.m303_exonerado_390_sha256_help",
             ),
             _option(
                 "output_language",

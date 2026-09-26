@@ -173,6 +173,8 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
         self._active_target: TuiNavigationTargetV1 | None = None
         self._home_semantic_focus: HomeTarget | None = None
         self._account_session: HomeAccountSession | None = None
+        self._onboarding_offered = False
+        """Whether this session has already opened the setup walk once."""
         self._read_account_session = read_account_session
         """Checks the live session's deadline without touching it, or ``None``.
 
@@ -625,6 +627,13 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
             self._active_destination_catalogue = self._destination_catalogue
         self._active_target = None
         self._replace_destination(HomeScreen(projection, restore_target=semantic_focus))
+        factories = self._account_factories
+        if factories is not None and factories.onboarding_pending and not self._onboarding_offered:
+            # A profile that is not set up yet cannot prepare a declaration,
+            # so the first Home of the session hands straight on to the setup
+            # walk. Once only: leaving it returns to Home like any destination.
+            self._onboarding_offered = True
+            self.call_next(self.run_account_action, AccountActionV1.PROFILE)
 
     def _on_destination_dismissed(self, _: None) -> None:
         """Return from a real child dismissal through the projection refresh door.

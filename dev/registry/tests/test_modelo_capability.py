@@ -104,20 +104,17 @@ class _SingleModeloAuthority(ValidatedRegistryAuthority):
 def test_a_tree_shipped_below_filing_grade_is_reported(authority: ValidatedRegistryAuthority) -> None:
     """Shipping filing bytes for a revision that declares it cannot file is caught.
 
-    This occurs live: two revisions ship a committed generated export tree while
-    declaring applicability grade. It is reported structurally rather than by
-    reading the reviewer prose, because one of those revisions carries an
-    attestation limiting itself to scheduling and applicability and describing a
-    much smaller declaration than the one now shipped. That attestation is a
-    person's signed statement and must not be rewritten to match the data, so
-    the disagreement between the shipped tree and the declared grade is the only
-    honest signal available.
+    This occurs live: modelo 222 ships committed generated export trees while
+    declaring calculation grade. It is reported structurally rather than by
+    reading reviewer prose, because the disagreement between the shipped tree and
+    the declared grade is the signal. Modelo 185 ships a tree at filing grade and
+    is screened alongside it, so the screen is shown to separate the two.
     """
     findings = [
         item for item in screen_authority(authority, ("222", "185")) if item.kind == "tree_ships_below_filing_grade"
     ]
 
-    assert {item.modelo for item in findings} == {"222", "185"}
+    assert {item.modelo for item in findings} == {"222"}
     assert all("cannot file" in item.detail for item in findings)
 
 

@@ -1,0 +1,119 @@
+---
+tags:
+  - '#exec'
+  - '#assets-core'
+date: '2026-09-21'
+modified: '2026-09-21'
+body_schema: 'body-v2'
+body_hash: 'sha256:7ca1ff1e22bf8b559886fb387727e9e7b477c5ee68e262a8f367b172cf17ecac'
+related:
+  - "[[2026-09-21-assets-core-plan]]"
+---
+
+# `assets-core` ledger
+
+## Changes
+
+- `S02` `M` `src/cadrumo/application/aggregation/tests/test_renta_ledger.py`
+- `S02` `M` `src/cadrumo/application/aggregation/tests/test_inventory_source.py`
+- `S02` `verify:` `uv run ruff check two P01.S02 test files` -> `pass`
+- `S02` `by:` `assets-stage1-regression`
+- `S01` `M` `.vault/reference/2026-09-21-assets-core-ownership-contracts-reference.md`
+- `S01` `M` `.vault/research/2026-09-21-assets-core-lifecycle-and-integration-research.md`
+- `S01` `M` `.vault/adr/2026-09-21-assets-core-lifecycle-contract-adr.md`
+- `S01` `verify:` `vaultspec assets-core focused checks` -> `pass`
+- `S01` `by:` `root`
+- `S03` `A` `src/cadrumo/domain/renta/actividad_asset/`
+- `S03` `A` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/parameters/0002-activity-asset-amortization.toml`
+- `S03` `A` `dev/registry/tests/test_modelo_100_activity_asset_amortization_parameters.py`
+- `S03` `A` `.vault/adr/2026-09-21-assets-core-cost-basis-stages-adr.md`
+- `S03` `verify:` `Ruff ty basedpyright` -> `pass`
+- `S03` `by:` `OpenAI GPT-5 lead; Terra High domain worker; Terra Max authority audit`
+- `S04` `A` `src/cadrumo/application/actividad_asset/`
+- `S04` `A` `src/cadrumo/adapters/persistence/profile/actividad_asset.py`
+- `S04` `A` `src/cadrumo/adapters/persistence/profile/tests/test_actividad_asset_history.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/secure_object_namespaces.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/namespace_registry.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/tests/test_namespace_registry.py`
+- `S04` `verify:` `global namespace order test` -> `fail`
+- `S04` `by:` `OpenAI GPT-5 lead; Terra High persistence worker`
+- `S03` `verify:` `uv run pytest -n 0 -m integration dev/registry/tests/test_authoring_candidate_inspection.py` -> `pass`
+- `S03` `verify:` `focused asset domain and authority pytest (13 tests)` -> `pass`
+- `S04` `verify:` `focused combined P02 pytest (20 tests)` -> `pass`
+- `S04` `verify:` `Ruff ty basedpyright git diff --check` -> `pass`
+- `S05` `A` `src/cadrumo/domain/calculations/registry/actividad_asset_bindings.py`
+- `S05` `A` `src/cadrumo/application/calculations/actividad_asset_schedule.py`
+- `S05` `A` `src/cadrumo/application/aggregation/modelo_bindings_actividad_assets.py`
+- `S05` `A` `dev/registry/tests/test_activity_asset_schedule_authority_resolution.py`
+- `S05` `A` `src/cadrumo/application/aggregation/tests/test_modelo_bindings_actividad_assets.py`
+- `S05` `by:` `OpenAI GPT-5 lead; Terra High resolver worker`
+- `S06` `verify:` `live asset source mesh tests (11 tests)` -> `pass`
+- `S05` `verify:` `asset authority and pure composition tests (7 tests)` -> `pass`
+- `S06` `verify:` `surrounding source boundary regression tests (44 tests)` -> `pass`
+- `S06` `M` `src/cadrumo/domain/renta/actividad_asset/claims.py`
+- `S06` `M` `src/cadrumo/domain/renta/actividad_asset/tests/test_claims.py`
+- `S06` `M` `src/cadrumo/application/aggregation/modelo_bindings.py`
+- `S06` `M` `src/cadrumo/application/aggregation/modelo_bindings_renta_expenses.py`
+- `S06` `M` `src/cadrumo/application/modelo/calculation_action_ports.py`
+- `S06` `M` `src/cadrumo/application/modelo/calculation_actions.py`
+- `S06` `M` `src/cadrumo/entrypoints/adapter_composition.py`
+- `S06` `M` `src/cadrumo/application/aggregation/tests/test_modelo_source_mesh_ledger.py`
+- `S06` `M` `src/cadrumo/adapters/persistence/profile/tests/file_flow_test_support.py`
+- `S06` `M` `src/cadrumo/adapters/persistence/profile/tests/test_bienes_inversion_regularizacion_source_mesh_enrollment.py`
+- `S06` `M` `src/cadrumo/adapters/persistence/profile/tests/test_renta_ledger.py`
+- `S06` `M` `src/cadrumo/adapters/persistence/profile/tests/test_source_boundary_and_enrollment.py`
+- `S06` `by:` `OpenAI GPT-5 lead; Terra High resolver worker`
+- `S06` `verify:` `Ruff ty basedpyright git diff --check` -> `pass`
+- `S07` `A` `src/cadrumo/application/actividad_asset/iva_linkage.py`
+- `S07` `A` `src/cadrumo/application/actividad_asset/tests/test_iva_linkage.py`
+- `S07` `by:` `Terra High filing worker; OpenAI GPT-5 lead`
+- `S07` `verify:` `focused reciprocal IVA linkage pytest (4 tests)` -> `pass`
+- `S09` `A` `src/cadrumo/application/actividad_asset/operations.py`
+- `S09` `A` `src/cadrumo/entrypoints/cli/_actividad_asset_cli.py`
+- `S09` `A` `src/cadrumo/entrypoints/cli/_app_ledger_actividad_asset_command_specs.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/_app_ledger_command_specs.py`
+- `S10` `A` `src/cadrumo/entrypoints/tui/ledger/actividad_asset.py`
+- `S10` `A` `src/cadrumo/entrypoints/tui/ledger/models_actividad_asset.py`
+- `S10` `M` `src/cadrumo/entrypoints/tui/launcher.py`
+- `S10` `M` `src/cadrumo/entrypoints/tui/ledger/controller.py`
+- `S10` `M` `src/cadrumo/entrypoints/tui/ledger/overview.py`
+- `S10` `M` `src/cadrumo/entrypoints/tui/ledger/routes.py`
+- `S10` `M` `src/cadrumo/entrypoints/tui/ledger/workspace_injection.py`
+- `S09-S10` `by:` `Terra High frontend worker; OpenAI GPT-5 lead`
+- `S09-S10` `verify:` `focused shared operations, CLI, TUI, and evidence pytest (11 tests)` -> `pass`
+- `S09-S10` `verify:` `Ruff ty basedpyright git diff --check` -> `pass`
+- `S11` `A` `dev/acceptance/assets/evidence.py`
+- `S11` `A` `dev/acceptance/assets/tests/test_evidence.py`
+- `S11` `verify:` `wheel build and installed site-packages origin` -> `pass`
+- `S11` `verify:` `installed TUI child over isolated encrypted storage` -> `blocked: no terminal child result`
+- `S11` `A` `dev/acceptance/assets/installed_tui_child.py`
+- `S11` `A` `dev/acceptance/assets/installed_journey.py`
+- `S11` `A` `dev/acceptance/assets/tests/test_installed_journey.py`
+- `S11` `verify:` `staged installed TUI supervisor and evidence pytest (4 tests)` -> `pass`
+- `S11` `verify:` `installed wheel probe and Home journey` -> `pass: clean exit 0`
+- `S11` `verify:` `installed Ledger journey` -> `blocked: clean exit 2 at required profile FieldEditScreen`
+- `S11` `verify:` `IVA lifecycle reserved unit evidence (11 tests)` -> `pass`
+- `S11` `verify:` `IVA live source-mesh integration` -> `fail: taxpayer-profile readiness fixture incomplete`
+- `S11` `verify:` `free-depreciation affected suite (34 tests)` -> `pass`
+- `S08` `A` `dev/acceptance/assets/export_journey.py`
+- `S08` `A` `dev/acceptance/assets/tests/test_export_journey.py`
+- `S08` `verify:` `installed M130/M100 asset overlay and official 2025 XSD validation` -> `pass`
+- `S08` `by:` `/root`
+- `S11` `M` `dev/acceptance/assets/evidence.py`
+- `S11` `M` `dev/acceptance/assets/installed_journey.py`
+- `S11` `M` `dev/acceptance/assets/installed_tui_child.py`
+- `S11` `A` `dev/acceptance/assets/installed_profile_setup.py`
+- `S11` `verify:` `installed TUI-to-CLI and CLI-to-TUI continuation` -> `pass`
+- `S11` `by:` `/root`
+- `S12` `M` `.vault/audit/2026-09-21-assets-core-audit.md`
+- `S12` `M` `.agents/session-briefs/handoffs/2026-09-21-assets-checkpoint.md`
+- `S12` `verify:` `final integrated review; no critical or high findings` -> `pass`
+- `S12` `by:` `/root`
+
+## Notes
+
+- `S04` Global namespace-order tripwire reaches an unrelated concurrent income-lane omission: withholding_workflow is enrolled but absent from that lane's expected tuple. Assets expected-order entry is present.
+- `S08` Blocked on concurrent uncommitted IVA-settlement ownership in src/cadrumo/domain/modelos/filing_record.py and the shared verification/export chain; calculation and provenance are proven, validated export is not claimed.
+- `S11` Acceptance status is conservative: AS3-AS8 and AS10 are proven; AS1, AS2, AS9, AS11, and AS12 remain blocked. The installed runner disproved the assumed hang and identified the required-profile admission modal, but no asset journey is claimed.
+- `S11` Commit `5b0d03887a` owns the AS7 implementation. A concurrent amend incident folded its final resolver-to-claim test into `79ace90cb5`; the implementation commit remained intact and no history rewrite was attempted.
+- `S08` AS12 is blocked before serialization by the absent public typed `FilingInstanceEvidence` authoring/resolution operation, including grounded exonerado-390 applicability metadata. Exporter production files are currently clean.

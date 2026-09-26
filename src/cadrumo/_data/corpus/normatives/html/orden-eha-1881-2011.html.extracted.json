@@ -9,10 +9,16 @@
   "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
   "units": [
     {
-      "text": "Orden EHA/1881/2011, de 5 de julio, por la que se aprueba el modelo 763 (BOE-A-2011-11704) - Modelo 763\nOrden EHA/1881/2011, de 5 de julio, por la que se aprueba el modelo 763.\nArticulo 1. Aprobacion del modelo 763.\nSe aprueba el modelo 763, «Autoliquidación del Impuesto sobre actividades de juego en los supuestos de actividades anuales o plurianuales».\nArticulo 4. Plazo de presentacion.\nLa presentación del modelo 763, autoliquidación del Impuesto sobre actividades de juego en los supuestos de actividades anuales o plurianuales, será trimestral y se efectuará durante el mes siguiente a la finalización de cada trimestre natural del año.\nProvenance: verbatim excerpt transcribed from the BOE consolidated text (https://www.boe.es/buscar/act.php?id=BOE-A-2011-11704) via agent web fetch during the obligation-enrollment campaign, under explicit operator authorization. Pending operator re-verification.",
-      "title": null,
-      "section": null,
-      "anchor": null
+      "text": "Se aprueba el modelo 763, «Autoliquidación del Impuesto sobre actividades de juego en los supuestos de actividades anuales o plurianuales».",
+      "title": "Articulo 1. Aprobacion del modelo 763.",
+      "section": "Articulo 1. Aprobacion del modelo 763.",
+      "anchor": "#a1"
+    },
+    {
+      "text": "La presentación del modelo 763, autoliquidación del Impuesto sobre actividades de juego en los supuestos de actividades anuales o plurianuales, será trimestral y se efectuará durante el mes siguiente a la finalización de cada trimestre natural del año.",
+      "title": "Articulo 4. Plazo de presentacion.",
+      "section": "Articulo 4. Plazo de presentacion.",
+      "anchor": "#a4"
     }
   ]
 }

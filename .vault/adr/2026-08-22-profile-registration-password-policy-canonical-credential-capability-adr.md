@@ -3,12 +3,13 @@ tags:
   - '#adr'
   - '#profile-registration-password-policy'
 date: '2026-08-22'
-modified: '2026-08-24'
+modified: '2026-09-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:ec38152a0d0a53d7ab04aaef5c647765aa43827dda282041adfc532d9aa65e1d'
+body_hash: 'sha256:1b7c1c9b7eba0295848d08d8a6584d438c0f0b02524a3a02c597c7988d0dbc2a'
 related:
   - "[[2026-08-22-profile-registration-password-policy-holistic-credential-capability-research]]"
   - "[[2026-08-13-profile-password-custody-rollup-adr]]"
+  - '[[2026-09-23-profile-password-custody-passphrase-reset-adr]]'
 ---
 
 # `profile-registration-password-policy` adr: `canonical credential capability` | (**status:** `accepted`)
@@ -71,7 +72,7 @@ custody guarantees accepted by `2026-08-13-profile-password-custody-rollup-adr`.
 - Envelope format, KDF grid, AAD, sentinel proof, transaction ordering, password
   generation, session revocation, and no-legacy rules remain unchanged.
 - Compromised-password blocklist design and normalization reconsideration are deferred.
-- Recovery-based password reset is a separate archive/lineage decision and is deferred.
+- Recovery-based password reset was deferred here as a separate archive/lineage decision; `2026-09-23-profile-password-custody-passphrase-reset-adr` (proposed) makes it.
 - Every implementation Step and every dispatched worker begins with `vaultspec-rag`
   grounding against code and governing ADRs, followed by exact-symbol confirmation.
 

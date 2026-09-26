@@ -30,7 +30,11 @@ from datetime import date
 from ...application.operator_actions.models import ActionReference, DeclaredNextAction
 from ...application.overview.agenda import OverviewAgenda
 from ...application.overview.backlog import OverviewBacklog
-from ...application.overview.calendar import actionable_post_filing_events
+from ...application.overview.calendar import (
+    actionable_post_filing_events,
+    holiday_coverage_statement,
+    shift_reason_statement,
+)
 from ...application.overview.calendar_evidence import NO_AEAT_HISTORY_NOTICE_CODE
 from ...application.overview.calendar_models import (
     CalendarWarning,
@@ -386,7 +390,11 @@ def _calendar_entry_text_line(entry: OverviewCalendarEntry) -> str:
         f"\topens={entry.opens_on.isoformat()}"
         f"\tcloses={entry.closes_on.isoformat()}"
         f"\tadjusted={entry.adjusted_closes_on.isoformat()}"
-        f"\tshift={calendar_shift_reason_text(entry.shift_reason)}"
+        f"\tshift={shift_reason_statement(entry.shift_reason)}"
+        f"\tholidays={holiday_coverage_statement(entry.holiday_coverage, entry.holiday_territory)}"
+        f"\tpayment_cutoff={entry.payment_cutoff_on.isoformat() if entry.payment_cutoff_on else 'none'}"
+        f"\tas_of={entry.evaluated_on.isoformat()}"
+        f"\tdays_overdue={entry.days_overdue if entry.days_overdue is not None else 'none'}"
         f"\tcenso_enrolment={entry.censo_enrolment_state.value}"
         f"\t{_calendar_filing_evidence_text_fields(entry.filing_evidence)}"
         f"\t{_calendar_entry_work_unit_text_fields(entry)}"
@@ -509,13 +517,21 @@ def overview_calendar_output(
         OverviewCalendarEntrySummaryPayload(
             modelo=entry.modelo,
             period=str(entry.period),
+            closes_on=entry.closes_on.isoformat(),
             adjusted_closes_on=entry.adjusted_closes_on.isoformat(),
+            shift_reason=entry.shift_reason,
+            holiday_coverage=entry.holiday_coverage.value,
+            holiday_territory=str(entry.holiday_territory) if entry.holiday_territory is not None else None,
+            payment_cutoff_on=entry.payment_cutoff_on.isoformat() if entry.payment_cutoff_on else None,
+            evaluated_on=entry.evaluated_on.isoformat(),
+            days_overdue=entry.days_overdue,
             user_state=entry.user_state.value,
             censo_enrolment_state=entry.censo_enrolment_state.value,
             local_filing_state=entry.filing_evidence.local_filing_state.value,
             aeat_submission_state=entry.filing_evidence.aeat_submission_state,
             justificante_verified=entry.filing_evidence.justificante_verified,
             detail_action=_calendar_entry_detail_action(entry),
+            recovery_action=_resolved_action(entry.recovery_action),
         ).model_dump(mode="json")
         for entry in cal.entries
     ]
@@ -551,6 +567,7 @@ def overview_calendar_output(
                     for warning in cal.warnings
                 ],
                 "generated_at": cal.generated_at.isoformat(),
+                "as_of": cal.evaluated_on.isoformat(),
                 "completeness": cal.completeness.model_dump(mode="json"),
                 "taxpayer_model_declared": cal.taxpayer_model_declared,
                 "incomplete_reason": cal.incomplete_reason,
@@ -959,36 +976,6 @@ def _calendar_entry_work_unit_text_fields(entry: OverviewCalendarEntry) -> str:
     if entry.local_work_unit_revision_id:
         fields.append(f"work_revision={entry.local_work_unit_revision_id}")
     return "\t".join(fields)
-
-
-def _calendar_shift_reason_part_text(part: str) -> str:
-    """Return the localized text label for one shift-reason token."""
-    if part == "business_day":
-        return tr(
-            "cli.overview.calendar.shift.business_day",
-        )
-    if part == "calendar_unavailable":
-        return tr(
-            "cli.overview.calendar.shift.calendar_unavailable",
-        )
-    if part == "domingo":
-        return tr(
-            "cli.overview.calendar.shift.domingo",
-        )
-    if part == "modelo_exception":
-        return tr(
-            "cli.overview.calendar.shift.modelo_exception",
-        )
-    if part == "sabado":
-        return tr(
-            "cli.overview.calendar.shift.sabado",
-        )
-    return part
-
-
-def calendar_shift_reason_text(shift_reason: str) -> str:
-    """Return the localized operator label for a calendar shift reason."""
-    return " + ".join(_calendar_shift_reason_part_text(part) for part in shift_reason.split(" + "))
 
 
 def _calendar_event_text_line(event: OverviewCalendarEvent) -> str:

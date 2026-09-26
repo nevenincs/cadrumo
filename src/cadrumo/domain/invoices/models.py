@@ -15,8 +15,9 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable, Iterator, Mapping
 from datetime import date
 from decimal import Decimal
+from pathlib import Path
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Final, Self, cast, override
+from typing import TYPE_CHECKING, Final, Self, override
 
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
@@ -31,7 +32,7 @@ from ...core.identity.hex_ids import InvoiceId
 from ...core.identity.tax_id import TaxIdIdentityToken
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.money.rounding import CENT, round_to_cents
-from ...core.time.utc import UtcInstant
+from ...core.time.utc import UtcInstant, parse_iso_datetime
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
@@ -44,6 +45,7 @@ from ..iva.classification import InvoiceKind, TransactionKind, resolve_transacti
 from ..iva.errors import IvaRateNotFoundError, IvaValidationError
 from ..iva.oss import OssIossRegime, resolve_oss_ioss_regime_catalogue
 from ..iva.schema import EUMemberState, IvaCategory, IvaRateKind, require_eu_member_state, spanish_eu_member_state
+from ..transactions.raw_transaction import RawProvenance, SourceFormat
 from . import normalization as _normalization
 from ._payload_normalisation import normalise_invoice_enum_fields, normalise_invoice_string_fields
 from .enums import (
@@ -394,6 +396,40 @@ class Invoice(BaseModel):
     # here means "not recorded", never "recorded as now".
     created_at: UtcInstant | None = None
     updated_at: UtcInstant | None = None
+    # Bulk-imported invoices retain the source file basename, content digest,
+    # and one-based source row through the same canonical provenance shape as
+    # raw ledger rows. Manual and other non-file-created invoices legitimately
+    # carry no source row, so this remains optional rather than inventing one.
+    provenance: RawProvenance | None = None
+
+    @field_validator("provenance", mode="before")
+    @classmethod
+    @pydantic_validation_boundary
+    def _normalise_nested_provenance_wire_values(cls, value: object) -> object:
+        """Rehydrate strict provenance values nested inside an envelope payload.
+
+        The generic encrypted envelope validates its JSON payload into Python
+        mappings before the nested invoice model sees them. That means strict
+        ``Path``/``datetime``/``SourceFormat`` fields arrive as their JSON wire
+        strings, unlike a direct ``RawProvenance.model_validate_json`` call.
+        Normalize those three wire forms here and keep ``RawProvenance`` as the
+        sole provenance shape.
+        """
+        if value is None or isinstance(value, RawProvenance):
+            return value
+        if not isinstance(value, Mapping):
+            return value
+        payload = STR_KEYED_MAPPING_ADAPTER.validate_python(value)
+        source_path = payload.get("source_path")
+        if isinstance(source_path, str):
+            payload["source_path"] = Path(source_path)
+        ingested_at = payload.get("ingested_at")
+        if isinstance(ingested_at, str):
+            payload["ingested_at"] = parse_iso_datetime(ingested_at)
+        source_format = payload.get("source_format")
+        if isinstance(source_format, str):
+            payload["source_format"] = SourceFormat(source_format)
+        return RawProvenance.model_validate(payload)
 
     @override
     def __hash__(self) -> int:
@@ -413,6 +449,16 @@ class Invoice(BaseModel):
     def grand_total_eur(self) -> Decimal | None:
         """``grand_total`` in euro, or ``None`` when the invoice is unconverted."""
         return self._in_eur(self.grand_total)
+
+    @property
+    def euro_value_pending(self) -> bool:
+        """Whether this is a foreign-currency invoice recorded without a euro rate.
+
+        Such an invoice is kept, and held back from every euro projection until
+        a rate is stamped on it; this names that state so a writer can tell the
+        operator at capture rather than leaving the first sign to a refusal.
+        """
+        return self.grand_total_eur is None
 
     @property
     def retention_amount_eur(self) -> Decimal | None:
@@ -1052,10 +1098,8 @@ def _normalise_linked_transaction_ids(value: object) -> tuple[str, ...]:
     )
     seen: dict[str, None] = {}
     for item in OBJECT_TUPLE_ADAPTER.validate_python(value):
-        _normalization.raise_first_invoice_violation(
-            ((not isinstance(item, str), "each linked_transaction_id must be a string"),),
-        )
-        normalized = cast(str, item).strip().lower()
+        text = _normalization.require_invoice_text(item, "each linked_transaction_id must be a string")
+        normalized = text.strip().lower()
         _normalization.raise_first_invoice_violation(
             (
                 (

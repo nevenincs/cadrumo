@@ -22,18 +22,14 @@ fleet:
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import pytest
 
 from ....adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend as _isolated_cli_backend,
 )
-from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
-from ....core.period import Period
-from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
+from ._m303_ordinary_cli_support import joint_return_options
 from ._modelo_work_ux_support import (
     _create_calculable_work_unit as _create_111_work_unit,
 )
@@ -52,8 +48,16 @@ _OPERATOR_FACTS = {
     "identity.name": "Operator",
     "identity.surnames": "Operator",
     "activities.description": "design",
+    "censo.activity_start_date": "2024-01-01",
     "taxpayer_type.irpf_income_categories": "actividad_economica",
     "tax_residence.ccaa": "madrid",
+    "tax_residence.jurisdiction_scope": "common_regime",
+    "iva.regime": "GENERAL",
+    "iva.m303_regime_composition": "general",
+    "iva.redeme_enrolled": "false",
+    "iva.cash_accounting_regime_enrolled": "false",
+    "iva.voluntary_sii_enrolled": "false",
+    "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
     # Modelo 111 readiness requires the colegio concertado answer.
     "withholding.colegio_concertado": "false",
 }
@@ -71,16 +75,9 @@ _LEGAL_ENTITY_FACTS = {
 }
 
 
-def _m303_filing_evidence(directory: Path, *, operation: PinnedAuthorityOperation) -> Path:
-    """Write the complete filing evidence M303 calculation requires, so the casilla gate is reached."""
-    path = directory / "m303-filing-evidence.json"
-    evidence = general_m303_filing_evidence(
-        Period.from_year_and_code(2025, "1T"),
-        reference="test:discovery-defects:m303",
-        operation=operation,
-    )
-    path.write_text(evidence.model_dump_json(), encoding="utf-8")
-    return path
+def _m303_filing_evidence_args() -> tuple[str, ...]:
+    """Answer the 1T ordinary Modelo 303 question so the canonical-casilla gate is reached."""
+    return joint_return_options()
 
 
 # ---------------------------------------------------------------------------
@@ -89,7 +86,7 @@ def _m303_filing_evidence(directory: Path, *, operation: PinnedAuthorityOperatio
 
 
 def test_work_calculate_rejects_registry_number_as_casilla_reference(
-    seed_profile: ProfileSeeder, tmp_path: Path, operation: PinnedAuthorityOperation
+    seed_profile: ProfileSeeder,
 ) -> None:
     """``--casilla`` requires canonical ``casilla.id`` values."""
 
@@ -99,7 +96,7 @@ def test_work_calculate_rejects_registry_number_as_casilla_reference(
         [
             "app", "modelo", "work", "calculate", work_unit_id,
             "--casilla", "regularizacion-inversiones=10.00",
-            "--m303-filing-evidence", str(_m303_filing_evidence(tmp_path, operation=operation)),
+            *_m303_filing_evidence_args(),
         ],
     )  # fmt: skip
     assert result.exit_code != 0, result.output
@@ -110,7 +107,7 @@ def test_work_calculate_rejects_registry_number_as_casilla_reference(
 
 
 def test_work_calculate_rejects_a_genuinely_unknown_numeric_casilla_id_candidate(
-    seed_profile: ProfileSeeder, tmp_path: Path, operation: PinnedAuthorityOperation
+    seed_profile: ProfileSeeder,
 ) -> None:
     """A numeric token that resolves to no canonical casilla.id still refuses.
 
@@ -123,7 +120,7 @@ def test_work_calculate_rejects_a_genuinely_unknown_numeric_casilla_id_candidate
         [
             "app", "modelo", "work", "calculate", work_unit_id,
             "--casilla", "9999=10.00",
-            "--m303-filing-evidence", str(_m303_filing_evidence(tmp_path, operation=operation)),
+            *_m303_filing_evidence_args(),
         ],
     )  # fmt: skip
     assert result.exit_code != 0, result.output

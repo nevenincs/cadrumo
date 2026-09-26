@@ -32,7 +32,7 @@ from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.submission.models import ModeloDraftStatus
 from ...filing.draft_construction import filing_binding_values
 from .._calculation_helpers import build_typed_observations
-from .._calculation_modelo_adjustments import suppress_m349_row_field_template_outputs
+from .._calculation_modelo_adjustments import drop_row_field_template_outputs
 from ..revision_replay_inputs import _m349_detail_row_replay_inputs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -127,8 +127,7 @@ def _calculated_revision(
     input_values = {casilla_id: str(value) for casilla_id, value in inputs.items()}
     binding_overrides = {binding_id: str(value) for binding_id, value in binding_values.items()}
     detail_rows = (row,)
-    casilla_values, observations = suppress_m349_row_field_template_outputs(
-        work_unit=work_unit,
+    casilla_values, observations = drop_row_field_template_outputs(
         revision=snapshot.revision,
         casilla_values=raw_casilla_values,
         observations=raw_observations,

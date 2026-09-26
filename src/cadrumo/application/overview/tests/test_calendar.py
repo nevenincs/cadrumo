@@ -12,11 +12,19 @@ from pydantic import ValidationError
 from ....core.period import Period
 from ....domain.calculations.registry.applicability import ApplicabilityVerdict, derive_modelo_applicability
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.calendar_ccaa_catalogue import require_calendar_ccaa
 from ....domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from ....domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from ....domain.contribuyente.entity_type import EntityType, LegalEntityForm
 from ....domain.deadlines.engine import DeadlineEngine
-from ....domain.deadlines.models import IVARegime, ObligationStatus, TaxpayerProfile
+from ....domain.deadlines.festivos import DeadlineHolidayCoverage
+from ....domain.deadlines.models import (
+    IrpfSpecialRegime,
+    IVARegime,
+    ModeloDeadline,
+    ObligationStatus,
+    TaxpayerProfile,
+)
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ...live.expedientes import PersistedExpedientesSnapshot
@@ -24,11 +32,13 @@ from ...live.expedientes_ports import ExpedientesDeclaration
 from ...live.notification_ports import RemoteNotification
 from ...live.notifications import PersistedNotificationsSnapshot
 from ..calendar import (
+    _calendar_entry_from_obligation,
     _registry_window_for_work_unit,
     build_overview_calendar,
     build_overview_calendar_events,
     calendar_events_from_expedientes_snapshots,
     calendar_events_from_notification_snapshots,
+    holiday_coverage_statement,
 )
 from ..calendar_models import (
     OverviewCalendar,
@@ -499,9 +509,11 @@ def _entry(**overrides: object) -> OverviewCalendarEntry:
         "closes_on": date(2026, 4, 20),
         "adjusted_closes_on": date(2026, 4, 20),
         "shift_reason": "business_day",
+        "holiday_coverage": DeadlineHolidayCoverage.NATIONAL_ONLY,
         "holiday_refs": (),
         "jurisdictions": (),
         "payment_cutoff_on": date(2026, 4, 15),
+        "evaluated_on": date(2026, 4, 1),
         "status": ObligationStatus.UPCOMING,
         "user_state": OverviewPeriodState.DUE,
     }
@@ -644,6 +656,66 @@ def test_notification_snapshots_project_message_events_on_notification_date() ->
     assert events[0].event_date == date(2025, 3, 12)
     assert events[0].reference_id == "2596230606502"
     assert events[0].status == "unread"
+    assert events[0].modelo is None
+    assert events[0].filing_year is None
+    assert events[0].period is None
+    assert events[0].aeat_submission_state is None
+    assert events[0].aeat_submitted_at is None
+    assert events[0].justificante_verified is None
+    assert events[0].verified_justificante_csv is None
+
+
+def test_notification_filing_like_text_stays_unlinked_and_replay_is_idempotent() -> None:
+    """A message cannot become filing evidence through suggestive metadata."""
+    row = RemoteNotification(
+        certificado_id="2596230606502",
+        tipo="notificacion",
+        concepto="Modelo 303 1T 2025 pagado con justificante",
+        titular_nif="B12345674",
+        titular_nombre="Test S.L.",
+        destinatario_nif="B12345674",
+        destinatario_nombre="Test S.L.",
+        fecha_emision=date(2025, 4, 20),
+        fecha_notificacion=date(2025, 4, 21),
+        modo_notificacion="DEHú",
+        leida=True,
+        source_url=_SOURCE_URL,
+    )
+    first = PersistedNotificationsSnapshot(
+        snapshot_id="a" * 64,
+        bucket_id=_BUCKET_ID,
+        captured_at=datetime(2025, 4, 21, 10, 0, tzinfo=UTC),
+        source_url=_SOURCE_URL,
+        authenticated_identity="B12345674",
+        rows=(row,),
+        persisted_at=datetime(2025, 4, 21, 10, 5, tzinfo=UTC),
+    )
+    replay = first.model_copy(
+        update={
+            "snapshot_id": "b" * 64,
+            "captured_at": datetime(2025, 4, 22, 10, 0, tzinfo=UTC),
+            "persisted_at": datetime(2025, 4, 22, 10, 5, tzinfo=UTC),
+        }
+    )
+
+    events = calendar_events_from_notification_snapshots(
+        (first, replay),
+        OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30)),
+        as_of=date(2025, 4, 22),
+        expected_tax_id="B12345674",
+    )
+
+    assert len(events) == 1
+    event = events[0]
+    assert event.event_type is OverviewCalendarEventType.MESSAGE
+    assert event.reference_id == row.certificado_id
+    assert event.modelo is None
+    assert event.filing_year is None
+    assert event.period is None
+    assert event.aeat_submission_state is None
+    assert event.aeat_submitted_at is None
+    assert event.justificante_verified is None
+    assert event.verified_justificante_csv is None
 
 
 def test_notification_snapshots_filter_message_events_by_expected_taxpayer() -> None:
@@ -949,6 +1021,28 @@ def test_build_user_state_matches_engine_status_per_entry(
         assert entry.user_state is user_state_for(entry.status)
 
 
+def test_build_uses_evaluation_date_for_historical_special_regime_route(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    profile = _profile().model_copy(
+        update={
+            "irpf_special_regime": IrpfSpecialRegime.from_registry("impatriado"),
+            "special_regime_start_date": date(2020, 1, 15),
+        },
+    )
+    rng = OverviewCalendarRange(from_date=date(2025, 1, 1), to_date=date(2025, 12, 31))
+
+    active = build_overview_calendar(profile, rng, operation=authority_operation, today=date(2025, 6, 1))
+    expired = build_overview_calendar(profile, rng, operation=authority_operation, today=date(2026, 6, 1))
+
+    active_modelos = {entry.modelo for entry in active.entries}
+    expired_modelos = {entry.modelo for entry in expired.entries}
+    assert "151" in active_modelos
+    assert "100" not in active_modelos
+    assert "100" in expired_modelos
+    assert "151" not in expired_modelos
+
+
 def test_build_empty_range_when_window_covers_no_obligations(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
@@ -987,6 +1081,140 @@ def test_build_threads_shift_metadata_onto_every_entry(
     for entry in cal.entries:
         assert entry.adjusted_closes_on >= entry.closes_on
         assert entry.shift_reason in accepted_reasons
+
+
+def test_build_uses_adjusted_close_for_status_recovery_and_overdue_age(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    obligation = ModeloDeadline(
+        modelo="303",
+        period=Period.from_year_and_code(2025, "1T"),
+        opens_on=date(2025, 4, 1),
+        closes_on=date(2025, 4, 20),
+        payment_cutoff_on=date(2025, 4, 15),
+        status=ObligationStatus.OVERDUE,
+        applies_because="synthetic shifted-boundary obligation",
+        boe_references=(),
+        recovery=None,
+    )
+    on_effective_close = _calendar_entry_from_obligation(
+        obligation,
+        holiday_territory=None,
+        filing_evidence=(),
+        live_censo_verified_profile_keys=None,
+        today=date(2025, 4, 21),
+        due_soon_days=14,
+        operation=authority_operation,
+    )
+    assert on_effective_close.adjusted_closes_on == date(2025, 4, 21)
+    assert on_effective_close.status is ObligationStatus.DUE_TODAY
+    assert on_effective_close.days_overdue is None
+    assert on_effective_close.recovery is None
+
+    after_effective_close = _calendar_entry_from_obligation(
+        obligation,
+        holiday_territory=None,
+        filing_evidence=(),
+        live_censo_verified_profile_keys=None,
+        today=date(2025, 4, 22),
+        due_soon_days=14,
+        operation=authority_operation,
+    )
+    assert after_effective_close.status is ObligationStatus.OVERDUE
+    assert after_effective_close.days_overdue == 1
+
+
+def _obligation(modelo: str, closes_on: date) -> ModeloDeadline:
+    return ModeloDeadline(
+        modelo=modelo,
+        period=Period.from_year_and_code(closes_on.year, "3T"),
+        opens_on=closes_on.replace(day=1),
+        closes_on=closes_on,
+        payment_cutoff_on=None,
+        status=ObligationStatus.UPCOMING,
+        applies_because="synthetic holiday-coverage obligation",
+        boe_references=(),
+        recovery=None,
+    )
+
+
+def _entry_for(obligation: ModeloDeadline, operation: PinnedAuthorityOperation, territory: str | None):
+    return _calendar_entry_from_obligation(
+        obligation,
+        holiday_territory=(
+            None
+            if territory is None
+            else require_calendar_ccaa(territory, effective_date=obligation.closes_on, authority=operation)
+        ),
+        filing_evidence=(),
+        live_censo_verified_profile_keys=None,
+        today=date(2025, 8, 1),
+        due_soon_days=14,
+        operation=operation,
+    )
+
+
+def test_regional_holiday_of_the_residence_moves_the_effective_close(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    """The 2025 Diada (Thursday 11 September) is inhábil only in Cataluna (BOE-A-2024-26935)."""
+    catalan = _entry_for(_obligation("303", date(2025, 9, 11)), authority_operation, "ES-CT")
+    madrid = _entry_for(_obligation("303", date(2025, 9, 11)), authority_operation, "ES-MD")
+
+    assert catalan.adjusted_closes_on == date(2025, 9, 12)
+    assert catalan.holiday_coverage is DeadlineHolidayCoverage.NATIONAL_AND_TERRITORY
+    assert str(catalan.holiday_territory) == "ES-CT"
+    assert "ES-CT" in holiday_coverage_statement(catalan.holiday_coverage, catalan.holiday_territory)
+    assert madrid.adjusted_closes_on == date(2025, 9, 11)
+    assert madrid.holiday_coverage is DeadlineHolidayCoverage.NATIONAL_AND_TERRITORY
+
+
+def test_unresolved_territory_is_reported_as_national_only(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    entry = _entry_for(_obligation("303", date(2025, 9, 11)), authority_operation, None)
+
+    assert entry.holiday_coverage is DeadlineHolidayCoverage.NATIONAL_ONLY
+    assert entry.holiday_territory is None
+
+
+def test_modelo_369_entry_is_not_shifted_on_a_weekend(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    entry = _entry_for(_obligation("369", date(2025, 10, 18)), authority_operation, "ES-MD")
+
+    assert entry.adjusted_closes_on == date(2025, 10, 18)
+    assert entry.shift_reason == "modelo_exception"
+    assert entry.holiday_coverage is DeadlineHolidayCoverage.NOT_SHIFTED
+    assert entry.holiday_territory is None
+
+
+def test_missing_holiday_calendar_keeps_the_original_close_visibly_unverified(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    """No holiday publication exists for 2027 yet, so a Saturday close cannot be adjusted or certified."""
+    entry = _entry_for(_obligation("303", date(2027, 10, 16)), authority_operation, "ES-MD")
+
+    assert entry.adjusted_closes_on == entry.closes_on == date(2027, 10, 16)
+    assert entry.shift_reason == "calendar_unavailable"
+    assert entry.holiday_coverage is DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE
+    assert entry.holiday_territory is None
+
+
+def test_entry_refuses_a_shift_its_coverage_did_not_evaluate() -> None:
+    with pytest.raises(ValidationError, match="did not evaluate"):
+        OverviewCalendarEntry(
+            modelo="303",
+            period=Period.from_year_and_code(2026, "3T"),
+            opens_on=date(2026, 10, 1),
+            closes_on=date(2026, 10, 17),
+            adjusted_closes_on=date(2026, 10, 19),
+            shift_reason="calendar_unavailable",
+            holiday_coverage=DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE,
+            evaluated_on=date(2026, 8, 1),
+            status=ObligationStatus.UPCOMING,
+            user_state=user_state_for(ObligationStatus.UPCOMING),
+        )
 
 
 def test_build_marks_modelo_369_as_modelo_exception(

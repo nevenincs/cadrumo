@@ -37,10 +37,12 @@ import pytest
 
 from .....application.aggregation.source_mesh import CalculationSourceDiagnostic
 from .....application.modelo.calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
+from .....application.modelo.settlement_casilla import SETTLEMENT_SEMANTIC_ROLES
 from .....application.modelo.tests.advisory_diagnostic_repositories import advisory_diagnostic_repositories
 from .....core.casilla_id import CasillaId
 from .....core.modelo import Modelo
 from .....domain.calculations.registry.schema import ModeloRevision
+from .....domain.calculations.registry.schema_input_kind import InputKind
 from .....domain.contribuyente.descendant import DescendantInfo
 from .....domain.contribuyente.descendant_facts import descendant_facts_from_list
 from .....domain.contribuyente.renta_codes import RentaMaritalStatus
@@ -169,23 +171,43 @@ def test_the_count_desync_advisory_reaches_the_coordinator() -> None:
     assert _COUNT_DESYNC in _source_kinds({_ESTATAL_CASILLA: Decimal("2400")})
 
 
+def _supported_year_with_manual_settlement() -> int:
+    """The first supported Modelo 100 year whose revision leaves a settlement casilla manual.
+
+    Read from the registry support envelope and the revisions' own structure,
+    so the fixture follows the envelope instead of naming a year it may drop.
+    """
+    operation = published_authority_operation()
+    supported = operation.modelo_directory(Modelo("100").value).supported_filing_years
+    assert supported is not None, "Modelo 100 declares no filing-year support envelope"
+    for year in supported.years:
+        revision = operation.snapshot(Modelo("100").value, filing_year=year, period=_ANNUAL_PERIOD).revision
+        if revision.formulas and any(
+            casilla.semantic_role in SETTLEMENT_SEMANTIC_ROLES and casilla.input_kind != InputKind.COMPUTED
+            for casilla in revision.casillas
+        ):
+            return year
+    raise AssertionError(f"no supported Modelo 100 year in {supported.years} leaves a settlement casilla manual")
+
+
 def test_the_settlement_advisory_reaches_the_coordinator() -> None:
     """A non-mínimo wiring, audited because this class keeps producing findings.
 
     ``settlement_not_computed`` fires where a revision declares a settlement-role
-    casilla that is NOT computed, which the 2020-2023 Modelo 100 revisions do
-    (2024 computes them, which is why the fixture year differs from every other
-    case in this module). The state is a property of the revision alone, so no
-    profile setup is needed.
+    casilla that is NOT computed, which only the partially modelled Modelo 100
+    revisions do, so the fixture year is selected from the support envelope by
+    that structure rather than shared with every other case in this module. The
+    state is a property of the revision alone, so no profile setup is needed.
     """
-    revision = published_authority_operation().snapshot("100", filing_year=2020, period=_ANNUAL_PERIOD).revision
+    filing_year = _supported_year_with_manual_settlement()
+    revision = published_authority_operation().snapshot("100", filing_year=filing_year, period=_ANNUAL_PERIOD).revision
     repositories = advisory_diagnostic_repositories(bucket_id=_BUCKET_ID)
     diagnostics = collect_bucket_aggregation_advisory_diagnostics(
         revision,
         {},
         modelo=Modelo("100").value,
         period_token=_ANNUAL_PERIOD,
-        filing_year=2020,
+        filing_year=filing_year,
         bucket_id=_BUCKET_ID,
         observation_repository=repositories.observation,
         prorrata_register_repository=repositories.prorrata_register,

@@ -9,10 +9,10 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.hashing import content_hash_hex
-from ....domain.calculations.registry.authority_artifact import AuthorityGenerationPin, ProfileCreateContext
-from ....domain.calculations.registry.tests.published_authority import published_profile_schema
-from ....domain.user_profile.errors import UserProfileValidationError
-from ....domain.user_profile.values import (
+from ...calculations.registry.authority_artifact import AuthorityGenerationPin, ProfileCreateContext
+from ...calculations.registry.tests.published_authority import published_profile_schema
+from ..errors import UserProfileValidationError
+from ..values import (
     ProfileSetupState,
     UserProfileFact,
     UserProfileRecord,

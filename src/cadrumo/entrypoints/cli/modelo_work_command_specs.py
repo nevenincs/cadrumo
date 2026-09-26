@@ -13,7 +13,6 @@ from cadrumo.application.operator_surface.command_ports import (
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 from .command_spec import (
     FLAG_VALUE,
-    PATH_VALUE,
     TEXT_VALUE,
     WHOLE_NUMBER_VALUE,
     ArgumentSpec,
@@ -49,6 +48,19 @@ _PAYMENT = ValueContract(DeferredTarget("...core.payment_election", "PaymentElec
 _DOMICILIATION = ValueContract(
     DeferredTarget("...core.prior_domiciliation_election", "PriorDomiciliationElection", __package__)
 )
+
+
+def _boolean_choice(name: str, declaration: str, *, help_name: str) -> OptionSpec:
+    """Declare a tri-state explicit operator choice with no implicit false default."""
+    return OptionSpec(
+        name,
+        (declaration, f"--no-{declaration.removeprefix('--')}"),
+        FLAG_VALUE,
+        ParameterDefault.value(None),
+        _key(f"cli.app.modelo.work.{help_name}_help"),
+        is_flag=True,
+        flag_value=True,
+    )
 
 
 def _policy(
@@ -207,13 +219,16 @@ _CALCULATE_PARAMETERS = (
     _o("sal_reserva_dotada", "--sal-reserva-dotada"),
     _o("sal_capital_social", "--sal-capital-social"),
     _o("autoconsumo_promotor_base", "--autoconsumo-promotor-base"),
+    _boolean_choice("joint_return_elected", "--joint-return-elected", help_name="joint_return_elected"),
     _o(
-        "m303_filing_evidence",
-        "--m303-filing-evidence",
-        PATH_VALUE,
-        transport_locus=TransportLocus.LOCAL_IN,
-        transport_shape=TransportShape.FILE,
-        transport_role=TransportRole.AUXILIARY,
+        "m303_exonerado_390_attachment_id",
+        "--m303-exonerado-390-attachment-id",
+        help_name="m303_exonerado_390_attachment_id",
+    ),
+    _o(
+        "m303_exonerado_390_sha256",
+        "--m303-exonerado-390-sha256",
+        help_name="m303_exonerado_390_sha256",
     ),
     _LANG,
 )
@@ -236,6 +251,22 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         _CALC_WRITE,
         "._modelo_payloads",
         "WorkCalculateResult",
+    ),
+    _leaf(
+        "attest-m303-exonerado-390",
+        "._modelo_work_m303_attestation_cli",
+        (
+            _o("year", "--year", WHOLE_NUMBER_VALUE, required=True),
+            _o("period", "--period", required=True),
+            _o("observed_at", "--observed-at", required=True),
+            _o("bucket_id", "--bucket-id"),
+            _o("actor", "--by"),
+            _LANG,
+        ),
+        _MODEL_WRITE,
+        "._modelo_payloads",
+        "M303Exonerado390AttestationResult",
+        handler_name="work_attest_m303_exonerado_390",
     ),
     _leaf(
         "create",

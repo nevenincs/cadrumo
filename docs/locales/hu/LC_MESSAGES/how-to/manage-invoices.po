@@ -18,11 +18,11 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:1
+#: ../../how-to/manage-invoices.md:1
 msgid "Manage business invoices"
 msgstr "Vállalkozási számlák kezelése"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:3
+#: ../../how-to/manage-invoices.md:3
 msgid ""
 "Record the invoices your business issues and receives: the money a "
 "customer owes you and the money you owe a supplier. This guide covers "
@@ -33,7 +33,7 @@ msgstr ""
 " tartozik egy beszállítónak. Ez az útmutató mindkét fajtát bemutatja, és "
 "megmutatja, mely rekordok táplálják az adószámításait."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:7
+#: ../../how-to/manage-invoices.md:7
 msgid ""
 "A business invoice is not the same as a purchase receipt you attach as "
 "evidence. Receipts support a deductible expense on a ledger transaction "
@@ -49,15 +49,15 @@ msgstr ""
 " dokumentumok: egy *kiállított* számla (Ön számlázott egy ügyfélnek) vagy"
 " egy *beérkezett* számla (egy beszállító számlázott Önnek)."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:13
+#: ../../how-to/manage-invoices.md:13
 msgid "Before you start"
 msgstr "Mielőtt hozzákezd"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:15
+#: ../../how-to/manage-invoices.md:15
 msgid "You need:"
 msgstr "Szüksége lesz:"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:17
+#: ../../how-to/manage-invoices.md:17
 msgid ""
 "An active taxpayer profile. Every command below works on the active "
 "profile; if none is set, the command refuses. See [Set up your taxpayer "
@@ -67,7 +67,7 @@ msgstr ""
 "dolgozik; ha nincs beállítva, a parancs elutasítja a műveletet. Lásd: "
 "[Állítsa be adózói profilját](profile-setup.md)."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:20
+#: ../../how-to/manage-invoices.md:20
 msgid ""
 "A master-key passphrase. The tool prompts for it the first time it opens "
 "your encrypted storage in a session."
@@ -75,7 +75,7 @@ msgstr ""
 "Egy mesterkulcs-jelmondatra. Az eszköz akkor kéri be, amikor egy "
 "munkamenetben először nyitja meg titkosított tárolóját."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:23
+#: ../../how-to/manage-invoices.md:23
 msgid ""
 "The `aeat` command-line interface (CLI) emits its help and messages in "
 "Spanish; the English text on this page describes what each step does."
@@ -83,15 +83,15 @@ msgstr ""
 "Az `aeat` parancssori felület (CLI) a súgóját és üzeneteit spanyolul adja"
 " ki; az oldalon szereplő magyar szöveg leírja, mit tesz az egyes lépések."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:26
+#: ../../how-to/manage-invoices.md:26
 msgid "Two ways to hold an invoice"
 msgstr "Egy számla kétféle tárolása"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:28
+#: ../../how-to/manage-invoices.md:28
 msgid "Cadrumo keeps invoices in two separate places, for two different jobs."
 msgstr "A Cadrumo két különböző helyen tárolja a számlákat, két különböző célra."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:30
+#: ../../how-to/manage-invoices.md:30
 msgid ""
 "Your invoices live in one place (`aeat app ledger invoice ...`): a record"
 " of who owes you and whom you owe. Use it to record, list, and edit "
@@ -101,7 +101,7 @@ msgstr ""
 "nyilvántartás arról, ki tartozik Önnek és kinek tartozik Ön. Ezzel "
 "rögzítsen, listázzon és szerkesszen számlákat."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:33
+#: ../../how-to/manage-invoices.md:33
 msgid ""
 "Every invoice you record is linkable and calculable. Match it to a bank "
 "transaction with `aeat app ledger link`, and a calculation reads it "
@@ -113,7 +113,7 @@ msgstr ""
 "közvetlenül olvassa: például a Modelo 349, a Közösségen belüli ügyletek "
 "összesítő nyilatkozata."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:38
+#: ../../how-to/manage-invoices.md:38
 msgid ""
 "Record every invoice with `invoice add`. There is no second copy to "
 "create."
@@ -121,7 +121,7 @@ msgstr ""
 "Minden számlát az `invoice add` paranccsal rögzítsen. Nincs második "
 "példány, amit létre kellene hozni."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:40
+#: ../../how-to/manage-invoices.md:40
 msgid ""
 "Every command takes `--kind issued` or `--kind received`. *Issued* means "
 "a customer owes you (a collectible invoice); *received* means you owe a "
@@ -132,11 +132,11 @@ msgstr ""
 "(behajtható számla); a *beérkezett* (received) azt jelenti, hogy Ön "
 "tartozik egy beszállítónak (fizetendő számla)."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:44
+#: ../../how-to/manage-invoices.md:44
 msgid "Record an issued invoice"
 msgstr "Kiállított számla rögzítése"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:46
+#: ../../how-to/manage-invoices.md:46
 msgid ""
 "Record an invoice you sent to a customer. The command returns the new "
 "`invoice_id`, the resolved `source_kind` (`collectible_invoice`), and the"
@@ -146,7 +146,7 @@ msgstr ""
 "visszaadja az új `invoice_id` azonosítót, a feloldott `source_kind` "
 "értéket (`collectible_invoice`) és a beírt értékeket:"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:54
+#: ../../how-to/manage-invoices.md:54
 msgid ""
 "Record the short `invoice_id`; you address the invoice by it (or by an "
 "unambiguous prefix)."
@@ -154,11 +154,11 @@ msgstr ""
 "Jegyezze fel a rövid `invoice_id` azonosítót; ez alapján (vagy egy "
 "egyértelmű előtag alapján) hivatkozik a számlára."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:57
+#: ../../how-to/manage-invoices.md:57
 msgid "Record a received invoice"
 msgstr "Beérkezett számla rögzítése"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:59
+#: ../../how-to/manage-invoices.md:59
 msgid ""
 "Record an invoice a supplier sent you. The `source_kind` resolves to "
 "`payable_invoice`:"
@@ -166,11 +166,11 @@ msgstr ""
 "Rögzítsen egy számlát, amelyet egy beszállító küldött Önnek. A "
 "`source_kind` `payable_invoice` értékre oldódik fel:"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:66
+#: ../../how-to/manage-invoices.md:66
 msgid "List, view, update, and remove"
 msgstr "Listázás, megtekintés, frissítés és eltávolítás"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:68
+#: ../../how-to/manage-invoices.md:68
 msgid ""
 "List both kinds or filter to one, add a note to a stored invoice, then "
 "remove it. The view of one invoice takes its id (or an unambiguous "
@@ -180,11 +180,11 @@ msgstr ""
 "tárolt számlához, majd távolítsa el. Egyetlen számla megtekintése az "
 "azonosítóját (vagy egy egyértelmű előtagját) és a fajtáját veszi fel:"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:75
+#: ../../how-to/manage-invoices.md:75
 msgid "Record an intra-community invoice"
 msgstr "Közösségen belüli számla rögzítése"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:77
+#: ../../how-to/manage-invoices.md:77
 msgid ""
 "A supply to, or acquisition from, a VAT-registered business in another EU"
 " country is an intra-community operation. Record it on the issued or "
@@ -196,7 +196,7 @@ msgstr ""
 "Rögzítse a kiállított vagy beérkezett számlán a partner országával és "
 "EU-s afaszámával, valamint a Modelo 349 ügylettípusával:"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:86
+#: ../../how-to/manage-invoices.md:86
 msgid ""
 "`--operation-type` takes one M349 operation key: `E` supplies of goods, "
 "`M` supplies after an exempt import, `H` the same via a fiscal "
@@ -211,11 +211,11 @@ msgstr ""
 " vevői készlet (call-off-stock) kulcsai: `R` (átszállítás), `D` "
 "(visszaszállítás) és `C` (helyettesítés)."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:92
+#: ../../how-to/manage-invoices.md:92
 msgid "Feed a calculation from the catalogue"
 msgstr "Számítás táplálása a katalógusból"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:94
+#: ../../how-to/manage-invoices.md:94
 msgid ""
 "To make an invoice reach a modelo calculation, create it in the "
 "catalogue. The catalogue copy is the one a calculation reads and the one "
@@ -231,7 +231,7 @@ msgstr ""
 "majd létrehozza és kiszámítja a Modelo 349 összesítő nyilatkozatot arra "
 "az időszakra, amelybe a számla esik:"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:104
+#: ../../how-to/manage-invoices.md:104
 msgid ""
 "For an intra-community operation, pass `--operation-type` so the "
 "catalogue stamps the classification the Modelo 349 calculation reads. Use"
@@ -248,7 +248,7 @@ msgstr ""
 "készlet átszállítási kulcsa; a helyesbítő sorok külön helyesbített-"
 "időszak és alap mezőket használnak."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:110
+#: ../../how-to/manage-invoices.md:110
 msgid ""
 "An invoice is counted only in the period its invoice date falls in. "
 "Modelo 349 reads invoices strictly by date, with no carry-forward from "
@@ -258,11 +258,11 @@ msgstr ""
 "a számla kelte esik. A Modelo 349 szigorúan kelet szerint olvassa a "
 "számlákat, korábbi időszakokból való áthozat nélkül."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:113
+#: ../../how-to/manage-invoices.md:113
 msgid "Link a catalogue invoice to a transaction"
 msgstr "Katalógusszámla összekapcsolása egy tranzakcióval"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:115
+#: ../../how-to/manage-invoices.md:115
 msgid ""
 "Link a catalogue invoice to the bank transaction that paid or collected "
 "it. The sequence records a transaction, catalogues an invoice, links "
@@ -273,7 +273,7 @@ msgstr ""
 "katalogizál egy számlát, összekapcsolja őket, és megerősíti az "
 "összekapcsolást a katalógusmásolaton:"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:123
+#: ../../how-to/manage-invoices.md:123
 msgid ""
 "Remove a catalogue invoice you created by mistake, confirming with "
 "`--yes`. Unlink the invoice first if it is still linked to a transaction:"
@@ -286,11 +286,11 @@ msgstr ""
 "eltávolítását elutasítja a rendszer, így a banki tranzakció soha nem "
 "hivatkozik egy már nem létező számlára:"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:132
+#: ../../how-to/manage-invoices.md:132
 msgid "Which modelos read your invoices"
 msgstr "Mely modelók olvassák a számláit"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:134
+#: ../../how-to/manage-invoices.md:134
 msgid ""
 "Catalogue invoices feed **Modelo 349** (the recapitulative declaration of"
 " intra-community operations) through the operation type you stamp on them"
@@ -302,7 +302,7 @@ msgstr ""
 "a létrehozáskor rájuk bélyegez. Ez az a modelo, amelyet a kiállított és "
 "beérkezett számlái közvetlenül hajtanak."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:139
+#: ../../how-to/manage-invoices.md:139
 msgid ""
 "Your **IVA returns do not read these invoice records**. Modelo 303 "
 "(quarterly IVA) and Modelo 390 (annual IVA summary) are computed from "
@@ -318,7 +318,7 @@ msgstr ""
 "osztályozása](classify-transactions.md)); az afabevallások a főkönyvet "
 "olvassák. Egy számla itteni rögzítése nem adja hozzá egy Modelo 303-hoz."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:146
+#: ../../how-to/manage-invoices.md:146
 msgid ""
 "Cross-border B2C sales under the One-Stop-Shop scheme (Modelo 369) are a "
 "separate flow not yet reachable from `invoice add`; record those through "
@@ -329,29 +329,29 @@ msgstr ""
 "parancsból még nem érhető el; ezeket az OSS-specifikus folyamaton "
 "keresztül rögzítse."
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:150
+#: ../../how-to/manage-invoices.md:150
 msgid "Where to go next"
 msgstr "Merre tovább"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:152
+#: ../../how-to/manage-invoices.md:152
 msgid "[Attach invoices and receipts](ledger-evidence.md)"
 msgstr "[Számlák és bizonylatok csatolása](ledger-evidence.md)"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:153
+#: ../../how-to/manage-invoices.md:153
 msgid "[Import and manage transactions](import-bank-statements.md)"
 msgstr "[Tranzakciók importálása és kezelése](import-bank-statements.md)"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:154
+#: ../../how-to/manage-invoices.md:154
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
 msgstr ""
 "[Számítási bemenetek felülvizsgálata és megadása](review-calculation-"
 "values.md)"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:155
+#: ../../how-to/manage-invoices.md:155
 msgid "[How to prepare a Modelo 303 quarterly filing](modelo-303.md)"
 msgstr "[Hogyan készítsen elő egy Modelo 303 negyedéves benyújtást](modelo-303.md)"
 
-#: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:156
+#: ../../how-to/manage-invoices.md:156
 msgid "[CLI reference](../cli/index.rst)"
 msgstr "[CLI-referencia](../cli/index.rst)"
 

@@ -35,6 +35,7 @@ from ...core.errors.hierarchy import CadrumoError
 from ...core.identity.profile import ProfileId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.paths import effective_storage_root
+from ...core.time.clock import now as _now
 from .authentication import ProfilePasswordProofOperation
 from .custody_ports import (
     create_profile_recovery_enrollment_material,
@@ -48,7 +49,9 @@ from .custody_ports import (
     unlock_profile_custody_recovery,
 )
 from .custody_repository import profile_custody_transaction_lock
-from .passphrase_rotation import rewrap_profile_passphrase_under_lock
+from .login_session import ProfileLoginThrottledError
+from .login_session_port import profile_login_session_port
+from .passphrase_rotation import ProfilePassphraseReplacementProof, rewrap_profile_passphrase_under_lock
 from .prospective_password import ProspectiveProfilePasswordRefusal, prospective_profile_password_refusal
 
 if TYPE_CHECKING:
@@ -258,7 +261,16 @@ def reset_profile_passphrase_with_recovery(
     a wrong code, a new passphrase outside the profile-password contract, or
     a mismatched confirmation all refuse with the committed envelope untouched.
 
+    The code is a credential proof like the passphrase, so it answers to the
+    same per-profile failed-attempt backoff login uses: a throttled profile is
+    refused before any key derivation runs, a wrong code counts as a failed
+    attempt, and a proven code clears the backoff exactly as a successful
+    login does. A second, reset-only counter would let a guesser alternate
+    doors to double their attempts.
+
     Raises:
+        ProfileLoginThrottledError: When the profile's failed-attempt backoff
+            is in force.
         ProfileRecoveryError: When recovery is not enrolled, the confirmation
             does not match, the new passphrase is invalid, or the code does
             not open the enrolled wrapper.
@@ -276,7 +288,16 @@ def reset_profile_passphrase_with_recovery(
         )
 
     storage_root = effective_storage_root(root)
+    bucket_id = str(profile_id)
+    sessions = profile_login_session_port()
     with profile_custody_transaction_lock(storage_root, profile_id):
+        # Evaluated under the custody lock so concurrent resets for this
+        # profile queue behind one another rather than all passing the gate
+        # before any of them has recorded its failure.
+        instant = _now()
+        evaluation = sessions.evaluate_throttle(storage_root=storage_root, bucket_id=bucket_id, now=instant)
+        if evaluation.throttled:
+            raise ProfileLoginThrottledError(remaining_seconds=evaluation.remaining_seconds)
         password = load_profile_custody_password_material(profile_id, root=storage_root)
         if not profile_custody_recovery_envelope_path(password.capsule_path).exists():
             raise ProfileRecoveryError(
@@ -292,15 +313,21 @@ def reset_profile_passphrase_with_recovery(
             )
             if refusal is None:
                 raise
+            sessions.record_login_failure(storage_root=storage_root, bucket_id=bucket_id, now=instant)
             raise ProfileRecoveryError(
                 translated_message="application.user_profile.errors.recovery_code_rejected",
             ) from refusal
+        # Cleared on the proof itself, as login clears it on authentication
+        # and before anything is published: the backoff counts failed proofs,
+        # and this one succeeded whatever happens to the write that follows.
+        sessions.reset_throttle(storage_root=storage_root, bucket_id=bucket_id)
         current = recovery.password_envelope
         rotated = rewrap_profile_passphrase_under_lock(
             profile_id=profile_id,
             dek=unlock.dek,
             current=current,
             new_passphrase=new_passphrase,
+            proof=ProfilePassphraseReplacementProof.RECOVERY_CODE,
             storage_root=storage_root,
             profile_decode_context=profile_decode_context,
         )

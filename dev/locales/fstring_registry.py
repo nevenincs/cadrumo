@@ -183,9 +183,11 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
     """
     from cadrumo.application.calculations.m303_carry_ingress import M303_CARRY_ERROR_NAMESPACE
     from cadrumo.application.live.errors import LiveIvaAcquisitionFailureMode
+    from cadrumo.application.modelo.workspace import MODELO_WORKSPACE_RECOVERY_ACTION_IDS
     from cadrumo.application.modelo.workspace_models import (
         ModeloWorkspaceCapabilityDisposition,
         ModeloWorkspaceCapabilityName,
+        ModeloWorkspaceRefusalCode,
         ModeloWorkspaceRevisionAssertionDisposition,
     )
     from cadrumo.application.operations.frontend_requests import (
@@ -212,6 +214,7 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
     )
     from cadrumo.domain.user_profile.values import ProfileSetupState
     from cadrumo.entrypoints.tui.components.account_chrome import AccountActionV1
+    from cadrumo.entrypoints.tui.ledger.classification import CLASSIFICATION_FIELD_NAMES
     from dev.docs.terminology_handbook.topics import load_topic_catalogue
     from dev.locales._registry_scanner import scan_detail_row_fields
 
@@ -252,6 +255,7 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
             topic_slugs=topic_slugs,
             home_reason_codes=HOME_ACTION_REASON_CODES,
             wizard_reason_codes=WIZARD_VALIDATION_REASON_CODES,
+            ledger_classification_fields=CLASSIFICATION_FIELD_NAMES,
         ),
         *_surface_registrations(profile_setup_state=ProfileSetupState),
         *_storage_registrations(
@@ -333,7 +337,27 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
                 ("input_kind", InputKind),
                 ("finding_kind", ModeloVerificationFindingKind),
                 ("finding_severity", ModeloVerificationFindingSeverity),
+                ("workspace_refusal.reason", ModeloWorkspaceRefusalCode),
             )
+        ),
+        FStringKeyRegistration(
+            # Bounded set: the only ``ModeloWorkspaceEvidenceFactV1.name`` values
+            # `graded_snapshot_refusal` call sites in
+            # application/modelo/workspace.py actually populate. ``name`` is a
+            # free-form bounded code on the typed record, not an enum, so this
+            # is pinned to that call-site inventory like
+            # ``tui.modelo.destination.*`` below rather than derived from a type.
+            description="tui.modelo.workspace_refusal.facts.* (ModeloWorkspaceEvidenceFactV1.name)",
+            key_factory=lambda v: f"tui.modelo.workspace_refusal.facts.{v}",
+            values=("modelo", "period", "required_grade", "work_unit_id"),
+        ),
+        FStringKeyRegistration(
+            # Bounded set declared once in application/modelo/workspace.py, which
+            # refuses any other id; entrypoints/tui/modelo/view/models.py names
+            # each offered action through this key.
+            description="tui.modelo.recovery_action.* (MODELO_WORKSPACE_RECOVERY_ACTION_IDS)",
+            key_factory=lambda v: f"tui.modelo.recovery_action.{v}",
+            values=tuple(sorted(MODELO_WORKSPACE_RECOVERY_ACTION_IDS)),
         ),
         FStringKeyRegistration(
             # Pinned to _OTHER_DESTINATIONS in entrypoints/tui/modelo/view/overview.py.
@@ -780,8 +804,9 @@ def _dynamic_family_registrations(
     topic_slugs: Iterable[str],
     home_reason_codes: Iterable[str],
     wizard_reason_codes: Iterable[str],
+    ledger_classification_fields: Iterable[str],
 ) -> tuple[FStringKeyRegistration, ...]:
-    """Register the eight formerly-unbounded production f-string families.
+    """Register the nine formerly-unbounded production f-string families.
 
     Each iterable is supplied by the owning producer in ``_build_registrations``:
     no current locale catalogue is consulted.  The wizard profile-key values
@@ -831,6 +856,11 @@ def _dynamic_family_registrations(
             description="topic.*.body (bundled terminology topic slugs)",
             key_factory=lambda v: f"topic.{v}.body",
             values=tuple(topic_slugs),
+        ),
+        FStringKeyRegistration(
+            description="tui.ledger.classification.field.* (CLASSIFICATION_FIELD_NAMES)",
+            key_factory=lambda v: f"tui.ledger.classification.field.{v}",
+            values=tuple(ledger_classification_fields),
         ),
         FStringKeyRegistration(
             description="tui.home.reason.* (HOME_ACTION_REASON_CODES)",

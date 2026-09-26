@@ -49,6 +49,7 @@ from ..contribuyente.entity_type import EntityType, LegalEntityForm
 from ..contribuyente.renta_codes import FiscalResidency
 from .errors import DeadlineValidationError
 from .fact_context import DeadlineFactResolutionContext
+from .festivos import CalendarCCAA
 
 
 class IVARegime(str):
@@ -489,6 +490,11 @@ class TaxpayerProfile(BaseModel):
         entity_type: The taxpayer's entity type (natural person, legal
             entity, or attribution entity). ``None`` when the operator
             has not yet declared it.
+        holiday_territory: The autonomous community whose holidays extend
+            this taxpayer's filing deadlines (Ley 39/2015 art. 30.6).
+            ``None`` when the territory is not established from a declared
+            residence; deadlines then shift for national holidays only and
+            say so.
         declaration_roles: The filer's :class:`~core.aggregation.ThirdPartyDeclarationRole`
             memberships -- orthogonal to ``entity_type`` and independent of
             it. Drives Modelo 347 claves C, D and E; empty when the operator
@@ -543,12 +549,20 @@ class TaxpayerProfile(BaseModel):
             operaciones intracomunitarias.
         third_party_transactions_above_347_threshold: Whether the
             profile exceeded the applicable third-party transaction
-            threshold during the prior year.
+            threshold during the prior year; ``None`` when unanswered.
         bienes_extranjero_above_threshold: Whether the taxpayer holds
-            bienes en el extranjero above the legal threshold.
+            bienes en el extranjero above the legal threshold; ``None``
+            when unanswered.
         monedas_virtuales_extranjero_above_threshold: Whether the
             taxpayer holds virtual currencies abroad above the Modelo
-            721 threshold.
+            721 threshold; ``None`` when unanswered.
+        premio_loteria_gravamen_especial_sin_retencion: Whether the
+            taxpayer obtained a lottery or betting prize subject to the
+            gravamen especial that was not subject to retención or
+            ingreso a cuenta (Modelo 136); ``None`` when unanswered.
+        premio_loteria_gravamen_especial_trimestres: The ``YYYY-nT``
+            quarters in which such prizes were cashed; ``None`` when
+            undeclared.
         iva: IVA-specific filing facts that can change filing cadence.
         cross_period_group_member_rosters: Expected group-member rosters
             keyed by upstream modelo, filing year, and period. These
@@ -620,14 +634,17 @@ class TaxpayerProfile(BaseModel):
     objective_estimation_modulos_module_6_units: Decimal | None = None
     objective_estimation_modulos_module_7_units: Decimal | None = None
     does_intracomunitario: bool = False
-    third_party_transactions_above_347_threshold: bool = False
-    bienes_extranjero_above_threshold: bool = False
-    monedas_virtuales_extranjero_above_threshold: bool = False
+    third_party_transactions_above_347_threshold: bool | None = None
+    bienes_extranjero_above_threshold: bool | None = None
+    monedas_virtuales_extranjero_above_threshold: bool | None = None
+    premio_loteria_gravamen_especial_sin_retencion: bool | None = None
+    premio_loteria_gravamen_especial_trimestres: frozenset[str] | None = None
     iva: ModeloIVAProfile | None = None
     cross_period_group_member_rosters: tuple[CrossPeriodGroupMemberRoster, ...] = Field(default_factory=tuple)
     enrollment: ModeloEnrollment = Field(default_factory=ModeloEnrollment)
     fiscal_address_cadastral_reference: str = ""
     fiscal_address_is_habitual_vivienda: bool = False
+    holiday_territory: CalendarCCAA | None = None
     activity_start_date: date | None = None
     activity_end_date: date | None = None
     incn_prior_12_months: Decimal | None = None

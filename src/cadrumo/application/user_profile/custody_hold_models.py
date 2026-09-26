@@ -3,16 +3,21 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import Any, Final, Literal, cast
+from typing import Final, Literal, TypedDict
 from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identity.digest import PrefixedContentDigest
+from ...core.json_shapes import model_json_object
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.utc import validate_utc_aware
-from ..profile_deletion_hold_contract import ProfileDeletionHoldOwnerProjection, ProfileDeletionHoldOwnerValue
+from ..profile_deletion_hold_contract import (
+    ProfileDeletionHoldOwner,
+    ProfileDeletionHoldOwnerProjection,
+    ProfileDeletionHoldOwnerValue,
+)
 
 #: Current write version for :class:`ProfileCustodyHoldEvidence`. This format is
 #: REGENERABLE (see the campaign's nested-persisted-format-boundary ADR): its
@@ -143,6 +148,24 @@ class ProfileCustodyHoldAssessment(BaseModel):
         )
 
 
+type HoldEvidenceAuthority = Literal["application-legal-hold-owner", "application-filing-hold-owner"]
+
+_HOLD_EVIDENCE_AUTHORITY: Final[dict[ProfileDeletionHoldOwner, HoldEvidenceAuthority]] = {
+    ProfileDeletionHoldOwner.LEGAL: "application-legal-hold-owner",
+    ProfileDeletionHoldOwner.FILING: "application-filing-hold-owner",
+}
+
+
+class _HoldEvidenceFields(TypedDict):
+    owner: ProfileDeletionHoldOwnerValue
+    profile_id: UUID
+    disposition: Literal["cleared", "held"]
+    source_record_id: str
+    source_record_digest: str
+    assessed_at: datetime
+    authority: HoldEvidenceAuthority
+
+
 class ProfileCustodyHoldEvidence(BaseModel):
     """One immutable canonical answer from a legal or filing hold owner."""
 
@@ -155,7 +178,7 @@ class ProfileCustodyHoldEvidence(BaseModel):
     source_record_id: str = Field(min_length=3, max_length=256)
     source_record_digest: PrefixedContentDigest
     assessed_at: datetime
-    authority: Literal["application-legal-hold-owner", "application-filing-hold-owner"]
+    authority: HoldEvidenceAuthority
     evidence_digest: PrefixedContentDigest
 
     @field_validator("source_record_id")
@@ -191,7 +214,7 @@ class ProfileCustodyHoldEvidence(BaseModel):
     @property
     def canonical_payload(self) -> dict[str, object]:
         """Return the evidence fields excluding the digest."""
-        payload = cast(dict[str, object], self.model_dump(mode="json"))
+        payload = model_json_object(self)
         del payload["evidence_digest"]
         return payload
 
@@ -205,18 +228,14 @@ class ProfileCustodyHoldEvidence(BaseModel):
 
 def evidence_from_owner_projection(projection: ProfileDeletionHoldOwnerProjection) -> ProfileCustodyHoldEvidence:
     """Create derived custody evidence from a read-only external owner projection."""
-    authority = cast(
-        Literal["application-legal-hold-owner", "application-filing-hold-owner"],
-        f"application-{projection.owner}-hold-owner",
-    )
-    values: dict[str, Any] = {
+    values: _HoldEvidenceFields = {
         "owner": projection.owner,
         "profile_id": projection.profile_id,
         "disposition": "held" if projection.blocks_local_deletion else "cleared",
         "source_record_id": projection.source_record_id,
         "source_record_digest": projection.source_record_digest,
         "assessed_at": projection.assessed_at,
-        "authority": authority,
+        "authority": _HOLD_EVIDENCE_AUTHORITY[projection.owner],
     }
     unsigned = ProfileCustodyHoldEvidence.model_construct(**values, evidence_digest="")
     return ProfileCustodyHoldEvidence(**values, evidence_digest=unsigned.computed_evidence_digest)

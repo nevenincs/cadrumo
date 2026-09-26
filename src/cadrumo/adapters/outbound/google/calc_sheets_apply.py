@@ -956,7 +956,7 @@ def apply_export_plan(
     Returns:
         A :class:`~adapters.outbound.google.calc_sheets_apply.CalcSheetsApplyResult` with
         the spreadsheet location and write counts surfaced by
-        ``aeat config google sync calc export``.
+        ``aeat app modelo spreadsheet push``.
 
     Raises:
         :exc:`~adapters.outbound.storage.errors.OutboundStorageValidationError`:

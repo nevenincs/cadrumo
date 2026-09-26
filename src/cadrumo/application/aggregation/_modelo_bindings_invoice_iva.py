@@ -589,6 +589,40 @@ def _recargo_rate_divergence(
     )
 
 
+def recargo_unattributable_diagnostics(
+    invoices: Sequence[Invoice],
+    *,
+    resolver_id: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Return one advisory per invoice whose recargo could not be compared by rate.
+
+    The recargo is recorded once for the whole invoice while the Modelo 303
+    recargo casillas are per IVA rate, so for an invoice spanning several rates
+    the screen leaves the recargo out of its comparison with the ledger. Left
+    unsaid, a ledger that omits that recargo would pass the screen as though it
+    had been checked.
+    """
+    return tuple(
+        CalculationSourceDiagnostic(
+            reason="invoice_recargo_not_attributable_to_a_tier",
+            source_kind="ledger_iva_aggregation",
+            resolver_id=resolver_id,
+            source_ref=f"invoice:{invoice.invoice_id}",
+            message=(
+                f"invoice {invoice.invoice_number!r} records a recargo de equivalencia of "
+                f"{invoice.recargo_amount} across lines at several IVA rates. The invoice does not say how "
+                "that recargo divides between the rates, so it was not compared against the ledger's "
+                "recargo for each rate"
+            ),
+            remedy=(
+                "Check that the transaction ledger records this invoice's recargo under each IVA rate it "
+                "applies to; the declared recargo is the ledger's"
+            ),
+        )
+        for invoice in invoices
+    )
+
+
 def recargo_rate_mismatch_diagnostics(
     divergences: Sequence[_RecargoRateDivergence],
     *,
@@ -663,6 +697,10 @@ class ScreenedInvoiceIva:
             the rate art. 161 publishes for that slot. Unlike the two above,
             these are NOT withheld -- the figure is declared exactly as
             recorded and the advisory is a cross-check beside it.
+        recargo_unattributable: invoices whose one recorded recargo spans
+            cuota lines at several IVA rates. The screen cannot say which
+            rate's recargo it is, so it compares none of it against the
+            ledger, and says so rather than letting that pass as a match.
     """
 
     observations: tuple[IvaLedgerObservation, ...] = ()
@@ -672,6 +710,7 @@ class ScreenedInvoiceIva:
     reverse_charge_underivable: tuple[Invoice, ...] = ()
     deduction_authority_missing: tuple[Invoice, ...] = ()
     recargo_rate_divergences: tuple[_RecargoRateDivergence, ...] = ()
+    recargo_unattributable: tuple[Invoice, ...] = ()
     #: The catalogue could not be READ, as distinct from holding no invoices.
     #: Without this the two are the same value downstream, and the silence guard
     #: returns as though it had compared a catalogue it never saw.
@@ -702,6 +741,10 @@ class InvoiceIvaSilenceReport:
     #: to build an observation, so dropping it when the screen returns early
     #: would silence the advisory exactly when the invoice is least examined.
     recargo_rate_divergences: tuple[_RecargoRateDivergence, ...] = ()
+    #: Carried on every return path for the same reason as the divergences: the
+    #: recargo was left out of the comparison, so a ledger that omits it would
+    #: otherwise pass the screen without a word.
+    recargo_unattributable: tuple[Invoice, ...] = ()
     #: The screen could not read the invoice catalogue, so it reached NO verdict
     #: about whether invoice IVA is absent from the ledger totals. Distinct from
     #: a clean pass, which is what a silent empty return looked like.
@@ -715,6 +758,7 @@ class _ScreenedInvoiceIvaResult:
     observations: tuple[IvaLedgerObservation, ...]
     reverse_charge_underivable: bool
     recargo_rate_divergence: _RecargoRateDivergence | None
+    recargo_unattributable: bool
     deduction_authority_missing: bool
     category_counterparty_mismatch: bool
 
@@ -755,6 +799,7 @@ def screened_invoice_iva_observations(
     reverse_charge_underivable: list[Invoice] = []
     deduction_authority_missing: list[Invoice] = []
     recargo_rate_divergences: list[_RecargoRateDivergence] = []
+    recargo_unattributable: list[Invoice] = []
     for invoice in catalogue.values():
         if not _screened_invoice_in_period(invoice, context=context, period=period):
             continue
@@ -767,6 +812,8 @@ def screened_invoice_iva_observations(
             reverse_charge_underivable.append(invoice)
         if screened.recargo_rate_divergence is not None:
             recargo_rate_divergences.append(screened.recargo_rate_divergence)
+        if screened.recargo_unattributable:
+            recargo_unattributable.append(invoice)
         if screened.deduction_authority_missing:
             deduction_authority_missing.append(invoice)
             continue
@@ -784,6 +831,7 @@ def screened_invoice_iva_observations(
         reverse_charge_underivable=tuple(reverse_charge_underivable),
         deduction_authority_missing=tuple(deduction_authority_missing),
         recargo_rate_divergences=tuple(recargo_rate_divergences),
+        recargo_unattributable=tuple(recargo_unattributable),
     )
 
 
@@ -833,6 +881,7 @@ def _screened_invoice_iva_result(
         observations=observations,
         reverse_charge_underivable=reverse_charge_underivable,
         recargo_rate_divergence=recargo_rate_divergence,
+        recargo_unattributable=_recargo_spans_several_tiers(invoice),
         deduction_authority_missing=deduction_authority_missing,
         category_counterparty_mismatch=category_counterparty_mismatch,
     )
@@ -942,6 +991,18 @@ def _linked_invoice_deduction_authority(
     ):
         return None
     return first
+
+
+def _recargo_spans_several_tiers(invoice: Invoice) -> bool:
+    """Whether the invoice's one recorded recargo sits over cuota lines at several rates.
+
+    Exactly the case :func:`_sole_recargo_bearing_line_index` declines to
+    attribute, named on its own so the screen can report it instead of only
+    leaving it out.
+    """
+    if not invoice.recargo_amount:
+        return False
+    return len({line.iva_rate for line in invoice.lines if line.iva_amount > Decimal("0")}) > 1
 
 
 def _sole_recargo_bearing_line_index(invoice: Invoice) -> int | None:

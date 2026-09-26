@@ -12,8 +12,9 @@ from __future__ import annotations
 
 import asyncio
 import os
+import tempfile
 from collections.abc import Coroutine
-from typing import TypedDict
+from typing import IO, TypedDict
 
 import mcp.types as mcp_types
 import pytest
@@ -119,29 +120,56 @@ def test_memory_session_tools_list_preserves_resolver_backed_action_capabilities
     assert [capability["action_id"] for capability in capabilities] == ["operator.overview.status"]
 
 
+_SERVER_STDERR_NOTE_CHARS = 4000
+
+
+def _server_stderr_note(server_stderr: IO[str]) -> str:
+    """Render the tail of the server subprocess's stderr for a failure note."""
+    server_stderr.flush()
+    server_stderr.seek(0)
+    captured = server_stderr.read()[-_SERVER_STDERR_NOTE_CHARS:].strip()
+    if not captured:
+        return "cadrumo-mcp server wrote nothing to stderr"
+    return f"cadrumo-mcp server stderr (tail):\n{captured}"
+
+
 async def _stdio_handshake() -> _HandshakeObservation:
     params = StdioServerParameters(
         command="cadrumo-mcp",
         env={**os.environ, "CADRUMO_MCP_PERSONA": "cadrumo-verifier"},
+        encoding="utf-8",
     )
-    async with (
-        stdio_client(params) as (read_stream, write_stream),
-        ClientSession(read_stream, write_stream) as session,
+    # The child's stderr must be a real OS file: stdio_client defaults to the
+    # sys.stderr bound when the SDK was imported, which pytest capture replaces
+    # with an in-memory stream that has no fileno, so the spawn fails before the
+    # server starts. The test owns this sink, closes (and so deletes) it, and
+    # attaches its tail to any failure.
+    with (
+        tempfile.TemporaryDirectory() as stderr_dir,
+        open(os.path.join(stderr_dir, "server-stderr.log"), "w+", encoding="utf-8", errors="replace") as server_stderr,
     ):
-        initialized = await session.initialize()
-        resources = await session.list_resources()
-        templates = await session.list_resource_templates()
-        prompts = await session.list_prompts()
-        tools = await session.list_tools()
-        call = await session.call_tool(HARNESS_LOAD_TOOL, {})
-        return {
-            "server_name": initialized.server_info.name,
-            "resource_uris": tuple(str(item.uri) for item in resources.resources),
-            "template_uris": tuple(item.uri_template for item in templates.resource_templates),
-            "prompt_names": tuple(item.name for item in prompts.prompts),
-            "tool_names": tuple(item.name for item in tools.tools),
-            "call": call,
-        }
+        try:
+            async with (
+                stdio_client(params, errlog=server_stderr) as (read_stream, write_stream),
+                ClientSession(read_stream, write_stream) as session,
+            ):
+                initialized = await session.initialize()
+                resources = await session.list_resources()
+                templates = await session.list_resource_templates()
+                prompts = await session.list_prompts()
+                tools = await session.list_tools()
+                call = await session.call_tool(HARNESS_LOAD_TOOL, {})
+                return {
+                    "server_name": initialized.server_info.name,
+                    "resource_uris": tuple(str(item.uri) for item in resources.resources),
+                    "template_uris": tuple(item.uri_template for item in templates.resource_templates),
+                    "prompt_names": tuple(item.name for item in prompts.prompts),
+                    "tool_names": tuple(item.name for item in tools.tools),
+                    "call": call,
+                }
+        except Exception as exc:
+            exc.add_note(_server_stderr_note(server_stderr))
+            raise
 
 
 def test_stdio_subprocess_client_proves_cadrumo_identity_and_round_trip() -> None:

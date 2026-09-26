@@ -119,12 +119,14 @@ def _manager() -> App[Any]:
     def _overview():
         return build_profile_overview(profiles.load(profile_id), label=label)
 
-    def _persist(path: str, value: str):
+    def _persist(path: str, value: str, expected_revision: int, expected_content_digest: str):
         with bundled_indexed_authority().operation() as operation:
             record = apply_manager_profile_field_mutation(
                 profile_id=profile_id,
                 path=path,
                 value=value,
+                expected_revision=expected_revision,
+                expected_content_digest=expected_content_digest,
                 profile_decode_context=operation.profile_decode_context(),
             )
         return build_profile_overview(record, label=label)

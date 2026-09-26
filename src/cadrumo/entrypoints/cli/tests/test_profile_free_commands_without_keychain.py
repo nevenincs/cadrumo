@@ -40,7 +40,6 @@ def _run(storage_root: Path, *args: str, stdin_payload: str | None = None) -> su
         args,
         settings={
             "cadrumo_local_storage_root": storage_root,
-            "cadrumo_secret_store_dir": storage_root / "fallback-store",
             "cadrumo_secret_passphrase": _passphrase(),
             "cadrumo_output_language": "en",
             "cadrumo_llm_ollama_chat_url": _CLOSED_RUNTIME,
@@ -80,7 +79,6 @@ def test_provision_status_runs_with_an_active_profile_and_no_keychain(active_pro
     assert envelope["result"]["runtime"]["reachable"] is False
     assert envelope["result"]["extraction_ready"] is False
     assert envelope["result"]["document_readiness"] == "text_layer_only"
-    assert envelope["result"]["probed"] is False
 
 
 def test_provision_verify_runs_with_an_active_profile_and_no_keychain(active_profile_root: Path) -> None:

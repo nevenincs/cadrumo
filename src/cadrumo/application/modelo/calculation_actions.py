@@ -59,7 +59,7 @@ from ...core.time.clock import now as _utc_now
 from ...domain.calculations.registry.binding_provider_registration import BINDING_PROVIDER_REGISTRATIONS
 from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids
 from ...domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
-from ...domain.calculations.registry.casilla_membership import casillas_by_id
+from ...domain.calculations.registry.casilla_membership import casillas_by_id, reject_row_field_template_scalar_inputs
 from ...domain.calculations.registry.formula_runtime import (
     RegistryCalculationResult,
     calculate_registry_snapshot,
@@ -107,6 +107,9 @@ from ._calculation_modelo_adjustments import (
     detail_row_binding_values_for_calculation as _detail_row_binding_values_for_calculation,
 )
 from ._calculation_modelo_adjustments import (
+    drop_row_field_template_outputs as _drop_row_field_template_outputs,
+)
+from ._calculation_modelo_adjustments import (
     m131_objective_estimation_data_base_inputs as _m131_objective_estimation_data_base_inputs,
 )
 from ._calculation_modelo_adjustments import (
@@ -114,9 +117,6 @@ from ._calculation_modelo_adjustments import (
 )
 from ._calculation_modelo_adjustments import (
     require_detail_rows_declared_for_their_owning_modelo as _require_detail_rows_declared_for_their_owning_modelo,
-)
-from ._calculation_modelo_adjustments import (
-    suppress_m349_row_field_template_outputs as _suppress_m349_row_field_template_outputs,
 )
 from ._calculation_modelo_adjustments import (
     union_detail_rows_by_identity as _union_detail_rows_by_identity,
@@ -157,6 +157,12 @@ from .calculation_route import CALCULATION_ROUTE_ENROLLED_SOURCES
 from .calculation_route import CalculationRouteStage as _CalculationRouteStage
 from .calculation_route import require_calculation_route_resolver as _require_calculation_route_resolver
 from .calculation_source_policy import BUCKET_AGGREGATION_LOCK_SOURCES, CALLER_OVERRIDABLE_CARRY_SOURCES
+from .lifecycle_clock_gate import (
+    ModeloLifecycleClockOperation,
+    require_lifecycle_clock_not_before,
+    work_unit_ordering_instants,
+)
+from .m123_count_authority_gate import Modelo123CountAuthorityStage, require_modelo_123_count_authority
 from .m303_filing_evidence import validate_m303_filing_instance_evidence_for_revision
 from .m303_regimen_simplificado_scope import (
     m303_regimen_simplificado_annual_summary_applies_to_profile,
@@ -175,7 +181,6 @@ if TYPE_CHECKING:
     from ...domain.calculations.registry.schema import RegistrySnapshot
     from ..aggregation.foreign_assets import ForeignAssetIngestObservation
     from ..aggregation.source_mesh import (
-        CalculationSourceDiagnosticReason,
         CalculationSourceResolution,
     )
 
@@ -498,6 +503,11 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
     work_units = prepared.work_units
     work_unit = prepared.work_unit
     snapshot = prepared.snapshot
+    require_modelo_123_count_authority(
+        work_unit,
+        retencion_ports=ports.retencion_observation_ports,
+        stage=Modelo123CountAuthorityStage.CALCULATE,
+    )
     _require_m303_regimen_simplificado_annual_summary_handoff(
         revision=snapshot.revision,
         profile=prepared.profile,
@@ -523,6 +533,9 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
     resolved_inputs = channel_inputs.casilla_inputs
 
     resolved_text_inputs = validated_text_input_casilla_ids(channel_inputs.text_casilla_inputs)
+    # The row-field template outputs are dropped after the engine runs, so a
+    # scalar input for one would be persisted with no observation to ground it.
+    reject_row_field_template_scalar_inputs(snapshot.revision, (*resolved_inputs, *resolved_text_inputs))
 
     engine_result = _calculate_prepared_registry_snapshot(
         snapshot,
@@ -559,8 +572,7 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
         resolved_binding_values=prepared.channels.bindings,
     )
     typed_observations = _build_typed_observations(engine_result=engine_result, snapshot=snapshot)
-    casilla_values, typed_observations = _suppress_m349_row_field_template_outputs(
-        work_unit=work_unit,
+    casilla_values, typed_observations = _drop_row_field_template_outputs(
         revision=snapshot.revision,
         casilla_values=casilla_values,
         observations=typed_observations,
@@ -576,6 +588,13 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
     )
 
     now = _trusted_calculation_clock(clock)
+    # The new draft is created at ``now`` and orders itself; the parent work
+    # unit's advanced pointer is stamped with it too.
+    require_lifecycle_clock_not_before(
+        now,
+        operation=ModeloLifecycleClockOperation.CALCULATE,
+        instants=work_unit_ordering_instants(work_unit),
+    )
     return persist_calculation_revision(
         work_unit_id=work_unit_id,
         registry_snapshot_ref=snapshot.snapshot_ref,
@@ -739,6 +758,7 @@ def resolve_bucket_source_mesh(
     from ..aggregation.source_resolution_operations import merge_source_resolutions
     from ..aggregation.withholding_source import WithholdingSourceResolver
     from ..calculations.iva_compensation_annual_partition import IvaCompensationAnnualPartitionSourceResolver
+    from ..calculations.m115_no_relevant_payments import m115_no_relevant_payment_periods_for_bucket
     from ..calculations.m303_regimen_simplificado_annual_summary import (
         M303RegimenSimplificadoAnnualSummarySourceResolver,
     )
@@ -813,6 +833,7 @@ def resolve_bucket_source_mesh(
                     ports=renta_catalogue_read_ports,
                     prorrata_register_repository=prorrata_register_repository,
                     usage_ratio_profile_loader=ports.usage_ratio_profile_loader,
+                    activity_asset_history_repository=ports.activity_asset_history_repository,
                 )
             ),
             # M130 actividad-económica income (ledger_renta_income_aggregation).
@@ -828,6 +849,7 @@ def resolve_bucket_source_mesh(
                 LedgerRentaGastosPagoFraccionadoAggregationSourceResolver(
                     transaction_repository=memoized_transaction_repository,
                     prorrata_register_repository=prorrata_register_repository,
+                    activity_asset_history_repository=ports.activity_asset_history_repository,
                 )
             ),
             # M151 impatriado (Ley Beckham) Spanish-source base
@@ -856,12 +878,27 @@ def resolve_bucket_source_mesh(
             # dedicated per-perceptor store for quarterly count/base, while M180/M193
             # read it for distinct perceptor-NIF counts. Empty store on a declaring
             # revision surfaces a no-silent advisory.
-            resolve_declared(RetencionesAggregationSourceResolver(ports=ports.retencion_observation_ports)),
+            resolve_declared(
+                RetencionesAggregationSourceResolver(
+                    ports=ports.retencion_observation_ports,
+                    m115_no_relevant_payment_periods=m115_no_relevant_payment_periods_for_bucket(
+                        work_unit.bucket_id,
+                        profile_path_values_reader=profile_read_ports.path_values,
+                    ),
+                ),
+            ),
             # M190 distinct percepción count (withholding): reads the dedicated
             # per-perceptor-clave withholding store and materialises scalar
             # withholding bindings. Empty store on a declaring revision surfaces
             # a no-silent advisory while still materialising an explicit zero.
-            resolve_declared(WithholdingSourceResolver(ports=ports.percepciones_observation_ports)),
+            # M193 also reads the Modelo 123 retención store for the disclosure
+            # phases of captured capital allocations.
+            resolve_declared(
+                WithholdingSourceResolver(
+                    ports=ports.percepciones_observation_ports,
+                    retencion_ports=ports.retencion_observation_ports,
+                )
+            ),
             # M349 collectible / payable invoices (collectible_invoice,
             # payable_invoice).  Loads the encrypted invoice catalogue and resolves
             # binding values for intra-community transactions in scope.
@@ -976,7 +1013,10 @@ def _source_provenance_refs(
     dropped: it is a subject identity, not grounding, and the anti-
     duplication rationale for ``legal_refs``/``source_refs`` does not extend to
     it -- nothing else on the revision recovers which casilla a general
-    (non-row-materialized) source object explains.
+    (non-row-materialized) source object explains. ``source_filing_year`` is
+    kept for the same reason: it is the only persisted trace of a Modelo 193
+    disclosure phase row's accrual year, which tells a settled prior-accrual
+    row from a pending one.
     """
     return tuple(
         CalculationSourceRef(
@@ -990,6 +1030,7 @@ def _source_provenance_refs(
             fingerprint=provenance.fingerprint,
             source_casilla_ids=provenance.source_casilla_ids,
             dependency_treatment=provenance.dependency_treatment,
+            source_filing_year=provenance.source_filing_year,
         )
         for provenance in source_resolution.provenance
     )
@@ -1524,10 +1565,15 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
 
 
 #: The reason a persisted :class:`CalculationSourceIssue` may carry.
-_DurableUnroutedReason = Literal["unrouted_observation", "unrouted_declarable_quantity"]
+_DurableSourceIssueReason = Literal[
+    "unrouted_observation",
+    "unrouted_declarable_quantity",
+    "iva_selected_scope_evidence_failure",
+    "iva_compensation_annual_source_evidence_failure",
+]
 
 
-def _durable_unrouted_reason(reason: CalculationSourceDiagnosticReason) -> _DurableUnroutedReason | None:
+def _durable_source_issue_reason(diagnostic: CalculationSourceDiagnostic) -> _DurableSourceIssueReason | None:
     """Narrow a diagnostic reason to the durable subset, or ``None``.
 
     Both durable reasons describe a value ABSENT from the filing, which is what
@@ -1538,10 +1584,14 @@ def _durable_unrouted_reason(reason: CalculationSourceDiagnosticReason) -> _Dura
     durable set and the persisted model's own ``Literal`` then fails to compile
     instead of at the first calculation that raises the new reason.
     """
-    if reason == "unrouted_observation":
+    if diagnostic.reason == "unrouted_observation":
         return "unrouted_observation"
-    if reason == "unrouted_declarable_quantity":
+    if diagnostic.reason == "unrouted_declarable_quantity":
         return "unrouted_declarable_quantity"
+    if diagnostic.reason == "iva_selected_scope_evidence_failure":
+        return "iva_selected_scope_evidence_failure"
+    if diagnostic.reason == "iva_compensation_annual_source_evidence_failure":
+        return "iva_compensation_annual_source_evidence_failure"
     return None
 
 
@@ -1563,14 +1613,18 @@ def _unrouted_source_issues(
     """
     issues: list[CalculationSourceIssue] = []
     for diagnostic in source_diagnostics:
-        reason = _durable_unrouted_reason(diagnostic.reason)
+        reason = _durable_source_issue_reason(diagnostic)
         if reason is None or diagnostic.binding_source is None:
             continue
         issues.append(
             CalculationSourceIssue(
                 reason=reason,
                 binding_source=diagnostic.binding_source,
-                message=diagnostic.message,
+                message=(
+                    "selected-scope IVA evidence failure"
+                    if reason == "iva_selected_scope_evidence_failure"
+                    else diagnostic.message
+                ),
                 resolver_id=diagnostic.resolver_id,
                 source_ref=diagnostic.source_ref,
             ),
@@ -1842,9 +1896,9 @@ def assert_no_novel_source_kinds(revision: ModeloRevision) -> None:
         )
 
 
-def _registered_disposition(source: object) -> str | None:
+def _registered_disposition(source: BindingSourceKind) -> str | None:
     """Return the registered disposition for ``source``, or ``None`` when unregistered."""
-    registration = BINDING_PROVIDER_REGISTRATIONS.get(source)  # type: ignore[arg-type]
+    registration = BINDING_PROVIDER_REGISTRATIONS.get(source)
     return None if registration is None else registration.disposition
 
 

@@ -35,7 +35,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from pydantic import NonNegativeInt, field_validator, model_validator
+from pydantic import NonNegativeInt, PositiveInt, field_validator, model_validator
 
 from ...application.ledger.models import (
     DiagnosticKind,
@@ -436,7 +436,7 @@ class LedgerAllocateResult(_LedgerMutationResult):
 
 
 class LedgerAttachResult(_LedgerMutationResult):
-    """JSON envelope for ``aeat app ledger attach`` and ``ledger doclink``."""
+    """JSON envelope for ``aeat app ledger attach`` and ``aeat app ledger evidence pull``."""
 
 
 class LedgerDetachResult(_LedgerMutationResult):
@@ -830,6 +830,7 @@ class LedgerExportRowPayload(OutputSchema):
     bucket_id: BucketId
     transaction_id: TransactionId
     lifecycle_state: NonEmptyStr
+    invoice_id: str = ""
     booked_date: IsoDateText
     value_date: str = ""
     effective_date: IsoDateText
@@ -1104,6 +1105,8 @@ class LedgerTrackResult(OutputSchema):
     bucket_id: BucketId
     transaction: TransactionPayload
     tracking: LedgerTrackingPayload
+    source_filename: NonEmptyStr | None = None
+    source_row_index: PositiveInt | None = None
     participated_in: list[LedgerTransactionParticipationEntryPayload] | None = None
 
 

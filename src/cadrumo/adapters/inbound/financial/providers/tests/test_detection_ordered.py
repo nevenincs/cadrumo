@@ -35,6 +35,7 @@ from ..csv import CsvProvider
 from ..detection import _ordered_candidates
 from ..ofx import OfxProvider
 from ..pdf_n26 import PdfN26Provider
+from ..xls import XlsProvider
 from ..xlsx import XlsxProvider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
@@ -50,6 +51,7 @@ def test_ordered_candidates_known_suffix_leads_with_declared_provider(tmp_path: 
     cases = (
         ("pdf", ".pdf", b"%PDF-1.4\n% financial statement sample\n", PdfN26Provider),
         ("xlsx", ".xlsx", b"PK\x03\x04 workbook container sample", XlsxProvider),
+        ("xls", ".xls", b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1 legacy workbook sample", XlsProvider),
         ("ofx", ".ofx", b"<OFX><BANKMSGSRSV1></BANKMSGSRSV1></OFX>", OfxProvider),
         ("qfx", ".qfx", b"<OFX><BANKMSGSRSV1></BANKMSGSRSV1></OFX>", OfxProvider),
         ("csv", ".csv", b"date,description,amount\n", CsvProvider),
@@ -76,6 +78,7 @@ def test_ordered_candidates_unknown_suffix_magic_bytes_lead_with_declared_provid
     cases = (
         ("pdf-magic", b"%PDF-1.4\n% financial statement sample\n", PdfN26Provider),
         ("zip-magic", b"PK\x03\x04 workbook container sample", XlsxProvider),
+        ("ole2-magic", b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1 legacy workbook sample", XlsProvider),
         ("ofx-envelope", b"<?xml version='1.0'?><OFX><BODY/></OFX>", OfxProvider),
         ("banktranlist-marker", b"<HEADER/>\n<BANKTRANLIST>" + b"x" * 50, OfxProvider),
     )
@@ -125,13 +128,27 @@ def test_ordered_candidates_covers_every_provider_in_every_branch(tmp_path: Path
     of them — ordering it earlier would let an inferred parse shadow a
     deterministic one on a known bank export.
     """
-    target = tmp_path / "statement.csv"
-    target.write_bytes(b"date,amount\n")
+    branches = (
+        ("statement.csv", b"date,amount\n"),
+        ("statement.pdf", b"%PDF-1.4\n"),
+        ("statement.xlsx", b"PK\x03\x04"),
+        ("statement.xls", b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1"),
+        ("statement.ofx", b"<OFX></OFX>"),
+        ("pdf.bin", b"%PDF-1.4\n"),
+        ("zip.bin", b"PK\x03\x04"),
+        ("ole2.bin", b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1"),
+        ("ofx.bin", b"<OFX></OFX>"),
+        ("plain.bin", b"no sentinel"),
+    )
+    exact = {CsvProvider, XlsxProvider, XlsProvider, OfxProvider, PdfN26Provider}
+    for name, content in (*branches, ("missing.bin", None)):
+        target = tmp_path / name
+        if content is not None:
+            target.write_bytes(content)
+        candidates = _ordered_candidates(target)
+        provider_types = {type(p) for p in candidates}
 
-    candidates = _ordered_candidates(target)
-    provider_types = {type(p) for p in candidates}
-
-    assert provider_types >= {CsvProvider, XlsxProvider, OfxProvider, PdfN26Provider}
-    assert len(candidates) == len(provider_types), "each provider is offered exactly once"
-    assert isinstance(candidates[-1], MappedTabularProvider)
-    assert not any(isinstance(provider, MappedTabularProvider) for provider in candidates[:-1])
+        assert provider_types >= exact, name
+        assert len(candidates) == len(provider_types), f"{name}: each provider is offered exactly once"
+        assert isinstance(candidates[-1], MappedTabularProvider), name
+        assert not any(isinstance(provider, MappedTabularProvider) for provider in candidates[:-1]), name

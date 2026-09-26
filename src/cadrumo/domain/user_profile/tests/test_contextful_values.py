@@ -8,12 +8,12 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.hashing import content_hash_hex
-from ....domain.calculations.registry.tests.published_authority import published_profile_schema
 from ...calculations.registry.authority_artifact import (
     AuthorityGenerationPin,
     ProfileCreateContext,
     ProfileDecodeContext,
 )
+from ...calculations.registry.tests.published_authority import published_profile_schema
 from ..errors import UserProfileValidationError
 from ..values import (
     ProfileSetupState,

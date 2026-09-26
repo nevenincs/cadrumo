@@ -50,6 +50,8 @@ __all__ = ["advisory_profile_bucket"]
 _BUCKET_ID = "7b7b7b7b-7b7b-4b7b-8b7b-7b7b7b7b7b7b"
 _FILING_YEAR = 2024
 _ANNUAL_PERIOD = "0A"
+#: A Modelo 303 liquidation period: another modelo is exercised at a coordinate it files.
+_QUARTERLY_PERIOD = "1T"
 _ESTATAL_CASILLA: CasillaId = "0513"
 
 #: Any non-zero aggregate: the advisory's precondition is that a mínimo is being
@@ -63,8 +65,8 @@ def bucket_id() -> str:
     return _BUCKET_ID
 
 
-def _revision() -> ModeloRevision:
-    return published_authority_operation().snapshot("100", filing_year=_FILING_YEAR, period=_ANNUAL_PERIOD).revision
+def _revision(modelo: str = Modelo("100").value, period_token: str = _ANNUAL_PERIOD) -> ModeloRevision:
+    return published_authority_operation().snapshot(modelo, filing_year=_FILING_YEAR, period=period_token).revision
 
 
 def _write(*descendants: DescendantInfo) -> None:
@@ -76,13 +78,14 @@ def _coordinator_diagnostics(
     casilla_values: dict[CasillaId, Decimal] | None = None,
     *,
     modelo: str = Modelo("100").value,
+    period_token: str = _ANNUAL_PERIOD,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     repositories = advisory_diagnostic_repositories(bucket_id=_BUCKET_ID)
     return collect_bucket_aggregation_advisory_diagnostics(
-        _revision(),
+        _revision(modelo, period_token),
         _CLAIMED if casilla_values is None else casilla_values,
         modelo=modelo,
-        period_token=_ANNUAL_PERIOD,
+        period_token=period_token,
         filing_year=_FILING_YEAR,
         bucket_id=_BUCKET_ID,
         observation_repository=repositories.observation,
@@ -96,10 +99,11 @@ def _collect(
     casilla_values: dict[CasillaId, Decimal] | None = None,
     *,
     modelo: str = Modelo("100").value,
+    period_token: str = _ANNUAL_PERIOD,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     return tuple(
         diagnostic
-        for diagnostic in _coordinator_diagnostics(casilla_values, modelo=modelo)
+        for diagnostic in _coordinator_diagnostics(casilla_values, modelo=modelo, period_token=period_token)
         if diagnostic.source_kind == "minimo_descendientes_rentas_undeclared"
     )
 
@@ -233,7 +237,8 @@ def test_silent_for_a_profile_with_no_descendientes_at_all() -> None:
 
 
 def test_silent_for_another_modelo() -> None:
-    diagnostics = _collect(modelo="303")
+    _write(_contributing_child())
+    diagnostics = _collect(modelo=Modelo("303").value, period_token=_QUARTERLY_PERIOD)
     assert diagnostics == ()
 
 

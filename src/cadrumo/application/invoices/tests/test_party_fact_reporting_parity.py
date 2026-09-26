@@ -21,7 +21,7 @@ from datetime import date
 import pytest
 
 from ....core.aggregation import IntracomOperationType
-from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
 from ....domain.iva.classification import (
     IvaClassificationRule,
@@ -66,11 +66,11 @@ class TestEveryReportedCategoryIsMintedByADeclaringBranch:
     for an operation the clave fallback does not yet reach.
     """
 
-    def test_every_clave_reported_category_has_a_declaring_rule(self) -> None:
+    def test_every_clave_reported_category_has_a_declaring_rule(self, operation: PinnedAuthorityOperation) -> None:
         rules = _classification_rules()
         declaring = _classifiable_categories(rules, consuming=PartyFact.IVA_IDENTIFICATION_STATE)
         mintable = _classifiable_categories(rules)
-        catalogue = resolve_iva_category_catalogue()
+        catalogue = resolve_iva_category_catalogue(authority=operation)
         reported = {
             category
             for operation_key in (

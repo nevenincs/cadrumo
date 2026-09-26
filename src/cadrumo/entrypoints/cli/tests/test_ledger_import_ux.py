@@ -415,6 +415,28 @@ def test_cross_format_import_of_the_same_movements_deduplicates(
     assert len(json.loads(after.output)["result"]["rows"]) == 4
 
 
+def test_identical_statement_bytes_under_another_filename_do_not_duplicate_movements(tmp_path: Path) -> None:
+    first_path = tmp_path / "statement.csv"
+    second_path = tmp_path / "renamed.csv"
+    first_path.write_text(_FOUR_ROW_CSV, encoding="utf-8")
+    second_path.write_text(_FOUR_ROW_CSV, encoding="utf-8")
+
+    first = _invoke(["app", "ledger", "import", "--file", str(first_path), "--provider", "csv"])
+    assert first.exit_code == 0, first.output
+
+    replay = _invoke(
+        ["--format", "json", "app", "ledger", "import", "--file", str(second_path), "--provider", "csv"],
+    )
+    assert replay.exit_code == 0, replay.output
+    payload = json.loads(replay.output)["result"]
+    assert payload["imported"] == 0
+    assert payload["skipped"] == 4
+
+    after = _invoke(["--format", "json", "app", "ledger", "list"])
+    assert after.exit_code == 0, after.output
+    assert len(json.loads(after.output)["result"]["rows"]) == 4
+
+
 def test_import_warns_on_likely_cross_format_duplicate(tmp_path: Path) -> None:
     """A same-date same-amount row with a divergent narrative is flagged.
 

@@ -555,7 +555,7 @@ application:
         unreadable_table: 'El fitxer d''importació massiva de factures no conté cap
           taula llegible: {detail}'
         unsupported_extension: El fitxer d'importació massiva de factures ha de ser
-          .csv o .xlsx (s'ha rebut {extension}).
+          .csv, .tsv, .xlsx, .xlsm o .xls (s'ha rebut {extension}).
     creation:
       errors:
         duplicate_invoice: 'Ja existeix una factura amb la mateixa identitat al catàleg:
@@ -854,12 +854,10 @@ application:
         de naixement); no es pot aportar mitjançant --binding, que només admet valors
         decimals i d'enumeració. Defineix-lo com a dada del perfil i torna a calcular.
       calculate_binding_unknown: '--binding %{key} no coincideix amb cap binding d''aquesta
-        revisió. Bindings acceptats: %{accepted}. Useu `aeat app modelo bindings list
-        <MODELO>` per llistar els bindings vàlids.'
+        revisió. Bindings acceptats: %{accepted}.'
       calculate_boolean_binding_encoding_invalid: 'El valor del binding %{key} és
         un indicador booleà codificat com a decimal i ha de ser un de: %{accepted}.
-        S''ha rebut %{value}. Codificació acceptada: %{mapping}. Executa ''aeat app
-        modelo bindings list <MODELO>'' per veure la codificació decimal de cada binding.'
+        S''ha rebut %{value}. Codificació acceptada: %{mapping}.'
       calculate_casilla_noncanonical_ambiguous: '--casilla %{key} no és un casilla.id
         canònic i és ambigu. Valors casilla.id candidats: %{accepted}. Indica el casilla.id
         canònic exacte'
@@ -867,16 +865,9 @@ application:
         imprès o de formulari, o una referència d''exportació, no un casilla.id canònic.
         Usa el casilla.id canònic en el seu lloc: %{accepted}'
       calculate_casilla_unknown: --casilla %{key} no és un casilla.id canònic d'aquesta
-        revisió. Usa `aeat app modelo casillas <MODELO>` per llistar els casilla.id
-        vàlids.
+        revisió.
       calculate_decimal_input_invalid: 'El valor %{flag} de %{key} no és decimal:
         %{value}'
-      calculate_detail_casilla_unsupported: La casella %{key} identifica un camp de
-        detall de perceptor/immoble del Model 180, no una casella decimal escalar.
-        El canal local --casilla només accepta caselles decimals escalars; les files
-        de detall de perceptor/immoble del Model 180 encara no estan suportades a
-        la superfície pública --row. Usa aeat app modelo aggregate --modelo 180 --retencion-observation
-        per a la font suportada de nombre de perceptors/base/retencions anual.
       calculate_m184_share_sum_invalid: Els percentatges de participació de les files
         de membre del model 184 han de sumar exactament 100%; s'ha obtingut %{total}
         en %{count} files.
@@ -1029,10 +1020,9 @@ application:
         anterior de zero no té cap evidència al darrere. Inicialitza el saldo d''obertura
         de manera explícita o descarrega la cartera des de l''AEAT, perquè el zero
         quedi declarat i no suposat.'
-      iva_wallet_not_seeded: 'El càlcul del Model 303 requereix un historial de compensació
-        IVA inicialitzat. Per a la primera declaració d''un perfil nou, inicialitza
-        el saldo d''obertura amb zero: `aeat app modelo iva-wallet seed --filing-year
-        YEAR --period PERIOD --amount 0 --confirm`.'
+      iva_wallet_not_seeded: El càlcul del Model 303 requereix un historial de compensació
+        IVA inicialitzat. Per a la primera declaració d'un perfil nou, inicialitza
+        amb import zero el saldo d'obertura de la compensació IVA del període i confirma'l.
       iva_wallet_registry_snapshot_unavailable: 'La conciliació de la cartera de compensació
         d''IVA està bloquejada per al Model 303: no s''ha pogut resoldre la instantània
         del registre per a aquest exercici i període, de manera que no es pot provar
@@ -1058,8 +1048,9 @@ application:
       iva_wallet_unsupported_decision_type: 'Tipus de decisió de la cartera de compensació
         d''IVA no admès: %{decision_type}.'
       ledger_preflight_blocked: 'la comprovació prèvia del llibre bloqueja el càlcul
-        del model: transacció %{transaction_id} %{reason}: %{detail}. Executa `aeat
-        app ledger preflight --period %{period}` abans de calcular.'
+        del model: transacció %{transaction_id} %{reason}: %{detail}. Executa la comprovació
+        prèvia del llibre per al període %{period} i resol-ne les incidències abans
+        de calcular.'
       local_observation_actor_blank: Una correcció manual d'una observació ha d'indicar
         l'operador que la registra.
       local_observation_override_missing: El model %{modelo} %{filing_year} %{period}
@@ -1091,7 +1082,7 @@ application:
       profile_readiness_profile_missing: No existeix cap perfil actiu persistit per
         a aquest treball de model; crea o repara el perfil abans de continuar.
       profile_readiness_setup_incomplete: La configuració del perfil encara no s'ha
-        declarat completa; executa `aeat config profile complete-setup` abans de treballar
+        declarat completa; declara completa la configuració del perfil abans de treballar
         amb models.
       profile_readiness_setup_incomplete_missing: 'La configuració del perfil està
         incompleta; acaba l''assistent de configuració abans de treballar amb models.
@@ -1110,7 +1101,7 @@ application:
       recipient_registry_not_found: No hi ha cap destinatari registrat amb l'id %{recipient_id}.
       reconcile_declaration_unsupported: La reconciliació per casella des de PDF de
         declaració encara no està habilitada per a aquest model; reconcilia un justificant
-        descarregat amb aeat app modelo reconcile file, o espera que aquest model
+        descarregat amb aeat app modelo reconcile import, o espera que aquest model
         estigui habilitat.
       reconcile_no_active_bucket: No hi ha cap perfil actiu; executa `aeat config
         profile create NAME` abans de reconciliar una unitat de treball.
@@ -1138,6 +1129,9 @@ application:
       work_unit_create_discarded: Aquest objectiu de declaració es va descartar. Tornar
         a crear-lo retorna la mateixa unitat de treball descartada, de manera que
         no es pot reprendre.
+      work_unit_create_superseded_modelo: El model %{modelo} ha estat substituït pel
+        model %{superseded_by} i ja no admet presentacions. No s'ha creat res; obre
+        la declaració amb el model %{superseded_by}.
       work_unit_discarded_cannot_calculate: La unitat de treball %{work_unit_id} és
         a l'estat %{work_unit_state} i no es pot calcular.
       work_unit_discarded_cannot_import: La unitat de treball %{work_unit_id} és a
@@ -1209,11 +1203,22 @@ application:
         %{position_key} del grup %{group_code} va passar de %{prior_value_eur} EUR
         a %{current_value_eur} EUR, un increment de %{delta_value_eur} EUR per sobre
         del llindar de redeclaració de %{redeclaration_increase_threshold_eur} EUR.'
+      iva_compensation_annual_source_evidence_failure: L'evidència d'origen anual
+        obligatòria del Model 303 per al Model 390 no està resolta (%{source_issue_count}
+        incidència(es)); la finalització queda bloquejada.
+      iva_selected_scope_evidence_failure: 'L''evidència d''IVA de l''àmbit seleccionat
+        és incompleta (%{source_ref_count} referències d''origen; %{unidentified_source_count}
+        sense identificar), per tant la verificació queda bloquejada. Identificadors
+        de referències d''origen, no valors financers: %{source_ref_ids}.'
       iva_wallet_precondition_failed: No es compleix la condició prèvia %{condition_id}
         de la cartera de compensació d'IVA per a aquesta revisió (escenari %{scenario_id}).
       ledger_snapshot_drift: 'El model %{modelo} %{filing_year} %{period} s''ha desviat
         de la seva instantània de llibre ancorada: %{changed_count} modificades, %{removed_count}
         eliminades.'
+      m193_settled_row_amount_authority_unresolved: El model 193 de %{filing_year}
+        inclou %{settled_prior_accrual_rows} registre(s) que paguen rendiments meritats
+        en un exercici anterior, i cap font oficial no determina la base i la retenció
+        que declaren; la presentació i l'exportació rebutjaran aquesta revisió.
       m210_agrupacion_renta_invalid: El model %{modelo_id} període %{period_code}
         té una agrupació de rendes no vàlida (%{error_type}).
       m210_convenio_lob_advisory: El país %{country_code} i el tipus de renda %{tipo_renta_code}
@@ -1273,6 +1278,25 @@ application:
       seed_negative_amount: L'import inicial no pot ser negatiu.
       seed_no_nif: No hi ha NIF definit per a l'operació d'import inicial; associeu-lo
         al perfil actiu.
+    lifecycle:
+      calculate: Calcula
+      export: Exporta
+      export_destination_placeholder: Camí de destinació de l'exportació
+      file: Registra la presentació local
+      file_cancelled: La presentació local s'ha cancel·lat; no s'ha registrat res.
+      file_confirm_accept: Registra la presentació local
+      file_confirm_cancel: Cancel·la
+      file_confirm_message: Això registra la declaració verificada a l'historial local
+        d'aquesta aplicació. No presenta res a l'AEAT.
+      file_confirm_title: Voleu registrar una presentació local?
+      refusal:
+        calculation_required: Calculeu aquesta declaració abans de continuar.
+        edit_unavailable: Aquesta declaració no ofereix valors editables ara mateix;
+          torneu-la a calcular o torneu-la a obrir abans d'editar.
+        export_destination_required: Introduïu un camí de destinació per a l'exportació.
+        verification_required: Verifiqueu aquest càlcul abans de registrar una presentació
+          local.
+      verify: Verifica
     profile_binding:
       errors:
         boolean_value_channel_mismatch: El fet del perfil per al vincle {binding_id}
@@ -1287,7 +1311,28 @@ application:
           %{binding_id} té un tipus no suportat: %{value_type}.'
         enum_boolean_invalid: La dada de perfil per al binding enum %{binding_id}
           ha resolt a booleà; els booleans no són claus vàlides de dispatch enum.
+    quickfile:
+      stage_incomplete: L'etapa %{stage} de quickfile ha acabat amb l'estat %{status}.
+      stage_refused: 'Quickfile s''ha aturat a l''etapa %{stage}: l''etapa s''ha rebutjat
+        amb %{error_code}.'
   overview:
+    calendar:
+      holiday_coverage:
+        calendar_unavailable: calendari de festius no disponible; la data de tancament
+          original no està verificada
+        national_and_territory: festius nacionals i de %{territory} comprovats; festius
+          locals sense comprovar
+        national_only: només festius nacionals; festius autonòmics i locals sense
+          comprovar
+        not_shifted: el termini d'aquest model no es trasllada per dies inhàbils
+        territory_unverified: només festius nacionals; els festius autonòmics de %{territory}
+          d'aquest any no estan verificats i els locals no es comproven
+      shift:
+        business_day: Dia hàbil
+        calendar_unavailable: Calendari no disponible
+        domingo: Diumenge
+        modelo_exception: Excepció del model
+        sabado: Dissabte
     errors:
       horizon_days_not_positive: horizon_days ha de ser positiu; s'ha rebut %{horizon_days}
     explain:
@@ -1311,7 +1356,7 @@ application:
             reflecteix els paràmetres vigents consultats per les fórmules.'
           period: '%{modelo_title} - període %{period} / %{filing_year}.'
           pull_command: Per incorporar les vostres edicions a l'emmagatzematge local,
-            executeu 'aeat config google sync calc pull' des de la CLI.
+            executeu 'aeat app modelo spreadsheet pull' des de la CLI.
           title: '%{modelo_title} - %{period}/%{filing_year}'
         labels:
           casilla: Casella
@@ -1427,6 +1472,8 @@ application:
         instantània de perfil no és compatible amb aquesta aplicació.
       row_all_values_blank: 'No s''ha indicat cap valor per a la fila de ''%{section}''.
         Informa almenys un camp de: %{fields}.'
+      row_not_found: La fila '%{row}' no existeix a la secció '%{section}'; no s'ha
+        escrit res.
       row_unknown_field: 'La secció ''%{section}'' no declara aquests camps: %{unknown}.
         Camps disponibles: %{fields}.'
     notices:

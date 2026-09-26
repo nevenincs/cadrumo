@@ -12,10 +12,10 @@ from pathlib import Path
 
 import pytest
 
-from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .....core.modelo import Modelo
 from .....core.period import Period
 from .....domain.submission.models import ModeloPresentado, SubmissionAttempt, SubmissionStatus
+from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..submission import SubmissionRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

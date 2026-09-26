@@ -802,6 +802,102 @@ class TransactionCatalogueRepository:
             len(extra_writes),
         )
 
+    def replace_if_current_with_secure_object_writes(
+        self,
+        current: Transaction,
+        replacement: Transaction,
+        extra_writes: tuple[SecureObjectWrite, ...],
+    ) -> None:
+        """Atomically replace one opened row without rewriting other catalogue members.
+
+        The opened value is compared with the encrypted row and its revision is
+        carried into the batch. A concurrent change to that row, a collision
+        with the new identity, or a concurrent membership-index write therefore
+        rolls the whole transaction and its audit event back.
+        """
+        from ....application.ledger.persistence_ports import LedgerPersistenceConflictError
+        from ....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID, SecureObjectWrite
+        from ..storage.crypto.encrypted_columns import secure_object_key_digest
+        from ..storage.envelope.contract import Envelope
+        from ..storage.sql.secure_object_records import SecureObjectDeletion
+
+        old_key = transaction_object_key(self._bucket_id, current.transaction_id)
+        records = tuple(
+            self._objects.load_many_current(
+                TRANSACTION_CATALOGUE_NAMESPACE.namespace,
+                (old_key,),
+                expected_class=TRANSACTION_CATALOGUE_NAMESPACE.sensitivity,
+                current_version=TRANSACTION_CATALOGUE_NAMESPACE.schema_version,
+                refuse_legacy=self._refuse_targeted_implicit_migration,
+            )
+        )
+        if len(records) != 1:
+            raise LedgerPersistenceConflictError("opened transaction no longer exists")
+        stored = Envelope[Transaction].model_validate_json(records[0].payload).payload
+        if stored != current:
+            raise LedgerPersistenceConflictError("transaction changed since it was opened")
+        old_revision = str(records[0].revision_id)
+        old_id = current.transaction_id
+        new_id = replacement.transaction_id
+        if replacement.invoice_id != current.invoice_id:
+            raise TransactionValidationError("invoice associations require the reciprocal link operation")
+        if old_id != new_id and current.invoice_id is not None:
+            raise TransactionValidationError(
+                "linked transaction identity cannot change without updating its invoice link"
+            )
+
+        writes: list[SecureObjectWrite] = [
+            SecureObjectWrite(
+                namespace=TRANSACTION_CATALOGUE_NAMESPACE.namespace,
+                object_key=transaction_object_key(self._bucket_id, new_id),
+                classification=TRANSACTION_CATALOGUE_NAMESPACE.sensitivity,
+                schema_version=TRANSACTION_CATALOGUE_NAMESPACE.schema_version,
+                written_at=replacement.modified_at,
+                payload=self._serialise_transaction(replacement),
+                expected_revision_id=(old_revision if old_id == new_id else ABSENT_SECURE_OBJECT_REVISION_ID),
+            )
+        ]
+        deletions: tuple[SecureObjectDeletion, ...] = ()
+        if old_id != new_id:
+            index_key = transaction_index_object_key(self._bucket_id)
+            ids = self._load_index_ids()
+            if old_id not in ids or new_id in ids:
+                raise LedgerPersistenceConflictError("transaction membership changed during edit")
+            index_revisions = self._objects.peek_many_revision_ids(
+                TRANSACTION_CATALOGUE_NAMESPACE.namespace,
+                (index_key,),
+            )
+            index_revision = index_revisions.get(index_key)
+            if index_revision is None:
+                raise LedgerPersistenceConflictError("transaction membership revision is unavailable")
+            new_ids = (ids - {old_id}) | {new_id}
+            writes.append(
+                SecureObjectWrite(
+                    namespace=TRANSACTION_CATALOGUE_NAMESPACE.namespace,
+                    object_key=index_key,
+                    classification=TRANSACTION_CATALOGUE_NAMESPACE.sensitivity,
+                    schema_version=TRANSACTION_CATALOGUE_NAMESPACE.schema_version,
+                    written_at=now(),
+                    payload=self._serialise_index(new_ids),
+                    expected_revision_id=str(index_revision),
+                )
+            )
+            deletions = (
+                SecureObjectDeletion(
+                    namespace=TRANSACTION_CATALOGUE_NAMESPACE.namespace,
+                    hashed_object_key=secure_object_key_digest(old_key),
+                    expected_revision_id=old_revision,
+                ),
+            )
+        self._objects.apply_batch((*writes, *extra_writes), deletions)
+        try:
+            self._sync_date_index(self.load())
+        except Exception:
+            # The index is a rebuildable routing cache. The guarded financial
+            # and audit batch has committed; reporting a failed edit now would
+            # invite an unsafe retry of a successful replacement.
+            _log.warning("transaction date index refresh failed after committed edit bucket_id=%s", self._bucket_id)
+
     @_translating_storage_failures
     def load_for_date_range(self, start: date, end: date) -> TransactionCatalogue:
         """Return the persisted catalogue filtered to ``[start, end]`` inclusive.

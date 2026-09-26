@@ -62,9 +62,6 @@ from ._overview_payloads import (
     OverviewStatusResult,
 )
 from ._overview_rendering import (
-    calendar_shift_reason_text as calendar_shift_reason_text,
-)
-from ._overview_rendering import (
     overview_agenda_output,
     overview_backlog_output,
     overview_calendar_output,
@@ -514,9 +511,14 @@ def overview_calendar(
         expected_tax_id=expected_tax_id,
     )
     work_units, work_units_notice = local_modelo_work_units(bucket_id)
+    from ...domain.calculations.registry.applicability import derive_tax_route
+
+    # Without this, a row's "not observed" AEAT state cannot be told apart from
+    # a store that has never captured any AEAT history at all.
+    history_notice = overview_no_aeat_history_notice(tax_route=derive_tax_route(workflow_profile))
     evidence_notices = [
         notice
-        for notice in (live_notice, modelo_events_notice, filing_evidence_notice, work_units_notice)
+        for notice in (live_notice, modelo_events_notice, filing_evidence_notice, work_units_notice, history_notice)
         if notice is not None
     ]
     cal: OverviewCalendar = build_overview_calendar(
@@ -541,10 +543,12 @@ def overview_calendar(
         )
     if cal.warnings and not allow_incomplete:
         _refuse_calendar_warnings(cal, schema=_require_profile_schema(profile_schema))
+    from ._payer_fact_migration_notice import pending_payer_fact_notices
+
     typed_cal, lines, calendar_notices = overview_calendar_output(
         cal,
         rng,
-        evidence_notices=evidence_notices,
+        evidence_notices=[*evidence_notices, *pending_payer_fact_notices(record)],
     )
     emit_envelope(
         ctx,
@@ -888,6 +892,8 @@ def overview_explain(
     """
     from ...application.overview.errors import OverviewExplainError
     from ...application.overview.explain import build_overview_explain
+    from ...domain.calculations.registry.applicability import ApplicabilityVerdict
+    from ._payer_fact_migration_notice import pending_payer_fact_notices
 
     current = current_workflow_state()
     try:
@@ -899,7 +905,18 @@ def overview_explain(
     except OverviewExplainError as exc:
         raise bad(str(exc)) from exc
     typed_explain, lines = overview_explain_output(result)
-    emit_envelope(ctx, command="overview.explain", result=typed_explain, lines=lines)
+    notices = (
+        pending_payer_fact_notices(current.active_profile_record(), modelo=result.modelo)
+        if result.verdict is ApplicabilityVerdict.INCOMPLETE
+        else ()
+    )
+    emit_envelope(
+        ctx,
+        command="overview.explain",
+        result=typed_explain,
+        lines=lines,
+        notices=notices,
+    )
 
 
 def overview_prepare(

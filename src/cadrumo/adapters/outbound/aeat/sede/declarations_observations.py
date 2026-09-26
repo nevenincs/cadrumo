@@ -42,7 +42,7 @@ from .....domain.calculations.registry.errors import (
     RegistrySnapshotError,
     RegistryValidationError,
 )
-from .....domain.calculations.registry.export import resolve_export_layout
+from .....domain.calculations.registry.export import resolve_export_layout, row_binding_casilla_ids_by_field
 from .....domain.calculations.registry.export_parse import (
     ParsedExportFieldValue,
     parse_export_payload,
@@ -377,13 +377,15 @@ def observed_casillas_from_submitted_file(
             reason=str(exc),
         ) from exc
     _verify_submitted_file_context(resolved.fields_by_id, parsed.fields, declaration=declaration)
+    row_casilla_ids = row_binding_casilla_ids_by_field(snapshot.revision, resolved.layout)
     observations: list[ObservedCasillaValue] = []
-    for casilla in parsed.casillas:
-        if casilla.casilla_id is None or casilla.value is None:
+    for casilla in parsed.fields:
+        casilla_id = casilla.casilla_id or row_casilla_ids.get(casilla.field_id)
+        if casilla_id is None or casilla.value is None:
             continue
         observations.append(
             ObservedCasillaValue(
-                casilla_id=casilla.casilla_id,
+                casilla_id=casilla_id,
                 value=_observed_value_token(casilla),
                 value_kind=_observed_value_kind(casilla.value),
                 source_artefact_kind="submitted_file",

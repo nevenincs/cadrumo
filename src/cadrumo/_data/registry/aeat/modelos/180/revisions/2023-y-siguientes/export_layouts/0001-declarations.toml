@@ -1041,6 +1041,9 @@ record_type = "perceptor"
 order = 1
 encoding = "iso-8859-1"
 line_ending = "none"
+required = false
+repeat = "binding_rows"
+binding_record = "perceptor"
 
 [[revisions.2023-y-siguientes.export_layouts.records.fields]]
 id = "modelo-180-perc-record-type"
@@ -1492,3 +1495,32 @@ justification = "left"
 signed = false
 legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-180-2023"]
+
+[revisions.2023-y-siguientes.export_layouts.records.row_field_casilla_ids]
+perceptor_nif = "perc.nif"
+representative_nif = "perc.nif-representante-legal"
+perceptor_name = "perc.nombre"
+recipient_province_code = "perc.provincia"
+modality = "perc.modalidad"
+taxable_base = "perc.base"
+withholding_percentage = "perc.porcentaje-retencion"
+retencion_amount = "perc.retenciones"
+accrual_year = "perc.ejercicio-devengo"
+situation = "perc.situacion-inmueble"
+cadastral_reference = "perc.referencia-catastral"
+street_type = "perc.inmueble-tipo-via"
+street_name = "perc.inmueble-nombre-via"
+number_type = "perc.inmueble-tipo-numeracion"
+house_number = "perc.inmueble-numero-casa"
+number_qualifier = "perc.inmueble-calificador-numero"
+block = "perc.inmueble-bloque"
+portal = "perc.inmueble-portal"
+staircase = "perc.inmueble-escalera"
+floor = "perc.inmueble-planta"
+door = "perc.inmueble-puerta"
+complement = "perc.inmueble-complemento"
+locality = "perc.inmueble-localidad"
+municipality = "perc.inmueble-municipio"
+municipality_code = "perc.inmueble-codigo-municipio"
+province_code = "perc.inmueble-provincia"
+postal_code = "perc.inmueble-codigo-postal"

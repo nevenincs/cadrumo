@@ -8,8 +8,8 @@ from decimal import Decimal
 import pytest
 
 from .....domain.currency.errors import ExchangeRateProviderError
-from .....tests.recorded_ecb_rates import recorded_ecb_answers, recorded_ecb_fetch, recorded_ecb_rate_provider
 from ..ecb_provider import LOOKBACK_DAYS, EcbReferenceRateProvider, _observation_url, _parse_observations
+from .recorded_ecb_rates import recorded_ecb_answers, recorded_ecb_fetch, recorded_ecb_rate_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

@@ -44,7 +44,14 @@ from .._rate_box_advisory import collect_rate_box_coverage_diagnostics
 from ..calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
 from .advisory_diagnostic_repositories import advisory_diagnostic_repositories
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.hex_application,
+    # The fixture bindings validate their IVA categories, rate kinds, flows and
+    # cash-accounting treatments against governed facts, which only a leased
+    # generation puts in scope.
+    pytest.mark.usefixtures("authority_operation"),
+]
 
 _BUCKET_ID = "6b6b6b6b-6b6b-4b6b-8b6b-6b6b6b6b6b6b"
 _FILING_YEAR = 2025

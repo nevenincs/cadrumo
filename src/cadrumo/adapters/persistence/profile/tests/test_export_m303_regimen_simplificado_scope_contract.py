@@ -7,7 +7,12 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.tests._export_test_support import _general_m303_filing_evidence, _profile
+from cadrumo.adapters.persistence.profile.tests.modelo_export_support import (
+    export_m303_filing_evidence as _general_m303_filing_evidence,
+)
+from cadrumo.adapters.persistence.profile.tests.modelo_export_support import (
+    export_taxpayer_profile as _profile,
+)
 from cadrumo.application.aggregation.iva_ledger import (
     IvaLedgerAggregation,
 )

@@ -489,7 +489,7 @@ class _InferenceLaneState:
         """Return whether ``role``'s reader can run, probing it at most once."""
         if role in self._reader_pauses:
             return False
-        from ...application.local_reader import probe_local_reader
+        from ..local_reader import probe_local_reader
 
         status = probe_local_reader(role, self._settings)
         if status.available:
@@ -522,9 +522,9 @@ def _assess_model_load_contention_once(
     unsafe about attempting it, and the extractor's own refusal names the
     provisioning verb far more precisely than a guess made here could.
     """
-    from ...application.provisioning import select_model_for_role
-    from ...application.provisioning_runtime import assess_model_load_contention
     from ...core.model_catalogue import ModelRole
+    from ..provisioning import select_model_for_role
+    from ..provisioning_runtime import assess_model_load_contention
 
     for role in (ModelRole.TEXT_EXTRACTION, ModelRole.VISION_TRANSCRIPTION):
         assessable = select_model_for_role(role, profile=profile).assessable_load

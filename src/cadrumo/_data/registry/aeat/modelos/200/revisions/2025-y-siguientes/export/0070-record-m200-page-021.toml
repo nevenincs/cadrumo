@@ -812,6 +812,7 @@ source_refs = ['aeat-dr-200-2025']
 [revisions.2025-y-siguientes.export_layouts.records.fields.projection_ref]
 projection_kind = 'm200_incn_establecimiento_permanente'
 slot = 1
+field = 'nif'
 
 [[revisions.2025-y-siguientes.export_layouts.records.fields]]
 id = 'm200-2025.dp200021.f0036'
@@ -835,6 +836,7 @@ source_refs = ['aeat-dr-200-2025']
 [revisions.2025-y-siguientes.export_layouts.records.fields.projection_ref]
 projection_kind = 'm200_incn_establecimiento_permanente'
 slot = 2
+field = 'nif'
 
 [[revisions.2025-y-siguientes.export_layouts.records.fields]]
 id = 'm200-2025.dp200021.f0037'
@@ -858,6 +860,7 @@ source_refs = ['aeat-dr-200-2025']
 [revisions.2025-y-siguientes.export_layouts.records.fields.projection_ref]
 projection_kind = 'm200_incn_establecimiento_permanente'
 slot = 3
+field = 'nif'
 
 [[revisions.2025-y-siguientes.export_layouts.records.fields]]
 id = 'm200-2025.dp200021.f0038'
@@ -881,6 +884,7 @@ source_refs = ['aeat-dr-200-2025']
 [revisions.2025-y-siguientes.export_layouts.records.fields.projection_ref]
 projection_kind = 'm200_incn_establecimiento_permanente'
 slot = 4
+field = 'nif'
 
 [[revisions.2025-y-siguientes.export_layouts.records.fields]]
 id = 'm200-2025.dp200021.f0039'
@@ -904,6 +908,7 @@ source_refs = ['aeat-dr-200-2025']
 [revisions.2025-y-siguientes.export_layouts.records.fields.projection_ref]
 projection_kind = 'm200_incn_establecimiento_permanente'
 slot = 5
+field = 'nif'
 
 [[revisions.2025-y-siguientes.export_layouts.records.fields]]
 id = 'm200-2025.dp200021.f0040'

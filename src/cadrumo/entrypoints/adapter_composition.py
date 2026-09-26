@@ -17,7 +17,7 @@ Core types:
 
 from __future__ import annotations
 
-from collections.abc import Generator, Mapping
+from collections.abc import Callable, Generator, Mapping
 from contextlib import ExitStack, asynccontextmanager, contextmanager
 from functools import cached_property
 from typing import TYPE_CHECKING, override
@@ -49,6 +49,7 @@ if TYPE_CHECKING:
         RetencionObservationPorts,
         RetencionObservationPortsFactory,
     )
+    from ..application.aggregation.withholding_observation_service import WithholdingObservationService
     from ..application.auth.apoderado_repository import ApoderadoConfigurationRepositoryFactory
     from ..application.auth.certificate_secret_backend import CertificateSecretBackendFactory
     from ..application.auth.operator_probe_ports import OperatorProbePorts
@@ -118,6 +119,7 @@ if TYPE_CHECKING:
     from ..application.user_profile.profile_read_ports import ProfileReadPorts, ProfileReadPortsFactory
     from ..core.config import Settings
     from ..core.tabular import NormalizedTable
+    from ..domain.attachments.protocols import AttachmentStoreProtocol
     from ..domain.calculations.registry.authority import PinnedAuthorityOperation
     from ..domain.calculations.registry.tax_id_format import SubjectTaxId
     from ..domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
@@ -138,16 +140,7 @@ class ProfileAdapterComposition:
     @cached_property
     def state_projection_read_ports(self) -> StateProjectionReadPorts:
         """Resolve the state projection read ports on first read."""
-        from ..adapters.persistence.profile.state_projection import StateProjectionPersistenceAdapter
-        from ..adapters.persistence.profile.usage_ratios import load_usage_ratios
-        from ..application.state_projection_ports import StateProjectionReadPorts
-
-        projection_adapter = StateProjectionPersistenceAdapter(diagnostics_ports=self.diagnostics_ports)
-        return StateProjectionReadPorts(
-            workspace=projection_adapter,
-            profile=projection_adapter,
-            usage_ratio_profile_loader=load_usage_ratios,
-        )
+        return build_state_projection_read_ports(diagnostics_ports=self.diagnostics_ports)
 
     @cached_property
     def diagnostics_ports(self) -> DiagnosticsPorts:
@@ -194,6 +187,11 @@ class ProfileAdapterComposition:
         return build_calculation_action_ports
 
     @property
+    def attachment_store_factory(self) -> Callable[[str], AttachmentStoreProtocol]:
+        """Resolve the encrypted attachment custody store factory."""
+        return build_attachment_store
+
+    @property
     def amendment_action_ports_factory(self) -> AmendmentActionPortsFactory:
         """Resolve the amendment action ports factory on first read."""
         return build_amendment_action_ports
@@ -212,6 +210,11 @@ class ProfileAdapterComposition:
     def retencion_observation_ports_factory(self) -> RetencionObservationPortsFactory:
         """Resolve the retencion observation ports factory on first read."""
         return build_retencion_observation_ports
+
+    @property
+    def withholding_observation_service_factory(self) -> Callable[[str], WithholdingObservationService]:
+        """Resolve the sole atomic withholding mutation service for one bucket."""
+        return lambda bucket_id: build_withholding_observation_service(bucket_id=bucket_id)
 
     @property
     def percepcion_observation_ports_factory(self) -> PercepcionObservationPortsFactory:
@@ -505,6 +508,7 @@ def build_modelo_export_ports(
             objects=objects,
         ),
         draft_review_ports=build_draft_review_ports(bucket_id=normalized_bucket_id),
+        retencion_observation_ports=build_retencion_observation_ports(bucket_id=normalized_bucket_id),
     )
 
 
@@ -926,6 +930,58 @@ def build_percepcion_observation_ports(*, bucket_id: str) -> PercepcionObservati
     )
 
 
+def build_withholding_observation_service(*, bucket_id: str) -> WithholdingObservationService:
+    """Compose the one atomic withholding-window mutation service for a bucket."""
+    from ..adapters.persistence.profile.percepciones_observations import PercepcionObservationRepositoryAdapter
+    from ..adapters.persistence.profile.retencion_observations import RetencionObservationRepositoryAdapter
+    from ..adapters.persistence.profile.withholding_observation_workflow import WithholdingObservationWorkflowAdapter
+    from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+    from ..application.aggregation.withholding_observation_service import WithholdingObservationService
+
+    objects = secure_object_repository_for_bucket(bucket_id.strip())
+    return WithholdingObservationService(
+        WithholdingObservationWorkflowAdapter(
+            objects=objects,
+            retenciones=RetencionObservationRepositoryAdapter(objects=objects),
+            percepciones=PercepcionObservationRepositoryAdapter(objects=objects),
+        ),
+    )
+
+
+def build_attachment_store(bucket_id: str) -> AttachmentStoreProtocol:
+    """Bind encrypted attachment custody to the profile bucket's secure repository."""
+    from ..adapters.persistence.storage.attachment import AttachmentStore
+    from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+
+    normalized_bucket_id = bucket_id.strip()
+    return AttachmentStore(objects=secure_object_repository_for_bucket(normalized_bucket_id))
+
+
+def build_state_projection_read_ports(
+    *,
+    diagnostics_ports: DiagnosticsPorts | None = None,
+) -> StateProjectionReadPorts:
+    """Compose the state-projection read ports over the persistence adapters.
+
+    Module-level so a caller that is not holding a
+    :class:`ProfileAdapterComposition` -- the TUI's own workspace admission,
+    for one -- reaches the same composition rather than assembling a second
+    one from the same adapters.
+    """
+    from ..adapters.persistence.profile.state_projection import StateProjectionPersistenceAdapter
+    from ..adapters.persistence.profile.usage_ratios import load_usage_ratios
+    from ..application.state_projection_ports import StateProjectionReadPorts
+
+    projection_adapter = StateProjectionPersistenceAdapter(
+        diagnostics_ports=diagnostics_ports or build_diagnostics_ports()
+    )
+    return StateProjectionReadPorts(
+        workspace=projection_adapter,
+        profile=projection_adapter,
+        usage_ratio_profile_loader=load_usage_ratios,
+    )
+
+
 def build_calculation_action_ports(
     *,
     bucket_id: str,
@@ -933,6 +989,7 @@ def build_calculation_action_ports(
     profile_record: object | None = None,
 ) -> CalculationActionPorts:
     """Compose every persisted authority required by one Modelo calculation."""
+    from ..adapters.persistence.profile.actividad_asset import ActividadAssetHistoryRepository
     from ..adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
     from ..adapters.persistence.profile.buckets import BucketEventHistoryRepository
     from ..adapters.persistence.profile.calculation_observations import (
@@ -1006,6 +1063,10 @@ def build_calculation_action_ports(
         ),
         bucket_event_repository=bucket_event_repository,
         transaction_repository=TransactionCatalogueRepository(
+            bucket_id=normalized_bucket_id,
+            objects=objects,
+        ),
+        activity_asset_history_repository=ActividadAssetHistoryRepository(
             bucket_id=normalized_bucket_id,
             objects=objects,
         ),
@@ -1185,6 +1246,7 @@ def build_filing_action_ports(*, bucket_id: str) -> FilingActionPorts:
         workflow_run_repository=WorkflowRunRepository(objects=objects),
         draft_review_ports=build_draft_review_ports(bucket_id=normalized_bucket_id),
         workflow_gate_ports=build_workflow_gate_ports(bucket_id=normalized_bucket_id),
+        retencion_observation_ports=build_retencion_observation_ports(bucket_id=normalized_bucket_id),
     )
 
 
@@ -1363,6 +1425,7 @@ def build_verification_repository_bundle(bucket_id: str) -> VerificationReposito
         justificante=JustificanteRepository(objects=objects),
         draft_review_ports=build_draft_review_ports(bucket_id=normalized_bucket_id),
         workflow_gate_ports=build_workflow_gate_ports(bucket_id=normalized_bucket_id),
+        retencion_observation_ports=build_retencion_observation_ports(bucket_id=normalized_bucket_id),
     )
 
 
@@ -1389,6 +1452,7 @@ __all__ = [
     "build_percepcion_observation_ports",
     "build_prorrata_register_repository",
     "build_retencion_observation_ports",
+    "build_state_projection_read_ports",
     "build_verification_repository_bundle",
     "build_work_lifecycle_ports",
     "profile_adapter_composition",

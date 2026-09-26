@@ -110,11 +110,11 @@ def test_m130_gate_registers_and_bites_without_aggregation_imported() -> None:
             )
             assert route.output_casilla in casilla_ids
 
-            assert check("130", casilla_ids, frozenset(), binding_ids) == [], (
+            assert check("130", casilla_ids, frozenset(), binding_ids, filing_year=2025) == [], (
                 "the registered check must pass against the revision it just validated"
             )
             stripped = casilla_ids - {{route.output_casilla}}
-            assert check("130", stripped, frozenset(), binding_ids), (
+            assert check("130", stripped, frozenset(), binding_ids, filing_year=2025), (
                 "the registered check must report a failure when the casilla its "
                 "binding redirects onto is absent from the revision"
             )

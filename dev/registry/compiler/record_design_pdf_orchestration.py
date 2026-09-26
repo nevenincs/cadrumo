@@ -13,6 +13,7 @@ from dev.registry.compiler.record_design_schema import (
     RecordDesignSkippedSheet,
 )
 
+from .record_design_pdf_columns import PdfColumnRow, document_declares_column_table, extract_pdf_column_rows
 from .record_design_pdf_repairs import (
     collapse_doubled_coordinate_rows,
     collapse_stuttered_row_prefix,
@@ -88,14 +89,25 @@ def extract_record_design_pdf_stream(
         )
         if not any(line.strip() for line in lines):
             raise RegistryValidationError(f"no text extracted from record-design PDF {source_label}")
+        column_rows = (
+            extract_pdf_column_rows(pdf_bytes, source_label=source_label)
+            if document_declares_column_table(lines)
+            else ()
+        )
         try:
-            return _read_with_reversed_column_repair(lines, source_label=source_label, corrections=corrections)
+            return _read_with_reversed_column_repair(
+                lines,
+                source_label=source_label,
+                corrections=corrections,
+                column_rows=column_rows,
+            )
         except (ValueError, RegistryValidationError) as pdfium_exc:
             recovered = _recover_after_pdf_text_failure(
                 pdf_bytes,
                 source_label=source_label,
                 corrections=corrections,
                 pdfium_error=pdfium_exc,
+                column_rows=column_rows,
             )
             if recovered is not None:
                 return recovered
@@ -147,12 +159,14 @@ def _recover_after_pdf_text_failure(
     source_label: str,
     corrections: CorrectionIndex,
     pdfium_error: Exception,
+    column_rows: tuple[PdfColumnRow, ...],
 ) -> RecordDesignExtraction | None:
     text_fallback = _try_pdf_text_fallback(
         pdf_bytes,
         source_label=source_label,
         corrections=corrections,
         pdfium_error=pdfium_error,
+        column_rows=column_rows,
     )
     if text_fallback is not None:
         return text_fallback
@@ -165,10 +179,16 @@ def _try_pdf_text_fallback(
     source_label: str,
     corrections: CorrectionIndex,
     pdfium_error: Exception,
+    column_rows: tuple[PdfColumnRow, ...],
 ) -> RecordDesignExtraction | None:
     try:
         fallback_lines = extract_pdfplumber_text_lines(pdf_bytes, source_label=source_label)
-        return extract_pdf_lines(fallback_lines, source_label=source_label, corrections=corrections)
+        return extract_pdf_lines(
+            fallback_lines,
+            source_label=source_label,
+            corrections=corrections,
+            column_rows=column_rows,
+        )
     except (ValueError, RegistryValidationError) as fallback_error:
         if "did not contain parseable field rows" not in str(fallback_error):
             raise fallback_error from pdfium_error
@@ -288,6 +308,7 @@ def _read_with_reversed_column_repair(
     *,
     source_label: str,
     corrections: CorrectionIndex,
+    column_rows: tuple[PdfColumnRow, ...] = (),
 ) -> RecordDesignExtraction:
     """Read the design, retrying with the reversed-column repair only where it can help.
 
@@ -308,7 +329,7 @@ def _read_with_reversed_column_repair(
     record the lines produce, including the ones that stay reported, because
     that is where this repair does its work.
     """
-    first = extract_pdf_lines(lines, source_label=source_label, corrections=corrections)
+    first = extract_pdf_lines(lines, source_label=source_label, corrections=corrections, column_rows=column_rows)
     if not first.skipped:
         return first
     repaired_lines = recover_coordinate_stutter_rows(
@@ -336,6 +357,7 @@ def _read_with_reversed_column_repair(
             source_label=source_label,
             corrections=corrections,
             repair_glued_rows=True,
+            column_rows=column_rows,
         )
     except (ValueError, RegistryValidationError):
         return first

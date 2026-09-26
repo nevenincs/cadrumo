@@ -16,8 +16,17 @@ import pytest
 from ....core.config import override_settings
 from ....core.i18n.render import tr
 from ..labels import (
+    PROFILE_CODED_CHOICE_PATHS,
+    PROFILE_ELSEWHERE_LABELLED_CHOICE_PATHS,
+    PROFILE_FIELD_HELP_PARTS,
+    PROFILE_FIELD_HELP_PATHS,
+    profile_choice_is_worded,
+    profile_choice_label,
+    profile_choice_label_key,
+    profile_field_help_key,
     profile_field_label,
     profile_field_label_key,
+    profile_schema_locale_keys,
     profile_section_title,
     profile_section_title_key,
 )
@@ -132,3 +141,70 @@ def test_section_and_field_key_families_cannot_collide() -> None:
 
     assert not colliding_field.startswith(f"{section_title}.")
     assert section_title != colliding_field
+
+
+def test_every_worded_choice_is_enrolled_and_every_coded_choice_is_not(schema) -> None:
+    """Parity demands copy for each worded enumeration choice, and never for an official code."""
+    enrolled = profile_schema_locale_keys(schema)
+    enumerations = [
+        (section.key, field) for section in schema.sections for field in section.fields if field.enum_values
+    ]
+    assert any(profile_choice_is_worded(key, field.key) for key, field in enumerations)
+    assert any(f"{key}.{field.key}" in PROFILE_CODED_CHOICE_PATHS for key, field in enumerations)
+    for section_key, field in enumerations:
+        keys = {profile_choice_label_key(section_key, field.key, token) for token in field.enum_values}
+        if profile_choice_is_worded(section_key, field.key):
+            assert keys <= enrolled, f"{section_key}.{field.key} choices are not enrolled for translation"
+        else:
+            assert not keys & enrolled, f"{section_key}.{field.key} is coded or labelled elsewhere"
+
+
+def test_an_undeclared_enumeration_defaults_to_needing_copy() -> None:
+    """A new enumeration is labelled unless it is explicitly declared as codes.
+
+    This is what turns a forgotten translation into a parity failure instead
+    of a question offering its raw storage tokens.
+    """
+    assert profile_choice_is_worded("__new_section__", "__new_enum__")
+    for path in PROFILE_CODED_CHOICE_PATHS | PROFILE_ELSEWHERE_LABELLED_CHOICE_PATHS:
+        section_key, field_key = path.split(".", 1)
+        assert not profile_choice_is_worded(section_key, field_key)
+
+
+def test_a_worded_choice_reads_as_language_and_a_coded_choice_as_its_code() -> None:
+    """The IVA regime reads as words in each language; a socio clave stays the AEAT code."""
+    with override_settings(cadrumo_output_language="en"):
+        english = profile_choice_label("iva", "regime", "RECARGO_EQUIVALENCIA")
+    with override_settings(cadrumo_output_language="es"):
+        spanish = profile_choice_label("iva", "regime", "RECARGO_EQUIVALENCIA")
+    assert english != spanish
+    assert "RECARGO_EQUIVALENCIA" not in (english, spanish)
+    assert profile_choice_label("attribution_entity_socios", "clave", "A") == "A"
+
+
+def test_every_question_setup_can_ask_carries_its_three_part_help(schema) -> None:
+    """A schema-required field, or one the IVA block obliges, is never asked unexplained."""
+    from ...deadlines.profiles import MODELO_IVA_BLOCK_REQUIRED_PATHS
+
+    setup_paths = {
+        f"{section.key}.{field.key}"
+        for section in schema.sections
+        if not section.repeatable
+        for field in section.fields
+        if field.required
+    } | set(MODELO_IVA_BLOCK_REQUIRED_PATHS)
+    assert setup_paths, "the schema must declare setup questions, or this proves nothing"
+    assert setup_paths <= PROFILE_FIELD_HELP_PATHS, sorted(setup_paths - PROFILE_FIELD_HELP_PATHS)
+
+
+def test_help_is_enrolled_only_for_declared_fields_that_exist(schema) -> None:
+    """Each help path names a real field, and parity demands all three parts of it."""
+    declared = {f"{section.key}.{field.key}" for section in schema.sections for field in section.fields}
+    assert declared >= PROFILE_FIELD_HELP_PATHS, sorted(PROFILE_FIELD_HELP_PATHS - declared)
+    enrolled = profile_schema_locale_keys(schema)
+    for path in PROFILE_FIELD_HELP_PATHS:
+        section_key, field_key = path.split(".", 1)
+        for part in PROFILE_FIELD_HELP_PARTS:
+            key = profile_field_help_key(section_key, field_key, part)
+            assert key in enrolled
+            assert tr(key, locale="es") != tr(key, locale="en"), key

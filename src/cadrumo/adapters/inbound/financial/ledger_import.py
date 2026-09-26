@@ -12,7 +12,6 @@ from collections.abc import Iterator
 from pathlib import Path
 from typing import override
 
-from ....adapters.persistence.storage.secure_object_namespaces import TRANSACTION_CATALOGUE_NAMESPACE
 from ....application.ledger.import_ports import (
     LedgerImportPorts,
     LedgerParsedRow,
@@ -22,6 +21,7 @@ from ....application.ledger.import_ports import (
 from ....application.ledger.protocols import FinancialProviderProtocol
 from ....core.errors.error_codes import resolve_error_message
 from ....domain.transactions.errors import TransactionValidationError
+from ...persistence.storage.secure_object_namespaces import TRANSACTION_CATALOGUE_NAMESPACE
 from .providers.base import FinancialProvider, FinancialProviderError
 from .providers.csv import CsvProvider
 from .providers.detection import detect_provider

@@ -16,7 +16,7 @@ from ...core.hashing import sha256_hex
 from ...core.identity.digest import ContentDigest
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.period import Period
+from ...core.period import AD_HOC_PERIOD_CODE, Period
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...domain.calculations.registry.ids import RecordId
 from ...domain.calculations.registry.schema import RegistrySnapshot
@@ -41,6 +41,18 @@ _ENVELOPE_GRAMMAR_LITERALS: Mapping[FilingEnvelopePrefixRole, str] = {
     FilingEnvelopePrefixRole.AUX_CLOSING_TAG: "</AUX>",
 }
 _ENVELOPE_CLOSER_EXTENT: int = 18
+#: The envelope grammar prints the filing period as the two-character ``PP`` span
+#: of its record identifier ``<T{modelo}0{AAAA}{PP}0000>``, in the prefix and
+#: again in the relative closer.
+_ENVELOPE_PERIOD_EXTENT: int = 2
+#: What the envelope prints for a filing period the registry addresses by its
+#: obligation rather than by a settlement window. The record designs that carry
+#: an ad-hoc modelo admit exactly the four quarters and ``0A`` in that span
+#: (``aeat-dr-308-2019`` M30800 row 5 "Período. (PP)", and ``aeat-dr-309-2023``
+#: M30900 row 5), and an ad-hoc settlement falls in no quarter, so ``0A`` is the
+#: only token those designs leave for it. Keyed on the period token, so the
+#: mapping refuses to stand in for a cadence it does not name.
+_ENVELOPE_PERIOD_TOKENS: Mapping[str, str] = {AD_HOC_PERIOD_CODE: "0A"}
 _ENVELOPE_FILLER_ROLES: frozenset[FilingEnvelopePrefixRole] = frozenset(
     {
         FilingEnvelopePrefixRole.PRE_PROGRAM_FILLER,
@@ -158,13 +170,33 @@ def _validate_envelope_filing_producer(
         raise ValueError("filing-envelope producer taxpayer must match the approved draft subject")
 
 
+def envelope_period_token(period: Period) -> str:
+    """Return the two-character ``PP`` token the envelope grammar prints for ``period``.
+
+    A filing period whose registry token is already two characters prints
+    itself. A period the registry addresses by its obligation rather than by a
+    settlement window prints the token its record design admits instead. Every
+    other period has no place in the two-character span and is refused rather
+    than truncated.
+
+    Raises:
+        FilingExportValidationError: When ``period`` has no two-character
+            envelope representation.
+    """
+    token = _ENVELOPE_PERIOD_TOKENS.get(period.registry_token, period.registry_token)
+    if len(token) != _ENVELOPE_PERIOD_EXTENT:
+        raise FilingExportValidationError(
+            f"filing period {period!s} has no {_ENVELOPE_PERIOD_EXTENT}-character envelope representation"
+        )
+    return token
+
+
 def envelope_closer_bytes(*, modelo: Modelo, period: Period) -> bytes:
     """Derive the declared relative closing identifier."""
     discriminant = _ENVELOPE_GRAMMAR_LITERALS[FilingEnvelopePrefixRole.DISCRIMINANT]
     record_type = _ENVELOPE_GRAMMAR_LITERALS[FilingEnvelopePrefixRole.RECORD_TYPE]
-    closer = f"</T{modelo.value}{discriminant}{period.filing_year:04d}{period.registry_token}{record_type}".encode(
-        "ascii"
-    )
+    period_token = envelope_period_token(period)
+    closer = f"</T{modelo.value}{discriminant}{period.filing_year:04d}{period_token}{record_type}".encode("ascii")
     if len(closer) != _ENVELOPE_CLOSER_EXTENT:
         raise FilingExportValidationError(
             f"filing-envelope closer must render to the declared {_ENVELOPE_CLOSER_EXTENT}-byte extent"
@@ -276,13 +308,13 @@ def _envelope_prefix_role_value(
         case FilingEnvelopePrefixRole.FILING_YEAR:
             return f"{period.filing_year:04d}"
         case FilingEnvelopePrefixRole.PERIOD:
-            return period.registry_token
+            return envelope_period_token(period)
         case FilingEnvelopePrefixRole.COMPOSED_OPENING_TAG:
             return (
                 f"{_ENVELOPE_GRAMMAR_LITERALS[FilingEnvelopePrefixRole.OPENING_TAG]}"
                 f"{modelo.value}"
                 f"{_ENVELOPE_GRAMMAR_LITERALS[FilingEnvelopePrefixRole.DISCRIMINANT]}"
-                f"{period.filing_year:04d}{period.registry_token}"
+                f"{period.filing_year:04d}{envelope_period_token(period)}"
                 f"{_ENVELOPE_GRAMMAR_LITERALS[FilingEnvelopePrefixRole.RECORD_TYPE]}"
             )
         case FilingEnvelopePrefixRole.PROGRAM_IDENTIFIER:

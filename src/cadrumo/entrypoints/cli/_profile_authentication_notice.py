@@ -21,11 +21,15 @@ def drain_profile_authentication_notices() -> tuple[Notice, ...]:
     _SESSION_NOT_PERSISTED.set(False)
     from ...core.i18n.render import tr
 
+    # Same code as a login whose session could not be persisted, but a
+    # different cause: authentication supplied to one command is scoped to its
+    # process by design, whatever the keychain can do, so the message must not
+    # claim the keychain is missing.
     return (
         Notice(
             severity=NoticeSeverity.WARNING,
             code="config.login.session_not_persisted",
-            message=tr("cli.config.login.notices.session_not_persisted"),
+            message=tr("cli.config.login.notices.session_invocation_scoped"),
         ),
     )
 

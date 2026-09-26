@@ -3,8 +3,9 @@
 Takes an :class:`TaxpayerProfile` and a year and produces a deterministic,
 typed :class:`Schedule`. Filing windows and applicability conditions are
 read from validated calculation registry data supplied by
-:class:`ValidatedRegistryAuthority`. Each window is described by a
-:class:`ModeloRevision` paired with its deadline window definitions.
+:class:`ValidatedRegistryAuthority`. Each window is described by the
+selection metadata of its owning revision paired with its deadline window
+definition.
 """
 
 from __future__ import annotations
@@ -14,11 +15,13 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import date
 from threading import Lock
-from typing import TYPE_CHECKING, Final, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Final, Protocol, override, runtime_checkable
 
 from ...core.logging import get_logger
 from ...core.modelo import Modelo
+from ...core.period import Period
 from ...core.time.clock import now, today_madrid
+from ..contribuyente.entity_type import EntityType, entity_type_legal_entity_token
 
 # Type-only registry references. Runtime callers below import the
 # concrete symbols lazily inside the helpers that use them so importing
@@ -27,9 +30,12 @@ from ...core.time.clock import now, today_madrid
 if TYPE_CHECKING:
     from ..calculations.registry.authority import PinnedAuthorityOperation
     from ..calculations.registry.authority_artifact import AuthorityGenerationPin
-    from ..calculations.registry.schema import ModeloRevision
     from ..calculations.registry.schema_deadlines import DeadlineWindowDefinition
     from ..calculations.registry.schema_verification import ProfilePredicateDefinition
+    from ..calculations.registry.temporal import RevisionSelectionMetadata
+
+    type DeadlineWindowProjection = tuple[str, RevisionSelectionMetadata, DeadlineWindowDefinition]
+    """One projected window: modelo code, its owning revision's selection metadata, and the window."""
 
 from .errors import (
     DeadlineValidationError,
@@ -90,29 +96,31 @@ def classify_obligation_status(closes_on: date, today: date, due_soon_days: int)
 
 def _window_outside_activity_period(
     *,
+    period: Period,
+    entity_type: EntityType | None,
     opens_on: date,
     closes_on: date,
     activity_start_date: date | None,
     activity_end_date: date | None,
+    legal_entity_token: EntityType | None = None,
 ) -> bool:
-    """Return True when an AEAT window falls entirely outside the operator's activity period.
+    """Return whether an obligation's tax period is outside the activity period.
 
-    Two gates, both grounded in RGAT Arts. 9 / 11 (censo activity
-    start / end dates published on G313):
+    Quarterly, monthly, and annual obligations compare the tax period rather
+    than the later filing window. This preserves final-period and annual
+    residual obligations after cessation. Event and instalment periods have no
+    calendar span, so they retain the filing-window fallback.
 
-    * Pre-start: ``closes_on < activity_start_date`` — the entire
-      window precedes the alta. AEAT does not expect a filing for
-      activity that did not occur.
-    * Post-baja: ``opens_on > activity_end_date`` — the entire window
-      follows the baja. AEAT does not expect a forward-period filing
-      after the operator has declared baja.
-
-    Windows that straddle either date stay on the schedule — the
-    operator may still owe a return covering the active fraction.
+    The inclusive boundaries are grounded in RGAT Arts. 9 and 11: a period
+    that overlaps either alta or baja remains potentially reportable.
     """
-    if activity_start_date is not None and closes_on < activity_start_date:
+    starts_on = period.start_date if period.has_date_span() else opens_on
+    ends_on = period.end_date if period.has_date_span() else closes_on
+    if activity_start_date is not None and ends_on < activity_start_date:
         return True
-    return activity_end_date is not None and opens_on > activity_end_date
+    if legal_entity_token is not None and entity_type == legal_entity_token:
+        return False
+    return activity_end_date is not None and starts_on > activity_end_date
 
 
 #: One year's projection, keyed by the generation it was read from. An admitted
@@ -122,10 +130,10 @@ def _window_outside_activity_period(
 #: key is the authority's own content identity (logical generation plus reader
 #: incarnation), never a path or an object address, so a different generation --
 #: or the same content behind a fresh reader -- projects again. Bounded because
-#: each entry retains that year's hydrated revisions.
+#: each entry retains that year's projected windows.
 _DEADLINE_WINDOW_INDEX: OrderedDict[
     tuple[AuthorityGenerationPin, int],
-    tuple[tuple[str, ModeloRevision, DeadlineWindowDefinition], ...],
+    tuple[DeadlineWindowProjection, ...],
 ] = OrderedDict()
 _DEADLINE_WINDOW_INDEX_LIMIT: Final = 32
 _DEADLINE_WINDOW_INDEX_LOCK: Final = Lock()
@@ -134,7 +142,7 @@ _DEADLINE_WINDOW_INDEX_LOCK: Final = Lock()
 def indexed_deadline_windows(
     operation: PinnedAuthorityOperation,
     year: int,
-) -> tuple[tuple[str, ModeloRevision, DeadlineWindowDefinition], ...]:
+) -> tuple[DeadlineWindowProjection, ...]:
     """Project one filing year's deadline windows from a pinned operation.
 
     Reused for a generation already projected for this year; see
@@ -158,31 +166,32 @@ def indexed_deadline_windows(
 def _project_deadline_windows(
     operation: PinnedAuthorityOperation,
     year: int,
-) -> tuple[tuple[str, ModeloRevision, DeadlineWindowDefinition], ...]:
-    """Walk the directory and hydrate the revisions that own this year's windows.
+) -> tuple[DeadlineWindowProjection, ...]:
+    """Walk the directory and project the windows their owning revisions declare for ``year``.
 
-    The directory carries the metadata needed to select the owning revision;
-    only revisions that canonically own a matching window are then hydrated.
-    This mirrors the eager authority's ownership rule without reconstructing a
-    whole model graph.
+    Ownership is decided on the directory metadata by the same selector
+    :meth:`PinnedAuthorityOperation.revision_for_context` uses, which mirrors the
+    eager authority's ownership rule. The metadata also carries the owner's
+    filing schedules, the only other revision member any consumer of the
+    projection reads, so no revision is hydrated.
     """
-    projected: list[tuple[str, ModeloRevision, DeadlineWindowDefinition]] = []
+    from ..calculations.registry.temporal import select_revision_metadata
+
+    projected: list[DeadlineWindowProjection] = []
     for modelo_id in operation.modelo_ids():
         directory = operation.modelo_directory(modelo_id)
         for metadata in directory.revisions:
             for metadata_window in metadata.deadline_windows:
                 if metadata_window.filing_year != year:
                     continue
-                selected = operation.revision_for_context(
-                    modelo_id,
+                selected = select_revision_metadata(
+                    directory,
                     filing_year=metadata_window.filing_year,
                     period=metadata_window.period.registry_token,
                 )
                 if selected.id != metadata.id:
                     continue
-                revision = operation.revision(modelo_id, str(metadata.id))
-                matching = tuple(window for window in revision.deadline_windows if window == metadata_window)
-                if len(matching) != 1:
+                if metadata.deadline_windows.count(metadata_window) != 1:
                     raise ScheduleComputationError(
                         translated_message=_SCHEDULE_COMPUTATION_MESSAGE_KEY,
                         context={
@@ -192,7 +201,7 @@ def _project_deadline_windows(
                             "filing_year": year,
                         },
                     )
-                projected.append((modelo_id, revision, matching[0]))
+                projected.append((modelo_id, metadata, metadata_window))
     projected.sort(
         key=lambda item: (
             item[2].closes_on,
@@ -306,7 +315,7 @@ class DeadlineEngine:
         *,
         profile: TaxpayerProfile,
         modelo: str,
-        revision: ModeloRevision,
+        revision: RevisionSelectionMetadata,
         window: DeadlineWindowDefinition,
         reference_today: date,
         operation: PinnedAuthorityOperation,
@@ -344,10 +353,15 @@ class DeadlineEngine:
         if condition_text is None:
             return None
         if _window_outside_activity_period(
+            period=window.period,
+            entity_type=profile.entity_type,
             opens_on=window.opens_on,
             closes_on=window.closes_on,
             activity_start_date=profile.activity_start_date,
             activity_end_date=profile.activity_end_date,
+            legal_entity_token=entity_type_legal_entity_token(
+                effective_date=window.period.end_date if window.period.has_date_span() else window.closes_on,
+            ),
         ):
             return None
         obligation_status = classify_obligation_status(window.closes_on, reference_today, self.due_soon_days)
@@ -436,7 +450,7 @@ class DeadlineEngine:
         year: int,
         *,
         operation: PinnedAuthorityOperation | None = None,
-    ) -> tuple[tuple[str, ModeloRevision, DeadlineWindowDefinition], ...]:
+    ) -> tuple[DeadlineWindowProjection, ...]:
         from ..calculations.registry.errors import RegistryError
 
         try:
@@ -454,7 +468,7 @@ class DeadlineEngine:
                 },
             ) from exc
 
-    def deadline_windows(self, year: int) -> tuple[tuple[str, ModeloRevision, DeadlineWindowDefinition], ...]:
+    def deadline_windows(self, year: int) -> tuple[DeadlineWindowProjection, ...]:
         """Return validated registry deadline windows for ``year``.
 
         This read-only facade lets application projections inspect the same
@@ -465,7 +479,11 @@ class DeadlineEngine:
             return self._deadline_windows(year, operation=operation)
 
     @staticmethod
-    def _schedule_applies(profile: TaxpayerProfile, revision: ModeloRevision, window: DeadlineWindowDefinition) -> bool:
+    def _schedule_applies(
+        profile: TaxpayerProfile,
+        revision: RevisionSelectionMetadata,
+        window: DeadlineWindowDefinition,
+    ) -> bool:
         from ..calculations.registry.schedules import applicable_filing_schedules
 
         if not revision.filing_schedules:
@@ -475,7 +493,7 @@ class DeadlineEngine:
     def schedule_applies(
         self,
         profile: TaxpayerProfile,
-        revision: ModeloRevision,
+        revision: RevisionSelectionMetadata,
         window: DeadlineWindowDefinition,
     ) -> bool:
         """Return whether a validated filing schedule applies to ``profile``.
@@ -483,8 +501,8 @@ class DeadlineEngine:
         Args:
             profile: The :class:`TaxpayerProfile` whose declared facts are
                 checked against the schedule.
-            revision: The :class:`ModeloRevision` whose filing schedules are
-                consulted.
+            revision: The owning revision's selection metadata, whose filing
+                schedules are consulted.
             window: The deadline window under evaluation.
         """
         return self._schedule_applies(profile, revision, window)
@@ -605,15 +623,15 @@ def next_deadline(schedule: Schedule, today: date | None = None) -> ModeloDeadli
     return upcoming[0]
 
 
-@runtime_checkable
-class ScheduleProducer(Protocol):
-    """Structural surface over :class:`DeadlineEngine.compute`.
+class ObligationScheduleSource(Protocol):
+    """Structural surface over :class:`DeadlineEngine.compute` alone.
 
     :func:`compute_obligation_schedule` is typed against this Protocol
     rather than the concrete :class:`DeadlineEngine` so the workflow
     engine — which injects a protocol-typed deadline engine — and the
     state projection — which uses a concrete :class:`DeadlineEngine` —
-    can both feed the same single-producer function.
+    can both feed the same single-producer function. It asks for nothing
+    that function does not read.
     """
 
     def compute(
@@ -633,8 +651,36 @@ class ScheduleProducer(Protocol):
         ...
 
 
+@runtime_checkable
+class ScheduleProducer(ObligationScheduleSource, Protocol):
+    """An :class:`ObligationScheduleSource` that also exposes its due-soon window.
+
+    The overview calendar reads ``due_soon_days`` to classify rows it
+    projects itself, so it needs this wider surface.
+    """
+
+    due_soon_days: int
+
+    @override
+    def compute(
+        self,
+        profile: TaxpayerProfile,
+        year: int,
+        *,
+        today: date | None = None,
+    ) -> Schedule:
+        """Return a :class:`Schedule` for ``profile`` in ``year``.
+
+        Args:
+            profile: The :class:`TaxpayerProfile` to compute obligations for.
+            year: The fiscal year to compute for.
+            today: Reference date for status classification.
+        """
+        ...
+
+
 def compute_obligation_schedule(
-    engine: ScheduleProducer,
+    engine: ObligationScheduleSource,
     profile: TaxpayerProfile,
     *,
     today: date,
@@ -654,7 +700,7 @@ def compute_obligation_schedule(
 
     Args:
         engine: The deadline engine to compute with. Any
-            :class:`ScheduleProducer` — a concrete
+            :class:`ObligationScheduleSource` — a concrete
             :class:`DeadlineEngine` or the workflow engine's
             protocol-typed injected deadline engine.
         profile: The :class:`TaxpayerProfile` to schedule obligations for.

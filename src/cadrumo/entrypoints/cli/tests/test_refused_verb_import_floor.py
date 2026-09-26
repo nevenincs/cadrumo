@@ -54,7 +54,6 @@ def _loaded_after(
     env.update(
         {
             "CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root),
-            "CADRUMO_SECRET_STORE_DIR": str(tmp_path / "fallback-store"),
             "CADRUMO_SECRET_PASSPHRASE": dev_test_database_password(),
             "CADRUMO_OUTPUT_LANGUAGE": "es",
             "CADRUMO_TEST_IMPORT_REPORT": str(report),

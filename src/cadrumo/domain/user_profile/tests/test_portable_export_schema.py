@@ -13,11 +13,11 @@ from cadrumo.domain.user_profile.values import create_user_profile_record as _cr
 
 from ....core.classification.policies import SensitivityClass
 from ....core.external_constants import PROVENANCE_SOURCE_CENSO_ARTEFACT
-from ....domain.calculations.registry.tests.published_authority import (
+from ...calculations.registry.tests.published_authority import (
     leased_profile_create_context as _profile_creation_context_for_test,
 )
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ..portable_export import CarriedSecureObject, CoverageManifest, UserProfilePortableExport
+from ..values import ProfileSetupState, UserProfileFact, UserProfileRecord
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("authority_operation")]
 

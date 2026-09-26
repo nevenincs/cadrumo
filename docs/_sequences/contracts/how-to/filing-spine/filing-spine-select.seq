@@ -4,7 +4,7 @@
 @step Record a later sale so recalculation produces a new content-addressed draft even when the reused seed revision was already filed.
 @setup aeat app ledger add --date 2026-03-20 --amount 121 --direction INCOMING --description "Selector transition sale" --classification BUSINESS --taxable-base 100 --iva-rate 0.21 --iva-amount 21 --iva-category domestic_general --idempotency-key filing-spine-selector-transition
 @step Calculate the changed quarter and retain the new draft reference.
-@setup aeat --format json app modelo work calculate --modelo 303 --year 2026 --period 1T --m303-filing-evidence fixtures/m303-filing-evidence-2026-1T.json
+@setup aeat --format json app modelo work calculate --modelo 303 --year 2026 --period 1T --no-joint-return-elected
 @capture selected_revision_id result.calculation_revision_id
 @step Select the latest draft revision explicitly.
 aeat --format json app modelo work revision --modelo 303 --year 2026 --period 1T --select latest-draft

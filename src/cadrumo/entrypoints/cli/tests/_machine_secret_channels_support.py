@@ -272,7 +272,6 @@ def _settings(storage_root: Path, *, output_language: OutputLanguage = OutputLan
     return {
         "cadrumo_authority_root": None if authority_root is None else str(authority_root),
         "cadrumo_local_storage_root": str(storage_root),
-        "cadrumo_secret_store_dir": str(storage_root / "fallback-store"),
         "cadrumo_output_language": output_language.value,
     }
 

@@ -383,7 +383,6 @@ def test_platform_descriptor_bootstrap_authenticates_real_read(tmp_path: Path) -
                 "PYTHON_KEYRING_BACKEND": "keyring.backends.fail.Keyring",
                 "PYTHONPATH": _base_interpreter_pythonpath(),
                 "CADRUMO_LOCAL_STORAGE_ROOT": str(root),
-                "CADRUMO_SECRET_STORE_DIR": str(root / "fallback-store"),
                 "CADRUMO_OUTPUT_LANGUAGE": "en",
                 **_authority_root_environment(),
             },
@@ -469,7 +468,6 @@ def _assert_windows_recovery_handles_complete_real_headless_enrolment(tmp_path: 
             "PYTHON_KEYRING_BACKEND": "keyring.backends.fail.Keyring",
             "PYTHONPATH": _base_interpreter_pythonpath(),
             "CADRUMO_LOCAL_STORAGE_ROOT": str(root),
-            "CADRUMO_SECRET_STORE_DIR": str(root / "fallback-store"),
             "CADRUMO_OUTPUT_LANGUAGE": "en",
             "CADRUMO_PROFILE_KDF_MEASURE_CALIBRATION": "false",
         },
@@ -577,7 +575,6 @@ def _assert_posix_recovery_descriptors_complete_real_headless_enrolment(tmp_path
         extra={
             "PYTHON_KEYRING_BACKEND": "keyring.backends.fail.Keyring",
             "CADRUMO_LOCAL_STORAGE_ROOT": str(root),
-            "CADRUMO_SECRET_STORE_DIR": str(root / "fallback-store"),
             "CADRUMO_OUTPUT_LANGUAGE": "en",
             "CADRUMO_PROFILE_KDF_MEASURE_CALIBRATION": "false",
         },
@@ -682,7 +679,6 @@ def test_platform_root_descriptor_plus_leaf_stdin_performs_real_certificate_writ
                 "PYTHON_KEYRING_BACKEND": "keyring.backends.fail.Keyring",
                 "PYTHONPATH": _base_interpreter_pythonpath(),
                 "CADRUMO_LOCAL_STORAGE_ROOT": str(root),
-                "CADRUMO_SECRET_STORE_DIR": str(root / "fallback-store"),
                 "CADRUMO_OUTPUT_LANGUAGE": "en",
                 **_authority_root_environment(),
             },
@@ -772,6 +768,33 @@ _COLD_LEAVES: tuple[tuple[str, tuple[str, ...], str | None], ...] = (
         _PROFILE_AUTHENTICATION,
     ),
     (
+        "plantilla-media-set",
+        (
+            "--profile-secrets-stdin",
+            "config",
+            "profile",
+            "plantilla-media",
+            "set",
+            "--year",
+            "2024",
+            "--average-workforce",
+            "3.50",
+            "--state",
+            "observed",
+        ),
+        _PROFILE_AUTHENTICATION,
+    ),
+    (
+        "plantilla-media-list",
+        ("--profile-secrets-stdin", "config", "profile", "plantilla-media", "list"),
+        _PROFILE_AUTHENTICATION,
+    ),
+    (
+        "plantilla-media-remove",
+        ("--profile-secrets-stdin", "config", "profile", "plantilla-media", "remove", "2099"),
+        _PROFILE_AUTHENTICATION,
+    ),
+    (
         "capabilities-view",
         ("--profile-secrets-stdin", "config", "profile", "capabilities", "view"),
         _PROFILE_AUTHENTICATION,
@@ -796,10 +819,11 @@ _COLD_LEAVES: tuple[tuple[str, tuple[str, ...], str | None], ...] = (
 
 #: The leaves that refuse by contract rather than succeed, per setup state:
 #: an unfinished record cannot pass ``validate`` or be promoted, the profile
-#: has no descendant at index 0, and the selected profile cannot be deleted.
+#: has no descendant at index 0 and no average workforce declared for 2099,
+#: and the selected profile cannot be deleted.
 _COLD_REFUSALS = {
-    "incomplete": {"validate", "complete-setup", "descendiente-remove", "delete-preflight"},
-    "complete": {"descendiente-remove", "delete-preflight"},
+    "incomplete": {"validate", "complete-setup", "descendiente-remove", "plantilla-media-remove", "delete-preflight"},
+    "complete": {"descendiente-remove", "plantilla-media-remove", "delete-preflight"},
 }
 
 

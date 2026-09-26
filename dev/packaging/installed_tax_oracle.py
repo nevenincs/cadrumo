@@ -28,7 +28,7 @@ if str(_REPO_ROOT) not in sys.path:
 if not __package__:
     __package__ = "dev.packaging"
 
-_INSTALLED_WHEEL_BINDING = importlib.import_module("dev.packaging._installed_wheel_binding")
+_INSTALLED_WHEEL_BINDING = importlib.import_module("dev.packaging.installed_wheel_binding")
 installed_wheel_payload_sha256 = _INSTALLED_WHEEL_BINDING.installed_wheel_payload_sha256
 _COMMAND_EXECUTION = importlib.import_module("dev.packaging.command_execution")
 CommandResult = _COMMAND_EXECUTION.CommandResult

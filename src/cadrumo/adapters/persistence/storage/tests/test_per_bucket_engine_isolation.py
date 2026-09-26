@@ -23,10 +23,10 @@ from pathlib import Path
 
 import pytest
 
-from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .....application.auth.models import AuthState
 from .....application.workflow.persistence import WorkflowStateRepository
 from .....application.workflow.state_models import WorkflowState
+from .secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

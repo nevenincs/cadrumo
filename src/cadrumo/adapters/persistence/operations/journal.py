@@ -37,6 +37,7 @@ from ....core.directory_scan import (
 )
 from ....core.locks import exclusive_file_lock
 from ....core.models import STRICT_FROZEN_CONFIG
+from ....core.operations import OperationLifecycle
 from ....core.storage_taxonomy import StorageCategory
 from ....core.storage_taxonomy_locations import storage_location
 from ..storage.errors import RepositoryError
@@ -193,23 +194,62 @@ class _SnapshotJournalRepository(JournalRepositoryBase[OperationJournalRecord]):
         expected_revision: OperationRevision,
         lease: OperationOwnerLease,
     ) -> None:
-        """Atomically advance an existing snapshot after all transition checks pass."""
+        """Atomically advance an existing snapshot to one non-terminal successor."""
+        if snapshot.lifecycle is OperationLifecycle.TERMINAL:
+            raise RepositoryError("a terminal operation snapshot is committed only with its lease release")
         self._validate_lease(snapshot, lease)
         self._ensure_root()
-        path = self.path_for(snapshot.operation_id)
         with exclusive_file_lock(self.lock_target):
-            self._lease_storage.require_live_exact_unlocked(
-                scope_ref=lease.scope_ref,
-                operation_id=snapshot.operation_id,
-                lease=lease,
+            self._advance_unlocked(snapshot, expected_revision=expected_revision, lease=lease)
+
+    def commit_settlement(
+        self,
+        snapshot: OperationPersistedSnapshot,
+        *,
+        expected_revision: OperationRevision,
+        lease: OperationOwnerLease,
+    ) -> None:
+        """Write the terminal snapshot and clear its scope's lease inside one lock hold.
+
+        Lease acquisition takes this same lock, so no submitter can observe the
+        terminal record while the lease is still held. A process that dies
+        between the two writes leaves a terminal record beside a lease its
+        operation no longer uses; submission and reconciliation recover that.
+        """
+        if snapshot.lifecycle is not OperationLifecycle.TERMINAL:
+            raise RepositoryError("operation settlement commit requires a terminal snapshot")
+        self._validate_lease(snapshot, lease)
+        self._ensure_root()
+        with exclusive_file_lock(self.lock_target):
+            self._advance_unlocked(snapshot, expected_revision=expected_revision, lease=lease)
+            self._lease_storage.replace_unlocked(
+                lease.scope_ref,
+                snapshot.operation_id,
+                None,
                 observed_at=snapshot.updated_at,
             )
-            if not os.path.lexists(path):
-                raise RepositoryError("operation journal commit requires an existing snapshot created via create")
-            current = super().load(snapshot.operation_id)
-            self._validate_advance(current.snapshot, snapshot, expected_revision)
-            record = OperationJournalRecord(snapshot=snapshot, history=(*current.history, *snapshot.events))
-            self._write(path, record)
+
+    def _advance_unlocked(
+        self,
+        snapshot: OperationPersistedSnapshot,
+        *,
+        expected_revision: OperationRevision,
+        lease: OperationOwnerLease,
+    ) -> None:
+        """Validate the exact live lease and the transition, then write, while the lock is held."""
+        self._lease_storage.require_live_exact_unlocked(
+            scope_ref=lease.scope_ref,
+            operation_id=snapshot.operation_id,
+            lease=lease,
+            observed_at=snapshot.updated_at,
+        )
+        path = self.path_for(snapshot.operation_id)
+        if not os.path.lexists(path):
+            raise RepositoryError("operation journal commit requires an existing snapshot created via create")
+        current = super().load(snapshot.operation_id)
+        self._validate_advance(current.snapshot, snapshot, expected_revision)
+        record = OperationJournalRecord(snapshot=snapshot, history=(*current.history, *snapshot.events))
+        self._write(path, record)
 
     @staticmethod
     def _validate_lease(snapshot: OperationPersistedSnapshot, lease: OperationOwnerLease) -> None:
@@ -330,6 +370,22 @@ class OperationJournalRepository(OperationJournal, OperationEventStream, Operati
     ) -> None:
         """Atomically advance an existing snapshot through the typed substrate."""
         await asyncio.to_thread(self._repository.commit, snapshot, expected_revision=expected_revision, lease=lease)
+
+    @override
+    async def commit_settlement(
+        self,
+        snapshot: OperationPersistedSnapshot,
+        *,
+        expected_revision: OperationRevision,
+        lease: OperationOwnerLease,
+    ) -> None:
+        """Commit the terminal snapshot and release its lease under one journal-root lock."""
+        await asyncio.to_thread(
+            self._repository.commit_settlement,
+            snapshot,
+            expected_revision=expected_revision,
+            lease=lease,
+        )
 
     def is_absent(self, operation_id: str) -> bool:
         """Distinguish an absent record from a present but unreadable record."""

@@ -507,7 +507,7 @@ class EvidenceReviewListResult(OutputSchema):
 
 
 class EvidenceReviewViewResult(OutputSchema):
-    """JSON envelope for ``aeat app ledger evidence review show``.
+    """JSON envelope for ``aeat app ledger evidence review view``.
 
     Everything the review gate requires a person to have in front of them for
     one document: every field with its value, origin, verbatim anchor, grounding

@@ -40,9 +40,6 @@ from ...adapters.persistence.profile.tests.cross_period_seeding import (
     seed_clean_cross_period_sources,
 )
 from ...adapters.persistence.profile.tests.justificante_metadata import persist_justificante_metadata
-from ...adapters.persistence.profile.tests.verification_repository_support import (
-    build_test_certificate_secret_backend_factory,
-)
 from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ...adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ...application.auth.operation_definitions import build_auth_operation_definitions
@@ -92,11 +89,12 @@ from ...application.user_profile.censal_operation import (
     CensalOperationAcquisition,
     CensalProfileBaseline,
     CensalReviewedFieldIntent,
+    CensalReviewProjectionV1,
     build_censal_operation_definition,
 )
 from ...application.user_profile.censo_sync import CENSAL_ADOPTABLE_PATHS
 from ...application.user_profile.custody_ports import profile_custody_secure_object_repository
-from ...application.user_profile.login_session import login_profile
+from ...application.user_profile.login_session import login_profile, logout_active_profile
 from ...application.user_profile.profile_record_repository import ProfileRecordRepository
 from ...application.user_profile.registration import register_profile_with_credentials
 from ...core.auth_provider import AuthProviderKind
@@ -124,6 +122,9 @@ from ..adapter_composition import (
 )
 from ..censal_review import review_censal_with_services
 from ..operation_composition import build_auth_operation_ports, build_production_operation_registry
+from .profile_persistence.verification_repository_support import (
+    build_test_certificate_secret_backend_factory,
+)
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
@@ -292,6 +293,14 @@ _EXPECTATIONS: Mapping[str, _RegisteredExecutorConformanceCase] = {
             "modelo.work.discard", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
         ),
         _RegisteredExecutorConformanceCase(
+            # Calculated from the unit's (empty) ledger aggregation: the M130
+            # revision marks no casilla required, so one revision is persisted.
+            "modelo.work.calculate",
+            OperationTerminalCondition.SUCCEEDED,
+            OperationEffect.UPDATED,
+            ("modelo.work.calculate.ledger",),
+        ),
+        _RegisteredExecutorConformanceCase(
             "modelo.work.verify", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
         ),
         _RegisteredExecutorConformanceCase(
@@ -423,7 +432,8 @@ class _ExecutionDriver:
                     definition_contract_digest=review_contract.definition_contract_digest,
                     expires_at=None,
                 )
-            )
+            ),
+            CensalReviewProjectionV1,
         )
         assert isinstance(result, OperationReviewProjectionRefusalV1)
         assert result.code is OperationReviewProjectionRefusalCode.REVIEW_NOT_PENDING
@@ -845,6 +855,10 @@ def _payload(
                 "reason": "corrected the declared base for the conformance matrix",
                 "actor": _ACTOR,
             }
+        case "modelo.work.calculate":
+            unit = _seeded_modelo_work_unit(profile_id, operation=operation)
+            subject_ref = unit.work_unit_id
+            values = {"work_unit_id": unit.work_unit_id, "actor": _ACTOR}
         case "modelo.work.verify":
             revision_id = _seeded_modelo_calculation_revision(profile_id, operation=operation)
             subject_ref = revision_id
@@ -939,6 +953,10 @@ def _runtime(
             finally:
                 asyncio.run(services.shutdown())
                 authority_scope.__exit__(None, None, None)
+                # The login above binds this process's live session; a runtime
+                # that leaves it open hands every later test in the worker a
+                # logged-in profile it never created.
+                logout_active_profile()
 
 
 @pytest.mark.parametrize("apply", [True, False], ids=["apply", "reject"])
@@ -1097,6 +1115,38 @@ def test_every_production_registered_executor_runs_through_the_shared_supervisor
                 registry=registry,
             )
         )
+
+
+@pytest.mark.timeout(90)
+def test_calculate_refused_before_persisting_reports_no_effect(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
+    """A precondition refusal settles REFUSED with NONE, never the open UNKNOWN.
+
+    Modelo 303 filing evidence addressed to a Modelo 130 unit is refused while
+    the executor is still only reading, so nothing can have been written and
+    the truthful effect is NONE.
+    """
+    with _runtime(tmp_path / "calculate-refusal", cleanup=_CloseWitness()) as (driver, registry, profile_id):
+        definition = registry.lookup("modelo.work.calculate")
+        unit = _seeded_modelo_work_unit(profile_id, operation=operation)
+        payload = definition.request_type.model_validate(
+            {
+                "work_unit_id": unit.work_unit_id,
+                "actor": _ACTOR,
+                "ordinary_m303_filing_evidence": {"joint_return_elected": False},
+            },
+            strict=True,
+        )
+
+        _submitted, observed = asyncio.run(
+            driver.run(definition_id=definition.definition_id, subject_ref=unit.work_unit_id, payload=payload)
+        )
+
+        assert observed.projection.lifecycle is OperationLifecycle.TERMINAL
+        assert observed.projection.terminal_condition is OperationTerminalCondition.REFUSED
+        assert observed.projection.refusal_ref == "REFUSED_MODELO_M303_FILING_EVIDENCE"
+        assert observed.projection.effect is OperationEffect.NONE
 
 
 def test_censo_cooperative_cancellation_settles_after_its_irreversible_section(

@@ -22,8 +22,6 @@ from uuid import uuid4
 
 from pydantic import BaseModel, Field
 
-from ...application.flows.copy import register_copy_source
-from ...application.flows.definition import CopyRef, FlowDefinition, FlowPage, FlowSection
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
@@ -35,13 +33,15 @@ from ...domain.calculations.registry.errors import (
 )
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.user_profile.errors import ProfileNotFoundError
+from ..flows.copy import register_copy_source
+from ..flows.definition import CopyRef, FlowDefinition, FlowPage, FlowSection
 from .binding_readiness import profile_resolvable_binding_ids
 from .registry_discovery import registry_bindings_for_scope, registry_casillas_for_registry_scope
 
 if TYPE_CHECKING:
-    from ...application.flows.engine import FlowState
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.modelos.work_unit import WorkUnit
+    from ..flows.engine import FlowState
 
 
 ModeloWorkWizardPromptChannel = Literal["casilla", "binding", "relation"]

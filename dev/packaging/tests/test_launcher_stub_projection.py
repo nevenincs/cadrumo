@@ -37,7 +37,7 @@ from pathlib import Path
 
 import pytest
 
-from .._installed_wheel_binding import _launcher_stub_projection
+from ..installed_wheel_binding import _launcher_stub_projection
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

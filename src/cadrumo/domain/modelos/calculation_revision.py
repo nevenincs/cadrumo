@@ -60,6 +60,7 @@ from pydantic import (
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.filing_year import FilingYear
 from ...core.identity.hex_ids import CalculationRevisionId, SnapshotId, WorkUnitId
 from ...core.irnr import M210GrossIncomeSourceMode
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -356,6 +357,14 @@ class CalculationSourceRef(BaseModel):
             audit reader has no other way to recover that distinction after the
             fact. Carried here rather than gated here: the value is NOT withheld
             on the basis of its treatment.
+        source_filing_year: The filing year of the source this node rests on,
+            when the resolver recorded one: the source modelo's year for a
+            relation carry, and the accrual year for a Modelo 193 disclosure
+            phase row, which tells a pending row from a settled prior-accrual
+            one. ``None`` means the year is unknown, including on every revision
+            persisted before the field existed; it never means "the current
+            year". It joins the revision identity only when present, so those
+            revisions keep their content-addressed ids.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -370,6 +379,7 @@ class CalculationSourceRef(BaseModel):
     fingerprint: str | None = Field(default=None, min_length=1, max_length=256)
     source_casilla_ids: tuple[CasillaId, ...] = ()
     dependency_treatment: str = ""
+    source_filing_year: FilingYear | None = None
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -405,18 +415,29 @@ class CalculationSourceIssue(BaseModel):
     binding, without misrepresenting it as source provenance for a computed
     output.
 
-    Two conditions qualify, and both must survive to the persisted revision
-    because both describe a value absent from the filing.
+    Three conditions qualify, and all must survive to the persisted revision
+    because each describes a condition the filing cannot treat as complete.
     ``unrouted_observation`` is a row no binding consumes at all.
     ``unrouted_declarable_quantity`` is an independent quantity that consumed
     rows carry and no binding drawing that quantity reaches â€” the row-keyed
     screens are silent on it by construction, so a verify or export gate that
     saw only the row condition would read their silence as confirmation.
+    ``iva_selected_scope_evidence_failure`` is a ledger IVA row whose selected
+    filing scope cannot be completed from its recorded tax evidence.
+    ``iva_compensation_annual_source_evidence_failure`` is a required Modelo
+    390 annual partition whose filed Modelo 303 source set is incomplete or
+    stale. A contradictory source is refused during calculation before a
+    revision can be persisted.
     """
 
     model_config = STRICT_FROZEN_CONFIG
 
-    reason: Literal["unrouted_observation", "unrouted_declarable_quantity"]
+    reason: Literal[
+        "unrouted_observation",
+        "unrouted_declarable_quantity",
+        "iva_selected_scope_evidence_failure",
+        "iva_compensation_annual_source_evidence_failure",
+    ]
     binding_source: BindingSourceKind
     message: str = Field(min_length=1, max_length=512)
     resolver_id: str | None = Field(default=None, min_length=1, max_length=128)

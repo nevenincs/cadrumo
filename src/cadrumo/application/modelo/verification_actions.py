@@ -72,7 +72,10 @@ from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry.applicability import derive_taxpayer_files_economic_activity
 from ...domain.calculations.registry.applicability_modelo202 import derive_modelo_202_modality
 from ...domain.calculations.registry.bindings import CasillaObservation
-from ...domain.calculations.registry.casilla_membership import casillas_by_id, row_template_casilla_ids
+from ...domain.calculations.registry.casilla_membership import (
+    casillas_by_id,
+    row_field_template_records_by_casilla,
+)
 from ...domain.calculations.registry.formula_runtime import RegistryCalculationUnresolvedOutcome
 from ...domain.calculations.registry.formula_runtime_ops import RegistryUnresolvedOutcomeReason
 from ...domain.calculations.registry.ids import (
@@ -100,6 +103,7 @@ from ...domain.modelos.errors import ModeloValidationError
 from ...domain.modelos.modelo_fact_context import ModeloFactResolutionContext
 from ...domain.modelos.participation_index import TransactionRevisionParticipation, upsert_transaction_participation
 from ...domain.modelos.perceptor_clave_scope import (
+    PERCEPTOR_CLAVE_SCOPE_MODELO,
     PerceptorClaveScope,
     resolve_perceptor_clave_scope,
     row_field_value_bindings,
@@ -174,6 +178,13 @@ from .iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
 from .iva_wallet_gate import (
     require_persisted_iva_compensation_decision_matches_revision as _require_iva_compensation_revision_match,
 )
+from .lifecycle_clock_gate import (
+    ModeloLifecycleClockOperation,
+    require_lifecycle_clock_not_before,
+    verification_ordering_instants,
+)
+from .m123_count_authority_gate import Modelo123CountAuthorityStage, require_modelo_123_count_authority
+from .m193_settled_row_gate import modelo_193_settled_row_verification_finding
 from .preconditions import ModeloPreconditionFailure
 from .pulled_filing_reconcile import pulled_filing_divergence_findings
 from .revision_persistence import (
@@ -182,6 +193,7 @@ from .revision_persistence import (
 from .revision_persistence import (
     require_filing_instance_evidence_for_work_unit,
 )
+from .stored_row_field_input_gate import refuse_stored_row_field_scalar_inputs as _refuse_stored_row_field_scalar_inputs
 from .verification_cross_period import (
     cross_period_clean_state_findings,
     cross_period_clean_state_verdict_for_work_unit,
@@ -287,6 +299,14 @@ def _optional_observation_refs(observations: Iterable[CasillaObservation | None]
 #: ``_attribution_received_advisory``) and says which case it is: an absent
 #: subject reads differently from one whose id is blank.
 _ABSENT_FACT: Final[str] = "absent"
+
+_REGISTRY_SNAPSHOT_GRADE_INSUFFICIENT_SCENARIO: Final[str] = (
+    "modelo.work.verify.registry_snapshot.authority_grade_insufficient"
+)
+_REGISTRY_SNAPSHOT_UNAVAILABLE_SCENARIO: Final[str] = "modelo.work.verify.registry_snapshot.unavailable"
+_REGISTRY_SNAPSHOT_REFUSAL_SCENARIOS: Final[frozenset[str]] = frozenset(
+    {_REGISTRY_SNAPSHOT_GRADE_INSUFFICIENT_SCENARIO, _REGISTRY_SNAPSHOT_UNAVAILABLE_SCENARIO},
+)
 
 #: Legal grounding for missing IVA evidence. Deducting input IVA requires the
 #: original factura (LIVA art. 97, RD 1619/2012 art. 2). Output-IVA evidence
@@ -777,6 +797,11 @@ def _append_model_specific_findings(
             operation=operation,
         ),
     )
+    # Non-blocking and without a precondition failure: filing and export refuse
+    # the revision themselves, and this tells the operator before they try.
+    settled_row_finding = modelo_193_settled_row_verification_finding(work_unit, target)
+    if settled_row_finding is not None:
+        findings.append(settled_row_finding)
 
 
 def verify_modelo_revision_with_preconditions(
@@ -855,6 +880,9 @@ def verify_modelo_revision_with_preconditions(
             unit is missing.
         :class:`~cadrumo.application.modelo.action_errors.ModeloCrossPeriodCleanStateError`: A
             required cross-period dependency has a blocking clean-state finding.
+        :class:`~cadrumo.application.modelo.lifecycle_clock_gate.ModeloLifecycleClockPrecedesError`:
+            ``clock`` precedes the revision's or work unit's ``created_at``;
+            refused before anything is persisted.
     """
     repos = verification_repositories
     cr_repo = repos.calculation
@@ -881,6 +909,13 @@ def verify_modelo_revision_with_preconditions(
         work_unit=work_unit,
         calculation_revision_id=calculation_revision_id,
         operation=RevisionParentOperation.VERIFY,
+    )
+    # Before the idempotent no-op below: a revision granted before evidence was
+    # captured must not be reported as verified beside that evidence either.
+    require_modelo_123_count_authority(
+        work_unit,
+        retencion_ports=repos.retencion_observation_ports,
+        stage=Modelo123CountAuthorityStage.VERIFY,
     )
     if target.state is not CalculationRevisionState.BORRADOR:
         # Idempotent re-verify (aeat-cli-contract): a
@@ -912,6 +947,7 @@ def verify_modelo_revision_with_preconditions(
         )
 
     _assert_revision_content_integrity(target)
+    _refuse_stored_row_field_scalar_inputs(target, work_unit=work_unit, operation=operation)
     from .profile_readiness_gate import load_modelo_work_profile, require_profile_ready_for_work_unit
 
     if profile is None:
@@ -959,23 +995,38 @@ def verify_modelo_revision_with_preconditions(
             work_profile=checked_profile,
         )
     )
-    _append_model_specific_findings(
-        findings,
-        failures_by_finding_id=failures_by_finding_id,
-        work_unit=work_unit,
-        target=target,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        observation_repository=repos.observation,
-        iva_history_repository=repos.iva_compensation_history,
-        operation=operation,
+    # A registry-snapshot refusal already stands as a blocking finding, and
+    # without a valid snapshot the model-specific checks have nothing to compare
+    # against; running them would only re-request the refused snapshot.
+    registry_snapshot_refused = any(
+        failure.scenario_id in _REGISTRY_SNAPSHOT_REFUSAL_SCENARIOS for failure in failures_by_finding_id.values()
     )
+    if not registry_snapshot_refused:
+        _append_model_specific_findings(
+            findings,
+            failures_by_finding_id=failures_by_finding_id,
+            work_unit=work_unit,
+            target=target,
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            observation_repository=repos.observation,
+            iva_history_repository=repos.iva_compensation_history,
+            operation=operation,
+        )
     completeness, granted = _classify_verification_outcome(
         findings=findings,
         missing_required=missing_required_casilla_ids,
     )
 
     now = clock or _utc_now()
+    # Before the workflow gate and every save below: each record this action
+    # rewrites takes ``now``, and a stamp earlier than those instants would
+    # persist catalogues their own loaders refuse.
+    require_lifecycle_clock_not_before(
+        now,
+        operation=ModeloLifecycleClockOperation.VERIFY,
+        instants=verification_ordering_instants(revision=target, work_unit=work_unit),
+    )
     report = _build_verification_report(
         calculation_revision_id=calculation_revision_id,
         registry_snapshot_ref=target.registry_snapshot_ref,
@@ -1338,6 +1389,106 @@ def _append_revision_advisory_findings(
 
 
 _OSS_AGGREGATION_SOURCE = BindingSourceKind.LEDGER_OSS_AGGREGATION
+_IVA_AGGREGATION_SOURCE = BindingSourceKind.LEDGER_IVA_AGGREGATION
+_IVA_COMPENSATION_ANNUAL_PARTITION_SOURCE = BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION
+
+
+def _iva_selected_scope_evidence_finding(target: CalculationRevision) -> ModeloVerificationFinding | None:
+    """Return the blocking finding for persisted selected-scope IVA evidence failures."""
+    issues = tuple(
+        issue
+        for issue in target.source_issues
+        if issue.binding_source is _IVA_AGGREGATION_SOURCE and issue.reason == "iva_selected_scope_evidence_failure"
+    )
+    if not issues:
+        return None
+    source_refs = tuple(issue.source_ref for issue in issues if issue.source_ref is not None)
+    return ModeloVerificationFinding(
+        kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+        severity=ModeloVerificationFindingSeverity.BLOCKING,
+        message_locale_key="application.modelo.findings.iva_selected_scope_evidence_failure",
+        message_facts={
+            "source_ref_count": len(source_refs),
+            "unidentified_source_count": len(issues) - len(source_refs),
+            "source_ref_ids": "|".join(source_refs) if source_refs else _ABSENT_FACT,
+        },
+        legal_refs=WORKFLOW_GATE_LEGAL_REFS,
+    )
+
+
+def _append_iva_selected_scope_evidence_finding(
+    *,
+    work_unit: WorkUnit,
+    target: CalculationRevision,
+    findings: list[ModeloVerificationFinding],
+    failures_by_finding_id: dict[int, ModeloPreconditionFailure],
+) -> None:
+    finding = _iva_selected_scope_evidence_finding(target)
+    if finding is None:
+        return
+    findings.append(finding)
+    failures_by_finding_id[id(finding)] = build_verification_precondition_failure(
+        calculation_revision_id=target.calculation_revision_id,
+        work_unit_id=work_unit.work_unit_id,
+        condition_id="modelo.work.verify.iva_selected_scope_evidence.complete",
+        scenario_id="modelo.work.verify.iva_selected_scope_evidence.unresolved",
+        evidence_id="modelo.work.verify.iva_selected_scope_evidence",
+        evidence_values={
+            "modelo": str(work_unit.modelo),
+            "source_issue_count": len(
+                tuple(
+                    issue
+                    for issue in target.source_issues
+                    if issue.binding_source is _IVA_AGGREGATION_SOURCE
+                    and issue.reason == "iva_selected_scope_evidence_failure"
+                )
+            ),
+        },
+        provenance=ActionEvidenceProvenance.PERSISTED_STATE,
+    )
+
+
+def _iva_compensation_annual_source_evidence_finding(
+    target: CalculationRevision,
+) -> ModeloVerificationFinding | None:
+    """Return the blocking finding for missing or stale required M390 partition evidence."""
+    issues = tuple(
+        issue
+        for issue in target.source_issues
+        if issue.binding_source is _IVA_COMPENSATION_ANNUAL_PARTITION_SOURCE
+        and issue.reason == "iva_compensation_annual_source_evidence_failure"
+    )
+    if not issues:
+        return None
+    return ModeloVerificationFinding(
+        kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+        severity=ModeloVerificationFindingSeverity.BLOCKING,
+        message_locale_key="application.modelo.findings.iva_compensation_annual_source_evidence_failure",
+        message_facts={"source_issue_count": len(issues)},
+        legal_refs=WORKFLOW_GATE_LEGAL_REFS,
+    )
+
+
+def _append_iva_compensation_annual_source_evidence_finding(
+    *,
+    work_unit: WorkUnit,
+    target: CalculationRevision,
+    findings: list[ModeloVerificationFinding],
+    failures_by_finding_id: dict[int, ModeloPreconditionFailure],
+) -> None:
+    finding = _iva_compensation_annual_source_evidence_finding(target)
+    if finding is None:
+        return
+    findings.append(finding)
+    failures_by_finding_id[id(finding)] = build_verification_precondition_failure(
+        calculation_revision_id=target.calculation_revision_id,
+        work_unit_id=work_unit.work_unit_id,
+        condition_id="modelo.work.verify.iva_compensation_annual_source_evidence.complete",
+        scenario_id="modelo.work.verify.iva_compensation_annual_source_evidence.unresolved",
+        evidence_id="modelo.work.verify.iva_compensation_annual_source_evidence",
+        evidence_values={"modelo": str(work_unit.modelo)},
+        provenance=ActionEvidenceProvenance.PERSISTED_STATE,
+    )
 
 
 def _m369_oss_bindings(snapshot: RegistrySnapshot) -> tuple[BindingDefinition, ...]:
@@ -1491,7 +1642,7 @@ def _resolve_verification_snapshot(
             calculation_revision_id=target.calculation_revision_id,
             work_unit_id=target.work_unit_id,
             condition_id="modelo.work.verify.registry_snapshot.filing_authority",
-            scenario_id="modelo.work.verify.registry_snapshot.authority_grade_insufficient",
+            scenario_id=_REGISTRY_SNAPSHOT_GRADE_INSUFFICIENT_SCENARIO,
             evidence_id="modelo.work.verify.registry_snapshot",
             evidence_values={
                 "modelo": str(work_unit.modelo),
@@ -1520,7 +1671,7 @@ def _resolve_verification_snapshot(
             calculation_revision_id=target.calculation_revision_id,
             work_unit_id=target.work_unit_id,
             condition_id="modelo.work.verify.registry_snapshot.available",
-            scenario_id="modelo.work.verify.registry_snapshot.unavailable",
+            scenario_id=_REGISTRY_SNAPSHOT_UNAVAILABLE_SCENARIO,
             evidence_id="modelo.work.verify.registry_snapshot",
             evidence_values={
                 "modelo": str(work_unit.modelo),
@@ -1533,14 +1684,18 @@ def _resolve_verification_snapshot(
 
 
 def _perceptor_clave_scope(work_unit: WorkUnit, *, operation: PinnedAuthorityOperation) -> PerceptorClaveScope | None:
-    """Return the registry clave scope for the work unit's ejercicio, if one is declared."""
+    """Return the registry clave scope for the work unit's ejercicio, if one is declared.
+
+    The scope fact governs one modelo's perceptor records only. Any other
+    modelo has nothing to scope, and its period may be a filing event or an
+    instalment with no calendar span to place on the scope's date axis.
+    """
     from ...domain.calculations.registry.errors import RegistryValidationError
 
+    if str(work_unit.modelo) != PERCEPTOR_CLAVE_SCOPE_MODELO.value:
+        return None
     try:
-        return resolve_perceptor_clave_scope(
-            effective_date=date(work_unit.filing_year, 12, 31),
-            authority=operation,
-        )
+        return resolve_perceptor_clave_scope(period=work_unit.period, authority=operation)
     except RegistryValidationError:
         # An ejercicio no scope variant covers keeps every per-record casilla required.
         return None
@@ -1777,6 +1932,18 @@ def _collect_revision_verification_findings(
         failures_by_finding_id=failures_by_finding_id,
         clave_scope=_perceptor_clave_scope(work_unit, operation=operation),
     )
+    _append_iva_selected_scope_evidence_finding(
+        work_unit=work_unit,
+        target=target,
+        findings=findings,
+        failures_by_finding_id=failures_by_finding_id,
+    )
+    _append_iva_compensation_annual_source_evidence_finding(
+        work_unit=work_unit,
+        target=target,
+        findings=findings,
+        failures_by_finding_id=failures_by_finding_id,
+    )
     _append_oss_verification_finding(
         work_unit=work_unit,
         target=target,
@@ -1843,17 +2010,18 @@ def _detail_row_template_casilla_is_satisfied(
 ) -> bool:
     """Return whether a per-row template casilla is answered by its row source.
 
-    A casilla whose section names a record that a row-set binding produces is
-    one field of each emitted row, not a scalar the operator types once; its
-    completeness belongs to the row source. Modelo 349 additionally proves its
-    rows are present, since its operador and rectificacion records are the
-    return's whole content.
+    A casilla an export record fills once per detail row is one field of each
+    emitted row, not a scalar the operator types once; its completeness belongs
+    to the row source. The same declared mapping decides which casillas
+    calculate refuses as scalar inputs, so verify never demands one of them.
+    Modelo 349 additionally proves its rows are present, since its operador and
+    rectificacion records are the return's whole content.
     """
     if not casilla.section:
         return False
     section = str(casilla.section[0])
     if str(work_unit.modelo) != Modelo("349").value:
-        return casilla.id in row_template_casilla_ids(revision)
+        return casilla.id in row_field_template_records_by_casilla(revision)
     if section == "operador":
         return any(getattr(row, "row_type", None) == "operador" for row in target.detail_rows)
     if section != "rectificacion":

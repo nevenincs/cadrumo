@@ -23,10 +23,10 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from ....domain.calculations.registry.tests.published_authority import (
+from ...calculations.registry.tests.published_authority import (
     leased_profile_create_context as _profile_creation_context_for_test,
 )
-from ....domain.calculations.registry.tests.published_authority import published_profile_schema
+from ...calculations.registry.tests.published_authority import published_profile_schema
 from ..values import (
     ProfileSetupState,
     UserProfileFact,

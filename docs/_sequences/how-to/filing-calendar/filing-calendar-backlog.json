@@ -11,7 +11,7 @@
         "--irpf-income-categories",
         "actividad_economica",
         "--activity-start-date",
-        "2026-01-01"
+        "2025-01-01"
       ],
       "captures": [],
       "envelope": null,
@@ -434,6 +434,36 @@
               "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 128 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
+            "severity": "info"
+          },
+          {
+            "action": {
+              "action": {
+                "action_id": "operator.overview.explain",
+                "cli_path": [
+                  "app",
+                  "overview",
+                  "explain"
+                ],
+                "target_command_key": "overview.explain"
+              },
+              "argument_bindings": [
+                {
+                  "argument_name": "modelo",
+                  "source": "operator_action.verdict_context",
+                  "source_evidence_id": null,
+                  "source_key": "modelo",
+                  "status": "resolved",
+                  "value": "136"
+                }
+              ]
+            },
+            "code": "overview.coverage.incomplete",
+            "context": {
+              "modelo": "136",
+              "reason": "applicability_undetermined"
+            },
+            "message": "The filing obligation 136 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
             "severity": "info"
           },
           {
@@ -1432,7 +1462,6 @@
           "completeness": {
             "computable_modelos": [
               "130",
-              "136",
               "303",
               "360",
               "390"
@@ -1486,6 +1515,10 @@
               },
               {
                 "modelo": "128",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "136",
                 "reason": "applicability_undetermined"
               },
               {
@@ -1727,7 +1760,6 @@
             "surfaced": [
               "100",
               "130",
-              "136",
               "303",
               "360",
               "390",
@@ -1738,9 +1770,11 @@
           "incomplete_reason": null,
           "items": [
             {
-              "adjusted_closes_on": "2026-01-20",
+              "adjusted_closes_on": "2025-04-21",
               "censo_enrolment_state": "not_checked",
-              "closes_on": "2026-01-20",
+              "closes_on": "2025-04-21",
+              "days_overdue": 345,
+              "evaluated_on": "2026-04-01",
               "filing_evidence": {
                 "aeat_evidence_conflict_reference_ids": [],
                 "aeat_evidence_kind": null,
@@ -1756,32 +1790,352 @@
                 "local_filed_at": null,
                 "local_filing_record_id": null,
                 "local_filing_state": "not_ready_to_file",
-                "modelo": "136",
-                "period": "2025 4T",
+                "modelo": "130",
+                "period": "2025 1T",
                 "verified_justificante_csv": null
               },
               "filing_year": 2025,
+              "holiday_coverage": "national_only",
               "holiday_refs": [],
+              "holiday_territory": null,
               "jurisdictions": [],
               "local_work_unit_id": null,
               "local_work_unit_name": null,
               "local_work_unit_revision_id": null,
-              "modelo": "136",
-              "opens_on": "2026-01-01",
-              "payment_cutoff_on": null,
-              "period": "2025 4T",
+              "modelo": "130",
+              "opens_on": "2025-04-01",
+              "payment_cutoff_on": "2025-04-15",
+              "period": "2025 1T",
               "recovery": {
                 "recargo_band": {
-                  "id": "completed_months_2",
+                  "id": "completed_months_11",
                   "interest_applies": false,
                   "legal_ref": "ley-58-2003:art-27.2",
-                  "max_completed_months": 2,
-                  "min_completed_months": 2,
-                  "surcharge_pct": "3.00"
+                  "max_completed_months": 11,
+                  "min_completed_months": 11,
+                  "surcharge_pct": "12.00"
                 },
                 "still_filable": true
               },
-              "shift_reason": "calendar_unavailable",
+              "shift_reason": "business_day",
+              "source": "registry_deadline",
+              "status": "OVERDUE",
+              "user_state": "late"
+            },
+            {
+              "adjusted_closes_on": "2025-04-21",
+              "censo_enrolment_state": "not_checked",
+              "closes_on": "2025-04-21",
+              "days_overdue": 345,
+              "evaluated_on": "2026-04-01",
+              "filing_evidence": {
+                "aeat_evidence_conflict_reference_ids": [],
+                "aeat_evidence_kind": null,
+                "aeat_reference_id": null,
+                "aeat_snapshot_id": null,
+                "aeat_submission_state": "not_observed",
+                "aeat_submitted_at": null,
+                "evidence_source": null,
+                "filing_year": 2025,
+                "justificante_required": true,
+                "justificante_verified": false,
+                "local_calculation_revision_id": null,
+                "local_filed_at": null,
+                "local_filing_record_id": null,
+                "local_filing_state": "not_ready_to_file",
+                "modelo": "303",
+                "period": "2025 1T",
+                "verified_justificante_csv": null
+              },
+              "filing_year": 2025,
+              "holiday_coverage": "national_only",
+              "holiday_refs": [],
+              "holiday_territory": null,
+              "jurisdictions": [],
+              "local_work_unit_id": null,
+              "local_work_unit_name": null,
+              "local_work_unit_revision_id": null,
+              "modelo": "303",
+              "opens_on": "2025-04-01",
+              "payment_cutoff_on": "2025-04-15",
+              "period": "2025 1T",
+              "recovery": {
+                "recargo_band": {
+                  "id": "completed_months_11",
+                  "interest_applies": false,
+                  "legal_ref": "ley-58-2003:art-27.2",
+                  "max_completed_months": 11,
+                  "min_completed_months": 11,
+                  "surcharge_pct": "12.00"
+                },
+                "still_filable": true
+              },
+              "shift_reason": "business_day",
+              "source": "registry_deadline",
+              "status": "OVERDUE",
+              "user_state": "late"
+            },
+            {
+              "adjusted_closes_on": "2025-07-21",
+              "censo_enrolment_state": "not_checked",
+              "closes_on": "2025-07-21",
+              "days_overdue": 254,
+              "evaluated_on": "2026-04-01",
+              "filing_evidence": {
+                "aeat_evidence_conflict_reference_ids": [],
+                "aeat_evidence_kind": null,
+                "aeat_reference_id": null,
+                "aeat_snapshot_id": null,
+                "aeat_submission_state": "not_observed",
+                "aeat_submitted_at": null,
+                "evidence_source": null,
+                "filing_year": 2025,
+                "justificante_required": true,
+                "justificante_verified": false,
+                "local_calculation_revision_id": null,
+                "local_filed_at": null,
+                "local_filing_record_id": null,
+                "local_filing_state": "not_ready_to_file",
+                "modelo": "130",
+                "period": "2025 2T",
+                "verified_justificante_csv": null
+              },
+              "filing_year": 2025,
+              "holiday_coverage": "national_only",
+              "holiday_refs": [],
+              "holiday_territory": null,
+              "jurisdictions": [],
+              "local_work_unit_id": null,
+              "local_work_unit_name": null,
+              "local_work_unit_revision_id": null,
+              "modelo": "130",
+              "opens_on": "2025-07-01",
+              "payment_cutoff_on": "2025-07-16",
+              "period": "2025 2T",
+              "recovery": {
+                "recargo_band": {
+                  "id": "completed_months_8",
+                  "interest_applies": false,
+                  "legal_ref": "ley-58-2003:art-27.2",
+                  "max_completed_months": 8,
+                  "min_completed_months": 8,
+                  "surcharge_pct": "9.00"
+                },
+                "still_filable": true
+              },
+              "shift_reason": "business_day",
+              "source": "registry_deadline",
+              "status": "OVERDUE",
+              "user_state": "late"
+            },
+            {
+              "adjusted_closes_on": "2025-07-21",
+              "censo_enrolment_state": "not_checked",
+              "closes_on": "2025-07-21",
+              "days_overdue": 254,
+              "evaluated_on": "2026-04-01",
+              "filing_evidence": {
+                "aeat_evidence_conflict_reference_ids": [],
+                "aeat_evidence_kind": null,
+                "aeat_reference_id": null,
+                "aeat_snapshot_id": null,
+                "aeat_submission_state": "not_observed",
+                "aeat_submitted_at": null,
+                "evidence_source": null,
+                "filing_year": 2025,
+                "justificante_required": true,
+                "justificante_verified": false,
+                "local_calculation_revision_id": null,
+                "local_filed_at": null,
+                "local_filing_record_id": null,
+                "local_filing_state": "not_ready_to_file",
+                "modelo": "303",
+                "period": "2025 2T",
+                "verified_justificante_csv": null
+              },
+              "filing_year": 2025,
+              "holiday_coverage": "national_only",
+              "holiday_refs": [],
+              "holiday_territory": null,
+              "jurisdictions": [],
+              "local_work_unit_id": null,
+              "local_work_unit_name": null,
+              "local_work_unit_revision_id": null,
+              "modelo": "303",
+              "opens_on": "2025-07-01",
+              "payment_cutoff_on": "2025-07-16",
+              "period": "2025 2T",
+              "recovery": {
+                "recargo_band": {
+                  "id": "completed_months_8",
+                  "interest_applies": false,
+                  "legal_ref": "ley-58-2003:art-27.2",
+                  "max_completed_months": 8,
+                  "min_completed_months": 8,
+                  "surcharge_pct": "9.00"
+                },
+                "still_filable": true
+              },
+              "shift_reason": "business_day",
+              "source": "registry_deadline",
+              "status": "OVERDUE",
+              "user_state": "late"
+            },
+            {
+              "adjusted_closes_on": "2025-09-30",
+              "censo_enrolment_state": "not_checked",
+              "closes_on": "2025-09-30",
+              "days_overdue": 183,
+              "evaluated_on": "2026-04-01",
+              "filing_evidence": {
+                "aeat_evidence_conflict_reference_ids": [],
+                "aeat_evidence_kind": null,
+                "aeat_reference_id": null,
+                "aeat_snapshot_id": null,
+                "aeat_submission_state": "not_observed",
+                "aeat_submitted_at": null,
+                "evidence_source": null,
+                "filing_year": 2024,
+                "justificante_required": true,
+                "justificante_verified": false,
+                "local_calculation_revision_id": null,
+                "local_filed_at": null,
+                "local_filing_record_id": null,
+                "local_filing_state": "not_ready_to_file",
+                "modelo": "360",
+                "period": "2024 AD-HOC",
+                "verified_justificante_csv": null
+              },
+              "filing_year": 2024,
+              "holiday_coverage": "national_only",
+              "holiday_refs": [],
+              "holiday_territory": null,
+              "jurisdictions": [],
+              "local_work_unit_id": null,
+              "local_work_unit_name": null,
+              "local_work_unit_revision_id": null,
+              "modelo": "360",
+              "opens_on": "2025-01-01",
+              "payment_cutoff_on": null,
+              "period": "2024 AD-HOC",
+              "recovery": {
+                "recargo_band": {
+                  "id": "completed_months_6",
+                  "interest_applies": false,
+                  "legal_ref": "ley-58-2003:art-27.2",
+                  "max_completed_months": 6,
+                  "min_completed_months": 6,
+                  "surcharge_pct": "7.00"
+                },
+                "still_filable": true
+              },
+              "shift_reason": "business_day",
+              "source": "registry_deadline",
+              "status": "OVERDUE",
+              "user_state": "late"
+            },
+            {
+              "adjusted_closes_on": "2025-10-20",
+              "censo_enrolment_state": "not_checked",
+              "closes_on": "2025-10-20",
+              "days_overdue": 163,
+              "evaluated_on": "2026-04-01",
+              "filing_evidence": {
+                "aeat_evidence_conflict_reference_ids": [],
+                "aeat_evidence_kind": null,
+                "aeat_reference_id": null,
+                "aeat_snapshot_id": null,
+                "aeat_submission_state": "not_observed",
+                "aeat_submitted_at": null,
+                "evidence_source": null,
+                "filing_year": 2025,
+                "justificante_required": true,
+                "justificante_verified": false,
+                "local_calculation_revision_id": null,
+                "local_filed_at": null,
+                "local_filing_record_id": null,
+                "local_filing_state": "not_ready_to_file",
+                "modelo": "130",
+                "period": "2025 3T",
+                "verified_justificante_csv": null
+              },
+              "filing_year": 2025,
+              "holiday_coverage": "national_only",
+              "holiday_refs": [],
+              "holiday_territory": null,
+              "jurisdictions": [],
+              "local_work_unit_id": null,
+              "local_work_unit_name": null,
+              "local_work_unit_revision_id": null,
+              "modelo": "130",
+              "opens_on": "2025-10-01",
+              "payment_cutoff_on": "2025-10-15",
+              "period": "2025 3T",
+              "recovery": {
+                "recargo_band": {
+                  "id": "completed_months_5",
+                  "interest_applies": false,
+                  "legal_ref": "ley-58-2003:art-27.2",
+                  "max_completed_months": 5,
+                  "min_completed_months": 5,
+                  "surcharge_pct": "6.00"
+                },
+                "still_filable": true
+              },
+              "shift_reason": "business_day",
+              "source": "registry_deadline",
+              "status": "OVERDUE",
+              "user_state": "late"
+            },
+            {
+              "adjusted_closes_on": "2025-10-20",
+              "censo_enrolment_state": "not_checked",
+              "closes_on": "2025-10-20",
+              "days_overdue": 163,
+              "evaluated_on": "2026-04-01",
+              "filing_evidence": {
+                "aeat_evidence_conflict_reference_ids": [],
+                "aeat_evidence_kind": null,
+                "aeat_reference_id": null,
+                "aeat_snapshot_id": null,
+                "aeat_submission_state": "not_observed",
+                "aeat_submitted_at": null,
+                "evidence_source": null,
+                "filing_year": 2025,
+                "justificante_required": true,
+                "justificante_verified": false,
+                "local_calculation_revision_id": null,
+                "local_filed_at": null,
+                "local_filing_record_id": null,
+                "local_filing_state": "not_ready_to_file",
+                "modelo": "303",
+                "period": "2025 3T",
+                "verified_justificante_csv": null
+              },
+              "filing_year": 2025,
+              "holiday_coverage": "national_only",
+              "holiday_refs": [],
+              "holiday_territory": null,
+              "jurisdictions": [],
+              "local_work_unit_id": null,
+              "local_work_unit_name": null,
+              "local_work_unit_revision_id": null,
+              "modelo": "303",
+              "opens_on": "2025-10-01",
+              "payment_cutoff_on": "2025-10-15",
+              "period": "2025 3T",
+              "recovery": {
+                "recargo_band": {
+                  "id": "completed_months_5",
+                  "interest_applies": false,
+                  "legal_ref": "ley-58-2003:art-27.2",
+                  "max_completed_months": 5,
+                  "min_completed_months": 5,
+                  "surcharge_pct": "6.00"
+                },
+                "still_filable": true
+              },
+              "shift_reason": "business_day",
               "source": "registry_deadline",
               "status": "OVERDUE",
               "user_state": "late"
@@ -1790,6 +2144,8 @@
               "adjusted_closes_on": "2026-01-30",
               "censo_enrolment_state": "not_checked",
               "closes_on": "2026-01-30",
+              "days_overdue": 61,
+              "evaluated_on": "2026-04-01",
               "filing_evidence": {
                 "aeat_evidence_conflict_reference_ids": [],
                 "aeat_evidence_kind": null,
@@ -1810,7 +2166,9 @@
                 "verified_justificante_csv": null
               },
               "filing_year": 2025,
+              "holiday_coverage": "national_only",
               "holiday_refs": [],
+              "holiday_territory": null,
               "jurisdictions": [],
               "local_work_unit_id": null,
               "local_work_unit_name": null,
@@ -1830,7 +2188,7 @@
                 },
                 "still_filable": true
               },
-              "shift_reason": "calendar_unavailable",
+              "shift_reason": "business_day",
               "source": "registry_deadline",
               "status": "OVERDUE",
               "user_state": "late"
@@ -1839,6 +2197,8 @@
               "adjusted_closes_on": "2026-01-30",
               "censo_enrolment_state": "not_checked",
               "closes_on": "2026-01-30",
+              "days_overdue": 61,
+              "evaluated_on": "2026-04-01",
               "filing_evidence": {
                 "aeat_evidence_conflict_reference_ids": [],
                 "aeat_evidence_kind": null,
@@ -1859,7 +2219,9 @@
                 "verified_justificante_csv": null
               },
               "filing_year": 2025,
+              "holiday_coverage": "national_only",
               "holiday_refs": [],
+              "holiday_territory": null,
               "jurisdictions": [],
               "local_work_unit_id": null,
               "local_work_unit_name": null,
@@ -1879,7 +2241,7 @@
                 },
                 "still_filable": true
               },
-              "shift_reason": "calendar_unavailable",
+              "shift_reason": "business_day",
               "source": "registry_deadline",
               "status": "OVERDUE",
               "user_state": "late"
@@ -1888,6 +2250,8 @@
               "adjusted_closes_on": "2026-01-30",
               "censo_enrolment_state": "not_checked",
               "closes_on": "2026-01-30",
+              "days_overdue": 61,
+              "evaluated_on": "2026-04-01",
               "filing_evidence": {
                 "aeat_evidence_conflict_reference_ids": [],
                 "aeat_evidence_kind": null,
@@ -1908,7 +2272,9 @@
                 "verified_justificante_csv": null
               },
               "filing_year": 2025,
+              "holiday_coverage": "national_only",
               "holiday_refs": [],
+              "holiday_territory": null,
               "jurisdictions": [],
               "local_work_unit_id": null,
               "local_work_unit_name": null,
@@ -1928,13 +2294,13 @@
                 },
                 "still_filable": true
               },
-              "shift_reason": "calendar_unavailable",
+              "shift_reason": "business_day",
               "source": "registry_deadline",
               "status": "OVERDUE",
               "user_state": "late"
             }
           ],
-          "late_count": 4,
+          "late_count": 10,
           "range": {
             "from_date": "2025-04-01",
             "to_date": "2026-04-01"
@@ -2459,6 +2825,36 @@
                   "source_evidence_id": null,
                   "source_key": "modelo",
                   "status": "resolved",
+                  "value": "136"
+                }
+              ]
+            },
+            "code": "overview.coverage.incomplete",
+            "context": {
+              "modelo": "136",
+              "reason": "applicability_undetermined"
+            },
+            "message": "The filing obligation 136 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
+            "severity": "info"
+          },
+          {
+            "action": {
+              "action": {
+                "action_id": "operator.overview.explain",
+                "cli_path": [
+                  "app",
+                  "overview",
+                  "explain"
+                ],
+                "target_command_key": "overview.explain"
+              },
+              "argument_bindings": [
+                {
+                  "argument_name": "modelo",
+                  "source": "operator_action.verdict_context",
+                  "source_evidence_id": null,
+                  "source_key": "modelo",
+                  "status": "resolved",
                   "value": "156"
                 }
               ]
@@ -3438,7 +3834,6 @@
             "computable_modelos": [
               "100",
               "130",
-              "136",
               "303",
               "360",
               "390",
@@ -3493,6 +3888,10 @@
               },
               {
                 "modelo": "128",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "136",
                 "reason": "applicability_undetermined"
               },
               {
@@ -3734,7 +4133,6 @@
             "surfaced": [
               "100",
               "130",
-              "136",
               "303",
               "360",
               "390",
@@ -3745,58 +4143,11 @@
           "incomplete_reason": null,
           "items": [
             {
-              "adjusted_closes_on": "2026-01-20",
-              "censo_enrolment_state": "not_checked",
-              "closes_on": "2026-01-20",
-              "filing_evidence": {
-                "aeat_evidence_conflict_reference_ids": [],
-                "aeat_evidence_kind": null,
-                "aeat_reference_id": null,
-                "aeat_snapshot_id": null,
-                "aeat_submission_state": "not_observed",
-                "aeat_submitted_at": null,
-                "evidence_source": null,
-                "filing_year": 2025,
-                "justificante_required": true,
-                "justificante_verified": false,
-                "local_calculation_revision_id": null,
-                "local_filed_at": null,
-                "local_filing_record_id": null,
-                "local_filing_state": "not_ready_to_file",
-                "modelo": "136",
-                "period": "2025 4T",
-                "verified_justificante_csv": null
-              },
-              "filing_year": 2025,
-              "holiday_refs": [],
-              "jurisdictions": [],
-              "local_work_unit_id": null,
-              "local_work_unit_name": null,
-              "local_work_unit_revision_id": null,
-              "modelo": "136",
-              "opens_on": "2026-01-01",
-              "payment_cutoff_on": null,
-              "period": "2025 4T",
-              "recovery": {
-                "recargo_band": {
-                  "id": "completed_months_2",
-                  "interest_applies": false,
-                  "legal_ref": "ley-58-2003:art-27.2",
-                  "max_completed_months": 2,
-                  "min_completed_months": 2,
-                  "surcharge_pct": "3.00"
-                },
-                "still_filable": true
-              },
-              "shift_reason": "calendar_unavailable",
-              "source": "registry_deadline",
-              "status": "OVERDUE",
-              "user_state": "late"
-            },
-            {
               "adjusted_closes_on": "2026-01-30",
               "censo_enrolment_state": "not_checked",
               "closes_on": "2026-01-30",
+              "days_overdue": 61,
+              "evaluated_on": "2026-04-01",
               "filing_evidence": {
                 "aeat_evidence_conflict_reference_ids": [],
                 "aeat_evidence_kind": null,
@@ -3817,7 +4168,9 @@
                 "verified_justificante_csv": null
               },
               "filing_year": 2025,
+              "holiday_coverage": "national_only",
               "holiday_refs": [],
+              "holiday_territory": null,
               "jurisdictions": [],
               "local_work_unit_id": null,
               "local_work_unit_name": null,
@@ -3837,7 +4190,7 @@
                 },
                 "still_filable": true
               },
-              "shift_reason": "calendar_unavailable",
+              "shift_reason": "business_day",
               "source": "registry_deadline",
               "status": "OVERDUE",
               "user_state": "late"
@@ -3846,6 +4199,8 @@
               "adjusted_closes_on": "2026-01-30",
               "censo_enrolment_state": "not_checked",
               "closes_on": "2026-01-30",
+              "days_overdue": 61,
+              "evaluated_on": "2026-04-01",
               "filing_evidence": {
                 "aeat_evidence_conflict_reference_ids": [],
                 "aeat_evidence_kind": null,
@@ -3866,7 +4221,9 @@
                 "verified_justificante_csv": null
               },
               "filing_year": 2025,
+              "holiday_coverage": "national_only",
               "holiday_refs": [],
+              "holiday_territory": null,
               "jurisdictions": [],
               "local_work_unit_id": null,
               "local_work_unit_name": null,
@@ -3886,7 +4243,7 @@
                 },
                 "still_filable": true
               },
-              "shift_reason": "calendar_unavailable",
+              "shift_reason": "business_day",
               "source": "registry_deadline",
               "status": "OVERDUE",
               "user_state": "late"
@@ -3895,6 +4252,8 @@
               "adjusted_closes_on": "2026-01-30",
               "censo_enrolment_state": "not_checked",
               "closes_on": "2026-01-30",
+              "days_overdue": 61,
+              "evaluated_on": "2026-04-01",
               "filing_evidence": {
                 "aeat_evidence_conflict_reference_ids": [],
                 "aeat_evidence_kind": null,
@@ -3915,7 +4274,9 @@
                 "verified_justificante_csv": null
               },
               "filing_year": 2025,
+              "holiday_coverage": "national_only",
               "holiday_refs": [],
+              "holiday_territory": null,
               "jurisdictions": [],
               "local_work_unit_id": null,
               "local_work_unit_name": null,
@@ -3935,13 +4296,13 @@
                 },
                 "still_filable": true
               },
-              "shift_reason": "calendar_unavailable",
+              "shift_reason": "business_day",
               "source": "registry_deadline",
               "status": "OVERDUE",
               "user_state": "late"
             }
           ],
-          "late_count": 4,
+          "late_count": 3,
           "range": {
             "from_date": "2026-01-01",
             "to_date": "2026-06-30"

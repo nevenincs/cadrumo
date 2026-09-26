@@ -2,13 +2,23 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
+from cadrumo.core.modelo import Modelo
+from cadrumo.core.payment_election import PaymentElection
+from cadrumo.core.prior_domiciliation_election import PriorDomiciliationElection
+from cadrumo.core.refund_election import RefundElection
+from cadrumo.core.result_disposition import ResultDisposition
+from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
+from cadrumo.domain.calculations.registry.export_parse import parse_export_payload
 from cadrumo.domain.contribuyente.entity_type import EntityType
 from cadrumo.domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime
+from cadrumo.domain.filing.errors import FilingExportValidationError
+from cadrumo.domain.identifiers import canonical_decimal_string
+from cadrumo.domain.submission.models import ModeloDraftStatus
 
-from ....application.filing.runtime import ModeloOperatorProfile, build_runtime_schema_provider
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.schema_input_kind import InputKind
@@ -31,6 +41,15 @@ from ....domain.modelos.row_models import (
 )
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ...filing.draft_construction import build_draft
+from ...filing.export import export_draft
+from ...filing.producer_snapshot import (
+    FilingElectionFacts,
+    GeneralFilingProfileFacts,
+    PresenterIdentity,
+    TaxpayerIdentityFacts,
+    build_filing_producer_snapshot,
+)
+from ...filing.runtime import ModeloOperatorProfile, build_runtime_schema_provider
 from ..revision_replay_inputs import revision_filing_replay_inputs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -344,6 +363,216 @@ def test_revision_replay_inputs_project_m720_row_binding_values_into_draft_rows(
     assert draft_rows[("modelo-720-asset-row-identifier", 1)] == "AD-ACCOUNT-001"
     assert draft_rows[("modelo-720-asset-row-acquisition-date", 1)] == "2020-01-15"
     assert draft_rows[("modelo-720-asset-row-valuation", 1)] == Decimal("40000")
+
+
+def _annual_export_snapshot(modelo: str):
+    """Build the typed producer facts shared by the annual export proofs."""
+    return build_filing_producer_snapshot(
+        modelo=Modelo(modelo),
+        taxpayer_tax_id="12345678Z",
+        taxpayer_identity=TaxpayerIdentityFacts(
+            legal_name=None,
+            given_name="Ana",
+            surnames="Prueba",
+            full_name="Ana Prueba",
+        ),
+        presenter=PresenterIdentity(tax_id="00000000T", full_name="Gestoría Prueba"),
+        model_profile=GeneralFilingProfileFacts(),
+        elections=FilingElectionFacts(
+            result_disposition=ResultDisposition.NEGATIVA,
+            payment=PaymentElection.INGRESO,
+            refund=RefundElection.COMPENSAR,
+            prior_domiciliation=PriorDomiciliationElection.KEEP,
+        ),
+        amendment_evidence=None,
+        m303_filing_facts=None,
+        refund_account=None,
+        charge_account=None,
+    )
+
+
+def _replayed_annual_draft(
+    *,
+    modelo: str,
+    scalar_bindings: dict[str, Decimal],
+    row_binding_values: dict[str, dict[str, str]],
+    expected_values: dict[CasillaId, Decimal],
+):
+    """Rehydrate one calculated annual revision through the public draft path."""
+    work_unit = _work_unit(modelo=modelo, filing_year=2025, period_code="0A")
+    provider = build_runtime_schema_provider(
+        modelos=(modelo,),
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+    )
+    resolved_bound_inputs = resolve_available_bound_inputs_by_casilla_id(
+        provider.get_snapshot(modelo).revision,
+        scalar_bindings,
+    )
+    revision = _revision(
+        work_unit,
+        state=CalculationRevisionState.VERIFICADO_COMPLETO,
+        input_values_by_casilla_id={
+            casilla_id: canonical_decimal_string(value) for casilla_id, value in resolved_bound_inputs.items()
+        },
+        binding_overrides={
+            binding_id: canonical_decimal_string(value) for binding_id, value in scalar_bindings.items()
+        },
+        row_binding_values=row_binding_values,
+        casilla_values=expected_values,
+    )
+    replay_inputs = revision_filing_replay_inputs(revision=revision, work_unit=work_unit)
+    draft = build_draft(
+        modelo=modelo,
+        period=work_unit.period,
+        profile=ModeloOperatorProfile(tax_id="12345678Z", display_name="TEST DECLARANTE"),
+        inputs=replay_inputs,
+        schema_provider=provider,
+    )
+    return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO}), provider
+
+
+def _parsed_field_values(parsed, field_id: str) -> tuple[object, ...]:
+    return tuple(field.value for field in parsed.fields if field.field_id == field_id)
+
+
+def test_persisted_m180_row_bindings_export_two_records_with_control_totals(tmp_path: Path) -> None:
+    """The canonical exporter carries two persisted property rows to disk."""
+    rows = {
+        "modelo-180-perceptor-row-nif": {"1": "B12345674", "2": "B12345674"},
+        "modelo-180-perceptor-row-name": {"1": "ARRENDADOR UNO SL", "2": "ARRENDADOR DOS SL"},
+        "modelo-180-perceptor-row-recipient-province": {"1": "28", "2": "28"},
+        "modelo-180-perceptor-row-modality": {"1": "1", "2": "1"},
+        "modelo-180-perceptor-row-base": {"1": "3000", "2": "2000"},
+        "modelo-180-perceptor-row-withholding-percentage": {"1": "19", "2": "19"},
+        "modelo-180-perceptor-row-retenciones": {"1": "570", "2": "380"},
+        "modelo-180-perceptor-row-accrual-year": {"1": "2025", "2": "2025"},
+        "modelo-180-perceptor-row-property-situation": {"1": "1", "2": "1"},
+        "modelo-180-perceptor-row-cadastral-reference": {
+            "1": "1234567VK4713C0001XY",
+            "2": "9872023VH5797S0001WX",
+        },
+        "modelo-180-perceptor-row-property-province": {"1": "28", "2": "28"},
+        "modelo-180-perceptor-row-postal-code": {"1": "28001", "2": "28002"},
+    }
+    draft, provider = _replayed_annual_draft(
+        modelo="180",
+        scalar_bindings={
+            "modelo-180-115-perceptores-anual": Decimal("2"),
+            "modelo-180-115-base-anual": Decimal("5000"),
+            "modelo-180-115-retenciones-anual": Decimal("950"),
+        },
+        row_binding_values=rows,
+        expected_values={
+            validated_casilla_id("decl.total-perceptores"): Decimal("2"),
+            validated_casilla_id("decl.base-total"): Decimal("5000"),
+            validated_casilla_id("decl.retenciones-total"): Decimal("950"),
+        },
+    )
+    output_path = tmp_path / "modelo-180.txt"
+
+    receipt = export_draft(
+        draft,
+        output_path=output_path,
+        producer_snapshot=_annual_export_snapshot("180"),
+        schema_provider=provider,
+    )
+    layout = provider.get_subview("180").export_layouts[0]
+    parsed = parse_export_payload(layout, output_path.read_bytes(), sources=provider.sources)
+
+    assert receipt.byte_size == output_path.stat().st_size == 1500
+    assert _parsed_field_values(parsed, "modelo-180-perc-nif") == ("B12345674", "B12345674")
+    assert _parsed_field_values(parsed, "modelo-180-decl-total-perceptores") == (Decimal("2"),)
+    assert _parsed_field_values(parsed, "modelo-180-decl-base-total") == (Decimal("5000.00"),)
+    assert _parsed_field_values(parsed, "modelo-180-decl-retenciones-total") == (Decimal("950.00"),)
+
+
+def test_persisted_m190_row_bindings_export_optional_blank_rows_with_control_totals(tmp_path: Path) -> None:
+    """Optional annual-detail slots remain absent without breaking read-back."""
+    rows = {
+        "modelo-190-perceptor-row-nif": {"1": "B12345674", "2": "B12345674"},
+        "modelo-190-perceptor-row-name": {"1": "PERCEPTOR UNO SL", "2": "PERCEPTOR DOS SL"},
+        "modelo-190-perceptor-row-provincia": {"1": "28", "2": "28"},
+        "modelo-190-perceptor-row-clave": {"1": "G", "2": "G"},
+        "modelo-190-perceptor-row-subclave": {"1": "01", "2": "01"},
+        "modelo-190-perceptor-row-percibido-dinerario": {"1": "500", "2": "100"},
+        "modelo-190-perceptor-row-percibido-especie": {"1": "0", "2": "0"},
+        "modelo-190-perceptor-row-retencion-practicada": {"1": "95", "2": "15"},
+        "modelo-190-perceptor-row-ingreso-a-cuenta": {"1": "0", "2": "0"},
+        "modelo-190-perceptor-row-territorial-deduccion": {"1": "0", "2": "0"},
+    }
+    draft, provider = _replayed_annual_draft(
+        modelo="190",
+        scalar_bindings={
+            "modelo-190-percepciones-anual": Decimal("2"),
+            "modelo-190-111-trabajo-dinerario-importe-anual": Decimal("600"),
+            "modelo-190-111-retenciones-anual": Decimal("110"),
+        },
+        row_binding_values=rows,
+        expected_values={
+            validated_casilla_id("decl.total-percepciones"): Decimal("2"),
+            validated_casilla_id("decl.percepciones-total"): Decimal("600"),
+            validated_casilla_id("decl.retenciones-total"): Decimal("110"),
+        },
+    )
+    output_path = tmp_path / "modelo-190.txt"
+
+    receipt = export_draft(
+        draft,
+        output_path=output_path,
+        producer_snapshot=_annual_export_snapshot("190"),
+        schema_provider=provider,
+    )
+    layout = provider.get_subview("190").export_layouts[0]
+    parsed = parse_export_payload(layout, output_path.read_bytes(), sources=provider.sources)
+
+    assert receipt.byte_size == output_path.stat().st_size == 1500
+    assert _parsed_field_values(parsed, "modelo-190-perc-nif") == ("B12345674", "B12345674")
+    assert _parsed_field_values(parsed, "modelo-190-perc-descendientes-menores-3-total") == (None, None)
+    assert _parsed_field_values(parsed, "modelo-190-decl-total-percepciones") == (Decimal("2"),)
+    assert _parsed_field_values(parsed, "modelo-190-decl-percepciones-total") == (Decimal("600.00"),)
+    assert _parsed_field_values(parsed, "modelo-190-decl-retenciones-total") == (Decimal("110.00"),)
+
+
+def test_m180_required_row_binding_refuses_before_any_export_bytes_are_written(tmp_path: Path) -> None:
+    """A required property field cannot become an accepted blank wire slot."""
+    rows = {
+        "modelo-180-perceptor-row-nif": {"1": "B12345674"},
+        "modelo-180-perceptor-row-name": {"1": "ARRENDADOR UNO SL"},
+        "modelo-180-perceptor-row-recipient-province": {"1": "28"},
+        "modelo-180-perceptor-row-modality": {"1": "1"},
+        "modelo-180-perceptor-row-base": {"1": "3000"},
+        "modelo-180-perceptor-row-withholding-percentage": {"1": "19"},
+        "modelo-180-perceptor-row-retenciones": {"1": "570"},
+        "modelo-180-perceptor-row-property-situation": {"1": "1"},
+        "modelo-180-perceptor-row-cadastral-reference": {"1": "1234567VK4713C0001XY"},
+        "modelo-180-perceptor-row-postal-code": {"1": "28001"},
+    }
+    draft, provider = _replayed_annual_draft(
+        modelo="180",
+        scalar_bindings={
+            "modelo-180-115-perceptores-anual": Decimal("1"),
+            "modelo-180-115-base-anual": Decimal("3000"),
+            "modelo-180-115-retenciones-anual": Decimal("570"),
+        },
+        row_binding_values=rows,
+        expected_values={
+            validated_casilla_id("decl.total-perceptores"): Decimal("1"),
+            validated_casilla_id("decl.base-total"): Decimal("3000"),
+            validated_casilla_id("decl.retenciones-total"): Decimal("570"),
+        },
+    )
+    output_path = tmp_path / "modelo-180-incomplete.txt"
+
+    with pytest.raises(FilingExportValidationError, match="modelo-180-perc-inmueble-provincia"):
+        export_draft(
+            draft,
+            output_path=output_path,
+            producer_snapshot=_annual_export_snapshot("180"),
+            schema_provider=provider,
+        )
+
+    assert not output_path.exists()
 
 
 def _m232_row(index: int) -> Modelo232VinculadaRow:

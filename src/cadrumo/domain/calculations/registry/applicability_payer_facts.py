@@ -6,8 +6,8 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import date
 from enum import StrEnum
-from types import MappingProxyType
-from typing import TYPE_CHECKING, Final
+from types import MappingProxyType, NoneType
+from typing import TYPE_CHECKING, Final, get_args
 
 from ....core.time.clock import today_madrid
 from ...deadlines.models import TaxpayerProfile
@@ -23,9 +23,11 @@ if TYPE_CHECKING:
 
 __all__ = [
     "PayerFact",
+    "PayerFactDeclaration",
+    "PayerFactPeriodCompanion",
     "PayerFactProjection",
     "PayerFactValue",
-    "payer_fact_holds",
+    "payer_fact_declaration",
     "payer_fact_profile_keys",
     "resolve_payer_fact",
     "resolve_payer_fact_catalogue",
@@ -43,14 +45,44 @@ class PayerFact(StrEnum):
     OSS_ENROLLED = "oss_enrolled"
 
 
+class PayerFactDeclaration(StrEnum):
+    """What a profile says about one payer fact.
+
+    ``UNDECLARED`` and ``PERIODS_UNDECLARED`` are both undeclared states: the
+    second is a declared yes whose required period companion is absent or
+    empty, kept distinct only so the rationale can name what is missing.
+    """
+
+    DECLARED_YES = "declared_yes"
+    DECLARED_NO = "declared_no"
+    UNDECLARED = "undeclared"
+    PERIODS_UNDECLARED = "periods_undeclared"
+
+
+@dataclass(frozen=True, slots=True)
+class PayerFactPeriodCompanion:
+    """The profile period set that must accompany a declared yes."""
+
+    profile_key: str
+    label: str
+
+
 @dataclass(frozen=True, slots=True)
 class PayerFactProjection:
-    """One dated, registry-owned payer-applicability declaration."""
+    """One dated, registry-owned payer-applicability declaration.
+
+    ``three_state`` is true when the profile field can hold an undeclared
+    answer, so a stored ``False`` is a declared no. A plain boolean field keeps
+    the two-state reading: ``False`` cannot be told apart from an unanswered
+    question and stays undeclared.
+    """
 
     token: str
     profile_key: str
     label: str
     legal_refs: tuple[str, ...]
+    three_state: bool = False
+    period_companion: PayerFactPeriodCompanion | None = None
 
 
 type PayerFactValue = PayerFact | PayerFactProjection
@@ -142,6 +174,51 @@ def _pipe(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
     return values
 
 
+def _profile_field_args(profile_key: str, *, token: str) -> frozenset[object]:
+    field = TaxpayerProfile.model_fields.get(profile_key)
+    if field is None:
+        raise RegistryValidationError(
+            f"payer applicability fact {token!r} names profile key {profile_key!r}, which the taxpayer profile "
+            "does not declare",
+        )
+    annotation: object = field.annotation
+    return frozenset(get_args(annotation) or (annotation,))
+
+
+def _declaration_profile_key(profile_key: str, *, token: str) -> bool:
+    """Validate a yes/no profile key and return whether it is three-state."""
+    args = _profile_field_args(profile_key, token=token)
+    if args == frozenset({bool}):
+        return False
+    if args == frozenset({bool, NoneType}):
+        return True
+    raise RegistryValidationError(
+        f"payer applicability fact {token!r} profile key {profile_key!r} must be a boolean profile field",
+    )
+
+
+def _period_companion(
+    entries: Mapping[str, str],
+    prefix: str,
+    *,
+    token: str,
+) -> PayerFactPeriodCompanion | None:
+    if f"{prefix}period_set_key" not in entries:
+        if f"{prefix}period_set_label" in entries:
+            raise RegistryValidationError(f"payer applicability fact {token!r} labels an undeclared period set")
+        return None
+    profile_key = required_mapping_entry(entries, f"{prefix}period_set_key", subject=_ENTRY_SUBJECT)
+    if _profile_field_args(profile_key, token=token) != frozenset({frozenset[str], NoneType}):
+        raise RegistryValidationError(
+            f"payer applicability fact {token!r} period set {profile_key!r} must be an optional token-set "
+            "profile field",
+        )
+    return PayerFactPeriodCompanion(
+        profile_key=profile_key,
+        label=required_mapping_entry(entries, f"{prefix}period_set_label", subject=_ENTRY_SUBJECT),
+    )
+
+
 def _catalogue(entries: Mapping[str, str]) -> tuple[PayerFactProjection, ...]:
     definitions: list[PayerFactProjection] = []
     for raw_token in unique_mapping_tokens(entries, _ORDER_KEY, subject=_ENTRY_SUBJECT):
@@ -149,12 +226,15 @@ def _catalogue(entries: Mapping[str, str]) -> tuple[PayerFactProjection, ...]:
         if required_mapping_entry(entries, f"{prefix}value", subject=_ENTRY_SUBJECT) != raw_token:
             raise RegistryValidationError(f"payer applicability fact {raw_token!r} declares a mismatched value")
         legal_refs = _pipe(entries, f"{prefix}legal_refs")
+        profile_key = required_mapping_entry(entries, f"{prefix}profile_key", subject=_ENTRY_SUBJECT)
         definitions.append(
             PayerFactProjection(
                 token=raw_token,
-                profile_key=required_mapping_entry(entries, f"{prefix}profile_key", subject=_ENTRY_SUBJECT),
+                profile_key=profile_key,
                 label=required_mapping_entry(entries, f"{prefix}label", subject=_ENTRY_SUBJECT),
                 legal_refs=legal_refs,
+                three_state=_declaration_profile_key(profile_key, token=raw_token),
+                period_companion=_period_companion(entries, prefix, token=raw_token),
             ),
         )
     if len({item.token for item in definitions}) != len(definitions):
@@ -210,27 +290,48 @@ def resolve_payer_fact(
     raise RegistryValidationError(f"payer applicability fact {raw!r} is not declared by the selected registry")
 
 
-def payer_fact_holds(profile: TaxpayerProfile, fact: PayerFactValue) -> bool:
-    """Return whether ``profile`` positively declares the supplied payer fact.
+def _projection_declaration(profile: TaxpayerProfile, fact: PayerFactProjection) -> PayerFactDeclaration:
+    value = getattr(profile, fact.profile_key, None)
+    if value is None and fact.three_state:
+        return PayerFactDeclaration.UNDECLARED
+    if not isinstance(value, bool):
+        raise RegistryValidationError(
+            f"payer applicability profile key {fact.profile_key!r} must resolve to a boolean",
+        )
+    if not value:
+        return PayerFactDeclaration.DECLARED_NO if fact.three_state else PayerFactDeclaration.UNDECLARED
+    if fact.period_companion is None:
+        return PayerFactDeclaration.DECLARED_YES
+    periods = getattr(profile, fact.period_companion.profile_key, None)
+    if periods is not None and not isinstance(periods, frozenset):
+        raise RegistryValidationError(
+            f"payer applicability period set {fact.period_companion.profile_key!r} must resolve to a token set",
+        )
+    return PayerFactDeclaration.DECLARED_YES if periods else PayerFactDeclaration.PERIODS_UNDECLARED
+
+
+def payer_fact_declaration(profile: TaxpayerProfile, fact: PayerFactValue) -> PayerFactDeclaration:
+    """Return what ``profile`` declares about the supplied payer fact.
+
+    A coded mechanics fact is two-state: its evaluator can prove a yes, and
+    anything else stays undeclared.
 
     Core types:
     :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
     """
     if isinstance(fact, PayerFactProjection):
-        value = getattr(profile, fact.profile_key, None)
-        if not isinstance(value, bool):
-            raise RegistryValidationError(
-                f"payer applicability profile key {fact.profile_key!r} must resolve to a boolean",
-            )
-        return value
+        return _projection_declaration(profile, fact)
     try:
-        return _PAYER_FACT_EVALUATORS[fact](profile)
+        holds = _PAYER_FACT_EVALUATORS[fact](profile)
     except KeyError as exc:
         raise RegistryValidationError(f"payer applicability fact {fact!r} has no evaluator") from exc
+    return PayerFactDeclaration.DECLARED_YES if holds else PayerFactDeclaration.UNDECLARED
 
 
 def payer_fact_profile_keys(fact: PayerFactValue) -> tuple[str, ...]:
     """Return profile fields needed to answer an applicability fact."""
     if isinstance(fact, PayerFactProjection):
+        if fact.period_companion is not None:
+            return (fact.profile_key, fact.period_companion.profile_key)
         return (fact.profile_key,)
     return _PAYER_FACT_PROFILE_KEYS.get(fact, ())

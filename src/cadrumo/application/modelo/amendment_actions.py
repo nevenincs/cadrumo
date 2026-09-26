@@ -115,10 +115,16 @@ from .action_errors import (
 from .amendment_action_ports import AmendmentActionPorts
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
 from .filed_revision_observation import filed_revision_observation_writes, prepare_filed_revision_observation
+from .lifecycle_clock_gate import (
+    ModeloLifecycleClockOperation,
+    amendment_ordering_instants,
+    require_lifecycle_clock_not_before,
+)
 from .m303_filing_evidence import validate_m303_filing_instance_evidence_for_revision
 from .profile_export_binding import resolve_export_identity
 from .result_disposition_resolution import base_modelo_result_disposition
 from .revision_persistence import build_modelo_bucket_event as _build_bucket_event
+from .stored_row_field_input_gate import refuse_stored_row_field_scalar_inputs as _refuse_stored_row_field_scalar_inputs
 
 
 def _load_amendment_baseline[CasillaKey](
@@ -186,6 +192,10 @@ def _load_amendment_baseline[CasillaKey](
     revisions = ports.calculation_repository.load()
     baseline_revision = _require_revision(revisions, baseline.calculation_revision_id, operation=operation)
     source_revision = _require_revision(revisions, in_force.calculation_revision_id, operation=operation)
+    # Both revisions contribute stored inputs to the correction, so neither may
+    # carry a scalar a detail-row casilla cannot hold.
+    for stored_revision in (source_revision, baseline_revision):
+        _refuse_stored_row_field_scalar_inputs(stored_revision, work_unit=work_unit, operation=operation)
     if work_unit.modelo == Modelo("303").value and source_revision.filing_instance_evidence is None:
         raise AmendmentEvidenceMissingError(
             translated_message="errors.error.error_modelo_amendment_evidence_missing",
@@ -405,6 +415,11 @@ def amend_modelo_revision[CasillaKey](
     )
 
     now = clock or _utc_now()
+    require_lifecycle_clock_not_before(
+        now,
+        operation=ModeloLifecycleClockOperation.AMEND,
+        instants=amendment_ordering_instants(work_unit=work_unit, baseline=baseline, in_force=in_force),
+    )
     corrected_values: dict[CasillaId, Decimal] = dict(source_revision.casilla_values)
     corrected_values.update(canonical_overrides)
 

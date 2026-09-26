@@ -11,6 +11,7 @@ from pydantic import ValidationError
 from ....core.hashing import sha256_hex
 from ....core.period import Period
 from ....domain.calculations.registry.applicability import ApplicabilityVerdict
+from ....domain.deadlines.festivos import DeadlineHolidayCoverage
 from ....domain.deadlines.models import ObligationStatus
 from ....domain.modelos.filing_record import ExternalEvidenceKind
 from ...live.expedientes import PersistedExpedientesSnapshot
@@ -294,6 +295,8 @@ def test_period_bearing_calendar_models_roundtrip_through_json() -> None:
         closes_on=date(2025, 4, 20),
         adjusted_closes_on=date(2025, 4, 21),
         shift_reason="weekend",
+        holiday_coverage=DeadlineHolidayCoverage.NATIONAL_ONLY,
+        evaluated_on=date(2025, 4, 1),
         status=ObligationStatus.UPCOMING,
         user_state=OverviewPeriodState.DUE,
         filing_year=2025,

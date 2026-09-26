@@ -139,6 +139,9 @@ errors:
       de declaración no nulo.
     parameter_unknown: El parámetro {parameter_id} no está registrado.
     relation_value_missing: La relación {relation_id} no tiene valor asignado.
+    row_field_template_supplied_as_input: Las casillas {casilla_ids} toman un valor
+      por cada fila de detalle de {record_ids}, por lo que no pueden suministrarse
+      como un único valor de entrada. Indíquelas como filas de detalle.
     text_input_non_text_casillas: 'Entrada de texto suministrada para casillas no
       textuales: %{casilla_ids}.'
     unknown_input_casillas: 'Identificadores de casilla de entrada desconocidos: {casilla_ids}.'
@@ -159,6 +162,8 @@ errors:
       de envío.
     error_access_gate_submission_preflight: La comprobación previa del control de
       acceso rechazó una operación de escritura.
+    error_actividad_asset: Ha fallado una operación sobre un activo de actividad económica
+      del IRPF.
     error_aggregation_config: Se ha violado un invariante de composición del servicio
       de agregación.
     error_application_live: La orquestación de la lectura en vivo de la AEAT falló.
@@ -572,6 +577,8 @@ errors:
     validate_expects_str: La validación de identidad espera un valor de texto; se
       obtuvo {got_type}.
   integrity:
+    canonical_actividad_asset_history_persistence: No se pudo reabrir con seguridad
+      el historial cifrado de activos.
     canonical_aeat_sync_workspace_projection: Las autoridades de la AEAT ya cargadas
       no pueden formar una instantánea segura.
     canonical_authority_component_codec: No se pudo codificar o descodificar un componente
@@ -582,6 +589,8 @@ errors:
       el conjunto declarado de sus componentes cambió inesperadamente.
     canonical_authority_store_cutover: La referencia fijada del almacén de autoridad
       apunta a otra generación del lector.
+    canonical_authority_store_format: El almacén de autoridad publicado tiene un formato
+      que esta versión no lee; vuelve a publicar la autoridad.
     canonical_declarations_calendar_projection: Las autoridades de calendario proporcionadas
       no pueden formar una vista segura y coherente.
     canonical_declarations_workspace_projection: Las autoridades proporcionadas no
@@ -594,8 +603,12 @@ errors:
       está mal formada y no se puede interpretar.
     canonical_manifest_payload_validation: La carga útil del manifiesto del corpus
       no superó la validación.
+    canonical_modelo_workspace_absent_readiness_projection: La captura de disponibilidad
+      se devolvió sin el informe prometido.
     canonical_modelo_workspace_absent_registry_projection: La captura del registro
       se devolvió sin la proyección prometida.
+    canonical_modelo_workspace_materialization_provenance_missing: Un valor de fila
+      repetida almacenado no indica su vinculación de origen.
     canonical_relation_binding_join: No se pudo leer conforme a lo declarado la correspondencia
       incluida entre relaciones y bindings.
     canonical_tampered_manifest_payload: El resumen del manifiesto del corpus no coincide
@@ -635,6 +648,8 @@ errors:
       inesperado.
     integrity_profile_bucket_mismatch: El perfil %{profile_id} no pertenece al bucket
       %{bucket_id}; un bucket de perfil contiene exactamente una identidad de perfil.
+    integrity_profile_record_schema_migration_required: El registro del perfil se
+      guardó con un esquema de perfil anterior y debe migrarse antes de poder leerse.
     integrity_profile_snapshot_hash_mismatch: El hash del snapshot del perfil no coincide
       con la proyección actual.
     integrity_profile_snapshot_not_found: No existe ningún snapshot de perfil con
@@ -721,6 +736,10 @@ errors:
     internal_operation_declaration_breach: 'Error interno: un ejecutor de operación
       reclamó una fase, un efecto, un recurso o una interacción que su definición
       no declara.'
+    internal_operation_executor_returned_no_result: 'Error interno: la operación se
+      detuvo sin resultado y sin quedar a la espera de nada, por lo que se ha cerrado
+      como fallida. No se hará nada más con ella; consulte los registros de diagnóstico
+      para conocer la causa.'
     internal_operation_unsettled: 'Error interno: la operación se detuvo antes de
       poder registrar su resultado. Queda abierta y se cerrará automáticamente cuando
       caduque su bloqueo de propietario; consulte los registros de diagnóstico para
@@ -754,6 +773,9 @@ errors:
     locked_google_keychain: El llavero del sistema operativo que guarda las credenciales
       de Google está bloqueado o no es accesible. Desbloquea el llavero y vuelve a
       intentarlo.
+    locked_journal_busy: Otro programa mantuvo en uso un archivo de registro, así
+      que no se pudo leer ni escribir. No se ha perdido nada; vuelve a intentarlo
+      en un momento.
     locked_storage_bucket_busy: El bucket de almacenamiento está en uso por otro proceso.
       Espera a que ese proceso termine y vuelve a intentarlo.
     locked_storage_bucket_session: Esta operación requiere un bucket de almacenamiento
@@ -788,10 +810,27 @@ errors:
       un archivo dentro del ámbito de acceso concedido.
     canonical_inventory_closing_authority_conflict: Ya consta otra autoridad inmutable
       de cierre del inventario.
+    canonical_invoice_withholding_evidence: La evidencia de la factura no permite
+      registrar la retención.
+    canonical_ledger_payment_withholding_evidence: El pago del libro no permite registrar
+      la retención.
     canonical_m036_declaration_ambiguous: El prefijo del identificador de la declaración
       del Modelo 036 coincide con varios registros.
     canonical_m036_declaration_not_found: Ninguna declaración del Modelo 036 coincide
       con el identificador solicitado.
+    canonical_m193_phase_materialization: La evidencia de capital activa no permite
+      derivar una fase de declaración del Modelo 193.
+    canonical_modelo_123_count_authority_unresolved: 'El modelo 123 sigue rechazado:
+      hay retenciones registradas en este periodo, pero ninguna norma oficial define
+      cómo se cuenta el «Número de rentas», por lo que no puede calcularse, verificarse
+      ni presentarse.'
+    canonical_modelo_193_settled_row_amount_authority_unresolved: 'El modelo 193 no
+      puede exportarse: contiene un registro que paga rendimientos devengados en un
+      ejercicio anterior y ninguna fuente oficial determina la base y la retención
+      que declara ese registro.'
+    canonical_modelo_lifecycle_clock_precedes: El reloj de la acción es anterior a
+      un registro que actualizaría, así que no se ha guardado nada. Vuelva a intentarlo
+      con la hora actual.
     canonical_modelo_workspace_stale_cursor: El cursor fijado ya no coincide con la
       referencia actual; reinicia la consulta.
     canonical_modelo_workspace_unresolved_work: La lectura del espacio de trabajo
@@ -800,6 +839,8 @@ errors:
       supera el ancla autorizada.
     canonical_operation_observation_unknown_operation: No existe un diario de observaciones
       para la operación solicitada.
+    canonical_operation_subject_busy: Otra operación sobre esta declaración sigue
+      en curso. Espere a que termine y vuelva a intentarlo.
     canonical_previous_filing_observation_absent: No se ha observado la presentación
       anterior requerida.
     canonical_prorrata_election: La elección de prorrata no cumple el artículo 105
@@ -825,6 +866,15 @@ errors:
       compatible.
     canonical_tui_unresolved_action_candidate: El candidato de acción del TUI no tiene
       una declaración de catálogo coincidente.
+    canonical_withholding_filing_cadence: Las retenciones no pueden asignarse a un
+      periodo trimestral que el calendario de presentación del declarante no asigna.
+      Los periodos mensuales de retenciones aún no se admiten.
+    canonical_withholding_observation_mutation: Se rechazó el cambio en la evidencia
+      de retenciones de este periodo.
+    canonical_withholding_producer: La evidencia de retenciones no corresponde a ninguna
+      vía de modelo admitida.
+    canonical_withholding_recognition: No se puede determinar la fecha de reconocimiento
+      de la retención con la evidencia aportada.
     censal_read_identity: La lectura censal no corresponde al contribuyente de este
       perfil.
     clave_credentials_incomplete: Al modo de autenticación Cl@ve seleccionado le falta
@@ -881,6 +931,15 @@ errors:
       no está en un estado utilizable para esta operación.
     modelo_compare_need_two_years: La comparación requiere dos ejercicios fiscales
       distintos.
+    modelo_edit_baseline_stale: La declaración ha cambiado desde que se abrió, por
+      lo que no se ha aplicado la edición. Vuelva a abrirla y edítela de nuevo.
+    modelo_edit_contract_incompatible: La edición se preparó en un formato que esta
+      versión no acepta, por lo que no se ha cambiado nada. Vuelva a abrir la declaración
+      y edítela de nuevo.
+    modelo_edit_intent_unsupported: Este tipo de edición todavía no está disponible,
+      por lo que no se ha cambiado nada.
+    modelo_edit_refused: Se ha rechazado la edición y no se ha cambiado nada. Revise
+      los valores y vuelva a intentarlo.
     modelo_export_cross_bucket: La revisión apuntada pertenece a un bucket distinto
       del perfil activo. La exportación solo opera dentro del bucket del perfil activo.
     modelo_export_no_active_bucket: La exportación necesita un perfil activo. Crea
@@ -905,6 +964,8 @@ errors:
       pertenece a otra revisión.
     modelo_workspace_manifest_capture_not_current: El manifiesto de campos cambió
       durante la lectura; vuelva a capturarlo.
+    producer_capture_not_current: Una proyección de productor cambió mientras se leía;
+      vuelva a capturarla.
     profile_capsule_archive: No se ha podido escribir o leer el archivo de copia del
       perfil
     profile_capsule_source: El origen indicado no es una cápsula de perfil legible
@@ -923,11 +984,22 @@ errors:
       identidad entre declaraciones. Revisa los importes antes de continuar.
     reconciliation_evidence_invalid: No se ha podido leer el PDF. Compruebe que el
       archivo es el justificante de la AEAT y no otro documento, y que no está dañado.
-      Vuelva a ejecutar `aeat app modelo reconcile file WORK_UNIT_ID --file PATH`
+      Vuelva a ejecutar `aeat app modelo reconcile import WORK_UNIT_ID --file PATH`
       con el archivo correcto.
     refused_access_gate_live_read_not_enabled: El acceso de lectura en vivo a la AEAT
       está desactivado. Esta operación no puede contactar con la AEAT en la configuración
       actual.
+    refused_active_profile_pointer_manual_recovery: El puntero de perfil activo {path}
+      no se puede leer, así que no se puede borrar sin perder su revisión; requiere
+      una recuperación manual.
+    refused_actividad_asset_claim_conflict: La amortización registrada entra en conflicto
+      con las ya registradas para el activo.
+    refused_actividad_asset_incomplete: Al cuadro de amortización del activo le falta
+      un dato necesario, como su amortización acumulada inicial.
+    refused_actividad_asset_unsupported: La amortización solicitada no tiene una autoridad
+      inscrita para este caso.
+    refused_actividad_asset_validation: Un dato del activo o una solicitud de amortización
+      no superó la validación.
     refused_apoderado_invalid_represented_nif: El identificador fiscal del representado
       no es un NIF, NIE o CIF válido.
     refused_apoderado_live_check_unavailable: La comprobación en vivo de apoderamientos
@@ -1098,10 +1170,27 @@ errors:
       la tabla de despacho de filtros.
     refused_modelo_charge_account_missing: Se ha elegido una domiciliacion pero no
       hay una cuenta de cargo registrada.
+    refused_modelo_export_prior_domiciliation_election_required: La exportación del
+      modelo 303 necesita una elección sobre la domiciliación anterior (mantenerla,
+      o anularla o modificarla); no se indicó ninguna, así que no se ha escrito nada.
+      Elija una y vuelva a exportar.
+    refused_modelo_export_product_identity_unavailable: 'La exportación oficial no
+      está disponible: el diseño de registro reserva los campos de cabecera «Versión
+      del Programa» y «NIF del desarrollador» a la entidad desarrolladora del software,
+      y no existe una identidad de producto revisada para ellos. Cadrumo no los rellena
+      con blancos ni con valores ficticios. El cálculo y su verificación siguen siendo
+      válidos; para exportar hace falta un identificador de programa y un NIF de desarrollador
+      revisados, facilitados por el desarrollador del software.'
     refused_modelo_ledger_evidence_recapture: No se puede volver a agrupar la evidencia
       de esta declaración porque los apuntes contables que la sustentan han cambiado
       desde que se selló. Vuelve a calcular la declaración; la recaptura solo recoge
       evidencia adjuntada a apuntes sin cambios.
+    refused_modelo_m303_exonerado_390_attestation_unadmissible: 'La atestación de
+      aplicabilidad del modelo 390 no puede usarse para este modelo 303: su identificador
+      y su SHA-256 están mal formados o no coinciden, o la atestación no consta en
+      este perfil, pertenece a otro trimestre, ya no coincide con el perfil actual
+      o contradice otra atestación del trimestre. No se ha calculado nada; registre
+      una atestación nueva para este trimestre y vuelva a intentarlo.'
     refused_modelo_m303_rectificativa_motive: Las rectificativas del modelo 303 requieren
       exactamente un motivo canónico en un diseño de registro aplicable y revisado;
       el motivo está prohibido en los demás casos.
@@ -1115,6 +1204,10 @@ errors:
     refused_modelo_refund_election_not_eligible: Se solicitó una devolución en un
       periodo donde no está disponible; solo el último periodo de declaración del
       año permite la devolución a un no inscrito en REDEME.
+    refused_modelo_stored_row_field_input: La revisión de cálculo {calculation_revision_id}
+      guarda un único valor de entrada para las casillas {casilla_ids}, que toman
+      un valor por cada fila de detalle. Vuelva a calcular la unidad de trabajo {work_unit_id}
+      para sustituirla.
     refused_modeloprior_domiciliation_election: Se ha rechazado la baja o modificación
       de la domiciliacion previa porque falta o no es valida la rectificativa del
       modelo 303 o la prueba oficial de la presentación base U.
@@ -1232,6 +1325,8 @@ errors:
       y aprueba el borrador de nuevo.
     submission_preflight_error_findings: El borrador tiene {finding_count} incidencia(s)
       de severidad ERROR; resuélvelas antes de presentar.
+    tui_modelo_lifecycle_action_unavailable: La acción seleccionada del ciclo de vida
+      del modelo no está disponible.
     unsupported_currency: El código de moneda indicado no es compatible.
   snapshot:
     ambiguous_revision_selection: 'Más de una revisión del registro coincide con el

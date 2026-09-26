@@ -155,8 +155,10 @@ def generate_manifest(
         # stable address on the index ahead of an upload, and addressing a
         # release asset instead would point this manifest at a surface no
         # workflow populates. The constraints file still pins the whole
-        # transitive closure to the tested lock.
-        f"& uv pip install --python {python_path} --no-cache "
+        # transitive closure to the tested lock. Unlike pip, uv writes no
+        # bytecode unless asked, which would leave the first launch compiling
+        # the whole import closure.
+        f"& uv pip install --python {python_path} --no-cache --compile-bytecode "
         "--constraint (Join-Path $dir 'constraints.txt') "
         f"'cadrumo=={version}'; "
         "if ($LASTEXITCODE -ne 0) { throw 'uv pip install failed' }",

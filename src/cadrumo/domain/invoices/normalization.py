@@ -9,7 +9,7 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable, Sequence
 from datetime import date, datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING, Final, cast
+from typing import TYPE_CHECKING, Final
 
 from ...core.decimal.coercion import coerce_decimal
 from ...core.decimal.constants import ZERO
@@ -223,6 +223,13 @@ def raise_first_invoice_violation(violations: Iterable[tuple[bool, str]]) -> Non
             raise InvoiceValidationError(message)
 
 
+def require_invoice_text(value: object, message: str) -> str:
+    """Return ``value`` as text, or refuse with ``message``."""
+    if not isinstance(value, str):
+        raise InvoiceValidationError(message)
+    return value
+
+
 def require_optional_non_negative(value: Decimal | None, message: str) -> None:
     """Raise ``message`` when ``value`` is present and negative."""
     if value is not None and value < ZERO:
@@ -284,32 +291,28 @@ _INVOICE_ID_REQUIRED_FIELDS = frozenset(
 )
 
 
-_INVOICE_IDENTITY_TYPE_RULES: Final[tuple[tuple[str, type[object], str], ...]] = (
-    ("kind", InvoiceKind, "kind must be an InvoiceKind"),
-    ("invoice_number", str, "invoice_number must be a string"),
-    ("issued_at", date, "issued_at must be a date"),
-    ("currency", str, "currency must be a string"),
-    ("grand_total", Decimal, "grand_total must be a Decimal"),
-)
-
-
 def _validated_invoice_identity_values(
     payload: dict[str, object],
 ) -> tuple[InvoiceKind, str, date, str | None, str, Decimal]:
-    for field, expected, message in _INVOICE_IDENTITY_TYPE_RULES:
-        if not isinstance(payload[field], expected):
-            raise InvoiceValidationError(message)
+    kind = payload["kind"]
+    if not isinstance(kind, InvoiceKind):
+        raise InvoiceValidationError("kind must be an InvoiceKind")
+    invoice_number = payload["invoice_number"]
+    if not isinstance(invoice_number, str):
+        raise InvoiceValidationError("invoice_number must be a string")
+    issued_at = payload["issued_at"]
+    if not isinstance(issued_at, date):
+        raise InvoiceValidationError("issued_at must be a date")
+    currency = payload["currency"]
+    if not isinstance(currency, str):
+        raise InvoiceValidationError("currency must be a string")
+    grand_total = payload["grand_total"]
+    if not isinstance(grand_total, Decimal):
+        raise InvoiceValidationError("grand_total must be a Decimal")
     counterparty_tax_id = payload["counterparty_tax_id"]
     if counterparty_tax_id is not None and not isinstance(counterparty_tax_id, str):
         raise InvoiceValidationError("counterparty_tax_id must be a string or None")
-    return (
-        cast(InvoiceKind, payload["kind"]),
-        cast(str, payload["invoice_number"]),
-        cast(date, payload["issued_at"]),
-        counterparty_tax_id,
-        cast(str, payload["currency"]),
-        cast(Decimal, payload["grand_total"]),
-    )
+    return (kind, invoice_number, issued_at, counterparty_tax_id, currency, grand_total)
 
 
 def derive_invoice_id_when_complete(

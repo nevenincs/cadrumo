@@ -32,6 +32,8 @@ from .command_surface import command_surface
 from .dispatch import tool_name_for_command
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
+# The ``$defs`` name under which the envelope's notice body is declared once.
+_NOTICE_DEFINITION = Notice.__name__
 
 
 class McpToolDescriptor(BaseModel):
@@ -188,11 +190,15 @@ def _output_schema_for(command_key: str) -> dict[str, Any]:
     error_definitions = _schema_definitions(error_schema.pop("$defs", {}))
     notice_schema = Notice.model_json_schema()
     notice_definitions = _schema_definitions(notice_schema.pop("$defs", {}))
-    notices_schema = {"type": "array", "items": notice_schema}
+    # Both envelope branches carry the same notices array. Declaring the notice
+    # body once and referencing it keeps tools/list from paying for it twice
+    # per verb.
+    notices_schema = {"type": "array", "items": {"$ref": f"#/$defs/{_NOTICE_DEFINITION}"}}
     combined_definitions = _merge_schema_definitions(
         definitions,
         error_definitions,
         notice_definitions,
+        {_NOTICE_DEFINITION: notice_schema},
     )
     return _without_generated_titles(
         {

@@ -56,6 +56,7 @@ class _PercepcionObservationEnvelopePayload(BaseModel):
     captured_at: UtcInstant
     source_kind: AggregationCaptureKind
     source_metadata: Mapping[str, str] = Field(default_factory=dict)
+    projection_identity: str | None = Field(default=None, min_length=64, max_length=64)
 
 
 class PercepcionObservationRepositoryAdapter(
@@ -90,6 +91,7 @@ class PercepcionObservationRepositoryAdapter(
             observation.perceptor_tax_id,
             observation.clave,
             observation.subclave,
+            payload.projection_identity,
         )
 
     def build_observation_payload(
@@ -102,6 +104,7 @@ class PercepcionObservationRepositoryAdapter(
         source_kind: AggregationCaptureKind,
         captured_at: datetime | None = None,
         source_metadata: Mapping[str, str] | None = None,
+        projection_identity: str | None = None,
     ) -> _PercepcionObservationEnvelopePayload:
         """Build one validated envelope payload before committing it."""
         return _PercepcionObservationEnvelopePayload(
@@ -112,6 +115,7 @@ class PercepcionObservationRepositoryAdapter(
             captured_at=captured_at if captured_at is not None else now(),
             source_kind=source_kind,
             source_metadata=dict(source_metadata or {}),
+            projection_identity=projection_identity,
         )
 
     def save_observation(
@@ -185,6 +189,22 @@ class PercepcionObservationRepositoryAdapter(
             if payload.modelo == modelo
             and payload.filing_year == period.filing_year
             and payload.period.registry_token == period.registry_token
+        )
+
+    @override
+    def load_annual_source_observations(
+        self,
+        source_modelo: str,
+        filing_year: int,
+    ) -> tuple[WithholdingObservation, ...]:
+        """Read each active quarterly row for an annual withholding return."""
+        return _translate_storage_failure(
+            "percepcion_load_annual_source_observations",
+            lambda: tuple(
+                payload.observation
+                for payload in self.iter_modelo(source_modelo)
+                if payload.filing_year == filing_year and payload.period.registry_token.endswith("T")
+            ),
         )
 
     def iter_modelo(self, modelo: str) -> Iterator[_PercepcionObservationEnvelopePayload]:

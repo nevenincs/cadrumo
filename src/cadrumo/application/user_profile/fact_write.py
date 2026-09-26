@@ -57,6 +57,8 @@ class ProfileFactWriteDoor(StrEnum):
     MANAGER_ROW = "manager.row"
     CLI_CAPACIDAD = "cli.capacidad"
     CLI_DESCENDIENTE = "cli.descendiente"
+    CLI_PLANTILLA_MEDIA = "cli.plantilla_media"
+    MANAGER_PLANTILLA_MEDIA = "manager.plantilla_media"
 
 
 def _effective(record: UserProfileRecord) -> dict[str, object]:
@@ -171,6 +173,8 @@ def apply_manager_profile_field_mutation(
     profile_id: str,
     path: str,
     value: str,
+    expected_revision: int | None = None,
+    expected_content_digest: str | None = None,
     profile_decode_context: ProfileDecodeContext,
 ) -> UserProfileRecord:
     """Apply the manager's one-field trim-or-clear policy through the sole write door."""
@@ -180,6 +184,14 @@ def apply_manager_profile_field_mutation(
         profile_id,
         profile_decode_context=profile_decode_context,
     ).load(profile_id)
+    if (
+        expected_revision is not None
+        and expected_content_digest is not None
+        and (current.record_revision != expected_revision or current.content_digest != expected_content_digest)
+    ):
+        from .capsule_record import ProfileRecordConflictError
+
+        raise ProfileRecordConflictError("profile manager edit baseline is stale")
     return apply_profile_fact_changes(
         profile_id=profile_id,
         changes=(UserProfileFact(path=path, value=value.strip() or None),),

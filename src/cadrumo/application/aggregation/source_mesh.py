@@ -96,6 +96,8 @@ CalculationSourceDiagnosticReason = Literal[
     "duplicate_bound_casilla_owner",
     "duplicate_relation_owner",
     "source_issue",
+    "iva_selected_scope_evidence_failure",
+    "iva_compensation_annual_source_evidence_failure",
     "unresolved_binding",
     "storage_degraded",
     "source_domain_not_ready",
@@ -233,6 +235,10 @@ CalculationSourceDiagnosticReason = Literal[
     # The recorded recargo departs from the rate art. 161 publishes for that
     # slot. A cross-check beside the declared figure, never a replacement of it.
     "invoice_recargo_departs_from_published_rate",
+    # One recorded recargo over lines at several IVA rates. The M303 recargo
+    # casillas are per rate and the invoice does not divide it, so the screen
+    # leaves it out of the ledger comparison and says so rather than passing it.
+    "invoice_recargo_not_attributable_to_a_tier",
     "official_box_unpopulated",
     "prior_payment_not_deducted",
     "prior_payment_minoracion_not_captured",
@@ -267,6 +273,13 @@ CalculationSourceDiagnosticReason = Literal[
     # every unrouted reason: nothing here is missing from the return, one of two
     # available figures was chosen over the other.
     "operator_override_diverges_from_computed",
+    # A Modelo 193 payment-year record for income accrued in an earlier year,
+    # whose base and withholding amounts no official source settles: the
+    # withholding was declared in the accrual year's Modelo 123, and the record
+    # design is silent on what the later record repeats. The amounts are kept,
+    # so nothing is missing from the return; what is missing is the authority
+    # for them, which must not read as settled.
+    "m193_settled_row_amounts_unresolved_authority",
 ]
 
 

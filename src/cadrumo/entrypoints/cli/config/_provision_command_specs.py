@@ -16,7 +16,7 @@ from ..command_spec import (
     TranslationKey,
     ValueContract,
 )
-from ._spec_policies import LOCAL_READ, NETWORK_DESTRUCTIVE, NETWORK_WRITE, STATE_FREE
+from ._spec_policies import NETWORK_DESTRUCTIVE, NETWORK_READ, NETWORK_REMOTE_EFFECT, NETWORK_WRITE, STATE_FREE
 
 _MODEL = OptionSpec(
     name="model",
@@ -85,7 +85,7 @@ CONFIG_PROVISION_COMMAND_SPECS = (
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
         parameters=(),
-        policy=LOCAL_READ,
+        policy=NETWORK_READ,
         handler=_handler("provision_report"),
         result_schema=_schema("ProvisionReportResult", "config.provision.report"),
     ),
@@ -132,18 +132,23 @@ CONFIG_PROVISION_COMMAND_SPECS = (
         help_key=TranslationKey("cli.config.provision.status.help"),
         short_help_key=None,
         invocation=InvocationSpec(context_parameter="ctx"),
-        parameters=(
-            OptionSpec(
-                name="probe",
-                declarations=("--probe",),
-                value=ValueContract(DeferredTarget("builtins", "bool")),
-                default=ParameterDefault.value(False),
-                help_key=TranslationKey("cli.config.provision.status.probe_help"),
-            ),
-        ),
-        policy=LOCAL_READ,
+        parameters=(),
+        policy=NETWORK_READ,
         handler=_handler("provision_status"),
         result_schema=_schema("ProvisionStatusResult", "config.provision.status"),
+    ),
+    CommandSpec(
+        "config_provision_probe",
+        "config_provision",
+        "probe",
+        kind=CommandNodeKind.LEAF,
+        help_key=TranslationKey("cli.config.provision.probe.help"),
+        short_help_key=None,
+        invocation=InvocationSpec(context_parameter="ctx"),
+        parameters=(),
+        policy=NETWORK_REMOTE_EFFECT,
+        handler=_handler("provision_probe"),
+        result_schema=_schema("ProvisionProbeResult", "config.provision.probe"),
     ),
     CommandSpec(
         "config_provision_install",

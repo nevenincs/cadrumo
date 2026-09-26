@@ -13,10 +13,10 @@ from datetime import date
 from enum import Enum
 
 from ...core.casilla_id import CasillaId
-from ...domain.calculations.registry.errors import RegistryValidationError
-from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
-from ...domain.calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
-from ...domain.calculations.registry.schema_base import DateAxis
+from ..calculations.registry.errors import RegistryValidationError
+from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
+from ..calculations.registry.schema_base import DateAxis
 
 
 def _category_name(member: object) -> str:

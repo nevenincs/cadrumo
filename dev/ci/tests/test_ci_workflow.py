@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+import itertools
 import pathlib
 import re
 import shlex
@@ -16,6 +17,7 @@ from dev._paths import REPO_ROOT
 from dev.packaging.command_execution import run_command
 
 from ..lane_reachability import declared_lanes, resolved_recipe_commands
+from ..workflow_job_gates import dispatch_input_defaults
 from ..workflow_run_text import executed_text
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -69,6 +71,11 @@ def _prohibited_aeat_product_forms(surface: str) -> tuple[str, ...]:
 
 
 _REPOSITORY_ROOT = REPO_ROOT
+
+# A hang guard, not a speed budget: each nested `uv run pytest --collect-only`
+# starts an interpreter and collects in a fresh process, which under the merge
+# gate's full xdist lane outlasted thirty seconds without anything being wrong.
+_NESTED_COLLECTION_HANG_GUARD_SECONDS = 180
 _PYPROJECT = _REPOSITORY_ROOT / "pyproject.toml"
 #: Per-test wall ceiling for the harness lane's combined real-proof pass, in
 #: seconds. Deliberately above the ini default: this lane's subject is a real
@@ -284,7 +291,7 @@ def test_harness_member_preflight_rejects_empty_collection_even_when_another_mem
     aggregate = run_command(
         [*invocation, str(populated_member), str(empty_member)],
         cwd=_REPOSITORY_ROOT,
-        timeout_seconds=30,
+        timeout_seconds=_NESTED_COLLECTION_HANG_GUARD_SECONDS,
     )
     assert aggregate.returncode == 0, (
         "the populated control must make aggregate collection non-empty\n"
@@ -295,7 +302,7 @@ def test_harness_member_preflight_rejects_empty_collection_even_when_another_mem
     empty_preflight = run_command(
         [*invocation, str(empty_member)],
         cwd=_REPOSITORY_ROOT,
-        timeout_seconds=30,
+        timeout_seconds=_NESTED_COLLECTION_HANG_GUARD_SECONDS,
     )
     assert empty_preflight.returncode == 5, (
         "the per-member collect preflight must preserve pytest exit 5 for an empty member\n"
@@ -515,6 +522,85 @@ def test_the_dotenv_gate_refuses_a_lane_that_loads_operator_overrides(tmp_path: 
     assert _dotenv_offenders(_lane_documents((workflow,))) == ["dotenv.yml: env-setup"]
 
 
+#: A checkout ref drawn from a dispatch input. A dispatched run owns the cache
+#: scope of the ref it was dispatched on, so checking out a different ref runs
+#: that ref's code with the dispatching ref's cache token.
+_DISPATCH_INPUT_EXPRESSION = re.compile(r"\binputs\.")
+
+
+def _input_selected_checkouts(documents: tuple[tuple[Path, dict[str, Any]], ...]) -> list[str]:
+    offenders: list[str] = []
+    for path, document in documents:
+        for job_name, job in document["jobs"].items():
+            for step in job.get("steps") or ():
+                if not str(step.get("uses", "")).startswith("actions/checkout@"):
+                    continue
+                ref = (step.get("with") or {}).get("ref")
+                if ref is not None and _DISPATCH_INPUT_EXPRESSION.search(str(ref)):
+                    offenders.append(f"{path.name}: {job_name}: {ref}")
+    return offenders
+
+
+def test_the_merge_gate_checks_out_only_the_ref_it_runs_on() -> None:
+    """The merge gate executes its checkout, so the checkout is never input-selected."""
+    assert _input_selected_checkouts(_lane_documents((_MERGE_GATE,))) == []
+
+
+def test_the_checkout_gate_refuses_an_input_selected_ref(tmp_path: Path) -> None:
+    """Teeth: a dispatch that checks out an input-named ref and runs its code is reported."""
+    workflow = tmp_path / "poisonable.yml"
+    fillers = "".join("      - run: just check-style\n" for _ in range(_MINIMUM_LANE_STEPS))
+    workflow.write_text(
+        "name: Cadrumo Poisonable\n"
+        "on:\n  workflow_dispatch:\n    inputs:\n      ref:\n        type: string\n"
+        "jobs:\n  lane:\n    runs-on: [self-hosted, Linux, X64]\n    steps:\n"
+        "      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1\n"
+        "        with:\n          ref: ${{ inputs.ref || '' }}\n"
+        "      - uses: ./.github/actions/setup\n" + fillers,
+        encoding="utf-8",
+    )
+    assert _input_selected_checkouts(_lane_documents((workflow,))) == ["poisonable.yml: lane: ${{ inputs.ref || '' }}"]
+
+
+_DISPATCH_FIELD_FLAGS = frozenset({"-f", "--raw-field", "-F", "--field"})
+
+
+def _dispatched_fields(workflow_name: str, documents: tuple[tuple[Path, dict[str, Any]], ...]) -> list[tuple[str, ...]]:
+    """Return the input names each `gh workflow run <workflow_name>` command passes."""
+    dispatches: list[tuple[str, ...]] = []
+    for _, document in documents:
+        for job in document["jobs"].values():
+            for step in job.get("steps") or ():
+                for line in str(step.get("run") or "").replace("\\\n", " ").splitlines():
+                    if "gh workflow run" not in line:
+                        continue
+                    argv = shlex.split(line, comments=True)
+                    if argv[:4] != ["gh", "workflow", "run", workflow_name]:
+                        continue
+                    dispatches.append(
+                        tuple(
+                            value.partition("=")[0]
+                            for flag, value in itertools.pairwise(argv)
+                            if flag in _DISPATCH_FIELD_FLAGS
+                        )
+                    )
+    return dispatches
+
+
+def test_the_merge_gate_dispatch_passes_only_declared_inputs() -> None:
+    """An undeclared input makes the dispatch fail, and the release pull request then never reports the gate."""
+    declared = set(dispatch_input_defaults(yaml.safe_load(_MERGE_GATE.read_text(encoding="utf-8"))))
+    dispatches = _dispatched_fields(_MERGE_GATE.name, _lane_documents((_WORKFLOWS_DIR / "release-please.yml",)))
+    assert dispatches, "release-please no longer dispatches the merge gate"
+    assert [set(fields) - declared for fields in dispatches] == [set()] * len(dispatches)
+
+
+def test_the_dispatch_field_reader_sees_every_passed_input() -> None:
+    """Teeth: a passed input field is read by name, so an undeclared one cannot hide."""
+    document = {"jobs": {"lane": {"steps": [{"run": 'gh workflow run merge-gate.yml --ref "$B" -f "ref=$B"'}]}}}
+    assert _dispatched_fields("merge-gate.yml", ((Path("fixture.yml"), document),)) == [("ref",)]
+
+
 def _product_surface(document: dict[str, Any]) -> str:
     jobs = list(document["jobs"].values())
     return "\n".join(
@@ -591,3 +677,98 @@ def test_aeat_human_cli_and_authority_forms_are_allowed(surface: str) -> None:
 def test_former_aeat_product_forms_are_rejected(surface: str, expected_family: str) -> None:
     """Former import, package, install, and source families remain prohibited."""
     assert expected_family in _prohibited_aeat_product_forms(surface)
+
+
+_RELEASE = _WORKFLOWS_DIR / "release.yml"
+
+#: The dispatched commit. A run's cache token writes into the scope of the ref it
+#: was dispatched on, so this is the only commit whose code a release job may run
+#: without proof that the dispatched ref already carries it.
+_DISPATCHED_COMMIT = "${{ github.sha }}"
+_STEP_OUTPUT_REF = re.compile(r"^\$\{\{\s*steps\.([\w-]+)\.outputs\.[\w-]+\s*\}\}$")
+#: A step that compares a resolved commit against the dispatched one, so the
+#: commit it outputs is the dispatched commit or one of its ancestors.
+_ANCESTRY_REFUSAL = re.compile(r"compare/\S*\.\.\.\$\{GITHUB_SHA\}")
+
+
+def _foreign_commit_checkouts(documents: tuple[tuple[Path, dict[str, Any]], ...]) -> list[str]:
+    """Return own-repository checkouts of a commit the dispatched ref is not proven to carry."""
+    offenders: list[str] = []
+    for path, document in documents:
+        for job_name, job in document["jobs"].items():
+            guarded: set[str] = set()
+            for step in job.get("steps") or ():
+                if step.get("id") and _ANCESTRY_REFUSAL.search(str(step.get("run") or "")):
+                    guarded.add(str(step["id"]))
+                if not str(step.get("uses", "")).startswith("actions/checkout@"):
+                    continue
+                arguments = step.get("with") or {}
+                if "repository" in arguments:
+                    continue
+                ref = str(arguments.get("ref") or "")
+                if ref == _DISPATCHED_COMMIT:
+                    continue
+                guard = _STEP_OUTPUT_REF.match(ref)
+                if guard is not None and guard.group(1) in guarded:
+                    continue
+                offenders.append(f"{path.name}: {job_name}: {ref or '<dispatched ref name>'}")
+    return offenders
+
+
+def test_release_jobs_run_only_code_the_dispatched_ref_carries() -> None:
+    """No release job runs a tag's or input's code with the dispatched ref's cache token."""
+    assert _foreign_commit_checkouts(_lane_documents((_RELEASE,))) == []
+
+
+@pytest.mark.parametrize(
+    ("steps", "expected"),
+    (
+        pytest.param(
+            [{"uses": "actions/checkout@v7", "with": {"ref": "${{ needs.locate-cohort.outputs.tag-commit }}"}}],
+            ["fixture.yml: lane: ${{ needs.locate-cohort.outputs.tag-commit }}"],
+            id="proven-tag-of-another-ref",
+        ),
+        pytest.param(
+            [{"uses": "actions/checkout@v7", "with": {"ref": "${{ inputs.ref }}"}}],
+            ["fixture.yml: lane: ${{ inputs.ref }}"],
+            id="input-ref",
+        ),
+        pytest.param(
+            [{"uses": "actions/checkout@v7"}],
+            ["fixture.yml: lane: <dispatched ref name>"],
+            id="re-resolved-ref-name",
+        ),
+        pytest.param(
+            [
+                {"id": "resolved", "run": 'gh api "repos/r/commits/${INPUT_REF}" --jq .sha'},
+                {"uses": "actions/checkout@v7", "with": {"ref": "${{ steps.resolved.outputs.commit }}"}},
+            ],
+            ["fixture.yml: lane: ${{ steps.resolved.outputs.commit }}"],
+            id="resolved-without-ancestry-refusal",
+        ),
+        pytest.param(
+            [
+                {"uses": "actions/checkout@v7", "with": {"ref": "${{ steps.documented.outputs.commit }}"}},
+                {"id": "documented", "run": 'gh api "repos/r/compare/${commit}...${GITHUB_SHA}" --jq .status'},
+            ],
+            ["fixture.yml: lane: ${{ steps.documented.outputs.commit }}"],
+            id="refusal-after-the-checkout",
+        ),
+        pytest.param(
+            [
+                {"id": "documented", "run": 'gh api "repos/r/compare/${commit}...${GITHUB_SHA}" --jq .status'},
+                {"uses": "actions/checkout@v7", "with": {"ref": "${{ steps.documented.outputs.commit }}"}},
+                {"uses": "actions/checkout@v7", "with": {"ref": "${{ github.sha }}"}},
+                {"uses": "actions/checkout@v7", "with": {"repository": "o/tap", "path": "var/tap"}},
+            ],
+            [],
+            id="dispatched-or-ancestry-proven",
+        ),
+    ),
+)
+def test_the_foreign_commit_gate_reports_every_unproven_checkout(
+    steps: list[dict[str, Any]], expected: list[str]
+) -> None:
+    """Teeth: a checkout of a commit the dispatched ref is not proven to carry is reported."""
+    document = {"jobs": {"lane": {"steps": steps}}}
+    assert _foreign_commit_checkouts(((Path("fixture.yml"), document),)) == expected

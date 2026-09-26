@@ -35,8 +35,8 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.money.rounding import round_to_cents
 from ...core.parsing.codes import normalise_iso_4217_currency
 from ...core.time.clock import now
-from ...domain.buckets.event import BucketEventObjectType, BucketEventType
-from ...domain.buckets.event_repository import emit_bucket_event
+from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
+from ...domain.buckets.event_repository import build_bucket_event
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
@@ -60,7 +60,6 @@ from ...domain.iva.schema import IvaCategory
 from ..aggregation.counterpart import counterpart_operation_catalogue_entries
 from .catalogue_creation_ports import (
     CatalogueCreationPorts,
-    CatalogueInvoiceEventRepositoryPort,
     CatalogueInvoiceRateProviderPort,
 )
 
@@ -103,16 +102,15 @@ _EVENT_TYPES_BY_KIND: dict[InvoiceKind, tuple[BucketEventType, BucketEventType, 
 _INVOICE_EVENT_PAYLOAD_VERSION = 1
 
 
-def emit_catalogue_invoice_event(
+def build_catalogue_invoice_event(
     *,
     invoice: Invoice,
     bucket_id: str,
     slot: int,
-    event_repository: CatalogueInvoiceEventRepositoryPort,
     occurred_at: datetime,
     actor: str,
-) -> tuple[str, ...]:
-    """Append the creation event for a canonically-written invoice.
+) -> BucketEvent:
+    """Build the durable audit entry for a canonically-written invoice.
 
     The canonical write paths emitted NO bucket event of any kind, while the
     slim store emitted six types and returned their ids to the operator. So
@@ -126,8 +124,7 @@ def emit_catalogue_invoice_event(
     """
     event_type = _EVENT_TYPES_BY_KIND[invoice.kind][slot]
     object_type = _EVENT_OBJECT_BY_KIND[invoice.kind]
-    event = emit_bucket_event(
-        repository=event_repository,
+    return build_bucket_event(
         bucket_id=bucket_id,
         event_type=event_type,
         occurred_at=occurred_at,
@@ -141,7 +138,6 @@ def emit_catalogue_invoice_event(
         },
         payload_version=_INVOICE_EVENT_PAYLOAD_VERSION,
     )
-    return (event.event_id,)
 
 
 def _registry_m349_operation_type_requirement(
@@ -162,7 +158,11 @@ def _registry_m349_operation_type_requirement(
         return value.strip()
 
     try:
-        category = require_iva_category(required("modelo.349.operation_type_required_category"))
+        category = require_iva_category(
+            required("modelo.349.operation_type_required_category"),
+            effective_date=effective_date,
+            authority=operation,
+        )
     except (RegistryValidationError, ValueError) as exc:
         raise ValueError("counterpart registry declares an unknown operation-type category") from exc
     tokens = tuple(
@@ -253,7 +253,7 @@ def resolve_iva_rate_slot(iva_rate: Decimal | None, on_date: date) -> IvaRate:
 
 def _resolve_invoice_line_totals(
     *,
-    taxable_base: Decimal,
+    taxable_base: Decimal | None,
     lines: Sequence[InvoiceLine] | None,
     invoice_number: str,
     rate_slot: IvaRate,
@@ -261,21 +261,20 @@ def _resolve_invoice_line_totals(
 ) -> tuple[Decimal, Decimal, object]:
     """Return the authoritative line payload and totals for one invoice.
 
-    Supplied lines own their own amounts and must agree with the declared base;
-    otherwise this is the sole synthesis of the one operator-supplied rate line.
+    Supplied lines own their own amounts; otherwise this is the sole synthesis
+    of the one operator-supplied rate line.
     """
-    if lines:
+    if lines is not None:
+        if not lines:
+            raise InvoiceValidationError("lines must not be empty")
         if not all(isinstance(item, InvoiceLine) for item in lines):
             raise InvoiceValidationError("lines must be InvoiceLine records")
         base_total = round_to_cents(sum((item.subtotal for item in lines), Decimal("0")))
         iva_total = round_to_cents(sum((item.iva_amount for item in lines), Decimal("0")))
-        declared_base = round_to_cents(taxable_base)
-        if declared_base != base_total:
-            raise InvoiceValidationError(
-                f"taxable_base {declared_base} does not equal the summed line subtotals {base_total}",
-            )
         return base_total, iva_total, [item.model_dump(mode="json") for item in lines]
 
+    if taxable_base is None:
+        raise InvoiceValidationError("taxable_base is required when lines are not supplied")
     base_total = round_to_cents(taxable_base)
     iva_amount = Decimal("0") if iva_percentage is None else round_to_cents(taxable_base * iva_percentage)
     return (
@@ -364,9 +363,9 @@ def build_catalogue_invoice(
     counterparty_country: str,
     invoice_number: str,
     issued_at: date,
-    taxable_base: Decimal,
-    iva_rate: Decimal | None,
     currency: str,
+    taxable_base: Decimal | None = None,
+    iva_rate: Decimal | None = None,
     payment_status: PaymentStatus = PaymentStatus.PENDING,
     notes: str = "",
     iva_category: IvaCategory | None = None,
@@ -397,10 +396,9 @@ def build_catalogue_invoice(
     to the wrong rate, and the per-rate breakdown is precisely what the IVA
     modelos declare.
 
-    ``taxable_base`` must then AGREE with the summed line subtotals, and a
-    mismatch refuses rather than resolving. Two disagreeing sources of truth
-    for the same base is the shape that silently mis-declares, so the caller is
-    made to state one number, not two.
+    Structured callers do not supply ``taxable_base`` or ``iva_rate``: those
+    scalar synthesis inputs would create a second source of truth for the line
+    set. The application derives the canonical totals from the ordered lines.
 
     ``iva_category`` carries the intra-community classification the M349
     recapitulative resolver reads for historical goods/triangulation records.
@@ -457,72 +455,88 @@ def build_catalogue_invoice(
                 operation=indexed_operation,
             )
 
-    # Normalise once, before either the persisted payload or the FX lookup
-    # reads it: a padded or lowercase token ("gbp", " gbp ") must resolve the
-    # SAME provider rate as its canonical "GBP" form, not silently miss the
-    # rate and leave the invoice unstamped.
-    currency = normalise_iso_4217_currency(currency)
-    devengo_date = operation_date or issued_at
+    # Every governed fact this construction reads -- the rate slot, the invoice
+    # class default, the Modelo 349 clave rule, the devengo role and the final
+    # validation -- resolves under the operation the caller handed in, never
+    # under whatever scope the calling thread happens to hold.
     with validating_governed_facts(operation):
-        rate_slot = resolve_iva_rate_slot(iva_rate, devengo_date)
-        # The exact devengo date is present at this composition boundary, so both
-        # synthesis and Invoice validation project the same authority fact.
-        pct = iva_rate_percentage(rate_slot, devengo_date)
-    base_total, iva_total, payload_lines = _resolve_invoice_line_totals(
-        taxable_base=taxable_base,
-        lines=lines,
-        invoice_number=invoice_number,
-        rate_slot=rate_slot,
-        iva_percentage=pct,
-    )
-    # The recargo de equivalencia rides INSIDE the invoice total (LIVA art. 161)
-    # while a retencion is settled outside it, which is why only the recargo
-    # appears here. The model re-checks this identity exactly, so a caller that
-    # states a recargo the lines do not support is refused rather than balanced.
-    recargo = recargo_amount or Decimal("0")
-    grand_total = base_total + iva_total + recargo
-    invoice_payload: dict[str, object] = {
-        "bucket_id": bucket_id,
-        "kind": kind.value,
-        "invoice_number": invoice_number,
-        "issued_at": issued_at.isoformat(),
-        "counterparty_name": counterparty_name,
-        "counterparty_tax_id": counterparty_tax_id,
-        "counterparty_country": counterparty_country,
-        "base_total": format(base_total, "f"),
-        "iva_total": format(iva_total, "f"),
-        "grand_total": format(grand_total, "f"),
-        "currency": currency,
-        "payment_status": payment_status.value,
-        "lines": payload_lines,
-        "notes": notes,
-        "invoice_class": (invoice_class or default_invoice_class()).value,
-    }
-    _apply_operator_asserted_invoice_facts(
-        invoice_payload,
-        series=series,
-        rectifies_invoice_number=rectifies_invoice_number,
-        recargo_amount=recargo_amount,
-        iva_category=iva_category,
-        operation_type=operation_type,
-        operation_date=operation_date,
-        retention_rate=retention_rate,
-        retention_amount=retention_amount,
-        effective_date=devengo_date,
-        operation=operation,
-    )
-    # The euro-conversion stamp. ``currency`` is already the canonical uppercase
-    # ISO 4217 token (normalised once above), so the provider is queried with the
-    # same token the record stores. WHICH date the rate is taken at, and when a
-    # record is deliberately left unstamped, are resolve_fx_conversion_stamp's to
-    # answer -- this only writes the result into the payload shape.
-    _apply_fx_conversion_stamp(
-        invoice_payload,
-        currency=currency,
-        issued_at=issued_at,
-        rate_provider=rate_provider,
-    )
-    with validating_governed_facts(operation):
+        if lines is not None and (taxable_base is not None or iva_rate is not None):
+            raise InvoiceValidationError("structured lines cannot be combined with taxable_base or iva_rate")
+        # Normalise once, before either the persisted payload or the FX lookup
+        # reads it: a padded or lowercase token ("gbp", " gbp ") must resolve the
+        # SAME provider rate as its canonical "GBP" form, not silently miss the
+        # rate and leave the invoice unstamped.
+        currency = normalise_iso_4217_currency(currency)
+        devengo_date = operation_date or issued_at
+        if lines is None:
+            rate_slot = resolve_iva_rate_slot(iva_rate, devengo_date)
+            # The exact devengo date is present at this composition boundary, so both
+            # synthesis and Invoice validation project the same authority fact.
+            pct = iva_rate_percentage(rate_slot, devengo_date)
+            base_total, iva_total, payload_lines = _resolve_invoice_line_totals(
+                taxable_base=taxable_base,
+                lines=None,
+                invoice_number=invoice_number,
+                rate_slot=rate_slot,
+                iva_percentage=pct,
+            )
+        else:
+            if not lines:
+                raise InvoiceValidationError("lines must not be empty")
+            base_total, iva_total, payload_lines = _resolve_invoice_line_totals(
+                taxable_base=None,
+                lines=lines,
+                invoice_number=invoice_number,
+                rate_slot=lines[0].iva_rate,
+                iva_percentage=None,
+            )
+        # The recargo de equivalencia rides INSIDE the invoice total (LIVA art. 161)
+        # while a retencion is settled outside it, which is why only the recargo
+        # appears here. The model re-checks this identity exactly, so a caller that
+        # states a recargo the lines do not support is refused rather than balanced.
+        recargo = recargo_amount or Decimal("0")
+        grand_total = base_total + iva_total + recargo
+        invoice_payload: dict[str, object] = {
+            "bucket_id": bucket_id,
+            "kind": kind.value,
+            "invoice_number": invoice_number,
+            "issued_at": issued_at.isoformat(),
+            "counterparty_name": counterparty_name,
+            "counterparty_tax_id": counterparty_tax_id,
+            "counterparty_country": counterparty_country,
+            "base_total": format(base_total, "f"),
+            "iva_total": format(iva_total, "f"),
+            "grand_total": format(grand_total, "f"),
+            "currency": currency,
+            "payment_status": payment_status.value,
+            "lines": payload_lines,
+            "notes": notes,
+            "invoice_class": (invoice_class or default_invoice_class()).value,
+        }
+        _apply_operator_asserted_invoice_facts(
+            invoice_payload,
+            series=series,
+            rectifies_invoice_number=rectifies_invoice_number,
+            recargo_amount=recargo_amount,
+            iva_category=iva_category,
+            operation_type=operation_type,
+            operation_date=operation_date,
+            retention_rate=retention_rate,
+            retention_amount=retention_amount,
+            effective_date=devengo_date,
+            operation=operation,
+        )
+        # The euro-conversion stamp. ``currency`` is already the canonical uppercase
+        # ISO 4217 token (normalised once above), so the provider is queried with the
+        # same token the record stores. WHICH date the rate is taken at, and when a
+        # record is deliberately left unstamped, are resolve_fx_conversion_stamp's to
+        # answer -- this only writes the result into the payload shape.
+        _apply_fx_conversion_stamp(
+            invoice_payload,
+            currency=currency,
+            issued_at=issued_at,
+            rate_provider=rate_provider,
+        )
         return Invoice.model_validate(invoice_payload)
 
 
@@ -536,9 +550,9 @@ def create_catalogue_invoice(
     """Persist one pre-built catalogue invoice and return the updated catalogue.
 
     :func:`build_catalogue_invoice` is the sole construction authority for
-    operator-supplied fields and line synthesis. This service owns only the
-    catalogue mutation and its post-save audit event, so the construction
-    contract cannot drift between an in-memory candidate and the written record.
+    operator-supplied fields and line synthesis. This service co-commits the
+    catalogue mutation and its durable audit entry, so the invoice cannot
+    survive an event-write failure without a traceable audit record.
     """
     bucket_id = invoice.bucket_id
     if bucket_id is None:
@@ -556,35 +570,27 @@ def create_catalogue_invoice(
         updated[invoice.invoice_id] = invoice
         return InvoiceCatalogue.model_validate({"invoices": updated})
 
-    # Guarded rather than load-then-save: the catalogue is one encrypted row, so
-    # two operators adding DIFFERENT invoices at once would both read the same
-    # catalogue and the later write would drop the earlier invoice. Nothing
-    # would report it -- the duplicate check above cannot see an invoice it
-    # never read -- and a dropped invoice under-declares. Re-running the
-    # duplicate check on each attempt is the point: it must be judged against
-    # the catalogue actually being written to, not the one first read.
-    new_catalogue = ports.invoice_repository.mutate(_add)
-    # Emitted AFTER the save, so the audit trail never records a creation that
-    # did not persist. The reverse order would leave an event pointing at an
-    # invoice that is not there, which is worse than a missing event: it reads
-    # as evidence.
-    event_ids = emit_catalogue_invoice_event(
+    event = build_catalogue_invoice_event(
         invoice=invoice,
         bucket_id=bucket_id,
         slot=0,
-        event_repository=ports.event_repository,
         occurred_at=occurred_at or now(),
         actor=actor,
     )
+    # Both singleton catalogues are rebuilt from their revisioned reads at each
+    # retry.  The batch consequently cannot discard a concurrent invoice or
+    # audit entry, and a failed batch persists neither half of this command.
+    new_catalogue = ports.audit_commit.mutate_with_event(_add, event)
     return CatalogueInvoiceCreateResult(
         invoice=invoice,
         catalogue=new_catalogue,
-        bucket_event_ids=event_ids,
+        bucket_event_ids=(event.event_id,),
     )
 
 
 __all__ = [
     "CatalogueInvoiceCreateResult",
     "build_catalogue_invoice",
+    "build_catalogue_invoice_event",
     "create_catalogue_invoice",
 ]

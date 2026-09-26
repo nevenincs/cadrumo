@@ -68,6 +68,10 @@ def _option_row_count(output: str, option: str) -> int:
 
 def _console_env(tmp_path: Path) -> dict[str, str]:
     base_settings = Settings.model_validate({})
+    # Explicit directory overrides are the operator's to provision; the CLI
+    # validates them and never creates them.
+    for directory in ("probe-tokens", "probe-runs", "txs", "invoices", "probe-drafts", "storage/fallback-store"):
+        (tmp_path / directory).mkdir(parents=True, exist_ok=True)
     env = {key: value for key, value in os.environ.items() if not key.upper().startswith(("AEAT_", "CADRUMO_"))}
     setting_env = str.upper
     env.update(

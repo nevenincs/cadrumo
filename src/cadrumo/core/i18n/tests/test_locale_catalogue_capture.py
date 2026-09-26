@@ -11,6 +11,7 @@ from ..locale_catalogue import (
     LocaleCatalogueCaptureError,
     LocaleCatalogueCurrentCoordinate,
     capture_locale_catalogue,
+    capture_locale_catalogue_entries,
 )
 from ..render import lookup_translation_entry, override_locales_root
 
@@ -136,3 +137,29 @@ def test_capture_exposes_no_catalogue_internals_and_no_parallel_reader() -> None
         "comparison_domain",
         "generation",
     }
+
+
+def test_a_batch_reads_every_entry_under_one_window(tmp_path: Path) -> None:
+    """A batch returns what individual captures return, all tied to one catalogue state."""
+    shard_dir = tmp_path / "es"
+    shard_dir.mkdir(parents=True)
+    (shard_dir / "cli.yml").write_text(
+        'cli:\n  common:\n    label:\n      total: "Total"\n      base: "Base"\n',
+        encoding="utf-8",
+    )
+    keys = ("cli.common.label.total", "cli.common.label.base", "cli.common.label.absent")
+
+    with override_locales_root(tmp_path):
+        batch = capture_locale_catalogue_entries(keys, locale="es")
+        single = tuple(capture_locale_catalogue(key, locale="es") for key in keys)
+
+    assert tuple((c.translation_key, c.present, c.value) for c in batch) == tuple(
+        (c.translation_key, c.present, c.value) for c in single
+    )
+    assert {(c.catalogue_digest, c.comparison_domain, c.generation) for c in batch} == {
+        (single[0].catalogue_digest, single[0].comparison_domain, single[0].generation)
+    }
+
+
+def test_an_empty_batch_captures_nothing() -> None:
+    assert capture_locale_catalogue_entries((), locale="es") == ()

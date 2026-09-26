@@ -129,3 +129,40 @@ def test_symlinks_are_never_assessed_or_removed(tmp_path: Path) -> None:
 
     assert reaper.assess_run_directories(tmp_path) == ()
     assert target.is_dir()
+
+
+def _scratch(base: Path, name: str, *, age: float, now: float) -> Path:
+    directory = base / name
+    directory.mkdir(parents=True)
+    os.utime(directory, (now - age, now - age))
+    return directory
+
+
+def test_run_scratch_follows_its_owner_and_the_grace_period(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    now = 2_000_000_000.0
+    grace = reaper.INTERRUPTED_GRACE_SECONDS + 1
+    live = _scratch(tmp_path, "cr_301_a1b2c3", age=grace, now=now)
+    young = _scratch(tmp_path, "cr_302_d4e5f6", age=60, now=now)
+    dead = _scratch(tmp_path, "cr_303_0a0b0c", age=grace, now=now)
+    abandoned = _scratch(tmp_path, "cr_304_0d0e0f", age=reaper.PID_TRUST_CEILING_SECONDS + 1, now=now)
+    monkeypatch.setattr(reaper, "process_is_live", lambda pid: pid in {301, 304})
+
+    verdicts = reaper.assess_scratch_directories(tmp_path, now=now)
+
+    assert {row.directory: row.reclaimable for row in verdicts} == {
+        live: False,
+        young: False,
+        dead: True,
+        abandoned: True,
+    }
+
+
+def test_run_scratch_assessment_ignores_what_other_programs_keep_in_temp(tmp_path: Path) -> None:
+    """The temp base is shared, so only names shaped like a run's scratch are judged."""
+    now = 2_000_000_000.0
+    old = reaper.PID_TRUST_CEILING_SECONDS + 1
+    for name in ("claude", "cadrumo-pytest-303", "cr_notapid_a1b2c3", "cr_303", "crx_303_a1b2c3", "cr-303-a1b2c3"):
+        _scratch(tmp_path, name, age=old, now=now)
+    (tmp_path / "cr_305_a1b2c3").write_text("a file, not a scratch directory", encoding="utf-8")
+
+    assert reaper.assess_scratch_directories(tmp_path, now=now) == ()

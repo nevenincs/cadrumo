@@ -138,6 +138,11 @@ def _guarderia_mensual_or_dash(descendant: DescendantInfo) -> str:
     return serialise_guarderia_mensual(descendant.gastos_guarderia_mensuales) or "-"
 
 
+_GUARDERIA_CONFLICT_LOCALE_KEY = "cli.config.profile.descendiente.guarderia_spend_shapes_conflict"
+_MISSING_BIRTH_DATE_LOCALE_KEY = "cli.config.profile.descendiente.invalid_flag"
+_INVALID_ROW_LOCALE_KEY = "cli.config.profile.descendiente.invalid_row"
+
+
 def _offending_flag_key(error: CadrumoError) -> dict[str, str]:
     """Return the ``--descendiente`` key a parse refusal names, when it names one.
 
@@ -148,6 +153,21 @@ def _offending_flag_key(error: CadrumoError) -> dict[str, str]:
     """
     key = (error.context or {}).get("key")
     return {"key": key} if isinstance(key, str) and key else {}
+
+
+def _descendiente_refusal_key(error: CadrumoError) -> tuple[str, dict[str, str]]:
+    """Map a ``--descendiente`` parse refusal to the translated key that states its cause.
+
+    Only a refusal the parser attributes to ``NACIMIENTO`` may use the copy that
+    tells the operator every row must declare a birth date; any other refusal
+    rendered through it names a cause that is not the one that happened.
+    """
+    context = _offending_flag_key(error)
+    if (error.context or {}).get("refusal") == "guarderia_spend_shapes":
+        return _GUARDERIA_CONFLICT_LOCALE_KEY, context
+    if context.get("key") == "NACIMIENTO":
+        return _MISSING_BIRTH_DATE_LOCALE_KEY, context
+    return _INVALID_ROW_LOCALE_KEY, context
 
 
 def _ambiguous_relacion_indices(new_rows: list[DescendantInfo], *, index_offset: int) -> tuple[int, ...]:
@@ -319,14 +339,18 @@ def descendiente_add(
     Art. 58/61 LIRPF minimo por descendientes engine
     (:func:`~application.modelo.profile_binding.inject_derived_minimo_descendientes_facts`) has
     real facts to compute from on the next M100 calculate.
+
+    Parsing reads the registry's disability grades and relación default, and
+    the stored rows are validated against the same authority: the governed-fact
+    scope dispatch opens for this command.
     """
-    _activate_subcommand_output_language(ctx, output_language)
     from pydantic import ValidationError
 
     from ....core.errors.hierarchy import ProfileAnswerTypeError
     from ....domain.contribuyente.descendant_facts import parse_descendiente_flag
     from ..state_projection_support import authority_operation
 
+    _activate_subcommand_output_language(ctx, output_language)
     pointer = _active_profile_pointer()
     # Stored rows and the flag's relationship and disability vocabularies are
     # governed facts, so reading and parsing need the command's pinned
@@ -360,20 +384,14 @@ def descendiente_add(
             # The mutually-exclusive guarderia spend forms are a known, safe
             # condition with a dedicated localised refusal. Other parser prose can
             # include the supplied value, so it stays behind the generic boundary.
-            raise _CliRefusedBoundaryError(
-                translated_message=(
-                    "cli.config.profile.descendiente.guarderia_spend_shapes_conflict"
-                    if (exc.context or {}).get("refusal") == "guarderia_spend_shapes"
-                    else "cli.config.profile.descendiente.invalid_flag"
-                ),
-                context=_offending_flag_key(exc),
-            ) from exc
+            translated_message, context = _descendiente_refusal_key(exc)
+            raise _CliRefusedBoundaryError(translated_message=translated_message, context=context) from exc
         except ValidationError as exc:
             # Name the FIELDS that conflict, never the exception class. The class
             # name leaks "ValidationError" into the envelope the operator reads and
             # tells them nothing; the field paths are exactly what they can act on.
             raise _CliRefusedBoundaryError(
-                translated_message="cli.config.profile.descendiente.invalid_flag",
+                translated_message=_INVALID_ROW_LOCALE_KEY,
                 context={
                     # The coherence rules are MODEL-level validators, so `loc` is
                     # empty and the conflicting field is named in the message. Take

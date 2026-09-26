@@ -20,10 +20,12 @@ from __future__ import annotations
 
 import os
 import re
+import sys
+import time
 from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
-from typing import Protocol
+from typing import Final, Protocol
 
 from pydantic import ValidationError
 
@@ -36,10 +38,55 @@ from ..core.link_safety import is_link_like
 from ..core.locks import exclusive_file_lock
 from ..core.storage_taxonomy import StorageCategory
 from ..core.storage_taxonomy_locations import storage_location
+from ..core.windows_contention import is_windows_contention
 
 JOURNAL_OPERATION_ID_PATTERN = re.compile(HEX_PATTERN_64)
 _DIRECTORY_MODE = 0o700
 _FILE_MODE = 0o600
+_CONTENTION_RETRY_SECONDS: Final[float] = 5.0
+"""How long a journal read or replace waits out a peer's open handle.
+
+Reads take no lock, so on Windows a reader holding a journal open refuses the
+writer's replace, and a replace in flight refuses the reader. Both clear the
+moment the other side closes; a refusal that outlasts this window is not a
+race and propagates."""
+_CONTENTION_POLL_SECONDS: Final[float] = 0.02
+
+
+class JournalBusyError(CadrumoError):
+    """A journal stayed held by another handle for the whole contention window.
+
+    Transient and never corruption: the journal is intact, and the same read
+    or write succeeds once the other handle closes. It carries no journal
+    content and no identity of the holder.
+    """
+
+    def __init__(self, subject: str) -> None:
+        """Name only which kind of journal was held."""
+        super().__init__(f"{subject} stayed held by another handle past the contention window")
+
+
+def _waiting_out_contention[R](attempt: Callable[[], R], *, subject: str) -> R:
+    """Run ``attempt``, retrying while Windows refuses it for another handle.
+
+    A refusal from ``open`` comes through the C runtime and carries no Windows
+    error code, so on Windows a code-less ``PermissionError`` is waited out
+    too; only the bounded window separates it from a genuine denial. Contention
+    that outlasts the window is reported as busy, never as a corrupt journal.
+    """
+    deadline = time.monotonic() + _CONTENTION_RETRY_SECONDS
+    while True:
+        try:
+            return attempt()
+        except PermissionError as exc:
+            transient = is_windows_contention(exc) or (
+                sys.platform == "win32" and getattr(exc, "winerror", None) is None
+            )
+            if not transient:
+                raise
+            if time.monotonic() >= deadline:
+                raise JournalBusyError(subject) from exc
+            time.sleep(_CONTENTION_POLL_SECONDS)
 
 
 class JournalOperation(Protocol):
@@ -138,7 +185,7 @@ class JournalRepositoryBase[T: JournalOperation]:
         if is_link_like(path):
             raise self._corrupt_type(f"{self._subject} path cannot be a link: {operation_id}")
         try:
-            raw = path.read_text(encoding=UTF_8_ENCODING)
+            raw = _waiting_out_contention(lambda: path.read_text(encoding=UTF_8_ENCODING), subject=self._subject)
         except FileNotFoundError as exc:
             raise self._not_found_type(operation_id) from exc
         except OSError as exc:
@@ -214,7 +261,10 @@ class JournalRepositoryBase[T: JournalOperation]:
         if os.path.lexists(path) and is_link_like(path):
             raise self._error_type(f"{self._subject} file cannot be a symlink or junction")
         payload = operation.model_dump_json(indent=2) + "\n"
-        atomic_write_hardened_text(path, payload, encoding=UTF_8_ENCODING, mode=_FILE_MODE)
+        _waiting_out_contention(
+            lambda: atomic_write_hardened_text(path, payload, encoding=UTF_8_ENCODING, mode=_FILE_MODE),
+            subject=self._subject,
+        )
         try:
             os.chmod(path, _FILE_MODE)
         except OSError as exc:
@@ -226,6 +276,7 @@ class JournalRepositoryBase[T: JournalOperation]:
 
 
 __all__ = [
+    "JournalBusyError",
     "JournalOperation",
     "JournalRepositoryBase",
 ]

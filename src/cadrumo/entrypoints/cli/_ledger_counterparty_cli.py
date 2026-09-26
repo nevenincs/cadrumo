@@ -48,7 +48,6 @@ import typer
 
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
-from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.iva.classification import IvaTerritorialScope
 from ...domain.iva.schema import EUMemberState
 from ._ledger_counterparty_payloads import (
@@ -59,7 +58,7 @@ from ._ledger_counterparty_payloads import (
 )
 from .common import active_bucket_id_or_refuse as _counterparty_bucket_id
 from .common import bad, emit_envelope
-from .state_projection_support import authority_operation, counterparty_establishment_repository_factory
+from .state_projection_support import counterparty_establishment_repository_factory
 
 if TYPE_CHECKING:
     from ...application.ledger.counterparty_establishment import (
@@ -129,17 +128,16 @@ def counterparty_confirm(
     repository = counterparty_establishment_repository_factory(ctx)(bucket_id=bucket_id)
     asserted_by = actor or bucket_id or "operator"
     try:
-        with validating_governed_facts(authority_operation(ctx)):
-            outcome = confirm_counterparty_establishment(
-                bucket_id=bucket_id,
-                tax_identifier=tax_identifier,
-                asserted_by=asserted_by,
-                territorial_scope=scope,
-                identification_state=identification_state,
-                country_code=country_code,
-                note=note,
-                repository=repository,
-            )
+        outcome = confirm_counterparty_establishment(
+            bucket_id=bucket_id,
+            tax_identifier=tax_identifier,
+            asserted_by=asserted_by,
+            territorial_scope=scope,
+            identification_state=identification_state,
+            country_code=country_code,
+            note=note,
+            repository=repository,
+        )
     except ConfirmedCounterpartyFactsInputError as exc:
         raise bad(
             tr("cli.ledger.counterparty.errors.nothing_asserted", identifier=tax_identifier),
@@ -205,13 +203,12 @@ def counterparty_withdraw(
             tr("cli.ledger.counterparty.errors.unverifiable_identifier", identifier=tax_identifier),
         )
     repository = counterparty_establishment_repository_factory(ctx)(bucket_id=bucket_id)
-    with validating_governed_facts(authority_operation(ctx)):
-        withdrawn = forget_confirmed_counterparty_facts(
-            bucket_id=bucket_id,
-            tax_identifier=tax_identifier,
-            country_code=country_code,
-            repository=repository,
-        )
+    withdrawn = forget_confirmed_counterparty_facts(
+        bucket_id=bucket_id,
+        tax_identifier=tax_identifier,
+        country_code=country_code,
+        repository=repository,
+    )
     notices: list[Notice] = []
     if not withdrawn:
         notices.append(
@@ -354,14 +351,13 @@ def counterparty_view(
 
     bucket_id = _counterparty_bucket_id()
     repository = counterparty_establishment_repository_factory(ctx)(bucket_id=bucket_id)
-    with validating_governed_facts(authority_operation(ctx)):
-        resolution = resolve_confirmed_counterparty_facts(
-            bucket_id=bucket_id,
-            tax_identifier=tax_identifier,
-            country_code=country_code,
-            evidenced_scope=evidenced_scope,
-            repository=repository,
-        )
+    resolution = resolve_confirmed_counterparty_facts(
+        bucket_id=bucket_id,
+        tax_identifier=tax_identifier,
+        country_code=country_code,
+        evidenced_scope=evidenced_scope,
+        repository=repository,
+    )
     notices = _counterparty_view_notices(tax_identifier, resolution)
     emit_envelope(
         ctx,

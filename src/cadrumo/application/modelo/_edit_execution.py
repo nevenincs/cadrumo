@@ -38,6 +38,7 @@ from ...core.secure_object_write import SecureObjectWrite
 from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.row_models import ModeloDetailRow
+from .calculate_input import resolve_binding_overrides
 from .calculation_action_ports import CalculationActionPorts
 from .calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
@@ -65,6 +66,7 @@ from .edit_services import RESPONSIBLE_OWNER as _RESPONSIBLE_OWNER
 from .edit_services import (
     detail_row_natural_key,
     reconfirm_modelo_edit_baseline,
+    validate_binding_intent,
     validate_scalar_intent,
     writable_scalar_entry,
 )
@@ -79,11 +81,6 @@ _ROW_UNSUPPORTED_REASON: dict[ModeloEditRowIntentKind, ModeloEditUnsupportedInte
     ModeloEditRowIntentKind.UPDATE_ROW: ModeloEditUnsupportedIntentReason.UPDATE_ROW_NOT_YET_WIRED,
     ModeloEditRowIntentKind.DELETE_ROW: ModeloEditUnsupportedIntentReason.DELETE_ROW_NOT_YET_WIRED,
     ModeloEditRowIntentKind.MOVE_ROW: ModeloEditUnsupportedIntentReason.MOVE_ROW_NOT_YET_WIRED,
-}
-
-_BINDING_UNSUPPORTED_REASON: dict[ModeloEditBindingIntentKind, ModeloEditUnsupportedIntentReason] = {
-    ModeloEditBindingIntentKind.SET_OVERRIDE_VALUE: ModeloEditUnsupportedIntentReason.SET_OVERRIDE_VALUE_NOT_YET_WIRED,
-    ModeloEditBindingIntentKind.REMOVE_OVERRIDE: ModeloEditUnsupportedIntentReason.REMOVE_OVERRIDE_NOT_YET_WIRED,
 }
 
 _NUMERIC_DATA_TYPES = frozenset({"decimal", "money", "integer", "ratio", "year"})
@@ -120,12 +117,6 @@ def _reachable_scalar_inputs(
     if submission.row_intents:
         first_row = submission.row_intents[0]
         return _unsupported_intent_refusal(_ROW_UNSUPPORTED_REASON[first_row.kind], address=first_row.address)
-    if submission.binding_intents:
-        first_binding = submission.binding_intents[0]
-        return _unsupported_intent_refusal(
-            _BINDING_UNSUPPORTED_REASON[first_binding.kind], address=first_binding.address
-        )
-
     baseline = submission.baseline
     casilla_inputs: dict[str, Decimal] = {}
     text_casilla_inputs: dict[str, str] = {}
@@ -244,6 +235,41 @@ def _prepare_scalar_edit_inputs(
     return casilla_inputs, text_casilla_inputs, cleared_casilla_ids
 
 
+def _prepare_binding_edit_inputs(
+    submission: ModeloEditSubmissionV1,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> tuple[dict[str, Decimal], dict[str, str]] | ModeloEditExecutionNoEffectV1:
+    """Validate admitted SET overrides and route them through registry channels."""
+    raw: dict[str, str] = {}
+    for intent in submission.binding_intents:
+        refusal = validate_binding_intent(submission.baseline, intent.address, intent.kind)
+        if refusal is not None:
+            return ModeloEditExecutionNoEffectV1(refusal=refusal)
+        if intent.kind is ModeloEditBindingIntentKind.REMOVE_OVERRIDE:
+            return _unsupported_intent_refusal(
+                ModeloEditUnsupportedIntentReason.REMOVE_OVERRIDE_NOT_YET_WIRED,
+                address=intent.address,
+            )
+        raw[intent.address.binding_id] = str(intent.value)
+    baseline = submission.baseline
+    snapshot = operation.snapshot(
+        str(baseline.modelo),
+        filing_year=baseline.filing_year,
+        period=baseline.period.registry_token,
+    )
+    if snapshot.revision.id != baseline.law_selected_revision_id:
+        return ModeloEditExecutionNoEffectV1(
+            refusal=ModeloEditDomainRefusalV1(
+                code=ModeloEditRefusalCode.REGISTRY_SCHEMA_CONFLICT,
+                facts=("law_selected_revision_id",),
+                responsible_owner=_RESPONSIBLE_OWNER,
+                reconsideration_condition="refresh the edit baseline against its current authority revision",
+            )
+        )
+    return resolve_binding_overrides(raw, snapshot.revision)
+
+
 def _capture_edit_receipt(
     calculation_revision_id: str,
     bucket_event_id: str | None,
@@ -288,6 +314,8 @@ def _execute_modelo_edit(
     text_casilla_inputs: dict[str, str],
     cleared_casilla_ids: tuple[CasillaId, ...],
     detail_rows: tuple[ModeloDetailRow, ...],
+    binding_values: dict[str, Decimal],
+    enum_binding_values: dict[str, str],
     ports: CalculationActionPorts,
     receipt_repository: ModeloEditReceiptRepositoryPort,
     now: datetime,
@@ -315,6 +343,8 @@ def _execute_modelo_edit(
         text_casilla_inputs=text_casilla_inputs or None,
         cleared_casilla_ids=cleared_casilla_ids,
         detail_rows=detail_rows,
+        binding_values=binding_values or None,
+        enum_binding_values=enum_binding_values or None,
         ports=ports,
         clock=now,
         additional_secure_object_writes_for_revision=_co_commit_receipt,
@@ -377,6 +407,11 @@ def apply_modelo_edit(
         return reachable
     casilla_inputs, text_casilla_inputs, cleared_casilla_ids = reachable
 
+    binding_inputs = _prepare_binding_edit_inputs(submission, operation=ports.operation)
+    if isinstance(binding_inputs, ModeloEditExecutionNoEffectV1):
+        return binding_inputs
+    binding_values, enum_binding_values = binding_inputs
+
     # Immediately before effect: revision-load the catalogues and recheck
     # every baseline coordinate. No re-read happens between this check and
     # the guarded commit below other than the calculation boundary's own
@@ -405,6 +440,8 @@ def apply_modelo_edit(
         text_casilla_inputs=text_casilla_inputs,
         cleared_casilla_ids=cleared_casilla_ids,
         detail_rows=reconstructed_detail_rows,
+        binding_values=binding_values,
+        enum_binding_values=enum_binding_values,
         ports=ports,
         receipt_repository=receipt_repository,
         now=now,

@@ -274,8 +274,8 @@ def build_validated_snapshot(
             legal_ids,
             filing_date=on or date(filing_year, 12, 31),
         )
-    _check_revision_scoped_legal_windows(modelo, revision, catalogues)
-    _check_revision_scoped_source_windows(modelo, revision, catalogues, endpoint_directory)
+    check_revision_scoped_legal_windows(modelo, revision, catalogues)
+    check_revision_scoped_source_windows(modelo, revision, catalogues, endpoint_directory)
     snapshot = RegistrySnapshot(
         modelo=modelo,
         revision=revision,
@@ -507,8 +507,9 @@ def legal_window_covers_devengo(revision: ModeloRevision, reference: LegalRefere
       partway through the following calendar year, while the return is still
       being filed, did NOT govern the tax period and must not ground it, even
       though it overlaps the presentation-extended window below.
-    - Every other kind (``orden``, ``manual``, ``instruction`` -- procedural or
-      interpretive instruments) keeps the existing presentation-window-tolerant
+    - Every other kind (``orden``, ``manual``, ``resolucion``,
+      ``acuerdo_parlamentario`` -- procedural, interpretive or parliamentary
+      instruments) keeps the existing presentation-window-tolerant
       overlap check via :class:`RevisionLegalApplicabilityWindow`: the orden
       ministerial approving a modelo form, or a manual's TFI-documentation
       annex, is legitimately published AFTER the tax year closes, during the
@@ -537,7 +538,7 @@ def legal_window_covers_devengo(revision: ModeloRevision, reference: LegalRefere
     return governs_to is None or governs_to >= revision.valid_to
 
 
-def _check_revision_scoped_legal_windows(
+def check_revision_scoped_legal_windows(
     modelo: ModeloDefinition,
     revision: ModeloRevision,
     catalogues: RegistryCatalogues,
@@ -549,6 +550,11 @@ def _check_revision_scoped_legal_windows(
     its nested records cites it is a filing-specific grounding claim, checked by
     :func:`legal_window_covers_devengo` -- devengo-anchored for substantive law,
     presentation-window-tolerant for procedural/administrative kinds.
+
+    Args:
+        modelo: The :class:`ModeloDefinition` whose own refs stay exempt.
+        revision: The :class:`ModeloRevision` whose cited refs are checked.
+        catalogues: The legal and source catalogues the refs resolve against.
     """
     revision_legal_ids, _revision_source_ids = collect_snapshot_ref_ids(modelo, revision)
     elsewhere_legal_ids, _elsewhere_source_ids = collect_snapshot_ref_ids(
@@ -753,7 +759,7 @@ def _construct_source_ids_without_deadline_closure(revision: ModeloRevision) -> 
     return source_ids
 
 
-def _check_revision_scoped_source_windows(
+def check_revision_scoped_source_windows(
     modelo: ModeloDefinition,
     revision: ModeloRevision,
     catalogues: RegistryCatalogues,
@@ -776,8 +782,10 @@ def _check_revision_scoped_source_windows(
     filing has to be able to defend.
 
     Args:
-        modelo: The modelo owning the revision, named in the failure message.
-        revision: The selected revision whose scoped source refs are checked.
+        modelo: The :class:`ModeloDefinition` owning the revision, named in the
+            failure message.
+        revision: The selected :class:`ModeloRevision` whose scoped source refs
+            are checked.
         catalogues: Catalogues supplying the referenced source records.
         revision_directory: Complete endpoint metadata from the pinned directory,
             or ``None`` when the caller holds the complete in-memory modelo.
@@ -1026,6 +1034,8 @@ def collect_snapshot_ref_ids(
 __all__ = [
     "SUBSTANTIVE_LAW_KINDS",
     "build_validated_snapshot",
+    "check_revision_scoped_legal_windows",
+    "check_revision_scoped_source_windows",
     "check_snapshot_filing_capability",
     "check_snapshot_filing_review_tier",
     "collect_snapshot_ref_ids",

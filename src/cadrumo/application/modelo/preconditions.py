@@ -134,6 +134,12 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
     ),
     _profile(
+        "modelo.work.create",
+        "modelo.work.create.censo.work_unit_allowed",
+        "modelo.work.create.censo.modelo_superseded",
+        no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+    ),
+    _profile(
         "modelo.work.rename",
         "modelo.work.rename.lifecycle.mutable",
         "modelo.work.rename.lifecycle.discarded",
@@ -202,6 +208,31 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.work.calculate.source_inputs.casilla_override_rejected",
     ),
     _profile(
+        "modelo.work.calculate",
+        "modelo.work.calculate.caller_overrides.binding_declared",
+        "modelo.work.calculate.caller_overrides.binding_unknown",
+        action_id="operator.modelo.bindings.list",
+    ),
+    _profile(
+        "modelo.work.calculate",
+        "modelo.work.calculate.caller_overrides.binding_encoding_valid",
+        "modelo.work.calculate.caller_overrides.boolean_binding_encoding_invalid",
+        action_id="operator.modelo.bindings.list",
+    ),
+    _profile(
+        "modelo.work.calculate",
+        "modelo.work.calculate.caller_overrides.casilla_declared",
+        "modelo.work.calculate.caller_overrides.casilla_unknown",
+        action_id="operator.modelo.casillas",
+    ),
+    # No action: a row field's values arrive on the detail rows that carry it,
+    # and which rows those are is the operator's to supply, not a refusal's.
+    _profile(
+        "modelo.work.calculate",
+        "modelo.work.calculate.caller_overrides.casilla_scalar",
+        "modelo.work.calculate.caller_overrides.row_field_casilla_refused",
+    ),
+    _profile(
         "modelo.work.verify",
         "modelo.work.verify.lifecycle_path.required",
         "modelo.work.verify.lifecycle_path.direct_cross_period_promotion_refused",
@@ -251,6 +282,24 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.work.calculate.m390.reconciliation.complete",
         "modelo.work.calculate.m390.reconciliation.clean_m303_observations_missing",
     ),
+    *(
+        _profile(
+            leaf,
+            f"{leaf}.m123_count_authority.resolved",
+            f"{leaf}.m123_count_authority.unresolved",
+        )
+        for leaf in ("modelo.work.calculate", "modelo.work.verify", "modelo.work.file", "modelo.export")
+    ),
+    # No action: a settled prior-accrual Modelo 193 row needs an official
+    # source for its payment-year amounts, which only the operator can obtain.
+    *(
+        _profile(
+            leaf,
+            f"{leaf}.m193_settled_row_amount_authority.resolved",
+            f"{leaf}.m193_settled_row_amount_authority.unresolved",
+        )
+        for leaf in ("modelo.work.file", "modelo.export")
+    ),
     _profile(
         "modelo.work.calculate",
         "modelo.work.calculate.ledger_preflight.ready",
@@ -271,6 +320,16 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.work.calculate",
         "modelo.work.calculate.m303_filing_evidence.valid",
         "modelo.work.calculate.m303_filing_evidence.period_mismatch",
+    ),
+    _profile(
+        "modelo.work.calculate",
+        "modelo.work.calculate.m303_filing_evidence.valid",
+        "modelo.work.calculate.m303_filing_evidence.exonerado_390_attestation_outside_last_period",
+    ),
+    _profile(
+        "modelo.work.calculate",
+        "modelo.work.calculate.m303_filing_evidence.valid",
+        "modelo.work.calculate.m303_filing_evidence.period_outside_filing_schedule",
     ),
     _profile(
         "modelo.work.calculate",

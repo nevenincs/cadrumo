@@ -49,7 +49,7 @@ def test_real_text_layer_invoice_extracts_content() -> None:
 
 def test_real_scanned_pdf_has_no_text_layer_then_rasterises() -> None:
     """A real image-only invoice PDF has no text layer, so it falls back to rasterisation."""
-    from .....adapters.outbound.llm.providers.local import rasterise_pdf_pages_to_base64_png
+    from ....outbound.llm.providers.local import rasterise_pdf_pages_to_base64_png
 
     data = _read_corpus("scanned_invoice_from_commons_1.pdf")
     with pytest.raises(ValueError):  # no usable text layer -> caller routes to the vision reader
@@ -87,8 +87,8 @@ def test_prompt_injection_invoice_extracts_text_without_executing_it() -> None:
 
 def test_malformed_pdf_raises_not_crashes() -> None:
     """A PDF header followed by garbage fails loudly on both parsers, never silently."""
-    from .....adapters.outbound.llm.errors import LLMPdfRasterisationError
-    from .....adapters.outbound.llm.providers.local import rasterise_pdf_pages_to_base64_png
+    from ....outbound.llm.errors import LLMPdfRasterisationError
+    from ....outbound.llm.providers.local import rasterise_pdf_pages_to_base64_png
 
     data = _read_corpus("adversarial_malformed.pdf")
     with pytest.raises(ValueError, match="pdfplumber could not open"):
@@ -102,8 +102,8 @@ def test_malformed_pdf_raises_not_crashes() -> None:
 
 def test_empty_pdf_raises_not_crashes() -> None:
     """A zero-byte .pdf fails loudly rather than producing a bogus result."""
-    from .....adapters.outbound.llm.errors import LLMPdfRasterisationError
-    from .....adapters.outbound.llm.providers.local import rasterise_pdf_pages_to_base64_png
+    from ....outbound.llm.errors import LLMPdfRasterisationError
+    from ....outbound.llm.providers.local import rasterise_pdf_pages_to_base64_png
 
     data = _read_corpus("adversarial_empty.pdf")
     assert data == b""

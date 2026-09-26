@@ -23,6 +23,7 @@ from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.config import load_settings, override_settings
 from ....tests.os_keychain_hook import require_os_credential_store
 from ..verb_input_schema import build_verb_input_schemas
+from ._modelo_work_ux_support import m111_withholding_aggregate_arguments, m111_withholding_invoice_arguments
 from .subprocess_cli import as_text_completed_process, subprocess_cli_env
 
 # Each journey crosses from in-process registration into a fresh installed
@@ -261,46 +262,23 @@ def _create_work_unit(
     return work_unit_id
 
 
-def _seed_m111_retencion(environment: dict[str, str]) -> None:
-    observation = json.dumps(
-        {
-            "source_kind": "ledger_transaction",
-            "source_object_id": "s27-retencion-001",
-            "perceptor_nif": "A12345678",
-            "perceptor_name": "Entidad pagadora SL",
-            "scheme": "rendimientos_trabajo",
-            "taxable_base": "1000.00",
-            "retencion_amount": "190.00",
-            "accrued_on": "2026-04-15",
-        },
-    )
-    _run_success(
-        environment,
-        [
-            "app",
-            "modelo",
-            "aggregate",
-            "--modelo",
-            "111",
-            "--year",
-            "2026",
-            "--period",
-            "2T",
-            "--retencion-observation",
-            observation,
-        ],
-    )
+def _capture_m111_invoice_withholding(environment: dict[str, str]) -> None:
+    """Capture the Modelo 111 2025 1T invoice-backed retención through the installed console."""
+    created = _run_success(environment, m111_withholding_invoice_arguments())
+    invoice_id = _result(created).get("invoice_id")
+    assert isinstance(invoice_id, str) and invoice_id
+    _run_success(environment, m111_withholding_aggregate_arguments(invoice_id))
 
 
 def _create_calculable_m111_work(environment: dict[str, str]) -> str:
     work_unit_id = _create_work_unit(
         environment,
         modelo="111",
-        year=2026,
-        period="2T",
+        year=2025,
+        period="1T",
         revision="2019-y-siguientes",
     )
-    _seed_m111_retencion(environment)
+    _capture_m111_invoice_withholding(environment)
     return work_unit_id
 
 

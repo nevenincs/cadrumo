@@ -116,14 +116,14 @@ def _parse_iso_date(value: str | None, option: str) -> _date | None:
 
 def _compose_diagnostics_run_health_port():
     """Compose the required diagnostic telemetry port at the CLI boundary."""
-    from ...entrypoints.diagnostics_run_health_composition import compose_diagnostics_run_health_port
+    from ..diagnostics_run_health_composition import compose_diagnostics_run_health_port
 
     return compose_diagnostics_run_health_port()
 
 
 def _compose_diagnostics_auth_probe_port(ctx: typer.Context):
     """Compose the diagnostics auth probe from the root-owned state ports."""
-    from ...entrypoints.diagnostics_run_health_composition import compose_diagnostics_auth_probe_port
+    from ..diagnostics_run_health_composition import compose_diagnostics_auth_probe_port
     from .state_projection_support import (
         authority_operation,
         certificate_secret_backend_factory,

@@ -21,7 +21,7 @@ strings that embeds an ``aeat app`` /
 
 The hint-string extraction reuses the documented-command gate's command-line
 decomposition and live-tree resolution (``_parse_command_line``,
-``_resolve_path``, ``_validate_command``) so the two gates share one notion of
+``resolve_path``, ``validate_cited_command``) so the two gates share one notion of
 "resolves against the live CLI".
 
 **Class 2 - enum-choice-vs-handler sets.** Every Typer option whose advertised
@@ -58,12 +58,8 @@ from ....application.modelo.selectors import ModeloCalculationRevisionSelector
 from ....core.i18n.render import locale_map
 from ....domain.attachments.enums import AttachmentSource
 from .cli_runner import cadrumo_click_command
-from .test_documented_command_conformance import (
-    _AEAT_TOKEN_RE,
-    _CitedCommand,
-    _parse_command_line,
-    _validate_command,
-)
+from .live_command_validation import CitedCommand, validate_cited_command
+from .test_documented_command_conformance import _AEAT_TOKEN_RE, _parse_command_line
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -167,7 +163,7 @@ def _command_span(after_aeat: str) -> str:
     return " ".join(kept)
 
 
-def _cited_from_text(text: str) -> list[_CitedCommand]:
+def _cited_from_text(text: str) -> list[CitedCommand]:
     """Decompose every ``aeat ...`` command embedded in a free-text string.
 
     Reuses the documented-command gate's :func:`_parse_command_line` for the
@@ -175,7 +171,7 @@ def _cited_from_text(text: str) -> list[_CitedCommand]:
     a hint embedded in a sentence is validated as the command it cites, not the
     surrounding words.
     """
-    out: list[_CitedCommand] = []
+    out: list[CitedCommand] = []
     for raw_line in text.replace("`", " ").splitlines():
         match = _AEAT_TOKEN_RE.search(raw_line)
         if match is None:
@@ -194,7 +190,7 @@ def test_locale_command_strings_resolve() -> None:
     violations: list[str] = []
     for key, value in _locale_command_strings():
         for cited in _cited_from_text(value):
-            for problem in _validate_command(cited):
+            for problem in validate_cited_command(cited):
                 violations.append(f"locale {key}: {problem}")
     assert not violations, "cli.* locale strings cite non-conforming commands:\n  " + "\n  ".join(violations)
 
@@ -206,7 +202,7 @@ def test_literal_hint_strings_resolve() -> None:
         cited = _cited_from_text(hint)
         assert cited, f"literal hint did not decompose into a command: {hint!r}"
         for command in cited:
-            for problem in _validate_command(command):
+            for problem in validate_cited_command(command):
                 violations.append(f"literal hint {hint!r}: {problem}")
     assert not violations, "literal next-action hints cite non-conforming commands:\n  " + "\n  ".join(violations)
 

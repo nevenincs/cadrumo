@@ -91,8 +91,7 @@ _PLUGIN_DESCRIPTION = (
     "desde el inicio."
 )
 # The single product author-identity string, derived from the central product
-# identity. Shared by the plugin, marketplace, and shipped MCPB manifests so all
-# three read one declaration from this defining workspace module.
+# identity, declared once in this defining workspace module.
 PRODUCT_AUTHOR_NAME = f"{PRODUCT_IDENTITY.display_name} tax assistant project"
 _PLUGIN_AUTHOR_NAME = PRODUCT_AUTHOR_NAME
 _PLUGIN_LICENSE = "Apache-2.0"
@@ -139,61 +138,6 @@ _RUNTIME_WHEELHOUSE_FLOORS = {
     "windows-x86-64": "windows-10",
 }
 
-# --- Claude marketplace layout --------------------------------------------
-#
-# The marketplace layout target emits the git-repo content a dedicated public
-# marketplace repository serves: a ``.claude-plugin/``
-# ``marketplace.json`` (marketplace name ``neve``) listing the Cadrumo plugin plus
-# the plugin tree it points
-# at, materialised UNDER the marketplace root at ``plugins/cadrumo`` via the same
-# ``materialise_plugin`` emitter, so the marketplace manifest and the plugin it
-# serves cannot drift. Every field name here is the one the live
-# ``claude plugin validate --strict`` oracle accepts for a marketplace manifest;
-# note the validator checks the manifest shape only and does NOT resolve the
-# ``plugins[].source`` path, so the generator materialises the pointed-at plugin
-# itself rather than trusting the manifest alone.
-_MARKETPLACE_MANIFEST = "marketplace.json"
-# The marketplace NAME is the ecosystem namespace users address plugins under
-# (``<plugin>@neve``), independent of the repo it is served from; kebab-case
-# (lowercase) is required by the claude.ai marketplace sync.
-_MARKETPLACE_NAME = "neve"
-_MARKETPLACE_DESCRIPTION = (
-    "English: Neve plugin marketplace - Claude plugins including the Cadrumo "
-    "Spanish-tax assistant: read-only toward AEAT, it never files (the taxpayer "
-    "files outside the app), every state change needs human confirmation, financial "
-    "data stays on-host in encrypted storage, and only the conversation reaches the "
-    "model provider.\n"
-    "Español: Marketplace de plugins de Neve - plugins de Claude, incluido el "
-    "asistente de impuestos españoles Cadrumo: de solo lectura frente a la AEAT, "
-    "nunca presenta declaraciones (el contribuyente presenta fuera de la "
-    "aplicación), cada cambio de estado requiere confirmación humana, los datos "
-    "financieros permanecen en el equipo en almacenamiento cifrado y solo la "
-    "conversación llega al proveedor del modelo."
-)
-_MARKETPLACE_OWNER_NAME = _PLUGIN_AUTHOR_NAME
-_MARKETPLACE_PLUGINS_SUBDIR = "plugins"
-# The relative source the marketplace manifest points at, resolved from the
-# marketplace repo root (the directory holding ``.claude-plugin/``).
-_MARKETPLACE_PLUGIN_SOURCE = f"./{_MARKETPLACE_PLUGINS_SUBDIR}/{_PLUGIN_NAME}"
-# The prior plugin identity this product retires, declared as data the publisher
-# reads at merge time.
-#
-# It rides a SIDECAR beside the manifest rather than a field inside it, and the
-# reason is measured rather than stylistic: the manifest is governed by the live
-# ``claude plugin validate --strict`` oracle, and that oracle REJECTS the field.
-# Two marketplace trees generated from this emitter, identical but for the key,
-# validate as pass (exit 0) and fail (exit 1, "Unknown field 'supersedes'.
-# Claude Code ignores it at load time"). So the manifest is the wrong home twice
-# over: the declaration would be ignored by the very consumer the manifest
-# exists for, and carrying it would force a choice between a red gate and
-# retiring the oracle. The sidecar keeps the served manifest byte-shaped exactly
-# as the validator accepts while the declaration still ships with every cohort,
-# which is the property the retirement rests on -- it is re-verified on every
-# publication, so a replay, a stale manifest, or a stranger reclaiming the
-# abandoned name is refused again rather than once.
-_MARKETPLACE_SUPERSEDES_MANIFEST = "supersedes.json"
-_MARKETPLACE_SUPERSEDED_PLUGINS = ("aeat",)
-
 
 class PluginManifest(BaseModel):
     """Result of materialising a Claude plugin from the shipped harness source.
@@ -212,23 +156,6 @@ class PluginManifest(BaseModel):
     skills_written: int = Field(ge=0)
     agents_written: int = Field(ge=0)
     persona_default: str = ""
-
-
-class MarketplaceManifest(BaseModel):
-    """Result of materialising the marketplace-served tree from the harness source.
-
-    ``plugin_source`` is the relative ``plugins[].source`` the marketplace
-    manifest points at (``./plugins/cadrumo``); ``plugin`` is the nested
-    :class:`PluginManifest` for the plugin materialised under that source, so the
-    marketplace and the plugin it serves are one emission and cannot drift.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    output_path: str = Field(min_length=1)
-    marketplace_name: str = Field(min_length=1)
-    plugin_source: str = Field(min_length=1)
-    plugin: PluginManifest
 
 
 class _PluginPythonCohort(Protocol):
@@ -665,68 +592,6 @@ def materialise_plugin(
         skills_written=skills,
         agents_written=agents,
         persona_default=persona_default,
-    )
-
-
-def _marketplace_manifest_document() -> dict[str, object]:
-    """Build the ``.claude-plugin/marketplace.json`` manifest document.
-
-    ``name``, ``owner`` (object), and ``plugins[]`` are the validator-required
-    fields; ``description`` is required additionally under ``--strict`` (its
-    absence is a strict-failing warning). The single ``plugins[]`` entry sources
-    the plugin from the relative ``./plugins/cadrumo`` subtree this generator
-    materialises alongside the manifest.
-    """
-    return {
-        "name": _MARKETPLACE_NAME,
-        "description": _MARKETPLACE_DESCRIPTION,
-        "owner": {"name": _MARKETPLACE_OWNER_NAME},
-        "plugins": [
-            {"name": _PLUGIN_NAME, "source": _MARKETPLACE_PLUGIN_SOURCE},
-        ],
-    }
-
-
-def materialise_marketplace(
-    output_dir: Path,
-    *,
-    persona_default: str = "",
-    cohort: _PluginPythonCohort,
-) -> MarketplaceManifest:
-    """Write the marketplace-served tree under ``output_dir`` from the harness source.
-
-    Emits ``.claude-plugin/marketplace.json`` listing the Cadrumo plugin and, under
-    the relative ``plugins/cadrumo`` source it points at, the full plugin tree via
-    :func:`materialise_plugin`. Because both come from one call, the marketplace
-    manifest and the plugin it serves cannot drift. The required validated
-    ``cohort`` and ``persona_default`` pass straight through to plugin emission.
-
-    Also emits the ``.claude-plugin/supersedes.json`` sidecar naming the prior
-    plugin identities this product retires, which the publisher reads at merge
-    time. It is a sidecar rather than a manifest field because the strict plugin
-    validator rejects unknown manifest fields; see the constant's comment for the
-    measurement.
-
-    Returns:
-        :class:`MarketplaceManifest` describing the marketplace tree written.
-    """
-    _write_json(output_dir / _PLUGIN_DIR, _MARKETPLACE_MANIFEST, _marketplace_manifest_document())
-    _write_json(
-        output_dir / _PLUGIN_DIR,
-        _MARKETPLACE_SUPERSEDES_MANIFEST,
-        {"supersedes": list(_MARKETPLACE_SUPERSEDED_PLUGINS)},
-    )
-    plugin = materialise_plugin(
-        output_dir / _MARKETPLACE_PLUGINS_SUBDIR / _PLUGIN_NAME,
-        persona_default=persona_default,
-        cohort=cohort,
-    )
-
-    return MarketplaceManifest(
-        output_path=str(output_dir),
-        marketplace_name=_MARKETPLACE_NAME,
-        plugin_source=_MARKETPLACE_PLUGIN_SOURCE,
-        plugin=plugin,
     )
 
 

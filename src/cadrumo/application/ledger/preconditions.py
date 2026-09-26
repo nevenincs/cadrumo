@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Mapping
 from enum import StrEnum
-from typing import cast
 
+from ...core.errors.hierarchy import TerminalPreconditionErrorMixin
 from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ..operator_actions.models import PreconditionVerdict
 from ..operator_actions.preconditions import no_action_precondition_verdict
@@ -33,26 +33,13 @@ class LedgerPreconditionCondition(StrEnum):
     COUNTERPARTY_IDENTIFIER_VALID = "ledger.counterparty.identifier_valid"
 
 
-class LedgerPreconditionErrorMixin:
-    """Attach one typed terminal refusal to an existing registered error."""
+class LedgerPreconditionErrorMixin(TerminalPreconditionErrorMixin[PreconditionVerdict]):
+    """Attach one typed terminal refusal to an existing registered error.
 
-    def __init__(
-        self,
-        message: str | None = None,
-        *,
-        context: Mapping[str, object] | None = None,
-        translated_message: str | None = None,
-        precondition_verdict: PreconditionVerdict | None = None,
-    ) -> None:
-        """Keep a domain verdict without retaining a presentation suggestion."""
-        parent_init = cast(Callable[..., None], super().__init__)
-        parent_init(message, context=context, translated_message=translated_message)
-        self._terminal_precondition_verdict = precondition_verdict
-
-    @property
-    def terminal_precondition_verdict(self) -> PreconditionVerdict | None:
-        """Return the exact application-owned refusal for later projection."""
-        return self._terminal_precondition_verdict
+    The ledger boundary needs no transport behaviour of its own: it binds the
+    core mixin to the application's verdict record and keeps the ledger name
+    its errors are declared with.
+    """
 
 
 def ledger_no_recovery_verdict(

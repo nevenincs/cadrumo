@@ -1,0 +1,1108 @@
+[[revisions.2019-y-siguientes.export_layouts]]
+id = 'generated-modelo-308-2019-y-siguientes-fichero'
+
+[[revisions.2019-y-siguientes.export_layouts.records]]
+id = 'm308-page-01'
+record_type = 'page-01'
+order = 0
+encoding = 'iso-8859-1'
+line_ending = 'none'
+required = true
+
+[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+id = 'm308-2019.declaracion.f001'
+offset = 1
+length = 2
+kind = 'literal'
+literal = '<T'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-21',
+    'rd-1624-1992:art-30-bis',
+    'orden-eha-3786-2008:art-2',
+    'ley-37-1992:art-161',
+]
+source_refs = ['aeat-dr-308-2019']
+
+[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+id = 'm308-2019.declaracion.f002'
+offset = 3
+length = 3
+kind = 'literal'
+literal = '308'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-21',
+    'rd-1624-1992:art-30-bis',
+    'orden-eha-3786-2008:art-2',
+    'ley-37-1992:art-161',
+]
+source_refs = ['aeat-dr-308-2019']
+
+[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+id = 'm308-2019.declaracion.f003'
+offset = 6
+length = 2
+kind = 'literal'
+literal = '01'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-21',
+    'rd-1624-1992:art-30-bis',
+    'orden-eha-3786-2008:art-2',
+    'ley-37-1992:art-161',
+]
+source_refs = ['aeat-dr-308-2019']
+
+[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+id = 'm308-2019.declaracion.f004'
+offset = 8
+length = 4
+kind = 'literal'
+literal = '000>'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-21',
+    'rd-1624-1992:art-30-bis',
+    'orden-eha-3786-2008:art-2',
+    'ley-37-1992:art-161',
+]
+source_refs = ['aeat-dr-308-2019']
+
+[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+id = 'm308-2019.declaracion.f005'
+offset = 12
+length = 1
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-21',
+    'rd-1624-1992:art-30-bis',
+    'orden-eha-3786-2008:art-2',
+    'ley-37-1992:art-161',
+]
+source_refs = ['aeat-dr-308-2019']
+
+[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+id = 'm308-2019.declaracion.f006'
+offset = 13
+length = 1
+kind = 'casilla'
+casilla_id = 'decl.tipo-declaracion'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-21',
+    'rd-1624-1992:art-30-bis',
+    'orden-eha-3786-2008:art-2',
+    'ley-37-1992:art-161',
+]
+source_refs = ['aeat-dr-308-2019']
+
+[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+id = 'm308-2019.declaracion.f007'
+offset = 14
+length = 9
+kind = 'header'
+producer_key = 'taxpayer.tax_id'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-21',
+    'rd-1624-1992:art-30-bis',
+    'orden-eha-3786-2008:art-2',
+    'ley-37-1992:art-161',
+]
+source_refs = ['aeat-dr-308-2019']
+
+[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+id = 'm308-2019.declaracion.f008'
+offset = 23
+length = 60
+kind = 'header'
+producer_key = 'taxpayer.surnames_or_legal_name'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-21',
+    'rd-1624-1992:art-30-bis',
+    'orden-eha-3786-2008:art-2',
+    'ley-37-1992:art-161',
+]
+source_refs = ['aeat-dr-308-2019']
+
+[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+id = 'm308-2019.declaracion.f009'
+offset = 83
+length = 20
+kind = 'casilla'
+casilla_id = 'decl.nombre'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-21',
+    'rd-1624-1992:art-30-bis',
+    'orden-eha-3786-2008:art-2',
+    'ley-37-1992:art-161',
+]
+source_refs = ['aeat-dr-308-2019']
+
+[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+id = 'm308-2019.declaracion.f010'
+offset = 103
+length = 4
+kind = 'casilla'
+casilla_id = 'decl.ejercicio'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-21',
+    'rd-1624-1992:art-30-bis',
+    'orden-eha-3786-2008:art-2',
+    'ley-37-1992:art-161',
+]
+source_refs = ['aeat-dr-308-2019']
+
+[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+id = 'm308-2019.declaracion.f011'
+offset = 107
+length = 2
+kind = 'casilla'
+casilla_id = 'decl.periodo'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-21',
+    'rd-1624-1992:art-30-bis',
+    'orden-eha-3786-2008:art-2',
+    'ley-37-1992:art-161',
+]
+source_refs = ['aeat-dr-308-2019']
+
+[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+id = 'm308-2019.declaracion.f012'
+offset = 109
+length = 1
+kind = 'casilla'
+casilla_id = 'decl.tipo-tributacion'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+design_type = 'Num'
+value_policy = 'enumerated-digits'
+allowed_values = [
+    '1',
+    '2',
+    '3',
+    '4',
+]
+legal_refs = [
+    'ley-37-1992:art-21',
+    'rd-1624-1992:art-30-bis',
+    'orden-eha-3786-2008:art-2',
+    'ley-37-1992:art-161',
+]
+source_refs = ['aeat-dr-308-2019']
+
+[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+id = 'm308-2019.declaracion.f013'
+offset = 110
+length = 9
+kind = 'casilla'
+casilla_id = 'decl.mtn-adquirente-nif'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-21',
+    'rd-1624-1992:art-30-bis',
+    'orden-eha-3786-2008:art-2',
+    'ley-37-1992:art-161',
+]
+source_refs = ['aeat-dr-308-2019']
+
+[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+id = 'm308-2019.declaracion.f014'
+offset = 119
+length = 60
+kind = 'casilla'
+casilla_id = 'decl.mtn-adquirente-apellidos'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-21',
+    'rd-1624-1992:art-30-bis',
+    'orden-eha-3786-2008:art-2',
+    'ley-37-1992:art-161',
+]
+source_refs = ['aeat-dr-308-2019']
+
+[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+id = 'm308-2019.declaracion.f015'
+offset = 179
+length = 20
+kind = 'casilla'
+casilla_id = 'decl.mtn-adquirente-nombre'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-21',
+    'rd-1624-1992:art-30-bis',
+    'orden-eha-3786-2008:art-2',
+    'ley-37-1992:art-161',
+]
+source_refs = ['aeat-dr-308-2019']
+
+[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+id = 'm308-2019.declaracion.f016'
+offset = 199
+length = 2
+kind = 'casilla'
+casilla_id = 'decl.mtn-adquirente-pais'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-21',
+    'rd-1624-1992:art-30-bis',
+    'orden-eha-3786-2008:art-2',
+    'ley-37-1992:art-161',
+]
+source_refs = ['aeat-dr-308-2019']
+
+[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+id = 'm308-2019.declaracion.f017'
+offset = 201
+length = 40
+kind = 'casilla'
+casilla_id = 'decl.mtn-vehiculo-marca'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-21',
+    'rd-1624-1992:art-30-bis',
+    'orden-eha-3786-2008:art-2',
+    'ley-37-1992:art-161',
+]
+source_refs = ['aeat-dr-308-2019']
+
+[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+id = 'm308-2019.declaracion.f018'
+offset = 241
+length = 40
+kind = 'casilla'
+casilla_id = 'decl.mtn-vehiculo-tipo'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-21',
+    'rd-1624-1992:art-30-bis',
+    'orden-eha-3786-2008:art-2',
+    'ley-37-1992:art-161',
+]
+source_refs = ['aeat-dr-308-2019']
+
+[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+id = 'm308-2019.declaracion.f019'
+offset = 281
+length = 40
+kind = 'casilla'
+casilla_id = 'decl.mtn-vehiculo-modelo'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-21',
+    'rd-1624-1992:art-30-bis',
+    'orden-eha-3786-2008:art-2',
+    'ley-37-1992:art-161',
+]
+source_refs = ['aeat-dr-308-2019']
+
+[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+id = 'm308-2019.declaracion.f020'
+offset = 321
+length = 22
+kind = 'casilla'
+casilla_id = 'decl.mtn-vehiculo-bastidor'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-21',
+    'rd-1624-1992:art-30-bis',
+    'orden-eha-3786-2008:art-2',
+    'ley-37-1992:art-161',
+]
+source_refs = ['aeat-dr-308-2019']
+
+[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+id = 'm308-2019.declaracion.f021'
+offset = 343
+length = 6
+kind = 'casilla'
+casilla_id = 'decl.mtn-vehiculo-clasificacion'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-21',
+    'rd-1624-1992:art-30-bis',
+    'orden-eha-3786-2008:art-2',
+    'ley-37-1992:art-161',
+]
+source_refs = ['aeat-dr-308-2019']
+
+[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+id = 'm308-2019.declaracion.f022'
+offset = 349
+length = 40
+kind = 'casilla'
+casilla_id = 'decl.mtn-embarcacion-fabricante'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-21',
+    'rd-1624-1992:art-30-bis',
+    'orden-eha-3786-2008:art-2',
+    'ley-37-1992:art-161',
+]
+source_refs = ['aeat-dr-308-2019']
+
+[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+id = 'm308-2019.declaracion.f023'
+offset = 389
+length = 80
+kind = 'casilla'
+casilla_id = 'decl.mtn-embarcacion-tipo'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-21',
+    'rd-1624-1992:art-30-bis',
+    'orden-eha-3786-2008:art-2',
+    'ley-37-1992:art-161',
+]
+source_refs = ['aeat-dr-308-2019']
+
+[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+id = 'm308-2019.declaracion.f024'
+offset = 469
+length = 22
+kind = 'casilla'
+casilla_id = 'decl.mtn-embarcacion-identificacion'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-21',
+    'rd-1624-1992:art-30-bis',
+    'orden-eha-3786-2008:art-2',
+    'ley-37-1992:art-161',
+]
+source_refs = ['aeat-dr-308-2019']
+
+[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+id = 'm308-2019.declaracion.f025'
+offset = 491
+length = 5
+kind = 'casilla'
+casilla_id = 'decl.mtn-embarcacion-eslora'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = [
+    'ley-37-1992:art-21',
+    'rd-1624-1992:art-30-bis',
+    'orden-eha-3786-2008:art-2',
+    'ley-37-1992:art-161',
+]
+source_refs = ['aeat-dr-308-2019']
+
+[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+id = 'm308-2019.declaracion.f026'
+offset = 496
+length = 40
+kind = 'casilla'
+casilla_id = 'decl.mtn-aeronave-fabricante'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-21',
+    'rd-1624-1992:art-30-bis',
+    'orden-eha-3786-2008:art-2',
+    'ley-37-1992:art-161',
+]
+source_refs = ['aeat-dr-308-2019']
+
+[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+id = 'm308-2019.declaracion.f027'
+offset = 536
+length = 80
+kind = 'casilla'
+casilla_id = 'decl.mtn-aeronave-marca'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-21',
+    'rd-1624-1992:art-30-bis',
+    'orden-eha-3786-2008:art-2',
+    'ley-37-1992:art-161',
+]
+source_refs = ['aeat-dr-308-2019']
+
+[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+id = 'm308-2019.declaracion.f028'
+offset = 616
+length = 22
+kind = 'casilla'
+casilla_id = 'decl.mtn-aeronave-serie'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-21',
+    'rd-1624-1992:art-30-bis',
+    'orden-eha-3786-2008:art-2',
+    'ley-37-1992:art-161',
+]
+source_refs = ['aeat-dr-308-2019']
+
+[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+id = 'm308-2019.declaracion.f029'
+offset = 638
+length = 4
+kind = 'casilla'
+casilla_id = 'decl.mtn-aeronave-ano'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+design_type = 'Num'
+value_policy = 'four-digit-year'
+legal_refs = [
+    'ley-37-1992:art-21',
+    'rd-1624-1992:art-30-bis',
+    'orden-eha-3786-2008:art-2',
+    'ley-37-1992:art-161',
+]
+source_refs = ['aeat-dr-308-2019']
+
+[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+id = 'm308-2019.declaracion.f030'
+offset = 642
+length = 10
+kind = 'casilla'
+casilla_id = 'decl.mtn-aeronave-peso'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+design_type = 'Num'
+value_policy = 'unsigned-integer'
+legal_refs = [
+    'ley-37-1992:art-21',
+    'rd-1624-1992:art-30-bis',
+    'orden-eha-3786-2008:art-2',
+    'ley-37-1992:art-161',
+]
+source_refs = ['aeat-dr-308-2019']
+
+[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+id = 'm308-2019.declaracion.f031'
+offset = 652
+length = 17
+kind = 'casilla'
+casilla_id = 'decl.mtn-precio-adquisicion'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = [
+    'ley-37-1992:art-21',
+    'rd-1624-1992:art-30-bis',
+    'orden-eha-3786-2008:art-2',
+    'ley-37-1992:art-161',
+]
+source_refs = ['aeat-dr-308-2019']
+
+[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+id = 'm308-2019.declaracion.f032'
+offset = 669
+length = 5
+kind = 'casilla'
+casilla_id = 'decl.mtn-tipo-01'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = [
+    'ley-37-1992:art-21',
+    'rd-1624-1992:art-30-bis',
+    'orden-eha-3786-2008:art-2',
+    'ley-37-1992:art-161',
+]
+source_refs = ['aeat-dr-308-2019']
+
+[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+id = 'm308-2019.declaracion.f033'
+offset = 674
+length = 17
+kind = 'casilla'
+casilla_id = 'decl.mtn-iva-soportado'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = [
+    'ley-37-1992:art-21',
+    'rd-1624-1992:art-30-bis',
+    'orden-eha-3786-2008:art-2',
+    'ley-37-1992:art-161',
+]
+source_refs = ['aeat-dr-308-2019']
+
+[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+id = 'm308-2019.declaracion.f034'
+offset = 691
+length = 17
+kind = 'casilla'
+casilla_id = 'decl.mtn-precio-venta'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = [
+    'ley-37-1992:art-21',
+    'rd-1624-1992:art-30-bis',
+    'orden-eha-3786-2008:art-2',
+    'ley-37-1992:art-161',
+]
+source_refs = ['aeat-dr-308-2019']
+
+[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+id = 'm308-2019.declaracion.f035'
+offset = 708
+length = 5
+kind = 'casilla'
+casilla_id = 'decl.mtn-tipo-04'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = [
+    'ley-37-1992:art-21',
+    'rd-1624-1992:art-30-bis',
+    'orden-eha-3786-2008:art-2',
+    'ley-37-1992:art-161',
+]
+source_refs = ['aeat-dr-308-2019']
+
+[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+id = 'm308-2019.declaracion.f036'
+offset = 713
+length = 17
+kind = 'casilla'
+casilla_id = 'decl.mtn-maximo-devolver'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = [
+    'ley-37-1992:art-21',
+    'rd-1624-1992:art-30-bis',
+    'orden-eha-3786-2008:art-2',
+    'ley-37-1992:art-161',
+]
+source_refs = ['aeat-dr-308-2019']
+
+[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+id = 'm308-2019.declaracion.f037'
+offset = 730
+length = 17
+kind = 'casilla'
+casilla_id = 'decl.mtn-iva-devolver-eib'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = [
+    'ley-37-1992:art-21',
+    'rd-1624-1992:art-30-bis',
+    'orden-eha-3786-2008:art-2',
+    'ley-37-1992:art-161',
+]
+source_refs = ['aeat-dr-308-2019']
+
+[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+id = 'm308-2019.declaracion.f038'
+offset = 747
+length = 17
+kind = 'casilla'
+casilla_id = 'decl.mtn-iva-devolver-transporte'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = [
+    'ley-37-1992:art-21',
+    'rd-1624-1992:art-30-bis',
+    'orden-eha-3786-2008:art-2',
+    'ley-37-1992:art-161',
+]
+source_refs = ['aeat-dr-308-2019']
+
+[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+id = 'm308-2019.declaracion.f039'
+offset = 764
+length = 17
+kind = 'casilla'
+casilla_id = 'decl.mtn-iva-soportado-art21'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = [
+    'ley-37-1992:art-21',
+    'rd-1624-1992:art-30-bis',
+    'orden-eha-3786-2008:art-2',
+    'ley-37-1992:art-161',
+]
+source_refs = ['aeat-dr-308-2019']
+
+[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+id = 'm308-2019.declaracion.f040'
+offset = 781
+length = 17
+kind = 'casilla'
+casilla_id = 'decl.mtn-iva-devolver-art21'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = [
+    'ley-37-1992:art-21',
+    'rd-1624-1992:art-30-bis',
+    'orden-eha-3786-2008:art-2',
+    'ley-37-1992:art-161',
+]
+source_refs = ['aeat-dr-308-2019']
+
+[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+id = 'm308-2019.declaracion.f041'
+offset = 798
+length = 17
+kind = 'casilla'
+casilla_id = 'decl.req-base-08'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = [
+    'ley-37-1992:art-21',
+    'rd-1624-1992:art-30-bis',
+    'orden-eha-3786-2008:art-2',
+    'ley-37-1992:art-161',
+]
+source_refs = ['aeat-dr-308-2019']
+
+[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+id = 'm308-2019.declaracion.f042'
+offset = 815
+length = 5
+kind = 'casilla'
+casilla_id = 'decl.req-tipo-09'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = [
+    'ley-37-1992:art-21',
+    'rd-1624-1992:art-30-bis',
+    'orden-eha-3786-2008:art-2',
+    'ley-37-1992:art-161',
+]
+source_refs = ['aeat-dr-308-2019']
+
+[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+id = 'm308-2019.declaracion.f043'
+offset = 820
+length = 17
+kind = 'casilla'
+casilla_id = 'decl.req-cuota-10'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = [
+    'ley-37-1992:art-21',
+    'rd-1624-1992:art-30-bis',
+    'orden-eha-3786-2008:art-2',
+    'ley-37-1992:art-161',
+]
+source_refs = ['aeat-dr-308-2019']
+
+[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+id = 'm308-2019.declaracion.f044'
+offset = 837
+length = 17
+kind = 'casilla'
+casilla_id = 'decl.req-base-11'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = [
+    'ley-37-1992:art-21',
+    'rd-1624-1992:art-30-bis',
+    'orden-eha-3786-2008:art-2',
+    'ley-37-1992:art-161',
+]
+source_refs = ['aeat-dr-308-2019']
+
+[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+id = 'm308-2019.declaracion.f045'
+offset = 854
+length = 5
+kind = 'casilla'
+casilla_id = 'decl.req-tipo-12'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = [
+    'ley-37-1992:art-21',
+    'rd-1624-1992:art-30-bis',
+    'orden-eha-3786-2008:art-2',
+    'ley-37-1992:art-161',
+]
+source_refs = ['aeat-dr-308-2019']
+
+[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+id = 'm308-2019.declaracion.f046'
+offset = 859
+length = 17
+kind = 'casilla'
+casilla_id = 'decl.req-cuota-13'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = [
+    'ley-37-1992:art-21',
+    'rd-1624-1992:art-30-bis',
+    'orden-eha-3786-2008:art-2',
+    'ley-37-1992:art-161',
+]
+source_refs = ['aeat-dr-308-2019']
+
+[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+id = 'm308-2019.declaracion.f047'
+offset = 876
+length = 17
+kind = 'casilla'
+casilla_id = 'decl.req-base-14'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = [
+    'ley-37-1992:art-21',
+    'rd-1624-1992:art-30-bis',
+    'orden-eha-3786-2008:art-2',
+    'ley-37-1992:art-161',
+]
+source_refs = ['aeat-dr-308-2019']
+
+[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+id = 'm308-2019.declaracion.f048'
+offset = 893
+length = 5
+kind = 'casilla'
+casilla_id = 'decl.req-tipo-15'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = [
+    'ley-37-1992:art-21',
+    'rd-1624-1992:art-30-bis',
+    'orden-eha-3786-2008:art-2',
+    'ley-37-1992:art-161',
+]
+source_refs = ['aeat-dr-308-2019']
+
+[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+id = 'm308-2019.declaracion.f049'
+offset = 898
+length = 17
+kind = 'casilla'
+casilla_id = 'decl.req-cuota-16'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = [
+    'ley-37-1992:art-21',
+    'rd-1624-1992:art-30-bis',
+    'orden-eha-3786-2008:art-2',
+    'ley-37-1992:art-161',
+]
+source_refs = ['aeat-dr-308-2019']
+
+[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+id = 'm308-2019.declaracion.f050'
+offset = 915
+length = 17
+kind = 'casilla'
+casilla_id = 'decl.req-iva-devolver-17'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+design_type = 'Num'
+legal_refs = [
+    'ley-37-1992:art-21',
+    'rd-1624-1992:art-30-bis',
+    'orden-eha-3786-2008:art-2',
+    'ley-37-1992:art-161',
+]
+source_refs = ['aeat-dr-308-2019']
+
+[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+id = 'm308-2019.declaracion.f051'
+offset = 932
+length = 34
+kind = 'casilla'
+casilla_id = 'decl.devolucion-iban'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-21',
+    'rd-1624-1992:art-30-bis',
+    'orden-eha-3786-2008:art-2',
+    'ley-37-1992:art-161',
+]
+source_refs = ['aeat-dr-308-2019']
+
+[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+id = 'm308-2019.declaracion.f052'
+offset = 966
+length = 11
+kind = 'casilla'
+casilla_id = 'decl.devolucion-bic'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-21',
+    'rd-1624-1992:art-30-bis',
+    'orden-eha-3786-2008:art-2',
+    'ley-37-1992:art-161',
+]
+source_refs = ['aeat-dr-308-2019']
+
+[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+id = 'm308-2019.declaracion.f053'
+offset = 977
+length = 499
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-21',
+    'rd-1624-1992:art-30-bis',
+    'orden-eha-3786-2008:art-2',
+    'ley-37-1992:art-161',
+]
+source_refs = ['aeat-dr-308-2019']
+
+[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+id = 'm308-2019.declaracion.f054'
+offset = 1476
+length = 13
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-21',
+    'rd-1624-1992:art-30-bis',
+    'orden-eha-3786-2008:art-2',
+    'ley-37-1992:art-161',
+]
+source_refs = ['aeat-dr-308-2019']
+
+[[revisions.2019-y-siguientes.export_layouts.records.fields]]
+id = 'm308-2019.declaracion.f055'
+offset = 1489
+length = 12
+kind = 'literal'
+literal = '</T30801000>'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-21',
+    'rd-1624-1992:art-30-bis',
+    'orden-eha-3786-2008:art-2',
+    'ley-37-1992:art-161',
+]
+source_refs = ['aeat-dr-308-2019']
+
+[revisions.2019-y-siguientes.export_layouts.records.row_field_casilla_ids]

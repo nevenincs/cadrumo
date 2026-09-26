@@ -16,7 +16,6 @@ from decimal import Decimal
 
 import pytest
 
-from .....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from .....core.classification.policies import SensitivityClass
 from .....core.config_support import LLMProvider
 from .....core.redaction.rules import (
@@ -26,6 +25,7 @@ from .....core.redaction.rules import (
     redact_structured,
 )
 from ....persistence.llm.cache import LLMCache
+from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ....persistence.storage.secure_object_namespaces import LLM_CACHE_NAMESPACE
 from ..models import CachedEntry, LLMRequest, LLMResponse
 

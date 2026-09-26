@@ -112,7 +112,7 @@
         "--binding",
         "renta-base-liquidable-negativa-general-anterior=0",
         "--relation",
-        "renta-modelo-130-pagos-fraccionados=0"
+        "renta-modelo-123-retenciones-periodicas=450"
       ],
       "captures": [],
       "envelope": {
@@ -175,6 +175,7 @@
             "code": "modelo.work.calculate.source_advisory",
             "context": {
               "casilla_id": "0513",
+              "legal_refs": "ley-35-2006:art-56, ley-35-2006:art-58, ley-35-2006:art-61, orden-hac-277-2026:art-3",
               "reason": "source_issue",
               "remedy": "Declare the family situation with `descendiente add --descendiente NACIMIENTO=YYYY-MM-DD`.",
               "source_kind": "minimo_descendientes_undeclared"
@@ -222,7 +223,7 @@
             "renta-profile-taxpayer-birth-date": "1985-06-15",
             "renta-profile-unidad-familiar-otros-miembros-base": "0"
           },
-          "calculation_revision_id": "623a3ba760fcc2069d7db7e4ed1103f11b38222d8a9e69fed10b7252fe1084fe",
+          "calculation_revision_id": "e39909050c78ae6faa3f3a53bfae1d2f7a3ee727aef550a86115c7a9ce6d6954",
           "casilla_values": {
             "0001": "0",
             "0002": "0",
@@ -814,7 +815,7 @@
             "0594": "0",
             "0595": "3506.69",
             "0596": "2400",
-            "0597": "0",
+            "0597": "450",
             "0598": "0.00",
             "0599": "0",
             "0600": "0",
@@ -826,8 +827,8 @@
             "0606": "0",
             "0607": "0",
             "0608": "0",
-            "0609": "2400.00",
-            "0610": "1106.69",
+            "0609": "2850.00",
+            "0610": "656.69",
             "0611": "0",
             "0612": "0",
             "0613": "0",
@@ -886,7 +887,7 @@
             "0666": "0",
             "0667": "0",
             "0669": "0",
-            "0670": "1106.69",
+            "0670": "656.69",
             "0671": "1651.19",
             "0672": "0.00",
             "0675": "1651.19",
@@ -901,7 +902,7 @@
             "0692": "0",
             "0693": "0",
             "0694": "0",
-            "0695": "1106.69",
+            "0695": "656.69",
             "0698": "0",
             "0699": "0",
             "0700": "0",
@@ -17316,7 +17317,7 @@
               "value": "2400"
             },
             {
-              "absent_by_design": true,
+              "absent_by_design": false,
               "casilla_id": "0597",
               "formula_id": null,
               "legal_refs": [
@@ -17338,7 +17339,7 @@
                 "aeat-modelo-193-296-note-2025",
                 "boe-modelo-193-2011-form"
               ],
-              "value": "0"
+              "value": "450"
             },
             {
               "absent_by_design": false,
@@ -17632,7 +17633,7 @@
                 "0",
                 "0",
                 "2400",
-                "0",
+                "450",
                 "0.00",
                 "0",
                 "0",
@@ -17647,7 +17648,7 @@
                 "aeat-renta-2025-manual-parte1",
                 "boe-modelo-100-2025-form"
               ],
-              "value": "2400.00"
+              "value": "2850.00"
             },
             {
               "absent_by_design": false,
@@ -17668,13 +17669,13 @@
               ],
               "operand_values": [
                 "3506.69",
-                "2400.00"
+                "2850.00"
               ],
               "source_refs": [
                 "aeat-renta-2025-manual-parte1",
                 "boe-modelo-100-2025-form"
               ],
-              "value": "1106.69"
+              "value": "656.69"
             },
             {
               "absent_by_design": false,
@@ -19035,7 +19036,7 @@
                 "0669"
               ],
               "operand_values": [
-                "1106.69",
+                "656.69",
                 "0",
                 "0",
                 "0",
@@ -19057,7 +19058,7 @@
                 "aeat-renta-2025-manual-parte1",
                 "boe-modelo-100-2025-form"
               ],
-              "value": "1106.69"
+              "value": "656.69"
             },
             {
               "absent_by_design": false,
@@ -19416,13 +19417,13 @@
                 "0693"
               ],
               "operand_values": [
-                "1106.69",
+                "656.69",
                 "0"
               ],
               "source_refs": [
                 "lirpf-cuota-chain-authority"
               ],
-              "value": "1106.69"
+              "value": "656.69"
             },
             {
               "absent_by_design": false,
@@ -58126,7 +58127,9 @@
             "period": "0A",
             "revision_id": "2025"
           },
-          "relation_overrides": {},
+          "relation_overrides": {
+            "renta-modelo-123-retenciones-periodicas": "450"
+          },
           "result_summary": [
             {
               "casilla_id": "0519",
@@ -58244,7 +58247,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 623a3ba760fcc2069d7db7e4ed1103f11b38222d8a9e69fed10b7252fe1084fe (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision e39909050c78ae6faa3f3a53bfae1d2f7a3ee727aef550a86115c7a9ce6d6954 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "relation_prefill",

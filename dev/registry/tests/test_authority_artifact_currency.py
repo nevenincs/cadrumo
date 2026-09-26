@@ -1,8 +1,9 @@
 """The indexed-authority currency gate refuses a stale publication and accepts a fresh one.
 
-Every case runs on an isolated temporary registry and source tree: the artifact
-is installed through the real SQLite publisher, read back through the real runtime reader,
-and judged against the identity the publisher derives for the live inputs.
+Every case runs on an isolated temporary registry, source tree and compiler
+checkout: the artifact is installed through the real SQLite publisher, read back
+through the real runtime reader, and judged against the identity the live inputs
+and the re-hashed recorded compiler closure derive.
 """
 
 from __future__ import annotations
@@ -10,13 +11,16 @@ from __future__ import annotations
 import json
 import os
 import shutil
+import sqlite3
+from dataclasses import dataclass
 from decimal import Decimal
 from pathlib import Path
+from types import ModuleType
 
 import pytest
 from typer.testing import CliRunner
 
-from cadrumo.core.hashing import sha256_hex
+from cadrumo.core.hashing import canonical_json_bytes, content_hash_hex, sha256_hex
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority_artifact import (
     AuthorityArtifact,
@@ -24,6 +28,8 @@ from cadrumo.domain.calculations.registry.authority_artifact import (
     AuthorityEvidenceProjection,
     PublishedLegalEvidence,
 )
+from cadrumo.domain.calculations.registry.authority_compiler_closure import AuthorityCompilerClosure
+from cadrumo.domain.calculations.registry.authority_store import SQLiteAuthorityReader
 from cadrumo.domain.calculations.registry.runtime_catalogues import (
     ApoderamientoScopeRecord,
     CountryVocabularyRecord,
@@ -37,12 +43,14 @@ from cadrumo.domain.calculations.registry.runtime_catalogues import (
 from cadrumo.domain.calculations.registry.schema import RegistryCatalogues
 from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ..compiler.build_identity import authority_compiler_identity
+from ..compiler.build_identity import live_compiler_environment, observe_compiler_closure
 from ..conformance.cli import app as conformance_app
 from ..pipeline.authority_publication import (
+    AuthorityBuildInput,
+    AuthorityDatabaseCurrency,
     AuthorityDatabaseCurrencyStatus,
-    authority_candidate_identity,
     authority_database_currency,
+    authority_source_identity,
     install_validated_authority_database,
 )
 from ._referential_integrity_support import (
@@ -56,10 +64,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _REVISION_TOML = 'id = "2025"\nvalid_from = 2025-01-01\n'
 _LEGAL_ID = "ley-35-2006:art-1"
 _LEGAL_TEXT = "art-1 fixture authority text"
-_STALE_BUILD_IDENTITY = AuthorityBuildIdentity.from_inputs(
-    source_identity_digest=sha256_hex(b"stale fixture authority sources"),
-    compiler_identity_digest=sha256_hex(b"stale fixture authority compiler"),
-)
+_LOADED_CORE = ("src", "cadrumo", "core", "loaded.py")
+_LOADED_COMPILER = ("dev", "registry", "compiler", "loaded_compiler.py")
+_UNLOADED_APPLICATION = ("src", "cadrumo", "application", "unloaded.py")
+_LOADED_TEST = ("src", "cadrumo", "core", "tests", "test_loaded.py")
 
 
 def _publication_catalogues() -> RegistryCatalogues:
@@ -159,13 +167,46 @@ def _stage_inputs(root: Path) -> tuple[Path, Path]:
     return registry_root, root
 
 
-def _publish(artifact_path: Path, build_identity: AuthorityBuildIdentity) -> None:
-    """Install a generation recording ``build_identity`` through the real publisher."""
+def _stage_compiler_checkout(root: Path) -> dict[str, Path]:
+    """Lay out compiler sources and return the portable roots that anchor them."""
+    for parts, text in (
+        (_LOADED_CORE, "VALUE = 1\n"),
+        (_LOADED_COMPILER, "COMPILED = True\r\n"),
+        (_UNLOADED_APPLICATION, "UNUSED = 1\n"),
+        (_LOADED_TEST, "def test_value() -> None: ...\n"),
+    ):
+        path = root.joinpath(*parts)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(text.encode())
+    return {"cadrumo": root / "src" / "cadrumo", "dev/registry": root / "dev" / "registry"}
+
+
+def _loaded_module(path: Path) -> ModuleType:
+    module = ModuleType(path.stem)
+    module.__file__ = str(path)
+    return module
+
+
+def _observed_closure(checkout: Path, roots: dict[str, Path]) -> AuthorityCompilerClosure:
+    """Observe the closure of a process that loaded the core, compiler and test modules only."""
+    return observe_compiler_closure(
+        modules=(
+            *(_loaded_module(checkout.joinpath(*parts)) for parts in (_LOADED_CORE, _LOADED_COMPILER, _LOADED_TEST)),
+            ModuleType("namespace_without_file"),
+            _loaded_module(checkout.parent / "outside.py"),
+        ),
+        roots=roots,
+    )
+
+
+def _publish(artifact_path: Path, build_identity: AuthorityBuildIdentity, closure: AuthorityCompilerClosure) -> None:
+    """Install a generation recording ``build_identity`` and ``closure`` through the real publisher."""
     install_validated_authority_database(
         AuthorityArtifact(
             modelos=(minimal_modelo(minimal_revision()),),
             catalogues=_publication_catalogues(),
             build_identity=build_identity,
+            compiler_closure=closure,
             identity_digest=build_identity.identity_digest,
             profile_schema=compiled_bundled_authority().profile_schema(),
             evidence=_publication_evidence(),
@@ -175,139 +216,236 @@ def _publish(artifact_path: Path, build_identity: AuthorityBuildIdentity) -> Non
     )
 
 
-def _fresh_publication(tmp_path: Path) -> tuple[Path, Path, Path]:
-    """Stage inputs and publish an artifact recording their live identity."""
+@dataclass(frozen=True, slots=True)
+class _Publication:
+    registry_root: Path
+    source_root: Path
+    artifact_path: Path
+    compiler_checkout: Path
+    compiler_roots: dict[str, Path]
+    closure: AuthorityCompilerClosure
+
+    def currency(self, artifact_path: Path | None = None) -> AuthorityDatabaseCurrency:
+        return authority_database_currency(
+            artifact_path or self.artifact_path,
+            registry_root=self.registry_root,
+            source_root=self.source_root,
+            compiler_source_roots=self.compiler_roots,
+        )
+
+    def compiler_file(self, parts: tuple[str, ...]) -> Path:
+        return self.compiler_checkout.joinpath(*parts)
+
+
+def _fresh_publication(tmp_path: Path) -> _Publication:
+    """Stage inputs and a compiler checkout, then publish an artifact recording their live identity."""
     registry_root, source_root = _stage_inputs(tmp_path / "candidate")
+    checkout = tmp_path / "compiler"
+    roots = _stage_compiler_checkout(checkout)
+    closure = _observed_closure(checkout, roots)
     artifact_path = tmp_path / "published" / "authority.current.json"
     artifact_path.parent.mkdir()
-    candidate = authority_database_currency(
-        artifact_path,
-        registry_root=registry_root,
-        source_root=source_root,
-    ).candidate_build_identity
-    _publish(artifact_path, candidate)
-    return registry_root, source_root, artifact_path
+    build = AuthorityBuildIdentity.from_inputs(
+        authority_source_identity(registry_root=registry_root, source_root=source_root),
+        closure.identity_digest,
+    )
+    _publish(artifact_path, build, closure)
+    return _Publication(registry_root, source_root, artifact_path, checkout, roots, closure)
 
 
-def _status(artifact_path: Path, registry_root: Path, source_root: Path) -> AuthorityDatabaseCurrencyStatus:
-    return authority_database_currency(artifact_path, registry_root=registry_root, source_root=source_root).status
+def _stale_receipts() -> tuple[AuthorityBuildIdentity, AuthorityCompilerClosure]:
+    """Receipts for another candidate, whose closure names files no checkout holds."""
+    closure = AuthorityCompilerClosure(
+        (("cadrumo/stale_fixture.py", sha256_hex(b"stale fixture authority compiler")),),
+        live_compiler_environment(),
+    )
+    build = AuthorityBuildIdentity.from_inputs(sha256_hex(b"stale fixture authority sources"), closure.identity_digest)
+    return build, closure
 
 
 def test_an_artifact_published_from_the_live_inputs_is_current(tmp_path: Path) -> None:
-    registry_root, source_root, artifact_path = _fresh_publication(tmp_path)
+    publication = _fresh_publication(tmp_path)
 
-    currency = authority_database_currency(artifact_path, registry_root=registry_root, source_root=source_root)
+    currency = publication.currency()
 
     assert currency.is_current
     assert currency.recorded_identity_digest == currency.candidate_identity_digest
+    assert currency.recorded_build_identity == currency.candidate_build_identity
+    assert currency.drifted_inputs == ()
 
 
-def test_unchanged_inputs_reproduce_the_same_candidate_identity(tmp_path: Path) -> None:
-    """A no-op build derives the same whole-candidate identity twice."""
+def test_the_observed_closure_records_loaded_compiler_sources_portably(tmp_path: Path) -> None:
+    """Only loaded, non-test files under a root are recorded, CRLF folded, under their portable prefix."""
+    publication = _fresh_publication(tmp_path)
+
+    assert publication.closure.sources == (
+        ("cadrumo/core/loaded.py", sha256_hex(b"VALUE = 1\n")),
+        ("dev/registry/compiler/loaded_compiler.py", sha256_hex(b"COMPILED = True\n")),
+    )
+
+
+def test_a_publication_observing_this_process_records_the_compiler_itself(tmp_path: Path) -> None:
+    """The real observation over this checkout names the compiler and publisher modules and no tests."""
+    registry_root, source_root = _stage_inputs(tmp_path / "candidate")
+    closure = observe_compiler_closure()
+    artifact_path = tmp_path / "published" / "authority.current.json"
+    artifact_path.parent.mkdir()
+    _publish(
+        artifact_path,
+        AuthorityBuildIdentity.from_inputs(
+            authority_source_identity(registry_root=registry_root, source_root=source_root),
+            closure.identity_digest,
+        ),
+        closure,
+    )
+
+    currency = authority_database_currency(artifact_path, registry_root=registry_root, source_root=source_root)
+    reader = SQLiteAuthorityReader(artifact_path)
+    try:
+        recorded = reader.compiler_closure()
+    finally:
+        reader.close()
+
+    assert currency.is_current
+    assert recorded == closure
+    recorded_paths = {path for path, _digest in recorded.sources}
+    assert {
+        "dev/registry/compiler/authority.py",
+        "dev/registry/compiler/build_identity.py",
+        "dev/registry/pipeline/authority_publication.py",
+        "cadrumo/domain/calculations/registry/authority_compiler_closure.py",
+    } <= recorded_paths
+    assert not any("/tests/" in path for path in recorded_paths)
+
+
+def test_unchanged_inputs_reproduce_the_same_source_identity(tmp_path: Path) -> None:
+    """A no-op build derives the same source identity twice."""
     registry_root, source_root = _stage_inputs(tmp_path / "candidate")
 
-    first = authority_candidate_identity(registry_root=registry_root, source_root=source_root)
-    second = authority_candidate_identity(registry_root=registry_root, source_root=source_root)
+    first = authority_source_identity(registry_root=registry_root, source_root=source_root)
+    second = authority_source_identity(registry_root=registry_root, source_root=source_root)
 
     assert second == first
 
 
-def test_compiler_source_change_updates_portable_compiler_identity(tmp_path: Path) -> None:
-    """Compiler identity is path-independent but changes with production source semantics."""
+def test_an_identical_compiler_checkout_elsewhere_observes_the_same_closure(tmp_path: Path) -> None:
+    """The closure is path-independent but changes with the recorded sources' content."""
     original = tmp_path / "original"
-    source_roots = {"domain": original / "domain", "compiler": original / "compiler"}
-    for root in source_roots.values():
-        root.mkdir(parents=True)
-        (root / "module.py").write_text("VALUE = 1\n", encoding="utf-8")
-    first = authority_compiler_identity(source_roots=source_roots)
-
-    relocated = tmp_path / "relocated"
+    original_closure = _observed_closure(original, _stage_compiler_checkout(original))
+    relocated = tmp_path / "elsewhere" / "relocated"
     shutil.copytree(original, relocated)
-    relocated_roots = {name: relocated / name for name in source_roots}
-    assert authority_compiler_identity(source_roots=relocated_roots) == first
+    relocated_roots = {"cadrumo": relocated / "src" / "cadrumo", "dev/registry": relocated / "dev" / "registry"}
 
-    (relocated_roots["compiler"] / "module.py").write_text("VALUE = 2\n", encoding="utf-8")
+    assert _observed_closure(relocated, relocated_roots) == original_closure
 
-    assert authority_compiler_identity(source_roots=relocated_roots) != first
+    relocated.joinpath(*_LOADED_COMPILER).write_bytes(b"COMPILED = False\n")
+
+    assert _observed_closure(relocated, relocated_roots).identity_digest != original_closure.identity_digest
+
+
+def test_an_edit_outside_the_recorded_closure_keeps_the_artifact_current(tmp_path: Path) -> None:
+    """An unloaded module and a loaded test module cannot change what the compiler ran."""
+    publication = _fresh_publication(tmp_path)
+    publication.compiler_file(_UNLOADED_APPLICATION).write_bytes(b"UNUSED = 2\n")
+    publication.compiler_file(_LOADED_TEST).write_bytes(b"def test_value() -> None:\n    assert False\n")
+
+    assert publication.currency().status is AuthorityDatabaseCurrencyStatus.CURRENT
+
+
+def test_an_edit_inside_the_recorded_closure_makes_the_compiler_stale(tmp_path: Path) -> None:
+    publication = _fresh_publication(tmp_path)
+    publication.compiler_file(_LOADED_CORE).write_bytes(b"VALUE = 2\n")
+
+    currency = publication.currency()
+
+    assert currency.status is AuthorityDatabaseCurrencyStatus.STALE
+    assert currency.drifted_inputs == (AuthorityBuildInput.COMPILER,)
+    assert "drifted: compiler" in currency.detail
+
+
+def test_a_line_ending_change_inside_the_recorded_closure_is_not_drift(tmp_path: Path) -> None:
+    publication = _fresh_publication(tmp_path)
+    loaded = publication.compiler_file(_LOADED_CORE)
+    loaded.write_bytes(loaded.read_bytes().replace(b"\n", b"\r\n"))
+
+    assert publication.currency().status is AuthorityDatabaseCurrencyStatus.CURRENT
+
+
+def test_a_deleted_recorded_closure_file_makes_the_compiler_stale(tmp_path: Path) -> None:
+    publication = _fresh_publication(tmp_path)
+    publication.compiler_file(_LOADED_COMPILER).unlink()
+
+    currency = publication.currency()
+
+    assert currency.status is AuthorityDatabaseCurrencyStatus.STALE
+    assert currency.drifted_inputs == (AuthorityBuildInput.COMPILER,)
 
 
 def test_a_registry_edit_after_publication_makes_the_artifact_stale(tmp_path: Path) -> None:
-    registry_root, source_root, artifact_path = _fresh_publication(tmp_path)
-    revision = registry_root / "modelos" / "999" / "revisions" / "2025" / "revision.toml"
+    publication = _fresh_publication(tmp_path)
+    revision = publication.registry_root / "modelos" / "999" / "revisions" / "2025" / "revision.toml"
     revision.write_bytes(revision.read_bytes().replace(b"2025-01-01", b"2025-01-02"))
 
-    currency = authority_database_currency(artifact_path, registry_root=registry_root, source_root=source_root)
+    currency = publication.currency()
 
     assert currency.status is AuthorityDatabaseCurrencyStatus.STALE
     assert currency.recorded_identity_digest != currency.candidate_identity_digest
+    assert currency.drifted_inputs == (AuthorityBuildInput.SOURCE,)
+    assert "drifted: source" in currency.detail
 
 
 def test_a_same_size_registry_edit_with_its_timestamp_restored_is_still_stale(tmp_path: Path) -> None:
     """The identity is content-addressed, so a stat-preserving edit cannot hide."""
-    registry_root, source_root, artifact_path = _fresh_publication(tmp_path)
-    revision = registry_root / "modelos" / "999" / "revisions" / "2025" / "revision.toml"
+    publication = _fresh_publication(tmp_path)
+    revision = publication.registry_root / "modelos" / "999" / "revisions" / "2025" / "revision.toml"
     before = revision.stat()
     revision.write_bytes(revision.read_bytes().replace(b'"2025"', b'"2026"'))
     os.utime(revision, ns=(before.st_atime_ns, before.st_mtime_ns))
 
     assert revision.stat().st_size == before.st_size
-    assert _status(artifact_path, registry_root, source_root) is AuthorityDatabaseCurrencyStatus.STALE
+    assert publication.currency().status is AuthorityDatabaseCurrencyStatus.STALE
 
 
 def test_a_source_evidence_edit_after_publication_makes_the_artifact_stale(tmp_path: Path) -> None:
-    registry_root, source_root, artifact_path = _fresh_publication(tmp_path)
-    (source_root / "corpus" / "test" / "ley.html").write_bytes(b"<html>amended provision</html>\r\n")
+    publication = _fresh_publication(tmp_path)
+    (publication.source_root / "corpus" / "test" / "ley.html").write_bytes(b"<html>amended provision</html>\r\n")
 
-    currency = authority_database_currency(
-        artifact_path,
-        registry_root=registry_root,
-        source_root=source_root,
-    )
-    assert currency.status is AuthorityDatabaseCurrencyStatus.STALE
-    assert "logical identity differs" in currency.detail
+    currency = publication.currency()
 
-
-def test_a_compiler_only_change_is_reported_separately_from_sources(tmp_path: Path) -> None:
-    registry_root, source_root, artifact_path = _fresh_publication(tmp_path)
-    current = authority_database_currency(
-        artifact_path,
-        registry_root=registry_root,
-        source_root=source_root,
-    ).candidate_build_identity
-    compiler_changed = AuthorityBuildIdentity.from_inputs(
-        source_identity_digest=current.source_identity_digest,
-        compiler_identity_digest=sha256_hex(b"changed compiler fixture"),
-    )
-    _publish(artifact_path, compiler_changed)
-
-    currency = authority_database_currency(
-        artifact_path,
-        registry_root=registry_root,
-        source_root=source_root,
-    )
     assert currency.status is AuthorityDatabaseCurrencyStatus.STALE
     assert "logical identity differs" in currency.detail
 
 
 def test_a_planted_artifact_recording_another_candidate_is_stale(tmp_path: Path) -> None:
-    registry_root, source_root, artifact_path = _fresh_publication(tmp_path)
-    _publish(artifact_path, _STALE_BUILD_IDENTITY)
+    publication = _fresh_publication(tmp_path)
+    _publish(publication.artifact_path, *_stale_receipts())
 
-    assert _status(artifact_path, registry_root, source_root) is AuthorityDatabaseCurrencyStatus.STALE
+    currency = publication.currency()
+
+    assert currency.status is AuthorityDatabaseCurrencyStatus.STALE
+    assert currency.drifted_inputs == (AuthorityBuildInput.SOURCE, AuthorityBuildInput.COMPILER)
 
 
 def test_an_identical_checkout_elsewhere_derives_the_recorded_identity(tmp_path: Path) -> None:
     """A clone at another absolute path, with fresh timestamps, agrees with the publisher."""
-    _registry_root, source_root, artifact_path = _fresh_publication(tmp_path)
+    publication = _fresh_publication(tmp_path)
     clone = tmp_path / "elsewhere" / "clone"
-    shutil.copytree(source_root, clone)
+    shutil.copytree(publication.source_root, clone)
 
-    assert _status(artifact_path, clone / "registry" / "aeat", clone) is AuthorityDatabaseCurrencyStatus.CURRENT
+    currency = authority_database_currency(
+        publication.artifact_path,
+        registry_root=clone / "registry" / "aeat",
+        source_root=clone,
+        compiler_source_roots=publication.compiler_roots,
+    )
+
+    assert currency.status is AuthorityDatabaseCurrencyStatus.CURRENT
 
 
 def test_registry_line_endings_and_working_tree_byproducts_do_not_change_the_identity(tmp_path: Path) -> None:
     """A CRLF working copy of the LF registry, a lock sidecar and bytecode are not candidate changes."""
-    registry_root, source_root, artifact_path = _fresh_publication(tmp_path)
+    publication = _fresh_publication(tmp_path)
+    registry_root, source_root = publication.registry_root, publication.source_root
     revision = registry_root / "modelos" / "999" / "revisions" / "2025" / "revision.toml"
     revision.write_bytes(revision.read_bytes().replace(b"\n", b"\r\n"))
     (registry_root / ".generated-export-transaction-999-2025.lock").write_bytes(b"")
@@ -315,39 +453,42 @@ def test_registry_line_endings_and_working_tree_byproducts_do_not_change_the_ide
     (registry_root / "modelos" / "999" / "__pycache__" / "x.cpython-313.pyc").write_bytes(b"\x00")
     (source_root / "corpus" / "test" / "ley.html.lock").write_bytes(b"")
 
-    assert _status(artifact_path, registry_root, source_root) is AuthorityDatabaseCurrencyStatus.CURRENT
+    assert publication.currency().status is AuthorityDatabaseCurrencyStatus.CURRENT
 
 
 def test_source_evidence_line_endings_are_byte_exact(tmp_path: Path) -> None:
     """Legal evidence is digested raw: a line-ending translation is a real evidence change."""
-    registry_root, source_root, artifact_path = _fresh_publication(tmp_path)
-    evidence = source_root / "corpus" / "test" / "ley.html"
+    publication = _fresh_publication(tmp_path)
+    evidence = publication.source_root / "corpus" / "test" / "ley.html"
     evidence.write_bytes(evidence.read_bytes().replace(b"\r\n", b"\n"))
 
-    assert _status(artifact_path, registry_root, source_root) is AuthorityDatabaseCurrencyStatus.STALE
+    assert publication.currency().status is AuthorityDatabaseCurrencyStatus.STALE
 
 
 def test_a_missing_or_malformed_artifact_is_unreadable_rather_than_current(tmp_path: Path) -> None:
-    registry_root, source_root, artifact_path = _fresh_publication(tmp_path)
-    missing = authority_database_currency(
-        tmp_path / "authority.current.json", registry_root=registry_root, source_root=source_root
-    )
-    artifact_path.write_bytes(b'{"payload":')
-    malformed = authority_database_currency(artifact_path, registry_root=registry_root, source_root=source_root)
+    publication = _fresh_publication(tmp_path)
+    missing = publication.currency(tmp_path / "authority.current.json")
+    publication.artifact_path.write_bytes(b'{"payload":')
+    malformed = publication.currency()
 
     assert missing.status is AuthorityDatabaseCurrencyStatus.UNREADABLE
     assert "AuthorityStoreError" in missing.detail
     assert malformed.status is AuthorityDatabaseCurrencyStatus.UNREADABLE
     assert "AuthorityStoreError" in malformed.detail
     assert missing.recorded_identity_digest is None
+    assert missing.candidate_identity_digest is None
+    assert missing.candidate_source_identity_digest == authority_source_identity(
+        registry_root=publication.registry_root, source_root=publication.source_root
+    )
 
 
 def test_the_integrity_gate_refuses_a_stale_database_on_stderr_before_compiling(tmp_path: Path) -> None:
     """The planted stale copy fails the owning gate with exit 1; the registry is never compiled."""
-    registry_root, source_root, _artifact_path = _fresh_publication(tmp_path)
+    publication = _fresh_publication(tmp_path)
     stale = tmp_path / "stale" / "authority.current.json"
     stale.parent.mkdir()
-    _publish(stale, _STALE_BUILD_IDENTITY)
+    stale_build, stale_closure = _stale_receipts()
+    _publish(stale, stale_build, stale_closure)
 
     result = CliRunner().invoke(
         conformance_app,
@@ -355,9 +496,9 @@ def test_the_integrity_gate_refuses_a_stale_database_on_stderr_before_compiling(
             "integrity",
             "--json",
             "--registry-root",
-            str(registry_root),
+            str(publication.registry_root),
             "--source-root",
-            str(source_root),
+            str(publication.source_root),
             "--authority-descriptor",
             str(stale),
         ],
@@ -368,8 +509,191 @@ def test_the_integrity_gate_refuses_a_stale_database_on_stderr_before_compiling(
     refusal = json.loads(result.stderr)
     assert refusal["status"] == "refused"
     assert refusal["currency"] == "stale"
-    assert refusal["recorded_identity_digest"] == _STALE_BUILD_IDENTITY.identity_digest
-    assert refusal["candidate_identity_digest"] == authority_candidate_identity(
-        registry_root=registry_root, source_root=source_root
+    assert refusal["recorded_identity_digest"] == stale_build.identity_digest
+    assert (
+        refusal["candidate_identity_digest"]
+        == authority_database_currency(
+            stale, registry_root=publication.registry_root, source_root=publication.source_root
+        ).candidate_identity_digest
     )
     assert refusal["republish_with"] == "python -m dev.registry.pipeline publish-authority"
+
+
+def _rewrite_published_manifest(descriptor_path: Path, statements: tuple[tuple[str, tuple[str, ...]], ...]) -> None:
+    """Republish a modified copy of the current database under its own content address."""
+    descriptor = json.loads(descriptor_path.read_text(encoding="utf-8"))
+    source = descriptor_path.parent / descriptor["database"]
+    staging = descriptor_path.parent / "rewrite.sqlite3"
+    shutil.copyfile(source, staging)
+    connection = sqlite3.connect(staging)
+    try:
+        for statement, parameters in statements:
+            connection.execute(statement, parameters)
+        connection.commit()
+        connection.execute("VACUUM")
+    finally:
+        connection.close()
+    payload = staging.read_bytes()
+    digest = sha256_hex(payload)
+    target = descriptor_path.parent / f"authority-{digest}.sqlite3"
+    staging.replace(target)
+    descriptor.update({"database": target.name, "database_sha256": digest, "database_size": len(payload)})
+    descriptor_path.write_bytes(canonical_json_bytes(descriptor))
+
+
+def _assert_unknown_generation(currency: AuthorityDatabaseCurrency) -> None:
+    assert currency.status is AuthorityDatabaseCurrencyStatus.UNSUPPORTED_FORMAT
+    assert currency.recorded_build_identity is None
+    assert currency.candidate_build_identity is None
+    assert currency.candidate_identity_digest is None
+    assert currency.drifted_inputs == ()
+    assert not currency.is_current
+
+
+def test_a_generation_without_build_receipts_reports_them_as_unknown(tmp_path: Path) -> None:
+    """A first-format database is refused, never admitted with receipts it did not record."""
+    publication = _fresh_publication(tmp_path)
+    _rewrite_published_manifest(
+        publication.artifact_path,
+        (
+            (
+                "CREATE TABLE legacy_manifest (singleton INTEGER PRIMARY KEY, format TEXT NOT NULL, "
+                "logical_generation TEXT NOT NULL, component_count INTEGER NOT NULL) STRICT",
+                (),
+            ),
+            (
+                "INSERT INTO legacy_manifest SELECT singleton, ?, logical_generation, component_count "
+                "FROM authority_manifest",
+                ("cadrumo-authority-sqlite-v1",),
+            ),
+            ("DROP TABLE authority_manifest", ()),
+            ("ALTER TABLE legacy_manifest RENAME TO authority_manifest", ()),
+            ("DROP TABLE compiler_sources", ()),
+            ("DROP TABLE compiler_environment", ()),
+        ),
+    )
+
+    _assert_unknown_generation(publication.currency())
+
+
+def test_a_generation_without_a_compiler_closure_reports_its_build_as_unknown(tmp_path: Path) -> None:
+    """A receipts-only database is refused: its compiler receipt cannot be re-hashed without compiling."""
+    publication = _fresh_publication(tmp_path)
+    _rewrite_published_manifest(
+        publication.artifact_path,
+        (
+            ("UPDATE authority_manifest SET format = ?", ("cadrumo-authority-sqlite-v2",)),
+            ("DROP TABLE compiler_sources", ()),
+            ("DROP TABLE compiler_environment", ()),
+        ),
+    )
+
+    currency = publication.currency()
+
+    _assert_unknown_generation(currency)
+    assert "AuthorityStoreFormatError" in currency.detail
+
+
+def test_build_receipts_that_do_not_recompute_the_generation_are_refused(tmp_path: Path) -> None:
+    """Receipts are admitted only when they reproduce the published logical generation."""
+    publication = _fresh_publication(tmp_path)
+    forged, _closure = _stale_receipts()
+    _rewrite_published_manifest(
+        publication.artifact_path,
+        (
+            (
+                "UPDATE authority_manifest SET source_identity_digest = ?, compiler_identity_digest = ?, "
+                "component_dependency_digest = ?",
+                (
+                    forged.source_identity_digest,
+                    forged.compiler_identity_digest,
+                    forged.component_dependency_digest,
+                ),
+            ),
+        ),
+    )
+
+    currency = publication.currency()
+
+    assert currency.status is AuthorityDatabaseCurrencyStatus.UNREADABLE
+    assert "do not recompute" in currency.detail
+
+
+def test_a_tampered_compiler_closure_row_is_refused_at_admission(tmp_path: Path) -> None:
+    """A recorded closure that no longer recomputes the compiler receipt is corruption, not drift."""
+    publication = _fresh_publication(tmp_path)
+    _rewrite_published_manifest(
+        publication.artifact_path,
+        (
+            (
+                "UPDATE compiler_sources SET sha256 = ? WHERE path = ?",
+                (sha256_hex(b"VALUE = 2\n"), "cadrumo/core/loaded.py"),
+            ),
+        ),
+    )
+    publication.compiler_file(_LOADED_CORE).write_bytes(b"VALUE = 2\n")
+
+    currency = publication.currency()
+
+    assert currency.status is AuthorityDatabaseCurrencyStatus.UNREADABLE
+    assert "AuthorityStoreCorruptionError" in currency.detail
+    assert "compiler closure does not recompute" in currency.detail
+    assert currency.recorded_build_identity is None
+
+
+def test_the_recorded_dependency_receipt_is_derived_from_source_and_compiler(tmp_path: Path) -> None:
+    """Recomputed here from its published schema, independently of the artifact code."""
+    recorded = _fresh_publication(tmp_path).currency().recorded_build_identity
+    assert recorded is not None
+
+    independent = content_hash_hex(
+        {
+            "schema": "authority-component-dependencies/v1",
+            "component": "complete-authority",
+            "source_identity_digest": recorded.source_identity_digest,
+            "compiler_identity_digest": recorded.compiler_identity_digest,
+        }
+    )
+
+    assert recorded.component_dependency_digest == independent
+
+
+def test_the_recorded_compiler_receipt_is_derived_from_the_recorded_closure(tmp_path: Path) -> None:
+    """Recomputed here from its published schema, independently of the closure code."""
+    publication = _fresh_publication(tmp_path)
+    recorded = publication.currency().recorded_build_identity
+    assert recorded is not None
+    environment = publication.closure.environment
+
+    independent = content_hash_hex(
+        {
+            "schema": "authority-compiler-identity/v2",
+            "sources": [
+                ["cadrumo/core/loaded.py", sha256_hex(b"VALUE = 1\n")],
+                ["dev/registry/compiler/loaded_compiler.py", sha256_hex(b"COMPILED = True\n")],
+            ],
+            "python": environment.python,
+            "dependency_manifests": {
+                "pyproject.toml": environment.pyproject_sha256,
+                "uv.lock": environment.uv_lock_sha256,
+            },
+            "dependencies": {"pydantic": environment.pydantic, "pydantic-core": environment.pydantic_core},
+        }
+    )
+
+    assert recorded.compiler_identity_digest == independent
+
+
+def test_a_dependency_only_receipt_change_is_refused_at_admission(tmp_path: Path) -> None:
+    """A dependency receipt cannot drift alone: one that disagrees with its inputs is malformed."""
+    publication = _fresh_publication(tmp_path)
+    _rewrite_published_manifest(
+        publication.artifact_path,
+        (("UPDATE authority_manifest SET component_dependency_digest = ?", (sha256_hex(b"forged dependency"),)),),
+    )
+
+    currency = publication.currency()
+
+    assert currency.status is AuthorityDatabaseCurrencyStatus.UNREADABLE
+    assert "build receipts are malformed" in currency.detail
+    assert currency.recorded_build_identity is None

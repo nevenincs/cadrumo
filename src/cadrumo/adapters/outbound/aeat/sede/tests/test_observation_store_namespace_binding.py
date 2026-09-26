@@ -29,7 +29,6 @@ import pytest
 from pydantic import AnyHttpUrl
 from sqlalchemy import select
 
-from ......adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ......core.config import Settings
 from ......core.period import Period
 from ......domain.calculations.registry.tests.published_authority import published_snapshot
@@ -40,6 +39,7 @@ from .....persistence.storage.secure_object_namespaces import (
 )
 from .....persistence.storage.sql.orm import SecureObjectRow
 from .....persistence.storage.sql.session import session_scope
+from .....persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..iva_compensation_wallet_parsing import WALLET_URL
 from ..observation_store import FiledDeclaracionObservationStore
 from ..schema import (

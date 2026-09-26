@@ -11,12 +11,13 @@ import pytest
 from textual.widgets import Static
 
 from ......adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ......application.modelo.workspace_models import ModeloWorkspaceCapabilityName
 from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import tr
 from ....components.host import ScreenHostApp
 from ....components.widgets import ContentDataTable
 from ..controller import ModeloWorkspaceReadSession, open_workspace_read_session
-from ..models import disposition_label
+from ..models import disposition_label, evidence_reference_label, recovery_action_label
 from ..verification import ModeloWorkspaceVerificationScreen
 from .conftest import resolve_real_result
 
@@ -66,26 +67,67 @@ async def test_unmeasured_readiness_is_stated_and_no_axes_table_is_mounted(
 
 
 @pytest.mark.asyncio
-async def test_absent_evidence_and_recovery_actions_are_stated_not_shown_empty(
+async def test_the_capability_evidence_line_says_what_the_producer_carries(
     bucket_and_repository: tuple[str, WorkUnitCatalogueRepository],
 ) -> None:
-    """Canary: asserts the producers really carry none before checking the text.
+    """The line reports the capability's own payload, in both directions.
 
-    If a producer ever begins populating evidence or recovery actions, this
-    test fails rather than the screen quietly continuing to claim none are
-    supplied.
+    Read the verification capability first and decide from it which sentence
+    the screen owes, rather than pinning one outcome: a static inspection over
+    a target with no work unit names no addressable step, while one over an
+    existing work unit does, and the screen must be right either way. Asserting
+    only the empty sentence would pass on a screen that had stopped reading the
+    payload at all.
     """
     bucket_id, repository = bucket_and_repository
     session = _session(bucket_id, repository)
-    assert all(capability.evidence == () for capability in session.projection.capabilities)
-    assert all(capability.facts == () for capability in session.projection.capabilities)
-    assert all(capability.recovery_action is None for capability in session.projection.capabilities)
+    capability = next(
+        candidate
+        for candidate in session.projection.capabilities
+        if candidate.capability is ModeloWorkspaceCapabilityName.VERIFICATION_READINESS
+    )
+    expected_parts = [evidence_reference_label(reference) for reference in capability.evidence]
+    if capability.recovery_action is not None:
+        expected_parts.append(recovery_action_label(capability.recovery_action))
+    expected = (
+        tr("flows.modelo_workspace_verification.evidence_none")
+        if not expected_parts
+        else tr(
+            "flows.modelo_workspace_verification.evidence_carried",
+            entries="; ".join(expected_parts),
+        )
+    )
 
     app = ScreenHostApp(ModeloWorkspaceVerificationScreen(session))
     async with app.run_test() as pilot:
         await pilot.pause()
-        notice = app.screen.query_one("#workspace-verification-evidence-not-carried", Static)
-        assert str(notice.content) == tr("flows.modelo_workspace_verification.evidence_not_carried")
+        notice = app.screen.query_one("#workspace-verification-evidence", Static)
+        assert str(notice.content) == expected
+
+
+@pytest.mark.asyncio
+async def test_the_capability_facts_name_the_registry_family_behind_the_answer(
+    bucket_and_repository: tuple[str, WorkUnitCatalogueRepository],
+) -> None:
+    """The explanation is real registry data, not a decorative empty tuple.
+
+    The verification capability rests on the revision's own
+    ``verification_expectations`` family, and a static inspection does not
+    carry that family -- so the source disposition is unmeasured rather than a
+    fabricated empty one, and the fact naming the family is still present.
+    """
+    bucket_id, repository = bucket_and_repository
+    capability = next(
+        candidate
+        for candidate in _session(bucket_id, repository).projection.capabilities
+        if candidate.capability is ModeloWorkspaceCapabilityName.VERIFICATION_READINESS
+    )
+
+    facts = {fact.name: fact.value.value for fact in capability.facts}
+
+    assert facts["source_family"] == "verification_expectations"
+    assert "declared_members" not in facts
+    assert capability.source_disposition is None
 
 
 @pytest.mark.asyncio

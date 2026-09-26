@@ -13,9 +13,9 @@ related:
   - "[[2026-08-08-profile-requirement-grounding-adr]]"
 supersedes:
   - '2026-09-10-registry-authority-artifact-boundary-adr'
-modified: '2026-09-14'
+modified: '2026-09-23'
 body_schema: 'body-v2'
-body_hash: 'sha256:de63723b520133821a81c90491fc1e02ce9cf898ca760bce9ad70f9817fc43ee'
+body_hash: 'sha256:e8464e90422dc3742c6ec4597882bc56aded8dab1f0796287d033f1f8875f492'
 ---
 
 # `registry-authority-artifact-boundary` adr: indexed authority and complete source enrollment | (**status:** `accepted`)
@@ -107,3 +107,23 @@ The selected design moves invariant work to compilation while making runtime cos
 ## Consequences
 
 Cold access and memory are expected to improve, but must pass the comparative gates. Compilation remains full and may become more expensive because it proves the encoded database independently. A small descriptor accompanies the single data file. Runtime now owns connection/resource leases and bounded caches, and callers must use explicit queries rather than eager graph traversal. Profile schema becomes generation-consistent while taxpayer persistence semantics stay separate. The current JSON backend remains the actual shipped implementation until the plan is executed and accepted.
+
+## Amendment 2026-09-23: persisted build identity
+
+Accepted 2026-09-23 under the operator's standing pre-approval of routine work, relayed by the tui-modelo coordinator, which assigned the gap to the calendar lane that found it.
+
+The Constraints section keeps source, compiler/schema, component-dependency and logical-generation identities distinct, but the published database persisted only the logical generation: the publisher builds the three-part `AuthorityBuildIdentity` (`dev/registry/pipeline/authority_publication.py:217`) and the manifest stored `format, logical_generation` only (`dev/registry/compiler/authority_database.py:62`). A generation reported stale against the live receipt could therefore not say which input drifted, and `authority_database_currency` returned no recorded build identity in either branch.
+
+Decision: the manifest persists the source-identity, compiler-identity and component-dependency digests beside the logical generation. The database format advances from `cadrumo-authority-sqlite-v1` to `cadrumo-authority-sqlite-v2`. Admission verifies that the three persisted digests recompute the recorded logical generation and refuses a mismatch; runtime accepts only the current format and never infers missing digests. The development currency check reports the recorded build identity and names each drifted component (source, compiler, dependency). A database of an older format is reported as unreadable by runtime and, to the currency check, as a generation whose build identity is explicitly unknown; it is never coerced, and the remedy is republication through the global publication queue.
+
+## Amendment 2026-09-23: observed compiler closure and descriptor versioning
+
+Accepted 2026-09-23 under the operator's standing pre-approval of routine work, relayed by the tui-modelo coordinator after the first republish that recorded build receipts.
+
+Compiler identity. `authority_compiler_identity` (`dev/registry/compiler/build_identity.py`) hashed every non-test module under `core/`, `domain/` and `application/`, about 1,460 files, although a complete validation loads 303 product modules: 131 in `core`, 168 in `domain` and 4 in `application`. Any application edit therefore reported compiler drift, and the currency gate stayed stale in a shared worktree. Nothing recorded the broad scope as a decision. Decision: the publisher records the observed closure (every product and registry-tooling source file loaded by the complete compile, with its content digest) in the published database, and the compiler identity is the digest of that closure together with the interpreter and dependency manifests. The currency check re-hashes exactly the recorded closure. A new import can enter the closure only through an edit to a file already in it, and a deleted file is caught as missing, so narrowing cannot produce a false current; edits outside the closure no longer produce false staleness. This changes the published schema, so the database format advances to `cadrumo-authority-sqlite-v3`, under the same refusal and republication rule as v2.
+
+Descriptor versioning. `cadrumo-authority-descriptor-v1` versions the descriptor document's own members (database name, size, digest and logical generation), which neither v2 nor v3 changes. The store format is carried by the database manifest and checked at admission; a runtime that meets a newer store format refuses it. The descriptor format advances only when its own members change.
+
+Launcher independence. A closure read from the publishing process also records whatever its launcher had already imported, so the build hook and the `publish-authority` command recorded different closures, and different logical generations, for identical source. Decision: every publication compiles in one canonical child interpreter (`dev/registry/pipeline/compile_authority_candidate.py`), started from `sys.executable` with the launcher's Python environment variables removed. The child observes its own closure and stages the database; the parent admits it and swaps the descriptor under the publication lock. The closure's environment records the interpreter and the dependency versions the child actually ran with. A build environment whose dependency versions differ from the lock therefore produces a different generation by design: it is a different compiler.
+
+Directory filing schedules. Deadline-window projection hydrated each window-owning revision only to read its filing schedules. Decision: the v3 modelo directory carries each revision's filing schedules beside its deadline windows as a required member, so the projection reads directory metadata alone. A directory without them is refused at decode, never defaulted to an empty schedule set.

@@ -16,10 +16,11 @@ from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.iva.schema import IvaCashAccountingTreatment
 from ....domain.transactions import models as transaction_models
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
-from ....domain.transactions.errors import TransactionValidationError
+from ....domain.transactions.errors import TransactionNotFoundError, TransactionValidationError
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..actions_common import remove_transaction, replace_transaction, upsert_transaction
+from ..actions_export import _ledger_export_row
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -63,6 +64,18 @@ def _transaction(provider_id: str) -> Transaction:
 
 def _ledger(size: int) -> TransactionCatalogue:
     return TransactionCatalogue.from_transactions([_transaction(f"row-{index}") for index in range(size)])
+
+
+def test_export_row_preserves_linked_invoice_identity() -> None:
+    transaction = _transaction("export-linked")
+    linked = Transaction.model_validate({**transaction.model_dump(), "invoice_id": "a" * 64})
+
+    assert (
+        _ledger_export_row(bucket_id="00000000-0000-4000-8000-000000000000", transaction=transaction).invoice_id == ""
+    )
+    assert (
+        _ledger_export_row(bucket_id="00000000-0000-4000-8000-000000000000", transaction=linked).invoice_id == "a" * 64
+    )
 
 
 def _relabelled(transaction: Transaction, label: str) -> Transaction:
@@ -126,3 +139,49 @@ def test_a_replacement_breaking_the_cash_accounting_axis_is_refused() -> None:
 
     with pytest.raises((TransactionValidationError, ValidationError), match="operation_date"):
         replace_transaction(ledger, old_transaction_id=first.transaction_id, replacement=forged)
+
+
+def test_replacing_a_missing_member_is_refused() -> None:
+    ledger = _ledger(1)
+    replacement = _transaction("new-row")
+
+    with pytest.raises(TransactionNotFoundError):
+        replace_transaction(ledger, old_transaction_id="a" * 64, replacement=replacement)
+
+    assert len(ledger) == 1
+
+
+def test_identity_change_cannot_overwrite_a_different_member() -> None:
+    ledger = _ledger(2)
+    first, second = tuple(ledger.values())
+
+    with pytest.raises(TransactionValidationError, match="different transaction"):
+        replace_transaction(ledger, old_transaction_id=first.transaction_id, replacement=second)
+
+    assert len(ledger) == 2
+    assert ledger.get(first.transaction_id) == first
+    assert ledger.get(second.transaction_id) == second
+
+
+def test_linked_identity_change_refuses_before_creating_a_one_sided_link() -> None:
+    ledger = _ledger(1)
+    current = next(iter(ledger.values())).model_copy(update={"invoice_id": "a" * 64})
+    ledger = TransactionCatalogue.from_transactions([current])
+    replacement = _transaction("edited-row").model_copy(update={"invoice_id": current.invoice_id})
+
+    with pytest.raises(TransactionValidationError, match="invoice link"):
+        replace_transaction(ledger, old_transaction_id=current.transaction_id, replacement=replacement)
+
+    assert ledger.get(current.transaction_id) == current
+    assert replacement.transaction_id not in ledger
+
+
+def test_generic_replacement_cannot_change_the_invoice_association() -> None:
+    ledger = _ledger(1)
+    current = next(iter(ledger.values()))
+    replacement = current.model_copy(update={"invoice_id": "b" * 64})
+
+    with pytest.raises(TransactionValidationError, match="reciprocal link"):
+        replace_transaction(ledger, old_transaction_id=current.transaction_id, replacement=replacement)
+
+    assert ledger.get(current.transaction_id) == current

@@ -7,16 +7,22 @@
 # `bash -c '...'` payloads handed to docker. `cmd.exe` does not treat `'` as a
 # quote character at all, so it would split `-m 'unit and not perf'` into five
 # argv entries and hand pytest a marker expression it never wrote - selecting a
-# different test population, silently, while still reporting green. Everywhere
-# a body IS a single bare command the fleet uses `cmd` instead, because it
-# forwards native exit codes verbatim where pwsh does not; `propagate` below is
-# what buys that fidelity back here.
+# different test population, silently, while still reporting green.
+#
+# pwsh's `-Command` host exits 1 for ANY failing native command instead of
+# forwarding its status, which reduced a missing tool (127), a broken tool (7)
+# and an empty pytest selection (5) to one generic failure at every `just`
+# boundary. Each line therefore runs through `-CommandWithArgs` (pwsh >= 7.4)
+# with one check appended after it: when the line's last statement failed, the
+# shell exits with that command's own status, else 1 as `-Command` would. Output
+# and pass/fail are otherwise identical to `-Command`, and no recipe has to opt
+# in; `dev/tests/test_just_exit_forwarding.py` proves it through the real driver.
 #
 # `-NoProfile` is load bearing: without it every recipe loads the operator's
 # personal PowerShell profile, so aliases shadowing `ls`/`curl`, a customised
 # `$ErrorActionPreference`, or an altered `PSModulePath` silently change what a
 # recipe does from one machine to the next.
-set windows-shell := ["pwsh.exe", "-NoLogo", "-NoProfile", "-Command"]
+set windows-shell := ["pwsh.exe", "-NoLogo", "-NoProfile", "-CommandWithArgs", '''$global:LASTEXITCODE = 0; . ([scriptblock]::Create($args[0] + [Environment]::NewLine + 'if (-not $?) { exit $(if ($LASTEXITCODE) { $LASTEXITCODE } else { 1 }) }'))''']
 
 # ── Dev-loop storage root ────────────────────────────────────────────────────
 # Keep a developer's state inside the checkout instead of the platform
@@ -37,14 +43,6 @@ default:
 
 # ── Bootstrap / Install ──────────────────────────────────────────────────────
 
-# PowerShell's `-Command` host exits 1 for ANY failing native command rather
-# than forwarding that command's own status, which would collapse every
-# `setup` exit code onto 1 and destroy the distinction between "a host tool is
-# missing", "the lockfile drifted", and "an editor is holding .venv open".
-# Appending an explicit propagation is the whole remedy; it is empty on unix,
-# where `sh` already forwards the status, so no recipe needs a platform pair.
-propagate := if os_family() == "windows" { "; exit $LASTEXITCODE" } else { "" }
-
 # Complete new-worktree provisioning. The first command owns the locked Python
 # sync and default Vaultspec enrollment. RAG then provisions its managed models,
 # Qdrant binary, and MCP integration. Authority publication runs last so the
@@ -52,9 +50,9 @@ propagate := if os_family() == "windows" { "; exit $LASTEXITCODE" } else { "" }
 [doc('Fully initialize a new worktree: Python, Vaultspec, RAG, and runtime authority.')]
 [group('setup')]
 init:
-    uv run --isolated --no-project --python 3.13.11 -- python -m dev.init all{{propagate}}
-    uv run --no-sync vaultspec-rag install --upgrade --yes{{propagate}}
-    uv run --no-sync python -m dev.registry.pipeline publish-authority{{propagate}}
+    uv run --isolated --no-project --python 3.13.11 -- python -m dev.init all
+    uv run --no-sync vaultspec-rag install --upgrade --yes
+    uv run --no-sync python -m dev.registry.pipeline publish-authority
 
 # Canonical checkout setup. This is the minimal convergence facade: it creates
 # the pinned Python environment, installs repository tooling, and materializes
@@ -63,34 +61,34 @@ init:
 [doc('Converge a checkout with Python, repository tooling, and local environment configuration.')]
 [group('setup')]
 setup:
-    uv run --isolated --no-project --python 3.13.11 -- python -m dev.init all{{propagate}}
+    uv run --isolated --no-project --python 3.13.11 -- python -m dev.init all
 
 [doc('Synchronize the pinned Python environment from uv.lock.')]
 [group('setup')]
 setup-python:
-    uv run --isolated --no-project --python 3.13.11 -- python -m dev.init python{{propagate}}
+    uv run --isolated --no-project --python 3.13.11 -- python -m dev.init python
 
 [doc('Install repository tooling, including pinned actionlint, after the Python environment is available.')]
 [group('setup')]
 setup-repository-tools:
-    uv run --isolated --no-project --python 3.13.11 -- python -m dev.init tools{{propagate}}
+    uv run --isolated --no-project --python 3.13.11 -- python -m dev.init tools
 
 [doc('Install the pinned Hunspell dictionaries used by check-locales.')]
 [group('setup')]
 setup-locale-spelling:
-    npm ci --ignore-scripts --no-audit --no-fund{{propagate}}
+    npm ci --ignore-scripts --no-audit --no-fund
 
 [doc('Check checkout setup state without writing a report or changing files.')]
 [group('setup')]
 setup-check:
-    uv run --isolated --no-project --python 3.13.11 -- python -m dev.init check{{propagate}}
+    uv run --isolated --no-project --python 3.13.11 -- python -m dev.init check
 
 # Optional workstation CLI prerequisites for non-Python audit recipes. This is
 # deliberately outside the minimal checkout setup.
 [doc('Provision optional workstation CLI prerequisites for non-Python audits; mutates workstation tooling only.')]
 [group('setup')]
 setup-workstation-tools:
-    uv run --no-sync python -m dev.env workstation-tools{{propagate}}
+    uv run --no-sync python -m dev.env workstation-tools
 
 # ── Environment Setup and Doctor ─────────────────────────────────────────────
 
@@ -98,27 +96,27 @@ setup-workstation-tools:
 [doc('Copy env/.env.example to env/.env if the latter is missing; no-op otherwise.')]
 [group('setup')]
 setup-env:
-    uv run --no-sync python -m dev.env setup{{propagate}}
+    uv run --no-sync python -m dev.env setup
 
 [doc('Diagnose the developer toolchain by PATH inspection; does not install or write anything.')]
 [group('doctor')]
 doctor-dev:
-    uv run --no-sync python -m dev.env doctor{{propagate}}
+    uv run --no-sync python -m dev.env doctor
 
 [doc('Verify the product capability configuration without changing it.')]
 [group('doctor')]
 doctor-product:
-    uv run --no-sync aeat config check{{propagate}}
+    uv run --no-sync aeat config check
 
 [doc('Verify Python package consistency without modifying the environment.')]
 [windows]
 doctor-python:
-    uv pip check --python .venv/Scripts/python.exe{{propagate}}
+    uv pip check --python .venv/Scripts/python.exe
 
 [doc('Verify Python package consistency without modifying the environment.')]
 [unix]
 doctor-python:
-    uv pip check --python .venv/bin/python{{propagate}}
+    uv pip check --python .venv/bin/python
 
 # Provision both browser channels the codebase needs (the post-install step
 # `uv sync` does not perform). Bundled Chromium: some tests launch it directly
@@ -131,12 +129,18 @@ doctor-python:
 # typically needs root/apt access; a non-root Linux box may need
 # `google-chrome-stable` pre-installed by an administrator, or rerun this
 # recipe with elevation. Verify the result with `just doctor-browser`.
+#
+# The `chrome` install runs with `CI` removed from its environment. Under `CI`
+# Playwright reinstalls the channel even when Chrome is already present, which
+# needs root; a CI runner whose host provisions `google-chrome-stable` cannot
+# escalate, so the step failed there on every run. Without `CI` an installed
+# Chrome is left alone and a missing one is installed exactly as before.
 
 [doc('Provision optional Playwright Chromium and system Chrome browser channels.')]
 [group('setup')]
 setup-browser:
-    uv run --no-sync playwright install chromium{{propagate}}
-    uv run --no-sync playwright install chrome{{propagate}}
+    uv run --no-sync playwright install chromium
+    uv run --no-sync python -c "import os, subprocess, sys; env = {k: v for k, v in os.environ.items() if k != 'CI'}; sys.exit(subprocess.call([sys.executable, '-m', 'playwright', 'install', 'chrome'], env=env))"
 
 # Verify the local environment is correctly provisioned with the CONFIGURED
 # Playwright browser channel (per `cadrumo_browser_channel`, default `chrome`)
@@ -146,7 +150,7 @@ setup-browser:
 [doc('Probe the configured browser channel with a real read-only launch.')]
 [group('doctor')]
 doctor-browser:
-    uv run --no-sync python -m dev.env.playwright_doctor{{propagate}}
+    uv run --no-sync python -m dev.env.playwright_doctor
 
 # One reclamation surface over three families that used to be three commands:
 # ignored worktree output, release-build scratch under `var/`, and the temp
@@ -420,14 +424,6 @@ check-hooks:
 [group('check')]
 check-dependency-vulnerabilities:
     @uv run --no-sync python -m dev.audit.dependency_audit
-
-# Same semgrep invocation as the correctness workflow's blocking scan
-# (`--error` fails on any finding), scoped to what changed since BASE via
-# `--baseline-commit`.
-[doc('Run the blocking semgrep scan scoped to the diff since BASE; read-only.')]
-[group('check')]
-check-security-diff base="origin/main":
-    @uvx --from semgrep==1.168.0 semgrep --config .semgrep/rules/ --error src/cadrumo/ --baseline-commit $(git merge-base {{base}} HEAD)
 
 [doc('Run the blocking semgrep scan against the full source tree; read-only.')]
 [group('check')]
@@ -918,7 +914,8 @@ test-test-policy:
 [doc('Run repository and developer-tool contract tests outside the registry, packaging, CI, and capability populations.')]
 [group('test')]
 test-repository-contracts:
-    @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service" dev/agent_eval/tests dev/audit/tests dev/corpus/tests dev/docs dev/env/tests dev/identity/tests dev/ingest_harness/tests dev/locales/tests dev/quality/tests dev/readme/tests dev/sanitizer/tests dev/smoke/tests dev/tui/tests dev/tui/harness/tests --ignore=dev/docs/terminology/tests/test_sweep_live_service.py --ignore=dev/quality/tests/test_fixes.py --ignore=dev/quality/tests/test_ty_fix_boundary.py
+    @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service" dev/acceptance dev/agent_eval/tests dev/audit/tests dev/corpus/tests dev/docs dev/env/tests dev/identity/tests dev/ingest_harness/tests dev/locales/tests dev/quality/tests dev/readme/tests dev/sanitizer/tests dev/smoke/tests dev/tui/tests dev/tui/harness/tests --ignore=dev/docs/terminology/tests/test_sweep_live_service.py --ignore=dev/quality/tests/test_fixes.py --ignore=dev/quality/tests/test_ty_fix_boundary.py
+    @uv run --no-sync pytest -v -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service" dev/acceptance
 
 [doc('Run the packaging and container tooling contracts, parallel then serial; the serial pass includes the installed-artifact oracles.')]
 [group('test')]

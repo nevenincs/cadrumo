@@ -11,7 +11,7 @@ The suggestion-citation gate already carries its own controls
 (``test_scanner_flags_a_dead_citation`` and siblings), and the JSON-schema gate
 controls its secret-field scan with a planted secret. Two detectors had none:
 
-- ``_validate_command``, the documented-command gate's high-signal option
+- ``validate_cited_command``, the documented-command gate's high-signal option
   validity and dead-subcommand check -- the one that catches a doc citing a real
   verb with an option it does not have; and
 - ``_is_forbidden_notice_field``, the check that no result schema regrows a
@@ -36,7 +36,8 @@ from __future__ import annotations
 
 import pytest
 
-from .test_documented_command_conformance import _cited_commands, _validate_command
+from .live_command_validation import validate_cited_command
+from .test_documented_command_conformance import _cited_commands
 from .test_json_schema_conformance import _is_forbidden_notice_field
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -61,7 +62,7 @@ def _violations_for(command: str) -> list[str]:
         f"the citation producer emitted nothing for {command!r}, so the control below would assert over an "
         "empty list and hold vacuously. The doc parser, not the detector, is what broke."
     )
-    return [violation for entry in cited for violation in _validate_command(entry)]
+    return [violation for entry in cited for violation in validate_cited_command(entry)]
 
 
 def test_the_option_validity_detector_flags_an_option_the_command_does_not_have() -> None:

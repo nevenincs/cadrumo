@@ -83,6 +83,7 @@ from ..core.auth_provider import AuthProviderKind
 from ..core.bucket_pointer import resolve_active_bucket_id
 from ..core.errors.hierarchy import CadrumoError, InternalInvariantError, pydantic_validation_boundary
 from ..core.filing_year import FilingYear
+from ..core.hashing import content_hash_hex
 from ..core.identity.profile import ProfileId
 from ..core.logging import get_logger
 from ..core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -108,6 +109,7 @@ from .ledger.preflight import (
 )
 from .ledger.usage_ratio_repository import UsageRatioProfileLoader
 from .operator_actions.models import PreconditionVerdict
+from .producer_capture import ProducerCapture, ProducerCaptureCoordinate, ProducerCaptureScope
 from .state_projection_auth import ProjectionAuthReadiness, build_auth_readiness
 from .state_projection_ports import StateProjectionReadPorts
 from .user_profile.commands import ProfilePreflightReport, ProfilePreflightRequirement
@@ -605,6 +607,10 @@ class ProjectionModeloReadiness(BaseModel):
             :class:`~cadrumo.application.user_profile.commands.ProfilePreflightReport`.
         profile_refusal: Operator-facing refusal when profile facts are
             present but disqualify the target period.
+        profile_precondition_verdict: Typed recovery verdict for
+            ``profile_refusal`` when a catalogued operator action resolves it
+            (an unfinished profile setup), or ``None`` when the refusal is
+            absent or states facts no action repairs.
         registry_ready: Whether the requested modelo/year/period/revision
             resolved to a usable registry snapshot.
         registry_refusal: Operator-facing explanation when registry
@@ -642,6 +648,7 @@ class ProjectionModeloReadiness(BaseModel):
     profile_ready: bool
     per_operation_requirements_assessed: bool
     profile_refusal: str = ""
+    profile_precondition_verdict: PreconditionVerdict | None = None
     registry_ready: bool = True
     registry_refusal: str = ""
     binding_ready: bool = True
@@ -689,6 +696,7 @@ class _ModeloReadinessEvaluation:
 
     profile_report: ProfilePreflightReport
     profile_refusal: str
+    profile_precondition_verdict: PreconditionVerdict | None
     registry: _ModeloReadinessRegistryResolution
     period: Period
     missing_bindings: tuple[ProjectionModeloBindingRequirement, ...]
@@ -717,19 +725,32 @@ def _modelo_profile_refusal(
     request: ModeloReadinessRequest,
     period: Period,
     operation: PinnedAuthorityOperation,
-) -> str:
-    """Return the first profile refusal while evaluating every refusal limb."""
+) -> tuple[str, PreconditionVerdict | None]:
+    """Return the first profile refusal while evaluating every refusal limb.
+
+    Only the setup-incomplete limb carries a typed recovery verdict: the
+    applicability and pre-activity limbs state facts the operator cannot fix
+    through a catalogued action, so they travel as text alone.
+    """
     from ..core.i18n.render import tr
     from ..domain.user_profile.values import ProfileSetupState
     from .modelo.profile_readiness_gate import (
         modelo_applicability_refusal,
         pre_activity_period_refusal,
     )
+    from .operator_actions.preconditions import profile_setup_incomplete_verdict
+    from .user_profile.completeness import missing_required_field_paths
+    from .user_profile.projections import record_to_path_values
 
-    profile_refusal = (
-        tr("application.modelo.errors.profile_readiness_setup_incomplete")
+    setup_verdict = (
+        profile_setup_incomplete_verdict(
+            modelo=request.modelo,
+            missing_required_field_count=len(
+                missing_required_field_paths(operation.profile_schema(), record_to_path_values(record)),
+            ),
+        )
         if record.setup_state is ProfileSetupState.INCOMPLETE
-        else ""
+        else None
     )
     applicability_refusal = modelo_applicability_refusal(
         record=record,
@@ -744,13 +765,13 @@ def _modelo_profile_refusal(
         filing_year=request.filing_year,
         period=period,
     )
-    if profile_refusal:
-        return profile_refusal
+    if setup_verdict is not None:
+        return tr("application.modelo.errors.profile_readiness_setup_incomplete"), setup_verdict
     if applicability_refusal is not None:
-        return applicability_refusal[0]
+        return applicability_refusal[0], None
     if pre_activity_refusal is not None:
-        return pre_activity_refusal[0]
-    return ""
+        return pre_activity_refusal[0], None
+    return "", None
 
 
 def _build_modelo_profile_stage(
@@ -760,7 +781,7 @@ def _build_modelo_profile_stage(
     period: Period,
     registry: _ModeloReadinessRegistryResolution,
     operation: PinnedAuthorityOperation,
-) -> tuple[ProfilePreflightReport, str]:
+) -> tuple[ProfilePreflightReport, str, PreconditionVerdict | None]:
     """Evaluate profile completeness and target-specific refusal limbs."""
     from .modelo.profile_readiness_gate import modelo_work_profile_preflight_report
 
@@ -777,13 +798,14 @@ def _build_modelo_profile_stage(
         profile_decode_context=operation.profile_decode_context(),
         operation=operation,
     )
-    return profile_report, _modelo_profile_refusal(
+    profile_refusal, profile_verdict = _modelo_profile_refusal(
         record=context.record,
         bucket_id=context.bucket_id,
         request=request,
         period=period,
         operation=operation,
     )
+    return profile_report, profile_refusal, profile_verdict
 
 
 def _build_modelo_ledger_stage(
@@ -822,7 +844,7 @@ def _evaluate_modelo_readiness(
     """Evaluate profile, registry, binding, and ledger axes for one request."""
     period = _ledger_period_for_modelo_readiness(request)
     registry = _resolve_modelo_readiness_registry(request, period=period, operation=operation)
-    profile_report, profile_refusal = _build_modelo_profile_stage(
+    profile_report, profile_refusal, profile_precondition_verdict = _build_modelo_profile_stage(
         request,
         context=context,
         period=period,
@@ -852,6 +874,7 @@ def _evaluate_modelo_readiness(
     return _ModeloReadinessEvaluation(
         profile_report=profile_report,
         profile_refusal=profile_refusal,
+        profile_precondition_verdict=profile_precondition_verdict,
         registry=registry,
         period=period,
         missing_bindings=missing_bindings,
@@ -874,6 +897,7 @@ def _project_modelo_readiness(evaluation: _ModeloReadinessEvaluation) -> Project
         profile_ready=profile_ready,
         per_operation_requirements_assessed=profile_report.per_operation_requirements_assessed,
         profile_refusal=evaluation.profile_refusal,
+        profile_precondition_verdict=evaluation.profile_precondition_verdict,
         registry_ready=evaluation.registry.ready,
         registry_refusal=evaluation.registry.refusal,
         binding_ready=not evaluation.missing_bindings,
@@ -892,7 +916,7 @@ def _project_modelo_readiness(evaluation: _ModeloReadinessEvaluation) -> Project
     )
 
 
-def _build_modelo_readiness(
+def build_modelo_readiness_reports(
     requests: tuple[ModeloReadinessRequest, ...],
     *,
     active_profile_id: str | None,
@@ -1321,7 +1345,7 @@ def _assemble_operator_state_projection(
         pending_obligations = ()
 
     if modelo_readiness_requests:
-        modelo_readiness = _build_modelo_readiness(
+        modelo_readiness = build_modelo_readiness_reports(
             modelo_readiness_requests,
             active_profile_id=profile_health.active_profile,
             read_ports=read_ports,
@@ -1339,6 +1363,87 @@ def _assemble_operator_state_projection(
     )
 
 
+def _readiness_owner_observation(
+    active_profile_id: str,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> tuple[str, ...]:
+    """Read the profile pointer, the profile record and the registry generation.
+
+    These are the three limbs a readiness report is a function of: which
+    profile is active, what that profile declares, and which registry
+    generation answered the modelo's requirements. A write to any of them
+    between two reads makes the report a stitch across two states, which is
+    exactly what the capture window refuses to publish.
+    """
+    from .user_profile.profile_record_repository import ProfileRecordRepository
+    from .workflow.profile_bucket_scan import read_profile_bucket_by_id
+
+    pointer = read_profile_bucket_by_id(active_profile_id)
+    if pointer is None:
+        return ("absent-pointer",)
+    record = ProfileRecordRepository.for_current_session(
+        pointer.bucket_id,
+        profile_decode_context=operation.profile_decode_context(),
+    ).load(pointer.bucket_id)
+    return (
+        pointer.bucket_id,
+        content_hash_hex(record.model_dump(mode="json")),
+        str(operation.read_current_coordinate().generation),
+    )
+
+
+_READINESS_CAPTURE_SCOPE = ProducerCaptureScope(
+    owner="application.state_projection",
+    namespace="modelo.readiness",
+)
+
+
+def read_modelo_readiness_current_coordinate(
+    requests: tuple[ModeloReadinessRequest, ...],
+    *,
+    active_profile_id: str,
+    operation: PinnedAuthorityOperation,
+) -> ProducerCaptureCoordinate:
+    """Return the typed current coordinate for same-domain readiness validation."""
+    return _READINESS_CAPTURE_SCOPE.read_current_coordinate(
+        coordinate={"active_profile_id": active_profile_id, "requests": _readiness_request_coordinate(requests)},
+        observe=lambda: _readiness_owner_observation(active_profile_id, operation=operation),
+    )
+
+
+def capture_modelo_readiness(
+    requests: tuple[ModeloReadinessRequest, ...],
+    *,
+    active_profile_id: str,
+    read_ports: StateProjectionReadPorts,
+    operation: PinnedAuthorityOperation,
+) -> ProducerCapture[tuple[ProjectionModeloReadiness, ...]]:
+    """Compute readiness over a window in which none of its owner limbs moved.
+
+    The reports are exactly what :func:`build_modelo_readiness_reports`
+    produced; this adds the currentness coordinate a pinned multi-producer
+    read needs and nothing else. There is no second readiness computation
+    here and none may be added: a consumer that needs readiness without a
+    coordinate calls the builder directly.
+    """
+    return _READINESS_CAPTURE_SCOPE.capture(
+        coordinate={"active_profile_id": active_profile_id, "requests": _readiness_request_coordinate(requests)},
+        observe=lambda: _readiness_owner_observation(active_profile_id, operation=operation),
+        build=lambda: build_modelo_readiness_reports(
+            requests,
+            active_profile_id=active_profile_id,
+            read_ports=read_ports,
+            operation=operation,
+        ),
+    )
+
+
+def _readiness_request_coordinate(requests: tuple[ModeloReadinessRequest, ...]) -> str:
+    """Name the exact request set one readiness capture answers."""
+    return content_hash_hex([request.model_dump(mode="json") for request in requests])
+
+
 __all__ = [
     "CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS",
     "OPERATOR_ACTION_BY_MODELO_READINESS_BINDING_SOURCE",
@@ -1353,6 +1458,8 @@ __all__ = [
     "ProjectionWorkspaceSummary",
     "build_active_profile",
     "build_auth_readiness",
+    "build_modelo_readiness_reports",
     "build_operator_state_projection",
     "build_pending_obligations",
+    "capture_modelo_readiness",
 ]

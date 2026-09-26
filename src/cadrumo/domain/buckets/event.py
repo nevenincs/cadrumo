@@ -167,6 +167,10 @@ class BucketEventType(StrEnum):
     # generation advanced, which is what makes an earlier record row's
     # provenance witness legitimately stale rather than evidence of tampering.
     PROFILE_PASSPHRASE_ROTATED = _PROFILE_ROTATION_EVENT
+    # A stored record written under an earlier profile schema was carried
+    # forward to the current one. The payload names what the migration
+    # cleared, so the operator can be asked to answer it again.
+    PROFILE_SCHEMA_MIGRATED = "profile.schema.migrated"
     # 036 censo cotejo: emitted once per artefact-apply reconciliation
     # commit (``apply_cotejo``). The live-refresh scrape against the sede
     # Mis Datos Censales endpoint was retired and its snapshot substrate

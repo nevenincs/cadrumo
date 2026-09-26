@@ -248,6 +248,10 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             ),
         ),
         ActionCatalogueEntry(
+            action_id="operator.profile.complete_setup",
+            target_command_key="config.profile.complete_setup",
+        ),
+        ActionCatalogueEntry(
             action_id="operator.profile.edit",
             target_command_key="config.profile.edit",
             argument_specifications=(
@@ -293,6 +297,17 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
         ActionCatalogueEntry(
             action_id="operator.ledger.review",
             target_command_key="ledger.review",
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.ledger.actividad_asset.correct_revision",
+            target_command_key="ledger.actividad_asset.correct",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="revision_json",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="revision_json",
+                ),
+            ),
         ),
         ActionCatalogueEntry(
             action_id="operator.ledger.preflight",
@@ -428,6 +443,27 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
         ActionCatalogueEntry(
             action_id="operator.modelo.bindings.list",
             target_command_key="modelo.bindings.list",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="modelo",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="modelo",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="year",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="year",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="period",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="period",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.modelo.casillas",
+            target_command_key="modelo.casillas",
             argument_specifications=(
                 ActionArgumentBindingSpecification(
                     argument_name="modelo",

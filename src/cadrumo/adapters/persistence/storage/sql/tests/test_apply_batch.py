@@ -108,3 +108,28 @@ def test_apply_batch_is_atomic_on_failure(tmp_path: Path) -> None:
         assert repo.exists(_NS, "victim"), "deletion must roll back"
         kept = repo.load(_NS, "keep", expected_class=SensitivityClass.FINANCIAL, max_supported_version=1)
         assert kept is not None and kept.payload == b"keep-body", "conflicting upsert must roll back"
+
+
+def test_guarded_deletion_refuses_a_stale_revision_and_rolls_back_sibling_write(tmp_path: Path) -> None:
+    """An identity-changing edit must not erase a row changed after it opened."""
+    with EphemeralBucketSession(), _repo(tmp_path) as repo:
+        repo.apply_batch((_write("old", b"original"),))
+        original = repo.load(_NS, "old", expected_class=SensitivityClass.FINANCIAL, max_supported_version=1)
+        assert original is not None
+        repo.apply_batch((_write("old", b"concurrent"),))
+
+        with pytest.raises(SecureObjectRevisionConflictError):
+            repo.apply_batch(
+                (_write("new", b"replacement"),),
+                (
+                    SecureObjectDeletion(
+                        namespace=_NS,
+                        hashed_object_key=secure_object_key_digest("old"),
+                        expected_revision_id=original.revision_id,
+                    ),
+                ),
+            )
+
+        current = repo.load(_NS, "old", expected_class=SensitivityClass.FINANCIAL, max_supported_version=1)
+        assert current is not None and current.payload == b"concurrent"
+        assert not repo.exists(_NS, "new")

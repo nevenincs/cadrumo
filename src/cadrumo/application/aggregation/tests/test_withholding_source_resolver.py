@@ -5,7 +5,8 @@ the resolver reads persisted per-perceptor-clave
 :class:`WithholdingObservation` records and materialises the DISTINCT
 (perceptor, clave, subclave) count for a ``percepcion_count`` binding. Empty
 store -> zero count + a non-blocking advisory (a nil filer must still
-calculate), never a hard refusal.
+calculate), never a hard refusal. A filer whose schedule makes Modelo 111
+monthly is refused instead of receiving a quarterly-only count.
 """
 
 from __future__ import annotations
@@ -23,12 +24,23 @@ from ....core.aggregation import (
     RetencionClave,
 )
 from ....core.period import Period
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_references import PeriodSelector
 from ....domain.calculations.registry.withholding_bindings import WithholdingObservation
+from ....domain.user_profile.values import UserProfileFact
+from ...modelo.work_profile import ModeloWorkProfile
 from ..percepciones_observations_repository import PercepcionObservationPorts
+from ..retencion_observations_repository import RetencionObservationPorts
+from ..retenciones import RetencionObservation
 from ..source_mesh import CalculationSourceContext
+from ..withholding_filing_cadence import WithholdingFilingCadenceError
 from ..withholding_source import WithholdingSourceResolver
+from .withholding_filer_profile_support import (
+    LARGE_COMPANY_FACTS,
+    PUBLIC_ADMINISTRATION_FACTS,
+    withholding_work_profile,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -73,6 +85,58 @@ class _InMemoryPercepcionObservationRepository:
     def load_observations(self, modelo: str, period: Period) -> tuple[WithholdingObservation, ...]:
         return self._windows.get((modelo, period.filing_year, period.registry_token), ())
 
+    def load_annual_source_observations(
+        self,
+        source_modelo: str,
+        filing_year: int,
+    ) -> tuple[WithholdingObservation, ...]:
+        return tuple(
+            observation
+            for (modelo, year, period), observations in self._windows.items()
+            if modelo == source_modelo and year == filing_year and period.endswith("T")
+            for observation in observations
+        )
+
+
+class _EmptyRetencionObservationRepository:
+    """Protocol-conforming inward fake: no captured retención allocations."""
+
+    def replace_observations(
+        self,
+        *,
+        modelo: str,
+        filing_year: int,
+        period: Period,
+        observations: Sequence[RetencionObservation],
+        source_kind: AggregationCaptureKind,
+        captured_at: datetime | None = None,
+        source_metadata: Mapping[str, str] | None = None,
+    ) -> None:
+        del modelo, filing_year, period, observations, source_kind, captured_at, source_metadata
+
+    def load_observations(self, modelo: str, period: Period) -> tuple[RetencionObservation, ...]:
+        del modelo, period
+        return ()
+
+    def load_annual_source_observations(self, source_modelo: str, filing_year: int) -> tuple[RetencionObservation, ...]:
+        del source_modelo, filing_year
+        return ()
+
+    def load_source_observations_through_year(
+        self,
+        source_modelo: str,
+        last_filing_year: int,
+    ) -> tuple[RetencionObservation, ...]:
+        del source_modelo, last_filing_year
+        return ()
+
+
+def _resolver(repository: _InMemoryPercepcionObservationRepository) -> WithholdingSourceResolver:
+    return WithholdingSourceResolver(
+        ports=PercepcionObservationPorts(repository=repository),
+        retencion_ports=RetencionObservationPorts(repository=_EmptyRetencionObservationRepository()),
+    )
+
 
 def _revision_with(*bindings: BindingDefinition) -> ModeloRevision:
     return ModeloRevision(
@@ -108,13 +172,14 @@ def _non_withholding_revision() -> ModeloRevision:
     )
 
 
-def _context(revision: ModeloRevision) -> CalculationSourceContext:
+def _context(revision: ModeloRevision, profile: ModeloWorkProfile | None) -> CalculationSourceContext:
     return CalculationSourceContext(
         bucket_id="operator",
         modelo="190",
         filing_year=2024,
         period=Period.from_year_and_code(2024, "0A"),
         revision=revision,
+        profile=profile,
     )
 
 
@@ -140,13 +205,13 @@ def _obs(nif: str, clave: RetencionClave) -> WithholdingObservation:
     )
 
 
-def test_resolver_materialises_distinct_percepcion_count() -> None:
+def test_resolver_materialises_distinct_percepcion_count(authority_operation: PinnedAuthorityOperation) -> None:
     """One perceptor under two claves -> percepciones count of 2 from the store."""
     binding = _percepcion_binding()
-    period = Period.from_year_and_code(2024, "0A")
+    period = Period.from_year_and_code(2024, "1T")
     repository = _InMemoryPercepcionObservationRepository()
     repository.replace_observations(
-        modelo="190",
+        modelo="111",
         filing_year=2024,
         period=period,
         observations=[
@@ -156,19 +221,88 @@ def test_resolver_materialises_distinct_percepcion_count() -> None:
         ],
         source_kind=AggregationCaptureKind.AGGREGATE_PULL,
     )
-    resolution = WithholdingSourceResolver(ports=PercepcionObservationPorts(repository=repository)).resolve(
-        _context(_revision_with(binding)),
+    resolution = _resolver(repository).resolve(
+        _context(_revision_with(binding), withholding_work_profile(authority_operation)),
     )
 
     assert resolution.binding_values == {binding.id: Decimal(3)}
     assert resolution.diagnostics == ()
 
 
-def test_resolver_materialises_zero_with_advisory_on_empty_store() -> None:
+def _two_quarter_repository() -> _InMemoryPercepcionObservationRepository:
+    repository = _InMemoryPercepcionObservationRepository()
+    repository.replace_observations(
+        modelo="111",
+        filing_year=2024,
+        period=Period.from_year_and_code(2024, "1T"),
+        observations=[_obs("11111111H", RetencionClave.from_registry("A"))],
+        source_kind=AggregationCaptureKind.AGGREGATE_PULL,
+    )
+    repository.replace_observations(
+        modelo="111",
+        filing_year=2024,
+        period=Period.from_year_and_code(2024, "2T"),
+        observations=[
+            _obs("11111111H", RetencionClave.from_registry("A")).model_copy(
+                update={"transaction_date": date(2024, 4, 2)}
+            ),
+            _obs("22222222J", RetencionClave.from_registry("G")),
+        ],
+        source_kind=AggregationCaptureKind.AGGREGATE_PULL,
+    )
+    return repository
+
+
+def test_m190_resolver_folds_active_quarterly_m111_detail(authority_operation: PinnedAuthorityOperation) -> None:
+    """Annual Modelo 190 reads its own detail from the active 111 projections."""
+    binding = _percepcion_binding()
+
+    resolution = _resolver(_two_quarter_repository()).resolve(
+        _context(_revision_with(binding), withholding_work_profile(authority_operation))
+    )
+
+    assert resolution.binding_values == {binding.id: Decimal(2)}
+    assert len(resolution.provenance) == 3
+
+
+@pytest.mark.parametrize(
+    "facts",
+    [LARGE_COMPANY_FACTS, PUBLIC_ADMINISTRATION_FACTS],
+    ids=["large-company", "public-administration"],
+)
+def test_m190_refuses_a_monthly_m111_filer_instead_of_a_quarterly_only_count(
+    authority_operation: PinnedAuthorityOperation,
+    facts: tuple[UserProfileFact, ...],
+) -> None:
+    """Quarterly windows cannot hold a monthly filer's Modelo 111 detail, so no total is produced."""
+    with pytest.raises(WithholdingFilingCadenceError) as raised:
+        _resolver(_two_quarter_repository()).resolve(
+            _context(_revision_with(_percepcion_binding()), withholding_work_profile(authority_operation, facts=facts))
+        )
+
+    assert raised.value.refusal_code == "withholding_annual_source_not_quarterly"
+    context = raised.value.context
+    assert context is not None
+    assert context["annual_modelo"] == "190"
+    assert context["modelo"] == "111"
+    assert context["scheduled_periods"] == "01|02|03|04|05|06|07|08|09|10|11|12"
+    assert context["unscheduled_quarters"] == "1T|2T|3T|4T"
+
+
+def test_m190_refuses_when_no_filer_profile_was_loaded() -> None:
+    """An unknown cadence is refused rather than read as quarterly."""
+    with pytest.raises(WithholdingFilingCadenceError) as raised:
+        _resolver(_two_quarter_repository()).resolve(_context(_revision_with(_percepcion_binding()), None))
+
+    assert raised.value.refusal_code == "withholding_filer_profile_absent"
+
+
+def test_resolver_materialises_zero_with_advisory_on_empty_store(authority_operation: PinnedAuthorityOperation) -> None:
     """Empty store -> zero count materialised + a non-blocking advisory (not a refusal)."""
     binding = _percepcion_binding()
-    ports = PercepcionObservationPorts(repository=_InMemoryPercepcionObservationRepository())
-    resolution = WithholdingSourceResolver(ports=ports).resolve(_context(_revision_with(binding)))
+    resolution = _resolver(_InMemoryPercepcionObservationRepository()).resolve(
+        _context(_revision_with(binding), withholding_work_profile(authority_operation))
+    )
 
     assert resolution.binding_values == {binding.id: Decimal(0)}
     assert len(resolution.diagnostics) == 1
@@ -178,8 +312,7 @@ def test_resolver_materialises_zero_with_advisory_on_empty_store() -> None:
 
 def test_resolver_silent_when_revision_declares_no_withholding_binding() -> None:
     """A revision with no withholding binding resolves empty (no false advisory)."""
-    ports = PercepcionObservationPorts(repository=_InMemoryPercepcionObservationRepository())
-    resolution = WithholdingSourceResolver(ports=ports).resolve(
+    resolution = _resolver(_InMemoryPercepcionObservationRepository()).resolve(
         CalculationSourceContext(
             bucket_id="operator",
             modelo="303",

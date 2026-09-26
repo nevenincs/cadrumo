@@ -87,6 +87,43 @@ def active_profile_pointer_repair_verdict(
     )
 
 
+PROFILE_SETUP_DECLARED_COMPLETE_CONDITION = "profile.setup.declared_complete"
+"""Failed-condition identity: filing-grade work needs a profile declared set up."""
+
+PROFILE_SETUP_STATE_EVIDENCE = "profile.setup.state"
+"""Evidence identity for the persisted profile setup state observation."""
+
+
+def profile_setup_incomplete_verdict(*, modelo: str, missing_required_field_count: int) -> PreconditionVerdict:
+    """Build the completion outcome for modelo work refused by an unfinished profile setup.
+
+    The condition belongs to the profile rather than to one modelo verb: every
+    filing-grade leaf re-checks it, so the verdict names no leaf.  Setup is
+    declared complete by one operator step that itself re-judges the record and
+    names any outstanding field, which is why the same action serves a record
+    with and without missing required facts.
+    """
+    if missing_required_field_count < 0:
+        raise ValueError("missing_required_field_count cannot be negative")
+    return PreconditionVerdict(
+        failed_condition_id=PROFILE_SETUP_DECLARED_COMPLETE_CONDITION,
+        evidence=(
+            ConditionEvidence(
+                condition_id=PROFILE_SETUP_DECLARED_COMPLETE_CONDITION,
+                evidence_id=PROFILE_SETUP_STATE_EVIDENCE,
+                provenance=ActionEvidenceProvenance.PERSISTED_STATE,
+                values={
+                    "modelo": modelo,
+                    "setup_declared_complete": False,
+                    "missing_required_field_count": missing_required_field_count,
+                },
+            ),
+        ),
+        action=ActionReference(action_id="operator.profile.complete_setup"),
+        conditionality=ActionConditionality.IMMEDIATE,
+    )
+
+
 def corrupt_active_profile_pointer_verdict(*, path: str) -> PreconditionVerdict:
     """Build the repair outcome for a core-observed corrupt active-profile pointer."""
     return active_profile_pointer_repair_verdict(
@@ -102,8 +139,11 @@ def corrupt_active_profile_pointer_verdict(*, path: str) -> PreconditionVerdict:
 
 
 __all__ = [
+    "PROFILE_SETUP_DECLARED_COMPLETE_CONDITION",
+    "PROFILE_SETUP_STATE_EVIDENCE",
     "active_profile_pointer_repair_verdict",
     "conditionality_for_binding",
     "corrupt_active_profile_pointer_verdict",
     "no_action_precondition_verdict",
+    "profile_setup_incomplete_verdict",
 ]

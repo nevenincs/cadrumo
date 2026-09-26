@@ -7,6 +7,14 @@ cadrumo.domain.renta package
    :ignore-module-all:
 
 
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   cadrumo.domain.renta.actividad_asset
+
 Submodules
 ----------
 

@@ -56,6 +56,7 @@ class _RetencionObservationEnvelopePayload(BaseModel):
     captured_at: UtcInstant
     source_kind: AggregationCaptureKind
     source_metadata: Mapping[str, str] = Field(default_factory=dict)
+    projection_identity: str | None = Field(default=None, min_length=64, max_length=64)
 
 
 class RetencionObservationRepositoryAdapter(
@@ -88,6 +89,7 @@ class RetencionObservationRepositoryAdapter(
             payload.period,
             payload.observation.perceptor_nif,
             payload.observation.scheme,
+            payload.projection_identity,
         )
 
     def build_observation_payload(
@@ -100,6 +102,7 @@ class RetencionObservationRepositoryAdapter(
         source_kind: AggregationCaptureKind,
         captured_at: datetime | None = None,
         source_metadata: Mapping[str, str] | None = None,
+        projection_identity: str | None = None,
     ) -> _RetencionObservationEnvelopePayload:
         """Build one validated envelope payload before committing it."""
         return _RetencionObservationEnvelopePayload(
@@ -110,6 +113,7 @@ class RetencionObservationRepositoryAdapter(
             captured_at=captured_at if captured_at is not None else now(),
             source_kind=source_kind,
             source_metadata=dict(source_metadata or {}),
+            projection_identity=projection_identity,
         )
 
     def save_observation(
@@ -183,6 +187,34 @@ class RetencionObservationRepositoryAdapter(
             if payload.modelo == modelo
             and payload.filing_year == period.filing_year
             and payload.period.registry_token == period.registry_token
+        )
+
+    @override
+    def load_annual_source_observations(self, source_modelo: str, filing_year: int) -> tuple[RetencionObservation, ...]:
+        """Read every active periodic row for the source modelo and year."""
+        return _translate_storage_failure(
+            "retencion_load_annual_source_observations",
+            lambda: tuple(
+                payload.observation
+                for payload in self.iter_modelo(source_modelo)
+                if payload.filing_year == filing_year and payload.period.registry_token.endswith("T")
+            ),
+        )
+
+    @override
+    def load_source_observations_through_year(
+        self,
+        source_modelo: str,
+        last_filing_year: int,
+    ) -> tuple[RetencionObservation, ...]:
+        """Read every active periodic row for the source modelo up to and including ``last_filing_year``."""
+        return _translate_storage_failure(
+            "retencion_load_source_observations_through_year",
+            lambda: tuple(
+                payload.observation
+                for payload in self.iter_modelo(source_modelo)
+                if payload.filing_year <= last_filing_year and payload.period.registry_token.endswith("T")
+            ),
         )
 
     def iter_modelo(self, modelo: str) -> Iterator[_RetencionObservationEnvelopePayload]:

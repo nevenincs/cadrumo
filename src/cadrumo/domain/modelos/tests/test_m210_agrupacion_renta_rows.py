@@ -9,7 +9,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.irnr import M210PayerMode
-from ....domain.transactions.m210_income_classification import resolve_m210_payer_mode
+from ...transactions.m210_income_classification import resolve_m210_payer_mode
 from ..row_models import (
     Modelo210AgrupacionRentaRow,
     Modelo210AgrupacionRentaRowsError,

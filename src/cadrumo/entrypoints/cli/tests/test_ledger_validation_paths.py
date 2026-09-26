@@ -734,10 +734,13 @@ def test_usage_ratio_help_points_to_configured_ratio_commands(tmp_path: Path) ->
     """
 
     for args in (
-        ["app", "ledger", "add", "--help"],
-        ["app", "ledger", "allocate", "--help"],
+        ["--language", "en", "app", "ledger", "add", "--help"],
+        ["--language", "en", "app", "ledger", "allocate", "--help"],
     ):
-        result = _invoke(args, env={"CADRUMO_OUTPUT_LANGUAGE": "en", "COLUMNS": "260"})
+        # The language is chosen through the CLI's own flag: an environment
+        # value is ignored while an in-process settings override is active,
+        # so it depended on what earlier tests in the worker had resolved.
+        result = _invoke(args, env={"COLUMNS": "260"})
 
         assert result.exit_code == 0, result.output
         flat = _flatten_box(result.output or "")

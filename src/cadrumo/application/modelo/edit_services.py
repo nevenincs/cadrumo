@@ -22,12 +22,15 @@ from ...domain.modelos.work_unit import WorkUnitCatalogue
 from .edit_models import (
     ModeloEditAddressV1,
     ModeloEditBaselineV1,
+    ModeloEditBindingAddressV1,
+    ModeloEditBindingIntentKind,
     ModeloEditDomainRefusalV1,
     ModeloEditRefusalCode,
     ModeloEditRefusalV1,
     ModeloEditScalarAddressV1,
     ModeloEditScalarIntentKind,
     ModeloEditStaleBaselineRefusalV1,
+    ModeloEditWritableBindingOverrideSurfaceEntryV1,
     ModeloEditWritableScalarSurfaceEntryV1,
 )
 
@@ -74,6 +77,16 @@ def writable_scalar_entry(
     """Return the baseline's writable-scalar surface entry for ``casilla_id``, or ``None``."""
     for entry in baseline.permitted_surface:
         if isinstance(entry, ModeloEditWritableScalarSurfaceEntryV1) and entry.casilla_id == casilla_id:
+            return entry
+    return None
+
+
+def writable_binding_entry(
+    baseline: ModeloEditBaselineV1, binding_id: str
+) -> ModeloEditWritableBindingOverrideSurfaceEntryV1 | None:
+    """Return the admitted binding-override surface entry, when writable."""
+    for entry in baseline.permitted_surface:
+        if isinstance(entry, ModeloEditWritableBindingOverrideSurfaceEntryV1) and entry.binding_id == binding_id:
             return entry
     return None
 
@@ -139,10 +152,24 @@ def validate_scalar_intent(
     return None
 
 
+def validate_binding_intent(
+    baseline: ModeloEditBaselineV1,
+    address: ModeloEditBindingAddressV1,
+    kind: ModeloEditBindingIntentKind,
+) -> ModeloEditRefusalV1 | None:
+    """Return a refusal unless the admitted surface allows this binding intent."""
+    entry = writable_binding_entry(baseline, address.binding_id)
+    if entry is None or kind not in entry.allowed_intents:
+        return _disallowed_intent_refusal(address)
+    return None
+
+
 __all__ = [
     "detail_row_identity_components",
     "detail_row_natural_key",
     "reconfirm_modelo_edit_baseline",
+    "validate_binding_intent",
     "validate_scalar_intent",
+    "writable_binding_entry",
     "writable_scalar_entry",
 ]

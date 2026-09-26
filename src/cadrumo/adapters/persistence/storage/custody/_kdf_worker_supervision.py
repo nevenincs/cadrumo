@@ -21,7 +21,6 @@ from ._kdf_attestation import (
     parse_ready_attestation as _parse_ready_attestation,
 )
 from ._kdf_codec import (
-    KDF_CALIBRATED_FRAME,
     KDF_FAILED_FRAME,
     KDF_FRAME_CONTROL,
     KDF_FRAME_DEK,
@@ -33,6 +32,9 @@ from ._kdf_codec import (
 )
 from ._kdf_codec import (
     close_fd as _close_fd,
+)
+from ._kdf_codec import (
+    parse_calibration_frame as _parse_calibration_frame,
 )
 from ._kdf_codec import (
     read_kdf_frame_to_queue as _read_kdf_frame_to_queue,
@@ -76,7 +78,8 @@ class _SupervisedKdfWorker:
     def __exit__(self, exc_type: object, _exc_value: object, _traceback: object) -> None:
         self._close(failed=exc_type is not None)
 
-    def calibrate(self, parameters: ProfileCustodyKdfParameters) -> None:
+    def calibrate(self, parameters: ProfileCustodyKdfParameters) -> float:
+        """Return the seconds the worker itself timed around the one derivation."""
         self._write_request(
             {
                 "kdf": parameters.model_dump(mode="json"),
@@ -86,11 +89,15 @@ class _SupervisedKdfWorker:
         )
         kind, result = self._read_response_frame()
         self._require_clean_worker_exit()
-        if (kind, result) == (KDF_FRAME_CONTROL, KDF_CALIBRATED_FRAME):
-            return
         if (kind, result) == (KDF_FRAME_CONTROL, KDF_FAILED_FRAME):
             raise _resource_refusal()
-        raise _supervision_refusal()
+        if kind != KDF_FRAME_CONTROL:
+            raise _supervision_refusal()
+        try:
+            derivation_ns = _parse_calibration_frame(result)
+        except (UnicodeDecodeError, ValueError):
+            raise _supervision_refusal() from None
+        return derivation_ns / 1_000_000_000
 
     def unwrap(
         self,

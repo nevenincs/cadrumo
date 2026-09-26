@@ -21,7 +21,7 @@ from cadrumo.application.ledger.actions_common import save_transaction_catalogue
 from cadrumo.core.secure_object_write import SecureObjectWrite
 from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
 from cadrumo.domain.buckets.event_repository import build_bucket_event, emit_bucket_events
-from cadrumo.domain.transactions.models import LedgerDatePartition, TransactionCatalogue
+from cadrumo.domain.transactions.models import LedgerDatePartition, Transaction, TransactionCatalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -99,6 +99,14 @@ class _InterleavingTransactionWriter:
                 events=[_event("interloper")],
             )
         self._delegate.save_with_secure_object_writes(catalogue, extra_writes)
+
+    def replace_if_current_with_secure_object_writes(
+        self,
+        current: Transaction,
+        replacement: Transaction,
+        extra_writes: tuple[SecureObjectWrite, ...],
+    ) -> None:
+        self._delegate.replace_if_current_with_secure_object_writes(current, replacement, extra_writes)
 
 
 def test_a_co_committed_event_is_persisted(tmp_path: Path) -> None:

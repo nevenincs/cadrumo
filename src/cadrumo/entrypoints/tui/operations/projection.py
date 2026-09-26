@@ -11,7 +11,7 @@ reclassified downstream of what the projection already declares.
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Literal, assert_never
+from typing import Final, Literal, assert_never
 
 from pydantic import BaseModel, model_validator
 
@@ -56,6 +56,11 @@ one reference plus this discriminator is the whole derivation: it makes
 the mutual exclusion the contract already guarantees impossible to render
 wrongly, rather than leaving two nullable fields for a renderer to show
 side by side."""
+
+_PARTIAL_SUCCESS_TERMINAL_LOCALE_KEY: Final[OperationModalTerminalCopyKeyV1] = (
+    "operation.modal.terminal.succeeded_partial"
+)
+"""A success whose effect was only partial; no terminal condition alone selects it."""
 
 _TERMINAL_COPY_KEYS: dict[OperationTerminalCondition, OperationModalTerminalCopyKeyV1] = {
     OperationTerminalCondition.SUCCEEDED: "operation.modal.terminal.succeeded",
@@ -217,7 +222,7 @@ def _terminal_copy_key(projection: OperationPublicProjectionV1) -> OperationModa
     if condition is None:
         raise ValueError("terminal copy requires a settled terminal condition")
     if condition is OperationTerminalCondition.SUCCEEDED and projection.effect is OperationEffect.PARTIAL:
-        return "operation.modal.terminal.succeeded_partial"
+        return _PARTIAL_SUCCESS_TERMINAL_LOCALE_KEY
     return _TERMINAL_COPY_KEYS[condition]
 
 

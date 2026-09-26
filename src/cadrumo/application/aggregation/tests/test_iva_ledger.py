@@ -430,7 +430,13 @@ def test_incoming_business_transaction_projects_to_repercutido_iva_observation()
     assert observation.iva_amount == Decimal("10.00")
 
 
-def test_mixed_business_transaction_applies_business_percentage_to_base_and_iva() -> None:
+def test_mixed_business_transaction_applies_business_percentage_to_iva_and_keeps_the_full_base() -> None:
+    """The business share reduces the cuota; the base is declared whole.
+
+    The Modelo 303 instructions state the deductible bases "sin prorratear",
+    and for bienes de inversion that the base goes unreduced even where the
+    partial-affectation deduction percentage (LIVA art. 95.Tres) applies.
+    """
     transaction = _transaction(
         "row-mixed",
         business_classification=BusinessClassification.MIXED,
@@ -445,7 +451,7 @@ def test_mixed_business_transaction_applies_business_percentage_to_base_and_iva(
     )
 
     assert result.issues == ()
-    assert result.observations[0].base_amount == Decimal("50.0000")
+    assert result.observations[0].base_amount == Decimal("200.00")
     assert result.observations[0].iva_amount == Decimal("10.5000")
 
 
@@ -493,7 +499,7 @@ def test_mixed_input_row_applies_business_percentage_before_carrying_prorrata_re
 
     assert result.issues == ()
     assert result.prorrata_references[0].reference.sector_id == "sector-retail"
-    assert result.prorrata_references[0].base_amount == Decimal("50.0000")
+    assert result.prorrata_references[0].base_amount == Decimal("200.00")
     assert result.prorrata_references[0].input_iva_amount == Decimal("10.5000")
 
 

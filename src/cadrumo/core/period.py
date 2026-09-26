@@ -39,12 +39,12 @@ import calendar
 import re
 from datetime import date
 from enum import StrEnum
-from typing import Annotated, override
+from typing import Annotated, Final, override
 
 from pydantic import BaseModel, BeforeValidator, Field
 
-from ..core.models import STRICT_FROZEN_CONFIG
 from .errors.hierarchy import CadrumoError
+from .models import STRICT_FROZEN_CONFIG
 
 
 class StandardPeriodCode(StrEnum):
@@ -83,7 +83,11 @@ class StandardPeriodCode(StrEnum):
 
 _STANDARD_PERIOD_SET: frozenset[str] = frozenset(member.value for member in StandardPeriodCode)
 _EXTENDED_PERIOD_SET: frozenset[str] = frozenset(("EXT-1T", "EXT-2T", "EXT-3T", "EXT-4T"))
-_AD_HOC_PERIOD = "AD-HOC"
+#: The filing-period token for a declaration whose obligation is an event rather
+#: than a settlement window. Public because consumers that must name the ad-hoc
+#: period -- the filing-envelope grammar, which prints a two-character period --
+#: would otherwise spell the token a second time.
+AD_HOC_PERIOD_CODE: Final = "AD-HOC"
 _ADMINISTRATIVE_PERIOD_SET: frozenset[str] = frozenset(
     ("ALTA", "MODIFICACION", "BAJA", "COMUNICACION", "VARIACION"),
 )
@@ -124,7 +128,7 @@ def _validate_filing_period(value: str) -> str:
         return normalized
     if normalized in _EXTENDED_PERIOD_SET:
         return normalized
-    if normalized == _AD_HOC_PERIOD:
+    if normalized == AD_HOC_PERIOD_CODE:
         return normalized
     if _EVENT_NUMBER_PERIOD_RE.match(normalized):
         return normalized
@@ -217,7 +221,7 @@ def accepted_filing_period_codes() -> tuple[str, ...]:
     The administrative tokens are excluded — they address a registry revision,
     not a filing period — as is the infinite ``EVENT-<number>`` family.
     """
-    return tuple(sorted(_STANDARD_PERIOD_SET | _EXTENDED_PERIOD_SET | {_AD_HOC_PERIOD}))
+    return tuple(sorted(_STANDARD_PERIOD_SET | _EXTENDED_PERIOD_SET | {AD_HOC_PERIOD_CODE}))
 
 
 def accepted_filing_period_patterns() -> tuple[str, ...]:
@@ -237,7 +241,7 @@ def _format_accepted_filing_period_set() -> str:
     lines = [
         f"StandardPeriodCode: {', '.join(standard)}",
         f"Extended: {', '.join(extended)}",
-        f"Ad-hoc: {_AD_HOC_PERIOD}",
+        f"Ad-hoc: {AD_HOC_PERIOD_CODE}",
         "Event-driven: EVENT-N (where N is an event-number integer, e.g. EVENT-3)",
     ]
     return "; ".join(lines)
@@ -561,6 +565,7 @@ class Period(BaseModel):
 
 
 __all__ = [
+    "AD_HOC_PERIOD_CODE",
     "FilingPeriodCode",
     "Period",
     "PeriodError",

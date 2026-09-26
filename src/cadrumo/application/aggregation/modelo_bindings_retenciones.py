@@ -9,7 +9,11 @@ from ...core.i18n.translatable import Translatable as tr
 from ...core.modelo import Modelo
 from ...core.period import Period
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
-from ...domain.calculations.registry.retenciones_bindings import resolve_retenciones_aggregation_binding_values
+from ...domain.calculations.registry.retenciones_bindings import (
+    resolve_retenciones_aggregation_binding_row_values,
+    resolve_retenciones_aggregation_binding_values,
+)
+from ..calculations.m115_no_relevant_payments import is_m115_no_relevant_payment_period
 from ._modelo_bindings_support import (
     STORAGE_DEGRADATION_ERRORS,
     empty_source_resolution,
@@ -36,6 +40,7 @@ from .retenciones import (
 )
 from .source_mesh import (
     CalculationSourceContext,
+    CalculationSourceDiagnostic,
     CalculationSourceProvenance,
     CalculationSourceResolution,
 )
@@ -69,9 +74,15 @@ class RetencionesAggregationSourceResolver:
     resolver_id: ClassVar[str] = "retenciones_aggregation"
     owned_sources: ClassVar[tuple[BindingSourceKind, ...]] = (BindingSourceKind.RETENCIONES_AGGREGATION,)
 
-    def __init__(self, *, ports: RetencionObservationPorts) -> None:
+    def __init__(
+        self,
+        *,
+        ports: RetencionObservationPorts,
+        m115_no_relevant_payment_periods: frozenset[tuple[int, str]] = frozenset(),
+    ) -> None:
         """Use the required retención-observation capability bundle."""
         self._ports = ports
+        self._m115_no_relevant_payment_periods = m115_no_relevant_payment_periods
 
     @staticmethod
     def aggregate(
@@ -107,7 +118,11 @@ class RetencionesAggregationSourceResolver:
             # retenciones aggregator. Resolve empty rather than guess values.
             return empty_source_resolution(self.resolver_id, self.owned_sources)
         try:
-            observations = self._ports.repository.load_observations(str(context.modelo), context.period)
+            observations = (
+                self._ports.repository.load_annual_source_observations("115", context.filing_year)
+                if str(context.modelo) == Modelo("180").value
+                else self._ports.repository.load_observations(str(context.modelo), context.period)
+            )
         except (RetencionObservationPersistenceError, *STORAGE_DEGRADATION_ERRORS) as exc:
             return storage_degradation_resolution(
                 resolver_id=self.resolver_id,
@@ -116,6 +131,34 @@ class RetencionesAggregationSourceResolver:
                 error=exc,
             )
         if not observations:
+            is_m115 = str(context.modelo) == Modelo("115").value
+            is_m115_no_relevant_payment = is_m115 and is_m115_no_relevant_payment_period(
+                filing_year=context.filing_year,
+                period_token=context.period.registry_token,
+                attested_periods=self._m115_no_relevant_payment_periods,
+            )
+            if is_m115_no_relevant_payment:
+                aggregation = self.aggregate(str(context.modelo), (), period=context.period)
+                return CalculationSourceResolution(
+                    resolver_id=self.resolver_id,
+                    owned_sources=self.owned_sources,
+                    binding_values=resolve_retenciones_aggregation_binding_values(context.revision, aggregation),
+                    row_binding_values=resolve_retenciones_aggregation_binding_row_values(
+                        context.revision, aggregation
+                    ),
+                    diagnostics=(
+                        CalculationSourceDiagnostic(
+                            reason="source_issue",
+                            source_kind="retenciones_aggregation",
+                            resolver_id=self.resolver_id,
+                            message=(
+                                f"Modelo 115 {context.filing_year} {context.period.registry_token} has an explicit "
+                                "no-relevant-payment attestation; its retention values are materialised as zero. "
+                                "This is local preparation evidence, not AEAT submission evidence."
+                            ),
+                        ),
+                    ),
+                )
             # Modelo 111 is the one retenciones modelo with a prescribed remedy:
             # a quarter with no retenciones is ATTESTED, never filed blank. Name
             # that path, following the Modelo 180 precedent of carrying the flag
@@ -155,6 +198,7 @@ class RetencionesAggregationSourceResolver:
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
             binding_values=resolve_retenciones_aggregation_binding_values(context.revision, aggregation),
+            row_binding_values=resolve_retenciones_aggregation_binding_row_values(context.revision, aggregation),
             diagnostics=administrador_retencion_rate_advisory_observations(
                 observations, effective_date=context.period.end_date
             ),

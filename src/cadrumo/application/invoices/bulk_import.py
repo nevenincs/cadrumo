@@ -35,8 +35,9 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Iterable, Iterator, Mapping
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
+from io import BytesIO
 from pathlib import Path
 from typing import Any
 
@@ -46,14 +47,18 @@ from ...core.country_code import CountryCodeAlpha2
 from ...core.decimal.coercion import coerce_decimal, normalize_decimal_separators
 from ...core.decimal.grammar import DecimalSeparator, DecimalSeparatorValue, try_parse_canonical_decimal
 from ...core.errors.hierarchy import CadrumoError
-from ...core.external_constants import DEFAULT_CURRENCY
+from ...core.external_constants import DEFAULT_CURRENCY, XLS_EXTENSION
+from ...core.hashing import sha256_hex
+from ...core.legacy_workbook import read_legacy_workbook
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.codes import IsoCurrencyCode
 from ...core.parsing.dates import parse_iso8601_date
 from ...core.tabular import TabularSourceError, coerce_cell_text, normalize_tabular_bytes
+from ...core.time.clock import now
 from ...core.workbook import FORMULA_CELL_REFUSAL, WorkbookCell, first_formula_cell_column
 from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.iva.classification import InvoiceKind
+from ...domain.transactions.raw_transaction import RawProvenance, SourceFormat
 from ._bulk_import_columns import (
     BulkImportColumnResolution,
     ColumnRoleMapper,
@@ -63,6 +68,7 @@ from .catalogue_creation import build_catalogue_invoice, create_catalogue_invoic
 from .catalogue_creation_ports import CatalogueCreationPorts
 
 __all__ = [
+    "BULK_INVOICE_IMPORT_EXTENSIONS",
     "BULK_INVOICE_IMPORT_REQUIRED_COLUMNS",
     "BulkImportSourceRow",
     "BulkInvoiceImportResult",
@@ -72,6 +78,9 @@ __all__ = [
     "import_invoices_from_rows",
     "read_bulk_invoice_import_source",
 ]
+
+#: The invoice-book file kinds the importer reads, in every frontend.
+BULK_INVOICE_IMPORT_EXTENSIONS: frozenset[str] = frozenset({".csv", ".tsv", ".xlsx", ".xlsm", XLS_EXTENSION})
 
 BULK_INVOICE_IMPORT_REQUIRED_COLUMNS: frozenset[str] = frozenset(
     {
@@ -94,12 +103,17 @@ class BulkImportSourceRow(BaseModel):
             representation. A delimited file yields text exactly as printed; a
             workbook yields the type the workbook itself chose, so a numeric
             cell is never stringified into the operator's typed-text grammar.
+        provenance: Optional source-file identity for rows read by
+            :func:`read_bulk_invoice_import_source`. It carries only the
+            basename, file digest, and one-based row identity; manually built
+            source rows leave it unset.
     """
 
     model_config = STRICT_FROZEN_CONFIG
 
     row_number: int = Field(ge=1)
     values: dict[str, object]
+    provenance: RawProvenance | None = None
 
 
 class BulkInvoiceImportSource(BaseModel):
@@ -502,16 +516,34 @@ def _assert_country_is_answerable(
     )
 
 
-def _read_delimited_source(path: Path, *, mapper: ColumnRoleMapper | None) -> BulkInvoiceImportSource:
+def _bulk_row_provenance(
+    path: Path,
+    *,
+    source_sha256: str,
+    source_format: SourceFormat,
+    ingested_at: datetime,
+    row_number: int,
+) -> RawProvenance:
+    """Build one canonical source identity without retaining the original path."""
+    return RawProvenance(
+        source_path=Path(path.name),
+        source_sha256=source_sha256,
+        source_row_index=row_number,
+        source_format=source_format,
+        ingested_at=ingested_at,
+        provider_name="bulk-invoice-import",
+    )
+
+
+def _read_delimited_source(
+    path: Path,
+    *,
+    mapper: ColumnRoleMapper | None,
+    source_bytes: bytes,
+    source_sha256: str,
+    ingested_at: datetime,
+) -> BulkInvoiceImportSource:
     """Read a delimited invoice book of any dialect into a resolved source."""
-    try:
-        source_bytes = path.read_bytes()
-    except OSError as exc:
-        raise InvoiceValidationError(
-            "bulk invoice import file could not be read",
-            translated_message="application.invoices.bulk_import.errors.file_read_failed",
-            context={"path_name": path.name, "error_type": type(exc).__name__},
-        ) from exc
     try:
         table = normalize_tabular_bytes(source_bytes)
     except TabularSourceError as exc:
@@ -529,6 +561,13 @@ def _read_delimited_source(path: Path, *, mapper: ColumnRoleMapper | None) -> Bu
         BulkImportSourceRow(
             row_number=row.source_line_number,
             values={field: row.cells[index] for index, field in field_by_index.items() if index < len(row.cells)},
+            provenance=_bulk_row_provenance(
+                path,
+                source_sha256=source_sha256,
+                source_format=SourceFormat.CSV,
+                ingested_at=ingested_at,
+                row_number=row.source_line_number,
+            ),
         )
         for row in table.rows
     )
@@ -565,6 +604,9 @@ def _workbook_source_rows(
     *,
     path: Path,
     field_by_index: Mapping[int, str],
+    source_sha256: str,
+    source_format: SourceFormat,
+    ingested_at: datetime,
 ) -> tuple[BulkImportSourceRow, ...]:
     rows: list[BulkImportSourceRow] = []
     for row_number, row_cells in enumerate(rows_iter, start=2):  # header is row 1
@@ -576,7 +618,19 @@ def _workbook_source_rows(
         for index, field in field_by_index.items():
             cell_value = row[index] if index < len(row) else None
             values[field] = cell_value.isoformat() if isinstance(cell_value, date) else cell_value
-        rows.append(BulkImportSourceRow(row_number=row_number, values=values))
+        rows.append(
+            BulkImportSourceRow(
+                row_number=row_number,
+                values=values,
+                provenance=_bulk_row_provenance(
+                    path,
+                    source_sha256=source_sha256,
+                    source_format=source_format,
+                    ingested_at=ingested_at,
+                    row_number=row_number,
+                ),
+            ),
+        )
     return tuple(rows)
 
 
@@ -585,6 +639,9 @@ def _workbook_source_from_rows(
     *,
     path: Path,
     mapper: ColumnRoleMapper | None,
+    source_sha256: str,
+    source_format: SourceFormat,
+    ingested_at: datetime,
 ) -> BulkInvoiceImportSource:
     try:
         header_cells = next(rows_iter)
@@ -597,12 +654,26 @@ def _workbook_source_from_rows(
     )
     _assert_required_fields_present(resolution)
     return BulkInvoiceImportSource(
-        rows=_workbook_source_rows(rows_iter, path=path, field_by_index=resolution.field_by_index),
+        rows=_workbook_source_rows(
+            rows_iter,
+            path=path,
+            field_by_index=resolution.field_by_index,
+            source_sha256=source_sha256,
+            source_format=source_format,
+            ingested_at=ingested_at,
+        ),
         resolution=resolution,
     )
 
 
-def _read_workbook_source(path: Path, *, mapper: ColumnRoleMapper | None) -> BulkInvoiceImportSource:
+def _read_workbook_source(
+    path: Path,
+    *,
+    mapper: ColumnRoleMapper | None,
+    source_bytes: bytes,
+    source_sha256: str,
+    ingested_at: datetime,
+) -> BulkInvoiceImportSource:
     """Read a workbook invoice book into a resolved source.
 
     A workbook states its own cell types, so there is no dialect to detect: a
@@ -626,12 +697,51 @@ def _read_workbook_source(path: Path, *, mapper: ColumnRoleMapper | None) -> Bul
     """
     from openpyxl import load_workbook
 
-    workbook = load_workbook(filename=path, read_only=True, data_only=False)
+    workbook = load_workbook(filename=BytesIO(source_bytes), read_only=True, data_only=False)
     try:
         rows_iter = iter(workbook.worksheets[0].iter_rows())
-        return _workbook_source_from_rows(rows_iter, path=path, mapper=mapper)
+        return _workbook_source_from_rows(
+            rows_iter,
+            path=path,
+            mapper=mapper,
+            source_sha256=source_sha256,
+            source_format=SourceFormat.XLSX,
+            ingested_at=ingested_at,
+        )
     finally:
         workbook.close()
+
+
+def _read_legacy_workbook_source(
+    path: Path,
+    *,
+    mapper: ColumnRoleMapper | None,
+    source_bytes: bytes,
+    source_sha256: str,
+    ingested_at: datetime,
+) -> BulkInvoiceImportSource:
+    """Read a legacy Excel 97-2003 invoice book exactly as :func:`_read_workbook_source` reads ``.xlsx``.
+
+    :func:`~core.legacy_workbook.read_legacy_workbook` marks each formula cell
+    the way ``openpyxl`` does, so the same first worksheet is read under the
+    same formula refusal, header resolution and row numbering.
+    """
+    try:
+        worksheets = read_legacy_workbook(source_bytes)
+    except TabularSourceError as exc:
+        raise InvoiceValidationError(
+            "bulk invoice import file carries no readable table",
+            translated_message="application.invoices.bulk_import.errors.unreadable_table",
+            context={"path_name": path.name, "detail": str(exc)},
+        ) from exc
+    return _workbook_source_from_rows(
+        iter(worksheets[0].rows if worksheets else ()),
+        path=path,
+        mapper=mapper,
+        source_sha256=source_sha256,
+        source_format=SourceFormat.XLS,
+        ingested_at=ingested_at,
+    )
 
 
 def read_bulk_invoice_import_source(
@@ -639,7 +749,7 @@ def read_bulk_invoice_import_source(
     *,
     mapper: ColumnRoleMapper | None = None,
 ) -> BulkInvoiceImportSource:
-    """Read a CSV, TSV or XLSX invoice book into rows keyed by importer field.
+    """Read a CSV, TSV, XLSX/XLSM or legacy XLS invoice book into rows keyed by importer field.
 
     A column whose header already names an importer field binds to it outright.
     Anything left over is put to ``mapper`` once for the whole file, and a column
@@ -662,14 +772,37 @@ def read_bulk_invoice_import_source(
             read, or no column supplies a required field.
     """
     suffix = path.suffix.lower()
+    if suffix not in BULK_INVOICE_IMPORT_EXTENSIONS:
+        raise InvoiceValidationError(
+            "bulk invoice import file must be .csv, .tsv, .xlsx, .xlsm or .xls",
+            translated_message="application.invoices.bulk_import.errors.unsupported_extension",
+            context={"path_name": path.name, "extension": suffix},
+        )
+    try:
+        source_bytes = path.read_bytes()
+    except OSError as exc:
+        raise InvoiceValidationError(
+            "bulk invoice import file could not be read",
+            translated_message="application.invoices.bulk_import.errors.file_read_failed",
+            context={"path_name": path.name, "error_type": type(exc).__name__},
+        ) from exc
+    source_sha256 = sha256_hex(source_bytes)
+    ingested_at = now()
     if suffix in {".csv", ".tsv"}:
-        return _read_delimited_source(path, mapper=mapper)
-    if suffix in {".xlsx", ".xlsm"}:
-        return _read_workbook_source(path, mapper=mapper)
-    raise InvoiceValidationError(
-        "bulk invoice import file must be .csv, .tsv or .xlsx",
-        translated_message="application.invoices.bulk_import.errors.unsupported_extension",
-        context={"path_name": path.name, "extension": suffix},
+        return _read_delimited_source(
+            path,
+            mapper=mapper,
+            source_bytes=source_bytes,
+            source_sha256=source_sha256,
+            ingested_at=ingested_at,
+        )
+    read_workbook = _read_legacy_workbook_source if suffix == XLS_EXTENSION else _read_workbook_source
+    return read_workbook(
+        path,
+        mapper=mapper,
+        source_bytes=source_bytes,
+        source_sha256=source_sha256,
+        ingested_at=ingested_at,
     )
 
 
@@ -757,6 +890,9 @@ def import_invoices_from_rows(
             # already-catalogued identity -- report it, do not re-write or raise.
             skipped_duplicate += 1
             continue
+
+        if source_row.provenance is not None:
+            candidate = candidate.model_copy(update={"provenance": source_row.provenance})
 
         result = create_catalogue_invoice(
             invoice=candidate,

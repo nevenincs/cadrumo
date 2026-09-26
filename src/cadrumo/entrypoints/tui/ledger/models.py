@@ -10,6 +10,7 @@ from typing import Final, Literal, Protocol, get_args
 
 from pydantic import BaseModel, Field, model_validator
 
+from ....application.invoices.catalogue_lifecycle import CatalogueInvoicePatch
 from ....application.ledger.actions_import import LedgerProviderID
 from ....application.ledger.attachment_review import AttachmentReviewItem
 from ....application.ledger.models import (
@@ -25,11 +26,15 @@ from ....application.ledger.workspace import (
     LedgerWorkspaceEntryRefV1,
 )
 from ....application.operator_actions.models import ActionReference
+from ....core.aggregation import IntracomOperationType
 from ....core.country_code import CountryCodeAlpha2
 from ....core.identity.hex_ids import InvoiceId
 from ....core.identity.transaction_ids import TransactionId
 from ....core.models import STRICT_FROZEN_CONFIG
+from ....domain.invoices.models import Invoice
 from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.schema import IvaCategory
+from ....domain.transactions.models import Transaction
 
 type LedgerDestinationIdV1 = Literal[
     "ledger.overview",
@@ -280,12 +285,37 @@ class LedgerInvoiceClassChoice(StrEnum):
     RECTIFICATIVA = "rectificativa"
 
 
+class LedgerInvoiceLineEntryV1(BaseModel):
+    """One printed invoice line as the operator typed it, with its numbers already parsed.
+
+    It carries exactly the domain line's fields. The rate stays the registry
+    slot token as typed: whether that slot is governed, and whether the line's
+    arithmetic holds, are the writer's checks, made against the pinned
+    authority when the line becomes the domain line.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    description: str
+    quantity: Decimal
+    unit_price: Decimal
+    subtotal: Decimal
+    iva_rate: str
+    iva_amount: Decimal
+    spending_category_id: str | None = None
+    oss_rate_kind: str | None = None
+
+
 class LedgerInvoiceEntryV1(BaseModel):
     """One invoice as the operator typed it, already parsed into typed values.
 
     Legal checks -- the NIF format, the IVA slot for the date, the retention
-    consistency -- are the application writer's, so nothing here pre-judges
-    them; this only carries what was entered.
+    consistency, the recargo identity -- are the application writer's, so
+    nothing here pre-judges them; this only carries what was entered.
+
+    An invoice is entered either as one taxable base and rate or as its
+    ordered lines, exactly as the writer accepts it, so a mixed-rate invoice
+    reaches the writer with its per-rate breakdown intact.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -296,8 +326,14 @@ class LedgerInvoiceEntryV1(BaseModel):
     country_code: str
     invoice_number: str
     invoice_date: date
-    taxable_base: Decimal
+    taxable_base: Decimal | None
     iva_rate: Decimal | None
+    lines: tuple[LedgerInvoiceLineEntryV1, ...] = ()
+    operation_type: IntracomOperationType | None = None
+    operation_date: date | None = None
+    recargo_amount: Decimal | None = None
+    rectifies_invoice_number: str | None = None
+    iva_category: IvaCategory | None = None
     currency: str
     retention_rate: Decimal | None = None
     retention_amount: Decimal | None = None
@@ -317,6 +353,8 @@ class LedgerInvoiceAddResultV1(BaseModel):
     iva_total: Decimal
     grand_total: Decimal
     currency: str
+    euro_value_pending: bool = False
+    """The invoice is in a foreign currency and no euro rate was found for it."""
 
 
 class LedgerInvoiceAddDoorV1(Protocol):
@@ -324,6 +362,34 @@ class LedgerInvoiceAddDoorV1(Protocol):
 
     async def __call__(self, entry: LedgerInvoiceEntryV1) -> LedgerInvoiceAddResultV1:
         """Build and persist one invoice through the sole catalogue writer."""
+        ...
+
+
+class LedgerRecordDoorsV1(Protocol):
+    """Injected application doors that read and edit canonical invoice and transaction records.
+
+    The bound implementation captures one profile and authority generation,
+    so navigating between records can never retarget a write.
+    """
+
+    async def invoices(self) -> tuple[Invoice, ...]:
+        """List the bucket's canonical invoices."""
+        ...
+
+    async def invoice(self, invoice_id: str) -> Invoice:
+        """Resolve one canonical invoice by its full identity."""
+        ...
+
+    async def update_invoice(self, baseline: Invoice, patch: CatalogueInvoicePatch) -> Invoice:
+        """Submit a baseline-guarded metadata patch through the shared writer."""
+        ...
+
+    async def transaction(self, transaction_id: str) -> Transaction:
+        """Resolve one typed transaction."""
+        ...
+
+    async def update_transaction(self, baseline: Transaction, patch: ManualLedgerTransactionPatch) -> Transaction:
+        """Apply a typed edit against the captured transaction baseline."""
         ...
 
 
@@ -518,10 +584,12 @@ __all__ = [
     "LedgerInvoiceAddResultV1",
     "LedgerInvoiceClassChoice",
     "LedgerInvoiceEntryV1",
+    "LedgerInvoiceLineEntryV1",
     "LedgerLinkResultV1",
     "LedgerLinkSubmissionV1",
     "LedgerLinkSubmitterV1",
     "LedgerReaderReadinessV1",
+    "LedgerRecordDoorsV1",
     "LedgerReviewRowV1",
     "LedgerRouteRefusalV1",
     "LedgerRouteTargetV1",

@@ -147,6 +147,21 @@ class _InMemoryTransactionRepository(TransactionCatalogueCoCommitWriterProtocol)
         del extra_writes
         self._catalogue = catalogue
 
+    @override
+    def replace_if_current_with_secure_object_writes(
+        self,
+        current: Transaction,
+        replacement: Transaction,
+        extra_writes: tuple[SecureObjectWrite, ...],
+    ) -> None:
+        del extra_writes
+        if self._catalogue.get(current.transaction_id) != current:
+            raise AssertionError("guarded replacement received a stale baseline")
+        updated = dict(self._catalogue.transactions)
+        updated.pop(current.transaction_id)
+        updated[replacement.transaction_id] = replacement
+        self._catalogue = TransactionCatalogue.from_transactions(updated.values())
+
 
 class _InMemoryEventRepository(BucketEventHistoryCoCommitWriterProtocol):
     """In-memory event capability; event persistence is outside this test seam."""

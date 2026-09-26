@@ -6,31 +6,28 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-
-from ....adapters.persistence.storage.tests.secure_sql import isolated_cli_runtime_profile
-from ....core.period import Period
-from ....domain.calculations.registry.tests.published_authority import published_snapshot
+from ....adapters.persistence.storage.tests.secure_sql import (
+    isolated_cli_backend as _isolated_cli_backend,
+)
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....tests.cli_envelope import require_schema_envelope
 from ._iva_wallet_inspector_support import (
     _GUIDANCE_PROFILE,
     _seed_full_autonomo_profile_for_guidance,
 )
-from ._m303_filing_evidence_support import write_m303_filing_evidence
+from ._m303_ordinary_cli_support import joint_return_options
 from .cli_runner import invoke_cached_cli
 
+__all__ = ["_isolated_cli_backend"]
+
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
-
-
-def _m303_revision_id(*, filing_year: int, period: str) -> str:
-    return str(published_snapshot("303", filing_year=filing_year, period=period).revision.id)
 
 
 def test_m303_fresh_profile_binding_override_is_a_terminal_typed_refusal(
     tmp_path: Path,
 ) -> None:
     """No seed inference is made when a compensation record is absent."""
-    with isolated_cli_runtime_profile(
+    with isolated_runtime_profile(
         tmp_path=tmp_path,
         bucket_id=_GUIDANCE_PROFILE,
     ):
@@ -46,11 +43,9 @@ def test_m303_fresh_profile_binding_override_is_a_terminal_typed_refusal(
                 "--modelo",
                 "303",
                 "--year",
-                "2024",
+                "2025",
                 "--period",
                 "2T",
-                "--revision",
-                _m303_revision_id(filing_year=2024, period="2T"),
             ],
         )
         assert work_unit_result.exit_code == 0, work_unit_result.output
@@ -66,28 +61,26 @@ def test_m303_fresh_profile_binding_override_is_a_terminal_typed_refusal(
                 work_unit_id,
                 "--binding",
                 "modelo-303-compensacion-pendiente-anteriores=500",
+                *joint_return_options(),
             ],
             env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
         )
 
     assert result.exit_code != 0, "Expected non-zero exit when compensation binding is supplied without a seeded wallet"
     assert "iva-wallet seed" not in result.output, f"Refusal must not infer a seed command; got:\n{result.output}"
+    assert 'action.failed_condition_id: "modelo.work.calculate.iva_wallet.ready"' in result.output, result.output
+    assert "action.action: null" in result.output, result.output
+    assert 'action.no_recovery_outcome: "operator_decision"' in result.output, result.output
+    assert "NOTICE:" not in result.output, result.output
 
 
 def test_m303_in_scope_missing_wallet_surfaces_typed_terminal_refusal(
     tmp_path: Path,
-    *,
-    authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """In-scope missing authority preserves its terminal operator-decision verdict."""
-    filing_year = 2024
+    filing_year = 2025
     period_code = "2T"
-    evidence_path = write_m303_filing_evidence(
-        tmp_path / "m303-filing-evidence.json",
-        Period.from_year_and_code(filing_year, period_code),
-        operation=authority_operation,
-    )
-    with isolated_cli_runtime_profile(
+    with isolated_runtime_profile(
         tmp_path=tmp_path,
         bucket_id=_GUIDANCE_PROFILE,
     ):
@@ -106,8 +99,6 @@ def test_m303_in_scope_missing_wallet_surfaces_typed_terminal_refusal(
                 str(filing_year),
                 "--period",
                 period_code,
-                "--revision",
-                _m303_revision_id(filing_year=filing_year, period=period_code),
             ],
         )
         assert work_unit_result.exit_code == 0, work_unit_result.output
@@ -121,8 +112,7 @@ def test_m303_in_scope_missing_wallet_surfaces_typed_terminal_refusal(
                 "work",
                 "calculate",
                 work_unit_id,
-                "--m303-filing-evidence",
-                str(evidence_path),
+                *joint_return_options(),
             ],
             env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
         )
@@ -146,7 +136,7 @@ def test_m303_fresh_profile_calculate_without_binding_override_does_not_raise_wa
     tmp_path: Path,
 ) -> None:
     """Anti-tautology: fresh-profile M303 calculate without binding override does not error on wallet."""
-    with isolated_cli_runtime_profile(
+    with isolated_runtime_profile(
         tmp_path=tmp_path,
         bucket_id=_GUIDANCE_PROFILE,
     ):
@@ -163,11 +153,9 @@ def test_m303_fresh_profile_calculate_without_binding_override_does_not_raise_wa
                 "--modelo",
                 "303",
                 "--year",
-                "2024",
+                "2025",
                 "--period",
                 "1T",
-                "--revision",
-                _m303_revision_id(filing_year=2024, period="1T"),
             ],
         )
         assert work_unit_result.exit_code == 0, work_unit_result.output
@@ -175,7 +163,14 @@ def test_m303_fresh_profile_calculate_without_binding_override_does_not_raise_wa
         work_unit_id = str(work_unit_payload["work_unit_id"])
 
         result = invoke_cached_cli(
-            ["app", "modelo", "work", "calculate", work_unit_id],
+            [
+                "app",
+                "modelo",
+                "work",
+                "calculate",
+                work_unit_id,
+                *joint_return_options(),
+            ],
             env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
         )
 

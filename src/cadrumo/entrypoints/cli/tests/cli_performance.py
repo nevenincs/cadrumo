@@ -571,7 +571,6 @@ def _run_child(
         env_extra = {
             **dict(extra_env or {}),
             "CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root),
-            "CADRUMO_SECRET_STORE_DIR": str(storage_root / "secret-store"),
             "CADRUMO_OUTPUT_LANGUAGE": "en",
         }
         started = time.perf_counter()

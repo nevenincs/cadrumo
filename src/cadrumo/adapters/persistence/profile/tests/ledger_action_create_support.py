@@ -65,7 +65,15 @@ from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.domain.transactions.models import Transaction as _Transaction
 from cadrumo.domain.usage_ratios.model import UsageRatioProfile as _UsageRatioProfile
 
-from .ledger_action_persistence_support import _BUCKET_ID, _repositories, purchase_invoice
+from .ledger_action_persistence_support import (
+    BUCKET_ID as _BUCKET_ID,
+)
+from .ledger_action_persistence_support import (
+    purchase_invoice,
+)
+from .ledger_action_persistence_support import (
+    repositories as _repositories,
+)
 
 
 @contextmanager

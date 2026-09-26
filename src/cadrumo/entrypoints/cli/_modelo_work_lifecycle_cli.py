@@ -294,6 +294,7 @@ def work_create(
             enforce_applicability=not allow_not_applicable,
             catalogue=lifecycle_ports.work_unit_repository.load(),
             ports=lifecycle_ports,
+            operation=operation,
             profile=profile,
         )
     except (ModeloWorkRegistryYearMismatchError, RegistrySnapshotError) as exc:

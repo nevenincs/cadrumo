@@ -61,6 +61,8 @@ from ...domain.modelos.calculation_revision_m303_handoff import FilingInstanceEv
 from ...domain.modelos.verification_report import VerificationReport
 from ...domain.modelos.work_unit import WorkUnit
 from ..auth.operator_probe_ports import OperatorProbePorts
+from ..cli_exception_preconditions import nested_terminal_precondition_verdict
+from ..operator_actions.models import PreconditionVerdict
 from ..state_projection_ports import StateProjectionReadError, StateProjectionReadPorts
 from .calculate_input import WorkCalculateInputBundle, calculate_modelo_work_revision
 from .calculation_action_ports import CalculationActionPorts
@@ -78,6 +80,7 @@ if TYPE_CHECKING:
     from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
     from ..auth.operator_scope_ports import OperatorScopePorts
     from ..state_projection import ProjectionModeloReadiness
+    from .work_profile import ModeloWorkProfile
 
 _log = get_logger(__name__)
 
@@ -129,16 +132,21 @@ class QuickfileStageStatus(StrEnum):
 class QuickfileStageOutcome:
     """The typed result of one quickfile stage.
 
-    ``translated_message`` and ``context`` carry the originating
-    :class:`core.errors.hierarchy.CadrumoError` metadata verbatim so the transport layer
-    can localise the refusal without the application layer depending on i18n.
+    ``refusal`` retains the originating :class:`core.errors.hierarchy.CadrumoError`
+    of a REFUSED stage so the transport renders it through the canonical error
+    message resolver without the application layer depending on i18n;
+    ``context`` carries its structured metadata verbatim. ``precondition_verdict``
+    is that refusal's typed decision, when it carries one: the ONLY channel
+    through which a recovery action reaches the operator, because the refusal's
+    rendered prose may not name an executable command.
     """
 
     stage: QuickfileStage
     status: QuickfileStageStatus
     message: str = ""
-    translated_message: str | None = None
     context: Mapping[str, str] = field(default_factory=_empty_text_context)
+    refusal: CadrumoError | None = None
+    precondition_verdict: PreconditionVerdict | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -203,14 +211,15 @@ class QuickfileCommand(BaseModel):
 
 
 def _refusal_outcome(stage: QuickfileStage, exc: CadrumoError) -> QuickfileStageOutcome:
-    """Build a REFUSED outcome carrying the error's localisation metadata."""
+    """Build a REFUSED outcome carrying the error and its typed decision, if any."""
     context = {str(key): str(value) for key, value in (exc.context or {}).items()}
     return QuickfileStageOutcome(
         stage=stage,
         status=QuickfileStageStatus.REFUSED,
         message=str(exc),
-        translated_message=exc.translated_message,
         context=context,
+        refusal=exc,
+        precondition_verdict=nested_terminal_precondition_verdict(exc),
     )
 
 
@@ -236,6 +245,7 @@ def run_modelo_quickfile(
     read_ports: StateProjectionReadPorts,
     workflow_profile: TaxpayerProfile,
     build_calculation_inputs: Callable[[str], WorkCalculateInputBundle],
+    profile: ModeloWorkProfile | None = None,
 ) -> QuickfileResult:
     """Run readiness → create → calculate → verify → export for one modelo target.
 
@@ -269,6 +279,7 @@ def run_modelo_quickfile(
         workflow_profile: The active :class:`TaxpayerProfile` the readiness and
             calculate stages are evaluated against.
         build_calculation_inputs: Factory producing the calculate-stage inputs.
+        profile: Already-authenticated work profile reused by calculate when supplied.
 
     Returns:
         A :class:`QuickfileResult` whose ``completed`` flag is ``True`` only when
@@ -330,6 +341,7 @@ def run_modelo_quickfile(
             actor=command.actor,
             catalogue=calculation_action_ports.work_lifecycle_ports.work_unit_repository.load(),
             ports=calculation_action_ports.work_lifecycle_ports,
+            operation=operation,
         )
     except CadrumoError as exc:
         return _halted(
@@ -351,15 +363,15 @@ def run_modelo_quickfile(
 
     # ── Stage 3: calculate ────────────────────────────────────────────────
     try:
-        calculation_inputs = replace(
-            build_calculation_inputs(work_unit.work_unit_id),
-            filing_instance_evidence=command.filing_instance_evidence,
-        )
+        calculation_inputs = build_calculation_inputs(work_unit.work_unit_id)
+        filing_instance_evidence = command.filing_instance_evidence or calculation_inputs.filing_instance_evidence
+        calculation_inputs = replace(calculation_inputs, filing_instance_evidence=filing_instance_evidence)
         calculation = calculate_modelo_work_revision(
             work_unit_id=work_unit.work_unit_id,
             actor=command.actor,
             inputs=calculation_inputs,
             ports=calculation_action_ports,
+            profile=profile,
         )
     except CadrumoError as exc:
         return _halted(
@@ -580,6 +592,9 @@ def _readiness_outcome(readiness: ProjectionModeloReadiness | None) -> Quickfile
             "binding_ready": str(readiness.binding_ready).lower(),
             "missing_bindings": str(len(readiness.missing_bindings)),
         },
+        # The readiness warning is where an incomplete setup is first seen, so
+        # its typed recovery rides here as well as on any later refusal.
+        precondition_verdict=readiness.profile_precondition_verdict,
     )
 
 

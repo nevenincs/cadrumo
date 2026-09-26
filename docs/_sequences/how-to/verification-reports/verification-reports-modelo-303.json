@@ -134,7 +134,7 @@
           "created_at": "2026-04-01T09:00:00Z",
           "evidence_id": "9a075f52dad08e80",
           "invoice_date": "2026-02-11",
-          "invoice_number": "sha256:17853e99",
+          "invoice_number": "C-2026-0087",
           "iva_amount": "105",
           "iva_rate": "0.21",
           "media_kind": "pdf",
@@ -248,14 +248,13 @@
         "work",
         "calculate",
         "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d",
-        "--m303-filing-evidence",
-        "fixtures/m303-filing-evidence-2026-1T.json"
+        "--no-joint-return-elected"
       ],
       "captures": [
         {
           "json_path": "result.calculation_revision_id",
           "name": "calculation_revision_id",
-          "value": "f976ec3e454a1fa1c12c1f41d30947cc66821ffa5ee62c4f871ec039ba694b92"
+          "value": "23862cfbc3813b353d2167f1722d1683b3bbc76b85455b2a75ad8b7df8be2fe2"
         }
       ],
       "envelope": {
@@ -300,7 +299,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "f976ec3e454a1fa1c12c1f41d30947cc66821ffa5ee62c4f871ec039ba694b92",
+          "calculation_revision_id": "23862cfbc3813b353d2167f1722d1683b3bbc76b85455b2a75ad8b7df8be2fe2",
           "casilla_values": {
             "01": "0",
             "02": "0",
@@ -3805,7 +3804,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision f976ec3e454a1fa1c12c1f41d30947cc66821ffa5ee62c4f871ec039ba694b92 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 23862cfbc3813b353d2167f1722d1683b3bbc76b85455b2a75ad8b7df8be2fe2 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_iva_aggregation",
@@ -3866,13 +3865,13 @@
         "modelo",
         "work",
         "verify",
-        "f976ec3e454a1fa1c12c1f41d30947cc66821ffa5ee62c4f871ec039ba694b92"
+        "23862cfbc3813b353d2167f1722d1683b3bbc76b85455b2a75ad8b7df8be2fe2"
       ],
       "captures": [
         {
           "json_path": "result.verification_report_id",
           "name": "verification_report_id",
-          "value": "26ac92bf9912bdc00bfa827e8c7d2958c91455fa9e0f5dfe55a797bfed58508d"
+          "value": "9da509f75e5d1fad9375b6496f572e79679588866c048b3b3a968885acb9a081"
         }
       ],
       "envelope": {
@@ -3913,7 +3912,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "f976ec3e454a1fa1c12c1f41d30947cc66821ffa5ee62c4f871ec039ba694b92",
+          "calculation_revision_id": "23862cfbc3813b353d2167f1722d1683b3bbc76b85455b2a75ad8b7df8be2fe2",
           "completeness_status": "complete",
           "findings": [
             {
@@ -3963,7 +3962,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "26ac92bf9912bdc00bfa827e8c7d2958c91455fa9e0f5dfe55a797bfed58508d",
+          "verification_report_id": "9da509f75e5d1fad9375b6496f572e79679588866c048b3b3a968885acb9a081",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
@@ -3985,7 +3984,7 @@
         "verification-report",
         "list",
         "--calculation-revision-id",
-        "f976ec3e454a1fa1c12c1f41d30947cc66821ffa5ee62c4f871ec039ba694b92"
+        "23862cfbc3813b353d2167f1722d1683b3bbc76b85455b2a75ad8b7df8be2fe2"
       ],
       "captures": [],
       "envelope": {
@@ -3993,12 +3992,12 @@
         "command": "modelo.verification_report.list",
         "notices": [],
         "result": {
-          "calculation_revision_id_filter": "f976ec3e454a1fa1c12c1f41d30947cc66821ffa5ee62c4f871ec039ba694b92",
+          "calculation_revision_id_filter": "23862cfbc3813b353d2167f1722d1683b3bbc76b85455b2a75ad8b7df8be2fe2",
           "operation": "modelo.verification_report.list",
           "report_count": 1,
           "reports": [
             {
-              "calculation_revision_id": "f976ec3e454a1fa1c12c1f41d30947cc66821ffa5ee62c4f871ec039ba694b92",
+              "calculation_revision_id": "23862cfbc3813b353d2167f1722d1683b3bbc76b85455b2a75ad8b7df8be2fe2",
               "completeness_status": "complete",
               "findings": [
                 {
@@ -4047,7 +4046,7 @@
               },
               "resolved_casilla_ids": [],
               "run_at": "2026-04-01T09:00:00+00:00",
-              "verification_report_id": "26ac92bf9912bdc00bfa827e8c7d2958c91455fa9e0f5dfe55a797bfed58508d",
+              "verification_report_id": "9da509f75e5d1fad9375b6496f572e79679588866c048b3b3a968885acb9a081",
               "verified_by": "docs-sequence-sandbox"
             }
           ]
@@ -4070,7 +4069,7 @@
         "modelo",
         "verification-report",
         "view",
-        "26ac92bf9912bdc00bfa827e8c7d2958c91455fa9e0f5dfe55a797bfed58508d"
+        "9da509f75e5d1fad9375b6496f572e79679588866c048b3b3a968885acb9a081"
       ],
       "captures": [],
       "envelope": {
@@ -4078,7 +4077,7 @@
         "command": "modelo.verification_report.view",
         "notices": [],
         "result": {
-          "calculation_revision_id": "f976ec3e454a1fa1c12c1f41d30947cc66821ffa5ee62c4f871ec039ba694b92",
+          "calculation_revision_id": "23862cfbc3813b353d2167f1722d1683b3bbc76b85455b2a75ad8b7df8be2fe2",
           "completeness_status": "complete",
           "findings": [
             {
@@ -4128,7 +4127,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "26ac92bf9912bdc00bfa827e8c7d2958c91455fa9e0f5dfe55a797bfed58508d",
+          "verification_report_id": "9da509f75e5d1fad9375b6496f572e79679588866c048b3b3a968885acb9a081",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",

@@ -96,7 +96,8 @@ async def _resolve_censal_projection(
 ) -> CensalReviewProjectionV1:
     """Resolve and type-check the safe projection shown to the reviewer."""
     projected: OperationReviewProjectionResultV1[CensalReviewProjectionV1] = await services.review.resolve(
-        OperationReviewProjectionRequestV1(reference=pending.review_reference)
+        OperationReviewProjectionRequestV1(reference=pending.review_reference),
+        CensalReviewProjectionV1,
     )
     if not isinstance(projected, OperationReviewProjectionSuccessV1) or not isinstance(
         projected.projection, CensalReviewProjectionV1

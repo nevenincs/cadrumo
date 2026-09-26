@@ -130,9 +130,9 @@ def modelo_work_create_applicability_refusal(
     if allow_not_applicable:
         return None
 
-    from ...application.user_profile.projections import projection_for_taxpayer
     from ...domain.calculations.registry.applicability import derive_modelo_applicability
     from ...domain.calculations.registry.authority import bundled_indexed_authority
+    from ..user_profile.projections import projection_for_taxpayer
     from .profile_readiness_gate import BLOCKING_APPLICABILITY_VERDICTS
 
     with bundled_indexed_authority().operation() as operation:
@@ -158,8 +158,8 @@ def guard_active_profile_foral_ccaa(record: UserProfileRecord | None) -> None:
     Core types:
     :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
     """
-    from ...application.user_profile.projections import fact_value
     from ...domain.contribuyente.tax_residence import parse_tax_region
+    from ..user_profile.projections import fact_value
 
     raw_ccaa = fact_value(record, "tax_residence.ccaa")
     if raw_ccaa:

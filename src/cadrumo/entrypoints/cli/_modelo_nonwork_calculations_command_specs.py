@@ -112,6 +112,11 @@ MODELO_NONWORK_CALCULATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 ("--received-invoice-retencion",),
                 "cli.app.modelo.aggregate.received_invoice_retencion_help",
             ),
+            _repeatable_text_option(
+                "ledger_payment_withholding",
+                ("--ledger-payment-withholding",),
+                "cli.app.modelo.aggregate.ledger_payment_withholding_help",
+            ),
         ),
         policy=_CALCULATION_WRITE,
         handler=LazyBinding.available(DeferredTarget("._modelo_aggregate_cli", "aggregate_modelo", __package__)),

@@ -80,6 +80,12 @@ profile:
         Model 720
       monedas_virtuales_extranjero_above_threshold: Monedes virtuals a l'estranger
         superen el llindar del Model 721
+      premio_loteria_gravamen_especial_sin_retencion: Premi de loteries o apostes
+        subjecte al gravamen especial obtingut sense retenció ni ingrés a compte (Model
+        136)
+      premio_loteria_gravamen_especial_trimestres: Trimestres en què es va cobrar
+        aquest premi de loteries o apostes (Model 136), com a tokens AAAA-nT separats
+        per |
       third_party_transactions_above_347_threshold: Operacions amb tercers superen
         el llindar del Model 347
     preferences:
@@ -139,6 +145,7 @@ profile:
     withholding:
       has_employees: Té empleats i paga salaris amb retenció
       modelo_111_no_retenciones_periods: Períodes Model 111 sense retencions
+      modelo_115_no_relevant_payment_periods: Períodes Model 115 sense pagament rellevant
       pays_capital_income_with_retencion: Paga rendes de capital amb retenció
       pays_professionals_with_retencion: Paga a professionals amb retenció
       pays_rent_with_retencion: Paga lloguer de local amb retenció
@@ -153,6 +160,11 @@ profile:
           label: Epígraf IAE
       attribution_entity:
         legal_form:
+          choices:
+            comunidad_bienes: Comunitat de béns
+            herencia_yacente: Herència jacent
+            other: Una altra
+            sociedad_civil: Societat civil
           label: Forma jurídica de l'entitat en atribució
       attribution_entity_socios:
         base_imponible_assigned:
@@ -192,6 +204,10 @@ profile:
         rendimiento_neto_previo_eo:
           label: Rendiment net previ (estimació objectiva)
         role:
+          choices:
+            comunero: Comuner
+            participe: Partícip
+            socio: Soci
           label: Paper del membre
         share_pct:
           label: Percentatge de participació
@@ -238,12 +254,20 @@ profile:
         elected_withholding_pct:
           label: Tipus de retenció triat
         establecimiento_type:
+          choices:
+            arrendado: Arrendat
+            cedido_gratuitamente: Cedit gratuïtament
+            propio: Propi
           label: Tipus d'establiment
         large_company:
           label: Condició de gran empresa
         public_administration_budget_gt_6000000:
           label: Pressupost d'administració pública superior a 6.000.000 EUR
         status:
+          choices:
+            alta: Alta
+            baja: Baixa
+            modificacion: Modificació
           label: Estat del cens
       contact:
         contact_person_name:
@@ -270,13 +294,27 @@ profile:
         surnames:
           label: Cognoms
         tax_id:
+          help:
+            what: 'El teu número d''identificació fiscal: el NIF del teu DNI, el NIE
+              si ets estranger, o el NIF d''una entitat.'
+            where: Al teu DNI o targeta de NIE, o a la targeta de NIF emesa per l'AEAT.
+              També apareix en qualsevol declaració anterior o carta de l'AEAT.
+            why: Totes les declaracions es presenten amb aquest número; és com t'identifica
+              l'AEAT.
           label: NIF/NIE/CIF d'identificació
       irpf:
         activity_kind:
+          choices:
+            profesional: Activitat professional
+            sectorial: Activitat sectorial (tipus de l'art. 95 RIRPF)
           label: Tipus d'activitat
         art109_activity_income_withholding_ge_70pct:
           label: Compleix l'excepció del 70 % de l'art. 109 RIRPF
         estimation_regime:
+          choices:
+            directa_normal: Estimació directa normal
+            directa_simplificada: Estimació directa simplificada
+            objetiva: Estimació objectiva (mòduls)
           label: Règim d'estimació
         objective_estimation_modulos_iae_epigraph:
           label: Epígraf IAE (mòduls)
@@ -308,9 +346,14 @@ profile:
           label: Ingressos de pagadors secundaris
         pagadores_total_work_income:
           label: Rendiments íntegres del treball
+        plantilla_media:
+          label: Plantilla mitjana per any natural
         professional_income_withholding_ge_70pct:
           label: Retenció professional arriba al 70 %
         special_regime:
+          choices:
+            general: Règim general
+            impatriado: Règim d'impatriats (art. 93 LIRPF)
           label: Règim especial
         special_regime_start_date:
           label: Data d'inici del règim especial
@@ -318,6 +361,12 @@ profile:
         autoconsumo_promotor_base:
           label: Base imposable de l'autoconsum (promotor)
         cash_accounting_regime_enrolled:
+          help:
+            what: Si vas optar pel règim especial del criteri de caixa de l'IVA.
+            where: S'escull al model 036 i figura a les teves dades censals. Si no
+              hi vas optar, la resposta és No.
+            why: Amb aquest règim, l'IVA es merita en cobrar o pagar les factures
+              i no en emetre-les, cosa que canvia les xifres de cada període.
           label: Inscripció al criteri de caixa
         does_intracomunitario:
           label: Operacions intracomunitàries
@@ -326,22 +375,66 @@ profile:
         group_member_enrolled:
           label: Membre de grup d'IVA (Model 322)
         hydrocarbon_deposit_advance_payment_deduction_entitled:
+          help:
+            what: Si pots deduir els pagaments anticipats d'IVA fets en treure hidrocarburs
+              d'un règim de dipòsit fiscal.
+            where: Només afecta empreses que treuen combustible d'un dipòsit fiscal.
+              La majoria de contribuents respon No.
+            why: Aquests pagaments anticipats es dedueixen a la declaració d'IVA,
+              així que el dret canvia l'import a ingressar.
           label: Dret a deduir bestretes de dipòsits d'hidrocarburs
         intracommunity_operations_exceed_50000_eur:
           label: Operacions intracomunitàries superiors a 50.000 EUR
         m303_regime_composition:
+          choices:
+            general: Només règim general
+            mixed: Règim general i simplificat
+            simplified: Només règim simplificat
+          help:
+            what: 'Quins règims d''IVA combina el teu model 303: només el general,
+              només el simplificat o tots dos.'
+            where: Es dedueix del règim d'IVA de cadascuna de les teves activitats
+              a la teva declaració censal.
+            why: El model 303 té una part diferent per a cada règim; això decideix
+              quines parts s'omplen.
           label: Composició de règims del Model 303
         oss_enrolled:
           label: Inscripció a l'OSS/IOSS
         redeme_enrolled:
+          help:
+            what: Si estàs inscrit al REDEME, el registre de devolució mensual de
+              l'IVA.
+            where: Se sol·licita al model 036 i figura a les teves dades censals.
+              Si no ho has demanat mai, la resposta és No.
+            why: La inscripció fa que la teva declaració d'IVA sigui mensual en lloc
+              de trimestral i obliga al SII.
           label: Inscripció al REDEME
         regime:
+          choices:
+            EXENTO: Exempt
+            GENERAL: General
+            REAGP: Règim especial de l'agricultura, ramaderia i pesca (REAGP)
+            RECARGO_EQUIVALENCIA: Recàrrec d'equivalència
+            SIMPLIFICADO: Simplificat
+          help:
+            what: El règim d'IVA en què està donada d'alta la teva activitat.
+            where: A la teva declaració censal (model 036 o 037), o a les teves dades
+              censals a la seu electrònica de l'AEAT.
+            why: Decideix quines declaracions d'IVA presentes i com es calcula l'IVA
+              de les teves vendes i compres.
           label: Règim d'IVA
         roi_enrolled:
           label: Inscripció al ROI/VIES
         sii_enrolled:
           label: Inscripció al SII
         voluntary_sii_enrolled:
+          help:
+            what: Si et vas adherir voluntàriament al SII, el subministrament immediat
+              dels teus llibres registre d'IVA a l'AEAT.
+            where: L'adhesió voluntària se sol·licita al model 036 i figura a les
+              teves dades censals. Si no l'has demanada mai, la resposta és No.
+            why: Qui és al SII porta els llibres d'IVA en línia amb l'AEAT, cosa que
+              canvia algunes obligacions i terminis.
           label: Inscripció voluntària al SII
       maritime_worker:
         annual_salary:
@@ -359,18 +452,35 @@ profile:
         tuna_fleet:
           label: Flota tonyinaire
         vessel_flag:
+          choices:
+            ES: Pavelló espanyol
+            foreign: Pavelló estranger
           label: Pavelló del vaixell
         vessel_registry:
+          choices:
+            REBECA: Registre Especial de Vaixells de Canàries (REBECA)
+            other: Una altra
+            rebeca_eu_eea: Naviliera REBECA amb vaixell en un altre registre UE/EEE
+            scheduled_canary_route: Línia regular Canàries - península
           label: Registre del vaixell
         waters_type:
+          choices:
+            international: Aigües internacionals
+            national: Aigües nacionals
           label: Tipus d'aigües
         worker_class:
+          choices:
+            trabajador_del_mar: Treballador del mar
           label: Classificació de treballador del mar
       obligations:
         bienes_extranjero_above_threshold:
           label: Llindar del Model 720 superat
         monedas_virtuales_extranjero_above_threshold:
           label: Llindar del Model 721 superat
+        premio_loteria_gravamen_especial_sin_retencion:
+          label: Premi de loteria sense retenció (Model 136)
+        premio_loteria_gravamen_especial_trimestres:
+          label: Trimestres del premi (Model 136)
         third_party_transactions_above_347_threshold:
           label: Llindar del Model 347 superat
       preferences:
@@ -380,9 +490,22 @@ profile:
         cadastral_reference:
           label: Referència cadastral
         use_type:
+          choices:
+            habitual: Habitatge habitual
+            imputed_income: Imputació de rendes (sense llogar)
+            mixed: Ús mixt
+            other: Una altra
+            rental: Llogat
           label: Ús de l'immoble
       provenance:
         source:
+          choices:
+            aeat_censo_read: Llegit del cens de l'AEAT
+            censo_artefact_g313: Llegit d'un certificat de situació censal aportat
+            manual_cli: Introduït a mà
+            modelo_036_import: Importat del model 036
+            registry_inference: Deduït de les regles del registre
+            setup_wizard: Assistent de configuració
           label: Origen de la dada
         valid_from:
           label: Vàlid des de
@@ -409,6 +532,12 @@ profile:
         minor_children_in_unit:
           label: Fills menors a la unitat familiar
         situacion_familiar:
+          choices:
+            casado: Casat o casada
+            pareja_hecho_no_registrada: Parella de fet no registrada
+            pareja_hecho_registrada: Parella de fet registrada
+            separado_divorciado: Separat o divorciat
+            soltero: Solter o soltera
           label: Situació familiar
         unidad_familiar_otros_miembros_base:
           label: Base imposable d'altres membres de la unitat familiar (Madrid)
@@ -417,6 +546,11 @@ profile:
           label: Tipus de declaració
       renta_rental:
         reduccion_art_23_2_tier_2024:
+          choices:
+            tier-50: Reducció del 50 %
+            tier-60: Reducció del 60 %
+            tier-70: Reducció del 70 %
+            tier-90: Reducció del 90 %
           label: Tram de reducció per lloguer (art. 23.2)
       renta_spouse:
         birth_date:
@@ -432,6 +566,9 @@ profile:
         non_resident_irpf:
           label: Cònjuge no resident (no contribuent IRPF)
         sex:
+          choices:
+            H: Home
+            M: Dona
           label: Sexe del cònjuge
         surnames:
           label: Cognoms del cònjuge
@@ -455,11 +592,41 @@ profile:
         marriage_month_start:
           label: Mes d'inici del matrimoni (calculat)
         sex:
+          choices:
+            H: Home
+            M: Dona
           label: Sexe
       tax_residence:
         ccaa:
+          choices:
+            andalucia: Andalusia
+            aragon: Aragó
+            asturias: Astúries
+            baleares: Illes Balears
+            canarias: Canàries
+            cantabria: Cantàbria
+            castilla_la_mancha: Castella-la Manxa
+            castilla_y_leon: Castella i Lleó
+            cataluna: Catalunya
+            comunidad_valenciana: Comunitat Valenciana
+            extremadura: Extremadura
+            galicia: Galícia
+            la_rioja: La Rioja
+            madrid: Comunitat de Madrid
+            murcia: Regió de Múrcia
           label: Comunitat autònoma de residència
         jurisdiction_scope:
+          choices:
+            common_regime: Territori comú
+            foral_unsupported: Territori foral (País Basc o Navarra) - encara no admès
+          help:
+            what: Si els teus impostos es regeixen pel territori comú o per un territori
+              foral (País Basc o Navarra).
+            where: 'Es dedueix del teu domicili fiscal: un domicili a Àlaba, Biscaia,
+              Guipúscoa o Navarra és foral; a la resta d''Espanya és territori comú.'
+            why: Decideix quina administració tributària i quines normes s'apliquen.
+              Els territoris forals presenten davant la seva pròpia Hisenda, cosa
+              que encara no s'admet.
           label: Règim territorial
       taxpayer_type:
         country_of_fiscal_residence:
@@ -467,14 +634,30 @@ profile:
         declaration_roles:
           label: Rols declarants de tercers (model 347)
         entity_type:
+          choices:
+            attribution_entity: Entitat en atribució de rendes
+            legal_entity: Persona jurídica (societat)
+            natural_person: Persona física
           label: Tipus de contribuent
         fiscal_residency:
+          choices:
+            non_resident_irnr: No resident (IRNR)
+            resident_irpf: Resident a Espanya (IRPF)
           label: Residència fiscal del contribuent
         incn_prior_12_months:
           label: INCN dels 12 mesos anteriors
         irpf_income_categories:
           label: Categories de renda IRPF
         legal_entity_form:
+          choices:
+            cooperativa: Cooperativa
+            other: Una altra
+            sa: Societat anònima (S.A.)
+            sal: Societat anònima laboral (S.A.L.)
+            sin_fines_lucrativos: Entitat sense finalitat lucrativa
+            sl: Societat limitada (S.L.)
+            sll: Societat limitada laboral (S.L.L.)
+            sociedad_civil_mercantil: Societat civil amb objecte mercantil
           label: Forma jurídica de l'entitat
         ley_49_2002_special_regime_option_date:
           label: Data d'opció pel règim de la Llei 49/2002
@@ -515,6 +698,8 @@ profile:
           label: Té empleats
         modelo_111_no_retenciones_periods:
           label: Períodes sense retencions del Model 111
+        modelo_115_no_relevant_payment_periods:
+          label: Períodes Model 115 sense pagament rellevant
         pays_capital_income_with_retencion:
           label: Paga rendiments de capital amb retenció
         pays_professionals_with_retencion:
@@ -523,56 +708,91 @@ profile:
           label: Paga lloguers amb retenció
     section:
       activities:
+        summary: Les activitats econòmiques que fas, una fila per activitat.
         title: Activitats econòmiques
       attribution_entity:
+        summary: La forma jurídica de l'entitat en atribució de rendes (comunitat
+          de béns, societat civil) que gestiones.
         title: Forma jurídica de l'entitat en atribució
       attribution_entity_socios:
+        summary: Els socis d'aquesta entitat i la part de la renda atribuïda a cadascun.
         title: Socis de l'entitat en atribució
       attribution_received:
+        summary: Rendes que t'atribueixen les entitats de les quals ets soci.
         title: Rendes atribuïdes rebudes
       auth:
+        summary: 'Com t''identifiques davant l''AEAT: certificat, Cl@ve Móvil o Cl@ve
+          PIN.'
         title: Autenticació amb l'AEAT
       capabilities:
+        summary: Quins serveis opcionals pot fer servir aquest perfil, com llegir
+          documents escanejats en aquest equip.
         title: Capacitats del servei
       censo:
+        summary: La teva alta al cens de l'AEAT (model 036/037) i les seves dates.
         title: Cens i alta
       contact:
+        summary: On et pot contactar l'AEAT i el teu domicili fiscal.
         title: Contacte i domicili fiscal
       identity:
+        summary: 'El teu nom i NIF: per a qui es preparen les declaracions.'
         title: Identitat
       irpf:
+        summary: Com es calcula el teu IRPF i quines retencions suportes.
         title: IRPF i retencions
       iva:
+        summary: El teu règim d'IVA i amb quina freqüència el presentes.
         title: Perfil d'IVA
       maritime_worker:
+        summary: 'Només per a treballadors del mar: la classificació que decideix
+          deduccions especials.'
         title: Classificació de treballador del mar
       obligations:
+        summary: Llindars que decideixen si has de presentar determinades declaracions.
         title: Llindars d'obligació de declarar
       preferences:
+        summary: Com es comunica amb tu l'aplicació, per exemple l'idioma de cada
+          pantalla.
         title: Preferències de l'operador
       properties:
+        summary: Immobles que tens o llogues, una fila per immoble.
         title: Immobles i lloguer
       provenance:
+        summary: D'on procedeixen les dades del perfil i des de quan s'apliquen.
         title: Origen i vigència
       renta_family:
+        summary: Fills i altres familiars que et poden donar dret a mínims familiars.
         title: Família (Renda)
       renta_filing:
+        summary: Com presentes la teva declaració anual de la Renda.
         title: Context de presentació (Renda)
       renta_rental:
+        summary: Context dels lloguers a la teva declaració anual.
         title: Context de lloguer (Renda)
       renta_spouse:
+        summary: Les dades del teu cònjuge, necessàries per a la declaració conjunta.
         title: Cònjuge (Renda)
       renta_taxpayer:
+        summary: Circumstàncies personals del contribuent que fa servir la declaració
+          anual.
         title: Contribuent (Renda)
       tax_residence:
+        summary: On tens la residència fiscal, cosa que decideix les normes i el territori
+          aplicables.
         title: Residència fiscal i jurisdicció
       taxpayer_type:
+        summary: Quin tipus de contribuent ets i quins tipus de renda obtens.
         title: Tipus de contribuent i categories de renda
       usage_ratios:
+        summary: La part d'ús professional de béns compartits, com un cotxe o un telèfon.
         title: Ràtios d'ús i deduïbilitat
       vivienda_office:
+        summary: Si fas servir part del teu habitatge habitual com a oficina per a
+          la teva activitat.
         title: Afectació de l'habitatge habitual
       withholding:
+        summary: Retencions que has de practicar quan pagues a altres, com ara empleats
+          o arrendadors.
         title: Obligacions com a pagador amb retenció
   validation:
     boolean_field_invalid: El camp booleà no és vàlid
@@ -581,6 +801,7 @@ profile:
     derived_field_not_editable: El camp derivat no es pot editar
     effective_window_end_not_enforced: El final de la finestra de vigència no s'aplica
     effective_window_unused: La finestra de vigència no s'utilitza
+    indexed_instance_invalid: La instància indexada no és vàlida
     invalid_date_value: Valor de data no vàlid
     invalid_email_value: Valor de correu electrònic no vàlid
     invalid_enum_value: Valor d'enumeració no vàlid

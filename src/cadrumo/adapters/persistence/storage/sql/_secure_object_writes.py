@@ -8,6 +8,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any, NamedTuple, Protocol, cast
 
 from sqlalchemy import Table, bindparam, delete, insert, select, update
+from sqlalchemy.engine import CursorResult
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -244,12 +245,19 @@ class SecureObjectWriteOperations:
         with session_scope(self._engine) as session:
             self._write_pending_in_session(session, pending)
             for removal in deletions:
-                session.execute(
-                    delete(SecureObjectRow).where(
-                        SecureObjectRow.namespace == removal.namespace,
-                        SecureObjectRow.object_key == removal.hashed_object_key,
-                    ),
+                statement = delete(SecureObjectRow).where(
+                    SecureObjectRow.namespace == removal.namespace,
+                    SecureObjectRow.object_key == removal.hashed_object_key,
                 )
+                if removal.expected_revision_id is not None:
+                    statement = statement.where(SecureObjectRow.revision_id == removal.expected_revision_id)
+                result = cast("CursorResult[Any]", session.execute(statement))
+                if removal.expected_revision_id is not None and result.rowcount != 1:
+                    raise self._revision_conflict(
+                        namespace=removal.namespace,
+                        expected_revision_id=removal.expected_revision_id,
+                        current_revision_id=None,
+                    )
 
     def save_with_raw_key(
         self,

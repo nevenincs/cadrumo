@@ -27,7 +27,7 @@ from typing import Annotated
 
 from pydantic import BeforeValidator
 
-from ...core.errors.hierarchy import pydantic_validation_boundary
+from ..errors.hierarchy import pydantic_validation_boundary
 from .documents import IdentityError, SpanishTaxIdFormat, validate_identity
 from .nif_iva import normalise_nif_iva
 

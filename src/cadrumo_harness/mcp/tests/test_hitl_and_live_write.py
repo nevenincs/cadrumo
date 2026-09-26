@@ -53,6 +53,7 @@ def test_a_hypothetical_live_write_would_be_blocked() -> None:
         handoff=False,
         live_write=True,
         open_world=True,
+        reaches_aeat=True,
     )
     assert confirmation_for_policy(planted) is ConfirmationPolicy.BLOCK
 

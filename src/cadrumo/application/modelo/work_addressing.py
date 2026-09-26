@@ -71,7 +71,13 @@ from .selectors import (
     ModeloCalculationRevisionSelectorStateError,
     resolve_modelo_calculation_revision_pick,
 )
-from .work_lifecycle import RevisionParentOperation, create_work_unit, rename_work_unit, require_revision_parent_active
+from .work_lifecycle import (
+    RevisionParentOperation,
+    create_work_unit,
+    reject_superseded_censo_modelo,
+    rename_work_unit,
+    require_revision_parent_active,
+)
 from .work_lifecycle_ports import WorkLifecyclePorts
 from .work_selection import (
     ModeloWorkResolution,
@@ -1133,6 +1139,7 @@ def ensure_modelo_work_unit_for_active_target(
     enforce_applicability: bool = True,
     catalogue: WorkUnitCatalogue,
     ports: WorkLifecyclePorts,
+    operation: PinnedAuthorityOperation,
     profile: ModeloWorkProfile | None = None,
 ) -> ModeloWorkEnsureResult:
     """Resume or create the active work unit for one visible filing target.
@@ -1140,6 +1147,11 @@ def ensure_modelo_work_unit_for_active_target(
     The visible target is resolved first. If one active unit exists, it is reused
     after profile-readiness validation and optional rename. If none exists, the
     law-determined registry revision is selected and a work unit is created.
+
+    ``operation`` is the caller's pinned authority. A long-lived TUI session
+    pins one generation when it opens; reading the profile under whichever
+    generation the bundled descriptor names now would cross that pin as soon
+    as the authority is republished.
 
     Returns:
         A :class:`ModeloWorkEnsureResult` marking whether the unit was reused or
@@ -1162,44 +1174,42 @@ def ensure_modelo_work_unit_for_active_target(
         unit = resolution.work_unit
         from .profile_readiness_gate import require_profile_ready_for_work_unit
 
-        with bundled_indexed_authority().operation() as operation:
-            profile_decode_context = operation.profile_decode_context()
-            require_profile_ready_for_work_unit(
-                unit,
-                enforce_applicability=enforce_applicability,
-                profile_decode_context=profile_decode_context,
-                operation=operation,
-                profile=profile,
-            )
-            name_applied: str | None = None
-            if name is not None and name.strip() and name.strip() != unit.name:
-                unit = rename_work_unit(unit.work_unit_id, name, actor=actor, ports=ports)
-                name_applied = unit.name
-            return ModeloWorkEnsureResult(work_unit=unit, reused=True, name_applied=name_applied)
-
-    with bundled_indexed_authority().operation() as operation:
-        revision_id = law_selected_revision_for_work_target(
-            modelo=modelo,
-            filing_year=filing_year,
-            period=period,
-            requested_revision_id=requested_revision,
-            operation=operation,
-        )
-        unit = create_work_unit(
-            bucket_id=bucket_id,
-            modelo=modelo,
-            filing_year=filing_year,
-            period=period,
-            revision_id=revision_id,
-            name=name,
-            actor=actor,
-            causante_ccaa=causante_ccaa,
+        require_profile_ready_for_work_unit(
+            unit,
             enforce_applicability=enforce_applicability,
-            ports=ports,
+            profile_decode_context=operation.profile_decode_context(),
             operation=operation,
             profile=profile,
         )
-        return ModeloWorkEnsureResult(work_unit=unit, reused=False)
+        name_applied: str | None = None
+        if name is not None and name.strip() and name.strip() != unit.name:
+            unit = rename_work_unit(unit.work_unit_id, name, actor=actor, ports=ports)
+            name_applied = unit.name
+        return ModeloWorkEnsureResult(work_unit=unit, reused=True, name_applied=name_applied)
+
+    reject_superseded_censo_modelo(modelo=modelo, operation=operation)
+    revision_id = law_selected_revision_for_work_target(
+        modelo=modelo,
+        filing_year=filing_year,
+        period=period,
+        requested_revision_id=requested_revision,
+        operation=operation,
+    )
+    unit = create_work_unit(
+        bucket_id=bucket_id,
+        modelo=modelo,
+        filing_year=filing_year,
+        period=period,
+        revision_id=revision_id,
+        name=name,
+        actor=actor,
+        causante_ccaa=causante_ccaa,
+        enforce_applicability=enforce_applicability,
+        ports=ports,
+        operation=operation,
+        profile=profile,
+    )
+    return ModeloWorkEnsureResult(work_unit=unit, reused=False)
 
 
 def resolve_modelo_work_address(

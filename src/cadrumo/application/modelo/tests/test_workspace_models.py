@@ -11,6 +11,7 @@ from ....core.period import Period
 from ....core.revision_review import RevisionReviewStatus
 from ....core.schema_family_disposition import RegistrySchemaFamilyDisposition
 from ....domain.modelos.calculation_revision import CalculationSourceRef
+from ...state_projection import ProjectionModeloReadiness
 from ..workspace_models import (
     ModeloWorkspaceBaselineV1,
     ModeloWorkspaceBoundedFacetV1,
@@ -29,7 +30,6 @@ from ..workspace_models import (
     ModeloWorkspaceMaterializationRecordV1,
     ModeloWorkspaceProjectionV1,
     ModeloWorkspaceProvenanceRecordV1,
-    ModeloWorkspaceReadinessV1,
     ModeloWorkspaceResolvedTargetV1,
     ModeloWorkspaceRevisionAssertionDisposition,
     ModeloWorkspaceRevisionAssertionSource,
@@ -152,8 +152,8 @@ def _capabilities(
     )
 
 
-def _readiness(target: ModeloWorkspaceResolvedTargetV1) -> ModeloWorkspaceReadinessV1:
-    return ModeloWorkspaceReadinessV1(
+def _readiness(target: ModeloWorkspaceResolvedTargetV1) -> ProjectionModeloReadiness:
+    return ProjectionModeloReadiness(
         profile_id="11111111-1111-4111-8111-111111111111",
         modelo=str(target.modelo),
         revision_id=target.law_selected_revision_id,
@@ -168,7 +168,7 @@ def _readiness(target: ModeloWorkspaceResolvedTargetV1) -> ModeloWorkspaceReadin
 def _static_projection(
     *,
     target: ModeloWorkspaceResolvedTargetV1 | None = None,
-    readiness: ModeloWorkspaceReadinessV1 | None = None,
+    readiness: ProjectionModeloReadiness | None = None,
     capabilities: tuple[ModeloWorkspaceCapabilityV1, ...] | None = None,
 ) -> ModeloWorkspaceProjectionV1:
     resolved_target = _target() if target is None else target
@@ -387,7 +387,6 @@ def test_workspace_schema_record_has_typed_destinations_for_every_explanatory_re
             "classification": ModeloWorkspaceSchemaClassification.PROJECTED,
             "family_disposition": RegistrySchemaFamilyDisposition.POPULATED,
             "continuity": ({"kind": "continuity", "continuidad_id": "income-base"},),
-            "applicability": ({"kind": "applicability", "applicability_rule_id": "income-only"},),
             "constraints": ({"kind": "constraint", "casilla_id": "0001"},),
             "formula_operands": (
                 {"kind": "formula_operand_binding", "formula_id": "base-formula", "binding_id": "income-base"},
@@ -400,7 +399,6 @@ def test_workspace_schema_record_has_typed_destinations_for_every_explanatory_re
     )
 
     assert record.continuity[0].continuidad_id == "income-base"
-    assert record.applicability[0].applicability_rule_id == "income-only"
     assert record.constraints is not None
     assert record.constraints[0].casilla_id == "0001"
     assert record.formula_operands[0].kind == "formula_operand_binding"
@@ -734,45 +732,29 @@ def test_workspace_schema_record_label_distinguishes_localized_from_technical() 
     assert isinstance(reloaded_technical.label, ModeloWorkspaceTechnicalLabelV1)
 
 
-def test_workspace_ledger_issue_subject_distinguishes_transaction_from_period() -> None:
-    """A period-level ledger-preflight issue is represented as itself.
+def test_workspace_readiness_is_the_canonical_projection_not_a_workspace_copy() -> None:
+    """The projection carries the readiness producer's own record, unconverted.
 
-    ``LedgerPreflightIssue.transaction_id`` is ``TransactionId | Literal["__period__"]``
-    for exactly one non-transaction case (an unsupported period with no date span).
-    Collapsing both arms into one required ``TransactionId`` field would either
-    drop the period-level issue or pin it to a fabricated transaction id; the
-    discriminated ``ModeloWorkspaceLedgerIssueSubjectV1`` union represents each
-    case honestly.
+    A Workspace-local restatement of readiness was retired here: every axis it
+    declared -- profile requirements, registry availability, binding
+    resolution, ledger preflight -- is already typed on
+    :class:`ProjectionModeloReadiness`, and a second shape could only answer
+    the same question in a way that drifts from it. This asserts the identity
+    rather than the absence, so re-introducing a converting copy fails here
+    instead of passing unseen.
+
+    The period-level ledger-preflight case the retired copy existed to
+    represent is preserved by the canonical record's own
+    ``LedgerPreflightIssue.transaction_id`` union, which is checked at its
+    owner rather than restated here.
     """
-    from ...ledger.preflight import LedgerPreflightIssueReason
-    from ..workspace_models import (
-        ModeloWorkspaceLedgerIssueV1,
-        ModeloWorkspaceLedgerPeriodSubjectV1,
-        ModeloWorkspaceLedgerTransactionSubjectV1,
-    )
+    target = _target()
+    readiness = _readiness(target)
 
-    transaction_issue = ModeloWorkspaceLedgerIssueV1.model_validate(
-        {
-            "subject": {"kind": "transaction", "transaction_id": "e" * 64},
-            "reason": LedgerPreflightIssueReason.MISSING_CATEGORY,
-            "detail": "missing IVA category",
-        }
-    )
-    assert isinstance(transaction_issue.subject, ModeloWorkspaceLedgerTransactionSubjectV1)
-    assert transaction_issue.subject.transaction_id == "e" * 64
+    projection = _static_projection(target=target, readiness=readiness)
 
-    period_issue = ModeloWorkspaceLedgerIssueV1.model_validate(
-        {
-            "subject": {"kind": "period"},
-            "reason": LedgerPreflightIssueReason.UNSUPPORTED_PERIOD,
-            "detail": "period has no date span",
-        }
-    )
-    assert isinstance(period_issue.subject, ModeloWorkspaceLedgerPeriodSubjectV1)
-    assert transaction_issue.subject != period_issue.subject
-
-    # Round-trip through JSON must preserve the discriminant in both directions.
-    reloaded_transaction = ModeloWorkspaceLedgerIssueV1.model_validate_json(transaction_issue.model_dump_json())
-    assert isinstance(reloaded_transaction.subject, ModeloWorkspaceLedgerTransactionSubjectV1)
-    reloaded_period = ModeloWorkspaceLedgerIssueV1.model_validate_json(period_issue.model_dump_json())
-    assert isinstance(reloaded_period.subject, ModeloWorkspaceLedgerPeriodSubjectV1)
+    assert projection.readiness is readiness
+    assert ModeloWorkspaceProjectionV1.model_fields["readiness"].annotation is not None
+    reloaded = ModeloWorkspaceProjectionV1.model_validate_json(projection.model_dump_json())
+    assert isinstance(reloaded.readiness, ProjectionModeloReadiness)
+    assert reloaded.readiness == readiness

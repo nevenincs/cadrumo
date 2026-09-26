@@ -30,7 +30,7 @@ from .._preconditions import AggregationPreconditionCondition
 from ..errors import AggregationValidationError
 from ..modelo_bindings_retenciones import RetencionesAggregationSourceResolver
 from ..retencion_observations_repository import RetencionObservationPorts
-from ..retenciones import RetencionObservation
+from ..retenciones import Modelo180PropertyEvidence, Modelo180StructuredAddress, RetencionObservation
 from ..source_mesh import CalculationSourceContext
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -73,6 +73,26 @@ class _InMemoryRetencionObservationRepository:
     def load_observations(self, modelo: str, period: Period) -> tuple[RetencionObservation, ...]:
         return self._windows.get((modelo, period.filing_year, period.registry_token), ())
 
+    def load_annual_source_observations(self, source_modelo: str, filing_year: int) -> tuple[RetencionObservation, ...]:
+        return tuple(
+            observation
+            for (modelo, year, period), observations in self._windows.items()
+            if modelo == source_modelo and year == filing_year and period.endswith("T")
+            for observation in observations
+        )
+
+    def load_source_observations_through_year(
+        self,
+        source_modelo: str,
+        last_filing_year: int,
+    ) -> tuple[RetencionObservation, ...]:
+        return tuple(
+            observation
+            for (modelo, year, period), observations in self._windows.items()
+            if modelo == source_modelo and year <= last_filing_year and period.endswith("T")
+            for observation in observations
+        )
+
 
 def _resolver(repository: _InMemoryRetencionObservationRepository) -> RetencionesAggregationSourceResolver:
     return RetencionesAggregationSourceResolver(ports=RetencionObservationPorts(repository=repository))
@@ -105,6 +125,26 @@ def _observation(nif: str) -> RetencionObservation:
         taxable_base=Decimal("1000.00"),
         retencion_amount=Decimal("190.00"),
         accrued_on="2024-03-15",
+        modelo_180_property=Modelo180PropertyEvidence(
+            property_key=f"property-{nif}",
+            situation="1",
+            cadastral_reference=f"{nif}PROPERTY",
+            recipient_province_code="28",
+            modality="1",
+            accrual_year=2024,
+            withholding_percentage=Decimal("19.00"),
+            address=Modelo180StructuredAddress(
+                province_code="28",
+                municipality_code="079",
+                municipality="Madrid",
+                locality="Madrid",
+                postal_code="28001",
+                street_type="CL",
+                street_name="Ejemplo",
+                number_type="NUM",
+                house_number="1",
+            ),
+        ),
     )
 
 
@@ -144,13 +184,13 @@ def _context_for(*, modelo: str, filing_year: int, period: str, revision: Modelo
 def test_resolver_materialises_distinct_perceptor_count() -> None:
     """Two perceptors across three rows materialise a DISTINCT count of 2, not 3."""
     repository = _InMemoryRetencionObservationRepository()
-    period = Period.from_year_and_code(2024, "0A")
+    period = Period.from_year_and_code(2024, "1T")
     # 11111111H appears twice (e.g. two payments) but is ONE perceptor; the
     # distinct-NIF count is 2. (Same NIF, same scheme → the second overwrites,
     # so seed via two NIFs plus a repeat to prove distinctness through the
     # aggregator, not the store.)
     repository.replace_observations(
-        modelo="180",
+        modelo="115",
         filing_year=2024,
         period=period,
         observations=[_observation("11111111H"), _observation("22222222J")],
@@ -288,6 +328,35 @@ def test_resolver_empty_modelo_115_store_fails_before_silent_zero() -> None:
     assert verdict.action is None
     assert verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
     assert verdict.evidence[0].values["modelo"] == "115"
+
+
+def test_resolver_materialises_empty_modelo_115_only_for_exact_no_relevant_payment_attestation() -> None:
+    """An explicit matching profile fact is the sole empty-window zero authority."""
+    snapshot = _authority_snapshot("115", 2026, "1T")
+    resolver = RetencionesAggregationSourceResolver(
+        ports=RetencionObservationPorts(repository=_InMemoryRetencionObservationRepository()),
+        m115_no_relevant_payment_periods=frozenset({(2026, "1T")}),
+    )
+
+    resolution = resolver.resolve(
+        _context_for(modelo="115", filing_year=2026, period="1T", revision=snapshot.revision),
+    )
+
+    assert resolution.binding_values == {
+        _M115_PERCEPTOR_BINDING_ID: Decimal("0"),
+        _M115_BASE_BINDING_ID: Decimal("0"),
+    }
+    assert len(resolution.diagnostics) == 1
+    assert "explicit no-relevant-payment attestation" in resolution.diagnostics[0].message
+    with pytest.raises(AggregationValidationError):
+        resolver.resolve(
+            _context_for(
+                modelo="115",
+                filing_year=2026,
+                period="2T",
+                revision=_authority_snapshot("115", 2026, "2T").revision,
+            ),
+        )
 
 
 def test_resolver_empty_store_fails_before_silent_zero() -> None:

@@ -160,12 +160,29 @@ aggregation:
       m111_no_retenciones_attestation_missing: 'No hi ha observacions de retenció
         per perceptor per al model 111 %{filing_year} %{period}. No presentis un Model
         111 en blanc: declara el trimestre com a període sense retencions amb `aeat
-        config profile complete setup --modelo-111-no-retenciones-periods %{attestation_period}`,
-        o registra les files de perceptor amb `aeat app modelo aggregate --retencion-observation`.'
+        config profile edit --modelo-111-no-retenciones-periods %{attestation_period}`
+        (l''opció substitueix la llista desada, així que inclou també, separats per
+        comes, els períodes ja declarats), o registra les files de perceptor amb `aeat
+        app modelo aggregate --retencion-observation`.'
+      m193_phase_allocation_collision: 'Model %{modelo} %{filing_year}: les assignacions
+        %{source_allocations} consten declarades manualment i també provenen de les
+        retencions de capital capturades. Elimineu la fila manual.'
       perceptor_nif_blank: El NIF del perceptor no pot estar buit.
       perceptor_observations_missing: No hi ha observacions de retencions per perceptor
         per al model %{modelo} %{filing_year} %{period}; la font %{source_kind} no
         es pot resoldre.
+      withholding_annual_source_not_quarterly: 'No es pot elaborar el resum anual:
+        el calendari de presentació del declarant no assigna el seu model periòdic
+        de retencions a tots els trimestres de l''any (el presenta mensualment), i
+        sumar només els períodes trimestrals deixaria fora mesos de retencions.'
+      withholding_filer_profile_absent: No s'ha pogut carregar el perfil del declarant
+        per a aquest exercici, de manera que no es pot determinar si les retencions
+        es presenten trimestralment o mensualment. Completeu el perfil i torneu-ho
+        a provar.
+      withholding_quarterly_window_not_scheduled: El calendari de presentació del
+        declarant no assigna aquest trimestre al model de retencions (una gran empresa
+        el presenta mensualment) i els períodes mensuals de retencions encara no s'admeten.
+        No s'ha registrat res.
   service:
     errors:
       currency_conversion_required: L'import en moneda estrangera requereix una conversió
@@ -738,6 +755,14 @@ operation:
         operació. Actualitza Cadrumo.
     status:
       running: En curs
+    terminal:
+      cancelled: Cancel·lada
+      failed: Fallida
+      interrupted: Interrompuda
+      refused: Rebutjada
+      succeeded: Completada
+      succeeded_partial: Completada en part
+      timed_out: Temps esgotat
 overview:
   no_aeat_history: Aquest perfil no té cap presentació confirmada per l'AEAT.
   no_aeat_history_sociedades: Aquest perfil no té cap presentació confirmada per l'AEAT.
@@ -810,6 +835,8 @@ sheets:
       base_imponible: Base imposable
       base_imponible_assigned: Base imposable atribuïda
       base_retenciones: Base de retencions i ingressos a compte
+      block: Bloc
+      cadastral_reference: Referència cadastral
       clave: Clau
       clave_codigo: Clau codi
       clave_declarado: Clau de titularitat de l'immoble
@@ -819,6 +846,7 @@ sheets:
       codigo_emisor: Codi emissor
       codigo_provincia: Codi de província
       compensaciones: Compensacions
+      complement: Complement del domicili
       complemento_infancia_clave: Complement d'ajuda a la infància
       complete_acquisition_cost: Cost total d'adquisició
       contract_relation_clave: Contracte o relació
@@ -847,11 +875,13 @@ sheets:
       domicilio_fiscal: Domicili fiscal del membre
       donor_legal_name: Nom o raó social del donant
       donor_tax_id: NIF del donant
+      door: Porta
       emerging_stock_excess_clave: Excessos de lliurament d'accions d'empreses emergents
       fecha_devengo: Data de meritació
       fecha_inicio_prestamo: Data d'inici del préstec
       fecha_vencimiento_prestamo: Data de venciment del préstec
       first_child_compute: Còmput del 1r fill
+      floor: Pis
       foral_retention_araba: Retencions i ingressos a compte ingressats a Araba/Àlaba
       foral_retention_bizkaia: Retencions i ingressos a compte ingressats a Bizkaia
       foral_retention_estatal: Retencions i ingressos a compte ingressats a l'Estat
@@ -860,6 +890,7 @@ sheets:
       garantias: Garanties
       gastos_deducibles: Despeses deduïbles
       geographic_mobility_clave: Mobilitat geogràfica
+      house_number: Número de casa
       housing_loan_communication_clave: Comunicació de préstecs d'habitatge habitual
       importe_gastos: Import de despeses
       importe_q1: Import 1T
@@ -878,14 +909,20 @@ sheets:
       ingreso_a_cuenta_repercutido: Ingressos a compte repercutits
       is_recurrent: Donatiu recurrent
       isin_code: Codi ISIN
+      locality: Localitat
       member_legal_name: Raó social del membre
       member_state_code: Estat membre
       member_tax_id: NIF del membre
       miembro_a_31_diciembre: Membre a 31 de desembre
+      modality: Modalitat
+      municipality: Municipi
+      municipality_code: Codi de municipi
       naturaleza: Naturalesa
       naturaleza_declarante: Naturalesa del declarant
       naturaleza_inmueble: Naturalesa de l'immoble
       nif_pagador_anterior: NIF del pagador anterior
+      number_qualifier: Qualificador del número
+      number_type: Tipus de numeració
       numero_orden: Número d'ordre
       opening_minus_closing_positive: Diferència positiva entre obertura i tancament
       operation_date: Data de l'operació
@@ -904,13 +941,18 @@ sheets:
       perceptor_birth_year: Any de naixement
       perceptor_legal_name: Cognoms i nom del perceptor
       perceptor_mediador_flag: Perceptor mediador
+      perceptor_name: Nom del perceptor
+      perceptor_nif: NIF del perceptor
       perceptor_situacion_familiar: Situació familiar
       perceptor_tax_id: NIF del perceptor
       percibido_dinerario: Percepcions dineràries
       percibido_especie: Percepcions en espècie
       porcentaje_retencion: '% Retenció'
       porcentaje_titularidad_inmueble: Percentatge de titularitat de l'immoble
+      portal: Portal
+      postal_code: Codi postal
       province_code: Província
+      recipient_province_code: Codi de província del perceptor
       rectified_base_previous: Base imposable anterior (rectificació)
       rectified_period: Període rectificat
       rectified_year: Exercici rectificat
@@ -922,17 +964,24 @@ sheets:
       rendimiento_neto_minorado_agricola_eo: Rendiment net minorat agrícola (estimació
         objectiva)
       rendimiento_neto_previo_eo: Rendiment net previ (estimació objectiva)
+      representative_nif: NIF del representant
       representative_tax_id: NIF del representant legal
+      retencion_amount: Import de la retenció
       retencion_practicada: Retenció practicada
       second_child_compute: Còmput del 2n fill
       share_percentage: Percentatge de participació
       situacion_inmueble: Situació de l'immoble
+      situation: Situació de l'immoble
       spouse_or_unit_titular_tax_id: NIF del cònjuge o del titular de la unitat de
         convivència
+      staircase: Escala
       startup_fund_rendimientos_clave: Rendiments per la gestió de fons vinculats
         a l'emprenedoria
+      street_name: Nom de la via pública
+      street_type: Tipus de via
       subclave: Subclau
       supplier_tax_id: NIF del proveïdor
+      taxable_base: Base de retenció
       territorial_deduction_clave: Ceuta o Melilla / La Palma
       third_child_compute: Còmput del 3r fill
       tipo_codigo: Tipus codi
@@ -940,6 +989,7 @@ sheets:
       transfer_pricing_method_code: Mètode de valoració
       unit_convivencia_titular_clave: Titular de la unitat de convivència
       valuation_amount: Valoració
+      withholding_percentage: Percentatge de retenció
 topic:
   authentication:
     body: L'autenticació AEAT usa Cl@ve Mòbil (push al mòbil registrat) o un certificat
@@ -1199,14 +1249,21 @@ tui:
         local: Estat local
       detail:
         action: 'Acció en prémer Retorn: {action}'
-        axes: 'Legal: {legal} · Local: {local} · AEAT: {aeat} · Justificant: {receipt}'
-        dates: 'Obertura: {opening} · Pagament: {payment} · Tancament ajustat: {closing}'
+        axes: 'Legal: {legal} · Local: {local} · AEAT: {aeat} · Justificant: {receipt}
+          · Coherència de l''evidència: {conflict}'
+        dates: 'Obertura: {opening} · Pagament: {payment} · Tancament original: {original}
+          · Tancament efectiu: {effective} · Avaluat: {evaluated} · Dies de retard:
+          {overdue} · Ajust: {shift}'
+        holidays: 'Festius: {coverage}'
         source: '{source}: {availability} · Observat: {observed}'
       empty:
         known: No hi ha obligacions en aquest interval.
         search: Cap obligació coincideix amb la cerca i l'àmbit.
         stale: L'última agenda observada ({observed}) no té files; les dades estan
           desactualitzades.
+      evidence:
+        clear: No s'ha observat cap conflicte
+        conflicted: S'ha observat evidència AEAT contradictòria
       justificante:
         not_verified: No verificat
         unknown: Desconegut
@@ -1359,6 +1416,22 @@ tui:
       not_applicable: No aplicable
       result_unknown: No disponible
       'yes': Sí
+    work_create:
+      created: S'ha creat {address}. Torna a Declaracions per treballar-hi.
+      modelo: Model
+      period: Període
+      progress: Creant o reprenent la declaració seleccionada…
+      refusal:
+        modelo: Indica un número de model.
+        not_applicable: 'El model %{modelo} no s''aplica a aquest perfil: %{reason}
+          Si s''hi hauria d''aplicar, corregeix el perfil a Perfil (F4) i torna-ho
+          a provar.'
+        period: Indica un període vàlid per a l'exercici seleccionat.
+        year: Indica un exercici admès de quatre xifres.
+      reused: S'ha reprès {address}. Torna a Declaracions per treballar-hi.
+      submit: Crear o reprendre
+      title: Crear o reprendre una declaració
+      year: Exercici
     work_state:
       borrador: Esborrany
       descartado: Descartat
@@ -1368,6 +1441,13 @@ tui:
     home: Inici
     ledger: Llibre registre
     profile: Perfil
+    withholding: Retencions
+  filing_year_route:
+    invalid: Introduïu un exercici vàlid de quatre xifres.
+    open: Obre les retencions
+    prompt: Seleccioneu un exercici (AAAA)
+    unavailable: Els justificants de retencions no estan disponibles per a aquest
+      perfil i exercici.
   home:
     account_fallback: Compte
     action:
@@ -1470,12 +1550,25 @@ tui:
       stale: Desactualitzat
       unavailable: No disponible
     classification:
+      boundary: La classificació d'entrada, el sector de prorrata i el justificant
+        de compra es recullen mitjançant els seus fluxos específics de captura o d'adjunció.
       business: Professional
       cancel: Cancel·la
       confirm: Confirma
       confirming: Confirma la classificació seleccionada.
       excluded: Revisat i exclòs
       failure: No s'ha pogut desar la classificació.
+      field:
+        business_pct: Percentatge professional (fracció de 0 a 1; només Mixta)
+        deduction_fact_kind: Tipus de fet de deducció (identificador del registre)
+        irpf_category: Categoria d'IRPF (identificador del registre)
+        iva_amount: Quota d'IVA
+        iva_category: Categoria d'IVA (identificador del registre)
+        iva_rate: Tipus d'IVA (fracció decimal; p. ex., 0.21)
+        prorrata_reference: Referència de prorrata
+        taxable_base: Base imposable
+        usage_ratio_id: ID de proporció d'ús
+      mixed: Mixta (percentatge professional)
       personal: Personal
       progress: S'està desant la classificació…
       prompt: Tria una classificació per a l'assentament seleccionat.
@@ -1619,6 +1712,9 @@ tui:
         simplificada: Simplificada
       confirm: Registra la factura
       confirming: Revisa la factura i registra-la.
+      euro_rate_unavailable: No s'ha trobat cap tipus de canvi a euros per a {currency}
+        en aquesta data. La factura es conserva, però queda fora dels totals en euros
+        fins que s'hi afegeixi un tipus.
       failure: La factura no s'ha registrat.
       field:
         counterparty_name: Nom de la contrapart
@@ -1628,9 +1724,14 @@ tui:
         invoice_class: Classe de factura
         invoice_date: Data de la factura (AAAA-MM-DD)
         invoice_number: Número de factura
+        iva_category: Tractament de l'IVA (clau del registre)
         iva_rate: Tipus d'IVA (%)
         kind: Tipus de factura
         notes: Notes
+        operation_date: Data de l'operació, si és diferent de la de la factura (AAAA-MM-DD)
+        operation_type: Clau d'operació del model 349
+        recargo_amount: Import del recàrrec d'equivalència
+        rectifies_invoice_number: Número de la factura que rectifica
         retention_amount: Import de la retenció d'IRPF
         retention_rate: Tipus de retenció d'IRPF (%)
         series: Sèrie
@@ -1638,11 +1739,35 @@ tui:
       kind:
         issued: Emesa
         received: Rebuda
+      line:
+        add: Afegeix una línia
+        field:
+          description: Descripció de la línia
+          iva_amount: Quota d'IVA de la línia
+          iva_rate: Tipus d'IVA (clau del registre, com RATE_21)
+          oss_rate_kind: Classe de tipus OSS (clau del registre)
+          quantity: Quantitat
+          spending_category_id: Categoria de despesa
+          subtotal: Base de la línia
+          unit_price: Preu unitari
+        heading: Línies de la factura. Si la factura té més d'un tipus d'IVA, afegeix
+          aquí cada línia impresa i deixa buits la base imposable i el tipus d'IVA
+          de dalt.
+        none: 'No hi ha línies: s''utilitzen la base imposable i el tipus d''IVA de
+          dalt.'
+        remove: Treu l'última línia
+        row: '{index}. {description} · {quantity} × {unit_price} = {subtotal} · IVA
+          {rate} {amount}'
       open: Afegeix factura
+      operation_type_none: Sense clau del model 349
       optional: '{label} (opcional)'
       problem:
         amount: '{field} ha de ser un número com 1200.00.'
+        base_or_lines: Introdueix una base imposable o afegeix almenys una línia de
+          factura.
         date: '{field} ha de ser una data amb el format AAAA-MM-DD.'
+        lines_and_base: Introdueix la factura per línies o amb una base imposable
+          i un tipus d'IVA, però no de les dues maneres.
         required: '{field} és obligatori.'
       progress: S'està registrant la factura…
       prompt: Introdueix la factura tal com està impresa. Es comprova i es registra
@@ -1654,6 +1779,9 @@ tui:
         amounts: Base imposable {base} {currency} · tipus d'IVA {rate}
         counterparty: 'Contrapart: {name} · NIF {nif} · {country}'
         identity: Factura {kind} {number} amb data {date}
+        operation: Clau del model 349 {code} · data de l'operació {date}
+        recargo: Recàrrec d'equivalència {amount} {currency}
+        rectifies: Rectifica la factura {number}
         retention: 'Retenció d''IRPF: tipus {rate} · import {amount}'
       title: Afegeix una factura
     overview:
@@ -1690,6 +1818,23 @@ tui:
       suggestions: Enllaços suggerits
       title: Conciliació local del llibre
       'yes': Sí
+    records:
+      failed: El canvi s'ha rebutjat o no s'ha pogut desar.
+      identity: ID del registre
+      invoice_detail: Detall de la factura
+      invoices: Factures registrades
+      lines: Línies
+      links: Registres vinculats
+      loading: Llegint el registre…
+      no_change: Introduïu un valor diferent abans de revisar.
+      open_invoices: Veure factures
+      open_transaction: Veure o editar l'assentament seleccionat
+      reviewed: Reviseu el valor i després deseu-lo.
+      save: Desar el canvi
+      saved: Canvi desat.
+      saving: Desant el canvi…
+      source: Fitxer d'origen
+      transaction_detail: Detall de l'assentament
     refusal:
       application_state: Aquesta àrea no està disponible en l'estat actual del llibre
         comptable.
@@ -1834,6 +1979,27 @@ tui:
       not_applicable: No s'aplica
       refused: Rebutjat
       unmeasured: Sense mesurar
+    edit:
+      apply: Aplica els valors declarats
+      binding: Dada declarada {binding}
+      scalar: Casella {casilla}
+    evidence_kind:
+      legal: Referència legal
+      source: Referència d'origen
+    export:
+      payment_election:
+        cuenta_corriente: Compte corrent tributari
+        domiciliacion: Domiciliació bancària
+        ingreso: Ingrés
+        label: 'Resultat a ingressar: forma de pagament'
+      prior_domiciliation_election:
+        cancel_or_modify: Anul·lar-la o modificar-la
+        keep: Mantenir-la
+        label: Domiciliació anterior (només autoliquidació rectificativa)
+      refund_election:
+        compensar: Compensar en períodes posteriors
+        devolver: Sol·licitar la devolució
+        label: 'Resultat negatiu: compensar o sol·licitar la devolució'
     finding_kind:
       advisory: Consell
       blocking_rule: Regla no complerta
@@ -1849,12 +2015,43 @@ tui:
       informational: Només informatiu
       manual: L'introdueixes tu
       projection_only: Es mostra, no es presenta
+    m303_evidence:
+      admission_unavailable: Aquí no es pot registrar una atestació nova per a aquesta
+        declaració. No s'ha calculat res.
+      attestation_attachment_id: Identificador de l'atestació existent
+      attestation_sha256: SHA-256 de l'atestació existent
+      cancel: Cancel·la
+      cancelled: Càlcul cancel·lat; no s'ha registrat cap dada de l'autoliquidació.
+      existing_attestation_hint: Responeu la pregunta. Després, indiqueu una atestació
+        existent que no escau l'apartat d'exoneració del Model 390 (el seu identificador
+        i SHA-256), o deixeu-los en blanc i indiqueu quan ho vau confirmar per registrar
+        una atestació nova.
+      joint_return_elected: Autoliquidació conjunta?
+      no_modelo_390_question_hint: Responeu la pregunta. L'autoliquidació d'aquest
+        període no pregunta per l'exoneració del Model 390; només ho fa la de l'últim
+        període de l'any (12 o 4T).
+      observed_at: Confirmat el, per a una atestació nova (ISO 8601 amb desplaçament
+        UTC, per exemple 2025-04-01T12:00:00Z)
+      required: Responeu la pregunta sobre l'autoliquidació conjunta. A l'últim període
+        de l'any indiqueu també una atestació existent completa o una hora de confirmació
+        amb el seu desplaçament UTC, però no totes dues.
+      stale_context: La declaració seleccionada ha canviat mentre el formulari era
+        obert. No s'ha calculat res; torneu a triar Calcula.
+      title: Dades de l'autoliquidació del Model 303
     record_family:
       bindings: Valors dels teus registres
       casillas: Caselles
       formulas: Fórmules
       parameters: Paràmetres
       relations: Vincles amb altres models
+    recovery_action:
+      operator:
+        modelo:
+          work:
+            calculate: Calculeu aquesta unitat de treball
+            create: Creeu la unitat de treball d'aquesta declaració
+            status: Reviseu l'estat d'aquesta unitat de treball
+            verify: Verifiqueu aquesta unitat de treball
     review_status:
       agent_reviewed: Revisat automàticament
       operator_reviewed: Revisat per una persona
@@ -1867,6 +2064,32 @@ tui:
       producer_of: Origen de «{capability}»
       record_family: Secció
     technical_details: Detalls tècnics
+    workspace_refusal:
+      facts:
+        modelo: Model
+        period: Període
+        required_grade: Grau requerit
+        work_unit_id: Unitat de treball
+      reason:
+        authority_grade_unavailable: L'autoritat de la revisió seleccionada encara
+          no admet la vista calculada sol·licitada.
+        bucket_assertion_mismatch: La identitat emmagatzemada de la declaració no
+          coincideix amb la sol·licitada.
+        calculation_unavailable: Aquesta declaració encara no s'ha calculat, així
+          que no hi ha valors disponibles.
+        consistency_unavailable: No s'ha pogut confirmar la coherència de la declaració.
+        locale_unavailable: No s'han pogut llegir les etiquetes traduïdes de la declaració.
+        schema_unavailable: No s'ha pogut llegir l'esquema de la declaració.
+        static_inspection_unavailable: No s'ha pogut llegir el disseny del formulari
+          d'aquesta declaració.
+        target_not_found: Encara no existeix treball per a aquesta declaració, així
+          que no hi ha res a calcular.
+        visible_target_ambiguous: Més d'una declaració coincideix amb aquesta adreça,
+          així que cap es pot obrir com una de sola.
+        workspace_changed: Aquesta declaració ha canviat mentre estava oberta; torneu-la
+          a obrir per veure l'estat actual.
+      static_fallback: Només es mostra el disseny del formulari. No es mostren valors
+        calculats a continuació.
   root:
     account:
       appearance: Aparença
@@ -1925,6 +2148,7 @@ tui:
       ledger: Obre el llibre major
       profile: Obre el perfil
       unknown: Obre l'espai de treball
+      withholding: Obre els justificants de retencions
     destination_help:
       aeat_sync: El que s'ha llegit de l'AEAT i el que es pot llegir a continuació
       declarations: Declaracions, revisions de càlcul, historial de presentacions
@@ -1932,6 +2156,7 @@ tui:
       home: Properes accions, declaracions i terminis d'un cop d'ull
       ledger: Apunts, revisió, classificació i justificants
       profile: Les dades d'aquest perfil i les fonts que les completen
+      withholding: Registra i consulta les retencions de factures de l'exercici seleccionat
     refusal:
       not_composed: Encara no s'han pogut llegir totes les fonts de l'espai de treball.
       refresh_failed: La darrera actualització no ha pogut reconstruir l'índex.

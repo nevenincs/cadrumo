@@ -26,7 +26,6 @@ import time
 from collections.abc import Callable, Mapping
 from enum import StrEnum
 from pathlib import Path
-from typing import cast
 from urllib.parse import urlsplit
 
 import httpx
@@ -34,6 +33,7 @@ from pydantic import Field, model_validator
 
 from ..core.config import Settings, load_settings
 from ..core.errors.hierarchy import pydantic_validation_boundary
+from ..core.type_guards import is_object_dict
 from .provisioning_contracts import (
     OLLAMA_INSTALL_TIMEOUT_S,
     OLLAMA_PROBE_TIMEOUT_S,
@@ -186,7 +186,7 @@ def read_runtime_version(settings: Settings | None = None) -> str | None:
             payload = response.json()
     except (httpx.HTTPError, ValueError):
         return None
-    version = cast(dict[str, object], payload).get("version") if isinstance(payload, dict) else None
+    version = payload.get("version") if is_object_dict(payload) else None
     return version if isinstance(version, str) and version else "unknown"
 
 

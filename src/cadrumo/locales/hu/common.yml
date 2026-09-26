@@ -149,13 +149,29 @@ aggregation:
       m111_no_retenciones_attestation_missing: 'A 111-es modellhez nincs perceptoronkénti
         levonási megfigyelés a következőre: %{filing_year} %{period}. Ne nyújts be
         teljesen üres 111-es modellt: nyilatkozz a negyedévről mint levonásmentes
-        időszakról a `aeat config profile complete setup --modelo-111-no-retenciones-periods
-        %{attestation_period}` paranccsal, vagy rögzítsd a perceptor-sorokat az `aeat
-        app modelo aggregate --retencion-observation` paranccsal.'
+        időszakról az `aeat config profile edit --modelo-111-no-retenciones-periods
+        %{attestation_period}` paranccsal (a kapcsoló felülírja a tárolt listát, ezért
+        vesszővel elválasztva add meg a már bejelentett időszakokat is), vagy rögzítsd
+        a perceptor-sorokat az `aeat app modelo aggregate --retencion-observation`
+        paranccsal.'
+      m193_phase_allocation_collision: '%{modelo} modell, %{filing_year}: a(z) %{source_allocations}
+        felosztás(ok) kézzel is rögzítve vannak, és a rögzített tőkejövedelem-visszatartásból
+        is származnak. Törölje a kézi sort.'
       perceptor_nif_blank: A perceptor NIF nem lehet üres.
       perceptor_observations_missing: Nincsenek perceptoronkénti retención megfigyelések
         a(z) %{modelo} %{filing_year} %{period} modellhez; a(z) %{source_kind} forrás
         nem oldható fel.
+      withholding_annual_source_not_quarterly: 'Az éves összesítő nem készíthető el:
+        a bevalló benyújtási ütemezése nem rendeli az időszakos forrásadó-levonási
+        modellt az év minden negyedévéhez (havonta nyújtja be), és csak a negyedéves
+        időszakok összegzése hónapoknyi forrásadó-levonást hagyna ki.'
+      withholding_filer_profile_absent: A bevalló profilja nem tölthető be erre az
+        adóévre, így nem állapítható meg, hogy a forrásadó-levonást negyedévente vagy
+        havonta vallja-e be. Töltse ki a profilt, majd próbálja újra.
+      withholding_quarterly_window_not_scheduled: A bevalló benyújtási ütemezése nem
+        rendeli ezt a negyedévet a forrásadó-levonási modellhez (nagyvállalatként
+        havonta nyújtja be), a havi forrásadó-levonási időszakok pedig még nem támogatottak.
+        Semmi sem került rögzítésre.
   service:
     errors:
       currency_conversion_required: A külföldi pénznemű összeget euróra kell váltani,
@@ -729,6 +745,14 @@ operation:
         műveletre. Frissítsd a Cadrumót.
     status:
       running: Folyamatban
+    terminal:
+      cancelled: Megszakítva
+      failed: Sikertelen
+      interrupted: Félbeszakadt
+      refused: Elutasítva
+      succeeded: Sikeres
+      succeeded_partial: Részben sikeres
+      timed_out: Időtúllépés
 overview:
   no_aeat_history: Ehhez a profilhoz nincs az AEAT által megerősített benyújtás.
   no_aeat_history_sociedades: Ehhez a profilhoz nincs az AEAT által megerősített benyújtás.
@@ -801,6 +825,8 @@ sheets:
       base_imponible: Adóalap
       base_imponible_assigned: Hozzárendelt adóalap
       base_retenciones: Visszatartás alapja
+      block: Tömb
+      cadastral_reference: Kataszteri azonosító
       clave: Kulcs
       clave_codigo: Kódkulcs
       clave_declarado: Az ingatlan tulajdonjogi kódja
@@ -810,6 +836,7 @@ sheets:
       codigo_emisor: Kibocsátó kódja
       codigo_provincia: Tartomány kódja
       compensaciones: Kompenzációk
+      complement: Címkiegészítés
       complemento_infancia_clave: Gyermeknevelési kiegészítés
       complete_acquisition_cost: Teljes beszerzési költség
       contract_relation_clave: Szerződés vagy jogviszony
@@ -838,11 +865,13 @@ sheets:
       domicilio_fiscal: A tag adóügyi lakóhelye
       donor_legal_name: Adományozó neve
       donor_tax_id: Adományozó adóazonosítója
+      door: Ajtó
       emerging_stock_excess_clave: Startup részvényjuttatási többlet
       fecha_devengo: Keletkezés dátuma
       fecha_inicio_prestamo: Kölcsön kezdő dátuma
       fecha_vencimiento_prestamo: Kölcsön lejárati dátuma
       first_child_compute: 1. gyermek beszámítása
+      floor: Emelet
       foral_retention_araba: Araba/Álavának befizetett visszatartások és előlegek
       foral_retention_bizkaia: Bizkaiának befizetett visszatartások és előlegek
       foral_retention_estatal: Az államnak befizetett visszatartások és előlegek
@@ -851,6 +880,7 @@ sheets:
       garantias: Garancia
       gastos_deducibles: Levonható költségek
       geographic_mobility_clave: Földrajzi mobilitás
+      house_number: Házszám
       housing_loan_communication_clave: Lakáshitel-bevallás
       importe_gastos: Költség összege
       importe_q1: 1. negyedévi összeg
@@ -867,14 +897,20 @@ sheets:
       ingreso_a_cuenta_repercutido: Áthárított előleg
       is_recurrent: Ismétlődő adomány
       isin_code: ISIN kód
+      locality: Település
       member_legal_name: Tag neve
       member_state_code: Tagállam
       member_tax_id: Tag adóazonosítója
       miembro_a_31_diciembre: Tag december 31-én
+      modality: Módozat
+      municipality: Község
+      municipality_code: Községkód
       naturaleza: Jelleg
       naturaleza_declarante: A bevalló jellege
       naturaleza_inmueble: Az ingatlan jellege
       nif_pagador_anterior: Előző kifizető adóazonosítója
+      number_qualifier: Számminősítő
+      number_type: Számozás típusa
       numero_orden: Sorszám
       opening_minus_closing_positive: Pozitív nyitó mínusz záró különbözet
       operation_date: Művelet dátuma
@@ -893,13 +929,18 @@ sheets:
       perceptor_birth_year: Születési év
       perceptor_legal_name: Kedvezményezett neve
       perceptor_mediador_flag: Közvetítő kedvezményezett
+      perceptor_name: Kedvezményezett neve
+      perceptor_nif: Kedvezményezett NIF-je
       perceptor_situacion_familiar: Családi állapot
       perceptor_tax_id: Kedvezményezett adóazonosítója
       percibido_dinerario: Készpénzes bevétel
       percibido_especie: Természetbeni bevétel
       porcentaje_retencion: Visszatartás %
       porcentaje_titularidad_inmueble: Ingatlantulajdoni hányad százaléka
+      portal: Bejárat
+      postal_code: Irányítószám
       province_code: Tartomány
+      recipient_province_code: Kedvezményezett tartománykódja
       rectified_base_previous: Korábbi alap (helyesbítés)
       rectified_period: Helyesbített időszak
       rectified_year: Helyesbített év
@@ -911,16 +952,23 @@ sheets:
       rendimiento_neto_minorado_agricola_eo: Csökkentett nettó mezőgazdasági jövedelem
         (objektív becslés)
       rendimiento_neto_previo_eo: Előzetes nettó jövedelem (objektív becslés)
+      representative_nif: Képviselő NIF-je
       representative_tax_id: Törvényes képviselő adóazonosítója
+      retencion_amount: Visszatartott összeg
       retencion_practicada: Alkalmazott visszatartás
       second_child_compute: 2. gyermek beszámítása
       share_percentage: Részesedési arány
       situacion_inmueble: Az ingatlan elhelyezkedési státusza
+      situation: Ingatlan fekvése
       spouse_or_unit_titular_tax_id: Házastárs vagy együttélési egység vezetőjének
         adóazonosítója
+      staircase: Lépcsőház
       startup_fund_rendimientos_clave: Alapkezelési jövedelem
+      street_name: Közterület neve
+      street_type: Közterület jellege
       subclave: Alkulcs
       supplier_tax_id: Szállító adóazonosítója
+      taxable_base: Visszatartási alap
       territorial_deduction_clave: Ceuta vagy Melilla / La Palma
       third_child_compute: 3. gyermek beszámítása
       tipo_codigo: Kódtípus
@@ -928,6 +976,7 @@ sheets:
       transfer_pricing_method_code: Transzferár-módszer
       unit_convivencia_titular_clave: Együttélési egység vezetője
       valuation_amount: Értékelés
+      withholding_percentage: Visszatartási kulcs
 topic:
   authentication:
     body: 'Az AEAT-hitelesítés Cl@ve Móvil (push a regisztrált telefonra) vagy digitális
@@ -1190,14 +1239,21 @@ tui:
         local: Helyi állapot
       detail:
         action: 'Enter művelete: {action}'
-        axes: 'Jogi: {legal} · Helyi: {local} · AEAT: {aeat} · Igazolás: {receipt}'
-        dates: 'Nyitás: {opening} · Fizetés: {payment} · Módosított zárás: {closing}'
+        axes: 'Jogi: {legal} · Helyi: {local} · AEAT: {aeat} · Igazolás: {receipt}
+          · Bizonyíték konzisztenciája: {conflict}'
+        dates: 'Nyitás: {opening} · Fizetés: {payment} · Eredeti zárás: {original}
+          · Tényleges zárás: {effective} · Értékelés: {evaluated} · Késedelmes napok:
+          {overdue} · Eltolás: {shift}'
+        holidays: 'Ünnepnapok: {coverage}'
         source: '{source}: {availability} · Megfigyelve: {observed}'
       empty:
         known: Ebben az időszakban nincs kötelezettség.
         search: Nincs a keresésnek és szűrőnek megfelelő kötelezettség.
         stale: Az utoljára megfigyelt napirendben ({observed}) nincs sor; az adatok
           elavultak.
+      evidence:
+        clear: Nem figyelhető meg ellentmondás
+        conflicted: Ellentmondó AEAT-bizonyíték figyelhető meg
       justificante:
         not_verified: Nincs ellenőrizve
         unknown: Ismeretlen
@@ -1350,6 +1406,22 @@ tui:
       not_applicable: Nem alkalmazható
       result_unknown: Nem érhető el
       'yes': Igen
+    work_create:
+      created: '{address} létrehozva. A munkához nyisd meg újra a Bevallások részt.'
+      modelo: Nyomtatvány
+      period: Időszak
+      progress: A kiválasztott bevallás létrehozása vagy folytatása…
+      refusal:
+        modelo: Add meg a nyomtatvány számát.
+        not_applicable: 'A(z) %{modelo} nyomtatvány nem vonatkozik erre a profilra:
+          %{reason} Ha vonatkoznia kellene, javítsd a profilt a Profil (F4) nézetben,
+          és próbáld újra.'
+        period: Adj meg az évhez tartozó érvényes időszakot.
+        year: Adj meg egy támogatott, négyjegyű bevallási évet.
+      reused: '{address} folytatva. A munkához nyisd meg újra a Bevallások részt.'
+      submit: Létrehozás vagy folytatás
+      title: Bevallás létrehozása vagy folytatása
+      year: Bevallási év
     work_state:
       borrador: Piszkozat
       descartado: Elvetve
@@ -1359,6 +1431,12 @@ tui:
     home: Kezdőlap
     ledger: Főkönyv
     profile: Profil
+    withholding: Levonások
+  filing_year_route:
+    invalid: Adjon meg érvényes négyjegyű adóévet.
+    open: Levonások megnyitása
+    prompt: Válasszon adóévet (ÉÉÉÉ)
+    unavailable: A levonási adatok nem érhetők el ehhez a profilhoz és évhez.
   home:
     account_fallback: Fiók
     action:
@@ -1461,12 +1539,25 @@ tui:
       stale: Elavult
       unavailable: Nem érhető el
     classification:
+      boundary: A bemeneti besorolást, a prorrata-szektort és a beszerzési bizonylatot
+        külön rögzítési vagy csatolási folyamatban rögzítjük.
       business: Üzleti
       cancel: Mégse
       confirm: Megerősítés
       confirming: Erősítse meg a kiválasztott besorolást.
       excluded: Ellenőrizve és kizárva
       failure: A besorolás mentése nem sikerült.
+      field:
+        business_pct: Üzleti hányad (0 és 1 közötti tizedes tört; csak Vegyes)
+        deduction_fact_kind: Levonási tény típusa (nyilvántartási azonosító)
+        irpf_category: IRPF-kategória (nyilvántartási azonosító)
+        iva_amount: IVA összege
+        iva_category: IVA-kategória (nyilvántartási azonosító)
+        iva_rate: IVA-kulcs (tizedes tört, pl. 0.21)
+        prorrata_reference: Prorrata-hivatkozás
+        taxable_base: Adóalap
+        usage_ratio_id: Felhasználási arány azonosítója
+      mixed: Vegyes (üzleti hányad)
       personal: Személyes
       progress: Besorolás mentése…
       prompt: Válasszon besorolást a kijelölt tételhez.
@@ -1610,6 +1701,9 @@ tui:
         simplificada: Egyszerűsített számla (simplificada)
       confirm: Számla rögzítése
       confirming: Ellenőrizd a számlát, majd rögzítsd.
+      euro_rate_unavailable: Nem található euró árfolyam {currency} pénznemre erre
+        a napra. A számla megmarad, de kimarad az eurós összesítésekből, amíg árfolyam
+        nem kerül hozzá.
       failure: A számla nem került rögzítésre.
       field:
         counterparty_name: Partner neve
@@ -1617,11 +1711,16 @@ tui:
         country_code: Partner országa (két betű)
         currency: Pénznem
         invoice_class: Számla fajtája
-        invoice_date: Számla dátuma (ÉÉÉÉ-HH-NN)
+        invoice_date: Számla dátuma (év-hó-nap)
         invoice_number: Számlaszám
+        iva_category: Áfakezelés (nyilvántartási azonosító)
         iva_rate: IVA-kulcs (%)
         kind: Számla típusa
         notes: Megjegyzések
+        operation_date: Teljesítés dátuma, ha eltér a számla dátumától (év-hó-nap)
+        operation_type: 349-es nyomtatvány szerinti ügyletkód
+        recargo_amount: Kiegyenlítő pótlék összege
+        rectifies_invoice_number: A helyesbített számla száma
         retention_amount: IRPF-visszatartás összege
         retention_rate: IRPF-visszatartás kulcsa (%)
         series: Sorozat
@@ -1629,11 +1728,32 @@ tui:
       kind:
         issued: Kiállított
         received: Beérkezett
+      line:
+        add: Tétel hozzáadása
+        field:
+          description: A tétel megnevezése
+          iva_amount: A tétel IVA-összege
+          iva_rate: IVA-kulcs (nyilvántartási azonosító, például RATE_21)
+          oss_rate_kind: OSS-kulcs fajtája (nyilvántartási azonosító)
+          quantity: Mennyiség
+          spending_category_id: Költségkategória
+          subtotal: A tétel adóalapja
+          unit_price: Egységár
+        heading: Számlatételek. Ha a számlán több IVA-kulcs szerepel, itt add meg
+          egyenként a nyomtatott tételeket, és hagyd üresen a fenti adóalapot és IVA-kulcsot.
+        none: 'Nincs megadott tétel: a fenti adóalap és IVA-kulcs kerül felhasználásra.'
+        remove: Utolsó tétel törlése
+        row: '{index}. {description} · {quantity} × {unit_price} = {subtotal} · IVA
+          {rate} {amount}'
       open: Számla hozzáadása
+      operation_type_none: Nincs 349-es ügyletkód
       optional: '{label} (nem kötelező)'
       problem:
         amount: '{field} csak szám lehet, például 1200.00.'
-        date: '{field} ÉÉÉÉ-HH-NN formátumú dátum kell legyen.'
+        base_or_lines: Adj meg adóalapot, vagy adj hozzá legalább egy számlatételt.
+        date: '{field} év-hó-nap formátumú dátum kell legyen.'
+        lines_and_base: A számlát vagy tételenként, vagy egyetlen adóalappal és IVA-kulccsal
+          add meg, a kettőt együtt nem.
         required: '{field} megadása kötelező.'
       progress: A számla rögzítése…
       prompt: Add meg a számlát úgy, ahogy nyomtatva szerepel. Csak az áttekintés
@@ -1645,6 +1765,9 @@ tui:
         amounts: Adóalap {base} {currency} · IVA-kulcs {rate}
         counterparty: 'Partner: {name} · NIF {nif} · {country}'
         identity: '{kind} számla: {number}, kelte {date}'
+        operation: '349-es ügyletkód: {code} · teljesítés dátuma: {date}'
+        recargo: 'Kiegyenlítő pótlék: {amount} {currency}'
+        rectifies: Helyesbíti a(z) {number} számlát
         retention: 'IRPF-visszatartás: kulcs {rate} · összeg {amount}'
       title: Számla hozzáadása
     overview:
@@ -1681,6 +1804,23 @@ tui:
       suggestions: Javasolt kapcsolatok
       title: Helyi főkönyvi egyeztetés
       'yes': Igen
+    records:
+      failed: A módosítás elutasítva, vagy nem sikerült menteni.
+      identity: Rekordazonosító
+      invoice_detail: Számla részletei
+      invoices: Rögzített számlák
+      lines: Tételek
+      links: Kapcsolt rekordok
+      loading: Rekord olvasása…
+      no_change: Ellenőrzés előtt adjon meg eltérő értéket.
+      open_invoices: Számlák megtekintése
+      open_transaction: Kijelölt tétel megtekintése vagy szerkesztése
+      reviewed: Ellenőrizze az értéket, majd mentse.
+      save: Módosítás mentése
+      saved: Módosítás mentve.
+      saving: Módosítás mentése…
+      source: Forrásfájl
+      transaction_detail: Tétel részletei
     refusal:
       application_state: Ez a terület a főkönyv jelenlegi állapotában nem érhető el.
       destination_pending: Ez a terület ebben a verzióban még nem érhető el.
@@ -1822,6 +1962,27 @@ tui:
       not_applicable: Nem vonatkozik rá
       refused: Elutasítva
       unmeasured: Nincs felmérve
+    edit:
+      apply: Bevallott értékek alkalmazása
+      binding: 'Bevallott adat: {binding}'
+      scalar: '{casilla}. rovat'
+    evidence_kind:
+      legal: Jogszabályi hivatkozás
+      source: Forráshivatkozás
+    export:
+      payment_election:
+        cuenta_corriente: Adófolyószámla (cuenta corriente tributaria)
+        domiciliacion: Csoportos beszedés (domiciliación)
+        ingreso: Befizetés (ingreso)
+        label: 'Befizetendő eredmény: a fizetés módja'
+      prior_domiciliation_election:
+        cancel_or_modify: Visszavonás vagy módosítás
+        keep: Megtartás
+        label: Korábbi csoportos beszedés (csak helyesbítő önbevallásnál)
+      refund_election:
+        compensar: Továbbvitel a későbbi időszakokra (compensar)
+        devolver: Visszatérítés kérése (devolver)
+        label: 'Negatív eredmény: továbbvitel vagy visszatérítés kérése'
     finding_kind:
       advisory: Tanács
       blocking_rule: Nem teljesülő szabály
@@ -1837,12 +1998,43 @@ tui:
       informational: Csak tájékoztató
       manual: Ön adja meg
       projection_only: Megjelenik, de nem kerül benyújtásra
+    m303_evidence:
+      admission_unavailable: Itt nem rögzíthető új nyilatkozat ehhez a bevalláshoz.
+        Semmi sem lett kiszámítva.
+      attestation_attachment_id: A meglévő nyilatkozat azonosítója
+      attestation_sha256: A meglévő nyilatkozat SHA-256 értéke
+      cancel: Mégse
+      cancelled: A számítás megszakítva; nem került rögzítésre bevallási adat.
+      existing_attestation_hint: Válaszoljon a kérdésre. Ezután adjon meg egy meglévő
+        nyilatkozatot arról, hogy a 390-es nyomtatvány alóli mentesség szakasza nem
+        alkalmazandó (azonosítóját és SHA-256 értékét), vagy hagyja ezeket üresen,
+        és adja meg, mikor erősítette meg, hogy új nyilatkozat jöjjön létre.
+      joint_return_elected: Közös önbevallás (autoliquidación conjunta)?
+      no_modelo_390_question_hint: Válaszoljon a kérdésre. Ennek az időszaknak a bevallása
+        nem kérdez rá a 390-es nyomtatvány alóli mentességre; ezt csak az év utolsó
+        időszakáé (12 vagy 4T) teszi.
+      observed_at: Megerősítés időpontja új nyilatkozathoz (ISO 8601 UTC-eltolással,
+        például 2025-04-01T12:00:00Z)
+      required: Válaszoljon a közös önbevallásra vonatkozó kérdésre. Az év utolsó
+        időszakában adjon meg emellett vagy egy teljes meglévő nyilatkozatot, vagy
+        egy megerősítési időpontot UTC-eltolással, de ne mindkettőt.
+      stale_context: A kiválasztott bevallás megváltozott, miközben az űrlap nyitva
+        volt. Semmi sem lett kiszámítva; válassza újra a Számítást.
+      title: A 303-es nyomtatvány bevallási adatai
     record_family:
       bindings: Értékek a nyilvántartásából
       casillas: Mezők
       formulas: Képletek
       parameters: Paraméterek
       relations: Kapcsolatok más nyomtatványokkal
+    recovery_action:
+      operator:
+        modelo:
+          work:
+            calculate: Számítsa ki ezt a munkaegységet
+            create: Hozza létre a bevalláshoz tartozó munkaegységet
+            status: Tekintse át ennek a munkaegységnek az állapotát
+            verify: Ellenőrizze ezt a munkaegységet
     review_status:
       agent_reviewed: Automatikusan átnézve
       operator_reviewed: Ember nézte át
@@ -1855,6 +2047,32 @@ tui:
       producer_of: „{capability}” forrása
       record_family: Szakasz
     technical_details: Technikai részletek
+    workspace_refusal:
+      facts:
+        modelo: Modell
+        period: Időszak
+        required_grade: Szükséges szint
+        work_unit_id: Munkaegység
+      reason:
+        authority_grade_unavailable: A kiválasztott revízió hatósági szintje még nem
+          támogatja a kért számított nézetet.
+        bucket_assertion_mismatch: A bevallás tárolt azonossága nem egyezik a kért
+          azonossággal.
+        calculation_unavailable: Ezt a bevallást még nem számították ki, ezért nincsenek
+          elérhető értékek.
+        consistency_unavailable: A bevallás konzisztenciáját nem sikerült megerősíteni.
+        locale_unavailable: A bevallás lefordított feliratait nem sikerült beolvasni.
+        schema_unavailable: A bevallás sémáját nem sikerült beolvasni.
+        static_inspection_unavailable: Ennek a bevallásnak az űrlap-elrendezését nem
+          sikerült beolvasni.
+        target_not_found: Ehhez a bevalláshoz még nem létezik munka, így nincs mit
+          kiszámítani.
+        visible_target_ambiguous: Egynél több bevallás felel meg ennek a címnek, ezért
+          egyik sem nyitható meg egyetlenként.
+        workspace_changed: Ez a bevallás megváltozott, amíg nyitva volt; nyissa meg
+          újra az aktuális állapot megtekintéséhez.
+      static_fallback: Csak az űrlap elrendezése látható. Az alábbiakban nem jelennek
+        meg számított értékek.
   root:
     account:
       appearance: Megjelenés
@@ -1914,12 +2132,14 @@ tui:
       ledger: Főkönyv megnyitása
       profile: Profil megnyitása
       unknown: Munkafelület megnyitása
+      withholding: Levonási bizonylatok megnyitása
     destination_help:
       aeat_sync: Amit az AEAT-tól már beolvastunk, és amit legközelebb be lehet olvasni
       declarations: Bevallások, számítási változatok, benyújtási előzmények és naptár
       home: Következő teendők, bevallások és határidők egy pillantással
       ledger: Tételek, ellenőrzés, besorolás és igazoló dokumentumok
       profile: A profil adatai és az azokat kitöltő források
+      withholding: Számla-levonások rögzítése és megtekintése a kiválasztott adóévben
     refusal:
       not_composed: A munkafelület nem minden forrása volt még olvasható.
       refresh_failed: A legutóbbi frissítés nem tudta újraépíteni az indexet.

@@ -1,0 +1,102 @@
+# Perceptor row bindings for the modelo 190 ejercicio-2023 fichero BOE.
+#
+# One binding per type-2 row field the export layout emits, grounded on the
+# bundled aeat-dr-190-2023 record design for the position and on the AEAT
+# modelo 190 procedure for the filing route. Over the 2022 edition this adds
+# the five clave-E foral retention rows at 323-387. The modelo 111 relation
+# prefills and the declarante-total formulas the 2024 edition carries are
+# deliberately NOT here: their corpus grounding opens in 2025 and cannot be
+# cited by this exercise.
+[[revisions."2023".bindings]]
+id = "modelo-190-perceptor-row-retenciones-forales-estatal"
+provider = { kind = "withholding", fact = "row_field", row_field = "foral_retention_estatal", grouping = "per_perceptor_clave", record = "perceptor", data_type = "money" }
+value = { data_type = "money", channel = "row_set", row_grouping = "withholding" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2023", "aeat-modelo-190-procedure"]
+
+[[revisions."2023".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2023".bindings]]
+id = "modelo-190-perceptor-row-retenciones-forales-navarra"
+provider = { kind = "withholding", fact = "row_field", row_field = "foral_retention_navarra", grouping = "per_perceptor_clave", record = "perceptor", data_type = "money" }
+value = { data_type = "money", channel = "row_set", row_grouping = "withholding" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2023", "aeat-modelo-190-procedure"]
+
+[[revisions."2023".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2023".bindings]]
+id = "modelo-190-perceptor-row-retenciones-forales-araba"
+provider = { kind = "withholding", fact = "row_field", row_field = "foral_retention_araba", grouping = "per_perceptor_clave", record = "perceptor", data_type = "money" }
+value = { data_type = "money", channel = "row_set", row_grouping = "withholding" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2023", "aeat-modelo-190-procedure"]
+
+[[revisions."2023".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2023".bindings]]
+id = "modelo-190-perceptor-row-retenciones-forales-gipuzkoa"
+provider = { kind = "withholding", fact = "row_field", row_field = "foral_retention_gipuzkoa", grouping = "per_perceptor_clave", record = "perceptor", data_type = "money" }
+value = { data_type = "money", channel = "row_set", row_grouping = "withholding" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2023", "aeat-modelo-190-procedure"]
+
+[[revisions."2023".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2023".bindings]]
+id = "modelo-190-perceptor-row-retenciones-forales-bizkaia"
+provider = { kind = "withholding", fact = "row_field", row_field = "foral_retention_bizkaia", grouping = "per_perceptor_clave", record = "perceptor", data_type = "money" }
+value = { data_type = "money", channel = "row_set", row_grouping = "withholding" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2023", "aeat-modelo-190-procedure"]
+
+[[revisions."2023".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2023".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2023".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2023".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2023".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2023".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+# DECLARANTE RESUMEN TOTALS. The three type-1 summary fields are defined by the
+# design's own Contenido text as sums over this file's type-2 records, so they
+# are bound here rather than left operator-supplied:
+#   136-144 NUMERO TOTAL DE PERCEPCIONES -- "(Numero de registros de tipo 2.)"
+#   145-160 IMPORTE TOTAL DE LAS PERCEPCIONES -- "la suma de las cantidades ...
+#           reflejadas en las percepciones integras satisfechas (posiciones 82 a
+#           94, 109 a 121, 256 a 268 y 283-295 ...)"
+#   161-175 IMPORTE TOTAL DE LAS RETENCIONES E INGRESOS A CUENTA -- "la suma de
+#           las cantidades reflejadas en los campos ... (posiciones 95 a 107,
+#           122 a 134, y 269 a 281 y 296 a 308 ...)"
+# One binding per summed position range; the two money totals are assembled by
+# this revision's own formulas.
+

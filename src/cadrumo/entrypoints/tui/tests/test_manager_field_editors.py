@@ -28,13 +28,13 @@ from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.user_profile.fact_write import apply_manager_profile_field_mutation
 from ....application.user_profile.login_session import login_profile
-from ....application.user_profile.overview import build_profile_overview
+from ....application.user_profile.overview import ProfileOverview, build_profile_overview
 from ....application.user_profile.registration import register_profile_with_credentials
 from ....core.bucket_pointer import require_active_bucket_id
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ..components.host import ScreenHostApp
-from ..profile.overview import FieldEditScreen, ProfileManagerScreen
+from ..profile.overview import FieldEditScreen, ProfileFieldPersist, ProfileManagerScreen
 from .manager_pilot import wait_until_settled
 
 pytestmark = [
@@ -83,7 +83,9 @@ def _live_overview():
         return build_profile_overview(record, label=_LABEL, schema=_profile_contexts_for_test()[1].schema)
 
 
-def _persist(path: str, value: str):
+def _write(
+    path: str, value: str, expected_revision: int | None = None, expected_content_digest: str | None = None
+) -> ProfileOverview:
     """The production write door, so an edit here travels the real path."""
     # Building the overview validates facts against registry authority; lease it here, on whatever thread runs this.
     with bundled_indexed_authority().operation():
@@ -93,9 +95,19 @@ def _persist(path: str, value: str):
             profile_id=require_active_bucket_id(),
             path=path,
             value=value,
+            expected_revision=expected_revision,
+            expected_content_digest=expected_content_digest,
             profile_decode_context=_profile_decode_context_for_test,
         )
         return build_profile_overview(record, label=_LABEL, schema=_profile_contexts_for_test()[1].schema)
+
+
+def _persist_door(path: str, value: str, expected_revision: int, expected_content_digest: str) -> ProfileOverview:
+    """The screen's door, bound to its declared signature so a change fails type-checking, not a run."""
+    return _write(path, value, expected_revision, expected_content_digest)
+
+
+_persist: ProfileFieldPersist = _persist_door
 
 
 def _stored() -> dict[str, object | None]:

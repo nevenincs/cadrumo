@@ -136,6 +136,7 @@ _RESULT_STATUS_LOCALE_KEYS: Final[Mapping[WorkbenchSearchStatus, str]] = {
 _DESTINATION_LOCALE_KEYS: Final[Mapping[str, str]] = {
     "workbench.home": "tui.search.destination.home",
     "workbench.ledger": "tui.search.destination.ledger",
+    "workbench.withholding": "tui.search.destination.withholding",
     "workbench.declarations": "tui.search.destination.declarations",
     "workbench.aeat_sync": "tui.search.destination.aeat_sync",
     "workbench.profile": "tui.search.destination.profile",
@@ -143,6 +144,7 @@ _DESTINATION_LOCALE_KEYS: Final[Mapping[str, str]] = {
 _DESTINATION_HELP_LOCALE_KEYS: Final[Mapping[str, str]] = {
     "workbench.home": "tui.search.destination_help.home",
     "workbench.ledger": "tui.search.destination_help.ledger",
+    "workbench.withholding": "tui.search.destination_help.withholding",
     "workbench.declarations": "tui.search.destination_help.declarations",
     "workbench.aeat_sync": "tui.search.destination_help.aeat_sync",
     "workbench.profile": "tui.search.destination_help.profile",

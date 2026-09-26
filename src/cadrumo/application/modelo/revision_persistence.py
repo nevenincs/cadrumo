@@ -45,7 +45,12 @@ from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.hashing import sha256_hex
 from ...core.irnr import M210GrossIncomeSourceMode
 from ...core.modelo import Modelo
-from ...core.result_disposition import ResultDisposition
+from ...core.result_disposition import (
+    ResultDisposition,
+    canonical_result_amount,
+    result_disposition_casilla_ids,
+    result_disposition_is_refund,
+)
 from ...core.secure_object_write import SecureObjectWrite
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import bucket_event_history_write
@@ -87,6 +92,9 @@ from ...domain.modelos.filing_record import (
     AeatConfirmationState,
     FilingDeclarationKind,
     FilingOrigin,
+    IvaCreditSnapshot,
+    IvaSettlementRefundState,
+    IvaSettlementSnapshot,
     ModeloRecord,
     ModeloRecordCatalogue,
     ModeloRecordStatus,
@@ -115,6 +123,7 @@ from ..filing.retention import try_record_filing_retention_snapshot
 from ..prorrata_register.service import require_prorrata_register_coordinates_current
 from .action_errors import M303FilingEvidenceError
 from .filed_revision_observation import (
+    PreparedFiledRevisionObservation,
     filed_revision_observation_writes,
     prepare_filed_revision_observation,
     require_filing_result_disposition,
@@ -920,6 +929,7 @@ def _new_local_filing_record(
     notes: str | None,
     actor: str,
     now: datetime,
+    settlement: IvaSettlementSnapshot | None = None,
 ) -> ModeloRecord:
     return ModeloRecord(
         filing_record_id=filing_record_id,
@@ -937,6 +947,59 @@ def _new_local_filing_record(
         declaration_kind=FilingDeclarationKind.ORIGINAL,
         status=ModeloRecordStatus.VIGENTE,
         source_transaction_ids=target.source_transaction_ids,
+        settlement=settlement,
+    )
+
+
+def _new_local_m303_settlement_snapshot(
+    *,
+    target: CalculationRevision,
+    work_unit: WorkUnit,
+    prepared_observation: PreparedFiledRevisionObservation,
+    result_disposition: ResultDisposition | None,
+) -> IvaSettlementSnapshot | None:
+    """Derive a new local M303 settlement snapshot from filing-time owners only."""
+    if work_unit.modelo != Modelo("303").value:
+        return None
+    state = prepared_observation.iva_compensation_state
+    result_ids = result_disposition_casilla_ids(str(work_unit.modelo))
+    if (
+        state is None
+        or state.prior_pending_amount is None
+        or state.applied_amount is None
+        or result_ids is None
+        or any(casilla_id not in target.casilla_values for casilla_id in result_ids)
+    ):
+        raise M303FilingEvidenceError(
+            precondition_failure=m303_filing_evidence_failure(
+                "missing",
+                {"modelo": str(work_unit.modelo), "operation": "settlement_snapshot"},
+            ),
+        )
+    result_values = {casilla_id: target.casilla_values[casilla_id] for casilla_id in result_ids}
+    result_amount = canonical_result_amount(str(work_unit.modelo), result_values)
+    if result_amount is None or result_disposition is None:
+        raise M303FilingEvidenceError(
+            precondition_failure=m303_filing_evidence_failure(
+                "missing",
+                {"modelo": str(work_unit.modelo), "operation": "settlement_snapshot"},
+            ),
+        )
+    return IvaSettlementSnapshot(
+        calculation_revision_id=target.calculation_revision_id,
+        declared_liability=max(result_amount, Decimal("0")),
+        payment_evidence=(),
+        refund_election_intent=result_disposition_is_refund(result_disposition),
+        refund_state=IvaSettlementRefundState.NOT_REQUESTED,
+        refund_requested_amount=Decimal("0"),
+        refund_approved_amount=Decimal("0"),
+        refund_paid_amount=Decimal("0"),
+        credit_snapshot=IvaCreditSnapshot(
+            opening_amount=state.prior_pending_amount,
+            generated_amount=state.generated_amount,
+            applied_amount=state.applied_amount,
+            remaining_amount=state.available_end_amount,
+        ),
     )
 
 
@@ -1162,6 +1225,12 @@ def persist_filed_revision(
         taxpayer_nif=taxpayer_nif,
         filing_record_id=new_filing_id,
     )
+    settlement = _new_local_m303_settlement_snapshot(
+        target=target,
+        work_unit=work_unit,
+        prepared_observation=prepared_observation,
+        result_disposition=result_disposition,
+    )
 
     filing_catalogue = filing_repository.load()
     prior_current = filing_catalogue.current_for(
@@ -1178,6 +1247,7 @@ def persist_filed_revision(
         notes=notes,
         actor=actor,
         now=now,
+        settlement=settlement,
     )
 
     # Revisioned: this catalogue is composed into a co-commit, so it cannot

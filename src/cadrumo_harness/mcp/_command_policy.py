@@ -10,7 +10,13 @@ _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, 
 
 
 class CommandPolicyProjection(BaseModel):
-    """SDK-independent MCP view of one spec-owned execution policy."""
+    """SDK-independent MCP view of one spec-owned execution policy.
+
+    ``open_world`` says the command may leave the host at all, which drives the
+    client hint and the call's timeout tier. ``reaches_aeat`` says it reaches
+    AEAT under the active taxpayer's identity, which is what the identity gate
+    asks: a local model-runtime read is open-world and still safe unidentified.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -21,6 +27,7 @@ class CommandPolicyProjection(BaseModel):
     handoff: bool
     live_write: bool
     open_world: bool
+    reaches_aeat: bool
 
 
 def project_command_policy(command_key: str, raw_policy: CommandExecutionPolicy) -> CommandPolicyProjection:
@@ -38,6 +45,7 @@ def project_command_policy(command_key: str, raw_policy: CommandExecutionPolicy)
         handoff=raw_policy.handoff,
         live_write=raw_policy.live_write,
         open_world="network" in classification.expanded_capabilities,
+        reaches_aeat="aeat" in classification.expanded_capabilities,
     )
 
 

@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from typing import cast
 
 import pytest
 
@@ -17,9 +18,12 @@ from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalo
 from ....domain.invoices.errors import InvoiceNotFoundError, InvoiceValidationError
 from ....domain.invoices.models import Invoice
 from ....domain.iva.classification import InvoiceKind
-from ....tests.recorded_ecb_rates import recorded_ecb_rate_provider
-from ..catalogue_creation import build_catalogue_invoice
-from ..catalogue_lifecycle import CatalogueInvoicePatch, resolve_catalogue_invoice
+from ...exchange_rate_provider import exchange_rate_provider
+from ..catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
+from ..catalogue_lifecycle import CatalogueInvoicePatch, resolve_catalogue_invoice, update_catalogue_invoice
+from ..catalogue_lifecycle_ports import CatalogueLifecyclePorts
+from ..catalogue_reads_ports import InvoiceCatalogueReadPorts
+from ._catalogue_creation_fakes import in_memory_catalogue_creation_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -39,7 +43,7 @@ def _build(invoice_number: str) -> Invoice:
         taxable_base=Decimal("100.00"),
         iva_rate=Decimal("21"),
         currency="EUR",
-        rate_provider=recorded_ecb_rate_provider(),
+        rate_provider=exchange_rate_provider(),
     )
 
 
@@ -109,3 +113,35 @@ def test_the_patch_model_cannot_express_an_identity_change() -> None:
     }
 
     assert identity_fields.isdisjoint(set(CatalogueInvoicePatch.model_fields))
+
+
+def test_stale_invoice_baseline_refuses_before_catalogue_and_audit_mutation() -> None:
+    """A second editor cannot overwrite a note changed since its view opened."""
+    creation_ports = in_memory_catalogue_creation_ports()
+    original = create_catalogue_invoice(invoice=_build("2026-0142"), ports=creation_ports).invoice
+    lifecycle_ports = CatalogueLifecyclePorts(
+        read_ports=cast(InvoiceCatalogueReadPorts, object()),
+        invoice_repository=creation_ports.invoice_repository,
+        event_repository=creation_ports.event_repository,
+        audit_commit=creation_ports.audit_commit,
+    )
+    first = update_catalogue_invoice(
+        bucket_id=_BUCKET_ID,
+        invoice_id=original.invoice_id,
+        patch=CatalogueInvoicePatch(notes="first editor"),
+        ports=lifecycle_ports,
+        expected_invoice=original,
+    )
+    event_count = len(creation_ports.event_repository.load().events)
+
+    with pytest.raises(InvoiceValidationError, match="changed since it was opened"):
+        update_catalogue_invoice(
+            bucket_id=_BUCKET_ID,
+            invoice_id=original.invoice_id,
+            patch=CatalogueInvoicePatch(notes="stale editor"),
+            ports=lifecycle_ports,
+            expected_invoice=original,
+        )
+
+    assert creation_ports.invoice_repository.load().get(original.invoice_id) == first.invoice
+    assert len(creation_ports.event_repository.load().events) == event_count

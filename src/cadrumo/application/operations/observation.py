@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import cast
 
 from ...core.errors.hierarchy import CadrumoError
 from ...core.operations import OperationCancellation, OperationInteractionKind, OperationLifecycle
@@ -57,7 +56,7 @@ from .persistence.journal import (
     OperationPersistedSnapshot,
     OperationProgressFoldInput,
 )
-from .persistence.replay import PublicReplayStatus
+from .persistence.replay import OperationReplayStatus
 from .registry import (
     OperationPublicContractSetV1,
     OperationPublicDefinitionContractV1,
@@ -223,7 +222,9 @@ def _project_event_page(materialization: OperationObservationMaterialization) ->
     """Project the replay page while retaining its anchored cursor semantics."""
     snapshot = materialization.snapshot
     replay = materialization.replay
-    replay_status = cast(PublicReplayStatus, replay.status)
+    if replay.status is OperationReplayStatus.UNKNOWN_OPERATION:
+        raise ValueError("an observation event page cannot project an unknown operation")
+    replay_status = replay.status
     return OperationPublicEventPageV1(
         operation_id=snapshot.operation_id,
         anchor_cursor=materialization.anchor_cursor,

@@ -57,7 +57,7 @@ if TYPE_CHECKING:
     from ....application.user_profile.censo_sync import CensalReconciliation
     from ....application.user_profile.projections import EffectiveFact
     from ....domain.user_profile.values import UserProfileFact, UserProfileRecord
-    from ....entrypoints.censal_review import CensalReviewedFrontendResult
+    from ...censal_review import CensalReviewedFrontendResult
 
 
 def censo_import(
@@ -119,7 +119,7 @@ def censo_pull(
     from ....adapters.outbound.aeat.browser.factory import default_browser_session_factory
     from ....application.live.censo import pull_censal_datos
     from ....application.user_profile.projections import record_to_effective_facts
-    from ....entrypoints.censal_review import run_censal_review
+    from ...censal_review import run_censal_review
     from ..state_projection_support import censal_fetch_port, certificate_secret_backend_factory, operator_scope_ports
     from ._censo_review_cli import confirm_censal_review
 

@@ -3,7 +3,7 @@
 aeat --format json app modelo work create --modelo 303 --year 2026 --period 1T
 @capture work_unit_id result.work_unit_id
 @step Calculate the draft from the classified ledger.
-aeat --format json app modelo work calculate {work_unit_id} --m303-filing-evidence fixtures/m303-filing-evidence-2026-1T.json
+aeat --format json app modelo work calculate {work_unit_id} --no-joint-return-elected
 @capture calculation_revision_id result.calculation_revision_id
 @step Verify the draft; the run saves a report you can reopen.
 aeat --format json app modelo work verify {calculation_revision_id}

@@ -6,7 +6,7 @@ no seeded revisions. Each test runs the actual
 readiness -> create -> calculate -> verify -> export services in sequence.
 
 Coverage:
-- a calculable modelo (115, fed one real retención observation) reaches granted
+- a calculable modelo (115, fed one invoice-backed retención) reaches granted
   verification before honestly refusing its unavailable export layout;
 - a modelo whose ``previous_filing`` source is absent (130 without an observed
   prior-year Modelo 100 filing) calculates using the caller-supplied override
@@ -25,18 +25,27 @@ from collections.abc import Sequence
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import Any
 
 import pytest
 from click.testing import Result
 
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 
+from ....adapters.outbound.fx.tests.recorded_ecb_rates import recorded_ecb_rate_provider
 from ....adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from ....adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend as _isolated_cli_backend,
+)
+from ....application.aggregation.invoice_retencion import InvoiceWithholdingEvidenceRequest
+from ....application.aggregation.retenciones import Modelo180PropertyEvidence, Modelo180StructuredAddress
+from ....application.aggregation.withholding_recognition import (
+    WithholdingIncomeKind,
+    WithholdingRecipientTaxRegime,
+    WithholdingRecipientTaxStatus,
 )
 from ....application.calculations.tests.filing_evidence import regimen_simplificado_filing_evidence
 from ....application.state_projection import ProjectionModeloReadiness
@@ -46,21 +55,18 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.iva_schema_vocabulary import m303_regime_composition_simplified_scope
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ....domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource, published_snapshot
-from ....domain.filing_evidence import FilingEvidenceReference
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.regimen_simplificado_rows import (
     M303RegimenSimplificadoScopeDecision,
     RegimenSimplificadoFilingRows,
 )
 from ....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
-from ....domain.modelos.calculation_revision_m303_evidence import M303Exonerado390FilingEvidence
 from ....domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence, M303FilingInstanceEvidence
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....tests.cli_envelope import unwrap_envelope_notices as _notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
-from ....tests.recorded_ecb_rates import recorded_ecb_rate_provider
 from .cli_runner import invoke_cached_cli
 
 __all__ = ["_isolated_cli_backend"]
@@ -98,7 +104,7 @@ def _invoke(args: Sequence[str], *, attempts: int = 8) -> Result:
     return result
 
 
-def _create_profile(*, activity_start_date: str = "2026-01-01") -> None:
+def _create_profile(*, activity_start_date: str = "2026-01-01", complete: bool = True) -> None:
     """Register the profile through the shared CLI registration door."""
     register_cli_profile(
         label="operator",
@@ -120,38 +126,86 @@ def _create_profile(*, activity_start_date: str = "2026-01-01") -> None:
             "iva.voluntary_sii_enrolled": "false",
             "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
+        complete=complete,
         log_in=False,
     )
 
 
-def _seed_m115_retencion_observation() -> None:
-    """Persist one real URBAN_RENTAL retención observation for M115 2026 1T.
+def _capture_m115_invoice_withholding() -> None:
+    """Capture one received urban-rent invoice's retención as Modelo 115 2025 1T evidence.
 
     Modelo 115 aggregates its cuota from persisted retención evidence; with one
-    observation seeded the calculate stage resolves and the chain runs to
-    completion. This is the source-preflight the ``calculate`` stage reads.
+    captured allocation the calculate stage resolves and the chain runs to
+    completion. The evidence enters through the public path only: ``ledger
+    invoice add`` mints a received rent invoice (2700.00 base, 19% retención =
+    513.00), then ``modelo aggregate --received-invoice-retencion`` records its
+    single paid allocation with the property detail Modelo 180 requires. The
+    settlement is the invoice grand total (2700.00 + 21% IVA = 3267.00) less
+    the retención: 2754.00.
     """
-    observation = json.dumps(
-        {
-            "source_kind": "ledger_transaction",
-            "source_object_id": "rent-ledger-row-001",
-            "perceptor_nif": "B12345678",
-            "perceptor_name": "Arrendador Ejemplo SL",
-            "scheme": "arrendamiento_urbano",
-            "taxable_base": "2700.00",
-            "retencion_amount": "513.00",
-            "accrued_on": "2026-03-15",
-        },
+    paid_on = date(2025, 3, 15)
+    created = _invoke(
+        [
+            "--format", "json",
+            "app", "ledger", "invoice", "add",
+            "--kind", "received",
+            "--counterparty-name", "Arrendador Ejemplo SL",
+            "--counterparty-nif", "B12345674",
+            "--invoice-number", "M115-RENT-2025-001",
+            "--invoice-date", paid_on.isoformat(),
+            "--country-code", "ES",
+            "--taxable-base", "2700.00", "--iva-rate", "21",
+            "--retention-rate", "0.19", "--retention-amount", "513.00",
+            "--iva-category", "domestic_general",
+        ],
+    )  # fmt: skip
+    assert created.exit_code == 0, created.output
+    invoice_id = _payload(created.output)["invoice_id"]
+    assert isinstance(invoice_id, str) and invoice_id, created.output
+
+    request = InvoiceWithholdingEvidenceRequest(
+        invoice_id=invoice_id,
+        income_kind=WithholdingIncomeKind.URBAN_RENT,
+        scheme="arrendamiento_urbano",
+        recipient_tax_status=WithholdingRecipientTaxStatus.RESIDENT,
+        recipient_tax_regime=WithholdingRecipientTaxRegime.IRPF,
+        payment_event_id="m115-rent-payment-2025-03-15",
+        payment_occurred_on=paid_on,
+        allocation_id="m115-rent-allocation-1",
+        allocated_base=Decimal("2700.00"),
+        allocated_withholding=Decimal("513.00"),
+        allocated_settlement=Decimal("2754.00"),
+        idempotency_key="m115-rent-allocation-1",
+        modelo_180_property=Modelo180PropertyEvidence(
+            property_key="quickfile-rent-property",
+            situation="1",
+            cadastral_reference="1234567VK4713C0001XY",
+            address=Modelo180StructuredAddress(
+                province_code="28",
+                municipality_code="079",
+                municipality="Madrid",
+                locality="Madrid",
+                postal_code="28001",
+                street_type="CL",
+                street_name="Ejemplo",
+                number_type="NUM",
+                house_number="1",
+            ),
+            recipient_province_code="28",
+            modality="1",
+            accrual_year=2025,
+            withholding_percentage=Decimal("19.00"),
+        ),
     )
-    result = _invoke(
+    captured = _invoke(
         [
             "--format", "json",
             "app", "modelo", "aggregate",
-            "--modelo", "115", "--year", "2026", "--period", "1T",
-            "--retencion-observation", observation,
+            "--modelo", "115", "--year", "2025", "--period", "1T",
+            "--received-invoice-retencion", request.model_dump_json(),
         ],
     )  # fmt: skip
-    assert result.exit_code == 0, result.output
+    assert captured.exit_code == 0, captured.output
 
 
 def _active_bucket_id() -> str:
@@ -179,18 +233,9 @@ def _write_m303_filing_evidence(path: Path, *, operation: PinnedAuthorityOperati
         m303=M303FilingInstanceEvidence(
             period=period,
             joint_return_elected=False,
-            annual_volume_nonzero=False,
+            annual_volume_nonzero=None,
             insolvency=None,
-            exonerado_390=M303Exonerado390FilingEvidence(
-                applicable=False,
-                applicability_reference=FilingEvidenceReference(
-                    reference="test:quickfile:exonerado-390:not-applicable",
-                ),
-                endpoints=(),
-                activity_rows=(),
-                operaciones_terceros_declarables=None,
-                operaciones_terceros_reference=None,
-            ),
+            exonerado_390=None,
             regimen_simplificado=regimen_simplificado_filing_evidence(
                 period=period,
                 scope_decision=scope,
@@ -353,10 +398,12 @@ def test_quickfile_runs_full_chain_to_exported_fichero(
 ) -> None:
     """One command carries a calculable M115 from create to a written fichero.
 
-    Modelo 115 1T 2026 with one seeded retención observation is calculable, so
+    Modelo 115 1T 2025 with one invoice-backed retención allocation is calculable, so
     the chain reaches granted verification and then EXPORTS: the revision's
     ``modelo-115-fichero-boe`` layout is a renderable fixed-width definition
-    carrying its records, so local declaration bytes are produced.
+    carrying its records, so local declaration bytes are produced. The quarter
+    is 2025 because invoice-backed withholding recognition is grounded for the
+    2025 applicable year only and refuses capture for any other year.
 
     This assertion was inverted for a period when no complete export layout was
     authored and the stage legitimately refused. The layout is authored again,
@@ -365,15 +412,15 @@ def test_quickfile_runs_full_chain_to_exported_fichero(
     subject.
     """
 
-    _create_profile()
-    _seed_m115_retencion_observation()
+    _create_profile(activity_start_date="2025-01-01")
+    _capture_m115_invoice_withholding()
     out = tmp_path / "modelo-115.txt"
 
     result = _invoke(
         [
             "--format", "json",
             "app", "quickfile",
-            "--modelo", "115", "--year", "2026", "--period", "1T",
+            "--modelo", "115", "--year", "2025", "--period", "1T",
             "--casilla", "04=0",
             "--output", str(out),
         ],
@@ -404,16 +451,10 @@ def test_quickfile_runs_full_chain_to_exported_fichero(
     assert out.stat().st_size > 0, "the exported fichero is empty"
 
 
-def test_quickfile_m303_fully_taxable_ledger_reaches_granted_verify_before_identity_refusal(
-    tmp_path: Path, *, operation: PinnedAuthorityOperation
-) -> None:
-    """A fully taxable M303 reaches verify, then requires reviewed export identity."""
+def test_quickfile_m303_2026_refuses_an_attestation_pair_the_period_does_not_ask(tmp_path: Path) -> None:
+    """1T does not ask the Modelo 390 exemption, so a supplied attestation pair stops quickfile at calculate."""
 
     _create_profile()
-    bucket_id = _active_bucket_id()
-    _seed_m303_ledger_and_wallet(bucket_id)
-    evidence_path = tmp_path / "m303-filing-evidence.json"
-    _write_m303_filing_evidence(evidence_path, operation=operation)
     out = tmp_path / "modelo-303-2026-1T.boe"
 
     result = _invoke(
@@ -421,8 +462,9 @@ def test_quickfile_m303_fully_taxable_ledger_reaches_granted_verify_before_ident
             "--format", "json",
             "app", "quickfile",
             "--modelo", "303", "--year", "2026", "--period", "1T",
-            "--m303-filing-evidence", str(evidence_path),
-            "--payment-election", "ingreso",
+            "--joint-return-elected",
+            "--m303-exonerado-390-attachment-id", "a" * 64,
+            "--m303-exonerado-390-sha256", "a" * 64,
             "--output", str(out),
         ],
     )  # fmt: skip
@@ -431,19 +473,16 @@ def test_quickfile_m303_fully_taxable_ledger_reaches_granted_verify_before_ident
     assert "Traceback" not in result.output
     payload = _payload(result.output)
     assert payload["completed"] is False, result.output
-    assert payload["stopped_at_stage"] == "export", json.dumps(payload, sort_keys=True)
-    assert payload["granted_verificado_completo"] is True
+    assert payload["stopped_at_stage"] == "calculate", json.dumps(payload, sort_keys=True)
+    assert payload["granted_verificado_completo"] is None
 
     statuses = _stage_status(payload)
-    assert statuses["calculate"] == "ok"
-    assert statuses["verify"] == "ok"
-    assert statuses["export"] == "refused"
-
-    notice_text = json.dumps(_notices(result.output), sort_keys=True)
-    assert "prorrata" not in notice_text.lower()
-    assert "product/software identity authority" in notice_text.lower()
+    assert statuses["calculate"] == "refused"
+    assert statuses["verify"] == "skipped"
+    assert statuses["export"] == "skipped"
     assert payload["export"] is None
     assert not out.exists()
+    assert "exonerado_390_attestation_outside_last_period" in result.output
 
 
 def test_quickfile_help_exposes_explicit_result_elections() -> None:
@@ -673,3 +712,165 @@ def test_quickfile_result_payload_summarises_a_missing_binding_requirement() -> 
     assert payload.readiness is not None
     assert payload.readiness.binding_ready is False
     assert payload.readiness.missing_binding_count == 1
+
+
+def _stage_notice_for(output: str, stage: str) -> dict[str, Any]:
+    """Return the one notice the stage produced, re-validated through the production contract."""
+    from ....core.json_contract import Notice
+
+    matching = [notice for notice in _notices(output) if notice.get("code") == f"quickfile.stage.{stage}"]
+    assert len(matching) == 1, json.dumps(_notices(output), sort_keys=True)
+    notice = matching[0]
+    Notice.model_validate_json(json.dumps(notice))
+    message = notice["message"]
+    assert isinstance(message, str) and message
+    assert "aeat " not in message and "`aeat" not in message, message
+    return notice
+
+
+def _assert_stopped_at(output: str, stage: str) -> dict[str, Any]:
+    payload = _payload(output)
+    assert payload["completed"] is False, output
+    assert payload["stopped_at_stage"] == stage, json.dumps(payload, sort_keys=True)
+    assert payload["export"] is None
+    statuses = _stage_status(payload)
+    order = ("readiness", "create", "calculate", "verify", "export")
+    assert statuses[stage] == "refused"
+    assert all(statuses[later] == "skipped" for later in order[order.index(stage) + 1 :]), statuses
+    return payload
+
+
+def test_quickfile_setup_incomplete_refusal_reports_the_typed_completion_action(tmp_path: Path) -> None:
+    """An undeclared-complete profile stops quickfile at create with a typed recovery, not a crash.
+
+    The refusal's prose once named the completion command, which the notices
+    contract refuses, so quickfile exited 2 instead of reporting the stage. The
+    recovery now travels only on the notice's typed action.
+    """
+    _create_profile(complete=False)
+    out = tmp_path / "modelo-130.txt"
+
+    result = _invoke(
+        [
+            "--format", "json",
+            "app", "quickfile",
+            "--modelo", "130", "--year", "2026", "--period", "2T",
+            "--output", str(out),
+        ],
+    )  # fmt: skip
+
+    assert result.exit_code == 1, result.output
+    assert "Traceback" not in result.output
+    _assert_stopped_at(result.output, "create")
+    notice = _stage_notice_for(result.output, "create")
+    action = notice["action"]
+    assert isinstance(action, dict), notice
+    assert action["failed_condition_id"] == "profile.setup.declared_complete"
+    resolved = action["action"]
+    assert isinstance(resolved, dict), action
+    assert resolved["action_id"] == "operator.profile.complete_setup"
+    assert resolved["target_command_key"] == "config.profile.complete_setup"
+    assert resolved["cli_path"] == ["config", "profile", "complete-setup"]
+    assert action["conditionality"] == "immediate"
+    # The readiness warning is where the incomplete setup is first seen; it
+    # carries the same typed recovery rather than a bare warning.
+    readiness = _stage_notice_for(result.output, "readiness")
+    readiness_action = readiness["action"]
+    assert isinstance(readiness_action, dict), readiness
+    assert readiness_action["action"]["action_id"] == "operator.profile.complete_setup"
+    assert not out.exists()
+
+
+def test_quickfile_create_stage_refusal_without_a_typed_action_reports_its_reason(tmp_path: Path) -> None:
+    """A create-stage refusal that carries no verdict still reports its own reason, with no action."""
+    _create_profile(activity_start_date="2026-01-01")
+    out = tmp_path / "modelo-130.txt"
+
+    result = _invoke(
+        [
+            "--format", "json",
+            "app", "quickfile",
+            "--modelo", "130", "--year", "2025", "--period", "1T",
+            "--output", str(out),
+        ],
+    )  # fmt: skip
+
+    assert result.exit_code == 1, result.output
+    assert "Traceback" not in result.output
+    _assert_stopped_at(result.output, "create")
+    notice = _stage_notice_for(result.output, "create")
+    assert notice.get("action") is None, notice
+    assert "pre-activity period" in str(notice["message"])
+    assert "2026-01-01" in str(notice["message"])
+    assert not out.exists()
+
+
+def test_quickfile_calculate_refusal_reports_its_reason_and_typed_recovery(tmp_path: Path) -> None:
+    """An unknown ``--binding`` stops quickfile at calculate with its own reason and a typed recovery.
+
+    The refusal's reason names the rejected binding and the accepted ones, and
+    no command: the bindings listing reaches the operator only as the typed
+    action. (A reason that still named a command would fall back to the
+    stage-and-code sentence; the detector below proves that path.)
+    """
+    _create_profile(activity_start_date="2025-01-01")
+    out = tmp_path / "modelo-115.txt"
+
+    result = _invoke(
+        [
+            "--format", "json",
+            "app", "quickfile",
+            "--modelo", "115", "--year", "2025", "--period", "1T",
+            "--binding", "not-a-declared-binding=1",
+            "--output", str(out),
+        ],
+    )  # fmt: skip
+
+    assert result.exit_code == 1, result.output
+    assert "Traceback" not in result.output
+    _assert_stopped_at(result.output, "calculate")
+    notice = _stage_notice_for(result.output, "calculate")
+    action = notice.get("action")
+    assert isinstance(action, dict), notice
+    assert action["failed_condition_id"] == "modelo.work.calculate.caller_overrides.binding_declared"
+    assert action["action"]["action_id"] == "operator.modelo.bindings.list"
+    context = notice["context"]
+    assert isinstance(context, dict), notice
+    assert context["stage"] == "calculate"
+    assert context["status"] == "refused"
+    assert "not-a-declared-binding" in str(notice["message"])
+    assert not out.exists()
+
+
+def test_notice_contract_refuses_the_command_prose_the_old_stage_projection_passed() -> None:
+    """Detector: the reason the old projection copied into a notice is refused by the contract.
+
+    Without this refusal, the fallback above would be dead code and the
+    stage notices would carry an executable command outside the typed action.
+    """
+    from pydantic import ValidationError
+
+    from ....application.modelo.action_errors import ModeloProfileReadinessError
+    from ....application.modelo.quickfile import QuickfileStage, QuickfileStageOutcome, QuickfileStageStatus
+    from ....core.json_contract import Notice, NoticeSeverity
+    from .._app_quickfile import _stage_notice
+
+    # Catalogued refusals no longer name commands, so the specimen is the shape
+    # the old projection used to copy: a reason ending in an executable command.
+    reason = "--binding not-a-declared-binding is unknown. Use `aeat app modelo bindings list 115` to list them."
+    with pytest.raises(ValidationError, match="raw aeat command prose"):
+        Notice(severity=NoticeSeverity.WARNING, code="quickfile.stage.calculate", message=reason)
+
+    commanded = ModeloProfileReadinessError("run `aeat config profile complete-setup` first")
+    notice = _stage_notice(
+        QuickfileStageOutcome(
+            stage=QuickfileStage.CREATE,
+            status=QuickfileStageStatus.REFUSED,
+            message=str(commanded),
+            refusal=commanded,
+        ),
+    )
+    assert "aeat" not in notice.message
+    assert notice.context is not None
+    assert notice.context["error_code"] == "REFUSED_MODELO_PROFILE_READINESS"
+    assert notice.action is None

@@ -11,8 +11,8 @@ from ....core.period import Period
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.filing.errors import FilingExportError
-from .._export_parity import assert_export_mirrors_manifest
 from ..draft_construction import build_draft
+from ..export_parity import assert_export_mirrors_manifest
 from ..runtime import ModeloOperatorProfile, build_runtime_schema_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

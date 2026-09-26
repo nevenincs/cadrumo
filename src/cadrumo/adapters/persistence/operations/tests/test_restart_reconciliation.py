@@ -46,7 +46,11 @@ from cadrumo.application.operations.persistence.events import (
     OperationNoticeEvent,
     OperationReconciliationEvent,
 )
-from cadrumo.application.operations.persistence.leases import operation_conflict_scope_reference
+from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
+from cadrumo.application.operations.persistence.leases import (
+    OperationLeaseObservation,
+    operation_conflict_scope_reference,
+)
 from cadrumo.application.operations.registry import (
     OperationDefinition,
     OperationExecutorFactory,
@@ -147,10 +151,18 @@ def _pending_interaction(identity: OperationIdentity) -> OperationPendingInterac
 
 
 class CheckpointingExecutor:
-    """Publish one durable checkpoint, then record any re-entry after it."""
+    """Publish one durable checkpoint, then record any re-entry after it.
+
+    A re-entered executor stays live after its phase until ``release_resume``
+    is set, so the recovering owner's state can be read before it settles.
+    """
+
+    resumed_result_ref = "result:restart-resumed"
 
     def __init__(self) -> None:
         self.resume_checkpoints: list[object] = []
+        self.resume_entered = asyncio.Event()
+        self.release_resume = asyncio.Event()
 
     async def execute(
         self,
@@ -171,7 +183,9 @@ class CheckpointingExecutor:
         del request
         self.resume_checkpoints.append(checkpoint)
         await context.events.phase(_RESUME_PHASE)
-        return None
+        self.resume_entered.set()
+        await self.release_resume.wait()
+        return self.resumed_result_ref
 
 
 def build_restart_registry(
@@ -395,16 +409,29 @@ def test_crashed_owner_checkpoint_is_taken_over_replayed_and_resumed(tmp_path: P
         token=_RECOVERY_OWNER_TOKEN,
         at=_AFTER_LEASE_EXPIRY,
     )
-    resumed = asyncio.run(recovery.reconcile(operation_id))
-    after = asyncio.run(journal.read_after(operation_id, 0, limit=64))
     leases = OperationLeaseFilesystemRepository(storage_root=storage_root)
-    observed = asyncio.run(
-        leases.inspect(
+
+    async def observe_live_resume() -> tuple[
+        OperationPersistedSnapshot, OperationLeaseObservation, OperationPersistedSnapshot
+    ]:
+        # The re-entered executor stays live until released, so the takeover
+        # lease and the resumed record are read while the new owner holds them.
+        reconciliation = asyncio.create_task(recovery.reconcile(operation_id))
+        await executor.resume_entered.wait()
+        live = await journal.load(operation_id)
+        lease = await leases.inspect(
             operation_conflict_scope_reference(definition_id=_DEFINITION_ID, subject_ref=subject_ref),
             operation_id,
             observed_at=_AFTER_LEASE_EXPIRY,
         )
-    )
+        executor.release_resume.set()
+        return live, lease, await reconciliation
+
+    resumed, observed, settled = asyncio.run(observe_live_resume())
+    after = asyncio.run(journal.read_after(operation_id, 0, limit=64))
+
+    assert resumed.lifecycle is OperationLifecycle.RUNNING
+    assert settled.terminal_condition is OperationTerminalCondition.SUCCEEDED
 
     # Lease takeover: the dead owner no longer holds the scope.
     assert observed.current is not None

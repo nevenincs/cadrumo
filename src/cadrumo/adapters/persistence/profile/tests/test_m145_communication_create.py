@@ -20,9 +20,6 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from .....adapters.persistence.profile.m145_communication_records import build_m145_communication_records_ports
-from .....adapters.persistence.storage.secure_object_namespaces import M145_COMMUNICATION_RECORD_NAMESPACE
-from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .....application.modelo.m145_communication import build_m145_communication_service_contract
 from .....application.modelo.m145_communication_period import M145CommunicationPeriod
 from .....application.modelo.m145_communication_records import (
@@ -38,6 +35,9 @@ from .....core.period import Period, PeriodError
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.calculations.registry.casilla_membership import undeclared_casilla_ids
 from .....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
+from ...storage.secure_object_namespaces import M145_COMMUNICATION_RECORD_NAMESPACE
+from ...storage.tests.secure_sql import isolated_runtime_profile
+from ..m145_communication_records import build_m145_communication_records_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

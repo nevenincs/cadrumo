@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from ._app_ledger_actividad_asset_command_specs import LEDGER_ACTIVIDAD_ASSET_COMMAND_SPECS
 from ._app_ledger_bienes_inversion_command_specs import LEDGER_BIENES_INVERSION_COMMAND_SPECS
 from ._app_ledger_classification_command_specs import LEDGER_CLASSIFICATION_COMMAND_SPECS
 from ._app_ledger_counterparty_command_specs import LEDGER_COUNTERPARTY_COMMAND_SPECS
@@ -27,6 +28,7 @@ LEDGER_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     *LEDGER_OPERATIONS_COMMAND_SPECS,
     *LEDGER_MANAGEMENT_COMMAND_SPECS,
     *LEDGER_LIFECYCLE_COMMAND_SPECS,
+    *LEDGER_ACTIVIDAD_ASSET_COMMAND_SPECS,
     *LEDGER_BIENES_INVERSION_COMMAND_SPECS,
     *LEDGER_COUNTERPARTY_COMMAND_SPECS,
     *LEDGER_EVIDENCE_COMMAND_SPECS,

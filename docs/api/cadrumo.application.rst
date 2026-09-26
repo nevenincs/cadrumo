@@ -13,6 +13,7 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
+   cadrumo.application.actividad_asset
    cadrumo.application.aeat_sync
    cadrumo.application.aggregation
    cadrumo.application.auth
@@ -73,6 +74,7 @@ Submodules
    cadrumo.application.local_reader_operation
    cadrumo.application.persistence_errors
    cadrumo.application.preflight
+   cadrumo.application.producer_capture
    cadrumo.application.profile_deletion_hold_contract
    cadrumo.application.profile_preconditions
    cadrumo.application.provisioning

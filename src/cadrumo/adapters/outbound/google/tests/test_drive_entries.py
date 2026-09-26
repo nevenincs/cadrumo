@@ -27,7 +27,7 @@ if TYPE_CHECKING:
     from googleapiclient._apis.drive.v3.resources import DriveResource
 
 from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
-from ....outbound.storage.errors import (
+from ...storage.errors import (
     OutboundStorageConflictError,
     OutboundStorageError,
     OutboundStorageValidationError,

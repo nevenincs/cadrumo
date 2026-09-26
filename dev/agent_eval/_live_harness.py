@@ -31,9 +31,10 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+import tempfile
 import time
 from collections.abc import Mapping, Sequence
-from typing import TYPE_CHECKING, ClassVar, Protocol
+from typing import IO, TYPE_CHECKING, ClassVar, Protocol
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -54,6 +55,7 @@ if TYPE_CHECKING:  # pragma: no cover - typing-only imports
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
 _MCP_INSTALL_HINT = "the live harness requires the MCP client SDK; install the product: pip install cadrumo"
+_SERVER_STDERR_NOTE_CHARS = 4000
 _ANTHROPIC_INSTALL_HINT = (
     "the Anthropic persona driver requires the anthropic SDK; install the extra: pip install 'cadrumo[anthropic]'"
 )
@@ -292,6 +294,16 @@ def _result_text(result: object) -> str:
     return "\n".join(parts)
 
 
+def _server_stderr_note(server_stderr: IO[str]) -> str:
+    """Render the tail of the server subprocess's stderr for a failure note."""
+    server_stderr.flush()
+    server_stderr.seek(0)
+    captured = server_stderr.read()[-_SERVER_STDERR_NOTE_CHARS:].strip()
+    if not captured:
+        return "cadrumo-mcp server wrote nothing to stderr"
+    return f"cadrumo-mcp server stderr (tail):\n{captured}"
+
+
 async def run_live_session_async(
     server_command: Sequence[str],
     *,
@@ -366,43 +378,56 @@ async def run_live_session_async(
         env=merged_env,
         encoding=_UTF_8,
     )
-    async with stdio_client(params) as (read_stream, write_stream):
-        session: ClientSession
-        async with ClientSession(read_stream, write_stream, elicitation_callback=_on_elicitation) as session:
-            await session.initialize()
-            listed = await session.list_tools()
-            specs = tuple(
-                LiveToolSpec(
-                    name=tool.name,
-                    description=tool.description or "",
-                    input_schema_json=json.dumps(tool.input_schema or {}, ensure_ascii=False, sort_keys=True),
-                )
-                for tool in listed.tools
-            )
-            await driver.start(specs)
+    # The child's stderr must be a real OS file: stdio_client's default is the
+    # sys.stderr bound when the SDK was imported, which a capturing host (a test
+    # runner, a notebook) replaces with an in-memory stream that has no fileno,
+    # and the spawn then fails before the server starts. The harness owns this
+    # sink, closes (and so deletes) it, and attaches its tail to any failure.
+    with (
+        tempfile.TemporaryDirectory() as stderr_dir,
+        open(os.path.join(stderr_dir, "server-stderr.log"), "w+", encoding=_UTF_8, errors="replace") as server_stderr,
+    ):
+        try:
+            async with stdio_client(params, errlog=server_stderr) as (read_stream, write_stream):
+                session: ClientSession
+                async with ClientSession(read_stream, write_stream, elicitation_callback=_on_elicitation) as session:
+                    await session.initialize()
+                    listed = await session.list_tools()
+                    specs = tuple(
+                        LiveToolSpec(
+                            name=tool.name,
+                            description=tool.description or "",
+                            input_schema_json=json.dumps(tool.input_schema or {}, ensure_ascii=False, sort_keys=True),
+                        )
+                        for tool in listed.tools
+                    )
+                    await driver.start(specs)
 
-            last: LiveToolCallRecord | None = None
-            for _ in range(max_actions):
-                action = await driver.next_action(last)
-                if isinstance(action, LiveFinish):
-                    break
-                if isinstance(action, LiveNarrate):
-                    narrations.append(LiveNarrationRecord(step=action.step, text=action.text))
-                    last = None
-                    continue
-                arguments = json.loads(action.arguments_json)
-                started = time.monotonic()
-                result = await session.call_tool(action.tool_name, arguments)
-                duration_ms = int((time.monotonic() - started) * 1000)
-                last = LiveToolCallRecord(
-                    tool_name=action.tool_name,
-                    command_key=command_key_by_tool.get(action.tool_name, ""),
-                    arguments_json=action.arguments_json,
-                    is_error=bool(getattr(result, "isError", False)),
-                    result_text=_result_text(result),
-                    duration_ms=duration_ms,
-                )
-                tool_calls.append(last)
+                    last: LiveToolCallRecord | None = None
+                    for _ in range(max_actions):
+                        action = await driver.next_action(last)
+                        if isinstance(action, LiveFinish):
+                            break
+                        if isinstance(action, LiveNarrate):
+                            narrations.append(LiveNarrationRecord(step=action.step, text=action.text))
+                            last = None
+                            continue
+                        arguments = json.loads(action.arguments_json)
+                        started = time.monotonic()
+                        result = await session.call_tool(action.tool_name, arguments)
+                        duration_ms = int((time.monotonic() - started) * 1000)
+                        last = LiveToolCallRecord(
+                            tool_name=action.tool_name,
+                            command_key=command_key_by_tool.get(action.tool_name, ""),
+                            arguments_json=action.arguments_json,
+                            is_error=bool(getattr(result, "isError", False)),
+                            result_text=_result_text(result),
+                            duration_ms=duration_ms,
+                        )
+                        tool_calls.append(last)
+        except Exception as exc:
+            exc.add_note(_server_stderr_note(server_stderr))
+            raise
 
     return LiveTrajectory(
         scenario=scenario,

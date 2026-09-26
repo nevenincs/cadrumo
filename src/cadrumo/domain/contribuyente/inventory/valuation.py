@@ -47,7 +47,13 @@ from .records import (
 
 
 @dataclass(frozen=True, slots=True)
-class _InventoryAnexoDDerivation:
+class InventoryAnexoDDerivation:
+    """Every Anexo D projection field derived from one retained canonical source.
+
+    Returned by :func:`derive_inventory_anexo_d_values` so the projection record
+    can compare its own published fields against the source authority.
+    """
+
     source_ledger: InventoryLedger
     source_ledger_fingerprint: ContentDigest
     actividad_id: str
@@ -194,7 +200,7 @@ def _complete_acquisition_summary(
     return acquisition_total, acquisition_fingerprints
 
 
-def derive_inventory_anexo_d_values(ledger: InventoryLedger) -> _InventoryAnexoDDerivation:
+def derive_inventory_anexo_d_values(ledger: InventoryLedger) -> InventoryAnexoDDerivation:
     """Derive every public projection field from one retained canonical source."""
     validated = _validate_anexo_d_ledger(ledger)
     record, resolution = _resolve_anexo_d_closing(validated)
@@ -204,7 +210,7 @@ def derive_inventory_anexo_d_values(ledger: InventoryLedger) -> _InventoryAnexoD
         raise InventoryLedgerError("complete acquisition totals do not match inventory valuation purchase authority")
     opening = _quantize(ledger.opening_stock)
     signed_variation = _quantize(resolution.authoritative_value - opening)
-    return _InventoryAnexoDDerivation(
+    return InventoryAnexoDDerivation(
         source_ledger=validated,
         source_ledger_fingerprint=_inventory_projection_source_fingerprint(validated),
         actividad_id=validated.actividad_id,

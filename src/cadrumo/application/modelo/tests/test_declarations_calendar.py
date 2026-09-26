@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 from datetime import UTC, date, datetime
+from decimal import Decimal
 from pathlib import Path
 from typing import cast
 
@@ -12,7 +13,8 @@ from pydantic import ValidationError
 
 from ....core.identity.hex_ids import CalculationRevisionId, FilingRecordId, WorkUnitId
 from ....core.period import Period
-from ....domain.deadlines.models import ObligationStatus
+from ....domain.deadlines.festivos import DeadlineHolidayCoverage
+from ....domain.deadlines.models import ObligationStatus, RecargoBand, Recovery
 from ...overview.calendar_models import (
     OverviewAeatSubmissionState,
     OverviewCalendar,
@@ -110,6 +112,8 @@ def _entry(
         closes_on=close,
         adjusted_closes_on=close,
         shift_reason="none",
+        holiday_coverage=DeadlineHolidayCoverage.NATIONAL_ONLY,
+        evaluated_on=date(2026, 1, 1),
         status=ObligationStatus.UPCOMING,
         user_state=OverviewPeriodState.DUE,
         filing_year=resolved_period.filing_year,
@@ -121,9 +125,23 @@ def _entry(
     )
 
 
+def _recovery() -> Recovery:
+    return Recovery(
+        recargo_band=RecargoBand(
+            id="completed_months_1",
+            min_completed_months=1,
+            max_completed_months=1,
+            surcharge_pct=Decimal("2"),
+            interest_applies=False,
+            legal_ref="ley-58-2003:art-27.2",
+        )
+    )
+
+
 def _calendar(*entries: OverviewCalendarEntry) -> OverviewCalendar:
     return OverviewCalendar(
         range=_RANGE,
+        evaluated_on=date(2026, 1, 1),
         entries=entries,
         generated_at=_NOW,
         events=(
@@ -158,7 +176,7 @@ def test_exact_source_axis_matrix_and_safe_full_row_are_preserved() -> None:
     )
     entry = _entry(evidence=evidence)
     action = declare_next_action("operator.modelo.work.create", modelo="303", year=2026, period="1T")
-    entry = entry.model_copy(update={"recovery": object(), "recovery_action": action})
+    entry = entry.model_copy(update={"recovery": _recovery(), "recovery_action": action})
     projection = project_declarations_calendar(
         calendar=_calendar(entry),
         evidence=_provider(evidence),
@@ -173,11 +191,15 @@ def test_exact_source_axis_matrix_and_safe_full_row_are_preserved() -> None:
     )
     row = projection.entries[0]
     assert row.semantic_key() == ("303", 2026, "1T")
-    assert (row.opens_on, row.adjusted_closes_on, row.payment_cutoff_on) == (
+    assert (row.opens_on, row.closes_on, row.adjusted_closes_on, row.payment_cutoff_on) == (
         date(2026, 4, 1),
+        date(2026, 4, 20),
         date(2026, 4, 20),
         None,
     )
+    assert row.evaluated_on == date(2026, 1, 1)
+    assert row.days_overdue is None
+    assert row.evidence_conflicted is False
     assert row.legal_status is ObligationStatus.UPCOMING
     assert row.user_state is OverviewPeriodState.DUE
     assert row.local_filing_state is OverviewLocalFilingState.READY_TO_FILE
@@ -202,6 +224,39 @@ def test_exact_evidence_join_counts_only_the_matching_scheduled_address() -> Non
     assert tuple(source.item_count for source in projection.sources) == (1, 1, 1)
     assert projection.entries[0].local_filing_state is OverviewLocalFilingState.READY_TO_FILE
     assert projection.entries[0].aeat_submission_state is OverviewAeatSubmissionState.ACCEPTED
+
+
+def test_overdue_row_projects_only_conditional_unassessed_recargo_guidance() -> None:
+    recovery = _recovery()
+    action = declare_next_action("operator.modelo.work.create", modelo="303", year=2026, period="1T")
+    entry = _entry().model_copy(
+        update={
+            "evaluated_on": date(2026, 5, 30),
+            "status": ObligationStatus.OVERDUE,
+            "user_state": OverviewPeriodState.LATE,
+            "days_overdue": 40,
+            "recovery": recovery,
+            "recovery_action": action,
+        }
+    )
+
+    projection = project_declarations_calendar(
+        calendar=_calendar(entry),
+        evidence=_provider(entry.filing_evidence),
+        as_of=date(2026, 5, 30),
+        schedule_observation=_schedule(),
+    )
+
+    preview = projection.entries[0].conditional_recargo_preview
+    assert preview is not None
+    assert preview.band_id == "completed_months_1"
+    assert preview.surcharge_pct == Decimal("2")
+    assert preview.interest_applies is False
+    assert preview.legal_ref == "ley-58-2003:art-27.2"
+    assert preview.rate_reference_on == date(2026, 5, 30)
+    assert preview.assessment_status == "unassessed"
+    assert not hasattr(preview, "amount")
+    assert not hasattr(preview, "liability")
 
 
 def test_projection_strips_every_protected_identity_name_event_and_reference() -> None:
@@ -338,7 +393,7 @@ def test_contradictory_inputs_fail_closed(case: str) -> None:
         provider = _provider(_filing_evidence(local=OverviewLocalFilingState.READY_TO_FILE))
     elif case == "wrong_recovery_address":
         action = declare_next_action("operator.modelo.work.create", modelo="130", year=2026, period="1T")
-        calendar = _calendar(entry.model_copy(update={"recovery": object(), "recovery_action": action}))
+        calendar = _calendar(entry.model_copy(update={"recovery": _recovery(), "recovery_action": action}))
     elif case == "unavailable_schedule_rows":
         schedule = _schedule(HomeAvailability.UNAVAILABLE)
     with pytest.raises(DeclarationsCalendarProjectionError):
@@ -396,7 +451,7 @@ def _entry_ref_payload() -> dict[str, object]:
     evidence = _filing_evidence(local=OverviewLocalFilingState.READY_TO_FILE)
     entry = _entry(evidence=evidence)
     action = declare_next_action("operator.modelo.work.create", modelo="303", year=2026, period="1T")
-    entry = entry.model_copy(update={"recovery": object(), "recovery_action": action})
+    entry = entry.model_copy(update={"recovery": _recovery(), "recovery_action": action})
     projection = project_declarations_calendar(
         calendar=_calendar(entry),
         evidence=_provider(evidence),

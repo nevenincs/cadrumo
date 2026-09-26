@@ -370,7 +370,7 @@
             "code": "overview.coverage.incomplete",
             "context": {
               "modelo": "136",
-              "reason": "applicable_window_missing"
+              "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 136 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
             "severity": "warning"
@@ -1542,7 +1542,7 @@
               },
               {
                 "modelo": "136",
-                "reason": "applicable_window_missing"
+                "reason": "applicability_undetermined"
               },
               {
                 "modelo": "156",
@@ -2188,7 +2188,7 @@
             "code": "overview.coverage.incomplete",
             "context": {
               "modelo": "136",
-              "reason": "applicable_window_missing"
+              "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 136 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
             "severity": "warning"
@@ -3360,7 +3360,7 @@
               },
               {
                 "modelo": "136",
-                "reason": "applicable_window_missing"
+                "reason": "applicability_undetermined"
               },
               {
                 "modelo": "156",
@@ -4008,7 +4008,7 @@
             "code": "overview.coverage.incomplete",
             "context": {
               "modelo": "136",
-              "reason": "applicable_window_missing"
+              "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 136 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
             "severity": "warning"
@@ -5180,7 +5180,7 @@
               },
               {
                 "modelo": "136",
-                "reason": "applicable_window_missing"
+                "reason": "applicability_undetermined"
               },
               {
                 "modelo": "156",

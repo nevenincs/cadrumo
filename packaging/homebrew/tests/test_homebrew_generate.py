@@ -205,6 +205,12 @@ def test_formula_is_deterministic_and_binds_the_real_cohort(
     assert 'ENV.prepend_path "PATH", libexec/"bin"' in formula
     assert 'venv.pip_install resource("cryptography"), build_isolation: false' in formula
     assert "venv.pip_install_and_link buildpath" in formula
+    # Homebrew installs with pip --no-compile; post_install is the one hook that
+    # runs after both a source build and a bottle pour.
+    post_install = formula[formula.index("  def post_install\n") : formula.index("  test do\n")]
+    assert "compileall.compile_dir(" in post_install
+    assert 'libexec/"bin/python"' in post_install
+    assert 'libexec/"lib"' in post_install
     assert 'assert_predicate bin/"aeat", :executable?' in formula
     # The formula exposes only the product CLI.
     assert 'shell_output("#{bin}/aeat --version")' in formula

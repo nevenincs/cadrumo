@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import base64
 import ctypes
+import json
 import os
 import queue
 import struct
@@ -26,13 +27,36 @@ KDF_FRAME_CONTROL: Final = 1
 KDF_FRAME_DEK: Final = 2
 KDF_FRAME_HEADER: Final = struct.Struct("!4sBBHI")
 _FRAME_MAX_BYTES: Final = 8 * 1024
-KDF_CALIBRATED_FRAME: Final = b"cadrumo-profile-kdf-calibrated-v1"
+KDF_CALIBRATION_PROTOCOL: Final = "profile-kdf-calibrated/v2"
 KDF_FAILED_FRAME: Final = b"cadrumo-profile-kdf-failed-v1"
 
 
 def canonical_frame_bytes(payload: object) -> bytes:
     """Encode one supervised-KDF frame body under the canonical encoding."""
     return bounded_canonical_json_bytes(payload, maximum_bytes=_FRAME_MAX_BYTES, subject="profile KDF frame")
+
+
+def calibration_frame_bytes(*, derivation_ns: int) -> bytes:
+    """Encode the worker's own timing of one calibration derivation.
+
+    Whole nanoseconds keep the canonical encoding exact; a float would make
+    the refusal of a non-canonical frame depend on its decimal rendering.
+    """
+    return canonical_frame_bytes({"derivation_ns": derivation_ns, "protocol": KDF_CALIBRATION_PROTOCOL})
+
+
+def parse_calibration_frame(value: bytes) -> int:
+    """Return the derivation nanoseconds a calibrated frame carries, refusing any other shape."""
+    parsed = json.loads(value.decode(KDF_TRANSPORT_ENCODING, errors="strict"))
+    if not isinstance(parsed, dict) or set(parsed) != {"derivation_ns", "protocol"}:
+        raise ValueError("profile KDF calibration fields are invalid")
+    record = cast("dict[str, object]", parsed)
+    derivation_ns = record["derivation_ns"]
+    if record["protocol"] != KDF_CALIBRATION_PROTOCOL or type(derivation_ns) is not int or derivation_ns < 0:
+        raise ValueError("profile KDF calibration frame is invalid")
+    if calibration_frame_bytes(derivation_ns=derivation_ns) != value:
+        raise ValueError("profile KDF calibration frame is not canonical")
+    return derivation_ns
 
 
 def canonical_frame_digest(payload: object) -> str:
@@ -140,7 +164,7 @@ def windows_available_memory_bytes() -> int:
 
 
 __all__ = [
-    "KDF_CALIBRATED_FRAME",
+    "KDF_CALIBRATION_PROTOCOL",
     "KDF_FAILED_FRAME",
     "KDF_FRAME_CONTROL",
     "KDF_FRAME_DEK",
@@ -148,6 +172,8 @@ __all__ = [
     "KDF_FRAME_MAGIC",
     "KDF_FRAME_VERSION",
     "KDF_TRANSPORT_ENCODING",
+    "calibration_frame_bytes",
+    "parse_calibration_frame",
     "read_kdf_frame",
     "write_kdf_frame",
 ]

@@ -184,7 +184,8 @@ def _validate_m303_exonerado_filing_evidence(
 ) -> None:
     """Validate final-period A28 endpoints and their value/observation agreement."""
     exonerado = evidence.exonerado_390
-
+    if exonerado is None:
+        return
     if exonerado.applicable and not is_last_filing_period_of_year(work_unit.period):
         raise M303FilingEvidenceError(
             precondition_failure=m303_filing_evidence_failure(

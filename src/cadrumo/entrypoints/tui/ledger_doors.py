@@ -20,7 +20,11 @@ from ...application.ledger.actions_import import (
     import_ledger_source,
     plan_ledger_import_sources,
 )
-from ...application.ledger.models import LedgerSourceImportCommand, LedgerSourceImportResult
+from ...application.ledger.models import (
+    LedgerSourceImportCommand,
+    LedgerSourceImportResult,
+    ManualLedgerTransactionPatch,
+)
 from ...core.errors.hierarchy import InternalInvariantError
 from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.transactions.errors import TransactionValidationError
@@ -44,6 +48,7 @@ from .ledger.models import (
 if TYPE_CHECKING:
     from ...application.invoices.bulk_import import BulkInvoiceImportResult
     from ...application.invoices.catalogue_creation_ports import CatalogueCreationPorts
+    from ...application.invoices.catalogue_lifecycle import CatalogueInvoicePatch
     from ...application.ledger.evidence import PurchaseInvoiceEvidence, PurchaseInvoiceEvidenceService
     from ...application.ledger.evidence_ports import LedgerEvidencePorts
     from ...application.ledger.invoice_draft_extraction_ports import InvoiceDraftExtractionPorts
@@ -51,13 +56,14 @@ if TYPE_CHECKING:
     from ...application.ledger.workspace import LedgerWorkspaceProjectionV1
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.invoices.enums import InvoiceClass
+    from ...domain.invoices.models import Invoice
     from ...domain.iva.regime_legend import RegimeLegend
+    from ...domain.transactions.models import Transaction
     from .ledger.models import LedgerInvoiceAddDoorV1
     from .ledger.workspace_injection import LedgerWorkspaceRefreshV1
 
 #: The audit label an import written from this surface is recorded under.
 LEDGER_IMPORT_SOURCE_COMMAND: Final = "cadrumo-tui ledger import"
-_INVOICE_BOOK_SUFFIXES: Final = frozenset({".csv", ".tsv", ".xlsx", ".xlsm"})
 _ACTOR: Final = "operator"
 
 
@@ -73,9 +79,11 @@ def _invoice_book_files(path: Path) -> tuple[Path, ...]:
     A folder holding none yields nothing, which the outcome reports as zero
     files read rather than as a success with rows.
     """
+    from ...application.invoices.bulk_import import BULK_INVOICE_IMPORT_EXTENSIONS
+
     if not path.is_dir():
         return (path,)
-    return tuple(sorted(child for child in path.iterdir() if child.suffix.lower() in _INVOICE_BOOK_SUFFIXES))
+    return tuple(sorted(child for child in path.iterdir() if child.suffix.lower() in BULK_INVOICE_IMPORT_EXTENSIONS))
 
 
 @dataclass(frozen=True, slots=True)
@@ -246,8 +254,25 @@ def ledger_invoice_add_door(profile_id: str, operation: PinnedAuthorityOperation
     def record(entry: LedgerInvoiceEntryV1) -> LedgerInvoiceAddResultV1:
         from ...adapters.persistence.profile.catalogue_creation import build_catalogue_creation_ports
         from ...application.invoices.catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
+        from ...application.invoices.source_resolver import iva_category_for_operation_type
+        from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
+        from ...domain.calculations.registry.iva_category_catalogue import require_iva_category
+        from ...domain.invoices.models import InvoiceLine
 
         ports = build_catalogue_creation_ports(bucket_id=profile_id)
+        # The typed lines and the invoice class read governed facts, so they
+        # resolve under the generation this door was bound to, the same one
+        # the writer below is handed.
+        with validating_governed_facts(operation):
+            lines = tuple(InvoiceLine.model_validate(line.model_dump(exclude_none=True)) for line in entry.lines)
+            invoice_class = _invoice_class(entry.invoice_class, entry.invoice_date)
+        # A stated treatment wins; the one implied by the Modelo 349 key only
+        # fills its absence, exactly as the command-line writer resolves it.
+        iva_category = (
+            require_iva_category(entry.iva_category, effective_date=entry.invoice_date, authority=operation)
+            if entry.iva_category is not None
+            else iva_category_for_operation_type(entry.operation_type)
+        )
         invoice = build_catalogue_invoice(
             bucket_id=profile_id,
             kind=entry.kind,
@@ -258,12 +283,18 @@ def ledger_invoice_add_door(profile_id: str, operation: PinnedAuthorityOperation
             issued_at=entry.invoice_date,
             taxable_base=entry.taxable_base,
             iva_rate=entry.iva_rate,
+            lines=lines or None,
+            iva_category=iva_category,
+            operation_type=entry.operation_type,
+            operation_date=entry.operation_date,
             currency=entry.currency,
             notes=entry.notes,
             retention_rate=entry.retention_rate,
             retention_amount=entry.retention_amount,
-            invoice_class=_invoice_class(entry.invoice_class, entry.invoice_date),
+            invoice_class=invoice_class,
             series=entry.series,
+            rectifies_invoice_number=entry.rectifies_invoice_number,
+            recargo_amount=entry.recargo_amount,
             rate_provider=ports.rate_provider,
             operation=operation,
         )
@@ -275,6 +306,7 @@ def ledger_invoice_add_door(profile_id: str, operation: PinnedAuthorityOperation
             iva_total=recorded.iva_total,
             grand_total=recorded.grand_total,
             currency=recorded.currency,
+            euro_value_pending=recorded.euro_value_pending,
         )
 
     return add
@@ -471,10 +503,91 @@ def ledger_workspace_refresh(
     return refresh
 
 
+@dataclass(frozen=True, slots=True)
+class LedgerRecordDoors:
+    """One captured profile and authority; navigation cannot retarget a write."""
+
+    bucket_id: str
+    operation: PinnedAuthorityOperation
+
+    async def invoices(self) -> tuple[Invoice, ...]:
+        """List canonical records through the application read port."""
+        return await asyncio.to_thread(self._invoices)
+
+    def _invoices(self) -> tuple[Invoice, ...]:
+        from ...adapters.persistence.profile.catalogue_reads import build_invoice_catalogue_read_ports
+
+        ports = build_invoice_catalogue_read_ports(bucket_id=self.bucket_id)
+        return tuple(sorted(ports.invoice_reader.load().values(), key=lambda item: (item.issued_at, item.invoice_id)))
+
+    async def invoice(self, invoice_id: str) -> Invoice:
+        """Resolve one canonical invoice from this door's bucket."""
+        return await asyncio.to_thread(self._invoice, invoice_id)
+
+    def _invoice(self, invoice_id: str) -> Invoice:
+        from ...adapters.persistence.profile.catalogue_reads import build_invoice_catalogue_read_ports
+        from ...application.invoices.catalogue_lifecycle import resolve_catalogue_invoice_from_repository
+
+        return resolve_catalogue_invoice_from_repository(
+            invoice_id=invoice_id,
+            ports=build_invoice_catalogue_read_ports(bucket_id=self.bucket_id),
+        )
+
+    async def update_invoice(self, baseline: Invoice, patch: CatalogueInvoicePatch) -> Invoice:
+        """Submit a baseline-guarded metadata patch through the shared writer."""
+        return await asyncio.to_thread(self._update_invoice, baseline, patch)
+
+    def _update_invoice(self, baseline: Invoice, patch: CatalogueInvoicePatch) -> Invoice:
+        from ...adapters.persistence.profile.catalogue_creation import build_catalogue_lifecycle_ports
+        from ...application.invoices.catalogue_lifecycle import update_catalogue_invoice
+
+        return update_catalogue_invoice(
+            bucket_id=self.bucket_id,
+            invoice_id=baseline.invoice_id,
+            patch=patch,
+            ports=build_catalogue_lifecycle_ports(bucket_id=self.bucket_id),
+            actor="operator",
+            expected_invoice=baseline,
+        ).invoice
+
+    async def transaction(self, transaction_id: str) -> Transaction:
+        """Resolve one typed transaction through the manual application read."""
+        return await asyncio.to_thread(self._transaction, transaction_id)
+
+    def _transaction(self, transaction_id: str) -> Transaction:
+        from ...application.ledger.actions_manual import get_manual_transaction
+        from ..ledger_action_composition import compose_ledger_action_ports
+
+        return get_manual_transaction(
+            bucket_id=self.bucket_id,
+            transaction_id=transaction_id,
+            ports=compose_ledger_action_ports(bucket_id=self.bucket_id, operation=self.operation),
+        ).transaction
+
+    async def update_transaction(self, baseline: Transaction, patch: ManualLedgerTransactionPatch) -> Transaction:
+        """Apply a typed edit to the captured transaction and baseline."""
+        return await asyncio.to_thread(self._update_transaction, baseline, patch)
+
+    def _update_transaction(self, baseline: Transaction, patch: ManualLedgerTransactionPatch) -> Transaction:
+        from ...application.ledger.actions_manual import update_manual_transaction_fields
+        from ..ledger_action_composition import compose_ledger_action_ports
+
+        return update_manual_transaction_fields(
+            bucket_id=self.bucket_id,
+            transaction_id=baseline.transaction_id,
+            patch=patch,
+            actor="operator",
+            source_command="tui.ledger.transaction.update",
+            ports=compose_ledger_action_ports(bucket_id=self.bucket_id, operation=self.operation),
+            expected_current=baseline,
+        ).transaction
+
+
 __all__ = [
     "LEDGER_IMPORT_SOURCE_COMMAND",
     "LedgerEvidenceDoor",
     "LedgerImportDoor",
+    "LedgerRecordDoors",
     "ledger_invoice_add_door",
     "ledger_workspace_refresh",
 ]

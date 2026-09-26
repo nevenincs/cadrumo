@@ -9,7 +9,8 @@ round-trip.
 
 from __future__ import annotations
 
-import json
+from datetime import date
+from decimal import Decimal
 
 import pytest
 from pydantic import ValidationError
@@ -18,6 +19,8 @@ from ....application.export.tabular import ExportSerializationFormat
 from ....application.ledger.models import LedgerExportResult, LedgerExportRow
 from ....domain.categories.proportionality_catalogue import require_proportionality_kind
 from ....domain.categories.spending_category import SpendingCategory
+from ....domain.invoices.enums import InvoiceClass, IvaRate, PaymentStatus
+from ....domain.iva.classification import InvoiceKind
 from ....domain.transactions.enums import BusinessClassification
 from .._ledger_catalogue_invoice_payloads import (
     CatalogueInvoiceListResult,
@@ -435,29 +438,38 @@ def test_ratios_payloads_use_typed_rows_and_findings() -> None:
 
 def test_invoice_inventory_evidence_and_rule_apply_lists_use_typed_rows() -> None:
     """List payloads for companion ledger sub-apps are typed."""
-    invoice_list = CatalogueInvoiceListResult.model_validate_json(
-        json.dumps(
-            {
-                "bucket_id": "default",
-                "rows": [
-                    {
-                        "invoice_id": "b" * 64,
-                        "kind": "received",
-                        "invoice_number": "F-001",
-                        "issued_at": "2026-04-05",
-                        "counterparty_name": "Proveedor SL",
-                        "counterparty_tax_id": "B12345674",
-                        "counterparty_country": "ES",
-                        "base_total": "100.00",
-                        "iva_total": "21.00",
-                        "grand_total": "121.00",
-                        "currency": "EUR",
-                        "payment_status": "PENDING",
-                    },
-                ],
-                "count": 1,
-            }
-        ),
+    invoice_list = CatalogueInvoiceListResult.model_validate(
+        {
+            "bucket_id": "default",
+            "rows": [
+                {
+                    "invoice_id": "b" * 64,
+                    "kind": InvoiceKind.RECEIVED,
+                    "invoice_number": "F-001",
+                    "issued_at": date(2026, 4, 5),
+                    "counterparty_name": "Proveedor SL",
+                    "counterparty_tax_id": "B12345674",
+                    "counterparty_country": "ES",
+                    "base_total": Decimal("100.00"),
+                    "iva_total": Decimal("21.00"),
+                    "grand_total": Decimal("121.00"),
+                    "currency": "EUR",
+                    "payment_status": PaymentStatus.PENDING,
+                    "invoice_class": InvoiceClass.from_registry("ORDINARIA"),
+                    "lines": [
+                        {
+                            "description": "Synthetic service",
+                            "quantity": Decimal("1"),
+                            "unit_price": Decimal("100.00"),
+                            "subtotal": Decimal("100.00"),
+                            "iva_rate": IvaRate.from_registry("RATE_21"),
+                            "iva_amount": Decimal("21.00"),
+                        },
+                    ],
+                },
+            ],
+            "count": 1,
+        },
     )
     assert isinstance(invoice_list.rows[0], CatalogueInvoiceRecordPayload)
 

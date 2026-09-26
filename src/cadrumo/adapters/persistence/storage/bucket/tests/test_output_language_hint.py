@@ -6,7 +6,6 @@ from pathlib import Path
 
 import pytest
 
-from ......adapters.persistence.storage.bucket.tests.bucket_layout import provision_bucket_directory
 from ......core.external_constants import OutputLanguage
 from ..output_language_hint import (
     bucket_output_language_hint_path,
@@ -14,6 +13,7 @@ from ..output_language_hint import (
     read_bucket_output_language_hint,
     write_bucket_output_language_hint,
 )
+from .bucket_layout import provision_bucket_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

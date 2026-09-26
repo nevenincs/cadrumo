@@ -717,7 +717,7 @@ def release_id(label: str, *, now: datetime) -> str:
 
 def _local_release_label(repo_root: Path) -> str:
     """Label a local publish by the commit it was built from."""
-    head = _run(["git", "rev-parse", "--short=12", "HEAD"], cwd=repo_root)
+    head = _run(["git", "--no-optional-locks", "rev-parse", "--short=12", "HEAD"], cwd=repo_root)
     return f"local-{head.stdout.strip()}"
 
 

@@ -302,16 +302,30 @@ def derive_result_disposition(modelo: str, casilla_values: Mapping[CasillaId, De
     without a codified spec, so the caller applies a documented fallback rather
     than a guessed disposition.
     """
-    spec = _DISPOSITION_SPEC.get(modelo)
-    if spec is None:
+    result = canonical_result_amount(modelo, casilla_values)
+    if result is None:
         return None
-    _reject_non_result_casilla_values(modelo, spec, casilla_values)
-    result = sum((casilla_values.get(casilla_id, Decimal("0")) for casilla_id in spec.result_casilla_ids), Decimal("0"))
+    spec = _DISPOSITION_SPEC[modelo]
     if result > 0:
         return ResultDisposition.INGRESO
     if result < 0:
         return spec.negative
     return spec.zero
+
+
+def canonical_result_amount(modelo: str, casilla_values: Mapping[CasillaId, Decimal]) -> Decimal | None:
+    """Return the canonical final-result sum after rejecting unrelated casillas.
+
+    The caller supplies only the modelo's result-casilla subset. A missing
+    declared result casilla is represented as zero for disposition derivation;
+    filing-time consumers that require an observed value enforce its presence
+    before calling this shared owner.
+    """
+    spec = _DISPOSITION_SPEC.get(modelo)
+    if spec is None:
+        return None
+    _reject_non_result_casilla_values(modelo, spec, casilla_values)
+    return sum((casilla_values.get(casilla_id, Decimal("0")) for casilla_id in spec.result_casilla_ids), Decimal("0"))
 
 
 def _reject_non_result_casilla_values(
@@ -338,6 +352,7 @@ def _reject_non_result_casilla_values(
 
 __all__ = [
     "ResultDisposition",
+    "canonical_result_amount",
     "derive_result_disposition",
     "result_disposition_casilla_ids",
     "result_disposition_is_refund",

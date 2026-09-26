@@ -239,6 +239,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.modelo.m193_settled_row_gate.Modelo193SettledRowAmountAuthorityUnresolvedError",
+        ErrorCode(
+            code="REFUSED_MODELO_193_SETTLED_ROW_AMOUNT_AUTHORITY_UNRESOLVED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.canonical_modelo_193_settled_row_amount_authority_unresolved",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.modelo.export.ModeloExportCrossBucketRefusedError",
         ErrorCode(
             code="REFUSED_MODELO_EXPORT_CROSS_BUCKET",
@@ -364,6 +374,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="REFUSED_CENSAL_READ_IDENTITY",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.censal_read_identity",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.user_profile.profile_pointer.ActiveProfilePointerManualRecoveryError",
+        ErrorCode(
+            code="REFUSED_ACTIVE_PROFILE_POINTER_MANUAL_RECOVERY",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_active_profile_pointer_manual_recovery",
             retryable=False,
             runbook_id=None,
         ),
@@ -665,6 +685,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.user_profile.capsule_record.ProfileRecordMigrationRequiredError",
+        ErrorCode(
+            code="INTEGRITY_PROFILE_RECORD_SCHEMA_MIGRATION_REQUIRED",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.integrity_profile_record_schema_migration_required",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.domain.iva_compensation.errors.IvaWalletReconciliationError",
         ErrorCode(
             code="REFUSED_IVA_WALLET_RECONCILIATION_INVARIANT",
@@ -815,6 +845,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.modelo.action_errors.StoredRowFieldScalarInputError",
+        ErrorCode(
+            code="REFUSED_MODELO_STORED_ROW_FIELD_INPUT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_modelo_stored_row_field_input",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.modelo.action_errors.StoredCalculationDriftError",
         ErrorCode(
             code="INTEGRITY_STORED_CALCULATION_DRIFT",
@@ -841,6 +881,17 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             category=ErrorCategory.REFUSED,
             message_key="application.modelo.errors.m303_filing_evidence_invalid",
             retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.modelo.action_errors.M303Exonerado390AttestationUnadmissibleError",
+        ErrorCode(
+            code="REFUSED_MODELO_M303_EXONERADO_390_ATTESTATION_UNADMISSIBLE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_modelo_m303_exonerado_390_attestation_unadmissible",
+            retryable=False,
+            public_message_from_registry=True,
             runbook_id=None,
         ),
     ),
@@ -1196,11 +1247,51 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.operations.errors.OperationExecutorReturnedNoResultError",
+        ErrorCode(
+            code="INTERNAL_OPERATION_EXECUTOR_RETURNED_NO_RESULT",
+            category=ErrorCategory.INTERNAL,
+            message_key="errors.internal.internal_operation_executor_returned_no_result",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.operations.errors.OperationSubjectBusyError",
+        ErrorCode(
+            code="REFUSED_OPERATION_SUBJECT_BUSY",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.canonical_operation_subject_busy",
+            retryable=True,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.journal_repository.JournalBusyError",
+        ErrorCode(
+            code="LOCKED_JOURNAL_BUSY",
+            category=ErrorCategory.LOCKED,
+            message_key="errors.locked.locked_journal_busy",
+            retryable=True,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.operations.errors.OperationUnsettledError",
         ErrorCode(
             code="INTERNAL_OPERATION_UNSETTLED",
             category=ErrorCategory.INTERNAL,
             message_key="errors.internal.internal_operation_unsettled",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.producer_capture.ProducerCaptureError",
+        ErrorCode(
+            code="REFUSED_PRODUCER_CAPTURE_NOT_CURRENT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.producer_capture_not_current",
             retryable=False,
             runbook_id=None,
         ),
@@ -1222,6 +1313,50 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.modelo_work_discard_approval_stale",
             retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.modelo.action_errors.ModeloEditRefusedError",
+        ErrorCode(
+            code="REFUSED_MODELO_EDIT_REFUSED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.modelo_edit_refused",
+            retryable=False,
+            public_message_from_registry=True,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.modelo.action_errors.ModeloEditBaselineStaleError",
+        ErrorCode(
+            code="REFUSED_MODELO_EDIT_BASELINE_STALE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.modelo_edit_baseline_stale",
+            retryable=False,
+            public_message_from_registry=True,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.modelo.action_errors.ModeloEditIntentUnsupportedError",
+        ErrorCode(
+            code="REFUSED_MODELO_EDIT_INTENT_UNSUPPORTED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.modelo_edit_intent_unsupported",
+            retryable=False,
+            public_message_from_registry=True,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.modelo.action_errors.ModeloEditContractIncompatibleError",
+        ErrorCode(
+            code="REFUSED_MODELO_EDIT_CONTRACT_INCOMPATIBLE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.modelo_edit_contract_incompatible",
+            retryable=False,
+            public_message_from_registry=True,
             runbook_id=None,
         ),
     ),

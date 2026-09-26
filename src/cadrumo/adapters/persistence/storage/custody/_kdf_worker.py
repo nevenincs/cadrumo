@@ -14,6 +14,7 @@ import binascii
 import json
 import os
 import sys
+import time
 from collections.abc import Mapping
 from typing import cast
 
@@ -24,11 +25,11 @@ from cryptography.exceptions import InvalidTag
 from ..crypto.aes_gcm import GCM_TAG_SIZE, KEY_SIZE, open_sealed, seal
 from ._kdf_attestation import kdf_worker_ready_attestation
 from ._kdf_codec import (
-    KDF_CALIBRATED_FRAME,
     KDF_FAILED_FRAME,
     KDF_FRAME_CONTROL,
     KDF_FRAME_DEK,
     KDF_TRANSPORT_ENCODING,
+    calibration_frame_bytes,
     canonical_frame_bytes,
     read_kdf_frame,
     write_kdf_frame,
@@ -67,8 +68,7 @@ def main() -> int:
         payload = _parse_request(request)
         operation = cast(str, payload["operation"])
         if operation == KdfOperation.CALIBRATE:
-            _derive_calibration(payload)
-            write_kdf_frame(result_fd, KDF_CALIBRATED_FRAME, kind=KDF_FRAME_CONTROL)
+            write_kdf_frame(result_fd, _derive_calibration(payload), kind=KDF_FRAME_CONTROL)
         elif operation in UNWRAP_OPERATIONS:
             write_kdf_frame(result_fd, _unwrap(payload, recovery=operation.startswith("recovery-")), kind=KDF_FRAME_DEK)
         elif operation in WRAP_OPERATIONS:
@@ -150,9 +150,12 @@ def _parse_request(value: bytes) -> dict[str, object]:
     return record
 
 
-def _derive_calibration(payload: Mapping[str, object]) -> None:
+def _derive_calibration(payload: Mapping[str, object]) -> bytes:
+    """Derive once and report the derivation's own duration, excluding this process's start-up."""
     kdf = kdf_parameters_from_wire(payload["kdf"])
+    started = time.perf_counter_ns()
     _derive_key(secret=_CALIBRATION_PASSWORD, kdf=kdf)
+    return calibration_frame_bytes(derivation_ns=time.perf_counter_ns() - started)
 
 
 def _unwrap(payload: Mapping[str, object], *, recovery: bool = False) -> bytes:

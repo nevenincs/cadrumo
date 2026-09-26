@@ -122,6 +122,21 @@ def test_xml_dictionary_layout_skips_record_encoding_check() -> None:
     assert layout.format is ExportLayoutFormat.XML_DICTIONARY
 
 
+def test_xml_dictionary_layout_refuses_a_static_aux_version_override() -> None:
+    """Product identity cannot be overridden by selected-authority payload."""
+    with pytest.raises(ValidationError, match="aux_version"):
+        ExportLayoutDefinition(
+            id="layout.xml.static-aux-version",
+            format=ExportLayoutFormat.XML_DICTIONARY,
+            dictionary_source_ref="aeat-dict-1",
+            source_refs=("aeat-dict-1",),
+            legal_refs=("ley-37-1992:art-1",),
+            records=(),
+            aux_idioma="E",
+            aux_version="9999",
+        )
+
+
 def test_the_stored_token_hydrates_to_its_member() -> None:
     """A manifest's canonical token still becomes the member it names."""
     layout = ExportLayoutDefinition(

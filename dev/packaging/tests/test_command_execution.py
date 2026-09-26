@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 import subprocess
 import sys
+import time
 from contextlib import suppress
 from datetime import UTC
 from pathlib import Path
@@ -69,6 +70,42 @@ def test_run_command_propagates_a_real_timeout_without_inventing_an_exit_status(
     """A process that did not exit cannot truthfully become a command transcript."""
     with pytest.raises(subprocess.TimeoutExpired):
         run_command((sys.executable, "-c", "import time; time.sleep(1)"), cwd=tmp_path, timeout_seconds=0.01)
+
+
+#: Starts a grandchild that inherits the captured stdout and outlives the
+#: command, the shape of a launcher such as LibreOffice's ``soffice`` handing
+#: work to ``soffice.bin``. The pid goes to a file because the stream a
+#: timeout interrupts is not a reliable carrier for it.
+_SPAWN_A_GRANDCHILD_HOLDING_STDOUT = """
+import pathlib, subprocess, sys, time
+
+grandchild = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(120)"])
+pathlib.Path(sys.argv[1]).write_text(str(grandchild.pid))
+time.sleep(120)
+"""
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="the process-tree kill is the Windows timeout path")
+def test_run_command_timeout_kills_the_grandchild_holding_the_captured_stream(tmp_path: Path) -> None:
+    """A timeout ends the whole tree, so neither a pipe nor a process outlives it."""
+    psutil = pytest.importorskip("psutil")
+    pid_file = tmp_path / "grandchild.pid"
+    started = time.monotonic()
+    with pytest.raises(subprocess.TimeoutExpired):
+        run_command(
+            (sys.executable, "-c", _SPAWN_A_GRANDCHILD_HOLDING_STDOUT, str(pid_file)), cwd=tmp_path, timeout_seconds=5
+        )
+    elapsed = time.monotonic() - started
+
+    grandchild_pid = int(pid_file.read_text())
+    try:
+        # The grandchild sleeps for 120 s; draining its still-open pipe would
+        # hold the timeout until then.
+        assert elapsed < 60, elapsed
+        assert not psutil.pid_exists(grandchild_pid) or psutil.Process(grandchild_pid).status() == "zombie"
+    finally:
+        with suppress(psutil.NoSuchProcess):
+            psutil.Process(grandchild_pid).kill()
 
 
 @pytest.mark.parametrize("argv", ((), ("",)))

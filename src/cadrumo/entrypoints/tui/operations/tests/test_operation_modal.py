@@ -74,7 +74,7 @@ from .....application.user_profile.login_session import login_profile
 from .....application.user_profile.profile_record_repository import ProfileRecordRepository
 from .....application.user_profile.registration import register_profile_with_credentials
 from .....core.config import override_settings
-from .....core.i18n.render import clear_output_language_cache
+from .....core.i18n.render import clear_output_language_cache, tr
 from .....core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from .....core.time.clock import now
 from .....domain.calculations.registry.authority import bundled_indexed_authority
@@ -245,7 +245,7 @@ def test_controller_drives_a_review_operation_to_public_terminal_settlement(tmp_
             assert view_model.interaction_affordance == "review_available"
             assert view_model.spinner_visible is True
 
-            interaction = await resolve_modal_interaction_state(controller, projection)
+            interaction = await resolve_modal_interaction_state(controller, projection, CensalReviewProjectionV1)
             assert isinstance(interaction, OperationModalReviewInteractionV1)
             assert isinstance(interaction.projection, CensalReviewProjectionV1)
             assert interaction.apply_enabled is True
@@ -422,7 +422,7 @@ def test_review_unavailable_disposition_for_a_stale_reference(tmp_path: Path) ->
             pending = waiting.projection.pending_interaction
             assert isinstance(pending, OperationReviewAvailableInteractionV1)
             stale_reference = pending.review_reference.model_copy(update={"revision": pending.revision + 1})
-            resolved = await controller.resolve_review(stale_reference)
+            resolved = await controller.resolve_review(stale_reference, CensalReviewProjectionV1)
 
             assert isinstance(resolved, OperationReviewProjectionRefusalV1)
 
@@ -528,16 +528,22 @@ def _sample(modal: OperationModal) -> _RenderedSample | None:
     )
 
 
-async def _timeline(controller: OperationController) -> tuple[list[_RenderedSample], OperationModalViewModelV1]:
+async def _timeline(
+    controller: OperationController, release: asyncio.Event
+) -> tuple[list[_RenderedSample], OperationModalViewModelV1]:
     """Drive the installed modal to settlement, sampling the widgets throughout.
 
-    The pending REVIEW is answered by pressing the modal's own apply control
-    once the modal enables it. It cannot be answered from outside: the
-    response capability is single-use and the modal's poll loop has already
-    bound it, so an out-of-band bind is refused. Answering it before the
-    modal mounts would settle the operation first and leave nothing to
-    sample, which is the difference between watching a lifecycle and
-    watching one that has already finished.
+    The pending REVIEW is answered by pressing the modal's own apply control,
+    once, after the modal has folded an observation that enables it. It cannot
+    be answered from outside: the response capability is single-use and the
+    modal's poll loop has already bound it.
+
+    The continuation then waits at its irreversible-section barrier until the
+    modal has drawn a revision later than the one it was answered at and
+    every declared non-terminal fact, and only then is ``release`` set. So
+    what the modal is sampled showing is decided by the operation's own
+    states, not by how quickly the host settles it: without the barrier a
+    fast settlement dismisses the modal between two samples.
     """
     samples: list[_RenderedSample] = []
     modal = OperationModal(controller)
@@ -553,7 +559,7 @@ async def _timeline(controller: OperationController) -> tuple[list[_RenderedSamp
             self.run_worker(self._present())
 
     host = _Host()
-    applied = False
+    answered_at: OperationRevision | None = None
 
     def _record() -> None:
         # Sample the modal itself rather than whatever screen is current, so
@@ -564,40 +570,56 @@ async def _timeline(controller: OperationController) -> tuple[list[_RenderedSamp
         if sample is not None and (not samples or sample != samples[-1]):
             samples.append(sample)
 
-    async with host.run_test(size=(120, 40)) as pilot:
-        # Settlement runs on the supervised task after the apply, so the
-        # bound is wall-clock time rather than a count of pilot pauses.
-        deadline = asyncio.get_running_loop().time() + 60
-        while asyncio.get_running_loop().time() < deadline:
-            _record()
-            if modal.is_mounted:
-                apply_control = modal.query("#btn-operation-apply")
-                if not applied and apply_control and not apply_control.only_one(Button).disabled:
-                    # The control can be enabled in the same frame that grows
-                    # the review row and moves it, so a click aimed at the
-                    # stale position misses; a missed click is retried.
-                    applied = await pilot.click("#btn-operation-apply")
-            if host.outcome is not None:
-                break
-            await pilot.pause(0.02)
-    assert applied, "the modal never offered the apply control, so the REVIEW was never answered"
+    def _held_state_drawn() -> bool:
+        return (
+            answered_at is not None
+            and any(sample.revision > answered_at for sample in samples)
+            and all(
+                any(getattr(sample, fact) for sample in samples) for fact in ("status", "phase", "deadlines", "log")
+            )
+        )
 
+    async with host.run_test(size=(120, 40)) as pilot:
+        # A wall-clock bound rather than a count of pilot pauses: the modal
+        # re-reads the supervisor on a timed poll.
+        deadline = asyncio.get_running_loop().time() + 60
+        while asyncio.get_running_loop().time() < deadline and host.outcome is None:
+            _record()
+            view_model = modal._view_model if modal.is_mounted else None
+            if answered_at is None and view_model is not None and samples:
+                apply_control = modal.query("#btn-operation-apply")
+                if apply_control and not apply_control.only_one(Button).disabled:
+                    assert await pilot.click("#btn-operation-apply"), "a single click on apply missed its control"
+                    answered_at = view_model.projection.revision
+            if not release.is_set() and _held_state_drawn():
+                release.set()
+            await pilot.pause(0.02)
+    assert answered_at is not None, "the modal never offered the apply control, so the REVIEW was never answered"
+    assert release.is_set(), f"the held running state was never drawn; samples {samples}"
     assert isinstance(host.outcome, OperationModalSettledOutcomeV1), (
         f"the modal did not settle; last sample {samples[-1] if samples else None}"
     )
-    assert samples, "the modal settled without ever rendering a supervisor revision"
     return samples, host.outcome.view_model
 
 
 def test_the_modal_renders_every_declared_fact_across_one_real_operation(tmp_path: Path) -> None:
     """Spinner, phase, deadline, cancel availability, logs, review and receipt all reach a widget."""
-    with _runtime(tmp_path) as (services, _registry, profile_id):
+    release = asyncio.Event()
+
+    async def before_irreversible_section() -> None:
+        await release.wait()
+
+    with _runtime(tmp_path, before_irreversible_section=before_irreversible_section) as (
+        services,
+        _registry,
+        profile_id,
+    ):
 
         async def run() -> None:
             submitted = await _submit_censal_review(services, profile_id)
             controller = OperationController(services=services, submission=submitted, actor_ref=_ACTOR)
             await _start_until_waiting(controller)
-            samples, settled = await _timeline(controller)
+            samples, settled = await _timeline(controller, release)
 
             assert any(sample.status for sample in samples), "the spinner or terminal copy never reached the status row"
             assert any(sample.phase for sample in samples), "no supervisor phase ever reached the phase row"
@@ -654,13 +676,22 @@ def test_the_modal_renders_review_content_and_cancel_availability_while_waiting(
 
 def test_rendered_state_follows_supervisor_revisions_and_never_regresses(tmp_path: Path) -> None:
     """Every rendered change is a step forward in the supervisor's own revision."""
-    with _runtime(tmp_path) as (services, _registry, profile_id):
+    release = asyncio.Event()
+
+    async def before_irreversible_section() -> None:
+        await release.wait()
+
+    with _runtime(tmp_path, before_irreversible_section=before_irreversible_section) as (
+        services,
+        _registry,
+        profile_id,
+    ):
 
         async def run() -> None:
             submitted = await _submit_censal_review(services, profile_id)
             controller = OperationController(services=services, submission=submitted, actor_ref=_ACTOR)
             await _start_until_waiting(controller)
-            samples, settled = await _timeline(controller)
+            samples, settled = await _timeline(controller, release)
 
             revisions = [sample.revision for sample in samples]
             assert revisions == sorted(revisions), f"the modal rendered a stale supervisor revision: {revisions}"
@@ -775,6 +806,45 @@ def test_the_terminal_receipt_reaches_the_receipt_widget(tmp_path: Path) -> None
                 modal._refresh_detail_rows(settled)
                 receipt = str(modal.query_one("#operation-modal-receipt", Static).content)
                 assert settled.receipt_ref in receipt
+                await host.action_quit()
+
+        asyncio.run(run())
+
+
+@pytest.mark.parametrize(
+    ("refusal_ref", "explained"),
+    [
+        ("REFUSED_MODELO_EXPORT_PRODUCT_IDENTITY_UNAVAILABLE", True),
+        ("REFUSED_PROFILE_LIFO_FORBIDDEN", False),
+    ],
+)
+def test_a_refusal_code_is_explained_only_when_its_registry_message_is_public(
+    tmp_path: Path, refusal_ref: str, explained: bool
+) -> None:
+    """A settled refusal keeps only its code; the modal explains it only from a self-contained registry message."""
+    with _runtime(tmp_path) as (services, _registry, profile_id):
+
+        async def run() -> None:
+            watched = await _submit_censal_review(services, profile_id)
+            watching = OperationController(services=services, submission=watched, actor_ref=_ACTOR)
+            observed = await watching.observe(0)
+            assert isinstance(observed, OperationObservationSuccessV1)
+            refused = build_operation_modal_view_model(observed.projection).model_copy(
+                update={"receipt_kind": "refusal", "receipt_ref": refusal_ref}
+            )
+            modal = OperationModal(watching)
+            host = ScreenHostApp(modal)
+            async with host.run_test(size=(120, 40)) as pilot:
+                for _ in range(200):
+                    await pilot.pause()
+                    if modal.is_mounted and modal.query("#operation-modal-receipt"):
+                        break
+                modal._refresh_detail_rows(refused)
+                receipt = str(modal.query_one("#operation-modal-receipt", Static).content)
+                explanation = tr("errors.refused.refused_modelo_export_product_identity_unavailable")
+                assert refusal_ref in receipt
+                assert (explanation in receipt) is explained
+                assert ("Versión del Programa" in receipt) is explained
                 await host.action_quit()
 
         asyncio.run(run())

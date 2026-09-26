@@ -10,11 +10,11 @@ from __future__ import annotations
 
 import inspect
 from collections.abc import Callable, Mapping
-from contextlib import nullcontext
+from contextlib import AbstractContextManager, nullcontext
 from enum import Enum
 from functools import cache
 from types import GenericAlias
-from typing import Any, cast, override
+from typing import Any, Final, cast, override
 
 import typer
 from click import Choice
@@ -29,10 +29,12 @@ from ._command_target import resolve_deferred_target
 from .command_spec import (
     ArgumentSpec,
     BindingState,
+    Capability,
     CommandSpec,
     CommandSpecGraph,
     DefaultKind,
     DeferredTarget,
+    ExecutionPolicySpec,
     OptionSpec,
     ParameterDefault,
 )
@@ -320,13 +322,61 @@ def _requires_leaf_preflight(spec: CommandSpec) -> bool:
     return spec.kind == "leaf" or (spec.kind == "group" and spec.invocation.terminal_behavior == "executable")
 
 
+GOVERNED_FACT_SCOPE_CAPABILITIES: Final[frozenset[Capability]] = frozenset({"registry", "encrypted-facts"})
+"""Capabilities whose behavior reads governed registry facts.
+
+Decoding encrypted profile facts is itself pinned to the authority generation,
+so a command holding either capability reads governed facts."""
+
+
+def runs_in_governed_fact_scope(spec: CommandSpec) -> bool:
+    """Report whether dispatch runs this spec's behavior inside its governed-fact scope."""
+    return (
+        spec.invocation.context_parameter is not None
+        and _requires_leaf_preflight(spec)
+        and not spec.policy.expanded_capabilities.isdisjoint(GOVERNED_FACT_SCOPE_CAPABILITIES)
+    )
+
+
+def _governed_fact_scope(spec: CommandSpec, context: typer.Context) -> AbstractContextManager[None]:
+    """Open the invocation's pinned authority as the scope its behavior reads under.
+
+    A handler that opens its own scope can forget to, and one that relies on an
+    earlier lease is only correct in the session posture that took it.
+    """
+    if not runs_in_governed_fact_scope(spec):
+        return nullcontext()
+    from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
+    from .state_projection_support import authority_operation
+
+    return validating_governed_facts(authority_operation(context))
+
+
+def refuse_declared_live_write(policy: ExecutionPolicySpec) -> None:
+    """Refuse a behavior whose policy declares a live AEAT write.
+
+    Live AEAT submission is permanently forbidden, so a ``live_write``
+    declaration is never a permission: dispatch raises the access gate's typed
+    refusal before any preflight, provisioning or handler import can run.
+
+    Raises:
+        LiveSubmitForbiddenError: When ``policy.live_write`` is set.
+    """
+    if not policy.live_write:
+        return
+    from ...core.access_gate.gate import AeatAccessGate
+    from ...core.config import load_settings
+
+    AeatAccessGate(settings=load_settings()).require_live_write()
+
+
 def _invoke_bound_behavior(
     graph: CommandSpecGraph,
     spec: CommandSpec,
     target_ref: DeferredTarget,
     bound: inspect.BoundArguments,
 ) -> object:
-    """Apply group short-circuiting and terminal preflight to bound arguments."""
+    """Apply group short-circuiting, the live-write refusal and terminal preflight."""
     context_parameter = spec.invocation.context_parameter
     if spec.kind == "group" and context_parameter is not None:
         structural_context = _invocation_context(bound, context_parameter)
@@ -335,6 +385,11 @@ def _invoke_bound_behavior(
             # must not be imported or executed while Click descends toward
             # the fully parsed child authority.
             return None
+    try:
+        refuse_declared_live_write(spec.policy)
+    except Exception as error:
+        _capture_refusal_spine(error)
+        raise
     if context_parameter is not None and _requires_leaf_preflight(spec):
         from ...application.user_profile.profile_summary import summary_inventory_snapshot
         from ._profile_authentication_gate import preflight_parsed_leaf
@@ -347,7 +402,7 @@ def _invoke_bound_behavior(
             summary_inventory_snapshot() if spec.policy.side_effects == frozenset({"none"}) else nullcontext()
         )
         try:
-            with listing_scope:
+            with _governed_fact_scope(spec, cast(typer.Context, context)), listing_scope:
                 preflight_parsed_leaf(
                     cast(typer.Context, context),
                     graph=graph,
@@ -355,9 +410,29 @@ def _invoke_bound_behavior(
                     arguments=bound.arguments,
                 )
                 return _invoke_deferred_target(target_ref, bound.arguments)
+        except Exception as error:
+            _capture_refusal_spine(error)
+            raise
         finally:
             clear_staged_machine_secret_payloads()
-    return _invoke_deferred_target(target_ref, bound.arguments)
+    if _requires_leaf_preflight(spec):
+        from ...application.provisioning import provision_cli_storage
+        from ._profile_authentication_contract import command_needs_state_tree
+
+        # A runnable command with no context to preflight is provisioned here;
+        # a group rendering its own help is not.
+        provision_cli_storage(writes_state=command_needs_state_tree(graph.node(spec.key)))
+    try:
+        return _invoke_deferred_target(target_ref, bound.arguments)
+    except Exception as error:
+        _capture_refusal_spine(error)
+        raise
+
+
+def _capture_refusal_spine(error: Exception) -> None:
+    from .errors import capture_refusal_spine
+
+    capture_refusal_spine(error)
 
 
 def _wrapper_parameters(spec: CommandSpec) -> list[inspect.Parameter]:
@@ -500,8 +575,11 @@ def build_command_subtree(graph: CommandSpecGraph, key: str) -> typer.Typer:
 
 
 __all__ = [
+    "GOVERNED_FACT_SCOPE_CAPABILITIES",
     "CommandSpecTyperGroup",
     "build_command_app",
     "build_command_subtree",
+    "refuse_declared_live_write",
     "resolve_deferred_target",
+    "runs_in_governed_fact_scope",
 ]

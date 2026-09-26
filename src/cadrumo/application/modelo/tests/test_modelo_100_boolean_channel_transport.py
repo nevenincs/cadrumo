@@ -34,6 +34,7 @@ from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.tests.published_authority import (
     published_revision_definitions,
     published_snapshot,
+    published_supported_filing_years,
 )
 from ....domain.user_profile.registry_contract import profile_binding_selectors
 from ...aggregation.source_mesh import CalculationSourceResolution
@@ -76,9 +77,7 @@ def _binding(snapshot: RegistrySnapshot, binding_id: str) -> Any:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize("year", [2020, 2021, 2022, 2023, 2024, 2025])
 def test_boolean_contract_bindings_never_appear_on_the_decimal_channel(
-    year: int,
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """Whatever the profile holds, a boolean contract does not land on Decimal.
@@ -87,19 +86,24 @@ def test_boolean_contract_bindings_never_appear_on_the_decimal_channel(
     invariant over the whole resolution rather than over one binding: NO
     binding whose registry contract declares the boolean channel may appear in
     ``binding_values``. A regression that re-collapses the channel shows up
-    here regardless of which binding it happens to affect.
+    here regardless of which binding it happens to affect. Every filing year
+    the published support envelope admits is checked, so the year set follows
+    the registry rather than a list kept beside it.
     """
-    snapshot = _snapshot(year)
-    boolean_ids = {
-        binding.id for binding in snapshot.revision.bindings if binding.value.channel is BindingValueChannel.BOOLEAN
-    }
-    resolution = resolve_profile_sourced_bindings(
-        snapshot,
-        bucket_id="nonexistent-bucket-for-channel-shape",
-        operation=authority_operation,
-    )
+    supported_years = published_supported_filing_years()
+    assert supported_years is not None
+    for year in supported_years.years:
+        snapshot = _snapshot(year)
+        boolean_ids = {
+            binding.id for binding in snapshot.revision.bindings if binding.value.channel is BindingValueChannel.BOOLEAN
+        }
+        resolution = resolve_profile_sourced_bindings(
+            snapshot,
+            bucket_id="nonexistent-bucket-for-channel-shape",
+            operation=authority_operation,
+        )
 
-    assert not (boolean_ids & set(resolution.binding_values))
+        assert not (boolean_ids & set(resolution.binding_values)), year
 
 
 def test_resolution_envelope_carries_the_boolean_channel_as_real_bools() -> None:

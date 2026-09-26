@@ -25,6 +25,7 @@ from .....application.overview.calendar_models import (
 )
 from .....application.overview.home import HomeAvailability
 from .....core.period import Period
+from .....domain.deadlines.festivos import DeadlineHolidayCoverage
 from .....domain.deadlines.models import ObligationStatus
 from ...navigation import TuiScreenContextV1
 from ..controller import DeclarationsCalendarController
@@ -50,13 +51,19 @@ def calendar_row(
         filing_year=2026,
         period=Period.from_year_and_code(2026, period_code),
         opens_on=closes.replace(day=1),
+        closes_on=closes,
         adjusted_closes_on=closes,
+        shift_reason="fixture",
+        holiday_coverage=DeadlineHolidayCoverage.NATIONAL_ONLY,
         payment_cutoff_on=closes.replace(day=max(1, closes.day - 5)),
+        evaluated_on=date(2026, 9, 3),
+        days_overdue=(date(2026, 9, 3) - closes).days if legal is ObligationStatus.OVERDUE else None,
         legal_status=legal,
         user_state=user,
         local_filing_state=local,
         aeat_submission_state=aeat,
         justificante_verified=None if aeat is None else False,
+        evidence_conflicted=False,
         source=OverviewCalendarEntrySource.REGISTRY_DEADLINE,
     )
 

@@ -1,0 +1,95 @@
+# The modelo 190 ejercicio-2022 annual summary: the three declarante resumen
+# casillas, the two formulas that compute the money totals, and every binding
+# that supplies a value to the fichero BOE -- the per-position row sums feeding
+# those formulas and the type-2 row fields the perceptor record emits.
+#
+# The ref lists are the union of the refs of every member named below, which is
+# what the construct-closure rule requires of an enclosing construct.
+
+[[revisions."2022".constructs]]
+id = "modelo-190-annual-summary"
+legal_refs = ["ley-35-2006:art-101", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-58", "ley-35-2006:art-59", "ley-35-2006:art-60", "ley-35-2006:art-68.4", "ley-35-2006:art-99", "ley-58-2003:art-93", "orden-eha-3127-2009:art-1", "orden-eha-3127-2009:art-5", "rd-439-2007:art-108", "rd-439-2007:art-80", "rd-439-2007:art-86"]
+source_refs = ["aeat-dr-190-2020", "aeat-modelo-190-procedure"]
+casilla_ids = ["decl.percepciones-total", "decl.retenciones-total", "decl.total-percepciones"]
+formulas = ["modelo-190-percepciones-total", "modelo-190-retenciones-total"]
+bindings = [
+    "modelo-190-perceptor-row-nif",
+    "modelo-190-perceptor-row-nif-representante",
+    "modelo-190-perceptor-row-name",
+    "modelo-190-perceptor-row-provincia",
+    "modelo-190-perceptor-row-clave",
+    "modelo-190-perceptor-row-subclave",
+    "modelo-190-perceptor-row-percibido-dinerario",
+    "modelo-190-perceptor-row-retencion-practicada",
+    "modelo-190-perceptor-row-percibido-especie",
+    "modelo-190-perceptor-row-ingreso-a-cuenta",
+    "modelo-190-perceptor-row-ingreso-a-cuenta-repercutido",
+    "modelo-190-perceptor-row-ejercicio-devengo",
+    "modelo-190-perceptor-row-territorial-deduccion",
+    "modelo-190-perceptor-row-ano-nacimiento",
+    "modelo-190-perceptor-row-situacion-familiar",
+    "modelo-190-perceptor-row-nif-conyuge-titular",
+    "modelo-190-perceptor-row-discapacidad",
+    "modelo-190-perceptor-row-contrato-relacion",
+    "modelo-190-perceptor-row-titular-unidad",
+    "modelo-190-perceptor-row-movilidad-geografica",
+    "modelo-190-perceptor-row-reducciones",
+    "modelo-190-perceptor-row-gastos-deducibles",
+    "modelo-190-perceptor-row-pension-compensatoria",
+    "modelo-190-perceptor-row-anualidades-alimentos",
+    "modelo-190-perceptor-row-descendientes-menores-3-total",
+    "modelo-190-perceptor-row-descendientes-menores-3-entero",
+    "modelo-190-perceptor-row-descendientes-resto-total",
+    "modelo-190-perceptor-row-descendientes-resto-entero",
+    "modelo-190-perceptor-row-descendientes-disc-33-65-total",
+    "modelo-190-perceptor-row-descendientes-disc-33-65-entero",
+    "modelo-190-perceptor-row-descendientes-disc-movilidad-total",
+    "modelo-190-perceptor-row-descendientes-disc-movilidad-entero",
+    "modelo-190-perceptor-row-descendientes-disc-65-total",
+    "modelo-190-perceptor-row-descendientes-disc-65-entero",
+    "modelo-190-perceptor-row-ascendientes-menores-75-total",
+    "modelo-190-perceptor-row-ascendientes-menores-75-entero",
+    "modelo-190-perceptor-row-ascendientes-75-mas-total",
+    "modelo-190-perceptor-row-ascendientes-75-mas-entero",
+    "modelo-190-perceptor-row-ascendientes-disc-33-65-total",
+    "modelo-190-perceptor-row-ascendientes-disc-33-65-entero",
+    "modelo-190-perceptor-row-ascendientes-disc-movilidad-total",
+    "modelo-190-perceptor-row-ascendientes-disc-movilidad-entero",
+    "modelo-190-perceptor-row-ascendientes-disc-65-total",
+    "modelo-190-perceptor-row-ascendientes-disc-65-entero",
+    "modelo-190-perceptor-row-computo-hijo-1",
+    "modelo-190-perceptor-row-computo-hijo-2",
+    "modelo-190-perceptor-row-computo-hijo-3",
+    "modelo-190-perceptor-row-prestamos-vivienda",
+    "modelo-190-perceptor-row-incapacidad-dineraria-percepcion",
+    "modelo-190-perceptor-row-incapacidad-dineraria-retenciones",
+    "modelo-190-perceptor-row-incapacidad-especie-valoracion",
+    "modelo-190-perceptor-row-incapacidad-especie-ingresos-a-cuenta",
+    "modelo-190-perceptor-row-incapacidad-especie-repercutidos",
+    "modelo-190-perceptor-row-complemento-ayuda-infancia",
+    "modelo-190-percepciones-anual",
+    "modelo-190-perceptor-rows-percepcion-dineraria-total",
+    "modelo-190-perceptor-rows-percepcion-especie-total",
+    "modelo-190-perceptor-rows-incapacidad-dineraria-total",
+    "modelo-190-perceptor-rows-incapacidad-especie-total",
+    "modelo-190-perceptor-rows-retencion-practicada-total",
+    "modelo-190-perceptor-rows-ingreso-a-cuenta-total",
+    "modelo-190-perceptor-rows-incapacidad-retencion-total",
+    "modelo-190-perceptor-rows-incapacidad-ingreso-a-cuenta-total",
+]
+live_cross_references = ["modelo-190-filed-declarations-read"]
+workbook_parity_refs = ["modelo-190-dr-pdf"]
+verification_expectations = ["modelo-190-annual-summary-verification"]
+application_links = [
+    "modelo-190-filing",
+    "modelo-190-deadline",
+    "modelo-190-calculation",
+    "modelo-190-export",
+    "modelo-190-portal",
+    "modelo-190-review",
+    "modelo-190-approval",
+    "modelo-190-reconciliation",
+    "modelo-190-workflow",
+]
+deadline_windows = ["modelo-190-2022-0a"]
+filing_schedules = ["modelo-190-anual"]

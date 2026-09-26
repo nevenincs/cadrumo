@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import TypedDict
 
 import pytest
 
@@ -66,9 +67,18 @@ def test_list_objects_matches_the_published_example() -> None:
     assert _signature(headers) == "34b48302e7b5fa45bde8084f4b7868a86f0a534bc59db6670ed5711ef69dc6f7"
 
 
+class _CommonSigningArgs(TypedDict):
+    host: str
+    method: str
+    path: str
+    query: dict[str, str]
+    extra_headers: dict[str, str]
+    now: datetime
+
+
 def test_a_changed_body_changes_the_signature() -> None:
     """Teeth for the examples: the signature is bound to what is sent."""
-    common = {
+    common: _CommonSigningArgs = {
         "host": _EXAMPLE_HOST,
         "method": "PUT",
         "path": "/a.html",

@@ -2,19 +2,26 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import ClassVar, cast, override
 
-from textual.app import App, ComposeResult
-from textual.widgets import DataTable, Static
+from textual.app import ComposeResult
+from textual.containers import Vertical
+from textual.widgets import Button, DataTable, Input, Static
 
+from ....core.errors.hierarchy import CadrumoError
+from ....core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN
+from ....core.period import Period, PeriodError
 from ..components.widgets import ContentDataTable, ContentScroll
 from .controller import (
     DeclarationsWorkspaceController,
     DeclarationsWorkspaceScreen,
     declarations_copy,
     natural_address,
+    work_create_refusal_message,
     work_state_label,
 )
+from .models import ModeloWorkCreateHandoffV1
 
 
 class DeclarationsOverviewScreen(DeclarationsWorkspaceScreen):
@@ -31,6 +38,7 @@ class DeclarationsOverviewScreen(DeclarationsWorkspaceScreen):
         """Retain injected state and semantic selection."""
         super().__init__(controller, id=id)
         self.selected_work_unit_id: str | None = None
+        self._work_create_in_flight = False
 
     @override
     def compose(self) -> ComposeResult:
@@ -42,6 +50,20 @@ class DeclarationsOverviewScreen(DeclarationsWorkspaceScreen):
                 markup=False,
             )
             yield ContentDataTable[str](id="declarations-navigation", cursor_type="row", zebra_stripes=True)
+            yield Static(
+                declarations_copy("tui.declarations.work_create.title"),
+                classes="cadrumo-heading",
+                markup=False,
+            )
+            with Vertical(id="declarations-work-form", classes="declarations-work-form"):
+                yield Static(declarations_copy("tui.declarations.work_create.modelo"), markup=False)
+                yield Input(placeholder="111", id="declarations-work-modelo", max_length=8)
+                yield Static(declarations_copy("tui.declarations.work_create.year"), markup=False)
+                yield Input(placeholder="2025", id="declarations-work-year", max_length=4)
+                yield Static(declarations_copy("tui.declarations.work_create.period"), markup=False)
+                yield Input(placeholder="1T / 0A", id="declarations-work-period", max_length=12)
+                yield Button(declarations_copy("tui.declarations.work_create.submit"), id="declarations-work-create")
+                yield Static(id="declarations-work-create-notice", classes="declarations-refusal", markup=False)
             yield Static(
                 declarations_copy("tui.declarations.overview.declarations"),
                 classes="cadrumo-heading",
@@ -80,9 +102,19 @@ class DeclarationsOverviewScreen(DeclarationsWorkspaceScreen):
         row_index = next((i for i, item in enumerate(table.ordered_rows) if item.key.value == restored), None)
         if row_index is None:
             self.query_one("#declarations-navigation", DataTable).focus()
+            # Focusing scrolls the table into view, which on a page taller than
+            # the terminal scrolls the opening heading away. A fresh arrival
+            # belongs at the top; the restored branch keeps its own position.
+            # After the refresh, because the focus scroll lands once layout
+            # settles and would overwrite a scroll issued here.
+            self.call_after_refresh(self._scroll_to_top)
         else:
             table.move_cursor(row=row_index)
             table.focus()
+
+    def _scroll_to_top(self) -> None:
+        """Return the page to its opening heading after focus has settled."""
+        self.query_one("#declarations-page", ContentScroll).scroll_home(animate=False)
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
         """Route a navigation row or invoke the injected declaration handoff."""
@@ -98,7 +130,62 @@ class DeclarationsOverviewScreen(DeclarationsWorkspaceScreen):
             self.refuse_handoff()
         else:
             child = factory(row)
-            cast("App[None]", self.app).push_screen(child, self._restore_declaration_focus)
+            self.app.push_screen(child, self._restore_declaration_focus)
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        """Create only the explicit natural address the operator supplied."""
+        if event.button.id != "declarations-work-create":
+            return
+        handoff = self.controller.work_create_handoff
+        if handoff is None:
+            self.refuse_handoff()
+            return
+        if self._work_create_in_flight:
+            return
+        modelo = self.query_one("#declarations-work-modelo", Input).value.strip()
+        year_text = self.query_one("#declarations-work-year", Input).value.strip()
+        period_text = self.query_one("#declarations-work-period", Input).value.strip()
+        notice = self.query_one("#declarations-work-create-notice", Static)
+        if not modelo:
+            notice.update(declarations_copy("tui.declarations.work_create.refusal.modelo"))
+            return
+        if not year_text.isascii() or not year_text.isdecimal():
+            notice.update(declarations_copy("tui.declarations.work_create.refusal.year"))
+            return
+        filing_year = int(year_text)
+        if not FILING_YEAR_MIN <= filing_year <= FILING_YEAR_MAX:
+            notice.update(declarations_copy("tui.declarations.work_create.refusal.year"))
+            return
+        try:
+            period = Period.from_year_and_code(filing_year, period_text)
+        except PeriodError:
+            notice.update(declarations_copy("tui.declarations.work_create.refusal.period"))
+            return
+        # The write runs on a worker thread that cancelling cannot stop, so a
+        # second press waits for the first instead of replacing it: its result
+        # would otherwise land unreported under fields that now name another
+        # declaration.
+        self._work_create_in_flight = True
+        notice.update(declarations_copy("tui.declarations.work_create.progress"))
+        self.run_worker(
+            self._submit_work_create(handoff, modelo, filing_year, period),
+            group="declarations-work-create",
+        )
+
+    async def _submit_work_create(
+        self, handoff: ModeloWorkCreateHandoffV1, modelo: str, filing_year: int, period: Period
+    ) -> None:
+        """Run the storage-backed application command off Textual's event loop."""
+        notice = self.query_one("#declarations-work-create-notice", Static)
+        try:
+            result = await asyncio.to_thread(handoff, modelo, filing_year, period)
+        except CadrumoError as refusal:
+            notice.update(work_create_refusal_message(refusal))
+            return
+        finally:
+            self._work_create_in_flight = False
+        message_key = "tui.declarations.work_create.reused" if result.reused else "tui.declarations.work_create.created"
+        notice.update(declarations_copy(message_key, address=natural_address(modelo, filing_year, period)))
 
     def _restore_declaration_focus(self, _: None) -> None:
         """Restore the semantic declaration table after its child dismisses."""

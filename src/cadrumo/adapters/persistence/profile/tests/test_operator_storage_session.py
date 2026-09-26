@@ -9,7 +9,8 @@ import pytest
 from pydantic import SecretStr
 
 from cadrumo.adapters.outbound.aeat.auth import session_store
-from cadrumo.adapters.persistence.profile.tests._operator_scope_fakes import (
+from cadrumo.adapters.persistence.profile.tests.operator_projection_test_support import configure_operator_auth
+from cadrumo.adapters.persistence.profile.tests.operator_scope_fakes import (
     InwardOperatorScopeStorage,
     build_inward_operator_scope_ports,
     build_inward_operator_scope_ports_for_active_route,
@@ -34,7 +35,6 @@ from cadrumo.application.auth.operator_results import (
 from cadrumo.application.auth.operator_scope import auth_mutation_span
 from cadrumo.application.auth.operator_scope_ports import OperatorScopeStorageError
 from cadrumo.application.auth.sessions import load_persisted_session, storage_state_paths
-from cadrumo.application.auth.tests.operator_projection_test_support import configure_operator_auth
 from cadrumo.application.user_profile.profile_keys import profile_keys
 from cadrumo.application.workflow.persistence import workflow_state_repository
 from cadrumo.core.auth_provider import AuthProviderKind

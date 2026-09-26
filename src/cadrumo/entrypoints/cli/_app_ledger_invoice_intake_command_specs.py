@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from dataclasses import replace
+
 from ...application.ledger.operator_input_contracts import INVOICE_KIND_INPUT
 from ...application.operator_surface.command_ports import CommandNodeKind
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
@@ -37,7 +39,10 @@ LEDGER_INVOICE_INTAKE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         short_help_key=None,
         invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
         parameters=(
-            *INVOICE_INTAKE_WIZARD_CORE_OPTIONS,
+            *(
+                replace(option, default=ParameterDefault.value(None)) if option.name == "taxable_base" else option
+                for option in INVOICE_INTAKE_WIZARD_CORE_OPTIONS
+            ),
             *INVOICE_LIFECYCLE_METADATA_OPTIONS[:5],
             OptionSpec(
                 name="counterparty_nif",
@@ -58,6 +63,22 @@ LEDGER_INVOICE_INTAKE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             *INVOICE_LIFECYCLE_METADATA_OPTIONS[5:],
             INVOICE_INTAKE_WIZARD_TRAILING_OPTIONS[0],
             OPTIONAL_IVA_CATEGORY_OPTION,
+            OptionSpec(
+                name="line",
+                declarations=("--line",),
+                value=ValueContract(DeferredTarget("builtins", "str")),
+                default=ParameterDefault.value(()),
+                help_key=TranslationKey("cli.app.ledger.invoice.line_help"),
+                metavar=None,
+                is_flag=False,
+                flag_value=None,
+                multiple=True,
+                count=False,
+                eager=False,
+                constraint=ParameterConstraint(),
+                show_default=True,
+                hidden=False,
+            ),
             INVOICE_INTAKE_WIZARD_TRAILING_OPTIONS[1],
         ),
         policy=_POLICY_2,

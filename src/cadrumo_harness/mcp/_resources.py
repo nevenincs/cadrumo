@@ -295,14 +295,20 @@ def _read_corpus_resource(ref: str, uri: str) -> HarnessResourceContent:
 
     ``ref`` is a citation id or a retrieval ``corpus_ref``; resolution routes
     through the registry legal catalogue (the single citation authority).
+    The authority addresses legal declarations by citation id only, so a
+    ``corpus_ref`` is matched against every published declaration rather than
+    loaded as if it were an id.
     """
     from cadrumo.application.corpus_search.citation_lookup import bundled_citation_lookup
     from cadrumo.application.corpus_search.errors import CorpusSearchInputError
     from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
+    key = ref.strip()
     try:
         with bundled_indexed_authority().operation() as operation:
-            text = bundled_citation_lookup((ref,), operation=operation).resolve_corpus_text(ref)
+            published = operation.legal_reference_ids()
+            selected = (key,) if key in published else published
+            text = bundled_citation_lookup(selected, operation=operation).resolve_corpus_text(key)
     except CorpusSearchInputError as exc:
         raise HarnessResourceNotFoundError(f"no corpus text for {ref!r} ({uri})") from exc
     return HarnessResourceContent(ref=_ref_for(HarnessResourceKind.CORPUS, ref), text=text)

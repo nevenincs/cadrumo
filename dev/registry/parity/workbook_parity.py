@@ -17,6 +17,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import date
 from decimal import Decimal
+from enum import StrEnum
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING
@@ -78,6 +79,8 @@ _log = get_logger(__name__)
 
 
 __all__ = [
+    "LIBREOFFICE_FAILURE_CONTEXT_KEY",
+    "LibreOfficeFailureCause",
     "WorkbookScanOptions",
     "assert_workbook_scan_clean",
     "compare_registry_to_workbook",
@@ -104,9 +107,52 @@ _CELL_REF_PATTERN = re.compile(r"(?<![A-Z0-9_])(?:'[^']+'!)?\$?[A-Z]{1,3}\$?\d+(
 _CELL_REF_VALUE_PATTERN = re.compile(r"^(?:(?P<sheet>'[^']+'|[^!]+)!)?(?P<coordinate>\$?[A-Z]{1,3}\$?\d+)$")
 _BINARY_XLS_CONVERSION_BYTES_CACHE: dict[tuple[str, int, str], bytes] = {}
 
+# Every LibreOffice call starts from a fresh, private user installation, so its
+# first-run registration of the bundled extensions into that profile dominates
+# the call: a single conversion was measured at 10-63 s and six concurrent ones
+# at about 135 s each on a loaded 24-thread Windows host. The budget covers that
+# initialisation under load; it is a hang guard, not a performance expectation.
+_LIBREOFFICE_TIMEOUT_SECONDS = 300.0
 
-class _BinaryXlsConversionError(RuntimeError):
-    """Failure raised after a valid LibreOffice runner starts XLS conversion."""
+# On Windows LibreOffice abandons that first-run registration part-way once the
+# user-installation root is too deep -- and still exits 0 without writing any
+# output. Measured against LibreOffice 26.8 with long paths enabled in the OS: a
+# 147-character root converted, a 149-character root did not. The limit keeps a
+# margin below that, and the conversion refuses up front instead of running a
+# process that would report success and produce nothing.
+_LIBREOFFICE_PROFILE_ROOT_MAX_CHARS: int | None = 140 if sys.platform == "win32" else None
+
+LIBREOFFICE_FAILURE_CONTEXT_KEY = "libreoffice_failure"
+"""Error ``context`` key carrying the :class:`LibreOfficeFailureCause` of a refusal."""
+
+
+class LibreOfficeFailureCause(StrEnum):
+    """Why a LibreOffice headless conversion yielded no workbook."""
+
+    PROFILE_PATH_TOO_LONG = "profile_path_too_long"
+    TIMED_OUT = "timed_out"
+    EXITED_NONZERO = "exited_nonzero"
+    NO_OUTPUT = "no_output"
+
+
+class _LibreOfficeConversionError(RuntimeError):
+    """Failure raised once a resolved LibreOffice runner is asked to convert a workbook."""
+
+    def __init__(self, cause: LibreOfficeFailureCause, message: str) -> None:
+        super().__init__(message)
+        self.cause = cause
+
+    def as_registry_error(self) -> RegistryValidationError:
+        return RegistryValidationError(str(self), context={LIBREOFFICE_FAILURE_CONTEXT_KEY: self.cause.value})
+
+
+@dataclass(frozen=True)
+class _LibreOfficeWorkspace:
+    """Private scratch tree for one LibreOffice call, with every name kept short."""
+
+    root: Path
+    profile: Path
+    output: Path
 
 
 def _com_member(raw: object, name: str) -> object:
@@ -188,7 +234,14 @@ class _BinaryXlsConversionContext:
 
 @dataclass(frozen=True)
 class WorkbookScanOptions:
-    """Controls for bounded workbook discovery."""
+    """Controls for bounded workbook discovery.
+
+    ``per_file_timeout_seconds`` is a budget of CPU time spent by the scanning
+    thread, counted from the moment the workbook is opened. The budget exists to
+    stop a runaway parse of a pathological workbook, which is CPU work; wall-clock
+    time would also count the time the thread waits for a processor, so the same
+    workbook would pass on an idle host and time out on a busy one.
+    """
 
     per_file_timeout_seconds: float = field(
         default=15.0,
@@ -242,7 +295,7 @@ def scan_workbook(path: Path, *, root: Path, options: WorkbookScanOptions | None
         )
 
     try:
-        sheets, formulas, references = _scan_xlsx_contents(resolved_path, relative, opts, started)
+        sheets, formulas, references = _scan_xlsx_contents(resolved_path, relative, opts)
     except TimeoutError as exc:
         return _failed_report(
             relative=relative,
@@ -343,24 +396,24 @@ def _scan_xlsx_contents(
     resolved_path: Path,
     relative: str,
     opts: WorkbookScanOptions,
-    started: float,
 ) -> tuple[list[str], list[WorkbookCellRef], list[WorkbookCellRef]]:
     """Open the workbook in read-only mode and collect (sheet titles, formulas, references)."""
     from openpyxl import load_workbook
 
+    cpu_started = time.thread_time()
     workbook = load_workbook(resolved_path, data_only=False, read_only=True)
     sheets: list[str] = []
     formulas: list[WorkbookCellRef] = []
     references: list[WorkbookCellRef] = []
     try:
         for worksheet in workbook.worksheets:
-            _raise_if_timed_out(started, opts.per_file_timeout_seconds, relative)
+            _raise_if_timed_out(cpu_started, opts.per_file_timeout_seconds, relative)
             sheets.append(worksheet.title)
             _scan_worksheet_cells(
                 worksheet,
                 relative=relative,
                 opts=opts,
-                started=started,
+                cpu_started=cpu_started,
                 formulas=formulas,
                 references=references,
             )
@@ -374,13 +427,13 @@ def _scan_worksheet_cells(
     *,
     relative: str,
     opts: WorkbookScanOptions,
-    started: float,
+    cpu_started: float,
     formulas: list[WorkbookCellRef],
     references: list[WorkbookCellRef],
 ) -> None:
     """Walk one worksheet's cells, appending formulas and bounded references in place."""
     for row in worksheet.iter_rows(values_only=False):
-        _raise_if_timed_out(started, opts.per_file_timeout_seconds, relative)
+        _raise_if_timed_out(cpu_started, opts.per_file_timeout_seconds, relative)
         for cell in row:
             value = cell.value
             if not (isinstance(value, str) and value.startswith("=")):
@@ -498,27 +551,8 @@ def run_workbook_with_libreoffice(
     if resolved.suffix.lower() != _XLSX_EXTENSION:
         raise RegistryValidationError("LibreOffice runner currently accepts only XLSX workbooks")
 
-    # Declared exception to the "every tempfile call passes dir=" storage
-    # provenance discipline: this scratch area is never renamed into place --
-    # LibreOffice is shelled out to convert a copy, and the recalculated
-    # values are read back into memory and returned. The dir= pin exists to
-    # guarantee same-filesystem adjacency for an eventual os.rename; with no
-    # rename here, that requirement does not bind, and pinning buys nothing.
-    # It also measurably regresses: anchoring dir= on the workbook's own
-    # directory (deeper-nested under a real pytest tmp_path) pushed this
-    # exact call past a length where LibreOffice's own `-env:UserInstallation=`
-    # profile tree failed to materialise under pytest-xdist (passed at path
-    # length 137 under -n0, failed at 147 under a real xdist worker;
-    # plausibly Windows MAX_PATH once LibreOffice's internal profile
-    # directories are added on top) -- proven by reverting to HEAD and
-    # reproducing the failure, then restoring and reproducing it again.
-    # Leave this on the OS-default temp root.
-    with TemporaryDirectory(prefix="cadrumo-workbook-") as tmp:
-        tmp_path = Path(tmp)
-        output_dir = tmp_path / "output"
-        output_dir.mkdir()
-        user_installation = (tmp_path / "lo-profile").resolve().as_uri()
-        working_copy = tmp_path / resolved.name
+    with _libreoffice_workspace() as workspace:
+        working_copy = workspace.root / f"in{_XLSX_EXTENSION}"
         shutil.copy2(resolved, working_copy)
         workbook = load_workbook(working_copy)
         try:
@@ -528,33 +562,14 @@ def run_workbook_with_libreoffice(
         finally:
             workbook.close()
         try:
-            completed = _run_libreoffice(
-                [
-                    str(runner),
-                    "--headless",
-                    "--nologo",
-                    "--nodefault",
-                    "--nofirststartwizard",
-                    f"-env:UserInstallation={user_installation}",
-                    "--convert-to",
-                    "xlsx",
-                    "--outdir",
-                    str(output_dir),
-                    str(working_copy),
-                ],
-                timeout_seconds=60,
+            recalculated_path = _convert_with_libreoffice(
+                runner,
+                working_copy,
+                workspace=workspace,
+                operation="workbook recalculation",
             )
-        except subprocess.TimeoutExpired as exc:
-            raise RegistryValidationError("LibreOffice workbook recalculation timed out") from exc
-        except subprocess.CalledProcessError as exc:
-            raise RegistryValidationError(
-                f"LibreOffice workbook recalculation failed: {_subprocess_failure_detail(exc)}",
-            ) from exc
-        recalculated_path = output_dir / working_copy.name
-        if not recalculated_path.is_file():
-            raise RegistryValidationError(
-                f"LibreOffice did not produce recalculated workbook: {_subprocess_failure_detail(completed)}",
-            )
+        except _LibreOfficeConversionError as exc:
+            raise exc.as_registry_error() from exc
         recalculated = load_workbook(recalculated_path, data_only=True, read_only=True)
         try:
             return {
@@ -580,9 +595,8 @@ def convert_binary_xls_with_libreoffice(
             sheets, formulas, references = _inspect_converted_xlsx(
                 converted_path,
                 original_relative=context.relative,
-                started=started,
             )
-    except _BinaryXlsConversionError as exc:
+    except _LibreOfficeConversionError as exc:
         # A timeout and any other conversion failure both resolve to the same
         # "failed" WorkbookConversionReport: WorkbookConversionStatus carries no
         # distinct timed-out member, so there is nothing for a timeout branch to
@@ -628,8 +642,8 @@ def converted_binary_xls_with_libreoffice(
     try:
         with _converted_binary_xls_path(context, runner=runner) as converted_path:
             yield converted_path
-    except _BinaryXlsConversionError as exc:
-        raise RegistryValidationError(str(exc)) from exc
+    except _LibreOfficeConversionError as exc:
+        raise exc.as_registry_error() from exc
 
 
 def _binary_xls_conversion_context(workbook_path: Path, *, root: Path) -> _BinaryXlsConversionContext:
@@ -657,56 +671,107 @@ def _converted_binary_xls_path(
     *,
     runner: Path,
 ) -> Generator[Path]:
-    # Declared exception -- same reasoning and same measured regression as
-    # run_workbook_with_libreoffice above: no rename happens here (the
-    # converted file is read back into memory, or yielded for the caller to
-    # read within the `with` block), so the dir= same-filesystem-adjacency
-    # requirement does not bind, and pinning it broke real LibreOffice
-    # headless conversion under pytest-xdist's deeper tmp_path nesting.
-    # Leave this on the OS-default temp root.
-    with TemporaryDirectory(prefix="cadrumo-xls-conversion-") as tmp:
-        tmp_path = Path(tmp)
-        output_dir = tmp_path / "output"
-        output_dir.mkdir()
+    with _libreoffice_workspace() as workspace:
+        converted_path = workspace.output / f"{context.resolved_path.stem}{_XLSX_EXTENSION}"
         cache_key = (context.digest, context.byte_count, str(runner))
         cached_bytes = _BINARY_XLS_CONVERSION_BYTES_CACHE.get(cache_key)
-        if cached_bytes is not None:
-            cached_path = output_dir / f"{context.resolved_path.stem}.xlsx"
-            cached_path.write_bytes(cached_bytes)
-            yield cached_path
-            return
-        user_installation = (tmp_path / "lo-profile").resolve().as_uri()
-        try:
-            completed = _run_libreoffice(
-                [
-                    str(runner),
-                    "--headless",
-                    "--nologo",
-                    "--nodefault",
-                    "--nofirststartwizard",
-                    f"-env:UserInstallation={user_installation}",
-                    "--convert-to",
-                    "xlsx",
-                    "--outdir",
-                    str(output_dir),
-                    str(context.resolved_path),
-                ],
-                timeout_seconds=120,
+        if cached_bytes is None:
+            # LibreOffice names its output after its input, so converting a
+            # short-named copy keeps every path it writes bounded by the
+            # workspace rather than by the official artefact's file name.
+            source_copy = workspace.root / f"in{_XLS_EXTENSION}"
+            shutil.copyfile(context.resolved_path, source_copy)
+            produced = _convert_with_libreoffice(
+                runner,
+                source_copy,
+                workspace=workspace,
+                operation="binary XLS conversion",
             )
-        except subprocess.TimeoutExpired as exc:
-            raise _BinaryXlsConversionError("LibreOffice binary XLS conversion timed out") from exc
-        except subprocess.CalledProcessError as exc:
-            raise _BinaryXlsConversionError(
-                f"LibreOffice binary XLS conversion failed: {_subprocess_failure_detail(exc)}",
-            ) from exc
-        outputs = scan_directory(output_dir, pattern="*.xlsx")
-        if len(outputs) != 1:
-            raise _BinaryXlsConversionError(
-                f"LibreOffice did not produce exactly one XLSX workbook: {_subprocess_failure_detail(completed)}",
-            )
-        converted_path = outputs[0]
-        _BINARY_XLS_CONVERSION_BYTES_CACHE[cache_key] = converted_path.read_bytes()
+            produced.replace(converted_path)
+            _BINARY_XLS_CONVERSION_BYTES_CACHE[cache_key] = converted_path.read_bytes()
+        else:
+            converted_path.write_bytes(cached_bytes)
         yield converted_path
+
+
+@contextmanager
+def _libreoffice_workspace() -> Generator[_LibreOfficeWorkspace]:
+    """Yield a private scratch tree holding the input copy, profile and output of one call.
+
+    Declared exception to the "every tempfile call passes dir=" storage
+    provenance discipline: nothing here is renamed into place -- the converted
+    workbook is read back into memory, or yielded for the caller to read within
+    the ``with`` block -- so the same-filesystem adjacency that ``dir=`` pins
+    does not bind. The tree stays on the process temp root with one-letter
+    member names because LibreOffice's user installation beneath it is
+    path-length sensitive (see ``_LIBREOFFICE_PROFILE_ROOT_MAX_CHARS``);
+    anchoring it on a deeper directory such as a pytest ``tmp_path`` is what
+    pushed the profile past that limit.
+    """
+    with TemporaryDirectory(prefix="lo-") as tmp:
+        root = Path(tmp).resolve()
+        output = root / "o"
+        output.mkdir()
+        yield _LibreOfficeWorkspace(root=root, profile=root / "p", output=output)
+
+
+def _convert_with_libreoffice(
+    runner: Path,
+    source: Path,
+    *,
+    workspace: _LibreOfficeWorkspace,
+    operation: str,
+) -> Path:
+    """Convert ``source`` to XLSX in ``workspace`` and return the one workbook LibreOffice wrote.
+
+    The user installation is private to this call: soffice forwards a request
+    to any running instance that shares its profile and then exits 0 itself,
+    so a shared profile lets a concurrent call absorb this conversion.
+    """
+    profile_chars = len(str(workspace.profile))
+    if _LIBREOFFICE_PROFILE_ROOT_MAX_CHARS is not None and profile_chars > _LIBREOFFICE_PROFILE_ROOT_MAX_CHARS:
+        raise _LibreOfficeConversionError(
+            LibreOfficeFailureCause.PROFILE_PATH_TOO_LONG,
+            f"LibreOffice {operation} refused: its user profile root would be {profile_chars} characters "
+            f"long, above the {_LIBREOFFICE_PROFILE_ROOT_MAX_CHARS} LibreOffice can initialise on this "
+            "platform without silently producing no output; point TMP/TEMP at a shorter directory",
+        )
+    try:
+        completed = _run_libreoffice(
+            [
+                str(runner),
+                "--headless",
+                "--nologo",
+                "--nodefault",
+                "--nofirststartwizard",
+                f"-env:UserInstallation={workspace.profile.as_uri()}",
+                "--convert-to",
+                "xlsx",
+                "--outdir",
+                str(workspace.output),
+                str(source),
+            ],
+            timeout_seconds=_LIBREOFFICE_TIMEOUT_SECONDS,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise _LibreOfficeConversionError(
+            LibreOfficeFailureCause.TIMED_OUT,
+            f"LibreOffice {operation} timed out after {_LIBREOFFICE_TIMEOUT_SECONDS:.0f}s",
+        ) from exc
+    except subprocess.CalledProcessError as exc:
+        raise _LibreOfficeConversionError(
+            LibreOfficeFailureCause.EXITED_NONZERO,
+            f"LibreOffice {operation} failed: {_subprocess_failure_detail(exc)}",
+        ) from exc
+    outputs = scan_directory(workspace.output, pattern=f"*{_XLSX_EXTENSION}")
+    if len(outputs) != 1:
+        raise _LibreOfficeConversionError(
+            LibreOfficeFailureCause.NO_OUTPUT,
+            f"LibreOffice {operation} produced {len(outputs)} XLSX workbooks instead of one "
+            f"({_subprocess_failure_detail(completed)}); soffice reports success without converting "
+            "when its user profile cannot be initialised or another instance took the request",
+        )
+    return outputs[0]
 
 
 def run_registry_workbook_parity(
@@ -1139,9 +1204,10 @@ def _infer_modelo(relative_path: str) -> str | None:
     return modelo
 
 
-def _raise_if_timed_out(started: float, timeout_seconds: float, relative: str) -> None:
-    if time.monotonic() - started > timeout_seconds:
-        raise TimeoutError(f"workbook scan timed out for {relative!r} after {timeout_seconds:.1f}s")
+def _raise_if_timed_out(cpu_started: float, timeout_seconds: float, relative: str) -> None:
+    """Raise once the scanning thread has spent more than ``timeout_seconds`` of CPU time."""
+    if time.thread_time() - cpu_started > timeout_seconds:
+        raise TimeoutError(f"workbook scan of {relative!r} exceeded its {timeout_seconds:.1f}s CPU budget")
 
 
 def _elapsed_decimal(started: float) -> Decimal:
@@ -1290,24 +1356,26 @@ def _inspect_converted_xlsx(
     path: Path,
     *,
     original_relative: str,
-    started: float,
 ) -> tuple[tuple[str, ...], tuple[WorkbookCellRef, ...], tuple[WorkbookCellRef, ...]]:
     from openpyxl import load_workbook
 
+    # The budget starts here, not when the conversion started: the LibreOffice
+    # process time before it is bounded by its own timeout.
+    cpu_started = time.thread_time()
     workbook = load_workbook(path, data_only=False, read_only=True)
     try:
         sheets: list[str] = []
         formulas: list[WorkbookCellRef] = []
         references: list[WorkbookCellRef] = []
         for worksheet in workbook.worksheets:
-            _raise_if_timed_out(started, _INSPECT_CONVERTED_XLSX_TIMEOUT_S, original_relative)
+            _raise_if_timed_out(cpu_started, _INSPECT_CONVERTED_XLSX_TIMEOUT_S, original_relative)
             sheets.append(worksheet.title)
             _collect_sheet_formulas(
                 worksheet,
                 formulas=formulas,
                 references=references,
                 original_relative=original_relative,
-                started=started,
+                cpu_started=cpu_started,
             )
         return tuple(sheets), tuple(formulas), tuple(references)
     finally:
@@ -1320,11 +1388,11 @@ def _collect_sheet_formulas(
     formulas: list[WorkbookCellRef],
     references: list[WorkbookCellRef],
     original_relative: str,
-    started: float,
+    cpu_started: float,
 ) -> None:
     """Walk every row in ``worksheet`` and append formula refs + a bounded set of references."""
     for row in worksheet.iter_rows(values_only=False):
-        _raise_if_timed_out(started, _INSPECT_CONVERTED_XLSX_TIMEOUT_S, original_relative)
+        _raise_if_timed_out(cpu_started, _INSPECT_CONVERTED_XLSX_TIMEOUT_S, original_relative)
         for cell in row:
             _record_cell_if_formula(
                 cell,

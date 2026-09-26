@@ -14,9 +14,9 @@ from contextlib import ExitStack, contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 
-from ...core.bucket_pointer import BucketPointer, read_pointer, write_pointer
+from ...core.bucket_pointer import BucketPointer, pointer_path, read_pointer, write_pointer
 from ...core.config import load_settings
-from ...core.errors.hierarchy import CadrumoError
+from ...core.errors.hierarchy import ActiveProfilePointerError, CadrumoError
 from ...core.locks_errors import LockAcquisitionError
 from ...core.paths import effective_storage_root
 from .custody_ports import default_profile_custody_local_record_store
@@ -25,6 +25,22 @@ from .profile_pointer_ports import ProfileCustodyRootLockPort
 
 class ActiveProfilePointerTransactionError(CadrumoError):
     """Reject invalid nesting or use outside live transaction ownership."""
+
+
+class ActiveProfilePointerManualRecoveryError(CadrumoError):
+    """Refuse to clear a pointer record whose transition revision cannot be read.
+
+    Every clear publishes the successor of the revision it replaces, and an
+    unreadable record has no revision to succeed. Publishing one anyway would
+    let a revision a live process already captured become current again.
+    """
+
+    def __init__(self, *, path: Path) -> None:
+        """Name the record that needs recovering by hand."""
+        super().__init__(
+            translated_message="errors.refused.refused_active_profile_pointer_manual_recovery",
+            context={"path": str(path), "pointer_corrupt": True, "manual_recovery_required": True},
+        )
 
 
 class ActiveProfilePointerTransaction:
@@ -64,7 +80,12 @@ class ActiveProfilePointerTransaction:
         return self._publish(expected=None, bucket_id=None)
 
     def _publish(self, *, expected: BucketPointer | None, bucket_id: str | None) -> BucketPointer:
-        observed = read_pointer(self._root)
+        try:
+            observed = read_pointer(self._root)
+        except ActiveProfilePointerError as exc:
+            if bucket_id is None:
+                raise ActiveProfilePointerManualRecoveryError(path=pointer_path(self._root)) from exc
+            raise
         if expected is not None and observed != expected:
             raise ActiveProfilePointerTransactionError(
                 translated_message="errors.integrity.integrity_storage_profile_custody_record",
@@ -237,6 +258,7 @@ def observe_active_profile_pointer(root: Path | None = None) -> BucketPointer:
 
 
 __all__ = [
+    "ActiveProfilePointerManualRecoveryError",
     "ActiveProfilePointerTransaction",
     "ActiveProfilePointerTransactionError",
     "active_profile_pointer_transaction",

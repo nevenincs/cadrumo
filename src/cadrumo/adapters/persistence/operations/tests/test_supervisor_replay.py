@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from contextlib import suppress
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -24,7 +25,7 @@ from cadrumo.application.operations.capabilities import (
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.owner import OperationExecutorContext
 from cadrumo.application.operations.persistence.journal import OperationSecureReferenceStore
-from cadrumo.application.operations.persistence.replay import OperationReplayStatus
+from cadrumo.application.operations.persistence.replay import OperationReplayPage, OperationReplayStatus
 from cadrumo.application.operations.registry import (
     OperationDefinition,
     OperationExecutorFactory,
@@ -62,7 +63,19 @@ class ReplayRequest(BaseModel):
 
 
 class ReplayNoticeExecutor:
-    """Concrete executor that commits two independently replayable events."""
+    """Concrete executor that commits two independently replayable events, then stays live.
+
+    Staying live keeps the replayed stream free of a terminal event; the test
+    closes the host once the replay proof is read.
+    """
+
+    notices_committed: asyncio.Event
+    release: asyncio.Event
+
+    @classmethod
+    def reset(cls) -> None:
+        cls.notices_committed = asyncio.Event()
+        cls.release = asyncio.Event()
 
     async def execute(
         self,
@@ -72,6 +85,8 @@ class ReplayNoticeExecutor:
         del request
         await context.events.notice("operation.replay.notice-one")
         await context.events.notice("operation.replay.notice-two")
+        type(self).notices_committed.set()
+        await type(self).release.wait()
 
 
 def _capabilities() -> OperationCapabilities:
@@ -145,6 +160,7 @@ def _supervisor(
 
 def test_supervisor_replay_reads_idempotent_bounded_pages_from_the_durable_event_stream(tmp_path: Path) -> None:
     """Real encrypted-SQL and filesystem adapters preserve authoritative cursor replay."""
+    ReplayNoticeExecutor.reset()
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         journal = OperationJournalRepository(storage_root=tmp_path / "durable-state")
         leases = OperationLeaseFilesystemRepository(storage_root=tmp_path / "durable-state")
@@ -161,17 +177,28 @@ def test_supervisor_replay_reads_idempotent_bounded_pages_from_the_durable_event
                 operation_id="3" * 64,
             )
         )
-        asyncio.run(run_to_settlement(supervisor, operation_id))
         observer = _supervisor(
             journal=OperationJournalRepository(storage_root=tmp_path / "durable-state"),
             leases=OperationLeaseFilesystemRepository(storage_root=tmp_path / "durable-state"),
             operands=operands,
         )
 
-        first_page = asyncio.run(observer.replay(operation_id, 0, limit=2))
-        repeated_first_page = asyncio.run(observer.replay(operation_id, 0, limit=2))
-        second_page = asyncio.run(observer.replay(operation_id, first_page.next_cursor, limit=1))
-        caught_up = asyncio.run(observer.replay(operation_id, second_page.next_cursor, limit=2))
+        async def replay_live_operation() -> tuple[
+            OperationReplayPage, OperationReplayPage, OperationReplayPage, OperationReplayPage
+        ]:
+            waiter = asyncio.create_task(run_to_settlement(supervisor, operation_id))
+            await ReplayNoticeExecutor.notices_committed.wait()
+            first_page = await observer.replay(operation_id, 0, limit=2)
+            repeated_first_page = await observer.replay(operation_id, 0, limit=2)
+            second_page = await observer.replay(operation_id, first_page.next_cursor, limit=1)
+            caught_up = await observer.replay(operation_id, second_page.next_cursor, limit=2)
+            waiter.cancel()
+            with suppress(asyncio.CancelledError):
+                await waiter
+            await supervisor.shutdown()
+            return first_page, repeated_first_page, second_page, caught_up
+
+        first_page, repeated_first_page, second_page, caught_up = asyncio.run(replay_live_operation())
 
         assert first_page.status is OperationReplayStatus.PAGE
         assert tuple(event.sequence for event in first_page.events) == (1, 2)

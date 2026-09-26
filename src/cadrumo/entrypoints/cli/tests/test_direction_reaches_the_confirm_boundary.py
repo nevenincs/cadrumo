@@ -50,8 +50,6 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation,
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.regime_legend import RegimeLegend, resolve_regime_legends
 from ....domain.user_profile.values import UserProfileFact
-from ....entrypoints.adapter_composition import build_ledger_evidence_ports
-from ....entrypoints.ledger_evidence_extraction_composition import invoice_draft_extraction_ports
 from ....tests.loopback_llm import (
     SilentLoopbackHandler,
     ollama_chat_reply,
@@ -60,6 +58,8 @@ from ....tests.loopback_llm import (
     write_json_response,
 )
 from ....tests.pdf_fixtures import text_pdf_bytes
+from ...adapter_composition import build_ledger_evidence_ports
+from ...ledger_evidence_extraction_composition import invoice_draft_extraction_ports
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

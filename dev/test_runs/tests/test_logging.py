@@ -15,6 +15,7 @@ import pytest
 
 from dev._paths import REPO_ROOT
 from dev.test_runs.logging import RunLog, _redirect_collection_output
+from dev.test_runs.paths import SCRATCH_PATH_BUDGET, SCRATCH_PREFIX, SCRATCH_SEPARATOR
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.serial]
 
@@ -116,10 +117,14 @@ def test_real_child_pytest_confines_cache_and_basetemp_to_its_run(tmp_path: Path
     assert result.returncode == 0, result.stdout + result.stderr
     paths = json.loads(report.read_text(encoding="utf-8"))
     run_root = Path(paths["run_root"]).resolve()
+    scratch = Path(paths["scratch"]).resolve()
     assert Path(paths["cache"]).resolve() == run_root / "cache" / "pytest"
-    assert Path(paths["basetemp"]).resolve() == run_root / "scratch" / "pytest"
-    assert Path(paths["stdlib_temp"]).resolve() == run_root / "scratch"
-    assert Path(paths["storage_root"]).resolve().parent == run_root / "scratch"
+    assert Path(paths["basetemp"]).resolve() == scratch / "pytest"
+    assert Path(paths["stdlib_temp"]).resolve() == scratch
+    assert Path(paths["storage_root"]).resolve().parent == scratch
+    # TEMP must stay short enough for tools that bind Unix-domain sockets under it.
+    assert len(paths["stdlib_temp"]) <= SCRATCH_PATH_BUDGET, paths["stdlib_temp"]
+    assert Path(json.loads((run_root / "run.json").read_text(encoding="utf-8"))["scratch"]).resolve() == scratch
 
 
 def test_parallel_workers_each_get_a_private_basetemp_inside_the_run(tmp_path: Path) -> None:
@@ -170,4 +175,5 @@ def test_parallel_workers_each_get_a_private_basetemp_inside_the_run(tmp_path: P
     for worker, basetemp in basetemps.items():
         assert basetemp.name == worker, f"{worker} did not own its basetemp: {basetemp}"
         assert basetemp.parent.name == "pytest"
-        assert basetemp.parent.parent.name == "scratch"
+        assert basetemp.parent.parent.name.startswith(f"{SCRATCH_PREFIX}{SCRATCH_SEPARATOR}")
+    assert len({basetemp.parent.parent for basetemp in basetemps.values()}) == 1, f"workers split the run: {basetemps}"

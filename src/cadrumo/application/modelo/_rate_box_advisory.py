@@ -21,7 +21,7 @@ advisory preceded at calculate.
 See Also:
     :mod:`domain.calculations.registry.rate_box_partition`
         Derives the two layers and owns the one subtraction both gates read.
-    :mod:`application.filing._export_parity`
+    :mod:`application.filing.export_parity`
         The export-side refusal on the same condition.
 """
 

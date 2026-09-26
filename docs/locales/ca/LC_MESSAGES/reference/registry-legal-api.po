@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-19 09:40+0200\n"
+"POT-Creation-Date: 2026-09-24 04:05+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ca\n"
@@ -188,11 +188,12 @@ msgstr "Rebut del compilador"
 
 #: ../../reference/registry-legal-api.md
 msgid ""
-"Relevant Cadrumo and compiler code, dependency manifests, Python "
-"major/minor, and Pydantic versions."
+"The Cadrumo and compiler source files the canonical compiler process "
+"loaded, dependency manifests, Python major/minor, and Pydantic versions."
 msgstr ""
-"Codi relevant de Cadrumo i del compilador, manifestos de dependències, "
-"versió major/menor de Python i versions de Pydantic."
+"Els fitxers font de Cadrumo i del compilador que va carregar el procés "
+"canònic del compilador, els manifestos de dependències, la versió "
+"major/menor de Python i les versions de Pydantic."
 
 #: ../../reference/registry-legal-api.md
 msgid "Component receipt"
@@ -247,22 +248,26 @@ msgid ""
 "The descriptor format is `cadrumo-authority-descriptor-v1`; its exact "
 "members are `format`, `database`, `database_size`, `database_sha256`, and"
 " `logical_generation`. The database format is `cadrumo-authority-"
-"sqlite-v1`. Its manifest binds the logical generation and the complete "
-"component directory. The physical database digest is both the "
-"descriptor's admission check and the content-addressed filename, so a "
-"changed or colliding payload is refused before runtime work begins."
+"sqlite-v3`. Its manifest binds the logical generation and the complete "
+"component directory, and it records the compiler source closure and "
+"environment the compiler receipt is computed from. A database in an older"
+" format is refused rather than read. The physical database digest is both"
+" the descriptor's admission check and the content-addressed filename, so "
+"a changed or colliding payload is refused before runtime work begins."
 msgstr ""
 "El format del descriptor és `cadrumo-authority-descriptor-v1`; els seus "
 "membres exactes són `format`, `database`, `database_size`, "
 "`database_sha256` i `logical_generation`. El format de la base de dades "
-"és `cadrumo-authority-sqlite-v1`. El seu manifest vincula la generació "
-"lògica i el directori complet de components. El resum físic de la base de"
-" dades és a la vegada la comprovació d'admissió del descriptor i el nom "
-"de fitxer adreçat per contingut, de manera que una càrrega útil "
-"modificada o en col·lisió es rebutja abans que comenci la feina de "
-"l'entorn d'execució."
+"és `cadrumo-authority-sqlite-v3`. El seu manifest vincula la generació "
+"lògica i el directori complet de components, i registra el tancament de "
+"fonts del compilador i l'entorn a partir dels quals es calcula el rebut "
+"del compilador. Una base de dades en un format anterior es rebutja en "
+"lloc de llegir-se. El resum físic de la base de dades és a la vegada la "
+"comprovació d'admissió del descriptor i el nom de fitxer adreçat per "
+"contingut, de manera que una càrrega útil modificada o en col·lisió es "
+"rebutja abans que comenci la feina de l'entorn d'execució."
 
-#: ../../reference/registry-legal-api.md:62
+#: ../../reference/registry-legal-api.md:64
 msgid ""
 "The development publication command is `python -m dev.registry.pipeline "
 "publish-authority`. It writes to the configured authority root, and "
@@ -281,26 +286,43 @@ msgstr ""
 "explícit. El paquet del producte que porta les ordres no té cap ordre que"
 " compili o repari aquesta publicació."
 
-#: ../../reference/registry-legal-api.md:71
+#: ../../reference/registry-legal-api.md:73
 msgid ""
 "The source receipt folds each registry and source-evidence file's root-"
 "relative path and content digest. Registry files fold CRLF to LF; source "
-"evidence is byte-exact. The compiler receipt also changes with relevant "
-"source code, `pyproject.toml`, `uv.lock`, Python major/minor, or the "
-"installed `pydantic` and `pydantic-core` versions. A fresh clone in the "
-"same declared environment is stable, without promising identity across "
-"incompatible build environments."
+"evidence is byte-exact. The compiler receipt hashes the portable path and"
+" content of every non-test `cadrumo` and `dev/registry` source file "
+"loaded to compile, validate and project the authority, together with "
+"`pyproject.toml`, `uv.lock`, Python major/minor, and the installed "
+"`pydantic` and `pydantic-core` versions. Every publication, whether "
+"started from the command above or by the package build, compiles in one "
+"fresh interpreter running the same module, so the recorded files do not "
+"depend on the launching tool. The currency check re-hashes exactly those "
+"recorded files without compiling: an edit to a recorded file, or its "
+"removal, makes the publication stale, while an edit to a module the "
+"compiler never loaded does not. A fresh clone in the same declared "
+"environment is stable, without promising identity across incompatible "
+"build environments."
 msgstr ""
 "El rebut de fonts plega el camí relatiu a l'arrel i el resum de contingut"
 " de cada fitxer de registre i d'evidència d'origen. Els fitxers de "
 "registre converteixen CRLF en LF; l'evidència d'origen és exacta byte a "
-"byte. El rebut del compilador també canvia amb el codi font relevant, "
-"`pyproject.toml`, `uv.lock`, la versió major/menor de Python o les "
-"versions instal·lades de `pydantic` i `pydantic-core`. Una còpia nova del"
-" repositori en el mateix entorn declarat és estable, sense prometre "
-"identitat entre entorns de compilació incompatibles."
+"byte. El rebut del compilador calcula el hash del camí portable i del "
+"contingut de cada fitxer font de `cadrumo` i de `dev/registry`, excloses "
+"les proves, que es carrega per compilar, validar i projectar l'autoritat,"
+" juntament amb `pyproject.toml`, `uv.lock`, la versió major/menor de "
+"Python i les versions instal·lades de `pydantic` i `pydantic-core`. Tota "
+"publicació, tant si s'inicia amb l'ordre anterior com amb la compilació "
+"del paquet, es compila en un únic intèrpret nou que executa el mateix "
+"mòdul, de manera que els fitxers registrats no depenen de l'eina que la "
+"inicia. La comprovació de vigència torna a calcular el hash exactament "
+"d'aquests fitxers registrats sense compilar: la modificació d'un fitxer "
+"registrat, o la seva eliminació, deixa obsoleta la publicació, mentre que"
+" la modificació d'un mòdul que el compilador no va carregar mai no ho fa."
+" Una còpia nova del repositori en el mateix entorn declarat és estable, "
+"sense prometre identitat entre entorns de compilació incompatibles."
 
-#: ../../reference/registry-legal-api.md:78
+#: ../../reference/registry-legal-api.md:87
 msgid ""
 "Each component payload is a compact canonical projection of one typed "
 "authority value. Required fields are always written; a field is omitted "
@@ -378,7 +400,7 @@ msgstr "Text"
 msgid "The bare JSON string, for example `\"0.40\"`"
 msgstr "La cadena JSON nua, per exemple `\"0.40\"`"
 
-#: ../../reference/registry-legal-api.md:96
+#: ../../reference/registry-legal-api.md:105
 msgid ""
 "Runtime decodes the payload under the same strict schema the development "
 "compiler uses. It refuses an unknown tag, a malformed or non-canonical "
@@ -391,7 +413,7 @@ msgstr ""
 "valor de fet no textual sense etiqueta; mai no infereix un tipus a partir"
 " de la forma d'una cadena."
 
-#: ../../reference/registry-legal-api.md:101
+#: ../../reference/registry-legal-api.md:110
 msgid ""
 "The compiler, not the product runtime, expands authoring deltas into "
 "complete canonical revisions. The database also carries typed runtime "
@@ -411,7 +433,7 @@ msgstr ""
 "Una escriptura o lectura rebutja una autoritat quan qualsevol catàleg "
 "obligatori de l'entorn d'execució és buit."
 
-#: ../../reference/registry-legal-api.md:108
+#: ../../reference/registry-legal-api.md:117
 msgid ""
 "Modelo and tax-domain types validate stable identifier syntax without "
 "loading the authored tree. The compiled authority owns membership and "
@@ -427,7 +449,7 @@ msgstr ""
 "temporal compartida `floor`, `horizon` i `hard_ceiling` opcional, "
 "utilitzada per admetre coordenades compatibles."
 
-#: ../../reference/registry-legal-api.md:114
+#: ../../reference/registry-legal-api.md:123
 msgid ""
 "The `IndexedRegistryAuthority.operation()` path has no source "
 "compilation, raw authored-tree loader, repair path, eager JSON runtime "
@@ -452,7 +474,7 @@ msgstr ""
 "carreguen només quan una operació fixada els demana; els valors correctes"
 " romanen en una memòria cau limitada a l'àmbit de la generació."
 
-#: ../../reference/registry-legal-api.md:124
+#: ../../reference/registry-legal-api.md:133
 msgid ""
 "Development checkpoint C may compare the indexed reader with an explicit "
 "`dev.registry.indexed_authority_benchmark` JSON baseline. The baseline is"
@@ -478,7 +500,7 @@ msgstr ""
 "control C s'executi sobre un candidat estable; aquesta descripció de "
 "l'API no implica cap guany mesurat."
 
-#: ../../reference/registry-legal-api.md:134
+#: ../../reference/registry-legal-api.md:143
 msgid ""
 "The runtime contract is for ordinary filesystem-installed wheels, where "
 "the descriptor and SQLite database have stable physical paths. Direct "
@@ -491,7 +513,7 @@ msgstr ""
 "importació des d'un zip: SQLite no pot obrir un membre d'arxiu comprimit "
 "com la seva base de dades de només lectura."
 
-#: ../../reference/registry-legal-api.md:139
+#: ../../reference/registry-legal-api.md:148
 msgid ""
 "`python -m dev.registry.conformance integrity` refuses a "
 "descriptor/database publication whose recorded identity digest differs "
@@ -508,11 +530,11 @@ msgstr ""
 "les garanties de publicació, les comprovacions d'actualitat i la ruta de "
 "recuperació."
 
-#: ../../reference/registry-legal-api.md:146
+#: ../../reference/registry-legal-api.md:155
 msgid "Filing-input contract shapes"
 msgstr "Formes del contracte d'entrada de la presentació"
 
-#: ../../reference/registry-legal-api.md:148
+#: ../../reference/registry-legal-api.md:157
 msgid ""
 "The validated registry snapshot is the read-model authority for one "
 "modelo, filing year, and period. It defines the casillas, formulas, "
@@ -581,7 +603,7 @@ msgstr "Operands tipats i operació fonamentada en referències del registre"
 msgid "A calculated casilla observation"
 msgstr "Una observació de casella calculada"
 
-#: ../../reference/registry-legal-api.md:159
+#: ../../reference/registry-legal-api.md:168
 msgid ""
 "A binding is not an attachable data blob. It is the contract by which an "
 "enrolled source resolver projects an owned source record into one of "
@@ -599,7 +621,7 @@ msgstr ""
 "càlcul inscrit per al `InventoryLedger` xifrat, per tant continua sent un"
 " registre empresarial independent."
 
-#: ../../reference/registry-legal-api.md:166
+#: ../../reference/registry-legal-api.md:175
 #, python-brace-format
 msgid ""
 "Use the generated [application command reference](../cli/app.rst) to look"
@@ -612,11 +634,11 @@ msgstr ""
 "informe de verificació i auditoria. Utilitzeu el {doc}`glossary "
 "</_generated/glossary>` per a les definicions adreçades als contribuents."
 
-#: ../../reference/registry-legal-api.md:170
+#: ../../reference/registry-legal-api.md:179
 msgid "Python public API lookup"
 msgstr "Consulta de l'API pública de Python"
 
-#: ../../reference/registry-legal-api.md:172
+#: ../../reference/registry-legal-api.md:181
 msgid ""
 "The generated [Cadrumo package API](../api/cadrumo.rst) is the entry "
 "point for Python lookup. Public consumers import from `cadrumo` and its "
@@ -629,7 +651,7 @@ msgstr ""
 "paquets generat llista les superfícies admeses d'adaptadors, aplicació, "
 "nucli, domini, punt d'entrada i localització."
 
-#: ../../reference/registry-legal-api.md:177
+#: ../../reference/registry-legal-api.md:186
 msgid ""
 "There is no `aeat` Python import compatibility package. Names containing "
 "`aeat` inside the `cadrumo` package identify the external authority "

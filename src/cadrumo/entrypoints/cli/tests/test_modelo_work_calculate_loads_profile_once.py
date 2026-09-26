@@ -14,8 +14,6 @@ the count holds for every step the command runs.
 
 from __future__ import annotations
 
-import json
-
 import pytest
 
 from ....adapters.persistence.storage.tests.secure_sql import (
@@ -23,12 +21,15 @@ from ....adapters.persistence.storage.tests.secure_sql import (
 )
 from ....application.modelo.profile_readiness_gate import load_modelo_work_profile, require_profile_ready_for_work_unit
 from ....application.user_profile.capsule_record import LoadedProfileRecord, ProfileRecordStore
-from ....core.aggregation import BindingSourceKind
 from ....core.bucket_pointer import resolve_active_bucket_id
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....tests.cli_envelope import unwrap_schema_envelope
 from .._modelo_behavior_support import resolve_work_unit_for_cli
-from ._modelo_work_ux_support import _create_calculable_work_unit, operator_profile_facts
+from ._modelo_work_ux_support import (
+    _capture_m115_invoice_withholding,
+    _create_calculable_work_unit,
+    operator_profile_facts,
+)
 from .cli_runner import invoke_cached_cli
 from .modelo_cli import create_modelo_work_unit_via_cli
 from .modelo_profile_seed import ProfileSeeder, seed_profile
@@ -86,28 +87,8 @@ def test_m111_calculate_decrypts_the_profile_once(seed_profile: ProfileSeeder, p
 
 def test_m115_calculate_decrypts_the_profile_once(seed_profile: ProfileSeeder, profile_decrypts: list[str]) -> None:
     seed_profile(label="operator", facts=operator_profile_facts())
-    work_unit_id = _create_work_unit(modelo="115", year=2026, period="1T")
-    observation = json.dumps(
-        {
-            "source_kind": BindingSourceKind.LEDGER_TRANSACTION.value,
-            "source_object_id": "rent-ledger-row-001",
-            "perceptor_nif": "B12345678",
-            "perceptor_name": "Arrendador Ejemplo SL",
-            "scheme": "arrendamiento_urbano",
-            "taxable_base": "2700.00",
-            "retencion_amount": "513.00",
-            "accrued_on": "2026-03-15",
-        },
-    )
-    aggregated = invoke_cached_cli(
-        [
-            "--format", "json",
-            "app", "modelo", "aggregate",
-            "--modelo", "115", "--year", "2026", "--period", "1T",
-            "--retencion-observation", observation,
-        ],
-    )  # fmt: skip
-    assert aggregated.exit_code == 0, aggregated.output
+    work_unit_id = _create_work_unit(modelo="115", year=2025, period="1T")
+    _capture_m115_invoice_withholding()
 
     exit_code, output = _calculate(profile_decrypts, work_unit_id, "--casilla", "04=0")
 
@@ -127,6 +108,45 @@ def test_m100_calculate_decrypts_the_profile_once(seed_profile: ProfileSeeder, p
     )
 
     assert len(profile_decrypts) == 1, (profile_decrypts, output)
+
+
+def test_m303_attestation_cli_admits_only_a_sanitized_secure_reference_once(
+    seed_profile: ProfileSeeder, profile_decrypts: list[str]
+) -> None:
+    seed_profile(label="operator", facts=operator_profile_facts())
+
+    profile_decrypts.clear()
+    result = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "work",
+            "attest-m303-exonerado-390",
+            "--year",
+            "2025",
+            # Only the year's last return asks the Modelo 390 exemption
+            # (DP30301 Nota 4), so only its period admits the attestation.
+            "--period",
+            "4T",
+            "--observed-at",
+            "2025-12-31T12:00:00+00:00",
+        ]
+    )
+
+    assert result.exit_code == 0, result.output
+    payload = unwrap_schema_envelope(result.output)
+    attachment_id = payload["attachment_id"]
+    sha256 = payload["sha256"]
+    assert isinstance(attachment_id, str) and len(attachment_id) == 64
+    assert attachment_id == sha256
+    assert payload["filing_year"] == 2025
+    assert payload["period"] == {"filing_year": 2025, "code": "4T"}
+    assert "profile_witness" not in result.output
+    assert "attachment:" not in result.output
+    assert "filing_evidence_reference" not in result.output
+    assert len(profile_decrypts) == 1, profile_decrypts
 
 
 def test_the_readiness_gate_hands_back_the_profile_it_checked(seed_profile: ProfileSeeder) -> None:

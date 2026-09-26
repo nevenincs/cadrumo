@@ -292,6 +292,38 @@ def test_manual_transaction_tax_fields_feed_renta_observation_without_invoice_ca
     assert result.casilla_values == {_M100_ASESORIA_CASILLA: Decimal("100.00")}
 
 
+def test_raw_amortizable_acquisition_is_currently_deducted_at_full_base_without_a_schedule() -> None:
+    """Pin the pre-asset-schedule behavior at the ledger boundary.
+
+    This is deliberately a material acquisition whose taxable base is larger
+    than any illustrative annual charge: the current transaction-ledger path
+    has only the raw purchase amount and category.  It therefore routes the
+    whole base to 0208; it neither receives nor validates asset lifecycle,
+    service-date, coefficient, or accumulated-depreciation facts.
+    """
+    equipment = _transaction(
+        "unscheduled-equipment-acquisition",
+        amount=Decimal("2420.00"),
+        category=SpendingCategory.from_registry("hardware_amortizable"),
+        taxable_base=Decimal("2000.00"),
+        iva_rate=Decimal("0.21"),
+        iva_amount=Decimal("420.00"),
+    )
+
+    result = aggregate_renta_ledger_expenses(
+        TransactionCatalogue.from_transactions((equipment,)),
+        InvoiceCatalogue(),
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
+        period=_ANNUAL_2025,
+        profile_year=2025,
+    )
+
+    assert result.issues == ()
+    assert result.observations[0].target_casilla_id == "0208"
+    assert result.observations[0].deductible_amount == Decimal("2000.00")
+    assert result.casilla_values == {validated_casilla_id("0208", surface="test"): Decimal("2000.00")}
+
+
 def test_usage_ratio_phone_requires_ratio_before_routing_to_other_expenses() -> None:
     phone = _transaction(
         "phone",

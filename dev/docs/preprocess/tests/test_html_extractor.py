@@ -514,3 +514,83 @@ def test_block_noise_is_stripped_when_its_end_tag_carries_whitespace(tmp_path: P
     assert "Jurisprudencia" not in body
     # Positive control: the article prose the stripper must not touch survives.
     assert "tributo de naturaleza indirecta" in body
+
+
+_WRAPPED_ARTICLE_EXCERPT = (
+    "<html><body>\n"
+    "<p>Orden de prueba, por la que se aprueba el modelo 999.</p>\n"
+    '<div id="a1">\n<h2>Articulo 1. Aprobacion del modelo 999.</h2>\n'
+    "<p>Se aprueba el modelo 999.</p>\n</div>\n"
+    '<div id="a6">\n<h2>Artículo 6. Plazo de presentación.</h2>\n'
+    "<p>Se presentará durante el mes de enero.</p>\n</div>\n"
+    "<p>Provenance: capture note outside every article.</p>\n"
+    "</body></html>"
+)
+
+
+def test_plain_heading_excerpt_splits_on_its_declared_article_fragments(tmp_path: Path) -> None:
+    """Each ``<div id="aN"><h2>Articulo N.`` becomes its own titled unit at ``#aN``.
+
+    Unsplit, the excerpt was one anonymous unit, so a citation of article 1
+    verified against article 6's text too. The capture note after the last
+    wrapper is not article text and stays out of every unit.
+    """
+    source = tmp_path / "orden-probe.html"
+    source.write_text(_WRAPPED_ARTICLE_EXCERPT, encoding="utf-8")
+
+    units = build_outputs(source, repo_root=tmp_path)[0].units
+
+    assert [(unit.anchor, unit.title) for unit in units] == [
+        ("#a1", "Articulo 1. Aprobacion del modelo 999."),
+        ("#a6", "Artículo 6. Plazo de presentación."),
+    ]
+    assert units[0].text == "Se aprueba el modelo 999."
+    assert units[1].text == "Se presentará durante el mes de enero."
+    assert not any("Provenance" in unit.text or "Orden de prueba" in unit.text for unit in units)
+
+
+def test_heading_ids_split_an_excerpt_and_run_to_the_next_article(tmp_path: Path) -> None:
+    """``<h1 id="aN">`` declares the fragment on the heading itself."""
+    source = tmp_path / "rdleg-probe.html"
+    source.write_text(
+        "<html><body>\n"
+        '<h1 id="a2">Articulo 2. Ambito de aplicacion.</h1>\n<p>1. Este impuesto se aplicara.</p>\n'
+        '<h1 id="a13">Articulo 13. Rentas.</h1>\n<p id="a13-1-h">h) Las rentas imputadas.</p>\n'
+        "</body></html>",
+        encoding="utf-8",
+    )
+
+    units = build_outputs(source, repo_root=tmp_path)[0].units
+
+    assert [unit.anchor for unit in units] == ["#a2", "#a13"]
+    assert units[0].text == "1. Este impuesto se aplicara."
+    assert units[1].text == "h) Las rentas imputadas."
+
+
+def test_an_excerpt_whose_articles_do_not_all_declare_their_fragment_is_not_split(tmp_path: Path) -> None:
+    """A wrapper naming no article lends no fragment, and one unmarked article stops the split.
+
+    ``<div id="modelo-200">`` wraps several articles, so its fragment belongs to
+    the excerpt, not to article 1; with no fragment per article the document
+    keeps its single unit rather than gaining anchors its source never stated.
+    """
+    source = tmp_path / "orden-wrapper-probe.html"
+    source.write_text(
+        "<html><body>\n"
+        '<div id="modelo-200">\n<h2>Artículo 1. Aprobación.</h2>\n<p>Se aprueba el modelo 200.</p>\n'
+        "<h2>Artículo 6. Plazo.</h2>\n<p>Veinticinco días naturales.</p>\n</div>\n"
+        "</body></html>",
+        encoding="utf-8",
+    )
+    partly_marked = tmp_path / "orden-partly-marked-probe.html"
+    partly_marked.write_text(
+        '<html><body>\n<div id="a1"><h2>Artículo 1. Uno.</h2><p>Texto uno.</p></div>\n'
+        "<h2>Artículo 2. Dos.</h2><p>Texto dos.</p>\n</body></html>",
+        encoding="utf-8",
+    )
+
+    for probe in (source, partly_marked):
+        units = build_outputs(probe, repo_root=tmp_path)[0].units
+        assert len(units) == 1
+        assert units[0].title is None
+        assert units[0].anchor is None

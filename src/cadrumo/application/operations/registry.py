@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from enum import StrEnum
 from functools import cached_property
-from typing import Annotated, Literal, Protocol, cast, runtime_checkable
+from typing import Annotated, Literal, Protocol, TypeIs, runtime_checkable
 
 from pydantic import (
     BaseModel,
@@ -204,6 +204,11 @@ class OperationFrontendProjection(StrEnum):
     TUI = "tui"
 
 
+def _is_operation_executor(executor: object) -> TypeIs[OperationExecutor[BaseModel]]:
+    """Report whether a built executor structurally implements the executor contract."""
+    return isinstance(executor, OperationExecutor)
+
+
 class OperationExecutorFactory(BaseModel):
     """Non-effectful descriptor binding an executor class to its request type."""
 
@@ -223,9 +228,9 @@ class OperationExecutorFactory(BaseModel):
     def create(self) -> OperationExecutor[BaseModel]:
         """Construct and validate the declared executor without running it."""
         executor = self.build()
-        if not isinstance(executor, self.executor_type) or not isinstance(executor, OperationExecutor):
+        if not isinstance(executor, self.executor_type) or not _is_operation_executor(executor):
             raise TypeError("operation executor factory returned an undeclared or invalid executor")
-        return cast(OperationExecutor[BaseModel], executor)
+        return executor
 
 
 class OperationDefinition(BaseModel):
@@ -652,17 +657,14 @@ def _public_contract_for_definition(
     interaction_response_schema: OperationSchemaIdentityV1 | None,
     workspace_refresh_target_schema: OperationSchemaIdentityV1 | None,
 ) -> OperationPublicDefinitionContractV1:
-    return cast(
-        OperationPublicDefinitionContractV1,
-        _build_public_contract(
-            contract_type=OperationPublicDefinitionContractV1,
-            definition=definition,
-            request_schema=request_schema,
-            result_schema=result_schema,
-            review_projection_schema=review_projection_schema,
-            interaction_response_schema=interaction_response_schema,
-            workspace_refresh_target_schema=workspace_refresh_target_schema,
-        ),
+    return _build_public_contract(
+        contract_type=OperationPublicDefinitionContractV1,
+        definition=definition,
+        request_schema=request_schema,
+        result_schema=result_schema,
+        review_projection_schema=review_projection_schema,
+        interaction_response_schema=interaction_response_schema,
+        workspace_refresh_target_schema=workspace_refresh_target_schema,
     )
 
 

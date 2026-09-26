@@ -47,6 +47,7 @@ from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.lockfile_unlink import LOCKFILE_UNLINK_RETRY_SECONDS, unlink_lockfile
 from cadrumo.core.logging import get_logger
 from cadrumo.core.pid_liveness import pid_is_alive
+from cadrumo.core.windows_contention import is_windows_contention
 
 from .errors import LocaleError, LocaleWriteConflictError
 
@@ -57,6 +58,15 @@ LOCK_FILENAME = ".catalogue-write.lock"
 
 _DEFAULT_WAIT_SECONDS = 60.0
 _POLL_SECONDS = 0.02
+
+CATALOGUE_REPLACE_RETRY_SECONDS = 5.0
+"""How long a replace refused by a transient Windows handle is retried before refusing.
+
+The lock already excludes every catalogue writer, so the handle that refuses the
+replace belongs to something outside this tool -- a scanner or indexer opening the
+freshly staged file for a few milliseconds. A refusal that outlasts this window is
+not that, and is reported rather than retried forever.
+"""
 _ABSENT_DIGEST = ""
 
 
@@ -140,8 +150,36 @@ class CatalogueWriteGuard:
                 f"{path.name} changed while this edit was in flight; the edit was not written. "
                 "Another writer or a hand edit landed first. Re-run the command to apply it on top."
             )
-        atomic_write_text(path, text, encoding=UTF_8_ENCODING)
+        _replace_catalogue(path, text)
         self._observed[key] = _digest_bytes(text.encode(UTF_8_ENCODING))
+
+
+def _replace_catalogue(path: Path, text: str) -> None:
+    """Atomically replace ``path``, waiting out a transient Windows handle on it.
+
+    Raises:
+        LocaleError: When Windows still refuses the replace after
+            :data:`CATALOGUE_REPLACE_RETRY_SECONDS`; the catalogue keeps its
+            previous bytes.
+        OSError: For any failure that is not Windows handle contention.
+    """
+    deadline = time.monotonic() + CATALOGUE_REPLACE_RETRY_SECONDS
+    while True:
+        try:
+            atomic_write_text(path, text, encoding=UTF_8_ENCODING)
+        except PermissionError as error:
+            if not is_windows_contention(error):
+                raise
+            if time.monotonic() >= deadline:
+                raise LocaleError(
+                    f"{path.name} could not be replaced: Windows kept refusing access for "
+                    f"{CATALOGUE_REPLACE_RETRY_SECONDS:g} s, so the edit was not written. Close whatever "
+                    "holds the file open and re-run the command."
+                ) from error
+            _log.debug("catalogue replace refused by a transient handle; retrying path=%s", path.name)
+            time.sleep(_POLL_SECONDS)
+        else:
+            return
 
 
 @contextmanager

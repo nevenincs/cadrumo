@@ -32,7 +32,7 @@ from ....domain.filing.errors import FilingExportValidationError
 from .._export_xml_dictionary import (
     _modelo_100_comunidad_block,
     _modelo_100_unfiled_comunidad_paths,
-    _registry_modelo_100_xml_declarations,
+    registry_modelo_100_xml_declarations,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -45,7 +45,7 @@ _SHARED_TOTAL = "0564"
 def _declarations(operation: PinnedAuthorityOperation) -> Mapping[str, str]:
     """Resolve Modelo 100 XML routing declarations through the pinned authority."""
     with validating_governed_facts(operation):
-        return _registry_modelo_100_xml_declarations()
+        return registry_modelo_100_xml_declarations()
 
 
 def _entries():

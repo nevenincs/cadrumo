@@ -20,10 +20,8 @@ from typing import Any, Final, cast
 from textual.app import App
 from textual.screen import Screen
 
-from cadrumo.adapters.outbound.aeat.browser.factory import default_browser_session_factory
-from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
+from cadrumo.domain.deadlines.festivos import DeadlineHolidayCoverage
 from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
-from cadrumo.entrypoints.adapter_composition import build_censal_fetch_port
 
 from ....application.aeat_sync.workspace import (
     AeatSyncAeatObservationState,
@@ -60,6 +58,8 @@ from ....application.ledger.workspace import (
     LedgerWorkspaceAreaStateV1,
     LedgerWorkspaceProjectionV1,
 )
+from ....application.live.tests.operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
+from ....application.live.tests.unopened_live_ports import unopened_browser_session_factory, unopened_censal_fetch
 from ....application.modelo.declarations_calendar import (
     DeclarationsCalendarProjectionV1,
     DeclarationsCalendarSource,
@@ -147,6 +147,7 @@ from ..home import HomeScreen
 from ..ledger.controller import LedgerWorkspaceController
 from ..ledger.workspace_injection import LedgerWorkspaceInjection
 from ..navigation import (
+    TUI_DESTINATION_CATALOGUE,
     TuiDestinationAdmissionV1,
     TuiScreenContextV1,
     build_destination_catalogue,
@@ -159,7 +160,7 @@ _AT: Final[datetime] = datetime(2026, 9, 3, 10, tzinfo=UTC)
 _CERTIFICATE_SECRET_BACKEND_FACTORY = InMemoryCertificateSecretBackendFactory()
 
 
-_OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
+_OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 
 
 class WorkbenchFixtureScenario(StrEnum):
@@ -241,12 +242,18 @@ def _aeat_source(
 
 
 def _operation_contracts() -> OperationPublicContractSetV1:
-    """Build the canonical censo contract with its existing action join."""
+    """Build the canonical censo contract with its existing action join.
+
+    Only the public contract is read; the live authorities the definition binds
+    are never invoked here. Binding inward ports that refuse to open keeps that
+    honest: a fixture that ever reached AEAT or local storage would fail loudly
+    rather than quietly acquire a browser session.
+    """
     definition = build_censal_operation_definition(
         certificate_secret_backend_factory=_CERTIFICATE_SECRET_BACKEND_FACTORY,
-        browser_session_factory=default_browser_session_factory,
+        browser_session_factory=unopened_browser_session_factory,
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-        censal_fetch_port=build_censal_fetch_port(),
+        censal_fetch_port=unopened_censal_fetch,
     ).model_copy(update={"action_reference": ActionReference(action_id="operator.profile.edit")})
     contract = build_censal_operation_registration(definition).contract
     return OperationPublicContractSetV1.build((contract,))
@@ -554,6 +561,8 @@ def _calendar_projection(scenario: WorkbenchFixtureScenario) -> DeclarationsCale
                 closes_on=date(2026, 4, 30),
                 adjusted_closes_on=date(2026, 4, 30),
                 shift_reason="fixture",
+                holiday_coverage=DeadlineHolidayCoverage.NATIONAL_ONLY,
+                evaluated_on=date(2026, 2, 1),
                 status=ObligationStatus.UPCOMING,
                 user_state=OverviewPeriodState.DUE,
                 filing_evidence=OverviewCalendarFilingEvidence(modelo="130", filing_year=2026, period=period),
@@ -561,6 +570,7 @@ def _calendar_projection(scenario: WorkbenchFixtureScenario) -> DeclarationsCale
         )
     calendar = OverviewCalendar(
         range=OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31)),
+        evaluated_on=date(2026, 2, 1),
         entries=entries,
         generated_at=_AT,
     )
@@ -691,38 +701,36 @@ def _operation_modal_app() -> App[Any]:
     return _host(OperationModal(controller))
 
 
+def _root_admissions() -> dict[str, TuiDestinationAdmissionV1]:
+    """Admit Home and refuse every other destination the shell declares.
+
+    Derived from the closed catalogue rather than restated, so a destination
+    added to the shell is admitted here by construction. Restating the list
+    left the fixture short of `workbench.withholding` when that route landed,
+    and the root fixture stopped building at all.
+    """
+    return {
+        descriptor.destination: TuiDestinationAdmissionV1(
+            destination=descriptor.destination,
+            state=WorkbenchDestinationAdmissionState.AVAILABLE,
+        )
+        if descriptor.destination == "workbench.home"
+        else TuiDestinationAdmissionV1(
+            destination=descriptor.destination,
+            state=WorkbenchDestinationAdmissionState.NEVER_CAPTURED,
+            reason_code="fixture.root.unavailable",
+        )
+        for descriptor in TUI_DESTINATION_CATALOGUE
+    }
+
+
 def _root_app(scenario: WorkbenchFixtureScenario) -> App[Any]:
     home_projection = _home_projection(scenario)
 
     def home_factory(_context: TuiScreenContextV1) -> Screen[None]:
         return HomeScreen(home_projection)
 
-    admissions = {
-        "workbench.home": TuiDestinationAdmissionV1(
-            destination="workbench.home", state=WorkbenchDestinationAdmissionState.AVAILABLE
-        ),
-        "workbench.ledger": TuiDestinationAdmissionV1(
-            destination="workbench.ledger",
-            state=WorkbenchDestinationAdmissionState.NEVER_CAPTURED,
-            reason_code="fixture.root.unavailable",
-        ),
-        "workbench.declarations": TuiDestinationAdmissionV1(
-            destination="workbench.declarations",
-            state=WorkbenchDestinationAdmissionState.NEVER_CAPTURED,
-            reason_code="fixture.root.unavailable",
-        ),
-        "workbench.aeat_sync": TuiDestinationAdmissionV1(
-            destination="workbench.aeat_sync",
-            state=WorkbenchDestinationAdmissionState.NEVER_CAPTURED,
-            reason_code="fixture.root.unavailable",
-        ),
-        "workbench.profile": TuiDestinationAdmissionV1(
-            destination="workbench.profile",
-            state=WorkbenchDestinationAdmissionState.NEVER_CAPTURED,
-            reason_code="fixture.root.unavailable",
-        ),
-    }
-    catalogue = build_destination_catalogue(admissions=admissions, factories={"workbench.home": home_factory})
+    catalogue = build_destination_catalogue(admissions=_root_admissions(), factories={"workbench.home": home_factory})
     return CadrumoTuiApp(
         services=cast(OperationComposedServices, object()),
         destination_catalogue=catalogue,

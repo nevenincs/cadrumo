@@ -301,3 +301,113 @@ def test_structural_title_match_survives_an_abbreviated_period_qualified_heading
     text = resolve_anchored_extracted_unit(sidecar, anchor="articulo-1")
 
     assert "obligados tributarios" in text
+
+
+def _write_sidecar(tmp_path: Path, name: str, units: list[dict[str, str | None]]) -> Path:
+    sidecar = tmp_path / f"{name}.html.extracted.json"
+    sidecar.write_text(json.dumps({"units": units}, ensure_ascii=False), encoding="utf-8")
+    return sidecar
+
+
+def test_an_unsplit_multi_article_unit_refuses_an_article_anchor(tmp_path: Path) -> None:
+    """A whole document holding several articles cannot stand in for one of them.
+
+    Returned whole, the unit would let a phrase quoted from article 3 verify a
+    citation of article 1.
+    """
+    sidecar = _write_sidecar(
+        tmp_path,
+        "orden-probe",
+        [
+            {
+                "anchor": None,
+                "title": None,
+                "text": (
+                    "Orden de prueba.\n"
+                    "Artículo 1. Aprobación del modelo.\n"
+                    "Se aprueba el modelo de prueba.\n"
+                    "Artículo 3. Plazo de presentación.\n"
+                    "Se presentará en el mes de enero."
+                ),
+            },
+        ],
+    )
+
+    for anchor in ("a1", "a3", "art-1", "a1-2"):
+        with pytest.raises(CorpusAnchorResolutionError, match="missing"):
+            resolve_anchored_extracted_unit(sidecar, anchor=anchor)
+
+
+def test_a_one_article_unit_still_resolves_its_own_article_anchor(tmp_path: Path) -> None:
+    """An excerpt whose only article heading is the cited one keeps the fallback."""
+    sidecar = _write_sidecar(
+        tmp_path,
+        "rd-probe-art-113",
+        [
+            {
+                "anchor": None,
+                "title": None,
+                "text": (
+                    "RD de prueba Art. 113\n"
+                    "Artículo 113. Ámbito de aplicación.\n"
+                    "Conforme al artículo 93.1 de la Ley del Impuesto.\n"
+                    "artículo 25.1.f) del texto refundido, citado en prosa."
+                ),
+            },
+        ],
+    )
+
+    assert "Ámbito de aplicación" in resolve_anchored_extracted_unit(sidecar, anchor="a113")
+    assert "Ámbito de aplicación" in resolve_anchored_extracted_unit(sidecar, anchor="a113-2")
+    with pytest.raises(CorpusAnchorResolutionError, match="missing"):
+        resolve_anchored_extracted_unit(sidecar, anchor="a93")
+
+
+def test_an_article_anchor_is_refused_by_a_unit_titled_as_an_apartado(tmp_path: Path) -> None:
+    """``#a1`` names an article; an orden's apartado ``Primero.`` is not one."""
+    sidecar = _write_sidecar(
+        tmp_path,
+        "orden-probe-apartado",
+        [{"anchor": None, "title": "Primero.", "text": "Aprobación del modelo 840."}],
+    )
+
+    with pytest.raises(CorpusAnchorResolutionError, match="missing"):
+        resolve_anchored_extracted_unit(sidecar, anchor="a1")
+    assert "modelo 840" in resolve_anchored_extracted_unit(sidecar, anchor="primero")
+
+
+def test_a_document_level_anchor_keeps_the_whole_unit_fallback(tmp_path: Path) -> None:
+    """An anchor naming the excerpt's container, not an article, still resolves it."""
+    sidecar = _write_sidecar(
+        tmp_path,
+        "orden-probe-container",
+        [
+            {
+                "anchor": None,
+                "title": None,
+                "text": "Artículo 1. Aprobación.\nTexto uno.\nArtículo 6. Plazo.\nTexto seis.",
+            },
+        ],
+    )
+
+    assert "Texto seis." in resolve_anchored_extracted_unit(sidecar, anchor="modelo-200")
+
+
+def test_an_article_point_resolves_to_its_articles_unit_only(tmp_path: Path) -> None:
+    """``a13-1-h`` narrows to article 13's unit, never to the document or another article."""
+    sidecar = _write_sidecar(
+        tmp_path,
+        "trlirnr-probe",
+        [
+            {"anchor": "#a2", "title": "Articulo 2. Ambito.", "text": "Territorio espanol."},
+            {"anchor": "#a13", "title": "Articulo 13. Rentas.", "text": "h) Las rentas imputadas."},
+            {"anchor": "#a1-3", "title": "Articulo 1. Otro bloque.", "text": "Bloque BOE distinto."},
+        ],
+    )
+
+    text = resolve_anchored_extracted_unit(sidecar, anchor="a13-1-h")
+    assert "rentas imputadas" in text
+    assert "Territorio" not in text
+    assert "Bloque BOE distinto." in resolve_anchored_extracted_unit(sidecar, anchor="a1-3")
+    with pytest.raises(CorpusAnchorResolutionError, match="missing"):
+        resolve_anchored_extracted_unit(sidecar, anchor="a24-1-a")

@@ -218,6 +218,28 @@ class RegistryValidationError(RegistryError, CoreValidationError):
             },
         )
 
+    @classmethod
+    def for_row_field_template_scalar_inputs(
+        cls,
+        *,
+        casilla_ids: Sequence[CasillaId],
+        record_ids: Sequence[str],
+    ) -> Self:
+        """Scalar inputs named casillas that a repeated export record fills once per detail row.
+
+        Such a casilla carries one value per emitted row, so a single scalar
+        value names no row and would be recorded as an operator input with no
+        filing value behind it.
+        """
+        ids = sorted(casilla_ids)
+        records = sorted(record_ids)
+        return cls(
+            f"row-field template casillas cannot be supplied as scalar inputs; supply them as detail rows "
+            f"of export records {records!r}: {ids!r}",
+            translated_message="errors.calc.row_field_template_supplied_as_input",
+            context={"casilla_ids": _csv(ids), "record_ids": _csv(records)},
+        )
+
 
 class GovernedFactNotApplicableError(RegistryValidationError):
     """A registered governed fact authors no variant covering the query coordinate.

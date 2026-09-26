@@ -39,6 +39,7 @@ from ...domain.calculations.registry.casilla_membership import (
     casilla_noncanonical_reference_targets,
     casillas_by_id,
     format_noncanonical_casilla_reference,
+    row_field_template_records_by_casilla,
     undeclared_casilla_ids,
 )
 from ...domain.calculations.registry.errors import (
@@ -470,6 +471,20 @@ def reject_unknown_override_casillas[CasillaKey](
                 "casillas": resolved.unknown_only,
             },
         )
+    # An override is one scalar value; a casilla an export record fills once
+    # per detail row has no single value it could replace.
+    records_by_casilla = row_field_template_records_by_casilla(resolved.snapshot.revision)
+    row_fields = sorted(set(resolved.canonical_values).intersection(records_by_casilla))
+    if row_fields:
+        raise AmendmentOverrideCasillaError(
+            translated_message="errors.calc.row_field_template_supplied_as_input",
+            context={
+                "casilla_ids": ",".join(row_fields),
+                "record_ids": ",".join(
+                    sorted({record for casilla in row_fields for record in records_by_casilla[casilla]})
+                ),
+            },
+        )
     return resolved.canonical_values
 
 
@@ -563,7 +578,10 @@ def required_input_casilla_ids_for_revision(
     Returns ``None`` when the registry root or
     :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot` cannot be
     loaded. The first tuple contains required manual casillas from the selected
-    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`; the second
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision` that an
+    operator supplies once, leaving out those an export record fills once per
+    detail row, whose values arrive on the rows exactly as verify reads them;
+    the second
     contains declared manual, bound, and computed
     :class:`~cadrumo.core.casilla_id.CasillaId` values that
     amendment/import paths may need to carry through replay.
@@ -573,10 +591,13 @@ def required_input_casilla_ids_for_revision(
     except (FileNotFoundError, RegistrySnapshotError):
         return None
 
+    row_field_casilla_ids = row_field_template_records_by_casilla(snapshot.revision)
     required: list[CasillaId] = []
     optional: list[CasillaId] = []
     for casilla in snapshot.revision.casillas:
         casilla_id = casilla.id
+        if casilla_id in row_field_casilla_ids:
+            continue
         if casilla.input_kind == InputKind.MANUAL and casilla.required:
             required.append(casilla_id)
         elif casilla.input_kind in (InputKind.MANUAL, InputKind.BOUND, InputKind.COMPUTED):

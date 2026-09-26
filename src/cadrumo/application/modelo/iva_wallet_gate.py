@@ -42,14 +42,16 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
-from typing import TYPE_CHECKING, Final, NamedTuple, Never, cast, override
+from typing import TYPE_CHECKING, Final, NamedTuple, Never, override
 
 from ...core.casilla_id import CasillaId
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.identity.tax_id import same_tax_identifier
 from ...core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ...core.modelo import Modelo
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...core.period import Period as _Period
+from ...core.type_guards import is_object_collection
 from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.bindings_previous_filing import previous_filing_observation_requirements
 from ...domain.calculations.registry.errors import RegistrySnapshotError
@@ -308,7 +310,22 @@ def _resolve_caller_supplied_prior_compensation(
         persist=False,
         profile_values=profile_values,
     )
-    if decision is None or _decision_is_missing_local_authority(decision):
+    if decision is None:
+        return None
+    if _decision_is_missing_local_authority(decision):
+        if any(amount != Decimal("0") for amount in supplied_amounts):
+            blocked_reason, blocked_message = _blocked_refusal(decision)
+            _raise_iva_wallet_precondition(
+                subject_leaf_key="modelo.work.calculate",
+                reason_code=blocked_reason,
+                translated_message=blocked_message,
+                evidence_values={
+                    "binding_id": _M303_PRIOR_COMPENSATION_BINDING_ID,
+                    "nonzero_amount_count": sum(amount != Decimal("0") for amount in supplied_amounts),
+                    "wallet_blocked": True,
+                },
+                context={"divergence": str(decision.divergence), "reason": blocked_reason},
+            )
         return None
     if _decision_has_concrete_zero_authority(decision):
         if any(amount != Decimal("0") for amount in supplied_amounts):
@@ -358,10 +375,12 @@ def resolve_iva_compensation_decision_for_calculation(
     exists. A supplied decision must match the persisted
     :class:`~cadrumo.domain.iva_compensation.reconciliation.IvaCompensationReconciliationDecision`.
     If the caller supplied a prior-compensation binding or casilla without a
-    decision, the function tries only the local-authority zero path and otherwise
-    returns ``None`` so calculation surfaces the seed/reconcile guidance instead
-    of silently trusting the value. ``profile_values`` is the path projection of
-    the profile the calculation already loaded, or ``None`` when it has none.
+    decision, the function tries only the local-authority zero path. A nonzero
+    supplied value with no usable required authority is a terminal no-action
+    refusal; an otherwise ungrounded zero still returns ``None`` for the
+    first-profile seed/reconcile guidance. ``profile_values`` is the path
+    projection of the profile the calculation already loaded, or ``None`` when
+    it has none.
     """
     if supplied_decision is not None:
         return require_persisted_iva_compensation_decision_for_work_unit(
@@ -860,6 +879,25 @@ def _decision_is_missing_local_authority(decision: object) -> bool:
     return str(getattr(decision, "divergence", "")) == "missing" and getattr(decision, "selected_amount", None) is None
 
 
+def _source_periods(source: object) -> tuple[_Period, ...]:
+    """Return the canonical periods one evidence source names.
+
+    A carrier whose periods are not canonical cannot ground a zero, and reading
+    it as if it were would answer the authority question from an unknown shape.
+    """
+    raw_periods = getattr(source, "source_periods", None)
+    if not raw_periods:
+        return ()
+    if not is_object_collection(raw_periods):
+        raise InternalInvariantError("iva wallet evidence source periods are not a collection")
+    periods: list[_Period] = []
+    for period in raw_periods:
+        if not isinstance(period, _Period):
+            raise InternalInvariantError("iva wallet evidence source names a non-canonical period")
+        periods.append(period)
+    return tuple(periods)
+
+
 def _source_proves_concrete_zero_authority(source: object, *, target_start: date | None) -> bool:
     amount = getattr(source, "amount", None)
     if amount is None or Decimal(amount) != Decimal("0"):
@@ -869,8 +907,7 @@ def _source_proves_concrete_zero_authority(source: object, *, target_start: date
         return getattr(source, "captured_at", None) is not None
     if source_kind not in _LOCAL_EVIDENCE_SOURCE_KINDS:
         return False
-    raw_periods = getattr(source, "source_periods", None)
-    periods = cast("tuple[_Period, ...]", tuple(raw_periods) if raw_periods else ())
+    periods = _source_periods(source)
     # Local evidence proves a zero only from periods before the target; a
     # source naming the target period itself is the first-period placeholder,
     # which only the activity start can ground.

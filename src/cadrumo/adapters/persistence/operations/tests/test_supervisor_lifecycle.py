@@ -60,6 +60,7 @@ from cadrumo.core.operations import (
 )
 
 from .supervision_support import run_to_settlement
+from .test_supervisor import _close_host_over_live_executor
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -155,6 +156,7 @@ class LifecycleExecutor:
         resource_type: type[JournalObservedFileResource] = JournalObservedFileResource,
         hold_cleanup: bool = True,
         result_ref: str | None = None,
+        stay_live: bool = False,
     ) -> None:
         self._journal = journal
         self._resource_root = resource_root
@@ -163,7 +165,9 @@ class LifecycleExecutor:
         self._resource_type = resource_type
         self._hold_cleanup = hold_cleanup
         self._result_ref = result_ref
+        self._stay_live = stay_live
         self.started = asyncio.Event()
+        self.release = asyncio.Event()
         self.resource: JournalObservedFileResource | None = None
 
     async def execute(
@@ -186,6 +190,8 @@ class LifecycleExecutor:
             while not context.cancellation.cancellation_requested:
                 await asyncio.sleep(0)
             await context.cancellation.acknowledge_cancellation()
+        if self._stay_live:
+            await self.release.wait()
         return self._result_ref
 
 
@@ -345,6 +351,7 @@ def test_every_terminal_condition_waits_for_owned_file_cleanup_and_preserves_eff
             resource_root=tmp_path / "owned-files",
             effect=case.effect,
             await_cancellation=case.await_cancellation,
+            stay_live=not case.await_cancellation,
         )
         supervisor = _supervisor(journal=journal, leases=leases, operands=operands, executor=executor)
 
@@ -363,7 +370,10 @@ def test_every_terminal_condition_waits_for_owned_file_cleanup_and_preserves_eff
                 ready_for_settlement = await supervisor.inspect(operation_id)
                 terminal_task = start_task
             else:
-                ready_for_settlement = await run_to_settlement(supervisor, operation_id)
+                # Closing the host stops the live executor without settling it,
+                # leaving the running record for the explicit receipt below.
+                ready_for_settlement = await _close_host_over_live_executor(supervisor, operation_id, executor.started)
+                assert ready_for_settlement.lifecycle is OperationLifecycle.RUNNING
                 resource = executor.resource
                 assert resource is not None
                 terminal_waiter = asyncio.create_task(supervisor.await_terminal(operation_id))
@@ -451,6 +461,7 @@ def test_cleanup_failure_refuses_terminal_journal_persistence(tmp_path: Path) ->
             await_cancellation=False,
             resource_type=CleanupFailingFileResource,
             hold_cleanup=False,
+            stay_live=True,
         )
         supervisor = _supervisor(journal=journal, leases=leases, operands=operands, executor=executor)
         case = _TERMINAL_CASES[0]
@@ -458,7 +469,7 @@ def test_cleanup_failure_refuses_terminal_journal_persistence(tmp_path: Path) ->
         async def refuse_terminal_after_cleanup_failure() -> None:
             operation_id = "3" * 64
             await supervisor.submit(_request(subject_ref="subject:cleanup-failure"), operation_id=operation_id)
-            running = await run_to_settlement(supervisor, operation_id)
+            running = await _close_host_over_live_executor(supervisor, operation_id, executor.started)
             resource = executor.resource
             assert resource is not None
 

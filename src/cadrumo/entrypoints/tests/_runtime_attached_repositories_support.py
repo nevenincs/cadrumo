@@ -1,0 +1,709 @@
+"""Shared support for split adapter tests."""
+
+from __future__ import annotations
+
+import hashlib
+import json
+from collections.abc import Generator
+from contextlib import contextmanager
+from datetime import UTC, date, datetime, timedelta
+from decimal import Decimal
+from pathlib import Path
+
+import pytest
+from pydantic import AnyHttpUrl, TypeAdapter
+
+from ...adapters.outbound.aeat.sede.schema import FiledDeclaracionArtefact
+from ...adapters.outbound.google.records import REQUIRED_SCOPES, DriveConfig, OAuthClient, OAuthMetadata, OAuthToken
+from ...adapters.outbound.llm.models import LLMRequest, LLMResponse, UsageRecord
+from ...adapters.persistence.storage.master_key.bucket_session import BucketSession
+from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+from ...adapters.persistence.storage.secure_object_namespaces import (
+    CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE,
+    LLM_USAGE_NAMESPACE,
+)
+from ...adapters.persistence.storage.sql.engine import dispose_engine
+from ...adapters.persistence.storage.tests.ephemeral_bucket_session import EphemeralBucketSession
+from ...adapters.persistence.storage.tests.registered_bucket import ensure_registered_bucket
+from ...application.filing.history_models import ModeloHistory, ModeloHistoryEntry
+from ...application.live.borrador_100 import (
+    Borrador100Snapshot,
+    derive_borrador_100_snapshot_id,
+)
+from ...application.live.snapshot_base import SnapshotLifecycleState
+from ...application.workflow.run_models import WorkflowResult, WorkflowStage, WorkflowStep
+from ...application.workflow.state_models import WorkflowState
+from ...core.casilla_id import CasillaId, validated_casilla_id
+from ...core.classification.policies import SensitivityClass
+from ...core.config import override_settings
+from ...core.config_support import LLMProvider
+from ...core.iva_compensation_provenance import IvaCompensationStateProvenance
+from ...core.period import Period as _Period
+from ...domain.buckets.event import (
+    BucketEvent,
+    BucketEventObjectType,
+    BucketEventType,
+    derive_bucket_event_id,
+)
+from ...domain.calculations.registry.bindings import CasillaObservation
+from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ...domain.calculations.registry.tests.published_authority import published_snapshot
+from ...domain.categories.spending_category import SpendingCategory
+from ...domain.contribuyente.inventory.records import InventoryLedger, ValuationMethod
+from ...domain.filing.schema import (
+    ModeloDraft,
+    ModeloValue,
+    ModeloValueKind,
+    compute_modelo_draft_id,
+    registry_schema_version,
+)
+from ...domain.identifiers import ModeloIdentifier
+from ...domain.invoices.enums import IvaRate, PaymentStatus
+from ...domain.invoices.models import Invoice, InvoiceLine, derive_invoice_id
+from ...domain.iva.classification import InvoiceKind
+from ...domain.iva_compensation.carry_forward import IvaCompensationPeriodState
+from ...domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
+from ...domain.justificante.schema import Justificante
+from ...domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionCatalogue,
+    CalculationRevisionState,
+    derive_calculation_revision_id,
+)
+from ...domain.modelos.codes import ModeloCode
+from ...domain.modelos.filing_record import (
+    AeatConfirmationState,
+    ExternalEvidence,
+    ExternalEvidenceKind,
+    FilingDeclarationKind,
+    FilingOrigin,
+    ModeloRecord,
+    ModeloRecordCatalogue,
+    derive_filing_record_id,
+)
+from ...domain.modelos.verification_report import (
+    VerificationCompletenessStatus,
+    VerificationReport,
+    VerificationReportCatalogue,
+    derive_verification_report_id,
+)
+from ...domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
+from ...domain.submission.models import (
+    ModeloDraftStatus,
+    ModeloPresentado,
+    SubmissionAttempt,
+    SubmissionStatus,
+)
+from ...domain.transactions.enums import TransactionDirection
+from ...domain.transactions.models import Transaction
+from ...domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from ...domain.usage_ratios.model import UsageRatioProfile
+from ...tests.aeat_literal_fixtures import (
+    AEAT_HOST_SUFFIX_EXPECTED,
+    AUTH_DIAGNOSTIC_PATH_FIXTURE,
+    BORRADOR_STORAGE_PATH_FIXTURE,
+    FILED_ARTEFACT_PATH_FIXTURE,
+    JUSTIFICANTE_VERIFY_PATH_FIXTURE,
+    aeat_url,
+)
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+
+_DEK = b"d" * 32
+
+_MASTER_KEY = b"m" * 32
+
+_GOOGLE_OAUTH_ENDPOINT = "https://oauth2.googleapis.com/token"
+_BUCKET_A_ID = "0f60a84e-d1ac-4c0e-9e91-c094a33df00a"
+_BUCKET_B_ID = "9b22bbfd-d870-4207-a1a7-30a2b4b3600b"
+_WALLET_SUBJECT_ID = "ES12345678Z"
+_BUCKET_A_ATTACHMENT_PAYLOAD = f"{_BUCKET_A_ID} attachment payload".encode("ascii")
+_BUCKET_B_ATTACHMENT_PAYLOAD = f"{_BUCKET_B_ID} attachment payload".encode("ascii")
+
+
+_CALCULATION_INPUT_CASILLA: CasillaId = validated_casilla_id("base")
+_CALCULATION_OUTPUT_CASILLA: CasillaId = validated_casilla_id("casilla-01")
+
+
+@contextmanager
+def _active_runtime(tmp_path: Path, bucket_id: str) -> Generator[None]:
+    # The repositories below open a real engine inside the bucket root, and the
+    # engine refuses to create that root: a bucket exists only once its profile
+    # capsule is published. Registering here is that publication, so every span
+    # runs against a bucket directory an operator's profile could actually own.
+    ensure_registered_bucket(tmp_path, bucket_id)
+    with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=bucket_id) as settings:
+        dispose_engine(settings)
+        with EphemeralBucketSession(key=_MASTER_KEY):
+            try:
+                yield
+            finally:
+                dispose_engine(settings)
+
+
+def _session(bucket_id: str) -> BucketSession:
+    _opened_at = datetime.now(UTC)
+    return BucketSession.open_resumed(
+        bucket_id=bucket_id,
+        dek=_DEK,
+        idle_minutes=15,
+        opened_at=_opened_at,
+        idle_deadline=_opened_at + timedelta(minutes=15),
+        absolute_deadline=_opened_at + timedelta(minutes=240),
+    )
+
+
+def _workflow_state(label: str) -> WorkflowState:
+    now = datetime.now(UTC).replace(microsecond=0)
+    return WorkflowState(updated_at=now)
+
+
+def _transaction(label: str) -> Transaction:
+    raw = RawTransaction(
+        provider_transaction_id=f"tx-{label}",
+        booked_date=date(2026, 4, 5),
+        value_date=date(2026, 4, 5),
+        amount=Decimal("121.00"),
+        currency="EUR",
+        counterparty="Proveedor SL",
+        description=f"runtime attached repository {label}",
+        provenance=RawProvenance(
+            source_path=Path(f"/bank/{label}.csv"),
+            source_sha256="a" * 64,
+            source_row_index=1,
+            source_format=SourceFormat.CSV,
+            ingested_at=datetime.now(UTC).replace(microsecond=0),
+            provider_name="CSV provider",
+        ),
+        raw_fields={"Concepto": f"runtime attached repository {label}"},
+    )
+    return Transaction.model_validate(
+        {"raw": raw, "direction": TransactionDirection.OUTGOING, "group_label": None, "source_jurisdiction": "ES"},
+    )
+
+
+def _storage_state(label: str) -> dict[str, object]:
+    return {
+        "cookies": [
+            {
+                "name": "AEAT_SESSION",
+                "value": label,
+                "domain": f".{AEAT_HOST_SUFFIX_EXPECTED}",
+                "path": "/",
+            },
+        ],
+        "origins": [],
+    }
+
+
+def _hex(label: str) -> str:
+    return hashlib.sha256(label.encode("utf-8")).hexdigest()
+
+
+def _workflow_run(label: str) -> WorkflowResult:
+    when = datetime(2026, 5, 26, 9, 0, tzinfo=UTC)
+    step = WorkflowStep(
+        stage=WorkflowStage.LOADING_PROFILE,
+        started_at=when,
+        ended_at=when,
+        success=True,
+        summary_locale_key="application.workflow.steps.profile_loaded",
+    )
+    return WorkflowResult(
+        run_id=_hex(f"workflow-run-{label}")[:16],
+        started_at=when,
+        ended_at=when,
+        final_stage=WorkflowStage.DONE,
+        aborted_reason=None,
+        steps=(step,),
+        summary_locale_key="application.workflow.results.completed",
+    )
+
+
+def _bucket_event(label: str) -> BucketEvent:
+    occurred_at = datetime(2026, 5, 26, 10, 0, tzinfo=UTC)
+    payload = {"label": label}
+    return BucketEvent(
+        event_id=derive_bucket_event_id(
+            bucket_id=label,
+            event_type=BucketEventType.PROFILE_SELECTED,
+            occurred_at=occurred_at,
+            actor="operator",
+            object_type=BucketEventObjectType.PROFILE,
+            object_id=label,
+            payload=payload,
+        ),
+        bucket_id=label,
+        event_type=BucketEventType.PROFILE_SELECTED,
+        occurred_at=occurred_at,
+        actor="operator",
+        object_type=BucketEventObjectType.PROFILE,
+        object_id=label,
+        payload_version=1,
+        payload=payload,
+    )
+
+
+def _invoice(label: str) -> Invoice:
+    line = InvoiceLine(
+        description=f"runtime attached invoice line {label}",
+        quantity=Decimal("1"),
+        unit_price=Decimal("100.00"),
+        subtotal=Decimal("100.00"),
+        iva_rate=IvaRate.from_registry("RATE_21"),
+        iva_amount=Decimal("21.00"),
+    )
+    invoice_id = derive_invoice_id(
+        kind=InvoiceKind.ISSUED,
+        invoice_number=f"INV-{label.upper()}",
+        issued_at=date(2026, 4, 1),
+        counterparty_tax_id="B12345674",
+        currency="EUR",
+        grand_total=Decimal("121.00"),
+    )
+    return Invoice(
+        invoice_id=invoice_id,
+        kind=InvoiceKind.ISSUED,
+        invoice_number=f"INV-{label.upper()}",
+        issued_at=date(2026, 4, 1),
+        counterparty_name="Cliente SL",
+        counterparty_tax_id="B12345674",
+        counterparty_country="ES",
+        base_total=Decimal("100.00"),
+        iva_total=Decimal("21.00"),
+        grand_total=Decimal("121.00"),
+        currency="EUR",
+        lines=(line,),
+        payment_status=PaymentStatus.PENDING,
+        linked_transaction_ids=(),
+    )
+
+
+def _modelo_draft(label: str) -> ModeloDraft:
+    now = datetime.now(UTC).replace(microsecond=0)
+    period = _Period.from_year_and_code(2026, "1T")
+    profile_tax_id = "12345678Z"
+    snapshot_ref = RegistrySnapshotRef(
+        modelo="303",
+        revision_id="2026-y-siguientes",
+        modelo_year=2026,
+        period="1T",
+    )
+    values = (
+        ModeloValue(
+            casilla_id=validated_casilla_id(f"iva.devengado.{label}"),
+            value=Decimal("100.00"),
+            kind=ModeloValueKind.LITERAL,
+            source="runtime attached repository test",
+        ),
+    )
+    draft_id = compute_modelo_draft_id(
+        modelo="303",
+        period=period,
+        profile_tax_id=profile_tax_id,
+        snapshot_ref=snapshot_ref,
+        values=values,
+    )
+    return ModeloDraft(
+        draft_id=draft_id,
+        modelo="303",
+        period=period,
+        profile_tax_id=profile_tax_id,
+        subject_tax_id="12345678Z",
+        snapshot_ref=snapshot_ref,
+        status=ModeloDraftStatus.BORRADOR,
+        values=values,
+        binding_values=(),
+        findings=(),
+        created_at=now,
+        updated_at=now,
+        schema_version=registry_schema_version(modelo="303", revision_id="2026-y-siguientes"),
+    )
+
+
+def _submission(label: str) -> ModeloPresentado:
+    submitted_at = datetime(2026, 4, 27, 10, 0, tzinfo=UTC)
+    draft_id = f"draft-{label}"
+    submission_id = "0123456789abcdef"
+    return ModeloPresentado(
+        submission_id=submission_id,
+        draft_id=draft_id,
+        modelo="303",
+        period=_Period.from_year_and_code(2026, "1T"),
+        profile_tax_id="00000000T",
+        status=SubmissionStatus.PRESENTADA,
+        submitted_at=submitted_at,
+        attempts=(
+            SubmissionAttempt(
+                attempt_id=f"{submission_id}.1",
+                started_at=submitted_at,
+                ended_at=submitted_at,
+                status=SubmissionStatus.PRESENTADA,
+            ),
+        ),
+    )
+
+
+def _justificante(tmp_path: Path, label: str) -> Justificante:
+    csv = f"CSV{_hex(label)[:13].upper()}"
+    pdf = tmp_path / f"{csv}.pdf"
+    pdf.write_bytes(b"%PDF-1.4\n%EOF\n")
+    return Justificante(
+        csv=csv,
+        modelo="303",
+        period=_Period.from_year_and_code(2026, "1T"),
+        ejercicio="2026",
+        presentation_id=None,
+        presented_at=datetime(2026, 4, 10, 11, 23, 45, tzinfo=UTC),
+        tax_id="00000000T",
+        total_a_ingresar=Decimal("10.00"),
+        total_a_devolver=None,
+        verification_url=TypeAdapter(AnyHttpUrl).validate_python(aeat_url("sede", JUSTIFICANTE_VERIFY_PATH_FIXTURE)),
+        source_pdf_path=pdf,
+        source_pdf_sha256=hashlib.sha256(pdf.read_bytes()).hexdigest(),
+        parsed_at=datetime(2026, 4, 12, tzinfo=UTC),
+    )
+
+
+def _work_unit(bucket_id: str, label: str) -> WorkUnit:
+    now = datetime(2026, 5, 26, 9, 0, tzinfo=UTC)
+    modelo = ModeloCode("303")
+    period = _Period.from_year_and_code(2026, "1T")
+    revision_id = str(published_snapshot("303", filing_year=2026, period="1T").snapshot_ref.revision_id)
+    work_unit_id = derive_work_unit_id(
+        bucket_id=bucket_id,
+        modelo=modelo,
+        filing_year=2026,
+        period=period,
+        revision_id=revision_id,
+    )
+    return WorkUnit(
+        work_unit_id=work_unit_id,
+        bucket_id=bucket_id,
+        modelo=modelo,
+        filing_year=2026,
+        period=period,
+        revision_id=revision_id,
+        name=f"IVA 2026 {label}",
+        created_at=now,
+        updated_at=now,
+        state=WorkUnitState.BORRADOR,
+    )
+
+
+def _calculation_revision_id_for(label: str) -> str:
+    """Return the same content-addressed revision id `_calculation_catalogue` persists.
+
+    `_verification_catalogue` must reference this exact id: the verification-report
+    save path resolves `calculation_revision_id` against the bucket's real
+    calculation-revision catalogue, so an unrelated invented id is refused.
+    """
+    return derive_calculation_revision_id(
+        work_unit_id=_work_unit(label, label).work_unit_id,
+        input_values_by_casilla_id={_CALCULATION_INPUT_CASILLA: "100.00"},
+        binding_overrides={},
+        casilla_values={_CALCULATION_OUTPUT_CASILLA: Decimal("100.00")},
+        source_transaction_ids=(),
+        filing_instance_evidence=None,
+        source_provenance=(),
+    )
+
+
+def _calculation_catalogue(label: str) -> CalculationRevisionCatalogue:
+    """Return one calculation under the WorkUnit ``_work_unit(label, label)`` persists."""
+    work_unit_id = _work_unit(label, label).work_unit_id
+    input_values_by_casilla_id = {_CALCULATION_INPUT_CASILLA: "100.00"}
+    values = {_CALCULATION_OUTPUT_CASILLA: Decimal("100.00")}
+    revision_id = _calculation_revision_id_for(label)
+    revision = CalculationRevision(
+        calculation_revision_id=revision_id,
+        work_unit_id=work_unit_id,
+        registry_snapshot_ref=published_snapshot("303", filing_year=2026, period="1T").snapshot_ref,
+        state=CalculationRevisionState.BORRADOR,
+        input_values_by_casilla_id=input_values_by_casilla_id,
+        binding_overrides={},
+        source_transaction_ids=(),
+        casilla_values=values,
+        observations=(
+            CasillaObservation(
+                casilla_id=_CALCULATION_OUTPUT_CASILLA,
+                value=Decimal("100.00"),
+                legal_refs=("ley-58-2003:art-93",),
+                source_refs=("runtime-attached-repository-test",),
+            ),
+        ),
+        created_at=datetime(2026, 5, 26, 9, 0, tzinfo=UTC),
+        updated_at=datetime(2026, 5, 26, 9, 0, tzinfo=UTC),
+        filing_instance_evidence=None,
+        source_provenance=(),
+    )
+    return CalculationRevisionCatalogue(revisions={revision_id: revision})
+
+
+def _filing_record_catalogue(bucket_id: str, label: str) -> ModeloRecordCatalogue:
+    filed_at = datetime(2026, 5, 26, 11, 0, tzinfo=UTC)
+    work_unit_id = _hex(f"filing-work-unit-{label}")
+    revision_id = _hex(f"filing-revision-{label}")
+    record_id = derive_filing_record_id(
+        work_unit_id=work_unit_id,
+        calculation_revision_id=revision_id,
+        filed_by="aeat.cli.modelo.file",
+    )
+    record = ModeloRecord(
+        filing_record_id=record_id,
+        work_unit_id=work_unit_id,
+        calculation_revision_id=revision_id,
+        bucket_id=bucket_id,
+        modelo=ModeloCode("303"),
+        filing_year=2026,
+        period=_Period.from_year_and_code(2026, "1T"),
+        filed_at=filed_at,
+        filed_by="aeat.cli.modelo.file",
+        notes=f"runtime attached filing record {label}",
+        origin=FilingOrigin.AEAT,
+        confirmation=AeatConfirmationState.CONFIRMADA,
+        declaration_kind=FilingDeclarationKind.ORIGINAL,
+        external_evidence=ExternalEvidence(
+            kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+            reference_id=f"justificante-{label}",
+            imported_at=filed_at,
+        ),
+    )
+    return ModeloRecordCatalogue(records={record_id: record})
+
+
+def _verification_catalogue(label: str) -> VerificationReportCatalogue:
+    run_at = datetime(2026, 5, 26, 12, 0, tzinfo=UTC)
+    revision_id = _calculation_revision_id_for(label)
+    report_id = derive_verification_report_id(
+        calculation_revision_id=revision_id,
+        completeness_status=VerificationCompletenessStatus.COMPLETE,
+        findings=(),
+        verified_by="aeat.cli.modelo.verify",
+    )
+    report = VerificationReport(
+        verification_report_id=report_id,
+        calculation_revision_id=revision_id,
+        registry_snapshot_ref=published_snapshot("303", filing_year=2026, period="1T").snapshot_ref,
+        completeness_status=VerificationCompletenessStatus.COMPLETE,
+        findings=(),
+        resolved_casilla_ids=(validated_casilla_id("iva.devengado"),),
+        missing_required_casilla_ids=(),
+        run_at=run_at,
+        verified_by="aeat.cli.modelo.verify",
+        granted_verificado_completo=True,
+    )
+    return VerificationReportCatalogue(reports={report_id: report})
+
+
+def _history(label: str) -> ModeloHistory:
+    submitted_at = datetime(2026, 5, 26, 13, 0, tzinfo=UTC)
+    period = "1T" if label.endswith("a") else "2T"
+    return ModeloHistory(
+        modelo=ModeloIdentifier("303"),
+        entries=(
+            ModeloHistoryEntry(
+                modelo=ModeloIdentifier("303"),
+                period=_Period.from_year_and_code(2026, period),
+                submitted_at=submitted_at,
+                status="presentada",
+            ),
+        ),
+    )
+
+
+def _iva_state(label: str) -> IvaCompensationPeriodState:
+    period = "1T" if label.endswith("a") else "2T"
+    period_value = _Period.from_year_and_code(2026, period)
+    return IvaCompensationPeriodState(
+        provenance=IvaCompensationStateProvenance.AEAT_CAPTURE,
+        taxpayer_nif="00000000T",
+        filing_year=2026,
+        period=period_value,
+        registry_snapshot_ref=published_snapshot(
+            "303", filing_year=2026, period=period_value.registry_token
+        ).snapshot_ref,
+        expediente_id="202610013522456T",
+        status="presentada",
+        presented_at=datetime(2026, 4, 20, 10, 0, tzinfo=UTC),
+        generated_amount=Decimal("10.00"),
+        available_end_amount=Decimal("10.00"),
+        source_observation_key=f"303:2026:1T:{label}",
+    )
+
+
+def _usage_profile(category: SpendingCategory, ratio: str) -> UsageRatioProfile:
+    return UsageRatioProfile(ratios={category: Decimal(ratio)})
+
+
+def _inventory_ledger(label: str) -> InventoryLedger:
+    return InventoryLedger(
+        actividad_id=f"retail-{label}",
+        year=2026,
+        valuation_method=ValuationMethod.FIFO,
+        opening_stock=Decimal("0.00"),
+        closing_authority_record=None,
+    )
+
+
+def _google_records(label: str) -> tuple[OAuthClient, OAuthToken, OAuthMetadata, DriveConfig]:
+    issued_at = datetime(2026, 5, 26, 9, 0, tzinfo=UTC)
+    return (
+        OAuthClient.model_validate(
+            {
+                "client_id": f"desktop-{label}.apps.googleusercontent.com",
+                "client_secret": f"secret-{label}",
+                "project_id": f"aeat-vault-{label}",
+                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                "token_uri": _GOOGLE_OAUTH_ENDPOINT,
+                "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+                "redirect_uris": ("http://127.0.0.1:8765/callback",),
+            },
+        ),
+        OAuthToken.model_validate({"refresh_token": f"1//refresh-token-{label}", "token_uri": _GOOGLE_OAUTH_ENDPOINT}),
+        OAuthMetadata(
+            account_email=f"{label}@example.com",
+            granted_scopes=REQUIRED_SCOPES,
+            issued_at=issued_at,
+            last_refresh_at=issued_at,
+        ),
+        DriveConfig(root_folder_id=f"drive-folder-{label}"),
+    )
+
+
+def _llm_request() -> LLMRequest:
+    return LLMRequest(prompt="Summarise a runtime storage routing", cache_key="runtime-storage")
+
+
+def _llm_response(label: str) -> LLMResponse:
+    return LLMResponse(
+        text=f"runtime attached response {label}",
+        provider=LLMProvider.OPENAI,
+        model="gpt-test",
+        input_tokens=10,
+        output_tokens=5,
+        cost_estimate_usd=Decimal("0.01"),
+        cache_hit=False,
+        created_at=datetime(2026, 5, 26, 9, 0, tzinfo=UTC),
+        request_id=f"request-{label}",
+    )
+
+
+def _usage_record(label: str) -> UsageRecord:
+    response = _llm_response(label)
+    return UsageRecord(
+        prompt_id="runtime-storage",
+        caller="s87",
+        text=response.text,
+        provider=response.provider,
+        model=response.model,
+        input_tokens=response.input_tokens,
+        output_tokens=response.output_tokens,
+        cost_estimate_usd=response.cost_estimate_usd,
+        cache_hit=response.cache_hit,
+        created_at=response.created_at,
+        request_id=response.request_id,
+    )
+
+
+def _sede_artefact(label: str) -> tuple[FiledDeclaracionArtefact, bytes]:
+    body = f"runtime attached sede artefact {label}".encode()
+    return (
+        FiledDeclaracionArtefact(
+            kind="submitted_file",
+            source_url=TypeAdapter(AnyHttpUrl).validate_python(aeat_url("sede", FILED_ARTEFACT_PATH_FIXTURE)),
+            content_type="application/pdf",
+            byte_count=len(body),
+            sha256=hashlib.sha256(body).hexdigest(),
+            captured_at=datetime(2026, 5, 26, 9, 0, tzinfo=UTC),
+        ),
+        body,
+    )
+
+
+def _borrador_snapshot(bucket_id: str) -> Borrador100Snapshot:
+    filing_year = 2026
+    period = _Period.from_year_and_code(2026, "0A")
+    captured_at = datetime(2026, 5, 26, 9, 0, tzinfo=UTC)
+    source_url = aeat_url("sede", BORRADOR_STORAGE_PATH_FIXTURE)
+    binding_values = {"casilla-001": Decimal("1.00")}
+    registry_snapshot_ref = RegistrySnapshotRef(
+        modelo="100",
+        revision_id="2025",
+        modelo_year=filing_year,
+        period=period.registry_token,
+    )
+    snapshot_id = derive_borrador_100_snapshot_id(
+        filing_year=filing_year,
+        period=period,
+        registry_snapshot_ref=registry_snapshot_ref,
+        captured_at=captured_at,
+        source_url=source_url,
+        binding_values=binding_values,
+    )
+    return Borrador100Snapshot(
+        snapshot_id=snapshot_id,
+        bucket_id=bucket_id,
+        modelo="100",
+        filing_year=filing_year,
+        period=period,
+        registry_snapshot_ref=registry_snapshot_ref,
+        captured_at=captured_at,
+        source_url=source_url,
+        state=SnapshotLifecycleState.ACTIVE,
+        binding_values=binding_values,
+    )
+
+
+def _iva_wallet_decision(label: str, *, target_period: str = "2T") -> IvaCompensationReconciliationDecision:
+    period = _Period.from_year_and_code(2026, target_period)
+    return IvaCompensationReconciliationDecision(
+        taxpayer_nif=_WALLET_SUBJECT_ID,
+        target_year=2026,
+        target_period=period,
+        target_registry_snapshot_ref=published_snapshot(
+            "303", filing_year=2026, period=period.registry_token
+        ).snapshot_ref,
+        source_registry_snapshot_refs=(),
+        selected_authority="aeat_wallet",
+        selected_amount=Decimal("1200.00"),
+        wallet_amount=Decimal("1200.00"),
+        local_recurrence_amount=None,
+        override_amount=None,
+        divergence="match",
+        blocked=False,
+        stale_wallet=False,
+        reason_identity="aeat_wallet_validated",
+        wallet_captured_at=datetime(2026, 5, 26, 9, 0, tzinfo=UTC),
+        decided_at=datetime(2026, 5, 26, 9, 0, tzinfo=UTC),
+    )
+
+
+def _save_auth_diagnostic(label: str) -> None:
+    payload = {
+        "diagnostic_id": f"diagnostic-{label}",
+        "reason": "runtime attached auth diagnostic",
+        "url": aeat_url("sede", AUTH_DIAGNOSTIC_PATH_FIXTURE),
+        "captured_at": datetime(2026, 5, 26, 9, 0, tzinfo=UTC).isoformat(),
+        "auth_attempt": {"auth_mode": "clave", "headless": True},
+    }
+    secure_object_repository_for_active_bucket().save(
+        namespace=CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.namespace,
+        object_key=payload["diagnostic_id"],
+        classification=SensitivityClass.SESSION,
+        schema_version=1,
+        written_at=datetime(2026, 5, 26, 9, 0, tzinfo=UTC),
+        payload=json.dumps(payload, sort_keys=True).encode(),
+    )
+
+
+def _save_diagnostic_probe_row(label: str) -> None:
+    secure_object_repository_for_active_bucket().save(
+        namespace=LLM_USAGE_NAMESPACE.namespace,
+        object_key=f"diagnostic-probe-{label}",
+        classification=LLM_USAGE_NAMESPACE.sensitivity,
+        schema_version=LLM_USAGE_NAMESPACE.schema_version,
+        written_at=datetime(2026, 5, 26, 9, 0, tzinfo=UTC),
+        payload=f"diagnostic-probe-{label}".encode(),
+    )

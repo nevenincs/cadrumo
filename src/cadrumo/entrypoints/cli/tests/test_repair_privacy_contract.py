@@ -34,6 +34,10 @@ _ROW_WRITTEN_AT = datetime(2099, 5, 28, 14, 55, 0, tzinfo=UTC)
 @pytest.fixture(autouse=True)
 def _isolated_secure_object_database(tmp_path: Path) -> Iterator[None]:
     dispose_engine()
+    # Explicit directory overrides are the operator's to provision; the CLI
+    # validates them and never creates them.
+    for directory in ("probe-tokens", "probe-runs", "txs", "invoices", "probe-drafts"):
+        (tmp_path / directory).mkdir()
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
         override_settings(

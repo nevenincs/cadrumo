@@ -27,7 +27,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....application.modelo.operation_definitions import ModeloWorkAmendRequest
+from ...modelo.operation_definitions import ModeloWorkAmendRequest
 from ..registry_schema_validation import strict_model_json_schema, validate_credential_free_schema
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

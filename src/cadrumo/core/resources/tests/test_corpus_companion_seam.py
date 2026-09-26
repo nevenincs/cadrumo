@@ -34,8 +34,8 @@ import pytest
 
 from cadrumo.tests.audited_process import run_audited_process
 
-from ....core.directory_scan import DirectoryEntryKind, scan_directory
-from ....core.resources.bundled_data import (
+from ...directory_scan import DirectoryEntryKind, scan_directory
+from ..bundled_data import (
     bundled_data_roots,
     bundled_path,
     resolve_companion_binary,

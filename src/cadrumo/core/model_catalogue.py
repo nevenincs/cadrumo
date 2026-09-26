@@ -53,7 +53,7 @@ from typing import Final
 
 from pydantic import BaseModel, Field, model_validator
 
-from ..core.errors.hierarchy import pydantic_validation_boundary
+from .errors.hierarchy import pydantic_validation_boundary
 from .models import STRICT_FROZEN_CONFIG
 from .source_locator import OptionalSourceUrl
 

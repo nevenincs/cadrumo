@@ -224,6 +224,9 @@ def _provisioned_profile_env(tmp_path: Path) -> Generator[None]:
     real published generation is what a host owes this door, exactly as binding
     the persistence ports is.
     """
+    # An explicit directory override is the operator's to provision: the CLI
+    # validates it for every command that runs and never creates it.
+    (tmp_path / "fallback-store").mkdir(exist_ok=True)
     with (
         temporary_env(
             CADRUMO_LOCAL_STORAGE_ROOT=str(tmp_path / "storage"),
@@ -286,10 +289,14 @@ def test_warm_runtime_refuses_when_the_required_profile_secret_channel_is_cleare
             {},
         )
 
+    # Setup removed every session artefact, so without the stdin proof there is
+    # no session to resume: the read refuses as logged out and names the login.
     assert refused["status"] == "error"
     error = refused["error"]
     assert isinstance(error, dict)
-    assert error["code"] == "AUTH_STORAGE_KEYRING_UNAVAILABLE"
+    assert error["code"] == "REFUSED_CLI_BOUNDARY"
+    assert error["context"] == {"reason": "absent"}
+    assert error["action"]["action"]["target_command_key"] == "config.login"
 
 
 def test_warm_runtime_holds_no_bucket_session_between_calls(tmp_path: Path) -> None:

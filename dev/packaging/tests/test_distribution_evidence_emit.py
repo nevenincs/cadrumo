@@ -27,11 +27,7 @@ import pytest
 
 from cadrumo.core.directory_scan import scan_directory
 
-from .._acquire_common import venv_bin_dir, venv_executable
-from .._installed_wheel_binding import (
-    assert_installed_console_entry_point,
-    installed_distribution_payload_sha256,
-)
+from ..acquire_common import venv_bin_dir, venv_executable
 from ..cohort_manifest import LoadedReleaseCohort
 from ..command_execution import CommandResult, run_command
 from ..distribution_evidence_emit import (
@@ -55,6 +51,10 @@ from ..installed_tax_oracle import (
     EXPECTED_VALUE,
     TARGET_CASILLA,
     InstalledTaxEvidence,
+)
+from ..installed_wheel_binding import (
+    assert_installed_console_entry_point,
+    installed_distribution_payload_sha256,
 )
 from ..release_cohort_support import client_venv_template, release_cohort
 
@@ -466,8 +466,8 @@ def test_copied_cohort_fields_cannot_launder_a_foreign_same_version_install(tmp_
     """Copied sealed fields and a truthful foreign executable hash still fail payload binding."""
     from dataclasses import replace
 
-    from .._installed_wheel_binding import sealed_wheel_payload_sha256
     from ..distribution_evidence_emit import EvidenceCohortBindingError
+    from ..installed_wheel_binding import sealed_wheel_payload_sha256
 
     cohort = release_cohort(tmp_path / "foreign-cohort", version=_COHORT_VERSION, payload_suffix="foreign")
     tax = _tax_evidence(tmp_path, cohort)

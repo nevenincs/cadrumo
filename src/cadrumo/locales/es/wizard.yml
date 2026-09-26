@@ -383,6 +383,10 @@ wizard:
       modelo-111-no-retenciones-periods:
         help: Periodos Modelo 111 sin obligación, separados por comas, formato AAAA:PERIODO
           (por ejemplo 2025:2T,2025:3T). Usar solo cuando no se pagaron rentas sujetas.
+      modelo-115-no-relevant-payment-periods:
+        help: Periodos Modelo 115 sin pago relevante de alquiler urbano, separados
+          por comas, formato AAAA:PERIODO (por ejemplo 2025:3T,2025:4T). Es evidencia
+          local explícita, no evidencia de presentación ante la AEAT.
       monedas-virtuales-extranjero-above-threshold:
         help: Monedas virtuales en el extranjero superan el umbral del Modelo 721
       name:
@@ -418,6 +422,12 @@ wizard:
         help: Paga a profesionales con retención
       pays-rent-with-retencion:
         help: Paga alquiler de local con retención
+      premio-loteria-gravamen-especial-sin-retencion:
+        help: Obtuvo un premio de loterías o apuestas sujeto al gravamen especial
+          sin retención ni ingreso a cuenta (Modelo 136)
+      premio-loteria-gravamen-especial-trimestres:
+        help: Trimestres en que se cobró el premio, como tokens AAAA-nT separados
+          por | (por ejemplo 2025-1T|2025-3T)
       professional-income-withholding-ge-70pct:
         help: Al menos 70% de los ingresos profesionales con retención previa
       representante-fiscal-nif:
@@ -601,6 +611,11 @@ wizard:
         help: Periodos AAAA:PERIODO en los que no se pagaron rentas sujetas a retención
           o ingreso a cuenta, por lo que no se presenta un Modelo 111 en blanco.
         prompt: Periodos Modelo 111 sin retenciones
+      modelo-115-no-relevant-payment-periods:
+        help: Periodos AAAA:PERIODO en los que no hubo pago relevante de alquiler
+          urbano sujeto a retención, permitiendo un cálculo local a cero del Modelo
+          115.
+        prompt: Periodos Modelo 115 sin pago relevante
       monedas-virtuales-extranjero-above-threshold:
         prompt: Monedas virtuales en el extranjero superan el umbral del Modelo 721
       objective-estimation-modulos-iae-epigraph:
@@ -631,6 +646,14 @@ wizard:
         prompt: Paga a profesionales con retención
       pays-rent-with-retencion:
         prompt: Paga alquiler de local con retención
+      premio-loteria-gravamen-especial-sin-retencion:
+        prompt: Obtuvo un premio de loterías o apuestas sujeto al gravamen especial
+          sin retención ni ingreso a cuenta
+      premio-loteria-gravamen-especial-trimestres:
+        help: Un token AAAA-nT por trimestre natural, separados por | (por ejemplo
+          2025-1T|2025-3T). Cada trimestre abre su propia presentación del Modelo
+          136.
+        prompt: Trimestres en que se cobró el premio
       professional-income-withholding-ge-70pct:
         prompt: Al menos 70% de los ingresos profesionales con retención previa
       third-party-transactions-above-347-threshold:

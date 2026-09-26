@@ -26,7 +26,7 @@ import sys
 import zipfile
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, cast
+from typing import Any
 
 import pytest
 
@@ -841,13 +841,13 @@ def test_post_build_source_mutation_cannot_change_an_existing_installation(
     installed_cohort: InstalledCohort,
 ) -> None:
     """Only republishing and rebuilding can carry authoring changes into runtime."""
-    from dev.registry.pipeline.authority_publication import authority_candidate_identity
+    from dev.registry.pipeline.authority_publication import authority_source_identity
 
     cohort = installed_cohort
     clean_repo = cohort.work_dir / "clean-repository"
     registry_root = clean_repo / "src" / "cadrumo" / "_data" / "registry" / "aeat"
     authored = registry_root / "modelos" / "200" / "manifest.toml"
-    before_candidate = authority_candidate_identity(registry_root=registry_root, source_root=clean_repo)
+    before_candidate = authority_source_identity(registry_root=registry_root, source_root=clean_repo)
     installed_descriptor, installed_descriptor_digest, installed_database, installed_database_digest = (
         _installed_authority_resource(
             cohort.venv,
@@ -880,7 +880,7 @@ def test_post_build_source_mutation_cannot_change_an_existing_installation(
     original = authored.read_bytes()
     try:
         authored.write_bytes(original + b"\n# post-build isolation probe\n")
-        after_candidate = authority_candidate_identity(registry_root=registry_root, source_root=clean_repo)
+        after_candidate = authority_source_identity(registry_root=registry_root, source_root=clean_repo)
         assert after_candidate != before_candidate
         assert sha256_path(installed_descriptor) == installed_descriptor_digest
         assert sha256_path(installed_database) == installed_database_digest
@@ -913,17 +913,6 @@ def test_post_build_source_mutation_cannot_change_an_existing_installation(
     assert sha256_path(installed_database) == installed_database_digest
 
 
-def _as_plugin_cohort(cohort: PythonCohort) -> Any:
-    """Adapt a PythonCohort to the marketplace materialiser's protocol.
-
-    PythonCohort satisfies the runtime protocol exactly; the materialiser
-    annotates its mutable digest mapping as a read-only Mapping protocol,
-    which static structural typing cannot prove for a frozen dataclass
-    (same documented cast as the release-cohort builder).
-    """
-    return cast("Any", cohort)
-
-
 def test_owned_server_launch_capture_is_a_clean_real_subprocess(installed_cohort: InstalledCohort) -> None:
     """The A-client launch capture spawns the real server and it exits 0 on stdin EOF.
 
@@ -932,7 +921,7 @@ def test_owned_server_launch_capture_is_a_clean_real_subprocess(installed_cohort
     as ``cadrumo``, and a clean exit (a killed server would be non-zero and could
     never sit in a passing distribution-evidence record).
     """
-    from .._acquire_common import capture_owned_server_launch
+    from ..acquire_common import capture_owned_server_launch
     from ..installed_mcp_oracle import isolated_mcp_environment
 
     work = installed_cohort.work_dir / "owned-launch-capture"

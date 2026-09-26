@@ -50,7 +50,7 @@ scoped_families = ["export_layouts", "workbook_parity_refs", "verification_expec
 
 [revisions."2025-y-siguientes".family_dispositions.parameters]
 reason = """
-A parameter holds a regulatory value a formula of this revision applies -- a rate, a threshold, a coefficient. Modelo 193 applies none: both of its formulas are op = 'copy', carrying the annual modelo 123 base and retenciones relations into the resumen casillas, and a copy applies nothing to what it copies. The retention rates reaching these figures were set by the retenedor at payment time under RD 439/2007 art. 90 and consumed by the quarterly modelo 123; this annual resumen receives the \
+A parameter holds a regulatory value a formula of this revision applies -- a rate, a threshold, a coefficient. Modelo 193 applies none: both of its formulas are op = 'copy', carrying the sums of the type-2 perceptor records' base and retenciones into the resumen casillas, and a copy applies nothing to what it copies. The retention rates reaching these figures were set by the retenedor at payment time under RD 439/2007 art. 90 and recorded on each perceptor record; this annual resumen receives the \
 already-withheld amounts. Empty by the shape of this modelo's calculation rather than by omission."""
 legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-90"]
 source_refs = ["aeat-modelo-193-procedure"]
@@ -538,13 +538,18 @@ sequence_order = {source_refs = [1, 0]}
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "dependency_classifications"
 selector = {revision = "2024", id = "modelo-193-dep-123"}
+# The declarant totals are summed from the type-2 perceptor records (design
+# pp. 5-6, positions 136-174), so the quarterly modelo 123 figures no longer
+# enter the arithmetic. They stay declared as a cross-check: pending
+# carry-out and prior-accrual settlement carry-in mean the two need not match.
+fields = {treatment = "factual_evidence"}
 sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
 sequence_removals = {source_refs = [2]}
 
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "constructs"
 selector = {revision = "2024", id = "modelo-193-annual-summary"}
-sequence_additions = {deadline_windows = ["modelo-193-2025-0a"], source_refs = ["aeat-dr-193-2025", "aeat-calendario-contribuyente-2026-hasta-2-febrero"]}
+sequence_additions = {bindings = ["modelo-193-perceptor-rows-base-total", "modelo-193-perceptor-rows-retenciones-total"], deadline_windows = ["modelo-193-2025-0a"], source_refs = ["aeat-dr-193-2025", "aeat-calendario-contribuyente-2026-hasta-2-febrero"]}
 sequence_removals = {deadline_windows = [0], source_refs = [3]}
 sequence_order = {source_refs = [0, 4, 1, 2, 3, 5]}
 
@@ -571,6 +576,9 @@ sequence_order = {source_refs = [1, 0]}
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "bindings"
 selector = {revision = "2024", id = "modelo-193-123-base-anual"}
+# A reconciliation cross-check against the quarterly modelo 123, no longer the
+# source of decl.base-total.
+fields = {provider = {relation_kind = "cross_model_output", dependency_role = "factual_evidence"}}
 sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
 sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [2, 0, 1]}
@@ -578,6 +586,10 @@ sequence_order = {source_refs = [2, 0, 1]}
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "bindings"
 selector = {revision = "2024", id = "modelo-193-123-perceptores-anual"}
+# Design p. 5, positions 136-144: the number of type-2 records, so a perceptor
+# on several records counts once per record rather than once per NIF.
+fields = {provider = {kind = "withholding", fact = "grouped_row_count", grouping = "per_perceptor_clave_devengo"}, aggregation = {op = "count_distinct"}}
+removed_fields = ["provider.target_casilla_id"]
 sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
 sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [2, 0, 1]}
@@ -585,6 +597,9 @@ sequence_order = {source_refs = [2, 0, 1]}
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "bindings"
 selector = {revision = "2024", id = "modelo-193-123-retenciones-anual"}
+# A reconciliation cross-check against the quarterly modelo 123, no longer the
+# source of decl.retenciones-total.
+fields = {provider = {relation_kind = "cross_model_output", dependency_role = "factual_evidence"}}
 sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
 sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [2, 0, 1]}
@@ -620,6 +635,7 @@ sequence_order = {source_refs = [1, 0]}
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "bindings"
 selector = {revision = "2024", id = "modelo-193-perceptor-row-base"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
 sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
 sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [1, 0]}
@@ -627,6 +643,7 @@ sequence_order = {source_refs = [1, 0]}
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "bindings"
 selector = {revision = "2024", id = "modelo-193-perceptor-row-ceuta"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
 sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
 sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [1, 0]}
@@ -634,6 +651,7 @@ sequence_order = {source_refs = [1, 0]}
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "bindings"
 selector = {revision = "2024", id = "modelo-193-perceptor-row-clave"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
 sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
 sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [1, 0]}
@@ -641,6 +659,7 @@ sequence_order = {source_refs = [1, 0]}
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "bindings"
 selector = {revision = "2024", id = "modelo-193-perceptor-row-clave-codigo"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
 sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
 sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [1, 0]}
@@ -648,6 +667,7 @@ sequence_order = {source_refs = [1, 0]}
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "bindings"
 selector = {revision = "2024", id = "modelo-193-perceptor-row-clave-mercado"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
 sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
 sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [1, 0]}
@@ -655,6 +675,7 @@ sequence_order = {source_refs = [1, 0]}
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "bindings"
 selector = {revision = "2024", id = "modelo-193-perceptor-row-codigo-cuenta"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
 sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
 sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [1, 0]}
@@ -662,6 +683,7 @@ sequence_order = {source_refs = [1, 0]}
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "bindings"
 selector = {revision = "2024", id = "modelo-193-perceptor-row-codigo-emisor"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
 sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
 sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [1, 0]}
@@ -669,6 +691,7 @@ sequence_order = {source_refs = [1, 0]}
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "bindings"
 selector = {revision = "2024", id = "modelo-193-perceptor-row-compensaciones"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
 sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
 sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [1, 0]}
@@ -676,6 +699,7 @@ sequence_order = {source_refs = [1, 0]}
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "bindings"
 selector = {revision = "2024", id = "modelo-193-perceptor-row-ejercicio-devengo"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
 sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
 sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [1, 0]}
@@ -683,6 +707,7 @@ sequence_order = {source_refs = [1, 0]}
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "bindings"
 selector = {revision = "2024", id = "modelo-193-perceptor-row-fecha-devengo"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
 sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
 sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [1, 0]}
@@ -690,6 +715,7 @@ sequence_order = {source_refs = [1, 0]}
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "bindings"
 selector = {revision = "2024", id = "modelo-193-perceptor-row-fecha-inicio"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
 sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
 sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [1, 0]}
@@ -697,6 +723,7 @@ sequence_order = {source_refs = [1, 0]}
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "bindings"
 selector = {revision = "2024", id = "modelo-193-perceptor-row-fecha-vencimiento"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
 sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
 sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [1, 0]}
@@ -704,6 +731,7 @@ sequence_order = {source_refs = [1, 0]}
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "bindings"
 selector = {revision = "2024", id = "modelo-193-perceptor-row-foral-araba"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
 sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
 sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [1, 0]}
@@ -711,6 +739,7 @@ sequence_order = {source_refs = [1, 0]}
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "bindings"
 selector = {revision = "2024", id = "modelo-193-perceptor-row-foral-bizkaia"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
 sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
 sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [1, 0]}
@@ -718,6 +747,7 @@ sequence_order = {source_refs = [1, 0]}
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "bindings"
 selector = {revision = "2024", id = "modelo-193-perceptor-row-foral-estatal"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
 sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
 sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [1, 0]}
@@ -725,6 +755,7 @@ sequence_order = {source_refs = [1, 0]}
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "bindings"
 selector = {revision = "2024", id = "modelo-193-perceptor-row-foral-gipuzkoa"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
 sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
 sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [1, 0]}
@@ -732,6 +763,7 @@ sequence_order = {source_refs = [1, 0]}
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "bindings"
 selector = {revision = "2024", id = "modelo-193-perceptor-row-foral-navarra"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
 sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
 sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [1, 0]}
@@ -739,6 +771,7 @@ sequence_order = {source_refs = [1, 0]}
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "bindings"
 selector = {revision = "2024", id = "modelo-193-perceptor-row-garantias"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
 sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
 sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [1, 0]}
@@ -746,6 +779,7 @@ sequence_order = {source_refs = [1, 0]}
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "bindings"
 selector = {revision = "2024", id = "modelo-193-perceptor-row-mediador"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
 sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
 sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [1, 0]}
@@ -753,6 +787,7 @@ sequence_order = {source_refs = [1, 0]}
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "bindings"
 selector = {revision = "2024", id = "modelo-193-perceptor-row-name"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
 sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
 sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [1, 0]}
@@ -760,6 +795,7 @@ sequence_order = {source_refs = [1, 0]}
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "bindings"
 selector = {revision = "2024", id = "modelo-193-perceptor-row-naturaleza"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
 sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
 sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [1, 0]}
@@ -767,6 +803,7 @@ sequence_order = {source_refs = [1, 0]}
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "bindings"
 selector = {revision = "2024", id = "modelo-193-perceptor-row-naturaleza-declarante"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
 sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
 sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [1, 0]}
@@ -774,6 +811,7 @@ sequence_order = {source_refs = [1, 0]}
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "bindings"
 selector = {revision = "2024", id = "modelo-193-perceptor-row-nif"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
 sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
 sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [1, 0]}
@@ -781,6 +819,7 @@ sequence_order = {source_refs = [1, 0]}
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "bindings"
 selector = {revision = "2024", id = "modelo-193-perceptor-row-nif-pagador-anterior"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
 sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
 sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [1, 0]}
@@ -788,6 +827,7 @@ sequence_order = {source_refs = [1, 0]}
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "bindings"
 selector = {revision = "2024", id = "modelo-193-perceptor-row-nif-representante"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
 sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
 sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [1, 0]}
@@ -795,6 +835,7 @@ sequence_order = {source_refs = [1, 0]}
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "bindings"
 selector = {revision = "2024", id = "modelo-193-perceptor-row-numero-orden"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
 sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
 sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [1, 0]}
@@ -802,6 +843,7 @@ sequence_order = {source_refs = [1, 0]}
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "bindings"
 selector = {revision = "2024", id = "modelo-193-perceptor-row-pago"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
 sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
 sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [1, 0]}
@@ -809,6 +851,7 @@ sequence_order = {source_refs = [1, 0]}
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "bindings"
 selector = {revision = "2024", id = "modelo-193-perceptor-row-penalizaciones"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
 sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
 sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [1, 0]}
@@ -816,6 +859,7 @@ sequence_order = {source_refs = [1, 0]}
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "bindings"
 selector = {revision = "2024", id = "modelo-193-perceptor-row-pendiente"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
 sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
 sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [1, 0]}
@@ -823,6 +867,7 @@ sequence_order = {source_refs = [1, 0]}
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "bindings"
 selector = {revision = "2024", id = "modelo-193-perceptor-row-percibido"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
 sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
 sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [1, 0]}
@@ -830,6 +875,7 @@ sequence_order = {source_refs = [1, 0]}
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "bindings"
 selector = {revision = "2024", id = "modelo-193-perceptor-row-porcentaje"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
 sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
 sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [1, 0]}
@@ -837,6 +883,7 @@ sequence_order = {source_refs = [1, 0]}
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "bindings"
 selector = {revision = "2024", id = "modelo-193-perceptor-row-provincia"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
 sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
 sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [1, 0]}
@@ -844,6 +891,7 @@ sequence_order = {source_refs = [1, 0]}
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "bindings"
 selector = {revision = "2024", id = "modelo-193-perceptor-row-reducciones"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
 sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
 sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [1, 0]}
@@ -851,6 +899,7 @@ sequence_order = {source_refs = [1, 0]}
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "bindings"
 selector = {revision = "2024", id = "modelo-193-perceptor-row-retencion"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
 sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
 sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [1, 0]}
@@ -858,6 +907,7 @@ sequence_order = {source_refs = [1, 0]}
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "bindings"
 selector = {revision = "2024", id = "modelo-193-perceptor-row-tipo-codigo"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
 sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
 sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [1, 0]}
@@ -865,6 +915,7 @@ sequence_order = {source_refs = [1, 0]}
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "bindings"
 selector = {revision = "2024", id = "modelo-193-perceptor-row-tipo-percepcion"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
 sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
 sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [1, 0]}
@@ -875,6 +926,24 @@ selector = {revision = "2024", id = "modelo-193-retenciones-ingresadas"}
 sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
 sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "modelo-193-base-total"}
+# Design pp. 5-6, positions 145-159: the sum of the perceptor records' 152-164.
+fields = {expression = {args = [{binding = "modelo-193-perceptor-rows-base-total"}]}}
+sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "modelo-193-retenciones-total"}
+# Design p. 6, positions 160-174: the sum of the perceptor records' 169-181.
+fields = {expression = {args = [{binding = "modelo-193-perceptor-rows-retenciones-total"}]}}
+sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
 
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "export_layouts"

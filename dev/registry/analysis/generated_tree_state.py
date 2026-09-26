@@ -38,13 +38,16 @@ from __future__ import annotations
 import collections
 import sys
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Final
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ..compiler.authority import compiled_bundled_authority
 from ..compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
+from ..pipeline.export_fragment_provenance import load_export_fragment_provenance_manifest
 from ..pipeline.render_check import compare_revision_against_committed
 from .corpus import bundled_modelo_ids
 
@@ -81,6 +84,19 @@ class GeneratedTreeState:
     #: meaning and are excluded before the state is decided.
     serialization_only: tuple[str, ...]
     detail: str
+    #: Generation-manifest members whose values differ between the committed
+    #: tree and the fresh render. A moved ``source_sha256`` here means the
+    #: official design itself changed, not merely what was rendered from it.
+    provenance_fields: tuple[str, ...] = ()
+    #: The ``(source_ref, source_sha256)`` the committed manifest attests, or
+    #: ``None`` when no committed manifest exists or it cannot be loaded.
+    committed_source: tuple[str, str] | None = None
+
+    @property
+    def record_differing(self) -> tuple[str, ...]:
+        """Differing files whose parsed meaning changed, excluding the manifest."""
+        excluded = {EXPORT_FRAGMENT_PROVENANCE_FILENAME, *self.serialization_only}
+        return tuple(name for name in self.differing if name not in excluded)
 
 
 def classify_comparison(
@@ -146,6 +162,7 @@ def generated_state_inventory(
                 continue
             differing = tuple(comparison.differing)
             serialization_only = tuple(comparison.serialization_only)
+            committed_source = _committed_source(export_root) if committed else None
             state = classify_comparison(differing, committed=committed, serialization_only=serialization_only)
             states.append(
                 GeneratedTreeState(
@@ -160,6 +177,8 @@ def generated_state_inventory(
                         if differing
                         else ("no committed tree" if not committed else "reproduces exactly")
                     ),
+                    provenance_fields=tuple(comparison.provenance_fields),
+                    committed_source=committed_source,
                 )
             )
     if inapplicable:
@@ -169,6 +188,21 @@ def generated_state_inventory(
             "census below is not corpus-wide\n"
         )
     return tuple(states), tuple(inapplicable)
+
+
+def _committed_source(export_root: Path) -> tuple[str, str] | None:
+    """Return the design source pin the committed manifest attests, if it loads.
+
+    An unloadable manifest yields ``None`` rather than raising, so it can never
+    be read as agreeing with anything that asks for a matching pin.
+    """
+    try:
+        manifest = load_export_fragment_provenance_manifest(
+            (export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME).read_bytes(),
+        )
+    except (RegistryValidationError, ValueError, OSError):
+        return None
+    return str(manifest.source_ref), manifest.source_sha256
 
 
 def tree_states(authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]) -> tuple[GeneratedTreeState, ...]:

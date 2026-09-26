@@ -21,8 +21,8 @@ from __future__ import annotations
 import pytest
 
 from .....core.authority_grade import RegistryAuthorityGrade
-from .....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from ..schema_input_kind import InputKind
+from .registry_tree import bundled_registry_tree
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
 

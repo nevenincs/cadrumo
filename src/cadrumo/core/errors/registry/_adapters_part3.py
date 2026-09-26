@@ -8,6 +8,16 @@ from ..error_codes import ErrorCategory, ErrorCode
 
 DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
+        "cadrumo.adapters.persistence.profile.actividad_asset.ActividadAssetHistoryPersistenceError",
+        ErrorCode(
+            code="INTEGRITY_ACTIVIDAD_ASSET_HISTORY_PERSISTENCE",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.canonical_actividad_asset_history_persistence",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.adapters.persistence.profile.relation_binding_join.RelationBindingJoinError",
         ErrorCode(
             code="INTEGRITY_RELATION_BINDING_JOIN",

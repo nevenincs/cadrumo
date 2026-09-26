@@ -616,6 +616,28 @@ def replace_transaction(
     old_transaction_id: str,
     replacement: Transaction,
 ) -> TransactionCatalogue:
+    current = catalogue.get(old_transaction_id)
+    if current is None:
+        raise TransactionNotFoundError(
+            f"transaction not found: {old_transaction_id}",
+            context={"transaction_id": old_transaction_id},
+        )
+    if replacement.invoice_id != current.invoice_id:
+        raise TransactionValidationError(
+            "invoice associations must change through the reciprocal link operation",
+            context={"transaction_id": old_transaction_id},
+        )
+    if replacement.transaction_id != old_transaction_id:
+        if replacement.transaction_id in catalogue:
+            raise TransactionValidationError(
+                "ledger edit would replace a different transaction",
+                context={"transaction_id": old_transaction_id, "replacement_id": replacement.transaction_id},
+            )
+        if current.invoice_id is not None:
+            raise TransactionValidationError(
+                "linked transaction identity cannot change without updating its invoice link",
+                context={"transaction_id": old_transaction_id, "invoice_id": current.invoice_id},
+            )
     updated = dict(catalogue.transactions)
     updated.pop(old_transaction_id, None)
     updated[replacement.transaction_id] = replacement
@@ -933,7 +955,22 @@ def save_transaction_catalogue_and_events(
     event_repository: BucketEventHistoryCoCommitWriterProtocol,
     catalogue: TransactionCatalogue,
     events: tuple[BucketEvent, ...],
+    expected_current: Transaction | None = None,
+    replacement: Transaction | None = None,
 ) -> None:
+    if expected_current is not None:
+        if replacement is None:
+            raise ValueError("baseline-guarded transaction write requires its replacement")
+        _commit_with_guarded_events(
+            event_repository=event_repository,
+            events=events,
+            commit=lambda event_write: transaction_repository.replace_if_current_with_secure_object_writes(
+                expected_current,
+                replacement,
+                (event_write,),
+            ),
+        )
+        return
     _commit_with_guarded_events(
         event_repository=event_repository,
         events=events,

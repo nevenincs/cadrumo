@@ -27,6 +27,7 @@ from ..modelo_work_command_specs import MODELO_WORK_COMMAND_SPECS
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 EXPECTED_TOKENS = {
+    "attest-m303-exonerado-390",
     "calculate",
     "create",
     "dependencies",
@@ -229,7 +230,7 @@ def _semantic_annotation(annotation: object) -> object:
 
 
 def test_modelo_work_specs_are_the_exact_owned_leaf_set() -> None:
-    assert len(MODELO_WORK_COMMAND_SPECS) == 19
+    assert len(MODELO_WORK_COMMAND_SPECS) == 20
     assert {spec.token for spec in MODELO_WORK_COMMAND_SPECS} == EXPECTED_TOKENS
     assert {spec.parent_key for spec in MODELO_WORK_COMMAND_SPECS} == {"app_modelo_work"}
     assert {spec.key for spec in MODELO_WORK_COMMAND_SPECS} == {

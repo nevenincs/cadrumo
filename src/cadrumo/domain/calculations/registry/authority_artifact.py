@@ -15,13 +15,13 @@ from __future__ import annotations
 import json
 import re
 from base64 import b64decode, b64encode
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum, StrEnum
 from pathlib import PurePath
-from typing import TYPE_CHECKING, Final, Protocol, cast, get_args
+from typing import TYPE_CHECKING, Final, Protocol, get_args
 
 from pydantic import BaseModel, TypeAdapter, ValidationError
 
@@ -35,7 +35,13 @@ from ....core.hashing import (
     sha256_hex,
 )
 from ....core.identity.documents import TAX_ID_FORMAT_CONTEXT
-from ....core.type_guards import is_object_mapping
+from ....core.type_guards import (
+    is_object_list_or_tuple,
+    is_object_mapping,
+    is_object_set_or_frozenset,
+    is_str_keyed_dict,
+)
+from .authority_compiler_closure import AuthorityCompilerClosure
 from .facts.resolution import GovernedFactQuery, ResolvedGovernedFact
 from .facts.schema import (
     TAGGED_FACT_ATOM_CONTEXT,
@@ -626,6 +632,7 @@ class AuthorityArtifact:
     catalogues: RegistryCatalogues
     identity_digest: str
     build_identity: AuthorityBuildIdentity
+    compiler_closure: AuthorityCompilerClosure
     profile_schema: ProfileSchemaDefinition
     evidence: AuthorityEvidenceProjection = AuthorityEvidenceProjection()
 
@@ -643,6 +650,10 @@ class AuthorityArtifact:
             raise TypeError("authority artifact requires typed build identity")
         if self.identity_digest != self.build_identity.identity_digest:
             raise ValueError("authority generation identity does not match its build receipts")
+        if not isinstance(self.compiler_closure, AuthorityCompilerClosure):
+            raise TypeError("authority artifact requires a typed compiler closure")
+        if self.compiler_closure.identity_digest != self.build_identity.compiler_identity_digest:
+            raise ValueError("authority compiler closure does not recompute its compiler identity receipt")
         if not isinstance(self.evidence, AuthorityEvidenceProjection):
             raise TypeError("authority artifact evidence must be an AuthorityEvidenceProjection")
         from ...user_profile.schema import ProfileSchemaDefinition
@@ -676,17 +687,15 @@ def _json_value(value: object) -> object:
             for field_name, field in type(value).model_fields.items()
             if not _field_equals_declared_default(value, field_name)
         }
-    if isinstance(value, Mapping):
-        return {_json_key(key): _json_value(item) for key, item in cast(Mapping[object, object], value).items()}
-    if isinstance(value, (frozenset, set)):
+    if is_object_mapping(value):
+        return {_json_key(key): _json_value(item) for key, item in value.items()}
+    if is_object_set_or_frozenset(value):
         # Iteration order of a set follows per-process string hashing, so an
         # unordered collection is written in canonical-JSON order: the same
         # authority always publishes the same bytes.
-        return sorted(
-            (_json_value(item) for item in cast(set[object] | frozenset[object], value)), key=canonical_json_bytes
-        )
-    if isinstance(value, (tuple, list)):
-        return [_json_value(item) for item in cast(Sequence[object], value)]
+        return sorted((_json_value(item) for item in value), key=canonical_json_bytes)
+    if is_object_list_or_tuple(value):
+        return [_json_value(item) for item in value]
     if isinstance(value, Enum):
         return _json_value(value.value)
     if isinstance(value, Decimal):
@@ -734,9 +743,9 @@ def _decode_json_object(raw: bytes, *, subject: str) -> dict[str, object]:
         decoded = json.loads(raw, object_pairs_hook=reject_duplicate_json_members, parse_constant=reject_json_constant)
     except (TypeError, UnicodeDecodeError, ValueError) as exc:
         raise AuthorityComponentCodecError(f"{subject} is not valid canonical JSON") from exc
-    if not isinstance(decoded, dict):
+    if not is_str_keyed_dict(decoded):
         raise AuthorityComponentCodecError(f"{subject} must be a JSON object")
-    return cast(dict[str, object], decoded)
+    return decoded
 
 
 def _require_members(document: Mapping[str, object], expected: set[str], subject: str) -> None:
@@ -755,9 +764,9 @@ def _required_string(document: Mapping[str, object], field_name: str) -> str:
 
 def _mapping_item(value: object, field_name: str) -> Mapping[str, object]:
     """Require one decoded JSON object."""
-    if not isinstance(value, Mapping) or not all(isinstance(key, str) for key in cast(Mapping[object, object], value)):
+    if not is_str_keyed_dict(value):
         raise AuthorityComponentCodecError(f"authority component field {field_name!r} must be an object")
-    return cast(Mapping[str, object], value)
+    return value
 
 
 def _decode_base64(value: str) -> bytes:

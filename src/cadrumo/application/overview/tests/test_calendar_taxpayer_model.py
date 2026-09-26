@@ -573,30 +573,35 @@ def test_calendar_natural_person_shows_irpf_not_corporate(
 def test_calendar_suppresses_modelo_721_without_crypto_abroad_threshold(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    """A default foreign-asset false profile must not receive active M721 rows."""
+    """Neither a declared "no" nor an unanswered M721 fact yields active M721 rows.
 
-    profile = TaxpayerProfile(
-        tax_id="X1234567L",
-        entity_type=EntityType.from_registry("natural_person"),
-        irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("trabajo")}),
-        iva_regime=IVARegime("GENERAL"),
-        bienes_extranjero_above_threshold=False,
-        monedas_virtuales_extranjero_above_threshold=False,
-    )
+    A declared "no" suppresses the rows as not applicable; an unanswered fact
+    suppresses them as incomplete.
+    """
+
     rng = OverviewCalendarRange(from_date=date(2025, 1, 1), to_date=date(2025, 3, 31))
+    for declared, expected_verdict in ((False, "not_applicable"), (None, "incomplete")):
+        profile = TaxpayerProfile(
+            tax_id="X1234567L",
+            entity_type=EntityType.from_registry("natural_person"),
+            irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("trabajo")}),
+            iva_regime=IVARegime("GENERAL"),
+            bienes_extranjero_above_threshold=declared,
+            monedas_virtuales_extranjero_above_threshold=declared,
+        )
 
-    cal = build_overview_calendar(
-        profile,
-        rng,
-        operation=authority_operation,
-        today=date(2025, 1, 15),
-        show_suppressed=True,
-    )
+        cal = build_overview_calendar(
+            profile,
+            rng,
+            operation=authority_operation,
+            today=date(2025, 1, 15),
+            show_suppressed=True,
+        )
 
-    assert "721" not in {entry.modelo for entry in cal.entries}
-    suppressed_721 = [entry for entry in cal.suppressed_entries if entry.modelo == "721"]
-    assert suppressed_721
-    assert {entry.verdict.value for entry in suppressed_721} == {"incomplete"}
+        assert "721" not in {entry.modelo for entry in cal.entries}, declared
+        suppressed_721 = [entry for entry in cal.suppressed_entries if entry.modelo == "721"]
+        assert suppressed_721, declared
+        assert {entry.verdict.value for entry in suppressed_721} == {expected_verdict}, declared
 
 
 def test_calendar_attribution_entity_is_shown_no_cuota_obligation(

@@ -9,8 +9,6 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
-from ......adapters.persistence.profile.auth_diagnostics import build_auth_diagnostic_persistence
-from ......adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ......application.auth.diagnostics import load_auth_diagnostic
 from ......application.auth.providers import AuthProvider
 from ......application.auth.session_types import (
@@ -26,6 +24,8 @@ from ......core.auth_session_keys import aeat_auth_session_storage_state_path
 from ......core.config import Settings
 from ......core.config_support import AEAT_CERTIFICATE_PROTECTED_URL
 from ......core.errors.hierarchy import AeatLoginAssertionError, AuthError
+from .....persistence.profile.auth_diagnostics import build_auth_diagnostic_persistence
+from .....persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...browser.tests.real_http_boundary import LocalHttpBoundary, opened_http_boundary, real_browser_factory
 from .. import session_store as session_store
 from ..authenticator import AEAT_SESSION_IDLE_TTL

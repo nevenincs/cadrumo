@@ -2219,44 +2219,49 @@ slot = 18
 field = "suma_deducciones_di_internacional_anteriores"
 
 [[revisions."2024".projection_endpoints]]
-id = "m200-incn-establecimiento-permanente:slot-1"
+id = "m200-incn-establecimiento-permanente:field-nif.slot-1"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
 projection_kind = "m200_incn_establecimiento_permanente"
 slot = 1
+field = "nif"
 
 [[revisions."2024".projection_endpoints]]
-id = "m200-incn-establecimiento-permanente:slot-2"
+id = "m200-incn-establecimiento-permanente:field-nif.slot-2"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
 projection_kind = "m200_incn_establecimiento_permanente"
 slot = 2
+field = "nif"
 
 [[revisions."2024".projection_endpoints]]
-id = "m200-incn-establecimiento-permanente:slot-3"
+id = "m200-incn-establecimiento-permanente:field-nif.slot-3"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
 projection_kind = "m200_incn_establecimiento_permanente"
 slot = 3
+field = "nif"
 
 [[revisions."2024".projection_endpoints]]
-id = "m200-incn-establecimiento-permanente:slot-4"
+id = "m200-incn-establecimiento-permanente:field-nif.slot-4"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
 projection_kind = "m200_incn_establecimiento_permanente"
 slot = 4
+field = "nif"
 
 [[revisions."2024".projection_endpoints]]
-id = "m200-incn-establecimiento-permanente:slot-5"
+id = "m200-incn-establecimiento-permanente:field-nif.slot-5"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
 projection_kind = "m200_incn_establecimiento_permanente"
 slot = 5
+field = "nif"
 
 [[revisions."2024".projection_endpoints]]
 id = "m200-incn-grupo-sociedad:field-nif-entidad-grupo.slot-1"

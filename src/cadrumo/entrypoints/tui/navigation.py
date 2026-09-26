@@ -29,6 +29,7 @@ from ...core.models import STRICT_FROZEN_CONFIG
 type TuiDestinationIdV1 = Literal[
     "workbench.home",
     "workbench.ledger",
+    "workbench.withholding",
     "workbench.declarations",
     "workbench.aeat_sync",
     "workbench.profile",
@@ -38,6 +39,7 @@ type TuiDestinationIdV1 = Literal[
 type TuiDestinationLabelKeyV1 = Literal[
     "tui.destination.home",
     "tui.destination.ledger",
+    "tui.destination.withholding",
     "tui.destination.declarations",
     "tui.destination.aeat_sync",
     "tui.destination.profile",
@@ -225,6 +227,9 @@ def declared_destination_ids() -> frozenset[str]:
 TUI_DESTINATION_CATALOGUE: Final[tuple[TuiDestinationDescriptorV1, ...]] = (
     TuiDestinationDescriptorV1(destination="workbench.home", label_key="tui.destination.home", zone="primary"),
     TuiDestinationDescriptorV1(destination="workbench.ledger", label_key="tui.destination.ledger", zone="primary"),
+    TuiDestinationDescriptorV1(
+        destination="workbench.withholding", label_key="tui.destination.withholding", zone="primary"
+    ),
     TuiDestinationDescriptorV1(
         destination="workbench.declarations",
         label_key="tui.destination.declarations",

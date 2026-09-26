@@ -30,7 +30,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-from ...core.registry_token import StrictRegistryToken
+from ..registry_token import StrictRegistryToken
 
 __all__ = [
     "NifIvaFormatSpec",

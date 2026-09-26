@@ -13,9 +13,9 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import TYPE_CHECKING, Any, Literal, Protocol
+from typing import TYPE_CHECKING, Any, Literal, NotRequired, Protocol, TypedDict
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, JsonValue
 
 from ...core.errors.hierarchy import CadrumoError
 from ...core.type_guards import is_object_list_or_tuple
@@ -54,6 +54,25 @@ class JsonType(StrEnum):
     BOOLEAN = "boolean"
 
 
+class VerbParameterJsonSchema(TypedDict):
+    """JSON Schema a consumer reads for one command parameter."""
+
+    type: str
+    items: NotRequired[VerbParameterJsonSchema]
+    enum: NotRequired[list[str]]
+    description: NotRequired[str]
+    default: NotRequired[JsonValue]
+
+
+class VerbInputJsonSchema(TypedDict):
+    """Strict JSON object schema a consumer reads for one command's inputs."""
+
+    type: Literal["object"]
+    properties: dict[str, VerbParameterJsonSchema]
+    required: list[str]
+    additionalProperties: bool
+
+
 class CommandWriteRoute(StrEnum):
     """The storage scope through which a command may write."""
 
@@ -84,6 +103,7 @@ type Capability = Literal[
     "profile-custody",
     "encrypted-facts",
     "network",
+    "aeat",
     "browser",
     "google",
     "calculation",
@@ -120,6 +140,7 @@ class CommandCapabilityClass:
         """Return the transitive capability implications used by policy checks."""
         implications: dict[Capability, tuple[Capability, ...]] = {
             "encrypted-facts": ("profile-custody",),
+            "aeat": ("network",),
             "browser": ("network",),
             "google": ("network",),
             "calculation": ("registry",),
@@ -333,14 +354,14 @@ class VerbParameter(BaseModel):
     default: bool | int | float | str | list[Any] | None = None
     help: str = ""
 
-    def property_schema(self) -> dict[str, Any]:
+    def property_schema(self) -> VerbParameterJsonSchema:
         """Project this parameter into the consumer-facing JSON schema."""
-        scalar: dict[str, Any] = {"type": self.json_type.value}
+        scalar: VerbParameterJsonSchema = {"type": self.json_type.value}
         if self.choices:
             scalar["enum"] = list(self.choices)
         if self.help:
             scalar["description"] = self.help
-        schema: dict[str, Any] = {"type": "array", "items": scalar} if self.multiple else scalar
+        schema: VerbParameterJsonSchema = {"type": "array", "items": scalar} if self.multiple else scalar
         if self.default is not None:
             schema["default"] = self.default
         return schema
@@ -392,7 +413,7 @@ class VerbInputSchema(BaseModel):
         """Return parameters that must be supplied by a caller."""
         return tuple(parameter for parameter in self.parameters if parameter.required)
 
-    def json_schema(self) -> dict[str, Any]:
+    def json_schema(self) -> VerbInputJsonSchema:
         """Project the input contract into a strict JSON object schema."""
         return {
             "type": "object",

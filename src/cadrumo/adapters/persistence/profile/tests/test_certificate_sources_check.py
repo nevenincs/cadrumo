@@ -18,8 +18,17 @@ from pydantic import SecretStr
 
 from cadrumo.adapters.outbound.aeat.auth import session_store
 from cadrumo.adapters.outbound.aeat.browser.factory import default_browser_session_factory
-from cadrumo.adapters.persistence.profile.tests._operator_probe_fakes import fake_operator_probe_ports
 from cadrumo.adapters.persistence.profile.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
+from cadrumo.adapters.persistence.profile.tests.operator_probe_fakes import fake_operator_probe_ports
+from cadrumo.adapters.persistence.profile.tests.operator_projection_test_support import (
+    build_live_auth_preflight_report,
+    build_operator_state_projection,
+    configure_operator_auth,
+    inspect_operator_auth,
+)
+from cadrumo.adapters.persistence.profile.tests.operator_projection_test_support import (
+    test_operator_auth as run_operator_auth_test,
+)
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
@@ -45,15 +54,6 @@ from cadrumo.application.auth.operator_results import (
 from cadrumo.application.auth.probes import ProviderProbeResult
 from cadrumo.application.auth.providers import select_provider
 from cadrumo.application.auth.sessions import load_persisted_session, storage_state_paths
-from cadrumo.application.auth.tests.operator_projection_test_support import (
-    build_live_auth_preflight_report,
-    build_operator_state_projection,
-    configure_operator_auth,
-    inspect_operator_auth,
-)
-from cadrumo.application.auth.tests.operator_projection_test_support import (
-    test_operator_auth as run_operator_auth_test,
-)
 from cadrumo.application.workflow.persistence import workflow_state_repository
 from cadrumo.core.auth_provider import AuthProviderKind
 from cadrumo.core.bucket_pointer import BucketPointer, write_pointer

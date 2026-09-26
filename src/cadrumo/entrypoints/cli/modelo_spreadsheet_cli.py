@@ -211,7 +211,7 @@ def modelo_spreadsheet_push(
         formula_cells_to_write=result.formula_cells_to_write,
     )
     lines = (
-        "operation\tconfig.google.sync.calc.export",
+        "operation\tmodelo.spreadsheet.push",
         f"profile\t{active}",
         f"modelo\t{result.modelo}",
         f"revision\t{result.revision}",
@@ -271,7 +271,7 @@ def execute_google_sheets_export(
     )
     from ...application.operations.models import OperationRequest
     from ...core.operations import OperationTerminalCondition, profile_operation_subject
-    from ...entrypoints.operation_composition import compose_operation_dependencies
+    from ..operation_composition import compose_operation_dependencies
 
     active = resolve_active_profile()
 
@@ -329,7 +329,8 @@ def execute_google_sheets_export(
                         terminal_revision=projection.revision,
                         definition_contract_digest=projection.definition_contract.definition_contract_digest,
                         result_schema=result_schema,
-                    )
+                    ),
+                    GoogleSheetsExportPublicResultV1,
                 )
                 if not isinstance(resolved, OperationResultProjectionSuccessV1) or not isinstance(
                     resolved.projection, GoogleSheetsExportPublicResultV1
@@ -368,7 +369,7 @@ def _scenario_casilla_decimal_map(node: object) -> dict[CasillaId, Decimal]:
     if not is_object_dict(node):
         return {}
     return {
-        validated_casilla_id(k, surface="google sync calc scenario casilla.id"): _scenario_decimal_value(v)
+        validated_casilla_id(k, surface="spreadsheet verify scenario casilla.id"): _scenario_decimal_value(v)
         for k, v in node.items()
     }
 
@@ -452,7 +453,7 @@ def _verify_result(profile: str, report: ParityReport) -> ModeloSpreadsheetVerif
 def _verify_lines(profile: str, report: ParityReport) -> list[str]:
     """Render the stable tabular projection of a parity report."""
     lines = [
-        "operation\tconfig.google.sync.calc.verify",
+        "operation\tmodelo.spreadsheet.verify",
         f"profile\t{profile}",
         f"modelo\t{report.modelo_id}",
         f"revision\t{report.revision_id}",
@@ -601,7 +602,7 @@ def _pull_result(
 ) -> ModeloSpreadsheetPullResult:
     """Build and validate the public pull result from canonical adapter records."""
     payload: dict[str, object] = {
-        "operation": "config.google.sync.calc.pull",
+        "operation": "modelo.spreadsheet.pull",
         "profile": active,
         "modelo": snapshot.modelo.id,
         "revision": snapshot.revision.id,
@@ -641,7 +642,7 @@ def _pull_lines(
 ) -> list[str]:
     """Render the stable tabular projection of a workbook pull."""
     lines: list[str] = [
-        "operation\tconfig.google.sync.calc.pull",
+        "operation\tmodelo.spreadsheet.pull",
         f"profile\t{active}",
         f"modelo\t{snapshot.modelo.id}",
         f"revision\t{snapshot.revision.id}",
@@ -788,7 +789,7 @@ def _calculate_lines(
 ) -> list[str]:
     """Render the stable tabular projection of a workbook calculation."""
     lines: list[str] = [
-        "operation\tconfig.google.sync.calc.compute",
+        "operation\tmodelo.spreadsheet.calculate",
         f"profile\t{active}",
         f"modelo\t{snapshot.modelo.id}",
         f"revision\t{snapshot.revision.id}",

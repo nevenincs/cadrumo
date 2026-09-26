@@ -16,16 +16,16 @@ capability axis on top.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, override
+from typing import Literal, NotRequired, TypedDict, override
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, JsonValue, field_validator, model_validator
 
 from cadrumo.application.operator_actions.catalogue import (
     OPERATOR_ACTION_CATALOGUE,
     ActionArgumentBindingSpecification,
     ActionCatalogue,
 )
-from cadrumo.application.operator_surface.command_ports import VerbInputSchema
+from cadrumo.application.operator_surface.command_ports import VerbInputSchema, VerbParameterJsonSchema
 from cadrumo.application.operator_surface.manifest import (
     CommandSchemaRef,
     InputSchemaInventoryRow,
@@ -39,7 +39,20 @@ from cadrumo.application.operator_surface.manifest import (
 from .command_surface import command_surface
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
-_ACTION_CAPABILITIES_SCHEMA_KEY = "x-cadrumo-action-capabilities"
+
+# The functional form is required: the extension key is not an identifier. It
+# restates the base keys so the result stays a structural subtype of the base
+# schema the override refines.
+McpActionInputJsonSchema = TypedDict(
+    "McpActionInputJsonSchema",
+    {
+        "type": Literal["object"],
+        "properties": dict[str, VerbParameterJsonSchema],
+        "required": list[str],
+        "additionalProperties": bool,
+        "x-cadrumo-action-capabilities": NotRequired[list[dict[str, JsonValue]]],
+    },
+)
 
 
 class McpActionCapability(BaseModel):
@@ -113,11 +126,17 @@ class McpVerbInputSchema(VerbInputSchema):
         return self
 
     @override
-    def json_schema(self) -> dict[str, Any]:
+    def json_schema(self) -> McpActionInputJsonSchema:
         """Return the CLI projection plus the capability extension."""
-        schema = super().json_schema()
+        base = super().json_schema()
+        schema: McpActionInputJsonSchema = {
+            "type": base["type"],
+            "properties": base["properties"],
+            "required": base["required"],
+            "additionalProperties": base["additionalProperties"],
+        }
         if self.action_capabilities:
-            schema[_ACTION_CAPABILITIES_SCHEMA_KEY] = [
+            schema["x-cadrumo-action-capabilities"] = [
                 capability.model_dump(mode="json") for capability in self.action_capabilities
             ]
         return schema

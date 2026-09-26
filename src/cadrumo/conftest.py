@@ -84,7 +84,7 @@ def operation() -> Iterator[PinnedAuthorityOperation]:
     :func:`_scope_tests_that_request_the_operation`; a wider-scoped fixture
     that computes under it enters ``validating_governed_facts`` itself.
     """
-    from .tests.authority_lease_support import private_authority_lease
+    from .domain.calculations.registry.tests.authority_lease_support import private_authority_lease
 
     with private_authority_lease() as pinned:
         yield pinned
@@ -98,7 +98,7 @@ def _scope_tests_that_request_the_operation(request: pytest.FixtureRequest) -> I
         return
     # A test's own parametrized ``operation`` argument also appears in
     # ``fixturenames``; ``scoped_when_requested`` tells the two apart.
-    from .tests.authority_lease_support import scoped_when_requested
+    from .domain.calculations.registry.tests.authority_lease_support import scoped_when_requested
 
     with scoped_when_requested(request, "operation"):
         yield
@@ -162,12 +162,12 @@ def source_tree_ast() -> Mapping[Path, ast.AST]:
     return cache
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="package", autouse=True)
 def _skip_profile_kdf_grid_measurement() -> Iterator[None]:
     """Stop every profile registration re-benchmarking this host's KDF grid.
 
     ``calibrate_profile_kdf`` MEASURES the parameter grid to pick the strongest
-    point inside the operator latency band: one supervised child per warmup and
+    point inside the operator latency band: one supervised child per probe and
     per sample. Profiled here, that is 16.1s of the 19.1s a registration costs,
     and it is repeated for every registration, on the same machine, for the same
     answer. Registration doors are reached from 102 direct call sites across 31
@@ -176,14 +176,22 @@ def _skip_profile_kdf_grid_measurement() -> Iterator[None]:
     The seam and its reasoning are the shipped function's own: measuring is
     "the right price for an operator's one-off enrolment and the wrong one for a
     host that enrols constantly". Declining adopts the FIXED fallback point,
-    which that function also returns whenever the grid cannot be measured before
-    its deadline, and which is STRONGER than the measured band's floor -- so
-    every custody envelope a test opens is wrapped no more weakly than before.
+    which that function also returns whenever no point is confirmed before its
+    deadline, and which is the floor a measured point never falls below -- so
+    every custody envelope a test opens is wrapped at a strength production
+    also accepts.
 
-    Session-scoped and outermost, which is what makes it survive: a nested
-    ``override_settings`` setting other fields keeps this value (checked), so
-    the many tests that override a storage root do not silently re-enable
-    measurement.
+    Outermost for every test in this package, which is what makes it survive: a
+    nested ``override_settings`` setting other fields keeps this value
+    (checked), so the many tests that override a storage root do not silently
+    re-enable measurement.
+
+    Package-scoped, not session-scoped. An override is a frozen snapshot of
+    every field, the storage root included, and a session-long one outlived
+    this package: an xdist worker that went on to ``src/cadrumo_harness`` kept
+    it, so the harness tests, which isolate themselves through the environment,
+    silently ran against this package's collection root. Leaving the package
+    now ends it.
 
     It cannot reach the calibration gate. ``calibrate_profile_kdf`` consults
     ``settings or load_settings()``, and
@@ -205,6 +213,7 @@ def compose_runtime_ports() -> Iterator[None]:
     from .adapters.inbound.reconciliation_parser import InboundReconciliationEvidenceParser
     from .adapters.outbound.aeat.auth.provider_selection import select_provider as select_outbound_auth_provider
     from .adapters.outbound.aeat.auth.session_store import build_session_store
+    from .adapters.outbound.fx.tests.recorded_ecb_rates import recorded_ecb_rate_provider
     from .adapters.persistence.profile.buckets import build_bucket_event_history_repository
     from .adapters.persistence.profile.confirmation_records import ConfirmationRecordRepository
     from .adapters.persistence.profile.extraction_drafts import ExtractionDraftRepository
@@ -245,7 +254,6 @@ def compose_runtime_ports() -> Iterator[None]:
     from .application.modelo.work_unit_repository import bind_work_unit_catalogue_repository_factory
     from .core.redaction.tax_identity_admission import bind_tax_identity_admission
     from .domain.calculations.registry.tax_identity_admission import RegistryTaxIdentityAdmission
-    from .tests.recorded_ecb_rates import recorded_ecb_rate_provider
 
     with (
         bind_tax_identity_admission(RegistryTaxIdentityAdmission()),

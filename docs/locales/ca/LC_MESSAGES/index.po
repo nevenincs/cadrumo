@@ -17,216 +17,215 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:118
+#: ../../index.md:118
 msgid "Getting started"
 msgstr "Primers passos"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:118
+#: ../../index.md:118
 msgid "Get Cadrumo"
 msgstr "Obtén Cadrumo"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:118
+#: ../../index.md:118
 msgid "Install Cadrumo"
 msgstr "Instal·la Cadrumo"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:118
+#: ../../index.md:118
 msgid "Quickstart"
 msgstr "Inici ràpid"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:118
+#: ../../index.md:118
 msgid "Connect an agent (MCP)"
 msgstr "Connecta un agent (MCP)"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:118
+#: ../../index.md:118
 msgid "First quarterly filing"
 msgstr "Primera presentació trimestral"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:118
+#: ../../index.md:118
 msgid "The income-tax year"
 msgstr "L'any de l'IRPF"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:118
+#: ../../index.md:118
 msgid "The IVA year"
 msgstr "L'any de l'IVA"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:131
+#: ../../index.md:131
 msgid "Set up a profile"
 msgstr "Configura un perfil"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:131
+#: ../../index.md:131
 msgid "Authenticate with AEAT"
 msgstr "Autentica't amb l'AEAT"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:131
+#: ../../index.md:131
 msgid "Maintain census facts"
 msgstr "Mantén les dades censals"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:131
+#: ../../index.md:131
 msgid "Which modelos apply to you"
 msgstr "Quins modelos t'apliquen"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:131
+#: ../../index.md:131
 msgid "Protect data access"
 msgstr "Protegeix l'accés a les dades"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:131
+#: ../../index.md:131
 msgid "Your profile"
 msgstr "El teu perfil"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:142
+#: ../../index.md:142
 msgid "Filing calendar"
 msgstr "Calendari de presentacions"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:142
+#: ../../index.md:142
 msgid "AEAT notifications"
 msgstr "Notificacions de l'AEAT"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:142
+#: ../../index.md:142
 msgid "Filing readiness"
 msgstr "Preparació per presentar"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:142
+#: ../../index.md:142
 msgid "Your calendar"
 msgstr "El teu calendari"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:151
+#: ../../index.md:151
 msgid "Work with transactions"
 msgstr "Treballa amb les transaccions"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:81
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:151
+#: ../../index.md:81 ../../index.md:151
 msgid "Classify transactions"
 msgstr "Classifica les transaccions"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:151
+#: ../../index.md:151
 msgid "Classify with an LLM"
 msgstr "Classifica amb un LLM"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:151
+#: ../../index.md:151
 msgid "Attach invoices and receipts"
 msgstr "Adjunta factures i rebuts"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:151
+#: ../../index.md:151
 msgid "Manage business invoices"
 msgstr "Gestiona les factures de negoci"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:151
+#: ../../index.md:151
 msgid "Correct mistakes"
 msgstr "Corregeix els errors"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:151
+#: ../../index.md:151
 msgid "IVA prorrata deductions"
 msgstr "Deduccions de prorrata de l'IVA"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:151
+#: ../../index.md:151
 msgid "Your ledger"
 msgstr "El teu ledger"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:164
+#: ../../index.md:164
 msgid "The filing workflow"
 msgstr "El flux de treball de presentació"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:164
+#: ../../index.md:164
 msgid "Modelo 036 (censo)"
 msgstr "Modelo 036 (cens)"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:164
+#: ../../index.md:164
 msgid "Modelo 100 (Renta)"
 msgstr "Modelo 100 (Renda)"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:164
+#: ../../index.md:164
 msgid "Modelo 130 (IRPF instalment)"
 msgstr "Modelo 130 (pagament fraccionat de l'IRPF)"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:164
+#: ../../index.md:164
 msgid "Modelo 303 (IVA)"
 msgstr "Modelo 303 (IVA)"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:164
+#: ../../index.md:164
 msgid "Modelo 349 (intra-community)"
 msgstr "Modelo 349 (intracomunitari)"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:164
+#: ../../index.md:164
 msgid "Modelo 390 (IVA summary)"
 msgstr "Modelo 390 (resum d'IVA)"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:164
+#: ../../index.md:164
 msgid "Calculation inputs"
 msgstr "Entrades de càlcul"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:164
+#: ../../index.md:164
 msgid "Google Sheets review"
 msgstr "Revisió amb Google Sheets"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:164
+#: ../../index.md:164
 msgid "Verify a filing"
 msgstr "Verifica una presentació"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:164
+#: ../../index.md:164
 msgid "File at AEAT"
 msgstr "Presenta a l'AEAT"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:164
+#: ../../index.md:164
 msgid "Reconcile a filing"
 msgstr "Concilia una presentació"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:164
+#: ../../index.md:164
 msgid "Your filings"
 msgstr "Les teves presentacions"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:182
+#: ../../index.md:182
 msgid "Troubleshooting"
 msgstr "Resolució de problemes"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:182
+#: ../../index.md:182
 msgid "Publish runtime authority"
 msgstr "Publica l'autoritat d'execució"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:182
+#: ../../index.md:182
 msgid "Disclaimer"
 msgstr "Avís legal"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:182
+#: ../../index.md:182
 msgid "Help"
 msgstr "Ajuda"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:191
+#: ../../index.md:191
 msgid "Cadrumo reference"
 msgstr "Referència de Cadrumo"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:191
+#: ../../index.md:191
 msgid "Reference"
 msgstr "Referència"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:202
+#: ../../index.md:202
 msgid "Overview"
 msgstr "Visió general"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:202
+#: ../../index.md:202
 msgid "How it works"
 msgstr "Com funciona"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:209
+#: ../../index.md:209
 msgid "Updates and downloads"
 msgstr "Actualitzacions i baixades"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:209
+#: ../../index.md:209
 msgid "Architecture"
 msgstr "Arquitectura"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:209
+#: ../../index.md:209
 msgid "Authoring guide"
 msgstr "Guia de redacció"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:209
+#: ../../index.md:209
 msgid "Project"
 msgstr "Projecte"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:1
+#: ../../index.md:1
 msgid "Cadrumo documentation"
 msgstr "Documentació de Cadrumo"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:3
+#: ../../index.md:3
 msgid ""
 "Paper tax forms, an envelope, a keyboard, and a calculator arranged on a "
 "desk"
@@ -234,7 +233,7 @@ msgstr ""
 "Formularis fiscals en paper, un sobre, un teclat i una calculadora "
 "disposats sobre un escriptori"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:9
+#: ../../index.md:9
 msgid ""
 "This is the documentation for Cadrumo and its `aeat` command-line "
 "interface (CLI). Cadrumo turns your records into checked modelo figures "
@@ -251,7 +250,7 @@ msgstr ""
 "font és a [GitHub](https://github.com/nevenincs/cadrumo). Cadrumo està en"
 " fase beta; les interfícies encara poden canviar entre versions."
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:18
+#: ../../index.md:18
 msgid ""
 "Cadrumo is not tax advice, is not affiliated with AEAT, and does not "
 "replace AEAT's official tools or advice from a qualified professional. It"
@@ -267,11 +266,11 @@ msgstr ""
 " sent responsable de cada declaració que presentes. Llegeix l'[avís legal"
 " complet](disclaimer.md) abans de confiar en Cadrumo."
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:25
+#: ../../index.md:25
 msgid "Where to start"
 msgstr "Per on començar"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:27
+#: ../../index.md:27
 msgid ""
 "These guides cover the whole preparation cycle: setting up a taxpayer "
 "profile, importing and classifying bank records, checking what is due, "
@@ -285,19 +284,19 @@ msgstr ""
 " anys de mostra (un per a l'IRPF i un per a l'IVA) recorren tot el cicle "
 "amb ordres reals."
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:37
+#: ../../index.md:37
 msgid "Start from scratch"
 msgstr "Comença de zero"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:42
+#: ../../index.md:42
 msgid "Take the shortest path from an empty profile to an exported modelo file."
 msgstr "Fes el camí més curt d'un perfil buit a un fitxer de modelo exportat."
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:45
+#: ../../index.md:45
 msgid "Run through the income-tax year"
 msgstr "Recorre l'any de l'IRPF"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:50
+#: ../../index.md:50
 msgid ""
 "Follow a worked year of Modelo 130 quarters closing into the annual "
 "Modelo 100 Renta declaration, command by command."
@@ -305,11 +304,11 @@ msgstr ""
 "Segueix un any de mostra de trimestres del Modelo 130 que es tanquen en "
 "la declaració anual del Modelo 100 (Renta), ordre per ordre."
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:54
+#: ../../index.md:54
 msgid "Run through the IVA year"
 msgstr "Recorre l'any de l'IVA"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:59
+#: ../../index.md:59
 msgid ""
 "Follow a worked year of Modelo 303 quarters, the Modelo 349 branch, and "
 "the annual Modelo 390 summary, command by command."
@@ -317,11 +316,11 @@ msgstr ""
 "Segueix un any de mostra de trimestres del Modelo 303, la branca del "
 "Modelo 349 i el resum anual del Modelo 390, ordre per ordre."
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:63
+#: ../../index.md:63
 msgid "Set up your taxpayer profile"
 msgstr "Configura el teu perfil de contribuent"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:68
+#: ../../index.md:68
 msgid ""
 "Create the taxpayer profile and record the facts that decide which "
 "modelos apply."
@@ -329,11 +328,11 @@ msgstr ""
 "Crea el perfil de contribuent i registra les dades que determinen quins "
 "modelos s'apliquen."
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:72
+#: ../../index.md:72
 msgid "Import and manage transactions"
 msgstr "Importa i gestiona les transaccions"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:77
+#: ../../index.md:77
 msgid ""
 "Import bank statements, review the rows, and attach the evidence behind "
 "them."
@@ -341,7 +340,7 @@ msgstr ""
 "Importa extractes bancaris, revisa les files i adjunta les proves que hi "
 "ha al darrere."
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:86
+#: ../../index.md:86
 msgid ""
 "Decide business, personal, or mixed use and set the category and tax "
 "fields on each row."
@@ -349,21 +348,21 @@ msgstr ""
 "Decideix l'ús comercial, personal o mixt i defineix la categoria i els "
 "camps fiscals de cada fila."
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:90
+#: ../../index.md:90
 msgid "Plan your filing calendar"
 msgstr "Planifica el teu calendari de presentacions"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:95
+#: ../../index.md:95
 msgid "See which modelos are due and which period to prepare next."
 msgstr ""
 "Consulta quins modelos s'han de presentar i quin període has de preparar "
 "tot seguit."
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:98
+#: ../../index.md:98
 msgid "Prepare your filings"
 msgstr "Prepara les teves presentacions"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:103
+#: ../../index.md:103
 msgid ""
 "Prepare, verify, export, file at AEAT, and reconcile - with a recipe per "
 "modelo: 036, 100 (Renta), 130, 303, 349, and 390."
@@ -371,11 +370,11 @@ msgstr ""
 "Prepara, verifica, exporta, presenta a l'AEAT i concilia, amb una recepta"
 " per a cada modelo: 036, 100 (Renta), 130, 303, 349 i 390."
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:108
+#: ../../index.md:108
 msgid "Search everything"
 msgstr "Cerca-ho tot"
 
-#: Y:/code/cadrumo-worktrees/main/docs/index.md:110
+#: ../../index.md:110
 #, python-brace-format
 msgid ""
 "Press {kbd}`Ctrl+K` ({kbd}`Cmd+K` on macOS) on any page to search tax "

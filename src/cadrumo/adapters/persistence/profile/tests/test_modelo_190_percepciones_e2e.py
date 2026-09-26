@@ -1,7 +1,7 @@
 """End-to-end: M190 "número total de percepciones" resolves via the live withholding source (#28 P05).
 
-Drives the REAL chain (no mocks): persist per-perceptor-clave WithholdingObservation
-rows into the encrypted store → the enrolled WithholdingSourceResolver materialises
+Drives the REAL chain (no mocks): persist active quarterly Modelo 111
+per-perceptor-clave WithholdingObservation rows into the encrypted store → the enrolled WithholdingSourceResolver materialises
 the DISTINCT (perceptor, clave, subclave) count → the registry engine binds it onto
 ``decl.total-percepciones`` (now ``input_kind = "bound"`` after the P04 re-point,
 replacing the nine op=sum quarterly relations). Proves percepciones > perceptores:
@@ -16,19 +16,22 @@ from pathlib import Path
 
 import pytest
 
-from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .....application.aggregation.percepciones_observations_repository import (
     PercepcionObservationPorts,
     persist_percepcion_observations,
 )
+from .....application.aggregation.retencion_observations_repository import RetencionObservationPorts
 from .....application.aggregation.source_mesh import CalculationSourceContext
+from .....application.aggregation.tests.withholding_filer_profile_support import withholding_work_profile
 from .....application.aggregation.withholding_source import WithholdingSourceResolver
 from .....core.aggregation import RetencionClave
 from .....core.casilla_id import validated_casilla_id
 from .....core.period import Period
 from .....domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from .....domain.calculations.registry.withholding_bindings import WithholdingObservation
+from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..percepciones_observations import PercepcionObservationRepositoryAdapter
+from ..retencion_observations import RetencionObservationRepositoryAdapter
 from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -62,14 +65,15 @@ def _obs(nif: str, clave: RetencionClave) -> WithholdingObservation:
 def test_m190_percepciones_count_resolves_distinct_from_store_to_bound_casilla(tmp_path: Path) -> None:
     """3 percepciones (one perceptor under 2 claves + a second) -> decl.total-percepciones == 3."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        period = Period.from_year_and_code(2024, "0A")
+        annual_period = Period.from_year_and_code(2024, "0A")
+        source_period = Period.from_year_and_code(2024, "2T")
         repository = PercepcionObservationRepositoryAdapter(objects=profile.repository)
         ports = PercepcionObservationPorts(repository=repository)
         persist_percepcion_observations(
             ports=ports,
-            modelo="190",
+            modelo="111",
             filing_year=2024,
-            period=period,
+            period=source_period,
             observations=[
                 _obs("11111111H", RetencionClave.from_registry("A")),
                 _obs("11111111H", RetencionClave.from_registry("G")),
@@ -77,13 +81,19 @@ def test_m190_percepciones_count_resolves_distinct_from_store_to_bound_casilla(t
             ],
         )
         snapshot = published_authority_operation().snapshot("190", filing_year=2024, period="0A")
-        resolution = WithholdingSourceResolver(ports=ports).resolve(
+        resolution = WithholdingSourceResolver(
+            ports=ports,
+            retencion_ports=RetencionObservationPorts(
+                repository=RetencionObservationRepositoryAdapter(objects=profile.repository),
+            ),
+        ).resolve(
             CalculationSourceContext(
                 bucket_id=_BUCKET_ID,
                 modelo="190",
                 filing_year=2024,
-                period=period,
+                period=annual_period,
                 revision=snapshot.revision,
+                profile=withholding_work_profile(published_authority_operation(), profile_id=_BUCKET_ID),
             ),
         )
         binding_values = dict(resolution.binding_values)

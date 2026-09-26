@@ -7,23 +7,24 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
 
-from .....adapters.persistence.storage.tests.secure_sql import (
-    isolated_runtime_profile,
-    mutate_encrypted_secure_object_json,
-)
 from .....core.storage_taxonomy import StorageCategory
 from .....core.storage_taxonomy_locations import storage_path
 from .....domain.invoices.enums import IvaRate, PaymentStatus
 from .....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from .....domain.iva.classification import InvoiceKind
+from .....domain.transactions.raw_transaction import RawProvenance, SourceFormat
 from ...storage.secure_object_namespaces import INVOICE_CATALOGUE_NAMESPACE
+from ...storage.tests.secure_sql import (
+    isolated_runtime_profile,
+    mutate_encrypted_secure_object_json,
+)
 from ..invoices import InvoiceCatalogueRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -62,6 +63,38 @@ def _populated_invoice(invoice_number: str = "F-2025-001") -> Invoice:
             "notes": "Test invoice for roundtrip coverage.",
         },
     )
+
+
+def test_invoice_catalogue_reopens_bulk_source_provenance_from_encrypted_storage(
+    tmp_path: Path,
+    authority_operation: object,
+) -> None:
+    """Encrypted catalogue reopening preserves canonical source identity."""
+    del authority_operation
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        invoice = _populated_invoice(invoice_number="F-2025-PROVENANCE").model_copy(
+            update={
+                "provenance": RawProvenance(
+                    source_path=Path("invoices.csv"),
+                    source_sha256="a" * 64,
+                    source_row_index=7,
+                    source_format=SourceFormat.CSV,
+                    ingested_at=datetime(2026, 9, 21, 12, 0, tzinfo=UTC),
+                    provider_name="bulk-invoice-import",
+                ),
+            },
+        )
+        original = InvoiceCatalogue(invoices={invoice.invoice_id: invoice})
+        repo = InvoiceCatalogueRepository()
+        repo.save(original)
+
+        loaded = repo.load().invoices[invoice.invoice_id]
+
+        assert loaded.provenance == invoice.provenance
+        assert loaded.provenance is not None
+        assert loaded.provenance.source_path == Path("invoices.csv")
+        assert str(tmp_path) not in loaded.provenance.model_dump_json()
+        assert "raw_fields" not in loaded.provenance.model_dump_json()
 
 
 def test_invoice_catalogue_survives_encrypted_storage_roundtrip(

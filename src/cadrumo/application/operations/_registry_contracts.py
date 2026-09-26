@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import inspect
 from collections.abc import Callable
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
@@ -25,6 +25,11 @@ if TYPE_CHECKING:
         OperationPublicDefinitionRegistrationV1,
         OperationSchemaIdentityV1,
     )
+
+
+#: Stand-in digest carried only by the provisional contract the real digest is
+#: computed from; it never leaves this function and is never persisted.
+_PROVISIONAL_CONTRACT_DIGEST: ContentDigest = "0" * 64
 
 
 def schema_identity_key(identity: OperationSchemaIdentityV1) -> tuple[str, int, ContentDigest]:
@@ -312,47 +317,65 @@ def definition_contract_policy_value(contract: OperationPublicDefinitionContract
 
 def build_public_contract(
     *,
-    contract_type: type[BaseModel],
+    contract_type: type[OperationPublicDefinitionContractV1],
     definition: OperationDefinition,
-    request_schema: Any,
-    result_schema: Any,
-    review_projection_schema: Any,
-    interaction_response_schema: Any,
-    workspace_refresh_target_schema: Any,
-) -> Any:
+    request_schema: OperationSchemaIdentityV1,
+    result_schema: OperationSchemaIdentityV1 | None,
+    review_projection_schema: OperationSchemaIdentityV1 | None,
+    interaction_response_schema: OperationSchemaIdentityV1 | None,
+    workspace_refresh_target_schema: OperationSchemaIdentityV1 | None,
+) -> OperationPublicDefinitionContractV1:
     """Build a public contract through the caller-owned Pydantic class."""
     capabilities = definition.capabilities
-    values: dict[str, object] = {
-        "definition_id": definition.definition_id,
-        "action_reference": definition.action_reference,
-        "request_schema": request_schema,
-        "result_schema": result_schema,
-        "review_projection_schema": review_projection_schema,
-        "interaction_response_schema": interaction_response_schema,
-        "workspace_refresh_target_schema": workspace_refresh_target_schema,
-        "interaction_kinds": definition.interaction_kinds,
-        "request_storage": capabilities.request_storage,
-        "durability": capabilities.durability,
-        "cancellation": capabilities.cancellation,
-        "deadline": capabilities.deadline,
-        "replay": capabilities.replay,
-        "baseline": capabilities.baseline,
-        "sensitive_input": capabilities.sensitive_input,
-        "conflict_scope": capabilities.conflict_scope,
-        "owned_resources": capabilities.owned_resources,
-        "permitted_effects": capabilities.permitted_effects,
-        "close_policy": capabilities.close_policy,
-        "reconciliation_policy": definition.reconciliation_policy,
-        "permitted_frontends": definition.permitted_frontends,
-        "ephemeral_secret_required": definition.ephemeral_secret is not None,
-    }
-    contract_type_any = cast(Any, contract_type)
-    provisional = contract_type_any.model_construct(
-        **values,
-        definition_contract_digest=cast(ContentDigest, "0" * 64),
+    provisional = contract_type.model_construct(
+        None,
+        definition_id=definition.definition_id,
+        action_reference=definition.action_reference,
+        request_schema=request_schema,
+        result_schema=result_schema,
+        review_projection_schema=review_projection_schema,
+        interaction_response_schema=interaction_response_schema,
+        workspace_refresh_target_schema=workspace_refresh_target_schema,
+        interaction_kinds=definition.interaction_kinds,
+        request_storage=capabilities.request_storage,
+        durability=capabilities.durability,
+        cancellation=capabilities.cancellation,
+        deadline=capabilities.deadline,
+        replay=capabilities.replay,
+        baseline=capabilities.baseline,
+        sensitive_input=capabilities.sensitive_input,
+        conflict_scope=capabilities.conflict_scope,
+        owned_resources=capabilities.owned_resources,
+        permitted_effects=capabilities.permitted_effects,
+        close_policy=capabilities.close_policy,
+        reconciliation_policy=definition.reconciliation_policy,
+        permitted_frontends=definition.permitted_frontends,
+        ephemeral_secret_required=definition.ephemeral_secret is not None,
+        definition_contract_digest=_PROVISIONAL_CONTRACT_DIGEST,
     )
-    return contract_type_any(
-        **values,
+    return contract_type(
+        definition_id=provisional.definition_id,
+        action_reference=provisional.action_reference,
+        request_schema=provisional.request_schema,
+        result_schema=provisional.result_schema,
+        review_projection_schema=provisional.review_projection_schema,
+        interaction_response_schema=provisional.interaction_response_schema,
+        workspace_refresh_target_schema=provisional.workspace_refresh_target_schema,
+        interaction_kinds=provisional.interaction_kinds,
+        request_storage=provisional.request_storage,
+        durability=provisional.durability,
+        cancellation=provisional.cancellation,
+        deadline=provisional.deadline,
+        replay=provisional.replay,
+        baseline=provisional.baseline,
+        sensitive_input=provisional.sensitive_input,
+        conflict_scope=provisional.conflict_scope,
+        owned_resources=provisional.owned_resources,
+        permitted_effects=provisional.permitted_effects,
+        close_policy=provisional.close_policy,
+        reconciliation_policy=provisional.reconciliation_policy,
+        permitted_frontends=provisional.permitted_frontends,
+        ephemeral_secret_required=provisional.ephemeral_secret_required,
         definition_contract_digest=definition_contract_digest(provisional),
     )
 

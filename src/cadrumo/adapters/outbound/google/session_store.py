@@ -39,9 +39,9 @@ definitions.
 
 from __future__ import annotations
 
-from ....adapters.persistence.storage.crypto.encrypted_columns import secure_object_key_digest
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.time.clock import now
+from ...persistence.storage.crypto.encrypted_columns import secure_object_key_digest
 from ...persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ...persistence.storage.secure_object_namespaces import (
     GOOGLE_CREDENTIAL_SOURCE_NAMESPACE,

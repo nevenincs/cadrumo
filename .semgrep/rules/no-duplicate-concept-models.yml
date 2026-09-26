@@ -16,7 +16,7 @@ rules:
         - "src/cadrumo/**/tests/**"
         - "src/cadrumo/**/test_*.py"
         - "src/cadrumo/**/_test_*.py"
-        - "src/cadrumo/domain/contribuyente/_ccaa.py"
+        - "src/cadrumo/domain/contribuyente/ccaa.py"
         - "src/cadrumo/application/filing/runtime.py"
     pattern-either:
       - patterns:

@@ -36,7 +36,8 @@ class McpAnnotations(BaseModel):
     ``read_only_hint`` mirrors the family
     mutability; ``destructive_hint`` is true only for irreversible
     state-destroying verbs; ``idempotent_hint`` for pure repeatable reads;
-    ``open_world_hint`` for a verb that reaches the outside AEAT sede.
+    ``open_world_hint`` for a verb that reaches the network, the AEAT sede
+    among other hosts.
     """
 
     model_config = _STRICT_FROZEN

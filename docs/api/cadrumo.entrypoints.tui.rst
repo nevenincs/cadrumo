@@ -21,6 +21,7 @@ Subpackages
    cadrumo.entrypoints.tui.operations
    cadrumo.entrypoints.tui.profile
    cadrumo.entrypoints.tui.secret
+   cadrumo.entrypoints.tui.withholding
 
 Submodules
 ----------

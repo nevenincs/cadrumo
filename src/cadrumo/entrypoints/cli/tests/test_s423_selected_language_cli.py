@@ -223,7 +223,7 @@ def test_selected_languages_render_parser_refusals_without_keychain(
     [
         (
             "ca",
-            "Falta l’opció '--modelo'.",
+            "Falta l'opció '--modelo'.",
             "Valor no vàlid per a '--year': 'abc' no és un enter vàlid.",
             "Esborrany",
             ("resta(", "màxim(", "percentatge(", "condicional(", "mínim("),
@@ -232,7 +232,7 @@ def test_selected_languages_render_parser_refusals_without_keychain(
         ),
         (
             "hu",
-            "Hiányzó beállítás '--modelo'.",
+            "Hiányzó kapcsoló '--modelo'.",
             "Érvénytelen érték ehhez: '--year': 'abc' nem érvényes egész szám.",
             "Piszkozat",
             ("kivonás(", "maximum(", "százalék(", "feltételes(", "minimum("),

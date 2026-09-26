@@ -24,7 +24,7 @@ import pytest
 
 from ....adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
-from ....tests.os_keychain_hook import require_os_credential_store
+from ._profile_cli_support import login_profile
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -99,7 +99,6 @@ def test_profile_create_help_advertises_situacion_familiar_runtime_choices(
     assert not missing, f"--situacion-familiar runtime choices are not all visible in profile-create help: {missing}"
 
 
-@pytest.mark.os_keychain
 def test_profile_edit_cli_accepts_objetiva_modulos_facts_and_directa_without_them(
     tmp_path: Path,
 ) -> None:
@@ -109,14 +108,16 @@ def test_profile_edit_cli_accepts_objetiva_modulos_facts_and_directa_without_the
     the ones named on the command line. Both profiles are seeded through the
     registration door and patched with ``edit --quiet``, which is the
     surviving surface that takes these flags.
-    """
-    # ``edit`` resumes the registered profile's session from the OS credential
-    # store; refuse before registering two profiles on a host that has none.
-    require_os_credential_store()
 
+    Session custody is not this case's subject. Registering the second profile
+    retires the first one's session, so ``direct-profile`` is read back after
+    an explicit login in this process rather than through a cross-invocation
+    resume, which would need the OS credential store to hold a receipt.
+    """
     with isolated_profile_storage_root(tmp_path=tmp_path):
         register_cli_profile(
             label="direct-profile",
+            log_in=False,
             facts={
                 "identity.tax_id": "12345678Z",
                 "taxpayer_type.entity_type": "natural_person",
@@ -136,6 +137,7 @@ def test_profile_edit_cli_accepts_objetiva_modulos_facts_and_directa_without_the
         )
         register_cli_profile(
             label="modulos-profile",
+            log_in=False,
             facts={
                 "identity.tax_id": "87654321X",
                 "taxpayer_type.entity_type": "natural_person",
@@ -175,12 +177,6 @@ def test_profile_edit_cli_accepts_objetiva_modulos_facts_and_directa_without_the
         )
         assert patched.exit_code == 0, patched.output
 
-        shown_direct = invoke_cached_cli(
-            ["--language", "en", "config", "profile", "view", "direct-profile"],
-        )
-        assert shown_direct.exit_code == 0, shown_direct.output
-        assert "objective_estimation_modulos" not in shown_direct.output
-
         shown = invoke_cached_cli(
             ["--language", "en", "config", "profile", "view", "modulos-profile"],
         )
@@ -189,3 +185,11 @@ def test_profile_edit_cli_accepts_objetiva_modulos_facts_and_directa_without_the
         assert "972.1" in shown.output
         assert "irpf.objective_estimation_modulos_module_1_units" in shown.output
         assert "2.50" in shown.output
+
+        logged_in = login_profile("direct-profile")
+        assert logged_in.exit_code == 0, logged_in.output
+        shown_direct = invoke_cached_cli(
+            ["--language", "en", "config", "profile", "view", "direct-profile"],
+        )
+        assert shown_direct.exit_code == 0, shown_direct.output
+        assert "objective_estimation_modulos" not in shown_direct.output

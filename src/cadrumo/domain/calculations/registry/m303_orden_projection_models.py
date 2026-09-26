@@ -12,7 +12,7 @@ from ....core.filing_year import FilingYear
 from ....core.identity.digest import ContentDigest
 from ....core.percentage import Percentage
 from ....core.text_bounds import PositiveCount
-from ....domain.iva.regimen_simplificado_rows import (
+from ...iva.regimen_simplificado_rows import (
     ActividadOrdenAnual,
     ActividadOrdenAnualId,
     AutoridadAgricolaOrdenAnualNoResuelta,

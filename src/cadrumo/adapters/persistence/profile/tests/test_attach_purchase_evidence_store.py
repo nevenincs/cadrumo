@@ -22,7 +22,12 @@ from typing import Any
 
 import pytest
 
-from ._evidence_test_support import _make_svc, pdf_file
+from .evidence_test_support import (
+    make_svc as _make_svc,
+)
+from .evidence_test_support import (
+    pdf_file,
+)
 
 __all__ = ["pdf_file"]
 

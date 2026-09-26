@@ -10,7 +10,6 @@ from cadrumo.core.hashing import sha256_hex
 from cadrumo.domain.calculations.registry.authority import IndexedRegistryAuthority, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.authority_artifact import (
     AuthorityArtifact,
-    AuthorityBuildIdentity,
     AuthorityEvidenceProjection,
     PublishedLegalEvidence,
 )
@@ -19,16 +18,14 @@ from cadrumo.domain.calculations.registry.tests.artifact_runtime_support import 
     minimal_catalogues,
     minimal_modelo,
     minimal_revision,
+    synthetic_build_receipts,
 )
 from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.pipeline.authority_publication import install_validated_authority_database
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_BUILD_IDENTITY = AuthorityBuildIdentity.from_inputs(
-    source_identity_digest=sha256_hex(b"fixture authority sources"),
-    compiler_identity_digest=sha256_hex(b"fixture authority compiler"),
-)
+_BUILD_IDENTITY, _COMPILER_CLOSURE = synthetic_build_receipts("fixture authority sources")
 _LEGAL_ID = "ley-35-2006:art-1"
 
 
@@ -43,6 +40,7 @@ def _stage_runtime_publication(
         modelos=(minimal_modelo(minimal_revision()),),
         catalogues=minimal_catalogues(),
         build_identity=_BUILD_IDENTITY,
+        compiler_closure=_COMPILER_CLOSURE,
         identity_digest=_BUILD_IDENTITY.identity_digest,
         evidence=AuthorityEvidenceProjection(
             legal=(

@@ -19,8 +19,6 @@ from pathlib import Path
 
 import pytest
 
-from .....adapters.persistence.profile.m145_communication_records import build_m145_communication_records_ports
-from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .....application.modelo.m145_communication_records import (
     M145CommunicationCreateCommand,
     M145CommunicationValidationIssueKind,
@@ -32,6 +30,8 @@ from .....domain.calculations.registry.casilla_membership import casillas_by_id
 from .....domain.calculations.registry.schema_surfaces import CasillaDefinition
 from .....domain.calculations.registry.temporal import select_revision
 from .....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
+from ...storage.tests.secure_sql import isolated_runtime_profile
+from ..m145_communication_records import build_m145_communication_records_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

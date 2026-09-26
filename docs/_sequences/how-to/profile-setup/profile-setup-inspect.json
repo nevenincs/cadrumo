@@ -43,7 +43,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "readiness\tready\tissues=0\nprofile_id\t<profile-id>\ndisplay_name\tdocs-sequence-sandbox\nsetup_state\tcomplete\nschema_version\t6\nvalid\tTrue\n"
+      "text": "readiness\tready\tissues=0\nprofile_id\t<profile-id>\ndisplay_name\tdocs-sequence-sandbox\nsetup_state\tcomplete\nschema_version\t7\nvalid\tTrue\n"
     },
     {
       "argv": [

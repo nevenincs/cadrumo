@@ -25,6 +25,8 @@ from cadrumo.application.user_profile.capsule_record import (
     ProfileRecordStore,
 )
 from cadrumo.application.user_profile.lifecycle import ProfileCapsuleLifecycle
+from cadrumo.core.storage_taxonomy import StorageCategory
+from cadrumo.core.storage_taxonomy_locations import storage_location
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.user_profile.values import ProfileSetupState
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
@@ -90,7 +92,12 @@ def _create_capsule(
 
 
 def _database(root: Path) -> Path:
-    return root / "buckets" / str(_PROFILE_ID) / "db" / "cadrumo.db"
+    return (
+        root
+        / storage_location(StorageCategory.BUCKETS).relative_path()
+        / str(_PROFILE_ID)
+        / storage_location(StorageCategory.BUCKET_DATABASE_FILE).relative_path()
+    )
 
 
 def test_initial_record_is_one_encrypted_database_row_with_authenticated_creation_history(tmp_path: Path) -> None:
@@ -101,7 +108,13 @@ def test_initial_record_is_one_encrypted_database_row_with_authenticated_creatio
 
     assert loaded.record.record_revision == 1
     assert loaded.record.previous_record_digest is None
-    assert (tmp_path / "buckets" / str(_PROFILE_ID) / "data" / "profile-record.v1.json").exists() is False
+    assert (
+        tmp_path
+        / storage_location(StorageCategory.BUCKETS).relative_path()
+        / str(_PROFILE_ID)
+        / storage_location(StorageCategory.PROFILE_CAPSULE_DATA).relative_path()
+        / "profile-record.v1.json"
+    ).exists() is False
     assert _database(tmp_path).is_file()
     assert [event.event_type for event in events] == [BucketEventType.PROFILE_BUCKET_CREATED]
     assert events[0].event_id == loaded.event_id

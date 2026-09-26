@@ -58,10 +58,19 @@ def build_authority_database(path: Path, artifact: AuthorityArtifact) -> Compile
             _create_schema(connection)
             _insert_components(connection, components)
             _insert_dependencies(connection, components)
+            _insert_compiler_closure(connection, artifact)
             connection.execute(
-                "INSERT INTO authority_manifest(singleton, format, logical_generation, component_count) "
-                "VALUES (1, ?, ?, ?)",
-                (AUTHORITY_DATABASE_FORMAT, artifact.identity_digest, len(components)),
+                "INSERT INTO authority_manifest(singleton, format, logical_generation, source_identity_digest, "
+                "compiler_identity_digest, component_dependency_digest, component_count) "
+                "VALUES (1, ?, ?, ?, ?, ?, ?)",
+                (
+                    AUTHORITY_DATABASE_FORMAT,
+                    artifact.identity_digest,
+                    artifact.build_identity.source_identity_digest,
+                    artifact.build_identity.compiler_identity_digest,
+                    artifact.build_identity.component_dependency_digest,
+                    len(components),
+                ),
             )
             connection.commit()
             integrity = connection.execute("PRAGMA integrity_check").fetchone()
@@ -271,6 +280,9 @@ def _create_schema(connection: sqlite3.Connection) -> None:
             singleton INTEGER PRIMARY KEY CHECK (singleton = 1),
             format TEXT NOT NULL,
             logical_generation TEXT NOT NULL CHECK (length(logical_generation) = 64),
+            source_identity_digest TEXT NOT NULL CHECK (length(source_identity_digest) = 64),
+            compiler_identity_digest TEXT NOT NULL CHECK (length(compiler_identity_digest) = 64),
+            component_dependency_digest TEXT NOT NULL CHECK (length(component_dependency_digest) = 64),
             component_count INTEGER NOT NULL CHECK (component_count > 0)
         ) STRICT;
         CREATE TABLE components (
@@ -294,7 +306,37 @@ def _create_schema(connection: sqlite3.Connection) -> None:
             FOREIGN KEY (dependency_kind, dependency_key) REFERENCES components(kind, key)
         ) STRICT, WITHOUT ROWID;
         CREATE INDEX dependencies_target ON dependencies(dependency_kind, dependency_key);
+        CREATE TABLE compiler_sources (
+            path TEXT PRIMARY KEY,
+            sha256 TEXT NOT NULL CHECK (length(sha256) = 64)
+        ) STRICT;
+        CREATE TABLE compiler_environment (
+            singleton INTEGER PRIMARY KEY CHECK (singleton = 1),
+            python TEXT NOT NULL,
+            pyproject_sha256 TEXT NOT NULL CHECK (length(pyproject_sha256) = 64),
+            uv_lock_sha256 TEXT NOT NULL CHECK (length(uv_lock_sha256) = 64),
+            pydantic TEXT NOT NULL,
+            pydantic_core TEXT NOT NULL
+        ) STRICT;
         """
+    )
+
+
+def _insert_compiler_closure(connection: sqlite3.Connection, artifact: AuthorityArtifact) -> None:
+    """Record the compiler sources and environment the compiler receipt is recomputed from."""
+    closure = artifact.compiler_closure
+    connection.executemany("INSERT INTO compiler_sources(path, sha256) VALUES (?, ?)", closure.sources)
+    environment = closure.environment
+    connection.execute(
+        "INSERT INTO compiler_environment(singleton, python, pyproject_sha256, uv_lock_sha256, pydantic, "
+        "pydantic_core) VALUES (1, ?, ?, ?, ?, ?)",
+        (
+            environment.python,
+            environment.pyproject_sha256,
+            environment.uv_lock_sha256,
+            environment.pydantic,
+            environment.pydantic_core,
+        ),
     )
 
 

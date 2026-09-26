@@ -8,21 +8,6 @@ from typing import NoReturn
 
 import pytest
 
-from .....adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from .....adapters.persistence.profile.tests._llm_evidence_split_support import (
-    _BUCKET,
-    _NOW,
-    _seed_parent,
-    _single_line_proposal,
-    _split_subprocess_proposer,
-    _two_line_proposal,
-)
-from .....adapters.persistence.profile.tests._llm_evidence_split_support import (
-    repositories as repositories,
-)
-from .....adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
-from .....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from .....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from .....application.ledger.evidence_textlayer_ports import EvidenceTextLayerPorts
 from .....application.ledger.llm_classification import (
     apply_evidence_classification,
@@ -37,6 +22,27 @@ from .....domain.categories.spending_category import SpendingCategory
 from .....domain.iva.schema import IvaCategory
 from .....domain.transactions.enums import BusinessClassification, TransactionLifecycleState
 from .....domain.transactions.errors import TransactionValidationError
+from ...storage.sql.secure_objects import SecureObjectRepository
+from ..buckets import BucketEventHistoryRepository
+from ..transactions import TransactionCatalogueRepository
+from .ledger_action_create_support import ledger_ports_for_test
+from .llm_evidence_split_support import (
+    _BUCKET,
+    _NOW,
+    _seed_parent,
+)
+from .llm_evidence_split_support import (
+    repositories as repositories,
+)
+from .llm_evidence_split_support import (
+    single_line_proposal as _single_line_proposal,
+)
+from .llm_evidence_split_support import (
+    split_subprocess_proposer as _split_subprocess_proposer,
+)
+from .llm_evidence_split_support import (
+    two_line_proposal as _two_line_proposal,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 

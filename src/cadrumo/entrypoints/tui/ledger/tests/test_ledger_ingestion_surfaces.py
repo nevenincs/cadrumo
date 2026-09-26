@@ -6,7 +6,7 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from textual.widgets import Button, DataTable, Input, Static
+from textual.widgets import Button, DataTable, Input, Select, Static
 
 from .....application.ledger.attachment_review import AttachmentReviewItem
 from .....application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
@@ -15,7 +15,7 @@ from .....core.config import override_settings
 from .....domain.invoices.errors import InvoiceValidationError
 from .....domain.iva.classification import InvoiceKind
 from .....domain.transactions.models import BucketTransactionRef
-from ....tui.components.host import ScreenHostApp
+from ...components.host import ScreenHostApp
 from ..controller import LedgerWorkspaceController
 from ..evidence import LedgerEvidenceScreen
 from ..invoice_entry import LedgerInvoiceEntryScreen
@@ -54,10 +54,12 @@ class _InvoiceDoor:
                 translated_message="application.invoices.creation.errors.duplicate_invoice",
                 context={"invoice_id": _INVOICE_ID},
             )
+        taxable_base = entry.taxable_base
+        assert taxable_base is not None
         return LedgerInvoiceAddResultV1(
             invoice_id=_INVOICE_ID,
             invoice_number=entry.invoice_number,
-            base_total=entry.taxable_base,
+            base_total=taxable_base,
             iva_total=Decimal("252.00"),
             grand_total=Decimal("1452.00"),
             currency=entry.currency,
@@ -137,6 +139,41 @@ async def test_invoice_entry_records_only_the_reviewed_entry() -> None:
             currency="EUR",
         )
     ]
+
+
+@pytest.mark.asyncio
+async def test_invoice_entry_preserves_explicit_iva_treatment_for_linked_income() -> None:
+    """The issued document's tax treatment reaches the shared invoice writer."""
+    door = _InvoiceDoor()
+    screen = _invoice_screen(door)
+    with override_settings(cadrumo_output_language="en"):
+        async with ScreenHostApp[None](screen).run_test(size=(100, 80)) as pilot:
+            await pilot.pause()
+            _fill(
+                screen,
+                counterparty_name="Synthetic client",
+                counterparty_nif="A58818501",
+                invoice_number="S-01",
+                invoice_date="2025-02-15",
+                taxable_base="4000.00",
+                iva_rate="21",
+                iva_category="domestic_general",
+                retention_rate="0.07",
+                retention_amount="280.00",
+            )
+            screen.query_one("#ledger-invoice-kind", Select).value = "issued"
+            screen.query_one("#ledger-invoice-review", Button).press()
+            await pilot.pause()
+            assert screen.flow_state is LedgerFlowState.CONFIRMING, str(
+                screen.query_one("#ledger-refusal", Static).render()
+            )
+            screen.query_one("#ledger-invoice-confirm", Button).press()
+            await pilot.pause()
+            await pilot.app.workers.wait_for_complete()
+            await pilot.pause()
+            assert screen.flow_state is LedgerFlowState.SUCCEEDED
+    assert len(door.entries) == 1
+    assert door.entries[0].iva_category.value == "domestic_general"
 
 
 @pytest.mark.asyncio
@@ -244,6 +281,9 @@ def _evidence_screen(door: _EvidenceDoor, refreshes: list[int]) -> LedgerEvidenc
     )
 
 
+_ROW_REFRESH_PAUSES = 200
+
+
 @pytest.mark.asyncio
 async def test_evidence_is_added_listed_and_reading_is_gated_on_the_reader() -> None:
     door = _EvidenceDoor(ready=False)
@@ -266,6 +306,12 @@ async def test_evidence_is_added_listed_and_reading_is_gated_on_the_reader() -> 
             assert door.added[-1] == "C:/synthetic/invoice_A-0003.pdf"
             assert refreshes == [1]
             records = screen.query_one("#ledger-evidence-records", DataTable)
+            # The refreshed rows arrive through the message loop after the add
+            # worker completes, so a loaded host may need more than one pause.
+            for _ in range(_ROW_REFRESH_PAUSES):
+                if records.ordered_rows:
+                    break
+                await pilot.pause(0.05)
             assert tuple(row.key.value for row in records.ordered_rows) == ("8747cbf318cf0adb",)
             records.focus()
             records.move_cursor(row=0)

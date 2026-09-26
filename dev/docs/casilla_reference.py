@@ -207,12 +207,14 @@ _DISPLAY_PREFIX: Final[str] = "docs.casilla"
 #: not instrument names and live in the catalogue under ``legal_kind.*``.
 _LEGAL_INSTRUMENT_NAMES: Final[dict[str, str]] = {
     "acuerdo_internacional": "Convenio",
+    "acuerdo_parlamentario": "Acuerdo",
     "ley": "Ley",
     "orden": "Orden",
     "real_decreto": "Real Decreto",
     "real_decreto_legislativo": "Real Decreto Legislativo",
     "real_decreto_ley": "Real Decreto-ley",
     "reglamento": "Reglamento",
+    "resolucion": "Resolución",
 }
 
 #: Id tokens that merely restate the authored ``kind`` and are dropped from the

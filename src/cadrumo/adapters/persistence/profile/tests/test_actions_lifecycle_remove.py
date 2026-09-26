@@ -24,10 +24,16 @@ from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalo
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 
 from .ledger_action_persistence_support import (
-    _BUCKET_ID,
-    _create_manual_row,
-    _repositories,
+    BUCKET_ID as _BUCKET_ID,
+)
+from .ledger_action_persistence_support import (
+    create_manual_row as _create_manual_row,
+)
+from .ledger_action_persistence_support import (
     purchase_invoice,
+)
+from .ledger_action_persistence_support import (
+    repositories as _repositories,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

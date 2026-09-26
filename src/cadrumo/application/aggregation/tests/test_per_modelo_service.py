@@ -61,6 +61,8 @@ from ..foreign_assets import (
 )
 from ..modelo_bindings_retenciones import RetencionesAggregationSourceResolver
 from ..retenciones import (
+    Modelo180PropertyEvidence,
+    Modelo180StructuredAddress,
     RetencionesAggregation,
     RetencionObservation,
     aggregate_retenciones_111,
@@ -602,6 +604,30 @@ _RETENCIONES_PERIOD = {
 }
 
 
+def _urban_property(nif: str) -> Modelo180PropertyEvidence:
+    """Complete Modelo 180 property detail, which every annual urban row must carry."""
+    return Modelo180PropertyEvidence(
+        property_key=f"property-{nif}",
+        situation="1",
+        cadastral_reference=f"{nif}PROPERTY",
+        recipient_province_code="28",
+        modality="1",
+        accrual_year=2025,
+        withholding_percentage=Decimal("19.00"),
+        address=Modelo180StructuredAddress(
+            province_code="28",
+            municipality_code="079",
+            municipality="Madrid",
+            locality="Madrid",
+            postal_code="28001",
+            street_type="CL",
+            street_name="Ejemplo",
+            number_type="NUM",
+            house_number="1",
+        ),
+    )
+
+
 def _mixed_scheme_retencion_observations() -> tuple[RetencionObservation, ...]:
     """One observation per scheme FAMILY (work / urban / capital), distinct perceptors.
 
@@ -621,6 +647,7 @@ def _mixed_scheme_retencion_observations() -> tuple[RetencionObservation, ...]:
             taxable_base=Decimal(base),
             retencion_amount=Decimal(ret),
             accrued_on="2025-03-01",
+            modelo_180_property=_urban_property(nif) if scheme == RetencionScheme("arrendamiento_urbano") else None,
         )
 
     return (
@@ -701,6 +728,7 @@ def test_retenciones_collapse_preserves_landed_distinct_nif_perceptor_count() ->
             taxable_base=Decimal("1200.00"),
             retencion_amount=Decimal("228.00"),
             accrued_on="2025-03-01",
+            modelo_180_property=_urban_property("B00000041"),
         ),
         RetencionObservation(
             source_kind=BindingSourceKind.LEDGER_TRANSACTION,
@@ -711,6 +739,7 @@ def test_retenciones_collapse_preserves_landed_distinct_nif_perceptor_count() ->
             taxable_base=Decimal("800.00"),
             retencion_amount=Decimal("152.00"),
             accrued_on="2025-06-01",
+            modelo_180_property=_urban_property("B00000042"),
         ),
     )
     expected = aggregate_retenciones_180(observations, period=_P_2025_ANNUAL)

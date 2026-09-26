@@ -13,8 +13,9 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runti
 from cadrumo.application.calculations.iva_compensation_history import iva_compensation_period_key
 from cadrumo.application.calculations.iva_compensation_history_ports import IvaCompensationHistoryPersistenceError
 from cadrumo.core.period import Period
+from cadrumo.domain.iva_compensation.carry_forward import build_iva_compensation_carry_forward_report
 
-from ._iva_compensation_history_support import _state
+from .iva_compensation_history_support import _state
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -32,6 +33,23 @@ def test_iva_compensation_history_round_trips_a_period_bound_encrypted_payload(t
 
     assert loaded == state
     assert listed == (state,)
+
+
+def test_replaying_the_same_period_state_does_not_duplicate_a_compensation_lot(tmp_path: Path) -> None:
+    """An identical recalculation/replay replaces one period key, not the wallet history."""
+    state = _state(filing_year=2026, period="2T", generated=Decimal("47.00"))
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_HISTORY_BUCKET_ID):
+        repository = IvaCompensationHistoryRepository()
+        repository.save_period(state)
+        repository.save_period(state)
+
+        listed = repository.list_periods()
+    report = build_iva_compensation_carry_forward_report(listed, as_of_year=2026)
+
+    assert listed == (state,)
+    assert len(report.lots) == 1
+    assert report.lots[0].remaining_amount == Decimal("47.00")
 
 
 def test_iva_compensation_history_refuses_a_period_payload_rekeyed_under_foreign_storage_key(tmp_path: Path) -> None:

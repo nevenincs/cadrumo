@@ -12,9 +12,9 @@
 # aeat-modelo-202-instructions REMAINS absent: it still declares 2025-01-01, and
 # its 2023-2024 sibling names modelo 222 exactly once, in passing.
 #
-# The 2025-y-siguientes edition also declares an "export" link. This edition
-# declares no export layout, so it declares no export link either rather than
-# pointing a consumer at a layout that does not exist.
+# The export link below addresses the generated export tree this edition now
+# carries, built from aeat-dr-222-2023-2024 -- the design whose own declared
+# window (2023-01-01..2024-12-31) covers this filing year exactly.
 
 [[revisions."2023".application_links]]
 id = "modelo-222-deadline"
@@ -47,3 +47,42 @@ consumer = "cadrumo.domain.calculations.registry.calculate_registry_snapshot"
 requires_snapshot = true
 legal_refs = ["ley-27-2014:art-40"]
 source_refs = ["aeat-dr-222-2023-2024", "aeat-modelo-222-instructions"]
+
+[[revisions."2023".application_links]]
+id = "modelo-222-export"
+surface = "export"
+consumer = "cadrumo.application.filing.export_draft"
+requires_snapshot = true
+legal_refs = ["orden-hfp-227-2017:art-2"]
+source_refs = ["aeat-dr-222-2023-2024"]
+
+# The review, approval and reconciliation surfaces a formula-bearing revision
+# owes. Each consumer reads the snapshot rather than an era-specific shape, and
+# each cites only references in force for this filing year: orden-hfp-227-2017
+# art 2 and art 5 (effective_from 2017-03-16, open-ended), ley-27-2014 art 29,
+# art 30 and art 40 (open-ended), and aeat-modelo-222-instructions-2023-2024
+# (2023-01-01..2024-12-31).
+
+[[revisions."2023".application_links]]
+id = "modelo-222-review"
+surface = "review"
+consumer = "cadrumo.application.filing.review"
+requires_snapshot = true
+legal_refs = ["orden-hfp-227-2017:art-2", "orden-hfp-227-2017:art-5", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-40"]
+source_refs = ["aeat-modelo-222-instructions-2023-2024"]
+
+[[revisions."2023".application_links]]
+id = "modelo-222-approval"
+surface = "approval"
+consumer = "cadrumo.application.workflow.approval"
+requires_snapshot = true
+legal_refs = ["orden-hfp-227-2017:art-2", "orden-hfp-227-2017:art-5", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-40"]
+source_refs = ["aeat-modelo-222-instructions-2023-2024"]
+
+[[revisions."2023".application_links]]
+id = "modelo-222-reconciliation"
+surface = "reconciliation"
+consumer = "cadrumo.application.reconciliation"
+requires_snapshot = true
+legal_refs = ["orden-hfp-227-2017:art-2", "orden-hfp-227-2017:art-5", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-40"]
+source_refs = ["aeat-modelo-222-instructions-2023-2024"]

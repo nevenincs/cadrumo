@@ -22,9 +22,6 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
-from .....adapters.outbound.aeat.export.registry_record_renderer import RegistryFixedWidthRecordRenderer
-from .....adapters.persistence.profile.m145_communication_records import build_m145_communication_records_ports
-from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .....application.modelo.m145_communication_records import (
     M145CommunicationCreateCommand,
     M145CommunicationRecordState,
@@ -35,6 +32,9 @@ from .....application.modelo.m145_communication_records import (
     read_m145_communication_record,
     validate_m145_communication_record,
 )
+from ....outbound.aeat.export.registry_record_renderer import RegistryFixedWidthRecordRenderer
+from ...storage.tests.secure_sql import isolated_runtime_profile
+from ..m145_communication_records import build_m145_communication_records_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

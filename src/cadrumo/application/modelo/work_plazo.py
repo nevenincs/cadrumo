@@ -28,11 +28,14 @@ from datetime import date
 from decimal import Decimal
 from typing import Literal
 
+from pydantic import BaseModel
+
 from ...core.logging import get_logger
 from ...core.modelo import Modelo
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import today_madrid
 from ...domain.calculations.registry.authority import bundled_indexed_authority
-from ...domain.deadlines.models import TaxpayerProfile
+from ...domain.deadlines.models import Recovery, TaxpayerProfile
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.work_unit import WorkUnit
 
@@ -59,8 +62,7 @@ class M210PlazoResolution:
     context: Mapping[str, str]
 
 
-@dataclass(frozen=True, slots=True)
-class ModeloWorkConditionalRecargoPreview:
+class ModeloWorkConditionalRecargoPreview(BaseModel):
     """Unassessed Article 27 rate preview for an overdue work unit.
 
     This is a governed calendar-rate preview, not an Article 27 statutory
@@ -76,6 +78,8 @@ class ModeloWorkConditionalRecargoPreview:
     contract: this calculate surface cannot assess Article 27 liability until a
     complete provenance-bearing assessment boundary exists.
     """
+
+    model_config = STRICT_FROZEN_CONFIG
 
     band_id: str
     surcharge_pct: Decimal
@@ -108,6 +112,24 @@ class ModeloWorkDeadlinePosture:
             days_remaining=self.days_remaining,
             days_overdue=self.days_overdue,
         )
+
+
+def conditional_recargo_preview_from_recovery(
+    recovery: Recovery | None,
+    *,
+    rate_reference_on: date,
+) -> ModeloWorkConditionalRecargoPreview | None:
+    """Project an existing recovery band as rate-only, unassessed guidance."""
+    if recovery is None:
+        return None
+    band = recovery.recargo_band
+    return ModeloWorkConditionalRecargoPreview(
+        band_id=band.id,
+        surcharge_pct=band.surcharge_pct,
+        interest_applies=band.interest_applies,
+        legal_ref=band.legal_ref,
+        rate_reference_on=rate_reference_on,
+    )
 
 
 def validate_modelo_work_deadline_posture(
@@ -212,15 +234,11 @@ def modelo_work_deadline_posture(
         )
         return ModeloWorkDeadlinePosture(closes_on=closes_on, days_overdue=days_overdue)
 
-    band = recovery.recargo_band
     return ModeloWorkDeadlinePosture(
         closes_on=closes_on,
         days_overdue=days_overdue,
-        conditional_recargo_preview=ModeloWorkConditionalRecargoPreview(
-            band_id=band.id,
-            surcharge_pct=band.surcharge_pct,
-            interest_applies=band.interest_applies,
-            legal_ref=band.legal_ref,
+        conditional_recargo_preview=conditional_recargo_preview_from_recovery(
+            recovery,
             rate_reference_on=resolved_reference_on,
         ),
     )

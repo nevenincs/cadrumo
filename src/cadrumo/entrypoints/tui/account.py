@@ -9,7 +9,7 @@ alternative credential, language, appearance, or sign-out screen.
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable, Sequence
+from collections.abc import Awaitable, Callable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import StrEnum, auto
 from functools import partial
@@ -19,14 +19,18 @@ from uuid import UUID
 from textual.command import DiscoveryHit, Hit, Hits, Provider
 
 from ...core.errors.hierarchy import CadrumoError
+from ...domain.user_profile.values import ProfileSetupState
 from .components.account_chrome import AccountActionV1, TuiAccountHostV1, account_action_help, account_action_label
-from .components.theme import AppearanceHost, toggle_appearance
+from .components.theme import toggle_appearance
 from .navigation import TuiScreenContextV1
 from .profile.overview import ProfileManagerScreen
 from .secret.login import LoginScreen
 from .secret.passphrase import PassphraseChangeAttempt, PassphraseScreen
 
 if TYPE_CHECKING:
+    from decimal import Decimal
+
+    from textual.app import App
     from textual.screen import Screen
 
     from ...application.operations.composition import OperationComposedServices
@@ -37,13 +41,14 @@ if TYPE_CHECKING:
     from ...application.user_profile.login_interaction import ProfileLoginAttempt, ProfileLoginChoice
     from ...application.user_profile.overview import ProfileOverview
     from ...core.credentials import ProfilePasswordAssessment
+    from ...domain.user_profile.plantilla_media import PlantillaMediaState, PlantillaMediaYear
     from .operations.controller import OperationController
 
 
 type AccountProfileFactoryV1 = Callable[[TuiScreenContextV1], ProfileManagerScreen]
 type AccountChangeUserFactoryV1 = Callable[[], LoginScreen]
 type AccountPasswordFactoryV1 = Callable[[], PassphraseScreen]
-type AccountAppearanceFactoryV1 = Callable[[AppearanceHost], str]
+type AccountAppearanceFactoryV1 = Callable[[App[AccountRecomposeRequiredV1 | None]], str]
 type AccountLanguageFactoryV1 = Callable[[ProfileManagerScreen], None]
 type AccountSignOutFactoryV1 = Callable[[], Awaitable[OperationController]]
 
@@ -90,12 +95,20 @@ class AccountFactoriesV1:
     appearance: AccountAppearanceFactoryV1
     language: AccountLanguageFactoryV1
     sign_out: AccountSignOutFactoryV1
+    onboarding_pending: bool = False
+    """Whether the profile still needs setup, so the session opens on the setup walk."""
 
 
 def compose_account_factories(
     *,
     profile_overview: ProfileOverview,
-    persist_profile_field: Callable[[str, str], ProfileOverview],
+    persist_profile_field: Callable[[str, str, int, str], ProfileOverview],
+    add_profile_row: Callable[[str, Mapping[str, str], int, str], ProfileOverview] | None = None,
+    update_profile_row: Callable[[str, str, Mapping[str, str], Sequence[str], int, str], ProfileOverview] | None = None,
+    remove_profile_row: Callable[[str, str, int, str], ProfileOverview] | None = None,
+    list_plantilla_media: Callable[[], Sequence[PlantillaMediaYear]] | None = None,
+    set_plantilla_media: Callable[[int, Decimal, PlantillaMediaState], ProfileOverview] | None = None,
+    remove_plantilla_media: Callable[[int], ProfileOverview] | None = None,
     login_choices: Sequence[ProfileLoginChoice],
     authenticate: Callable[[str, str], ProfileLoginAttempt],
     assess_password: Callable[[str], ProfilePasswordAssessment],
@@ -123,6 +136,12 @@ def compose_account_factories(
         return ProfileManagerScreen(
             profile_overview,
             persist=persist_profile_field,
+            add_row=add_profile_row,
+            update_row=update_profile_row,
+            remove_row=remove_profile_row,
+            list_plantilla_media=list_plantilla_media,
+            set_plantilla_media=set_plantilla_media,
+            remove_plantilla_media=remove_plantilla_media,
             complete_setup=complete_setup,
             validate=validate_profile_field,
             launch_source=launch_profile_source,
@@ -153,6 +172,7 @@ def compose_account_factories(
         appearance=appearance,
         language=language,
         sign_out=sign_out,
+        onboarding_pending=complete_setup is not None and profile_overview.setup_state is ProfileSetupState.INCOMPLETE,
     )
 
 

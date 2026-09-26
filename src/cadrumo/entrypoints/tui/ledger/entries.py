@@ -4,13 +4,14 @@ from __future__ import annotations
 
 from typing import ClassVar, cast, override
 
-from textual.app import App, ComposeResult
-from textual.widgets import DataTable, Static
+from textual.app import ComposeResult
+from textual.widgets import Button, DataTable, Static
 
 from ....core.identity.transaction_ids import TransactionId
 from ..components.widgets import ContentDataTable
 from .controller import (
     LedgerEntrySelected,
+    LedgerTransactionDetailRequested,
     LedgerWorkspaceController,
     LedgerWorkspaceScreen,
     ledger_copy,
@@ -110,6 +111,8 @@ class LedgerEntriesScreen(LedgerWorkspaceScreen):
         with ledger_workspace_page() as navigation:
             yield navigation
             yield ContentDataTable[str](id="ledger-entries", cursor_type="row", zebra_stripes=True)
+            if self.controller.record_doors is not None:
+                yield Button(ledger_copy("tui.ledger.records.open_transaction"), id="ledger-open-transaction")
             yield Static(id="ledger-empty", classes="ledger-empty", markup=False)
             yield Static(id="ledger-refusal", classes="ledger-refusal", markup=False)
 
@@ -121,7 +124,7 @@ class LedgerEntriesScreen(LedgerWorkspaceScreen):
         # cannot be used with class and instance checks` at mount. The cast
         # carries the element type for the reader and the type checker.
         table = cast("ContentDataTable[str]", self.query_one("#ledger-entries", ContentDataTable))
-        self._fill_table(table, cast("App[None]", self.app).size.width)
+        self._fill_table(table, self.app.size.width)
         if not table.row_count:
             # An empty ledger is a state, not a refusal: it gets the muted line,
             # and the warning line stays free for a navigation refusal.
@@ -179,7 +182,7 @@ class LedgerEntriesScreen(LedgerWorkspaceScreen):
         # cannot be used with class and instance checks` at mount. The cast
         # carries the element type for the reader and the type checker.
         table = cast("ContentDataTable[str]", self.query_one("#ledger-entries", ContentDataTable))
-        self._fill_table(table, cast("App[None]", self.app).size.width)
+        self._fill_table(table, self.app.size.width)
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
         """Route navigation or retain a safe semantic entry selection."""
@@ -191,6 +194,15 @@ class LedgerEntriesScreen(LedgerWorkspaceScreen):
             return
         self.selected_transaction_id = transaction_id
         self.post_message(LedgerEntrySelected(transaction_id))
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        """Open the selected record through its stable transaction identity."""
+        if event.button.id == "ledger-open-transaction":
+            transaction_id = self.selected_transaction_id or self.controller.restored_transaction_id()
+            if transaction_id is None:
+                self.query_one("#ledger-refusal", Static).update(ledger_copy("tui.ledger.refusal.selection_required"))
+                return
+            self.post_message(LedgerTransactionDetailRequested(transaction_id))
 
 
 __all__ = ["LedgerEntriesScreen"]

@@ -24,13 +24,14 @@ from datetime import date
 
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.filing_projection_ref import FilingProjectionRef
+from ...core.type_guards import is_object_tuple
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...domain.calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition, ExportRecordDefinition
-from ._producer_snapshot_m200 import Modelo200ProfileFacts
 from .producer_snapshot import FilingProducerSnapshot
+from .producer_snapshot_m200 import Modelo200ProfileFacts
 from .projection import FilingProjectionPlan, FilingProjectionValue, FilingRecordRenderContext
 
 __all__ = ["build_m200_filing_projection_plan"]
@@ -93,13 +94,22 @@ def _m200_address(reference: FilingProjectionRef) -> tuple[int, str] | None:
 
 
 def _rows_for(profile: object, kind: str, *, catalogue: _M200ProjectionCatalogue) -> tuple[object, ...]:
-    """Return the rows a projection kind draws on, empty when the filing carries none."""
+    """Return the rows a projection kind draws on, empty when the filing carries none.
+
+    An unroutable kind fails closed rather than resolving to no rows: a kind the
+    catalogue does not declare, or a family the typed profile does not carry, is
+    a registry or type defect, and answering it with an empty family would drop
+    the whole page from a filed return instead of reporting the defect.
+    """
     if not isinstance(profile, Modelo200ProfileFacts):
         return ()
     family = catalogue.family_by_kind.get(kind)
-    if family is None or family == "none":
-        return ()
-    return tuple(getattr(profile.projection_rows, family, ()) or ())
+    if family is None:
+        raise InternalInvariantError(f"Modelo 200 projection kind {kind!r} has no registry row-family declaration")
+    rows: object = getattr(profile.projection_rows, family, None)
+    if not is_object_tuple(rows):
+        raise InternalInvariantError(f"Modelo 200 projection row family {family!r} is not carried by the typed profile")
+    return rows
 
 
 def _m200_projection_refs(record: ExportRecordDefinition) -> tuple[FilingProjectionRef, ...]:

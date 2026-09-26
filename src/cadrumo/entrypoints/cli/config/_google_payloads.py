@@ -111,7 +111,7 @@ class GoogleLogoutResult(OutputSchema):
 
 
 class GoogleSyncProbeResult(OutputSchema):
-    """JSON envelope for ``aeat config google sync probe``.
+    """JSON envelope for ``aeat config google probe``.
 
     Adapts :class:`ProviderProbeReport` from
     the resolved Google Drive :class:`StorageProvider`.
@@ -119,7 +119,7 @@ class GoogleSyncProbeResult(OutputSchema):
     can line up probe health with the selected Drive root.
     """
 
-    operation: str = "config.google.sync.probe"
+    operation: str = "config.google.probe"
     profile: str
     provider_kind: ProviderKind
     reachable: bool

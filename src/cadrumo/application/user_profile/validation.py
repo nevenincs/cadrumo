@@ -12,6 +12,7 @@ from typing import Final
 
 from ...core.errors.severity import BaseSeverity
 from ...domain.user_profile.errors import UserProfileValidationError
+from ...domain.user_profile.plantilla_media import PlantillaMediaRefusalKind, plantilla_media_refusals
 from ...domain.user_profile.schema import (
     ProfileFieldDefinition,
     ProfileSchemaDefinition,
@@ -124,6 +125,14 @@ EFFECTIVE_WINDOW_END_NOT_ENFORCED_CODE: Final[str] = "effective_window_end_not_e
 MODELO_WORK_PROFILE_BASELINE_MISSING_CODE: Final[str] = "modelo_work_profile_baseline_missing"
 """Issue code for a filing-grade Modelo work baseline field that is absent."""
 
+INDEXED_INSTANCE_INVALID_CODE: Final[str] = "indexed_instance_invalid"
+"""Issue code for an indexed object instance that is incomplete or repeats a key.
+
+Not a completeness code: a half-stated instance or a second instance for the
+same key is a malformed answer, so it refuses at every write rather than
+waiting for the promotion out of setup.
+"""
+
 PROFILE_VALIDATION_ISSUE_CODES: Final[tuple[str, ...]] = (
     REQUIRED_FIELD_MISSING_CODE,
     CONDITIONAL_REQUIRED_FIELD_MISSING_CODE,
@@ -138,11 +147,12 @@ PROFILE_VALIDATION_ISSUE_CODES: Final[tuple[str, ...]] = (
     EFFECTIVE_WINDOW_UNUSED_CODE,
     EFFECTIVE_WINDOW_END_NOT_ENFORCED_CODE,
     MODELO_WORK_PROFILE_BASELINE_MISSING_CODE,
+    INDEXED_INSTANCE_INVALID_CODE,
 )
 """Complete finite vocabulary emitted under ``profile.validation.*``.
 
-The first twelve values are emitted by :class:`ProfileValidationService`;
-the filing-grade baseline value is emitted by the Modelo readiness gate.  The
+The baseline value is emitted by the Modelo readiness gate; every other value
+is emitted by :class:`ProfileValidationService`.  The
 tuple lives beside the issue-code declarations so a new producer must update
 one source of truth before its dynamic locale key can be rendered.
 """
@@ -161,6 +171,14 @@ as such by a test: a new kind added to the domain rule with no entry here
 would otherwise raise a :exc:`KeyError` at the moment a taxpayer's value
 tripped it, turning a refusal that should have been reported into a crash.
 """
+
+_ISSUE_CODE_BY_PLANTILLA_REFUSAL: Final[dict[PlantillaMediaRefusalKind, str]] = {
+    PlantillaMediaRefusalKind.NUMERIC: NUMERIC_VALUE_ISSUE_CODE,
+    PlantillaMediaRefusalKind.ENUM: ENUM_VALUE_ISSUE_CODE,
+    PlantillaMediaRefusalKind.INSTANCE: INDEXED_INSTANCE_INVALID_CODE,
+    PlantillaMediaRefusalKind.UNKNOWN_PATH: UNKNOWN_FIELD_ISSUE_CODE,
+}
+"""How an average-workforce refusal is reported; exhaustive over its kinds."""
 
 COMPLETENESS_ISSUE_CODES: Final[frozenset[str]] = frozenset(
     {REQUIRED_FIELD_MISSING_CODE, CONDITIONAL_REQUIRED_FIELD_MISSING_CODE},
@@ -224,6 +242,7 @@ class ProfileValidationService:
         issues.extend(self._required_field_issues(facts))
         issues.extend(self._conditional_completeness_issues(facts))
         issues.extend(self._atribucion_socio_country_issues(facts))
+        issues.extend(self._plantilla_media_issues(facts))
         issues.extend(self._unenforced_expiry_issues(facts))
         return ProfileValidationReport(
             profile_id=profile_id,
@@ -521,6 +540,25 @@ class ProfileValidationService:
         )
 
     @staticmethod
+    def _plantilla_media_issues(facts: tuple[UserProfileFact, ...]) -> tuple[ProfileValidationIssue, ...]:
+        """Refuse malformed, incomplete or repeated average-workforce instances.
+
+        Judged on each path's effective value, the one every reader resolves to.
+        """
+        effective: dict[str, object] = {}
+        for fact in in_window_order(facts):
+            effective[fact.path] = fact.value
+        return tuple(
+            ProfileValidationIssue(
+                severity=BaseSeverity.ERROR,
+                code=_ISSUE_CODE_BY_PLANTILLA_REFUSAL[refusal.kind],
+                path=refusal.path,
+                message=refusal.message,
+            )
+            for refusal in plantilla_media_refusals(effective)
+        )
+
+    @staticmethod
     def _render_fact_value(value: object) -> str:
         if isinstance(value, bool):
             return "true" if value else "false"
@@ -620,6 +658,7 @@ __all__ = [
     "EFFECTIVE_WINDOW_UNUSED_CODE",
     "EMAIL_VALUE_ISSUE_CODE",
     "ENUM_VALUE_ISSUE_CODE",
+    "INDEXED_INSTANCE_INVALID_CODE",
     "MODELO_WORK_PROFILE_BASELINE_MISSING_CODE",
     "NUMERIC_VALUE_ISSUE_CODE",
     "PROFILE_VALIDATION_ISSUE_CODES",

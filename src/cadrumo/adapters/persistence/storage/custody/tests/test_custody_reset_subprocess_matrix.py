@@ -22,9 +22,11 @@ from uuid import UUID
 
 import pytest
 
-from ......adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ......application.user_profile.custody_transactions import ProfileCustodyTransactionRefusalError
 from ......application.user_profile.lifecycle import ProfileCapsuleLifecycle
+from ......core.storage_taxonomy import StorageCategory
+from ......core.storage_taxonomy_locations import storage_location
+from ...tests.secure_sql import isolated_profile_storage_root
 from ..errors import ProfileCustodyRecoveryGuidance, ProfileCustodyRefusal
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -237,7 +239,7 @@ def test_crash_between_confirm_and_delete_leaves_an_intact_capsule_and_no_resuma
         stale_transaction_id = UUID(tx_line)
 
         capsule = root / "buckets" / str(_PROFILE_ID)
-        assert (capsule / "db" / "cadrumo.db").is_file()
+        assert (capsule / storage_location(StorageCategory.BUCKET_DATABASE_FILE).relative_path()).is_file()
 
         lifecycle = ProfileCapsuleLifecycle(root=root)
         with pytest.raises(

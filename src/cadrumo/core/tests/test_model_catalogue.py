@@ -18,8 +18,8 @@ from __future__ import annotations
 
 import pytest
 
-from ...core.config import Settings
 from ...tests.env_scope import isolated_aeat_env, settings_without_env_file
+from ..config import Settings
 from ..model_catalogue import (
     DEFAULT_MODEL_BY_RUNTIME_AND_ROLE,
     MODEL_CATALOGUE,

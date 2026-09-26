@@ -43,6 +43,18 @@ constant instead of spelling it again. Importing this module is safe from
 anywhere: it is pure stdlib and resolves no Settings.
 """
 
+AUTHORITY_SNAPSHOT_STEM = "cadrumo-frozen-authority-"
+"""Prefix for the per-process frozen copy of the published registry authority.
+
+A SIBLING of the collection storage root rather than a directory inside it:
+materialising a storage root rewrites that root's Windows DACL with inheritable
+entries, the rewrite propagates to every file beneath it, and propagation moves
+each file's metadata change time. The authority reader fingerprints its
+database's change time at admission, so a snapshot inside the storage tree was
+refused as altered the first time a test materialised the ambient root. Named
+with the owner PID so the sweep below reclaims a killed process's copy.
+"""
+
 SWEPT_SCRATCH_STEMS = (
     "cadrumo-object-name-",
     "cadrumo-client-venv-",
@@ -79,7 +91,7 @@ bound. That is not left to reviewer memory: a gate discovers every
 finalized at its own call site.
 """
 
-_SWEPT_STEMS = (_STEM, SETTINGS_STEM, *SWEPT_SCRATCH_STEMS)
+_SWEPT_STEMS = (_STEM, SETTINGS_STEM, AUTHORITY_SNAPSHOT_STEM, *SWEPT_SCRATCH_STEMS)
 """Every prefix the staleness sweep reclaims.
 
 The first two families leak by the same mechanism -- a process that is killed
@@ -217,7 +229,7 @@ def _windows_process_is_live(pid: int) -> bool:
 
 def _owning_pid(sibling: Path, stem: str) -> int | None:
     """Return the PID encoded in ``sibling``'s name, or ``None`` if it carries none."""
-    if stem != _STEM:
+    if stem not in {_STEM, AUTHORITY_SNAPSHOT_STEM}:
         return None
     suffix = sibling.name[len(stem) :]
     if not suffix.isdigit():
@@ -465,6 +477,15 @@ def collection_storage_root() -> Path:
     return Path(gettempdir()) / f"{_STEM}{os.getpid()}"
 
 
+def authority_snapshot_root() -> Path:
+    """Return this process's private directory for the frozen registry authority.
+
+    ``<gettempdir()>/cadrumo-frozen-authority-<pid>``, beside the collection storage
+    root and never inside it; :data:`AUTHORITY_SNAPSHOT_STEM` records why.
+    """
+    return Path(gettempdir()) / f"{AUTHORITY_SNAPSHOT_STEM}{os.getpid()}"
+
+
 def _release_log_handlers_under(root: Path) -> None:
     """Close and detach any root-logger file handler writing under ``root``.
 
@@ -552,6 +573,7 @@ def register_collection_storage_root_cleanup(root: Path) -> None:
     def _cleanup() -> None:
         _release_log_handlers_under(root)
         shutil.rmtree(root, ignore_errors=True)
+        shutil.rmtree(authority_snapshot_root(), ignore_errors=True)
         sweep_stale_roots(root.parent, exclude=root)
 
     atexit.register(_cleanup)

@@ -9,7 +9,7 @@ import pytest
 
 from ...application.modelo import operation_definitions as definitions_module
 from ...application.operations.registry import OperationDefinition
-from ...entrypoints.operation_composition import build_production_operation_registry
+from ..operation_composition import build_production_operation_registry
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -20,6 +20,7 @@ _FACTORY_ARGUMENTS: dict[str, Any] = {
     # Port collaborators are consumed only when an executor is built, which this
     # suite never does; it proves composition, not execution.
     "calculation_action_ports_factory": lambda *args, **kwargs: None,
+    "attachment_store_factory": lambda *args, **kwargs: None,
     "receipt_repository_factory": lambda *args, **kwargs: None,
     "export_ports_factory": lambda *args, **kwargs: None,
     "amendment_action_ports_factory": lambda *args, **kwargs: None,

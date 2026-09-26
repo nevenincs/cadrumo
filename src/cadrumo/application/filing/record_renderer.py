@@ -21,7 +21,6 @@ from ...domain.calculations.registry.schema_exports import (
 )
 from ...domain.filing.errors import FilingExportValidationError
 from ...domain.filing.schema import ModeloDraft
-from ._export_parity import did_page_suppressed
 from ._record_field_renderer import (
     complementaria_page_marker,
     format_field,
@@ -32,6 +31,7 @@ from ._record_field_renderer import (
 from ._record_field_renderer import (
     render_record as _render_record_fields,
 )
+from .export_parity import did_page_suppressed
 from .producer_snapshot import FilingProducerSnapshot
 from .projection import FilingProjectionPlan, FilingRecordRenderContext
 from .record_types import ProjectionAddress, RecordRenderRow, RenderedRecordOccurrence
@@ -264,6 +264,7 @@ def _binding_record_rows_for_index(
     binding_values: dict[tuple[BindingId, int | None], object],
     row_index: int,
 ) -> tuple[RecordRenderRow, ...]:
+    _require_populated_row_bindings(binding_fields, binding_values, row_index=row_index)
     active_fields = tuple(
         field
         for field in binding_fields
@@ -276,6 +277,33 @@ def _binding_record_rows_for_index(
         )
         for group in _compatible_binding_field_groups(active_fields)
     )
+
+
+def _require_populated_row_bindings(
+    binding_fields: tuple[ExportFieldDefinition, ...],
+    binding_values: dict[tuple[BindingId, int | None], object],
+    *,
+    row_index: int,
+) -> None:
+    """Refuse an emitted row that omits a registry-required binding field.
+
+    Positioned records begin as a space-filled buffer.  Without this guard an
+    omitted required binding can reach the parser as a blank byte range after
+    a write.  Requiredness belongs to the declaration, not to parser recovery:
+    a conditional absence must be declared optional before the renderer may
+    leave its slot untouched.
+    """
+    missing = tuple(
+        field.id
+        for field in binding_fields
+        if field.required
+        and field.binding is not None
+        and not _is_active_binding_value(binding_values.get((field.binding, row_index)))
+    )
+    if missing:
+        raise FilingExportValidationError(
+            f"binding-row {row_index} omits required export field(s): {', '.join(sorted(map(str, missing)))}"
+        )
 
 
 def preflight_projection_plan(plan: FilingProjectionPlan) -> dict[ProjectionAddress, object]:

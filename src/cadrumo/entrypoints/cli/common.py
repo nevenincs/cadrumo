@@ -877,9 +877,14 @@ def emit_envelope(
     if metadata_invocation:
         resolved_notices = supplied_notices
     else:
+        from ._payer_fact_migration_notice import drain_payer_fact_migration_notices
         from ._profile_authentication_notice import drain_profile_authentication_notices
 
-        supplied_notices = (*supplied_notices, *drain_profile_authentication_notices())
+        supplied_notices = (
+            *supplied_notices,
+            *drain_profile_authentication_notices(),
+            *drain_payer_fact_migration_notices(),
+        )
         resolved_notices = _resolve_notice_actions(supplied_notices)
     if output_format is OutputFormat.JSON:
         if metadata_invocation:

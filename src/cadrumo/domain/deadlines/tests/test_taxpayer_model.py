@@ -19,14 +19,14 @@ from pydantic import ValidationError
 
 from ....core.aggregation import ThirdPartyDeclarationRole
 from ....core.period import Period
-from ....domain.calculations.registry.tests.published_authority import (
-    PublishedGovernedFactSource,
-    published_supported_filing_years,
-)
 from ...calculations.registry.applicability import derive_tax_route
 from ...calculations.registry.applicability_routes import TaxRoute
 from ...calculations.registry.errors import RegistryValidationError
 from ...calculations.registry.schema_base import DateAxis
+from ...calculations.registry.tests.published_authority import (
+    PublishedGovernedFactSource,
+    published_supported_filing_years,
+)
 from ...calculations.registry.third_party_declaration_roles import third_party_declaration_role_choices
 from ...contribuyente.entity_type import EntityType, LegalEntityForm
 from ...contribuyente.renta_codes import FiscalResidency

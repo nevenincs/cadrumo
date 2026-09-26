@@ -1,6 +1,6 @@
 [schema]
 id = "cadrumo.user_profile"
-version = 6
+version = 7
 title = "Cadrumo user profile schema"
 snapshot_policy = "immutable_secure_snapshot_hash"
 remove_policy = "live_profile_tombstone_retain_snapshots"
@@ -1308,6 +1308,16 @@ description = "Total rendimientos íntegros del trabajo for the year, across all
 model_selectors = ["irpf.pagadores_total_work_income"]
 legal_refs = ["ley-35-2006:art-96"]
 
+[[sections.fields]]
+key = "plantilla_media"
+type = "object"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Plantilla media total de la empresa por año natural, una instancia indexada por año: year (año natural), average_workforce (personas empleadas según la legislación laboral, en proporción a la jornada completa, con dos decimales) y state (observed para un año cerrado; committed para un año no cerrado cuyo incumplimiento obliga a regularizar). Condiciona la libertad de amortización de LIS art. 102 y DA 17a. Sin instancia para un año, el dato no está declarado; nunca equivale a cero."
+model_selectors = ["irpf.plantilla_media"]
+legal_refs = ["ley-27-2014:art-102", "ley-27-2014:da-17"]
+
 [[sections]]
 key = "withholding"
 title = "Withholding payer obligations"
@@ -1373,6 +1383,16 @@ effective_dated = true
 description = "Comma-separated YYYY:PERIOD Modelo 111 periods where no rentas subject to retencion or ingreso a cuenta were paid, so no all-blank Modelo 111 filing obligation existed."
 model_selectors = ["withholding.modelo_111_no_retenciones_periods"]
 legal_refs = ["rd-439-2007:art-108", "orden-eha-586-2011:art-1"]
+
+[[sections.fields]]
+key = "modelo_115_no_relevant_payment_periods"
+type = "string"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Comma-separated YYYY:PERIOD Modelo 115 quarters explicitly attested as having no relevant urban-rent payment subject to withholding; only these facts permit a local zero materialization."
+model_selectors = ["withholding.modelo_115_no_relevant_payment_periods"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
 
 [[sections]]
 key = "iva"
@@ -1564,6 +1584,26 @@ effective_dated = true
 description = "Modelo 721 eligibility: virtual currencies held abroad declared above the legal threshold."
 model_selectors = ["monedas_virtuales_extranjero_above_threshold"]
 schedule_predicates = ["monedas_virtuales_extranjero_above_threshold"]
+
+[[sections.fields]]
+key = "premio_loteria_gravamen_especial_sin_retencion"
+type = "boolean"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Modelo 136 eligibility: a lottery or betting prize subject to the gravamen especial was obtained without retencion or ingreso a cuenta."
+model_selectors = ["premio_loteria_gravamen_especial_sin_retencion"]
+schedule_predicates = ["premio_loteria_gravamen_especial_sin_retencion"]
+
+[[sections.fields]]
+key = "premio_loteria_gravamen_especial_trimestres"
+type = "string"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Modelo 136 quarters: pipe-separated YYYY-nT quarter codes naming each natural quarter in which such a prize was cashed, for example 2025-1T|2025-3T."
+model_selectors = ["premio_loteria_gravamen_especial_trimestres"]
+schedule_predicates = ["premio_loteria_gravamen_especial_trimestres"]
 
 [[sections]]
 key = "renta_filing"

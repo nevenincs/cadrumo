@@ -12,6 +12,7 @@ CAPABILITIES = frozenset(
         "profile-custody",
         "encrypted-facts",
         "network",
+        "aeat",
         "browser",
         "google",
         "calculation",
@@ -24,6 +25,7 @@ SIDE_EFFECTS = frozenset({"none", "local-state", "network", "browser", "google"}
 PERFORMANCE_CLASSES = frozenset({"metadata", "local-io", "compute", "external-io", "interactive"})
 IMPLIED_CAPABILITIES: dict[str, frozenset[str]] = {
     "encrypted-facts": frozenset({"profile-custody"}),
+    "aeat": frozenset({"network"}),
     "browser": frozenset({"network"}),
     "google": frozenset({"network"}),
     "calculation": frozenset({"registry"}),

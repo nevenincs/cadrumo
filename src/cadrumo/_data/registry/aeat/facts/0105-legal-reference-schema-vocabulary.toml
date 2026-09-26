@@ -24,7 +24,6 @@ entries = [
   { key = "legal.source_kind.orden", value = "orden" },
   { key = "legal.source_kind.reglamento", value = "reglamento" },
   { key = "legal.source_kind.manual", value = "manual" },
-  { key = "legal.source_kind.instruction", value = "instruction" },
   { key = "legal.dictionary_casilla_id_grammar.numeric", value = "numeric" },
   { key = "legal.dictionary_casilla_id_grammar.numeric_or_single_uppercase_letter", value = "numeric_or_single_uppercase_letter" },
 ]

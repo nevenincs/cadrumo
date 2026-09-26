@@ -16,6 +16,9 @@ re-key rather than a rotation, and accepting it here would leave the sentinel
 and every enrolled recovery envelope unopenable while the write reported success. The
 invariant is enforced at the write boundary so it cannot be lost by a caller.
 
+The third is lineage: the replacement must be the committed envelope's direct
+successor, naming its self-digest and carrying exactly the next generation.
+
 Real capsules on a real filesystem, real Argon2id-derived envelopes, real
 sentinel verification. Nothing mocked.
 """
@@ -42,7 +45,12 @@ from ..capsule import (
 from ..envelope import create_profile_custody_password_envelope
 from ..errors import ProfileCustodyPasswordError, ProfileCustodyRecordError
 from ..kdf_supervision import unlock_profile_custody
-from ..records import PROFILE_CUSTODY_ENVELOPE_FILENAME, ProfileCustodyKdfParameters
+from ..records import (
+    PROFILE_CUSTODY_ENVELOPE_FILENAME,
+    ProfileCustodyEnvelope,
+    ProfileCustodyKdfParameters,
+    parse_profile_custody_envelope,
+)
 from ..recovery import create_profile_custody_recovery_envelope, unlock_profile_custody_recovery_envelope
 from ..sentinel import create_profile_custody_sentinel
 
@@ -102,8 +110,24 @@ def _envelope_path(settings: Settings) -> Path:
     return capsule / "custody" / PROFILE_CUSTODY_ENVELOPE_FILENAME
 
 
-def _rewrapped(settings: Settings, *, dek_epoch: str = _EPOCH, profile_id: UUID = _PROFILE_ID) -> bytes:
-    """Return a genuine envelope wrapping the same DEK under the new password."""
+def _committed(settings: Settings) -> ProfileCustodyEnvelope:
+    return parse_profile_custody_envelope(_envelope_path(settings).read_bytes())
+
+
+def _rewrapped(
+    settings: Settings,
+    *,
+    dek_epoch: str = _EPOCH,
+    profile_id: UUID = _PROFILE_ID,
+    predecessor: ProfileCustodyEnvelope | None = None,
+    password_generation: int | None = None,
+) -> bytes:
+    """Return a genuine envelope wrapping the same DEK under the new password.
+
+    By default it is the committed envelope's direct successor, as a real
+    rotation mints it; the keyword overrides state one lineage defect at a time.
+    """
+    parent = _committed(settings) if predecessor is None else predecessor
     return create_profile_custody_password_envelope(
         profile_id=profile_id,
         password=_NEW_PASSWORD,
@@ -112,6 +136,8 @@ def _rewrapped(settings: Settings, *, dek_epoch: str = _EPOCH, profile_id: UUID 
         # A fresh salt, as a real rotation mints: the same password must not
         # reproduce the same wrapped bytes.
         kdf=_kdf(salt=b"r" * 16),
+        password_generation=parent.password_generation + 1 if password_generation is None else password_generation,
+        previous_envelope_digest=parent.self_digest,
         settings=settings,
     ).canonical_json_bytes()
 
@@ -240,7 +266,9 @@ def test_rotation_refuses_a_stale_compare_and_swap_witness(tmp_path: Path) -> No
 
     The witness is what makes two racing rotations safe: the second caller
     authenticated bytes that are no longer current, so its write is refused
-    rather than silently discarding the first caller's new password.
+    rather than silently discarding the first caller's new password. The
+    second payload is a lineage-correct successor of what is committed now, so
+    the witness is the only thing wrong with it.
     """
     settings = _settings(tmp_path)
     _publish(tmp_path, settings)
@@ -295,3 +323,141 @@ def test_rotation_refuses_a_payload_that_is_not_an_envelope(tmp_path: Path) -> N
         )
 
     assert envelope_path.read_bytes() == before
+
+
+def test_rotation_records_the_committed_envelope_as_its_predecessor(tmp_path: Path) -> None:
+    """A correct successor passes, and the stored envelope says what it replaced."""
+    settings = _settings(tmp_path)
+    _publish(tmp_path, settings)
+    first = _committed(settings)
+    assert first.password_generation == 1
+    assert first.previous_envelope_digest is None
+
+    replace_committed_profile_custody_envelope(
+        _PROFILE_ID,
+        _rewrapped(settings),
+        expected_sha256=prefixed_digest(_envelope_path(settings).read_bytes()),
+        settings=settings,
+    )
+
+    second = _committed(settings)
+    assert second.password_generation == 2
+    assert second.previous_envelope_digest == first.self_digest
+
+
+def test_rotation_refuses_a_successor_minted_against_another_envelope(tmp_path: Path) -> None:
+    """The racing rotation the witness guards, refused on lineage as well.
+
+    Its author authenticated the original envelope and minted a successor of
+    it; after the first rotation committed, that successor names an envelope
+    that is no longer current. Even supplied with the current witness and the
+    next generation number, it is not the committed envelope's successor and
+    is not written.
+    """
+    settings = _settings(tmp_path)
+    _publish(tmp_path, settings)
+    original = _committed(settings)
+    replace_committed_profile_custody_envelope(
+        _PROFILE_ID,
+        _rewrapped(settings),
+        expected_sha256=prefixed_digest(_envelope_path(settings).read_bytes()),
+        settings=settings,
+    )
+    before = _envelope_path(settings).read_bytes()
+
+    with pytest.raises(ProfileCustodyRecordError, match="does not name the committed envelope as its predecessor"):
+        replace_committed_profile_custody_envelope(
+            _PROFILE_ID,
+            _rewrapped(settings, predecessor=original, password_generation=3),
+            expected_sha256=prefixed_digest(before),
+            settings=settings,
+        )
+
+    assert _envelope_path(settings).read_bytes() == before
+
+
+def test_rotation_refuses_a_successor_that_names_no_predecessor(tmp_path: Path) -> None:
+    """An unlinked envelope is a fresh lineage, never a replacement."""
+    settings = _settings(tmp_path)
+    _publish(tmp_path, settings)
+    before = _envelope_path(settings).read_bytes()
+    unlinked = create_profile_custody_password_envelope(
+        profile_id=_PROFILE_ID,
+        password=_NEW_PASSWORD,
+        dek=_DEK,
+        dek_epoch=_EPOCH,
+        kdf=_kdf(salt=b"r" * 16),
+        password_generation=2,
+        settings=settings,
+    ).canonical_json_bytes()
+
+    with pytest.raises(ProfileCustodyRecordError, match="does not name the committed envelope as its predecessor"):
+        replace_committed_profile_custody_envelope(
+            _PROFILE_ID,
+            unlinked,
+            expected_sha256=prefixed_digest(before),
+            settings=settings,
+        )
+
+    assert _envelope_path(settings).read_bytes() == before
+
+
+@pytest.mark.parametrize("password_generation", (1, 3), ids=("repeated", "skipped"))
+def test_rotation_refuses_a_successor_that_is_not_the_next_generation(
+    tmp_path: Path,
+    password_generation: int,
+) -> None:
+    """Only the committed generation plus one is a successor; a repeat or a skip is refused."""
+    settings = _settings(tmp_path)
+    _publish(tmp_path, settings)
+    before = _envelope_path(settings).read_bytes()
+
+    with pytest.raises(ProfileCustodyRecordError, match="does not carry the next password generation"):
+        replace_committed_profile_custody_envelope(
+            _PROFILE_ID,
+            _rewrapped(settings, password_generation=password_generation),
+            expected_sha256=prefixed_digest(before),
+            settings=settings,
+        )
+
+    assert _envelope_path(settings).read_bytes() == before
+
+
+def test_an_envelope_committed_without_a_predecessor_still_unlocks_and_can_be_succeeded(tmp_path: Path) -> None:
+    """Lineage governs what a replacement writes, never what a read accepts.
+
+    The committed envelope here has no predecessor digest at a generation past
+    the first: the shape of a wrapper replaced before lineage was recorded. It
+    must open under its password, and its own successor must be accepted.
+    """
+    settings = _settings(tmp_path)
+    _publish(tmp_path, settings)
+    envelope_path = _envelope_path(settings)
+    unlinked = create_profile_custody_password_envelope(
+        profile_id=_PROFILE_ID,
+        password=_OLD_PASSWORD,
+        dek=_DEK,
+        dek_epoch=_EPOCH,
+        kdf=_kdf(salt=b"l" * 16),
+        password_generation=2,
+        settings=settings,
+    )
+    # Written as bytes rather than through the replace boundary, which refuses
+    # it: this is what an earlier writer left on disk.
+    envelope_path.write_bytes(unlinked.canonical_json_bytes())
+
+    material = load_committed_profile_password_material(_PROFILE_ID, settings=settings)
+    assert material.envelope.previous_envelope_digest is None
+    assert material.envelope.password_generation == 2
+    unlocked = unlock_profile_custody(password=_OLD_PASSWORD, envelope=material.envelope, sentinel=material.sentinel)
+    assert bytes(unlocked.dek) == _DEK
+
+    replace_committed_profile_custody_envelope(
+        _PROFILE_ID,
+        _rewrapped(settings),
+        expected_sha256=prefixed_digest(envelope_path.read_bytes()),
+        settings=settings,
+    )
+    successor = _committed(settings)
+    assert successor.password_generation == 3
+    assert successor.previous_envelope_digest == unlinked.self_digest

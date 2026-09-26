@@ -23,6 +23,7 @@ def test_write_resolved_pytest_paths(tmp_path_factory: pytest.TempPathFactory, p
                 "basetemp": str(tmp_path_factory.getbasetemp()),
                 "cache": str(pytestconfig.cache._cachedir),
                 "run_root": os.environ["CADRUMO_TEST_RUN_ROOT"],
+                "scratch": os.environ["CADRUMO_TEST_RUN_SCRATCH"],
                 "stdlib_temp": tempfile.gettempdir(),
                 "storage_root": str(collection_storage_root()),
             }

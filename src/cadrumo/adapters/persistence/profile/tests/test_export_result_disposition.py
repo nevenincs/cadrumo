@@ -33,11 +33,13 @@ from .....domain.modelos.calculation_revision import (
 )
 from .....domain.modelos.codes import ModeloCode
 from .....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from ._export_test_support import (
+from .modelo_export_support import (
     _M130_RESULT_CASILLA,
     _M200_REFUND_RESULT_CASILLA,
     _M303_RESULT_CASILLA,
-    _profile,
+)
+from .modelo_export_support import (
+    export_taxpayer_profile as _profile,
 )
 from .published_authority_support import published_authority_operation
 

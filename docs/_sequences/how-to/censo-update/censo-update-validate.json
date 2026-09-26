@@ -61,7 +61,7 @@
           "display_name": "docs-sequence-sandbox",
           "issues": [],
           "profile_id": "<profile-id>",
-          "schema_version": 6,
+          "schema_version": 7,
           "setup_state": "complete",
           "valid": true
         },

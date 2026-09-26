@@ -54,26 +54,80 @@ flows:
       running: Comprobando el perfil y completando la configuración…
     edit:
       cancel: Cancelar
+      choose_one: Elige una de las opciones, o cancela para dejar el valor sin cambios.
       clear: Borrar
       masked_kept: Este valor está oculto, por eso el campo empieza vacío. Déjalo
         vacío para conservar el valor guardado o escribe uno nuevo para sustituirlo.
+      no_change: No fue necesario realizar cambios.
       required_blank: '{field} es obligatorio, así que no puede quedar en blanco.
         Introduce un valor o cancela para dejarlo sin cambios.'
       save: Guardar
+      saved: Guardado.
       shape:
         date: 'Formato: AAAA-MM-DD - por ejemplo 1978-03-15.'
         decimal: Un número, con punto para los decimales - por ejemplo 1234.56.
         email: Una dirección de correo electrónico - por ejemplo nombre@ejemplo.es.
         integer: Un número entero, sin separador de miles.
         money: Un importe en euros, con punto para los decimales - por ejemplo 1234.56.
+      stale_result: El guardado terminó, pero ya se muestra una versión más reciente
+        del perfil. No se mostró el resultado anterior.
       write_failed: No se ha podido guardar el campo. Vuelve a intentarlo.
       write_in_flight: Se está guardando el campo anterior. Espera a que termine y
         vuelve a intentarlo.
     field_unavailable: Campo de perfil no disponible
+    help:
+      about: 'Sobre este ajuste:'
+      what: 'Qué es:'
+      where: 'Dónde encontrarlo:'
+      why: 'Por qué se pide:'
     language:
       unavailable: Este perfil no ofrece un ajuste de idioma.
     namespace_detail: detalle {number}
+    onboarding:
+      continue: Continuar
+      done: La configuración está completa. Continúa al área de trabajo o sigue añadiendo
+        detalles opcionales abajo.
+      finish: Terminar la configuración
+      heading: Configura tu perfil
+      intro: Aquí solo se piden las respuestas necesarias para preparar tus declaraciones.
+        Pulsa Continuar y responde a cada pregunta; todo lo demás es opcional y puede
+        esperar.
+      progress: '{answered} de {total} respuestas obligatorias'
+      question: Pregunta {number} de {total} · {section}
+      ready: Ya tienes todas las respuestas obligatorias. Termina la configuración
+        para empezar a preparar tus declaraciones.
+      required_only: Solo obligatorias
+      search_empty: Ningún ajuste coincide con «{query}».
+      search_placeholder: Buscar ajustes
+      section_done: ✓ {title} - {present}/{total}
+      section_pending: ✖ {title} - {missing} obligatorias
+      sources_summary: Rellena el perfil a partir de los registros de la AEAT o de
+        tus documentos en lugar de escribirlo.
+      sources_title: Importar datos (opcional)
+      step: 'Paso {step} de {steps}: {section}'
+      step_finish: 'Paso {step} de {steps}: terminar la configuración'
+      to_workbench: Continuar al área de trabajo
+    plantilla_media:
+      average_workforce: Plantilla media
+      list_failed: No se han podido leer los años declarados. Vuelve a intentarlo.
+      none_declared: Todavía no hay ningún año declarado.
+      remove: Eliminar este año
+      state: Estado
+      state_committed: Comprometida (el año sigue abierto)
+      state_observed: Observada (el año está cerrado)
+      state_required: Indica si la cifra es observada o comprometida.
+      workforce_not_number: Introduce la plantilla media como un número, con punto
+        para los decimales - por ejemplo 12.50.
+      year: Año natural
+      year_not_whole: Introduce el año natural como un número entero - por ejemplo
+        2025.
+    profile_missing_fields: 'Al perfil le faltan %{count} campo(s) obligatorio(s):
+      %{fields}'
     required_field_unavailable: Campo obligatorio del perfil
+    rows:
+      add: Añadir fila
+      remove: Eliminar fila
+      remove_confirm: ¿Eliminar la fila %{row} de la sección %{section}?
     section_title: '{title} - {present}/{total}'
     title: 'Perfil: {profile}'
   modelo_review:
@@ -196,7 +250,9 @@ flows:
     values_unmeasured: Esta página solo muestra la estructura del formulario; aún
       no muestra valores calculados.
   modelo_workspace_overview:
-    actions_not_carried: Esta página aún no sugiere pasos siguientes.
+    actions_none: Todavía no se puede realizar ningún paso siguiente desde este espacio
+      de trabajo.
+    actions_suggested: 'Pasos siguientes sugeridos: {actions}'
     column:
       capability: Capacidad
       disposition: Disposición
@@ -257,8 +313,9 @@ flows:
       message: Qué se encontró
       severity: Severidad
       value: Valor
-    evidence_not_carried: Esta página aún no muestra justificantes ni pasos siguientes
-      sugeridos.
+    evidence_carried: 'Referencias de respaldo y paso siguiente: {entries}'
+    evidence_none: Esta capacidad de verificación no cita ninguna referencia del registro
+      ni indica ningún paso siguiente realizable.
     findings_none: La revisión de trabajo no ha registrado hallazgos.
     findings_unmeasured: Esta página aún no muestra los hallazgos de la verificación.
     readiness_unmeasured: Esta página aún no muestra si la declaración está lista.

@@ -10,6 +10,10 @@ The capture has to be FRESH rather than inherited. An amendment is filed now,
 against the ledger as it stands now; copying the baseline's anchor would assert
 that those older facts were the ones checked, backdating the claim by exactly
 the interval the amendment exists to correct.
+
+The capture also explains every operator input the draft carries, so an input
+the draft grounds in no observation is refused there; calculate refuses the
+row-field scalar inputs that would produce one.
 """
 
 from __future__ import annotations
@@ -22,9 +26,22 @@ from types import SimpleNamespace
 
 import pytest
 
-from ....application.aggregation.ledger_filing_snapshot import row_fingerprint
+from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
+from ....domain.calculations.registry.casilla_membership import (
+    reject_row_field_template_scalar_inputs,
+    row_field_template_records_by_casilla,
+)
+from ....domain.calculations.registry.errors import RegistryValidationError
+from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+from ....domain.calculations.registry.tests.published_authority import published_snapshot
+from ....domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionState,
+    derive_calculation_revision_id,
+)
 from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.errors import ModeloValidationError
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import (
@@ -35,6 +52,9 @@ from ....domain.transactions.models import (
     TransactionCatalogue,
 )
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from ...aggregation.ledger_filing_snapshot import row_fingerprint
+from .._calculation_helpers import build_typed_observations
+from .._calculation_modelo_adjustments import drop_row_field_template_outputs
 from ..amendment_actions import _amendment_ledger_anchor
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -260,3 +280,144 @@ def test_the_anchor_bundles_evidence_covering_every_fingerprinted_contributor() 
     assert evidence is not None
     assert evidence.snapshot_fingerprint == snapshot.snapshot_fingerprint
     assert {row.transaction_id for row in evidence.rows} == {row.transaction_id for row in snapshot.rows}
+
+
+_M193_DECLARED_EXPENSES: CasillaId = validated_casilla_id("decl.gastos-total", surface="test_amendment_ledger_anchor")
+_M193_PERCEPTOR_RETENCIONES: CasillaId = validated_casilla_id(
+    "perc.retenciones", surface="test_amendment_ledger_anchor"
+)
+
+
+def _m193_revision(
+    *,
+    casilla_inputs: dict[CasillaId, Decimal],
+    source_transaction_ids: tuple[str, ...],
+) -> tuple[WorkUnit, CalculationRevision]:
+    """Assemble a Modelo 193 draft through the calculation's own output pipeline.
+
+    The engine runs against the published registry, and its observations pass
+    through the same row-field drop the calculation applies before it
+    persists, so the draft is what calculate would have stored for these
+    inputs had it accepted them.
+    """
+    snapshot = published_snapshot("193", filing_year=2024, period="0A")
+    period = Period.from_year_and_code(2024, "0A")
+    work_unit = WorkUnit(
+        work_unit_id=derive_work_unit_id(
+            bucket_id=_WORK_BUCKET,
+            modelo="193",
+            filing_year=period.filing_year,
+            period=period,
+            revision_id=snapshot.revision.id,
+        ),
+        bucket_id=_WORK_BUCKET,
+        modelo=ModeloCode("193"),
+        filing_year=period.filing_year,
+        period=period,
+        revision_id=snapshot.revision.id,
+        name="193-2024-0A",
+        created_at=_T0,
+        updated_at=_T0,
+    )
+    engine_result = calculate_registry_snapshot(
+        snapshot,
+        inputs=casilla_inputs,
+        date_context={"filing_period": period.end_date},
+    )
+    casilla_values, observations = drop_row_field_template_outputs(
+        revision=snapshot.revision,
+        casilla_values=dict(engine_result.values),
+        observations=build_typed_observations(engine_result=engine_result, snapshot=snapshot),
+    )
+    input_values = {casilla_id: str(value) for casilla_id, value in casilla_inputs.items()}
+    revision_id = derive_calculation_revision_id(
+        work_unit_id=work_unit.work_unit_id,
+        input_values_by_casilla_id=input_values,
+        binding_overrides={},
+        casilla_values=casilla_values,
+        source_transaction_ids=source_transaction_ids,
+        filing_instance_evidence=None,
+        source_provenance=(),
+    )
+    return work_unit, CalculationRevision(
+        calculation_revision_id=revision_id,
+        work_unit_id=work_unit.work_unit_id,
+        registry_snapshot_ref=snapshot.snapshot_ref,
+        state=CalculationRevisionState.BORRADOR,
+        input_values_by_casilla_id=input_values,
+        binding_overrides={},
+        casilla_values=casilla_values,
+        observations=observations,
+        source_transaction_ids=source_transaction_ids,
+        created_at=_T0,
+        updated_at=_T0,
+        filing_instance_evidence=None,
+        source_provenance=(),
+    )
+
+
+def _contributing_purchase() -> tuple[Transaction, _TransactionRepository]:
+    purchase = _iva_transaction(
+        "irene-purchase-no-evidence",
+        direction=TransactionDirection.OUTGOING,
+        taxable_base=Decimal("200.00"),
+    )
+    return purchase, _TransactionRepository(TransactionCatalogue.from_transactions((purchase,)))
+
+
+def test_an_amendment_of_a_revision_without_row_field_inputs_bundles_every_manual_fact() -> None:
+    """A declarant scalar keeps its observation, so the amend-time capture explains it."""
+    purchase, tx_repo = _contributing_purchase()
+    work_unit, draft = _m193_revision(
+        casilla_inputs={_M193_DECLARED_EXPENSES: Decimal("250")},
+        source_transaction_ids=(purchase.transaction_id,),
+    )
+
+    snapshot, evidence = _amendment_ledger_anchor(
+        amendment_draft=draft,
+        work_unit=work_unit,
+        transaction_repository=tx_repo,
+        now=_AMENDED_AT,
+    )
+
+    assert snapshot is not None
+    assert evidence is not None
+    (entry,) = evidence.manual_entries
+    observation = next(obs for obs in draft.observations if obs.casilla_id == _M193_DECLARED_EXPENSES)
+    assert entry.casilla_id == _M193_DECLARED_EXPENSES
+    assert entry.value == "250"
+    assert set(entry.legal_refs) == {str(ref) for ref in observation.legal_refs}
+    assert set(entry.source_refs) == {str(ref) for ref in observation.source_refs}
+
+
+def test_a_row_field_scalar_input_is_refused_at_calculate_before_any_amendment_could_carry_it() -> None:
+    """The amend-time capture rightly refuses an input with no observation; calculate refuses it first.
+
+    A draft holding a scalar ``perc.retenciones`` input is the shape calculate
+    stored before it refused such inputs: the row-field drop removed the
+    observation, so the capture can ground the input in nothing and refuses.
+    The refusal calculate now applies names that same input, so no draft of
+    this shape reaches an amendment.
+    """
+    purchase, tx_repo = _contributing_purchase()
+    inputs = {_M193_DECLARED_EXPENSES: Decimal("250"), _M193_PERCEPTOR_RETENCIONES: Decimal("40")}
+    work_unit, draft = _m193_revision(casilla_inputs=inputs, source_transaction_ids=(purchase.transaction_id,))
+    assert _M193_PERCEPTOR_RETENCIONES in draft.input_values_by_casilla_id
+    assert all(obs.casilla_id != _M193_PERCEPTOR_RETENCIONES for obs in draft.observations)
+
+    with pytest.raises(ModeloValidationError) as capture_refusal:
+        _amendment_ledger_anchor(
+            amendment_draft=draft,
+            work_unit=work_unit,
+            transaction_repository=tx_repo,
+            now=_AMENDED_AT,
+        )
+    assert capture_refusal.value.context == {"field_name": "legal_refs", "observation_present": False}
+
+    revision = published_snapshot("193", filing_year=2024, period="0A").revision
+    with pytest.raises(RegistryValidationError) as calculate_refusal:
+        reject_row_field_template_scalar_inputs(revision, inputs)
+    assert calculate_refusal.value.context == {
+        "casilla_ids": _M193_PERCEPTOR_RETENCIONES,
+        "record_ids": ",".join(row_field_template_records_by_casilla(revision)[_M193_PERCEPTOR_RETENCIONES]),
+    }

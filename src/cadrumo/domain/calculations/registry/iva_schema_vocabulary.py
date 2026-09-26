@@ -12,9 +12,9 @@ from typing import Final, TypeVar
 from weakref import ReferenceType, ref
 
 from ....core.time.clock import today_madrid
-from ....domain.deadlines.models import IVARegime, M303RegimeComposition, M303TaxTerritory
-from ....domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScope
-from ....domain.iva.schema import IvaArt69DosService, IvaCashAccountingTreatment, IvaExemptionArticle
+from ...deadlines.models import IVARegime, M303RegimeComposition, M303TaxTerritory
+from ...iva.regimen_simplificado_rows import M303RegimenSimplificadoScope
+from ...iva.schema import IvaArt69DosService, IvaCashAccountingTreatment, IvaExemptionArticle
 from .errors import RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
 from .governed_fact_scope import GovernedFactSource, cache_governed_projection, governed_facts_in_scope

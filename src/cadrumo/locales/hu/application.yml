@@ -536,8 +536,8 @@ application:
           oszlopok: {missing_columns}'
         unreadable_table: 'A számlák tömeges importálási fájlja nem tartalmaz olvasható
           táblázatot: {detail}'
-        unsupported_extension: 'A számlák tömeges importálási fájljának .csv vagy
-          .xlsx kiterjesztésűnek kell lennie (kapott: {extension}).'
+        unsupported_extension: 'A számlák tömeges importálási fájljának .csv, .tsv,
+          .xlsx, .xlsm vagy .xls kiterjesztésűnek kell lennie (kapott: {extension}).'
     creation:
       errors:
         duplicate_invoice: 'A katalógusban már létezik azonos azonosságú számla: %{invoice_id}.'
@@ -819,31 +819,20 @@ application:
         értékeket fogad. Állítsd be profiladatként (pl. aeat config profile create
         ... --taxpayer-birth-date ÉÉÉÉ-HH-NN), majd számolj újra.
       calculate_binding_unknown: '--binding %{key} egyik binding azonosítónak sem
-        felel meg ebben a revízióban. Elfogadott binding azonosítók: %{accepted}.
-        Használja a `aeat app modelo bindings list <MODELO>` parancsot az érvényes
-        azonosítók listázásához.'
+        felel meg ebben a revízióban. Elfogadott binding azonosítók: %{accepted}.'
       calculate_boolean_binding_encoding_invalid: 'A(z) %{key} kötés értéke decimálisként
         kódolt logikai jelző, és a következők egyike kell legyen: %{accepted}. Beérkezett:
-        %{value}. Elfogadott kódolás: %{mapping}. Futtassa a ''aeat app modelo bindings
-        list <MODELO>'' parancsot az egyes kötések decimális kódolásának megtekintéséhez.'
+        %{value}. Elfogadott kódolás: %{mapping}.'
       calculate_casilla_noncanonical_ambiguous: 'A --casilla %{key} nem kanonikus
         casilla.id, és nem egyértelmű. Jelölt casilla.id értékek: %{accepted}. Adja
         meg a pontos kanonikus casilla.id-t'
       calculate_casilla_noncanonical_refused: 'A --casilla %{key} egy nyomtatott mezőszám,
         nyomtatványszám vagy exportreferencia, nem kanonikus casilla.id. Használja
         helyette a kanonikus casilla.id-t: %{accepted}'
-      calculate_casilla_unknown: 'A --casilla %{key} nem kanonikus casilla.id ebben
-        a revízióban. Érvényes casilla.id értékekhez futtassa: `aeat app modelo casillas
-        <MODELO>`.'
+      calculate_casilla_unknown: A --casilla %{key} nem kanonikus casilla.id ebben
+        a revízióban.
       calculate_decimal_input_invalid: 'A(z) %{flag} érték %{key} kulcshoz nem decimális
         szám: %{value}'
-      calculate_detail_casilla_unsupported: A(z) %{key} rovat a 180-as nyomtatvány
-        perceptor/ingatlan részletsor mezőjét nevezi meg, nem skaláris decimális rovat
-        bemenetet. A helyi --casilla csatorna csak skaláris decimális rovatokat fogad;
-        a 180-as nyomtatvány perceptor/ingatlan részletsorai még nem támogatottak
-        a nyilvános --row felületen. Használd a aeat app modelo aggregate --modelo
-        180 --retencion-observation parancsot a támogatott éves perceptor-szám/base/retenciones
-        forráshoz.
       calculate_m184_share_sum_invalid: 'A 184-es modell tag sorainak részesedési
         százalékai pontosan 100%-ot kell adjanak; kapott érték: %{total}, sorok: %{count}.'
       calculate_m210_tipo_renta_fetch_gated: 'A(z) %{value} 210-es nyomtatvány jövedelemtípus-kód
@@ -988,9 +977,10 @@ application:
         van a 303-es nyomtatvány esetén: ez az első időszak, és a nulla korábbi kompenzáció
         mögött nincs bizonyíték. Töltse fel kifejezetten a nyitóegyenleget, vagy töltse
         le a tárcát az AEAT-tól, hogy a nulla kimondott legyen, ne feltételezett.'
-      iva_wallet_not_seeded: A 303-es nyomtatvány számításához feltöltött IVA-kompenzáció
-        előzmény szükséges. Egy friss profil első M303 benyújtásához töltse fel az
-        előzményt.
+      iva_wallet_not_seeded: A 303-es nyomtatvány számításához feltöltött IVA-kompenzációs
+        előzmény szükséges. Egy friss profil első M303 benyújtásához töltse fel nulla
+        összeggel a benyújtási időszak IVA-kompenzációs nyitóegyenlegét, és erősítse
+        meg.
       iva_wallet_registry_snapshot_unavailable: 'Az IVA-tárca egyeztetése blokkolva
         van a 303-es nyomtatvány esetén: a nyilvántartási pillanatkép nem oldható
         fel erre az adóévre és időszakra, ezért az első időszaki nulla nem bizonyítható.
@@ -1013,8 +1003,8 @@ application:
       iva_wallet_unsupported_decision_type: 'Nem támogatott IVA-tárca döntéstípus:
         %{decision_type}.'
       ledger_preflight_blocked: 'a főkönyvi előellenőrzés blokkolja a modell számítást:
-        %{transaction_id} tranzakció, %{reason}: %{detail}. Futtassa a `aeat app ledger
-        preflight --period %{period}` parancsot számítás előtt.'
+        %{transaction_id} tranzakció, %{reason}: %{detail}. Futtassa a főkönyvi előellenőrzést
+        a(z) %{period} időszakra, és oldja meg a feltárt problémákat számítás előtt.'
       local_observation_actor_blank: A kézi megfigyelés-felülírásnak meg kell neveznie
         a rögzítő kezelőt.
       local_observation_override_missing: A(z) %{modelo} nyomtatvány %{filing_year}
@@ -1046,8 +1036,8 @@ application:
       profile_readiness_profile_missing: Nincs perzisztált aktív profil ehhez a modell
         munkához; folytatás előtt hozza létre vagy javítsa a profilt.
       profile_readiness_setup_incomplete: A profil beállítását még nem nyilvánították
-        befejezettnek; a modellekkel végzett munka előtt futtasd az `aeat config profile
-        complete-setup` parancsot.
+        befejezettnek; a modellekkel végzett munka előtt nyilvánítsd befejezettnek
+        a profil beállítását.
       profile_readiness_setup_incomplete_missing: 'A profil beállítása nincs befejezve;
         fejezd be a beállítási folyamatot, mielőtt modelókkal dolgoznál. Hiányzó mezők:
         %{missing}.'
@@ -1065,7 +1055,7 @@ application:
         címzett.
       reconcile_declaration_unsupported: A bevallás-PDF rovatszintű egyeztetése még
         nincs engedélyezve ehhez a modellhez; egyeztessen egy letöltött justificantét
-        a aeat app modelo reconcile file paranccsal, vagy várjon, amíg ez a modell
+        az aeat app modelo reconcile import paranccsal, vagy várjon, amíg ez a modell
         engedélyezésre kerül.
       reconcile_no_active_bucket: 'Nincs aktív profilmappa; futtassa: `aeat config
         profile create NÉV` az egyeztetés előtt.'
@@ -1094,6 +1084,9 @@ application:
       work_unit_already_discarded: A munkakérés már el van vetve.
       work_unit_create_discarded: Ezt a bevallási célt elvetettek. Az ismételt létrehozás
         ugyanazt az elvetett munkaegységét adja vissza, igy nem folytatható.
+      work_unit_create_superseded_modelo: A(z) %{modelo} modellt a(z) %{superseded_by}
+        modell váltotta fel, ezért már nem nyújtható be. Semmi sem jött létre; a bevallást
+        a(z) %{superseded_by} modellel nyissa meg.
       work_unit_discarded_cannot_calculate: A(z) %{work_unit_id} munkaegység állapota
         %{work_unit_state}, ezért nem számítható.
       work_unit_discarded_cannot_import: A(z) %{work_unit_id} munkaegység állapota
@@ -1167,11 +1160,23 @@ application:
         %{prior_value_eur} EUR összegről %{current_value_eur} EUR összegre nőtt, ami
         %{delta_value_eur} EUR növekedés a(z) %{redeclaration_increase_threshold_eur}
         EUR újrabevallási küszöb felett.'
+      iva_compensation_annual_source_evidence_failure: A 390-es modellhez szükséges
+        303-as modell éves forrásbizonyítéka rendezetlen (%{source_issue_count} probléma);
+        a befejezés blokkolva van.
+      iva_selected_scope_evidence_failure: 'A kiválasztott hatókör áfabizonyítéka
+        hiányos (%{source_ref_count} forráshivatkozás; %{unidentified_source_count}
+        azonosítatlan), ezért az ellenőrzés blokkolva van. Forráshivatkozás-azonosítók,
+        nem pénzügyi értékek: %{source_ref_ids}.'
       iva_wallet_precondition_failed: 'Az áfa-kompenzációs tárca %{condition_id} előfeltétele
         nem teljesült ehhez a revízióhoz (forgatókönyv: %{scenario_id}).'
       ledger_snapshot_drift: 'A(z) %{modelo} %{filing_year} %{period} nyomtatvány
         eltért a rögzített főkönyvi pillanatképétől: %{changed_count} módosult, %{removed_count}
         törlődött.'
+      m193_settled_row_amount_authority_unresolved: A(z) %{filing_year}. évi 193-as
+        modell %{settled_prior_accrual_rows} olyan rekordot tartalmaz, amely korábbi
+        évben keletkezett jövedelmet fizet ki, és egyetlen hivatalos forrás sem határozza
+        meg az általuk bevallott alapot és forrásadó-levonást; a benyújtás és az exportálás
+        elutasítja ezt a revíziót.
       m210_agrupacion_renta_invalid: A(z) %{modelo_id} nyomtatvány %{period_code}
         időszakában érvénytelen jövedelemcsoportosítás szerepel (%{error_type}).
       m210_convenio_lob_advisory: A(z) %{country_code} ország %{tipo_renta_code} jövedelemtípusára
@@ -1233,6 +1238,25 @@ application:
       seed_negative_amount: A vetőösszeg nem lehet negatív.
       seed_no_nif: Nincs NIF meghatározva a vetőösszeg-művelethez; rendelje hozzá
         az aktív profilhoz a vetőösszeg létrehozása előtt.
+    lifecycle:
+      calculate: Számítás
+      export: Exportálás
+      export_destination_placeholder: Export célútvonala
+      file: Helyi bevallás rögzítése
+      file_cancelled: A helyi bevallás rögzítése megszakadt; semmi sem került rögzítésre.
+      file_confirm_accept: Helyi bevallás rögzítése
+      file_confirm_cancel: Mégse
+      file_confirm_message: Ez a hitelesített bevallást az alkalmazás helyi bevallási
+        előzményeiben rögzíti. Semmit sem küld az AEAT-nak.
+      file_confirm_title: Rögzíti a helyi bevallást?
+      refusal:
+        calculation_required: A folytatás előtt számítsa ki ezt a bevallást.
+        edit_unavailable: Ez a bevallás jelenleg nem kínál szerkeszthető értékeket;
+          szerkesztés előtt számítsa újra, vagy nyissa meg újra.
+        export_destination_required: Adjon meg export célútvonalat.
+        verification_required: A helyi bevallás rögzítése előtt ellenőrizze ezt a
+          számítást.
+      verify: Ellenőrzés
     profile_binding:
       errors:
         boolean_value_channel_mismatch: A(z) {binding_id} kötés profiladata logikai
@@ -1247,7 +1271,30 @@ application:
           profiladata nem támogatott típusú: %{value_type}.'
         enum_boolean_invalid: A(z) %{binding_id} enumcsatornás kötés profiladata boolean
           értékre oldódott fel; a boolean adatok nem érvényes enum dispatch kulcsok.
+    quickfile:
+      stage_incomplete: A quickfile %{stage} szakasza %{status} állapottal fejeződött
+        be.
+      stage_refused: 'A quickfile a(z) %{stage} szakasznál leállt: a szakaszt %{error_code}
+        kóddal elutasították.'
   overview:
+    calendar:
+      holiday_coverage:
+        calendar_unavailable: az ünnepnapi naptár nem érhető el; az eredeti zárási
+          dátum nincs ellenőrizve
+        national_and_territory: országos és %{territory} ünnepnapok ellenőrizve; helyi
+          ünnepnapok nincsenek ellenőrizve
+        national_only: csak országos ünnepnapok; regionális és helyi ünnepnapok nincsenek
+          ellenőrizve
+        not_shifted: ennél a nyomtatványnál a határidő munkaszüneti nap miatt nem
+          tolódik
+        territory_unverified: csak országos ünnepnapok; %{territory} idei regionális
+          ünnepnapjai nincsenek ellenőrizve, a helyi ünnepnapok sem
+      shift:
+        business_day: Munkanap
+        calendar_unavailable: Naptár nem elérhető
+        domingo: Vasárnap
+        modelo_exception: Nyomtatvány-kivétel
+        sabado: Szombat
     errors:
       horizon_days_not_positive: 'a horizon_days értékének pozitívnak kell lennie;
         a kapott érték: %{horizon_days}'
@@ -1271,8 +1318,8 @@ application:
             az egyes számított mezők auditját, a ''Tarifas'' pedig a képletek által
             használt érvényes paramétereket tartalmazza.'
           period: '%{modelo_title} - időszak %{period} / %{filing_year}.'
-          pull_command: A módosítások helyi tárba húzásához futtassa a 'aeat config
-            google sync calc pull' parancsot a CLI-ből.
+          pull_command: A módosítások helyi tárba húzásához futtassa az 'aeat app
+            modelo spreadsheet pull' parancsot a CLI-ből.
           title: '%{modelo_title} - %{period}/%{filing_year}'
         labels:
           casilla: Rovat
@@ -1381,6 +1428,8 @@ application:
         ez az alkalmazás nem támogatja.
       row_all_values_blank: 'Nem adtál meg értéket a(z) ''%{section}'' sorhoz. Tölts
         ki legalább egyet ezek közül: %{fields}.'
+      row_not_found: A(z) '%{row}' sor nem létezik a(z) '%{section}' szakaszban; nem
+        történt írás.
       row_unknown_field: 'A(z) ''%{section}'' szakasz nem deklarálja ezeket a mezőket:
         %{unknown}. Elérhető mezők: %{fields}.'
     notices:

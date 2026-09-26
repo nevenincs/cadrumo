@@ -163,12 +163,28 @@ aggregation:
       m111_no_retenciones_attestation_missing: 'No existen observaciones de retención
         por perceptor para el modelo 111 %{filing_year} %{period}. No presentes un
         Modelo 111 en blanco: declara el trimestre como periodo sin retenciones con
-        `aeat config profile complete setup --modelo-111-no-retenciones-periods %{attestation_period}`,
-        o registra las filas de perceptor con `aeat app modelo aggregate --retención-observation`.'
+        `aeat config profile edit --modelo-111-no-retenciones-periods %{attestation_period}`
+        (la opción sustituye la lista guardada, así que incluye también, separados
+        por comas, los periodos ya declarados), o registra las filas de perceptor
+        con `aeat app modelo aggregate --retencion-observation`.'
+      m193_phase_allocation_collision: 'Modelo %{modelo} %{filing_year}: la(s) asignación(es)
+        %{source_allocations} figuran declaradas manualmente y también proceden de
+        las retenciones de capital capturadas. Elimine la fila manual.'
       perceptor_nif_blank: El NIF del perceptor no puede estar vacío.
       perceptor_observations_missing: No existen observaciones de retenciones por
         perceptor para el modelo %{modelo} %{filing_year} %{period}; la fuente %{source_kind}
         no puede resolverse.
+      withholding_annual_source_not_quarterly: 'No se puede elaborar el resumen anual:
+        el calendario de presentación del declarante no asigna su modelo periódico
+        de retenciones a todos los trimestres del año (lo presenta mensualmente),
+        y sumar solo los periodos trimestrales dejaría fuera meses de retenciones.'
+      withholding_filer_profile_absent: No se ha podido cargar el perfil del declarante
+        para este ejercicio, por lo que no puede determinarse si las retenciones se
+        presentan trimestral o mensualmente. Complete el perfil y vuelva a intentarlo.
+      withholding_quarterly_window_not_scheduled: El calendario de presentación del
+        declarante no asigna este trimestre al modelo de retenciones (una gran empresa
+        lo presenta mensualmente) y los periodos mensuales de retenciones aún no se
+        admiten. No se ha registrado nada.
   service:
     errors:
       currency_conversion_required: El importe en moneda extranjera requiere una conversión
@@ -748,6 +764,14 @@ operation:
         operación. Actualiza Cadrumo.
     status:
       running: En curso
+    terminal:
+      cancelled: Cancelada
+      failed: Fallida
+      interrupted: Interrumpida
+      refused: Rechazada
+      succeeded: Completada
+      succeeded_partial: Completada en parte
+      timed_out: Tiempo agotado
 overview:
   no_aeat_history: Este perfil no tiene ninguna presentación confirmada por la AEAT.
   no_aeat_history_sociedades: Este perfil no tiene ninguna presentación confirmada
@@ -820,6 +844,8 @@ sheets:
       base_imponible: Base imponible
       base_imponible_assigned: Base imponible atribuida
       base_retenciones: Base de retenciones e ingresos a cuenta
+      block: Bloque
+      cadastral_reference: Referencia catastral
       clave: Clave
       clave_codigo: Clave código
       clave_declarado: Clave de titularidad del inmueble
@@ -829,6 +855,7 @@ sheets:
       codigo_emisor: Código emisor
       codigo_provincia: Código de provincia
       compensaciones: Compensaciones
+      complement: Complemento del domicilio
       complemento_infancia_clave: Complemento de ayuda a la infancia
       complete_acquisition_cost: Coste total de adquisición
       contract_relation_clave: Contrato o relación
@@ -857,11 +884,13 @@ sheets:
       domicilio_fiscal: Domicilio fiscal del miembro
       donor_legal_name: Nombre o razón social del donante
       donor_tax_id: NIF del donante
+      door: Puerta
       emerging_stock_excess_clave: Excesos de entrega de acciones de empresas emergentes
       fecha_devengo: Fecha de devengo
       fecha_inicio_prestamo: Fecha de inicio del préstamo
       fecha_vencimiento_prestamo: Fecha de vencimiento del préstamo
       first_child_compute: Cómputo del 1.er hijo
+      floor: Planta
       foral_retention_araba: Retenciones e ingresos a cuenta ingresados a Araba/Álava
       foral_retention_bizkaia: Retenciones e ingresos a cuenta ingresados a Bizkaia
       foral_retention_estatal: Retenciones e ingresos a cuenta ingresados al Estado
@@ -870,6 +899,7 @@ sheets:
       garantias: Garantías
       gastos_deducibles: Gastos deducibles
       geographic_mobility_clave: Movilidad geográfica
+      house_number: Número de casa
       housing_loan_communication_clave: Comunicación de préstamos de vivienda habitual
       importe_gastos: Importe de gastos
       importe_q1: Importe 1T
@@ -888,14 +918,20 @@ sheets:
       ingreso_a_cuenta_repercutido: Ingresos a cuenta repercutidos
       is_recurrent: Donativo recurrente
       isin_code: Código ISIN
+      locality: Localidad
       member_legal_name: Razón social del miembro
       member_state_code: Estado miembro
       member_tax_id: NIF del miembro
       miembro_a_31_diciembre: Miembro a 31 de diciembre
+      modality: Modalidad
+      municipality: Municipio
+      municipality_code: Código de municipio
       naturaleza: Naturaleza
       naturaleza_declarante: Naturaleza del declarante
       naturaleza_inmueble: Naturaleza del inmueble
       nif_pagador_anterior: NIF del pagador anterior
+      number_qualifier: Calificador del número
+      number_type: Tipo de numeración
       numero_orden: Número de orden
       opening_minus_closing_positive: Diferencia positiva entre apertura y cierre
       operation_date: Fecha de la operación
@@ -914,13 +950,18 @@ sheets:
       perceptor_birth_year: Año de nacimiento
       perceptor_legal_name: Apellidos y nombre del perceptor
       perceptor_mediador_flag: Perceptor mediador
+      perceptor_name: Nombre del perceptor
+      perceptor_nif: NIF del perceptor
       perceptor_situacion_familiar: Situación familiar
       perceptor_tax_id: NIF del perceptor
       percibido_dinerario: Percepciones dinerarias
       percibido_especie: Percepciones en especie
       porcentaje_retencion: '% Retención'
       porcentaje_titularidad_inmueble: Porcentaje de titularidad del inmueble
+      portal: Portal
+      postal_code: Código postal
       province_code: Provincia
+      recipient_province_code: Código de provincia del perceptor
       rectified_base_previous: Base imponible anterior (rectificación)
       rectified_period: Periodo rectificado
       rectified_year: Ejercicio rectificado
@@ -932,17 +973,24 @@ sheets:
       rendimiento_neto_minorado_agricola_eo: Rendimiento neto minorado agrícola (estimación
         objetiva)
       rendimiento_neto_previo_eo: Rendimiento neto previo (estimación objetiva)
+      representative_nif: NIF del representante
       representative_tax_id: NIF del representante legal
+      retencion_amount: Importe de la retención
       retencion_practicada: Retención practicada
       second_child_compute: Cómputo del 2.º hijo
       share_percentage: Porcentaje de participación
       situacion_inmueble: Situación del inmueble
+      situation: Situación del inmueble
       spouse_or_unit_titular_tax_id: NIF del cónyuge o del titular de la unidad de
         convivencia
+      staircase: Escalera
       startup_fund_rendimientos_clave: Rendimientos por la gestión de fondos vinculados
         al emprendimiento
+      street_name: Nombre de la vía pública
+      street_type: Tipo de vía
       subclave: Subclave
       supplier_tax_id: NIF del proveedor
+      taxable_base: Base de retención
       territorial_deduction_clave: Ceuta o Melilla / La Palma
       third_child_compute: Cómputo del 3.er hijo
       tipo_codigo: Tipo código
@@ -950,6 +998,7 @@ sheets:
       transfer_pricing_method_code: Método de valoración
       unit_convivencia_titular_clave: Titular de la unidad de convivencia
       valuation_amount: Valoración
+      withholding_percentage: Porcentaje de retención
 topic:
   authentication:
     body: La autenticación AEAT usa Cl@ve Móvil (push al móvil registrado) o certificado
@@ -1210,14 +1259,21 @@ tui:
         local: Estado local
       detail:
         action: 'Acción al pulsar Intro: {action}'
-        axes: 'Legal: {legal} · Local: {local} · AEAT: {aeat} · Justificante: {receipt}'
-        dates: 'Apertura: {opening} · Pago: {payment} · Cierre ajustado: {closing}'
+        axes: 'Legal: {legal} · Local: {local} · AEAT: {aeat} · Justificante: {receipt}
+          · Coherencia de evidencia: {conflict}'
+        dates: 'Apertura: {opening} · Pago: {payment} · Cierre original: {original}
+          · Cierre efectivo: {effective} · Evaluado: {evaluated} · Días de retraso:
+          {overdue} · Ajuste: {shift}'
+        holidays: 'Festivos: {coverage}'
         source: '{source}: {availability} · Observado: {observed}'
       empty:
         known: No hay obligaciones en este intervalo.
         search: Ninguna obligación coincide con la búsqueda y el ámbito.
         stale: No hay filas en la última agenda observada ({observed}); los datos
           están desactualizados.
+      evidence:
+        clear: Sin conflicto observado
+        conflicted: Evidencia AEAT contradictoria observada
       justificante:
         not_verified: No verificado
         unknown: Desconocido
@@ -1371,6 +1427,21 @@ tui:
       not_applicable: No aplicable
       result_unknown: No disponible
       'yes': Sí
+    work_create:
+      created: Se ha creado {address}. Vuelve a Declaraciones para trabajar en ella.
+      modelo: Modelo
+      period: Período
+      progress: Creando o retomando la declaración seleccionada…
+      refusal:
+        modelo: Indica un número de modelo.
+        not_applicable: 'El modelo %{modelo} no se aplica a este perfil: %{reason}
+          Si debería aplicarse, corrige el perfil en Perfil (F4) y vuelve a intentarlo.'
+        period: Indica un período válido para el ejercicio seleccionado.
+        year: Indica un ejercicio admitido de cuatro cifras.
+      reused: Se ha retomado {address}. Vuelve a Declaraciones para trabajar en ella.
+      submit: Crear o retomar
+      title: Crear o retomar una declaración
+      year: Ejercicio
     work_state:
       borrador: Borrador
       descartado: Descartado
@@ -1380,6 +1451,13 @@ tui:
     home: Inicio
     ledger: Libro registro
     profile: Perfil
+    withholding: Retenciones
+  filing_year_route:
+    invalid: Introduzca un ejercicio válido de cuatro cifras.
+    open: Abrir retenciones
+    prompt: Seleccione un ejercicio (AAAA)
+    unavailable: Los justificantes de retenciones no están disponibles para este perfil
+      y ejercicio.
   home:
     account_fallback: Cuenta
     action:
@@ -1482,12 +1560,25 @@ tui:
       stale: Desactualizado
       unavailable: No disponible
     classification:
+      boundary: La clasificación de entrada, el sector de prorrata y el justificante
+        de compra se registran mediante sus propios flujos de captura o adjunto.
       business: Profesional
       cancel: Cancelar
       confirm: Confirmar
       confirming: Confirma la clasificación seleccionada.
       excluded: Revisado y excluido
       failure: No se pudo guardar la clasificación.
+      field:
+        business_pct: Porcentaje profesional (fracción de 0 a 1; solo Mixta)
+        deduction_fact_kind: Tipo de hecho de deducción (identificador del registro)
+        irpf_category: Categoría de IRPF (identificador del registro)
+        iva_amount: Cuota de IVA
+        iva_category: Categoría de IVA (identificador del registro)
+        iva_rate: Tipo de IVA (fracción decimal; p. ej., 0.21)
+        prorrata_reference: Referencia de prorrata
+        taxable_base: Base imponible
+        usage_ratio_id: ID de proporción de uso
+      mixed: Mixta (porcentaje profesional)
       personal: Personal
       progress: Guardando clasificación…
       prompt: Elige una clasificación para el apunte seleccionado.
@@ -1632,6 +1723,9 @@ tui:
         simplificada: Simplificada
       confirm: Registrar factura
       confirming: Revisa la factura y regístrala.
+      euro_rate_unavailable: No se encontró tipo de cambio a euros para {currency}
+        en esa fecha. La factura se conserva, pero queda fuera de los totales en euros
+        hasta que se añada un tipo.
       failure: La factura no se ha registrado.
       field:
         counterparty_name: Nombre de la contraparte
@@ -1641,9 +1735,15 @@ tui:
         invoice_class: Clase de factura
         invoice_date: Fecha de la factura (AAAA-MM-DD)
         invoice_number: Número de factura
+        iva_category: Tratamiento del IVA (clave del registro)
         iva_rate: Tipo de IVA (%)
         kind: Tipo de factura
         notes: Notas
+        operation_date: Fecha de la operación, si es distinta de la de la factura
+          (AAAA-MM-DD)
+        operation_type: Clave de operación del modelo 349
+        recargo_amount: Importe del recargo de equivalencia
+        rectifies_invoice_number: Número de la factura que rectifica
         retention_amount: Importe de la retención de IRPF
         retention_rate: Tipo de retención de IRPF (%)
         series: Serie
@@ -1651,11 +1751,34 @@ tui:
       kind:
         issued: Emitida
         received: Recibida
+      line:
+        add: Añadir línea
+        field:
+          description: Descripción de la línea
+          iva_amount: Cuota de IVA de la línea
+          iva_rate: Tipo de IVA (clave del registro, como RATE_21)
+          oss_rate_kind: Clase de tipo OSS (clave del registro)
+          quantity: Cantidad
+          spending_category_id: Categoría de gasto
+          subtotal: Base de la línea
+          unit_price: Precio unitario
+        heading: Líneas de la factura. Si la factura tiene más de un tipo de IVA,
+          añade aquí cada línea impresa y deja vacíos la base imponible y el tipo
+          de IVA de arriba.
+        none: 'No hay líneas: se usan la base imponible y el tipo de IVA de arriba.'
+        remove: Quitar la última línea
+        row: '{index}. {description} · {quantity} × {unit_price} = {subtotal} · IVA
+          {rate} {amount}'
       open: Añadir factura
+      operation_type_none: Sin clave del modelo 349
       optional: '{label} (opcional)'
       problem:
         amount: '{field} debe ser un número como 1200.00.'
+        base_or_lines: Introduce una base imponible o añade al menos una línea de
+          factura.
         date: '{field} debe ser una fecha con el formato AAAA-MM-DD.'
+        lines_and_base: Introduce la factura por líneas o con una base imponible y
+          un tipo de IVA, pero no de las dos formas.
         required: '{field} es obligatorio.'
       progress: Registrando la factura…
       prompt: Introduce la factura tal como está impresa. Se comprueba y se registra
@@ -1667,6 +1790,9 @@ tui:
         amounts: Base imponible {base} {currency} · tipo de IVA {rate}
         counterparty: 'Contraparte: {name} · NIF {nif} · {country}'
         identity: Factura {kind} {number} con fecha {date}
+        operation: Clave del modelo 349 {code} · fecha de la operación {date}
+        recargo: Recargo de equivalencia {amount} {currency}
+        rectifies: Rectifica la factura {number}
         retention: 'Retención de IRPF: tipo {rate} · importe {amount}'
       title: Añadir una factura
     overview:
@@ -1704,6 +1830,23 @@ tui:
       suggestions: Enlaces sugeridos
       title: Conciliación local del libro
       'yes': Sí
+    records:
+      failed: El cambio se rechazó o no se pudo guardar.
+      identity: ID del registro
+      invoice_detail: Detalle de la factura
+      invoices: Facturas registradas
+      lines: Líneas
+      links: Registros vinculados
+      loading: Leyendo el registro…
+      no_change: Introduzca un valor diferente antes de revisar.
+      open_invoices: Ver facturas
+      open_transaction: Ver o editar el apunte seleccionado
+      reviewed: Revise el valor y después guárdelo.
+      save: Guardar cambio
+      saved: Cambio guardado.
+      saving: Guardando cambio…
+      source: Archivo de origen
+      transaction_detail: Detalle del apunte
     refusal:
       application_state: Esta área no está disponible en el estado actual del libro
         contable.
@@ -1848,6 +1991,27 @@ tui:
       not_applicable: No se aplica
       refused: Rechazado
       unmeasured: Sin medir
+    edit:
+      apply: Aplicar valores declarados
+      binding: Dato declarado {binding}
+      scalar: Casilla {casilla}
+    evidence_kind:
+      legal: Referencia legal
+      source: Referencia de origen
+    export:
+      payment_election:
+        cuenta_corriente: Cuenta corriente tributaria
+        domiciliacion: Domiciliación bancaria
+        ingreso: Ingreso
+        label: 'Resultado a ingresar: forma de pago'
+      prior_domiciliation_election:
+        cancel_or_modify: Anularla o modificarla
+        keep: Mantenerla
+        label: Domiciliación anterior (solo autoliquidación rectificativa)
+      refund_election:
+        compensar: Compensar en periodos posteriores
+        devolver: Solicitar la devolución
+        label: 'Resultado negativo: compensar o solicitar la devolución'
     finding_kind:
       advisory: Consejo
       blocking_rule: Regla no cumplida
@@ -1863,12 +2027,43 @@ tui:
       informational: Solo informativo
       manual: Lo introduces tú
       projection_only: Se muestra, no se presenta
+    m303_evidence:
+      admission_unavailable: Aquí no se puede registrar una atestación nueva para
+        esta declaración. No se ha calculado nada.
+      attestation_attachment_id: Identificador de la atestación existente
+      attestation_sha256: SHA-256 de la atestación existente
+      cancel: Cancelar
+      cancelled: Cálculo cancelado; no se ha registrado ningún dato de la autoliquidación.
+      existing_attestation_hint: Responda a la pregunta. Después, indique una atestación
+        existente de que no procede el apartado de exoneración del modelo 390 (su
+        identificador y SHA-256), o déjelos en blanco e indique cuándo lo confirmó
+        para registrar una atestación nueva.
+      joint_return_elected: ¿Autoliquidación conjunta?
+      no_modelo_390_question_hint: Responda a la pregunta. La autoliquidación de este
+        período no pregunta por la exoneración del modelo 390; solo lo hace la del
+        último período del año (12 o 4T).
+      observed_at: Confirmado el, para una atestación nueva (ISO 8601 con desfase
+        UTC, por ejemplo 2025-04-01T12:00:00Z)
+      required: Responda a la pregunta sobre la autoliquidación conjunta. En el último
+        período del año indique además una atestación existente completa o una hora
+        de confirmación con su desfase UTC, pero no ambas.
+      stale_context: La declaración seleccionada cambió mientras el formulario estaba
+        abierto. No se ha calculado nada; vuelva a elegir Calcular.
+      title: Datos de la autoliquidación del modelo 303
     record_family:
       bindings: Valores de tus registros
       casillas: Casillas
       formulas: Fórmulas
       parameters: Parámetros
       relations: Vínculos con otros modelos
+    recovery_action:
+      operator:
+        modelo:
+          work:
+            calculate: Calcule esta unidad de trabajo
+            create: Cree la unidad de trabajo de esta declaración
+            status: Revise el estado de esta unidad de trabajo
+            verify: Verifique esta unidad de trabajo
     review_status:
       agent_reviewed: Revisado automáticamente
       operator_reviewed: Revisado por una persona
@@ -1881,6 +2076,32 @@ tui:
       producer_of: Origen de «{capability}»
       record_family: Sección
     technical_details: Detalles técnicos
+    workspace_refusal:
+      facts:
+        modelo: Modelo
+        period: Periodo
+        required_grade: Grado requerido
+        work_unit_id: Unidad de trabajo
+      reason:
+        authority_grade_unavailable: La autoridad de la revisión seleccionada todavía
+          no admite la vista calculada solicitada.
+        bucket_assertion_mismatch: La identidad almacenada de la declaración no coincide
+          con la solicitada.
+        calculation_unavailable: Esta declaración aún no se ha calculado, así que
+          no hay valores disponibles.
+        consistency_unavailable: No se pudo confirmar la coherencia de la declaración.
+        locale_unavailable: No se pudieron leer las etiquetas traducidas de la declaración.
+        schema_unavailable: No se pudo leer el esquema de la declaración.
+        static_inspection_unavailable: No se pudo leer el diseño del formulario de
+          esta declaración.
+        target_not_found: Todavía no existe trabajo para esta declaración, así que
+          no hay nada que calcular.
+        visible_target_ambiguous: Más de una declaración coincide con esta dirección,
+          así que ninguna puede abrirse como una sola.
+        workspace_changed: Esta declaración cambió mientras estaba abierta; vuelva
+          a abrirla para ver el estado actual.
+      static_fallback: Solo se muestra el diseño del formulario. No se muestran valores
+        calculados a continuación.
   root:
     account:
       appearance: Apariencia
@@ -1939,6 +2160,7 @@ tui:
       ledger: Abrir libro mayor
       profile: Abrir perfil
       unknown: Abrir área de trabajo
+      withholding: Abrir justificantes de retenciones
     destination_help:
       aeat_sync: Lo que se ha leído de la AEAT y lo que se puede leer a continuación
       declarations: Declaraciones, revisiones de cálculo, historial de presentaciones
@@ -1946,6 +2168,7 @@ tui:
       home: Próximas acciones, declaraciones y plazos de un vistazo
       ledger: Apuntes, revisión, clasificación y justificantes
       profile: Los datos de este perfil y las fuentes que los completan
+      withholding: Registrar y consultar retenciones de facturas del ejercicio seleccionado
     refusal:
       not_composed: Todavía no se han podido leer todas las fuentes del espacio de
         trabajo.

@@ -124,6 +124,22 @@ class _InMemoryTransactionRepository(TransactionCatalogueCoCommitWriterProtocol)
             raise AssertionError("readiness transaction fake does not support secure-object writes")
         self.save(catalogue)
 
+    @override
+    def replace_if_current_with_secure_object_writes(
+        self,
+        current: Transaction,
+        replacement: Transaction,
+        extra_writes: tuple[SecureObjectWrite, ...],
+    ) -> None:
+        if extra_writes:
+            raise AssertionError("readiness transaction fake does not support secure-object writes")
+        if self._catalogue.get(current.transaction_id) != current:
+            raise AssertionError("guarded replacement received a stale baseline")
+        updated = dict(self._catalogue.transactions)
+        updated.pop(current.transaction_id)
+        updated[replacement.transaction_id] = replacement
+        self._catalogue = TransactionCatalogue.from_transactions(updated.values())
+
 
 def _transaction(
     *,

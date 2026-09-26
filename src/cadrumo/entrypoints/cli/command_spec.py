@@ -8,6 +8,7 @@ records and resolve deferred targets only at their owning boundary.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from enum import Enum
 from importlib import import_module
@@ -51,6 +52,7 @@ type Capability = Literal[
     "profile-custody",
     "encrypted-facts",
     "network",
+    "aeat",
     "browser",
     "google",
     "calculation",
@@ -575,9 +577,13 @@ class CommandSpec:
     profile_authentication: ProfileAuthenticationPosture = ProfileAuthenticationPosture.NOT_APPLICABLE
     profile_target_parameter: str | None = None
     allow_unregistered_profile_diagnostic: bool = False
+    repairs_active_profile_pointer: bool = False
+    """Whether this leaf repairs the active-profile pointer, so it must run while that record is corrupt."""
 
     def __post_init__(self) -> None:
         """Validate the command node's identity, hierarchy, and dispatch invariants, or raise."""
+        if self.repairs_active_profile_pointer and self.kind != "leaf":
+            raise ValueError(f"{self.key}: only an executable leaf can repair the active-profile pointer")
         _validate_command_spec(
             self.key,
             self.parent_key,
@@ -631,9 +637,11 @@ class CommandSpecFamily:
             value = getattr(value, part)
         if isinstance(value, CommandSpec):
             return (value,)
-        if not isinstance(value, tuple) or not all(isinstance(spec, CommandSpec) for spec in value):
+        members: tuple[object, ...] = cast("tuple[object, ...]", value) if isinstance(value, tuple) else ()
+        specs = tuple(member for member in members if isinstance(member, CommandSpec))
+        if not isinstance(value, tuple) or len(specs) != len(members):
             raise TypeError(f"command spec family {self.source.identity!r} is not a CommandSpec tuple")
-        return cast(tuple[CommandSpec, ...], value)
+        return specs
 
 
 @dataclass(frozen=True, slots=True)
@@ -780,6 +788,46 @@ class CommandSpecGraph:
                 raise LookupError(f"unknown command spec path: {' '.join(path)!r}")
             current = match
         return current
+
+    def resolve_invocation(self, arguments: Sequence[str]) -> CommandSpec | None:
+        """Return the leaf an argument vector would run, read before any parsing, or ``None``.
+
+        Options declared on the node being walked are stepped over with their
+        values; the first positional token a leaf receives, or ``--``, ends the
+        walk. An undeclared option, an unknown or partial path, or a group
+        names no leaf, so a caller relaxing anything for a declared leaf never
+        relaxes it for a vector it could not read.
+        """
+        current = self.root()
+        index = 0
+        while index < len(arguments):
+            argument = arguments[index]
+            if argument == "--":
+                break
+            if argument.startswith("-"):
+                name, has_inline_value = argument.split("=", 1)[0], "=" in argument
+                option = next(
+                    (
+                        parameter
+                        for parameter in current.parameters
+                        if isinstance(parameter, OptionSpec)
+                        and name in {part for declaration in parameter.declarations for part in declaration.split("/")}
+                    ),
+                    None,
+                )
+                if option is None:
+                    return None
+                takes_value = not (option.is_flag or option.count or has_inline_value)
+                index += 2 if takes_value else 1
+                continue
+            if current.kind == "leaf":
+                break
+            child = next((spec for spec in self.children(current.key) if spec.token == argument), None)
+            if child is None:
+                return None
+            current = child
+            index += 1
+        return current if current.kind == "leaf" else None
 
     def by_schema_identity(self) -> MappingProxyType[str, CommandSpec]:
         """Return the unique executable result-schema identity index."""

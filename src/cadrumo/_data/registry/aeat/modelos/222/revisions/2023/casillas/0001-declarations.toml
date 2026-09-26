@@ -14,13 +14,23 @@
 # B.2 Casos especificos, on DR22202. They are ABSENT here rather than omitted:
 # this design prints two rate tiers, not four.
 #
-# EVERY box is filer input in this epoch. No formula is declared, because the
-# only Modelo 222 instrucciones source in the catalogue,
-# `aeat-modelo-222-instructions`, declares applies_from 2025-01-01 and covers
-# the 2025-y-siguientes page only. Rather than carry a formula reference this
-# edition cannot ground, the fifteen boxes the 2025 edition computes are
-# declared input_kind = "manual" here and their formula and
-# additional_source_refs are DROPPED, not left dangling.
+# FOURTEEN BOXES ARE COMPUTED IN THIS EPOCH. Each carries input_kind =
+# "computed" and names the formula that states it. The formulas are authored
+# from `aeat-modelo-222-instructions-2023-2024`, AEAT's own page "Instrucciones
+# para periodos impositivos iniciados en 2023 y 2024", acquired for this era
+# rather than borrowed from the 2025 page.
+#
+# An earlier note here said every box was filer input because the only
+# instrucciones source in the catalogue covered 2025 only. That was true of the
+# catalogue, not of AEAT: the 2025 page's own index LINKS to three earlier era
+# pages, and this era's page is one of them.
+#
+# Two boxes are computed here and filer input in the 2025 edition: [19], whose
+# text repeats the [16] chain, and [23], stated as clave [19] - clave [20].
+# They are authored because this era's instructions state them, not inferred
+# from the later edition. Conversely [67] and the third and fourth B.2 rate
+# tiers do not exist in this epoch, so [38] is clave [05] + clave [07] and [26]
+# sums only the two tiers this design prints.
 
 
 [[revisions."2023".casillas]]
@@ -45,6 +55,8 @@ continuidad_id = "is-pf-grupo-mod-40-2-lis-a-ingresar"
 number = "03"
 section = ["liquidacion"]
 semantic_role = "is_pf_grupo_mod_40_2_lis_a_ingresar"
+input_kind = "computed"
+formula = "modelo-222-modalidad-40-2-a-ingresar"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2023".casillas]]
@@ -101,6 +113,8 @@ continuidad_id = "is-pf-grupo-mod-40-3-lis-total-aumentos"
 number = "38"
 section = ["liquidacion"]
 semantic_role = "is_pf_grupo_mod_40_3_lis_total_aumentos"
+input_kind = "computed"
+formula = "modelo-222-total-correcciones-aumentos"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2023".casillas]]
@@ -109,6 +123,8 @@ continuidad_id = "is-pf-grupo-mod-40-3-lis-total-disminuciones"
 number = "39"
 section = ["liquidacion"]
 semantic_role = "is_pf_grupo_mod_40_3_lis_total_disminuciones"
+input_kind = "computed"
+formula = "modelo-222-total-correcciones-disminuciones"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2023".casillas]]
@@ -133,6 +149,8 @@ continuidad_id = "is-pf-grupo-mod-40-3-lis-suma-de-bases-imponibles-individuales
 number = "10"
 section = ["liquidacion"]
 semantic_role = "is_pf_grupo_mod_40_3_lis_suma_de_bases_imponibles_individuales_antes_de_compensar_bases_nega"
+input_kind = "computed"
+formula = "modelo-222-suma-bases-imponibles-individuales"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2023".casillas]]
@@ -157,6 +175,8 @@ continuidad_id = "is-pf-grupo-mod-40-3-lis-base-imponible-previa"
 number = "13"
 section = ["liquidacion"]
 semantic_role = "is_pf_grupo_mod_40_3_lis_base_imponible_previa"
+input_kind = "computed"
+formula = "modelo-222-base-imponible-previa"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2023".casillas]]
@@ -221,6 +241,8 @@ continuidad_id = "is-pf-grupo-mod-40-3-lis-b-1-caso-general-base-del-pago-fracci
 number = "16"
 section = ["liquidacion"]
 semantic_role = "is_pf_grupo_mod_40_3_lis_b_1_caso_general_base_del_pago_fraccionado"
+input_kind = "computed"
+formula = "modelo-222-base-pago-fraccionado-b1"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2023".casillas]]
@@ -286,6 +308,8 @@ continuidad_id = "is-pf-grupo-mod-40-3-lis-b-1-caso-general-resutlado-previo"
 number = "18"
 section = ["liquidacion"]
 semantic_role = "is_pf_grupo_mod_40_3_lis_b_1_caso_general_resutlado_previo"
+input_kind = "computed"
+formula = "modelo-222-resultado-previo-b1"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2023".casillas]]
@@ -294,6 +318,8 @@ continuidad_id = "is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-base-del-pago-f
 number = "19"
 section = ["liquidacion"]
 semantic_role = "is_pf_grupo_mod_40_3_lis_b_2_casos_especificos_base_del_pago_fraccionado"
+input_kind = "computed"
+formula = "modelo-222-base-pago-fraccionado-b2"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2023".casillas]]
@@ -325,6 +351,8 @@ section = ["liquidacion"]
 semantic_role = "is_pf_grupo_mod_40_3_lis_b_2_casos_especificos_importe_del_pago_fraccionado_1"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Mod. 40.3 LIS casos especificos declares TWO parallel rate tiers, each with its own base, porcentaje and importe, plus resultado previo and resultado. A group may be taxed at both, so each is its own box. The 2025 design adds tiers 3 and 4 ([61]-[66])."
+input_kind = "computed"
+formula = "modelo-222-importe-pago-fraccionado-b2-tipo-1"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2023".casillas]]
@@ -335,6 +363,8 @@ section = ["liquidacion"]
 semantic_role = "is_pf_grupo_mod_40_3_lis_b_2_casos_especificos_base_a_tipo_2"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Mod. 40.3 LIS casos especificos declares TWO parallel rate tiers, each with its own base, porcentaje and importe, plus resultado previo and resultado. A group may be taxed at both, so each is its own box. The 2025 design adds tiers 3 and 4 ([61]-[66])."
+input_kind = "computed"
+formula = "modelo-222-base-a-tipo-2-b2"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2023".casillas]]
@@ -356,6 +386,8 @@ section = ["liquidacion"]
 semantic_role = "is_pf_grupo_mod_40_3_lis_b_2_casos_especificos_importe_del_pago_fraccionado_2"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Mod. 40.3 LIS casos especificos declares TWO parallel rate tiers, each with its own base, porcentaje and importe, plus resultado previo and resultado. A group may be taxed at both, so each is its own box. The 2025 design adds tiers 3 and 4 ([61]-[66])."
+input_kind = "computed"
+formula = "modelo-222-importe-pago-fraccionado-b2-tipo-2"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2023".casillas]]
@@ -414,6 +446,8 @@ section = ["liquidacion"]
 semantic_role = "is_pf_grupo_mod_40_3_lis_b_2_casos_especificos_resultado_previo"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Mod. 40.3 LIS casos especificos declares TWO parallel rate tiers, each with its own base, porcentaje and importe, plus resultado previo and resultado. A group may be taxed at both, so each is its own box. The 2025 design adds tiers 3 and 4 ([61]-[66])."
+input_kind = "computed"
+formula = "modelo-222-resultado-previo-b2"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2023".casillas]]
@@ -465,6 +499,8 @@ section = ["liquidacion"]
 semantic_role = "is_pf_grupo_mod_40_3_lis_b_2_casos_especificos_resultado"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Mod. 40.3 LIS casos especificos declares TWO parallel rate tiers, each with its own base, porcentaje and importe, plus resultado previo and resultado. A group may be taxed at both, so each is its own box. The 2025 design adds tiers 3 and 4 ([61]-[66])."
+input_kind = "computed"
+formula = "modelo-222-modalidad-40-3-resultado"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2023".casillas]]
@@ -481,6 +517,8 @@ continuidad_id = "is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-cantidad-a-ingr
 number = "34"
 section = ["liquidacion"]
 semantic_role = "is_pf_grupo_mod_40_3_lis_b_2_casos_especificos_cantidad_a_ingresar"
+input_kind = "computed"
+formula = "modelo-222-cantidad-a-ingresar"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
 
 [[revisions."2023".casillas]]

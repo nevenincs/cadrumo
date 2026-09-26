@@ -177,6 +177,10 @@ def build_setup_flow(operation: PinnedAuthorityOperation) -> WizardFlow:
     _natural_person = WizardCondition(question_id="entity-type", equals=entity_type_natural_person_token().value)
 
     _joint_declaration = WizardCondition(question_id="taxation-type", equals="2")
+    _premio_loteria_declared = WizardCondition(
+        question_id="premio-loteria-gravamen-especial-sin-retencion",
+        equals="true",
+    )
     _non_resident_irpf = WizardCondition(question_id="spouse-non-resident-irpf", equals="true")
     _eu_eea_resident = WizardCondition(question_id="spouse-eu-eea-resident", equals="true")
 
@@ -1094,6 +1098,15 @@ def build_setup_flow(operation: PinnedAuthorityOperation) -> WizardFlow:
                 answer_type=str,
             ),
             WizardQuestion(
+                id="modelo-115-no-relevant-payment-periods",
+                profile_key="withholding.modelo_115_no_relevant_payment_periods",
+                widget=WizardWidget.TEXT,
+                prompt=tr("wizard.setup.obligations.modelo-115-no-relevant-payment-periods.prompt"),
+                help=tr("wizard.setup.obligations.modelo-115-no-relevant-payment-periods.help"),
+                required=False,
+                answer_type=str,
+            ),
+            WizardQuestion(
                 id="irpf-estimation-regime",
                 profile_key="irpf.estimation_regime",
                 widget=WizardWidget.SELECT,
@@ -1205,20 +1218,42 @@ def build_setup_flow(operation: PinnedAuthorityOperation) -> WizardFlow:
                 answer_type=str,
             ),
             _confirm("does-intracomunitario", "iva.does_intracomunitario", suffix="obligations"),
+            # Payer-fact questions carry no default: an unanswered question
+            # stays absent, so it reads as undeclared rather than as a "no".
             _confirm(
                 "third-party-transactions-above-347-threshold",
                 "obligations.third_party_transactions_above_347_threshold",
                 suffix="obligations",
+                default=None,
             ),
             _confirm(
                 "bienes-extranjero-above-threshold",
                 "obligations.bienes_extranjero_above_threshold",
                 suffix="obligations",
+                default=None,
             ),
             _confirm(
                 "monedas-virtuales-extranjero-above-threshold",
                 "obligations.monedas_virtuales_extranjero_above_threshold",
                 suffix="obligations",
+                default=None,
+            ),
+            _confirm(
+                "premio-loteria-gravamen-especial-sin-retencion",
+                "obligations.premio_loteria_gravamen_especial_sin_retencion",
+                suffix="obligations",
+                default=None,
+                visible_when=_natural_person,
+            ),
+            WizardQuestion(
+                id="premio-loteria-gravamen-especial-trimestres",
+                profile_key="obligations.premio_loteria_gravamen_especial_trimestres",
+                widget=WizardWidget.TEXT,
+                prompt=tr("wizard.setup.obligations.premio-loteria-gravamen-especial-trimestres.prompt"),
+                help=tr("wizard.setup.obligations.premio-loteria-gravamen-especial-trimestres.help"),
+                required=False,
+                visible_when=_premio_loteria_declared,
+                answer_type=str,
             ),
         ),
     )

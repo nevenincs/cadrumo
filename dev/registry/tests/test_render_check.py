@@ -7,6 +7,7 @@ record drift stays pinned to its exact source authority.
 
 from __future__ import annotations
 
+import json
 import shutil
 from pathlib import Path
 
@@ -144,6 +145,52 @@ def test_record_drift_is_reported_as_such(tmp_path: Path) -> None:
     assert not comparison.provenance_only
     assert comparison.record_differing == ("0002-record-m347-declarado.toml",)
     assert comparison.disposition_class == "record_drift"
+
+
+def test_a_stale_manifest_names_the_member_that_moved(tmp_path: Path) -> None:
+    """A provenance-only difference names which manifest member differs, not just the file.
+
+    A stale loader-semantic digest over byte-identical records is a different
+    cause from a moved source or semantic-map digest, and the remedy is chosen
+    by which one it is. The case is constructed from a copy of a real tree whose
+    manifest attests a different loader digest; every record file is untouched.
+    """
+    real = bundled_path("registry", "aeat", "modelos", "347", "revisions", "2025-y-siguientes", "export")
+    stale = tmp_path / "export"
+    shutil.copytree(real, stale)
+    manifest_path = stale / "_generation.provenance.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["loader_semantic_sha256"] = "0" * 64
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+    comparison = compare_export_tree_roots(
+        modelo="347",
+        revision="2025-y-siguientes",
+        layout_id="generated-modelo-347-2025-y-siguientes-fichero",
+        committed_root=stale,
+        rendered_root=real,
+    )
+
+    assert comparison.provenance_only
+    assert comparison.provenance_fields == ("loader_semantic_sha256",)
+
+
+def test_an_unparseable_manifest_is_never_reported_as_agreeing(tmp_path: Path) -> None:
+    """A corrupt manifest names itself rather than reporting no differing member."""
+    real = bundled_path("registry", "aeat", "modelos", "347", "revisions", "2025-y-siguientes", "export")
+    corrupt = tmp_path / "export"
+    shutil.copytree(real, corrupt)
+    (corrupt / "_generation.provenance.json").write_bytes(b"{not json")
+
+    comparison = compare_export_tree_roots(
+        modelo="347",
+        revision="2025-y-siguientes",
+        layout_id="generated-modelo-347-2025-y-siguientes-fichero",
+        committed_root=corrupt,
+        rendered_root=real,
+    )
+
+    assert comparison.provenance_fields == ("_generation.provenance.json does not parse as a JSON object",)
 
 
 def test_a_revision_without_a_generated_layout_is_refused_by_name(

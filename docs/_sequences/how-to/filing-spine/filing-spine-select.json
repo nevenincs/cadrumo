@@ -134,7 +134,7 @@
           "created_at": "2026-04-01T09:00:00Z",
           "evidence_id": "9a075f52dad08e80",
           "invoice_date": "2026-02-11",
-          "invoice_number": "sha256:17853e99",
+          "invoice_number": "C-2026-0087",
           "iva_amount": "105",
           "iva_rate": "0.21",
           "media_kind": "pdf",
@@ -282,14 +282,13 @@
         "2026",
         "--period",
         "1T",
-        "--m303-filing-evidence",
-        "fixtures/m303-filing-evidence-2026-1T.json"
+        "--no-joint-return-elected"
       ],
       "captures": [
         {
           "json_path": "result.calculation_revision_id",
           "name": "selected_revision_id",
-          "value": "dbbe0169927786b7be62260563880bb1ebb6b8460086647dd6ee74fd085d3f80"
+          "value": "2feafb1557d7b8bc5272b83afcaa5885f607ccb92868caed950e45087cbf8e6a"
         }
       ],
       "envelope": {
@@ -334,7 +333,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "dbbe0169927786b7be62260563880bb1ebb6b8460086647dd6ee74fd085d3f80",
+          "calculation_revision_id": "2feafb1557d7b8bc5272b83afcaa5885f607ccb92868caed950e45087cbf8e6a",
           "casilla_values": {
             "01": "0",
             "02": "0",
@@ -3839,7 +3838,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision dbbe0169927786b7be62260563880bb1ebb6b8460086647dd6ee74fd085d3f80 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 2feafb1557d7b8bc5272b83afcaa5885f607ccb92868caed950e45087cbf8e6a (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_iva_aggregation",
@@ -3962,7 +3961,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "dbbe0169927786b7be62260563880bb1ebb6b8460086647dd6ee74fd085d3f80",
+          "calculation_revision_id": "2feafb1557d7b8bc5272b83afcaa5885f607ccb92868caed950e45087cbf8e6a",
           "casilla_values": {
             "01": "0",
             "02": "0",
@@ -7592,7 +7591,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "dbbe0169927786b7be62260563880bb1ebb6b8460086647dd6ee74fd085d3f80",
+          "calculation_revision_id": "2feafb1557d7b8bc5272b83afcaa5885f607ccb92868caed950e45087cbf8e6a",
           "completeness_status": "complete",
           "findings": [
             {
@@ -7661,7 +7660,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "a7795493ec60983190e2e7961c00b5c7e4b94061c10fa1fb4df522c37b09f77d",
+          "verification_report_id": "e27243c5d4b5ea4fc03ce53fff49b2e5876ff1ba528a3d758a8003a54caa1f64",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
@@ -7733,7 +7732,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "dbbe0169927786b7be62260563880bb1ebb6b8460086647dd6ee74fd085d3f80",
+          "calculation_revision_id": "2feafb1557d7b8bc5272b83afcaa5885f607ccb92868caed950e45087cbf8e6a",
           "casilla_values": {
             "01": "0",
             "02": "0",
@@ -11319,13 +11318,13 @@
           "aeat_register": null,
           "amends_filing_record_id": null,
           "bucket_id": "<bucket-id>",
-          "calculation_revision_id": "dbbe0169927786b7be62260563880bb1ebb6b8460086647dd6ee74fd085d3f80",
+          "calculation_revision_id": "2feafb1557d7b8bc5272b83afcaa5885f607ccb92868caed950e45087cbf8e6a",
           "confirmation": "pendiente",
           "declaration_kind": "original",
           "external_evidence": null,
           "filed_at": "2026-04-01T09:00:00+00:00",
           "filed_by": "docs-sequence-sandbox",
-          "filing_record_id": "75ab698040790a66da253ec89c333d51c242b0a334bb83a47bdd350d2127cff7",
+          "filing_record_id": "9d27f540df0215f5cbb8bc2a23642ce25eb0d682164c1c03845270cc8ba99cec",
           "filing_year": 2026,
           "kind": "internal_filing",
           "live_submission": false,
@@ -11361,7 +11360,7 @@
         "modelo",
         "work",
         "revision",
-        "dbbe0169927786b7be62260563880bb1ebb6b8460086647dd6ee74fd085d3f80"
+        "2feafb1557d7b8bc5272b83afcaa5885f607ccb92868caed950e45087cbf8e6a"
       ],
       "captures": [],
       "envelope": {
@@ -11405,7 +11404,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "dbbe0169927786b7be62260563880bb1ebb6b8460086647dd6ee74fd085d3f80",
+          "calculation_revision_id": "2feafb1557d7b8bc5272b83afcaa5885f607ccb92868caed950e45087cbf8e6a",
           "casilla_values": {
             "01": "0",
             "02": "0",
@@ -15025,7 +15024,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "dbbe0169927786b7be62260563880bb1ebb6b8460086647dd6ee74fd085d3f80",
+          "calculation_revision_id": "2feafb1557d7b8bc5272b83afcaa5885f607ccb92868caed950e45087cbf8e6a",
           "casilla_values": {
             "01": "0",
             "02": "0",

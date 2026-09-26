@@ -1,15 +1,10 @@
-"""Sole production composition seam for the supervised operation platform.
-
-Core types:
-:class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
-"""
+"""Sole production composition seam for the supervised operation platform."""
 
 from __future__ import annotations
 
 import secrets
-from dataclasses import dataclass
-from datetime import date, timedelta
-from pathlib import Path
+from collections.abc import Callable
+from datetime import timedelta
 from typing import TYPE_CHECKING
 
 from ..adapters.outbound.aeat.browser.factory import default_browser_session_factory
@@ -27,14 +22,12 @@ from ..adapters.persistence.operations.secure_references import operation_secure
 from ..adapters.persistence.profile.sync_runs import SyncRunRecordRepository
 from ..adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
 from ..adapters.persistence.storage.operator_scope import build_operator_scope_ports
-from ..application.auth.certificate_secret_backend import CertificateSecretBackendFactory
 from ..application.auth.operation_definitions import (
     AuthOperationPorts,
     build_auth_operation_definitions,
     build_auth_operation_registrations,
 )
 from ..application.auth.operator_scope_ports import OperatorScopePorts
-from ..application.auth.protocols import BrowserSessionFactoryPort
 from ..application.export.google_operation import (
     GoogleSheetsExportAuthDependencyError,
     GoogleSheetsExportClientMissingError,
@@ -45,16 +38,11 @@ from ..application.export.google_operation import (
     build_google_sheets_export_operation_definition,
     build_google_sheets_export_operation_registration,
 )
-from ..application.live.filed_data_capture import FiledHistoryOnboardingRun
-from ..application.live.filed_data_ports import FiledDataCapturePort
 from ..application.live.filed_history_operation import (
-    FiledHistoryOperationRequest,
+    bind_shared_filed_history_pull,
     build_filed_history_operation_definition,
     build_filed_history_operation_registration,
 )
-from ..application.live.filed_observation_ports import FiledObservationPersistencePorts
-from ..application.live.iva_remote_state_ports import IvaRemoteStatePort
-from ..application.live.notification_ports import NotificationsPorts
 from ..application.local_reader_operation import (
     build_local_reader_operation_definition,
     build_local_reader_operation_registration,
@@ -74,14 +62,12 @@ from ..application.operations.composition import (
     OperationComposedServices,
     compose_operation_services,
 )
-from ..application.operations.owner import OperationEventEmitter
 from ..application.operations.registry import (
     OperationDefinition,
     OperationRegistry,
 )
 from ..application.storage.calc_sheets.export_service import export_modelo_to_sheets
 from ..application.storage.calc_sheets.records import SheetExportPlan, TabName
-from ..application.storage.sync_runs.records import SyncRunRecordRepositoryProtocol
 from ..application.user_profile.censal_operation import (
     build_censal_operation_definition,
     build_censal_operation_registration,
@@ -93,10 +79,10 @@ from ..application.user_profile.operations import (
 from ..core.config import Settings, load_settings
 from ..core.paths import effective_storage_root
 from ..core.time.clock import now
-from ..domain.deadlines.models import TaxpayerProfile
 from .adapter_composition import (
     build_active_work_lifecycle_ports,
     build_amendment_action_ports,
+    build_attachment_store,
     build_calculation_action_ports,
     build_censal_fetch_port,
     build_filing_action_ports,
@@ -106,7 +92,6 @@ from .adapter_composition import (
     build_verification_repository_bundle,
 )
 from .live_state_composition import (
-    _FiledHistoryPullPayload,
     compose_live_state,
     pull_filed_history_with_shared_composition,
 )
@@ -116,55 +101,8 @@ _EXECUTION_TIMEOUT = timedelta(hours=1)
 _CLEANUP_TIMEOUT = timedelta(minutes=2)
 
 
-@dataclass(frozen=True, slots=True)
-class _SharedFiledHistoryPullPayload(_FiledHistoryPullPayload):
-    """Typed payload projection consumed by the shared live-state callback."""
-
-    output_root: Path
-    today: date | None
-    limit: int | None
-    dry_run: bool
-
-
-async def _typed_pull_filed_history_with_shared_composition(
-    payload: FiledHistoryOperationRequest,
-    profile: TaxpayerProfile | None,
-    repository: SyncRunRecordRepositoryProtocol,
-    events: OperationEventEmitter,
-    ports: FiledObservationPersistencePorts,
-    filed_data_port: FiledDataCapturePort,
-    iva_remote_state_port: IvaRemoteStatePort,
-    notifications_ports: NotificationsPorts,
-    certificate_secret_backend_factory: CertificateSecretBackendFactory,
-    browser_session_factory: BrowserSessionFactoryPort,
-    operator_scope_ports: OperatorScopePorts,
-) -> FiledHistoryOnboardingRun:
-    """Adapt the shared composition callback to the filed-history operation contract."""
-    shared_payload = _SharedFiledHistoryPullPayload(
-        output_root=payload.output_root,
-        today=payload.today,
-        limit=payload.limit,
-        dry_run=payload.dry_run,
-    )
-    result = await pull_filed_history_with_shared_composition(
-        shared_payload,
-        profile,
-        repository,
-        events,
-        ports,
-        filed_data_port,
-        iva_remote_state_port,
-        notifications_ports,
-        certificate_secret_backend_factory,
-        browser_session_factory,
-        operator_scope_ports,
-    )
-    if not isinstance(result, FiledHistoryOnboardingRun):
-        raise TypeError("shared filed-history composition returned an invalid result")
-    return result
-
-
 if TYPE_CHECKING:
+    from ..domain.attachments.protocols import AttachmentStoreProtocol
     from ..domain.calculations.registry.authority import PinnedAuthorityOperation
 
 
@@ -253,6 +191,7 @@ def build_production_operation_registry(
     google_export_definition: OperationDefinition | None = None,
     modelo_export_ports_factory: ModeloExportPortsFactory = build_modelo_export_ports,
     calculation_action_ports_factory: CalculationActionPortsFactory = build_calculation_action_ports,
+    attachment_store_factory: Callable[[str], AttachmentStoreProtocol] = build_attachment_store,
     amendment_action_ports_factory: AmendmentActionPortsFactory = build_amendment_action_ports,
     filing_action_ports_factory: FilingActionPortsFactory = build_filing_action_ports,
     work_lifecycle_ports_factory: ActiveWorkLifecyclePortsFactory = build_active_work_lifecycle_ports,
@@ -274,6 +213,7 @@ def build_production_operation_registry(
         operator_scope_ports=resolved_operator_scope_ports,
         export_ports_factory=modelo_export_ports_factory,
         calculation_action_ports_factory=calculation_action_ports_factory,
+        attachment_store_factory=attachment_store_factory,
         amendment_action_ports_factory=amendment_action_ports_factory,
         filing_action_ports_factory=filing_action_ports_factory,
         work_lifecycle_ports_factory=work_lifecycle_ports_factory,
@@ -290,7 +230,7 @@ def build_production_operation_registry(
     filed_history_definition = build_filed_history_operation_definition(
         sync_run_repository_factory=SyncRunRecordRepository,
         composition_factory=compose_live_state,
-        pull=_typed_pull_filed_history_with_shared_composition,
+        pull=bind_shared_filed_history_pull(pull_filed_history_with_shared_composition),
     )
     local_reader_definition = build_local_reader_operation_definition(
         spawn=spawn_runtime_server,
@@ -344,6 +284,7 @@ def compose_operation_dependencies(
     settings: Settings | None = None,
     modelo_export_ports_factory: ModeloExportPortsFactory = build_modelo_export_ports,
     calculation_action_ports_factory: CalculationActionPortsFactory = build_calculation_action_ports,
+    attachment_store_factory: Callable[[str], AttachmentStoreProtocol] = build_attachment_store,
     amendment_action_ports_factory: AmendmentActionPortsFactory = build_amendment_action_ports,
     filing_action_ports_factory: FilingActionPortsFactory = build_filing_action_ports,
     work_lifecycle_ports_factory: ActiveWorkLifecyclePortsFactory = build_active_work_lifecycle_ports,
@@ -367,6 +308,7 @@ def compose_operation_dependencies(
         settings=resolved_settings,
         modelo_export_ports_factory=modelo_export_ports_factory,
         calculation_action_ports_factory=calculation_action_ports_factory,
+        attachment_store_factory=attachment_store_factory,
         amendment_action_ports_factory=amendment_action_ports_factory,
         filing_action_ports_factory=filing_action_ports_factory,
         work_lifecycle_ports_factory=work_lifecycle_ports_factory,

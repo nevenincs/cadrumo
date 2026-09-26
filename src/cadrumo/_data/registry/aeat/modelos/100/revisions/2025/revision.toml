@@ -697,7 +697,7 @@ fields = { section = ["rendimientos_capital_inmobiliario"], legal_refs = ["rd-43
 
 [[revisions."2025".casilla_overrides]]
 selector = { revision = "2024", id = "0153" }
-fields = { section = ["rendimientos_capital_inmobiliario", "retenciones"], constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-101", "rd-439-2007:art-100", "rd-439-2007:art-13", "ley-35-2006:art-99", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"] }, legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-13", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"] }
+fields = { section = ["rendimientos_capital_inmobiliario", "retenciones"], constraints = {  legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-101", "rd-439-2007:art-100", "rd-439-2007:art-13", "ley-35-2006:art-99", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"] }, legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-13", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"] }
 
 [[revisions."2025".casilla_overrides]]
 selector = { revision = "2024", id = "0154" }
@@ -1041,11 +1041,11 @@ fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-
 
 [[revisions."2025".casilla_overrides]]
 selector = { revision = "2024", id = "0246" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2024-dictionary y aeat-dr-100-2025-dictionary: campo PMESINI5; mismo concepto y ruta XML en ambas ediciones, con tipo y alcance conservados. Las variaciones de texto anual y agrupacion se declaran como evoluciones de presentacion.", constraints = { sign = "non_negative", max_value = "12", legal_refs = ["ley-35-2006:art-81-bis", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd"] }, legal_refs = ["ley-35-2006:art-81-bis", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2024-dictionary y aeat-dr-100-2025-dictionary: campo PMESINI5; mismo concepto y ruta XML en ambas ediciones, con tipo y alcance conservados. Las variaciones de texto anual y agrupacion se declaran como evoluciones de presentacion.", constraints = {  max_value = "12", legal_refs = ["ley-35-2006:art-81-bis", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd"] }, legal_refs = ["ley-35-2006:art-81-bis", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
 
 [[revisions."2025".casilla_overrides]]
 selector = { revision = "2024", id = "0247" }
-fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2024-dictionary y aeat-dr-100-2025-dictionary: campo PMESFIN5; mismo concepto y ruta XML en ambas ediciones, con tipo y alcance conservados. Las variaciones de texto anual y agrupacion se declaran como evoluciones de presentacion.", constraints = { sign = "non_negative", max_value = "12", legal_refs = ["ley-35-2006:art-81-bis", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd"] }, legal_refs = ["ley-35-2006:art-81-bis", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
+fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-2024-dictionary y aeat-dr-100-2025-dictionary: campo PMESFIN5; mismo concepto y ruta XML en ambas ediciones, con tipo y alcance conservados. Las variaciones de texto anual y agrupacion se declaran como evoluciones de presentacion.", constraints = {  max_value = "12", legal_refs = ["ley-35-2006:art-81-bis", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd"] }, legal_refs = ["ley-35-2006:art-81-bis", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
 
 [[revisions."2025".casilla_overrides]]
 selector = { revision = "2024", id = "0248" }
@@ -2499,7 +2499,7 @@ fields = { legal_refs = ["ley-35-2006:art-81-bis", "orden-hac-277-2026:art-3"], 
 
 [[revisions."2025".casilla_overrides]]
 selector = { revision = "2024", id = "0618" }
-fields = { legal_refs = ["ley-35-2006:art-81-bis", "orden-hac-277-2026:art-3"], constraints = { sign = "non_negative", min_value = "1", max_value = "9", legal_refs = ["ley-35-2006:art-81-bis", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd"] }, source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
+fields = { legal_refs = ["ley-35-2006:art-81-bis", "orden-hac-277-2026:art-3"], constraints = {  min_value = "1", max_value = "9", legal_refs = ["ley-35-2006:art-81-bis", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd"] }, source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
 
 [[revisions."2025".casilla_overrides]]
 selector = { revision = "2024", id = "0619" }
@@ -2543,7 +2543,7 @@ fields = { legal_refs = ["ley-35-2006:art-81-bis", "orden-hac-277-2026:art-3"], 
 
 [[revisions."2025".casilla_overrides]]
 selector = { revision = "2024", id = "0629" }
-fields = { legal_refs = ["ley-35-2006:art-81-bis", "orden-hac-277-2026:art-3"], constraints = { sign = "non_negative", max_value = "99", legal_refs = ["ley-35-2006:art-81-bis", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd"] }, source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
+fields = { legal_refs = ["ley-35-2006:art-81-bis", "orden-hac-277-2026:art-3"], constraints = {  max_value = "99", legal_refs = ["ley-35-2006:art-81-bis", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd"] }, source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
 
 [[revisions."2025".casilla_overrides]]
 selector = { revision = "2024", id = "0630" }
@@ -2635,7 +2635,7 @@ fields = { legal_refs = ["ley-35-2006:art-81-bis", "orden-hac-277-2026:art-3"], 
 
 [[revisions."2025".casilla_overrides]]
 selector = { revision = "2024", id = "0652" }
-fields = { legal_refs = ["ley-35-2006:art-81-bis", "orden-hac-277-2026:art-3"], constraints = { sign = "non_negative", max_value = "99", legal_refs = ["ley-35-2006:art-81-bis", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd"] }, source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
+fields = { legal_refs = ["ley-35-2006:art-81-bis", "orden-hac-277-2026:art-3"], constraints = {  max_value = "99", legal_refs = ["ley-35-2006:art-81-bis", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd"] }, source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"] }
 
 [[revisions."2025".casilla_overrides]]
 selector = { revision = "2024", id = "0653" }

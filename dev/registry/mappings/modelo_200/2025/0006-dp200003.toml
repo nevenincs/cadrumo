@@ -733,8 +733,8 @@ record_identity = "DP200003"
 
 [[entries]]
 export_field_id = "m200-2025.dp200003.f0057"
-kind = "header"
-producer_key = "m200.identificador_de_fin_de_registro_5"
+kind = "literal"
+literal = "</T20003000>"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [entries.anchor]

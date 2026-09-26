@@ -1,3 +1,9 @@
+# Each window carries one applicability condition: the profile's quarter set
+# (premio_loteria_gravamen_especial_trimestres) must include the window's own
+# YYYY-nT token. Art. 7 ties each filing to "los premios cobrados en el trimestre
+# natural inmediato anterior", so a prize cashed in one quarter does not open the
+# other three windows.
+
 [[revisions."2026".deadline_windows]]
 id = "modelo-136-2026-1t"
 filing_year = 2026
@@ -7,6 +13,14 @@ opens_on = 2026-04-01
 closes_on = 2026-04-20
 legal_refs = ["orden-hap-70-2013:art-7"]
 source_refs = ["aeat-modelo-136-procedure", "boe-modelo-136-base-order"]
+
+[[revisions."2026".deadline_windows.applicability_conditions]]
+field = "premio_loteria_gravamen_especial_trimestres"
+op = "includes"
+value = "2026-1T"
+explanation = "Premio sujeto al gravamen especial, sin retencion ni ingreso a cuenta, cobrado en el trimestre 1T de 2026."
+legal_refs = ["orden-hap-70-2013:art-6", "orden-hap-70-2013:art-7"]
+source_refs = ["aeat-modelo-136-procedure"]
 
 [[revisions."2026".deadline_windows]]
 id = "modelo-136-2026-2t"
@@ -18,6 +32,14 @@ closes_on = 2026-07-20
 legal_refs = ["orden-hap-70-2013:art-7"]
 source_refs = ["aeat-modelo-136-procedure", "boe-modelo-136-base-order"]
 
+[[revisions."2026".deadline_windows.applicability_conditions]]
+field = "premio_loteria_gravamen_especial_trimestres"
+op = "includes"
+value = "2026-2T"
+explanation = "Premio sujeto al gravamen especial, sin retencion ni ingreso a cuenta, cobrado en el trimestre 2T de 2026."
+legal_refs = ["orden-hap-70-2013:art-6", "orden-hap-70-2013:art-7"]
+source_refs = ["aeat-modelo-136-procedure"]
+
 [[revisions."2026".deadline_windows]]
 id = "modelo-136-2026-3t"
 filing_year = 2026
@@ -28,6 +50,14 @@ closes_on = 2026-10-20
 legal_refs = ["orden-hap-70-2013:art-7"]
 source_refs = ["aeat-modelo-136-procedure", "boe-modelo-136-base-order"]
 
+[[revisions."2026".deadline_windows.applicability_conditions]]
+field = "premio_loteria_gravamen_especial_trimestres"
+op = "includes"
+value = "2026-3T"
+explanation = "Premio sujeto al gravamen especial, sin retencion ni ingreso a cuenta, cobrado en el trimestre 3T de 2026."
+legal_refs = ["orden-hap-70-2013:art-6", "orden-hap-70-2013:art-7"]
+source_refs = ["aeat-modelo-136-procedure"]
+
 [[revisions."2026".deadline_windows]]
 id = "modelo-136-2026-4t"
 filing_year = 2026
@@ -37,3 +67,11 @@ opens_on = 2027-01-01
 closes_on = 2027-01-20
 legal_refs = ["orden-hap-70-2013:art-7"]
 source_refs = ["aeat-modelo-136-procedure", "boe-modelo-136-base-order"]
+
+[[revisions."2026".deadline_windows.applicability_conditions]]
+field = "premio_loteria_gravamen_especial_trimestres"
+op = "includes"
+value = "2026-4T"
+explanation = "Premio sujeto al gravamen especial, sin retencion ni ingreso a cuenta, cobrado en el trimestre 4T de 2026."
+legal_refs = ["orden-hap-70-2013:art-6", "orden-hap-70-2013:art-7"]
+source_refs = ["aeat-modelo-136-procedure"]

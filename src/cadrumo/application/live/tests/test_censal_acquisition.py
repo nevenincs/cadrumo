@@ -31,7 +31,7 @@ from ..censo import (
     LIVE_CENSAL_READ_OPERATION,
     pull_censal_datos,
 )
-from ._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
+from .operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 _CERTIFICATE_SECRET_BACKEND_FACTORY = InMemoryCertificateSecretBackendFactory()

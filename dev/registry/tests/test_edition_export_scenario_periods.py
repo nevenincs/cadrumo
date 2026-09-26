@@ -5,10 +5,10 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.application.filing.producer_snapshot import (
-    GeneralFilingProfileFacts,
     Modelo222ProfileFacts,
     Modelo296ProfileFacts,
 )
+from cadrumo.application.filing.producer_snapshot_m200 import Modelo200ProfileFacts
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from cadrumo.domain.calculations.registry.temporal import select_revision
@@ -82,4 +82,12 @@ def test_corporate_scenario_defers_software_identity_until_candidate_fact_scope(
         assert profile.numero_grupo == "0001/25"
         assert profile.entidad_dominante_identificacion == "B00000000"
     else:
-        assert isinstance(profile, GeneralFilingProfileFacts)
+        assert isinstance(profile, Modelo200ProfileFacts)
+        rows = profile.projection_rows
+        # Every record made of projection fields alone is declared required, so the
+        # scenario must carry a row of every family the typed rows admit. Derived from
+        # the model's own fields so a new family cannot be added and left unsupplied.
+        assert {name: len(getattr(rows, name)) for name in type(rows).model_fields} == dict.fromkeys(
+            type(rows).model_fields,
+            1,
+        )

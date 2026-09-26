@@ -90,6 +90,7 @@ type OperationModalInteractionStateV1[ReviewProjectionT: BaseModel] = (
 async def resolve_modal_interaction_state[ReviewProjectionT: BaseModel](
     controller: OperationController,
     projection: OperationPublicProjectionV1,
+    projection_type: type[ReviewProjectionT],
     *,
     current: OperationModalInteractionStateV1[ReviewProjectionT] | None = None,
 ) -> OperationModalInteractionStateV1[ReviewProjectionT]:
@@ -122,7 +123,8 @@ async def resolve_modal_interaction_state[ReviewProjectionT: BaseModel](
     ):
         return current
     resolved: OperationReviewProjectionResultV1[ReviewProjectionT] = await controller.resolve_review(
-        pending.review_reference
+        pending.review_reference,
+        projection_type,
     )
     if not isinstance(resolved, OperationReviewProjectionSuccessV1):
         return OperationModalReviewUnavailableV1(interaction=pending)

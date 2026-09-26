@@ -24,7 +24,7 @@ import cycle.
 
 from __future__ import annotations
 
-from typing import Any, Final
+from typing import Final, Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 from pydantic_core import PydanticCustomError
@@ -53,10 +53,50 @@ from ..contribuyente.renta_codes import (
     RentaSexCode,
     SituacionFamiliar,
 )
-from ..deadlines.models import IVARegime
+from ..deadlines.models import IrpfActivityKind, IrpfEstimationRegime, IrpfSpecialRegime, IVARegime
+from .quarter_sets import format_quarter_set, parse_quarter_set
+
+type OptionalWizardBool = bool | Literal[""]
+"""A three-state wizard answer: ``True``, ``False`` or blank when unanswered."""
+
+type OptionalTaxationType = RentaDeclaracionType | Literal[""]
+"""Declaration type, or blank when the taxpayer has not answered."""
+
+type OptionalEntityType = EntityType | Literal[""]
+"""Registry-projected entity type, or blank when undeclared."""
+
+type OptionalLegalEntityForm = LegalEntityForm | Literal[""]
+"""Registry-projected legal-entity form, or blank when undeclared."""
+
+type OptionalSexCode = RentaSexCode | Literal[""]
+"""Renta sex code, or blank when undeclared."""
+
+type OptionalMaritalStatus = RentaMaritalStatus | Literal[""]
+"""Renta marital status, or blank when undeclared."""
+
+type OptionalDisabilityGrade = RentaDisabilityGrade | Literal[""]
+"""Renta disability grade, or blank when undeclared."""
+
+type OptionalSituacionFamiliar = SituacionFamiliar | Literal[""]
+"""Art. 82 LIRPF family situation, or blank when undeclared."""
+
+type OptionalIVARegime = IVARegime | Literal[""]
+"""Registry-projected IVA regime, or blank when undeclared."""
+
+type OptionalIrpfEstimationRegime = IrpfEstimationRegime | Literal[""]
+"""Registry-projected IRPF estimation regime, or blank when undeclared."""
+
+type OptionalIrpfActivityKind = IrpfActivityKind | Literal[""]
+"""Registry-projected IRPF activity kind, or blank when undeclared."""
+
+type OptionalIrpfSpecialRegime = IrpfSpecialRegime | Literal[""]
+"""Registry-projected IRPF special regime, or blank for the general regime."""
+
+type OptionalFiscalResidency = FiscalResidency | Literal[""]
+"""Registry-projected fiscal-residency category, or blank when undeclared."""
 
 
-def _parse_optional_bool_token(value: object, *, field_name: str) -> object:
+def _parse_optional_bool_token(value: object, *, field_name: str) -> OptionalWizardBool:
     """Parse a three-state optional wizard boolean token.
 
     Accepted affirmative tokens become ``True``; accepted negative tokens become
@@ -101,10 +141,10 @@ class SetupAnswers(BaseModel):
     empty string, the value means undeclared/no answer rather than false, zero,
     or a default legal fact.
 
-    Field annotations use ``Any`` for taxonomy union types because the setup
-    flow carries typed enum members alongside the blank undeclared sentinel.
-    That ``Any`` is not a loose schema: validators enforce the same invariants,
-    reject values outside the declared enum / blank-string set, and raise
+    Field annotations are unions of the taxonomy type with the blank
+    undeclared sentinel, because the setup flow carries typed taxonomy members
+    alongside answers the taxpayer has not given. Validators reject values
+    outside that declared set and raise
     :class:`~cadrumo.core.errors.hierarchy.ProfileAnswerTypeError`.
     """
 
@@ -121,7 +161,7 @@ class SetupAnswers(BaseModel):
     """Optional Spanish postcode for the taxpayer's activity/contact address."""
     activity_start_date: str = ""
     """Optional ISO-8601 censo alta date for the economic activity."""
-    taxation_type: Any = ""
+    taxation_type: OptionalTaxationType = ""
     output_language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE
 
     @field_validator("output_language", mode="before")
@@ -137,17 +177,17 @@ class SetupAnswers(BaseModel):
         )
 
     # ── taxpayer type (three-axis taxpayer model) ────────────────────────
-    entity_type: Any = ""
-    legal_entity_form: Any = ""
+    entity_type: OptionalEntityType = ""
+    legal_entity_form: OptionalLegalEntityForm = ""
     incn_prior_12_months: str = ""
     """Optional INCN as a canonical decimal string."""
-    new_entity_first_two_profit_periods: Any = ""
+    new_entity_first_two_profit_periods: OptionalWizardBool = ""
     """Optional three-state bool for LIS Art. 29 new-entity rate."""
-    ley_49_2002_option_declared: Any = ""
+    ley_49_2002_option_declared: OptionalWizardBool = ""
     """Optional three-state bool for the governed special-regime option."""
     ley_49_2002_option_date: str = ""
     """ISO-8601 date declared for the governed special-regime option."""
-    ley_49_2002_renunciation_declared: Any = ""
+    ley_49_2002_renunciation_declared: OptionalWizardBool = ""
     """Optional three-state bool for governed special-regime renunciation."""
     ley_49_2002_renunciation_date: str = ""
     """ISO-8601 date declared for governed special-regime renunciation."""
@@ -157,12 +197,12 @@ class SetupAnswers(BaseModel):
     """Comma-separated set of ThirdPartyDeclarationRole tokens."""
 
     # ── taxpayer biographic ──────────────────────────────────────────────
-    taxpayer_sex: Any = ""
-    taxpayer_marital_status: Any = ""
+    taxpayer_sex: OptionalSexCode = ""
+    taxpayer_marital_status: OptionalMaritalStatus = ""
     taxpayer_marriage_date: str = ""
     """ISO-8601 date when the current marriage began."""
     taxpayer_birth_date: str = ""
-    taxpayer_disability_grade: Any = ""
+    taxpayer_disability_grade: OptionalDisabilityGrade = ""
     taxpayer_death_date: str = ""
 
     # ── spouse (taxation_type == "2") ────────────────────────────────────
@@ -170,8 +210,8 @@ class SetupAnswers(BaseModel):
     spouse_name: str = ""
     spouse_surnames: str = ""
     spouse_birth_date: str = ""
-    spouse_sex: Any = ""
-    spouse_disability_grade: Any = ""
+    spouse_sex: OptionalSexCode = ""
+    spouse_disability_grade: OptionalDisabilityGrade = ""
     spouse_non_resident_irpf: bool = False
     spouse_eu_eea_resident: bool = False
     spouse_eu_eea_country: str = ""
@@ -179,24 +219,24 @@ class SetupAnswers(BaseModel):
     # ── family ───────────────────────────────────────────────────────────
     family_descendants_eu_eea_deduction: bool = False
     family_minor_children_in_unit: bool = False
-    situacion_familiar: Any = ""
+    situacion_familiar: OptionalSituacionFamiliar = ""
     """Art. 82 LIRPF family situation governing conjunta eligibility."""
-    unidad_familiar_descendientes_exclusivos: Any = ""
+    unidad_familiar_descendientes_exclusivos: OptionalWizardBool = ""
     """Custodia compartida progenitor claiming the monoparental unidad familiar."""
 
     # ── IVA ──────────────────────────────────────────────────────────────
-    iva_regime: Any = ""
-    iva_roi_enrolled: Any = ""
-    iva_oss_enrolled: Any = ""
-    iva_group_member_enrolled: Any = ""
-    iva_group_dominant_entity_enrolled: Any = ""
-    iva_sii_enrolled: Any = ""
-    iva_redeme_enrolled: Any = ""
-    iva_intracommunity_operations_exceed_50000_eur: Any = ""
+    iva_regime: OptionalIVARegime = ""
+    iva_roi_enrolled: OptionalWizardBool = ""
+    iva_oss_enrolled: OptionalWizardBool = ""
+    iva_group_member_enrolled: OptionalWizardBool = ""
+    iva_group_dominant_entity_enrolled: OptionalWizardBool = ""
+    iva_sii_enrolled: OptionalWizardBool = ""
+    iva_redeme_enrolled: OptionalWizardBool = ""
+    iva_intracommunity_operations_exceed_50000_eur: OptionalWizardBool = ""
     iva_m303_regime_composition: str = ""
-    iva_cash_accounting_regime_enrolled: Any = ""
-    iva_voluntary_sii_enrolled: Any = ""
-    iva_hydrocarbon_deposit_advance_payment_deduction_entitled: Any = ""
+    iva_cash_accounting_regime_enrolled: OptionalWizardBool = ""
+    iva_voluntary_sii_enrolled: OptionalWizardBool = ""
+    iva_hydrocarbon_deposit_advance_payment_deduction_entitled: OptionalWizardBool = ""
 
     # ── enrollment ───────────────────────────────────────────────────────
     enrollment_large_company: bool = False
@@ -204,15 +244,16 @@ class SetupAnswers(BaseModel):
 
     # ── retencion / modelo obligation booleans ───────────────────────────
     has_employees: bool = False
-    colegio_concertado: Any = ""
+    colegio_concertado: OptionalWizardBool = ""
     pays_professionals_with_retencion: bool = False
     professional_income_withholding_ge_70pct: bool = False
     art109_activity_income_withholding_ge_70pct: bool = False
     pays_rent_with_retencion: bool = False
     pays_capital_income_with_retencion: bool = False
     modelo_111_no_retenciones_periods: str = ""
-    irpf_estimation_regime: Any = ""
-    irpf_activity_kind: Any = ""
+    modelo_115_no_relevant_payment_periods: str = ""
+    irpf_estimation_regime: OptionalIrpfEstimationRegime = ""
+    irpf_activity_kind: OptionalIrpfActivityKind = ""
     objective_estimation_modulos_iae_epigraph: str = ""
     objective_estimation_modulos_module_1_units: str = ""
     objective_estimation_modulos_module_2_units: str = ""
@@ -221,19 +262,28 @@ class SetupAnswers(BaseModel):
     objective_estimation_modulos_module_5_units: str = ""
     objective_estimation_modulos_module_6_units: str = ""
     objective_estimation_modulos_module_7_units: str = ""
-    irpf_special_regime: Any = ""
+    irpf_special_regime: OptionalIrpfSpecialRegime = ""
     """IRPF special-regime axis. Blank for the general regime."""
     irpf_special_regime_start_date: str = ""
     """ISO-8601 opt-in election date for the special regime."""
     does_intracomunitario: bool = False
-    third_party_transactions_above_347_threshold: bool = False
-    bienes_extranjero_above_threshold: bool = False
-    monedas_virtuales_extranjero_above_threshold: bool = False
+    third_party_transactions_above_347_threshold: OptionalWizardBool = ""
+    """Three-state payer fact: ``True``, ``False`` or blank when unanswered."""
+    bienes_extranjero_above_threshold: OptionalWizardBool = ""
+    """Three-state payer fact: ``True``, ``False`` or blank when unanswered."""
+    monedas_virtuales_extranjero_above_threshold: OptionalWizardBool = ""
+    """Three-state payer fact: ``True``, ``False`` or blank when unanswered."""
+    premio_loteria_gravamen_especial_sin_retencion: OptionalWizardBool = ""
+    """Three-state payer fact: ``True``, ``False`` or blank when unanswered."""
+    premio_loteria_gravamen_especial_trimestres: str = ""
+    """Canonical ``|``-delimited ``YYYY-nT`` quarters in which such prizes were cashed."""
 
     # ── residence ────────────────────────────────────────────────────────
-    tax_residence_ccaa: Any = None
+    # Resolved per construction rather than at class definition: an unanswered
+    # profile still takes its residence from the dated CCAA facts in scope.
+    tax_residence_ccaa: CCAA = Field(default_factory=default_ccaa)
     tax_residence_jurisdiction_scope: str = ""
-    fiscal_residency: Any = ""
+    fiscal_residency: OptionalFiscalResidency = ""
     """Fiscal residency category."""
     country_of_fiscal_residence: str = ""
     """ISO 3166-1 alpha-2 code of the country of fiscal residence."""
@@ -254,13 +304,12 @@ class SetupAnswers(BaseModel):
     # ------------------------------------------------------------------
 
     # Pydantic's ``mode="before"`` field validators accept the raw token and
-    # return either the typed taxonomy member or the blank sentinel. The
-    # answer fields remain ``Any`` because that sentinel is intentionally
-    # distinct from each enum's value space.
+    # return either the typed taxonomy member or the blank sentinel, which is
+    # intentionally distinct from each taxonomy's value space.
     @field_validator("iva_regime", mode="before")
     @classmethod
     @pydantic_validation_boundary
-    def _parse_iva_regime(cls, value: object) -> Any:
+    def _parse_iva_regime(cls, value: object) -> OptionalIVARegime:
         if isinstance(value, IVARegime):
             try:
                 return require_iva_regime(value)
@@ -291,13 +340,32 @@ class SetupAnswers(BaseModel):
     )
     @classmethod
     @pydantic_validation_boundary
-    def _parse_optional_iva_bool(cls, value: object) -> Any:
+    def _parse_optional_iva_bool(cls, value: object) -> OptionalWizardBool:
         return _parse_optional_bool_token(value, field_name="Modelo IVA boolean")
+
+    @field_validator(
+        "third_party_transactions_above_347_threshold",
+        "bienes_extranjero_above_threshold",
+        "monedas_virtuales_extranjero_above_threshold",
+        "premio_loteria_gravamen_especial_sin_retencion",
+        mode="before",
+    )
+    @classmethod
+    @pydantic_validation_boundary
+    def _parse_optional_payer_fact_bool(cls, value: object) -> OptionalWizardBool:
+        return _parse_optional_bool_token(value, field_name="payer applicability fact")
+
+    @field_validator("premio_loteria_gravamen_especial_trimestres")
+    @classmethod
+    @pydantic_validation_boundary
+    def _parse_premio_loteria_trimestres(cls, value: str) -> str:
+        parsed = parse_quarter_set(value)
+        return "" if parsed is None else format_quarter_set(parsed)
 
     @field_validator("tax_residence_ccaa", mode="before")
     @classmethod
     @pydantic_validation_boundary
-    def _parse_tax_residence_ccaa(cls, value: object) -> Any:
+    def _parse_tax_residence_ccaa(cls, value: object) -> CCAA:
         if isinstance(value, CCAA):
             return value
         if value is None:
@@ -314,7 +382,7 @@ class SetupAnswers(BaseModel):
     @field_validator("entity_type", mode="before")
     @classmethod
     @pydantic_validation_boundary
-    def _parse_entity_type(cls, value: object) -> Any:
+    def _parse_entity_type(cls, value: object) -> OptionalEntityType:
         if value == "":
             return ""
         if isinstance(value, EntityType):
@@ -329,7 +397,7 @@ class SetupAnswers(BaseModel):
     @field_validator("legal_entity_form", mode="before")
     @classmethod
     @pydantic_validation_boundary
-    def _parse_legal_entity_form(cls, value: object) -> Any:
+    def _parse_legal_entity_form(cls, value: object) -> OptionalLegalEntityForm:
         if value == "":
             return ""
         if isinstance(value, LegalEntityForm):
@@ -344,7 +412,7 @@ class SetupAnswers(BaseModel):
     @field_validator("irpf_estimation_regime", mode="before")
     @classmethod
     @pydantic_validation_boundary
-    def _parse_irpf_estimation_regime(cls, value: object) -> Any:
+    def _parse_irpf_estimation_regime(cls, value: object) -> OptionalIrpfEstimationRegime:
         if value == "":
             return ""
         try:
@@ -355,7 +423,7 @@ class SetupAnswers(BaseModel):
     @field_validator("irpf_activity_kind", mode="before")
     @classmethod
     @pydantic_validation_boundary
-    def _parse_irpf_activity_kind(cls, value: object) -> Any:
+    def _parse_irpf_activity_kind(cls, value: object) -> OptionalIrpfActivityKind:
         if value == "":
             return ""
         try:
@@ -368,7 +436,7 @@ class SetupAnswers(BaseModel):
     @field_validator("situacion_familiar", mode="before")
     @classmethod
     @pydantic_validation_boundary
-    def _parse_situacion_familiar(cls, value: object) -> Any:
+    def _parse_situacion_familiar(cls, value: object) -> OptionalSituacionFamiliar:
         if value == "":
             return ""
         if isinstance(value, (SituacionFamiliar, str)):
@@ -384,7 +452,7 @@ class SetupAnswers(BaseModel):
     def _parse_unidad_familiar_descendientes_exclusivos(
         cls,
         value: object,
-    ) -> Any:
+    ) -> OptionalWizardBool:
         if value == "":
             return ""
         if isinstance(value, bool):
@@ -401,7 +469,7 @@ class SetupAnswers(BaseModel):
     @field_validator("irpf_special_regime", mode="before")
     @classmethod
     @pydantic_validation_boundary
-    def _parse_irpf_special_regime(cls, value: object) -> Any:
+    def _parse_irpf_special_regime(cls, value: object) -> OptionalIrpfSpecialRegime:
         if value == "":
             return ""
         try:
@@ -412,7 +480,7 @@ class SetupAnswers(BaseModel):
     @field_validator("fiscal_residency", mode="before")
     @classmethod
     @pydantic_validation_boundary
-    def _parse_fiscal_residency(cls, value: object) -> Any:
+    def _parse_fiscal_residency(cls, value: object) -> OptionalFiscalResidency:
         if value == "":
             return ""
         if isinstance(value, FiscalResidency):
@@ -459,7 +527,7 @@ class SetupAnswers(BaseModel):
     @field_validator("taxation_type", mode="before")
     @classmethod
     @pydantic_validation_boundary
-    def _parse_taxation_type(cls, value: object) -> Any:
+    def _parse_taxation_type(cls, value: object) -> OptionalTaxationType:
         if value == "":
             return ""
         if isinstance(value, RentaDeclaracionType):
@@ -471,7 +539,7 @@ class SetupAnswers(BaseModel):
     @field_validator("taxpayer_sex", "spouse_sex", mode="before")
     @classmethod
     @pydantic_validation_boundary
-    def _parse_sex_code(cls, value: object) -> Any:
+    def _parse_sex_code(cls, value: object) -> OptionalSexCode:
         if value == "":
             return ""
         if isinstance(value, RentaSexCode):
@@ -483,7 +551,7 @@ class SetupAnswers(BaseModel):
     @field_validator("taxpayer_marital_status", mode="before")
     @classmethod
     @pydantic_validation_boundary
-    def _parse_marital_status(cls, value: object) -> Any:
+    def _parse_marital_status(cls, value: object) -> OptionalMaritalStatus:
         if value == "":
             return ""
         if isinstance(value, RentaMaritalStatus):
@@ -515,7 +583,7 @@ class SetupAnswers(BaseModel):
     )
     @classmethod
     @pydantic_validation_boundary
-    def _parse_disability_grade(cls, value: object) -> Any:
+    def _parse_disability_grade(cls, value: object) -> OptionalDisabilityGrade:
         if value == "":
             return ""
         if isinstance(value, RentaDisabilityGrade):
@@ -566,7 +634,7 @@ class SetupAnswers(BaseModel):
     def _parse_new_entity_first_two_profit_periods(
         cls,
         value: object,
-    ) -> Any:
+    ) -> OptionalWizardBool:
         return _parse_optional_bool_token(
             value,
             field_name="new_entity_first_two_profit_periods",
@@ -582,7 +650,7 @@ class SetupAnswers(BaseModel):
     def _parse_ley_49_2002_optional_bool(
         cls,
         value: object,
-    ) -> Any:
+    ) -> OptionalWizardBool:
         return _parse_optional_bool_token(value, field_name="ley_49_2002_optional_bool")
 
     @field_validator("activity_start_date")

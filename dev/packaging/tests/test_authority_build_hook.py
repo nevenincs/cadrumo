@@ -3,8 +3,12 @@
 from __future__ import annotations
 
 import importlib.util
+import json
+import os
+import shutil
 from pathlib import Path
 from types import ModuleType
+from typing import Generic, TypeVar
 
 import pytest
 
@@ -41,6 +45,71 @@ def test_fresh_source_tree_bootstraps_repo_root_authority(
     assert calls == [(tmp_path, expected)]
 
 
+def test_a_current_publication_is_read_without_publishing(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A copy of the session's current publication describes the live sources, so it is reused."""
+    hook = _hook_module()
+    current = Path(os.environ["CADRUMO_AUTHORITY_ROOT"])
+    descriptor = json.loads((current / "authority.current.json").read_text(encoding="utf-8"))
+    published = tmp_path / ".authority"
+    published.mkdir()
+    shutil.copy2(current / "authority.current.json", published / "authority.current.json")
+    shutil.copy2(current / descriptor["database"], published / descriptor["database"])
+    monkeypatch.delenv("CADRUMO_AUTHORITY_ROOT", raising=False)
+    monkeypatch.setattr(
+        hook,
+        "_publish_source_tree_authority",
+        lambda *_args: pytest.fail("a current publication must be read, not republished"),
+    )
+
+    assert hook._authority_root(tmp_path) == published
+
+
+def test_a_descriptor_that_describes_no_current_generation_is_republished(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A directory holding a descriptor proves a publication happened, not that it is current."""
+    hook = _hook_module()
+    published = tmp_path / ".authority"
+    published.mkdir()
+    (published / "authority.current.json").write_text("{}", encoding="utf-8")
+    calls: list[tuple[Path, Path]] = []
+
+    def publish(build_root: Path, destination: Path) -> Path:
+        calls.append((build_root, destination))
+        return destination
+
+    monkeypatch.delenv("CADRUMO_AUTHORITY_ROOT", raising=False)
+    monkeypatch.setattr(hook, "_publish_source_tree_authority", publish)
+
+    assert hook._authority_root(tmp_path) == published
+    assert calls == [(tmp_path, published)]
+
+
+def test_an_interrupted_publication_is_completed_rather_than_read(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A directory a failed publication created, holding no descriptor, is not a publication."""
+    hook = _hook_module()
+    interrupted = tmp_path / ".authority"
+    (interrupted / "authority-candidate-left-behind").mkdir(parents=True)
+    calls: list[tuple[Path, Path]] = []
+
+    def publish(build_root: Path, destination: Path) -> Path:
+        calls.append((build_root, destination))
+        return destination
+
+    monkeypatch.delenv("CADRUMO_AUTHORITY_ROOT", raising=False)
+    monkeypatch.setattr(hook, "_publish_source_tree_authority", publish)
+
+    assert hook._authority_root(tmp_path) == interrupted
+    assert calls == [(tmp_path, interrupted)]
+
+
 def test_embedded_sdist_authority_never_runs_source_bootstrap(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -68,3 +137,26 @@ def test_explicit_missing_override_does_not_fall_back_to_repo_root(
 
     with pytest.raises(FileNotFoundError, match=r"configured \$CADRUMO_AUTHORITY_ROOT directory is unavailable"):
         hook._authority_root(tmp_path)
+
+
+def test_hook_module_loads_with_one_parameter_nongeneric_hatchling_contract(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The current isolated backend may not expose the former two-parameter API."""
+    import hatchling.builders.config as builder_config_module
+    import hatchling.builders.hooks.plugin.interface as hook_interface_module
+
+    class CurrentBuilderConfig:
+        """Model Hatchling's concrete current configuration type."""
+
+    CurrentBuilderConfigType = TypeVar("CurrentBuilderConfigType")
+
+    class CurrentBuildHookInterface(Generic[CurrentBuilderConfigType]):
+        """Model Hatchling's one-parameter current build-hook interface."""
+
+    monkeypatch.setattr(builder_config_module, "BuilderConfig", CurrentBuilderConfig)
+    monkeypatch.setattr(hook_interface_module, "BuildHookInterface", CurrentBuildHookInterface)
+
+    hook = _hook_module()
+
+    assert hook.CustomBuildHook.__orig_bases__ == (CurrentBuildHookInterface[CurrentBuilderConfig],)

@@ -8,7 +8,6 @@ from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from pathlib import Path
 
-from ...application.auth.sessions import AuthenticatedAeatSessionResult as _AuthenticatedAeatSessionResult
 from ...core.access_gate.gate import AeatAccessGate as _AeatAccessGate
 from ...core.config import Settings as _Settings
 from ...core.config import load_settings as _load_settings
@@ -19,6 +18,7 @@ from ...core.period import Period
 from ...core.storage_taxonomy import StorageCategory
 from ...core.storage_taxonomy_locations import storage_location as _storage_location
 from ...core.time.clock import now
+from ..auth.sessions import AuthenticatedAeatSessionResult as _AuthenticatedAeatSessionResult
 from .errors import LiveApplicationInputError, LiveIvaSurfaceTimeoutError
 from .iva_remote_state_ports import IvaRemoteStatePort
 from .remote_state_models import (

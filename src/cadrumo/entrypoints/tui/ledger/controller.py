@@ -7,7 +7,6 @@ from collections.abc import Callable
 from dataclasses import replace
 from typing import ClassVar, Final, cast
 
-from textual.app import App
 from textual.binding import Binding
 from textual.message import Message
 from textual.widgets import DataTable, Static
@@ -158,6 +157,8 @@ class LedgerWorkspaceController:
         self.evidence_items = injection.evidence_items
         self.link_action = injection.link_action
         self.link_submitter = injection.link_submitter
+        self.activity_asset_actions = injection.activity_asset_actions
+        self.record_doors = injection.record_doors
         self._states = {row.area: row for row in projection.areas}
 
     def classification_target_coordinate(self) -> tuple[int, int, str]:
@@ -169,6 +170,10 @@ class LedgerWorkspaceController:
             index for index, row in enumerate(self.projection.entries, start=1) if row.transaction_id == target
         )
         return position, len(self.projection.entries), str(target)[:12]
+
+    def can_manage_activity_assets(self) -> bool:
+        """Return whether the installed composition supplied the shared asset door."""
+        return self.activity_asset_actions is not None
 
     def entry_label(self, transaction_id: TransactionId) -> str:
         """Name one entry the way the operator recorded it: its date and description.
@@ -554,6 +559,19 @@ class LedgerInvoiceEntryRequested(Message):
     """Request the invoice entry form as the workspace body."""
 
 
+class LedgerInvoiceCatalogueRequested(Message):
+    """Request canonical invoice readback from the bucket-bound door."""
+
+
+class LedgerTransactionDetailRequested(Message):
+    """Request detail for one selected transaction identity."""
+
+    def __init__(self, transaction_id: TransactionId) -> None:
+        """Retain the selected transaction rather than a mutable table position."""
+        super().__init__()
+        self.transaction_id = transaction_id
+
+
 class LedgerWorkspaceScreen(AccountChromeScreen):
     """Shared one-scroll shell and semantic navigation behavior."""
 
@@ -694,7 +712,7 @@ class LedgerWorkspaceScreen(AccountChromeScreen):
         # for the shared shell; at module scope the two would form a cycle.
         from .routes import resolve_ledger_screen
 
-        replace_workspace_body(cast(App[object], self.app), resolve_ledger_screen(self.controller, event.target))
+        replace_workspace_body(self.app, resolve_ledger_screen(self.controller, event.target))
 
     def on_ledger_invoice_entry_requested(self, _: LedgerInvoiceEntryRequested) -> None:
         """Open the invoice entry form, or say why it cannot open in this session."""
@@ -703,7 +721,30 @@ class LedgerWorkspaceScreen(AccountChromeScreen):
         if not self.controller.can_add_invoices():
             self.query_one("#ledger-refusal", Static).update(ledger_copy("tui.ledger.refusal.submission_unavailable"))
             return
-        replace_workspace_body(cast(App[object], self.app), LedgerInvoiceEntryScreen(self.controller))
+        replace_workspace_body(self.app, LedgerInvoiceEntryScreen(self.controller))
+
+    def on_ledger_invoice_catalogue_requested(self, _: LedgerInvoiceCatalogueRequested) -> None:
+        """Open canonical invoice readback through the injected record door."""
+        from .record_views import LedgerInvoiceCatalogueScreen
+
+        doors = self.controller.record_doors
+        if doors is None:
+            self.query_one("#ledger-refusal", Static).update(ledger_copy("tui.ledger.refusal.submission_unavailable"))
+            return
+        replace_workspace_body(self.app, LedgerInvoiceCatalogueScreen(self.controller, doors))
+
+    def on_ledger_transaction_detail_requested(self, event: LedgerTransactionDetailRequested) -> None:
+        """Open the selected transaction without resolving a row position."""
+        from .record_views import LedgerTransactionDetailScreen
+
+        doors = self.controller.record_doors
+        if doors is None:
+            self.query_one("#ledger-refusal", Static).update(ledger_copy("tui.ledger.refusal.submission_unavailable"))
+            return
+        replace_workspace_body(
+            self.app,
+            LedgerTransactionDetailScreen(self.controller, doors, str(event.transaction_id)),
+        )
 
     def on_ledger_back_requested(self, _: LedgerBackRequested) -> None:
         """Return an area to the Ledger overview; leave the workspace only from the overview."""
@@ -737,9 +778,11 @@ __all__ = [
     "LedgerBackRequested",
     "LedgerEntrySelected",
     "LedgerEvidenceReviewRequested",
+    "LedgerInvoiceCatalogueRequested",
     "LedgerInvoiceEntryRequested",
     "LedgerReviewRequested",
     "LedgerRouteRequested",
+    "LedgerTransactionDetailRequested",
     "LedgerWorkspaceController",
     "LedgerWorkspaceScreen",
     "area_label",

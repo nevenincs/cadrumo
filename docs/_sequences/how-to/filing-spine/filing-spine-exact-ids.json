@@ -134,7 +134,7 @@
           "created_at": "2026-04-01T09:00:00Z",
           "evidence_id": "9a075f52dad08e80",
           "invoice_date": "2026-02-11",
-          "invoice_number": "sha256:17853e99",
+          "invoice_number": "C-2026-0087",
           "iva_amount": "105",
           "iva_rate": "0.21",
           "media_kind": "pdf",
@@ -288,14 +288,13 @@
         "2026",
         "--period",
         "1T",
-        "--m303-filing-evidence",
-        "fixtures/m303-filing-evidence-2026-1T.json"
+        "--no-joint-return-elected"
       ],
       "captures": [
         {
           "json_path": "result.calculation_revision_id",
           "name": "revision_id",
-          "value": "703a1967150ffa63e7666477f502a198d7a3e7fe83f90dfe6f1ef424171059ed"
+          "value": "17f0b34638449024c53ae678c35561f3c909c17a48965f9a00f9a2507a49ab2c"
         }
       ],
       "envelope": {
@@ -340,7 +339,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "703a1967150ffa63e7666477f502a198d7a3e7fe83f90dfe6f1ef424171059ed",
+          "calculation_revision_id": "17f0b34638449024c53ae678c35561f3c909c17a48965f9a00f9a2507a49ab2c",
           "casilla_values": {
             "01": "0",
             "02": "0",
@@ -3845,7 +3844,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 703a1967150ffa63e7666477f502a198d7a3e7fe83f90dfe6f1ef424171059ed (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 17f0b34638449024c53ae678c35561f3c909c17a48965f9a00f9a2507a49ab2c (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_iva_aggregation",
@@ -3917,7 +3916,7 @@
         "modelo",
         "work",
         "verify",
-        "703a1967150ffa63e7666477f502a198d7a3e7fe83f90dfe6f1ef424171059ed"
+        "17f0b34638449024c53ae678c35561f3c909c17a48965f9a00f9a2507a49ab2c"
       ],
       "captures": [],
       "envelope": {
@@ -3973,7 +3972,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "703a1967150ffa63e7666477f502a198d7a3e7fe83f90dfe6f1ef424171059ed",
+          "calculation_revision_id": "17f0b34638449024c53ae678c35561f3c909c17a48965f9a00f9a2507a49ab2c",
           "completeness_status": "complete",
           "findings": [
             {
@@ -4042,7 +4041,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "e55136e9efc8a73cac623ceb483b9a764240fc929c103760167fd753f4935a55",
+          "verification_report_id": "2e0f31fedde799d7f8a5c8dad34216d1f065a57c8acf7c8bfd499863ed6af97e",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
@@ -4063,7 +4062,7 @@
         "modelo",
         "work",
         "file",
-        "703a1967150ffa63e7666477f502a198d7a3e7fe83f90dfe6f1ef424171059ed"
+        "17f0b34638449024c53ae678c35561f3c909c17a48965f9a00f9a2507a49ab2c"
       ],
       "captures": [],
       "envelope": {
@@ -4075,13 +4074,13 @@
           "aeat_register": null,
           "amends_filing_record_id": null,
           "bucket_id": "<bucket-id>",
-          "calculation_revision_id": "703a1967150ffa63e7666477f502a198d7a3e7fe83f90dfe6f1ef424171059ed",
+          "calculation_revision_id": "17f0b34638449024c53ae678c35561f3c909c17a48965f9a00f9a2507a49ab2c",
           "confirmation": "pendiente",
           "declaration_kind": "original",
           "external_evidence": null,
           "filed_at": "2026-04-01T09:00:00+00:00",
           "filed_by": "docs-sequence-sandbox",
-          "filing_record_id": "e6d810f1fe077e8f156fc1cd0c09e94a73a32c10fbe274899afb74345b87579f",
+          "filing_record_id": "c38577fd56d23591a76f9abdf90c9716d382fc895f979227c9b120c8e8329ef1",
           "filing_year": 2026,
           "kind": "internal_filing",
           "live_submission": false,
@@ -4118,7 +4117,7 @@
         "export",
         "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d",
         "--revision",
-        "703a1967150ffa63e7666477f502a198d7a3e7fe83f90dfe6f1ef424171059ed",
+        "17f0b34638449024c53ae678c35561f3c909c17a48965f9a00f9a2507a49ab2c",
         "--output",
         "./modelo-303.boe"
       ],
@@ -4128,12 +4127,16 @@
         "command": "modelo.export",
         "error": {
           "action": null,
-          "category": "FAIL",
-          "code": "FAIL_MODELO_EXPORT",
+          "category": "REFUSED",
+          "code": "REFUSED_MODELO_EXPORT_PRODUCT_IDENTITY_UNAVAILABLE",
           "context": {
-            "calculation_revision_id": "703a1967150ffa63e7666477f502a198d7a3e7fe83f90dfe6f1ef424171059ed"
+            "calculation_revision_id": "17f0b34638449024c53ae678c35561f3c909c17a48965f9a00f9a2507a49ab2c",
+            "developer_positions": "101-109",
+            "modelo": "303",
+            "program_positions": "93-96",
+            "record": "DP30300"
           },
-          "message": "Modelo 303 export requires explicit product/software identity authority",
+          "message": "Official export is unavailable: the record design reserves the header fields \"Versión del Programa\" and \"NIF del desarrollador\" for the software developer, and no reviewed product identity exists for them. Cadrumo does not fill them with blanks or placeholders. The calculation and its verification remain valid; exporting needs a reviewed program identifier and developer NIF from the software developer.",
           "retryable": false,
           "runbook_id": null,
           "trace_id": null
@@ -4143,7 +4146,7 @@
         "status": "error"
       },
       "envelope_source": "stderr",
-      "exit_code": 5,
+      "exit_code": 2,
       "kind": "result",
       "stderr_text": null,
       "text": null

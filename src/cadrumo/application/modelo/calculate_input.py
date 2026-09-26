@@ -33,13 +33,14 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal, InvalidOperation
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, NoReturn
 
 from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.casilla_id import CasillaId
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.irnr import M210GrossIncomeSourceMode
 from ...core.modelo import Modelo
+from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...core.rescate_type import RescateType
 from ...core.time.clock import today_madrid
 from ...domain.calculations.registry.binding_selector_utils import boolean_binding_encoded_values
@@ -47,6 +48,7 @@ from ...domain.calculations.registry.casilla_membership import (
     casilla_noncanonical_reference_targets,
     casillas_by_id,
     declared_casilla_ids,
+    row_field_template_records_by_casilla,
 )
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
@@ -96,11 +98,13 @@ from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
 from ._registry_helpers import validate_casilla_input_ids
+from .action_errors import ModeloPreconditionErrorMixin
 from .calculation_action_ports import CalculationActionPorts
 
 # Intra-package reuse of a sibling module's cap, permitted by the architecture
 # rule; only cross-package private reaches are barred, and that gate is separate.
 from .minimo_descendientes_advisory import MAX_NAMED_DESCENDANTS
+from .preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure_for_scenario
 from .profile_binding import MaternidadMesesResolution
 from .semantic_role_resolution import AmbiguousSemanticRoleCasillaError, casilla_id_for_unique_revision_semantic_role
 from .work_plazo import M210PlazoResolution
@@ -165,7 +169,7 @@ class ModeloCalculateDetailRowsError(ModeloCalculateInputError):
     """Raised when detail rows violate modelo calculation preconditions."""
 
 
-class ModeloCalculateDecimalInputError(ModeloCalculateInputError):
+class ModeloCalculateDecimalInputError(ModeloPreconditionErrorMixin, ModeloCalculateInputError):
     """Raised when a calculation override value is not decimal-shaped."""
 
 
@@ -173,11 +177,11 @@ class ModeloCalculateTextInputError(ModeloCalculateInputError):
     """Raised when a ``--casilla`` override targets a text casilla with a value its type refuses."""
 
 
-class ModeloCalculateCasillaInputError(ModeloCalculateInputError):
+class ModeloCalculateCasillaInputError(ModeloPreconditionErrorMixin, ModeloCalculateInputError):
     """Raised when a casilla override cannot be resolved for the active revision."""
 
 
-class ModeloCalculateBindingInputError(ModeloCalculateInputError):
+class ModeloCalculateBindingInputError(ModeloPreconditionErrorMixin, ModeloCalculateInputError):
     """Raised when a ``--binding`` override cannot be resolved for the active revision."""
 
 
@@ -448,15 +452,20 @@ def _resolve_casilla_overrides(
     revision: ModeloRevision,
     *,
     operation: PinnedAuthorityOperation,
+    work_unit: WorkUnit,
 ) -> tuple[dict[CasillaId, Decimal], dict[CasillaId, str], str | None]:
     """Resolve canonical casilla overrides onto their registry-declared channels."""
     revision_casillas_by_id = casillas_by_id(revision)
+    row_field_records = row_field_template_records_by_casilla(revision)
     casilla_inputs: dict[CasillaId, Decimal] = {}
     text_casilla_inputs: dict[CasillaId, str] = {}
     m210_official_tipo_renta_code: str | None = None
     for raw_key, raw_value in casilla_overrides.items():
-        _refuse_detail_casilla_override(raw_key, operation=operation)
-        key = _validated_canonical_casilla_id(raw_key, revision)
+        key = _validated_canonical_casilla_id(raw_key, revision, work_unit=work_unit)
+        # Before any value parsing: a row field is refused for being one, not
+        # for a value its scalar channel could not have held anyway.
+        if key in row_field_records:
+            _refuse_row_field_casilla_override(key, records=row_field_records[key], work_unit=work_unit)
         casilla_def = revision_casillas_by_id.get(key)
         if casilla_def is not None and registry_scalar_value_type(casilla_def.data_type) == "str":
             text_value, official_code = _validated_string_casilla_override(
@@ -477,11 +486,20 @@ def _resolve_casilla_overrides(
     )
 
 
-def _resolve_binding_overrides(
+def resolve_binding_overrides(
     binding_overrides: Mapping[BindingId, str],
     revision: ModeloRevision,
+    *,
+    work_unit: WorkUnit | None = None,
 ) -> tuple[dict[BindingId, Decimal], dict[BindingId, str]]:
-    """Resolve binding overrides using the revision's declared input channels."""
+    """Resolve binding overrides using the revision's declared input channels.
+
+    ``work_unit`` is the calculate target; when supplied, a refused override
+    carries its declared ``modelo.work.calculate`` precondition failure.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
+    """
     binding_values: dict[BindingId, Decimal] = {}
     enum_binding_values: dict[BindingId, str] = {}
     if not binding_overrides:
@@ -497,11 +515,17 @@ def _resolve_binding_overrides(
                 context={"key": raw_key},
                 translated_message="application.modelo.errors.calculate_binding_is_date_sourced",
             )
-        key, channel = _validated_binding_input_channel(raw_key, revision, known_binding_ids, enum_channel_ids)
+        key, channel = _validated_binding_input_channel(
+            raw_key,
+            revision,
+            known_binding_ids,
+            enum_channel_ids,
+            work_unit=work_unit,
+        )
         if channel == "enum":
             enum_binding_values[key] = raw_value
             continue
-        binding_values[key] = _decimal_binding_value(raw_value, bindings_by_id[key])
+        binding_values[key] = _decimal_binding_value(raw_value, bindings_by_id[key], work_unit=work_unit)
     return binding_values, enum_binding_values
 
 
@@ -579,8 +603,13 @@ def build_work_calculate_input_bundle(
         casilla_overrides,
         revision,
         operation=operation,
+        work_unit=work_unit,
     )
-    binding_values, enum_binding_values = _resolve_binding_overrides(binding_overrides, revision)
+    binding_values, enum_binding_values = resolve_binding_overrides(
+        binding_overrides,
+        revision,
+        work_unit=work_unit,
+    )
 
     casilla_inputs, binding_values, shortcut_diagnostics = apply_calculation_shortcut_inputs(
         work_unit=work_unit,
@@ -660,7 +689,12 @@ def _decimal(raw_value: str, *, flag: str, key: str) -> Decimal:
     return parsed
 
 
-def _decimal_binding_value(raw_value: str, binding: BindingDefinition) -> Decimal:
+def _decimal_binding_value(
+    raw_value: str,
+    binding: BindingDefinition,
+    *,
+    work_unit: WorkUnit | None = None,
+) -> Decimal:
     """Parse a ``--binding`` decimal value, teaching the accepted encoding on failure.
 
     For a boolean-typed decimal-channel binding (the Modelo 100 estimación-directa
@@ -693,6 +727,13 @@ def _decimal_binding_value(raw_value: str, binding: BindingDefinition) -> Decima
                     "mapping": mapping,
                 },
                 translated_message="application.modelo.errors.calculate_boolean_binding_encoding_invalid",
+                precondition_failure=_caller_override_failure(
+                    work_unit,
+                    scenario_id="modelo.work.calculate.caller_overrides.boolean_binding_encoding_invalid",
+                    evidence_id=_BINDING_OVERRIDE_EVIDENCE_ID,
+                    facts={"binding_id": binding.id, "accepted_encoded_values": accepted},
+                    with_registry_listing=True,
+                ),
             )
         raise ModeloCalculateDecimalInputError(
             context={"flag": "--binding", "key": binding.id, "value": raw_value},
@@ -804,35 +845,19 @@ def _validated_m210_official_tipo_renta_code(raw_value: str, *, key: str) -> str
     )
 
 
-def _refuse_detail_casilla_override(
-    key: str,
-    *,
-    operation: PinnedAuthorityOperation,
-) -> None:
-    """Reject detail-row aliases before the decimal-only casilla path parses values."""
-    if not is_detail_casilla_override_key(key, operation=operation):
-        return
+def _refuse_row_field_casilla_override(key: CasillaId, *, records: tuple[str, ...], work_unit: WorkUnit) -> NoReturn:
+    """Refuse a casilla an export record fills once per detail row, naming those records."""
     raise ModeloCalculateCasillaInputError(
-        context={"key": key},
-        translated_message="application.modelo.errors.calculate_detail_casilla_unsupported",
+        context={"casilla_ids": str(key), "record_ids": ",".join(records)},
+        translated_message="errors.calc.row_field_template_supplied_as_input",
+        precondition_failure=_caller_override_failure(
+            work_unit,
+            scenario_id="modelo.work.calculate.caller_overrides.row_field_casilla_refused",
+            evidence_id=_CASILLA_OVERRIDE_EVIDENCE_ID,
+            facts={"casilla_key": str(key)},
+            with_registry_listing=False,
+        ),
     )
-
-
-def is_detail_casilla_override_key(
-    key: str,
-    *,
-    operation: PinnedAuthorityOperation,
-) -> bool:
-    """Return whether *key* names a reserved detail-row alias, not a scalar casilla."""
-    declarations = _registry_calculate_input_declarations(operation=operation)
-    prefixes = tuple(
-        str(entry.value).strip().lower()
-        for entry in declarations.payload.entries
-        if str(entry.key).startswith("detail_override.prefix.") and str(entry.value).strip()
-    )
-    if not prefixes:
-        raise TypeError("calculate-input declarations must define detail override prefixes")
-    return key.strip().lower().startswith(prefixes)
 
 
 def _capture_work_catalogue(
@@ -1119,11 +1144,51 @@ def _maternidad_meses_withheld_advisory(
     )
 
 
+_CALCULATE_SUBJECT_LEAF = "modelo.work.calculate"
+_BINDING_OVERRIDE_EVIDENCE_ID = "modelo.work.calculate.binding_override"
+_CASILLA_OVERRIDE_EVIDENCE_ID = "modelo.work.calculate.casilla_override"
+
+
+def _caller_override_failure(
+    work_unit: WorkUnit | None,
+    *,
+    scenario_id: str,
+    evidence_id: str,
+    facts: Mapping[str, str | int],
+    with_registry_listing: bool,
+) -> ModeloPreconditionFailure | None:
+    """Build the declared calculate refusal for one caller override, when the target is known.
+
+    Only the calculate verb supplies its work unit; the preview projection and
+    the edit path share the binding validators without being that verb, so
+    they get no ``modelo.work.calculate`` verdict. Every actionable
+    caller-override scenario recovers through a registry listing addressed by
+    the work unit's modelo, year and period.
+    """
+    if work_unit is None:
+        return None
+    listing_arguments: Mapping[str, str | int] = {
+        "modelo": str(work_unit.modelo),
+        "year": work_unit.filing_year,
+        "period": work_unit.period.registry_token,
+    }
+    return build_modelo_precondition_failure_for_scenario(
+        subject_leaf_key=_CALCULATE_SUBJECT_LEAF,
+        scenario_id=scenario_id,
+        evidence_id=evidence_id,
+        evidence_values={"work_unit_id": work_unit.work_unit_id, **listing_arguments, **facts},
+        provenance=ActionEvidenceProvenance.REGISTRY_RECORD,
+        action_argument_values=listing_arguments if with_registry_listing else None,
+    )
+
+
 def _validated_binding_input_channel(
     key: str,
     revision: ModeloRevision,
     known_binding_ids: set[BindingId],
     enum_channel_ids: frozenset[BindingId],
+    *,
+    work_unit: WorkUnit | None = None,
 ) -> tuple[BindingId, Literal["decimal", "enum"]]:
     """Return the registry-declared engine channel for a ``--binding`` override.
 
@@ -1142,6 +1207,17 @@ def _validated_binding_input_channel(
         raise ModeloCalculateBindingInputError(
             context={"key": key, "accepted": accepted},
             translated_message="application.modelo.errors.calculate_binding_unknown",
+            precondition_failure=_caller_override_failure(
+                work_unit,
+                scenario_id="modelo.work.calculate.caller_overrides.binding_unknown",
+                evidence_id=_BINDING_OVERRIDE_EVIDENCE_ID,
+                facts={
+                    "binding_id": key,
+                    "revision_id": revision.id,
+                    "declared_binding_count": len(known_binding_ids),
+                },
+                with_registry_listing=True,
+            ),
         )
     return key, "enum" if key in enum_channel_ids else "decimal"
 
@@ -1156,7 +1232,7 @@ def _validated_relation_id(key: str, known_relation_ids: set[RelationId]) -> Rel
     )
 
 
-def _validated_canonical_casilla_id(key: str, revision: ModeloRevision) -> CasillaId:
+def _validated_canonical_casilla_id(key: str, revision: ModeloRevision, *, work_unit: WorkUnit) -> CasillaId:
     known_ids = declared_casilla_ids(revision)
     if key in known_ids:
         return key
@@ -1180,6 +1256,17 @@ def _validated_canonical_casilla_id(key: str, revision: ModeloRevision) -> Casil
     raise ModeloCalculateCasillaInputError(
         context={"key": key, "accepted": accepted_hint},
         translated_message="application.modelo.errors.calculate_casilla_unknown",
+        precondition_failure=_caller_override_failure(
+            work_unit,
+            scenario_id="modelo.work.calculate.caller_overrides.casilla_unknown",
+            evidence_id=_CASILLA_OVERRIDE_EVIDENCE_ID,
+            facts={
+                "casilla_key": key,
+                "revision_id": revision.id,
+                "declared_casilla_count": len(known_ids),
+            },
+            with_registry_listing=True,
+        ),
     )
 
 
@@ -1659,6 +1746,6 @@ __all__ = [
     "apply_calculation_shortcut_inputs",
     "build_work_calculate_input_bundle",
     "calculate_modelo_work_revision",
-    "is_detail_casilla_override_key",
     "modelo_202_modality_for_work_unit",
+    "resolve_binding_overrides",
 ]

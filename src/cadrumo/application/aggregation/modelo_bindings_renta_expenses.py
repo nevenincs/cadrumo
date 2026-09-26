@@ -19,6 +19,7 @@ from ...domain.calculations.registry.ledger_renta_gastos_estimacion_directa_bind
 )
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from ...domain.renta.ledger_expenses import RentaDeductibleExpenseObservation
+from ..actividad_asset.ports import ActivityAssetHistoryRepository
 from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPersistenceError, InvoiceCatalogueReadPorts
 from ..ledger.usage_ratio_repository import UsageRatioProfileLoader
 from ..user_profile.usage_ratio_resolution import resolve_effective_usage_ratios
@@ -28,6 +29,11 @@ from ._modelo_bindings_support import (
     revision_has_binding_source,
 )
 from .modelo_bindings import aggregation_period_for_modelo
+from .modelo_bindings_actividad_assets import (
+    CompetingDepreciationTreatment,
+    activity_asset_expense_observations,
+    refuse_competing_depreciation_treatments,
+)
 from .renta_ledger import aggregate_renta_ledger_expenses_from_repositories
 from .source_mesh import (
     CalculationSourceContext,
@@ -66,11 +72,13 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
         ports: InvoiceCatalogueReadPorts,
         prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
         usage_ratio_profile_loader: UsageRatioProfileLoader,
+        activity_asset_history_repository: ActivityAssetHistoryRepository,
     ) -> None:
         """Initialize the resolver with its required catalogue read capabilities."""
         self._ports = ports
         self._prorrata_register_repository = prorrata_register_repository
         self._usage_ratio_profile_loader = usage_ratio_profile_loader
+        self._activity_asset_history_repository = activity_asset_history_repository
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
         """Resolve the ledger Renta gastos estimación directa aggregation binding for ``context``.
@@ -115,15 +123,36 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
                 source_kinds=self.owned_sources,
                 error=exc,
             )
-        unrouted = unsupported_ledger_renta_gastos_estimacion_directa_observations(
-            context.revision, aggregation.observations
+        asset_history = self._activity_asset_history_repository.load()
+        refuse_competing_depreciation_treatments(
+            asset_history.revisions,
+            asset_history.claims,
+            tuple(
+                CompetingDepreciationTreatment(
+                    asset_id=asset.asset_id,
+                    transaction_id=observation.transaction_id,
+                    category=str(observation.category),
+                    tax_year=observation.tax_year,
+                )
+                for observation in aggregation.observations
+                for asset in asset_history.revisions
+                if observation.transaction_id == asset.acquisition.observed_transaction_id
+                and str(observation.target_casilla_id) in {"0208", "0227"}
+            ),
         )
+        asset_observations = activity_asset_expense_observations(
+            asset_history.claims,
+            modelo="100",
+            period=aggregation.period,
+        )
+        all_observations = (*aggregation.observations, *asset_observations)
+        unrouted = unsupported_ledger_renta_gastos_estimacion_directa_observations(context.revision, all_observations)
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
             binding_values=resolve_ledger_renta_gastos_estimacion_directa_aggregation_binding_values(
                 context.revision,
-                aggregation.observations,
+                all_observations,
             ),
             source_transaction_ids=sorted_ids(aggregation.observations, lambda observation: observation.transaction_id),
             diagnostics=source_issue_diagnostics(
@@ -151,6 +180,19 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
             provenance=_flattened_provenance_for(
                 aggregation.observations,
                 _renta_observation_provenance,
+            )
+            + tuple(
+                CalculationSourceProvenance(
+                    resolver_id=self.resolver_id,
+                    resolved_binding_source=BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION,
+                    contributor_source_kind="activity_asset_claim",
+                    contributor_binding_source=None,
+                    lineage_role=CalculationSourceLineageRole.PRIMARY,
+                    source_ref=f"activity-asset-claim:{observation.claim_id}",
+                    parent_source_ref=None,
+                    terminal_origin=TerminalOriginClass.LEDGER_AGGREGATE,
+                )
+                for observation in asset_observations
             ),
         )
 

@@ -360,6 +360,15 @@ def test_public_port_signatures_pin_explicit_lease_evidence_inputs() -> None:
         "expected_revision",
         "lease",
     )
+    assert tuple(inspect.signature(OperationJournal.commit_settlement).parameters) == (
+        "self",
+        "snapshot",
+        "expected_revision",
+        "lease",
+    )
+    assert inspect.signature(OperationJournal.commit_settlement).parameters["lease"].kind is (
+        inspect.Parameter.KEYWORD_ONLY
+    )
     assert tuple(inspect.signature(OperationEventStream.read_after).parameters) == (
         "self",
         "operation_id",

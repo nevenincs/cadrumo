@@ -21,4 +21,6 @@ Submodules
    cadrumo.adapters.inbound.financial.providers.detection
    cadrumo.adapters.inbound.financial.providers.ofx
    cadrumo.adapters.inbound.financial.providers.pdf_n26
+   cadrumo.adapters.inbound.financial.providers.workbook_layout
+   cadrumo.adapters.inbound.financial.providers.xls
    cadrumo.adapters.inbound.financial.providers.xlsx

@@ -1,29 +1,21 @@
-"""Verify that non-NoActiveProfileError exceptions propagate unchanged.
+"""Verify that a failure other than NoActiveProfileError is never read as "no profile".
 
-contract assertion: after contract narrows the broad ``except Exception`` catch in
-``_ratios_bucket_id``, ``_ratios_bucket_and_profile``, and
-``_rule_bucket_id`` to ``except NoActiveProfileError``, any unexpected
-exception (e.g. a corrupt active-profile pointer file producing a
-``pydantic.ValidationError``) must NOT be swallowed as the "no active
-profile" refusal.  Instead it must propagate to the top-level error
-boundary and surface as a categorically different typed envelope.
+``_ratios_bucket_id``, ``_ratios_bucket_and_profile`` and ``_rule_bucket_id``
+catch only ``NoActiveProfileError``. Anything else, such as a corrupt
+active-profile pointer, must reach the top-level error boundary as its own
+typed envelope rather than as the profile-create guidance an absent profile
+gets.
 
-Real-behavior test: uses a genuinely corrupt ``active-profile`` pointer
-file on disk to trigger the unexpected-exception path through the real
-production call stack.  No monkeypatching, no test doubles.
+Real-behavior test: uses a genuinely corrupt ``active-profile`` pointer file on
+disk to drive the real production call stack. No monkeypatching, no test
+doubles. The call chain under test:
 
-The call chain under test:
   ``aeat app ledger ratios list``
     → ``_ratios_bucket_and_profile()``
       → ``require_active_bucket_id()``
         → ``resolve_active_bucket_id()``
           → ``read_pointer(storage_root)``
-            → ``BucketPointer.from_toml(corrupt_text)``
-              → ``pydantic.ValidationError`` (not CadrumoError)
-
-Before contract the broad ``except Exception`` erased this distinction. After
-contract only ``NoActiveProfileError`` is caught and the
-``pydantic.ValidationError`` reaches the typed CLI validation boundary.
+            → ``ActiveProfilePointerError``
 """
 
 from __future__ import annotations
@@ -55,15 +47,8 @@ __all__ = ["_sessionless_root"]
 def _corrupt_pointer_root(tmp_path: Path) -> Iterator[Path]:
     """Storage root whose active-profile pointer file contains a partial TOML payload.
 
-    The file is valid TOML but is missing the required ``bucket_id`` field, so
-    ``BucketPointer.model_validate`` raises a ``pydantic.ValidationError`` — which
-    is NOT an ``CadrumoError`` subclass.
-
-    Before contract this exception was silently reclassified as the "no active
-    profile" refusal by the broad ``except Exception`` clause.  After contract
-    only ``NoActiveProfileError`` is caught; the ``pydantic.ValidationError``
-    propagates to the top-level CLI error boundary and surfaces as the
-    validation-boundary envelope.
+    The file is valid TOML but lacks the pointer's required fields, so the
+    reader refuses it as the typed pointer corruption.
     """
     with isolated_sessionless_storage_root(tmp_path=tmp_path) as storage_root:
         pointer_file = pointer_path(storage_root)
@@ -100,34 +85,16 @@ def test_no_pointer_projects_the_canonical_profile_action(_sessionless_root: Pat
 # ---------------------------------------------------------------------------
 
 
-def test_corrupt_pointer_projects_the_validation_boundary(
+def test_corrupt_pointer_projects_the_typed_pointer_refusal(
     _corrupt_pointer_root: Path,
 ) -> None:
-    """A corrupt pointer file raises a non-CadrumoError that must NOT be swallowed
-    as the 'no active profile' refusal.
-
-    Before contract the broad ``except Exception`` caught every exception and
-    converted it to the same profile-create guidance, hiding the real error.
-    After contract only ``NoActiveProfileError`` is caught; the
-    ``pydantic.ValidationError`` from the corrupt pointer propagates to the
-    top-level CLI error boundary and surfaces as a validation-boundary
-    envelope with its own condition evidence and terminal outcome.
-    """
+    """A corrupt pointer surfaces as itself, routed to its repair, and never as "no profile"."""
     result = invoke_cached_cli(["--format", "json", "app", "ledger", "ratios", "list"])
 
     assert result.exit_code != 0
     error = _object_member(require_error_document(result.output), "error")
-    assert error["code"] == "REFUSED_CLI_VALIDATION_BOUNDARY"
+    assert error["code"] == "INTEGRITY_ACTIVE_PROFILE_POINTER"
+    assert _object_member(error, "context")["path"] == str(pointer_path(_corrupt_pointer_root))
     action = _object_member(error, "action")
-    assert action["failed_condition_id"] == "cli.validation.boundary_clean"
-    assert action["evidence"] == [
-        {
-            "condition_id": "cli.validation.boundary_clean",
-            "evidence_id": "cli.validation.boundary_clean.observation",
-            "provenance": "runtime_observation",
-            "values": {"boundary_error_type": "CliValidationBoundaryError"},
-        }
-    ]
-    assert action["action"] is None
-    assert action["conditionality"] == "not_applicable"
-    assert action["no_recovery_outcome"] == "operator_decision"
+    assert action["failed_condition_id"] == "profile.active.pointer.valid"
+    assert _object_member(action, "action")["action_id"] == "operator.profile.repair_active_pointer"

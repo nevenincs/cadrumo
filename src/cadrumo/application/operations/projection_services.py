@@ -385,8 +385,14 @@ class OperationReviewProjectionService:
     async def resolve[ReviewProjectionT: BaseModel](
         self,
         request: OperationReviewProjectionVersionHeader | OperationReviewProjectionRequestV1,
+        projection_type: type[ReviewProjectionT],
     ) -> OperationReviewProjectionResultV1[ReviewProjectionT]:
-        """Resolve the exact registered REVIEW projection or a typed refusal."""
+        """Resolve the exact registered REVIEW projection or a typed refusal.
+
+        ``projection_type`` names the model the caller expects. A request whose
+        registered schema binds a different model refuses rather than returning
+        a projection of another shape under the caller's name.
+        """
         reference_or_refusal = _review_request_or_refusal(request)
         if isinstance(reference_or_refusal, OperationReviewProjectionRefusalV1):
             return reference_or_refusal
@@ -396,7 +402,12 @@ class OperationReviewProjectionService:
         registration_or_refusal = _lookup_review_registration(self.registry, context_or_refusal)
         if isinstance(registration_or_refusal, OperationReviewProjectionRefusalV1):
             return registration_or_refusal
-        return await _resolve_review_projection(self.registry, self.operands, registration_or_refusal)
+        return await _resolve_review_projection(
+            self.registry,
+            self.operands,
+            registration_or_refusal,
+            projection_type,
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -409,8 +420,13 @@ class OperationWorkspaceRefreshTargetService:
     async def resolve[RefreshTargetT: BaseModel](
         self,
         request: OperationWorkspaceRefreshTargetVersionHeader | OperationWorkspaceRefreshTargetRequestV1,
+        target_type: type[RefreshTargetT],
     ) -> OperationWorkspaceRefreshTargetResultV1[RefreshTargetT]:
-        """Resolve the exact registered refresh target or a typed refusal."""
+        """Resolve the exact registered refresh target or a typed refusal.
+
+        ``target_type`` names the model the caller expects. A request whose
+        registered schema binds a different model refuses.
+        """
         request_or_refusal = _refresh_request_or_refusal(request)
         if isinstance(request_or_refusal, OperationWorkspaceRefreshTargetRefusalV1):
             return request_or_refusal
@@ -420,7 +436,7 @@ class OperationWorkspaceRefreshTargetService:
         registration_or_refusal = _lookup_refresh_registration(self.registry, context_or_refusal)
         if isinstance(registration_or_refusal, OperationWorkspaceRefreshTargetRefusalV1):
             return registration_or_refusal
-        return await _resolve_refresh_target(self.registry, registration_or_refusal)
+        return await _resolve_refresh_target(self.registry, registration_or_refusal, target_type)
 
 
 @dataclass(frozen=True, slots=True)
@@ -441,8 +457,13 @@ class OperationResultProjectionService:
     async def resolve[ResultProjectionT: BaseModel](
         self,
         request: OperationResultProjectionVersionHeader | OperationResultProjectionRequestV1,
+        projection_type: type[ResultProjectionT],
     ) -> OperationResultProjectionResultV1[ResultProjectionT]:
-        """Resolve the exact registered public result projection or a refusal."""
+        """Resolve the exact registered public result projection or a refusal.
+
+        ``projection_type`` names the model the caller expects. A request whose
+        registered schema binds a different model refuses.
+        """
         request_or_refusal = _result_request_or_refusal(request)
         if isinstance(request_or_refusal, OperationResultProjectionRefusalV1):
             return request_or_refusal
@@ -460,6 +481,7 @@ class OperationResultProjectionService:
             self.operands,
             registration_or_refusal,
             digest_or_refusal,
+            projection_type,
         )
 
 

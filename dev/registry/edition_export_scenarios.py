@@ -41,13 +41,15 @@ does not require its bytes.
 
 Modelos with no draft input
 ---------------------------
-Modelos 714, 322, 490, 309, 308, 123, 604, 151, 165, 184, 202, 180, 185, 210,
+Modelos 714, 322, 490, 309, 123, 604, 151, 165, 184, 202, 180, 185, 210,
 270, 341, 353 and 576 route through one shared
 builder, :func:`general_export_scenario`. These scenarios need no extra
 software-identity evidence and declare no required repeated record, so an empty draft leaves no required occurrence
 unemitted and the compared bytes judge each edition's base layout and envelope,
 as Modelo 390's do. Each carries the full set of its export-bearing editions, so
 no edition of a listed modelo reports missing while its siblings report clean.
+Modelo 308 shares that same empty draft but, like 200 and 322, needs its own
+envelope software identity, so its own builder supplies it.
 
 Where it stops
 --------------
@@ -96,6 +98,24 @@ from cadrumo.application.filing.producer_snapshot import (
     PresenterIdentity,
     TaxpayerIdentityFacts,
     build_filing_producer_snapshot,
+)
+from cadrumo.application.filing.producer_snapshot_m200 import (
+    Modelo200AdministradorRow,
+    Modelo200EntidadMenorDependienteRow,
+    Modelo200EntidadParticipadaRow,
+    Modelo200EstablecimientoPermanenteRow,
+    Modelo200IncnEstablecimientoPermanenteRow,
+    Modelo200IncnGrupoSociedadRow,
+    Modelo200OperacionReestructuracionRow,
+    Modelo200ParticipacionDirectaRow,
+    Modelo200ParticipacionSocioRow,
+    Modelo200ParticipeAieUteRow,
+    Modelo200ProfileFacts,
+    Modelo200ProjectionRows,
+    Modelo200RepresentanteLegalRow,
+    Modelo200SecretarioConsejoRow,
+    Modelo200SocioSicavDisolucionRow,
+    Modelo200TransparenciaFiscalInternacionalRow,
 )
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.filing_projection_ref import M303RegimenSimplificadoFact
@@ -186,10 +206,13 @@ __all__ = [
     "edition_export_scenarios",
     "general_export_scenario",
     "m131_export_scenario",
+    "m190_export_scenario",
+    "m193_export_scenario",
     "m200_export_scenario",
     "m222_export_scenario",
     "m296_export_scenario",
     "m303_export_scenario",
+    "m308_export_scenario",
     "m322_export_scenario",
     "m390_export_scenario",
 ]
@@ -208,11 +231,15 @@ M189_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
 }
 #: The annual period each Modelo 190 edition is rendered for.
 M190_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
+    "2022": Period.from_year_and_code(2022, "0A"),
+    "2023": Period.from_year_and_code(2023, "0A"),
     "2024": Period.from_year_and_code(2024, "0A"),
     "2025-y-siguientes": Period.from_year_and_code(2025, "0A"),
 }
 #: The annual period each Modelo 193 edition is rendered for.
 M193_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
+    "2022": Period.from_year_and_code(2022, "0A"),
+    "2023": Period.from_year_and_code(2023, "0A"),
     "2024": Period.from_year_and_code(2024, "0A"),
     "2025-y-siguientes": Period.from_year_and_code(2025, "0A"),
 }
@@ -258,6 +285,9 @@ M714_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
     "2024": Period.from_year_and_code(2024, "0A"),
     "2025": Period.from_year_and_code(2025, "0A"),
 }
+#: The first filing year of Modelo 322's BOE fichero layout, which stamps no
+#: filing envelope where the editions before it do.
+_M322_BOE_LAYOUT_FROM_YEAR: Final = 2026
 #: The month each Modelo 322 edition is rendered for; 322 is a monthly group filer.
 M322_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
     "2008-2022": Period.from_year_and_code(2022, "01"),
@@ -759,6 +789,75 @@ def _m131_producer_snapshot() -> FilingProducerSnapshot:
     )
 
 
+# ── modelo 190 ──────────────────────────────────────────────────────────────
+
+#: The eight ``provider.kind = "withholding"`` grouped-row-sum bindings the 2022
+#: and 2023 editions' declarante summary formulas (percepciones-total,
+#: retenciones-total) add over. The 2024 edition replaces that formula with
+#: modelo 111 relation prefills instead, and every edition after it inherits
+#: that replacement, so from 2024 onward these bindings are no longer declared
+#: and must not be supplied.
+_M190_PERCEPTOR_ROW_TOTAL_BINDINGS: Final = (
+    "modelo-190-perceptor-rows-percepcion-dineraria-total",
+    "modelo-190-perceptor-rows-percepcion-especie-total",
+    "modelo-190-perceptor-rows-incapacidad-dineraria-total",
+    "modelo-190-perceptor-rows-incapacidad-especie-total",
+    "modelo-190-perceptor-rows-retencion-practicada-total",
+    "modelo-190-perceptor-rows-ingreso-a-cuenta-total",
+    "modelo-190-perceptor-rows-incapacidad-retencion-total",
+    "modelo-190-perceptor-rows-incapacidad-ingreso-a-cuenta-total",
+)
+
+
+def m190_export_scenario(period: Period) -> EditionExportScenario:
+    """A Modelo 190 annual scenario supplying the withholding row totals the 2022 and 2023 editions sum.
+
+    Those two editions bind their declarante summary casillas to formulas over
+    eight withholding grouped-row-sum bindings -- the annual total each type-2
+    perceptor row family sums to -- so an empty draft leaves them unresolved.
+    """
+    inputs: dict[str, Decimal] = {}
+    if period.filing_year <= 2023:
+        inputs = {binding_id: Decimal("1000.00") for binding_id in _M190_PERCEPTOR_ROW_TOTAL_BINDINGS}
+    return EditionExportScenario(
+        period=period,
+        inputs=inputs,
+        producer_snapshot=partial(_general_producer_snapshot, "190"),
+    )
+
+
+# ── modelo 193 ──────────────────────────────────────────────────────────────
+
+#: The two ``provider.kind = "withholding"`` grouped-row-sum bindings the 2022,
+#: 2023 and 2025-y-siguientes editions' declarante summary formulas add over.
+#: The 2024 edition replaces that formula with modelo 123 relation prefills
+#: instead, so it does not declare them.
+_M193_PERCEPTOR_ROW_TOTAL_BINDINGS: Final = (
+    "modelo-193-perceptor-rows-base-total",
+    "modelo-193-perceptor-rows-retenciones-total",
+)
+
+
+def m193_export_scenario(period: Period) -> EditionExportScenario:
+    """A Modelo 193 annual scenario supplying its manual gastos total and the withholding row totals it sums.
+
+    ``decl.gastos-total`` is a manual declarante casilla every edition declares
+    required, so every edition needs it supplied directly. The 2022, 2023 and
+    2025-y-siguientes editions additionally bind their base-total and
+    retenciones-total casillas to formulas over two withholding grouped-row-sum
+    bindings; the 2024 edition replaces that formula with modelo 123 relation
+    prefills instead.
+    """
+    inputs: dict[str, Decimal] = {"decl.gastos-total": Decimal("500.00")}
+    if period.filing_year != 2024:
+        inputs.update({binding_id: Decimal("1000.00") for binding_id in _M193_PERCEPTOR_ROW_TOTAL_BINDINGS})
+    return EditionExportScenario(
+        period=period,
+        inputs=inputs,
+        producer_snapshot=partial(_general_producer_snapshot, "193"),
+    )
+
+
 # ── modelos whose export path asks for no draft input ───────────────────────
 
 
@@ -772,12 +871,119 @@ def _scenario_software_identity(modelo_id: str) -> AeatProductSoftwareIdentity:
 
 
 def m200_export_scenario(period: Period) -> EditionExportScenario:
-    """An empty synthetic corporate draft with explicit envelope software evidence."""
+    """A synthetic corporate draft with explicit envelope software evidence and its rate-dispatch profile bindings.
+
+    The cuota-integra and tipo-gravamen formulas dispatch on the new-entity
+    profile flag; both of its branches then look up the rate by legal entity
+    form, and the cuota-ejercicio-a-ingresar formula unconditionally consumes
+    the tributacion-estado-porcentaje profile binding. None of the three is a
+    draft input the operator supplies through a casilla, so an empty draft
+    leaves them unresolved.
+
+    Six records of the layout -- pages 2, 2b, 21, 23, 24b and 25 -- are required
+    and consist of projection fields alone, so each needs at least one row of
+    every family it prints. The snapshot below supplies exactly one synthetic
+    row per family, carrying the identity the row is about and leaving every
+    monetary member absent, which is what AEAT's blancos rule prescribes for an
+    unsupplied alphanumeric field.
+    """
     return EditionExportScenario(
         period=period,
-        inputs={},
-        producer_snapshot=partial(_general_producer_snapshot, "200"),
+        inputs={
+            "modelo-200-profile-new-entity-flag": True,
+            "modelo-200-profile-legal-entity-form": "sl",
+            "modelo-200-profile-tributacion-estado-porcentaje": Decimal("100"),
+            # DP200012 casilla 00501, "Resultado de la cuenta de pérdidas y
+            # ganancias": the edition declares it required, and the base
+            # determination starts from it, so no draft can omit it.
+            "00501": Decimal("0.00"),
+        },
+        producer_snapshot=_m200_producer_snapshot,
+        prior_domiciliation_election=PriorDomiciliationElection.KEEP,
         product_software_identity_factory=partial(_scenario_software_identity, "200"),
+    )
+
+
+#: The synthetic NIF every Modelo 200 projected party is identified by. Nine
+#: characters, the width the diseño gives each of those NIF fields.
+_M200_SYNTHETIC_NIF: Final = "B00000000"
+#: The synthetic country/province code the two-character ``codigo`` members take.
+_M200_SYNTHETIC_COUNTRY: Final = "ES"
+
+
+def _m200_projection_rows() -> Modelo200ProjectionRows:
+    """One synthetic row of every repeated family modelo 200's layout projects."""
+    return Modelo200ProjectionRows(
+        administrador=(Modelo200AdministradorRow(nif=_M200_SYNTHETIC_NIF, apellidos_nombre_razon_social="Ana Prueba"),),
+        entidad_menor_dependiente=(
+            Modelo200EntidadMenorDependienteRow(nif=_M200_SYNTHETIC_NIF, nombre_o_razon_social="Prueba SL"),
+        ),
+        entidad_participada=(
+            Modelo200EntidadParticipadaRow(nif=_M200_SYNTHETIC_NIF, nombre_o_razon_social="Prueba SL"),
+        ),
+        establecimiento_permanente=(
+            Modelo200EstablecimientoPermanenteRow(
+                identificacion="Prueba EP",
+                pais_residencia_fiscal=_M200_SYNTHETIC_COUNTRY,
+            ),
+        ),
+        incn_establecimiento_permanente=(Modelo200IncnEstablecimientoPermanenteRow(nif=_M200_SYNTHETIC_NIF),),
+        incn_grupo_sociedad=(
+            Modelo200IncnGrupoSociedadRow(
+                nif_entidad_grupo=_M200_SYNTHETIC_NIF,
+                codigo_pais=_M200_SYNTHETIC_COUNTRY,
+            ),
+        ),
+        operacion_reestructuracion=(
+            Modelo200OperacionReestructuracionRow(
+                transmitente_nif=_M200_SYNTHETIC_NIF,
+                adquirente_nif=_M200_SYNTHETIC_NIF,
+            ),
+        ),
+        participacion_directa=(
+            Modelo200ParticipacionDirectaRow(nif=_M200_SYNTHETIC_NIF, nombre_o_razon_social="Prueba SL"),
+        ),
+        participacion_socio=(
+            Modelo200ParticipacionSocioRow(nif=_M200_SYNTHETIC_NIF, apellidos_nombre_razon_social="Ana Prueba"),
+        ),
+        participe_aie_ute=(
+            Modelo200ParticipeAieUteRow(nif=_M200_SYNTHETIC_NIF, apellidos_nombre_razon_social="Ana Prueba"),
+        ),
+        representante_legal=(Modelo200RepresentanteLegalRow(nif=_M200_SYNTHETIC_NIF, apellidos_y_nombre="Ana Prueba"),),
+        secretario_consejo=(Modelo200SecretarioConsejoRow(nif=_M200_SYNTHETIC_NIF, apellidos_y_nombre="Ana Prueba"),),
+        socio_sicav_disolucion=(
+            Modelo200SocioSicavDisolucionRow(
+                nif_sociedad_disuelta=_M200_SYNTHETIC_NIF,
+                nif_iic_reinversion=_M200_SYNTHETIC_NIF,
+            ),
+        ),
+        transparencia_fiscal_internacional=(
+            Modelo200TransparenciaFiscalInternacionalRow(
+                nombre_o_razon_social="Prueba SL",
+                clave_pais_territorio=_M200_SYNTHETIC_COUNTRY,
+            ),
+        ),
+    )
+
+
+def _m200_producer_snapshot() -> FilingProducerSnapshot:
+    """The Modelo 200 snapshot whose typed rows feed the layout's projection pages."""
+    return build_filing_producer_snapshot(
+        modelo=Modelo("200"),
+        taxpayer_tax_id=SYNTHETIC_TAX_ID,
+        taxpayer_identity=_TAXPAYER,
+        presenter=_presenter(),
+        model_profile=Modelo200ProfileFacts(projection_rows=_m200_projection_rows()),
+        elections=FilingElectionFacts(
+            result_disposition=ResultDisposition.NEGATIVA,
+            payment=PaymentElection.INGRESO,
+            refund=RefundElection.COMPENSAR,
+            prior_domiciliation=PriorDomiciliationElection.KEEP,
+        ),
+        amendment_evidence=None,
+        m303_filing_facts=None,
+        refund_account=None,
+        charge_account=None,
     )
 
 
@@ -867,8 +1073,11 @@ def general_export_scenario(modelo_id: str, period: Period) -> EditionExportScen
     end Modelo 390 already occupies. Modelos needing software-identity
     evidence, group identity or required detail occurrences use their own
     builders, which supply those facts explicitly.
-    The modelos routed here declare no required repeated record, so an empty
-    draft satisfies their occurrence requirements.
+    The modelos routed here declare no required repeated record and no other
+    required casilla an empty draft leaves unresolved. A modelo whose required
+    declarante total is bound to a formula over registry-sourced bindings the
+    draft never supplies -- Modelo 190's and 193's percepciones/retenciones
+    totals, for instance -- gets its own builder instead.
     """
     return EditionExportScenario(
         period=period,
@@ -906,12 +1115,23 @@ def _general_producer_snapshot(
 
 
 def m322_export_scenario(period: Period) -> EditionExportScenario:
-    """A synthetic complementaria exercising amendment fields and envelope evidence."""
+    """A synthetic complementaria carrying the envelope evidence only the editions that stamp one need.
+
+    The 2008-2022, 2023 and 2024-2025 editions render a filing envelope, which
+    the canonical export path refuses without BOTH an explicit
+    product/software identity and an explicit prior-domiciliation election. The
+    2026-y-siguientes edition replaces that layout with the BOE fichero, which
+    declares no envelope prefix, and the same path refuses a product/software
+    identity no layout stamps. The envelope facts therefore follow the layout,
+    not the modelo.
+    """
+    stamps_envelope = period.filing_year < _M322_BOE_LAYOUT_FROM_YEAR
     return EditionExportScenario(
         period=period,
         inputs={},
         producer_snapshot=_m322_producer_snapshot,
-        product_software_identity_factory=partial(_scenario_software_identity, "322"),
+        prior_domiciliation_election=PriorDomiciliationElection.KEEP if stamps_envelope else None,
+        product_software_identity_factory=(partial(_scenario_software_identity, "322") if stamps_envelope else None),
     )
 
 
@@ -926,11 +1146,28 @@ def _m322_producer_snapshot() -> FilingProducerSnapshot:
     )
 
 
+def m308_export_scenario(period: Period) -> EditionExportScenario:
+    """An empty synthetic draft with explicit envelope software evidence, as 200 and 322 supply.
+
+    Modelo 308's export layout renders an envelope prefix, which the canonical
+    export path refuses without explicit product/software identity authority
+    and an explicit prior-domiciliation election, whichever the layout's own
+    policy leaves defaulted.
+    """
+    return EditionExportScenario(
+        period=period,
+        inputs={},
+        producer_snapshot=partial(_general_producer_snapshot, "308"),
+        prior_domiciliation_election=PriorDomiciliationElection.KEEP,
+        product_software_identity_factory=partial(_scenario_software_identity, "308"),
+    )
+
+
 #: Per modelo, the scenario builder and the period each edition is rendered for.
 _DECLARED_SCENARIOS: Final[Mapping[str, tuple[Callable[[Period], EditionExportScenario], Mapping[str, Period]]]] = {
     str(Modelo("189")): (partial(general_export_scenario, "189"), M189_SCENARIO_PERIODS),
-    str(Modelo("190")): (partial(general_export_scenario, "190"), M190_SCENARIO_PERIODS),
-    str(Modelo("193")): (partial(general_export_scenario, "193"), M193_SCENARIO_PERIODS),
+    str(Modelo("190")): (m190_export_scenario, M190_SCENARIO_PERIODS),
+    str(Modelo("193")): (m193_export_scenario, M193_SCENARIO_PERIODS),
     str(Modelo("232")): (partial(general_export_scenario, "232"), M232_SCENARIO_PERIODS),
     str(Modelo("345")): (partial(general_export_scenario, "345"), M345_SCENARIO_PERIODS),
     # Modelo 347 is deliberately absent. Its m347-declarado record is a REQUIRED
@@ -945,7 +1182,7 @@ _DECLARED_SCENARIOS: Final[Mapping[str, tuple[Callable[[Period], EditionExportSc
     str(Modelo("322")): (m322_export_scenario, M322_SCENARIO_PERIODS),
     str(Modelo("490")): (partial(general_export_scenario, "490"), M490_SCENARIO_PERIODS),
     str(Modelo("309")): (partial(general_export_scenario, "309"), M309_SCENARIO_PERIODS),
-    str(Modelo("308")): (partial(general_export_scenario, "308"), M308_SCENARIO_PERIODS),
+    str(Modelo("308")): (m308_export_scenario, M308_SCENARIO_PERIODS),
     str(Modelo("123")): (partial(general_export_scenario, "123"), M123_SCENARIO_PERIODS),
     str(Modelo("604")): (partial(general_export_scenario, "604"), M604_SCENARIO_PERIODS),
     str(Modelo("151")): (partial(general_export_scenario, "151"), M151_SCENARIO_PERIODS),

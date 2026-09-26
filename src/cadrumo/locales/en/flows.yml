@@ -54,26 +54,77 @@ flows:
       running: Checking the profile and completing setup…
     edit:
       cancel: Cancel
+      choose_one: Choose one of the options, or cancel to leave the value unchanged.
       clear: Clear
       masked_kept: This value is hidden, so the box starts empty. Leave it empty to
         keep the value on record, or type a new one to replace it.
+      no_change: No changes were needed.
       required_blank: '{field} is required, so it cannot be left blank. Enter a value,
         or cancel to leave it unchanged.'
       save: Save
+      saved: Saved.
       shape:
         date: 'Format: YYYY-MM-DD - for example 1978-03-15.'
         decimal: A number, using a point for decimals - for example 1234.56.
         email: An email address - for example nombre@ejemplo.es.
         integer: A whole number, with no thousands separator.
         money: An amount in euros, using a point for decimals - for example 1234.56.
+      stale_result: The save completed, but a newer profile version is already visible.
+        The older result was not displayed.
       write_failed: The field could not be saved. Try again.
       write_in_flight: Saving the previous field. Wait for it to finish, then try
         again.
     field_unavailable: Unavailable profile field
+    help:
+      about: 'About this setting:'
+      what: 'What it is:'
+      where: 'Where to find it:'
+      why: 'Why it is needed:'
     language:
       unavailable: This profile does not offer a language setting.
     namespace_detail: detail {number}
+    onboarding:
+      continue: Continue
+      done: Setup is complete. Continue to the workbench, or keep adding optional
+        detail below.
+      finish: Finish setup
+      heading: Set up your profile
+      intro: Only the answers needed to prepare your declarations are asked here.
+        Press Continue and answer each question; everything else is optional and can
+        wait.
+      progress: '{answered} of {total} required answers'
+      question: Question {number} of {total} · {section}
+      ready: All required answers are in. Finish setup to start preparing your declarations.
+      required_only: Required only
+      search_empty: No setting matches “{query}”.
+      search_placeholder: Search settings
+      section_done: ✓ {title} - {present}/{total}
+      section_pending: ✖ {title} - {missing} required
+      sources_summary: Fill the profile from AEAT records or your own documents instead
+        of typing it.
+      sources_title: Import data (optional)
+      step: 'Step {step} of {steps}: {section}'
+      step_finish: 'Step {step} of {steps}: finish setup'
+      to_workbench: Continue to the workbench
+    plantilla_media:
+      average_workforce: Average workforce
+      list_failed: The declared years could not be read. Try again.
+      none_declared: No year is declared yet.
+      remove: Remove this year
+      state: State
+      state_committed: Committed (the year is still open)
+      state_observed: Observed (the year is closed)
+      state_required: Choose whether the figure is observed or committed.
+      workforce_not_number: Enter the average workforce as a number, using a point
+        for decimals - for example 12.50.
+      year: Calendar year
+      year_not_whole: Enter the calendar year as a whole number - for example 2025.
+    profile_missing_fields: 'Profile is missing %{count} required field(s): %{fields}'
     required_field_unavailable: Required profile field
+    rows:
+      add: Add row
+      remove: Remove row
+      remove_confirm: Remove row %{row} from section %{section}?
     section_title: '{title} - {present}/{total}'
     title: 'Profile: {profile}'
   modelo_review:
@@ -195,7 +246,8 @@ flows:
     values_unmeasured: This page shows the form's layout only; it does not show calculated
       values yet.
   modelo_workspace_overview:
-    actions_not_carried: This page does not suggest next steps yet.
+    actions_none: No suggested next step can be addressed from this workspace yet.
+    actions_suggested: 'Suggested next steps: {actions}'
     column:
       capability: Capability
       disposition: Disposition
@@ -256,8 +308,9 @@ flows:
       message: What was found
       severity: Severity
       value: Value
-    evidence_not_carried: This page does not show supporting evidence or suggested
-      next steps yet.
+    evidence_carried: 'Supporting references and next step: {entries}'
+    evidence_none: This verification capability cites no registry reference and names
+      no addressable next step.
     findings_none: The work review recorded no findings.
     findings_unmeasured: This page does not show verification findings yet.
     readiness_unmeasured: This page does not show whether the declaration is ready

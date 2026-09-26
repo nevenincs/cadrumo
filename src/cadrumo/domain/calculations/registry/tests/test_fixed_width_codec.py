@@ -612,6 +612,26 @@ def test_absent_optional_numeric_slot_parses_back_as_its_declared_zero() -> None
     assert parse_fixed_width_export_field(field, rendered) == Decimal(0)
 
 
+def test_parser_accepts_blank_optional_binding_but_refuses_required_binding() -> None:
+    """Only an explicitly optional inactive row binding may round-trip blank."""
+    optional_binding = _field(
+        kind="binding",
+        casilla_id=None,
+        binding="annual-row-optional-value",
+        required=False,
+    )
+    required_binding = _field(
+        kind="binding",
+        casilla_id=None,
+        binding="annual-row-required-value",
+        required=True,
+    )
+
+    assert parse_fixed_width_export_field(optional_binding, " " * 5) is None
+    with pytest.raises(RegistryValidationError, match="ASCII digits"):
+        parse_fixed_width_export_field(required_binding, " " * 5)
+
+
 def _absence_record(*, required: bool) -> ExportRecordDefinition:
     return ExportRecordDefinition(
         id="absent-optional-numeric-record",

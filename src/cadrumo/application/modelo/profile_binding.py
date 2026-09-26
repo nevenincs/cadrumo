@@ -236,6 +236,19 @@ def inject_derived_marriage_facts(
         fact_index["renta_taxpayer.marriage_month_end"] = Decimal("12")
 
 
+def _authored_year(snapshot: RegistrySnapshot) -> int:
+    """Return the year a snapshot's revision was authored for.
+
+    Derived profile selectors and the revision's date context are keyed by it:
+    a projected snapshot reuses its source revision's declarations, and a
+    snapshot carrying no projection is authored for its own filing year.
+    Formatting the optional field directly would key an unprojected snapshot
+    as ``..._None``, which no declared selector matches, and the injector
+    would skip the fact without a word.
+    """
+    return snapshot.authored_filing_year or snapshot.filing_year
+
+
 def _declared_profile_selectors(revision: ModeloRevision) -> frozenset[str]:
     """Every selector the revision's ``source = "profile"`` bindings name.
 
@@ -312,12 +325,12 @@ def _inject_derived_family_facts(
     if guarderia_key not in declared_selectors and gastos_key not in declared_selectors:
         return
 
-    profile = _renta_family_profile_from_facts(fact_index)
+    profile = renta_family_profile_from_facts(fact_index)
     fact_index[guarderia_key] = Decimal(profile.descendientes_guarderia_count(filing_year, context=context))
     fact_index[gastos_key] = Decimal(profile.gastos_guarderia_reales(filing_year, context=context))
 
 
-def _renta_family_profile_from_facts(
+def renta_family_profile_from_facts(
     fact_index: Mapping[str, UserProfileFactValue],
 ) -> RentaFamilyProfile:
     """Rebuild the canonical family record from the stored profile facts.
@@ -564,7 +577,7 @@ def _resolve_maternidad_meses_from_fact_index(
         return _maternidad_thresholds_unresolved_resolution(
             declares_meses=declares_meses,
         )
-    profile = _renta_family_profile_from_facts(fact_index)
+    profile = renta_family_profile_from_facts(fact_index)
     # The pairing is the DOMAIN's, asked for rather than recomposed here. This
     # resolver used to build it inline while `meses_maternidad_por_descendiente`
     # computed the same thing with no production caller -- two authorities for
@@ -661,7 +674,7 @@ def _resolved_minimo_descendientes_tranches(
     the check stays defensive for any future partial revision).
     """
     # A projected year reuses the authored edition's dated parameter values.
-    date_context = {"filing_period": date(snapshot.authored_filing_year or snapshot.filing_year, 12, 31)}
+    date_context = {"filing_period": date(_authored_year(snapshot), 12, 31)}
 
     def _resolve_tranche(suffix: str) -> Decimal | None:
         specific = (
@@ -715,7 +728,7 @@ def _resolved_minimo_descendientes_thresholds(
     a fabricated ceiling.
     """
     # A projected year reuses the authored edition's dated parameter values.
-    date_context = {"filing_period": date(snapshot.authored_filing_year or snapshot.filing_year, 12, 31)}
+    date_context = {"filing_period": date(_authored_year(snapshot), 12, 31)}
 
     def _resolve(suffix: str) -> Decimal | None:
         parameter = _minimo_descendientes_parameter(snapshot, suffix=suffix)
@@ -833,8 +846,8 @@ def inject_derived_minimo_descendientes_facts(
     """
     if context is None:
         context = _family_fact_context(snapshot, operation=operation)
-    estatal_key = f"renta_family.descendientes_minimos_aggregate_{snapshot.authored_filing_year}"
-    autonomico_key = f"renta_family.descendientes_minimos_aggregate_autonomico_{snapshot.authored_filing_year}"
+    estatal_key = f"renta_family.descendientes_minimos_aggregate_{_authored_year(snapshot)}"
+    autonomico_key = f"renta_family.descendientes_minimos_aggregate_autonomico_{_authored_year(snapshot)}"
 
     estatal_tranches = _resolved_minimo_descendientes_tranches(snapshot, ccaa_infix=None)
     if estatal_tranches is None:
@@ -852,7 +865,7 @@ def inject_derived_minimo_descendientes_facts(
         # exists to close, so refusing is the safe direction.
         return
 
-    profile = _renta_family_profile_from_facts(fact_index)
+    profile = renta_family_profile_from_facts(fact_index)
     second_filer_indicated = second_entitled_filer_indicated(fact_index)
 
     birth_order_amounts, menor_tres_supplement, fallecimiento_amount = estatal_tranches
@@ -984,7 +997,7 @@ def inject_derived_anualidades_eligibility_facts(
     if context is None:
         context = _family_fact_context(snapshot, operation=operation)
     filing_year = snapshot.filing_year
-    key = f"renta_family.anualidades_sin_minimo_descendientes_{snapshot.authored_filing_year}"
+    key = f"renta_family.anualidades_sin_minimo_descendientes_{_authored_year(snapshot)}"
     if key not in _declared_profile_selectors(snapshot.revision):
         return
     thresholds = _resolved_minimo_descendientes_thresholds(snapshot)
@@ -1221,7 +1234,7 @@ def _inject_derived_incremento_guarderia_facts(
     """
     if context is None:
         context = _family_fact_context(snapshot, operation=operation)
-    key = f"renta_family.incremento_guarderia_{snapshot.authored_filing_year}"
+    key = f"renta_family.incremento_guarderia_{_authored_year(snapshot)}"
     if key not in declared_selectors:
         return
 
@@ -1232,7 +1245,7 @@ def _inject_derived_incremento_guarderia_facts(
     if thresholds is None:
         return
 
-    profile = _renta_family_profile_from_facts(fact_index)
+    profile = renta_family_profile_from_facts(fact_index)
     fact_index[key] = profile.incremento_guarderia_0613(
         snapshot.filing_year,
         thresholds=thresholds,
@@ -1265,7 +1278,7 @@ def _inject_derived_deduccion_maternidad_facts(
     """
     if context is None:
         context = _family_fact_context(snapshot, operation=operation)
-    key = f"renta_family.deduccion_maternidad_{snapshot.authored_filing_year}"
+    key = f"renta_family.deduccion_maternidad_{_authored_year(snapshot)}"
     if key not in declared_selectors:
         return
 
@@ -1611,7 +1624,7 @@ def _load_profile_facts(
         fact_index,
         snapshot.filing_year,
         declared_selectors,
-        authored_filing_year=snapshot.authored_filing_year or snapshot.filing_year,
+        authored_filing_year=_authored_year(snapshot),
         context=family_context,
         operation=operation,
     )
@@ -1967,6 +1980,7 @@ __all__ = [
     "is_madrid_resident",
     "madrid_nacimiento_adopcion_candidate_weighted_count",
     "profile_resolved_binding_ids",
+    "renta_family_profile_from_facts",
     "resolve_maternidad_meses",
     "resolve_profile_binding_channels",
     "resolve_profile_binding_value",

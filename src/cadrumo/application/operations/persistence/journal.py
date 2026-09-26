@@ -340,7 +340,28 @@ class OperationJournal(Protocol):
         expected_revision: OperationRevision,
         lease: OperationOwnerLease,
     ) -> None:
-        """Atomically compare revision and append the snapshot and ordered events."""
+        """Atomically compare revision and append one non-terminal snapshot and its ordered events.
+
+        A terminal snapshot is refused here: settlement goes through
+        :meth:`commit_settlement`, which also gives up the conflict lease.
+        """
+        ...
+
+    async def commit_settlement(
+        self,
+        snapshot: OperationPersistedSnapshot,
+        *,
+        expected_revision: OperationRevision,
+        lease: OperationOwnerLease,
+    ) -> None:
+        """Commit one terminal snapshot and release its exact conflict lease as one transition.
+
+        No observer may see the operation terminal while its lease still holds
+        the definition subject, or an operator acting on that terminal state
+        is refused by a lease the settled operation no longer needs. Lease
+        acquisition and this commit share one exclusion, so the terminal
+        record and the released lease become visible together.
+        """
         ...
 
 

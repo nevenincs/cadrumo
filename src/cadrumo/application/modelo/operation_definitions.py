@@ -35,6 +35,7 @@ from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, StringConstra
 from ...core.country_code import CountryCodeAlpha2
 from ...core.errors.hierarchy import CadrumoError
 from ...core.filing_year import FilingYear
+from ...core.hex import Hex64Str
 from ...core.identity.bucket import BucketId
 from ...core.identity.digest import ContentDigest
 from ...core.identity.hex_ids import CalculationRevisionId, ModeloEditBaselineId, WorkUnitId
@@ -50,6 +51,7 @@ from ...core.operations import (
 )
 from ...core.payment_election import PaymentElection
 from ...core.period import Period
+from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.refund_election import RefundElection
 from ...core.time.clock import now as _utc_now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -92,11 +94,13 @@ from ..operations.registry import (
     OperationSchemaBindingV1,
 )
 from ._edit_execution import apply_modelo_edit
+from .action_errors import M303FilingEvidenceError, modelo_edit_refusal_error
 from .amendment_action_ports import AmendmentActionPortsFactory
 from .amendment_actions import amend_modelo_revision
 from .calculation_action_ports import CalculationActionPortsFactory
 from .edit_contract import ModeloEditCompatibilityTupleV1, ModeloEditMutationFamily
 from .edit_models import (
+    MAX_MODELO_EDIT_SURFACE_ENTRIES,
     ModeloBindingEditIntentV1,
     ModeloDetailRowEditIntentV1,
     ModeloEditApplyRequestV1,
@@ -122,14 +126,21 @@ from .export import ModeloExportCommand, export_modelo_revision
 from .export_ports import ModeloExportPortsFactory
 from .filing_action_ports import FilingActionPortsFactory
 from .filing_actions import file_modelo_revision
+from .m303_filing_evidence import m303_filing_evidence_failure
+from .m303_ordinary_filing_evidence_authoring import (
+    author_ordinary_m303_evidence_for_work,
+)
 from .verification_actions import verify_modelo_revision
 from .work_lifecycle import discard_work_unit, get_work_unit, rename_work_unit
 from .work_lifecycle_ports import ActiveWorkLifecyclePortsFactory
 from .workspace_models import ModeloWorkspaceRefreshTargetV1
 
 if TYPE_CHECKING:
+    from ...domain.attachments.protocols import AttachmentStoreProtocol
     from ...domain.deadlines.models import TaxpayerProfile
     from ...domain.filing.schema import ModeloScalar
+    from ...domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
+    from ...domain.modelos.work_unit import WorkUnit
     from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
     from ..auth.operator_scope_ports import OperatorScopePorts
     from ..operations.models import OperationRequest
@@ -138,6 +149,7 @@ if TYPE_CHECKING:
 
 MODELO_WORK_RENAME_OPERATION_DEFINITION_ID = "modelo.work.rename"
 MODELO_WORK_DISCARD_OPERATION_DEFINITION_ID = "modelo.work.discard"
+MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID = "modelo.work.calculate"
 MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID = "modelo.work.verify"
 MODELO_WORK_FILE_OPERATION_DEFINITION_ID = "modelo.work.file"
 MODELO_EXPORT_OPERATION_DEFINITION_ID = "modelo.export"
@@ -314,6 +326,198 @@ class ModeloWorkDiscardPublicResultV1(BaseModel):
 
 class ModeloWorkDiscardApprovalStaleError(CadrumoError):
     """Raised when the approved unit is no longer the unit on disk."""
+
+
+class ModeloWorkCalculateOrdinaryM303EvidenceRequestV2(BaseModel):
+    """Operator-authored ordinary-M303 facts admitted only through secure request custody.
+
+    The joint-return election is asked in every period. The Modelo 390
+    attestation pair is supplied only for the last settlement period of the
+    year and refused for any other; the executor applies that rule.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    joint_return_elected: bool
+    m303_exonerado_390_attachment_id: Hex64Str | None = None
+    m303_exonerado_390_sha256: Hex64Str | None = None
+
+
+class ModeloWorkCalculateRequest(BaseModel):
+    """Calculate the current ledger-backed revision for one work unit.
+
+    The optional M303 branch remains absent for other modelos.  Its two filing
+    facts are sensitive operator declarations, so the registered operation
+    stores this complete request through the secure-reference boundary.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    work_unit_id: _WORK_UNIT_ID
+    actor: Annotated[str, Field(min_length=1, max_length=128, pattern=r"\S")]
+    ordinary_m303_filing_evidence: ModeloWorkCalculateOrdinaryM303EvidenceRequestV2 | None = None
+
+
+class ModeloWorkCalculatePublicResultV1(BaseModel):
+    """The one persisted revision created by a successful calculation."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
+
+    result_version: int = 1
+    work_unit_id: _WORK_UNIT_ID
+    calculation_revision_id: Annotated[str, Field(min_length=1, max_length=128)]
+
+
+class ModeloWorkCalculateExecutor:
+    """Run the canonical ledger-backed calculation under the operation journal."""
+
+    def __init__(
+        self,
+        *,
+        calculation_action_ports_factory: CalculationActionPortsFactory,
+        attachment_store_factory: Callable[[str], AttachmentStoreProtocol],
+    ) -> None:
+        """Retain the composition-owned calculation and encrypted-attachment factories."""
+        self._calculation_action_ports_factory = calculation_action_ports_factory
+        self._attachment_store_factory = attachment_store_factory
+
+    async def execute(
+        self,
+        request: OperationRequest[ModeloWorkCalculateRequest],
+        context: OperationExecutorContext,
+    ) -> str | None:
+        """Delegate calculation without reinterpreting ledger or tax inputs."""
+        from ...core.bucket_pointer import require_active_bucket_id
+        from .calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
+        from .work_lifecycle import ActiveWorkUnitUse, require_active_work_unit
+
+        await context.events.phase("modelo.work.calculate.ledger")
+        payload = request.payload
+        ports = self._calculation_action_ports_factory(
+            bucket_id=require_active_bucket_id(), operation=context.authority_operation
+        )
+        work_unit = require_active_work_unit(
+            ports.work_unit_repository.load(),
+            work_unit_id=payload.work_unit_id,
+            repository_bucket_id=ports.work_unit_repository.bucket_id,
+            use=ActiveWorkUnitUse.CALCULATE,
+        )
+        filing_instance_evidence = self._ordinary_m303_filing_instance_evidence(
+            payload=payload,
+            work_unit=work_unit,
+            operation=context.authority_operation,
+        )
+        # Everything above only reads, so a refusal there truthfully changed
+        # nothing; the outcome is open only once the persisting call begins.
+        await context.events.effect(OperationEffect.UNKNOWN)
+        result = await asyncio.to_thread(
+            calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+            payload.work_unit_id,
+            ports=ports,
+            actor=payload.actor,
+            filing_instance_evidence=filing_instance_evidence,
+        )
+        await context.events.effect(OperationEffect.UPDATED)
+        return str(result.revision.calculation_revision_id)
+
+    def _ordinary_m303_filing_instance_evidence(
+        self,
+        *,
+        payload: ModeloWorkCalculateRequest,
+        work_unit: WorkUnit,
+        operation: PinnedAuthorityOperation,
+    ) -> FilingInstanceEvidence | None:
+        """Author the one supported M303 envelope before calculation can persist it."""
+        from ...core.modelo import Modelo
+
+        supplied = payload.ordinary_m303_filing_evidence
+        if work_unit.modelo != Modelo("303"):
+            if supplied is None:
+                return None
+            raise M303FilingEvidenceError(
+                precondition_failure=m303_filing_evidence_failure(
+                    "unsupported_modelo",
+                    {"modelo": str(work_unit.modelo), "evidence_present": True},
+                )
+            )
+        if supplied is None:
+            raise M303FilingEvidenceError(
+                precondition_failure=m303_filing_evidence_failure(
+                    "missing",
+                    {"modelo": str(work_unit.modelo), "evidence_present": False},
+                )
+            )
+        return author_ordinary_m303_evidence_for_work(
+            work_unit=work_unit,
+            joint_return_elected=supplied.joint_return_elected,
+            exonerado_390_attachment_id=supplied.m303_exonerado_390_attachment_id,
+            exonerado_390_sha256=supplied.m303_exonerado_390_sha256,
+            operation=operation,
+            open_attachment_store=lambda: self._attachment_store_factory(work_unit.bucket_id),
+        )
+
+
+def build_modelo_work_calculate_definition(
+    *,
+    calculation_action_ports_factory: CalculationActionPortsFactory,
+    attachment_store_factory: Callable[[str], AttachmentStoreProtocol],
+) -> OperationDefinition:
+    """Bind the canonical calculation service to the shared operation platform."""
+
+    def build() -> ModeloWorkCalculateExecutor:
+        return ModeloWorkCalculateExecutor(
+            calculation_action_ports_factory=calculation_action_ports_factory,
+            attachment_store_factory=attachment_store_factory,
+        )
+
+    return OperationDefinition(
+        definition_id=MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
+        request_type=ModeloWorkCalculateRequest,
+        result_type=ModeloWorkCalculatePublicResultV1,
+        executor_factory=OperationExecutorFactory(
+            request_type=ModeloWorkCalculateRequest,
+            executor_type=ModeloWorkCalculateExecutor,
+            build=build,
+        ),
+        phase_codes=("modelo.work.calculate.ledger",),
+        interaction_kinds=frozenset[OperationInteractionKind](),
+        capabilities=OperationCapabilities(
+            durability=OperationDurability.RECORDED,
+            cancellation=OperationCancellation.UNSUPPORTED,
+            deadline=OperationDeadline.ABSENT,
+            replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
+            baseline=OperationBaselinePolicy.REQUEST_BOUND,
+            request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
+            sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
+            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
+            owned_resources=frozenset(),
+            permitted_effects=EFFECTS_WITHOUT_PARTIAL_COMMIT,
+            close_policy=OperationClosePolicy.DETACH_ALLOWED,
+        ),
+        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
+        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
+    )
+
+
+def build_modelo_work_calculate_registration(
+    definition: OperationDefinition,
+) -> OperationPublicDefinitionRegistrationV1:
+    """Bind calculation to the exact refresh target carried by the receipt."""
+    return OperationPublicDefinitionRegistrationV1.compose(
+        definition=definition,
+        request_schema=OperationSchemaBindingV1.bind(
+            schema_id="modelo.work.calculate.request",
+            schema_version=3,
+            model_type=definition.request_type,
+        ),
+        result_schema=OperationSchemaBindingV1.bind(
+            schema_id="modelo.work.calculate.result",
+            schema_version=1,
+            model_type=ModeloWorkCalculatePublicResultV1,
+        ),
+        workspace_refresh_target_schema=_modelo_workspace_refresh_target_binding(definition.definition_id),
+        workspace_refresh_adapter=resolve_modelo_work_unit_refresh_target,
+    )
 
 
 class ModeloWorkDiscardExecutor:
@@ -830,11 +1034,15 @@ def build_modelo_work_file_registration(
 
 
 class ModeloExportRequest(CredentialFreeOperationRequest):
-    """The revision to export and where the operator wants the artefact.
+    """The revision to export, where the operator wants the artefact, and the elections that shape it.
 
     The path is the operator's chosen destination, journalled because it is a
     location rather than content. The exported bytes never enter the request
     or the result.
+
+    The three elections are the declaration-shaping choices the command line
+    also accepts, with the same neutral defaults, so one revision exports as
+    the same declaration type from either surface.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
@@ -844,6 +1052,9 @@ class ModeloExportRequest(CredentialFreeOperationRequest):
     #: ``min_length`` alone admits. NOT stripped: a path must stay byte-exact,
     #: and silently trimming one would mask a typo rather than surface it.
     output_path: Annotated[str, Field(min_length=1, max_length=4096, pattern=r"\S")]
+    refund_election: RefundElection = RefundElection.COMPENSAR
+    payment_election: PaymentElection = PaymentElection.INGRESO
+    prior_domiciliation_election: PriorDomiciliationElection = PriorDomiciliationElection.KEEP
 
     #: The operator this invocation acts as; stamped onto the exported
     #: artefact through the command built from this request.
@@ -910,6 +1121,9 @@ class ModeloExportExecutor:
             calculation_revision_id=payload.calculation_revision_id,
             output_path=Path(payload.output_path),
             actor=payload.actor,
+            refund_election=payload.refund_election,
+            payment_election=payload.payment_election,
+            prior_domiciliation_election=payload.prior_domiciliation_election,
         )
         from ...core.bucket_pointer import require_active_bucket_id
 
@@ -977,7 +1191,7 @@ def build_modelo_export_registration(
         definition=definition,
         request_schema=OperationSchemaBindingV1.bind(
             schema_id="modelo.export.request",
-            schema_version=1,
+            schema_version=2,
             model_type=definition.request_type,
         ),
         result_schema=OperationSchemaBindingV1.bind(
@@ -1247,7 +1461,9 @@ class ModeloEditApplyBaselineV1(BaseModel):
     law_selected_revision_id: RevisionId
     schema_identity: ModeloEditSchemaIdentityV1
     schema_version: Annotated[int, Field(ge=1)]
-    permitted_surface: Annotated[tuple[ModeloEditPermittedSurfaceEntryV1, ...], Field(max_length=2000)]
+    permitted_surface: Annotated[
+        tuple[ModeloEditPermittedSurfaceEntryV1, ...], Field(max_length=MAX_MODELO_EDIT_SURFACE_ENTRIES)
+    ]
     permitted_surface_digest: ContentDigest
     mutation_family: ModeloEditMutationFamily
     issued_at: datetime
@@ -1850,13 +2066,8 @@ class ModeloEditApplySubmissionV1(BaseModel):
         )
 
 
-class ModeloEditApplyOperationRequestV1(CredentialFreeOperationRequest):
-    """The admitted Edit Contract submission this operation is authorized to apply.
-
-    Credential-free by construction: every field is a pre-validated,
-    pre-admitted coordinate or typed value the Edit Contract admission
-    phase already produced, so nothing here is unsafe to journal.
-    """
+class ModeloEditApplyOperationRequestV1(BaseModel):
+    """The admitted value-bearing edit submission held by secure-reference custody."""
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
 
@@ -1905,13 +2116,12 @@ class ModeloEditApplyExecutor:
     ) -> str | None:
         """Delegate to apply_modelo_edit and return the settled receipt id.
 
-        A failed compare-and-swap is a typed domain fact
-        (ModeloEditExecutionNoEffectV1), not an unexpected error, but the
-        executor protocol this method implements returns only an optional
-        reference. No channel exists yet to carry the typed refusal back to a
-        caller outside this package through the operation result path, so it
-        is reported here as a no-effect None rather than fabricated into an
-        exception the refusal was deliberately designed not to be.
+        A refused edit (ModeloEditExecutionNoEffectV1) changed nothing: the
+        effect is reported as NONE, then the refusal is raised as the
+        registered refusal error of its family, which the supervisor settles
+        as REFUSED under that error's code. Only the family travels; the
+        typed refusal's addresses, facts, and evidence stay out of the
+        operation's persisted record.
 
         Unlike its delegating siblings this executor declares ONE phase and
         publishes it, because there is no inner transition it cannot see.
@@ -1936,11 +2146,11 @@ class ModeloEditApplyExecutor:
             result_destination=f"modelo/{baseline.modelo}/{baseline.filing_year}/{baseline.period}/edit-result",
         )
         if isinstance(outcome, ModeloEditExecutionNoEffectV1):
-            # A failed compare-and-swap changed nothing, and NONE is the
-            # truthful report of that -- distinct from the UNKNOWN carried
-            # while the outcome was still open.
+            # A refused edit changed nothing, and NONE is the truthful report
+            # of that -- distinct from the UNKNOWN carried while the outcome
+            # was still open -- recorded before the refusal settles it.
             await context.events.effect(OperationEffect.NONE)
-            return None
+            raise modelo_edit_refusal_error(outcome.refusal)
         await context.events.effect(OperationEffect.UPDATED)
         return str(outcome.receipt.receipt_id)
 
@@ -1975,8 +2185,8 @@ def build_modelo_edit_apply_definition(
             deadline=OperationDeadline.ABSENT,
             replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
             baseline=OperationBaselinePolicy.EXACT_APPROVAL,
-            request_storage=OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL,
-            sensitive_input=OperationSensitiveInputPolicy.NONE,
+            request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
+            sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
             conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
             owned_resources=frozenset(),
             permitted_effects=EFFECTS_WITHOUT_PARTIAL_COMMIT,
@@ -1984,7 +2194,6 @@ def build_modelo_edit_apply_definition(
         ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
-        transient_financial_operands=(_MODELO_EDIT_MANUAL_OVERRIDE_OPERAND,),
     )
 
 
@@ -2072,6 +2281,7 @@ __all__ = [
     "MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID",
     "MODELO_EXPORT_OPERATION_DEFINITION_ID",
     "MODELO_WORK_AMEND_OPERATION_DEFINITION_ID",
+    "MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID",
     "MODELO_WORK_DISCARD_OPERATION_DEFINITION_ID",
     "MODELO_WORK_FILE_OPERATION_DEFINITION_ID",
     "MODELO_WORK_RENAME_OPERATION_DEFINITION_ID",
@@ -2088,6 +2298,10 @@ __all__ = [
     "ModeloWorkAmendOverride",
     "ModeloWorkAmendPublicResultV1",
     "ModeloWorkAmendRequest",
+    "ModeloWorkCalculateExecutor",
+    "ModeloWorkCalculateOrdinaryM303EvidenceRequestV2",
+    "ModeloWorkCalculatePublicResultV1",
+    "ModeloWorkCalculateRequest",
     "ModeloWorkDiscardApprovalStaleError",
     "ModeloWorkDiscardBaseline",
     "ModeloWorkDiscardExecutor",
@@ -2111,6 +2325,8 @@ __all__ = [
     "build_modelo_lifecycle_operation_registrations",
     "build_modelo_work_amend_definition",
     "build_modelo_work_amend_registration",
+    "build_modelo_work_calculate_definition",
+    "build_modelo_work_calculate_registration",
     "build_modelo_work_discard_definition",
     "build_modelo_work_discard_registration",
     "build_modelo_work_file_definition",
@@ -2128,6 +2344,7 @@ def build_modelo_lifecycle_operation_definitions(
     operator_scope_ports: OperatorScopePorts,
     export_ports_factory: ModeloExportPortsFactory,
     calculation_action_ports_factory: CalculationActionPortsFactory,
+    attachment_store_factory: Callable[[str], AttachmentStoreProtocol],
     amendment_action_ports_factory: AmendmentActionPortsFactory,
     filing_action_ports_factory: FilingActionPortsFactory,
     work_lifecycle_ports_factory: ActiveWorkLifecyclePortsFactory,
@@ -2140,7 +2357,11 @@ def build_modelo_lifecycle_operation_definitions(
     exported and never composed is capacity nothing can reach, which is the
     shape this population exists to make impossible to ship.
     """
-    return (
+    population = (
+        build_modelo_work_calculate_definition(
+            calculation_action_ports_factory=calculation_action_ports_factory,
+            attachment_store_factory=attachment_store_factory,
+        ),
         build_modelo_edit_apply_definition(
             calculation_action_ports_factory=calculation_action_ports_factory,
             receipt_repository_factory=receipt_repository_factory,
@@ -2160,6 +2381,9 @@ def build_modelo_lifecycle_operation_definitions(
             verification_repository_bundle_factory=verification_repository_bundle_factory,
         ),
     )
+    # A registry holds its definitions in definition-id order, so the
+    # population is returned in that order whatever order it is built in.
+    return tuple(sorted(population, key=lambda definition: definition.definition_id))
 
 
 def build_modelo_lifecycle_operation_registrations(
@@ -2170,6 +2394,7 @@ def build_modelo_lifecycle_operation_registrations(
         MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID: build_modelo_edit_apply_registration,
         MODELO_EXPORT_OPERATION_DEFINITION_ID: build_modelo_export_registration,
         MODELO_WORK_AMEND_OPERATION_DEFINITION_ID: build_modelo_work_amend_registration,
+        MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID: build_modelo_work_calculate_registration,
         MODELO_WORK_DISCARD_OPERATION_DEFINITION_ID: build_modelo_work_discard_registration,
         MODELO_WORK_FILE_OPERATION_DEFINITION_ID: build_modelo_work_file_registration,
         MODELO_WORK_RENAME_OPERATION_DEFINITION_ID: build_modelo_work_rename_registration,

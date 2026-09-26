@@ -23,7 +23,7 @@ from typing import Any, Final
 
 from dev._paths import UTF_8
 
-from ._acquire_common import (
+from .acquire_common import (
     AcquisitionError,
     expected_oracle_target_value,
     require_command_succeeded,

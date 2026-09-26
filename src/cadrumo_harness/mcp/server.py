@@ -43,6 +43,7 @@ import sys
 import time
 import uuid
 from collections.abc import Callable
+from contextvars import ContextVar
 from functools import partial
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as distribution_version
@@ -625,7 +626,7 @@ async def _run_offloop_with_progress[T](
 
 
 _ADAPTER_COMPOSITION = contextlib.ExitStack()
-_ADAPTER_COMPOSITION_ENTERED = False
+_ADAPTER_COMPOSITION_BOUND: ContextVar[bool] = ContextVar("cadrumo_mcp_adapter_composition_bound", default=False)
 
 
 def _ensure_adapter_composition() -> None:
@@ -642,14 +643,20 @@ def _ensure_adapter_composition() -> None:
     task inherits, and every path that runs this server -- the stdio runner and
     the in-process test transport alike -- builds the server through here.
 
-    Entering once per process is deliberate, and so is never unwinding it: the
-    ports are bound for as long as the process serves, and a ContextVar token
-    can only be reset in the context that created it -- an exit-time unbind
-    would run in a different one and raise. The stack is held at module level
-    so the binding cannot be collected while the server is alive.
+    Whether the ports are bound is itself tracked in a ContextVar, because a
+    binding is visible only in the context that made it and the tasks that
+    context spawns. A server built inside a task, as the in-process transport
+    does, binds in that task alone; a later server built in a context that
+    never saw that binding must bind again. A process-wide flag skipped that
+    second binding and left every later server's handlers uncomposed.
+
+    Never unwinding a binding is deliberate: the ports are bound for as long
+    as the process serves, and a ContextVar token can only be reset in the
+    context that created it -- an exit-time unbind would run in a different
+    one and raise. The stack is held at module level so no binding can be
+    collected while a server built under it is alive.
     """
-    global _ADAPTER_COMPOSITION_ENTERED
-    if _ADAPTER_COMPOSITION_ENTERED:
+    if _ADAPTER_COMPOSITION_BOUND.get():
         return
     from cadrumo.adapters.outbound.fx.ecb_provider import default_ecb_rate_provider
     from cadrumo.application.exchange_rate_provider import bind_exchange_rate_provider_factory
@@ -658,7 +665,7 @@ def _ensure_adapter_composition() -> None:
 
     _ADAPTER_COMPOSITION.enter_context(bind_exchange_rate_provider_factory(default_ecb_rate_provider))
     _ADAPTER_COMPOSITION.enter_context(profile_adapter_composition())
-    _ADAPTER_COMPOSITION_ENTERED = True
+    _ADAPTER_COMPOSITION_BOUND.set(True)
 
 
 def build_server(

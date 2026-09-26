@@ -18,7 +18,7 @@ from collections.abc import Callable
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import TYPE_CHECKING, Annotated, Any, cast
+from typing import TYPE_CHECKING, Annotated, Any
 
 from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_validator
 
@@ -795,6 +795,7 @@ class InventoryLedger(BaseModel):
     @pydantic_validation_boundary
     def _opening_stock_matches_layers(self) -> InventoryLedger:
         """Enforce that ``opening_layers`` value-balances with ``opening_stock``."""
+        from ._anexo_d_records import resolve_inventory_authoritative_closing
         from .valuation import layers_value
 
         movement_ids = tuple(movement.movement_id for movement in self.period_movements)
@@ -806,7 +807,7 @@ class InventoryLedger(BaseModel):
             record = self.closing_authority_record
             if (record.decision.actividad_id, record.decision.filing_year) != (self.actividad_id, self.year):
                 raise InventoryValidationError("closing authority record must match the inventory ledger coordinate")
-            cast(Callable[..., InventoryClosingResolution], globals()["resolve_inventory_authoritative_closing"])(
+            resolve_inventory_authoritative_closing(
                 self,
                 decision=record.decision,
                 physical_observation=record.physical_observation,

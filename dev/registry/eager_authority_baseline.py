@@ -25,6 +25,10 @@ from cadrumo.domain.calculations.registry.authority_artifact import (
     PublishedLegalEvidence,
     PublishedSourceEvidence,
 )
+from cadrumo.domain.calculations.registry.authority_compiler_closure import (
+    AuthorityCompilerClosure,
+    AuthorityCompilerEnvironment,
+)
 from cadrumo.domain.calculations.registry.facts.schema import (
     TAGGED_FACT_ATOM_CONTEXT,
     FactAtomField,
@@ -43,7 +47,7 @@ from cadrumo.domain.calculations.registry.schema import (
 from cadrumo.domain.calculations.registry.tax_id_format import tax_id_format_from_catalogue
 from dev.registry.pipeline.authority_publication import require_evidence_closure
 
-_FORMAT = "cadrumo-development-eager-authority-v1"
+_FORMAT = "cadrumo-development-eager-authority-v2"
 _TAGGED_CONTEXT = {TAGGED_FACT_ATOM_CONTEXT: True}
 _FACT_ATOM_VALIDATORS = frozenset((get_args(FactAtomField)[1], get_args(OptionalFactAtomField)[1]))
 
@@ -117,6 +121,16 @@ def _artifact_document(artifact: AuthorityArtifact) -> dict[str, object]:
             "compiler_identity_digest": artifact.build_identity.compiler_identity_digest,
             "component_dependency_digest": artifact.build_identity.component_dependency_digest,
         },
+        "compiler_closure": {
+            "sources": [[path, digest] for path, digest in artifact.compiler_closure.sources],
+            "environment": {
+                "python": artifact.compiler_closure.environment.python,
+                "pyproject_sha256": artifact.compiler_closure.environment.pyproject_sha256,
+                "uv_lock_sha256": artifact.compiler_closure.environment.uv_lock_sha256,
+                "pydantic": artifact.compiler_closure.environment.pydantic,
+                "pydantic_core": artifact.compiler_closure.environment.pydantic_core,
+            },
+        },
         "evidence": {
             "legal": [
                 {
@@ -141,7 +155,15 @@ def _artifact_document(artifact: AuthorityArtifact) -> dict[str, object]:
 
 
 def _artifact_from_document(payload: Mapping[str, object]) -> AuthorityArtifact:
-    required = {"modelos", "catalogues", "identity_digest", "build_identity", "evidence", "profile_schema"}
+    required = {
+        "modelos",
+        "catalogues",
+        "identity_digest",
+        "build_identity",
+        "compiler_closure",
+        "evidence",
+        "profile_schema",
+    }
     if set(payload) != required:
         raise ValueError("unexpected eager baseline payload")
     modelos_document = _sequence(payload, "modelos")
@@ -187,12 +209,34 @@ def _artifact_from_document(payload: Mapping[str, object]) -> AuthorityArtifact:
             _string(build_document, "compiler_identity_digest"),
             _string(build_document, "component_dependency_digest"),
         ),
+        compiler_closure=_compiler_closure(_mapping(payload, "compiler_closure")),
         evidence=AuthorityEvidenceProjection(legal=legal, sources=sources),
         profile_schema=ProfileSchemaDefinition.model_validate(payload["profile_schema"]),
     )
     artifact.catalogues.runtime.require_complete()
     require_evidence_closure(artifact)
     return artifact
+
+
+def _compiler_closure(document: Mapping[str, object]) -> AuthorityCompilerClosure:
+    environment = _mapping(document, "environment")
+    return AuthorityCompilerClosure(
+        tuple(_source_row(row) for row in _sequence(document, "sources")),
+        AuthorityCompilerEnvironment(
+            python=_string(environment, "python"),
+            pyproject_sha256=_string(environment, "pyproject_sha256"),
+            uv_lock_sha256=_string(environment, "uv_lock_sha256"),
+            pydantic=_string(environment, "pydantic"),
+            pydantic_core=_string(environment, "pydantic_core"),
+        ),
+    )
+
+
+def _source_row(row: object) -> tuple[str, str]:
+    if not isinstance(row, list) or len(row) != 2 or not all(isinstance(item, str) for item in row):
+        raise ValueError("expected a [path, sha256] compiler source row")
+    path, digest = cast(list[str], row)
+    return path, digest
 
 
 def _json_value(value: object) -> object:

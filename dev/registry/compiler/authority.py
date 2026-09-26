@@ -32,7 +32,7 @@ from .authority_state import (
     register_authoring_authority,
     source_evidence_receipt,
 )
-from .build_identity import authority_compiler_identity
+from .build_identity import compiler_source_tree_digest
 from .convenio import convenio_authority_from_facts
 from .corpus_catalogue import (
     compile_record_design_manifest_catalogue,
@@ -275,6 +275,7 @@ def compile_validated_authority(
     profile_schema_path: Path | None = None,
     captured_profile_schema: CapturedProfileSchema | None = None,
     verify_evidence_bytes: bool = False,
+    complete_validation: bool = False,
 ) -> ValidatedRegistryAuthority:
     """Compile one mutable source candidate through the development cache.
 
@@ -290,6 +291,11 @@ def compile_validated_authority(
     receipt was otherwise recomputed by a full stat walk of a read-only package
     tree on every call, which is what made a cache HIT cost as much as a miss
     for the corpus-wide gates that call this in a loop.
+
+    ``complete_validation`` compiles and validates afresh, reusing neither this
+    process's compilation nor any recorded verdict. Publication sets it: the
+    compiler closure it records is observed from the modules this process has
+    loaded, and a skipped validation would leave the validator's modules out.
     """
     receipt = compilation_receipt(
         registry_root,
@@ -300,20 +306,30 @@ def compile_validated_authority(
         verify_evidence_bytes=verify_evidence_bytes,
     )
     pair = receipt.pair
-    authority = cached_compilation(
-        pair,
-        registry_identity_digest=receipt.identity.digest,
-        source_receipt=receipt.source_receipt,
-        compiler_identity_digest=receipt.compiler_identity_digest,
-        build=lambda: _compile_validated_authority_uncached(
+    if complete_validation:
+        authority = _compile_validated_authority_uncached(
             pair.registry_root,
             pair.source_root,
             identity=receipt.identity,
             profile_schema_path=receipt.profile_schema_path,
             captured_profile_schema=receipt.captured_profile_schema,
-            verdicts=receipt.verdicts,
-        ),
-    )
+            verdicts=None,
+        )
+    else:
+        authority = cached_compilation(
+            pair,
+            registry_identity_digest=receipt.identity.digest,
+            source_receipt=receipt.source_receipt,
+            compiler_identity_digest=receipt.compiler_source_tree_digest,
+            build=lambda: _compile_validated_authority_uncached(
+                pair.registry_root,
+                pair.source_root,
+                identity=receipt.identity,
+                profile_schema_path=receipt.profile_schema_path,
+                captured_profile_schema=receipt.captured_profile_schema,
+                verdicts=receipt.verdicts,
+            ),
+        )
     register_authoring_authority(authority, source_root=pair.source_root)
     return authority
 
@@ -332,7 +348,7 @@ class CompilationReceipt:
     profile_schema_path: Path
     captured_profile_schema: CapturedProfileSchema
     source_receipt: str
-    compiler_identity_digest: str
+    compiler_source_tree_digest: str
     verdicts: ValidationVerdictScope | None
 
 
@@ -365,7 +381,9 @@ def compilation_receipt(
             "profile_sha256": sha256_hex(captured.payload),
         }
     )
-    compiler_identity_digest = authority_compiler_identity()
+    # A pre-compile cache key: the closure a publication records is only
+    # observable after compiling, so the caches key on the whole source trees.
+    source_tree_digest = compiler_source_tree_digest()
     # Every root gets a verdict scope, bundled or staged. The keys are content
     # keys -- relative path, size and content digest per declaration -- so a
     # staged candidate reuses the per-modelo verdicts of the identical bytes it
@@ -376,7 +394,7 @@ def compilation_receipt(
             registry_root=pair.registry_root,
             fingerprints=identity.fingerprints,
             source_receipt=source_receipt,
-            compiler_identity_digest=compiler_identity_digest,
+            compiler_identity_digest=source_tree_digest,
         )
         if identity.fingerprints
         else None
@@ -387,7 +405,7 @@ def compilation_receipt(
         profile_schema_path=profile_path,
         captured_profile_schema=captured,
         source_receipt=source_receipt,
-        compiler_identity_digest=compiler_identity_digest,
+        compiler_source_tree_digest=source_tree_digest,
         verdicts=verdicts,
     )
 

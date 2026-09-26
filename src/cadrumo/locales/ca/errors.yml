@@ -141,6 +141,9 @@ errors:
       de declaració no nul.
     parameter_unknown: El paràmetre {parameter_id} no està registrat.
     relation_value_missing: La relació {relation_id} no té cap valor assignat.
+    row_field_template_supplied_as_input: Les caselles {casilla_ids} prenen un valor
+      per cada fila de detall de {record_ids}, de manera que no es poden subministrar
+      com un únic valor d'entrada. Indiqueu-les com a files de detall.
     text_input_non_text_casillas: 'Entrada de text subministrada per a caselles no
       textuals: %{casilla_ids}.'
     unknown_input_casillas: 'Identificadors de casella d''entrada desconeguts: {casilla_ids}.'
@@ -161,6 +164,8 @@ errors:
       d'enviament.
     error_access_gate_submission_preflight: La comprovació prèvia del control d'accés
       ha rebutjat una operació d'escriptura.
+    error_actividad_asset: Ha fallat una operació sobre un actiu d'activitat econòmica
+      de l'IRPF.
     error_aggregation_config: S'ha violat un invariant de composició del servei d'agregació.
     error_application_live: L'orquestració de la lectura en viu de l'AEAT ha fallat.
     error_application_live_iva_surface_timeout: La superfície de lectura d'IVA en
@@ -578,6 +583,8 @@ errors:
     validate_expects_str: La validació d'identitat espera un valor de text; s'ha obtingut
       {got_type}.
   integrity:
+    canonical_actividad_asset_history_persistence: No s'ha pogut tornar a obrir amb
+      seguretat l'historial xifrat d'actius.
     canonical_aeat_sync_workspace_projection: Les autoritats de l'AEAT ja carregades
       no poden formar una instantània segura.
     canonical_authority_component_codec: No s'ha pogut codificar o descodificar un
@@ -588,6 +595,8 @@ errors:
       el conjunt declarat dels seus components ha canviat inesperadament.
     canonical_authority_store_cutover: La referència fixada del magatzem d'autoritat
       apunta a una altra generació del lector.
+    canonical_authority_store_format: El magatzem d'autoritat publicat té un format
+      que aquesta versió no llegeix; torna a publicar l'autoritat.
     canonical_declarations_calendar_projection: Les autoritats del calendari proporcionades
       no poden formar una vista segura i coherent.
     canonical_declarations_workspace_projection: Les autoritats proporcionades no
@@ -600,8 +609,12 @@ errors:
       té un format incorrecte i no es pot interpretar.
     canonical_manifest_payload_validation: La càrrega útil del manifest del corpus
       no ha superat la validació.
+    canonical_modelo_workspace_absent_readiness_projection: La captura de disponibilitat
+      s'ha retornat sense l'informe promès.
     canonical_modelo_workspace_absent_registry_projection: La captura del registre
       s'ha retornat sense la projecció promesa.
+    canonical_modelo_workspace_materialization_provenance_missing: Un valor de fila
+      repetida emmagatzemat no indica la seva vinculació d'origen.
     canonical_relation_binding_join: No s'ha pogut llegir d'acord amb el que s'ha
       declarat la correspondència inclosa entre relacions i bindings.
     canonical_tampered_manifest_payload: El resum del manifest del corpus no coincideix
@@ -641,6 +654,9 @@ errors:
       inesperat.
     integrity_profile_bucket_mismatch: El perfil %{profile_id} no pertany al bucket
       %{bucket_id}; un bucket de perfil conté exactament una identitat de perfil.
+    integrity_profile_record_schema_migration_required: El registre del perfil es
+      va desar amb un esquema de perfil anterior i s'ha de migrar abans de poder-lo
+      llegir.
     integrity_profile_snapshot_hash_mismatch: El resum de la instantània del perfil
       no coincideix amb la projecció actual.
     integrity_profile_snapshot_not_found: No existeix cap instantània de perfil amb
@@ -728,6 +744,10 @@ errors:
     internal_operation_declaration_breach: 'Error intern: un executor d''operació
       ha reclamat una fase, un efecte, un recurs o una interacció que la seva definició
       no declara.'
+    internal_operation_executor_returned_no_result: 'Error intern: l''operació s''ha
+      aturat sense resultat i sense quedar a l''espera de res, de manera que s''ha
+      tancat com a fallida. No s''hi farà res més; consulteu els registres de diagnòstic
+      per conèixer-ne la causa.'
     internal_operation_unsettled: 'Error intern: l''operació s''ha aturat abans de
       poder registrar-ne el resultat. Queda oberta i es tancarà automàticament quan
       caduqui el seu bloqueig de propietari; consulteu els registres de diagnòstic
@@ -761,6 +781,9 @@ errors:
     locked_google_keychain: L'anell de claus del sistema operatiu que desa les credencials
       de Google està bloquejat o no és accessible. Desbloqueja l'anell de claus i
       torna-ho a provar.
+    locked_journal_busy: Un altre programa va mantenir en ús un fitxer de registre,
+      així que no s'ha pogut llegir ni escriure. No s'ha perdut res; torna-ho a provar
+      d'aquí a un moment.
     locked_storage_bucket_busy: El bucket d'emmagatzematge l'està utilitzant un altre
       procés. Espera que aquest procés acabi i torna-ho a provar.
     locked_storage_bucket_session: Aquesta operació requereix un bucket d'emmagatzematge
@@ -796,10 +819,27 @@ errors:
       un fitxer dins l'àmbit d'accés concedit.
     canonical_inventory_closing_authority_conflict: Ja consta una altra autoritat
       immutable de tancament de l'inventari.
+    canonical_invoice_withholding_evidence: L'evidència de la factura no permet registrar
+      la retenció.
+    canonical_ledger_payment_withholding_evidence: El pagament del llibre no permet
+      registrar la retenció.
     canonical_m036_declaration_ambiguous: El prefix de l'identificador de la declaració
       del Model 036 coincideix amb més d'un registre.
     canonical_m036_declaration_not_found: Cap declaració del Model 036 coincideix
       amb l'identificador sol·licitat.
+    canonical_m193_phase_materialization: L'evidència de capital activa no permet
+      derivar una fase de declaració del Model 193.
+    canonical_modelo_123_count_authority_unresolved: 'El model 123 continua rebutjat:
+      hi ha retencions registrades en aquest període, però cap norma oficial no defineix
+      com es compta el «Número de rendes», de manera que no es pot calcular, verificar
+      ni presentar.'
+    canonical_modelo_193_settled_row_amount_authority_unresolved: 'El model 193 no
+      es pot exportar: conté un registre que paga rendiments meritats en un exercici
+      anterior i cap font oficial no determina la base i la retenció que declara aquest
+      registre.'
+    canonical_modelo_lifecycle_clock_precedes: El rellotge de l'acció és anterior
+      a un registre que actualitzaria, així que no s'ha desat res. Torneu-ho a provar
+      amb l'hora actual.
     canonical_modelo_workspace_stale_cursor: El cursor fixat ja no coincideix amb
       la referència actual; reinicieu la consulta.
     canonical_modelo_workspace_unresolved_work: La lectura de l'espai de treball ha
@@ -808,6 +848,8 @@ errors:
       supera l'àncora autoritativa.
     canonical_operation_observation_unknown_operation: No existeix cap diari d'observacions
       per a l'operació sol·licitada.
+    canonical_operation_subject_busy: Una altra operació sobre aquesta declaració
+      encara està en curs. Espereu que acabi i torneu-ho a provar.
     canonical_previous_filing_observation_absent: No s'ha observat la presentació
       anterior requerida.
     canonical_prorrata_election: L'elecció de prorrata no compleix l'article 105 de
@@ -834,6 +876,15 @@ errors:
       catàleg compatible.
     canonical_tui_unresolved_action_candidate: El candidat d'acció del TUI no té cap
       declaració de catàleg coincident.
+    canonical_withholding_filing_cadence: Les retencions no es poden assignar a un
+      període trimestral que el calendari de presentació del declarant no assigna.
+      Els períodes mensuals de retencions encara no s'admeten.
+    canonical_withholding_observation_mutation: S'ha rebutjat el canvi en l'evidència
+      de retencions d'aquest període.
+    canonical_withholding_producer: L'evidència de retencions no correspon a cap via
+      de model admesa.
+    canonical_withholding_recognition: No es pot determinar la data de reconeixement
+      de la retenció amb l'evidència aportada.
     censal_read_identity: La lectura censal no correspon al contribuent d'aquest perfil.
     clave_credentials_incomplete: Al mode d'autenticació Cl@ve seleccionat li falta
       una credencial que necessita.
@@ -888,6 +939,15 @@ errors:
     modelo_calculation_revision_selector_state: La revisió de càlcul seleccionada
       no està en un estat utilitzable per a aquesta operació.
     modelo_compare_need_two_years: La comparació requereix dos exercicis fiscals diferents.
+    modelo_edit_baseline_stale: La declaració ha canviat des que es va obrir, de manera
+      que no s'ha aplicat l'edició. Torneu-la a obrir i editeu-la de nou.
+    modelo_edit_contract_incompatible: L'edició es va preparar en un format que aquesta
+      versió no accepta, de manera que no s'ha canviat res. Torneu a obrir la declaració
+      i editeu-la de nou.
+    modelo_edit_intent_unsupported: Aquest tipus d'edició encara no està disponible,
+      de manera que no s'ha canviat res.
+    modelo_edit_refused: S'ha rebutjat l'edició i no s'ha canviat res. Reviseu els
+      valors i torneu-ho a provar.
     modelo_export_cross_bucket: La revisió apuntada pertany a un bucket diferent del
       perfil actiu. L'exportació només opera dins el bucket del perfil actiu.
     modelo_export_no_active_bucket: L'exportació necessita un perfil actiu. Crea o
@@ -912,6 +972,8 @@ errors:
       pertany a una altra revisió.
     modelo_workspace_manifest_capture_not_current: El manifest de camps ha canviat
       mentre es llegia; torneu a capturar-lo.
+    producer_capture_not_current: Una projecció de productor ha canviat mentre es
+      llegia; torneu a capturar-la.
     profile_capsule_archive: No s'ha pogut escriure o llegir l'arxiu de còpia del
       perfil
     profile_capsule_source: L'origen indicat no és una càpsula de perfil llegible
@@ -930,11 +992,22 @@ errors:
       d'identitat entre declaracions. Revisa els imports abans de continuar.
     reconciliation_evidence_invalid: No s'ha pogut llegir el PDF. Comproveu que el
       fitxer és el justificant de l'AEAT i no un altre document, i que no està malmès.
-      Torneu a executar `aeat app modelo reconcile file WORK_UNIT_ID --file PATH`
+      Torneu a executar `aeat app modelo reconcile import WORK_UNIT_ID --file PATH`
       amb el fitxer correcte.
     refused_access_gate_live_read_not_enabled: L'accés de lectura en viu a l'AEAT
       està desactivat. Aquesta operació no pot contactar amb l'AEAT amb la configuració
       actual.
+    refused_active_profile_pointer_manual_recovery: El punter de perfil actiu {path}
+      no es pot llegir, així que no es pot esborrar sense perdre'n la revisió; cal
+      recuperar-lo manualment.
+    refused_actividad_asset_claim_conflict: L'amortització registrada entra en conflicte
+      amb les ja registrades per a l'actiu.
+    refused_actividad_asset_incomplete: Al quadre d'amortització de l'actiu li falta
+      una dada necessària, com la seva amortització acumulada inicial.
+    refused_actividad_asset_unsupported: L'amortització sol·licitada no té una autoritat
+      inscrita per a aquest cas.
+    refused_actividad_asset_validation: Una dada de l'actiu o una sol·licitud d'amortització
+      no ha superat la validació.
     refused_apoderado_invalid_represented_nif: L'identificador fiscal del representat
       no és un NIF, NIE o CIF vàlid.
     refused_apoderado_live_check_unavailable: La comprovació en viu d'apoderaments
@@ -1105,10 +1178,27 @@ errors:
       la taula de despacho de filtres.
     refused_modelo_charge_account_missing: S ha triat una domiciliació pero no hi
       ha cap compte de càrrec registrat.
+    refused_modelo_export_prior_domiciliation_election_required: L'exportació del
+      model 303 necessita una elecció sobre la domiciliació anterior (mantenir-la,
+      o anul·lar-la o modificar-la); no se n'ha indicat cap, així que no s'ha escrit
+      res. Trieu-ne una i torneu a exportar.
+    refused_modelo_export_product_identity_unavailable: 'L''exportació oficial no
+      està disponible: el disseny de registre reserva els camps de capçalera «Versión
+      del Programa» i «NIF del desarrollador» a l''entitat desenvolupadora del programari,
+      i no hi ha cap identitat de producte revisada per a aquests camps. Cadrumo no
+      els omple amb blancs ni amb valors ficticis. El càlcul i la seva verificació
+      continuen sent vàlids; per exportar cal un identificador de programa i un NIF
+      de desenvolupador revisats, facilitats pel desenvolupador del programari.'
     refused_modelo_ledger_evidence_recapture: No es pot tornar a agrupar l'evidència
       d'aquesta declaració perquè els assentaments comptables que la sustenten han
       canviat des que es va segellar. Torna a calcular la declaració; la recaptura
       només recull evidència adjuntada a assentaments sense canvis.
+    refused_modelo_m303_exonerado_390_attestation_unadmissible: 'L''atestació d''aplicabilitat
+      del Model 390 no es pot fer servir per a aquest Model 303: el seu identificador
+      i el seu SHA-256 estan mal formats o no coincideixen, o l''atestació no consta
+      en aquest perfil, pertany a un altre trimestre, ja no coincideix amb el perfil
+      actual o contradiu una altra atestació del trimestre. No s''ha calculat res;
+      registreu una atestació nova per a aquest trimestre i torneu-ho a provar.'
     refused_modelo_m303_rectificativa_motive: Les rectificatives del model 303 requereixen
       exactament un motiu canònic en un disseny de registre aplicable i revisat; el
       motiu està prohibit en els altres casos.
@@ -1122,6 +1212,10 @@ errors:
     refused_modelo_refund_election_not_eligible: S'ha sol·licitat una devolució en
       un període on no està disponible; només l'últim període de declaració de l'any
       permet la devolució a un no inscrit a REDEME.
+    refused_modelo_stored_row_field_input: La revisió de càlcul {calculation_revision_id}
+      desa un únic valor d'entrada per a les caselles {casilla_ids}, que prenen un
+      valor per cada fila de detall. Torneu a calcular la unitat de treball {work_unit_id}
+      per substituir-la.
     refused_modeloprior_domiciliation_election: S'ha rebutjat la baixa o modificació
       de la domiciliació prèvia perquè manca o no és vàlida la rectificativa del model
       303 o la prova oficial de la presentació base U.
@@ -1238,6 +1332,8 @@ errors:
       i aprova l'esborrany de nou.
     submission_preflight_error_findings: L'esborrany té {finding_count} incidència(es)
       de severitat ERROR; resol-les abans de presentar.
+    tui_modelo_lifecycle_action_unavailable: L'acció seleccionada del cicle de vida
+      del model no està disponible.
     unsupported_currency: El codi de moneda indicat no és compatible.
   snapshot:
     ambiguous_revision_selection: 'Més d''una revisió del registre coincideix amb

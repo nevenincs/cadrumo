@@ -76,9 +76,9 @@ _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_NOW = datetime(2026, 8, 24, 18, tzinfo=UTC)
+NOW = datetime(2026, 8, 24, 18, tzinfo=UTC)
 _CREDENTIAL_INPUT = "censal-operation-executor-passphrase"
-_RESPONSE_TOKEN = "a" * 64
+RESPONSE_TOKEN = "a" * 64
 
 
 def _test_censal_operation_definition() -> OperationDefinition:
@@ -95,7 +95,7 @@ def _test_censal_operation_definition_id() -> str:
 
 
 @contextmanager
-def _subject(tmp_path: Path) -> Generator[tuple[str, SecureObjectRepository, ProfileRecordSession]]:
+def subject(tmp_path: Path) -> Generator[tuple[str, SecureObjectRepository, ProfileRecordSession]]:
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path) as root:
         outcome = register_profile_with_credentials(
@@ -137,12 +137,12 @@ def _observation() -> CensalObservation:
             referencia_catastral="1234567VK4713C0001AB",
         ),
         domicilio_notificacion=CensalObservationAddress(),
-        captured_at=_NOW,
+        captured_at=NOW,
         source_url=aeat_url("sede", "/censo/consulta"),
     )
 
 
-def _payload(profile_id: str) -> CensalOperationRequest:
+def censal_request_payload(profile_id: str) -> CensalOperationRequest:
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     record = ProfileRecordRepository.for_current_session(
         profile_id, profile_decode_context=_profile_decode_context_for_test
@@ -167,14 +167,14 @@ def _scoped_authority_operation() -> PinnedAuthorityOperation:
     return scoped
 
 
-def _supervisor(
+def censal_supervisor(
     *,
     root: Path,
     objects: SecureObjectRepository,
     executor: CensalOperationExecutor,
     owner: str,
     token: str,
-    now: datetime = _NOW,
+    now: datetime = NOW,
 ) -> OperationSupervisor:
     operands = operation_secure_reference_repository(objects=objects)
     definition = _test_censal_operation_definition().model_copy(
@@ -203,11 +203,11 @@ def _supervisor(
         lease_duration=timedelta(minutes=1),
         execution_timeout=timedelta(minutes=5),
         cleanup_timeout=timedelta(minutes=1),
-        response_token_factory=lambda: _RESPONSE_TOKEN,
+        response_token_factory=lambda: RESPONSE_TOKEN,
     )
 
 
-async def _wait_for_phase(supervisor: OperationSupervisor, operation_id: str, phase: str):
+async def wait_for_phase(supervisor: OperationSupervisor, operation_id: str, phase: str):
     # The continuation commits through real journal and custody I/O, so the
     # wait is bounded by time rather than by a count of scheduler turns.
     deadline = asyncio.get_running_loop().time() + 10
@@ -219,7 +219,7 @@ async def _wait_for_phase(supervisor: OperationSupervisor, operation_id: str, ph
     raise AssertionError(f"operation did not reach {phase}")
 
 
-async def _start(supervisor: OperationSupervisor, operation_id: str):
+async def start(supervisor: OperationSupervisor, operation_id: str):
     return await run_to_settlement(supervisor, operation_id)
 
 
@@ -232,7 +232,7 @@ def test_censal_executor_acquires_once_recovers_review_and_applies_exact_operand
         acquisitions += 1
         return _observation()
 
-    with _subject(tmp_path) as (profile_id, objects, _session):
+    with subject(tmp_path) as (profile_id, objects, _session):
         durable_root = tmp_path / "operations"
         executor = CensalOperationExecutor(
             certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
@@ -241,7 +241,7 @@ def test_censal_executor_acquires_once_recovers_review_and_applies_exact_operand
             censal_fetch_port=fetch_censal_datos,
             acquire=acquire,
         )
-        owner = _supervisor(
+        owner = censal_supervisor(
             root=durable_root,
             objects=objects,
             executor=executor,
@@ -251,13 +251,13 @@ def test_censal_executor_acquires_once_recovers_review_and_applies_exact_operand
         request = OperationRequest(
             definition_id=_test_censal_operation_definition_id(),
             subject_ref=profile_id,
-            payload=_payload(profile_id),
+            payload=censal_request_payload(profile_id),
         )
         assert "response_token" not in request.payload.model_dump()
 
         async def run() -> None:
             operation_id = await owner.submit(request, operation_id="3" * 64)
-            waiting = await _start(owner, operation_id)
+            waiting = await start(owner, operation_id)
             assert waiting.lifecycle is OperationLifecycle.WAITING_FOR_INTERACTION
             assert waiting.effect is OperationEffect.NONE
             pending = waiting.pending_interaction
@@ -268,13 +268,13 @@ def test_censal_executor_acquires_once_recovers_review_and_applies_exact_operand
             )
             assert acquisitions == 1
 
-            recovery = _supervisor(
+            recovery = censal_supervisor(
                 root=durable_root,
                 objects=objects,
                 executor=executor,
                 owner="4" * 64,
                 token="5" * 64,
-                now=_NOW + timedelta(minutes=2),
+                now=NOW + timedelta(minutes=2),
             )
             recovered = await recovery.reconcile(operation_id)
             assert recovered.lifecycle is OperationLifecycle.WAITING_FOR_INTERACTION
@@ -289,22 +289,22 @@ def test_censal_executor_acquires_once_recovers_review_and_applies_exact_operand
                     interaction_id=recovered_pending.request.interaction_id,
                     operation_id=operation_id,
                     revision=recovered_pending.request.revision,
-                    response_token=_RESPONSE_TOKEN,
+                    response_token=RESPONSE_TOKEN,
                     continuation_digest=recovered_pending.request.continuation_digest,
                     reviewed_proposal_digest=recovered_pending.reviewed_proposal_digest,
                     actor_ref="operator:integration",
-                    responded_at=_NOW + timedelta(minutes=2),
+                    responded_at=NOW + timedelta(minutes=2),
                     baseline_digest=recovered_pending.baseline_digest,
                     proposed_effect_digest=recovered_pending.proposed_effect_digest,
                 )
             )
-            applied = await _wait_for_phase(recovery, operation_id, CENSAL_PHASE_SETTLEMENT)
+            applied = await wait_for_phase(recovery, operation_id, CENSAL_PHASE_SETTLEMENT)
             assert applied.effect is OperationEffect.UPDATED
             assert acquisitions == 1
 
         asyncio.run(run())
         assert all(
-            _RESPONSE_TOKEN.encode() not in path.read_bytes() for path in durable_root.rglob("*") if path.is_file()
+            RESPONSE_TOKEN.encode() not in path.read_bytes() for path in durable_root.rglob("*") if path.is_file()
         )
         record = ProfileRecordRepository.for_current_session(
             profile_id, profile_decode_context=_profile_decode_context_for_test
@@ -318,14 +318,14 @@ def test_censal_executor_rejects_none_and_post_commit_failure_stays_unknown(tmp_
     async def acquire() -> CensalObservation:
         return _observation()
 
-    with _subject(tmp_path) as (profile_id, objects, session):
+    with subject(tmp_path) as (profile_id, objects, session):
         durable_root = tmp_path / "operations"
         before = ProfileRecordRepository.for_current_session(
             profile_id, profile_decode_context=_profile_decode_context_for_test
         ).load(profile_id)
 
         async def reject_run() -> None:
-            supervisor = _supervisor(
+            supervisor = censal_supervisor(
                 root=durable_root,
                 objects=objects,
                 executor=CensalOperationExecutor(
@@ -341,10 +341,10 @@ def test_censal_executor_rejects_none_and_post_commit_failure_stays_unknown(tmp_
             request = OperationRequest(
                 definition_id=_test_censal_operation_definition_id(),
                 subject_ref=profile_id,
-                payload=_payload(profile_id),
+                payload=censal_request_payload(profile_id),
             )
             operation_id = await supervisor.submit(request, operation_id="8" * 64)
-            waiting = await _start(supervisor, operation_id)
+            waiting = await start(supervisor, operation_id)
             pending = waiting.pending_interaction
             assert pending is not None
             await supervisor.respond(
@@ -352,15 +352,23 @@ def test_censal_executor_rejects_none_and_post_commit_failure_stays_unknown(tmp_
                     interaction_id=pending.request.interaction_id,
                     operation_id=operation_id,
                     revision=pending.request.revision,
-                    response_token=_RESPONSE_TOKEN,
+                    response_token=RESPONSE_TOKEN,
                     continuation_digest=pending.request.continuation_digest,
                     reviewed_proposal_digest=pending.reviewed_proposal_digest,
                     actor_ref="operator:integration",
-                    responded_at=_NOW,
+                    responded_at=NOW,
                 )
             )
-            rejected = await _wait_for_phase(supervisor, operation_id, CENSAL_PHASE_SETTLEMENT)
+            # Awaiting the terminal state, not the settlement phase: returning at
+            # the phase tore the loop down while the rejection was still being
+            # journalled, which left the outcome to scheduling.
+            rejected = await supervisor.await_terminal(operation_id)
+            assert rejected.phase_code == CENSAL_PHASE_SETTLEMENT
+            assert rejected.terminal_condition is OperationTerminalCondition.SUCCEEDED
             assert rejected.effect is OperationEffect.NONE
+            assert rejected.terminal_receipt is not None
+            assert rejected.terminal_receipt.result_ref is not None
+            assert rejected.terminal_receipt.result_ref.endswith(":rejected")
 
         asyncio.run(reject_run())
         assert (
@@ -386,7 +394,7 @@ def test_censal_executor_rejects_none_and_post_commit_failure_stays_unknown(tmp_
             )
 
         async def stale_race_run() -> None:
-            supervisor = _supervisor(
+            supervisor = censal_supervisor(
                 root=tmp_path / "stale-race-operations",
                 objects=objects,
                 executor=CensalOperationExecutor(
@@ -403,10 +411,10 @@ def test_censal_executor_rejects_none_and_post_commit_failure_stays_unknown(tmp_
             request = OperationRequest(
                 definition_id=_test_censal_operation_definition_id(),
                 subject_ref=profile_id,
-                payload=_payload(profile_id),
+                payload=censal_request_payload(profile_id),
             )
             operation_id = await supervisor.submit(request, operation_id="f" * 64)
-            waiting = await _start(supervisor, operation_id)
+            waiting = await start(supervisor, operation_id)
             pending = waiting.pending_interaction
             assert pending is not None
             await supervisor.respond(
@@ -414,11 +422,11 @@ def test_censal_executor_rejects_none_and_post_commit_failure_stays_unknown(tmp_
                     interaction_id=pending.request.interaction_id,
                     operation_id=operation_id,
                     revision=pending.request.revision,
-                    response_token=_RESPONSE_TOKEN,
+                    response_token=RESPONSE_TOKEN,
                     continuation_digest=pending.request.continuation_digest,
                     reviewed_proposal_digest=pending.reviewed_proposal_digest,
                     actor_ref="operator:integration",
-                    responded_at=_NOW,
+                    responded_at=NOW,
                     baseline_digest=pending.baseline_digest,
                     proposed_effect_digest=pending.proposed_effect_digest,
                 )
@@ -444,7 +452,7 @@ def test_censal_executor_rejects_none_and_post_commit_failure_stays_unknown(tmp_
             raise RuntimeError("synthetic repository acknowledgement loss")
 
         async def ambiguous_run() -> None:
-            supervisor = _supervisor(
+            supervisor = censal_supervisor(
                 root=tmp_path / "ambiguous-operations",
                 objects=objects,
                 executor=CensalOperationExecutor(
@@ -461,10 +469,10 @@ def test_censal_executor_rejects_none_and_post_commit_failure_stays_unknown(tmp_
             request = OperationRequest(
                 definition_id=_test_censal_operation_definition_id(),
                 subject_ref=profile_id,
-                payload=_payload(profile_id),
+                payload=censal_request_payload(profile_id),
             )
             operation_id = await supervisor.submit(request, operation_id="c" * 64)
-            waiting = await _start(supervisor, operation_id)
+            waiting = await start(supervisor, operation_id)
             pending = waiting.pending_interaction
             assert pending is not None
             await supervisor.respond(
@@ -472,11 +480,11 @@ def test_censal_executor_rejects_none_and_post_commit_failure_stays_unknown(tmp_
                     interaction_id=pending.request.interaction_id,
                     operation_id=operation_id,
                     revision=pending.request.revision,
-                    response_token=_RESPONSE_TOKEN,
+                    response_token=RESPONSE_TOKEN,
                     continuation_digest=pending.request.continuation_digest,
                     reviewed_proposal_digest=pending.reviewed_proposal_digest,
                     actor_ref="operator:integration",
-                    responded_at=_NOW,
+                    responded_at=NOW,
                     baseline_digest=pending.baseline_digest,
                     proposed_effect_digest=pending.proposed_effect_digest,
                 )
@@ -506,12 +514,12 @@ def test_censal_executor_cancellation_before_irreversible_entry_keeps_none_and_w
         reached_boundary.set()
         await release_boundary.wait()
 
-    with _subject(tmp_path) as (profile_id, objects, session):
+    with subject(tmp_path) as (profile_id, objects, session):
         before = ProfileRecordRepository.for_current_session(
             profile_id, profile_decode_context=_profile_decode_context_for_test
         ).load(profile_id)
         history_before = ProfileRecordStore(session=session).history()
-        supervisor = _supervisor(
+        supervisor = censal_supervisor(
             root=tmp_path / "cancel-race-operations",
             objects=objects,
             executor=CensalOperationExecutor(
@@ -528,12 +536,12 @@ def test_censal_executor_cancellation_before_irreversible_entry_keeps_none_and_w
         request = OperationRequest(
             definition_id=_test_censal_operation_definition_id(),
             subject_ref=profile_id,
-            payload=_payload(profile_id),
+            payload=censal_request_payload(profile_id),
         )
 
         async def run() -> None:
             operation_id = await supervisor.submit(request, operation_id="3" * 64)
-            waiting = await _start(supervisor, operation_id)
+            waiting = await start(supervisor, operation_id)
             pending = waiting.pending_interaction
             assert pending is not None
             await supervisor.respond(
@@ -541,11 +549,11 @@ def test_censal_executor_cancellation_before_irreversible_entry_keeps_none_and_w
                     interaction_id=pending.request.interaction_id,
                     operation_id=operation_id,
                     revision=pending.request.revision,
-                    response_token=_RESPONSE_TOKEN,
+                    response_token=RESPONSE_TOKEN,
                     continuation_digest=pending.request.continuation_digest,
                     reviewed_proposal_digest=pending.reviewed_proposal_digest,
                     actor_ref="operator:integration",
-                    responded_at=_NOW,
+                    responded_at=NOW,
                     baseline_digest=pending.baseline_digest,
                     proposed_effect_digest=pending.proposed_effect_digest,
                 )

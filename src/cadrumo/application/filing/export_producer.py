@@ -23,7 +23,6 @@ from ...domain.iva.refund_eligibility import is_last_filing_period_of_year
 from ...domain.modelos.calculation_revision_amendment import M303RectificativaMotive
 from ...domain.modelos.calculation_revision_m303_evidence import M303InsolvencyFilingSubtype
 from ._producer_ownership import filing_producer_ownership as _filing_producer_ownership
-from ._producer_snapshot_m200 import Modelo200ProfileFacts
 from .producer_snapshot import (
     AmendmentEvidence,
     ChargeAccountSelection,
@@ -38,6 +37,7 @@ from .producer_snapshot import (
     Modelo353ProfileFacts,
     RefundAccountSelection,
 )
+from .producer_snapshot_m200 import Modelo200ProfileFacts
 
 
 @dataclass(frozen=True)
@@ -178,12 +178,6 @@ _SHARED_SNAPSHOT_PRODUCER_KEYS = frozenset(
         FilingProducerKey.M200_FECHA_DE_NACIMIENTO,
         FilingProducerKey.M200_IDENTIFICACION_EJERCICIO,
         FilingProducerKey.M200_IDENTIFICACION_TIPO_DE_EJERCICIO,
-        FilingProducerKey.M200_IDENTIFICADOR_DE_FIN_DE_REGISTRO,
-        FilingProducerKey.M200_IDENTIFICADOR_DE_FIN_DE_REGISTRO_2,
-        FilingProducerKey.M200_IDENTIFICADOR_DE_FIN_DE_REGISTRO_3,
-        FilingProducerKey.M200_IDENTIFICADOR_DE_FIN_DE_REGISTRO_4,
-        FilingProducerKey.M200_IDENTIFICADOR_DE_FIN_DE_REGISTRO_5,
-        FilingProducerKey.M200_IDENTIFICADOR_DE_FIN_DE_REGISTRO_6,
         FilingProducerKey.M200_IMPORTE_A_DEVOLVER,
         FilingProducerKey.M200_IMPORTE_A_INGRESAR,
         FilingProducerKey.M200_IMPORTE_NETO_DE_LA_CIFRA_DE_NEGOCIOS_DE_LOS,
@@ -394,6 +388,7 @@ _SHARED_SNAPSHOT_PRODUCER_KEYS = frozenset(
         FilingProducerKey.M222_REGIMEN_REDUCIDA_DIMENSION,
         FilingProducerKey.M222_CIFRA_NEGOCIOS_GRUPO_DOCE_MESES,
         FilingProducerKey.M222_COOPERATIVA_FISCALMENTE_PROTEGIDA,
+        FilingProducerKey.M222_COOPERATIVA_O_MULTIPLES_TIPOS,
         FilingProducerKey.M222_REGIMEN_ENTIDADES_CAPITAL_RIESGO,
         FilingProducerKey.M222_CIRCUNSTANCIA_CONCURRENTE,
         FilingProducerKey.M222_CIFRA_NEGOCIOS_PERIODO_ANTERIOR_TRAMO,
@@ -449,6 +444,7 @@ _M222_FIELD_BY_KEY: dict[FilingProducerKey, str] = {
     FilingProducerKey.M222_REGIMEN_REDUCIDA_DIMENSION: "regimen_reducida_dimension",
     FilingProducerKey.M222_CIFRA_NEGOCIOS_GRUPO_DOCE_MESES: "cifra_negocios_grupo_doce_meses",
     FilingProducerKey.M222_COOPERATIVA_FISCALMENTE_PROTEGIDA: "cooperativa_fiscalmente_protegida",
+    FilingProducerKey.M222_COOPERATIVA_O_MULTIPLES_TIPOS: "cooperativa_o_multiples_tipos",
     FilingProducerKey.M222_REGIMEN_ENTIDADES_CAPITAL_RIESGO: "regimen_entidades_capital_riesgo",
     FilingProducerKey.M222_CIRCUNSTANCIA_CONCURRENTE: "circunstancia_concurrente",
     FilingProducerKey.M222_CIFRA_NEGOCIOS_PERIODO_ANTERIOR_TRAMO: "cifra_negocios_periodo_anterior_tramo",
@@ -783,12 +779,6 @@ _M200_FIELD_BY_KEY: dict[FilingProducerKey, str] = {
     FilingProducerKey.M200_FECHA_DE_NACIMIENTO: "fecha_de_nacimiento",
     FilingProducerKey.M200_IDENTIFICACION_EJERCICIO: "identificacion_ejercicio",
     FilingProducerKey.M200_IDENTIFICACION_TIPO_DE_EJERCICIO: "identificacion_tipo_de_ejercicio",
-    FilingProducerKey.M200_IDENTIFICADOR_DE_FIN_DE_REGISTRO: "identificador_de_fin_de_registro",
-    FilingProducerKey.M200_IDENTIFICADOR_DE_FIN_DE_REGISTRO_2: "identificador_de_fin_de_registro_2",
-    FilingProducerKey.M200_IDENTIFICADOR_DE_FIN_DE_REGISTRO_3: "identificador_de_fin_de_registro_3",
-    FilingProducerKey.M200_IDENTIFICADOR_DE_FIN_DE_REGISTRO_4: "identificador_de_fin_de_registro_4",
-    FilingProducerKey.M200_IDENTIFICADOR_DE_FIN_DE_REGISTRO_5: "identificador_de_fin_de_registro_5",
-    FilingProducerKey.M200_IDENTIFICADOR_DE_FIN_DE_REGISTRO_6: "identificador_de_fin_de_registro_6",
     FilingProducerKey.M200_IMPORTE_A_DEVOLVER: "importe_a_devolver",
     FilingProducerKey.M200_IMPORTE_A_INGRESAR: "importe_a_ingresar",
     FilingProducerKey.M200_IMPORTE_NETO_DE_LA_CIFRA_DE_NEGOCIOS_DE_LOS: "importe_neto_de_la_cifra_de_negocios_de_los",
@@ -1034,6 +1024,7 @@ def _apply_foral_m303_overrides(
             FilingProducerKey.M303_INSOLVENCY_FILING_SUBTYPE: None,
             FilingProducerKey.M303_VOLUNTARY_SII_ENROLLED: "2",
             FilingProducerKey.M303_EXONERADO_390_APPLICABLE: "2",
+            FilingProducerKey.M303_ANNUAL_VOLUME_NONZERO: "2",
             FilingProducerKey.M303_HYDROCARBON_DEPOSIT_ADVANCE_PAYMENT_DEDUCTION_ENTITLED: "2",
         },
     )
@@ -1150,9 +1141,19 @@ def m303_filing_lexicals(m303_facts: M303FilingFacts | None) -> M303FilingLexica
     transition = m303_facts.prorrata_transition
     insolvency = m303_facts.insolvency
     transition_applicable = transition.is_applicable
+    # DP30301 Nota 4: the exemption is a question only in the last period; every other period prints "0".
+    final_exonerado = m303_facts.exonerado_390 if is_last_filing_period_of_year(m303_facts.period) else None
     return M303FilingLexicals(
         joint_return_elected=yes_no(m303_facts.joint_return_elected),
-        annual_volume_nonzero="1" if m303_facts.annual_volume_nonzero else None,
+        # DP30301 Nota 3: the art. 121 answer is printed only by a filer exempt from Modelo 390, and only in the
+        # last period; every other filing carries "0" whatever the operator answered.
+        annual_volume_nonzero=(
+            yes_no(m303_facts.annual_volume_nonzero)
+            if final_exonerado is not None
+            and final_exonerado.applicable
+            and m303_facts.annual_volume_nonzero is not None
+            else "0"
+        ),
         recipient_of_cash_accounting_operations=yes_no(
             m303_facts.supplier_regime.recipient_of_cash_accounting_operations,
         ),
@@ -1174,9 +1175,7 @@ def m303_filing_lexicals(m303_facts: M303FilingFacts | None) -> M303FilingLexica
             if insolvency is not None
             else None
         ),
-        exonerado_390_applicable=(
-            yes_no(m303_facts.exonerado_390.applicable) if is_last_filing_period_of_year(m303_facts.period) else "0"
-        ),
+        exonerado_390_applicable="0" if final_exonerado is None else yes_no(final_exonerado.applicable),
         prorrata_transition_applicable=transition_applicable,
     )
 

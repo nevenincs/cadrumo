@@ -16,21 +16,33 @@ would prove only that one file was consulted twice.
 
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
 import pytest
+from textual.widgets import Input, Static
 
 from ....application.search.workbench import WorkbenchDestinationAdmissionState
+from ....tests.audited_process import run_audited_process
+from ..components.filing_year_route import FilingYearRouteScreen
+from ..components.host import ScreenHostApp
 from ..launcher import main
 from ..ledger.controller import LedgerWorkspaceScreen
 from ..navigation import TUI_DESTINATION_CATALOGUE, TuiScreenContextV1
+from ..withholding.screen import WithholdingEvidenceScreen
 from .workbench_session import WORKBENCH_PROFILE_LABEL, installed_workbench_root
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _CLI_PACKAGE = "cadrumo.entrypoints.cli"
-_PRIMARY_DESTINATIONS = ("workbench.home", "workbench.ledger", "workbench.declarations", "workbench.aeat_sync")
+_PRIMARY_DESTINATIONS = (
+    "workbench.home",
+    "workbench.ledger",
+    "workbench.withholding",
+    "workbench.declarations",
+    "workbench.aeat_sync",
+)
 
 
 @pytest.mark.asyncio
@@ -88,6 +100,28 @@ async def test_the_installed_ledger_route_admits_the_link_door(tmp_path: Path) -
 
         assert isinstance(ledger, LedgerWorkspaceScreen)
         assert ledger.controller.can_submit_links(), "the installed Ledger route composed no link door"
+
+
+@pytest.mark.asyncio
+async def test_withholding_route_uses_the_active_profile_and_selected_year(tmp_path: Path) -> None:
+    """The real installed route opens the existing shared-service evidence screen."""
+    async with installed_workbench_root(tmp_path) as root:
+        route = root.destination_catalogue.resolve("workbench.withholding")
+        assert route.factory is not None
+        selector = route.factory(TuiScreenContextV1(destination="workbench.withholding"))
+        assert isinstance(selector, FilingYearRouteScreen)
+        assert isinstance(selector._screen_factory(2025), WithholdingEvidenceScreen)
+        async with ScreenHostApp(selector).run_test() as pilot:
+            year_input = pilot.app.screen.query_one("#filing-year-route-year", Input)
+            year_input.value = "2025"
+            assert year_input.value == "2025"
+            await pilot.click("#filing-year-route-open")
+            await pilot.pause()
+            assert year_input.value == "2025"
+            assert isinstance(pilot.app.screen, WithholdingEvidenceScreen), str(
+                selector.query_one("#filing-year-route-error", Static).render()
+            )
+            assert pilot.app.screen._filing_year == 2025
 
 
 @pytest.mark.asyncio
@@ -155,19 +189,58 @@ async def test_search_and_navigation_report_the_same_admissions(tmp_path: Path) 
         assert search_inputs.aeat_sync_admission == root.admissions["workbench.aeat_sync"]
 
 
+_CHILD_IMPORT_PROBE = """\
+import json
+import sys
+
+for module in sys.argv[1:]:
+    __import__(module)
+print(json.dumps(sorted(name for name in sys.modules if name == {cli!r} or name.startswith({cli!r} + "."))))
+"""
+
+
+def _cli_modules_a_fresh_process_loads(*modules: str) -> list[str]:
+    """Import ``modules`` in a new interpreter and return the CLI modules it then holds.
+
+    The question is what the CHILD process loads, so it is asked of a child. This
+    test process has usually imported CLI test modules already, so its own
+    ``sys.modules`` answers for whatever ran first, not for the code under test.
+    """
+    completed = run_audited_process(
+        [sys.executable, "-c", _CHILD_IMPORT_PROBE.format(cli=_CLI_PACKAGE), *modules],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        check=False,
+        timeout=300,
+    )
+    assert completed.returncode == 0, str(completed.stderr)[-4000:]
+    loaded = json.loads(str(completed.stdout).strip().splitlines()[-1])
+    assert isinstance(loaded, list)
+    return [str(name) for name in loaded]
+
+
 def test_the_installed_session_never_pulls_the_cli_into_the_child_process() -> None:
     """Composing the whole workbench must not import the sibling entrypoint.
 
     The boundary is out-of-process by decision, and an import is exactly how
     it would stop being one. This checks the modules actually loaded rather
     than a source-level grep, so an import reached through a function body is
-    still caught.
+    still caught, and it checks them in a fresh interpreter running the
+    child's own entry modules, so test order cannot change the verdict.
     """
-    from .. import installed_session
+    child_modules = ("cadrumo.entrypoints.tui.launcher", "cadrumo.entrypoints.tui.installed_session")
 
-    del installed_session
+    assert _cli_modules_a_fresh_process_loads(*child_modules) == []
 
-    assert not [name for name in sys.modules if name.startswith(_CLI_PACKAGE)]
+
+def test_the_child_import_probe_reports_a_cli_import_when_one_happens() -> None:
+    """The control: the same probe, handed a CLI module, reports it.
+
+    Without this an interpreter that failed to import anything, or a filter
+    that matched nothing, would pass the test above for the wrong reason.
+    """
+    assert _CLI_PACKAGE + ".main" in _cli_modules_a_fresh_process_loads(_CLI_PACKAGE + ".main")
 
 
 def test_an_empty_profile_store_ends_the_headless_session_without_creating_one(tmp_path: Path) -> None:

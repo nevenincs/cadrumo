@@ -25,7 +25,7 @@ from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalo
 from ....core.hashing import content_hash_hex
 from ....domain.invoices.models import Invoice, InvoiceCatalogue
 from ....domain.iva.classification import InvoiceKind
-from ....tests.recorded_ecb_rates import recorded_ecb_rate_provider
+from ...exchange_rate_provider import exchange_rate_provider
 from ...invoices.catalogue_creation import build_catalogue_invoice
 from ..draft_review import _invoice_catalogue_fingerprint
 
@@ -47,7 +47,7 @@ def _invoice(invoice_number: str, *, taxable_base: Decimal, bucket_id: str = _RU
         taxable_base=taxable_base,
         iva_rate=Decimal("21"),
         currency="EUR",
-        rate_provider=recorded_ecb_rate_provider(),
+        rate_provider=exchange_rate_provider(),
     )
 
 

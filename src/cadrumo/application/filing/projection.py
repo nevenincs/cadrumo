@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import cast
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -17,6 +16,7 @@ from ...core.filing_projection_ref import (
     M303RegimenSimplificadoActivityProjectionRef,
     M303RegimenSimplificadoFactProjectionRef,
     M303RegimenSimplificadoModuleProjectionRef,
+    is_typed_filing_projection_ref,
 )
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -426,11 +426,15 @@ def _project_exonerado_record(
 ) -> tuple[tuple[FilingRecordRenderContext, ...], tuple[FilingProjectionValue, ...]]:
     _require_nonrepeated_projection_record(record)
     evidence = facts.regimen_simplificado.regimen_snapshot
-    projected = project_m303_exonerado_390_value_arrival(
-        registry_snapshot=registry_snapshot,
-        projection_refs=tuple(ref for ref in refs if isinstance(ref, _EXONERADO_REF_TYPES)),
-        evidence=facts.exonerado_390,
-        record_design=evidence.record_design,
+    projected = (
+        None
+        if facts.exonerado_390 is None
+        else project_m303_exonerado_390_value_arrival(
+            registry_snapshot=registry_snapshot,
+            projection_refs=tuple(ref for ref in refs if isinstance(ref, _EXONERADO_REF_TYPES)),
+            evidence=facts.exonerado_390,
+            record_design=evidence.record_design,
+        )
     )
     return _single_occurrence_projection(
         registry_snapshot,
@@ -460,11 +464,11 @@ def _single_occurrence_projection(
     values: list[FilingProjectionValue] = []
     for field in fields:
         projection_ref = getattr(field, "projection_ref", None)
-        if not isinstance(projection_ref, BaseModel):
+        if not is_typed_filing_projection_ref(projection_ref):
             raise FilingExportValidationError("projector returned a field without an actual typed projection_ref")
         values.append(
             FilingProjectionValue(
-                projection_ref=cast(FilingProjectionRef, projection_ref),
+                projection_ref=projection_ref,
                 record_id=record.id,
                 occurrence=1,
                 value=getattr(field, "value", None),

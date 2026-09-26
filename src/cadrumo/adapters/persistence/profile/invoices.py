@@ -279,6 +279,34 @@ class InvoiceCatalogueRepository:
         self._assert_catalogue_bucket(catalogue, direction="saved through")
         return self._storage.to_secure_object_write(catalogue, expected_revision_id=expected_revision_id)
 
+    def save_with_secure_object_writes(
+        self,
+        catalogue: InvoiceCatalogue,
+        *,
+        expected_revision_id: str,
+        extra_writes: tuple[SecureObjectWrite, ...],
+    ) -> None:
+        """Commit a guarded invoice catalogue and sibling writes together.
+
+        The invoice catalogue is a singleton encrypted object.  Pairing its
+        compare-and-swap write with the event-history write in one storage
+        batch means a failed batch leaves neither a changed invoice catalogue
+        nor an audit entry behind.
+
+        Core types:
+        :class:`~cadrumo.domain.invoices.models.InvoiceCatalogue`.
+        """
+        invoice_write = self.to_secure_object_write(
+            catalogue,
+            expected_revision_id=expected_revision_id,
+        )
+        self._objects.apply_batch((invoice_write, *extra_writes))
+        _log.debug(
+            "saved invoice catalogue with %d invoice(s) and %d co-committed write(s)",
+            len(catalogue.invoices),
+            len(extra_writes),
+        )
+
 
 __all__ = [
     "InvoiceCatalogueRepository",

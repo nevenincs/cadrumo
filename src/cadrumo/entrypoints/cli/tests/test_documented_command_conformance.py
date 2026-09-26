@@ -81,18 +81,23 @@ from __future__ import annotations
 
 import json
 import re
-from dataclasses import dataclass
-from functools import cache
 from pathlib import Path
-from typing import cast
 
-import click
 import pytest
 from pydantic import TypeAdapter
 
 from ....core.directory_scan import scan_directory
 from ....tests.inventory import REPO_ROOT
-from .cli_runner import cadrumo_click_command
+from .live_command_validation import (
+    CitedCommand,
+    command_option_names,
+    live_root_command,
+    live_root_option_names,
+    required_positional_count,
+    resolve_path,
+    validate_cited_command,
+    value_consuming_option_names,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -126,7 +131,7 @@ _PROSE_DIRECTIVE_RE = re.compile(r"^@(?:blocked|capture|expect|note)\b")
 # Global options declared on the root callback. Accepted at any position before
 # the subcommand path and validated against the root command's own params, so
 # this set is a documentation aid only — the authoritative source is the live
-# root command (see :func:`_root_option_names`).
+# root command (see :func:`live_root_option_names`).
 _LINE_CONTINUATION_RE = re.compile(r"\\\s*$")
 
 
@@ -153,125 +158,6 @@ def _command_surfaces() -> list[Path]:
 
 
 # ---------------------------------------------------------------------------
-# Live CLI introspection
-# ---------------------------------------------------------------------------
-
-
-@cache
-def _root_command() -> click.Command:
-    """Materialize the live ``cadrumo`` click command (root of the tree)."""
-    return cadrumo_click_command()
-
-
-@cache
-def _root_option_names() -> frozenset[str]:
-    """Long/short option strings declared on the root callback."""
-    names: set[str] = set()
-    for param in _root_command().params:
-        if getattr(param, "param_type_name", None) == "option":
-            names.update(param.opts)
-            names.update(param.secondary_opts)
-    return frozenset(names)
-
-
-@dataclass(frozen=True)
-class _Resolved:
-    """Resolution outcome for a cited verb path."""
-
-    command: click.Command | None
-    # The verb path that resolved (may be a prefix of the cited tokens when
-    # trailing tokens are arguments rather than subcommands).
-    resolved_path: tuple[str, ...]
-
-
-def _resolve_path(tokens: tuple[str, ...]) -> _Resolved:
-    """Walk the live tree for the longest verb prefix of ``tokens``.
-
-    Returns the deepest command reachable by treating leading tokens as
-    subcommand names. Resolution stops at the first token that is not a
-    subcommand of the current group (that token and the rest are arguments).
-    """
-    cmd: click.Command = _root_command()
-    ctx = click.Context(cmd, info_name="aeat")
-    resolved: list[str] = []
-    for tok in tokens:
-        if not hasattr(cmd, "list_commands"):
-            break
-        # ``list_commands`` is the structural group marker; the vendored
-        # TyperGroup is not a guaranteed upstream ``click.Group`` subclass, so
-        # narrow by interface (cast) rather than isinstance to stay
-        # vendor-robust while exposing ``get_command`` to the checker.
-        group = cast(click.Group, cmd)
-        sub = group.get_command(ctx, tok)
-        if sub is None:
-            break
-        ctx = click.Context(sub, info_name=tok, parent=ctx)
-        cmd = sub
-        resolved.append(tok)
-    return _Resolved(command=cmd, resolved_path=tuple(resolved))
-
-
-def _command_option_names(cmd: click.Command) -> frozenset[str]:
-    names: set[str] = set()
-    for param in cmd.params:
-        if getattr(param, "param_type_name", None) == "option":
-            names.update(param.opts)
-            names.update(param.secondary_opts)
-    return frozenset(names)
-
-
-def _value_consuming_option_names(cmd: click.Command) -> frozenset[str]:
-    """Option strings on ``cmd`` that consume a following value token.
-
-    A boolean flag (``--force`` / ``--no-force``) or a counting option
-    (``-v -v``) takes no value; every other option consumes the next token as
-    its value. Knowing this set for the *resolved* command lets the
-    dead-subcommand check tell an option value (``--layout plugin``) apart from
-    a subcommand name — the root-global heuristic in the string parser cannot,
-    because it runs before the command is known.
-    """
-    names: set[str] = set()
-    for param in cmd.params:
-        if getattr(param, "param_type_name", None) != "option":
-            continue
-        if getattr(param, "is_flag", False) or getattr(param, "count", False):
-            continue
-        names.update(param.opts)
-        names.update(param.secondary_opts)
-    return frozenset(names)
-
-
-def _option_value_tokens(tokens: tuple[str, ...], value_consuming: frozenset[str]) -> set[str]:
-    """Tokens in ``tokens`` consumed as the value of a value-consuming option.
-
-    Walks the ordered stream and, for each cited value-consuming option written
-    without an inline ``=value``, marks the next token as its value. Used to
-    exclude an option value from the dead-subcommand check.
-    """
-    consumed: set[str] = set()
-    expect_value = False
-    for tok in tokens:
-        if expect_value:
-            consumed.add(tok)
-            expect_value = False
-            continue
-        if tok.startswith("-") and tok != "-":
-            name = tok.split("=", 1)[0]
-            if "=" not in tok and name in value_consuming:
-                expect_value = True
-    return consumed
-
-
-def _required_positional_count(cmd: click.Command) -> int:
-    """Number of required, non-variadic positional arguments on ``cmd``."""
-    count = 0
-    for param in cmd.params:
-        if getattr(param, "param_type_name", None) == "argument" and param.required and param.nargs != -1:
-            count += 1
-    return count
-
-
-# ---------------------------------------------------------------------------
 # Command-line extraction
 # ---------------------------------------------------------------------------
 
@@ -286,25 +172,6 @@ _PLACEHOLDER_RE = re.compile(r"^(<[^>]+>|[A-Z][A-Z0-9_-]*)$")
 # positional slot exactly like ``<id>`` and is never validated as an option
 # name. The inner name matches the engine's capture-identifier grammar.
 _INTERP_PLACEHOLDER_RE = re.compile(r"^\{[A-Za-z_][A-Za-z0-9_]*\}$")
-
-
-@dataclass(frozen=True)
-class _CitedCommand:
-    """A single cited ``aeat`` invocation, decomposed for validation."""
-
-    raw: str
-    verb_tokens: tuple[str, ...]
-    cited_options: tuple[str, ...]
-    # True when at least one non-flag token follows the verb path (a value or
-    # a placeholder) — used to evaluate the missing-required-positional check.
-    has_positional_token: bool
-    # The full ordered token stream after the executable token (verb tokens,
-    # options, option values, positionals), preserved so the dead-subcommand
-    # check can consult the resolved command's value-consuming options and tell
-    # an option *value* apart from a subcommand. Defaults to empty for the
-    # directly-constructed fixtures in the tests, which exercise the option-name
-    # and verb-resolution paths that do not need the ordered stream.
-    tokens: tuple[str, ...] = ()
 
 
 def _strip_inline_comment(line: str) -> str:
@@ -330,7 +197,7 @@ def _is_value_placeholder(tok: str) -> bool:
     return not tok.startswith("-")
 
 
-def _parse_command_line(line: str) -> _CitedCommand | None:
+def _parse_command_line(line: str) -> CitedCommand | None:
     """Decompose one ``aeat ...`` line into verb path + cited options.
 
     Returns ``None`` for lines that are not concretely-resolvable invocations:
@@ -414,7 +281,7 @@ def _parse_command_line(line: str) -> _CitedCommand | None:
                 has_positional = True
     if not verb_tokens:
         return None  # only top-level flags (``aeat --version``)
-    return _CitedCommand(
+    return CitedCommand(
         raw=line.strip(),
         verb_tokens=tuple(verb_tokens),
         cited_options=tuple(cited_options),
@@ -452,10 +319,10 @@ def _shlex_split(text: str) -> list[str]:
     return tokens
 
 
-def _cited_commands(text: str) -> list[_CitedCommand]:
+def _cited_commands(text: str) -> list[CitedCommand]:
     spans = [m.group(1) for m in _INLINE_CODE_RE.finditer(text)]
     spans += [m.group(1) for m in _FENCE_RE.finditer(text)]
-    out: list[_CitedCommand] = []
+    out: list[CitedCommand] = []
     seen: set[tuple[tuple[str, ...], tuple[str, ...], bool]] = set()
     for span in spans:
         # Join shell line continuations within a fenced block before splitting.
@@ -474,7 +341,7 @@ def _cited_commands(text: str) -> list[_CitedCommand]:
     return out
 
 
-def _surface_commands(path: Path) -> list[_CitedCommand]:
+def _surface_commands(path: Path) -> list[CitedCommand]:
     """Extract invocations from one reader doc or private sequence contract."""
     text = path.read_text(encoding="utf-8")
     if path.suffix == ".seq":
@@ -602,10 +469,10 @@ def _inline_command_complexity(span: str) -> int | None:
     cited = _parse_command_line(span)
     if cited is None:
         return None
-    resolved = _resolve_path(cited.verb_tokens)
-    value_consuming = _value_consuming_option_names(_root_command())
+    resolved = resolve_path(cited.verb_tokens)
+    value_consuming = value_consuming_option_names(live_root_command())
     if resolved.command is not None:
-        value_consuming = value_consuming | _value_consuming_option_names(resolved.command)
+        value_consuming = value_consuming | value_consuming_option_names(resolved.command)
     verb_path = list(resolved.resolved_path)
     verb_index = 0
     count = 0
@@ -719,66 +586,6 @@ def _current_inline_aeat_span_counts() -> dict[str, int]:
 
 
 # ---------------------------------------------------------------------------
-# Validation
-# ---------------------------------------------------------------------------
-
-
-def _split_verb_and_positionals(cited: _CitedCommand) -> tuple[_Resolved, tuple[str, ...]]:
-    """Resolve the verb path, returning the leftover (positional) verb tokens."""
-    resolved = _resolve_path(cited.verb_tokens)
-    leftover = cited.verb_tokens[len(resolved.resolved_path) :]
-    return resolved, leftover
-
-
-def _validate_command(cited: _CitedCommand) -> list[str]:
-    """Return human-readable violations for a single cited command."""
-    violations: list[str] = []
-    resolved, leftover = _split_verb_and_positionals(cited)
-    cmd = resolved.command
-    if cmd is None or not resolved.resolved_path:
-        violations.append(f"command path does not resolve in the live CLI: `{cited.raw}`")
-        return violations
-
-    # (b) Option validity: every cited option must be a param of the resolved
-    # command or a root-global option.
-    valid_options = _command_option_names(cmd) | _root_option_names()
-    for opt in cited.cited_options:
-        if opt not in valid_options:
-            violations.append(
-                f"`{cited.raw}` cites option `{opt}`, which is not a parameter of "
-                f"`aeat {' '.join(resolved.resolved_path)}` (nor a global option)",
-            )
-
-    # (c) Dead subcommand of a live group: longest-prefix resolution stops at
-    # the deepest reachable command and treats the rest as "arguments", but a
-    # GROUP takes no positional arguments — a leftover verb token under a
-    # group can only be a subcommand name that does not exist (the shape that
-    # let `aeat app ledger payable-invoice` pass while uninvokable after the
-    # invoice unification rename). A leftover token that is really the *value*
-    # of a value-consuming option on the resolved group (`aeat app quickfile
-    # --modelo 130`) is NOT a dead subcommand: the string parser cannot know
-    # the group's options, so it over-collects the value into the verb path;
-    # exclude those values by consulting the resolved command's real params.
-    if hasattr(cmd, "list_commands") and leftover:
-        value_consuming = _value_consuming_option_names(cmd) | _value_consuming_option_names(_root_command())
-        option_values = _option_value_tokens(cited.tokens, value_consuming)
-        dead = [tok for tok in leftover if tok not in option_values]
-        if dead:
-            violations.append(
-                f"`{cited.raw}` cites `{dead[0]}`, which is not a subcommand of "
-                f"the group `aeat {' '.join(resolved.resolved_path)}`",
-            )
-            return violations
-
-    # Missing-required-positional (the ``profile create`` shape) is
-    # deliberately NOT enforced here: see the module docstring's limitation
-    # note. ``leftover`` is otherwise computed only to keep verb-vs-positional
-    # resolution honest for the option-validity check above.
-    _ = leftover
-    return violations
-
-
-# ---------------------------------------------------------------------------
 # Tests
 # ---------------------------------------------------------------------------
 
@@ -829,44 +636,44 @@ def test_live_introspection_matches_reality() -> None:
     to materialize) that would make the gate vacuously pass.
     """
     # `describe` is a leaf with one required positional and no `--modelo`.
-    resolved = _resolve_path(("app", "modelo", "describe"))
+    resolved = resolve_path(("app", "modelo", "describe"))
     assert resolved.resolved_path == ("app", "modelo", "describe")
     describe = resolved.command
     assert describe is not None
     assert not hasattr(describe, "list_commands")
-    assert _required_positional_count(describe) == 1
-    assert "--modelo" not in _command_option_names(describe)
-    assert "--period" in _command_option_names(describe)
+    assert required_positional_count(describe) == 1
+    assert "--modelo" not in command_option_names(describe)
+    assert "--period" in command_option_names(describe)
     # `--language` / `--format` are root globals.
-    assert {"--language", "--format", "--profile"} <= _root_option_names()
+    assert {"--language", "--format", "--profile"} <= live_root_option_names()
     # A genuinely-wrong option must be rejected by the validator.
-    bad = _CitedCommand(
+    bad = CitedCommand(
         raw="aeat app modelo describe --modelo 130",
         verb_tokens=("app", "modelo", "describe"),
         cited_options=("--modelo",),
         has_positional_token=True,
     )
-    assert _validate_command(bad), "validator must flag a non-existent option"
+    assert validate_cited_command(bad), "validator must flag a non-existent option"
     # A dead subcommand of a LIVE group must be rejected, not absorbed as an
     # "argument" by longest-prefix resolution (the `ledger payable-invoice`
     # regression shape).
-    dead_subcommand = _CitedCommand(
+    dead_subcommand = CitedCommand(
         raw="aeat app ledger payable-invoice",
         verb_tokens=("app", "ledger", "payable-invoice"),
         cited_options=(),
         has_positional_token=False,
     )
-    flagged = _validate_command(dead_subcommand)
+    flagged = validate_cited_command(dead_subcommand)
     assert flagged, "validator must flag a dead subcommand under a live group"
     assert "payable-invoice" in flagged[0]
     # ...while a live leaf with a genuine positional argument stays accepted.
-    live_with_positional = _CitedCommand(
+    live_with_positional = CitedCommand(
         raw="aeat config login myprofile",
         verb_tokens=("config", "login", "myprofile"),
         cited_options=(),
         has_positional_token=True,
     )
-    assert not _validate_command(live_with_positional)
+    assert not validate_cited_command(live_with_positional)
 
 
 def test_value_consuming_option_value_is_not_a_dead_subcommand() -> None:
@@ -883,16 +690,16 @@ def test_value_consuming_option_value_is_not_a_dead_subcommand() -> None:
     """
     # Precondition: `app quickfile` is a live group and `--modelo` is a real,
     # value-consuming option of it (guards the fixture against CLI drift).
-    quickfile = _resolve_path(("app", "quickfile"))
+    quickfile = resolve_path(("app", "quickfile"))
     assert quickfile.resolved_path == ("app", "quickfile")
     assert quickfile.command is not None
     assert hasattr(quickfile.command, "list_commands")
-    assert "--modelo" in _value_consuming_option_names(quickfile.command)
+    assert "--modelo" in value_consuming_option_names(quickfile.command)
 
     option_value = _parse_command_line("aeat app quickfile --modelo 130")
     assert option_value is not None
     assert option_value.tokens == ("app", "quickfile", "--modelo", "130")
-    assert not _validate_command(option_value), (
+    assert not validate_cited_command(option_value), (
         "the value of a value-consuming option must not be flagged as a dead subcommand"
     )
 
@@ -900,7 +707,7 @@ def test_value_consuming_option_value_is_not_a_dead_subcommand() -> None:
     # (with no option consuming it) must still be refused.
     dead = _parse_command_line("aeat app quickfile totally-fake-subcommand")
     assert dead is not None
-    flagged = _validate_command(dead)
+    flagged = validate_cited_command(dead)
     assert flagged, "a genuinely dead subcommand under a live group must be refused"
     assert "totally-fake-subcommand" in flagged[0]
 
@@ -910,7 +717,7 @@ def test_documented_commands_conform(surface: Path) -> None:
     """Every cited ``aeat`` command resolves with valid options and arguments."""
     violations: list[str] = []
     for cited in _surface_commands(surface):
-        violations.extend(_validate_command(cited))
+        violations.extend(validate_cited_command(cited))
     assert not violations, (
         f"{surface.relative_to(REPO_ROOT)} cites aeat commands that do not conform "
         f"to the live CLI:\n  " + "\n  ".join(violations)
@@ -969,7 +776,7 @@ def test_cli_sequence_frame_lines_conform_as_ordinary_invocations() -> None:
     # The four aeat frame lines are extracted; the @capture/@expect annotation
     # lines (no aeat token) are not scanned as commands.
     assert len(cited) == 4
-    resolved_paths = {_resolve_path(c.verb_tokens).resolved_path for c in cited}
+    resolved_paths = {resolve_path(c.verb_tokens).resolved_path for c in cited}
     assert ("app", "ledger", "import") in resolved_paths
     assert ("app", "modelo", "work", "create") in resolved_paths
     assert ("app", "modelo", "work", "calculate") in resolved_paths
@@ -978,7 +785,7 @@ def test_cli_sequence_frame_lines_conform_as_ordinary_invocations() -> None:
     assert all("@" not in tok for c in cited for tok in c.verb_tokens)
     # Every frame line — including the {name}-placeholder calculate/verify frames —
     # conforms to the live CLI (real verb path, real options).
-    violations = [v for c in cited for v in _validate_command(c)]
+    violations = [v for c in cited for v in validate_cited_command(c)]
     assert not violations, f"cli-sequence frame lines must conform to the live CLI: {violations}"
 
 
@@ -1021,7 +828,7 @@ def test_enrolled_and_non_enrolled_pages_get_the_same_base_checks() -> None:
     # A non-enrolled page's plain fence keeps the base checks (a wrong option flags).
     assert not _page_is_enrolled(_NON_ENROLLED_BAD_OPTION_FIXTURE)
     non_enrolled_violations = [
-        v for c in _cited_commands(_NON_ENROLLED_BAD_OPTION_FIXTURE) for v in _validate_command(c)
+        v for c in _cited_commands(_NON_ENROLLED_BAD_OPTION_FIXTURE) for v in validate_cited_command(c)
     ]
     assert any("--bogus-option" in v for v in non_enrolled_violations), (
         "a non-enrolled page must keep the verb-path and option-name checks on its plain fence"
@@ -1029,7 +836,7 @@ def test_enrolled_and_non_enrolled_pages_get_the_same_base_checks() -> None:
 
     # A correct non-enrolled plain fence passes cleanly.
     assert not _page_is_enrolled(_NON_ENROLLED_FIXTURE)
-    assert [v for c in _cited_commands(_NON_ENROLLED_FIXTURE) for v in _validate_command(c)] == [], (
+    assert [v for c in _cited_commands(_NON_ENROLLED_FIXTURE) for v in validate_cited_command(c)] == [], (
         "a non-enrolled page whose plain-fence command is correct passes the base checks"
     )
 
@@ -1038,13 +845,13 @@ def test_enrolled_and_non_enrolled_pages_get_the_same_base_checks() -> None:
     # non-enrolled page (its directive frame lines conform too, so the only
     # violation is the deliberate wrong option in the plain fence).
     assert _page_is_enrolled(_ENROLLED_WITH_PLAIN_FENCE_FIXTURE)
-    assert [v for c in _cited_commands(_ENROLLED_WITH_PLAIN_FENCE_FIXTURE) for v in _validate_command(c)] == [], (
+    assert [v for c in _cited_commands(_ENROLLED_WITH_PLAIN_FENCE_FIXTURE) for v in validate_cited_command(c)] == [], (
         "an enrolled page's correct plain fence and its directive frame lines all pass the base checks"
     )
 
     assert _page_is_enrolled(_ENROLLED_WITH_BAD_OPTION_FENCE_FIXTURE)
     enrolled_violations = [
-        v for c in _cited_commands(_ENROLLED_WITH_BAD_OPTION_FENCE_FIXTURE) for v in _validate_command(c)
+        v for c in _cited_commands(_ENROLLED_WITH_BAD_OPTION_FENCE_FIXTURE) for v in validate_cited_command(c)
     ]
     assert any("--bogus-option" in v for v in enrolled_violations), (
         "an enrolled page's plain executable fence must still receive the base checks — "

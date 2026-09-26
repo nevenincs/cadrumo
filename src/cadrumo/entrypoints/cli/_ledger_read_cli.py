@@ -91,7 +91,7 @@ def ledger_llm_diagnostics(
     """Report existing LLM usage, cost, and classification-confidence metrics."""
     from ...application.ledger.llm_diagnostics import build_llm_diagnostics_report
     from ...core.unit_proportion import is_unit_proportion
-    from ...entrypoints.ledger_llm_diagnostics_composition import compose_ledger_llm_diagnostics_ports
+    from ..ledger_llm_diagnostics_composition import compose_ledger_llm_diagnostics_ports
     from .common import active_bucket_id_or_refuse
 
     since_date = _parse_iso_date(since, "--since")
@@ -816,6 +816,16 @@ def ledger_track(ctx: typer.Context, transaction_id: str) -> None:
                 "bucket_id": result.ref.bucket_id,
                 "transaction": ledger_transaction_payload(result.transaction).model_dump(mode="json"),
                 "tracking": ledger_transaction_tracking_payload(result.transaction).model_dump(mode="json"),
+                "source_filename": (
+                    result.transaction.raw.provenance.source_path.name
+                    if result.transaction.created_event_id is None
+                    else None
+                ),
+                "source_row_index": (
+                    result.transaction.raw.provenance.source_row_index
+                    if result.transaction.created_event_id is None
+                    else None
+                ),
                 "participated_in": participated_in,
             }
         ),
@@ -941,6 +951,7 @@ def _ledger_track_lines(transaction_id: str, transaction: Transaction) -> list[s
         provenance = transaction.raw.provenance
         lines.append(f"import_provider\t{provenance.provider_name}")
         lines.append(f"import_source\t{provenance.source_path.name}")
+        lines.append(f"import_source_row\t{provenance.source_row_index}")
         lines.append(f"import_ingested_at\t{provenance.ingested_at.isoformat()}")
         lines.append(f"import_fingerprint\t{transaction.import_fingerprint or '-'}")
     return lines

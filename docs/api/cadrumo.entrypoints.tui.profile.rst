@@ -15,3 +15,4 @@ Submodules
 
    cadrumo.entrypoints.tui.profile.local_reader
    cadrumo.entrypoints.tui.profile.overview
+   cadrumo.entrypoints.tui.profile.plantilla_media

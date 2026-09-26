@@ -249,6 +249,7 @@ def test_status_delegates_axes_and_counts_excluded_targets(monkeypatch) -> None:
     assert status.oracles is True
     assert dict(status.targets) == {
         "current": 1,
+        "explained": 0,
         "stale": 0,
         "drifted": 0,
         "never-committed": 0,

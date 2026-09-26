@@ -51,6 +51,7 @@ Submodules
    cadrumo.application.user_profile.operations
    cadrumo.application.user_profile.overview
    cadrumo.application.user_profile.passphrase_rotation
+   cadrumo.application.user_profile.plantilla_media_rows
    cadrumo.application.user_profile.preflight
    cadrumo.application.user_profile.presentation
    cadrumo.application.user_profile.profile_key
@@ -60,6 +61,7 @@ Submodules
    cadrumo.application.user_profile.profile_read_ports
    cadrumo.application.user_profile.profile_record_repository
    cadrumo.application.user_profile.profile_repository
+   cadrumo.application.user_profile.profile_schema_migration
    cadrumo.application.user_profile.profile_summary
    cadrumo.application.user_profile.projections
    cadrumo.application.user_profile.prospective_password

@@ -27,7 +27,6 @@ from pathlib import Path
 import pytest
 from sqlalchemy import select
 
-from .....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from .....core.config_support import LLMProvider
 from ....persistence.llm.cache import LLMCache
 from ....persistence.llm.run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
@@ -39,6 +38,7 @@ from ....persistence.storage.secure_object_namespaces import (
 )
 from ....persistence.storage.sql.orm import SecureObjectRow
 from ....persistence.storage.sql.session import session_scope
+from ....persistence.storage.tests.secure_sql import TestRuntimeProfile
 from ..models import LLMRequest, LLMResponse, UsageRecord
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

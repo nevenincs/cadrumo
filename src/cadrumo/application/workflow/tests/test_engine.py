@@ -17,12 +17,12 @@ import pytest
 
 from cadrumo.domain.deadlines.models import IVARegime
 
-from ....application.state_projection import build_pending_obligations
 from ....core.errors.error_codes import ErrorCategory, build_error_envelope
 from ....domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from ....domain.deadlines.engine import DeadlineEngine, compute_obligation_schedule
 from ....domain.deadlines.errors import ScheduleComputationError
 from ....domain.deadlines.models import TaxpayerProfile
+from ...state_projection import build_pending_obligations
 from .. import _deadline_stage as deadline_stage_module
 from .. import engine as engine_module
 from .. import engine_recording as engine_recording_module

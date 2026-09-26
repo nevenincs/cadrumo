@@ -9,7 +9,9 @@ so needs no kind gate.
 
 from __future__ import annotations
 
+import json
 from collections.abc import Sequence
+from pathlib import Path
 
 import pytest
 from click.testing import Result
@@ -17,13 +19,22 @@ from click.testing import Result
 from ....adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import (
     active_profile_isolated_backend_fixture,
 )
+from ....tests.cli_envelope import require_schema_envelope
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
+
+def _invoice_directory_settings(tmp_path: Path) -> dict[str, Path]:
+    """Provision the explicit test-only invoice state target before use."""
+    invoice_directory = tmp_path / "invoices"
+    invoice_directory.mkdir()
+    return {"cadrumo_invoices_dir": invoice_directory}
+
+
 _isolated_backend = active_profile_isolated_backend_fixture(
     bucket_id="00000000-0000-4000-8000-000000000000",
-    settings_overrides=lambda tmp_path: {"cadrumo_invoices_dir": tmp_path / "invoices"},
+    settings_overrides=_invoice_directory_settings,
 )
 
 
@@ -146,6 +157,163 @@ def test_invoice_add_refuses_missing_taxable_base() -> None:
     )
     assert result.exit_code != 0
     assert "--taxable-base" in result.output, result.output
+
+
+def test_invoice_add_accepts_ordered_json_lines_and_reads_back_canonical_document_facts() -> None:
+    first_line = json.dumps(
+        {
+            "description": "first line",
+            "quantity": "1",
+            "unit_price": "10.00",
+            "subtotal": "10.00",
+            "iva_rate": "RATE_21",
+            "iva_amount": "2.10",
+        },
+    )
+    second_line = json.dumps(
+        {
+            "description": "second line",
+            "quantity": "1",
+            "unit_price": "5.00",
+            "subtotal": "5.00",
+            "iva_rate": "RATE_10",
+            "iva_amount": "0.50",
+        },
+    )
+
+    added = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "ledger",
+            "invoice",
+            "add",
+            "--kind",
+            "received",
+            "--counterparty-nif",
+            "A58818501",
+            "--counterparty-name",
+            "Papeleria Sol SL",
+            "--invoice-number",
+            "LINES-001",
+            "--invoice-date",
+            "2026-03-15",
+            "--operation-date",
+            "2026-03-14",
+            "--country-code",
+            "ES",
+            "--series",
+            "L",
+            "--line",
+            first_line,
+            "--line",
+            second_line,
+        ],
+    )
+    assert added.exit_code == 0, added.output
+    add_payload = require_schema_envelope(added.output)
+    invoice_id = add_payload["invoice_id"]
+    assert isinstance(invoice_id, str)
+    assert [entry["description"] for entry in add_payload["lines"]] == ["first line", "second line"]
+    assert add_payload["base_total"] == "15.00"
+    assert add_payload["iva_total"] == "2.60"
+    assert add_payload["grand_total"] == "17.60"
+
+    viewed = invoke_cached_cli(
+        ["--format", "json", "app", "ledger", "invoice", "view", invoice_id],
+    )
+    assert viewed.exit_code == 0, viewed.output
+    view_payload = require_schema_envelope(viewed.output)
+    assert [entry["description"] for entry in view_payload["lines"]] == ["first line", "second line"]
+    assert view_payload["series"] == "L"
+    assert view_payload["operation_date"] == "2026-03-14"
+    assert view_payload["operation_date_role"] == "OPERATION_PERFORMED"
+    assert {"invoice_class", "iva_category", "rectifies_invoice_number"}.issubset(view_payload)
+
+
+@pytest.mark.parametrize(
+    "line",
+    (
+        '{"description":"missing required fields"}',
+        '{"description":"unknown field","quantity":"1","unit_price":"1","subtotal":"1","iva_rate":"RATE_21","iva_amount":"0.21","unexpected":true}',
+        "[]",
+    ),
+)
+def test_invoice_add_refuses_invalid_structured_line_without_mutation(line: str) -> None:
+    refused = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "ledger",
+            "invoice",
+            "add",
+            "--kind",
+            "received",
+            "--counterparty-nif",
+            "A58818501",
+            "--counterparty-name",
+            "Papeleria Sol SL",
+            "--invoice-number",
+            "LINES-REFUSED",
+            "--invoice-date",
+            "2026-03-15",
+            "--country-code",
+            "ES",
+            "--line",
+            line,
+        ],
+    )
+    assert refused.exit_code != 0
+
+    listed = invoke_cached_cli(["--format", "json", "app", "ledger", "invoice", "list"])
+    assert listed.exit_code == 0, listed.output
+    assert require_schema_envelope(listed.output)["count"] == 0
+
+
+def test_invoice_add_refuses_mixed_scalar_and_structured_input_before_mutation() -> None:
+    line = json.dumps(
+        {
+            "description": "line",
+            "quantity": "1",
+            "unit_price": "10.00",
+            "subtotal": "10.00",
+            "iva_rate": "RATE_21",
+            "iva_amount": "2.10",
+        },
+    )
+    refused = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "ledger",
+            "invoice",
+            "add",
+            "--kind",
+            "received",
+            "--counterparty-nif",
+            "A58818501",
+            "--counterparty-name",
+            "Papeleria Sol SL",
+            "--invoice-number",
+            "LINES-MIXED",
+            "--invoice-date",
+            "2026-03-15",
+            "--country-code",
+            "ES",
+            "--taxable-base",
+            "10.00",
+            "--line",
+            line,
+        ],
+    )
+    assert refused.exit_code != 0
+
+    listed = invoke_cached_cli(["--format", "json", "app", "ledger", "invoice", "list"])
+    assert listed.exit_code == 0, listed.output
+    assert require_schema_envelope(listed.output)["count"] == 0
 
 
 def test_invoice_add_derives_grand_total_from_base_and_rate() -> None:

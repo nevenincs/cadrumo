@@ -156,6 +156,28 @@ def censo_modelo_ownership(modelo: str) -> CensoModeloOwnership:
         raise RegistryValidationError(f"unknown censo modelo code {modelo!r}; expected '036' or '037'")
 
 
+def censo_ownership_refusing_work_units(
+    modelo: str,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> CensoModeloOwnership | None:
+    """Return ``modelo``'s ownership when it is a censo modelo that admits no work unit.
+
+    A modelo outside the censo pair, or the active censo modelo, returns
+    ``None``. The superseded censo modelo returns its ownership record, which
+    names the successor a filing belongs under, so the creation boundary can
+    refuse in those terms instead of failing later on a missing revision.
+    """
+    modelo = _require_modelo_string(modelo)
+    if modelo == _ACTIVE_CENSO_MODELO:
+        ownership = active_036_ownership_from_registry(operation)
+    elif modelo == _HISTORICAL_CENSO_MODELO:
+        ownership = _historical_037_ownership_from_registry(operation)
+    else:
+        return None
+    return None if ownership.active_work_unit_allowed else ownership
+
+
 def active_036_ownership_from_registry(
     authority: PinnedAuthorityOperation | ValidatedRegistryAuthority,
 ) -> CensoModeloOwnership:
@@ -308,5 +330,6 @@ __all__ = [
     "CensoModeloRole",
     "build_censo_modelo_foundation_contract",
     "censo_modelo_ownership",
+    "censo_ownership_refusing_work_units",
     "get_censo_modelo_foundation_contract",
 ]

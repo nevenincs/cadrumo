@@ -39,7 +39,7 @@ from typing import Final
 
 import pytest
 
-from cadrumo.tests.collection_storage_root import SETTINGS_STEM, SWEPT_SCRATCH_STEMS
+from cadrumo.tests.collection_storage_root import AUTHORITY_SNAPSHOT_STEM, SETTINGS_STEM, SWEPT_SCRATCH_STEMS
 from dev._paths import REPO_ROOT
 from dev.quality.unread_inputs import report_unread
 
@@ -48,7 +48,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 #: Prefixes the central sweep reclaims. The per-session stem carries the owning
 #: PID and is minted by the sweep's own module, so it is not a discovered
 #: subject; every other swept family is.
-_SWEPT: Final = (*SWEPT_SCRATCH_STEMS, SETTINGS_STEM, "cadrumo-pytest-")
+_SWEPT: Final = (*SWEPT_SCRATCH_STEMS, SETTINGS_STEM, AUTHORITY_SNAPSHOT_STEM, "cadrumo-pytest-")
 
 
 def _mkdtemp_prefixes(source: str) -> tuple[list[str], int, int]:

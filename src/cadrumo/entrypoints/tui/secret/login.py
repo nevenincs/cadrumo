@@ -19,9 +19,9 @@ from textual.widgets import Button, Footer, Input, Label, Select, Static
 from ....application.user_profile.login_session import ProfileLoginOutcome
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.i18n.render import tr
-from ....entrypoints.tui.components.status import PinnedStatusBar
-from ....entrypoints.tui.components.theme import BASE_CSS, install_cadrumo_themes, tokenised
-from ....entrypoints.tui.components.widgets import ContentScroll
+from ..components.status import PinnedStatusBar
+from ..components.theme import BASE_CSS, install_cadrumo_themes, tokenised
+from ..components.widgets import ContentScroll
 from .credentials import CREDENTIAL_PANEL_CSS, CredentialScreen
 
 if TYPE_CHECKING:

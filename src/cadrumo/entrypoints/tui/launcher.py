@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING
 from ...application.search.installed_workbench import InstalledWorkbenchSearchInputsV1
 from ...application.search.workbench import WorkbenchDestinationAdmission, WorkbenchDestinationAdmissionState
 from ...application.workbench_generation import (
+    ModeloWorkspaceProjectedReadV1,
     WorkbenchGenerationAvailability,
     WorkbenchGenerationProjectionResultV1,
     WorkbenchGenerationV1,
@@ -25,6 +26,8 @@ from .account import (
 )
 
 if TYPE_CHECKING:
+    from decimal import Decimal
+
     from textual.app import AutopilotCallbackType
     from textual.screen import Screen
 
@@ -33,7 +36,7 @@ if TYPE_CHECKING:
     from ...application.ledger.workspace import LedgerWorkspaceProjectionV1
     from ...application.modelo.declarations_calendar import DeclarationsCalendarEntryRefV1
     from ...application.modelo.workspace_models import (
-        ModeloWorkspaceProjectionV1,
+        ModeloWorkspaceResultV1,
         ModeloWorkspaceStaticInspectionResultV1,
     )
     from ...application.operations.composition import OperationComposedServices
@@ -42,13 +45,15 @@ if TYPE_CHECKING:
     from ...application.overview.home import HomeAccountSession, HomeProjectionV1
     from ...application.user_profile.login_interaction import ProfileLoginAttempt, ProfileLoginChoice
     from ...application.user_profile.overview import ProfileOverview
+    from ...core.authority_grade import RegistryAuthorityGrade
     from ...core.credentials import ProfilePasswordAssessment
     from ...core.external_constants import OutputLanguage
     from ...core.period import Period
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.modelos.work_unit import WorkUnit
+    from ...domain.user_profile.plantilla_media import PlantillaMediaState, PlantillaMediaYear
     from .account import AccountFactoriesV1
-    from .declarations.models import CalendarRecoveryHandoffV1
+    from .declarations.models import CalendarRecoveryHandoffV1, ModeloWorkCreateHandoffV1
     from .ledger.models import (
         LedgerClassificationSubmissionV1,
         LedgerClassificationSubmitterV1,
@@ -231,14 +236,20 @@ def _ledger_classification_submitter(
 
     def write(submission: LedgerClassificationSubmissionV1) -> ManualLedgerTransactionResult:
         from ...application.ledger.actions_manual import update_manual_transaction_fields
+        from ...domain.calculations.registry.iva_category_catalogue import require_iva_category
         from ..ledger_action_composition import compose_ledger_action_ports
 
         ports = compose_ledger_action_ports(bucket_id=profile_id, operation=operation)
+        patch = submission.patch
+        if patch.iva_category is not None:
+            patch = patch.model_copy(
+                update={"iva_category": require_iva_category(patch.iva_category, authority=operation)}
+            )
 
         return update_manual_transaction_fields(
             bucket_id=profile_id,
             transaction_id=submission.transaction_id,
-            patch=submission.patch,
+            patch=patch,
             actor="operator",
             source_command=str(submission.action.action_id),
             ports=ports,
@@ -355,25 +366,68 @@ def _declaration_result_casilla_reader(
 
 def _modelo_projection_reader(
     operation: PinnedAuthorityOperation,
-) -> Callable[[WorkUnit], ModeloWorkspaceProjectionV1]:
-    """Read one work unit's canonical workspace projection for search.
+) -> Callable[[WorkUnit], ModeloWorkspaceProjectedReadV1]:
+    """Read one work unit's canonical workspace projection for the whole session.
 
-    The read is the same static inspection the Modelo workspace itself is
-    admitted through, so a searchable declaration and an opened one cannot
-    describe different registry state. The output language is resolved per
-    read rather than closed over: a profile language change clears the
-    resolver cache, and a projection captured under the previous language
-    would leave the workbench half-translated until sign-out.
+    The read every Modelo destination and the workbench search share, so a
+    searchable declaration and an opened one cannot describe different
+    registry state. The output language is resolved per read rather than
+    closed over: a profile language change clears the resolver cache, and a
+    projection captured under the previous language would leave the workbench
+    half-translated until sign-out.
+
+    GRADED FIRST, static inspection second, and the order is the product
+    behaviour rather than an optimisation. A graded snapshot is the admission
+    that carries materialized values, their provenance and the canonical
+    readiness report; a static inspection carries the form's layout and says
+    plainly that it measured no values. Asking for the static one first would
+    leave every destination showing a layout for a declaration that has been
+    calculated.
+
+    The graded arm is MATCHED, never assumed: a target with no calculation
+    yet, or a revision whose declared authority cannot satisfy the requested
+    grade, is answered with a typed refusal rather than an exception, and this
+    seam answers it by reading the same target at the admission that CAN
+    answer.
+
+    STATIC FALLBACK IS ALWAYS VALID HERE, and that is a property of the one
+    resolver this reads rather than a blanket policy: `resolve_graded_snapshot_result`'s
+    own module comment enumerates exactly three taxpayer-facing refusals it
+    ever returns -- no work unit yet, no calculation yet, or a declared
+    authority below the requested grade -- and every one of them leaves the
+    revision itself resolvable at STATIC_INSPECTION's lower, no-grade,
+    no-calculation admission. A refusal this function cannot enumerate would
+    be a defect in that resolver, not a case to silently paper over here.
+
+    The refusal is never discarded on that fallback: it travels back on
+    :class:`ModeloWorkspaceProjectedReadV1` beside the static projection, for
+    whichever destination later opens this exact work unit to render
+    honestly -- reason, evidence, facts and the catalogued recovery action --
+    instead of a plain, unexplained static page.
     """
+    from ...core.authority_grade import RegistryAuthorityGrade as _RegistryAuthorityGrade
     from ...core.external_constants import OutputLanguage as _OutputLanguage
     from ...core.i18n.render import output_language as resolve_output_language
+    from .modelo.view.controller import ModeloWorkspaceRefusedReadV1, admit_modelo_workspace_result
 
-    def project(unit: WorkUnit) -> ModeloWorkspaceProjectionV1:
-        return resolve_modelo_workspace_static_inspection(
-            unit,
-            operation=operation,
-            output_language=_OutputLanguage(resolve_output_language()),
-        ).projection
+    def project(unit: WorkUnit) -> ModeloWorkspaceProjectedReadV1:
+        language = _OutputLanguage(resolve_output_language())
+        admission = admit_modelo_workspace_result(
+            resolve_modelo_workspace_graded_snapshot(
+                unit,
+                operation=operation,
+                output_language=language,
+                required_grade=_RegistryAuthorityGrade.CALCULATION,
+            )
+        )
+        if isinstance(admission, ModeloWorkspaceRefusedReadV1):
+            static_projection = resolve_modelo_workspace_static_inspection(
+                unit,
+                operation=operation,
+                output_language=language,
+            ).projection
+            return ModeloWorkspaceProjectedReadV1(projection=static_projection, graded_refusal=admission.refusal)
+        return ModeloWorkspaceProjectedReadV1(projection=admission.projection)
 
     return project
 
@@ -394,6 +448,7 @@ class InstalledWorkbenchRootInputsV1:
     admissions: Mapping[str, WorkbenchDestinationAdmission]
     account_factories: AccountFactoriesV1
     ledger_factory: TuiScreenFactoryV1 | None
+    withholding_factory: TuiScreenFactoryV1 | None
     declarations_factory: TuiScreenFactoryV1 | None
     aeat_sync_factory: TuiScreenFactoryV1 | None
     search_inputs: InstalledWorkbenchSearchInputsV1 | None
@@ -438,12 +493,18 @@ class InstalledWorkbenchAccountInputsV1:
 
     profile_id: str
     profile_overview: ProfileOverview
-    persist_profile_field: Callable[[str, str], ProfileOverview]
+    persist_profile_field: Callable[[str, str, int, str], ProfileOverview]
     login_choices: Sequence[ProfileLoginChoice]
     authenticate: Callable[[str, str], ProfileLoginAttempt]
     assess_password: Callable[[str], ProfilePasswordAssessment]
     rotate_password: Callable[[str, str, str], PassphraseChangeAttempt]
     complete_setup: Callable[[], ProfileOverview] | None = None
+    add_profile_row: Callable[[str, Mapping[str, str], int, str], ProfileOverview] | None = None
+    update_profile_row: Callable[[str, str, Mapping[str, str], Sequence[str], int, str], ProfileOverview] | None = None
+    remove_profile_row: Callable[[str, str, int, str], ProfileOverview] | None = None
+    list_plantilla_media: Callable[[], Sequence[PlantillaMediaYear]] | None = None
+    set_plantilla_media: Callable[[int, Decimal, PlantillaMediaState], ProfileOverview] | None = None
+    remove_plantilla_media: Callable[[int], ProfileOverview] | None = None
 
     def __post_init__(self) -> None:
         """Bind every account door to one exact authenticated profile identity."""
@@ -458,6 +519,12 @@ class InstalledWorkbenchAccountInputsV1:
         return compose_account_factories(
             profile_overview=self.profile_overview,
             persist_profile_field=self.persist_profile_field,
+            add_profile_row=self.add_profile_row,
+            update_profile_row=self.update_profile_row,
+            remove_profile_row=self.remove_profile_row,
+            list_plantilla_media=self.list_plantilla_media,
+            set_plantilla_media=self.set_plantilla_media,
+            remove_plantilla_media=self.remove_plantilla_media,
             login_choices=self.login_choices,
             authenticate=self.authenticate,
             assess_password=self.assess_password,
@@ -570,6 +637,9 @@ def compose_installed_workbench_generation_provider(
             admissions: dict[str, WorkbenchDestinationAdmission] = {
                 "workbench.home": _available_admission("workbench.home"),
                 "workbench.ledger": generation.ledger_admission,
+                "workbench.withholding": generation.ledger_admission.model_copy(
+                    update={"destination": "workbench.withholding"}
+                ),
                 "workbench.declarations": generation.declarations_admission,
                 "workbench.aeat_sync": generation.aeat_sync_admission,
                 "workbench.profile": dependencies.profile_admission,
@@ -584,7 +654,13 @@ def compose_installed_workbench_generation_provider(
             )
             if ledger_factory is not None:
                 factories["workbench.ledger"] = ledger_factory
-            declarations_factory = _declarations_generation_factory(current, dependencies)
+                factories["workbench.withholding"] = _withholding_generation_factory(dependencies.account.profile_id)
+            declarations_factory = _declarations_generation_factory(
+                current,
+                dependencies,
+                operation_runtime,
+                refresh_generation=capture,
+            )
             if declarations_factory is not None:
                 factories["workbench.declarations"] = declarations_factory
             aeat_sync_factory = _aeat_sync_generation_factory(
@@ -606,6 +682,7 @@ def compose_installed_workbench_generation_provider(
             admissions=admissions,
             account_factories=account_factories,
             ledger_factory=factories.get("workbench.ledger"),
+            withholding_factory=factories.get("workbench.withholding"),
             declarations_factory=factories.get("workbench.declarations"),
             aeat_sync_factory=factories.get("workbench.aeat_sync"),
             search_inputs=_search_inputs(generation),
@@ -752,8 +829,18 @@ def _ledger_generation_factory(
     if current[0].ledger.projection is None:
         return None
     from .ledger.routes import ledger_screen_factory
+    from .ledger_doors import LedgerRecordDoors
 
     def create(context: TuiScreenContextV1) -> Screen[None]:
+        from datetime import date
+
+        from ...adapters.persistence.profile.actividad_asset import ActividadAssetHistoryRepository
+        from ...application.actividad_asset.operations import ActivityAssetOperations
+        from ...application.calculations.actividad_asset_schedule import forecast_activity_asset_charge
+        from ...domain.renta.actividad_asset.election import DirectEstimationRegime
+        from ...domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
+        from ...domain.renta.actividad_asset.schedule import AssetScheduleHistory, ScheduledAmortizationCharge
+        from .ledger.actividad_asset import ActivityAssetTuiActionsV1
         from .ledger_doors import (
             LedgerEvidenceDoor,
             LedgerImportDoor,
@@ -762,6 +849,48 @@ def _ledger_generation_factory(
         )
 
         profile_id = dependencies.account.profile_id
+
+        def taxpayer_workforce() -> tuple[PlantillaMediaYear, ...]:
+            from ...domain.user_profile.plantilla_media import plantilla_media_years
+            from ..adapter_composition import build_profile_read_ports
+
+            values = build_profile_read_ports(bucket_id=profile_id).path_values.load_path_values(bucket_id=profile_id)
+            return () if values is None else plantilla_media_years(values)
+
+        def forecast_asset(
+            revision: ActivityAssetRevision,
+            *,
+            covered_from: date,
+            covered_until: date,
+            history: AssetScheduleHistory,
+            requested_free_amount: Decimal | None,
+        ) -> ScheduledAmortizationCharge:
+            return forecast_activity_asset_charge(
+                revision,
+                modelo_100_revision=operation.revision("100", str(covered_from.year)),
+                authority_generation=operation.pin().logical_generation,
+                covered_from=covered_from,
+                covered_until=covered_until,
+                history=history,
+                taxpayer_workforce=taxpayer_workforce,
+                requested_free_amount=requested_free_amount,
+            )
+
+        def taxpayer_modality() -> DirectEstimationRegime:
+            from ...application.actividad_asset.modality import direct_estimation_modality
+            from ..adapter_composition import build_profile_read_ports
+
+            values = build_profile_read_ports(bucket_id=profile_id).path_values.load_path_values(bucket_id=profile_id)
+            token = None if values is None else values.get("irpf.estimation_regime")
+            return direct_estimation_modality(token, authority=operation)
+
+        activity_asset_actions = ActivityAssetTuiActionsV1(
+            operations=ActivityAssetOperations(
+                repository=ActividadAssetHistoryRepository(bucket_id=profile_id),
+                forecast_operation=forecast_asset,
+                taxpayer_modality=taxpayer_modality,
+            ),
+        )
         return ledger_screen_factory(
             _required_projection(current[0].ledger, "Ledger"),
             review_action=dependencies.ledger_review_action,
@@ -793,7 +922,24 @@ def _ledger_generation_factory(
             invoice_add_door=ledger_invoice_add_door(profile_id, operation),
             evidence_door=LedgerEvidenceDoor(profile_id=profile_id, operation=operation),
             refresh=ledger_workspace_refresh(profile_id, capture_ledger),
+            activity_asset_actions=activity_asset_actions,
+            record_doors=LedgerRecordDoors(bucket_id=profile_id, operation=operation),
         )(context)
+
+    return create
+
+
+def _withholding_generation_factory(bucket_id: str) -> TuiScreenFactoryV1:
+    """Require an operator-selected filing year before opening shared withholding capture."""
+    from .components.filing_year_route import FilingYearRouteScreen
+    from .withholding.installed import compose_installed_withholding_screen
+
+    def create(context: TuiScreenContextV1) -> Screen[None]:
+        if context.destination != "workbench.withholding":
+            raise ValueError("withholding requires its admitted destination")
+        return FilingYearRouteScreen(
+            screen_factory=lambda year: compose_installed_withholding_screen(bucket_id=bucket_id, filing_year=year)
+        )
 
     return create
 
@@ -801,6 +947,9 @@ def _ledger_generation_factory(
 def _declarations_generation_factory(
     current: list[WorkbenchGenerationV1],
     dependencies: InstalledWorkbenchFactoryDependenciesV1,
+    operation_runtime: TuiOperationCompositionV1,
+    *,
+    refresh_generation: Callable[[], WorkbenchGenerationV1],
 ) -> TuiScreenFactoryV1 | None:
     if current[0].declarations.projection is None:
         return None
@@ -815,6 +964,16 @@ def _declarations_generation_factory(
                 bucket_id=_required_projection(current[0].declarations, "Declarations").bucket_id,
                 declarations=_required_projection(current[0].declarations, "Declarations").declarations,
                 projections=_required_projection(modelo, "Modelo"),
+                lifecycle_projections=_required_projection(current[0].modelo_lifecycle, "Modelo lifecycle")
+                if current[0].modelo_lifecycle.projection is not None
+                else (),
+                graded_refusals=current[0].modelo_graded_refusals.projection or {},
+                lifecycle_actions_factory=lambda lifecycle: _modelo_lifecycle_door(
+                    operation_runtime,
+                    lifecycle,
+                    bucket_id=_required_projection(current[0].declarations, "Declarations").bucket_id,
+                    refresh_after_success=refresh_generation,
+                ),
             )
             if modelo.availability is WorkbenchGenerationAvailability.AVAILABLE and modelo.projection is not None
             else None
@@ -830,13 +989,184 @@ def _declarations_generation_factory(
             calendar_recovery_handoff=_calendar_work_create_handoff(
                 bucket_id=_required_projection(current[0].declarations, "Declarations").bucket_id,
                 actor=dependencies.account.profile_overview.label,
+                operation=operation_runtime.authority_operation,
+            ),
+            work_create_handoff=_declarations_work_create_handoff(
+                bucket_id=_required_projection(current[0].declarations, "Declarations").bucket_id,
+                actor=dependencies.account.profile_overview.label,
+                operation=operation_runtime.authority_operation,
+                refresh_after_success=refresh_generation,
             ),
         )(context)
 
     return create
 
 
-def _calendar_work_create_handoff(*, bucket_id: str, actor: str) -> CalendarRecoveryHandoffV1:
+def _modelo_lifecycle_door(
+    operation_runtime: TuiOperationCompositionV1,
+    lifecycle: object,
+    *,
+    bucket_id: str,
+    refresh_after_success: Callable[[], object] | None = None,
+) -> object:
+    """Bind one lifecycle read to the session's operation services without repository access."""
+    from datetime import datetime
+
+    from ...application.modelo.edit_admission import admit_modelo_edit_baseline
+    from ...application.modelo.edit_models import ModeloEditAdmittedV1
+    from ...application.modelo.m303_exonerado_390_applicability_attestation import (
+        M303Exonerado390ApplicabilityAttestationAdmission,
+        M303Exonerado390ApplicabilityAttestationRequest,
+        admit_m303_exonerado_390_applicability_attestation,
+        modelo_390_question_asked,
+    )
+    from ...application.modelo.profile_readiness_gate import load_modelo_work_profile
+    from ...application.modelo.work_lifecycle import ActiveWorkUnitUse, require_active_work_unit
+    from ...application.modelo.workspace_models import ModeloWorkspaceLifecycleProjectionV1
+    from ...domain.attachments.m303_filing_evidence import M303Exonerado390ApplicabilityAssertion
+    from ..adapter_composition import build_attachment_store, build_calculation_action_ports
+    from .modelo.lifecycle import ModeloLifecycleActionUnavailableError, ModeloWorkspaceLifecycleDoor
+
+    if not isinstance(lifecycle, ModeloWorkspaceLifecycleProjectionV1) or lifecycle.target.work_unit_id is None:
+        raise ValueError("Modelo lifecycle actions require an admitted work-unit lifecycle projection")
+    ports = build_calculation_action_ports(
+        bucket_id=bucket_id,
+        operation=operation_runtime.authority_operation,
+    )
+    admission = admit_modelo_edit_baseline(
+        work_unit_id=str(lifecycle.target.work_unit_id),
+        work_catalogue=ports.work_unit_repository.load(),
+        calculation_catalogue=ports.calculation_repository.load(),
+        operation=operation_runtime.authority_operation,
+        operation_contracts=operation_runtime.public_contracts,
+    )
+
+    target = lifecycle.target
+
+    def admit_attestation(observed_at: datetime) -> M303Exonerado390ApplicabilityAttestationAdmission:
+        """Admit evidence only for the still-active selected M303 work coordinate."""
+        if str(target.modelo) != "303":
+            raise ModeloLifecycleActionUnavailableError(
+                translated_message="tui.modelo.m303_evidence.admission_unavailable"
+            )
+        current = require_active_work_unit(
+            ports.work_unit_repository.load(),
+            work_unit_id=str(target.work_unit_id),
+            repository_bucket_id=ports.work_unit_repository.bucket_id,
+            use=ActiveWorkUnitUse.CALCULATE,
+        )
+        if current.filing_year != target.filing_year or current.period != target.period:
+            raise ModeloLifecycleActionUnavailableError(translated_message="tui.modelo.m303_evidence.stale_context")
+        profile = load_modelo_work_profile(
+            bucket_id=bucket_id,
+            profile_decode_context=operation_runtime.authority_operation.profile_decode_context(),
+        )
+        return admit_m303_exonerado_390_applicability_attestation(
+            bucket_id=bucket_id,
+            request=M303Exonerado390ApplicabilityAttestationRequest(
+                filing_year=target.filing_year,
+                period=target.period,
+                asserted_value=M303Exonerado390ApplicabilityAssertion.NOT_APPLICABLE,
+                observed_at=observed_at,
+            ),
+            actor="operator:tui-modelo",
+            operation=operation_runtime.authority_operation,
+            store=build_attachment_store(bucket_id),
+            profile=profile,
+        )
+
+    return ModeloWorkspaceLifecycleDoor(
+        services=operation_runtime.services,
+        work_unit_id=str(lifecycle.target.work_unit_id),
+        calculation_revision_id=lifecycle.calculation_revision_id,
+        verification_report_id=lifecycle.verification_report_id,
+        refresh_after_success=refresh_after_success,
+        edit_baseline=admission.baseline if isinstance(admission, ModeloEditAdmittedV1) else None,
+        m303_exonerado_390_attestation_admission=admit_attestation,
+        asks_modelo_390=str(target.modelo) == "303"
+        and modelo_390_question_asked(target.period, operation=operation_runtime.authority_operation),
+    )
+
+
+def _declarations_work_create_handoff(
+    *,
+    bucket_id: str,
+    actor: str,
+    operation: PinnedAuthorityOperation,
+    refresh_after_success: Callable[[], object],
+) -> ModeloWorkCreateHandoffV1:
+    """Bind an operator-selected Modelo/year/period to the door ``modelo work create`` uses.
+
+    The entrypoint guards ``modelo work create`` runs before creation -- the
+    ceded-tax redirect, the foral-regime refusal and the profile applicability
+    refusal -- run here as well. Profile readiness, law-selected revision and
+    idempotent reuse stay inside the shared application command, so the two
+    frontends cannot drift. A refusal is raised as a typed error for the
+    Declarations screen to show as itself. The profile is read under the
+    session's pinned authority, never whichever generation is current now.
+    """
+    from ...core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN
+    from .declarations.models import ModeloWorkCreateResultV1
+    from .modelo.lifecycle import ModeloLifecycleActionUnavailableError
+
+    def create(modelo: str, filing_year: int, period: Period, /) -> ModeloWorkCreateResultV1:
+        from ...application.modelo.profile_readiness_gate import load_modelo_work_profile
+        from ...application.modelo.work_addressing import ensure_modelo_work_unit_for_active_target
+        from ...application.modelo.work_create_policy import (
+            guard_active_profile_foral_ccaa,
+            modelo_work_create_applicability_refusal,
+            modelo_work_create_refusal_locale_key,
+        )
+        from ..adapter_composition import build_work_lifecycle_ports
+
+        selected_modelo = modelo.strip()
+        if not FILING_YEAR_MIN <= filing_year <= FILING_YEAR_MAX:
+            raise ModeloLifecycleActionUnavailableError(translated_message="tui.declarations.work_create.refusal.year")
+        if period.filing_year != filing_year:
+            raise ModeloLifecycleActionUnavailableError(
+                translated_message="tui.declarations.work_create.refusal.period"
+            )
+        if locale_key := modelo_work_create_refusal_locale_key(selected_modelo):
+            raise ModeloLifecycleActionUnavailableError(
+                translated_message=locale_key, context={"modelo": selected_modelo}
+            )
+        profile = load_modelo_work_profile(
+            bucket_id=bucket_id,
+            profile_decode_context=operation.profile_decode_context(),
+        )
+        record = profile.record if profile is not None else None
+        guard_active_profile_foral_ccaa(record)
+        if refusal := modelo_work_create_applicability_refusal(
+            selected_modelo,
+            allow_not_applicable=False,
+            record=record,
+        ):
+            raise ModeloLifecycleActionUnavailableError(
+                translated_message="tui.declarations.work_create.refusal.not_applicable",
+                context={"modelo": refusal.modelo, "reason": refusal.reason},
+            )
+        ports = build_work_lifecycle_ports(bucket_id=bucket_id)
+        result = ensure_modelo_work_unit_for_active_target(
+            bucket_id=bucket_id,
+            modelo=selected_modelo,
+            filing_year=filing_year,
+            period=period,
+            registry_revision_id=None,
+            actor=actor,
+            catalogue=ports.work_unit_repository.load(),
+            ports=ports,
+            operation=operation,
+            profile=profile,
+        )
+        refresh_after_success()
+        return ModeloWorkCreateResultV1(reused=result.reused)
+
+    return create
+
+
+def _calendar_work_create_handoff(
+    *, bucket_id: str, actor: str, operation: PinnedAuthorityOperation
+) -> CalendarRecoveryHandoffV1:
     """Bind the calendar's "create this declaration" action to the door ``modelo work create`` uses.
 
     The calendar controller has already refused an action whose bound
@@ -850,29 +1180,28 @@ def _calendar_work_create_handoff(*, bucket_id: str, actor: str) -> CalendarReco
         from ...application.modelo.profile_readiness_gate import load_modelo_work_profile
         from ...application.modelo.work_addressing import ensure_modelo_work_unit_for_active_target
         from ...application.modelo.work_create_policy import guard_active_profile_foral_ccaa
-        from ...domain.calculations.registry.authority import bundled_indexed_authority
         from ..adapter_composition import build_work_lifecycle_ports
 
         if action.action.action_id != "operator.modelo.work.create":
             raise ValueError("the calendar handoff only creates declarations")
-        with bundled_indexed_authority().operation() as operation:
-            profile = load_modelo_work_profile(
-                bucket_id=bucket_id,
-                profile_decode_context=operation.profile_decode_context(),
-            )
-            guard_active_profile_foral_ccaa(profile.record if profile is not None else None)
-            ports = build_work_lifecycle_ports(bucket_id=bucket_id)
-            ensure_modelo_work_unit_for_active_target(
-                bucket_id=bucket_id,
-                modelo=str(entry.modelo),
-                filing_year=entry.filing_year,
-                period=entry.period,
-                registry_revision_id=None,
-                actor=actor,
-                catalogue=ports.work_unit_repository.load(),
-                ports=ports,
-                profile=profile,
-            )
+        profile = load_modelo_work_profile(
+            bucket_id=bucket_id,
+            profile_decode_context=operation.profile_decode_context(),
+        )
+        guard_active_profile_foral_ccaa(profile.record if profile is not None else None)
+        ports = build_work_lifecycle_ports(bucket_id=bucket_id)
+        ensure_modelo_work_unit_for_active_target(
+            bucket_id=bucket_id,
+            modelo=str(entry.modelo),
+            filing_year=entry.filing_year,
+            period=entry.period,
+            registry_revision_id=None,
+            actor=actor,
+            catalogue=ports.work_unit_repository.load(),
+            ports=ports,
+            operation=operation,
+            profile=profile,
+        )
 
     return create
 
@@ -923,6 +1252,52 @@ def resolve_modelo_workspace_static_inspection(
         bucket_id=unit.bucket_id,
         catalogue_repository=WorkUnitCatalogueRepository(bucket_id=unit.bucket_id),
         authority=operation,
+        output_language=output_language,
+    )
+
+
+def resolve_modelo_workspace_graded_snapshot(
+    unit: WorkUnit,
+    *,
+    operation: PinnedAuthorityOperation,
+    output_language: OutputLanguage,
+    required_grade: RegistryAuthorityGrade,
+) -> ModeloWorkspaceResultV1:
+    """Admit one already-resolved unit at a declared authority grade, or return its refusal.
+
+    The graded admission is the one that carries materialized values, their
+    provenance and the canonical readiness report, so it is the read a
+    destination needs before it can show anything beyond the form's layout.
+    It is addressed exactly like the static admission -- by the unit's own
+    identity, on the unit's own bucket -- for the same reason: a coordinate
+    request is ambiguous across two units at one address.
+
+    The result is the full three-arm ``ModeloWorkspaceResultV1``, not just its
+    successful arm. A graded read legitimately refuses (no calculation yet, a
+    grade the selected revision cannot satisfy), and those refusals are the
+    producer's typed answer rather than an error: narrowing the return type
+    here would force this seam to invent an exception for an outcome the
+    contract already spells out.
+    """
+    from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+    from ...application.modelo.work_addressing import ModeloExactWorkUnitTarget
+    from ...application.modelo.workspace import resolve_graded_snapshot_result
+    from ...application.modelo.workspace_models import ModeloWorkspaceExactWorkUnitTargetV1
+    from ..adapter_composition import build_calculation_action_ports, build_state_projection_read_ports
+
+    return resolve_graded_snapshot_result(
+        ModeloWorkspaceExactWorkUnitTargetV1(
+            target=ModeloExactWorkUnitTarget(
+                work_unit_id=unit.work_unit_id,
+                bucket_id=unit.bucket_id,
+            )
+        ),
+        required_grade=required_grade,
+        bucket_id=unit.bucket_id,
+        catalogue_repository=WorkUnitCatalogueRepository(bucket_id=unit.bucket_id),
+        calculation_ports=build_calculation_action_ports(bucket_id=unit.bucket_id, operation=operation),
+        readiness_read_ports=build_state_projection_read_ports(),
+        operation=operation,
         output_language=output_language,
     )
 
@@ -1035,6 +1410,7 @@ def compose_installed_workbench_root(
         for destination, factory in {
             "workbench.home": home_factory,
             "workbench.ledger": inputs.ledger_factory,
+            "workbench.withholding": inputs.withholding_factory,
             "workbench.declarations": inputs.declarations_factory,
             "workbench.aeat_sync": inputs.aeat_sync_factory,
             "workbench.profile": inputs.account_factories.profile,
@@ -1280,6 +1656,7 @@ __all__ = [
     "main",
     "operation_services_scope",
     "profile_storage_scope",
+    "resolve_modelo_workspace_graded_snapshot",
     "resolve_modelo_workspace_static_inspection",
     "run_authenticated_workbench_sessions",
     "run_module",

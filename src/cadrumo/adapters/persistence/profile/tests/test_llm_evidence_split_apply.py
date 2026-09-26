@@ -8,18 +8,6 @@ from typing import NoReturn
 
 import pytest
 
-from .....adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from .....adapters.persistence.profile.tests._llm_evidence_split_support import (
-    _BUCKET,
-    _NOW,
-    _seed_parent,
-    _seed_received_invoice,
-    _split_subprocess_proposer,
-    _two_line_proposal,
-)
-from .....adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
-from .....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from .....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from .....application.ledger.actions_split_merge import split_transaction_with_classified_children
 from .....application.ledger.evidence_textlayer_ports import EvidenceTextLayerPorts
 from .....application.ledger.llm_classification import apply_evidence_split, suggest_evidence_split
@@ -31,7 +19,23 @@ from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.iva.schema import IvaCategory
 from .....domain.transactions.enums import BusinessClassification, SplitRole, TransactionLifecycleState
 from .....domain.transactions.errors import TransactionValidationError
-from ._llm_evidence_split_support import repositories as repositories
+from ...storage.sql.secure_objects import SecureObjectRepository
+from ..buckets import BucketEventHistoryRepository
+from ..transactions import TransactionCatalogueRepository
+from .ledger_action_create_support import ledger_ports_for_test
+from .llm_evidence_split_support import (
+    _BUCKET,
+    _NOW,
+    _seed_parent,
+    _seed_received_invoice,
+)
+from .llm_evidence_split_support import repositories as repositories
+from .llm_evidence_split_support import (
+    split_subprocess_proposer as _split_subprocess_proposer,
+)
+from .llm_evidence_split_support import (
+    two_line_proposal as _two_line_proposal,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 __all__ = ["repositories"]

@@ -7,10 +7,13 @@ PDFs were paused although their reader was installed, and a machine missing the
 text model refused documents one at a time instead of pausing them.
 
 The lane now reads the role each document will reach off the same shape probe
-the deterministic test uses, and probes that role before the first read. These
-drive it against a REAL loopback runtime reporting a real inventory -- no
-patched module and no substituted probe -- so the proven path runs from
-settings through the HTTP inventory read into the lane's decision.
+the deterministic test uses, and probes that role before the first read. The
+lane cases drive it against a REAL loopback runtime reporting a real inventory
+-- no patched module -- so the proven path runs from settings through the HTTP
+inventory read into the lane's decision. Which shape a document's bytes carry
+is the inbound shape probe's answer and is proven against the evidence corpus
+in that adapter's own suite; here each shape is supplied through the
+application-owned probe port.
 """
 
 from __future__ import annotations
@@ -18,12 +21,12 @@ from __future__ import annotations
 from collections.abc import Iterator
 from contextlib import contextmanager
 from http import HTTPStatus
-from pathlib import Path
 from typing import ClassVar, override
 
 import pytest
 
 from ....core.config import load_settings, override_settings
+from ....core.document_shape import DocumentShape
 from ....core.hardware import AcceleratorKind
 from ....core.model_catalogue import ModelRole
 from ....tests.loopback_llm import SilentLoopbackHandler, serving_loopback, write_json_response
@@ -40,11 +43,23 @@ from ..evidence_input_ports import EvidenceDocumentShapeProbe
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
-_CORPUS = Path(__file__).parent / "_evidence_corpus"
-_TEXT_LAYER_PDF = "com_2026_0005_layout_minimal.pdf"
-_IMAGE = "commons_invoice_1.jpg"
-_STRUCTURED = "en16931_ubl_export_third_country_invoice.xml"
 _GIB = 1024**3
+
+#: Every shape the probe can answer, with the reader role it must reach. Spelled
+#: out rather than derived from the shape sets, so a new shape fails here until
+#: someone decides which reader it belongs to.
+_ROLE_BY_SHAPE: dict[DocumentShape, ModelRole | None] = {
+    DocumentShape.XML_CII: None,
+    DocumentShape.XML_UBL: None,
+    DocumentShape.XML_FACTURAE: None,
+    DocumentShape.PDF_EMBEDDED_XML: None,
+    DocumentShape.XML_AEAT_SII: None,
+    DocumentShape.XML_AEAT_VERIFACTU: None,
+    DocumentShape.PDF_TEXT_LAYER: ModelRole.TEXT_EXTRACTION,
+    DocumentShape.PDF_SCAN: ModelRole.VISION_TRANSCRIPTION,
+    DocumentShape.IMAGE: ModelRole.VISION_TRANSCRIPTION,
+    DocumentShape.UNKNOWN: None,
+}
 
 
 class _InventoryOnlyHandler(SilentLoopbackHandler):
@@ -83,26 +98,27 @@ def _uncontended() -> HardwareProfile:
     )
 
 
-def _document_shape_probe() -> EvidenceDocumentShapeProbe:
-    """Return the one production shape probe the extraction ports carry."""
-    from ....adapters.inbound.einvoice.shape import probe_document_shape
+def _probe_answering(shape: DocumentShape, *, expected_data: bytes) -> EvidenceDocumentShapeProbe:
+    """Return a shape probe that answers ``shape`` for exactly the bytes it is handed."""
 
-    return probe_document_shape
+    def probe(data: bytes) -> DocumentShape:
+        assert data == expected_data, "the role must be read off the document's own bytes"
+        return shape
+
+    return probe
 
 
-@pytest.mark.parametrize(
-    ("document", "expected"),
-    [
-        (_TEXT_LAYER_PDF, ModelRole.TEXT_EXTRACTION),
-        (_IMAGE, ModelRole.VISION_TRANSCRIPTION),
-        (_STRUCTURED, None),
-    ],
-)
-def test_each_document_names_the_reader_role_it_will_reach(document: str, expected: ModelRole | None) -> None:
-    """DISCRIMINATING: the role is read off the bytes, never off the file name."""
-    data = (_CORPUS / document).read_bytes()
+def test_every_shape_has_a_declared_reader_role() -> None:
+    """ANCHOR: the table below covers the whole shape vocabulary, so no shape is untested."""
+    assert set(_ROLE_BY_SHAPE) == set(DocumentShape)
 
-    assert _reader_role_for(data, document_shape_probe=_document_shape_probe()) is expected
+
+@pytest.mark.parametrize(("shape", "expected"), list(_ROLE_BY_SHAPE.items()))
+def test_each_document_names_the_reader_role_it_will_reach(shape: DocumentShape, expected: ModelRole | None) -> None:
+    """DISCRIMINATING: the role follows the probed shape of the bytes, never a file name."""
+    data = f"document probed as {shape.value}".encode()
+
+    assert _reader_role_for(data, document_shape_probe=_probe_answering(shape, expected_data=data)) is expected
 
 
 def test_a_missing_vision_model_leaves_text_documents_readable() -> None:

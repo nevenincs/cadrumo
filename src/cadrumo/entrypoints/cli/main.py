@@ -20,7 +20,7 @@ from __future__ import annotations
 import json
 import os
 from collections.abc import Generator
-from contextlib import contextmanager, nullcontext
+from contextlib import AbstractContextManager, contextmanager, nullcontext
 from dataclasses import fields, is_dataclass
 from enum import Enum
 from pathlib import Path
@@ -168,31 +168,52 @@ def main() -> None:
     # having to read the runtime log. stderr keeps the stdout JSON envelope
     # pure; the code is non-secret operator guidance, not a credential.
     progress_sink = nullcontext()
-    if not metadata_invocation:
-        try:
-            _provision_dependencies_at_startup()
-        except typer.Exit as exit_request:
-            raise SystemExit(exit_request.exit_code) from None
-        from ...adapters.outbound.aeat.operator_progress import operator_progress_sink
+    with _pointer_repair_scope(arguments):
+        if not metadata_invocation:
+            try:
+                _admit_authority_at_startup()
+            except typer.Exit as exit_request:
+                raise SystemExit(exit_request.exit_code) from None
+            from ...adapters.outbound.aeat.operator_progress import operator_progress_sink
 
-        progress_sink = operator_progress_sink(_emit_operator_progress)
-    with _metadata_state_isolation(arguments), progress_sink:
-        app(prog_name=_PRODUCT_IDENTITY.cli_executable)
+            progress_sink = operator_progress_sink(_emit_operator_progress)
+        with _metadata_state_isolation(arguments), progress_sink:
+            app(prog_name=_PRODUCT_IDENTITY.cli_executable)
 
 
-def _provision_dependencies_at_startup() -> None:
-    """Provision startup dependencies through the typed CLI error boundary."""
+def _pointer_repair_scope(arguments: list[str]) -> AbstractContextManager[None]:
+    """Let the declared pointer-repair leaf start while the pointer it repairs is corrupt.
+
+    Admission composes settings, and settings composition reads the active-profile
+    pointer, so without this the command a corrupt pointer's refusal recommends
+    would be refused by that same corruption before it could parse.
+    """
+    leaf = _COMMAND_GRAPH.resolve_invocation(arguments)
+    if leaf is None or not leaf.repairs_active_profile_pointer:
+        return nullcontext()
+    from ...core.bucket_pointer import corrupt_pointer_reads_as_unselected
+
+    return corrupt_pointer_reads_as_unselected()
+
+
+def _admit_authority_at_startup() -> None:
+    """Admit the shipped authority through the typed CLI error boundary.
+
+    Storage is not provisioned here: a command provisions it at dispatch, once
+    parsing has accepted it, so help, a bare group and a parse-time refusal
+    write nothing.
+    """
     from ...application.profile_preconditions import (
         FormerProductDetectionScope,
         former_product_state_verdict,
     )
-    from ...application.provisioning import ensure_cli_startup_dependencies
+    from ...application.provisioning import admit_cli_authority
     from ...core.config_state_root import FormerProductStateError
     from ...core.errors.hierarchy import ActiveProfilePointerError, CadrumoError
     from .errors import CliRefusedBoundaryError, emit_error_and_exit, project_cli_boundary_error
 
     try:
-        ensure_cli_startup_dependencies()
+        admit_cli_authority()
     except FormerProductStateError as error:
         emit_error_and_exit(
             attach_cli_policy_verdict(
@@ -203,9 +224,9 @@ def _provision_dependencies_at_startup() -> None:
             )
         )
     except ActiveProfilePointerError as error:
-        emit_error_and_exit(project_cli_boundary_error(error, _provision_dependencies_at_startup))
+        emit_error_and_exit(project_cli_boundary_error(error, _admit_authority_at_startup))
     except CadrumoError as error:
-        emit_error_and_exit(project_cli_boundary_error(error, _provision_dependencies_at_startup))
+        emit_error_and_exit(project_cli_boundary_error(error, _admit_authority_at_startup))
 
 
 @contextmanager

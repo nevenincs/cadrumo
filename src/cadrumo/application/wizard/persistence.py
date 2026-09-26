@@ -16,7 +16,7 @@ from collections.abc import Collection, Mapping
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal, TypedDict, cast
+from typing import TYPE_CHECKING, Literal, TypedDict
 
 from pydantic import BaseModel
 
@@ -238,7 +238,18 @@ def _discapacidad_grade(
         grade = int(raw)
     except ValueError:
         return None
-    return cast(Literal[0, 33, 65], grade) if grade in _accepted_disability_grades(operation=operation) else None
+    if grade not in _accepted_disability_grades(operation=operation):
+        return None
+    if grade == 0:
+        return 0
+    if grade == 33:
+        return 33
+    if grade == 65:
+        return 65
+    # The catalogue is the authority on which grades are accepted, and the
+    # projection carries only the three the descendant record declares; a
+    # fourth accepted token is a catalogue defect, not a projectable answer.
+    raise RegistryValidationError("descendant disability catalogue accepts an ungoverned grade")
 
 
 def _safe_entry_date(birth_raw: str, entry_raw: str | None) -> date | None:

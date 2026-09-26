@@ -815,9 +815,14 @@ def compile_search_index(
     stats = captured[0] if captured else None
     written = stats.custom_records_written if stats is not None else 0
     boosts = stats.relevance_boosts_applied if stats is not None else 0
+    merged = stats.records_sharing_a_destination if stats is not None else 0
+    # Records merged into another record's destination are named rather than
+    # left implicit: the corpus is larger than the entry count, and a silent
+    # difference reads as lost records.
+    merged_note = f", {merged} merged into a shared destination" if merged else ""
     print(
         f"Search index compiled: {outcome.page_count} pages + {written} term/casilla/legal/CLI records "
-        f"({boosts} relevance-boosted) -> {outcome.html_root / outcome.output_subdir}",
+        f"({boosts} relevance-boosted{merged_note}) -> {outcome.html_root / outcome.output_subdir}",
         flush=True,
     )
 

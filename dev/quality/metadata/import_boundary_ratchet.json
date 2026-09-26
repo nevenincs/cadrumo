@@ -14,8 +14,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_work_addressing",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -32,8 +36,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_file_flow_draft_persistence",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -50,8 +58,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_modelo_100_2025_expense_inspection_live",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -68,27 +80,13 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_selectors",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
-    },
-    {
-      "capability": "cross-layer-integration-test",
-      "contract": "adapters-do-not-reach-composition",
-      "created_on": "2026-09-15",
-      "expires_on": "2027-03-15",
-      "fingerprint": "05882a3bb85fc67e1da0a681c160b93d0f0fc23dd1ec5ffcb720d02b2c052614",
-      "import_form": "static",
-      "imported_symbols": [
-        "compose_ledger_llm"
-      ],
-      "lexical_scope": "<module>",
-      "multiplicity": 1,
-      "owner": "Cadrumo architecture maintainers",
-      "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
-      "source_module": "cadrumo.adapters.outbound.llm.tests.test_llm_vision_classifier",
-      "status": "active",
-      "target_module": "cadrumo.entrypoints.cli.ledger_llm_composition"
     },
     {
       "capability": "cross-layer-integration-test",
@@ -104,8 +102,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:00:59Z"
+      },
       "source_module": "cadrumo.application.live.tests.test_justificante_capture_live",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.cli.app_live_justificante_composition"
     },
     {
@@ -122,8 +124,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_modelo_130_cross_year_carry_continuity",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -140,8 +146,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_pulled_history_reaches_calculate",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.live_state_composition"
     },
     {
@@ -158,8 +168,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.verification_repository_support",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -176,26 +190,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_modelo_303_refund_election_e2e",
-      "status": "active",
-      "target_module": "cadrumo.entrypoints.adapter_composition"
-    },
-    {
-      "capability": "cross-layer-integration-test",
-      "contract": "application-is-inward",
-      "created_on": "2026-09-15",
-      "expires_on": "2027-03-15",
-      "fingerprint": "0d76dc5db56a648fa2b7723c2f3713afa4673cdebc92ec9ecdead80227d48c1d",
-      "import_form": "static",
-      "imported_symbols": [
-        "build_censal_fetch_port"
-      ],
-      "lexical_scope": "<module>",
-      "multiplicity": 1,
-      "owner": "Cadrumo architecture maintainers",
-      "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
-      "source_module": "cadrumo.application.aeat_sync.tests.test_workspace",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -212,8 +212,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_dt12_window_gate",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -230,8 +234,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_filed_header_facts_reach_storage",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.live_state_composition"
     },
     {
@@ -248,8 +256,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_import_flow",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -288,27 +300,13 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_modelo_303_refund_auto_carry_e2e",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
-    },
-    {
-      "capability": "cross-layer-integration-test",
-      "contract": "application-is-inward",
-      "created_on": "2026-09-15",
-      "expires_on": "2027-03-15",
-      "fingerprint": "132ab107cc43eb21bd106ad55a7b9479517157765c88d52b2f18ed7f3f9f2d66",
-      "import_form": "static",
-      "imported_symbols": [
-        "profile_authority_contexts"
-      ],
-      "lexical_scope": "<module>",
-      "multiplicity": 1,
-      "owner": "Cadrumo architecture maintainers",
-      "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production dependency direction remains unchanged.",
-      "source_module": "cadrumo.application.auth.tests.test_clave_credential_resolution",
-      "status": "active",
-      "target_module": "cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime"
     },
     {
       "capability": "cross-layer-integration-test",
@@ -324,8 +322,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests._justificante_reconcile_support",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.cli.app_live_justificante_composition"
     },
     {
@@ -342,8 +344,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_amend_flow",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -360,8 +366,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.operations.tests.test_censal_operation_operand",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -378,8 +388,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_modelo_100_base_negativa_general_compensation",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -396,8 +410,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_modelo_202_modality_lifecycle",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -414,8 +432,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_iva_wallet_engine_filing",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -432,8 +454,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_source_mesh_review",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -450,8 +476,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_review_runtime_storage",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -468,8 +498,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_dormant_m349_invoice_resolver_live",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -486,8 +520,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_file_flow_verify",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -504,8 +542,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The test proves that registry-projected domain values inhabit the public core value types. Moving it outward would leave the core contract untested; production core remains inward-only.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:00:59Z"
+      },
       "source_module": "cadrumo.core.tests.test_amendment_kind_regime",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.domain.calculations.registry.amendment_regime_policy"
     },
     {
@@ -522,8 +564,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_modelo_202_modality_lifecycle",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -540,8 +586,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:00:59Z"
+      },
       "source_module": "cadrumo.application.live.tests.test_justificante_capture_live",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.cli.app_live_justificante_composition"
     },
     {
@@ -558,8 +608,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_amend_flow",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -576,8 +630,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_llm_evidence_wiring",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.cli.ledger_llm_composition"
     },
     {
@@ -594,8 +652,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_previous_filing_casilla_override",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -612,8 +674,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.file_flow_test_support",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -630,8 +696,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:00:59Z"
+      },
       "source_module": "cadrumo.application.live.tests.test_justificante_capture_live",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.cli.app_live_justificante_composition"
     },
     {
@@ -648,8 +718,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_modelo_390_303_fold_in_live",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -666,8 +740,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_file_flow_events",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -684,8 +762,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_derived_aggregate_override_real_path",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -702,8 +784,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_e2e_ledger_m303_quarters_to_m390_annual",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -720,8 +806,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_actions_create_usage_ratio",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.ledger_action_composition"
     },
     {
@@ -738,8 +828,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_modelo_390_303_simplificado_fold_in_live",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -756,8 +850,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_modelo_202_modality_lifecycle",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -774,8 +872,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_derived_aggregate_override_real_path",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -792,8 +894,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:00:59Z"
+      },
       "source_module": "cadrumo.application.live.tests.test_justificante_capture_live",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.cli.app_live_justificante_composition"
     },
     {
@@ -810,8 +916,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_file_flow_verify",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -828,27 +938,13 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_modelo_200_fold_in_live",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
-    },
-    {
-      "capability": "cross-layer-integration-test",
-      "contract": "application-is-inward",
-      "created_on": "2026-09-15",
-      "expires_on": "2027-03-15",
-      "fingerprint": "3aa02ddd5986a1058fa6da8b7cd56adc0aeb1485fb0d75bdf62169d84b3bcaed",
-      "import_form": "static",
-      "imported_symbols": [
-        "profile_authority_contexts"
-      ],
-      "lexical_scope": "<module>",
-      "multiplicity": 1,
-      "owner": "Cadrumo architecture maintainers",
-      "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production dependency direction remains unchanged.",
-      "source_module": "cadrumo.application.auth.tests.test_blank_profile_identity_refusal",
-      "status": "active",
-      "target_module": "cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime"
     },
     {
       "capability": "cross-layer-integration-test",
@@ -864,8 +960,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_modelo_303_deductible_evidence_gate",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -882,8 +982,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_verify_ledger_drift_gate",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -900,8 +1004,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_external_source_import",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -918,8 +1026,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests._verify_ledger_drift_gate_support",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -936,8 +1048,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_m210_irnr_income_ledger",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -954,8 +1070,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_modelo_100_cross_year_carry_continuity",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -972,8 +1092,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_structured_path_country_codes",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -990,8 +1114,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_llm_review_workflow",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.cli.ledger_llm_composition"
     },
     {
@@ -1008,8 +1136,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:00:59Z"
+      },
       "source_module": "cadrumo.application.modelo.tests.test_work_rename_operation",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -1026,8 +1158,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_work_addressing",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -1044,8 +1180,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_manual_add_idempotency",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.ledger_action_composition"
     },
     {
@@ -1062,8 +1202,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_revision_parent_lifecycle_admission",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -1080,8 +1224,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_relation_fold_in_live",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -1098,8 +1246,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_iva_wallet_engine_lifecycle_gate",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -1116,8 +1268,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_modelo_303_deductible_evidence_gate",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -1134,8 +1290,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_expedientes",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -1152,8 +1312,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_modelo_303_refund_election_e2e",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -1170,27 +1334,13 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_verification_substance_workflow",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
-    },
-    {
-      "capability": "cross-layer-integration-test",
-      "contract": "application-is-inward",
-      "created_on": "2026-09-15",
-      "expires_on": "2027-03-15",
-      "fingerprint": "593b1121cb0f781e876d4fb0a98ce48dc90b019b616ea6e58042d020667a8ad1",
-      "import_form": "static",
-      "imported_symbols": [
-        "default_browser_session_factory"
-      ],
-      "lexical_scope": "<module>",
-      "multiplicity": 1,
-      "owner": "Cadrumo architecture maintainers",
-      "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production dependency direction remains unchanged.",
-      "source_module": "cadrumo.application.tests.test_workbench_generation",
-      "status": "active",
-      "target_module": "cadrumo.adapters.outbound.aeat.browser.factory"
     },
     {
       "capability": "cross-layer-integration-test",
@@ -1206,8 +1356,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_workflow_resume",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -1224,8 +1378,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:00:59Z"
+      },
       "source_module": "cadrumo.adapters.outbound.aeat.browser.tests.test_justificante_capture_authenticity",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.cli.app_live_justificante_composition"
     },
     {
@@ -1242,27 +1400,13 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_modelo_390_303_simplificado_fold_in_live",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
-    },
-    {
-      "capability": "cross-layer-integration-test",
-      "contract": "application-is-inward",
-      "created_on": "2026-09-15",
-      "expires_on": "2027-03-15",
-      "fingerprint": "6500f599a4d2d10538fd03d6b317ac31bd9a2e8b9b65988371b920bbbbea9393",
-      "import_form": "static",
-      "imported_symbols": [
-        "EInvoiceXmlParseError"
-      ],
-      "lexical_scope": "<module>",
-      "multiplicity": 1,
-      "owner": "Cadrumo architecture maintainers",
-      "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production dependency direction remains unchanged.",
-      "source_module": "cadrumo.application.ledger.tests.test_evidence_routing_and_projection",
-      "status": "active",
-      "target_module": "cadrumo.adapters.inbound.einvoice.xml"
     },
     {
       "capability": "cross-layer-integration-test",
@@ -1278,27 +1422,13 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:00:59Z"
+      },
       "source_module": "cadrumo.adapters.outbound.aeat.browser.tests.test_justificante_capture_authenticity",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.cli.app_live_justificante_composition"
-    },
-    {
-      "capability": "cross-layer-integration-test",
-      "contract": "application-is-inward",
-      "created_on": "2026-09-15",
-      "expires_on": "2027-03-15",
-      "fingerprint": "66aab8d1d9a027be9616621941c6b26a3e3ff3b939d8c6795155b897bba2102c",
-      "import_form": "static",
-      "imported_symbols": [
-        "translate_parsed_einvoice"
-      ],
-      "lexical_scope": "<module>",
-      "multiplicity": 1,
-      "owner": "Cadrumo architecture maintainers",
-      "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production dependency direction remains unchanged.",
-      "source_module": "cadrumo.application.ledger.tests.test_evidence_routing_and_projection",
-      "status": "active",
-      "target_module": "cadrumo.adapters.inbound.einvoice.application_translation"
     },
     {
       "capability": "cross-layer-integration-test",
@@ -1314,8 +1444,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_modelo_131_data_base_binding_projection",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -1332,8 +1466,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_cross_period_clean_state_enforcement",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -1350,8 +1488,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_modelo_100_negative_general_base_carry_live",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -1368,8 +1510,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_iva_wallet_live",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.live_state_composition"
     },
     {
@@ -1386,8 +1532,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_filed_capture_calculation_history",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.live_state_composition"
     },
     {
@@ -1404,27 +1554,13 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:00:59Z"
+      },
       "source_module": "cadrumo.adapters.outbound.llm.tests.test_llm_vision_evidence",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.cli.ledger_llm_composition"
-    },
-    {
-      "capability": "cross-layer-integration-test",
-      "contract": "application-is-inward",
-      "created_on": "2026-09-15",
-      "expires_on": "2027-03-15",
-      "fingerprint": "71743cf9022b77e18a33ed188e15b29eb48129fe5f48057182d3e085886753ea",
-      "import_form": "static",
-      "imported_symbols": [
-        "default_browser_session_factory"
-      ],
-      "lexical_scope": "<module>",
-      "multiplicity": 1,
-      "owner": "Cadrumo architecture maintainers",
-      "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production dependency direction remains unchanged.",
-      "source_module": "cadrumo.application.aeat_sync.tests.test_workspace_reader",
-      "status": "active",
-      "target_module": "cadrumo.adapters.outbound.aeat.browser.factory"
     },
     {
       "capability": "cross-layer-integration-test",
@@ -1440,8 +1576,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_state_projection",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -1458,8 +1598,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:00:59Z"
+      },
       "source_module": "cadrumo.application.modelo.tests.test_work_rename_operation",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -1476,8 +1620,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_modelo_303_deductible_evidence_gate",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -1494,8 +1642,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:00:59Z"
+      },
       "source_module": "cadrumo.application.modelo.tests.test_work_rename_operation",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -1512,8 +1664,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_amend_kind_resolution",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -1530,8 +1686,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_notifications",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.live_state_composition"
     },
     {
@@ -1548,8 +1708,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_structured_path_country_codes",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.ledger_evidence_extraction_composition"
     },
     {
@@ -1566,8 +1730,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_external_source_import",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -1584,8 +1752,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:00:59Z"
+      },
       "source_module": "cadrumo.application.live.tests.test_justificante_capture_live",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -1602,8 +1774,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_iva_compensation_provenance_population",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.live_state_composition"
     },
     {
@@ -1620,8 +1796,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_modelo_200_fold_in_live",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -1660,8 +1840,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:00:59Z"
+      },
       "source_module": "cadrumo.adapters.outbound.aeat.sede.tests.test_filed_history_operation",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.live_state_composition"
     },
     {
@@ -1688,24 +1872,6 @@
     },
     {
       "capability": "cross-layer-integration-test",
-      "contract": "application-is-inward",
-      "created_on": "2026-09-15",
-      "expires_on": "2027-03-15",
-      "fingerprint": "8aadc1042d12b32a82b0f7ac92882cb0b64c8af71e6a3f0950c65187766484a9",
-      "import_form": "static",
-      "imported_symbols": [
-        "profile_authority_contexts"
-      ],
-      "lexical_scope": "<module>",
-      "multiplicity": 1,
-      "owner": "Cadrumo architecture maintainers",
-      "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production dependency direction remains unchanged.",
-      "source_module": "cadrumo.application.auth.tests.test_identity_dni_divergence_is_auth_time_only",
-      "status": "active",
-      "target_module": "cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime"
-    },
-    {
-      "capability": "cross-layer-integration-test",
       "contract": "adapters-do-not-reach-composition",
       "created_on": "2026-09-15",
       "expires_on": "2027-03-15",
@@ -1718,8 +1884,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests._iva_wallet_engine_support",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -1736,8 +1906,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_source_mesh_calculation",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -1754,8 +1928,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_relation_fold_in_live",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -1772,27 +1950,13 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_modelo_720_foreign_asset_producer_join",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
-    },
-    {
-      "capability": "cross-layer-integration-test",
-      "contract": "application-is-inward",
-      "created_on": "2026-09-15",
-      "expires_on": "2027-03-15",
-      "fingerprint": "977614d729e6f22b1485452b665b7e335be54ea1b3b858b62d97666da6b7d259",
-      "import_form": "static",
-      "imported_symbols": [
-        "parse_einvoice_document"
-      ],
-      "lexical_scope": "<module>",
-      "multiplicity": 1,
-      "owner": "Cadrumo architecture maintainers",
-      "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production dependency direction remains unchanged.",
-      "source_module": "cadrumo.application.ledger.tests.test_evidence_routing_and_projection",
-      "status": "active",
-      "target_module": "cadrumo.adapters.inbound.einvoice.parsers"
     },
     {
       "capability": "cross-layer-integration-test",
@@ -1808,8 +1972,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_modelo_130_carry_forward_continuity",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -1826,8 +1994,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production dependency direction remains unchanged.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:00:59Z"
+      },
       "source_module": "cadrumo.application.auth.tests.operator_projection_test_support",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.adapters.persistence.profile.state_projection"
     },
     {
@@ -1844,8 +2016,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_calculate_input",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -1862,8 +2038,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_file_flow_filing_idempotent",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -1880,8 +2060,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_e2e_ledger_m303_quarters_to_m390_annual",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -1898,8 +2082,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_revision_parent_lifecycle_admission",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -1916,8 +2104,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:00:59Z"
+      },
       "source_module": "cadrumo.application.modelo.tests.test_work_rename_operation",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -1934,8 +2126,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_modelo_303_deductible_evidence_gate",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -1952,8 +2148,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_workflow_resume",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -1970,8 +2170,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_e2e_ledger_m130_quarters_to_m100_annual",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -1988,26 +2192,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_modelo_303_refund_election_e2e",
-      "status": "active",
-      "target_module": "cadrumo.entrypoints.adapter_composition"
-    },
-    {
-      "capability": "cross-layer-integration-test",
-      "contract": "application-is-inward",
-      "created_on": "2026-09-15",
-      "expires_on": "2027-03-15",
-      "fingerprint": "a8243db3ec0f1ca636e32425dc12f003ed3cd6dd2932106e46b69a87e7384c9a",
-      "import_form": "static",
-      "imported_symbols": [
-        "build_censal_fetch_port"
-      ],
-      "lexical_scope": "<module>",
-      "multiplicity": 1,
-      "owner": "Cadrumo architecture maintainers",
-      "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
-      "source_module": "cadrumo.application.tests.test_workbench_generation",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -2024,8 +2214,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.file_flow_test_support",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -2042,8 +2236,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_revision_parent_lifecycle_admission",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -2060,8 +2258,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_modelo_390_303_fold_in_live",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -2078,8 +2280,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_filed_capture_dry_run_writes_nothing",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.live_state_composition"
     },
     {
@@ -2096,8 +2302,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_modelo_100_2025_expense_inspection_live",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -2114,8 +2324,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_import_flow_validation",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -2132,8 +2346,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_llm_evidence_wiring",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -2150,8 +2368,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production dependency direction remains unchanged.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:00:59Z"
+      },
       "source_module": "cadrumo.application.auth.tests.operator_projection_test_support",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.adapters.persistence.profile.usage_ratios"
     },
     {
@@ -2168,27 +2390,13 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_source_mesh_calculation",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
-    },
-    {
-      "capability": "cross-layer-integration-test",
-      "contract": "application-is-inward",
-      "created_on": "2026-09-15",
-      "expires_on": "2027-03-15",
-      "fingerprint": "b764383f4381f8d9b32f806e2c8a5ac1b67d5f78ac0e2e3c5ea99ba2cc7faca7",
-      "import_form": "static",
-      "imported_symbols": [
-        "build_certificate_secret_backend"
-      ],
-      "lexical_scope": "<module>",
-      "multiplicity": 1,
-      "owner": "Cadrumo architecture maintainers",
-      "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production dependency direction remains unchanged.",
-      "source_module": "cadrumo.application.auth.tests.test_cold_root_login",
-      "status": "active",
-      "target_module": "cadrumo.adapters.persistence.storage.certificate_secret_backend"
     },
     {
       "capability": "cross-layer-integration-test",
@@ -2204,8 +2412,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_bienes_inversion_regularizacion_source_mesh_enrollment",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -2222,8 +2434,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests._evidence_input_test_support",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -2240,8 +2456,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_amend_flow",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -2258,8 +2478,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.operations.tests.test_censal_operation",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -2276,27 +2500,13 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_amend_flow",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
-    },
-    {
-      "capability": "cross-layer-integration-test",
-      "contract": "application-is-inward",
-      "created_on": "2026-09-15",
-      "expires_on": "2027-03-15",
-      "fingerprint": "be2295615befa6eb2313cc24103613e11f73178ef84686debd3d2cbe3e083791",
-      "import_form": "static",
-      "imported_symbols": [
-        "default_browser_session_factory"
-      ],
-      "lexical_scope": "<module>",
-      "multiplicity": 1,
-      "owner": "Cadrumo architecture maintainers",
-      "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production dependency direction remains unchanged.",
-      "source_module": "cadrumo.application.auth.tests.test_cold_root_login",
-      "status": "active",
-      "target_module": "cadrumo.adapters.outbound.aeat.browser.factory"
     },
     {
       "capability": "cross-layer-integration-test",
@@ -2312,8 +2522,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.storage.tests.test_runtime_attached_repositories_part1",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -2330,8 +2544,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_e2e_ledger_m303_quarters_to_m390_annual",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -2348,8 +2566,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_import_flow_mutation_guards",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -2366,8 +2588,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_modelo_131_data_base_binding_projection",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -2384,8 +2610,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_import_flow_mutation_guards",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -2402,8 +2632,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_file_flow_verify",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -2420,8 +2654,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_modelo_100_retenciones_credit_fold_in_live",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -2438,8 +2676,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_file_flow_events",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -2456,8 +2698,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_review_profile_activity_staleness",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -2474,8 +2720,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production dependency direction remains unchanged.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:00:59Z"
+      },
       "source_module": "cadrumo.application.live.tests.test_justificante_capture_live",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.adapters.persistence.storage.certificate_secret_backend"
     },
     {
@@ -2492,8 +2742,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_iva_wallet_blocked_decision_integration",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -2510,8 +2764,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_file_flow_calculation",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -2528,8 +2786,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_verify_report_idempotent_collapse",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -2546,8 +2808,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_modelo_130_cross_year_carry_continuity",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -2564,8 +2830,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_projection_compare",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -2582,8 +2852,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_bucket_aggregation_flow",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -2600,8 +2874,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_external_source_import",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -2618,8 +2896,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_filed_capture_external_baseline",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -2636,8 +2918,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_export_iva_wallet",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -2654,26 +2940,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_filing_core_persistence",
-      "status": "active",
-      "target_module": "cadrumo.entrypoints.adapter_composition"
-    },
-    {
-      "capability": "cross-layer-integration-test",
-      "contract": "application-is-inward",
-      "created_on": "2026-09-15",
-      "expires_on": "2027-03-15",
-      "fingerprint": "d95c38d8db8a544d164cb478e1252ee6308db61f1325fadb47d26ff4395ab78a",
-      "import_form": "static",
-      "imported_symbols": [
-        "build_censal_fetch_port"
-      ],
-      "lexical_scope": "<module>",
-      "multiplicity": 1,
-      "owner": "Cadrumo architecture maintainers",
-      "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
-      "source_module": "cadrumo.application.aeat_sync.tests.test_workspace_reader",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -2690,8 +2962,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_modelo_100_cross_year_carry_continuity",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -2708,8 +2984,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:00:59Z"
+      },
       "source_module": "cadrumo.application.modelo.tests.test_work_rename_operation",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -2726,8 +3006,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.operations.tests.test_workspace_refresh_target_resolution",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -2744,8 +3028,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_verify_ledger_drift_gate",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -2762,8 +3050,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_modelo_202_sociedades_fold_in_live",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -2780,8 +3072,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.import_flow_support",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -2798,8 +3094,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:00:59Z"
+      },
       "source_module": "cadrumo.adapters.outbound.llm.tests.test_llm_classify_run_telemetry",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.cli.ledger_llm_composition"
     },
     {
@@ -2816,8 +3116,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_invoice_accumulative_cross_modelo_periods",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -2834,8 +3138,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_modelo_720_foreign_asset_producer_join",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -2852,8 +3160,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_review_prior_filing_staleness",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -2870,27 +3182,13 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_file_flow_filing",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
-    },
-    {
-      "capability": "cross-layer-integration-test",
-      "contract": "adapters-do-not-reach-composition",
-      "created_on": "2026-09-15",
-      "expires_on": "2027-03-15",
-      "fingerprint": "ecae46eeea4c0692686406c396bf027e3ce86ca4bb683c7309c794ee98f6d62c",
-      "import_form": "static",
-      "imported_symbols": [
-        "VisionReader"
-      ],
-      "lexical_scope": "<module>",
-      "multiplicity": 1,
-      "owner": "Cadrumo architecture maintainers",
-      "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
-      "source_module": "cadrumo.adapters.outbound.llm.tests.test_llm_vision_classifier",
-      "status": "active",
-      "target_module": "cadrumo.entrypoints.cli.ledger_llm_composition"
     },
     {
       "capability": "cross-layer-integration-test",
@@ -2906,8 +3204,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_modelo_100_retenciones_credit_fold_in_live",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -2924,27 +3226,13 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_cross_period_clean_state_enforcement",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
-    },
-    {
-      "capability": "cross-layer-integration-test",
-      "contract": "application-is-inward",
-      "created_on": "2026-09-15",
-      "expires_on": "2027-03-15",
-      "fingerprint": "f0d8a0ef0a3242d4ee2915295f09107b013b8e96e919f2d6cc77c33dfda7336a",
-      "import_form": "static",
-      "imported_symbols": [
-        "default_browser_session_factory"
-      ],
-      "lexical_scope": "<module>",
-      "multiplicity": 1,
-      "owner": "Cadrumo architecture maintainers",
-      "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production dependency direction remains unchanged.",
-      "source_module": "cadrumo.application.aeat_sync.tests.test_workspace",
-      "status": "active",
-      "target_module": "cadrumo.adapters.outbound.aeat.browser.factory"
     },
     {
       "capability": "cross-layer-integration-test",
@@ -2960,27 +3248,13 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_pull_path_calculate_path_casilla_parity",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
-    },
-    {
-      "capability": "cross-layer-integration-test",
-      "contract": "application-is-inward",
-      "created_on": "2026-09-15",
-      "expires_on": "2027-03-15",
-      "fingerprint": "f370f243ee09ab825b72d66bafb3e0089dcb27cb54ed36fa07de997a8c8f1015",
-      "import_form": "static",
-      "imported_symbols": [
-        "profile_authority_contexts"
-      ],
-      "lexical_scope": "<module>",
-      "multiplicity": 1,
-      "owner": "Cadrumo architecture maintainers",
-      "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production dependency direction remains unchanged.",
-      "source_module": "cadrumo.application.auth.tests.test_session_identity_comparison",
-      "status": "active",
-      "target_module": "cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime"
     },
     {
       "capability": "cross-layer-integration-test",
@@ -2996,8 +3270,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_import_flow",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -3014,8 +3292,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production dependency direction remains unchanged.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:00:59Z"
+      },
       "source_module": "cadrumo.application.live.tests.test_justificante_capture_live",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.adapters.outbound.aeat.browser.factory"
     },
     {
@@ -3032,8 +3314,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_import_flow",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -3072,8 +3358,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_relation_fold_in_live",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -3090,8 +3380,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_import_flow",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -3108,8 +3402,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:00:59Z"
+      },
       "source_module": "cadrumo.adapters.outbound.llm.tests.persistence_vision_evidence_support",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
     },
     {
@@ -3126,43 +3424,13 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_projection_compare",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
-    },
-    {
-      "capability": "cross-layer-integration-test",
-      "contract": "adapters-do-not-reach-composition",
-      "created_on": "2026-09-19",
-      "expires_on": "2027-03-19",
-      "fingerprint": "bbdca0e5f42b86640f72ce0c0cf0d9d30ed1728f3d43ecfddb3edc4578a4aa9e",
-      "import_form": "local",
-      "imported_symbols": [],
-      "lexical_scope": "test_the_classify_path_reaches_the_local_text_reader",
-      "multiplicity": 1,
-      "owner": "Cadrumo architecture maintainers",
-      "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
-      "source_module": "cadrumo.adapters.outbound.llm.tests.test_local_text_reader_wiring",
-      "status": "active",
-      "target_module": "cadrumo.entrypoints.cli.ledger_llm_composition"
-    },
-    {
-      "capability": "cross-layer-integration-test",
-      "contract": "adapters-do-not-reach-composition",
-      "created_on": "2026-09-19",
-      "expires_on": "2027-03-19",
-      "fingerprint": "7f24b3d1494f97a4ef22c3ecf672670194676d01a7f860abdb7f38a84e3cdd90",
-      "import_form": "static",
-      "imported_symbols": [
-        "evidence_text_layer_ports"
-      ],
-      "lexical_scope": "<module>",
-      "multiplicity": 1,
-      "owner": "Cadrumo architecture maintainers",
-      "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
-      "source_module": "cadrumo.adapters.outbound.llm.tests.test_wired_reading_against_a_loopback_reader",
-      "status": "active",
-      "target_module": "cadrumo.entrypoints.ledger_evidence_extraction_composition"
     },
     {
       "capability": "cross-layer-integration-test",
@@ -3178,27 +3446,13 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:30:13Z"
+      },
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_amend_pending_chain",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.adapter_composition"
-    },
-    {
-      "capability": "cross-layer-integration-test",
-      "contract": "application-is-inward",
-      "created_on": "2026-09-19",
-      "expires_on": "2027-03-19",
-      "fingerprint": "c101898e608c94b7ad9212d18e8180dfbfd2317cf1a71c7a9ad6439e6368525e",
-      "import_form": "local",
-      "imported_symbols": [
-        "probe_document_shape"
-      ],
-      "lexical_scope": "_document_shape_probe",
-      "multiplicity": 1,
-      "owner": "Cadrumo architecture maintainers",
-      "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production code in this package has no such outward dependency.",
-      "source_module": "cadrumo.application.ledger.tests.test_batch_reader_roles",
-      "status": "active",
-      "target_module": "cadrumo.adapters.inbound.einvoice.shape"
     },
     {
       "capability": "cross-layer-integration-test",
@@ -3214,8 +3468,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production code in this package has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:00:59Z"
+      },
       "source_module": "cadrumo.application.modelo.tests.test_filing_chain_reconciliation",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.adapters.inbound.pdf.source_provenance"
     },
     {
@@ -3232,8 +3490,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production code in this package has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:00:59Z"
+      },
       "source_module": "cadrumo.application.modelo.tests.test_filing_chain_reconciliation",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.adapters.persistence.profile.buckets"
     },
     {
@@ -3250,8 +3512,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production code in this package has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:00:59Z"
+      },
       "source_module": "cadrumo.application.modelo.tests.test_filing_chain_reconciliation",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.adapters.persistence.profile.calculation_observations"
     },
     {
@@ -3268,8 +3534,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production code in this package has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:00:59Z"
+      },
       "source_module": "cadrumo.application.modelo.tests.test_filing_chain_reconciliation",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.adapters.persistence.profile.justificante"
     },
     {
@@ -3286,8 +3556,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production code in this package has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:00:59Z"
+      },
       "source_module": "cadrumo.application.modelo.tests.test_filing_chain_reconciliation",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.adapters.persistence.profile.modelos_calculation"
     },
     {
@@ -3304,8 +3578,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production code in this package has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:00:59Z"
+      },
       "source_module": "cadrumo.application.modelo.tests.test_filing_chain_reconciliation",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.adapters.persistence.profile.modelos_filing"
     },
     {
@@ -3322,8 +3600,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production code in this package has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:00:59Z"
+      },
       "source_module": "cadrumo.application.modelo.tests.test_filing_chain_reconciliation",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.adapters.persistence.profile.modelos_work_units"
     },
     {
@@ -3340,8 +3622,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production code in this package has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:00:59Z"
+      },
       "source_module": "cadrumo.application.modelo.tests.test_filing_chain_reconciliation",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.adapters.persistence.profile.tests.import_flow_support"
     },
     {
@@ -3358,8 +3644,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production code in this package has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:00:59Z"
+      },
       "source_module": "cadrumo.application.modelo.tests.test_filing_chain_reconciliation",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.adapters.persistence.storage.tests.secure_sql"
     },
     {
@@ -3376,8 +3666,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production code in this package has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:00:59Z"
+      },
       "source_module": "cadrumo.application.tests.test_local_reader_operation",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.adapters.persistence.operations.journal"
     },
     {
@@ -3394,8 +3688,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production code in this package has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:00:59Z"
+      },
       "source_module": "cadrumo.application.tests.test_local_reader_operation",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.adapters.persistence.operations.lease"
     },
     {
@@ -3412,8 +3710,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production code in this package has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:00:59Z"
+      },
       "source_module": "cadrumo.application.tests.test_local_reader_operation",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.adapters.persistence.operations.secure_references"
     },
     {
@@ -3430,8 +3732,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production code in this package has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:00:59Z"
+      },
       "source_module": "cadrumo.application.tests.test_local_reader_operation",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.adapters.persistence.storage.tests.secure_sql"
     },
     {
@@ -3448,8 +3754,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production code in this package has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:00:59Z"
+      },
       "source_module": "cadrumo.application.tests.test_workbench_ledger_guard",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.adapters.persistence.profile.invoices"
     },
     {
@@ -3466,8 +3776,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production code in this package has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:00:59Z"
+      },
       "source_module": "cadrumo.application.tests.test_workbench_ledger_guard",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.adapters.persistence.profile.transactions"
     },
     {
@@ -3484,8 +3798,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production code in this package has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:00:59Z"
+      },
       "source_module": "cadrumo.application.tests.test_workbench_ledger_guard",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.adapters.persistence.storage.tests.secure_sql"
     },
     {
@@ -3502,8 +3820,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production code in this package has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:00:59Z"
+      },
       "source_module": "cadrumo.application.tests.test_workbench_ledger_guard",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.ledger_action_composition"
     },
     {
@@ -3520,8 +3842,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production code in this package has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:00:59Z"
+      },
       "source_module": "cadrumo.application.user_profile.tests.test_cli_commands_leave_no_unsealed_bucket_session",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.adapters.persistence.profile.tests.profile_registration"
     },
     {
@@ -3538,8 +3864,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production code in this package has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:00:59Z"
+      },
       "source_module": "cadrumo.application.user_profile.tests.test_cli_commands_leave_no_unsealed_bucket_session",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.adapters.persistence.storage.master_key.active_session"
     },
     {
@@ -3556,8 +3886,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production code in this package has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:00:59Z"
+      },
       "source_module": "cadrumo.application.user_profile.tests.test_cli_commands_leave_no_unsealed_bucket_session",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.adapters.persistence.storage.master_key.bucket_session"
     },
     {
@@ -3574,8 +3908,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production code in this package has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:00:59Z"
+      },
       "source_module": "cadrumo.application.user_profile.tests.test_cli_commands_leave_no_unsealed_bucket_session",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.adapters.persistence.storage.profile_login_session"
     },
     {
@@ -3592,8 +3930,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production code in this package has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:00:59Z"
+      },
       "source_module": "cadrumo.application.user_profile.tests.test_cli_commands_leave_no_unsealed_bucket_session",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.adapters.persistence.storage.tests.profile_storage_root_fixture"
     },
     {
@@ -3610,8 +3952,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production code in this package has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:00:59Z"
+      },
       "source_module": "cadrumo.application.user_profile.tests.test_cli_commands_leave_no_unsealed_bucket_session",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.entrypoints.cli.tests.cli_runner"
     },
     {
@@ -3628,8 +3974,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production code in this package has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T11:21:39Z"
+      },
       "source_module": "cadrumo.application.user_profile.tests.test_registration_leaves_the_profile_admitted",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.adapters.persistence.storage.custody.acceleration_receipt"
     },
     {
@@ -3646,8 +3996,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production code in this package has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T11:21:39Z"
+      },
       "source_module": "cadrumo.application.user_profile.tests.test_registration_leaves_the_profile_admitted",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime"
     },
     {
@@ -3664,8 +4018,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production code in this package has no such outward dependency.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T11:21:39Z"
+      },
       "source_module": "cadrumo.application.user_profile.tests.test_registration_leaves_the_profile_admitted",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.adapters.persistence.storage.tests.secure_sql"
     },
     {
@@ -3682,8 +4040,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The shared test-support surface, and the tests that prove its session scoping, are consumed by tests in several layers, so relocating them into one owning package would sever the others. The outward import supplies only the fixture value those consumers assert against; no shipped module imports cadrumo.tests.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:00:59Z"
+      },
       "source_module": "cadrumo.tests.authority_lease_support",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.domain.calculations.registry.authority"
     },
     {
@@ -3700,8 +4062,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The shared test-support surface, and the tests that prove its session scoping, are consumed by tests in several layers, so relocating them into one owning package would sever the others. The outward import supplies only the fixture value those consumers assert against; no shipped module imports cadrumo.tests.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:00:59Z"
+      },
       "source_module": "cadrumo.tests.authority_lease_support",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.domain.calculations.registry.authority"
     },
     {
@@ -3718,8 +4084,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The shared test-support surface, and the tests that prove its session scoping, are consumed by tests in several layers, so relocating them into one owning package would sever the others. The outward import supplies only the fixture value those consumers assert against; no shipped module imports cadrumo.tests.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:00:59Z"
+      },
       "source_module": "cadrumo.tests.authority_lease_support",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.domain.calculations.registry.governed_fact_scope"
     },
     {
@@ -3736,8 +4106,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The shared test-support surface, and the tests that prove its session scoping, are consumed by tests in several layers, so relocating them into one owning package would sever the others. The outward import supplies only the fixture value those consumers assert against; no shipped module imports cadrumo.tests.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:00:59Z"
+      },
       "source_module": "cadrumo.tests.recorded_ecb_rates",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.adapters.outbound.fx.ecb_provider"
     },
     {
@@ -3754,8 +4128,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The shared test-support surface, and the tests that prove its session scoping, are consumed by tests in several layers, so relocating them into one owning package would sever the others. The outward import supplies only the fixture value those consumers assert against; no shipped module imports cadrumo.tests.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:00:59Z"
+      },
       "source_module": "cadrumo.tests.recorded_ecb_rates",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.adapters.outbound.fx.ecb_provider"
     },
     {
@@ -3772,8 +4150,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The shared test-support surface, and the tests that prove its session scoping, are consumed by tests in several layers, so relocating them into one owning package would sever the others. The outward import supplies only the fixture value those consumers assert against; no shipped module imports cadrumo.tests.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:00:59Z"
+      },
       "source_module": "cadrumo.tests.recorded_ecb_rates",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.domain.currency.errors"
     },
     {
@@ -3790,8 +4172,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The shared test-support surface, and the tests that prove its session scoping, are consumed by tests in several layers, so relocating them into one owning package would sever the others. The outward import supplies only the fixture value those consumers assert against; no shipped module imports cadrumo.tests.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:00:59Z"
+      },
       "source_module": "cadrumo.tests.test_session_operation_scope_isolation",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.domain.calculations.registry.authority"
     },
     {
@@ -3808,8 +4194,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The shared test-support surface, and the tests that prove its session scoping, are consumed by tests in several layers, so relocating them into one owning package would sever the others. The outward import supplies only the fixture value those consumers assert against; no shipped module imports cadrumo.tests.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-24T12:00:59Z"
+      },
       "source_module": "cadrumo.tests.test_session_operation_scope_isolation",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.domain.calculations.registry.governed_fact_scope"
     }
   ],

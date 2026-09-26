@@ -20,6 +20,7 @@ import pytest
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     open_test_profile_session,
+    profile_authority_contexts,
     seed_test_profile_record,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
@@ -28,13 +29,13 @@ from cadrumo.application.operator_actions.preconditions import no_action_precond
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.core.json_contract import EnvelopeStatus
 from cadrumo.core.operator_action_enums import ActionEvidenceProvenance
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli
 from cadrumo.tests.cli_envelope import require_schema_envelope
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from .._action_coverage import LeafConditionScenario, production_leaf_condition_scenario_matrix
 from .._models import ExitCodeScenario
@@ -58,11 +59,9 @@ def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
 
 
 def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
-    schema = load_user_profile_schema()
     seed_test_profile_record(
-        UserProfileRecord(
-            schema_id=schema.id,
-            schema_version=schema.version,
+        create_user_profile_record(
+            context=profile_authority_contexts()[0],
             profile_id=_PROFILE_ID,
             setup_state=ProfileSetupState.COMPLETE,
             facts=(
@@ -154,50 +153,52 @@ def _recovery_precondition(*, coverage: LeafConditionScenario, work_unit_id: str
 
 def _seed_m130_income_transaction(*, amount: Decimal, filing_year: int) -> None:
     """Seed one real actividad-economica income row for source-bound M130 casilla 01."""
-    bucket_id = resolve_active_bucket_id()
-    assert bucket_id is not None, "test profile must install an active bucket pointer"
-    value_date = date(filing_year, 2, 15)
-    income = Transaction.model_validate(
-        {
-            "raw": RawTransaction(
-                provider_transaction_id=f"exit-code-golden-income-{filing_year}",
-                booked_date=value_date,
-                value_date=value_date,
-                amount=amount,
-                currency="EUR",
-                counterparty="Cliente SA",
-                description="exit-code golden eval income",
-                provenance=RawProvenance(
-                    source_path=Path(__file__),
-                    source_sha256="f" * 64,
-                    source_row_index=1,
-                    source_format=SourceFormat.MANUAL,
-                    ingested_at=datetime(filing_year, 2, 16, 12, 0, tzinfo=UTC),
-                    provider_name="manual-ledger",
+    # Transactions validate against registry facts, as they do under a CLI invocation's lease.
+    with bundled_indexed_authority().operation():
+        bucket_id = resolve_active_bucket_id()
+        assert bucket_id is not None, "test profile must install an active bucket pointer"
+        value_date = date(filing_year, 2, 15)
+        income = Transaction.model_validate(
+            {
+                "raw": RawTransaction(
+                    provider_transaction_id=f"exit-code-golden-income-{filing_year}",
+                    booked_date=value_date,
+                    value_date=value_date,
+                    amount=amount,
+                    currency="EUR",
+                    counterparty="Cliente SA",
+                    description="exit-code golden eval income",
+                    provenance=RawProvenance(
+                        source_path=Path(__file__),
+                        source_sha256="f" * 64,
+                        source_row_index=1,
+                        source_format=SourceFormat.MANUAL,
+                        ingested_at=datetime(filing_year, 2, 16, 12, 0, tzinfo=UTC),
+                        provider_name="manual-ledger",
+                    ),
+                    raw_fields={"source_kind": "m130_exit_code_golden_income", "source_key": "exit-code-golden"},
                 ),
-                raw_fields={"source_kind": "m130_exit_code_golden_income", "source_key": "exit-code-golden"},
-            ),
-            "direction": TransactionDirection.INCOMING,
-            "group_label": None,
-            "business_classification": BusinessClassification.BUSINESS,
-            "source_jurisdiction": "ES",
-            "business_pct": None,
-            "category_id": None,
-            "taxable_base": amount,
-            "iva_rate": None,
-            "iva_amount": None,
-            "irpf_category": "actividad_economica",
-            "purchase_invoice_evidence_id": None,
-            "classified_at": datetime(filing_year, 2, 16, 13, 0, tzinfo=UTC),
-            "classified_by": "manual",
-        },
-    )
-    with open_test_profile_session(bucket_id):
-        existing = TransactionCatalogueRepository(bucket_id=bucket_id).load()
-        transactions = (*tuple(existing.transactions.values()), income)
-        TransactionCatalogueRepository(bucket_id=bucket_id).save(
-            TransactionCatalogue.from_transactions(transactions),
+                "direction": TransactionDirection.INCOMING,
+                "group_label": None,
+                "business_classification": BusinessClassification.BUSINESS,
+                "source_jurisdiction": "ES",
+                "business_pct": None,
+                "category_id": None,
+                "taxable_base": amount,
+                "iva_rate": None,
+                "iva_amount": None,
+                "irpf_category": "actividad_economica",
+                "purchase_invoice_evidence_id": None,
+                "classified_at": datetime(filing_year, 2, 16, 13, 0, tzinfo=UTC),
+                "classified_by": "manual",
+            },
         )
+        with open_test_profile_session(bucket_id):
+            existing = TransactionCatalogueRepository(bucket_id=bucket_id).load()
+            transactions = (*tuple(existing.transactions.values()), income)
+            TransactionCatalogueRepository(bucket_id=bucket_id).save(
+                TransactionCatalogue.from_transactions(transactions),
+            )
 
 
 def _dispatch_m130_verify_with_cross_period_finding(runtime_profile: TestRuntimeProfile) -> tuple[int, dict[str, Any]]:

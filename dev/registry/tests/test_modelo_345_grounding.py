@@ -90,14 +90,16 @@ def test_modelo_345_current_registry_uses_2025_sources_without_fake_calculation(
     # statutory date.
     window = next(item for item in revision.deadline_windows if item.filing_year == 2025)
     assert window.closes_on == date(2026, 1, 31)
-    # The deadline layer refuses in its own words and chains the fact-resolution
-    # cause. Both halves are asserted: the refusal a caller sees, and the reason
-    # underneath it, so a refusal raised for some other reason still reds.
-    with (
-        pytest.raises(DeadlineValidationError, match="holiday calendar publication for 2026") as refusal,
-        bundled_indexed_authority().operation() as operation,
-    ):
-        shift_deadline(window.closes_on, modelo="345", ccaa_code=None, operation=operation)
+    # The published 2026 calendar derives the 2 February close on read. For a
+    # year with no published calendar the deadline layer refuses in its own
+    # words and chains the fact-resolution cause. Both halves are asserted: the
+    # refusal a caller sees, and the reason underneath it, so a refusal raised
+    # for some other reason still reds.
+    with bundled_indexed_authority().operation() as operation:
+        shift = shift_deadline(window.closes_on, modelo="345", ccaa_code=None, operation=operation)
+        assert (shift.adjusted_close_date, shift.shifted, shift.shift_reason) == (date(2026, 2, 2), True, "sabado")
+        with pytest.raises(DeadlineValidationError, match="holiday calendar publication for 2027") as refusal:
+            shift_deadline(date(2027, 1, 29), modelo="345", ccaa_code=None, operation=operation)
     assert "no variant for the exact query context" in str(refusal.value.__cause__)
     assert {ref.workbook_source for ref in revision.workbook_parity_refs} == {"aeat-dr-345-2025"}
     # "export" joined the surfaces when the modelo's export layout was authored;

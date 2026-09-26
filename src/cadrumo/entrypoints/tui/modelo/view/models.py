@@ -36,10 +36,15 @@ from .....application.modelo.workspace_models import (
     ModeloWorkspaceCapabilityDisposition,
     ModeloWorkspaceCapabilityName,
     ModeloWorkspaceCapabilityV1,
+    ModeloWorkspaceEvidenceFactV1,
+    ModeloWorkspaceEvidenceReferenceV1,
+    ModeloWorkspaceLegalEvidenceReferenceV1,
     ModeloWorkspaceLocalizedTextV1,
     ModeloWorkspaceRecordLabelV1,
+    ModeloWorkspaceRefusalCode,
     ModeloWorkspaceRevisionAssertionDisposition,
 )
+from .....application.operator_actions.models import ActionReference
 from .....core.errors.hierarchy import pydantic_validation_boundary
 from .....core.i18n.render import tr
 from .....core.models import STRICT_FROZEN_CONFIG
@@ -213,6 +218,51 @@ def disposition_label(disposition: ModeloWorkspaceCapabilityDisposition) -> str:
     return f"{_DISPOSITION_GLYPH[disposition]} {tr(f'tui.modelo.disposition.{disposition.value}')}"
 
 
+def recovery_action_label(action: ActionReference) -> str:
+    """Name one catalogued recovery action in the operator's own words.
+
+    Keyed on the canonical catalogue id rather than on a display string, so a
+    renamed command changes one catalogue entry and one locale key instead of
+    leaving a screen offering a step that no longer exists.
+    """
+    return tr(f"tui.modelo.recovery_action.{action.action_id}")
+
+
+def workspace_refusal_reason_label(code: ModeloWorkspaceRefusalCode) -> str:
+    """Name one domain refusal's reason in the operator's own words.
+
+    Keyed on the closed refusal code, never on the producer's own
+    ``reconsideration_condition`` text: that field is an internal, untranslated
+    diagnostic string, and copying it to a taxpayer-facing surface would show
+    English prose to every non-English locale. The translated reason carries
+    the same "what happened, what would change it" meaning honestly instead.
+    """
+    return tr(f"tui.modelo.workspace_refusal.reason.{code.value}")
+
+
+def workspace_refusal_fact_label(fact: ModeloWorkspaceEvidenceFactV1) -> str:
+    """Render one safe refusal fact as a translated field name and its raw value.
+
+    The value is shown as the producer measured it -- a modelo code, a
+    period token, a grade name, a work-unit identifier -- never itself
+    translated, the same discipline :func:`evidence_reference_label` applies
+    to a reference's raw identifier behind its translated kind.
+    """
+    return f"{tr(f'tui.modelo.workspace_refusal.facts.{fact.name}')}: {fact.value.value}"
+
+
+def evidence_reference_label(reference: ModeloWorkspaceEvidenceReferenceV1) -> str:
+    """Render one safe evidence reference as the identity it actually names.
+
+    Legal and source references are registry identities with no locale
+    catalogue of their own, so they are shown as themselves behind a named
+    kind rather than wrapped in prose that would imply a translation happened.
+    """
+    if isinstance(reference, ModeloWorkspaceLegalEvidenceReferenceV1):
+        return f"{tr('tui.modelo.evidence_kind.legal')}: {reference.legal_ref_id}"
+    return f"{tr('tui.modelo.evidence_kind.source')}: {reference.source_ref_id}"
+
+
 def capability_label(capability: ModeloWorkspaceCapabilityName) -> str:
     """Name one workspace capability in words."""
     return tr(f"tui.modelo.capability.{capability.value}")
@@ -305,10 +355,14 @@ __all__ = [
     "capability_row",
     "display_text",
     "disposition_label",
+    "evidence_reference_label",
     "finding_kind_label",
     "finding_message",
     "finding_severity_label",
     "input_kind_label",
+    "recovery_action_label",
     "review_status_label",
     "work_state_label",
+    "workspace_refusal_fact_label",
+    "workspace_refusal_reason_label",
 ]

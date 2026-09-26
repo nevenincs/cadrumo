@@ -24,7 +24,7 @@ import pathlib
 
 import pytest
 
-from .._acquire_common import AcquisitionError
+from ..acquire_common import AcquisitionError
 from ..oracle_emit_cohort import _parser, _resolve_uv
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

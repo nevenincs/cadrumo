@@ -7,8 +7,16 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ..bucket_pointer import BucketPointer, pointer_path, read_pointer, write_pointer
+from ..bucket_pointer import (
+    BucketPointer,
+    corrupt_pointer_reads_as_unselected,
+    pointer_path,
+    read_pointer,
+    read_pointer_selection,
+    write_pointer,
+)
 from ..directory_scan import scan_directory
+from ..errors.hierarchy import ActiveProfilePointerError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -62,8 +70,55 @@ def test_write_retries_a_windows_sharing_refusal_during_atomic_publication(
 
 def test_old_v1_document_is_refused_without_a_compatibility_reader(tmp_path: Path) -> None:
     pointer_path(tmp_path).write_text('bucket_id = "alpha"\nschema_version = 1\n', encoding="utf-8")
-    with pytest.raises(ValidationError):
+    with pytest.raises(ActiveProfilePointerError) as refused:
         read_pointer(tmp_path)
+    assert isinstance(refused.value.__cause__, ValidationError)
+
+
+@pytest.mark.parametrize(
+    "content",
+    [
+        b"schema_version = 1\n",
+        b'selection = "selected"\nbucket_id = "alpha"\ntransition_revision = "one"\nschema_version = 2\n',
+        b"not = valid = toml",
+        b"\xff\xfe\x00 not utf-8",
+    ],
+    ids=["missing-fields", "wrong-type", "unparseable", "undecodable"],
+)
+def test_every_malformed_pointer_shape_is_the_typed_pointer_refusal(tmp_path: Path, content: bytes) -> None:
+    """No shape of a present-but-invalid record escapes as a raw decoding or validation error."""
+    pointer_path(tmp_path).write_bytes(content)
+
+    with pytest.raises(ActiveProfilePointerError) as refused:
+        read_pointer(tmp_path)
+
+    assert refused.value.context == {
+        "path": str(pointer_path(tmp_path)),
+        "pointer_corrupt": True,
+        "root_fallback_refused": True,
+    }
+
+
+def test_a_corrupt_pointer_reads_as_unselected_only_inside_the_repair_scope(tmp_path: Path) -> None:
+    """The selection read relaxes for the repairing command; the strict read never does."""
+    pointer_path(tmp_path).write_bytes(b"not = valid = toml")
+
+    with pytest.raises(ActiveProfilePointerError):
+        read_pointer_selection(tmp_path)
+    with corrupt_pointer_reads_as_unselected():
+        assert read_pointer_selection(tmp_path) == BucketPointer.absent(transition_revision=0)
+        with pytest.raises(ActiveProfilePointerError):
+            read_pointer(tmp_path)
+    with pytest.raises(ActiveProfilePointerError):
+        read_pointer_selection(tmp_path)
+
+
+def test_the_repair_scope_leaves_a_readable_selection_as_it_is(tmp_path: Path) -> None:
+    """Only corruption is read as no selection; a valid record keeps what it selects."""
+    write_pointer(tmp_path, _selected("alpha", 4))
+
+    with corrupt_pointer_reads_as_unselected():
+        assert read_pointer_selection(tmp_path) == _selected("alpha", 4)
 
 
 def test_link_like_pointer_is_refused_not_followed(tmp_path: Path) -> None:

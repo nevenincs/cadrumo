@@ -18,3 +18,4 @@ Submodules
    cadrumo.entrypoints.tui.operations.logs
    cadrumo.entrypoints.tui.operations.modal
    cadrumo.entrypoints.tui.operations.projection
+   cadrumo.entrypoints.tui.operations.refusal_explanation

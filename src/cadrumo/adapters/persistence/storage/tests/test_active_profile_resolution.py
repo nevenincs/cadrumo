@@ -14,13 +14,6 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
-from .....adapters.persistence.storage.custody.errors import ProfileCustodyRefusal, ProfileCustodyRefusedError
-from .....adapters.persistence.storage.custody.records import (
-    ProfileCustodyEnvelope,
-    ProfileCustodyKdfParameters,
-    ProfileCustodyWrappedDek,
-)
-from .....adapters.persistence.storage.custody.sentinel import create_profile_custody_sentinel
 from .....application.user_profile.capsule_record import ProfileRecordSession
 from .....application.user_profile.custody_transactions import ProfileCustodyTransactionConflictError
 from .....application.user_profile.lifecycle import ProfileCapsuleLifecycle
@@ -30,7 +23,16 @@ from .....application.workflow.profile_health import assess_active_profile_healt
 from .....application.workflow.state_models import WorkflowState
 from .....core.bucket_pointer import BucketPointer, pointer_path, read_pointer, write_pointer
 from .....core.config import override_settings
+from .....core.storage_taxonomy import StorageCategory
+from .....core.storage_taxonomy_locations import storage_location
 from .....domain.user_profile.values import ProfileSetupState, UserProfileFact
+from ..custody.errors import ProfileCustodyRefusal, ProfileCustodyRefusedError
+from ..custody.records import (
+    ProfileCustodyEnvelope,
+    ProfileCustodyKdfParameters,
+    ProfileCustodyWrappedDek,
+)
+from ..custody.sentinel import create_profile_custody_sentinel
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -132,7 +134,12 @@ def test_label_override_resolves_real_record_and_masks_dangling_pointer_repair(t
 
 def test_resolve_profile_bucket_refuses_a_retired_manifest_without_reading_it(tmp_path: Path) -> None:
     """A retired manifest is a typed custody refusal, not an alternate discovery route."""
-    retired = tmp_path / "buckets" / "51c1fa97-28e1-4700-ac1e-ed7cf094d37b" / "manifest.toml"
+    retired = (
+        tmp_path
+        / storage_location(StorageCategory.BUCKETS).relative_path()
+        / "51c1fa97-28e1-4700-ac1e-ed7cf094d37b"
+        / storage_location(StorageCategory.BUCKET_MANIFEST).relative_path()
+    )
     retired.parent.mkdir(parents=True)
     retired.write_bytes(b"this retired document is deliberately malformed")
 

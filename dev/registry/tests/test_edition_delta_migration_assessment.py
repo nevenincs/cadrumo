@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 
 import dev.registry.edition_delta_migration as migration
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from dev._paths import REPO_ROOT
 from dev.registry.tests.test_restated_family_merge import _build_modelo
 
@@ -42,6 +43,13 @@ def test_typed_comparison_preserves_false_zero_absence_empty_and_array_order() -
     assert not migration._typed_equal(["a", "b"], ["b", "a"])
     assert not migration._typed_equal({"present": []}, {})
     assert migration._typed_equal({"present": [], "enabled": False}, {"present": [], "enabled": False})
+
+
+def test_typed_comparison_matches_an_authored_token_to_its_typed_enum() -> None:
+    """Authored TOML states the token; the typed model holds the enum. Both are one fact."""
+    assert migration._typed_equal("computed", InputKind.COMPUTED)
+    assert migration._typed_equal(InputKind.BOUND, "bound")
+    assert not migration._typed_equal("bound", InputKind.COMPUTED)
 
 
 def test_only_converter_failure_roots_are_reassessed_against_the_adjacent_revision() -> None:
@@ -247,3 +255,29 @@ def test_unsupported_collection_shape_reports_incomplete_coverage_before_hydrati
         item["revision"] == "2025" and item["family"] == "formulas" and item["reason"] == "authored_shape_unsupported"
         for item in assessment.blocked_work
     )
+
+
+def test_a_predecessor_row_an_authored_operation_claims_is_not_free_to_rename() -> None:
+    """An authored override patches its row and an authored removal relocates it; neither is free."""
+    manifest = {
+        "casilla_overrides": [{"selector": {"revision": "2021", "id": "0800"}, "fields": {"section": ["x"]}}],
+        "casilla_removals": [{"selector": {"revision": "2021", "id": "0786"}}],
+    }
+
+    assert migration._authored_override_selectors(manifest) == frozenset({"0800", "0786"})
+    assert migration._authored_override_selectors({}) == frozenset()
+
+
+def test_a_row_override_states_exactly_one_source_reference_form() -> None:
+    """Additions over a stored whole list remove it; a whole list displaces stored additions."""
+    stored_whole = {"id": "0001", "source_refs": ["a"]}
+    stored_additions = {"id": "0001", "additional_source_refs": ["b"]}
+
+    assert migration._reconcile_row_source_removals({"additional_source_refs": ["c"]}, (), stored_whole) == (
+        "source_refs",
+    )
+    assert (
+        migration._reconcile_row_source_removals({"source_refs": ["c"]}, ("additional_source_refs",), stored_additions)
+        == ()
+    )
+    assert migration._reconcile_row_source_removals({"additional_source_refs": ["c"]}, (), stored_additions) == ()

@@ -9,7 +9,7 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated, cast
+from typing import Annotated
 
 from pydantic import BaseModel, Field, StringConstraints
 
@@ -126,7 +126,9 @@ def resolve_modelo_202_art_40_3_incn_threshold(
             effective_date=effective_date,
         ),
     )
-    return cast("ResolvedScalarFact", resolved)
+    if not isinstance(resolved, ResolvedScalarFact):
+        raise RegistryValidationError("Modelo 202 INCN threshold must resolve as a scalar fact")
+    return resolved
 
 
 def modelo_202_incn_threshold_decimal(threshold: ResolvedScalarFact) -> Decimal:

@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from typing import ClassVar, cast, override
 
-from textual.app import App, ComposeResult
+from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.widgets import DataTable, Input, Select, Static
 
@@ -15,6 +15,7 @@ from ....application.modelo.declarations_calendar import (
     DeclarationsCalendarSource,
 )
 from ....application.operator_actions.models import DeclaredNextAction
+from ....application.overview.calendar import holiday_coverage_statement, shift_reason_statement
 from ....application.overview.home import HomeAvailability
 from ....core.errors.error_codes import resolve_error_message
 from ....core.errors.hierarchy import CadrumoError
@@ -219,7 +220,17 @@ class DeclarationsCalendarScreen(AccountChromeScreen):
                 "tui.declarations.calendar.detail.dates",
                 opening=calendar_date_label(row.opens_on),
                 payment=calendar_date_label(row.payment_cutoff_on),
-                closing=calendar_date_label(row.adjusted_closes_on),
+                original=calendar_date_label(row.closes_on),
+                effective=calendar_date_label(row.adjusted_closes_on),
+                evaluated=calendar_date_label(row.evaluated_on),
+                overdue=row.days_overdue
+                if row.days_overdue is not None
+                else declarations_copy("tui.declarations.calendar.none"),
+                shift=shift_reason_statement(row.shift_reason),
+            ),
+            declarations_copy(
+                "tui.declarations.calendar.detail.holidays",
+                coverage=holiday_coverage_statement(row.holiday_coverage, row.holiday_territory),
             ),
             declarations_copy(
                 "tui.declarations.calendar.detail.axes",
@@ -234,6 +245,11 @@ class DeclarationsCalendarScreen(AccountChromeScreen):
                         if row.justificante_verified
                         else "tui.declarations.calendar.justificante.not_verified"
                     )
+                ),
+                conflict=declarations_copy(
+                    "tui.declarations.calendar.evidence.conflicted"
+                    if row.evidence_conflicted
+                    else "tui.declarations.calendar.evidence.clear"
                 ),
             ),
         ]
@@ -307,7 +323,7 @@ class DeclarationsCalendarScreen(AccountChromeScreen):
                 )
             elif self._pending_recovery is None and not self._recovery_in_flight:
                 self._pending_recovery = (row.recovery_action, row)
-                app = cast("App[None]", self.app)
+                app = self.app
                 app.push_screen(
                     ConfirmScreen(
                         title=declarations_copy("tui.declarations.calendar.action.create"),

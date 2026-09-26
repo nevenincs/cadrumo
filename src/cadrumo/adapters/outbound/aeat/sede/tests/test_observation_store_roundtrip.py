@@ -24,16 +24,16 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl, ValidationError
 
-from ......adapters.persistence.storage.tests.secure_sql import (
-    isolated_runtime_profile,
-    mutate_encrypted_secure_object_json,
-)
 from ......core.casilla_id import CasillaId, validated_casilla_id
 from ......core.casilla_value_kind import CasillaValueKind
 from ......core.config import Settings
 from ......core.period import Period
 from ......domain.calculations.registry.tests.published_authority import published_snapshot
 from .....persistence.storage.secure_object_namespaces import AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE
+from .....persistence.storage.tests.secure_sql import (
+    isolated_runtime_profile,
+    mutate_encrypted_secure_object_json,
+)
 from ..iva_compensation_wallet_parsing import WALLET_URL
 from ..observation_store import FiledDeclaracionObservationStore
 from ..schema import (

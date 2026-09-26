@@ -45,6 +45,11 @@ from .....domain.calculations.registry.casilla_membership import (
 )
 from .....domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from .....domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from .....domain.calculations.registry.iva_compensation_annual_partition_bindings import (
+    M303_COMPENSATION_APLICADA_CASILLA,
+    M303_COMPENSATION_PENDING_PRIOR_CASILLA,
+    M303_COMPENSATION_RESULTADO_FINAL_CASILLA,
+)
 from .....domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
 from .....domain.calculations.registry.prorrata_regularizacion_bindings import (
     ProrrataRegularizacionOutput,
@@ -84,6 +89,9 @@ _T0 = datetime(2026, 1, 1, 9, 0, 0, tzinfo=UTC)
 _SETTLEMENT_YEAR = 2026
 _CARRY_YEAR = 2027
 _SETTLEMENT_PERIOD = "4T"
+#: A synthetic, checksum-valid NIF: a local M303 filing projects its IVA
+#: compensation history, and so its settlement snapshot, under the taxpayer.
+_TAXPAYER_NIF = "12345678Z"
 
 _VOLUMEN_TOTAL_ID: CasillaId = validated_casilla_id("iva.prorrata-volumen-total", surface="test casilla id")
 _VOLUMEN_CON_DERECHO_ID: CasillaId = validated_casilla_id(
@@ -162,6 +170,11 @@ def _seed_verified_m303_settlement(
         _VOLUMEN_CON_DERECHO_ID: Decimal("150000.00"),
         _PORCENTAJE_ID: Decimal("75"),
         _RESULTADO_ID: Decimal("0"),
+        # The settlement snapshot every local M303 filing persists reads the
+        # final result and the compensation operands; none is carried here.
+        M303_COMPENSATION_RESULTADO_FINAL_CASILLA: Decimal("0"),
+        M303_COMPENSATION_PENDING_PRIOR_CASILLA: Decimal("0"),
+        M303_COMPENSATION_APLICADA_CASILLA: Decimal("0"),
     }
     work_unit_id = derive_work_unit_id(
         bucket_id=_BUCKET_ID,
@@ -477,7 +490,8 @@ def test_settlement_writeback_persists_observation_that_seeds_next_year_carried_
                 participation_index_repository=TransactionParticipationIndexRepository(bucket_id=_BUCKET_ID),
                 prorrata_register_repository=prorrata_repository,
                 result_disposition=ResultDisposition.NEGATIVA,
-                iva_compensation_history_repository=IvaCompensationHistoryRepository(),
+                taxpayer_nif=_TAXPAYER_NIF,
+                iva_compensation_history_repository=IvaCompensationHistoryRepository(objects=profile.repository),
                 operation=_authority_operation_for_test,
             )
 

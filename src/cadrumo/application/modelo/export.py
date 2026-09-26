@@ -12,7 +12,8 @@ runtime schema provider; Python code owns orchestration and safety checks, while
 the registry remains the authority for record fields, casillas, header keys, and
 provenance. The service refuses non-exportable revision states, cross-bucket
 targets, missing profile facts, unclean cross-period prerequisites, unmatched IVA
-wallet decisions, missing ledger evidence, and unusable output paths before the
+wallet decisions, missing ledger evidence, Modelo 193 settled prior-accrual rows
+whose amounts no official source settles, and unusable output paths before the
 operator-visible file is committed.
 
 The service is local-only: it never contacts AEAT and never invokes
@@ -79,15 +80,28 @@ from ...domain.calculations.registry.applicability import derive_taxpayer_files_
 from ...domain.calculations.registry.applicability_modelo202 import derive_modelo_202_modality
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.schema import BindingDefinition
-from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition
+from ...domain.calculations.registry.schema_exports import (
+    AuxiliaryEnvelopeHeaderDefinition,
+    ExportLayoutDefinition,
+    FilingEnvelopeDefinition,
+    FilingEnvelopePrefixRole,
+)
 from ...domain.deadlines.models import ModeloIVAProfile, TaxpayerProfile
 from ...domain.filing.errors import FilingExportError
 from ...domain.filing.protocols import ModeloInputs
 from ...domain.filing.schema import ModeloCasillaProvenance, ModeloDraft
 from ...domain.filing.software_identity import AeatProductSoftwareIdentity
 from ...domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
-from ...domain.modelos.calculation_revision import SEALED_REVISION_STATES, CalculationRevision
-from ...domain.modelos.errors import ModeloError, ModeloExportError
+from ...domain.modelos.calculation_revision import (
+    SEALED_REVISION_STATES,
+    CalculationRevision,
+)
+from ...domain.modelos.errors import (
+    ModeloError,
+    ModeloExportError,
+    ModeloExportPriorDomiciliationElectionRequiredError,
+    ModeloExportProductIdentityUnavailableError,
+)
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.prorrata_register.register import ProrrataRegister
 from ..aggregation.iva_ledger import (
@@ -147,6 +161,8 @@ from .calculation_revision_gate import require_calculation_revision_coordinates_
 from .export_amendment_evidence import resolve_persisted_amendment_export_evidence
 from .export_ports import ModeloExportPorts
 from .iva_wallet_gate import require_persisted_iva_compensation_decision_matches_revision
+from .m123_count_authority_gate import Modelo123CountAuthorityStage, require_modelo_123_count_authority
+from .m193_settled_row_gate import Modelo193SettledRowStage, require_modelo_193_settled_row_amount_authority
 from .m303_regimen_simplificado_scope import (
     m303_regimen_simplificado_annual_summary_applies,
     m303_regimen_simplificado_scope_for_profile,
@@ -497,6 +513,18 @@ def _iva_wallet_decision_export_provenance(
 
 def _raise_if_ledger_export_evidence_missing(revision: CalculationRevision) -> None:
     """Refuse ledger-derived exports that lack bundled evidence or a reference."""
+    if any(
+        issue.reason
+        in {
+            "iva_selected_scope_evidence_failure",
+            "iva_compensation_annual_source_evidence_failure",
+        }
+        for issue in revision.source_issues
+    ):
+        raise ModeloExportEvidenceMissingError(
+            translated_message="application.modelo.errors.export_ledger_evidence_missing",
+            context={"calculation_revision_id": revision.calculation_revision_id},
+        )
     if not revision.source_transaction_ids:
         return
     if revision.ledger_filing_evidence is not None:
@@ -1382,6 +1410,44 @@ def _require_modelo_export_clean_state(
     )
 
 
+def _product_identity_unavailable(
+    *,
+    work_unit: WorkUnit,
+    envelope: FilingEnvelopeDefinition | AuxiliaryEnvelopeHeaderDefinition | None,
+    calculation_revision_id: str,
+) -> ModeloExportProductIdentityUnavailableError:
+    """Name the developer-owned header fields, located by the selected record design, that block export.
+
+    Positions are 1-based byte ranges accumulated from the layout's declared
+    prefix fields, so the refusal points at the same bytes the official design
+    reserves for the program identifier and the developer's tax identifier.
+    """
+    positions: dict[FilingEnvelopePrefixRole, str] = {}
+    offset = 0
+    for field in () if envelope is None else envelope.prefix_fields:
+        if field.role in {FilingEnvelopePrefixRole.PROGRAM_IDENTIFIER, FilingEnvelopePrefixRole.DEVELOPER_TAX_ID}:
+            positions[field.role] = f"{offset + 1}-{offset + field.length}"
+        offset += field.length
+    program = positions.get(FilingEnvelopePrefixRole.PROGRAM_IDENTIFIER)
+    developer = positions.get(FilingEnvelopePrefixRole.DEVELOPER_TAX_ID)
+    if envelope is None or program is None or developer is None:
+        raise ModeloExportError(
+            f"Modelo {work_unit.modelo} export layout renders an envelope without locating its product identity",
+            context={"calculation_revision_id": calculation_revision_id},
+        )
+    return ModeloExportProductIdentityUnavailableError(
+        f"Modelo {work_unit.modelo} export needs {envelope.record_identity} header fields "
+        f"program identifier ({program}) and developer tax id ({developer}); no reviewed product identity exists",
+        context={
+            "calculation_revision_id": calculation_revision_id,
+            "modelo": str(work_unit.modelo),
+            "record": envelope.record_identity,
+            "program_positions": program,
+            "developer_positions": developer,
+        },
+    )
+
+
 def _resolve_modelo_exportprior_domiciliation(
     command: ModeloExportCommand,
     *,
@@ -1393,9 +1459,9 @@ def _resolve_modelo_exportprior_domiciliation(
 ) -> PriorDomiciliationElectionProjection:
     is_m303 = str(work_unit.modelo) == Modelo("303").value
     if is_m303 and command.prior_domiciliation_election is None:
-        raise ModeloExportError(
+        raise ModeloExportPriorDomiciliationElectionRequiredError(
             "Modelo 303 export requires an explicit prior-domiciliation election",
-            context={"calculation_revision_id": command.calculation_revision_id},
+            context={"calculation_revision_id": command.calculation_revision_id, "modelo": str(work_unit.modelo)},
         )
     export_layouts = schema_provider.get_subview(str(work_unit.modelo)).export_layouts
     # The product/software identity belongs to the layout's envelope prefix -- a
@@ -1404,9 +1470,10 @@ def _resolve_modelo_exportprior_domiciliation(
         export_layouts[0].filing_envelope is not None or export_layouts[0].auxiliary_envelope_header is not None
     )
     if renders_envelope_prefix and command.product_software_identity is None:
-        raise ModeloExportError(
-            f"Modelo {work_unit.modelo} export requires explicit product/software identity authority",
-            context={"calculation_revision_id": command.calculation_revision_id},
+        raise _product_identity_unavailable(
+            work_unit=work_unit,
+            envelope=export_layouts[0].filing_envelope or export_layouts[0].auxiliary_envelope_header,
+            calculation_revision_id=command.calculation_revision_id,
         )
     if not renders_envelope_prefix and command.product_software_identity is not None:
         raise ModeloExportError(
@@ -1449,6 +1516,12 @@ def _prepare_modelo_export(
         export_ports=export_ports,
         operation=operation,
     )
+    require_modelo_123_count_authority(
+        work_unit,
+        retencion_ports=export_ports.retencion_observation_ports,
+        stage=Modelo123CountAuthorityStage.EXPORT,
+    )
+    require_modelo_193_settled_row_amount_authority(work_unit, revision, stage=Modelo193SettledRowStage.EXPORT)
     amendment_evidence = resolve_persisted_amendment_export_evidence(
         command,
         revision,
@@ -1459,8 +1532,9 @@ def _prepare_modelo_export(
         justificante_repository=export_ports.justificante,
     )
     _require_exportable_revision_state(revision)
-    _raise_if_ledger_export_evidence_missing(revision)
-    _raise_if_deductible_iva_evidence_missing(revision)
+    # A handoff whose filed source was replaced makes the revision a statement
+    # about superseded facts, so it is refused before anything judges that
+    # revision's own evidence -- the order verification and filing keep too.
     validate_m303_regimen_simplificado_annual_summary_target_revision(
         target_work_unit=work_unit,
         target_revision=revision,
@@ -1470,6 +1544,8 @@ def _prepare_modelo_export(
         regimen_simplificado_applies=m303_regimen_simplificado_annual_summary_applies(work_unit),
         operation=operation,
     )
+    _raise_if_ledger_export_evidence_missing(revision)
+    _raise_if_deductible_iva_evidence_missing(revision)
     period, schema_provider = _prepare_modelo_export_schema(
         work_unit=work_unit,
         revision=revision,

@@ -57,8 +57,9 @@ from ....core.credentials import PROFILE_PASSWORD_MIN_SCALARS
 from ....core.errors.hierarchy import CadrumoError, InternalInvariantError
 from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES, UTF_8_ENCODING
 from ....core.i18n.render import output_language, tr
-from ....entrypoints.tui.components.status import PinnedStatusBar
-from ....entrypoints.tui.components.theme import BASE_CSS, install_cadrumo_themes, toggle_appearance, tokenised
+from ..components.app_access import TypedAppAccess
+from ..components.status import PinnedStatusBar
+from ..components.theme import BASE_CSS, install_cadrumo_themes, toggle_appearance, tokenised
 from .credentials import (
     CREDENTIAL_PANEL_CSS,
     CredentialAttempt,
@@ -547,7 +548,7 @@ class RegistrationScreen(CredentialScreen["ProfileRegistrationOutcome"]):
     def on_worker_state_changed(self, event: Worker.StateChanged) -> None:
         """Settle the enrolment worker here; everything else is the base attempt."""
         worker = self._enrollment_worker
-        if worker is None or event.worker is not worker:
+        if worker is None or cast("object", event.worker) is not worker:
             super().on_worker_state_changed(event)
             return
         if event.state not in {WorkerState.SUCCESS, WorkerState.ERROR}:
@@ -646,7 +647,7 @@ class RegistrationScreen(CredentialScreen["ProfileRegistrationOutcome"]):
         self.query_one("#btn-create", Button).disabled = busy
 
 
-class RecoveryOfferScreen(Screen[None]):
+class RecoveryOfferScreen(TypedAppAccess, Screen[None]):
     """Ask once whether to set up recovery, with the trade-off stated plainly."""
 
     BINDINGS: ClassVar = [
@@ -732,7 +733,7 @@ class RecoveryOfferScreen(Screen[None]):
         self._on_skip()
 
 
-class RecoveryCodeScreen(Screen[None]):
+class RecoveryCodeScreen(TypedAppAccess, Screen[None]):
     """Show the recovery code once and return masked exact re-entry proof."""
 
     BINDINGS: ClassVar = [

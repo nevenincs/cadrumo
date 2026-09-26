@@ -29,7 +29,7 @@ from collections.abc import Callable, Iterable, Mapping
 from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
-from typing import Final, Protocol, cast
+from typing import Final, Protocol
 
 from ...core.hashing import content_hash_hex
 from ...core.i18n.render import tr
@@ -37,6 +37,7 @@ from ...core.logging import get_logger
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.bindings import RegistryModeloObservation
+from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.categories.profile import CategoryProfile
 from ...domain.categories.registry import resolve_category_profiles
 from ...domain.categories.spending_category import SpendingCategory
@@ -69,6 +70,8 @@ class _StoredPriorObservation(Protocol):
     def member_nif(self) -> str | None: ...
     @property
     def stamped_revision_id(self) -> str: ...
+    @property
+    def registry_snapshot_ref(self) -> RegistrySnapshotRef: ...
 
 
 _logger = get_logger(__name__)
@@ -671,17 +674,11 @@ def _prior_filing_observations_fingerprint(
     stream structurally (the stored envelope type is private to the observation
     repository); an empty stream yields the stable empty-set digest.
     """
-    from ..calculations.observations_repository import (
-        ObservationEnvelopePayload,
-        require_observation_envelope_coordinates_current,
-    )
+    from ..calculations.observations_repository import require_observation_envelope_coordinates_current
 
     projected = sorted(
         _normalize_prior_filing_observation(
-            require_observation_envelope_coordinates_current(
-                cast(ObservationEnvelopePayload, payload),
-                operation=operation,
-            )
+            require_observation_envelope_coordinates_current(payload, operation=operation)
         )
         for payload in payloads
     )

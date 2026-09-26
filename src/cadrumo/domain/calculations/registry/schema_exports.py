@@ -1060,28 +1060,6 @@ class ExportLayoutDefinition(RegistryModel):
     declared here instead, beside the format that requires it.
     """
 
-    aux_version: str | None = Field(default=None, min_length=1, max_length=4)
-    """Producer token the declaration's mandatory ``Aux/VERSION`` element carries.
-
-    Deliberately has NO default, and that is load-bearing rather than caution.
-    AEAT declares the element as ``tipo_String4L`` — four characters against a
-    permissive pattern, with no enumeration, no annotation, and no worked example
-    carrying a genuine value anywhere in the bundled corpus. So a plausible token
-    such as ``"1.00"`` would VALIDATE while asserting something nothing verified,
-    the document would start passing our own checks, and the gap would stop being
-    reported at all.
-
-    Two sources that look authoritative are not. A real AEAT-submitted
-    declaration in the fixture corpus carries ``<VERSION>2.02</VERSION>``, which
-    is a redaction placeholder — the sanitiser assigned sequential field-position
-    indices, and its siblings include an ``ECIVIL`` of ``6`` where the schema
-    admits only 1-4. A governed fact would require legal evidence that this
-    value lacks; declaring one would have meant inventing a citation.
-
-    Absent, the export refuses rather than emitting a partial ``Aux`` — which
-    would be invalid regardless, since the element is ``minOccurs="1"``.
-    """
-
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _validate_layout_format(self) -> ExportLayoutDefinition:
@@ -1162,7 +1140,7 @@ def _validate_non_xml_layout(layout: ExportLayoutDefinition) -> None:
 
 def _validate_non_xml_metadata(layout: ExportLayoutDefinition) -> None:
     """Reject XML-only metadata on fixed-width and other non-XML layouts."""
-    if layout.aux_idioma is not None or layout.aux_version is not None:
+    if layout.aux_idioma is not None:
         raise RegistryValidationError(
             f"export layout {layout.id!r} declares Aux identity on a {layout.format} layout, which has no Aux block",
         )

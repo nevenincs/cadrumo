@@ -5,16 +5,15 @@ from collections.abc import Callable, Iterator
 import pytest
 
 from .....core.authority_grade import RegistryAuthorityGrade
-from .....domain.calculations.registry.authority import PinnedAuthorityOperation
-from .....domain.calculations.registry.ids import RevisionId
-from .....domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
-from .....tests.authority_lease_support import private_authority_lease, scoped_when_requested
+from ..authority import PinnedAuthorityOperation
 from ..governed_fact_scope import validating_governed_facts
-from ..schema import RegistrySnapshot
+from ..ids import RevisionId
+from ..schema import ModeloDefinition, RegistryCatalogues, RegistrySnapshot
 from ._formula_runtime_support import (
     _committed_modelo_130_snapshot,
     _committed_modelo_180_snapshot,
 )
+from .authority_lease_support import private_authority_lease, scoped_when_requested
 from .registry_tree import bundled_registry_tree
 
 
@@ -23,7 +22,7 @@ def registry_authority() -> Iterator[PinnedAuthorityOperation]:
     """Expose the published authority operation lease to registry-owned tests.
 
     The lease scopes governed facts only for the tests that depend on it; see
-    :func:`~cadrumo.tests.authority_lease_support.private_authority_lease`.
+    :func:`~cadrumo.domain.calculations.registry.tests.authority_lease_support.private_authority_lease`.
     """
     with private_authority_lease() as operation:
         yield operation

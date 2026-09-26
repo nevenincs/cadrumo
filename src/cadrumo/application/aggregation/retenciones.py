@@ -20,6 +20,8 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
+from enum import StrEnum
+from typing import Literal
 
 from pydantic import BaseModel, Field, InstanceOf, NonNegativeInt, field_validator, model_validator
 
@@ -40,7 +42,9 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation, 
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...domain.calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from ...domain.calculations.registry.schema_base import DateAxis
+from ...domain.calculations.registry.withholding_bindings import WithholdingObservation
 from ._grouping import assert_rollup_totals_match, filter_observations_for_modelo, group_and_collect_names
+from .withholding_recognition import WithholdingDatedEvent
 
 
 def _retenciones_source_kind(value: object) -> BindingSourceKind:
@@ -57,6 +61,117 @@ def _retenciones_source_kind(value: object) -> BindingSourceKind:
         allowed = ", ".join(COUNTERPART_SOURCE_KIND_ORDER)
         raise ValueError(f"retenciones source_kind {source_kind.value!r} is unsupported; use one of {allowed}")
     return source_kind
+
+
+class Modelo180StructuredAddress(BaseModel):
+    """Official property-address alternative used without a cadastral reference."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    province_code: str = Field(pattern=r"^\d{2}$")
+    municipality_code: str = Field(pattern=r"^\d{3}$")
+    municipality: str = Field(min_length=1, max_length=30)
+    locality: str = Field(min_length=1, max_length=30)
+    postal_code: str = Field(pattern=r"^\d{5}$")
+    street_type: str = Field(min_length=1, max_length=5)
+    street_name: str = Field(min_length=1, max_length=50)
+    number_type: str = Field(min_length=1, max_length=3)
+    house_number: str = Field(min_length=1, max_length=5)
+    number_qualifier: str = Field(default="", max_length=3)
+    block: str = Field(default="", max_length=3)
+    portal: str = Field(default="", max_length=3)
+    staircase: str = Field(default="", max_length=3)
+    floor: str = Field(default="", max_length=3)
+    door: str = Field(default="", max_length=3)
+    complement: str = Field(default="", max_length=40)
+
+
+class Modelo180PropertyEvidence(BaseModel):
+    """One allocation's explicit property and annual-recipient evidence.
+
+    ``withholding_percentage`` is supplied evidence, not a quotient inferred
+    from rounded base and withholding amounts.  The Modelo 180 record design
+    requires the last percentage applied in the year when a property row has
+    more than one percentage; :func:`aggregate_retenciones_180` selects that
+    value from the latest accrued observation.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    property_key: str = Field(min_length=1, max_length=128)
+    situation: Literal["1", "2", "3", "4"]
+    cadastral_reference: str | None = Field(default=None, min_length=1, max_length=20)
+    address: Modelo180StructuredAddress
+    recipient_province_code: str = Field(pattern=r"^\d{2}$")
+    modality: Literal["1", "2"]
+    accrual_year: int = Field(ge=1900, le=9999)
+    withholding_percentage: Decimal = Field(ge=Decimal("0"), le=Decimal("99.99"), decimal_places=2)
+    representative_nif: TaxIdIdentityToken | None = Field(default=None, min_length=1, max_length=16)
+
+    @model_validator(mode="after")
+    def _conditional_property_identity(self) -> Modelo180PropertyEvidence:
+        if self.situation in {"1", "2", "3"}:
+            if self.cadastral_reference is None:
+                raise ValueError("situations 1-3 require a cadastral reference")
+        elif self.cadastral_reference is not None:
+            raise ValueError("situation 4 requires no cadastral reference and a structured address")
+        return self
+
+    @property
+    def identity(self) -> str:
+        """Return the accepted property identity, without recipient/grouping axes."""
+        if self.cadastral_reference is not None:
+            return f"{self.situation}:cadastral:{self.cadastral_reference.upper()}"
+        return f"4:local:{self.property_key}"
+
+
+class Modelo193NonpaymentCause(StrEnum):
+    """The one authority-grounded unpaid capital cause in the scoped 2025 slice."""
+
+    HOLDER_NOT_PRESENTED_FOR_COLLECTION = "holder_not_presented_for_collection"
+
+
+class Modelo193PendingPaymentEvidence(BaseModel):
+    """Actual-recipient evidence for the narrow Modelo 193 pending-payment sequence.
+
+    The 2025 record design permits the ``PENDIENTE`` treatment only for keys
+    A, B and D when the holder did not present for collection.  It deliberately
+    retains the actual recipient detail here: the recognition-year materializer
+    substitutes the prescribed pending values, while a later settlement can
+    emit the actual recipient without asking the caller to re-enter it.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    perception_key: Literal["A", "B", "D"]
+    nonpayment_cause: Modelo193NonpaymentCause
+    actual_recipient_detail: WithholdingObservation
+
+    @model_validator(mode="after")
+    def _is_a_supported_unpaid_perception(self) -> Modelo193PendingPaymentEvidence:
+        detail = self.actual_recipient_detail
+        if detail.clave.value != self.perception_key:
+            raise ValueError("Modelo 193 perception key must match actual-recipient annual detail")
+        if detail.pendiente_flag is not None:
+            raise ValueError("Modelo 193 pending flag is derived by materialization")
+        if detail.accrual_year is not None:
+            raise ValueError("Modelo 193 accrual year is derived by materialization")
+        return self
+
+
+class Modelo193CapitalDetail(BaseModel):
+    """Persisted capital disclosure evidence coupled to one active allocation.
+
+    ``settlement_event`` is copied only from the typed recognition evidence by
+    the producer.  It is therefore a correction-safe fact of the allocation,
+    not a caller-authored annual phase or an independently writable store.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    pending_payment: Modelo193PendingPaymentEvidence
+    recognition_event_id: str = Field(min_length=1, max_length=128)
+    settlement_event: WithholdingDatedEvent | None = None
 
 
 class RetencionObservation(BaseModel):
@@ -94,6 +209,14 @@ class RetencionObservation(BaseModel):
     taxable_base: Decimal = Field(ge=Decimal("0"))
     retencion_amount: Decimal = Field(ge=Decimal("0"))
     accrued_on: IsoDateString = Field(min_length=10, max_length=10)
+    modelo_180_property: Modelo180PropertyEvidence | None = None
+    modelo_193_capital: Modelo193CapitalDetail | None = None
+
+    @model_validator(mode="after")
+    def _annual_detail_belongs_to_one_supported_family(self) -> RetencionObservation:
+        if self.modelo_180_property is not None and self.modelo_193_capital is not None:
+            raise ValueError("a retención allocation cannot carry both Modelo 180 and Modelo 193 annual detail")
+        return self
 
     @field_validator("source_kind", mode="before")
     @classmethod
@@ -122,6 +245,26 @@ class RetencionPerceptorRollup(BaseModel):
         return _retenciones_source_kind(value)
 
 
+class Modelo180Type2Row(BaseModel):
+    """Canonical emitted-row identity and amounts for one Modelo 180 type-2 record."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    filing_year: int
+    perceptor_nif: TaxIdIdentityToken
+    perceptor_name: str
+    property_detail: Modelo180PropertyEvidence
+    observations_count: NonNegativeInt
+    taxable_base: Decimal
+    retencion_amount: Decimal = Field(ge=Decimal("0"))
+    withholding_percentage: Decimal = Field(ge=Decimal("0"), le=Decimal("99.99"), decimal_places=2)
+
+    @property
+    def sign(self) -> Literal["positive", "reimbursement"]:
+        """Return the sign axis required for reimbursement separation."""
+        return "reimbursement" if self.taxable_base < 0 else "positive"
+
+
 class RetencionesAggregation(BaseModel):
     """Aggregate output for a retenciones modelo + period.
 
@@ -138,6 +281,8 @@ class RetencionesAggregation(BaseModel):
     total_perceptors: NonNegativeInt
     total_taxable_base: Decimal = Field(ge=Decimal("0"))
     total_retencion: Decimal = Field(ge=Decimal("0"))
+    type2_rows: tuple[Modelo180Type2Row, ...] = ()
+    type2_record_count: NonNegativeInt = 0
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -155,6 +300,15 @@ class RetencionesAggregation(BaseModel):
                 f"total_perceptors {self.total_perceptors} does not match "
                 f"distinct perceptor NIFs {len(unique_perceptors)}",
             )
+        if self.type2_record_count != len(self.type2_rows):
+            raise ValueError("type2_record_count must equal the canonical emitted row count")
+        if self.modelo != "180" and self.type2_rows:
+            raise ValueError("Modelo 180 type-2 rows cannot belong to another modelo")
+        if self.modelo == "180" and self.type2_rows:
+            if sum((row.taxable_base for row in self.type2_rows), Decimal("0")) != self.total_taxable_base:
+                raise ValueError("Modelo 180 type-2 bases must reconcile with the declaration total")
+            if sum((row.retencion_amount for row in self.type2_rows), Decimal("0")) != self.total_retencion:
+                raise ValueError("Modelo 180 type-2 withholdings must reconcile with the declaration total")
         return self
 
 
@@ -400,7 +554,90 @@ def aggregate_retenciones_180(
     if operation is None:
         with bundled_indexed_authority().operation() as indexed_operation:
             return aggregate_retenciones_180(observations, period=period, operation=indexed_operation)
-    return _aggregate_for_modelo(observations, modelo=Modelo("180").value, period=period, operation=operation)
+    aggregation = _aggregate_for_modelo(
+        observations,
+        modelo=Modelo("180").value,
+        period=period,
+        operation=operation,
+    )
+    filtered = filter_observations_for_modelo(
+        observations,
+        modelo=Modelo("180").value,
+        catalogue=_registry_retenciones_catalogue(
+            period,
+            modelo=Modelo("180").value,
+            operation=operation,
+        ).model_schemes,
+        attribute_fn=lambda obs: obs.scheme,
+        aggregator_label="Modelo 180 annual materializer",
+    )
+    if any(row.modelo_180_property is None for row in filtered):
+        raise ValueError("Modelo 180 annual detail is incomplete")
+    grouped: dict[tuple[object, ...], list[RetencionObservation]] = {}
+    for row in filtered:
+        detail = row.modelo_180_property
+        if detail is None:
+            raise AssertionError("complete Modelo 180 detail must be present")
+        sign = "reimbursement" if row.taxable_base < 0 else "positive"
+        key = (
+            period.filing_year,
+            row.perceptor_nif,
+            detail.modality,
+            detail.accrual_year,
+            detail.identity,
+            sign,
+        )
+        grouped.setdefault(key, []).append(row)
+    type2_rows: list[Modelo180Type2Row] = []
+    for _key, members in sorted(grouped.items(), key=lambda item: tuple(str(value) for value in item[0])):
+        detail = members[0].modelo_180_property
+        if detail is None:
+            raise AssertionError("complete Modelo 180 detail must be present")
+        # Percentage is evidence for the individual observation, not part of
+        # the official emitted-row identity.  The design directs us to show
+        # the last percentage applied in the year, so different earlier rates
+        # do not fragment the row.  Every other property-detail value must
+        # still agree rather than being guessed or silently selected.
+        detail_without_percentage = detail.model_dump(exclude={"withholding_percentage"})
+        if any(
+            member.modelo_180_property is None
+            or member.modelo_180_property.model_dump(exclude={"withholding_percentage"}) != detail_without_percentage
+            for member in members[1:]
+        ):
+            raise ValueError("Modelo 180 property detail conflicts within one emitted row")
+        names = {member.perceptor_name for member in members if member.perceptor_name}
+        if len(names) > 1:
+            raise ValueError("Modelo 180 recipient detail conflicts within one emitted row")
+        latest_accrued_on = max(member.accrued_on for member in members)
+        latest_percentages = {
+            member.modelo_180_property.withholding_percentage
+            for member in members
+            if member.accrued_on == latest_accrued_on and member.modelo_180_property is not None
+        }
+        if len(latest_percentages) != 1:
+            raise ValueError("Modelo 180 last-applied withholding percentage is ambiguous")
+        type2_rows.append(
+            Modelo180Type2Row(
+                filing_year=period.filing_year,
+                perceptor_nif=members[0].perceptor_nif,
+                perceptor_name=next(iter(names), ""),
+                property_detail=detail,
+                observations_count=len(members),
+                taxable_base=sum((member.taxable_base for member in members), Decimal("0")),
+                retencion_amount=sum((member.retencion_amount for member in members), Decimal("0")),
+                withholding_percentage=next(iter(latest_percentages)),
+            )
+        )
+    return RetencionesAggregation(
+        modelo=aggregation.modelo,
+        period=aggregation.period,
+        rollups=aggregation.rollups,
+        total_perceptors=aggregation.total_perceptors,
+        total_taxable_base=aggregation.total_taxable_base,
+        total_retencion=aggregation.total_retencion,
+        type2_rows=tuple(type2_rows),
+        type2_record_count=len(type2_rows),
+    )
 
 
 def aggregate_retenciones_190(
@@ -440,6 +677,12 @@ def aggregate_retenciones_193(
 
 
 __all__ = [
+    "Modelo180PropertyEvidence",
+    "Modelo180StructuredAddress",
+    "Modelo180Type2Row",
+    "Modelo193CapitalDetail",
+    "Modelo193NonpaymentCause",
+    "Modelo193PendingPaymentEvidence",
     "RetencionObservation",
     "RetencionPerceptorRollup",
     "RetencionesAggregation",

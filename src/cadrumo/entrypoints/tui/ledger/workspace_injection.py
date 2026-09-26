@@ -17,6 +17,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from ....application.ledger.attachment_review import AttachmentReviewItem
 from ....application.ledger.workspace import LedgerWorkspaceProjectionV1
@@ -30,6 +31,10 @@ from .models import (
     LedgerInvoiceAddDoorV1,
     LedgerLinkSubmitterV1,
 )
+
+if TYPE_CHECKING:
+    from .actividad_asset import ActivityAssetTuiActionsV1
+    from .models import LedgerRecordDoorsV1
 
 
 @dataclass(frozen=True, slots=True)
@@ -66,6 +71,10 @@ class LedgerWorkspaceInjection:
     evidence_door: LedgerEvidenceDoorV1 | None = None
     refresh: LedgerWorkspaceRefreshDoorV1 | None = None
     """Re-read the projection after a write; without it a flow shows its own result only."""
+    activity_asset_actions: ActivityAssetTuiActionsV1 | None = None
+    """Shared encrypted activity-asset operations; absent means no asset affordance."""
+    record_doors: LedgerRecordDoorsV1 | None = None
+    """Bucket-bound canonical invoice and transaction detail operations."""
 
     def __post_init__(self) -> None:
         """Refuse a miswired action."""

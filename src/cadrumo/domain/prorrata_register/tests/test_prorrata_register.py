@@ -34,8 +34,8 @@ from ....core.prorrata_register import (
     ProrrataRegisterRegime,
     SectorDiferenciadoLetra,
 )
-from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ...calculations.registry.schema_references import RegistrySnapshotRef
+from ...calculations.registry.tests.published_authority import published_snapshot
 from ..register import (
     ProrrataActivityRow,
     ProrrataEspecialTransitionEvidence,

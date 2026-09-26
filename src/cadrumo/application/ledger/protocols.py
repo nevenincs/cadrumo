@@ -17,7 +17,7 @@ from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.invoices.models import InvoiceCatalogue
 from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.transactions.enums import TransactionDirection
-from ...domain.transactions.models import TransactionCatalogue
+from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ...domain.transactions.raw_transaction import RawTransaction
 
@@ -103,6 +103,15 @@ class TransactionCatalogueCoCommitWriterProtocol(TransactionCatalogueRepositoryP
         Core types:
         :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`.
         """
+        ...
+
+    def replace_if_current_with_secure_object_writes(
+        self,
+        current: Transaction,
+        replacement: Transaction,
+        extra_writes: tuple[SecureObjectWrite, ...],
+    ) -> None:
+        """Commit one baseline-guarded replacement and its related objects."""
         ...
 
 

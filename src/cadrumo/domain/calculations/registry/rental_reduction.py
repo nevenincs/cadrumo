@@ -9,7 +9,7 @@ from types import MappingProxyType
 from typing import Final
 
 from ....core.time.clock import today_madrid
-from ....domain.renta.rental_reduction import RentalReductionArt232Tier
+from ...renta.rental_reduction import RentalReductionArt232Tier
 from .errors import RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
 from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope

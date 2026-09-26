@@ -8,6 +8,7 @@ from types import SimpleNamespace
 from typing import NoReturn, cast
 
 import pytest
+from textual.app import App
 
 from ....application.operations.models import OperationRequest
 from ....application.user_profile.acquisition_sources import (
@@ -18,13 +19,14 @@ from ....application.user_profile.login_interaction import ProfileLoginAttempt, 
 from ....application.user_profile.operations import ProfileLogoutOperationRequest
 from ....application.user_profile.overview import ProfileOverview
 from ....core.credentials import ProfilePasswordAssessment
+from ....domain.user_profile.values import ProfileSetupState
 from ..account import (
     AccountAppearanceFactoryV1,
+    AccountRecomposeRequiredV1,
     AccountSignOutFactoryV1,
     compose_account_factories,
     compose_profile_sign_out_factory,
 )
-from ..components.theme import AppearanceHost
 from ..navigation import TuiFocusIdentityV1, TuiScreenContextV1
 from ..operations.controller import OperationController
 from ..profile.overview import ProfileManagerScreen
@@ -41,10 +43,6 @@ class _LanguageScreen:
 
     def action_choose_language(self) -> None:
         self.opened = True
-
-
-class _Appearance:
-    theme = "cadrumo-light"
 
 
 def _factories(
@@ -65,12 +63,14 @@ def _factories(
         observed_calls.add(name)
         raise AssertionError(f"{name} ran while composing an account screen")
 
-    def default_appearance(_app: AppearanceHost) -> str:
+    def default_appearance(_app: App[AccountRecomposeRequiredV1 | None]) -> str:
         return "appearance.changed"
 
     selected_appearance = appearance or default_appearance
 
-    def persist_profile_field(_path: str, _value: str) -> ProfileOverview:
+    def persist_profile_field(
+        _path: str, _value: str, _expected_revision: int, _expected_content_digest: str
+    ) -> ProfileOverview:
         _unexpected("persist")
 
     def assess_password(_candidate: str) -> ProfilePasswordAssessment:
@@ -105,7 +105,7 @@ def test_account_factories_construct_existing_screens_without_host_effects() -> 
     """Composition does not read or mutate; each screen remains its prior owner."""
     calls: set[str] = set()
 
-    def refuse_appearance(_app: AppearanceHost) -> str:
+    def refuse_appearance(_app: App[AccountRecomposeRequiredV1 | None]) -> str:
         calls.add("appearance")
         raise AssertionError("appearance ran while composing an account screen")
 
@@ -172,16 +172,16 @@ def test_profile_factory_refuses_another_destination_before_constructing_a_scree
 
 def test_language_and_appearance_delegates_are_explicit_host_effects() -> None:
     """Language reuses Profile's action and appearance is supplied by the host."""
-    observed_apps: list[AppearanceHost] = []
+    observed_apps: list[App[AccountRecomposeRequiredV1 | None]] = []
 
-    def change_appearance(app: AppearanceHost) -> str:
+    def change_appearance(app: App[AccountRecomposeRequiredV1 | None]) -> str:
         observed_apps.append(app)
         return "appearance.changed"
 
     factories = _factories(appearance=change_appearance)
     language_screen = _LanguageScreen()
     factories.language(cast(ProfileManagerScreen, language_screen))
-    app = _Appearance()
+    app: App[AccountRecomposeRequiredV1 | None] = App()
 
     assert language_screen.opened is True
     assert factories.appearance(app) == "appearance.changed"
@@ -263,3 +263,36 @@ async def test_profile_sign_out_factory_submits_the_canonical_request_only_when_
     assert actor_ref == "operator:tui-account"
     assert request.definition_id == "user-profile.logout"
     assert str(request.payload.profile_id) == "11111111-1111-4111-8111-111111111111"
+
+
+@pytest.mark.parametrize(
+    ("setup_state", "offers_completion", "pending"),
+    [
+        (ProfileSetupState.INCOMPLETE, True, True),
+        (ProfileSetupState.COMPLETE, True, False),
+        (ProfileSetupState.INCOMPLETE, False, False),
+    ],
+)
+def test_the_session_opens_on_setup_only_while_setup_can_still_be_finished(
+    setup_state: ProfileSetupState, offers_completion: bool, pending: bool
+) -> None:
+    """An unfinished profile the host can complete opens on the setup walk; nothing else does."""
+
+    def refuse(*_args: object) -> NoReturn:
+        raise AssertionError("a door ran while composing")
+
+    async def sign_out() -> object:
+        return object()
+
+    factories = compose_account_factories(
+        profile_overview=ProfileOverview.model_construct(setup_state=setup_state),
+        persist_profile_field=refuse,
+        login_choices=(ProfileLoginChoice(profile_id="profile-1", label="Profile one"),),
+        authenticate=refuse,
+        assess_password=refuse,
+        rotate_password=refuse,
+        sign_out=cast(AccountSignOutFactoryV1, sign_out),
+        complete_setup=refuse if offers_completion else None,
+    )
+
+    assert factories.onboarding_pending is pending

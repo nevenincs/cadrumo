@@ -30,6 +30,8 @@ class AttachmentKind(StrEnum):
             against them, and its custody record is what later evidences what
             was served and when.
         METADATA_BLOB: Opaque metadata payload that supplements another record.
+        M303_EXONERADO_390_APPLICABILITY_ATTESTATION: Canonical operator
+            attestation of one Modelo 390 applicability coordinate.
         OTHER: Catch-all for documents that do not fit the above categories.
     """
 
@@ -41,6 +43,7 @@ class AttachmentKind(StrEnum):
     BANK_STATEMENT = "BANK_STATEMENT"
     AEAT_NOTIFICATION_PDF = "AEAT_NOTIFICATION_PDF"
     METADATA_BLOB = "METADATA_BLOB"
+    M303_EXONERADO_390_APPLICABILITY_ATTESTATION = "M303_EXONERADO_390_APPLICABILITY_ATTESTATION"
     OTHER = "OTHER"
 
 
@@ -72,7 +75,7 @@ class DocumentLinkSource(StrEnum):
     message, a Drive document, an arbitrary URL); it never carries local bytes.
     The full :class:`AttachmentSource` taxonomy also includes ``LOCAL_FILE`` and
     ``INLINE``, which name byte-bearing captures that are not link sources. The
-    ``aeat app ledger doclink --source`` option advertises exactly this narrowed
+    ``aeat app ledger evidence pull --source`` option advertises exactly this narrowed
     set so the choices it shows match the sources its handler accepts. Each member's
     value equals the matching :class:`AttachmentSource` member's value, so
     :meth:`to_attachment_source` is a total mapping.

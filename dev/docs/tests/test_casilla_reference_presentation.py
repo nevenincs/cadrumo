@@ -492,6 +492,30 @@ def test_provision_display_reads_the_official_instrument_name(
         assert _legal_provision_display(legal_id, provisions[legal_id], language) == (instrument, provision)
 
 
+@pytest.mark.parametrize(
+    ("legal_id", "instrument_name"),
+    [
+        ("resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo", "Resolución"),
+        ("resolucion-dgt-2011-01-03-modelo-145:aprobacion", "Resolución"),
+        ("resolucion-congreso-2026-01-27-derogacion-rdl-16-2025:acuerdo", "Acuerdo"),
+    ],
+)
+def test_a_resolution_or_parliamentary_agreement_is_named_as_the_instrument_it_is(
+    legal_id: str,
+    instrument_name: str,
+) -> None:
+    """A resolución or a parliamentary acuerdo is cited under its own instrument name.
+
+    Filed under the descriptive ``instruction`` kind these read as AEAT
+    instructions, which they are not: the BOE publishes them as a Resolución
+    and an Acuerdo, names that stay Spanish in every build language.
+    """
+    provisions = {record.legal_id: record for record in load_legal_provisions(_REPO_ROOT)}
+    for language in OutputLanguage:
+        instrument, _provision = _legal_provision_display(legal_id, provisions[legal_id], language)
+        assert instrument.split(" ", 1)[0] == instrument_name, (language, instrument)
+
+
 # ── Structure ────────────────────────────────────────────────────────────────
 
 

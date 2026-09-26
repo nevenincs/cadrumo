@@ -23,6 +23,7 @@ from ..casilla_id import CasillaId, validated_casilla_id
 from ..errors.hierarchy import CoreValidationError
 from ..result_disposition import (
     ResultDisposition,
+    canonical_result_amount,
     derive_result_disposition,
     result_disposition_casilla_ids,
 )
@@ -124,6 +125,10 @@ def test_codified_result_disposition_cases() -> None:
 def test_missing_result_casilla_defaults_to_negativa() -> None:
     """An absent result casilla is treated as zero → N (never silently ingreso)."""
     assert derive_result_disposition("303", {}) is ResultDisposition.NEGATIVA
+
+
+def test_canonical_result_amount_reuses_the_disposition_casilla_authority() -> None:
+    assert canonical_result_amount("303", _values(_M303_RESULT_CASILLA, "357.00")) == Decimal("357.00")
 
 
 def test_disposition_rejects_non_result_casilla_values() -> None:

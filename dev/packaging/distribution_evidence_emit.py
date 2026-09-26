@@ -39,12 +39,6 @@ from pydantic import JsonValue
 
 from dev._paths import UTF_8
 
-from ._installed_wheel_binding import (
-    assert_installed_console_entry_point,
-    installed_distribution_payload_sha256,
-    installed_wheel_payload_sha256,
-    sealed_wheel_payload_sha256,
-)
 from .cohort_manifest import LoadedReleaseCohort
 from .command_execution import CommandResult
 from .evidence import (
@@ -64,6 +58,12 @@ from .evidence import (
 from .evidence_scrub import scrub_distribution_evidence
 from .hashing import sha256_path, sha256_text
 from .installed_tax_oracle import InstalledTaxEvidence
+from .installed_wheel_binding import (
+    assert_installed_console_entry_point,
+    installed_distribution_payload_sha256,
+    installed_wheel_payload_sha256,
+    sealed_wheel_payload_sha256,
+)
 
 if TYPE_CHECKING:
     from .installed_mcp_oracle import InstalledMcpEvidence

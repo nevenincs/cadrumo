@@ -1,6 +1,20 @@
 cli:
   app:
     ledger:
+      actividad_asset:
+        claim_help: Registra una previsión como amortización; repetirla de forma idéntica
+          devuelve el registro existente.
+        correct_help: Añade una revisión que sustituye a la revisión vigente del activo
+          (JSON).
+        create_help: Crea un activo a partir de su primera revisión inmutable (JSON).
+        filing_handoff_help: Muestra las amortizaciones registradas proyectadas en
+          el Modelo 100 y, de forma acumulada, en el Modelo 130.
+        forecast_help: Calcula, sin registrarla, la amortización que admite la elección
+          de la revisión para un intervalo.
+        group_help: 'Registro de activos de actividades económicas del IRPF: revisiones
+          inmutables, previsiones de amortización y amortizaciones registradas (LIS
+          art. 12).'
+        inspect_help: Muestra la cadena completa de revisiones de un activo.
       bienes_inversion:
         acquisition_year_help: Año de adquisición del bien.
         art108_help: Si el bien tiene la consideración de bien de inversión según
@@ -323,6 +337,9 @@ cli:
         country_code_help: 'Código de país ISO 3166-1 alfa-2 de la contraparte. Obligatorio:
           determina el encaminamiento de ambas declaraciones informativas, por lo
           que nunca se presupone.'
+        euro_rate_unavailable_message: No se encontró tipo de cambio a euros para
+          {currency} el {date}, así que la factura se registró sin valor en euros
+          y queda fuera de los totales en euros hasta que se añada un tipo.
         group_help: Registros de facturas de negocio (emitidas o recibidas)
         import_all_refused: 'importación masiva de facturas fallida: se rechazaron
           todas las filas; no se creó ninguna factura'
@@ -347,6 +364,9 @@ cli:
           un cálculo de renta pueda fundamentarla.
         kind_help: 'Tipo de factura: emitida (un cliente te debe) o recibida (debes
           a un proveedor)'
+        line_help: Objeto JSON repetible para una línea de factura; pase un objeto
+          por cada --line. Para la entrada estructurada sustituye a los campos escalares
+          --taxable-base y --iva-rate.
         list_help: Lista las facturas del catálogo de conciliación.
         operation_date_help: Fecha en que se realizo la entrega o prestación (AAAA-MM-DD).
           Es la fecha de devengo del art. 75 LIVA que determina en que periodo se
@@ -692,8 +712,6 @@ cli:
         foreign_asset_observation_help: Objeto JSON ForeignAssetObservation. El valor
           source_kind debe ser ledger_transaction, purchase_invoice_evidence, payable_invoice
           o collectible_invoice. Repetible para varias observaciones.
-        invoice_retencion_excluded_notice: 'La factura %{invoice_id} no se enrutó
-          al almacén de retenciones: %{reasons}.'
         invoice_retencion_wrong_modelo: --received-invoice-retención enruta al almacén
           de retenciones por perceptor; el modelo %{modelo} no es uno de 111, 115,
           123, 180, 190, 193.
@@ -702,6 +720,22 @@ cli:
           {pos}.'
         json_validation_error: 'El valor de {flag} no es un objeto de observación
           válido: {details}.'
+        ledger_payment_withholding_exclusive: --ledger-payment-withholding no puede
+          combinarse con --received-invoice-retencion ni --retencion-observation.
+        ledger_payment_withholding_help: 'JSON LedgerPaymentWithholdingEvidenceRequest:
+          una asignación de nómina (Modelo 111) o de rendimientos del capital mobiliario
+          (Modelo 123) pagada por un movimiento del libro.'
+        ledger_payment_withholding_period_mismatch: El tipo de renta y el periodo
+          de reconocimiento del pago no coinciden con el modelo y el periodo solicitados.
+        ledger_payment_withholding_single_allocation: Envíe una sola asignación de
+          pago del libro por comando.
+        ledger_payment_withholding_wrong_modelo: --ledger-payment-withholding solo
+          registra rendimientos del trabajo en el Modelo 111 y del capital mobiliario
+          en el Modelo 123; no se admite el modelo %{modelo}.
+        m123_ledger_payment_only: El Modelo 123 solo admite retenciones acreditadas
+          por su movimiento de pago del libro mediante --ledger-payment-withholding;
+          se rechazan las retenciones de facturas o introducidas a mano y no se ha
+          registrado nada.
         modelo_help: Código de modelo soportado por el servicio backend de agregación
           (111, 115, 123, 180, 190, 193, 347, 349 o 720).
         period_help: 'Token de periodo de agregación: 0A anual, 1T-4T trimestres,
@@ -1073,9 +1107,11 @@ cli:
         casilla_help: Valor de casilla con la sintaxis CASILLA_ID=DECIMAL (repetible).
         ccaa_help: Código de comunidad autónoma para la proyección territorial.
         no_m130_revisions: No existen revisiones borrador trimestrales del Modelo
-          130 para el ejercicio %{year}. Ejecuta antes `aeat app modelo work calculate --modelo 130 --year %{year} --period 1T`.
+          130 para el ejercicio %{year}. Ejecuta antes `aeat app modelo work calculate
+          --modelo 130 --year %{year} --period 1T`.
         no_m130_units: No existen unidades de trabajo Modelo 130 en borrador para
-          el ejercicio %{year}. Crea antes una con `aeat app modelo work create --modelo 130 --year %{year} --period 1T`.
+          el ejercicio %{year}. Crea antes una con `aeat app modelo work create --modelo
+          130 --year %{year} --period 1T`.
         year_help: Ejercicio fiscal para la proyección.
       project_help: Ejecutar proyecciones agregadas de modelos (p. ej. agregación
         anual del Modelo 130).
@@ -1090,8 +1126,8 @@ cli:
         modelo / ejercicio / periodo.
       reconcile:
         app_help: 'Concilia una unidad de trabajo de modelo con su justificante AEAT:
-          pull descarga el justificante de AEAT y concilia; file concilia un PDF local;
-          history lista las conciliaciones anteriores.'
+          pull descarga el justificante de AEAT y concilia; import concilia un PDF
+          local; list lista las conciliaciones anteriores.'
         file_kind_help: 'Tipo de documento de evidencia: justificante (recibo AEAT,
           todos los modelos) o declaration (PDF de declaración presentada, conciliación
           a nivel de casilla, solo modelos habilitados). Por defecto justificante.'
@@ -1345,6 +1381,10 @@ cli:
           operador)
         app_help: Gestionar el ciclo de vida de las unidades de trabajo de un modelo
           tributario
+        attest_m303_exonerado_390_help: Registra en custodia cifrada su atestación
+          de que el apartado de exoneración del modelo 390 no se aplica a esta autoliquidación
+          del modelo 303 del último período del año (12 o 4T), e imprime su identificador
+          y SHA-256 para `work calculate`. Los demás períodos no lo preguntan.
         autoconsumo_promotor_base_help: 'Base imponible del autoconsumo del promotor
           inmobiliario (Art. 9.1.c + Art. 79.4 LISIVA): coste de construcción o rehabilitación
           de inmuebles afectados al patrimonio de arrendamiento. El asistente aplica
@@ -1474,6 +1514,9 @@ cli:
           en minúsculas de 64 caracteres; se recibió {value}.
         invalid_work_unit_lookup_id: work_unit_id debe ser un identificador SHA-256
           hexadecimal en minúsculas o un prefijo inequívoco
+        joint_return_elected_help: 'Modelo 303: indique expresamente si es una autoliquidación
+          conjunta; use --no-joint-return-elected para «no». Obligatorio para el modelo
+          303 y nunca se presupone.'
         kv_empty_key_error: La clave de {flag} no puede estar vacía; se recibió {spec}.
         kv_format_error: '{flag} debe escribirse como {key_label}={value_label}. Es
           una entrada clave-valor: pon el nombre del campo a la izquierda de un único
@@ -1495,6 +1538,12 @@ cli:
           (predeterminada) o agregación de libro mayor de fuente española.'
         m210_plazo_resolved: 'Se resolvió el plazo de presentación del Modelo 210:
           la presentación voluntaria finaliza el %{closes_on}.'
+        m303_exonerado_390_attachment_id_help: 'Modelo 303, solo en el último período
+          del año (12 o 4T): identificador de la atestación segura de no aplicación
+          del modelo 390 que devuelve `app modelo work attest-m303-exonerado-390`.
+          Se rechaza en cualquier otro período.'
+        m303_exonerado_390_sha256_help: 'Modelo 303, solo en el último período del
+          año (12 o 4T): SHA-256 de esa atestación, tal como lo devolvió `attest-m303-exonerado-390`.'
         m303_filing_evidence_help: Ruta al documento JSON completo de evidencias de
           presentación del modelo 303.
         m303_rectificativa_motive_help: 'Obligatorio para una rectificativa aplicable
@@ -1529,6 +1578,9 @@ cli:
         notes_help: Notas opcionales asociadas al filing record
         observations_help: Mostrar observaciones de cálculo tipadas por casilla y
           su procedencia.
+        observed_at_help: Cuándo confirmó la atestación, como instante ISO 8601 con
+          desfase UTC (por ejemplo 2025-03-31T12:00:00+00:00); no antes del cierre
+          del trimestre ni en el futuro.
         output_language_help: Idioma de salida para los mensajes renderizados.
         override_help: Valor de binding con sintaxis KEY=VALUE (repetible); ejecuta
           `aeat app modelo bindings list --missing` para ver los bindings que requiere
@@ -1733,15 +1785,6 @@ cli:
       app_help: 'Ejecuta toda la cadena local de presentación de un modelo en un solo
         comando: preparación -> crear -> calcular -> verificar -> exportar. Solo construye
         y exporta; nunca presenta ante la AEAT'
-      errors:
-        m303_evidence_forbidden: La evidencia de instancia de declaración del modelo
-          303 está prohibida para otro modelo.
-        m303_filing_evidence_invalid: El documento de evidencias de presentación del
-          modelo 303 en {path} no se puede leer o no es válido.
-        m303_filing_evidence_period_mismatch: El período de las evidencias de presentación
-          del modelo 303 no coincide con el período de trabajo seleccionado.
-        m303_filing_evidence_required: El modelo 303 requiere un documento JSON completo
-          de evidencias de presentación antes del cálculo.
   common:
     errors:
       filing_requires_declared_tax_id: 'El perfil activo no declara una identidad
@@ -2081,6 +2124,9 @@ cli:
           la sesión existente sin cambios.
         closed_previous_session: Se cerró la sesión del perfil anterior antes de iniciar
           esta.
+        session_invocation_scoped: La autenticación del perfil proporcionada a este
+          comando solo se aplica a este proceso; vuelva a proporcionarla al proceso
+          siguiente.
         session_not_persisted: No hay un almacén de claves del sistema utilizable,
           así que este comando solo autenticó su propio proceso; vuelva a proporcionar
           la autenticación del perfil al proceso siguiente.
@@ -2100,8 +2146,14 @@ cli:
         login NOMBRE' antes de cambiar su contraseña.
       reset_code_prompt: 'Código de recuperación: '
       reset_help: Establece una nueva contraseña para un perfil demostrando su código
-        de recuperación; úsalo cuando hayas olvidado la contraseña.
+        de recuperación; úsalo cuando hayas olvidado la contraseña. El código de recuperación
+        sigue siendo válido, y los archivos sellados exportados antes del restablecimiento
+        se siguen abriendo con la contraseña con la que se cifraron.
       reset_name_help: Nombre del perfil cuya contraseña se restablece.
+      reset_scope_notice: 'El código de recuperación sigue funcionando; para sustituirlo,
+        desactiva y vuelve a activar la recuperación. Un restablecimiento no revoca
+        nada: los archivos sellados exportados antes siguen abriéndose con la contraseña
+        con la que se cifraron.'
     profile:
       add_row:
         duplicate_field: El campo %{field} se indicó más de una vez; no se escribió
@@ -2267,6 +2319,8 @@ cli:
           judicial -- el dato almacenado no permite distinguirlo de un hijo real.
           Confirme que este descendiente es un hijo, o indique la relación real con
           RELACION=.
+        guarderia_spend_shapes_conflict: Para un descendiente, declare GASTOS_GUARDERIA
+          o GASTOS_GUARDERIA_MENSUAL, pero no ambos.
         help: Declarar descendientes para el mínimo por descendientes del art. 58/61
           LIRPF.
         index_out_of_range: Índice %{index} fuera de rango; el perfil tiene %{total}
@@ -2274,12 +2328,18 @@ cli:
         invalid_flag: El valor de --descendiente no es válido. Cada fila debe declarar
           NACIMIENTO=YYYY-MM-DD; otras claves como RELACION, DISCAPACIDAD o CONVIVENCIA
           son opcionales.
-        guarderia_spend_shapes_conflict: Para un descendiente, declare GASTOS_GUARDERIA
-          o GASTOS_GUARDERIA_MENSUAL, pero no ambos.
+        invalid_row: No se ha podido leer la fila de --descendiente. Compruebe cada
+          par CLAVE=VALOR con las claves que admite este comando; el contexto del
+          error indica la clave cuando se puede identificar.
         list_help: Listar los descendientes declarados en el perfil activo.
         remove_help: Eliminar un descendiente por índice (base 0) del perfil activo.
         remove_index_help: Índice (base 0) del descendiente a eliminar.
       edit_help: Vuelve a ejecutar el asistente sobre un perfil existente
+      edit_row:
+        clear_help: Campo declarado que se vacía de forma explícita; repítalo si es
+          necesario.
+        help: Modifica una fila identificada de una sección repetible del perfil.
+        value_help: Campo de fila como CAMPO=VALOR; repítalo para cada campo que cambie.
       help: Gestionar valores de configuración del perfil activo
       history:
         invalid_event_type: 'Tipo de evento desconocido: {value}. Tipos de evento
@@ -2308,6 +2368,28 @@ cli:
         modelos. Vuelve a abrirlo cuando quieras con 'aeat config profile edit'.
       no_active_profile: No hay un perfil activo. Ejecuta `aeat config profile create
         NAME --tax-id <NIF/CIF/DNI/NIE>` primero.
+      notices:
+        payer_fact_cleared: '{fact}: este perfil guardaba un «no» que el asistente
+          de configuración escribió por defecto, así que no se distinguía de una pregunta
+          sin responder y se ha borrado. Las obligaciones que dependen de él quedan
+          sin determinar hasta que respondas con la opción {yes_flag} o {no_flag}
+          del comando de edición del perfil.'
+      plantilla_media:
+        average_workforce_help: Plantilla media total del año, en equivalentes a jornada
+          completa y con dos decimales como máximo.
+        average_workforce_not_a_number: El valor de --average-workforce debe ser un
+          número, por ejemplo 12.50.
+        help: Declarar la plantilla media de la empresa por año natural (LIS art.
+          102 y DA 17.ª).
+        list_help: Listar la plantilla media declarada por año natural en el perfil
+          activo.
+        remove_help: Retirar la plantilla media de un año natural del perfil activo.
+        remove_year_help: Año natural que se retira.
+        set_help: Declarar o sustituir la plantilla media de un año natural en el
+          perfil activo.
+        state_help: observed para un año cerrado; committed para un año aún no cerrado,
+          que deberá regularizarse si no se cumple.
+        year_help: Año natural al que corresponde la media.
       recovery:
         channel_absent: Un código de recuperación solo puede mostrarse en un terminal.
           En un host sin terminal, indica --recovery-handoff-fd y --recovery-verification-fd;
@@ -2347,6 +2429,14 @@ cli:
         verification_mismatch: El código introducido no coincide; no se registró nada.
         verification_prompt: 'Escribe el código de recuperación para confirmar que
           lo tienes: '
+      remove_row:
+        help: Elimina una fila identificada de una sección repetible del perfil.
+      row:
+        invalid_row: '''%{row}'' no es una clave de fila válida; use un entero no
+          negativo o base.'
+        row_help: Clave estable de la fila mostrada por profile view; use base para
+          la fila sin índice.
+        section_help: Clave de la sección repetible del perfil.
       sandbox:
         active_indicator_info: Estás operando dentro del sandbox %{label}, no en un
           perfil real; todos los comandos se ejecutan contra este bucket aislado y
@@ -2384,6 +2474,10 @@ cli:
           modelo ya cargado se deja como está.
         model_help: Identificador en el runtime del modelo que se cargará. Debe estar
           ya descargado. Por defecto, el modelo seleccionado para la función.
+      probe:
+        help: Comprueba ahora la aptitud del modelo de texto en lugar de leer el veredicto
+          registrado por `aeat config provision verify` e informa del lector local
+          con ese resultado. Carga el modelo; no registra nada.
       pull:
         help: Descarga modelos al runtime local, el de cada función del lector salvo
           que --role o --model lo acoten. Rechaza antes de descargar si un modelo
@@ -2415,9 +2509,6 @@ cli:
       status:
         help: Informa de si el runtime local está instalado y responde, y de si el
           modelo de cada función del lector está instalado. Solo lee.
-        probe_help: Comprueba ahora la aptitud del modelo de texto en lugar de leer
-          el veredicto registrado por `aeat config provision verify`. Carga el modelo
-          y consume una respuesta completa; el resultado no se registra.
       verify:
         help: Verifica que los modelos cargan y responden a una consulta trivial dentro
           de un límite de tiempo, el de cada función del lector salvo que --role o
@@ -2478,6 +2569,8 @@ cli:
       accept_defaults_help: Rellena con los valores por defecto del descriptor todos
         los flags no indicados, sin preguntar. Úsalo junto a --quiet, o por sí solo
         para una creación con todo por defecto.
+      colegio_concertado_help: Declara expresamente si el retenedor es un colegio
+        concertado para la cabecera del Modelo 111.
       help: Configuración inicial guiada del perfil tributario
       profile_name_help: Nombre del perfil donde guardar las respuestas
       quiet_help: Ejecuta sin interacción usando solo los valores de los flags indicados;
@@ -2816,9 +2909,9 @@ cli:
         automáticamente y no puede establecerse a mano. Elige una de: BUSINESS, PERSONAL,
         MIXED, u omite --classification para dejar la fila sin clasificar.'
       taxable_base_help: Importe de base imponible
-      usage_ratio_help: 'Identificador de una proporción de uso configurada, no texto
+      usage_ratio_help: Identificador de una proporción de uso configurada, no texto
         libre. Consulta las proporciones y categorías admitidas antes de crearla o
-        asignarla; la --category-id del movimiento debe tener ya esa proporción.'
+        asignarla; la --category-id del movimiento debe tener ya esa proporción.
       value_date_help: Fecha valor de la transacción (AAAA-MM-DD)
     allocate:
       business_pct_help: Proporción de uso profesional de 0 a 1 para filas MIXED/proporcionales;
@@ -3493,12 +3586,6 @@ cli:
       help: Genera el calendario de plazos para el perfil activo en la ventana de
         fechas indicada. Aplica festivos y desplazamientos de día hábil. Local; nunca
         contacta con AEAT.
-      shift:
-        business_day: Día hábil
-        calendar_unavailable: Calendario no disponible
-        domingo: Domingo
-        modelo_exception: Excepción del modelo
-        sabado: Sábado
       show_suppressed_help: Mostrar también las entradas suprimidas (no aplicables)
         en el calendario.
       to_help: Fecha de fin inclusiva del calendario (ISO YYYY-MM-DD).

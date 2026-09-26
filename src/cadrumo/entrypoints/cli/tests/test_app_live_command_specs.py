@@ -180,7 +180,7 @@ def test_live_shared_support_contracts_are_independently_pinned() -> None:
     )
     assert (
         ExecutionPolicySpec(
-            capabilities=frozenset(["encrypted-facts", "network"]),
+            capabilities=frozenset(["aeat", "encrypted-facts", "network"]),
             side_effects=frozenset(["local-state", "network"]),
             performance="external-io",
             write_route=CommandWriteRoute.PROFILE_BOUND,

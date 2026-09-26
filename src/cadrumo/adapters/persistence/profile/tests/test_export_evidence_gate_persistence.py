@@ -9,7 +9,8 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from cadrumo.adapters.persistence.profile.tests._modelo_export_ports_support import modelo_export_ports_for_test
+from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests.modelo_export_ports_support import modelo_export_ports_for_test
 from cadrumo.adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import (
     active_profile_isolated_backend_fixture,
 )
@@ -20,6 +21,8 @@ from cadrumo.application.modelo.export import (
     export_modelo_revision,
 )
 from cadrumo.application.modelo.export_ports import ModeloExportPorts
+from cadrumo.application.modelo.tests.registry_revision import active_registry_revision_id
+from cadrumo.application.workflow.persistence import workflow_state_repository
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import (
@@ -37,9 +40,11 @@ from cadrumo.domain.modelos.calculation_revision import (
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
+from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.ledger_filing_snapshot import LedgerFilingSnapshot
 from cadrumo.domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
-from cadrumo.domain.modelos.work_unit import derive_work_unit_id
+from cadrumo.domain.modelos.repository import upsert_work_unit
+from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
@@ -47,6 +52,7 @@ _NOW = datetime(2026, 6, 3, 16, 0, tzinfo=UTC)
 _TX_ID = "a" * 64
 _BASE_CASILLA: CasillaId = validated_casilla_id("base", surface="_BASE_CASILLA")
 _CUOTA_CASILLA: CasillaId = validated_casilla_id("cuota", surface="_CUOTA_CASILLA")
+_PERIOD = Period.from_year_and_code(2026, "1T")
 
 active_profile = active_profile_isolated_backend_fixture(autouse=False, name="active_profile")
 
@@ -56,21 +62,39 @@ def _inward_export_ports(*, calculation: CalculationRevisionCatalogueRepositoryP
     return modelo_export_ports_for_test(calculation=calculation)
 
 
+def _persisted_work_unit(*, operation: PinnedAuthorityOperation) -> WorkUnit:
+    """Persist the parent WorkUnit a stored revision must belong to, at its law-selected coordinates."""
+    bucket_id = workflow_state_repository().load().active_profile_bucket_id()
+    assert bucket_id is not None
+    revision_id = active_registry_revision_id(modelo="303", filing_year=2026, period="1T", operation=operation)
+    work_unit = WorkUnit(
+        work_unit_id=derive_work_unit_id(
+            bucket_id=bucket_id, modelo="303", filing_year=2026, period=_PERIOD, revision_id=revision_id
+        ),
+        bucket_id=bucket_id,
+        modelo=ModeloCode("303"),
+        filing_year=2026,
+        period=_PERIOD,
+        revision_id=revision_id,
+        name="303-2026-1T",
+        created_at=_NOW,
+        updated_at=_NOW,
+    )
+    repository = WorkUnitCatalogueRepository()
+    repository.save(upsert_work_unit(repository.load(), work_unit))
+    return work_unit
+
+
 def _revision(
     *,
+    work_unit: WorkUnit,
     source_transaction_ids: tuple[str, ...],
     ledger_filing_snapshot: LedgerFilingSnapshot | None = None,
     operation: PinnedAuthorityOperation,
 ) -> CalculationRevision:
-    work_unit_id = derive_work_unit_id(
-        bucket_id="bucket-operator",
-        modelo="303",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
-        revision_id="gate",
-    )
+    work_unit_id = work_unit.work_unit_id
     filing_instance_evidence = general_m303_filing_evidence(
-        Period.from_year_and_code(2026, "1T"), reference="test:export-evidence-gate", operation=operation
+        _PERIOD, reference="test:export-evidence-gate", operation=operation
     )
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
@@ -86,9 +110,9 @@ def _revision(
         work_unit_id=work_unit_id,
         registry_snapshot_ref=RegistrySnapshotRef(
             modelo="303",
-            revision_id="gate",
+            revision_id=work_unit.revision_id,
             modelo_year=2026,
-            period="1T",
+            period=_PERIOD.registry_token,
         ),
         state=CalculationRevisionState.VERIFICADO_COMPLETO,
         input_values_by_casilla_id={_BASE_CASILLA: "100.00"},
@@ -116,7 +140,9 @@ def test_export_service_refuses_ledger_revision_without_evidence_reference(
     active_profile: None, tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        revision = _revision(source_transaction_ids=(_TX_ID,), operation=operation)
+        revision = _revision(
+            work_unit=_persisted_work_unit(operation=operation), source_transaction_ids=(_TX_ID,), operation=operation
+        )
         repository = CalculationRevisionCatalogueRepository()
         repository.save(upsert_calculation_revision(repository.load(), revision))
         output_path = tmp_path / "modelo-303.txt"

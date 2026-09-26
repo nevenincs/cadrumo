@@ -76,6 +76,8 @@ number = "175-189"
 segmento = "declarante"
 section = ["declarante", "resumen"]
 semantic_role = "retenciones_ingresadas_total"
+input_kind = "bound"
+binding = "modelo-193-retenciones-ingresadas"
 constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"] }
 # Design positions 175-189: the sum of the perceptor-record retenciones e ingresos a cuenta for rows whose clave de percepcion is C, plus the A/B/D rows whose pago is 1 or 3, per the design's own declaration.
 required = true
@@ -110,6 +112,8 @@ number = "136-144"
 section = ["declarante", "resumen"]
 data_type = "integer"
 semantic_role = "total_perceptores_count"
+input_kind = "bound"
+binding = "modelo-193-perceptores-anual"
 required = true
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 
@@ -119,6 +123,8 @@ continuidad_id = "base-retenciones-ingresos-a-cuenta"
 number = "145-159"
 section = ["declarante", "resumen"]
 semantic_role = "base_retenciones_ingresos_a_cuenta"
+input_kind = "computed"
+formula = "modelo-193-base-total"
 constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"] }
 required = true
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
@@ -129,6 +135,8 @@ continuidad_id = "retenciones-ingresos-a-cuenta"
 number = "160-174"
 section = ["declarante", "resumen"]
 semantic_role = "retenciones_ingresos_a_cuenta"
+input_kind = "computed"
+formula = "modelo-193-retenciones-total"
 constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"] }
 required = true
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]

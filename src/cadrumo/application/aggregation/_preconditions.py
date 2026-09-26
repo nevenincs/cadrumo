@@ -17,6 +17,8 @@ class AggregationPreconditionCondition(StrEnum):
     INVOICE_LEDGER_COMPLETE = "aggregation.invoice_ledger.complete"
     PER_MODELO_MODELO_SUPPORTED = "aggregation.per_modelo.modelo.supported"
     RETENCIONES_OBSERVATIONS_PRESENT = "aggregation.retenciones.observations.present"
+    WITHHOLDING_QUARTERLY_WINDOW_SCHEDULED = "aggregation.withholding.quarterly_window.scheduled"
+    WITHHOLDING_FILER_PROFILE_PRESENT = "aggregation.withholding.filer_profile.present"
 
 
 def aggregation_no_recovery_verdict(

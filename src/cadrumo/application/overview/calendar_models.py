@@ -19,7 +19,7 @@ from __future__ import annotations
 from datetime import date, datetime
 from enum import StrEnum
 from types import MappingProxyType
-from typing import Annotated, Literal, Protocol, Self, cast
+from typing import Annotated, Literal, Protocol, Self, runtime_checkable
 
 from pydantic import BaseModel, BeforeValidator, Field, NonNegativeInt, PlainSerializer, model_validator
 
@@ -36,6 +36,8 @@ from ...core.source_locator import SourceUrl
 from ...core.time.date_range import validate_inclusive_date_range as _validate_inclusive_date_range
 from ...domain.calculations.registry.applicability import ApplicabilityVerdict
 from ...domain.calculations.registry.ids import RevisionId
+from ...domain.deadlines.festivos import CalendarCCAA as _CalendarCCAA
+from ...domain.deadlines.festivos import DeadlineHolidayCoverage as _DeadlineHolidayCoverage
 from ...domain.deadlines.festivos import HolidayJurisdiction as _HolidayJurisdiction
 from ...domain.deadlines.models import ObligationStatus as _ObligationStatus
 from ...domain.deadlines.models import Recovery as _Recovery
@@ -160,6 +162,7 @@ def user_state_for(obligation_status: _ObligationStatus) -> OverviewPeriodState:
     return _USER_STATE_FOR_OBLIGATION_STATUS[obligation_status]
 
 
+@runtime_checkable
 class _CalendarJustificanteStateCarrier(Protocol):
     """Fields governed by the calendar justificante evidence invariant."""
 
@@ -173,7 +176,9 @@ class _CalendarJustificanteStateInvariant(BaseModel):
 
     @model_validator(mode="after")
     def _enforce_justificante_state_consistency(self) -> Self:
-        value = cast(_CalendarJustificanteStateCarrier, self)
+        if not isinstance(self, _CalendarJustificanteStateCarrier):
+            raise ValueError("calendar justificante invariant requires the governed evidence fields")
+        value = self
         if value.aeat_submission_state is None and value.justificante_verified is None:
             return self
         if value.aeat_submission_state is OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED:
@@ -281,7 +286,11 @@ class OverviewCalendarEntry(BaseModel):
     shift_reason: str = Field(min_length=1, max_length=64)
     holiday_refs: tuple[str, ...] = Field(default_factory=tuple)
     jurisdictions: tuple[_HolidayJurisdiction, ...] = Field(default_factory=tuple)
+    holiday_coverage: _DeadlineHolidayCoverage
+    holiday_territory: _CalendarCCAA | None = None
     payment_cutoff_on: date | None = None
+    evaluated_on: date
+    days_overdue: NonNegativeInt | None = None
     status: _ObligationStatus
     user_state: OverviewPeriodState
     recovery: _Recovery | None = None
@@ -312,6 +321,22 @@ class OverviewCalendarEntry(BaseModel):
         return self
 
     @model_validator(mode="after")
+    def _enforce_holiday_coverage_consistency(self) -> OverviewCalendarEntry:
+        known_territory = self.holiday_coverage in (
+            _DeadlineHolidayCoverage.NATIONAL_AND_TERRITORY,
+            _DeadlineHolidayCoverage.TERRITORY_UNVERIFIED,
+        )
+        if known_territory != (self.holiday_territory is not None):
+            raise ValueError("OverviewCalendarEntry.holiday_territory is present exactly when the territory is known")
+        unevaluated = self.holiday_coverage in (
+            _DeadlineHolidayCoverage.NOT_SHIFTED,
+            _DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE,
+        )
+        if unevaluated and self.adjusted_closes_on != self.closes_on:
+            raise ValueError("OverviewCalendarEntry cannot shift a deadline its holiday coverage did not evaluate")
+        return self
+
+    @model_validator(mode="after")
     def _enforce_user_state_consistency(self) -> OverviewCalendarEntry:
         expected = _USER_STATE_FOR_OBLIGATION_STATUS[self.status]
         if self.user_state is not expected:
@@ -319,6 +344,16 @@ class OverviewCalendarEntry(BaseModel):
                 f"OverviewCalendarEntry.user_state ({self.user_state}) "
                 f"disagrees with engine status mapping ({expected})",
             )
+        return self
+
+    @model_validator(mode="after")
+    def _enforce_overdue_age_consistency(self) -> OverviewCalendarEntry:
+        expected = max(0, (self.evaluated_on - self.adjusted_closes_on).days)
+        if self.status is _ObligationStatus.OVERDUE:
+            if self.days_overdue != expected or expected == 0:
+                raise ValueError("OverviewCalendarEntry.days_overdue must measure the effective overdue deadline")
+        elif self.days_overdue is not None:
+            raise ValueError("OverviewCalendarEntry.days_overdue is only valid for an overdue obligation")
         return self
 
     @model_validator(mode="after")
@@ -468,6 +503,7 @@ class OverviewCalendar(BaseModel):
     model_config = _STRICT_FROZEN
 
     range: OverviewCalendarRange
+    evaluated_on: date
     entries: tuple[OverviewCalendarEntry, ...]
     generated_at: datetime
     warnings: tuple[CalendarWarning, ...] = Field(default=())

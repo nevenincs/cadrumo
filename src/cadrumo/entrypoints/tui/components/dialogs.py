@@ -8,7 +8,7 @@ from textual.containers import Horizontal, Vertical
 from textual.screen import ModalScreen
 from textual.widgets import Button, Label, Static
 
-from ..components.theme import tokenised
+from .theme import tokenised
 
 _CONFIRM_DIALOG_CSS = tokenised("""
 #confirm-dialog {

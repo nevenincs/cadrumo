@@ -80,6 +80,7 @@ _EXPECTED_NAMESPACE_KEYS_IN_ORDER = (
     "operation_secure_references",
     "user_profile_value",
     "user_profile_snapshot",
+    "profile_actividad_asset_history",
     "profile_inventory_ledger",
     "profile_bienes_inversion_iva_register",
     "profile_prorrata_register",
@@ -88,6 +89,7 @@ _EXPECTED_NAMESPACE_KEYS_IN_ORDER = (
     "calculation_observations",
     "retencion_observations",
     "withholding_observations",
+    "withholding_workflow",
     "iva_wallet_reconciliation_decisions",
     "iva_wallet_reconciliation_decision_events",
     "modelo_reconciliation_records",
@@ -148,12 +150,34 @@ _EXPECTED_NAMESPACE_KEYS_IN_ORDER = (
 )
 
 
+def _first_sequence_divergence(actual: tuple[str, ...], expected: tuple[str, ...]) -> str | None:
+    """Name the first position where two namespace sequences disagree."""
+    for position, (actual_key, expected_key) in enumerate(zip(actual, expected, strict=False)):
+        if actual_key != expected_key:
+            return f"index {position}: registry declares {actual_key!r}, expected {expected_key!r}"
+    if len(actual) != len(expected):
+        return f"length: registry declares {len(actual)} namespaces, expected {len(expected)}"
+    return None
+
+
 def test_secure_object_registry_preserves_the_declared_namespace_sequence() -> None:
     """The aggregate registry's order is a stable hierarchy contract."""
-    assert (
-        tuple(definition.key for definition in STORAGE_NAMESPACE_REGISTRY.namespaces)
-        == _EXPECTED_NAMESPACE_KEYS_IN_ORDER
-    )
+    declared = tuple(definition.key for definition in STORAGE_NAMESPACE_REGISTRY.namespaces)
+
+    assert _first_sequence_divergence(declared, _EXPECTED_NAMESPACE_KEYS_IN_ORDER) is None
+
+
+@pytest.mark.parametrize("omitted_position", [0, 14, len(_EXPECTED_NAMESPACE_KEYS_IN_ORDER) - 1])
+def test_namespace_sequence_tripwire_detects_an_unenrolled_namespace(omitted_position: int) -> None:
+    """An expected sequence missing one declared namespace is reported, not accepted."""
+    declared = tuple(definition.key for definition in STORAGE_NAMESPACE_REGISTRY.namespaces)
+    omitted = declared[omitted_position]
+    incomplete = tuple(key for key in declared if key != omitted)
+
+    divergence = _first_sequence_divergence(declared, incomplete)
+
+    assert divergence is not None
+    assert repr(omitted) in divergence or divergence.startswith("length:")
 
 
 def test_secure_object_registry_names_application_namespaces() -> None:

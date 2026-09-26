@@ -42,18 +42,23 @@ from .schema_base import (
     SensitivityClassField,
     SourceRefs,
 )
-from .schema_deadlines import DeadlineWindowDefinition
+from .schema_deadlines import DeadlineWindowDefinition, ModeloScheduleDefinition
 from .schema_references import PeriodSelector, TemporalProjectionDirection
 
 
 class RevisionSelectionMetadata(RegistryModel):
-    """Complete immutable metadata required by the canonical revision selector."""
+    """Complete immutable metadata required by the canonical revision selector.
+
+    ``filing_schedules`` travels with the deadline windows so that deciding
+    whether a window applies to a profile never hydrates the whole revision.
+    """
 
     id: RevisionId
     valid_from: date
     valid_to: date | None = None
     period_selector: PeriodSelector
     deadline_windows: tuple[DeadlineWindowDefinition, ...] = ()
+    filing_schedules: tuple[ModeloScheduleDefinition, ...]
 
     def contains_date(self, coordinate: date) -> bool:
         """Return whether the coordinate lies inside the governed period window."""
@@ -72,6 +77,7 @@ class RevisionSelectionMetadata(RegistryModel):
             valid_to=revision.valid_to,
             period_selector=revision.period_selector,
             deadline_windows=revision.deadline_windows,
+            filing_schedules=revision.filing_schedules,
         )
 
 

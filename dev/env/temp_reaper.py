@@ -60,8 +60,8 @@ from cadrumo.tests.collection_storage_root import (
     pytest_numbered_dir_root,
     reap_abandoned_numbered_dirs,
 )
-from dev.test_runs.paths import run_log_families, run_log_roots
-from dev.test_runs.reaper import assess_run_directories, reclaim_run_directories
+from dev.test_runs.paths import run_log_families, run_log_roots, scratch_base
+from dev.test_runs.reaper import assess_run_directories, assess_scratch_directories, reclaim_run_directories
 
 CLAUDE_TEMP_STEM = "claude"
 """Claude Code's root under the OS temp directory.
@@ -501,6 +501,21 @@ def report_temporary_storage(
             print(f"  SPARE {count:4d} run directories  {reason}", file=stream)
     if apply:
         print(f"  removed {reclaim_run_directories(run_verdicts)} run directories", file=stream)
+
+    # A run's scratch sits directly under the temp base, not inside its run
+    # directory, so reclaiming the run directory leaves it behind; it is judged
+    # by the same owner and silence rules.
+    base = scratch_base()
+    scratch_verdicts = assess_scratch_directories(base)
+    print(f"\nRun scratch under {base}", file=stream)
+    for verdict in scratch_verdicts:
+        if verdict.reclaimable or verbose:
+            print(
+                f"  {'REAP ' if verdict.reclaimable else 'SPARE'} {verdict.directory.name}  {verdict.reason}",
+                file=stream,
+            )
+    if apply:
+        print(f"  removed {reclaim_run_directories(scratch_verdicts)} scratch directories", file=stream)
 
     session_root = claude_session_root()
     print(f"\nClaude Code session scratchpads under {session_root}", file=stream)

@@ -150,12 +150,27 @@ aggregation:
       m111_no_retenciones_attestation_missing: 'No per-perceptor retention observations
         exist for modelo 111 %{filing_year} %{period}. Do not file an all-blank Modelo
         111: declare the quarter as a no-retenciones period with `aeat config profile
-        complete setup --modelo-111-no-retenciones-periods %{attestation_period}`,
-        or record the perceptor rows with `aeat app modelo aggregate --retencion-observation`.'
+        edit --modelo-111-no-retenciones-periods %{attestation_period}` (the option
+        replaces the stored list, so also list, comma-separated, any periods already
+        declared), or record the perceptor rows with `aeat app modelo aggregate --retencion-observation`.'
+      m193_phase_allocation_collision: 'Modelo %{modelo} %{filing_year}: allocation(s)
+        %{source_allocations} are declared manually and also come from captured capital
+        withholding. Remove the manual row.'
       perceptor_nif_blank: Perceptor NIF must not be blank.
       perceptor_observations_missing: No per-perceptor retention observations exist
         for modelo %{modelo} %{filing_year} %{period}; source %{source_kind} cannot
         resolve.
+      withholding_annual_source_not_quarterly: 'The annual summary cannot be built:
+        the filer''s filing schedule does not assign its periodic withholding modelo
+        every quarter of the year (it files monthly), and totalling only the quarterly
+        windows would leave months of withholding out.'
+      withholding_filer_profile_absent: The filer's profile could not be loaded for
+        this filing year, so it cannot be established whether withholding is filed
+        quarterly or monthly. Complete the profile and try again.
+      withholding_quarterly_window_not_scheduled: The filer's filing schedule does
+        not assign this quarter to the withholding modelo (a large company files it
+        monthly), and monthly withholding periods are not supported yet. Nothing was
+        recorded.
   service:
     errors:
       currency_conversion_required: Foreign-currency amount requires an EUR conversion
@@ -719,6 +734,14 @@ operation:
         Update Cadrumo.
     status:
       running: Running
+    terminal:
+      cancelled: Cancelled
+      failed: Failed
+      interrupted: Interrupted
+      refused: Refused
+      succeeded: Succeeded
+      succeeded_partial: Partly succeeded
+      timed_out: Timed out
 overview:
   no_aeat_history: This profile holds no filing evidence AEAT confirmed.
   no_aeat_history_sociedades: This profile holds no filing evidence AEAT confirmed.
@@ -785,6 +808,8 @@ sheets:
       base_imponible: Tax base
       base_imponible_assigned: Tax base assigned
       base_retenciones: Withholding base
+      block: Block
+      cadastral_reference: Cadastral reference
       clave: Clave
       clave_codigo: Code key
       clave_declarado: Property ownership key
@@ -794,6 +819,7 @@ sheets:
       codigo_emisor: Issuer code
       codigo_provincia: Province code
       compensaciones: Compensations
+      complement: Address complement
       complemento_infancia_clave: Child support supplement
       complete_acquisition_cost: Total acquisition cost
       contract_relation_clave: Contract or relation
@@ -822,11 +848,13 @@ sheets:
       domicilio_fiscal: Member's tax domicile
       donor_legal_name: Donor legal name
       donor_tax_id: Donor tax id
+      door: Door
       emerging_stock_excess_clave: Emerging-company stock excess
       fecha_devengo: Accrual date
       fecha_inicio_prestamo: Loan start date
       fecha_vencimiento_prestamo: Loan maturity date
       first_child_compute: 1st child computation
+      floor: Floor
       foral_retention_araba: Withholdings and payments on account paid to Araba/Álava
       foral_retention_bizkaia: Withholdings and payments on account paid to Bizkaia
       foral_retention_estatal: Withholdings and payments on account paid to the State
@@ -835,6 +863,7 @@ sheets:
       garantias: Guarantees
       gastos_deducibles: Deductible expenses
       geographic_mobility_clave: Geographic mobility
+      house_number: House number
       housing_loan_communication_clave: Home loan communication
       importe_gastos: Expense amount
       importe_q1: Amount Q1
@@ -851,14 +880,20 @@ sheets:
       ingreso_a_cuenta_repercutido: Payments on account passed on
       is_recurrent: Recurrent donation
       isin_code: ISIN code
+      locality: Locality
       member_legal_name: Member legal name
       member_state_code: Member state
       member_tax_id: Member tax id
       miembro_a_31_diciembre: Member at 31 December
+      modality: Modality
+      municipality: Municipality
+      municipality_code: Municipality code
       naturaleza: Nature
       naturaleza_declarante: Declarant's nature
       naturaleza_inmueble: Property nature
       nif_pagador_anterior: Previous payer NIF
+      number_qualifier: Number qualifier
+      number_type: Number type
       numero_orden: Order number
       opening_minus_closing_positive: Positive opening-minus-closing difference
       operation_date: Operation date
@@ -877,13 +912,18 @@ sheets:
       perceptor_birth_year: Birth year
       perceptor_legal_name: Perceptor legal name
       perceptor_mediador_flag: Mediator perceptor
+      perceptor_name: Recipient name
+      perceptor_nif: Recipient NIF
       perceptor_situacion_familiar: Family situation
       perceptor_tax_id: Perceptor tax id
       percibido_dinerario: Cash income
       percibido_especie: In-kind income
       porcentaje_retencion: Withholding %
       porcentaje_titularidad_inmueble: Property ownership percentage
+      portal: Entrance
+      postal_code: Postal code
       province_code: Province
+      recipient_province_code: Recipient province code
       rectified_base_previous: Prior base (rectification)
       rectified_period: Rectified period
       rectified_year: Rectified year
@@ -895,15 +935,22 @@ sheets:
       rendimiento_neto_minorado_agricola_eo: Reduced agricultural net yield (estimación
         objetiva)
       rendimiento_neto_previo_eo: Prior net yield (estimación objetiva)
+      representative_nif: Representative NIF
       representative_tax_id: Legal representative NIF
+      retencion_amount: Withholding amount
       retencion_practicada: Withholding applied
       second_child_compute: 2nd child computation
       share_percentage: Share percentage
       situacion_inmueble: Property location status
+      situation: Property situation
       spouse_or_unit_titular_tax_id: Spouse or coexistence-unit holder NIF
+      staircase: Staircase
       startup_fund_rendimientos_clave: Fund-management income
+      street_name: Street name
+      street_type: Street type
       subclave: Subclave
       supplier_tax_id: Supplier tax id
+      taxable_base: Withholding base
       territorial_deduction_clave: Ceuta or Melilla / La Palma
       third_child_compute: 3rd child computation
       tipo_codigo: Code type
@@ -911,6 +958,7 @@ sheets:
       transfer_pricing_method_code: Transfer pricing method
       unit_convivencia_titular_clave: Coexistence unit holder
       valuation_amount: Valuation
+      withholding_percentage: Withholding rate
 topic:
   authentication:
     body: AEAT authentication uses Cl@ve Móvil (push to registered phone) or a digital
@@ -1168,13 +1216,20 @@ tui:
         local: Local status
       detail:
         action: 'Enter action: {action}'
-        axes: 'Legal: {legal} · Local: {local} · AEAT: {aeat} · Receipt: {receipt}'
-        dates: 'Opens: {opening} · Payment: {payment} · Adjusted close: {closing}'
+        axes: 'Legal: {legal} · Local: {local} · AEAT: {aeat} · Receipt: {receipt}
+          · Evidence consistency: {conflict}'
+        dates: 'Opens: {opening} · Payment: {payment} · Original close: {original}
+          · Effective close: {effective} · Evaluated: {evaluated} · Days overdue:
+          {overdue} · Shift: {shift}'
+        holidays: 'Holidays: {coverage}'
         source: '{source}: {availability} · Observed: {observed}'
       empty:
         known: There are no obligations in this range.
         search: No obligation matches the search and scope.
         stale: The last observed agenda ({observed}) has no rows; the data is stale.
+      evidence:
+        clear: No conflict observed
+        conflicted: Conflicting AEAT evidence observed
       justificante:
         not_verified: Not verified
         unknown: Unknown
@@ -1328,6 +1383,21 @@ tui:
       not_applicable: Not applicable
       result_unknown: Not available
       'yes': 'Yes'
+    work_create:
+      created: Created {address}. Reopen Declarations to work on it.
+      modelo: Modelo
+      period: Period
+      progress: Creating or reopening the selected declaration…
+      refusal:
+        modelo: Enter a Modelo number.
+        not_applicable: 'Modelo %{modelo} does not apply to this profile: %{reason}
+          If it should, correct the profile in Profile (F4) and try again.'
+        period: Enter a valid period for the selected year.
+        year: Enter a supported four-digit filing year.
+      reused: Reopened {address}. Reopen Declarations to work on it.
+      submit: Create or reopen
+      title: Create or reopen a declaration
+      year: Filing year
     work_state:
       borrador: Draft
       descartado: Discarded
@@ -1337,6 +1407,12 @@ tui:
     home: Home
     ledger: Ledger
     profile: Profile
+    withholding: Withholding
+  filing_year_route:
+    invalid: Enter a valid four-digit filing year.
+    open: Open withholding
+    prompt: Select a filing year (YYYY)
+    unavailable: Withholding evidence is unavailable for this profile and year.
   home:
     account_fallback: Account
     action:
@@ -1439,12 +1515,25 @@ tui:
       stale: Out of date
       unavailable: Unavailable
     classification:
+      boundary: Input classification, the prorrata sector, and purchase evidence are
+        recorded through their dedicated capture or attachment flows.
       business: Business
       cancel: Cancel
       confirm: Confirm
       confirming: Confirm the selected classification.
       excluded: Reviewed and excluded
       failure: The classification could not be saved.
+      field:
+        business_pct: Business share (decimal fraction from 0 to 1; Mixed only)
+        deduction_fact_kind: Deduction fact kind (registry token)
+        irpf_category: IRPF category (registry token)
+        iva_amount: IVA amount
+        iva_category: IVA category (registry token)
+        iva_rate: IVA rate (decimal fraction; e.g. 0.21)
+        prorrata_reference: Prorrata reference
+        taxable_base: Taxable base
+        usage_ratio_id: Usage ratio ID
+      mixed: Mixed (business share)
       personal: Personal
       progress: Saving classification…
       prompt: Choose a classification for the selected entry.
@@ -1588,6 +1677,9 @@ tui:
         simplificada: Simplified invoice (simplificada)
       confirm: Record invoice
       confirming: Check the invoice below, then record it.
+      euro_rate_unavailable: No euro exchange rate for {currency} on that date was
+        found. The invoice is kept, but it stays out of euro totals until a rate is
+        added.
       failure: The invoice was not recorded.
       field:
         counterparty_name: Counterparty name
@@ -1597,9 +1689,14 @@ tui:
         invoice_class: Invoice class
         invoice_date: Invoice date (YYYY-MM-DD)
         invoice_number: Invoice number
+        iva_category: IVA treatment (registry token)
         iva_rate: IVA rate (%)
         kind: Invoice type
         notes: Notes
+        operation_date: Operation date, when it differs from the invoice date (YYYY-MM-DD)
+        operation_type: Modelo 349 operation key
+        recargo_amount: Equivalence surcharge amount
+        rectifies_invoice_number: Number of the invoice this one corrects
         retention_amount: IRPF retention amount
         retention_rate: IRPF retention rate (%)
         series: Series
@@ -1607,11 +1704,32 @@ tui:
       kind:
         issued: Issued
         received: Received
+      line:
+        add: Add line
+        field:
+          description: Line description
+          iva_amount: Line IVA amount
+          iva_rate: IVA rate slot (registry token, such as RATE_21)
+          oss_rate_kind: OSS rate kind (registry token)
+          quantity: Quantity
+          spending_category_id: Spending category
+          subtotal: Line base
+          unit_price: Unit price
+        heading: Invoice lines. For an invoice with more than one IVA rate, add each
+          printed line here and leave the taxable base and IVA rate above empty.
+        none: 'No lines entered: the taxable base and IVA rate above are used.'
+        remove: Remove last line
+        row: '{index}. {description} · {quantity} × {unit_price} = {subtotal} · IVA
+          {rate} {amount}'
       open: Add invoice
+      operation_type_none: No Modelo 349 key
       optional: '{label} (optional)'
       problem:
         amount: '{field} must be a number such as 1200.00.'
+        base_or_lines: Enter a taxable base, or add at least one invoice line.
         date: '{field} must be a date written YYYY-MM-DD.'
+        lines_and_base: Enter the invoice either as lines or as one taxable base and
+          IVA rate, not both.
         required: '{field} is required.'
       progress: Recording the invoice…
       prompt: Enter the invoice as it is printed. It is checked and recorded only
@@ -1622,6 +1740,9 @@ tui:
         amounts: Taxable base {base} {currency} · IVA rate {rate}
         counterparty: 'Counterparty: {name} · NIF {nif} · {country}'
         identity: '{kind} invoice {number} dated {date}'
+        operation: Modelo 349 key {code} · operation date {date}
+        recargo: Equivalence surcharge {amount} {currency}
+        rectifies: Corrects invoice {number}
         retention: 'IRPF retention: rate {rate} · amount {amount}'
       title: Add an invoice
     overview:
@@ -1658,6 +1779,23 @@ tui:
       suggestions: Suggested links
       title: Local Ledger reconciliation
       'yes': 'Yes'
+    records:
+      failed: The change was refused or could not be saved.
+      identity: Record ID
+      invoice_detail: Invoice detail
+      invoices: Recorded invoices
+      lines: Lines
+      links: Linked records
+      loading: Reading the record…
+      no_change: Enter a different value before reviewing.
+      open_invoices: View invoices
+      open_transaction: View or edit selected entry
+      reviewed: Check the value, then save it.
+      save: Save change
+      saved: Change saved.
+      saving: Saving change…
+      source: Source file
+      transaction_detail: Entry detail
     refusal:
       application_state: This area is unavailable in the current Ledger state.
       destination_pending: This area is not available in this version yet.
@@ -1799,6 +1937,27 @@ tui:
       not_applicable: Does not apply
       refused: Refused
       unmeasured: Not measured
+    edit:
+      apply: Apply declared values
+      binding: Declared input {binding}
+      scalar: Box {casilla}
+    evidence_kind:
+      legal: Legal reference
+      source: Source reference
+    export:
+      payment_election:
+        cuenta_corriente: Tax current account (cuenta corriente tributaria)
+        domiciliacion: Direct debit (domiciliación)
+        ingreso: Payment by the taxpayer (ingreso)
+        label: 'Result to pay: how it is paid'
+      prior_domiciliation_election:
+        cancel_or_modify: Cancel or modify it
+        keep: Keep it
+        label: Earlier direct debit (corrective return only)
+      refund_election:
+        compensar: Carry forward to later periods (compensar)
+        devolver: Request a refund (devolver)
+        label: 'Negative result: carry it forward or request a refund'
     finding_kind:
       advisory: Advice
       blocking_rule: Rule not met
@@ -1814,12 +1973,43 @@ tui:
       informational: For information only
       manual: You enter it
       projection_only: Shown, not filed
+    m303_evidence:
+      admission_unavailable: A new attestation cannot be recorded for this declaration
+        here. Nothing was calculated.
+      attestation_attachment_id: Existing attestation identifier
+      attestation_sha256: Existing attestation SHA-256
+      cancel: Cancel
+      cancelled: Calculation cancelled; no filing facts were recorded.
+      existing_attestation_hint: Answer the question. Then either enter an existing
+        attestation that the Modelo 390 exemption section does not apply (its identifier
+        and SHA-256), or leave those blank and enter when you confirmed it to record
+        a new attestation.
+      joint_return_elected: Joint self-assessment (autoliquidación conjunta)?
+      no_modelo_390_question_hint: Answer the question. This period's return does
+        not ask about the Modelo 390 exemption; only the last period of the year (12
+        or 4T) does.
+      observed_at: Confirmed at, for a new attestation (ISO 8601 with UTC offset,
+        for example 2025-04-01T12:00:00Z)
+      required: Answer the joint self-assessment question. In the last period of the
+        year also give either a complete existing attestation or a confirmation time
+        with its UTC offset, not both.
+      stale_context: The selected declaration changed while the form was open. Nothing
+        was calculated; choose Calculate again.
+      title: Modelo 303 filing facts
     record_family:
       bindings: Values from your records
       casillas: Boxes
       formulas: Formulas
       parameters: Parameters
       relations: Links to other forms
+    recovery_action:
+      operator:
+        modelo:
+          work:
+            calculate: Calculate this work unit
+            create: Create the work unit for this declaration
+            status: Review this work unit's status
+            verify: Verify this work unit
     review_status:
       agent_reviewed: Reviewed automatically
       operator_reviewed: Reviewed by a person
@@ -1832,6 +2022,32 @@ tui:
       producer_of: Source of "{capability}"
       record_family: Section
     technical_details: Technical details
+    workspace_refusal:
+      facts:
+        modelo: Modelo
+        period: Period
+        required_grade: Required grade
+        work_unit_id: Work unit
+      reason:
+        authority_grade_unavailable: The selected revision's authority does not yet
+          support the requested calculated view.
+        bucket_assertion_mismatch: The declaration's stored identity does not match
+          what was requested.
+        calculation_unavailable: This declaration has not been calculated yet, so
+          no values are available.
+        consistency_unavailable: The declaration's consistency could not be confirmed.
+        locale_unavailable: The declaration's translated labels could not be read.
+        schema_unavailable: The declaration's schema could not be read.
+        static_inspection_unavailable: The form layout itself could not be read for
+          this declaration.
+        target_not_found: No work exists yet for this declaration, so there is nothing
+          to calculate.
+        visible_target_ambiguous: More than one declaration matches this address,
+          so none can be opened as one.
+        workspace_changed: This declaration changed while it was open; reopen it to
+          see the current state.
+      static_fallback: Showing the form layout only. No calculated values are shown
+        below.
   root:
     account:
       appearance: Appearance
@@ -1890,12 +2106,14 @@ tui:
       ledger: Open Ledger
       profile: Open Profile
       unknown: Open workbench area
+      withholding: Open withholding evidence
     destination_help:
       aeat_sync: What has been read from the AEAT and what can be read next
       declarations: Declarations, calculation revisions, filing history and calendar
       home: Next actions, declarations and deadlines at a glance
       ledger: Entries, review, classification and supporting evidence
       profile: This profile's details and the sources that fill them in
+      withholding: Capture and inspect invoice withholding for a selected filing year
     refusal:
       not_composed: Not every workbench source could be read yet.
       refresh_failed: The last refresh could not rebuild the index.

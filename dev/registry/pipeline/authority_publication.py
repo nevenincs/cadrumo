@@ -16,9 +16,14 @@ to LF, because the repository normalises the registry tree to LF while a
 Windows working copy may still hold CRLF; source evidence is byte-exact legal
 evidence and is digested raw.
 
-Currency includes the compiler and domain source identity as well as the data
-inputs. The source receipt and compiler receipt are distinct, and their combined
-digest identifies the build; the artifact frame separately hashes its output.
+Currency includes the compiler identity as well as the data inputs. The
+compiler identity hashes the closure of compiler source files loaded to compile
+the candidate, recorded in the generation with the interpreter and dependency
+environment; currency re-hashes exactly those recorded files rather than
+compiling again. Every publication compiles in the same canonical child
+interpreter, so that closure never depends on which tool launched it. The
+source receipt and compiler receipt are distinct, and their combined digest
+identifies the build; the artifact frame separately hashes its output.
 """
 
 from __future__ import annotations
@@ -46,9 +51,11 @@ from cadrumo.domain.calculations.registry.authority_artifact import (
     PublishedLegalEvidence,
     PublishedSourceEvidence,
 )
+from cadrumo.domain.calculations.registry.authority_compiler_closure import AuthorityCompilerClosure
 from cadrumo.domain.calculations.registry.authority_store import (
     AuthorityDescriptor,
     AuthorityStoreError,
+    AuthorityStoreFormatError,
     SQLiteAuthorityReader,
 )
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
@@ -57,7 +64,7 @@ from cadrumo.domain.calculations.registry.source_byte_availability import embedd
 
 from ..compiler.authority_database import build_authority_database
 from ..compiler.authority_state import canonical_authoring_root_pair
-from ..compiler.build_identity import authority_compiler_identity
+from ..compiler.build_identity import live_compiler_closure, observe_compiler_closure
 from ..compiler.corpus_provenance import classify_normative_corpus_provenance
 from ..compiler.identity import resolve_registry_identity
 from ..compiler.legal_grounding import published_legal_evidence_text
@@ -67,9 +74,11 @@ from ..compiler.source_evidence_fingerprint import (
     SourceEvidenceFingerprint,
     collect_source_evidence_fingerprints,
 )
+from .candidate_compile_process import run_candidate_compiler
 
 _PUBLICATION_LOCK_TIMEOUT: Final = 30.0
 _PUBLICATION_LOCK_RETRY_BACKOFF: Final = 0.05
+_DESCRIPTOR_NAME: Final = "authority.current.json"
 
 
 def require_evidence_closure(artifact: AuthorityArtifact) -> None:
@@ -88,16 +97,20 @@ def require_evidence_closure(artifact: AuthorityArtifact) -> None:
 
 
 __all__ = [
+    "AuthorityBuildInput",
     "AuthorityDatabaseCurrency",
     "AuthorityDatabaseCurrencyStatus",
     "AuthorityPublicationReceipt",
+    "PreparedAuthorityCandidate",
     "ValidatedAuthorityCandidate",
-    "authority_candidate_identity",
     "authority_database_currency",
     "authority_publication_destination",
+    "authority_source_identity",
     "install_validated_authority_database",
+    "prepare_authority_candidate",
     "promote_accepted_authority_database",
     "publish_sqlite_authority_candidate",
+    "stage_authority_candidate",
     "validate_authority_candidate",
 ]
 
@@ -118,6 +131,19 @@ class AuthorityDatabaseCurrencyStatus(StrEnum):
     CURRENT = "current"
     STALE = "stale"
     UNREADABLE = "unreadable"
+    UNSUPPORTED_FORMAT = "unsupported_format"
+    """The generation predates persisted build receipts; its build identity is unknown."""
+
+
+class AuthorityBuildInput(StrEnum):
+    """One compiler input whose drift a stale generation can name.
+
+    The component-dependency receipt is derived from these two, so it drifts
+    exactly when one of them does and is never reported on its own.
+    """
+
+    SOURCE = "source"
+    COMPILER = "compiler"
 
 
 @dataclass(frozen=True, slots=True)
@@ -125,16 +151,24 @@ class AuthorityDatabaseCurrency:
     """One indexed generation's recorded identity against the candidate's live identity.
 
     ``recorded_identity_digest`` is ``None`` only when the descriptor could not
-    be read, in which case ``detail`` names the refusal.
+    be read, in which case ``detail`` names the refusal.  ``recorded_build_identity``
+    is ``None`` whenever the generation's receipts are unknown: unreadable, or an
+    older format that never recorded them.  The live compiler identity is the
+    recorded compiler closure re-hashed in this checkout, so the candidate
+    identities are ``None`` exactly when the recorded ones are; the live source
+    identity is always known.  ``drifted_inputs`` names every input whose
+    recorded receipt differs from the live one.
     """
 
     descriptor_path: Path
     status: AuthorityDatabaseCurrencyStatus
-    candidate_identity_digest: str
+    candidate_source_identity_digest: str
+    candidate_identity_digest: str | None
     recorded_identity_digest: str | None
-    candidate_build_identity: AuthorityBuildIdentity
+    candidate_build_identity: AuthorityBuildIdentity | None
     recorded_build_identity: AuthorityBuildIdentity | None
     detail: str
+    drifted_inputs: tuple[AuthorityBuildInput, ...] = ()
 
     @property
     def is_current(self) -> bool:
@@ -151,15 +185,12 @@ class AuthorityPublicationReceipt:
     source_evidence_content_digests: tuple[tuple[str, str], ...]
     profile_schema_sha256: str
     source_identity_digest: str
-    compiler_identity_digest: str
-    component_dependency_digest: str
-    identity_digest: str
-    """Content-addressed candidate identity; recorded in the artifact it publishes."""
+    """Content-addressed source identity; recorded in the artifact it publishes."""
 
 
 @dataclass(frozen=True, slots=True)
 class ValidatedAuthorityCandidate:
-    """An authority publishable only while its input receipt remains current."""
+    """A validated artifact inside the canonical compiler process, with its input receipt."""
 
     registry_root: Path
     source_root: Path
@@ -174,7 +205,12 @@ def validate_authority_candidate(
     source_root: Path,
     profile_schema_path: Path | None = None,
 ) -> ValidatedAuthorityCandidate:
-    """Compile and validate a candidate, refusing inputs that change mid-validation."""
+    """Compile and validate a candidate, refusing inputs that change mid-validation.
+
+    The compiler closure is observed after the complete compile, validation and
+    evidence projection, so it names every compiler module this process loaded
+    to produce the artifact.
+    """
     # Import at the compile boundary so tooling discovery does not load validators.
     from ..compiler.authority import compile_validated_authority
 
@@ -200,7 +236,14 @@ def validate_authority_candidate(
         profile_schema_path=resolved_profile_schema,
         captured_profile_schema=captured_profile,
         verify_evidence_bytes=True,
+        complete_validation=True,
     )
+    evidence = _project_evidence(
+        authority.catalogues.legal,
+        authority.catalogues.sources,
+        source_root=resolved_source_root,
+    )
+    compiler_closure = observe_compiler_closure()
     receipt_after = _capture_receipt(
         resolved_registry_root,
         resolved_source_root,
@@ -210,20 +253,17 @@ def validate_authority_candidate(
         raise RegistryValidationError(
             "registry candidate changed while it was being validated; authority publication is refused",
         )
+    build_identity = AuthorityBuildIdentity.from_inputs(
+        receipt_after.source_identity_digest,
+        compiler_closure.identity_digest,
+    )
     artifact = AuthorityArtifact(
         modelos=authority.modelos,
         catalogues=authority.catalogues,
-        identity_digest=receipt_after.identity_digest,
-        build_identity=AuthorityBuildIdentity(
-            receipt_after.source_identity_digest,
-            receipt_after.compiler_identity_digest,
-            receipt_after.component_dependency_digest,
-        ),
-        evidence=_project_evidence(
-            authority.catalogues.legal,
-            authority.catalogues.sources,
-            source_root=resolved_source_root,
-        ),
+        identity_digest=build_identity.identity_digest,
+        build_identity=build_identity,
+        compiler_closure=compiler_closure,
+        evidence=evidence,
         profile_schema=authority.profile_schema(),
     )
     return ValidatedAuthorityCandidate(
@@ -232,6 +272,99 @@ def validate_authority_candidate(
         profile_schema_path=resolved_profile_schema,
         receipt=receipt_after,
         artifact=artifact,
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class PreparedAuthorityCandidate:
+    """A candidate pair the canonical compiler staged, publishable only while its inputs stay current."""
+
+    registry_root: Path
+    source_root: Path
+    profile_schema_path: Path
+    receipt: AuthorityPublicationReceipt
+    descriptor_path: Path
+    compiler_closure: AuthorityCompilerClosure
+    eager_baseline_path: Path | None = None
+
+
+def stage_authority_candidate(artifact: AuthorityArtifact, output: Path) -> AuthorityDescriptor:
+    """Write a validated artifact as a descriptor and content-addressed database pair in ``output``."""
+    output.mkdir(parents=True, exist_ok=False)
+    compiled = build_authority_database(output / "candidate.sqlite3", artifact)
+    database_name = f"authority-{compiled.physical_sha256}.sqlite3"
+    compiled.path.replace(output / database_name)
+    descriptor = AuthorityDescriptor(
+        database=database_name,
+        database_size=compiled.byte_count,
+        database_sha256=compiled.physical_sha256,
+        logical_generation=compiled.logical_generation,
+    )
+    (output / _DESCRIPTOR_NAME).write_bytes(descriptor.to_bytes())
+    return descriptor
+
+
+def prepare_authority_candidate(
+    *,
+    registry_root: Path,
+    source_root: Path,
+    profile_schema_path: Path,
+    staging: Path,
+    eager_baseline: bool = False,
+) -> PreparedAuthorityCandidate:
+    """Compile a candidate in the canonical compiler process and admit the pair it staged.
+
+    The parent captures the source receipt first and requires the staged
+    generation to record exactly that source identity; the child already
+    refused inputs that changed while it validated them.
+    """
+    resolved_registry_root, resolved_source_root = canonical_authoring_root_pair(registry_root, source_root)
+    resolved_profile_schema = profile_schema_path.resolve(strict=True)
+    receipt = _capture_receipt(
+        resolved_registry_root,
+        resolved_source_root,
+        profile_schema_path=resolved_profile_schema,
+    )
+    output = staging / "candidate"
+    eager_baseline_path = staging / "eager-baseline.json" if eager_baseline else None
+    compiled = run_candidate_compiler(
+        registry_root=resolved_registry_root,
+        source_root=resolved_source_root,
+        profile_schema_path=resolved_profile_schema,
+        output=output,
+        eager_baseline_path=eager_baseline_path,
+    )
+    if not compiled.succeeded:
+        raise RegistryValidationError(
+            f"the canonical authority compiler refused the candidate (exit {compiled.returncode}): "
+            f"{compiled.diagnostics}"
+        )
+    if compiled.diagnostics:
+        print(compiled.diagnostics, file=sys.stderr)
+    descriptor_path = output / _DESCRIPTOR_NAME
+    try:
+        reader = SQLiteAuthorityReader(descriptor_path)
+        try:
+            build_identity = reader.build_identity()
+            compiler_closure = reader.compiler_closure()
+        finally:
+            reader.close()
+    except AuthorityStoreError as exc:
+        raise RegistryValidationError(
+            f"the canonical authority compiler staged an inadmissible candidate: {exc}"
+        ) from exc
+    if build_identity.source_identity_digest != receipt.source_identity_digest:
+        raise RegistryValidationError(
+            "the staged candidate records other source inputs than this publication captured; publication is refused"
+        )
+    return PreparedAuthorityCandidate(
+        registry_root=resolved_registry_root,
+        source_root=resolved_source_root,
+        profile_schema_path=resolved_profile_schema,
+        receipt=receipt,
+        descriptor_path=descriptor_path,
+        compiler_closure=compiler_closure,
+        eager_baseline_path=eager_baseline_path,
     )
 
 
@@ -275,24 +408,25 @@ def _project_source_evidence(reference: SourceReference, *, source_root: Path) -
     )
 
 
-def authority_candidate_identity(
+def authority_source_identity(
     *,
     registry_root: Path,
     source_root: Path,
     profile_schema_path: Path | None = None,
 ) -> str:
-    """Return the content-addressed identity a publication of these inputs would record.
+    """Return the content-addressed source identity a publication of these inputs would record.
 
     Costs a content read of every registry and source-evidence file and no
-    compilation, so a gate can ask whether the published artifact is current
-    without publishing.
+    compilation. The compiler half of a generation's identity is known only
+    from a recorded compiler closure, which :func:`authority_database_currency`
+    re-hashes.
     """
     resolved_registry_root, resolved_source_root = canonical_authoring_root_pair(registry_root, source_root)
     return _capture_receipt(
         resolved_registry_root,
         resolved_source_root,
         profile_schema_path=profile_schema_path,
-    ).identity_digest
+    ).source_identity_digest
 
 
 def authority_database_currency(
@@ -301,49 +435,91 @@ def authority_database_currency(
     registry_root: Path,
     source_root: Path,
     profile_schema_path: Path | None = None,
+    compiler_source_roots: Mapping[str, Path] | None = None,
 ) -> AuthorityDatabaseCurrency:
-    """Compare an admitted indexed generation with the exact live compiler receipt."""
+    """Compare an admitted indexed generation with the exact live compiler receipt.
+
+    Nothing is compiled. The live compiler identity re-hashes the generation's
+    recorded compiler closure under ``compiler_source_roots``, which default to
+    this checkout's package and ``dev/registry`` directories; an edit outside
+    that closure cannot change what the compiler loads and so is not drift.
+    """
     roots = canonical_authoring_root_pair(registry_root, source_root)
     receipt = _capture_receipt(*roots, profile_schema_path=profile_schema_path)
-    candidate_build = AuthorityBuildIdentity(
-        receipt.source_identity_digest,
-        receipt.compiler_identity_digest,
-        receipt.component_dependency_digest,
-    )
     try:
         reader = SQLiteAuthorityReader(descriptor_path)
         try:
             recorded_identity = reader.pin().logical_generation
+            recorded_build = reader.build_identity()
+            recorded_closure = reader.compiler_closure()
         finally:
             reader.close()
-    except (AuthorityStoreError, OSError, ValueError) as exc:
-        return AuthorityDatabaseCurrency(
-            descriptor_path=descriptor_path,
-            status=AuthorityDatabaseCurrencyStatus.UNREADABLE,
-            candidate_identity_digest=receipt.identity_digest,
-            recorded_identity_digest=None,
-            candidate_build_identity=candidate_build,
-            recorded_build_identity=None,
-            detail=f"{type(exc).__name__}: {exc}",
+    except AuthorityStoreFormatError as exc:
+        return _unknown_generation_currency(
+            descriptor_path, AuthorityDatabaseCurrencyStatus.UNSUPPORTED_FORMAT, receipt, exc
         )
+    except (AuthorityStoreError, OSError, ValueError) as exc:
+        return _unknown_generation_currency(descriptor_path, AuthorityDatabaseCurrencyStatus.UNREADABLE, receipt, exc)
+    candidate_build = AuthorityBuildIdentity.from_inputs(
+        receipt.source_identity_digest,
+        live_compiler_closure(recorded_closure, roots=compiler_source_roots).identity_digest,
+    )
     status = (
         AuthorityDatabaseCurrencyStatus.CURRENT
-        if recorded_identity == receipt.identity_digest
+        if recorded_identity == candidate_build.identity_digest
         else AuthorityDatabaseCurrencyStatus.STALE
+    )
+    drifted = tuple(
+        build_input
+        for build_input, recorded, candidate in (
+            (
+                AuthorityBuildInput.SOURCE,
+                recorded_build.source_identity_digest,
+                candidate_build.source_identity_digest,
+            ),
+            (
+                AuthorityBuildInput.COMPILER,
+                recorded_build.compiler_identity_digest,
+                candidate_build.compiler_identity_digest,
+            ),
+        )
+        if recorded != candidate
     )
     detail = (
         "the indexed generation matches the live source manifest, compiler build, and component dependencies"
         if status is AuthorityDatabaseCurrencyStatus.CURRENT
-        else "the indexed generation logical identity differs from the live complete-authority receipt"
+        else "the indexed generation logical identity differs from the live complete-authority receipt; drifted: "
+        + (", ".join(build_input.value for build_input in drifted) or "none")
     )
     return AuthorityDatabaseCurrency(
         descriptor_path=descriptor_path,
         status=status,
-        candidate_identity_digest=receipt.identity_digest,
+        candidate_source_identity_digest=receipt.source_identity_digest,
+        candidate_identity_digest=candidate_build.identity_digest,
         recorded_identity_digest=recorded_identity,
         candidate_build_identity=candidate_build,
-        recorded_build_identity=None,
+        recorded_build_identity=recorded_build,
         detail=detail,
+        drifted_inputs=drifted,
+    )
+
+
+def _unknown_generation_currency(
+    descriptor_path: Path,
+    status: AuthorityDatabaseCurrencyStatus,
+    receipt: AuthorityPublicationReceipt,
+    refusal: Exception,
+) -> AuthorityDatabaseCurrency:
+    """Report a generation whose receipts and compiler closure could not be admitted."""
+    return AuthorityDatabaseCurrency(
+        descriptor_path=descriptor_path,
+        status=status,
+        candidate_source_identity_digest=receipt.source_identity_digest,
+        candidate_identity_digest=None,
+        recorded_identity_digest=None,
+        candidate_build_identity=None,
+        recorded_build_identity=None,
+        detail=f"{type(refusal).__name__}: {refusal}",
     )
 
 
@@ -354,7 +530,7 @@ def _capture_receipt(
     profile_schema_path: Path | None = None,
     captured_profile_schema: CapturedProfileSchema | None = None,
 ) -> AuthorityPublicationReceipt:
-    """Capture every mutable input the authority compiler uses for this candidate."""
+    """Capture every mutable registry, evidence and profile input of this candidate."""
     registry_identity = resolve_registry_identity(
         registry_root,
         collect_fingerprints=partial(collect_registry_tree_fingerprints, use_cache=False),
@@ -385,17 +561,12 @@ def _capture_receipt(
             "profile_schema": profile_schema_sha256,
         }
     )
-    compiler_identity_digest = authority_compiler_identity()
-    build_identity = AuthorityBuildIdentity.from_inputs(source_identity_digest, compiler_identity_digest)
     return AuthorityPublicationReceipt(
         registry_identity_digest=registry_identity.digest,
         source_evidence_fingerprints=source_evidence,
         source_evidence_content_digests=source_evidence_content_digests,
         profile_schema_sha256=profile_schema_sha256,
         source_identity_digest=source_identity_digest,
-        compiler_identity_digest=compiler_identity_digest,
-        component_dependency_digest=build_identity.component_dependency_digest,
-        identity_digest=build_identity.identity_digest,
     )
 
 
@@ -436,33 +607,38 @@ def publish_sqlite_authority_candidate(
     destination: Path,
     eager_baseline_path: Path | None = None,
 ) -> AuthorityDescriptor:
-    """Prepare outside the destination lock, then publish only while the receipt is current."""
+    """Compile in the canonical child outside the destination lock, then publish only while current."""
     resolved_destination = destination.resolve()
     resolved_destination.mkdir(parents=True, exist_ok=True)
-    descriptor_path = resolved_destination / "authority.current.json"
-    candidate = validate_authority_candidate(
-        registry_root=registry_root,
-        source_root=source_root,
-        profile_schema_path=profile_schema_path,
-    )
-    with exclusive_file_lock(
-        descriptor_path,
-        timeout=_PUBLICATION_LOCK_TIMEOUT,
-        retry_backoff=_PUBLICATION_LOCK_RETRY_BACKOFF,
-    ):
-        _require_candidate_receipt(candidate)
-        if eager_baseline_path is not None:
-            from ..eager_authority_baseline import write_eager_authority_baseline
-
-            write_eager_authority_baseline(eager_baseline_path, candidate.artifact)
-        return _install_validated_authority_database(
-            candidate.artifact,
-            destination=resolved_destination,
-            require_current=lambda: _require_candidate_receipt(candidate),
+    descriptor_path = resolved_destination / _DESCRIPTOR_NAME
+    with TemporaryDirectory(prefix="authority-candidate-", dir=resolved_destination) as staging:
+        candidate = prepare_authority_candidate(
+            registry_root=registry_root,
+            source_root=source_root,
+            profile_schema_path=profile_schema_path,
+            staging=Path(staging),
+            eager_baseline=eager_baseline_path is not None,
         )
+        with exclusive_file_lock(
+            descriptor_path,
+            timeout=_PUBLICATION_LOCK_TIMEOUT,
+            retry_backoff=_PUBLICATION_LOCK_RETRY_BACKOFF,
+        ):
+            _require_candidate_receipt(candidate)
+            if eager_baseline_path is not None and candidate.eager_baseline_path is not None:
+                with hardened_staged_publication(eager_baseline_path) as publication:
+                    publication.path.write_bytes(candidate.eager_baseline_path.read_bytes())
+                    publication.publish()
+            staged = AuthorityDescriptor.read(candidate.descriptor_path)
+            return _install_authority_database(
+                candidate.descriptor_path.parent / staged.database,
+                staged.logical_generation,
+                destination=resolved_destination,
+                require_current=lambda: _require_candidate_receipt(candidate),
+            )
 
 
-def _require_candidate_receipt(candidate: ValidatedAuthorityCandidate) -> None:
+def _require_candidate_receipt(candidate: PreparedAuthorityCandidate) -> None:
     current = _capture_receipt(
         candidate.registry_root,
         candidate.source_root,
@@ -471,6 +647,11 @@ def _require_candidate_receipt(candidate: ValidatedAuthorityCandidate) -> None:
     if current != candidate.receipt:
         raise RegistryValidationError(
             "registry candidate input receipt changed after validation; descriptor publication is refused"
+        )
+    recorded = candidate.compiler_closure
+    if live_compiler_closure(recorded) != recorded:
+        raise RegistryValidationError(
+            "authority compiler sources changed after validation; descriptor publication is refused"
         )
 
 
@@ -514,61 +695,71 @@ def _install_validated_authority_database(
     destination: Path,
     require_current: Callable[[], None],
 ) -> AuthorityDescriptor:
-    """Install exact validated bytes while the caller owns the publication lock."""
+    """Build and install exact validated bytes while the caller owns the publication lock."""
     resolved_destination = destination.resolve()
-    descriptor_path = resolved_destination / "authority.current.json"
     with TemporaryDirectory(prefix="authority-candidate-", dir=resolved_destination) as temporary:
-        staged_database = Path(temporary) / "candidate.sqlite3"
-        compiled = build_authority_database(staged_database, artifact)
-        database_name = f"authority-{compiled.physical_sha256}.sqlite3"
-        installed = resolved_destination / database_name
-        payload = staged_database.read_bytes()
-        created_install = False
-        descriptor_published = False
-        try:
-            if installed.exists():
-                if (
-                    installed.stat().st_size != compiled.byte_count
-                    or sha256_hex(installed.read_bytes()) != compiled.physical_sha256
-                ):
-                    raise RegistryValidationError(
-                        f"content-addressed authority collision at {installed}; existing bytes differ"
-                    )
-            else:
-                with installed.open("xb") as handle:
-                    created_install = True
-                    handle.write(payload)
-                    handle.flush()
-                    os.fsync(handle.fileno())
-            descriptor = AuthorityDescriptor(
-                database=database_name,
-                database_size=compiled.byte_count,
-                database_sha256=compiled.physical_sha256,
-                logical_generation=compiled.logical_generation,
-            )
-            with hardened_staged_publication(descriptor_path) as publication:
-                publication.path.write_bytes(descriptor.to_bytes())
-                reader = SQLiteAuthorityReader(publication.path)
-                try:
-                    with reader.lease() as pin:
-                        for query in reader.component_queries():
-                            reader.load(query, pin=pin)
-                finally:
-                    reader.close()
-                require_current()
-                publication.publish()
-                descriptor_published = True
-        finally:
-            _remove_unpublished_install(
-                installed,
-                created_install=created_install,
-                descriptor_published=descriptor_published,
-            )
-        _cleanup_retired_authority_databases(
-            resolved_destination,
-            current_database=descriptor.database,
+        compiled = build_authority_database(Path(temporary) / "candidate.sqlite3", artifact)
+        return _install_authority_database(
+            compiled.path,
+            compiled.logical_generation,
+            destination=resolved_destination,
+            require_current=require_current,
         )
-        return descriptor
+
+
+def _install_authority_database(
+    staged_database: Path,
+    logical_generation: str,
+    *,
+    destination: Path,
+    require_current: Callable[[], None],
+) -> AuthorityDescriptor:
+    """Install one staged database under its content address and cut the descriptor over to it."""
+    descriptor_path = destination / _DESCRIPTOR_NAME
+    payload = staged_database.read_bytes()
+    physical_sha256 = sha256_hex(payload)
+    database_name = f"authority-{physical_sha256}.sqlite3"
+    installed = destination / database_name
+    created_install = False
+    descriptor_published = False
+    try:
+        if installed.exists():
+            if installed.stat().st_size != len(payload) or sha256_hex(installed.read_bytes()) != physical_sha256:
+                raise RegistryValidationError(
+                    f"content-addressed authority collision at {installed}; existing bytes differ"
+                )
+        else:
+            with installed.open("xb") as handle:
+                created_install = True
+                handle.write(payload)
+                handle.flush()
+                os.fsync(handle.fileno())
+        descriptor = AuthorityDescriptor(
+            database=database_name,
+            database_size=len(payload),
+            database_sha256=physical_sha256,
+            logical_generation=logical_generation,
+        )
+        with hardened_staged_publication(descriptor_path) as publication:
+            publication.path.write_bytes(descriptor.to_bytes())
+            reader = SQLiteAuthorityReader(publication.path)
+            try:
+                with reader.lease() as pin:
+                    for query in reader.component_queries():
+                        reader.load(query, pin=pin)
+            finally:
+                reader.close()
+            require_current()
+            publication.publish()
+            descriptor_published = True
+    finally:
+        _remove_unpublished_install(
+            installed,
+            created_install=created_install,
+            descriptor_published=descriptor_published,
+        )
+    _cleanup_retired_authority_databases(destination, current_database=descriptor.database)
+    return descriptor
 
 
 def _cleanup_retired_authority_databases(destination: Path, *, current_database: str) -> tuple[Path, ...]:

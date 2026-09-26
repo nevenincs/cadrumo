@@ -55,26 +55,78 @@ flows:
       running: Comprovant el perfil i completant la configuració…
     edit:
       cancel: Cancel·la
+      choose_one: Tria una de les opcions, o cancel·la per deixar el valor sense canvis.
       clear: Esborra
       masked_kept: Aquest valor està ocult, per això el camp comença buit. Deixa'l
         buit per conservar el valor desat o escriu-ne un de nou per substituir-lo.
+      no_change: No ha calgut fer cap canvi.
       required_blank: '{field} és obligatori, així que no pot quedar en blanc. Introdueix
         un valor o cancel·la per deixar-lo sense canvis.'
       save: Desa
+      saved: Desat.
       shape:
         date: 'Format: AAAA-MM-DD - per exemple 1978-03-15.'
         decimal: Un nombre, amb punt per als decimals - per exemple 1234.56.
         email: Una adreça de correu electrònic - per exemple nom@exemple.cat.
         integer: Un nombre enter, sense separador de milers.
         money: Un import en euros, amb punt per als decimals - per exemple 1234.56.
+      stale_result: El desament ha acabat, però ja es mostra una versió més recent
+        del perfil. No s'ha mostrat el resultat anterior.
       write_failed: No s'ha pogut desar el camp. Torna-ho a provar.
       write_in_flight: S'està desant el camp anterior. Espera que acabi i torna-ho
         a provar.
     field_unavailable: Camp de perfil no disponible
+    help:
+      about: 'Sobre aquest ajust:'
+      what: 'Què és:'
+      where: 'On trobar-ho:'
+      why: 'Per què es demana:'
     language:
       unavailable: Aquest perfil no ofereix cap configuració d'idioma.
     namespace_detail: detall {number}
+    onboarding:
+      continue: Continua
+      done: La configuració és completa. Continua a l'àrea de treball o continua afegint
+        detalls opcionals a sota.
+      finish: Acaba la configuració
+      heading: Configura el teu perfil
+      intro: Aquí només es demanen les respostes necessàries per preparar les teves
+        declaracions. Prem Continua i respon cada pregunta; la resta és opcional i
+        pot esperar.
+      progress: '{answered} de {total} respostes obligatòries'
+      question: Pregunta {number} de {total} · {section}
+      ready: Ja tens totes les respostes obligatòries. Acaba la configuració per començar
+        a preparar les teves declaracions.
+      required_only: Només obligatòries
+      search_empty: Cap ajust no coincideix amb «{query}».
+      search_placeholder: Cercar ajustos
+      section_done: ✓ {title} - {present}/{total}
+      section_pending: ✖ {title} - {missing} obligatòries
+      sources_summary: Omple el perfil a partir dels registres de l'AEAT o dels teus
+        documents en lloc d'escriure'l.
+      sources_title: Importa dades (opcional)
+      step: 'Pas {step} de {steps}: {section}'
+      step_finish: 'Pas {step} de {steps}: acabar la configuració'
+      to_workbench: Continua a l'àrea de treball
+    plantilla_media:
+      average_workforce: Plantilla mitjana
+      list_failed: No s'han pogut llegir els anys declarats. Torna-ho a provar.
+      none_declared: Encara no hi ha cap any declarat.
+      remove: Elimina aquest any
+      state: Estat
+      state_committed: Compromesa (l'any encara és obert)
+      state_observed: Observada (l'any és tancat)
+      state_required: Indica si la xifra és observada o compromesa.
+      workforce_not_number: Introdueix la plantilla mitjana com un nombre, amb punt
+        per als decimals - per exemple 12.50.
+      year: Any natural
+      year_not_whole: Introdueix l'any natural com un nombre enter - per exemple 2025.
+    profile_missing_fields: 'Al perfil li falten %{count} camp(s) obligatori(s): %{fields}'
     required_field_unavailable: Camp obligatori del perfil
+    rows:
+      add: Afegir fila
+      remove: Eliminar fila
+      remove_confirm: Voleu eliminar la fila %{row} de la secció %{section}?
     section_title: '{title} - {present}/{total}'
     title: 'Perfil: {profile}'
   modelo_review:
@@ -197,7 +249,8 @@ flows:
     values_unmeasured: Aquesta pàgina només mostra l'estructura del formulari; encara
       no mostra valors calculats.
   modelo_workspace_overview:
-    actions_not_carried: Aquesta pàgina encara no suggereix passos següents.
+    actions_none: Encara no es pot fer cap pas següent des d'aquest espai de treball.
+    actions_suggested: 'Passos següents suggerits: {actions}'
     column:
       capability: Capacitat
       disposition: Disposició
@@ -258,8 +311,9 @@ flows:
       message: Què s'ha trobat
       severity: Severitat
       value: Valor
-    evidence_not_carried: Aquesta pàgina encara no mostra justificants ni passos següents
-      suggerits.
+    evidence_carried: 'Referències de suport i pas següent: {entries}'
+    evidence_none: Aquesta capacitat de verificació no cita cap referència del registre
+      ni indica cap pas següent realitzable.
     findings_none: La revisió de treball no ha registrat cap troballa.
     findings_unmeasured: Aquesta pàgina encara no mostra les troballes de la verificació.
     readiness_unmeasured: Aquesta pàgina encara no mostra si la declaració està a

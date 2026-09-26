@@ -21,9 +21,6 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from .....adapters.outbound.aeat.export.registry_record_renderer import RegistryFixedWidthRecordRenderer
-from .....adapters.persistence.profile.m145_communication_records import build_m145_communication_records_ports
-from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .....application.modelo.m145_communication_records import (
     M145CommunicationCreateCommand,
     M145CommunicationExportResult,
@@ -39,6 +36,9 @@ from .....domain.calculations.registry.export import ResolvedExportLayout, resol
 from .....domain.calculations.registry.schema_exports import ExportFieldDefinition
 from .....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from .....domain.calculations.registry.tests.snapshot_support import build_snapshot
+from ....outbound.aeat.export.registry_record_renderer import RegistryFixedWidthRecordRenderer
+from ...storage.tests.secure_sql import isolated_runtime_profile
+from ..m145_communication_records import build_m145_communication_records_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("authority_operation")]
 

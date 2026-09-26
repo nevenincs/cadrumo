@@ -22,8 +22,9 @@ from types import MappingProxyType
 from typing import Final
 
 from ...core.casilla_id import CasillaId, validated_casilla_id
-from ...core.time.clock import today_madrid
-from ..calculations.registry.errors import RegistryValidationError
+from ...core.modelo import Modelo
+from ...core.period import Period, StandardPeriodCode
+from ..calculations.registry.errors import GovernedFactNotApplicableError, RegistryValidationError
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from ..calculations.registry.ids import BindingId
@@ -33,6 +34,10 @@ from ..calculations.registry.validate_cross_domain_snapshot import register_cros
 from ..calculations.registry.withholding_bindings import resolve_retencion_clave
 
 PERCEPTOR_CLAVE_SCOPE_FACT_ID: Final = "m190-perceptor-casilla-clave-scope"
+#: The modelo whose perceptor records the scope fact governs. The snapshot check
+#: tests it before resolving the fact, because a year the fact has no edition
+#: for is a finding only for this modelo.
+PERCEPTOR_CLAVE_SCOPE_MODELO: Final = Modelo("190")
 _CASILLA_KEY_PREFIX: Final = "casilla:"
 _RESERVED_KEYS: Final = frozenset({"modelo", "row_clave_binding", "row_subclave_binding"})
 
@@ -82,13 +87,19 @@ class PerceptorClaveScope:
 
 def resolve_perceptor_clave_scope(
     *,
-    effective_date: date,
+    period: Period,
     authority: GovernedFactSource | None = None,
 ) -> PerceptorClaveScope:
-    """Resolve the clave scope declared for the filing period of ``effective_date``."""
+    """Resolve the clave scope declared for the filing ``period``.
+
+    The editions are windows on the filing-period axis with no period
+    selector, so the coordinate is the period's own end date and the governed
+    fact resolver picks the edition, including any temporal projection.
+    """
     selected_authority = authority or governed_facts_in_scope()
     if selected_authority is None:
         raise RegistryValidationError("perceptor clave scope requires an explicit authority operation or scope")
+    effective_date = period.end_date
     resolved = selected_authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id=PERCEPTOR_CLAVE_SCOPE_FACT_ID,
@@ -213,15 +224,38 @@ def check_perceptor_clave_scope(
     casilla_ids: frozenset[CasillaId],
     renta_first_slice_binding_targets: frozenset[CasillaId],  # shared Protocol shape, unused here
     revision_binding_ids: frozenset[BindingId] = frozenset(),
+    *,
+    filing_year: int,
 ) -> list[str]:
     """Assert the declared scope names real casillas and claves where it applies.
 
+    The scope is the edition governing ``filing_year``, the validated
+    snapshot's own year, so each revision is held to its own record design.
     A revision that declares no per-record clave binding carries no perceptor
-    records to scope, so the check has no claim over it.
+    records to scope, so the check has no claim over it; one that declares no
+    binding at all cannot carry that binding under any edition's name. A
+    revision that declares bindings in a year no edition governs is refused:
+    whether it carries perceptor records is exactly what the missing edition
+    would have to say.
     """
     del renta_first_slice_binding_targets
-    scope = resolve_perceptor_clave_scope(effective_date=today_madrid())
-    if modelo_id != scope.modelo_id or scope.row_clave_binding not in revision_binding_ids:
+    if modelo_id != PERCEPTOR_CLAVE_SCOPE_MODELO or not revision_binding_ids:
+        return []
+    try:
+        # Modelo 190 is an annual summary, so its filing coordinate is the year's 0A period.
+        scope = resolve_perceptor_clave_scope(
+            period=Period.from_year_and_code(filing_year, StandardPeriodCode.ANNUAL.value)
+        )
+    except GovernedFactNotApplicableError as error:
+        return [
+            f"no perceptor clave scope edition governs filing year {filing_year}, "
+            f"but the revision declares bindings: {error}"
+        ]
+    if scope.modelo_id != modelo_id:
+        return [
+            f"perceptor clave scope for filing year {filing_year} names modelo {scope.modelo_id!r}, not {modelo_id!r}"
+        ]
+    if scope.row_clave_binding not in revision_binding_ids:
         return []
     failures = perceptor_clave_scope_failures(scope, casilla_ids=casilla_ids)
     if scope.row_subclave_binding not in revision_binding_ids:
@@ -234,6 +268,7 @@ register_cross_domain_snapshot_check(check_perceptor_clave_scope)
 
 __all__ = [
     "PERCEPTOR_CLAVE_SCOPE_FACT_ID",
+    "PERCEPTOR_CLAVE_SCOPE_MODELO",
     "ClaveScopeToken",
     "PerceptorClaveScope",
     "check_perceptor_clave_scope",

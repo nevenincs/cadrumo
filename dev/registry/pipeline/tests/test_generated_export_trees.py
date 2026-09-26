@@ -22,7 +22,7 @@ from __future__ import annotations
 
 import filecmp
 import shutil
-from dataclasses import dataclass
+from collections.abc import Iterable
 from pathlib import Path
 
 import pytest
@@ -32,6 +32,7 @@ from cadrumo.domain.calculations.registry.errors import (
     RegistryLoadError,
     RegistryValidationError,
 )
+from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
 
 from ...compiler.authority import compiled_bundled_authority
 from ...compiler.loader import (
@@ -46,6 +47,10 @@ from ..candidate_staging import (
 from ..cli import stage_published_modelo
 from ..export_fragment_provenance import (
     ExportFragmentTarget,
+    export_fragment_provenance_manifest_json_bytes,
+    export_fragment_provenance_path,
+    load_export_fragment_provenance_manifest,
+    loader_semantic_digest,
 )
 from ..generated_tree_dispositions import record_drift_dispositions, render_refusal_dispositions
 from ..generated_tree_inventory import GeneratedExportTree, generated_export_trees
@@ -57,43 +62,27 @@ from ._generated_tree_test_support import isolated_authorities, isolated_authori
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.usefixtures("governed_fact_scope")]
 
 
-@dataclass(frozen=True)
-class _ReproductionPendingPin:
-    """One source-bound reason a semantically reproducible tree cannot yet be republished."""
-
-    source_ref: str
-    source_sha256: str
-    reason: str
-    reconsideration_condition: str
-    check_mode_refusal: str
-
-
 _GENERATED_TREES = generated_export_trees()
 _RECORD_DRIFT_DISPOSITIONS = {item.subject: item for item in record_drift_dispositions()}
 _RENDER_REFUSAL_DISPOSITIONS = {item.subject: item for item in render_refusal_dispositions()}
-_REPRODUCTION_PENDING = {
-    "m185-2025-y-siguientes": _ReproductionPendingPin(
-        source_ref="aeat-dr-185-2026",
-        source_sha256="102dc91b4e9484b830c81e790cf08569be95e2854fee1138f63f363d35d2bcae",
-        reason="revision earns applicability authority, below the publisher's calculation-grade floor",
-        reconsideration_condition=(
-            "Reconsider when the revision earns calculation authority or the generated tree is withdrawn."
-        ),
-        check_mode_refusal="cannot satisfy the requested 'filing' snapshot authority",
-    ),
-}
-
-
-#: Check mode's exact current refusal, projected from the same source-bound pins
-#: that govern pending republication. A changed refusal makes the owning row red.
+#: Check mode's exact current refusal. A changed refusal makes the owning row red.
 _CHECK_MODE_PENDING: dict[str, str] = {
-    subject: pin.check_mode_refusal for subject, pin in _REPRODUCTION_PENDING.items()
-} | {
     # The tree is published at calculation grade and reproduces exactly, but check
     # mode validates the candidate as a filing snapshot, and the revision's
     # relationship families are not yet resolved to filing grade. Retires, by
     # failing the pass assertion below, the day the revision earns filing grade.
     "m222-2025-y-siguientes": (
+        "declares 'calculation' authority grade, which cannot satisfy the requested 'filing' snapshot authority"
+    ),
+    # The 2023 and 2024 editions are the same case as their in-force sibling
+    # above, from the same design family: each publishes a reproducing tree at
+    # calculation grade, and each still owes the relationship families the
+    # filing rung asserts. Both retire by the same pass assertion the day the
+    # revision earns filing grade.
+    "m222-2023": (
+        "declares 'calculation' authority grade, which cannot satisfy the requested 'filing' snapshot authority"
+    ),
+    "m222-2024": (
         "declares 'calculation' authority grade, which cannot satisfy the requested 'filing' snapshot authority"
     ),
 }
@@ -118,47 +107,63 @@ def test_every_pending_check_mode_entry_names_an_enrolled_tree() -> None:
     )
 
 
-def test_every_reproduction_pending_pin_is_live_and_source_bound() -> None:
-    """A publication exclusion names current evidence and retires when its cause does."""
-    enrolled = {str(tree): tree for tree in _GENERATED_TREES}
-    assert set(_REPRODUCTION_PENDING) <= set(enrolled), (
-        f"reproduction pins name no enrolled tree: {sorted(set(_REPRODUCTION_PENDING) - set(enrolled))}"
+def _published_layout(tree: GeneratedExportTree, root: Path) -> ExportLayoutDefinition:
+    """Load the committed tree's layout exactly as check mode loads its published witness."""
+    staged = stage_published_modelo(root, modelo=tree.modelo, revision=tree.revision)
+    definition = load_modelo_directory(staged or bundled_path("registry", "aeat", "modelos", tree.modelo))
+    (layout,) = definition.revisions[tree.revision].export_layouts
+    return layout
+
+
+def _stale_loader_attestations(entries: Iterable[tuple[str, Path, ExportLayoutDefinition]]) -> list[str]:
+    """Name every export root whose manifest attests a loader digest its layout no longer has."""
+    stale: list[str] = []
+    for subject, export_root, layout in entries:
+        manifest = load_export_fragment_provenance_manifest(export_fragment_provenance_path(export_root).read_bytes())
+        current = loader_semantic_digest(layout)
+        if manifest.loader_semantic_sha256 != current:
+            stale.append(f"{subject} (attests {manifest.loader_semantic_sha256}, current {current})")
+    return stale
+
+
+def test_every_committed_manifest_attests_the_current_loader_semantics(tmp_path: Path) -> None:
+    """Each committed manifest's loader digest equals the digest of the layout it ships.
+
+    The reproduction gate reaches this question only after a full render and
+    reports one tree at a time. This asks it directly and names every stale tree
+    at once, so a projection or loader change that re-attests the corpus reads
+    as one list of trees to republish.
+    """
+    stale = _stale_loader_attestations(
+        (str(tree), tree.committed, _published_layout(tree, tmp_path / str(tree))) for tree in _GENERATED_TREES
     )
-    authority = compiled_bundled_authority()
-    for subject, pin in _REPRODUCTION_PENDING.items():
-        tree = enrolled[subject]
-        assert tree.source_ref == pin.source_ref
-        source = authority.catalogues.sources.get(pin.source_ref)
-        assert source is not None
-        assert source.sha256 == pin.source_sha256, f"{subject}: source was reissued; reconsider the pin"
-        assert pin.reason.strip() and pin.reconsideration_condition.strip()
-        # A pin states that a tree differs from a fresh render only in its
-        # attestation. Once the tree also differs in its RECORDS it has a
-        # disposition row saying so, and that row is the stronger statement:
-        # source-pinned, self-retiring, and consulted by the reproduction gate
-        # before the pin ever is. The pin is not deleted, because it still
-        # carries the check-mode refusal this suite expects, but its class
-        # assertion defers to the disposition and resumes the day the row
-        # retires. The row is asserted source-bound in its place, so the pin is
-        # superseded by a declaration rather than left merely unchecked.
-        comparison = compare_revision_against_committed(
-            authority,
-            modelo=tree.modelo,
-            revision=tree.revision,
-        )
-        # The pin table is keyed by the tree's own name; the ledger is keyed by
-        # modelo/revision. Look the row up the way the ledger spells it.
-        disposition = _RECORD_DRIFT_DISPOSITIONS.get(f"{tree.modelo}/{tree.revision}")
-        if disposition is not None:
-            assert disposition.source_ref == pin.source_ref
-            assert disposition.source_sha256 == pin.source_sha256
-            assert comparison.disposition_class == "record_drift", (
-                f"{subject}: a disposition row stands but the tree no longer drifts in its records"
-            )
-            continue
-        assert comparison.disposition_class == "provenance_only", (
-            f"{subject}: reproduction pin is dormant or its failure class changed"
-        )
+
+    assert stale == [], (
+        f"{len(stale)} committed export manifest(s) attest loader semantics their layout no longer has: "
+        f"{stale}. Republish each through `python -m dev.registry.pipeline republish-target`; "
+        "test_loader_semantic_projection_shape_is_bound_to_its_schema_version names a projection change"
+    )
+
+
+def test_a_manifest_attesting_other_loader_semantics_is_named(tmp_path: Path) -> None:
+    """Detector: a tree whose manifest attests a different loader digest is reported by name."""
+    tree = next(item for item in _GENERATED_TREES if str(item) == "m347-2025-y-siguientes")
+    layout = _published_layout(tree, tmp_path / "published")
+    stale_root = tmp_path / "stale" / "export"
+    shutil.copytree(tree.committed, stale_root)
+    manifest_path = export_fragment_provenance_path(stale_root)
+    manifest = load_export_fragment_provenance_manifest(manifest_path.read_bytes())
+    manifest_path.write_bytes(
+        export_fragment_provenance_manifest_json_bytes(
+            manifest.model_copy(update={"loader_semantic_sha256": "0" * 64})
+        ),
+    )
+
+    stale = _stale_loader_attestations(
+        (("committed", tree.committed, layout), ("stale-copy", stale_root, layout)),
+    )
+
+    assert stale == [f"stale-copy (attests {'0' * 64}, current {loader_semantic_digest(layout)})"]
 
 
 def test_m390_isolation_excludes_both_export_authorities_and_keeps_required_support(tmp_path: Path) -> None:
@@ -341,13 +346,9 @@ def test_committed_tree_is_reproducible_and_check_mode_refuses_only_for_its_name
                 "widening it; a second cause needs its own declaration."
             )
             return
-        reproduction_pin = _REPRODUCTION_PENDING.get(str(tree))
-        assert reproduction_pin is not None, (
-            f"{tree}: committed export fragment(s) differ from a fresh render: {differing}"
-        )
-        assert reproduction_pin.source_ref == tree.source_ref
-        assert comparison.disposition_class == "provenance_only", (
-            f"{tree}: reproduction pin is dormant or its failure class changed"
+        raise AssertionError(
+            f"{tree}: committed export fragment(s) differ from a fresh render: {differing}; "
+            f"differing manifest members: {list(comparison.provenance_fields)}"
         )
 
     candidate_root = tmp_path / "candidate"

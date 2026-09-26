@@ -66,16 +66,17 @@ __all__ = [
     "RuntimeResident",
     "SystemMemoryReading",
     "UnloadOutcome",
+    "admit_cli_authority",
     "assess_model_load_contention",
     "binding_free_bytes",
     "cadrumo_selected_models",
-    "ensure_cli_startup_dependencies",
     "probe_hardware_profile",
     "probe_local_inference_hardware",
     "probe_local_model_provisioning",
     "probe_model_runtime_hardware_floor",
     "probe_optional_extra",
     "probe_optional_extras",
+    "provision_cli_storage",
     "pull_runtime_model",
     "read_accelerator",
     "read_installed_models",
@@ -118,21 +119,38 @@ from .provisioning_runtime import (
 _LOGGER = get_logger(__name__)
 
 
-def ensure_cli_startup_dependencies() -> None:
-    """Provision owned storage defaults and validate the shipped authority.
+def admit_cli_authority() -> None:
+    """Validate the shipped authority before any command is parsed, writing nothing.
 
-    Explicit storage overrides are dependencies and are validated by the
-    materializer rather than created. Authority admission validates the
-    published descriptor and content-addressed SQLite generation without
-    hydrating registry components or reaching development authoring inputs.
+    Admission validates the published descriptor and content-addressed SQLite
+    generation without hydrating registry components or reaching development
+    authoring inputs, and it never creates storage: a help request, a bare
+    group or a refused parse must leave a fresh state root untouched.
     """
-    from ..core.storage_materialization import ensure_storage_tree
     from ..domain.calculations.registry.authority import bundled_authority_descriptor_path
     from ..domain.calculations.registry.authority_store import require_authority_store_available
 
-    ensure_storage_tree(load_settings())
     require_authority_store_available(bundled_authority_descriptor_path())
-    _LOGGER.debug("CLI startup storage and authority dependencies admitted")
+    _LOGGER.debug("CLI authority admitted")
+
+
+def provision_cli_storage(*, writes_state: bool) -> None:
+    """Provision owned storage defaults for a command that parsing has accepted to run.
+
+    Explicit storage overrides are dependencies and are validated by the
+    materializer rather than created, for every command that runs. Called at
+    dispatch, once parse-time refusals have had their chance. Only a command
+    that may write state materialises the state tree; one that writes nothing
+    gets the derived, rebuildable caches its work may fill, so a first run
+    never looks like a configured install.
+    """
+    from ..core.storage_materialization import ensure_storage_tree
+    from ..core.storage_taxonomy import StorageGrouping
+
+    ensure_storage_tree(
+        load_settings(),
+        derived_groupings=None if writes_state else frozenset({StorageGrouping.CACHE}),
+    )
 
 
 class DependencyStatus(ProvisioningOutcome):

@@ -22,9 +22,14 @@ from ....adapters.persistence.storage.tests.secure_sql import (
 from ....application.overview.next_actions import declare_next_action
 from ....application.user_profile.capsule_record import LoadedProfileRecord, ProfileRecordStore
 from ....core.bucket_pointer import resolve_active_bucket_id
+from ....core.errors.error_codes import resolve_error_message
+from ....core.errors.hierarchy import CadrumoError
+from ....core.filing_year import FILING_YEAR_MAX
+from ....core.period import Period
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...adapter_composition import build_work_lifecycle_ports
 from ..declarations.tests.calendar_fixtures import calendar_projection
-from ..launcher import _calendar_work_create_handoff
+from ..launcher import _calendar_work_create_handoff, _declarations_work_create_handoff
 
 __all__ = ["_isolated_cli_backend"]
 
@@ -53,6 +58,13 @@ def bucket_id() -> Iterator[str]:
 
 
 @pytest.fixture
+def operation() -> Iterator[PinnedAuthorityOperation]:
+    """Pin one authority generation, as a TUI session does when it opens."""
+    with bundled_indexed_authority().operation() as pinned:
+        yield pinned
+
+
+@pytest.fixture
 def profile_decrypts(monkeypatch: pytest.MonkeyPatch) -> list[str]:
     """Record every profile-record decrypt in the process, still performing it."""
     decrypts: list[str] = []
@@ -67,13 +79,13 @@ def profile_decrypts(monkeypatch: pytest.MonkeyPatch) -> list[str]:
 
 
 def test_the_calendar_handoff_creates_the_declaration_decrypting_the_profile_once(
-    bucket_id: str, profile_decrypts: list[str]
+    bucket_id: str, profile_decrypts: list[str], operation: PinnedAuthorityOperation
 ) -> None:
     entry = next(row for row in calendar_projection().entries if str(row.modelo) == "111")
     action = declare_next_action(
         "operator.modelo.work.create", modelo="111", year=entry.filing_year, period=str(entry.period)
     )
-    handoff = _calendar_work_create_handoff(bucket_id=bucket_id, actor="operator")
+    handoff = _calendar_work_create_handoff(bucket_id=bucket_id, actor="operator", operation=operation)
     profile_decrypts.clear()
 
     handoff(action, entry)
@@ -86,3 +98,69 @@ def test_the_calendar_handoff_creates_the_declaration_decrypting_the_profile_onc
         == (str(entry.modelo), entry.filing_year, str(entry.period))
     ]
     assert len(created) == 1, "the handoff must actually create the declaration, or the count proves nothing"
+
+
+def test_declarations_handoff_creates_and_reuses_2025_selected_work(
+    bucket_id: str, operation: PinnedAuthorityOperation
+) -> None:
+    refreshes: list[str] = []
+    handoff = _declarations_work_create_handoff(
+        bucket_id=bucket_id,
+        actor="operator",
+        operation=operation,
+        refresh_after_success=lambda: refreshes.append("refreshed"),
+    )
+    selected_period = Period.from_year_and_code(2025, "2T")
+
+    created = handoff("111", 2025, selected_period)
+    reused = handoff("111", 2025, selected_period)
+
+    assert created.reused is False
+    assert reused.reused is True
+    assert refreshes == ["refreshed", "refreshed"]
+    units = [
+        unit
+        for unit in build_work_lifecycle_ports(bucket_id=bucket_id).work_unit_repository.load().work_units.values()
+        if (str(unit.modelo), unit.filing_year, unit.period) == ("111", 2025, selected_period)
+    ]
+    assert len(units) == 1
+
+
+@pytest.mark.parametrize(
+    ("modelo", "filing_year", "period_year", "period_code", "expected_key"),
+    [
+        ("600", 2025, 2025, "2T", "cli.app.modelo.work.create_stub_modelo_600_refused"),
+        ("111", 2025, 2025, "0A", None),
+        ("999", 2025, 2025, "2T", None),
+        ("111", 2025, 2024, "2T", "tui.declarations.work_create.refusal.period"),
+        ("111", FILING_YEAR_MAX + 1, FILING_YEAR_MAX + 1, "2T", "tui.declarations.work_create.refusal.year"),
+        ("200", 2025, 2025, "0A", "tui.declarations.work_create.refusal.not_applicable"),
+    ],
+    ids=["ceded-modelo", "undeclared-period", "unknown-modelo", "year-period-mismatch", "year-range", "not-applicable"],
+)
+def test_declarations_handoff_refuses_before_persisting_or_refreshing(
+    bucket_id: str,
+    operation: PinnedAuthorityOperation,
+    modelo: str,
+    filing_year: int,
+    period_year: int,
+    period_code: str,
+    expected_key: str | None,
+) -> None:
+    refreshes: list[str] = []
+    handoff = _declarations_work_create_handoff(
+        bucket_id=bucket_id,
+        actor="operator",
+        operation=operation,
+        refresh_after_success=lambda: refreshes.append("refreshed"),
+    )
+
+    with pytest.raises(CadrumoError) as refusal:
+        handoff(modelo, filing_year, Period.from_year_and_code(period_year, period_code))
+
+    if expected_key is not None:
+        assert refusal.value.translated_message == expected_key
+    # Every refusal reaches the operator as words, never as an empty notice.
+    assert resolve_error_message(refusal.value).strip()
+    assert refreshes == []
+    assert not build_work_lifecycle_ports(bucket_id=bucket_id).work_unit_repository.load().work_units

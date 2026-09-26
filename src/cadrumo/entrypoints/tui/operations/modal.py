@@ -19,7 +19,7 @@ from typing import ClassVar, Literal, override
 from pydantic import BaseModel
 from textual.app import ComposeResult
 from textual.binding import Binding
-from textual.containers import ItemGrid, Vertical
+from textual.containers import ItemGrid, Vertical, VerticalScroll
 from textual.screen import ModalScreen
 from textual.widgets import Button, Static
 from textual.worker import Worker, WorkerCancelled, WorkerFailed
@@ -52,6 +52,7 @@ from .interactions import (
 )
 from .logs import OperationModalLogViewV1, build_initial_log_view, fold_event_page
 from .projection import OperationModalViewModelV1, build_operation_modal_view_model
+from .refusal_explanation import public_refusal_explanation
 
 _POLL_INTERVAL = timedelta(milliseconds=200)
 
@@ -102,9 +103,9 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
         background: $surface;
         padding: $cadrumo-space-0 $cadrumo-space-1;
         width: $cadrumo-modal-width;
-        height: auto;
-        max-height: $cadrumo-modal-height;
+        height: $cadrumo-modal-height;
     }
+    #operation-modal-content { height: 1fr; }
     #operation-modal-status { text-style: bold; margin: $cadrumo-space-0; }
     #operation-modal-review { color: $text; margin: $cadrumo-space-0; }
     #operation-modal-log { color: $text-muted; height: auto; max-height: $cadrumo-log-max-height; overflow-y: auto; }
@@ -140,15 +141,20 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
 
     @override
     def compose(self) -> ComposeResult:
+        # The body keeps one fixed size and the rows scroll inside it, so the
+        # actions never move: a sized-to-content body re-centred on every poll
+        # that filled a row, and an operator clicking a control as it became
+        # enabled was aiming at where it had just been.
         with Vertical(id="operation-modal-body"):
-            yield Static("", id="operation-modal-status")
-            yield Static("", id="operation-modal-phase")
-            yield Static("", id="operation-modal-deadlines")
-            yield Static("", id="operation-modal-diagnostic")
-            yield Static("", id="operation-modal-action-refusal")
-            yield Static("", id="operation-modal-receipt")
-            yield Static("", id="operation-modal-review")
-            yield Static("", id="operation-modal-log")
+            with VerticalScroll(id="operation-modal-content"):
+                yield Static("", id="operation-modal-status")
+                yield Static("", id="operation-modal-phase")
+                yield Static("", id="operation-modal-deadlines")
+                yield Static("", id="operation-modal-diagnostic")
+                yield Static("", id="operation-modal-action-refusal")
+                yield Static("", id="operation-modal-receipt")
+                yield Static("", id="operation-modal-review")
+                yield Static("", id="operation-modal-log")
             with ItemGrid(id="operation-modal-actions", min_column_width=_ACTION_MIN_COLUMN_WIDTH):
                 yield Button(tr("operation.modal.action.reject"), id="btn-operation-reject")
                 yield Button(tr("operation.modal.action.apply"), id="btn-operation-apply", classes="-primary")
@@ -175,7 +181,7 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
                 cursor = self._log_view.next_cursor
             self._view_model = build_operation_modal_view_model(observed.projection)
             self._interaction = await resolve_modal_interaction_state(
-                self._controller, observed.projection, current=self._interaction
+                self._controller, observed.projection, BaseModel, current=self._interaction
             )
             self._refresh_view_state()
             if observed.projection.lifecycle is OperationLifecycle.TERMINAL:
@@ -259,7 +265,9 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
         if view_model.receipt_kind == "result":
             receipt.update(f"{tr('operation.modal.detail.receipt_result')}: {view_model.receipt_ref}")
         elif view_model.receipt_kind == "refusal":
-            receipt.update(f"{tr('operation.modal.detail.receipt_refusal')}: {view_model.receipt_ref}")
+            refusal = f"{tr('operation.modal.detail.receipt_refusal')}: {view_model.receipt_ref}"
+            explanation = public_refusal_explanation(view_model.receipt_ref)
+            receipt.update(refusal if explanation is None else f"{refusal}\n{explanation}")
         else:
             receipt.update("")
 

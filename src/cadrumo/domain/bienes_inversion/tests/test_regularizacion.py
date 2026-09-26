@@ -16,7 +16,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....domain.calculations.registry.schema_base import ThresholdComparison
+from ...calculations.registry.schema_base import ThresholdComparison
 from ..register import (
     BienInversionValidationError,
     RegularizacionDireccion,

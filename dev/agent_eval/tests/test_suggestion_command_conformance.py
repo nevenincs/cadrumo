@@ -50,7 +50,6 @@ from __future__ import annotations
 import ast
 import re
 from collections.abc import Iterator
-from functools import cache
 from pathlib import Path
 from typing import cast
 
@@ -63,7 +62,11 @@ from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from cadrumo.core.json_contract import EnvelopeStatus
 from cadrumo.core.operator_action_enums import ActionEvidenceProvenance
-from cadrumo.entrypoints.cli.tests.cli_runner import cadrumo_click_command
+from cadrumo.entrypoints.cli.tests.live_command_validation import (
+    command_option_names,
+    live_root_command,
+    live_root_option_names,
+)
 from dev._paths import REPO_ROOT
 from dev.agent_eval._action_coverage import LeafConditionScenario, production_leaf_condition_scenario_matrix
 from dev.agent_eval._models import ExitCodeScenario, ObservedProductionActionAssertion, observe_production_action
@@ -94,12 +97,6 @@ _AST_SCAN_ROOTS = (
 _CITATION_PATTERN = re.compile(r"(?<!an )\baeat (app|config)((?: (?:[a-z][a-z0-9-]*|\d{3}))*)")
 
 
-@cache
-def _root_command() -> click.Command:
-    """Build the live Click tree once for the whole module."""
-    return cadrumo_click_command()
-
-
 def _is_group(command: click.Command) -> bool:
     """Return whether ``command`` is a structural group (not a runnable leaf).
 
@@ -124,7 +121,7 @@ def _resolve_citation(tokens: tuple[str, ...]) -> tuple[str | None, bool]:
       which is NOT runnable verbatim — the operator must pick a child or be
       pointed at ``... --help``.
     """
-    command: click.Command = _root_command()
+    command: click.Command = live_root_command()
     context = click.Context(command, info_name="aeat")
     for token in tokens:
         if not _is_group(command):
@@ -137,38 +134,6 @@ def _resolve_citation(tokens: tuple[str, ...]) -> tuple[str | None, bool]:
         context = click.Context(subcommand, info_name=token, parent=context)
         command = subcommand
     return None, _is_group(command)
-
-
-@cache
-def _root_option_names() -> frozenset[str]:
-    """Long/short option strings declared on the root callback.
-
-    Root-global options (``--language`` / ``--format`` / ``--profile`` /
-    ``--help`` / etc.) are accepted on any leaf, so the option-validity check
-    unions them with the resolved command's own params. Mirrors
-    :func:`test_documented_command_conformance._root_option_names`.
-    """
-    names: set[str] = set()
-    for param in _root_command().params:
-        if getattr(param, "param_type_name", None) == "option":
-            names.update(param.opts)
-            names.update(param.secondary_opts)
-    return frozenset(names)
-
-
-def _command_option_names(command: click.Command) -> frozenset[str]:
-    """Long/short option strings declared on ``command``.
-
-    Mirrors :func:`test_documented_command_conformance._command_option_names`
-    so the operator-instruction surface validates cited ``--option`` tokens against the
-    same authoritative live-parameter set the how-to docs are checked against.
-    """
-    names: set[str] = set()
-    for param in command.params:
-        if getattr(param, "param_type_name", None) == "option":
-            names.update(param.opts)
-            names.update(param.secondary_opts)
-    return frozenset(names)
 
 
 # An ``--option`` / ``-o`` token in operator-instruction text. ``--help`` is always valid
@@ -187,7 +152,7 @@ def _resolve_leaf_command(tokens: tuple[str, ...]) -> click.Command | None:
     the dead-token check already reports that as a failure, so option validity
     is only evaluated on a citation whose verb path is sound.
     """
-    command: click.Command = _root_command()
+    command: click.Command = live_root_command()
     context = click.Context(command, info_name="aeat")
     for token in tokens:
         if not _is_group(command):
@@ -299,7 +264,7 @@ def _dead_citations_in(text: str, *, origin: str, require_runnable_leaf: bool = 
         if require_runnable_leaf and cited_options:
             command = _resolve_leaf_command(tokens)
             if command is not None and not _is_group(command):
-                valid_options = _command_option_names(command) | _root_option_names()
+                valid_options = command_option_names(command) | live_root_option_names()
                 for option in cited_options:
                     if option not in valid_options:
                         failures.append(
@@ -400,7 +365,7 @@ def _advertised_command_failures(command: str, *, origin: str) -> list[str]:
                 f"{origin}: advertised command {command!r} names neither a command family nor a root "
                 "option, so nothing about it is checked against the live tree"
             ]
-        unknown = sorted(option for option in cited if option not in _root_option_names())
+        unknown = sorted(option for option in cited if option not in live_root_option_names())
         if not unknown:
             return []
         return [

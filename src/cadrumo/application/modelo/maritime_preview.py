@@ -32,11 +32,6 @@ from dataclasses import dataclass, replace
 from decimal import Decimal
 from typing import TYPE_CHECKING, Literal
 
-from ...application.calculations.maritime_exemption_service import (
-    resolve_maritime_exemption,
-    retmar_mandatory_filing,
-)
-from ...application.user_profile.projections import fact_value
 from ...core.parsing.utils import parse_bool
 from ...core.time.clock import today_madrid
 from ...domain.calculations.registry.authority import bundled_indexed_authority
@@ -44,7 +39,12 @@ from ...domain.renta.maritime_exemption import (
     MaritimeWorkerFacts,
     ProfileCompletenessError,
 )
-from ..calculations.maritime_exemption_service import MaritimeExemptionResult
+from ..calculations.maritime_exemption_service import (
+    MaritimeExemptionResult,
+    resolve_maritime_exemption,
+    retmar_mandatory_filing,
+)
+from ..user_profile.projections import fact_value
 from ..workflow.persistence import workflow_state_repository
 
 if TYPE_CHECKING:

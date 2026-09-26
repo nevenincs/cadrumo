@@ -81,11 +81,11 @@ from ....domain.modelos.filing_record import (
     derive_filing_record_id,
 )
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from ....entrypoints.adapter_composition import (
+from ....tests.aeat_literal_fixtures import SEDE_ROOT_URL_FIXTURE
+from ...adapter_composition import (
     build_amendment_action_ports,
     build_modelo_export_ports,
 )
-from ....tests.aeat_literal_fixtures import SEDE_ROOT_URL_FIXTURE
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

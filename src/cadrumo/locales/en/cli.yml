@@ -1,6 +1,19 @@
 cli:
   app:
     ledger:
+      actividad_asset:
+        claim_help: Record a forecast as an amortization claim; an identical replay
+          returns the existing claim.
+        correct_help: Append a revision that supersedes the asset's current revision
+          (JSON).
+        create_help: Create an activity asset from its first immutable revision (JSON).
+        filing_handoff_help: Show the recorded claims projected to Modelo 100 and,
+          cumulatively, to Modelo 130.
+        forecast_help: Preview, without recording it, the amortization the revision's
+          election allows for a covered interval.
+        group_help: 'IRPF activity-asset register: immutable revisions, amortization
+          forecasts and recorded claims (LIS art. 12).'
+        inspect_help: Show one activity asset's complete revision chain.
       bienes_inversion:
         acquisition_year_help: Year the good was acquired.
         art108_help: Whether the good qualifies as a bien de inversión under LIVA
@@ -301,6 +314,9 @@ cli:
         add_help: Create a linkable reconciliation invoice in the catalogue.
         country_code_help: 'Counterparty ISO 3166-1 alpha-2 country code. Required:
           it routes both informativas, so it is never assumed.'
+        euro_rate_unavailable_message: No euro exchange rate for {currency} on {date}
+          was found, so this invoice was recorded without a euro value and is left
+          out of euro totals until a rate is added.
         group_help: Business invoice records (issued or received)
         import_all_refused: 'bulk invoice import failed: every row was refused; no
           invoices were created'
@@ -323,6 +339,8 @@ cli:
           calculation to ground it.
         kind_help: 'Invoice kind: issued (a customer owes you) or received (you owe
           a supplier)'
+        line_help: Repeatable JSON object for one invoice line; pass one object per
+          --line. For structured input it replaces scalar --taxable-base and --iva-rate.
         list_help: List reconciliation catalogue invoices.
         operation_date_help: Date the entrega or prestacion took place (YYYY-MM-DD).
           This is the LIVA art. 75 devengo date that decides which period declares
@@ -636,8 +654,6 @@ cli:
         foreign_asset_observation_help: JSON ForeignAssetObservation object. The source_kind
           value must be ledger_transaction, purchase_invoice_evidence, payable_invoice,
           or collectible_invoice. Repeat for multiple observations.
-        invoice_retencion_excluded_notice: 'Invoice %{invoice_id} was not routed into
-          the retenciones store: %{reasons}.'
         invoice_retencion_wrong_modelo: --received-invoice-retencion routes into the
           retenciones per-perceptor store; modelo %{modelo} is not one of 111, 115,
           123, 180, 190, 193.
@@ -645,6 +661,21 @@ cli:
         json_parse_error: '{flag} must be a JSON object; invalid JSON at byte {pos}.'
         json_validation_error: 'The value of {flag} is not a valid observation object:
           {details}.'
+        ledger_payment_withholding_exclusive: --ledger-payment-withholding cannot
+          be combined with --received-invoice-retencion or --retencion-observation.
+        ledger_payment_withholding_help: 'JSON LedgerPaymentWithholdingEvidenceRequest:
+          one payroll (Modelo 111) or movable-capital income (Modelo 123) allocation
+          paid by a ledger transaction.'
+        ledger_payment_withholding_period_mismatch: The payment's income kind and
+          recognition period do not match the requested modelo and period.
+        ledger_payment_withholding_single_allocation: Submit one ledger payment allocation
+          per command.
+        ledger_payment_withholding_wrong_modelo: --ledger-payment-withholding records
+          work income for Modelo 111 and movable-capital income for Modelo 123 only;
+          modelo %{modelo} is not accepted.
+        m123_ledger_payment_only: Modelo 123 accepts withholding evidence only from
+          its paying ledger transaction through --ledger-payment-withholding; invoice
+          and hand-typed retenciones are refused, and nothing was written.
         modelo_help: Supported modelo code for the backend aggregation service (111,
           115, 123, 180, 190, 193, 347, 349, or 720).
         period_help: 'Aggregation period token: 0A annual, 1T-4T quarters, 01-12 months.'
@@ -993,9 +1024,11 @@ cli:
         ccaa_help: Autonomous community tax residence key for the M100 autonomic scale
           (e.g. cataluna, comunidad-valenciana). Must match the registry enum.
         no_m130_revisions: No Modelo 130 quarterly draft revisions exist for filing
-          year %{year}. Run `aeat app modelo work calculate --modelo 130 --year %{year} --period 1T` first.
+          year %{year}. Run `aeat app modelo work calculate --modelo 130 --year %{year}
+          --period 1T` first.
         no_m130_units: No Modelo 130 borrador work units exist for filing year %{year}.
-          Run `aeat app modelo work create --modelo 130 --year %{year} --period 1T` first.
+          Run `aeat app modelo work create --modelo 130 --year %{year} --period 1T`
+          first.
         year_help: Filing year (e.g. 2024).
       project_help: Run modelo aggregate projections (e.g. year-end Modelo 130 aggregation).
       readiness:
@@ -1009,8 +1042,8 @@ cli:
         / year / period.
       reconcile:
         app_help: 'Reconcile a modelo work unit against its AEAT justificante: pull
-          fetches the receipt from AEAT and reconciles; file reconciles a local PDF;
-          history lists past runs.'
+          fetches the receipt from AEAT and reconciles; import reconciles a local
+          PDF; list shows past runs.'
         file_kind_help: 'Evidence document kind: justificante (AEAT receipt, every
           modelo) or declaration (filed declaración PDF, casilla-level reconcile,
           enrolled modelos only). Defaults to justificante.'
@@ -1242,6 +1275,10 @@ cli:
         amendment_reason_help: Free-text reason for the amendment (operator audit
           trail)
         app_help: Manage the lifecycle of modelo work units
+        attest_m303_exonerado_390_help: Record in encrypted custody your attestation
+          that the Modelo 390 exemption section does not apply to this Modelo 303
+          return for the last period of the year (12 or 4T), and print its identifier
+          and SHA-256 for `work calculate`. Other periods do not ask it.
         autoconsumo_promotor_base_help: 'Tax base for the real-estate developer self-supply
           (Art. 9.1.c + Art. 79.4 LISIVA): construction or renovation cost of properties
           converted to the rental estate. The assistant automatically applies 21%
@@ -1363,6 +1400,9 @@ cli:
           SHA-256 digest; received {value}.
         invalid_work_unit_lookup_id: work_unit_id must be a lowercase hexadecimal
           SHA-256 id or unambiguous prefix
+        joint_return_elected_help: 'Modelo 303: state explicitly whether this is a
+          joint self-assessment (autoliquidación conjunta); use --no-joint-return-elected
+          for no. Required for Modelo 303 and never assumed.'
         kv_empty_key_error: '{flag} key must not be empty; got {spec}.'
         kv_format_error: '{flag} must be written as {key_label}={value_label}. This
           is a key-value entry: put the field name on the left of one equals sign
@@ -1381,6 +1421,13 @@ cli:
           or Spanish-source ledger aggregation.'
         m210_plazo_resolved: 'Modelo 210 filing window resolved: voluntary filing
           closes on %{closes_on}.'
+        m303_exonerado_390_attachment_id_help: 'Modelo 303, last period of the year
+          (12 or 4T) only: identifier of the secure Modelo 390 non-applicability attestation
+          returned by `app modelo work attest-m303-exonerado-390`. Refused in any
+          other period.'
+        m303_exonerado_390_sha256_help: 'Modelo 303, last period of the year (12 or
+          4T) only: SHA-256 of that attestation, exactly as `attest-m303-exonerado-390`
+          returned it.'
         m303_filing_evidence_help: Path to the complete typed Modelo 303 filing-evidence
           JSON document.
         m303_rectificativa_motive_help: 'Required for an applicable Modelo 303 rectificativa:
@@ -1412,6 +1459,9 @@ cli:
         name_required: Supply --name.
         notes_help: Optional notes attached to the filing record
         observations_help: Show typed per-casilla calculation observations and provenance.
+        observed_at_help: When you confirmed the attestation, as an ISO 8601 instant
+          with a UTC offset (for example 2025-03-31T12:00:00+00:00); not before the
+          quarter closes and not in the future.
         output_language_help: Output language for rendered messages.
         override_help: Binding value with KEY=VALUE syntax (repeatable); run `aeat
           app modelo bindings list --missing` to see the bindings the calculation
@@ -1606,15 +1656,6 @@ cli:
       app_help: 'Run the full local modelo filing chain in one command: readiness
         -> create -> calculate -> verify -> export. Build and export only; never submits
         to AEAT'
-      errors:
-        m303_evidence_forbidden: Modelo 303 filing-instance evidence is forbidden
-          for another modelo.
-        m303_filing_evidence_invalid: The Modelo 303 filing-evidence document at {path}
-          is unreadable or invalid.
-        m303_filing_evidence_period_mismatch: The Modelo 303 filing-evidence period
-          does not match the selected work period.
-        m303_filing_evidence_required: Modelo 303 requires a complete filing-evidence
-          JSON document before calculation.
   common:
     errors:
       filing_requires_declared_tax_id: 'The active profile does not declare a tax
@@ -1917,6 +1958,8 @@ cli:
           was resumed unchanged.
         closed_previous_session: The previously logged-in profile was signed out before
           this login.
+        session_invocation_scoped: Profile authentication supplied to this command
+          applies to this process only; supply it again to the next process.
         session_not_persisted: No usable OS keychain found, so this command authenticated
           only its own process; supply profile authentication again to the next process.
       passphrase_channel_absent: No passphrase channel is available. Run this verb
@@ -1934,8 +1977,13 @@ cli:
         before changing its passphrase.
       reset_code_prompt: 'Recovery code: '
       reset_help: Set a new passphrase for a profile by proving its recovery code;
-        use it when the passphrase is forgotten.
+        use it when the passphrase is forgotten. The recovery code stays valid, and
+        archives exported before the reset still open with the passphrase they were
+        sealed under.
       reset_name_help: Name of the profile whose passphrase is being reset.
+      reset_scope_notice: 'The recovery code still works; replace it by disabling
+        and re-enabling recovery. A reset revokes nothing: archives exported before
+        it still open with the passphrase they were sealed under.'
     profile:
       add_row:
         duplicate_field: Field %{field} was supplied more than once; nothing was written.
@@ -2088,19 +2136,26 @@ cli:
           descendant, or a minor under judicial guarda y custodia -- the stored fact
           cannot distinguish either from a true hijo. Confirm this descendant is a
           hijo, or state the actual relación with RELACION=.
+        guarderia_spend_shapes_conflict: For one descendant, declare GASTOS_GUARDERIA
+          or GASTOS_GUARDERIA_MENSUAL, but not both.
         help: Declare descendants for the Art. 58/61 LIRPF minimo por descendientes.
         index_out_of_range: Index %{index} is out of range; the profile has %{total}
           descendant(s).
         invalid_flag: The --descendiente value is invalid. Every row must declare
           NACIMIENTO=YYYY-MM-DD; other keys such as RELACION, DISCAPACIDAD or CONVIVENCIA
           are optional.
-        guarderia_spend_shapes_conflict: For one descendant, declare GASTOS_GUARDERIA
-          or GASTOS_GUARDERIA_MENSUAL, but not both.
+        invalid_row: The --descendiente row could not be read. Check each KEY=VALUE
+          pair against the keys this command accepts; the error context names the
+          key when it can be identified.
         list_help: List descendants declared on the active profile.
         remove_help: Remove one descendant by 0-based index from the active profile.
         remove_index_help: 0-based index of the descendant to remove.
       edit_help: Re-run the wizard against an existing profile and update values in
         place
+      edit_row:
+        clear_help: Declared row field to clear explicitly; repeat as needed.
+        help: Modify an identified row in a repeatable profile section.
+        value_help: Row field as FIELD=VALUE; repeat for each field to change.
       help: Manage active profile configuration values
       history:
         invalid_event_type: 'Unknown event type: {value}. Valid event types: {valid}.'
@@ -2127,6 +2182,29 @@ cli:
         it any time with 'aeat config profile edit'.
       no_active_profile: No active profile. Run `aeat config profile create NAME --tax-id
         <NIF/CIF/DNI/NIE>` first.
+      notices:
+        payer_fact_cleared: '{fact}: this profile stored a “no” that the setup wizard
+          wrote as its default, so it could not be told apart from an unanswered question
+          and has been cleared. Obligations that depend on it stay undetermined until
+          you answer it with the {yes_flag} or {no_flag} option of the profile edit
+          command.'
+      plantilla_media:
+        average_workforce_help: Average total workforce for the year, as full-time
+          equivalents with at most two decimal places.
+        average_workforce_not_a_number: The --average-workforce value must be a number,
+          such as 12.50.
+        help: Declare the enterprise's average workforce per calendar year (LIS art.
+          102 and DA 17a).
+        list_help: List the average workforce declared per calendar year on the active
+          profile.
+        remove_help: Withdraw one calendar year's average workforce from the active
+          profile.
+        remove_year_help: Calendar year to withdraw.
+        set_help: Declare or replace one calendar year's average workforce on the
+          active profile.
+        state_help: observed for a closed year; committed for a year not yet closed,
+          which must be regularised if not met.
+        year_help: Calendar year the average applies to.
       recovery:
         channel_absent: A recovery code can only be shown on a terminal. On a headless
           host, provide both --recovery-handoff-fd and --recovery-verification-fd;
@@ -2161,6 +2239,14 @@ cli:
           JSON object from this inherited readable descriptor before anything is installed.
         verification_mismatch: The code you typed does not match; nothing was enrolled.
         verification_prompt: 'Type the recovery code back to confirm you have it: '
+      remove_row:
+        help: Remove an identified row from a repeatable profile section.
+      row:
+        invalid_row: '''%{row}'' is not a valid row key; use a non-negative integer
+          or base.'
+        row_help: Stable row key shown by profile view; use base for the unindexed
+          row.
+        section_help: Repeatable profile section key.
       sandbox:
         active_indicator_info: You are operating inside the sandbox %{label}, not
           a real profile; every command runs against this isolated, discardable bucket.
@@ -2195,6 +2281,10 @@ cli:
           already loaded is left as it is.
         model_help: Runtime identifier of the model to load. It must already be downloaded.
           Defaults to the model selected for the role.
+      probe:
+        help: Check the text model's fitness now instead of reading the verdict recorded
+          by `aeat config provision verify`, and report the local reader with that
+          result. Loads the model; records nothing.
       pull:
         help: Download models into the local runtime, every reader role's model unless
           --role or --model narrows it. Refuses before downloading when a model could
@@ -2225,9 +2315,6 @@ cli:
       status:
         help: Report whether the local runtime is installed and answering, and whether
           each reader role's model is installed. Reads only.
-        probe_help: Check the text model's fitness now instead of reading the verdict
-          recorded by `aeat config provision verify`. Loads the model and spends a
-          full answer; the result is not recorded.
       verify:
         help: Verify models load and answer a trivial prompt within a time bound,
           every reader role's model unless --role or --model narrows it.
@@ -2281,6 +2368,8 @@ cli:
       accept_defaults_help: Fill every unsupplied flag from the descriptor defaults,
         without prompting. Use alongside --quiet, or on its own for an all-defaults
         create.
+      colegio_concertado_help: Explicitly declare whether the withholder is a colegio
+        concertado for the Modelo 111 header.
       help: Initialize the active tax profile
       profile_name_help: Profile name to write the answers into
       quiet_help: Run non-interactively using only the supplied flag values; required
@@ -2585,9 +2674,9 @@ cli:
         by the application and cannot be assigned by hand. Choose one of: BUSINESS,
         PERSONAL, MIXED, or omit --classification to leave the row unclassified.'
       taxable_base_help: IVA-exclusive base amount
-      usage_ratio_help: 'Configured usage-ratio id, not arbitrary prose. Inspect the
+      usage_ratio_help: Configured usage-ratio id, not arbitrary prose. Inspect the
         configured ratios and eligible categories before creating or assigning one;
-        the row''s --category-id must already carry that ratio.'
+        the row's --category-id must already carry that ratio.
       value_date_help: Value date (YYYY-MM-DD)
     allocate:
       business_pct_help: Business-use share from 0 to 1 for MIXED/proportional rows;
@@ -2795,8 +2884,8 @@ cli:
         the amount without a sign and set the flow with --direction (OUTGOING for
         money out, INCOMING for money in, INTERNAL_TRANSFER between your own accounts).
       unknown_category: Unrecognised --category-id {category!r}. Supply a bare category
-        id such as {example!r}, not a family-prefixed or compound key. Consult
-        the ledger category catalogue for recognised ids.
+        id such as {example!r}, not a family-prefixed or compound key. Consult the
+        ledger category catalogue for recognised ids.
       unknown_provider: 'Unknown import --provider {provider!r}. Recognised providers:
         {providers}.'
     exclude:
@@ -3220,12 +3309,6 @@ cli:
       help: Render the deadline calendar for the active profile across the supplied
         date window. Applies festivos and business-day shifts. Local-only; never contacts
         AEAT.
-      shift:
-        business_day: Business day
-        calendar_unavailable: Calendar unavailable
-        domingo: Sunday
-        modelo_exception: Modelo exception
-        sabado: Saturday
       show_suppressed_help: Include filtered (non-applicable) obligations in the output
         with their applicability verdict and reason.
       to_help: Inclusive end date for the calendar window (ISO YYYY-MM-DD).

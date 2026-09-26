@@ -429,6 +429,9 @@ def requires(ctx: typer.Context, modelo: str, year: int, period: str) -> None:
         optional_manual=[
             discovery_rendering.data_inventory_casilla_payload(entry) for entry in checklist.optional_manual
         ],
+        detail_row_fields=[
+            discovery_rendering.data_inventory_casilla_payload(entry) for entry in checklist.detail_row_fields
+        ],
         ledger_derivable=[
             discovery_rendering.data_inventory_casilla_payload(entry) for entry in checklist.ledger_derivable
         ],
@@ -468,6 +471,7 @@ def requires(ctx: typer.Context, modelo: str, year: int, period: str) -> None:
             ),
             checklist.optional_manual,
         ),
+        *discovery_rendering.data_inventory_section_lines("detail_row_fields", checklist.detail_row_fields),
         *discovery_rendering.data_inventory_section_lines(
             tr(
                 "cli.app.modelo.requires.section_ledger",

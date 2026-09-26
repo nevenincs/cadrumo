@@ -20,6 +20,7 @@ from cadrumo.application.operations.models import (
 from cadrumo.application.operations.persistence.events import OperationReconciliationEvent
 from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
 from cadrumo.application.operations.persistence.leases import (
+    OperationLeaseObservation,
     OperationLeaseObservationDisposition,
     operation_conflict_scope_reference,
 )
@@ -40,7 +41,9 @@ from .test_supervisor import (
     DeadlineAcknowledgingExecutor,
     ResumableReviewExecutor,
     ReviewExecutor,
+    WaitingExecutor,
     _capabilities,
+    _close_host_over_live_executor,
     _registry,
     _repositories,
     _request,
@@ -138,9 +141,15 @@ def test_duplicate_response_is_refused_after_detach_and_same_owner_supervisor_re
 def test_expired_resumable_checkpoint_restarts_through_real_storage_and_replays_reconciliation(tmp_path: Path) -> None:
     """An expired owner resumes only the real persisted checkpoint and records that fact in the journal."""
     executors: list[ResumableReviewExecutor] = []
+    resume_entered = asyncio.Event()
+    release_resume = asyncio.Event()
 
     def build() -> ResumableReviewExecutor:
-        executor = ResumableReviewExecutor()
+        executor = ResumableReviewExecutor(
+            result_ref="result:recovered-checkpoint",
+            resume_entered=resume_entered,
+            release_resume=release_resume,
+        )
         executors.append(executor)
         return executor
 
@@ -178,19 +187,35 @@ def test_expired_resumable_checkpoint_restarts_through_real_storage_and_replays_
             token="5" * 64,
             clock=lambda: recovered_at,
         )
-        resumed = asyncio.run(recovery.reconcile(operation_id))
-        replay = asyncio.run(journal.read_after(operation_id, 0, limit=20))
         reloaded_journal, reloaded_leases, _ = _repositories(
             storage_root=storage_root, profile_objects=profile.repository
         )
-        reloaded = asyncio.run(reloaded_journal.load(operation_id))
         scope_ref = operation_conflict_scope_reference(
-            definition_id=reloaded.identity.definition_id,
-            subject_ref=reloaded.identity.subject_ref,
+            definition_id=checkpoint.identity.definition_id,
+            subject_ref=checkpoint.identity.subject_ref,
         )
-        recovered_lease = asyncio.run(reloaded_leases.inspect(scope_ref, operation_id, observed_at=recovered_at))
+
+        async def observe_live_resume() -> tuple[
+            OperationPersistedSnapshot,
+            OperationPersistedSnapshot,
+            OperationLeaseObservation,
+            OperationPersistedSnapshot,
+        ]:
+            # The resumed executor stays live until released, so the running
+            # state and the recovery owner's lease are read while they hold.
+            reconciliation = asyncio.create_task(recovery.reconcile(operation_id))
+            await resume_entered.wait()
+            live = await journal.load(operation_id)
+            reloaded = await reloaded_journal.load(operation_id)
+            lease = await reloaded_leases.inspect(scope_ref, operation_id, observed_at=recovered_at)
+            release_resume.set()
+            return live, reloaded, lease, await reconciliation
+
+        resumed, reloaded, recovered_lease, settled = asyncio.run(observe_live_resume())
+        replay = asyncio.run(journal.read_after(operation_id, 0, limit=20))
 
     assert checkpoint.pending_interaction is not None
+    assert settled.terminal_condition is OperationTerminalCondition.SUCCEEDED
     assert resumed.lifecycle is OperationLifecycle.RUNNING
     assert reloaded == resumed
     assert executors[1].resume_checkpoints == [checkpoint.pending_interaction]
@@ -209,12 +234,12 @@ def test_expired_resumable_checkpoint_restarts_through_real_storage_and_replays_
 
 def test_expired_running_operation_reconciles_to_unknown_interruption_without_false_success(tmp_path: Path) -> None:
     """A fresh supervisor classifies owner loss from the real lease before publishing interruption."""
-    from .test_supervisor import IdleExecutor
-
+    started = asyncio.Event()
+    executor = WaitingExecutor(started=started, release=asyncio.Event())
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         storage_root = tmp_path / "durable-state"
         journal, leases, operands = _repositories(storage_root=storage_root, profile_objects=profile.repository)
-        registry = _registry(executor_type=IdleExecutor, build=IdleExecutor)
+        registry = _registry(executor_type=WaitingExecutor, build=lambda: executor)
         owner = _supervisor(
             registry=registry,
             journal=journal,
@@ -225,7 +250,8 @@ def test_expired_running_operation_reconciles_to_unknown_interruption_without_fa
             lease_duration=timedelta(minutes=1),
         )
         operation_id = asyncio.run(owner.submit(_request(), operation_id="3" * 64))
-        asyncio.run(run_to_settlement(owner, operation_id))
+        abandoned = asyncio.run(_close_host_over_live_executor(owner, operation_id, started))
+        assert abandoned.lifecycle is OperationLifecycle.RUNNING
         recovered_at = _NOW + timedelta(minutes=2)
         recovery = _supervisor(
             registry=registry,
@@ -331,6 +357,10 @@ def test_detached_cancellation_race_persists_acknowledgement_before_terminal_set
 def test_detached_deadline_race_persists_cooperative_stop_before_terminal_settlement(tmp_path: Path) -> None:
     """The aggregate deadline races real execution through the filesystem journal before settlement."""
     executor = DeadlineAcknowledgingExecutor()
+    # The supervisor re-reads its clock each time its deadline wait wakes, so
+    # holding time still until the detach has been journalled means the
+    # deadline can only fire after it, however slowly the host schedules.
+    instant = [datetime.now(UTC)]
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         storage_root = tmp_path / "durable-state"
         journal, leases, operands = _repositories(storage_root=storage_root, profile_objects=profile.repository)
@@ -352,7 +382,7 @@ def test_detached_deadline_race_persists_cooperative_stop_before_terminal_settle
             operands=operands,
             owner_id="1" * 64,
             token="2" * 64,
-            clock=lambda: datetime.now(UTC),
+            clock=lambda: instant[0],
             execution_timeout=timedelta(milliseconds=50),
             cleanup_timeout=timedelta(seconds=1),
         )
@@ -366,6 +396,7 @@ def test_detached_deadline_race_persists_cooperative_stop_before_terminal_settle
             start_task = asyncio.create_task(run_to_settlement(supervisor, operation_id))
             await executor.started.wait()
             detached = await supervisor.detach(operation_id)
+            instant[0] += timedelta(milliseconds=50)
             # The start door settles an executor that acknowledged the
             # deadline's cooperative stop, so the terminal fact arrives from it
             # rather than from a second settlement the caller drives.

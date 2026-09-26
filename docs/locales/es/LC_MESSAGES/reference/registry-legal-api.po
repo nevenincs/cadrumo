@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-19 09:40+0200\n"
+"POT-Creation-Date: 2026-09-24 04:05+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo Localization <docs@cadrumo.example>\n"
 "Language: es\n"
@@ -189,11 +189,12 @@ msgstr "Recibo del compilador"
 
 #: ../../reference/registry-legal-api.md
 msgid ""
-"Relevant Cadrumo and compiler code, dependency manifests, Python "
-"major/minor, and Pydantic versions."
+"The Cadrumo and compiler source files the canonical compiler process "
+"loaded, dependency manifests, Python major/minor, and Pydantic versions."
 msgstr ""
-"Código relevante de Cadrumo y del compilador, manifiestos de "
-"dependencias, versión mayor/menor de Python y versiones de Pydantic."
+"Los archivos fuente de Cadrumo y del compilador que cargó el proceso "
+"canónico del compilador, los manifiestos de dependencias, la versión "
+"mayor/menor de Python y las versiones de Pydantic."
 
 #: ../../reference/registry-legal-api.md
 msgid "Component receipt"
@@ -249,22 +250,27 @@ msgid ""
 "The descriptor format is `cadrumo-authority-descriptor-v1`; its exact "
 "members are `format`, `database`, `database_size`, `database_sha256`, and"
 " `logical_generation`. The database format is `cadrumo-authority-"
-"sqlite-v1`. Its manifest binds the logical generation and the complete "
-"component directory. The physical database digest is both the "
-"descriptor's admission check and the content-addressed filename, so a "
-"changed or colliding payload is refused before runtime work begins."
+"sqlite-v3`. Its manifest binds the logical generation and the complete "
+"component directory, and it records the compiler source closure and "
+"environment the compiler receipt is computed from. A database in an older"
+" format is refused rather than read. The physical database digest is both"
+" the descriptor's admission check and the content-addressed filename, so "
+"a changed or colliding payload is refused before runtime work begins."
 msgstr ""
 "El formato del descriptor es `cadrumo-authority-descriptor-v1`; sus "
 "miembros exactos son `format`, `database`, `database_size`, "
 "`database_sha256` y `logical_generation`. El formato de la base de datos "
-"es `cadrumo-authority-sqlite-v1`. Su manifiesto vincula la generación "
-"lógica y el directorio completo de componentes. El resumen físico de la "
-"base de datos es a la vez la comprobación de admisión del descriptor y el"
-" nombre de archivo direccionado por contenido, de modo que una carga útil"
-" modificada o en colisión se rechaza antes de que empiece el trabajo del "
-"entorno de ejecución."
+"es `cadrumo-authority-sqlite-v3`. Su manifiesto vincula la generación "
+"lógica y el directorio completo de componentes, y registra el cierre de "
+"fuentes del compilador y el entorno a partir de los cuales se calcula el "
+"recibo del compilador. Una base de datos en un formato anterior se "
+"rechaza en lugar de leerse. El resumen físico de la base de datos es a la"
+" vez la comprobación de admisión del descriptor y el nombre de archivo "
+"direccionado por contenido, de modo que una carga útil modificada o en "
+"colisión se rechaza antes de que empiece el trabajo del entorno de "
+"ejecución."
 
-#: ../../reference/registry-legal-api.md:62
+#: ../../reference/registry-legal-api.md:64
 msgid ""
 "The development publication command is `python -m dev.registry.pipeline "
 "publish-authority`. It writes to the configured authority root, and "
@@ -283,26 +289,44 @@ msgstr ""
 "schema` explícito. El paquete del producto que lleva los comandos no "
 "tiene ningún comando que compile o repare esta publicación."
 
-#: ../../reference/registry-legal-api.md:71
+#: ../../reference/registry-legal-api.md:73
 msgid ""
 "The source receipt folds each registry and source-evidence file's root-"
 "relative path and content digest. Registry files fold CRLF to LF; source "
-"evidence is byte-exact. The compiler receipt also changes with relevant "
-"source code, `pyproject.toml`, `uv.lock`, Python major/minor, or the "
-"installed `pydantic` and `pydantic-core` versions. A fresh clone in the "
-"same declared environment is stable, without promising identity across "
-"incompatible build environments."
+"evidence is byte-exact. The compiler receipt hashes the portable path and"
+" content of every non-test `cadrumo` and `dev/registry` source file "
+"loaded to compile, validate and project the authority, together with "
+"`pyproject.toml`, `uv.lock`, Python major/minor, and the installed "
+"`pydantic` and `pydantic-core` versions. Every publication, whether "
+"started from the command above or by the package build, compiles in one "
+"fresh interpreter running the same module, so the recorded files do not "
+"depend on the launching tool. The currency check re-hashes exactly those "
+"recorded files without compiling: an edit to a recorded file, or its "
+"removal, makes the publication stale, while an edit to a module the "
+"compiler never loaded does not. A fresh clone in the same declared "
+"environment is stable, without promising identity across incompatible "
+"build environments."
 msgstr ""
 "El recibo de fuentes pliega la ruta relativa a la raíz y el resumen de "
 "contenido de cada archivo de registro y de evidencia de origen. Los "
 "archivos de registro convierten CRLF en LF; la evidencia de origen es "
-"exacta byte a byte. El recibo del compilador también cambia con el código"
-" fuente relevante, `pyproject.toml`, `uv.lock`, la versión mayor/menor de"
-" Python o las versiones instaladas de `pydantic` y `pydantic-core`. Una "
-"copia nueva del repositorio en el mismo entorno declarado es estable, sin"
-" prometer identidad entre entornos de compilación incompatibles."
+"exacta byte a byte. El recibo del compilador calcula el hash de la ruta "
+"portable y del contenido de cada archivo fuente de `cadrumo` y de "
+"`dev/registry`, excluidas las pruebas, que se carga para compilar, "
+"validar y proyectar la autoridad, junto con `pyproject.toml`, `uv.lock`, "
+"la versión mayor/menor de Python y las versiones instaladas de `pydantic`"
+" y `pydantic-core`. Toda publicación, tanto si se inicia con el comando "
+"anterior como con la compilación del paquete, se compila en un único "
+"intérprete nuevo que ejecuta el mismo módulo, de modo que los archivos "
+"registrados no dependen de la herramienta que la inicia. La comprobación "
+"de vigencia vuelve a calcular el hash exactamente de esos archivos "
+"registrados sin compilar: la modificación de un archivo registrado, o su "
+"eliminación, deja obsoleta la publicación, mientras que la modificación "
+"de un módulo que el compilador nunca cargó no lo hace. Una copia nueva "
+"del repositorio en el mismo entorno declarado es estable, sin prometer "
+"identidad entre entornos de compilación incompatibles."
 
-#: ../../reference/registry-legal-api.md:78
+#: ../../reference/registry-legal-api.md:87
 msgid ""
 "Each component payload is a compact canonical projection of one typed "
 "authority value. Required fields are always written; a field is omitted "
@@ -381,7 +405,7 @@ msgstr "Texto"
 msgid "The bare JSON string, for example `\"0.40\"`"
 msgstr "La cadena JSON sin etiqueta, por ejemplo `\"0.40\"`"
 
-#: ../../reference/registry-legal-api.md:96
+#: ../../reference/registry-legal-api.md:105
 msgid ""
 "Runtime decodes the payload under the same strict schema the development "
 "compiler uses. It refuses an unknown tag, a malformed or non-canonical "
@@ -394,7 +418,7 @@ msgstr ""
 "valor de hecho no textual sin etiqueta; nunca infiere un tipo a partir de"
 " la forma de una cadena."
 
-#: ../../reference/registry-legal-api.md:101
+#: ../../reference/registry-legal-api.md:110
 msgid ""
 "The compiler, not the product runtime, expands authoring deltas into "
 "complete canonical revisions. The database also carries typed runtime "
@@ -415,7 +439,7 @@ msgstr ""
 "cuando cualquier catálogo obligatorio del entorno de ejecución está "
 "vacío."
 
-#: ../../reference/registry-legal-api.md:108
+#: ../../reference/registry-legal-api.md:117
 msgid ""
 "Modelo and tax-domain types validate stable identifier syntax without "
 "loading the authored tree. The compiled authority owns membership and "
@@ -432,7 +456,7 @@ msgstr ""
 "`hard_ceiling` opcional— que se utiliza para admitir coordenadas "
 "compatibles."
 
-#: ../../reference/registry-legal-api.md:114
+#: ../../reference/registry-legal-api.md:123
 msgid ""
 "The `IndexedRegistryAuthority.operation()` path has no source "
 "compilation, raw authored-tree loader, repair path, eager JSON runtime "
@@ -457,7 +481,7 @@ msgstr ""
 " solo cuando una operación fijada los solicita; los valores correctos "
 "permanecen en una caché acotada al ámbito de la generación."
 
-#: ../../reference/registry-legal-api.md:124
+#: ../../reference/registry-legal-api.md:133
 msgid ""
 "Development checkpoint C may compare the indexed reader with an explicit "
 "`dev.registry.indexed_authority_benchmark` JSON baseline. The baseline is"
@@ -483,7 +507,7 @@ msgstr ""
 "se ejecute sobre un candidato estable; esta descripción de la API no "
 "implica ninguna ganancia medida."
 
-#: ../../reference/registry-legal-api.md:134
+#: ../../reference/registry-legal-api.md:143
 msgid ""
 "The runtime contract is for ordinary filesystem-installed wheels, where "
 "the descriptor and SQLite database have stable physical paths. Direct "
@@ -496,7 +520,7 @@ msgstr ""
 "por importación desde un zip: SQLite no puede abrir un miembro de archivo"
 " comprimido como su base de datos de solo lectura."
 
-#: ../../reference/registry-legal-api.md:139
+#: ../../reference/registry-legal-api.md:148
 msgid ""
 "`python -m dev.registry.conformance integrity` refuses a "
 "descriptor/database publication whose recorded identity digest differs "
@@ -512,11 +536,11 @@ msgstr ""
 "runtime-authority.md) para conocer el comando canónico, las garantías de "
 "publicación, las comprobaciones de actualidad y la ruta de recuperación."
 
-#: ../../reference/registry-legal-api.md:146
+#: ../../reference/registry-legal-api.md:155
 msgid "Filing-input contract shapes"
 msgstr "Formas del contrato de entrada de la presentación"
 
-#: ../../reference/registry-legal-api.md:148
+#: ../../reference/registry-legal-api.md:157
 msgid ""
 "The validated registry snapshot is the read-model authority for one "
 "modelo, filing year, and period. It defines the casillas, formulas, "
@@ -585,7 +609,7 @@ msgstr "Operandos tipados y operación fundamentada en referencias del registro"
 msgid "A calculated casilla observation"
 msgstr "Una observación de casilla calculada"
 
-#: ../../reference/registry-legal-api.md:159
+#: ../../reference/registry-legal-api.md:168
 msgid ""
 "A binding is not an attachable data blob. It is the contract by which an "
 "enrolled source resolver projects an owned source record into one of "
@@ -603,7 +627,7 @@ msgstr ""
 "ningún resolvedor de cálculo inscrito para el `InventoryLedger` cifrado, "
 "por lo que sigue siendo un registro empresarial independiente."
 
-#: ../../reference/registry-legal-api.md:166
+#: ../../reference/registry-legal-api.md:175
 #, python-brace-format
 msgid ""
 "Use the generated [application command reference](../cli/app.rst) to look"
@@ -616,11 +640,11 @@ msgstr ""
 " verificación y auditoría de Modelo. Usa el {doc}`glossary "
 "</_generated/glossary>` para las definiciones dirigidas a contribuyentes."
 
-#: ../../reference/registry-legal-api.md:170
+#: ../../reference/registry-legal-api.md:179
 msgid "Python public API lookup"
 msgstr "Consulta de la API pública de Python"
 
-#: ../../reference/registry-legal-api.md:172
+#: ../../reference/registry-legal-api.md:181
 msgid ""
 "The generated [Cadrumo package API](../api/cadrumo.rst) is the entry "
 "point for Python lookup. Public consumers import from `cadrumo` and its "
@@ -633,7 +657,7 @@ msgstr ""
 "paquetes generado enumera las superficies admitidas de adaptadores, "
 "aplicación, núcleo, dominio, punto de entrada y locales."
 
-#: ../../reference/registry-legal-api.md:177
+#: ../../reference/registry-legal-api.md:186
 msgid ""
 "There is no `aeat` Python import compatibility package. Names containing "
 "`aeat` inside the `cadrumo` package identify the external authority "

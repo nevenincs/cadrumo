@@ -379,6 +379,14 @@ def parse_fixed_width_export_field(
             f"export field {field.id!r} expected {field.length} wire characters, got {len(raw)}",
         )
     kind = str(getattr(field.kind, "value", field.kind))
+    if kind == "binding" and not field.required and raw == " " * field.length:
+        # A positioned binding-row renderer emits only active bindings for a
+        # logical row.  An explicitly optional inactive binding is therefore
+        # represented by its untouched space fill rather than by the normal
+        # standalone absent-value encoding.  Read-back must recognise that
+        # canonical representation before attempting a numeric parse.
+        # Required bindings intentionally remain subject to normal validation.
+        return None
     if (
         kind not in {"filler", "literal"}
         and not field.required

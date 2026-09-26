@@ -194,34 +194,37 @@ class CalculationSourceLineageRole(StrEnum):
     """Upstream fact linked to, but never substituting for, a primary object."""
 
 
+# The docstring is a pydantic JSON-schema description, published to MCP clients
+# with every verb that carries a binding source, so the design rationale lives here.
+#
+# The single canonical closed set of binding/source-mesh tokens.
+#
+# Every :class:`~domain.calculations.registry.schema.BindingDefinition`
+# declares exactly one ``source`` drawn from the registry-declared subset of
+# this enum. The same enum also carries mesh-only source decisions such as
+# :attr:`BORRADOR` and :attr:`IVA_WALLET_DECISION`, which are resolved before a
+# registry binding is constructed and are parity-accounted as non-registry
+# members. Per-family frozensets (invoice, ledger, counterpart) are
+# **derived** from this enum rather than hand-maintained, so a new source token
+# is added in exactly one place.
+#
+# BEHAVIOUR-PRESERVING LIFT: every member's string VALUE equals the source
+# token that was previously a bare string (or a :class:`RowSetGroupingKind`
+# member) in the ``BindingDefinition.source`` Literal. Those tokens live in
+# registry TOML and may be persisted; a :class:`~enum.StrEnum` serialises to its
+# value, so folding the mixed Literal onto this enum changes the static type
+# without changing any stored or compared string (the modelo-enum-hardening
+# precedent). Do NOT rename a stored token.
+#
+# This enum is the single canonical source-kind authority across BOTH the
+# registry binding definitions AND the application resolver mesh: the
+# counterpart subset (:data:`COUNTERPART_SOURCE_KINDS`)
+# is derived from it, and the two grouping members reuse :class:`RowSetGroupingKind`
+# values so the cross-layer aggregation taxonomy stays consistent; see
+# :data:`ROW_SET_GROUPING_FOR_BINDING_SOURCE` for the detail-record
+# source-token ↔ grouping-axis mapping.
 class BindingSourceKind(StrEnum):
-    """The single canonical closed set of binding/source-mesh tokens.
-
-    Every :class:`~domain.calculations.registry.schema.BindingDefinition`
-    declares exactly one ``source`` drawn from the registry-declared subset of
-    this enum. The same enum also carries mesh-only source decisions such as
-    :attr:`BORRADOR` and :attr:`IVA_WALLET_DECISION`, which are resolved before a
-    registry binding is constructed and are parity-accounted as non-registry
-    members. Per-family frozensets (invoice, ledger, counterpart) are
-    **derived** from this enum rather than hand-maintained, so a new source token
-    is added in exactly one place.
-
-    BEHAVIOUR-PRESERVING LIFT: every member's string VALUE equals the source
-    token that was previously a bare string (or a :class:`RowSetGroupingKind`
-    member) in the ``BindingDefinition.source`` Literal. Those tokens live in
-    registry TOML and may be persisted; a :class:`~enum.StrEnum` serialises to its
-    value, so folding the mixed Literal onto this enum changes the static type
-    without changing any stored or compared string (the modelo-enum-hardening
-    precedent). Do NOT rename a stored token.
-
-    This enum is the single canonical source-kind authority across BOTH the
-    registry binding definitions AND the application resolver mesh: the
-    counterpart subset (:data:`COUNTERPART_SOURCE_KINDS`)
-    is derived from it, and the two grouping members reuse :class:`RowSetGroupingKind`
-    values so the cross-layer aggregation taxonomy stays consistent; see
-    :data:`ROW_SET_GROUPING_FOR_BINDING_SOURCE` for the detail-record
-    source-token ↔ grouping-axis mapping.
-    """
+    """The closed set of source kinds a casilla binding or source-mesh decision draws from."""
 
     # Profile / cross-filing / relation / manual scalar sources.
     PROFILE = "profile"

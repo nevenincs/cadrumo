@@ -17,6 +17,7 @@ being treated as history.
 
 from __future__ import annotations
 
+import re
 import shutil
 import time
 from dataclasses import dataclass
@@ -25,6 +26,8 @@ from pathlib import Path
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.link_safety import is_link_like
 from cadrumo.tests.collection_storage_root import process_is_live
+
+from .paths import SCRATCH_PREFIX, SCRATCH_SEPARATOR
 
 PID_TRUST_CEILING_SECONDS = 24 * 60 * 60
 """Mtime silence after which a directory's PID stops being believed.
@@ -56,6 +59,10 @@ not a retention period -- it never applies to a run that finished.
 """
 
 
+_SCRATCH_NAME = re.compile(rf"{re.escape(SCRATCH_PREFIX)}{SCRATCH_SEPARATOR}\d+{SCRATCH_SEPARATOR}[0-9a-f]+")
+"""A run scratch name: prefix, owning PID, random token."""
+
+
 @dataclass(frozen=True)
 class RunVerdict:
     """Reclamation decision for one test-run directory."""
@@ -66,10 +73,11 @@ class RunVerdict:
 
 
 def _owner_pid(directory: Path) -> int | None:
-    parts = directory.name.rsplit("-", 2)
-    if len(parts) != 3 or not parts[1].isdigit():
+    """Return the PID a run marker or scratch name carries second from the end."""
+    parts = re.split(rf"[-{SCRATCH_SEPARATOR}]", directory.name)
+    if len(parts) < 3 or not parts[-2].isdigit():
         return None
-    return int(parts[1])
+    return int(parts[-2])
 
 
 def assess_run_directories(root: Path, *, now: float | None = None) -> tuple[RunVerdict, ...]:
@@ -96,23 +104,53 @@ def assess_run_directories(root: Path, *, now: float | None = None) -> tuple[Run
         for run in runs:
             if is_link_like(run) or not run.is_dir():
                 continue
-            try:
-                age = reference - run.stat().st_mtime
-            except OSError:
-                continue
             if (run / "run.json").is_file():
-                reclaimable = True
-                reason = "completed run output, which nothing reads back"
-            elif age > PID_TRUST_CEILING_SECONDS:
-                reclaimable = True
-                reason = "silent past the ceiling; no run of this suite is still writing"
-            else:
-                pid = _owner_pid(run)
-                owner_live = pid is None or process_is_live(pid)
-                reclaimable = not owner_live and age > INTERRUPTED_GRACE_SECONDS
-                reason = "interrupted owner is gone" if reclaimable else "owner may still be writing"
-            verdicts.append(RunVerdict(run, reclaimable, reason))
+                verdicts.append(RunVerdict(run, True, "completed run output, which nothing reads back"))
+                continue
+            verdict = _owned_verdict(run, reference)
+            if verdict is not None:
+                verdicts.append(verdict)
     return tuple(verdicts)
+
+
+def assess_scratch_directories(base: Path, *, now: float | None = None) -> tuple[RunVerdict, ...]:
+    """Classify run scratch directories under ``base`` by their owner's liveness.
+
+    Scratch sits beside the temp base rather than inside its run directory, so it
+    carries no completion record: its owner's PID and silence decide alone, under
+    the same ceiling and grace a run directory without ``run.json`` gets. Only
+    names shaped ``<prefix>_<pid>_<token>`` are considered; the temp base is
+    shared with every other program on the machine.
+    """
+    reference = time.time() if now is None else now
+    try:
+        entries = scan_directory(base, require_root=True)
+    except OSError:
+        return ()
+    verdicts: list[RunVerdict] = []
+    for entry in entries:
+        if not _SCRATCH_NAME.fullmatch(entry.name) or is_link_like(entry) or not entry.is_dir():
+            continue
+        verdict = _owned_verdict(entry, reference)
+        if verdict is not None:
+            verdicts.append(verdict)
+    return tuple(verdicts)
+
+
+def _owned_verdict(directory: Path, reference: float) -> RunVerdict | None:
+    """Judge an unfinished directory by its owner's liveness, then its silence."""
+    try:
+        age = reference - directory.stat().st_mtime
+    except OSError:
+        return None
+    if age > PID_TRUST_CEILING_SECONDS:
+        return RunVerdict(directory, True, "silent past the ceiling; no run of this suite is still writing")
+    pid = _owner_pid(directory)
+    owner_live = pid is None or process_is_live(pid)
+    reclaimable = not owner_live and age > INTERRUPTED_GRACE_SECONDS
+    return RunVerdict(
+        directory, reclaimable, "interrupted owner is gone" if reclaimable else "owner may still be writing"
+    )
 
 
 def reclaim_run_directories(verdicts: tuple[RunVerdict, ...]) -> int:

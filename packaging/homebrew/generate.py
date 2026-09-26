@@ -472,6 +472,15 @@ def generate_formula(
     venv.pip_install_and_link buildpath
   end
 
+  def post_install
+    # Homebrew's pip arguments carry --no-compile and a bottle pour drops all
+    # bytecode, so without this the first `aeat` launch compiles the whole
+    # import closure. A file that fails to compile merely stays uncompiled.
+    system libexec/"bin/python", "-c",
+           "import compileall, sys; compileall.compile_dir(sys.argv[1], quiet=2, workers=0)",
+           libexec/"lib"
+  end
+
   test do
     assert_predicate bin/"aeat", :executable?
     assert_match "CADRUMO #{{version}}", shell_output("#{{bin}}/aeat --version")

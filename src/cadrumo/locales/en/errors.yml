@@ -132,6 +132,9 @@ errors:
       a non-zero filing year.
     parameter_unknown: Parameter {parameter_id} is not registered.
     relation_value_missing: Relation {relation_id} has no supplied value.
+    row_field_template_supplied_as_input: Casillas {casilla_ids} take one value per
+      detail row of {record_ids}, so they cannot be supplied as a single input value.
+      Supply them as detail rows instead.
     text_input_non_text_casillas: 'Text input supplied for non-text fields: %{casilla_ids}.'
     unknown_input_casillas: 'Unknown registry input casilla ids: {casilla_ids}.'
     unknown_text_input_casillas: 'Unknown text-input field identifiers: %{casilla_ids}.'
@@ -149,6 +152,7 @@ errors:
     error_access_gate_submission: The access-gate policy rejected a submission operation.
     error_access_gate_submission_preflight: Access-gate preflight rejected a write
       operation.
+    error_actividad_asset: An IRPF activity-asset operation failed.
     error_aggregation_config: An aggregation service composition invariant was violated.
     error_application_live: The live AEAT read orchestration failed.
     error_application_live_iva_surface_timeout: Live IVA read surface timed out before
@@ -527,6 +531,8 @@ errors:
       Z, and a CIF with A-H, J, N, P-S, U, V or W.'
     validate_expects_str: Identity validation expects a text value; got {got_type}.
   integrity:
+    canonical_actividad_asset_history_persistence: The encrypted activity-asset history
+      could not be reopened safely.
     canonical_aeat_sync_workspace_projection: The loaded AEAT authorities cannot form
       one safe snapshot.
     canonical_authority_component_codec: An authority component could not be encoded
@@ -537,6 +543,8 @@ errors:
       component closure changed unexpectedly.
     canonical_authority_store_cutover: The authority store pin refers to a different
       reader generation.
+    canonical_authority_store_format: The published authority store is in a format
+      this version does not read; republish the authority.
     canonical_declarations_calendar_projection: The supplied calendar authorities
       cannot form one coherent safe view.
     canonical_declarations_workspace_projection: The supplied authorities cannot form
@@ -548,8 +556,12 @@ errors:
     canonical_malformed_manifest_payload: The corpus manifest payload is malformed
       and cannot be parsed.
     canonical_manifest_payload_validation: The corpus manifest payload failed validation.
+    canonical_modelo_workspace_absent_readiness_projection: The readiness capture
+      returned without its promised report.
     canonical_modelo_workspace_absent_registry_projection: The registry capture returned
       without its promised projection.
+    canonical_modelo_workspace_materialization_provenance_missing: A stored repeated-row
+      value names no source binding.
     canonical_relation_binding_join: The bundled relation-to-binding join could not
       be read as declared.
     canonical_tampered_manifest_payload: The corpus manifest digest does not match
@@ -585,6 +597,8 @@ errors:
     integrity_profile_answer_type: A profile-answer field received an unexpected type.
     integrity_profile_bucket_mismatch: Profile %{profile_id} does not belong to bucket
       %{bucket_id}; a profile bucket holds exactly one profile identity.
+    integrity_profile_record_schema_migration_required: The profile record was stored
+      under an earlier profile schema and must be migrated before it can be read.
     integrity_profile_snapshot_hash_mismatch: The profile snapshot hash does not match
       the current projection.
     integrity_profile_snapshot_not_found: No profile snapshot exists with the identifier
@@ -662,6 +676,10 @@ errors:
       was recorded outside an active run context.'
     internal_operation_declaration_breach: 'Internal error: an operation executor
       claimed a phase, effect, resource, or interaction its definition does not declare.'
+    internal_operation_executor_returned_no_result: 'Internal error: the operation
+      stopped without a result and without waiting for anything, so it was closed
+      as failed. Nothing further will happen to it; check the diagnostic logs for
+      the cause.'
     internal_operation_unsettled: 'Internal error: the operation stopped before its
       result could be recorded. It stays open and is closed automatically when its
       owner lock expires; check the diagnostic logs for the cause.'
@@ -693,6 +711,8 @@ errors:
       now. Wait for it to finish and try again.
     locked_google_keychain: The operating-system keychain holding the Google credentials
       is locked or unreachable. Unlock the keychain and try again.
+    locked_journal_busy: A journal file stayed in use by another program, so it could
+      not be read or written. Nothing was lost; try again in a moment.
     locked_storage_bucket_busy: The storage bucket is in use by another process. Wait
       for that process to finish and try again.
     locked_storage_bucket_session: This operation requires an unlocked storage bucket.
@@ -727,10 +747,25 @@ errors:
       under the current access scope.
     canonical_inventory_closing_authority_conflict: A different immutable inventory
       closing authority is already recorded.
+    canonical_invoice_withholding_evidence: The invoice evidence cannot support a
+      withholding capture.
+    canonical_ledger_payment_withholding_evidence: The ledger payment cannot support
+      a withholding capture.
     canonical_m036_declaration_ambiguous: The Modelo 036 declaration identifier prefix
       matches multiple records.
     canonical_m036_declaration_not_found: No Modelo 036 declaration matches the requested
       identifier.
+    canonical_m193_phase_materialization: The active capital evidence cannot support
+      a Modelo 193 disclosure phase.
+    canonical_modelo_123_count_authority_unresolved: 'Modelo 123 stays refused: withholding
+      evidence is stored for this period, but no official rule defines how the ''Número
+      de rentas'' recipient count is made, so it cannot be calculated, verified or
+      filed.'
+    canonical_modelo_193_settled_row_amount_authority_unresolved: 'Modelo 193 cannot
+      be exported: it contains a record paying income accrued in an earlier year,
+      and no official source settles the base and withholding that record declares.'
+    canonical_modelo_lifecycle_clock_precedes: The action's clock is earlier than
+      a record it would update, so nothing was saved. Retry with the current time.
     canonical_modelo_workspace_stale_cursor: The pinned cursor no longer matches the
       current baseline; restart the query.
     canonical_modelo_workspace_unresolved_work: The workspace read reached an unresolved
@@ -739,6 +774,8 @@ errors:
       is beyond the authoritative anchor.
     canonical_operation_observation_unknown_operation: No observation journal exists
       for the requested operation.
+    canonical_operation_subject_busy: Another operation for this declaration is still
+      running. Wait for it to finish, then try again.
     canonical_previous_filing_observation_absent: The required previous filing has
       not been observed.
     canonical_prorrata_election: The prorrata election does not satisfy LIVA Article
@@ -763,6 +800,15 @@ errors:
       supported catalogue.
     canonical_tui_unresolved_action_candidate: The TUI action candidate has no matching
       catalogue declaration.
+    canonical_withholding_filing_cadence: The withholding cannot be placed in a quarterly
+      period the filer's filing schedule does not assign. Monthly withholding periods
+      are not supported yet.
+    canonical_withholding_observation_mutation: The withholding evidence change was
+      refused for this filing window.
+    canonical_withholding_producer: The withholding evidence does not match a supported
+      modelo route.
+    canonical_withholding_recognition: The withholding recognition date cannot be
+      derived from the supplied evidence.
     censal_read_identity: The censal read does not belong to this profile's taxpayer.
     clave_credentials_incomplete: The selected Cl@ve authentication mode is missing
       a credential it needs.
@@ -816,6 +862,14 @@ errors:
     modelo_calculation_revision_selector_state: The selected calculation revision
       is not in a usable state for this operation.
     modelo_compare_need_two_years: Comparison requires two different filing years.
+    modelo_edit_baseline_stale: The declaration changed since it was opened, so the
+      edit was not applied. Reopen it and edit again.
+    modelo_edit_contract_incompatible: The edit was prepared in a format this version
+      does not accept, so nothing was changed. Reopen the declaration and edit again.
+    modelo_edit_intent_unsupported: This kind of edit is not available yet, so nothing
+      was changed.
+    modelo_edit_refused: The edit was refused and nothing was changed. Review the
+      values and try again.
     modelo_export_cross_bucket: The addressed revision belongs to a bucket other than
       the active profile's. Export only operates within the active profile bucket.
     modelo_export_no_active_bucket: Export requires an active profile. Create or select
@@ -839,6 +893,8 @@ errors:
       to a different revision.
     modelo_workspace_manifest_capture_not_current: The field manifest changed while
       it was being read; capture it again.
+    producer_capture_not_current: A producer projection changed while it was being
+      read; capture it again.
     profile_capsule_archive: The profile archive could not be written or read
     profile_capsule_source: The given source is not a readable profile capsule
     profile_import_collision: The imported profile identifier collides with an existing
@@ -856,10 +912,21 @@ errors:
       declarations. Review the amounts before continuing.
     reconciliation_evidence_invalid: The PDF could not be read. Check that the file
       is the AEAT justificante and not a different document, and that it is not corrupt.
-      Re-run `aeat app modelo reconcile file WORK_UNIT_ID --file PATH` with the correct
-      file.
+      Re-run `aeat app modelo reconcile import WORK_UNIT_ID --file PATH` with the
+      correct file.
     refused_access_gate_live_read_not_enabled: Live-read access to the AEAT is disabled.
       This operation cannot contact the AEAT under the current configuration.
+    refused_active_profile_pointer_manual_recovery: The active-profile pointer {path}
+      cannot be read, so it cannot be cleared without losing its revision; it needs
+      manual recovery.
+    refused_actividad_asset_claim_conflict: The amortization claim conflicts with
+      the asset's recorded claims.
+    refused_actividad_asset_incomplete: The activity-asset schedule lacks a fact it
+      needs, such as its opening amortization history.
+    refused_actividad_asset_unsupported: The requested activity-asset amortization
+      has no enrolled authority for this case.
+    refused_actividad_asset_validation: An IRPF activity-asset fact or amortization
+      request failed validation.
     refused_apoderado_invalid_represented_nif: The represented party's tax identifier
       is not a valid NIF, NIE, or CIF.
     refused_apoderado_live_check_unavailable: The live check of representatives is
@@ -1019,10 +1086,25 @@ errors:
       filter dispatch table.
     refused_modelo_charge_account_missing: A direct-debit filing was selected but
       no charge account is recorded.
+    refused_modelo_export_prior_domiciliation_election_required: Modelo 303 export
+      needs a choice for any earlier direct debit (keep it, or cancel or modify it);
+      none was given, so nothing was written. Choose one and export again.
+    refused_modelo_export_product_identity_unavailable: 'Official export is unavailable:
+      the record design reserves the header fields "Versión del Programa" and "NIF
+      del desarrollador" for the software developer, and no reviewed product identity
+      exists for them. Cadrumo does not fill them with blanks or placeholders. The
+      calculation and its verification remain valid; exporting needs a reviewed program
+      identifier and developer NIF from the software developer.'
     refused_modelo_ledger_evidence_recapture: The evidence behind this filing cannot
       be re-bundled because the contributing ledger rows have changed since it was
       sealed. Recalculate the return instead; recapture only picks up evidence attached
       to unchanged rows.
+    refused_modelo_m303_exonerado_390_attestation_unadmissible: 'The Modelo 390 applicability
+      attestation cannot be used for this Modelo 303: its identifier and SHA-256 are
+      malformed or do not match, or the attestation is unknown to this profile, belongs
+      to another quarter, no longer matches the current profile, or conflicts with
+      another attestation for the quarter. Nothing was calculated; record a new attestation
+      for this quarter and try again.'
     refused_modelo_m303_rectificativa_motive: Modelo 303 rectificativa amendments
       require exactly one canonical motive on an applicable reviewed record design;
       the motive is forbidden elsewhere.
@@ -1036,6 +1118,9 @@ errors:
     refused_modelo_refund_election_not_eligible: A refund was requested for a period
       where it is not available; only the year's last filing period permits a non-REDEME
       refund.
+    refused_modelo_stored_row_field_input: Calculation revision {calculation_revision_id}
+      stores a single input value for casillas {casilla_ids}, which take one value
+      per detail row. Recalculate work unit {work_unit_id} to replace it.
     refused_modeloprior_domiciliation_election: The prior-direct-debit cancellation
       or modification was refused because the required Modelo 303 rectificativa and
       official baseline U evidence are incomplete or unavailable.
@@ -1146,6 +1231,8 @@ errors:
       the draft again.
     submission_preflight_error_findings: Draft has {finding_count} ERROR-severity
       finding(s); resolve them before submission.
+    tui_modelo_lifecycle_action_unavailable: The selected Modelo lifecycle action
+      is unavailable.
     unsupported_currency: The currency code provided is not supported.
   snapshot:
     ambiguous_revision_selection: 'More than one registry revision matches modelo

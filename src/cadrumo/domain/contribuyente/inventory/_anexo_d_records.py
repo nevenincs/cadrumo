@@ -10,7 +10,7 @@ from __future__ import annotations
 from dataclasses import fields as dataclass_fields
 from datetime import date
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Literal
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -39,6 +39,7 @@ from .records import (
 
 if TYPE_CHECKING:
     from ...calculations.registry.authority import PinnedAuthorityOperation
+    from .valuation import InventoryAnexoDDerivation
 
 
 def _resolve_anexo_d_registry_declarations(
@@ -149,7 +150,7 @@ def _validate_anexo_d_issues(result: InventoryAnexoDResult) -> None:
         raise InventoryValidationError("inventory projection issues must exactly reflect retained conflicts")
 
 
-def _expected_anexo_d_source_values(result: InventoryAnexoDResult) -> Any:
+def _expected_anexo_d_source_values(result: InventoryAnexoDResult) -> InventoryAnexoDDerivation:
     from .valuation import derive_inventory_anexo_d_values
 
     try:
@@ -158,7 +159,10 @@ def _expected_anexo_d_source_values(result: InventoryAnexoDResult) -> Any:
         raise InventoryValidationError("inventory projection retained source is invalid") from exc
 
 
-def _validate_anexo_d_source_values(result: InventoryAnexoDResult, expected_source_values: Any) -> None:
+def _validate_anexo_d_source_values(
+    result: InventoryAnexoDResult,
+    expected_source_values: InventoryAnexoDDerivation,
+) -> None:
     for field in dataclass_fields(expected_source_values):
         field_name = field.name
         expected_value = getattr(expected_source_values, field_name)

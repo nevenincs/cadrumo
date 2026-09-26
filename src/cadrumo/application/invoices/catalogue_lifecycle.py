@@ -200,6 +200,7 @@ def update_catalogue_invoice(
     ports: CatalogueLifecyclePorts,
     occurred_at: datetime | None = None,
     actor: str = "cli",
+    expected_invoice: Invoice | None = None,
 ) -> CatalogueInvoiceUpdateResult:
     """Apply a correction to one persisted canonical invoice.
 
@@ -227,6 +228,7 @@ def update_catalogue_invoice(
         ports: Required read, mutation, and bucket-event capabilities.
         occurred_at: Event timestamp; defaults to now.
         actor: Who performed the correction, recorded on the event.
+        expected_invoice: Optional displayed baseline; a changed record refuses inside the guarded mutation.
 
     Returns:
         The corrected invoice, the updated catalogue, and the emitted event id.
@@ -236,15 +238,23 @@ def update_catalogue_invoice(
         InvoiceValidationError: The patch is empty, or the corrected record
             would violate an invoice invariant.
     """
-    from .catalogue_creation import emit_catalogue_invoice_event
+    from .catalogue_creation import build_catalogue_invoice_event
 
     written: list[Invoice] = []
+    commit_time = occurred_at or now()
+
+    target_invoice_id = resolve_catalogue_invoice(ports.invoice_repository.load(), invoice_id).invoice_id
 
     def _apply(catalogue: InvoiceCatalogue) -> InvoiceCatalogue:
         """Re-resolve, re-patch and re-validate against the catalogue being written."""
-        existing = resolve_catalogue_invoice(catalogue, invoice_id)
+        existing = resolve_catalogue_invoice(catalogue, target_invoice_id)
+        if expected_invoice is not None and existing != expected_invoice:
+            raise InvoiceValidationError(
+                "invoice changed since it was opened; reopen it before editing",
+                context={"invoice_id": existing.invoice_id},
+            )
 
-        changes = patch.model_dump(exclude_unset=True, exclude_none=True)
+        changes = patch.model_dump(exclude_unset=True)
         if not changes:
             raise InvoiceValidationError(
                 translated_message="application.invoices.lifecycle.errors.empty_invoice_patch",
@@ -257,7 +267,7 @@ def update_catalogue_invoice(
         # is the reconciliation authority, and an update that dropped them would
         # sever a bidirectional binding the operator never asked to break.
         payload["linked_transaction_ids"] = existing.linked_transaction_ids
-        payload["updated_at"] = occurred_at or now()
+        payload["updated_at"] = commit_time
         corrected = Invoice.model_validate(payload)
 
         written.clear()
@@ -266,26 +276,24 @@ def update_catalogue_invoice(
         updated[corrected.invoice_id] = corrected
         return InvoiceCatalogue.model_validate({"invoices": updated})
 
-    # Guarded: correcting one invoice rewrites the whole singleton row, so an
-    # invoice created in the interim would be discarded by the correction. The
-    # patch is re-applied to the CURRENT stored record on a retry rather than to
-    # the one first read, which matters because the correction is a merge onto
-    # stored values -- replaying a merge computed against a superseded record
-    # would silently revert whatever changed in between.
-    new_catalogue = ports.invoice_repository.mutate(_apply)
-    corrected = written[0]
-    event_ids = emit_catalogue_invoice_event(
-        invoice=corrected,
+    # The event names a stable invoice identity and immutable facts, so it can
+    # be derived before the guarded mutation.  The committer re-applies the
+    # patch to the current singleton after a conflict and writes both catalogue
+    # and audit history in one batch.
+    existing = resolve_catalogue_invoice(ports.invoice_repository.load(), target_invoice_id)
+    event = build_catalogue_invoice_event(
+        invoice=existing,
         bucket_id=bucket_id,
         slot=1,
-        event_repository=ports.event_repository,
-        occurred_at=occurred_at or now(),
+        occurred_at=commit_time,
         actor=actor,
     )
+    new_catalogue = ports.audit_commit.mutate_with_event(_apply, event)
+    corrected = written[0]
     return CatalogueInvoiceUpdateResult(
         invoice=corrected,
         catalogue=new_catalogue,
-        bucket_event_ids=event_ids,
+        bucket_event_ids=(event.event_id,),
     )
 
 

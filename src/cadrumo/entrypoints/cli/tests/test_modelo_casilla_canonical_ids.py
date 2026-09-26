@@ -20,13 +20,17 @@ import pytest
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
-from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
-from ....core.period import Period
-from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....adapters.persistence.storage.tests.secure_sql import (
+    TestRuntimeProfile,
+    isolated_runtime_profile,
+)
+from ....adapters.persistence.storage.tests.secure_sql import isolated_cli_backend as _isolated_cli_backend
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
-from ._m303_filing_evidence_support import write_m303_filing_evidence
-from ._modelo_work_ux_support import _create_m303_work_unit
+from ....tests.cli_envelope import unwrap_schema_envelope
+from ._m303_ordinary_cli_support import joint_return_options
 from .cli_runner import invoke_cached_cli
+
+__all__ = ["_isolated_cli_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -44,7 +48,7 @@ def runtime_profile(
     directories that work-unit commands read from settings.
     """
 
-    with isolated_cli_runtime_profile(
+    with isolated_runtime_profile(
         tmp_path=tmp_path,
         bucket_id=_PROFILE_ID,
         label="Casilla canonical-id test profile",
@@ -69,6 +73,7 @@ def _seed_profile(runtime_profile: TestRuntimeProfile) -> None:
             UserProfileFact(path="identity.surnames", value="Test Operator"),
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
             UserProfileFact(path="activities.description", value="economic activity"),
+            UserProfileFact(path="censo.activity_start_date", value="2025-01-01"),
             UserProfileFact(path="iva.regime", value="GENERAL"),
             UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
             UserProfileFact(path="iva.m303_regime_composition", value="general"),
@@ -81,14 +86,31 @@ def _seed_profile(runtime_profile: TestRuntimeProfile) -> None:
     seed_test_profile_record(record, root=runtime_profile.storage_root, label="Casilla canonical-id test profile")
 
 
-def _filing_evidence_arg(tmp_path: Path) -> list[str]:
-    with bundled_indexed_authority().operation() as operation:
-        path = write_m303_filing_evidence(
-            tmp_path / "m303-filing-evidence.json",
-            Period.from_year_and_code(2025, "1T"),
-            operation=operation,
-        )
-    return ["--m303-filing-evidence", str(path)]
+def _filing_evidence_arg() -> tuple[str, ...]:
+    return joint_return_options()
+
+
+def _create_m303_work_unit() -> str:
+    result = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "work",
+            "create",
+            "--modelo",
+            "303",
+            "--year",
+            "2025",
+            "--period",
+            "1T",
+        ]
+    )
+    assert result.exit_code == 0, result.output
+    parsed = unwrap_schema_envelope(result.output)["work_unit_id"]
+    assert isinstance(parsed, str)
+    return parsed
 
 
 # ---------------------------------------------------------------------------
@@ -98,7 +120,6 @@ def _filing_evidence_arg(tmp_path: Path) -> list[str]:
 
 def test_printed_number_metadata_token_is_refused(
     runtime_profile: TestRuntimeProfile,
-    tmp_path: Path,
 ) -> None:
     """A printed number is not accepted when it differs from ``casilla.id``."""
 
@@ -109,7 +130,7 @@ def test_printed_number_metadata_token_is_refused(
         [
             "--language", "en",
             "app", "modelo", "work", "calculate", work_unit_id,
-            *_filing_evidence_arg(tmp_path),
+            *_filing_evidence_arg(),
             "--casilla", "69=0",
         ],
     )  # fmt: skip
@@ -123,7 +144,6 @@ def test_printed_number_metadata_token_is_refused(
 
 def test_export_ref_metadata_token_is_refused(
     runtime_profile: TestRuntimeProfile,
-    tmp_path: Path,
 ) -> None:
     """An export field id is not accepted as an alternate casilla reference."""
 
@@ -134,7 +154,7 @@ def test_export_ref_metadata_token_is_refused(
         [
             "--language", "en",
             "app", "modelo", "work", "calculate", work_unit_id,
-            *_filing_evidence_arg(tmp_path),
+            *_filing_evidence_arg(),
             "--casilla", "m303-2025.dp30301.f079=0",
         ],
     )  # fmt: skip
@@ -153,7 +173,6 @@ def test_export_ref_metadata_token_is_refused(
 
 def test_bare_numeric_unknown_casilla_surfaces_helpful_message(
     runtime_profile: TestRuntimeProfile,
-    tmp_path: Path,
 ) -> None:
     """An unresolvable token raises a helpful BadParameter.
 
@@ -168,7 +187,7 @@ def test_bare_numeric_unknown_casilla_surfaces_helpful_message(
         [
             "--language", "en",
             "app", "modelo", "work", "calculate", work_unit_id,
-            *_filing_evidence_arg(tmp_path),
+            *_filing_evidence_arg(),
             "--casilla", "99999=10.00",
         ],
     )  # fmt: skip
@@ -186,7 +205,6 @@ def test_bare_numeric_unknown_casilla_surfaces_helpful_message(
 
 def test_qualified_casilla_key_passes_validation_unchanged(
     runtime_profile: TestRuntimeProfile,
-    tmp_path: Path,
 ) -> None:
     """A canonical semantic casilla id reaches the engine unchanged.
 
@@ -202,7 +220,7 @@ def test_qualified_casilla_key_passes_validation_unchanged(
         [
             "--language", "en",
             "app", "modelo", "work", "calculate", work_unit_id,
-            *_filing_evidence_arg(tmp_path),
+            *_filing_evidence_arg(),
             "--casilla", "iva.resultado=0",
         ],
     )  # fmt: skip

@@ -23,7 +23,10 @@ def _with_authority[T](resolve: Callable[[GovernedFactSource], T]) -> T | None:
     """Resolve under the scoped authority, else a lease on the published one.
 
     Returns ``None`` when no authority can answer, so redaction applies its own
-    fail-safe instead of logging or raising from inside a log funnel.
+    fail-safe instead of logging or raising from inside a log funnel. An
+    authority that lacks the component answers nothing either: the store
+    reports a missing component as ``LookupError``, and a partial registry must
+    over-redact rather than break the log call that asked.
     """
     try:
         scoped = governed_facts_in_scope()
@@ -31,7 +34,7 @@ def _with_authority[T](resolve: Callable[[GovernedFactSource], T]) -> T | None:
             return resolve(scoped)
         with bundled_indexed_authority().operation() as operation:
             return resolve(operation)
-    except (CadrumoError, OSError, ValueError):
+    except (CadrumoError, LookupError, OSError, ValueError):
         return None
 
 

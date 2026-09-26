@@ -29,6 +29,13 @@ from ...application.aggregation.service import (
     PerModeloAggregationContributor,
     PerModeloAggregationResult,
 )
+from ...application.aggregation.withholding_observation_service import (
+    WithholdingGenerationAudit,
+    WithholdingGenerationId,
+    WithholdingMutationMode,
+    WithholdingScopeToken,
+    WithholdingWindowState,
+)
 from ...application.calculations.observations_repository import (
     ObservationSourceKind,
     PriorDomiciliationElectionProjection,
@@ -658,6 +665,16 @@ class WorkCalculateResult(CalculationRevisionProjectionFields):
     deadline: WorkDeadlinePosturePayload | None = None
 
 
+class M303Exonerado390AttestationResult(OutputSchema):
+    """Sanitized secure-reference result of ordinary M303 applicability admission."""
+
+    operation: str = "modelo.work.attest-m303-exonerado-390"
+    filing_year: int
+    period: Period
+    attachment_id: str
+    sha256: str
+
+
 class CalculationRevisionSummaryPayload(OutputSchema):
     """Compact calculation-revision row returned by ``modelo.work.revisions``."""
 
@@ -1100,7 +1117,8 @@ class ModeloRequiresResult(OutputSchema):
     Composes the registry snapshot for one ``(modelo, filing_year, period)``
     into the operator-facing "what data do I need" checklist: casillas the
     operator must hand-enter (``required_manual``), casillas they may
-    optionally enter (``optional_manual``), casillas the ledger aggregation
+    optionally enter (``optional_manual``), casillas they supply on each detail
+    row of a repeated export record (``detail_row_fields``), casillas the ledger aggregation
     mesh populates once the relevant transactions are imported and classified
     (``ledger_derivable``), and casillas populated from the active taxpayer
     profile (``profile_derivable``). The two cross-filing channels remain
@@ -1125,6 +1143,7 @@ class ModeloRequiresResult(OutputSchema):
     period: str
     required_manual: list[DataInventoryCasillaPayload]
     optional_manual: list[DataInventoryCasillaPayload]
+    detail_row_fields: list[DataInventoryCasillaPayload]
     ledger_derivable: list[DataInventoryCasillaPayload]
     profile_derivable: list[DataInventoryCasillaPayload]
     previous_filing: list[DataInventoryCasillaPayload]
@@ -1417,6 +1436,68 @@ class WorkResumeResult(OutputSchema):
     obligation: dict[str, object]
 
 
+class WithholdingWindowBaselinePayload(OutputSchema):
+    """An exact public optimistic-concurrency baseline for one withholding scope."""
+
+    scope_token: WithholdingScopeToken
+    generation_id: WithholdingGenerationId
+
+
+class WithholdingGenerationAuditPayload(OutputSchema):
+    """Payload-free immutable lineage facts for the current withholding generation."""
+
+    parent_generation_id: WithholdingGenerationId
+    mode: WithholdingMutationMode
+    supersedes_generation_id: WithholdingGenerationId | None = None
+
+    @field_validator("mode", mode="before")
+    @classmethod
+    @pydantic_validation_boundary
+    def _coerce_mode(cls, value: object) -> object:
+        """Hydrate the closed mutation-mode token from JSON rendering."""
+        if isinstance(value, str) and not isinstance(value, WithholdingMutationMode):
+            return WithholdingMutationMode(value)
+        return value
+
+
+class WithholdingWindowReadbackPayload(OutputSchema):
+    """Current withholding-window baseline and auditable generation lineage.
+
+    This is deliberately metadata-only.  The active entries remain encrypted
+    persistence data and are never copied into an aggregate command result or
+    its human-readable logging projection.
+    """
+
+    baseline: WithholdingWindowBaselinePayload
+    generation: NonNegativeInt
+    generation_audit: WithholdingGenerationAuditPayload | None = None
+
+    @classmethod
+    def from_window_state(
+        cls,
+        state: WithholdingWindowState,
+        *,
+        generation_audit: WithholdingGenerationAudit | None,
+    ) -> WithholdingWindowReadbackPayload:
+        """Project an existing service read without interpreting its entries."""
+        return cls(
+            baseline=WithholdingWindowBaselinePayload(
+                scope_token=state.baseline.scope_token,
+                generation_id=state.baseline.generation_id,
+            ),
+            generation=state.generation,
+            generation_audit=(
+                None
+                if generation_audit is None
+                else WithholdingGenerationAuditPayload(
+                    parent_generation_id=generation_audit.parent_generation_id,
+                    mode=generation_audit.mode,
+                    supersedes_generation_id=generation_audit.supersedes_generation_id,
+                )
+            ),
+        )
+
+
 class ModeloAggregateResult(OutputSchema):
     """Per-modelo aggregation result, projected from the canonical service result.
 
@@ -1459,6 +1540,7 @@ class ModeloAggregateResult(OutputSchema):
     source_kinds: list[BindingSourceKind] = Field(default_factory=list)
     result_row_count: NonNegativeInt
     clave_breakdown: list[WithholdingClaveBreakdownPayload] = Field(default_factory=list)
+    withholding_window: WithholdingWindowReadbackPayload | None = None
 
     @field_validator("provider", mode="before")
     @classmethod
@@ -1501,6 +1583,7 @@ class ModeloAggregateResult(OutputSchema):
         result: PerModeloAggregationResult,
         *,
         clave_breakdown: Sequence[WithholdingClaveBreakdown] = (),
+        withholding_window: WithholdingWindowReadbackPayload | None = None,
     ) -> ModeloAggregateResult:
         """Project the canonical service result onto the CLI transport shape.
 
@@ -1513,6 +1596,8 @@ class ModeloAggregateResult(OutputSchema):
         Args:
             result: The canonical per-modelo aggregation result.
             clave_breakdown: Modelo 190 per-clave rows, empty elsewhere.
+            withholding_window: Current baseline and generation metadata for an
+                invoice-backed withholding scope, absent for other modelos.
         """
         return cls(
             modelo=result.modelo,
@@ -1521,6 +1606,7 @@ class ModeloAggregateResult(OutputSchema):
             observation_count=result.log_fields.observation_count,
             source_kinds=list(result.source_kinds),
             result_row_count=result.log_fields.result_row_count,
+            withholding_window=withholding_window,
             clave_breakdown=[
                 WithholdingClaveBreakdownPayload(
                     clave=row.clave,
@@ -1574,6 +1660,7 @@ __all__ = [
     "LedgerIssuePayload",
     "M100ProjectionPayload",
     "M130AccumulatedPayload",
+    "M303Exonerado390AttestationResult",
     "ModeloAggregateResult",
     "ModeloAuditCheckResult",
     "ModeloAuditExportResult",
@@ -1601,6 +1688,9 @@ __all__ = [
     "VerificationReportPayload",
     "VerificationReportShowResult",
     "WithholdingClaveBreakdownPayload",
+    "WithholdingGenerationAuditPayload",
+    "WithholdingWindowBaselinePayload",
+    "WithholdingWindowReadbackPayload",
     "WorkAmendResult",
     "WorkCalculateResult",
     "WorkCreateResult",

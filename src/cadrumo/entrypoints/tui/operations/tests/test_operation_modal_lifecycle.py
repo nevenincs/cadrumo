@@ -22,7 +22,7 @@ from uuid import UUID
 import pytest
 from textual.app import App
 from textual.pilot import Pilot
-from textual.widgets import Button
+from textual.widgets import Button, Static
 
 from cadrumo.adapters.outbound.aeat.browser.factory import default_browser_session_factory
 from cadrumo.adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
@@ -94,7 +94,12 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _CREDENTIAL_INPUT = "operation-modal-lifecycle-passphrase"
 _ACTOR: OperationActorReference = "operator:operation-modal-lifecycle"
-_TERMINAL_POLL_BUDGET = 400
+_UI_DEADLINE_SECONDS = 60.0
+"""How long a rendered condition may take to appear.
+
+A wall-clock bound, not a count of pilot pauses: a pause is one message-pump
+turn, and on a loaded host a few hundred of them elapse before the modal's
+timed poll has run even once."""
 _POLL_PAUSE_SECONDS = 0.02
 _POLL_INTERVAL_SECONDS = 0.2
 """The modal's own observation interval, which liveness is measured in."""
@@ -257,25 +262,46 @@ async def _project(controller: OperationController) -> OperationPublicProjection
     return observed.projection
 
 
-async def _advance_to_pending_review(controller: OperationController) -> OperationReviewAvailableInteractionV1:
+async def _advance_to_pending_review(
+    services: OperationComposedServices, controller: OperationController
+) -> OperationReviewAvailableInteractionV1:
+    """Start the operation and return its REVIEW once the executor has stopped at it.
+
+    The supervisor's own settlement wait returns when the executor stops at
+    its review checkpoint, so nothing here depends on how fast the host is.
+    """
     await controller.start()
-    for _ in range(_TERMINAL_POLL_BUDGET):
-        pending = (await _project(controller)).pending_interaction
-        if isinstance(pending, OperationReviewAvailableInteractionV1):
-            return pending
-        await asyncio.sleep(_POLL_PAUSE_SECONDS)
-    message = "the censal REVIEW operation never reached a pending interaction"
-    raise AssertionError(message)
+    await services.submission.settled(controller.operation_id)
+    pending = (await _project(controller)).pending_interaction
+    assert isinstance(pending, OperationReviewAvailableInteractionV1), (
+        "the censal REVIEW operation stopped without a pending interaction"
+    )
+    return pending
 
 
-async def _settle(controller: OperationController) -> OperationPublicProjectionV1:
-    for _ in range(_TERMINAL_POLL_BUDGET):
+async def _settle(services: OperationComposedServices, controller: OperationController) -> OperationPublicProjectionV1:
+    """Wait on the supervisor until the operation is terminal, then project it.
+
+    A settlement wait can first return the executor's earlier stop at its
+    review checkpoint; the next wait is then the continuation's own.
+    """
+    for _ in range(3):
+        await services.submission.settled(controller.operation_id)
         projection = await _project(controller)
         if projection.lifecycle is OperationLifecycle.TERMINAL:
             return projection
-        await asyncio.sleep(_POLL_PAUSE_SECONDS)
-    message = "the operation never settled within the bounded poll budget"
+    message = f"the operation was not terminal after its settlement completed: {projection.lifecycle}"
     raise AssertionError(message)
+
+
+async def _pilot_until(pilot: Pilot[None], condition: Callable[[], bool], message: str) -> None:
+    """Let the host run until ``condition`` holds, failing after a wall-clock deadline."""
+    loop = asyncio.get_running_loop()
+    deadline = loop.time() + _UI_DEADLINE_SECONDS
+    while not condition():
+        if loop.time() > deadline:
+            raise AssertionError(message)
+        await pilot.pause(_POLL_PAUSE_SECONDS)
 
 
 def _apply_request(
@@ -293,13 +319,16 @@ def _apply_request(
 
 
 async def _await_enabled(pilot: Pilot[None], modal: OperationModal, selector: str) -> None:
-    """Settle the modal until the named control has been enabled by a poll."""
-    for _ in range(_TERMINAL_POLL_BUDGET):
-        if not modal.query_one(selector, Button).disabled:
-            return
-        await pilot.pause()
-    message = f"the modal never enabled {selector} from a supervisor observation"
-    raise AssertionError(message)
+    """Settle the modal until the named control has been enabled by a poll.
+
+    A control is enabled by default before the modal has folded any
+    observation, so enablement only counts once an observation is folded.
+    """
+    await _pilot_until(
+        pilot,
+        lambda: modal._view_model is not None and not modal.query_one(selector, Button).disabled,
+        f"the modal never enabled {selector} from a supervisor observation",
+    )
 
 
 class _ModalHost(App[None]):
@@ -323,18 +352,56 @@ class _ModalHost(App[None]):
         self.run_worker(self._present())
 
 
+async def _click(pilot: Pilot[None], selector: str) -> None:
+    """Click a modal control exactly once, as an operator does, and require it to land.
+
+    No retry: the modal keeps its actions still while rows fill, so a click
+    aimed where a control was drawn must reach it. A miss is a layout defect.
+    """
+    landed = await pilot.click(selector)
+    assert landed, f"a single click on {selector} missed: the control moved under the pointer"
+
+
+async def _await_outcome(pilot: Pilot[None], host: _ModalHost, controller: OperationController) -> None:
+    """Wait for the modal to return, naming the supervisor's state if it never does."""
+    try:
+        await _pilot_until(pilot, lambda: host.outcome is not None, "the modal never returned its outcome")
+    except AssertionError:
+        projection = await _project(controller)
+        screen = host.screen
+        refusal = (
+            str(screen.query_one("#operation-modal-action-refusal", Static).content)
+            + f" interaction={type(screen._interaction).__name__}"
+            + f" apply_disabled={screen.query_one('#btn-operation-apply', Button).disabled}"
+            + f" reject_disabled={screen.query_one('#btn-operation-reject', Button).disabled}"
+            if isinstance(screen, OperationModal)
+            else "<modal not shown>"
+        ) + f" app_exception={host._exception!r}"
+        message = (
+            "the modal never returned its outcome; the supervisor holds the operation at "
+            f"lifecycle={projection.lifecycle} terminal={projection.terminal_condition} "
+            f"pending={type(projection.pending_interaction).__name__} "
+            f"cancellation_requested={projection.cancellation_requested} revision={projection.revision}; "
+            f"the modal's action refusal reads {refusal!r}"
+        )
+        raise AssertionError(message) from None
+
+
 async def _pause_until_rendered(pilot: Pilot[None], host: _ModalHost) -> OperationModal:
     """Settle the host until the modal has folded its first observation."""
     await host.presented.wait()
-    for _ in range(_TERMINAL_POLL_BUDGET):
-        await pilot.pause()
+
+    def folded() -> bool:
+        # Read from the modal's own package-internal state, as this test
+        # package's other modal tests do: before the first fold every control
+        # still carries its default, so the rendered body alone proves nothing.
         screen = host.screen
-        if isinstance(screen, OperationModal):
-            status = screen.query_one("#operation-modal-status")
-            if status.is_mounted:
-                return screen
-    message = "the operation modal never mounted its rendered body"
-    raise AssertionError(message)
+        return isinstance(screen, OperationModal) and screen._view_model is not None
+
+    await _pilot_until(pilot, folded, "the operation modal never folded a supervisor observation")
+    screen = host.screen
+    assert isinstance(screen, OperationModal)
+    return screen
 
 
 def test_detach_closes_the_modal_while_the_operation_keeps_running(tmp_path: Path) -> None:
@@ -356,7 +423,7 @@ def test_detach_closes_the_modal_while_the_operation_keeps_running(tmp_path: Pat
         async def run() -> None:
             submitted = await _submit_censal_review(services, profile_id, authority_operation)
             controller = OperationController(services=services, submission=submitted, actor_ref=_ACTOR)
-            pending = await _advance_to_pending_review(controller)
+            pending = await _advance_to_pending_review(services, controller)
             control = await controller.response_control(
                 interaction_id=pending.interaction_id, revision=pending.revision
             )
@@ -367,11 +434,8 @@ def test_detach_closes_the_modal_while_the_operation_keeps_running(tmp_path: Pat
             async with host.run_test(size=(100, 40)) as pilot:
                 modal = await _pause_until_rendered(pilot, host)
                 assert modal.query_one("#btn-operation-detach", Button).disabled is False
-                await pilot.click("#btn-operation-detach")
-                for _ in range(_TERMINAL_POLL_BUDGET):
-                    if host.outcome is not None:
-                        break
-                    await pilot.pause()
+                await _click(pilot, "#btn-operation-detach")
+                await _await_outcome(pilot, host, controller)
 
             # Let the dismissed modal's polling worker finish its in-flight
             # journal read before this test reads the same journal: the read
@@ -387,7 +451,7 @@ def test_detach_closes_the_modal_while_the_operation_keeps_running(tmp_path: Pat
             detached_projection = await _project(controller)
             assert detached_projection.lifecycle is not OperationLifecycle.TERMINAL
             release_boundary.set()
-            settled = await _settle(controller)
+            settled = await _settle(services, controller)
             assert settled.terminal_condition is OperationTerminalCondition.SUCCEEDED
             assert settled.effect is OperationEffect.UPDATED
 
@@ -446,7 +510,7 @@ def test_cancel_requests_cooperative_stopping_without_terminating_the_operation(
         async def run() -> None:
             submitted = await _submit_censal_review(services, profile_id, authority_operation)
             controller = OperationController(services=services, submission=submitted, actor_ref=_ACTOR)
-            pending = await _advance_to_pending_review(controller)
+            pending = await _advance_to_pending_review(services, controller)
             control = await controller.response_control(
                 interaction_id=pending.interaction_id, revision=pending.revision
             )
@@ -456,19 +520,16 @@ def test_cancel_requests_cooperative_stopping_without_terminating_the_operation(
             host = _ModalHost(controller)
             async with host.run_test(size=(100, 40)) as pilot:
                 modal = await _pause_until_rendered(pilot, host)
-                for _ in range(_TERMINAL_POLL_BUDGET):
-                    if not modal.query_one("#btn-operation-cancel", Button).disabled:
-                        break
-                    await pilot.pause()
-                assert modal.query_one("#btn-operation-cancel", Button).disabled is False
-                await pilot.click("#btn-operation-cancel")
+                await _await_enabled(pilot, modal, "#btn-operation-cancel")
+                await _click(pilot, "#btn-operation-cancel")
                 requested = None
-                for _ in range(_TERMINAL_POLL_BUDGET):
-                    await pilot.pause()
+                loop = asyncio.get_running_loop()
+                deadline = loop.time() + _UI_DEADLINE_SECONDS
+                while requested is None and loop.time() < deadline:
+                    await pilot.pause(_POLL_PAUSE_SECONDS)
                     candidate = await _project(controller)
                     if candidate.cancellation_requested:
                         requested = candidate
-                        break
                 assert requested is not None, "the cancel control never reached the supervisor"
                 # The executor is parked inside its own boundary. Cancellation
                 # has been asked for and not yet granted, which is exactly the
@@ -478,7 +539,7 @@ def test_cancel_requests_cooperative_stopping_without_terminating_the_operation(
                 await host.action_quit()
 
             release_boundary.set()
-            settled = await _settle(controller)
+            settled = await _settle(services, controller)
             assert settled.terminal_condition is OperationTerminalCondition.CANCELLED
 
         asyncio.run(run())
@@ -491,19 +552,16 @@ def test_apply_through_the_modal_settles_the_operation_as_applied(tmp_path: Path
         async def run() -> None:
             submitted = await _submit_censal_review(services, profile_id, authority_operation)
             controller = OperationController(services=services, submission=submitted, actor_ref=_ACTOR)
-            await _advance_to_pending_review(controller)
+            await _advance_to_pending_review(services, controller)
 
             host = _ModalHost(controller)
             async with host.run_test(size=(100, 40)) as pilot:
                 modal = await _pause_until_rendered(pilot, host)
                 await _await_enabled(pilot, modal, "#btn-operation-apply")
-                await pilot.click("#btn-operation-apply")
-                for _ in range(_TERMINAL_POLL_BUDGET):
-                    if host.outcome is not None:
-                        break
-                    await pilot.pause()
+                await _click(pilot, "#btn-operation-apply")
+                await _await_outcome(pilot, host, controller)
 
-            settled = await _settle(controller)
+            settled = await _settle(services, controller)
             assert settled.terminal_condition is OperationTerminalCondition.SUCCEEDED
             assert settled.effect is OperationEffect.UPDATED
 
@@ -517,19 +575,20 @@ def test_reject_through_the_modal_settles_the_operation_without_an_effect(tmp_pa
         async def run() -> None:
             submitted = await _submit_censal_review(services, profile_id, authority_operation)
             controller = OperationController(services=services, submission=submitted, actor_ref=_ACTOR)
-            await _advance_to_pending_review(controller)
+            await _advance_to_pending_review(services, controller)
 
             host = _ModalHost(controller)
             async with host.run_test(size=(100, 40)) as pilot:
                 modal = await _pause_until_rendered(pilot, host)
+                first_drawn_at = modal.query_one("#btn-operation-reject", Button).region
                 await _await_enabled(pilot, modal, "#btn-operation-reject")
-                await pilot.click("#btn-operation-reject")
-                for _ in range(_TERMINAL_POLL_BUDGET):
-                    if host.outcome is not None:
-                        break
-                    await pilot.pause()
+                # The rows filled between the first fold and enablement; the
+                # control an operator aims at must not have moved meanwhile.
+                assert modal.query_one("#btn-operation-reject", Button).region == first_drawn_at
+                await _click(pilot, "#btn-operation-reject")
+                await _await_outcome(pilot, host, controller)
 
-            settled = await _settle(controller)
+            settled = await _settle(services, controller)
             assert settled.terminal_condition is OperationTerminalCondition.SUCCEEDED
             assert settled.effect is OperationEffect.NONE
 
@@ -594,10 +653,10 @@ def test_the_response_controls_stay_live_across_many_polls_while_a_review_waits(
 
                 # Still answerable at the end, which is the operator-facing
                 # claim: the affordance was not merely drawn, it still works.
-                await pilot.click("#btn-operation-reject")
+                await _click(pilot, "#btn-operation-reject")
                 await host.action_quit()
 
-            settled = await _settle(controller)
+            settled = await _settle(services, controller)
             assert settled.terminal_condition is OperationTerminalCondition.SUCCEEDED
             assert settled.effect is OperationEffect.NONE
 

@@ -90,7 +90,13 @@ def test_contract_roots_are_exactly_config_and_app() -> None:
     assert contract.roots[1].owns_operational_workflow is True
 
 
-def test_contract_lifecycle_forbids_live_submission() -> None:
+def test_contract_lifecycle_is_calculate_verify_file() -> None:
+    """The lifecycle is exactly calculate, verify, file, and refuses a skipped step.
+
+    That filing never reaches AEAT is not a lifecycle field: CLI dispatch
+    refuses every command declared ``live_write``, proven by the planted
+    command in ``entrypoints/cli/tests/test_command_runtime_live_write_refusal.py``.
+    """
     contract = get_operator_surface_contract()
 
     assert contract.lifecycle.steps == (
@@ -98,8 +104,6 @@ def test_contract_lifecycle_forbids_live_submission() -> None:
         ModeloLifecycleStep.VERIFY,
         ModeloLifecycleStep.FILE,
     )
-    assert contract.lifecycle.internal_filed_term == "internal filed"
-    assert contract.lifecycle.live_submission_enabled is False
 
     with pytest.raises(ValidationError, match=r"steps|VERIFY|lifecycle"):
         LifecycleContract(
@@ -107,15 +111,6 @@ def test_contract_lifecycle_forbids_live_submission() -> None:
                 ModeloLifecycleStep.CALCULATE,
                 ModeloLifecycleStep.FILE,
             ),
-        )
-    with pytest.raises(ValidationError, match=r"live_submission_enabled|forbidden|False"):
-        LifecycleContract(
-            steps=(
-                ModeloLifecycleStep.CALCULATE,
-                ModeloLifecycleStep.VERIFY,
-                ModeloLifecycleStep.FILE,
-            ),
-            live_submission_enabled=True,
         )
 
 

@@ -248,6 +248,24 @@ def _unresolved_diagnostics(
     )
 
 
+def _annual_source_evidence_diagnostics(
+    *,
+    binding_ids: tuple[BindingId, ...],
+    resolver_id: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Project incomplete required 303 annual evidence as a typed durable condition."""
+    return tuple(
+        CalculationSourceDiagnostic(
+            reason="iva_compensation_annual_source_evidence_failure",
+            source_kind=_SOURCE_KIND.value,
+            resolver_id=resolver_id,
+            binding_id=binding_id,
+            message="required Modelo 303 annual partition evidence is unresolved",
+        )
+        for binding_id in binding_ids
+    )
+
+
 def _select_partition_revision(
     registry_snapshot: RegistrySnapshot | None,
     context: CalculationSourceContext,
@@ -379,11 +397,16 @@ class IvaCompensationAnnualPartitionSourceResolver:
         if isinstance(loaded, CalculationSourceResolution):
             return loaded
         envelopes = loaded
-        binding_values = resolve_iva_compensation_annual_partition_binding_values(
-            revision,
-            envelopes,
-            filing_year=context.filing_year,
-            operation=self._operation,
+        observed_periods = {envelope.observation.period for envelope in envelopes}
+        binding_values = (
+            resolve_iva_compensation_annual_partition_binding_values(
+                revision,
+                envelopes,
+                filing_year=context.filing_year,
+                operation=self._operation,
+            )
+            if observed_periods == set(requirement.source_periods)
+            else {}
         )
         unresolved = _unresolved_partition_bindings(requirement.binding_ids, binding_values)
         return CalculationSourceResolution(
@@ -394,6 +417,10 @@ class IvaCompensationAnnualPartitionSourceResolver:
             diagnostics=_unresolved_diagnostics(
                 binding_ids=unresolved,
                 source_periods=requirement.source_periods,
+                resolver_id=self.resolver_id,
+            )
+            + _annual_source_evidence_diagnostics(
+                binding_ids=unresolved,
                 resolver_id=self.resolver_id,
             ),
             provenance=_partition_provenance(envelopes, requirement, resolver_id=self.resolver_id),

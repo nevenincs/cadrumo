@@ -174,7 +174,7 @@ def git_changed_files(base: str, root: Path = REPO_ROOT) -> tuple[str, ...]:
     git = shutil.which("git")
     if git is None:
         raise RuntimeError("git executable not found on PATH")
-    command = [git, "diff", "--name-only", f"{base}...HEAD"]
+    command = [git, "--no-optional-locks", "diff", "--name-only", f"{base}...HEAD"]
     completed = subprocess.run(
         command,
         cwd=root,

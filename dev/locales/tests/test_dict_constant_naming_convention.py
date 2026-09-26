@@ -112,6 +112,21 @@ def test_rule_fires_on_the_exact_historical_orphaning_shape() -> None:
     assert violations == [(3, "_PROFILE_STATUS_KEYS")]
 
 
+def test_a_bare_module_annotation_is_not_a_dict_declaration() -> None:
+    """A ``name: T`` declaration with no value is not a locale-key dict.
+
+    Its missing value once compared equal to the ``None`` a non-candidate name
+    looks up, so a platform-branched constant declared ahead of its
+    assignments was flagged. The historical shape above still fires, so the
+    exclusion cannot have silenced the gate.
+    """
+    tree = ast.parse(
+        "import sys\n_flags: int | None\nif sys.platform == 'win32':\n    _flags = None\nelse:\n    _flags = 1\n",
+    )
+
+    assert list(dict_constant_naming_violations_in_tree(tree)) == []
+
+
 def test_discovery_now_resolves_the_historical_shape_without_a_rename() -> None:
     """Non-tautology proof: the concealed keys are discoverable BEFORE any rename.
 

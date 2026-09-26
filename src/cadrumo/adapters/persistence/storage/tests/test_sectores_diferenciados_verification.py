@@ -39,9 +39,6 @@ from pathlib import Path
 
 import pytest
 
-from .....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
-from .....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .....application.aggregation.iva_ledger import (
     aggregate_iva_ledger_observations_from_repositories,
     resolve_iva_ledger_binding_values,
@@ -67,6 +64,9 @@ from .....domain.prorrata_register.register import ProrrataRegister, ProrrataReg
 from .....domain.transactions.enums import BusinessClassification, TransactionDirection
 from .....domain.transactions.models import Transaction, TransactionCatalogue
 from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from ...profile.prorrata_register import ProrrataRegisterRepository
+from ...profile.transactions import TransactionCatalogueRepository
+from .secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

@@ -27,6 +27,7 @@ preserve as any other invoice-creation path.
 
 from __future__ import annotations
 
+import hashlib
 from pathlib import Path
 
 import pytest
@@ -122,6 +123,10 @@ def test_bulk_import_creates_one_invoice_per_valid_row(tmp_path: Path) -> None:
     )
     assert exempt_row is not None, "Expected to find row with invoice_number 2026-BULK-003"
     assert exempt_row.get("iva_total") == "0"
+    first_row = next(row for row in rows if isinstance(row, dict) and row.get("invoice_number") == "2026-BULK-001")
+    assert first_row["source_filename"] == csv_path.name
+    assert first_row["source_row_index"] == 2
+    assert first_row["source_sha256"] == hashlib.sha256(csv_path.read_bytes()).hexdigest()
 
 
 def test_bulk_import_reimport_of_identical_file_is_idempotent_no_op(tmp_path: Path) -> None:
@@ -206,6 +211,59 @@ def test_bulk_import_refuses_malformed_row_with_row_number_and_field(tmp_path: P
     )
     assert missing_nif_failure is not None, "Expected refusal with row_number 4"
     assert missing_nif_failure.get("field") == "counterparty_nif"
+
+
+def test_partial_import_refuses_empty_invoice_number_without_losing_valid_row(tmp_path: Path) -> None:
+    """An empty required value is a row refusal, not a failed whole import."""
+    csv_path = tmp_path / "invoices.csv"
+    csv_path.write_text(
+        _CSV_HEADER
+        + f"{_RECEIVED_COUNTERPARTY_CIF},Papeleria Sol SL,2026-OK-001,2026-03-10,100.00,21\n"
+        + f"{_RECEIVED_COUNTERPARTY_CIF},Papeleria Sol SL,,2026-03-12,50.00,21\n",
+        encoding="utf-8",
+    )
+
+    result = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "ledger",
+            "invoice",
+            "import",
+            "--file",
+            str(csv_path),
+            "--kind",
+            "received",
+            "--country",
+            "ES",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    payload = _json_result(result.output)
+    assert payload["created"] == 1
+    assert payload["refused"][0]["row_number"] == 3
+    assert payload["refused"][0]["field"] == "invoice_number"
+
+
+def test_partial_import_reads_country_column_with_empty_invoice_number(tmp_path: Path) -> None:
+    """A country column supports row-local validation without a file-level override."""
+    csv_path = tmp_path / "invoices.csv"
+    csv_path.write_text(
+        "counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,iva_rate,country_code,notes\n"
+        + f"{_RECEIVED_COUNTERPARTY_CIF},Papeleria Sol SL,2026-OK-001,2026-03-10,100.00,21,ES,valid\n"
+        + f"{_RECEIVED_COUNTERPARTY_CIF},Papeleria Sol SL,,2026-03-12,50.00,21,ES,invalid\n",
+        encoding="utf-8",
+    )
+
+    result = invoke_cached_cli(
+        ["--format", "json", "app", "ledger", "invoice", "import", "--file", str(csv_path), "--kind", "received"],
+    )
+    assert result.exit_code == 0, result.output
+    payload = _json_result(result.output)
+    assert payload["created"] == 1
+    assert payload["refused"][0]["row_number"] == 3
+    assert payload["refused"][0]["field"] == "invoice_number"
 
 
 def test_bulk_import_all_rows_refused_exits_nonzero_with_notice(tmp_path: Path) -> None:

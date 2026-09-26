@@ -35,6 +35,7 @@ class SourceFormat(StrEnum):
     Attributes:
         CSV: Bank statement CSV export.
         XLSX: Bank statement Excel workbook.
+        XLS: Bank statement legacy Excel 97-2003 workbook.
         OFX: Open Financial Exchange feed.
         PDF: PDF statement (parsed text layer).
         MANUAL: Hand-entered transaction.
@@ -42,6 +43,7 @@ class SourceFormat(StrEnum):
 
     CSV = "csv"
     XLSX = "xlsx"
+    XLS = "xls"
     OFX = "ofx"
     PDF = "pdf"
     MANUAL = "manual"

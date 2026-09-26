@@ -32,7 +32,7 @@ from pathlib import Path, PurePosixPath
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
-from ...core.directory_scan import scan_directory
+from ..directory_scan import scan_directory
 from ..errors.hierarchy import (
     CoreValidationError as _CoreValidationError,
 )

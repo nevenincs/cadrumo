@@ -22,12 +22,11 @@ from typing import Any, TypedDict, Unpack, cast
 import pytest
 from pydantic import ValidationError
 
-from ....adapters.outbound.aeat.browser.factory import default_browser_session_factory
 from ....core.hashing import content_hash_hex
 from ....core.period import Period
 from ....domain.modelos.codes import ModeloCode
-from ....entrypoints.adapter_composition import build_censal_fetch_port
 from ...auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
+from ...live.tests.unopened_live_ports import unopened_browser_session_factory, unopened_censal_fetch
 from ...operations.registry import OperationPublicContractSetV1
 from ...operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE, ActionCatalogue, ActionCatalogueEntry
 from ...operator_actions.models import ActionReference
@@ -109,9 +108,9 @@ the only way any of this could start leaking.
 def _censal_operation_definition():
     return build_censal_operation_definition(
         certificate_secret_backend_factory=_CERTIFICATE_SECRET_BACKEND_FACTORY,
-        browser_session_factory=default_browser_session_factory,
+        browser_session_factory=unopened_browser_session_factory,
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-        censal_fetch_port=build_censal_fetch_port(),
+        censal_fetch_port=unopened_censal_fetch,
     )
 
 

@@ -25,13 +25,14 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from enum import StrEnum
-from typing import Annotated, Literal, cast
+from typing import Annotated, Literal
 
 from pydantic import BeforeValidator, Field, field_validator, model_validator
 
 from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.frozen_mapping import FROZEN_MAPPING
 from ....core.period import RegistrySelectorPeriodCode
+from ....core.type_guards import is_object_list
 from .errors import RegistryValidationError
 from .ids import RevisionId
 from .period_offset_math import apply_period_offset, same_ejercicio_prior_quarter_anchors
@@ -72,8 +73,8 @@ def _coerce_period_sequence(value: object) -> object:
     authority artifact and read back from it, so the JSON array a period tuple
     dumps to must validate back to the same member rather than to a refusal.
     """
-    if isinstance(value, list):
-        return tuple(cast("list[object]", value))
+    if is_object_list(value):
+        return tuple(value)
     return value
 
 

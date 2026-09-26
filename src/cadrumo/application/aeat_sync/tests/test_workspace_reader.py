@@ -13,10 +13,8 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.adapters.outbound.aeat.browser.factory import default_browser_session_factory
-from cadrumo.entrypoints.adapter_composition import build_censal_fetch_port
-
 from ...auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
+from ...live.tests.unopened_live_ports import unopened_browser_session_factory, unopened_censal_fetch
 from ...operations.registry import OperationPublicContractSetV1
 from ...operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE
 from ...user_profile.censal_operation import (
@@ -62,9 +60,9 @@ def _unrelated_contracts() -> OperationPublicContractSetV1:
             build_censal_operation_registration(
                 build_censal_operation_definition(
                     certificate_secret_backend_factory=_CERTIFICATE_SECRET_BACKEND_FACTORY,
-                    browser_session_factory=default_browser_session_factory,
+                    browser_session_factory=unopened_browser_session_factory,
                     operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-                    censal_fetch_port=build_censal_fetch_port(),
+                    censal_fetch_port=unopened_censal_fetch,
                 )
             ).contract,
         )

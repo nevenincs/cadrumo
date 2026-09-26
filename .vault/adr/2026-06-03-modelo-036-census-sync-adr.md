@@ -3,12 +3,13 @@ tags:
   - '#adr'
   - '#modelo-036-census-sync'
 date: '2026-06-03'
-modified: '2026-08-15'
+modified: '2026-09-24'
 body_hash: 'sha256:8a4f6aee837a45fbe4b089d0cac6dca6ae9726ed3b85c55fda6289fe2909ae7b'
 related:
   - '[[2026-06-03-m036-lifecycle-verbs-research]]'
   - '[[2026-06-03-cli-workflow-redesign-adr]]'
   - '[[2026-06-04-modelo-036-census-sync-research]]'
+  - '[[2026-09-24-taxpayer-profile-census-domain-grounding-research]]'
 ---
 
 # `modelo-036-census-sync` adr: `M036 declaration service: bucket-scoping contract` | (**status:** `accepted`)

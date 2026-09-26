@@ -26,10 +26,10 @@ from pathlib import Path
 
 import pytest
 
-from .....adapters.persistence.storage.crypto.encrypted_columns import secure_object_key_digest
-from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from ....persistence.storage.crypto.encrypted_columns import secure_object_key_digest
 from ....persistence.storage.errors import StorageValidationError
 from ....persistence.storage.sql.secure_object_records import SecureObjectDeletion
+from ....persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .. import session_store
 from ..records import REQUIRED_SCOPES, DriveConfig, OAuthClient, OAuthMetadata, OAuthToken
 

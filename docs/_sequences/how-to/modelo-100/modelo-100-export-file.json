@@ -173,6 +173,7 @@
             "code": "modelo.work.calculate.source_advisory",
             "context": {
               "casilla_id": "0513",
+              "legal_refs": "ley-35-2006:art-56, ley-35-2006:art-58, ley-35-2006:art-61, orden-hac-277-2026:art-3",
               "reason": "source_issue",
               "remedy": "Declare the family situation with `descendiente add --descendiente NACIMIENTO=YYYY-MM-DD`.",
               "source_kind": "minimo_descendientes_undeclared"
@@ -220,7 +221,7 @@
             "renta-profile-taxpayer-birth-date": "1985-06-15",
             "renta-profile-unidad-familiar-otros-miembros-base": "0"
           },
-          "calculation_revision_id": "623a3ba760fcc2069d7db7e4ed1103f11b38222d8a9e69fed10b7252fe1084fe",
+          "calculation_revision_id": "50ff08289aae34126f853d2b95de1feb1236992cc4abe46e0707dfd537d9febd",
           "casilla_values": {
             "0001": "0",
             "0002": "0",
@@ -58242,7 +58243,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 623a3ba760fcc2069d7db7e4ed1103f11b38222d8a9e69fed10b7252fe1084fe (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 50ff08289aae34126f853d2b95de1feb1236992cc4abe46e0707dfd537d9febd (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "relation_prefill",
@@ -58355,7 +58356,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "623a3ba760fcc2069d7db7e4ed1103f11b38222d8a9e69fed10b7252fe1084fe",
+          "calculation_revision_id": "50ff08289aae34126f853d2b95de1feb1236992cc4abe46e0707dfd537d9febd",
           "completeness_status": "complete",
           "findings": [
             {
@@ -58443,7 +58444,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "cc626793a20bc8c64af01c44438097e8ba7f60103b51cb70c6987f417b2b53b2",
+          "verification_report_id": "6c27523b6d144ee7280b60a7af7b3608127cfa174baca33b10c7b3a9d7701f46",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
@@ -58476,42 +58477,52 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "modelo.export",
-        "error": {
-          "action": {
+        "notices": [
+          {
             "action": null,
-            "argument_bindings": [],
-            "conditionality": "not_applicable",
-            "evidence": [
-              {
-                "condition_id": "filing.application.operation.admissible",
-                "evidence_id": "filing.application.operation.admissible.observation",
-                "provenance": "application_state",
-                "values": {
-                  "error_type": "ModeloApplicationError"
-                }
-              }
-            ],
-            "failed_condition_id": "filing.application.operation.admissible",
-            "missing_argument_names": [],
-            "no_recovery_outcome": "operator_decision"
+            "code": "modelo.export.local_export_not_official_evidence",
+            "context": {
+              "evidence_status": "local_export_not_official_aeat_filing_evidence",
+              "filing_year": "2025",
+              "modelo": "100",
+              "period": "0A"
+            },
+            "message": "The local export is not official filing evidence.",
+            "severity": "warning"
+          }
+        ],
+        "result": {
+          "bucket_event_id": "62702594e3b53d4485d3be0568658933b3180491df4306fa561e2c425598479c",
+          "bucket_id": "<bucket-id>",
+          "byte_size": 2282,
+          "calculation_revision_id": "50ff08289aae34126f853d2b95de1feb1236992cc4abe46e0707dfd537d9febd",
+          "file_sha256": "c1d2af49eae2e7ff87f92a407ccdc00093fa3e5ca6ce080cf2399d3698e13e70",
+          "filing_year": 2025,
+          "format": "xml-dictionary",
+          "modelo": "100",
+          "operation": "modelo.export",
+          "output_path": "modelo-100.boe",
+          "payment_election": "ingreso",
+          "period": {
+            "code": "0A",
+            "filing_year": 2025
           },
-          "category": "FAIL",
-          "code": "FAIL_MODELO_EXPORT",
-          "context": {
-            "calculation_revision_id": "623a3ba760fcc2069d7db7e4ed1103f11b38222d8a9e69fed10b7252fe1084fe",
-            "cause": "application.filing.export_parity.errors.aux_block_undeclared"
+          "prior_domiciliation_election": {
+            "baseline_evidence_reference_id": null,
+            "baseline_filing_record_id": null,
+            "baseline_result_disposition": null,
+            "baseline_source_header_locator": null,
+            "election": "keep"
           },
-          "message": "Could not write the export file for calculation revision 623a3ba760fcc2069d7db7e4ed1103f11b38222d8a9e69fed10b7252fe1084fe.",
-          "retryable": false,
-          "runbook_id": null,
-          "trace_id": null
+          "refund_election": null,
+          "resolved_result_disposition": "I",
+          "work_unit_id": "d36dd9ebe261dac47a36150e43ff53fdb815d4d1a45c0adbd4b8cdafd119d9fd"
         },
-        "notices": [],
         "schema_version": "2",
-        "status": "error"
+        "status": "warning"
       },
-      "envelope_source": "stderr",
-      "exit_code": 5,
+      "envelope_source": "stdout",
+      "exit_code": 0,
       "kind": "result",
       "stderr_text": null,
       "text": null

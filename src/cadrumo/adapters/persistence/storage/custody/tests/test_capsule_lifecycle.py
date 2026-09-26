@@ -48,6 +48,8 @@ from cadrumo.application.user_profile.profile_record_repository import (
 from cadrumo.application.user_profile.profile_repository import CommittedProfileRepository
 from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
 from cadrumo.core.bucket_pointer import read_pointer
+from cadrumo.core.storage_taxonomy import StorageCategory
+from cadrumo.core.storage_taxonomy_locations import storage_location
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.user_profile.errors import ProfileNotFoundError
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
@@ -156,7 +158,12 @@ def test_lifecycle_projects_only_its_committed_capsule_and_owns_selection(tmp_pa
     assert service.select("Capsule operator") == created
     pointer = read_pointer(tmp_path)
     assert pointer.bucket_id == str(_PROFILE_ID)
-    assert (tmp_path / "buckets" / str(_PROFILE_ID) / "db" / "cadrumo.db").is_file()
+    assert (
+        tmp_path
+        / storage_location(StorageCategory.BUCKETS).relative_path()
+        / str(_PROFILE_ID)
+        / storage_location(StorageCategory.BUCKET_DATABASE_FILE).relative_path()
+    ).is_file()
     with bound_profile_record_session(record_session):
         assert ProfileRecordRepository.for_current_session(
             _PROFILE_ID, root=tmp_path, profile_decode_context=_profile_decode_context_for_test
@@ -307,7 +314,13 @@ def test_label_provenance_is_uuid_bound_and_revisioned_at_create(tmp_path: Path)
     assert initial.previous_label_digest is None
     assert (
         initial.canonical_json_bytes()
-        == (tmp_path / "buckets" / str(_PROFILE_ID) / "data" / "profile-label.v1.json").read_bytes()
+        == (
+            tmp_path
+            / storage_location(StorageCategory.BUCKETS).relative_path()
+            / str(_PROFILE_ID)
+            / storage_location(StorageCategory.PROFILE_CAPSULE_DATA).relative_path()
+            / "profile-label.v1.json"
+        ).read_bytes()
     )
 
 
@@ -337,8 +350,20 @@ def test_label_provenance_refuses_a_same_uuid_canonical_substitution(tmp_path: P
 
     first_id, _ = label_records[0]
     second_id, _ = label_records[1]
-    first_path = tmp_path / "buckets" / str(first_id) / "data" / "profile-label.v1.json"
-    second_path = tmp_path / "buckets" / str(second_id) / "data" / "profile-label.v1.json"
+    first_path = (
+        tmp_path
+        / storage_location(StorageCategory.BUCKETS).relative_path()
+        / str(first_id)
+        / storage_location(StorageCategory.PROFILE_CAPSULE_DATA).relative_path()
+        / "profile-label.v1.json"
+    )
+    second_path = (
+        tmp_path
+        / storage_location(StorageCategory.BUCKETS).relative_path()
+        / str(second_id)
+        / storage_location(StorageCategory.PROFILE_CAPSULE_DATA).relative_path()
+        / "profile-label.v1.json"
+    )
     first_path.write_bytes(second_path.read_bytes())
     with pytest.raises(ProfileCustodyRecordError, match="UUID"):
         load_committed_profile_custody_label_record(first_id, root=tmp_path)
@@ -364,7 +389,13 @@ def test_locked_label_read_refuses_a_fresh_canonical_same_uuid_substitution(tmp_
         record_session=session,
     )
     original = load_committed_profile_custody_label_record(_PROFILE_ID, root=tmp_path)
-    label_path = tmp_path / "buckets" / str(_PROFILE_ID) / "data" / "profile-label.v1.json"
+    label_path = (
+        tmp_path
+        / storage_location(StorageCategory.BUCKETS).relative_path()
+        / str(_PROFILE_ID)
+        / storage_location(StorageCategory.PROFILE_CAPSULE_DATA).relative_path()
+        / "profile-label.v1.json"
+    )
     label_path.write_bytes(
         ProfileCustodyCapsuleLabel.create(
             profile_id=_PROFILE_ID,

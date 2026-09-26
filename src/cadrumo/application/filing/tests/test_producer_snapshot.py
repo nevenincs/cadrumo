@@ -16,7 +16,6 @@ from cadrumo.core.prorrata_register import ProrrataEspecialTransitionKind, Prorr
 from cadrumo.domain.bienes_inversion.vocabulary import BienInversionKind
 from cadrumo.domain.deadlines.models import IVARegime, M303RegimeComposition, M303TaxTerritory
 
-from ....application.calculations.tests.filing_evidence import regimen_simplificado_filing_evidence
 from ....core.casilla_id import validated_casilla_id
 from ....core.filing_producer_key import FilingProducerKey
 from ....core.modelo import Modelo
@@ -73,12 +72,13 @@ from ...aggregation.m303_arrivals import (
     M303SupplierRegimeArrival,
     resolve_m303_prorrata_transition_arrival,
 )
+from ...calculations.tests.filing_evidence import regimen_simplificado_filing_evidence
 from .._record_field_renderer import (
     complementaria_page_marker,
     m303_complementaria_marker,
     m303_no_activity_marker,
 )
-from ..export_producer import filing_producer_values, m303_profile_lexicals
+from ..export_producer import filing_producer_values, m303_filing_lexicals, m303_profile_lexicals
 from ..producer_snapshot import (
     M202_UNSUPPORTED_PRODUCER_IDS,
     AmendmentEvidence,
@@ -610,7 +610,7 @@ def test_modelo_303_uses_the_canonical_iva_profile_type() -> None:
     values = filing_producer_values(snapshot)
     assert values[FilingProducerKey.M303_EXCLUSIVELY_FORAL] == "2"
     assert values[FilingProducerKey.M303_REDEME_ENROLLED] == "2"
-    assert values[FilingProducerKey.M303_ANNUAL_VOLUME_NONZERO] is None
+    assert values[FilingProducerKey.M303_ANNUAL_VOLUME_NONZERO] == "0"
     assert values[FilingProducerKey.M303_JOINT_RETURN_ELECTED] == "2"
     assert values[FilingProducerKey.M303_CASH_ACCOUNTING_REGIME_ENROLLED] == "2"
     assert values[FilingProducerKey.M303_RECIPIENT_OF_CASH_ACCOUNTING_OPERATIONS] == "2"
@@ -677,7 +677,38 @@ def test_modelo_303_annual_volume_marker_requires_explicit_evidence() -> None:
         charge_account=None,
         m303_filing_facts=facts,
     )
-    assert filing_producer_values(snapshot)[FilingProducerKey.M303_ANNUAL_VOLUME_NONZERO] == "1"
+    # Not exempt from Modelo 390, so the affirmative answer is not printed (DP30301 Nota 3).
+    assert filing_producer_values(snapshot)[FilingProducerKey.M303_ANNUAL_VOLUME_NONZERO] == "0"
+
+
+@pytest.mark.parametrize(
+    ("period_code", "exonerado_390", "answer", "expected"),
+    (
+        ("4T", True, True, "1"),
+        ("4T", True, False, "2"),
+        ("12", True, True, "1"),
+        ("12", True, False, "2"),
+        ("4T", False, True, "0"),
+        ("12", False, True, "0"),
+        ("3T", True, True, "0"),
+        ("11", True, True, "0"),
+    ),
+)
+def test_modelo_303_annual_volume_marker_prints_only_for_a_390_exempt_filer_in_the_last_period(
+    period_code: str,
+    exonerado_390: bool,
+    answer: bool,
+    expected: str,
+) -> None:
+    """DP30301 Nota 3: "0" in every period but 12 and 4T, and there too for a filer not exempt from Modelo 390."""
+    facts = _m303_filing_facts(annual_volume_nonzero=answer).model_copy(
+        update={
+            "period": Period.from_year_and_code(2026, period_code),
+            "exonerado_390": m303_exonerado_390_evidence(applicable=exonerado_390),
+        }
+    )
+
+    assert m303_filing_lexicals(facts).annual_volume_nonzero == expected
 
 
 def test_modelo_303_foral_territory_projects_true_without_a_constant_fallback() -> None:
@@ -735,6 +766,7 @@ def test_modelo_303_foral_note_5_overrides_each_a16_to_a30_lexical_branch(
         FilingProducerKey.M303_INSOLVENCY_FILING_SUBTYPE: values[FilingProducerKey.M303_INSOLVENCY_FILING_SUBTYPE],
         FilingProducerKey.M303_VOLUNTARY_SII_ENROLLED: values[FilingProducerKey.M303_VOLUNTARY_SII_ENROLLED],
         FilingProducerKey.M303_EXONERADO_390_APPLICABLE: values[FilingProducerKey.M303_EXONERADO_390_APPLICABLE],
+        FilingProducerKey.M303_ANNUAL_VOLUME_NONZERO: values[FilingProducerKey.M303_ANNUAL_VOLUME_NONZERO],
         FilingProducerKey.M303_HYDROCARBON_DEPOSIT_ADVANCE_PAYMENT_DEDUCTION_ENTITLED: values[
             FilingProducerKey.M303_HYDROCARBON_DEPOSIT_ADVANCE_PAYMENT_DEDUCTION_ENTITLED
         ],
@@ -752,6 +784,7 @@ def test_modelo_303_foral_note_5_overrides_each_a16_to_a30_lexical_branch(
         FilingProducerKey.M303_INSOLVENCY_FILING_SUBTYPE: None,
         FilingProducerKey.M303_VOLUNTARY_SII_ENROLLED: "2",
         FilingProducerKey.M303_EXONERADO_390_APPLICABLE: "2",
+        FilingProducerKey.M303_ANNUAL_VOLUME_NONZERO: "2",
         FilingProducerKey.M303_HYDROCARBON_DEPOSIT_ADVANCE_PAYMENT_DEDUCTION_ENTITLED: "2",
     }
 
@@ -1339,4 +1372,39 @@ def test_m303_filing_facts_refuse_transition_arrival_evidence_from_another_regis
     payload["prorrata_register"] = ProrrataRegister(entries=(canonical_entry,))
 
     with pytest.raises(ValidationError, match="transition arrival evidence must belong to the supplied register"):
+        M303FilingFacts.model_validate(payload)
+
+
+@pytest.mark.parametrize(("period_code", "required"), [("1T", False), ("3T", False), ("4T", True)])
+def test_m303_evidence_requires_the_modelo_390_exemption_only_in_the_last_period(
+    period_code: str, required: bool
+) -> None:
+    """DP30301 Nota 4 asks for the exemption in 12 and 4T only; any other period may omit it."""
+    payload = _m303_instance_evidence(Period.from_year_and_code(2026, period_code)).model_dump(mode="python")
+    payload["exonerado_390"] = None
+    payload["annual_volume_nonzero"] = None
+
+    if required:
+        with pytest.raises(ValidationError, match="Modelo 390 exemption"):
+            M303FilingInstanceEvidence.model_validate(payload)
+    else:
+        assert M303FilingInstanceEvidence.model_validate(payload).exonerado_390 is None
+
+
+def test_m303_filing_facts_without_the_exemption_question_print_zero_for_both_marks() -> None:
+    """Outside the last period both DP30301 fields 23 and 24 carry "0", whether or not evidence was stored."""
+    facts = _m303_filing_facts(period_code="2T").model_copy(
+        update={"exonerado_390": None, "annual_volume_nonzero": None}
+    )
+
+    lexicals = m303_filing_lexicals(facts)
+
+    assert (lexicals.exonerado_390_applicable, lexicals.annual_volume_nonzero) == ("0", "0")
+
+
+def test_m303_last_period_filing_facts_refuse_a_missing_exemption_question() -> None:
+    payload = _m303_filing_facts(period_code="4T").model_dump(mode="python")
+    payload["exonerado_390"] = None
+
+    with pytest.raises(ValidationError, match="Modelo 390 exemption"):
         M303FilingFacts.model_validate(payload)

@@ -49,9 +49,9 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, Field
 
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
-from ...domain.calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
-from ...domain.calculations.registry.schema_base import DateAxis
+from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ..calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
+from ..calculations.registry.schema_base import DateAxis
 from .schema import IvaCategory
 
 if TYPE_CHECKING:

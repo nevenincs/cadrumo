@@ -11,7 +11,7 @@
 
 authority_id = "dev.registry.filing-export-conformance"
 mechanism_source_ref = "generated-provenance/200/2025-y-siguientes"
-generation_manifest_sha256 = "c51741a9e5b6e0f5ab169c8eadf3ffef32def679bcaf373b73e6ff30d549046c"
+generation_manifest_sha256 = "71ab1c4446f1dba50f74e984567eeac7ebd6b5995cd2bfba52324c8547c65a5e"
 filing_year = 2025
 period_code = "0A"
 
@@ -72,3 +72,9 @@ record_id = "m200-page-001"
 field_id = "m200-2025.dp200001.f0004"
 emitted_offset = 338
 length = 1
+
+[[probes]]
+record_id = "m200-page-001"
+field_id = "m200-2025.dp200001.f0113"
+emitted_offset = 943
+length = 12

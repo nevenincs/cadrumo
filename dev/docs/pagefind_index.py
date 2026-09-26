@@ -283,6 +283,44 @@ class PagefindUnavailableError(RuntimeError):
     """
 
 
+class PagefindIndexWriteError(RuntimeError):
+    """Raised when Pagefind reported the index written but its entry never became complete."""
+
+
+_ENTRY_FILE_NAME: Final[str] = "pagefind-entry.json"
+_ENTRY_COMPLETION_DEADLINE_SECONDS: Final[float] = 60.0
+_ENTRY_COMPLETION_POLL_SECONDS: Final[float] = 0.05
+
+
+async def await_complete_pagefind_entry(
+    entry: Path,
+    *,
+    deadline_seconds: float = _ENTRY_COMPLETION_DEADLINE_SECONDS,
+) -> None:
+    """Wait until ``entry`` holds a complete JSON document, or refuse.
+
+    Pagefind acknowledges ``WriteFiles`` before its entry file is fully on disk,
+    and closing the service terminates the indexer. Measured under twenty
+    concurrent builds, about one build in forty returned with an empty
+    ``pagefind-entry.json`` and reported success, which would publish a site
+    whose search finds nothing. The service therefore stays open until the entry
+    parses, and a build whose entry never completes fails instead of shipping.
+    """
+    loop = asyncio.get_running_loop()
+    deadline = loop.time() + deadline_seconds
+    while True:
+        try:
+            json.loads(entry.read_bytes())
+        except (OSError, ValueError):
+            if loop.time() >= deadline:
+                raise PagefindIndexWriteError(
+                    f"Pagefind reported the index written but {entry} never became a complete JSON document"
+                ) from None
+            await asyncio.sleep(_ENTRY_COMPLETION_POLL_SECONDS)
+        else:
+            return
+
+
 @dataclass(frozen=True)
 class SearchIndexResult:
     """Outcome of a Pagefind index pass."""
@@ -348,6 +386,7 @@ async def _run_index(
             # records and relevance weights here, before the index is written.
             await inject(index)
         await index.write_files(output_path=str(output_path))
+        await await_complete_pagefind_entry(output_path / _ENTRY_FILE_NAME)
     # The directory-pass response is a dict carrying the indexed page count.
     if isinstance(response, dict):
         return int(response.get("page_count", 0) or 0)

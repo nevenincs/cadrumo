@@ -42,6 +42,25 @@ class ModeloExportManifestError(ModeloExportError):
     """Raised when a modelo export manifest cannot be built or validated."""
 
 
+class ModeloExportProductIdentityUnavailableError(ModeloExportError):
+    """Raised when an official export envelope needs developer-owned header fields nobody has authorised.
+
+    The record design leaves the program identifier and the developer's tax
+    identifier to the software developer. Without a reviewed product identity
+    the export refuses instead of emitting blanks or placeholders; calculation
+    and verification are unaffected.
+    """
+
+
+class ModeloExportPriorDomiciliationElectionRequiredError(ModeloExportError):
+    """Raised when a Modelo 303 export names no prior-domiciliation action.
+
+    The page-three marker is the operator's per-filing choice, so an export
+    that carries none refuses before any byte is written instead of guessing
+    one.
+    """
+
+
 class Modelo036LifecycleError(ModeloError):
     """Base error for the Modelo 036 lifecycle (alta / modificacion / baja)."""
 

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import date
-from typing import TYPE_CHECKING, Literal, NamedTuple, Protocol, cast, runtime_checkable
+from typing import TYPE_CHECKING, Literal, NamedTuple, Protocol, TypeIs, runtime_checkable
 
 from ....core.i18n.translatable import Translatable as tr
 from ....core.text_fold import fold_diacritics
@@ -75,7 +75,7 @@ class KnownBadCitation(NamedTuple):
 
 
 _CITATION_FACT_ID = "registry-known-bad-citation-catalogue"
-_CITATION_SOURCE_VALUES: frozenset[str] = frozenset(
+_CITATION_SOURCE_VALUES: frozenset[CitationSource] = frozenset(
     {
         "ley",
         "real_decreto",
@@ -86,6 +86,11 @@ _CITATION_SOURCE_VALUES: frozenset[str] = frozenset(
         "instruction",
     },
 )
+
+
+def _is_citation_source(value: str) -> TypeIs[CitationSource]:
+    """Narrow a declared token to the closed citation-source vocabulary."""
+    return value in _CITATION_SOURCE_VALUES
 
 
 def _known_bad_citations(
@@ -128,13 +133,13 @@ def _known_bad_citations(
             raise RegistryValidationError(
                 f"known-bad citation catalogue is missing declaration {exc.args[0]!r}",
             ) from exc
-        if source not in _CITATION_SOURCE_VALUES:
+        if not _is_citation_source(source):
             raise RegistryValidationError(f"known-bad citation catalogue has unknown source {source!r}")
         if not article or not role_substring or not reason:
             raise RegistryValidationError(f"known-bad citation catalogue has an empty field for {identifier!r}")
         citations.append(
             KnownBadCitation(
-                cast(CitationSource, source),
+                source,
                 article,
                 tr(role_substring),
                 reason,
@@ -183,7 +188,7 @@ def find_known_bad(
     authority = authority or governed_facts_in_scope()
     if authority is None:
         raise RegistryValidationError("known-bad citation lookup requires an explicit authority operation or scope")
-    if source not in _CITATION_SOURCE_VALUES:
+    if not _is_citation_source(source):
         raise RegistryValidationError(f"known-bad citation lookup has unknown source {source!r}")
     if not isinstance(authority, _FilingYearFloorSource):
         raise RegistryValidationError(

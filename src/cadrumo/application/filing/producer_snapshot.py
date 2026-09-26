@@ -34,6 +34,7 @@ from ...domain.bienes_inversion.regularizacion_parameters import (
     BienesInversionRegularizacionParameters,
 )
 from ...domain.deadlines.models import ChargeAccount, ModeloIVAProfile, RefundAccount, TaxpayerProfile
+from ...domain.iva.refund_eligibility import is_last_filing_period_of_year
 from ...domain.modelos.calculation_revision_amendment import (
     CalculationRevisionAmendmentKind,
     M303RectificativaMotive,
@@ -57,8 +58,8 @@ from ..aggregation.m303_arrivals import (
     M303ProrrataTransitionArrival,
     M303SupplierRegimeArrival,
 )
-from ._producer_snapshot_m200 import Modelo200ProfileFacts as _Modelo200ProfileFacts
 from ._producer_snapshot_m390 import M390FilingFacts as _M390FilingFacts
+from .producer_snapshot_m200 import Modelo200ProfileFacts
 
 _NonBlankName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
 _AeatReceiptNumber = Annotated[str, StringConstraints(pattern=r"^\d{13}$")]
@@ -255,6 +256,11 @@ class Modelo222ProfileFacts(BaseModel):
     regimen_reducida_dimension: str | None = None
     cifra_negocios_grupo_doce_meses: str | None = None
     cooperativa_fiscalmente_protegida: str | None = None
+    #: The 2023-2024 diseño's single enumerated slot covering both the cooperativa
+    #: fiscalmente protegida and the "dos tipos impositivos" question: "0" no consta,
+    #: "1" grupo de cooperativas, "2" otros grupos fiscales. The 2025 diseño asks the
+    #: two questions separately through the fields above and below.
+    cooperativa_o_multiples_tipos: str | None = None
     regimen_entidades_capital_riesgo: str | None = None
     circunstancia_concurrente: str | None = None
     cifra_negocios_periodo_anterior_tramo: str | None = None
@@ -870,9 +876,9 @@ class M303FilingFacts(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     joint_return_elected: bool
-    annual_volume_nonzero: bool
+    annual_volume_nonzero: bool | None
     insolvency: M303InsolvencyFilingFact | None
-    exonerado_390: M303Exonerado390FilingEvidence
+    exonerado_390: M303Exonerado390FilingEvidence | None
     regimen_simplificado: M303RegimenSimplificadoFilingEvidence
     regimen_simplificado_result: M303RegimenSimplificadoCalculationResult
     period: Period
@@ -900,6 +906,8 @@ class M303FilingFacts(BaseModel):
 
 def _validate_m303_filing_periods(facts: M303FilingFacts) -> None:
     _require_m303_official_filing_period(facts.period)
+    if facts.exonerado_390 is None and is_last_filing_period_of_year(facts.period):
+        raise ValueError("M303 last-period filing facts require the Modelo 390 exemption evidence")
     if facts.period != facts.supplier_regime.period or facts.period != facts.prorrata_transition.period:
         raise ValueError("M303 filing facts and arrivals must share one filing period")
     if facts.regularisation_result.regularizacion_year != facts.period.filing_year:
@@ -1018,7 +1026,7 @@ type FilingModelProfileFacts = (
     GeneralFilingProfileFacts
     | Modelo111ProfileFacts
     | Modelo202ProducerProfile
-    | _Modelo200ProfileFacts
+    | Modelo200ProfileFacts
     | Modelo210ProfileFacts
     | Modelo222ProfileFacts
     | Modelo296ProfileFacts
@@ -1079,6 +1087,9 @@ def _validate_snapshot_modelo_profile(snapshot: FilingProducerSnapshot) -> None:
     if snapshot.modelo == Modelo("111"):
         _validate_modelo_111_snapshot(snapshot)
         return
+    if snapshot.modelo == Modelo("200"):
+        _validate_modelo_200_snapshot(snapshot)
+        return
     if snapshot.modelo == Modelo("202"):
         _validate_modelo_202_snapshot(snapshot)
         return
@@ -1095,6 +1106,20 @@ def _validate_snapshot_modelo_profile(snapshot: FilingProducerSnapshot) -> None:
         _validate_modelo_353_snapshot(snapshot)
         return
     _validate_general_modelo_snapshot(snapshot)
+
+
+def _validate_modelo_200_snapshot(snapshot: FilingProducerSnapshot) -> None:
+    """Modelo 200 carries repeated party, holding and establishment pages of its own.
+
+    Six records of the return are made entirely of projection fields -- the
+    administradores, the participaciones, the establecimientos permanentes, the
+    INCN communication, the operaciones de reestructuración and the
+    transparencia fiscal internacional -- and their rows exist nowhere but this
+    profile.  A general profile resolves none of them, so the return would
+    render with every one of those pages absent.
+    """
+    if not isinstance(snapshot.model_profile, Modelo200ProfileFacts):
+        raise ValueError("modelo 200 requires Modelo200ProfileFacts")
 
 
 def _validate_modelo_296_snapshot(snapshot: FilingProducerSnapshot) -> None:

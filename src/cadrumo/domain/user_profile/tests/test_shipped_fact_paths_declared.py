@@ -24,7 +24,7 @@ from pathlib import Path
 import pytest
 
 from ....core.directory_scan import scan_directory
-from ....domain.calculations.registry.tests.published_authority import published_profile_schema
+from ...calculations.registry.tests.published_authority import published_profile_schema
 from ..values import section_field_key
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

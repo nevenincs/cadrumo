@@ -28,19 +28,16 @@ beneath it -- produces no location and is not a finding; at the time of
 writing 68 such reads exist and every one is legitimate. Joining onto the root
 produces a location, and only the declared producers may do that.
 
-This is deliberately narrower than "the storage root has exactly one reader",
-which is a post-burndown property: it cannot hold until every ad-hoc site is
-enrolled, and a gate red at HEAD by 68 legitimate reads gets allowlisted into
-meaninglessness or deleted. The narrowing is recorded here rather than only in
-a commit message because a gate that quietly covers less than its ruling
-implies is how a campaign believes itself finished.
+This is deliberately narrower than "the storage root has exactly one reader":
+reading the root is legitimate, so that property would be false by design.
 
-**A second, different property is not covered here at all**: that a test must
-not hardcode a taxonomy-governed directory or file name. That is literal
-vocabulary, not join provenance, and it lives in the settings-lifecycle gate,
-which scans production modules only. Extending it across the test corpus is
-its own burndown. Neither gate subsumes the other -- a literal scan cannot see
-a path built by joining, and this gate cannot see a name spelled out in full.
+**A second, different property is not covered here at all**: that a module
+must not hardcode a taxonomy-governed directory or file name. That is literal
+vocabulary, not join provenance, and it lives in
+:mod:`~core.tests.test_settings_lifecycle_gate`, which scans production code
+and the test corpus alike. Neither gate subsumes the other -- a literal scan
+cannot see a path built by joining, and this gate cannot see a name spelled
+out in full.
 
 Following a rebind
 ------------------
@@ -48,26 +45,14 @@ A receiver-only walk is evaded by one line, so the detector follows the root
 through a function-local binding: a name assigned the root, then joined, is a
 join. Scope is the function plus the scopes enclosing it, and no further --
 chasing the root through parameters and returns is where a heuristic starts
-flagging healthy code, and ``root`` is an ordinary variable name. That
-undercount mattered beyond tidiness: this table's emptiness is a burndown
-closure signal, so a blind spot in the detector is a false completion signal,
-which is worse than a missing gate because it reads as proof.
+flagging healthy code, and ``root`` is an ordinary variable name. A blind spot
+in the detector would let a join pass unreported, which is worse than a missing
+gate because it reads as proof.
 
-Two tables, both keyed by module and enclosing function:
-
-- :data:`PERMITTED_PRODUCERS` -- the resolvers that exist to turn the root into
-  a path. Permanent.
-- :data:`PENDING_ENROLLMENT` -- sites that predate the taxonomy and are owned
-  by a named ruling. **This table may only shrink.**
-
-The anti-rot teeth are what make a declared table acceptable here at all. Each
-entry records how many join sites its function carries, and the gate re-runs
-the detector against it: an entry whose function no longer joins, or joins a
-different number of times, fails. So migrating a pending site reds the gate
-until its entry is struck, and adding a join to an already-declared function
-reds it too. The table cannot silently widen, and it cannot outlive the debt it
-describes. A site count scoped to one named function is not a census of the
-tree -- it moves only on the event being gated.
+:data:`PERMITTED_PRODUCERS`, keyed by module and enclosing function, names the
+resolvers that exist to turn the root into a path. Every other join fails, and
+an entry whose function stopped joining fails too, so the permission cannot
+outlive the function that needed it.
 """
 
 from __future__ import annotations
@@ -113,24 +98,6 @@ class JoinSite(NamedTuple):
         return (self.module, self.function)
 
 
-class PendingSite(NamedTuple):
-    """A pre-taxonomy join site awaiting enrollment, with its owning ruling."""
-
-    module: str
-    function: str
-    site_count: int
-    disposition: str
-    """Which burndown owns this entry -- see :data:`PENDING_DISPOSITIONS`.
-
-    Production enrollment and test re-expression are different work with
-    different rules: one routes a call site through the accessor, the other
-    must keep a test defending the property it was written for. Recording
-    which keeps a reader from mechanically re-pointing a pin and gutting it.
-    """
-
-    reason: str
-
-
 PERMITTED_PRODUCERS: Final[frozenset[tuple[str, str]]] = frozenset(
     {
         # The two accessors the enrollment contract names. Every enrolled site
@@ -155,28 +122,6 @@ PERMITTED_PRODUCERS: Final[frozenset[tuple[str, str]]] = frozenset(
     },
 )
 """Functions that may join onto the storage root, because producing a location is their job."""
-
-
-PRODUCTION_ENROLLMENT: Final[str] = "production enrollment"
-"""Route the call site through the accessor, declaring a member if none exists."""
-
-TEST_RE_EXPRESSION: Final[str] = "test re-expression"
-"""Keep the test defending its property, against the taxonomy rather than a literal."""
-
-PENDING_DISPOSITIONS: Final[frozenset[str]] = frozenset({PRODUCTION_ENROLLMENT, TEST_RE_EXPRESSION})
-
-
-PENDING_ENROLLMENT: Final[tuple[PendingSite, ...]] = ()
-"""Pre-taxonomy join sites, each owned by a ruling. This table may only shrink.
-
-Every entry here is currently a test re-expression: the production enrollments
-this table opened with were migrated, and their entries went stale and were
-struck by the route the shrink assertion forces. The count rose once, when the
-detector learned to follow a rebind and a five-join site that had been evading
-it surfaced -- an honest larger number replacing a flattering smaller one,
-which is the only direction a census may legitimately grow. That site was then
-re-expressed and struck too, by the same route.
-"""
 
 
 def _unwrap_path_call(node: ast.expr) -> ast.expr:
@@ -239,9 +184,8 @@ def _root_bound_names(tree: ast.AST, spans: list[tuple[int, int, str]]) -> dict[
         target = root / "buckets" / bucket_id        # a join the walk cannot see
 
     Both statements are individually unremarkable and together they produce a
-    location, so the binding has to be followed or the census undercounts --
-    and an undercounting census makes an emptied burndown table read as proof
-    the tree is enrolled when it is not.
+    location, so the binding has to be followed or the gate passes a join it
+    never saw.
 
     Scope is deliberately the whole of a function (plus the scopes enclosing
     it, since a closure genuinely sees its host's names) and no further.
@@ -371,10 +315,6 @@ def _tree_for(path: Path) -> ast.AST | None:
     return ast_for_path(path)
 
 
-def _pending_by_key() -> dict[tuple[str, str], PendingSite]:
-    return {(entry.module, entry.function): entry for entry in PENDING_ENROLLMENT}
-
-
 def test_the_scanned_corpus_and_its_findings_are_both_non_degenerate() -> None:
     """The gate must be looking at the real tree, not at nothing.
 
@@ -405,7 +345,7 @@ def test_the_scanned_corpus_and_its_findings_are_both_non_degenerate() -> None:
 
 def test_only_declared_producers_join_onto_the_storage_root() -> None:
     """Building a location from the root outside a declared producer fails here."""
-    declared = PERMITTED_PRODUCERS | set(_pending_by_key())
+    declared = PERMITTED_PRODUCERS
     undeclared = sorted(
         f"{site.module}:{site.lineno} in {site.function}" for site in _discovered_sites() if site.key not in declared
     )
@@ -427,48 +367,6 @@ def test_every_permitted_producer_still_produces() -> None:
         "the entry in the same change that moves the resolution, so the permission cannot outlive "
         "the function that needed it"
     )
-
-
-def test_pending_enrollment_only_shrinks() -> None:
-    """A migrated pending site must be struck, not left behind as permission."""
-    counts: dict[tuple[str, str], int] = {}
-    for site in _discovered_sites():
-        counts[site.key] = counts.get(site.key, 0) + 1
-
-    drifted: list[str] = []
-    for key, entry in sorted(_pending_by_key().items()):
-        observed = counts.get(key, 0)
-        if observed != entry.site_count:
-            drifted.append(
-                f"{entry.module}::{entry.function} declares {entry.site_count} join site(s), found {observed}"
-            )
-    assert not drifted, (
-        f"PENDING_ENROLLMENT has drifted from the tree: {drifted}. A count that fell means the "
-        "site was migrated -- strike the entry. A count that rose means a new join was added to "
-        "a function that already carried debt, which the enrollment contract forbids. This table "
-        "may only shrink"
-    )
-
-
-def test_no_site_is_both_permitted_and_pending() -> None:
-    """Permanent permission and temporary debt are different claims."""
-    overlap = sorted(f"{module}::{function}" for module, function in PERMITTED_PRODUCERS & set(_pending_by_key()))
-    assert not overlap, (
-        f"{overlap} appear in both PERMITTED_PRODUCERS and PENDING_ENROLLMENT; a function either "
-        "produces locations by design or carries debt awaiting enrollment"
-    )
-
-
-def test_every_pending_entry_states_its_reason_and_its_burndown() -> None:
-    """Debt with no stated owner is indistinguishable from permission."""
-    for entry in PENDING_ENROLLMENT:
-        assert entry.reason.strip(), f"{entry.module}::{entry.function} declares no reason"
-        assert entry.site_count > 0, f"{entry.module}::{entry.function} declares no join sites"
-        assert entry.disposition in PENDING_DISPOSITIONS, (
-            f"{entry.module}::{entry.function} declares disposition {entry.disposition!r}, which "
-            f"is not one of {sorted(PENDING_DISPOSITIONS)}. Routing a call site through the "
-            "accessor and re-expressing a pin are different work with different rules"
-        )
 
 
 # --------------------------------------------------------------------- #
@@ -580,8 +478,7 @@ def test_the_detector_follows_the_root_through_a_local_rebind() -> None:
 
     Both statements are unremarkable alone -- a plain read, then a join on an
     ordinary local -- and together they produce a location. A receiver-only
-    walk sees neither, so the census undercounts, and an undercounting census
-    makes an emptied burndown table read as proof the tree is enrolled.
+    walk sees neither, so the gate would pass a join it never saw.
     """
     source = (
         "def build(settings, bucket_id):\n"

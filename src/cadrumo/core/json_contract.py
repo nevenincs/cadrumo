@@ -49,9 +49,8 @@ from pydantic import (
     field_validator,
 )
 
-from ..core.errors.hierarchy import pydantic_validation_boundary
 from .action_argument_resolution import ActionArgumentResolution
-from .errors.hierarchy import CadrumoError
+from .errors.hierarchy import CadrumoError, pydantic_validation_boundary
 from .identifier_grammar import FIELD_KEY_PATTERN
 from .logging import get_logger
 from .operator_action_enums import ActionArgumentStatus
@@ -659,9 +658,13 @@ def _validated_error_envelope(typed_document: dict[str, object]) -> dict[str, ob
         raise OutputSchemaError("operator JSON error envelope has an invalid command")
     if active_profile is not None and not isinstance(active_profile, str):
         raise OutputSchemaError("operator JSON error envelope has an invalid active profile")
+    # A parsed document is JSON, validated as JSON, as the success envelope is:
+    # strict Python-mode validation rejects the lists and plain strings that
+    # JSON carries for the envelope's tuples and enums, so every error that
+    # names a recovery action failed here while plain errors passed.
     try:
-        ErrorEnvelope.model_validate(typed_document["error"])
-        TypeAdapter(list[Notice]).validate_python(typed_document["notices"])
+        ErrorEnvelope.model_validate_json(json.dumps(typed_document["error"]))
+        TypeAdapter(list[Notice]).validate_json(json.dumps(typed_document["notices"]))
     except ValidationError as error:
         raise OutputSchemaError("operator JSON error envelope failed strict validation") from error
     return typed_document

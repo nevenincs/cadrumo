@@ -1891,7 +1891,10 @@ def dict_constant_naming_violations_in_tree(tree: ast.AST) -> Iterator[tuple[int
         elif isinstance(node, ast.AnnAssign):
             target = node.target
             value = node.value
-        if not isinstance(target, ast.Name) or flow_confirmed.get(target.id) is not value:
+        # A bare annotation carries no value, and a name that is not a
+        # confirmed dict looks it up as None too; comparing the two would
+        # flag every module-level ``name: T`` declaration.
+        if value is None or not isinstance(target, ast.Name) or flow_confirmed.get(target.id) is not value:
             continue
         name = target.id
         if name.endswith(_LOCALE_KEY_CONSTANT_SUFFIXES):

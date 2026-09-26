@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Annotated, Literal
+from typing import Annotated, Final, Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ...core.aggregation import BindingSourceKind
 from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import pydantic_validation_boundary
@@ -17,12 +16,11 @@ from ...core.identity.bucket import BucketId
 from ...core.identity.continuidad import ContinuidadId
 from ...core.identity.digest import ContentDigest
 from ...core.identity.hex_ids import WorkUnitId
-from ...core.identity.profile import ProfileId
-from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.revision_review import RevisionReviewStatus
 from ...core.schema_family_disposition import RegistrySchemaFamilyDisposition
+from ...domain.buckets.event import BucketEvent
 from ...domain.calculations.registry.ids import (
     ApplicabilityRuleId,
     BindingId,
@@ -38,8 +36,8 @@ from ...domain.filing.schema import ModeloScalar
 from ...domain.modelos.calculation_revision import CalculationSourceRef
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.work_unit import WorkUnitState
-from ..ledger.preflight import LedgerPreflightIssueReason
 from ..operator_actions.models import ActionReference
+from ..state_projection import ProjectionModeloReadiness
 from . import _workspace_model_validation as _workspace_validation
 from .work_addressing import ModeloExactWorkUnitTarget, ModeloVisibleFilingTarget
 from .work_review import ModeloWorkReview
@@ -90,7 +88,15 @@ cosmetic -- it made every Workspace destination unopenable for any modelo
 declaring an uppercase casilla id, which includes Modelo 100. The leading
 character stays lowercase because the first segment is always a namespace
 (``modelo.``, ``flows.``, ``wizard.``) and no producer emits any other shape."""
-type _BoundedLocalizedText = Annotated[str, Field(min_length=1, max_length=512)]
+#: Bound on one localized display string. Official AEAT casilla labels are
+#: quoted in full, never truncated: the longest shipped text, measured across
+#: every catalogue locale on 2026-09-24, is 603 characters (the Modelo 100
+#: 2020 casilla 0814 label, Spanish), which the previous 512 refused and made
+#: its workspace unopenable. The bound keeps a payload ceiling with about 70%
+#: headroom over that measurement; a catalogue test runs every shipped text
+#: through this field, so a longer official text fails the build first.
+_MAX_LOCALIZED_TEXT_LENGTH: Final[int] = 1024
+type _BoundedLocalizedText = Annotated[str, Field(min_length=1, max_length=_MAX_LOCALIZED_TEXT_LENGTH)]
 type _BoundedRefList[T] = Annotated[tuple[T, ...], Field(max_length=_MAX_SCHEMA_EVIDENCE_REFERENCES)]
 
 
@@ -551,7 +557,18 @@ type ModeloWorkspaceSchemaReferenceV1 = Annotated[
 
 
 class ModeloWorkspaceSchemaRecordV1(_WorkspaceModel):
-    """Explanatory schema row using canonical registry identities, never grammar objects."""
+    """Explanatory schema row using canonical registry identities, never grammar objects.
+
+    There is no per-record applicability field, and its absence is a statement
+    about the registry rather than an omission. Applicability is declared on the
+    REVISION and expressed against taxpayer conditions -- entity type, income
+    category, estimation regime, fiscal residency, IVA regime. An applicability
+    rule names no casilla at all, so no record-to-rule relation exists to
+    project, and a per-record field over a revision-level concept could only be
+    filled by attaching every rule to every box, which is false.
+    :class:`ModeloWorkspaceApplicabilityReferenceV1` remains the identity a rule
+    is named by where one is addressed as a record's own subject.
+    """
 
     reference: ModeloWorkspaceSchemaReferenceV1
     record_family: Annotated[tuple[_BoundedText, ...], Field(max_length=_MAX_SCHEMA_RECORD_FAMILY_DEPTH)]
@@ -577,9 +594,6 @@ class ModeloWorkspaceSchemaRecordV1(_WorkspaceModel):
     source_refs: _BoundedRefList[SourceRefId] = ()
     continuity: Annotated[
         tuple[ModeloWorkspaceContinuityReferenceV1, ...], Field(max_length=_MAX_SCHEMA_RELATIONSHIPS)
-    ] = ()
-    applicability: Annotated[
-        tuple[ModeloWorkspaceApplicabilityReferenceV1, ...], Field(max_length=_MAX_SCHEMA_RELATIONSHIPS)
     ] = ()
     constraints: (
         Annotated[tuple[ModeloWorkspaceConstraintReferenceV1, ...], Field(max_length=_MAX_SCHEMA_RELATIONSHIPS)] | None
@@ -858,93 +872,6 @@ class ModeloWorkspaceEvidenceHorizonV1(_WorkspaceModel):
     evidence_digest: ContentDigest
 
 
-class ModeloWorkspaceProfileRequirementV1(_WorkspaceModel):
-    """One bounded profile requirement from the canonical readiness axis."""
-
-    selector: Annotated[str, Field(min_length=1, max_length=128)]
-    section_key: Annotated[str, Field(min_length=1, max_length=64)]
-    field_key: Annotated[str, Field(min_length=1, max_length=128)]
-    label: _BoundedLocalizedText
-    legal_refs: Annotated[tuple[LegalRefId, ...], Field(max_length=_MAX_SCHEMA_EVIDENCE_REFERENCES)] = ()
-    modelos: Annotated[tuple[ModeloCode, ...], Field(max_length=_MAX_SCHEMA_EVIDENCE_REFERENCES)] = ()
-
-
-class ModeloWorkspaceBindingRequirementV1(_WorkspaceModel):
-    """One missing canonical calculation-binding requirement from readiness."""
-
-    binding_id: BindingId
-    source: BindingSourceKind
-    input_channel: Annotated[str, Field(min_length=1, max_length=16)]
-
-
-class ModeloWorkspaceLedgerTransactionSubjectV1(_WorkspaceModel):
-    """A ledger-preflight issue attached to one identified transaction."""
-
-    kind: Literal["transaction"] = "transaction"
-    transaction_id: TransactionId
-
-
-class ModeloWorkspaceLedgerPeriodSubjectV1(_WorkspaceModel):
-    """A ledger-preflight issue that is not tied to any one transaction.
-
-    :class:`~cadrumo.application.ledger.preflight.LedgerPreflightIssue`
-    carries ``transaction_id: TransactionId | Literal["__period__"]`` for a
-    condition scoped to the whole period rather than one row (an unsupported
-    period with no date span, per ``_unsupported_period_issue``). Collapsing
-    that case into a required ``TransactionId`` would either drop the issue
-    (silent under-declaration on exactly the axis a taxpayer consults before
-    filing) or pin it to a fabricated transaction that has nothing to do with
-    it; this type represents the period-level case as itself.
-    """
-
-    kind: Literal["period"] = "period"
-
-
-type ModeloWorkspaceLedgerIssueSubjectV1 = Annotated[
-    ModeloWorkspaceLedgerTransactionSubjectV1 | ModeloWorkspaceLedgerPeriodSubjectV1,
-    Field(discriminator="kind"),
-]
-
-
-class ModeloWorkspaceLedgerIssueV1(_WorkspaceModel):
-    """One bounded ledger-preflight issue preserving its canonical typed axis."""
-
-    subject: ModeloWorkspaceLedgerIssueSubjectV1
-    reason: LedgerPreflightIssueReason
-    detail: _BoundedLocalizedText
-
-
-class ModeloWorkspaceReadinessV1(_WorkspaceModel):
-    """Typed, axis-preserving Workspace projection of canonical Modelo readiness."""
-
-    profile_id: ProfileId
-    modelo: ModeloCode
-    revision_id: RevisionId
-    filing_year: FilingYear
-    period: Period
-    missing: Annotated[tuple[ModeloWorkspaceProfileRequirementV1, ...], Field(max_length=128)] = ()
-    profile_ready: bool
-    per_operation_requirements_assessed: bool
-    profile_refusal: Annotated[str, Field(max_length=512)] = ""
-    registry_ready: bool = True
-    registry_refusal: Annotated[str, Field(max_length=512)] = ""
-    binding_ready: bool = True
-    missing_bindings: Annotated[tuple[ModeloWorkspaceBindingRequirementV1, ...], Field(max_length=128)] = ()
-    ledger_preflight_required: bool = False
-    ledger_ready: bool | None = None
-    ledger_period: Period | None = None
-    ledger_checked_transaction_count: Annotated[int, Field(ge=0)] = 0
-    ledger_issues: Annotated[tuple[ModeloWorkspaceLedgerIssueV1, ...], Field(max_length=128)] = ()
-    ready: bool
-
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _require_period_to_match_readiness_year(self) -> ModeloWorkspaceReadinessV1:
-        if self.period.filing_year != self.filing_year:
-            raise ValueError("workspace readiness filing_year must match period.filing_year")
-        return self
-
-
 class ModeloWorkspaceSnapshotScopeV1(_WorkspaceModel):
     """The explicitly requested and declared grade for one snapshot admission.
 
@@ -1009,7 +936,22 @@ class ModeloWorkspaceProjectionV1(_WorkspaceModel):
     materialization_facet: ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceMaterializationRecordV1] | None = None
     provenance_facet: ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceProvenanceRecordV1] | None = None
     work_review: ModeloWorkspaceWorkReviewFacetV1
-    readiness: ModeloWorkspaceReadinessV1 | None = None
+    readiness: ProjectionModeloReadiness | None = None
+    """The canonical readiness report for this exact target, when measured.
+
+    Deliberately the producer's own
+    :class:`~cadrumo.application.state_projection.ProjectionModeloReadiness`
+    rather than a Workspace-local restatement of it. Every axis this
+    projection would carry -- profile requirements, registry availability,
+    binding resolution, ledger preflight -- is already typed on that record,
+    and a second copy could only answer the same question in a shape that
+    drifts. The Workspace V1 public-schema digest is computed over the
+    REGISTRY type universe (``workspace_manifest``), not over this payload, so
+    carrying the canonical type here crosses no frozen contract boundary.
+
+    ``None`` means the admission never read the readiness producer, which is
+    the STATIC_INSPECTION case; it never means "not ready".
+    """
     capabilities: Annotated[
         tuple[ModeloWorkspaceCapabilityV1, ...],
         Field(min_length=len(ModeloWorkspaceCapabilityName), max_length=len(ModeloWorkspaceCapabilityName)),
@@ -1057,6 +999,29 @@ class ModeloWorkspaceProjectionV1(_WorkspaceModel):
         materialization_facet, provenance_facet = _require_graded_projection_facets(self)
         _require_graded_projection_facet_names(materialization_facet, provenance_facet)
         _require_graded_projection_facet_coordinates(self, materialization_facet, provenance_facet)
+        return self
+
+
+class ModeloWorkspaceLifecycleProjectionV1(_WorkspaceModel):
+    """Persisted lifecycle facts beside, never inside, the immutable read projection."""
+
+    contract_version: Literal[1] = 1
+    target: ModeloWorkspaceResolvedTargetV1
+    calculation_revision_id: str | None = None
+    verification_report_id: str | None = None
+    local_filing_record_id: str | None = None
+    aeat_accepted: Literal[False] = False
+    events: tuple[BucketEvent, ...] = ()
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _require_lifecycle_identity(self) -> ModeloWorkspaceLifecycleProjectionV1:
+        if self.target.work_unit_id is None:
+            raise ValueError("lifecycle projection requires one persisted work unit")
+        if self.verification_report_id is not None and self.calculation_revision_id is None:
+            raise ValueError("verification lifecycle fact requires its calculation revision")
+        if self.local_filing_record_id is not None and self.calculation_revision_id is None:
+            raise ValueError("local filing lifecycle fact requires its calculation revision")
         return self
 
 
@@ -1143,7 +1108,6 @@ __all__ = [
     "ModeloWorkspaceApplicabilityReferenceV1",
     "ModeloWorkspaceBaselineV1",
     "ModeloWorkspaceBindingReferenceV1",
-    "ModeloWorkspaceBindingRequirementV1",
     "ModeloWorkspaceBoundedFacetV1",
     "ModeloWorkspaceCapabilityDisposition",
     "ModeloWorkspaceCapabilityName",
@@ -1174,21 +1138,16 @@ __all__ = [
     "ModeloWorkspaceGradedSnapshotAdmissionV1",
     "ModeloWorkspaceGradedSnapshotResultV1",
     "ModeloWorkspaceGradedSnapshotScopeV1",
-    "ModeloWorkspaceLedgerIssueSubjectV1",
-    "ModeloWorkspaceLedgerIssueV1",
-    "ModeloWorkspaceLedgerPeriodSubjectV1",
-    "ModeloWorkspaceLedgerTransactionSubjectV1",
     "ModeloWorkspaceLegalEvidenceReferenceV1",
+    "ModeloWorkspaceLifecycleProjectionV1",
     "ModeloWorkspaceLocaleDisposition",
     "ModeloWorkspaceLocaleSummaryV1",
     "ModeloWorkspaceLocalizedTextV1",
     "ModeloWorkspaceMaterializationRecordV1",
     "ModeloWorkspaceParameterReferenceV1",
-    "ModeloWorkspaceProfileRequirementV1",
     "ModeloWorkspaceProjectionAdmissionV1",
     "ModeloWorkspaceProjectionV1",
     "ModeloWorkspaceProvenanceRecordV1",
-    "ModeloWorkspaceReadinessV1",
     "ModeloWorkspaceRecordLabelV1",
     "ModeloWorkspaceRefreshTargetV1",
     "ModeloWorkspaceRefusalCode",

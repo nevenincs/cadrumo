@@ -300,6 +300,10 @@ src/cadrumo/_data/corpus/manuals/**/source.html/
 # exercises; durable outcomes belong in the vaultspec pipeline (research,
 # adr, plan, exec, audit), never here.
 /.agents/testimonials/
+# Agent session briefs, checkpoints and run receipts. Session coordination
+# scratch; grounding and decisions go to `.vault/` research and ADRs, and run
+# output to `.logs/`.
+/.agents/session-briefs/
 # NO RULE NAMES A PATH UNDER `dev/`, and that is deliberate. `dev/` holds the
 # harness; a run's output goes to `.logs/`, which the next clean reclaims. Three
 # rules used to sit here -- the terminology coverage report beside its own

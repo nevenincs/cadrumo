@@ -24,10 +24,6 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from .....adapters.persistence.storage.crypto.encrypted_columns import secure_object_key_digest
-from .....adapters.persistence.storage.errors import PathContainmentError, SecureObjectRowIdentityError
-from .....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
-from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .....application.aggregation.percepciones_observations_repository import (
     PercepcionObservationPersistenceError,
     PercepcionObservationPorts,
@@ -41,6 +37,10 @@ from .....domain.calculations.registry.withholding_bindings import (
     WithholdingObservation,
     aggregate_withholding_by_clave,
 )
+from ...storage.crypto.encrypted_columns import secure_object_key_digest
+from ...storage.errors import PathContainmentError, SecureObjectRowIdentityError
+from ...storage.runtime_repository import secure_object_repository_for_active_bucket
+from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..percepciones_observations import (
     PercepcionObservationRepositoryAdapter,
 )

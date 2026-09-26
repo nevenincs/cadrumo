@@ -41,6 +41,7 @@ def retencion_observation_key(
     period: Period,
     perceptor_nif: str,
     scheme: RetencionScheme,
+    projection_identity: str | None = None,
 ) -> str:
     """Opaque per-perceptor object key — the NIF is hashed, never cleartext.
 
@@ -64,7 +65,10 @@ def retencion_observation_key(
     _validate_key_component(period_token, context="period")
     _validate_key_component(str(scheme.value), context="scheme")
     hashed_token = hashed_tax_id_token(perceptor_nif, field_name="perceptor_nif")
-    return f"{modelo}:{filing_year}:{period_token}:{hashed_token}:{scheme.value}"
+    if projection_identity is None:
+        return f"{modelo}:{filing_year}:{period_token}:{hashed_token}:{scheme.value}"
+    _validate_key_component(projection_identity, context="projection_identity")
+    return f"{modelo}:{filing_year}:{period_token}:{hashed_token}:{scheme.value}:{projection_identity}"
 
 
 def _validate_key_component(token: str, *, context: str) -> str:
@@ -111,6 +115,23 @@ class RetencionObservationRepository(Protocol):
 
     def load_observations(self, modelo: str, period: Period) -> tuple[RetencionObservation, ...]:
         """Return observations for one modelo and filing period."""
+        ...
+
+    def load_annual_source_observations(self, source_modelo: str, filing_year: int) -> tuple[RetencionObservation, ...]:
+        """Return all active periodic projections feeding one annual family."""
+        ...
+
+    def load_source_observations_through_year(
+        self,
+        source_modelo: str,
+        last_filing_year: int,
+    ) -> tuple[RetencionObservation, ...]:
+        """Return every active periodic projection of ``source_modelo`` up to ``last_filing_year``.
+
+        An annual disclosure can depend on an allocation recognised in an
+        earlier year and settled in this one, so the read spans every periodic
+        window whose filing year is at or before ``last_filing_year``.
+        """
         ...
 
 

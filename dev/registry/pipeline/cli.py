@@ -663,6 +663,7 @@ class TargetCurrentnessFact:
     only_committed: tuple[str, ...] = ()
     only_rendered: tuple[str, ...] = ()
     serialization_only: tuple[str, ...] = ()
+    provenance_fields: tuple[str, ...] = ()
     detail: str = ""
 
 
@@ -735,6 +736,13 @@ def target_currentness(
                 pass
             if comparison is not None:
                 state = TargetCurrentnessState.STALE if comparison.provenance_only else TargetCurrentnessState.DRIFTED
+                # A stale manifest's refusal names the digest that failed; the
+                # members that differ from a fresh render say which input moved.
+                detail = str(error)
+                if comparison.provenance_fields:
+                    detail = f"{detail}; manifest members differing from a fresh render: " + ", ".join(
+                        comparison.provenance_fields
+                    )
                 return TargetCurrentnessFact(
                     modelo=modelo,
                     revision=revision,
@@ -743,7 +751,8 @@ def target_currentness(
                     only_committed=comparison.only_committed,
                     only_rendered=comparison.only_rendered,
                     serialization_only=comparison.serialization_only,
-                    detail=str(error),
+                    provenance_fields=comparison.provenance_fields,
+                    detail=detail,
                 )
             return TargetCurrentnessFact(
                 modelo=modelo,

@@ -24,7 +24,6 @@ from pathlib import Path
 import pytest
 from sqlalchemy import select
 
-from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .....core.google_credential_source import GoogleCredentialSourceKind
 from ....persistence.storage.secure_object_namespaces import (
     GOOGLE_CREDENTIAL_SOURCE_NAMESPACE,
@@ -36,6 +35,7 @@ from ....persistence.storage.secure_object_namespaces import (
 )
 from ....persistence.storage.sql.orm import SecureObjectRow
 from ....persistence.storage.sql.session import session_scope
+from ....persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .. import session_store
 from ..impersonation import GoogleCredentialSourceSelection
 from ..records import REQUIRED_SCOPES, DriveConfig, OAuthClient, OAuthMetadata, OAuthToken

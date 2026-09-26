@@ -15,7 +15,6 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
-from typing import cast
 
 from .errors import RegistryValidationError
 from .facts.resolution import ResolvedScalarFact, ScalarFactQuery
@@ -51,7 +50,9 @@ def resolve_m347_counterparty_annual_threshold(
             effective_date=effective_date,
         ),
     )
-    return cast("ResolvedScalarFact", resolved)
+    if not isinstance(resolved, ResolvedScalarFact):
+        raise RegistryValidationError("M347 counterparty threshold must resolve as a scalar fact")
+    return resolved
 
 
 def resolve_m347_clave_c_declaration_threshold(
@@ -70,7 +71,9 @@ def resolve_m347_clave_c_declaration_threshold(
             effective_date=effective_date,
         ),
     )
-    return cast("ResolvedScalarFact", resolved)
+    if not isinstance(resolved, ResolvedScalarFact):
+        raise RegistryValidationError("M347 clave-C threshold must resolve as a scalar fact")
+    return resolved
 
 
 def _declarable_party_ids(totals: Mapping[str, Decimal], *, floor: Decimal) -> frozenset[str]:

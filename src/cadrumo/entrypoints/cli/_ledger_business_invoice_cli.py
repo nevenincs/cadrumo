@@ -12,6 +12,7 @@ record behind it and ``link --invoice-id`` resolves against that same identity.
 
 from __future__ import annotations
 
+import json
 from collections.abc import Callable, Sequence
 from datetime import date
 from decimal import Decimal
@@ -49,7 +50,7 @@ from ...core.json_contract import Notice, NoticeSeverity
 from ...core.type_guards import is_object_list_or_tuple
 from ...domain.invoices.enums import default_invoice_class, require_invoice_class
 from ...domain.invoices.errors import InvoiceValidationError
-from ...domain.invoices.models import Invoice
+from ...domain.invoices.models import Invoice, InvoiceLine
 from ...domain.iva.classification import InvoiceKind
 from ...domain.iva.schema import IvaCategory
 from ._date_parsing import _parse_iso_date
@@ -155,7 +156,59 @@ def _catalogue_invoice_payload(invoice: Invoice) -> dict[str, object]:
     payload["linked_transaction_ids"] = list(invoice.linked_transaction_ids)
     payload["bucket_id"] = invoice.bucket_id
     payload["operation_type"] = invoice.operation_type
+    payload["lines"] = [line.model_dump() for line in invoice.lines]
+    payload["invoice_class"] = invoice.invoice_class
+    payload["series"] = invoice.series
+    payload["operation_date"] = invoice.operation_date
+    payload["operation_date_role"] = invoice.operation_date_role
+    payload["iva_category"] = invoice.iva_category
+    payload["rectifies_invoice_number"] = invoice.rectifies_invoice_number
+    provenance = invoice.provenance
+    payload["source_filename"] = provenance.source_path.name if provenance is not None else None
+    payload["source_sha256"] = provenance.source_sha256 if provenance is not None else None
+    payload["source_row_index"] = provenance.source_row_index if provenance is not None else None
     return payload
+
+
+def _parse_invoice_lines(raw_lines: Sequence[str]) -> tuple[InvoiceLine, ...]:
+    """Parse ordered ``--line`` JSON objects through the canonical line model."""
+    parsed: list[InvoiceLine] = []
+    for raw_line in raw_lines:
+        try:
+            payload = json.loads(raw_line)
+        except json.JSONDecodeError as exc:
+            raise InvoiceValidationError("line must be one JSON object") from exc
+        if not isinstance(payload, dict):
+            raise InvoiceValidationError("line must be one JSON object")
+        parsed.append(InvoiceLine.model_validate(payload))
+    return tuple(parsed)
+
+
+def _euro_value_pending_notices(invoice: Invoice) -> list[Notice]:
+    """Say at capture that a foreign-currency invoice was recorded without a euro rate.
+
+    The invoice is kept and held back from every euro figure until a rate is
+    stamped on it. Without this notice the first sign was a refusal at
+    calculation, far from the capture that could have been corrected.
+    """
+    if not invoice.euro_value_pending:
+        return []
+    return [
+        Notice(
+            severity=NoticeSeverity.WARNING,
+            code="ledger.invoice.euro_rate_unavailable",
+            message=tr(
+                "cli.app.ledger.invoice.euro_rate_unavailable_message",
+                currency=invoice.currency,
+                date=invoice.issued_at.isoformat(),
+            ),
+            context={
+                "invoice_id": invoice.invoice_id,
+                "currency": invoice.currency,
+                "issued_at": invoice.issued_at.isoformat(),
+            },
+        ),
+    ]
 
 
 def _simplificada_tax_id_notices(invoice: Invoice) -> list[Notice]:
@@ -247,7 +300,7 @@ def invoice_add(
     counterparty_name: str,
     invoice_number: str,
     invoice_date: str,
-    taxable_base: str,
+    taxable_base: str | None,
     country_code: str,
     iva_rate: str | None = None,
     currency: str = DEFAULT_CURRENCY,
@@ -261,6 +314,7 @@ def invoice_add(
     rectifies_invoice_number: str | None = None,
     recargo: str | None = None,
     iva_category: IvaCategory | None = None,
+    line: tuple[str, ...] = (),
     notes: str = "",
 ) -> None:
     """Create a rich linkable invoice in the reconciliation catalogue.
@@ -286,6 +340,17 @@ def invoice_add(
         operation_type,
     )
     try:
+        structured_lines = _parse_invoice_lines(line)
+        if structured_lines and (taxable_base is not None or iva_rate is not None):
+            raise InvoiceValidationError("--line cannot be combined with --taxable-base or --iva-rate")
+        if structured_lines:
+            parsed_taxable_base: Decimal | None = None
+            parsed_iva_rate: Decimal | None = None
+        else:
+            if taxable_base is None:
+                raise InvoiceValidationError("--taxable-base is required when --line is not supplied")
+            parsed_taxable_base = parse_decimal_amount(taxable_base, label="taxable-base")
+            parsed_iva_rate = parse_optional_decimal_amount(iva_rate, label="iva-rate")
         invoice = build_catalogue_invoice(
             bucket_id=bucket_id,
             kind=kind,
@@ -294,8 +359,8 @@ def invoice_add(
             counterparty_country=country_code,
             invoice_number=invoice_number,
             issued_at=_parse_iso_date(invoice_date, label="invoice-date"),
-            taxable_base=parse_decimal_amount(taxable_base, label="taxable-base"),
-            iva_rate=parse_optional_decimal_amount(iva_rate, label="iva-rate"),
+            taxable_base=parsed_taxable_base,
+            iva_rate=parsed_iva_rate,
             currency=currency,
             notes=notes,
             iva_category=resolved_iva_category,
@@ -309,6 +374,7 @@ def invoice_add(
             series=series,
             rectifies_invoice_number=rectifies_invoice_number,
             recargo_amount=parse_optional_decimal_amount(recargo, label="recargo"),
+            lines=structured_lines or None,
             rate_provider=catalogue_ports.rate_provider,
         )
         result = create_catalogue_invoice(invoice=invoice, ports=catalogue_ports)
@@ -322,7 +388,7 @@ def invoice_add(
         command="ledger.invoice.add",
         result=CatalogueInvoiceCreatePayload.model_validate(_catalogue_invoice_payload(result.invoice)),
         lines=_catalogue_invoice_lines(result.invoice),
-        notices=_simplificada_tax_id_notices(result.invoice),
+        notices=[*_simplificada_tax_id_notices(result.invoice), *_euro_value_pending_notices(result.invoice)],
     )
 
 
@@ -416,6 +482,7 @@ def invoice_wizard(
             ),
         )
         lines.append(noop_message)
+    notices.extend(_euro_value_pending_notices(wizard_result.invoice))
 
     emit_envelope(
         ctx,
@@ -761,18 +828,21 @@ def invoice_update(
     """
     authority_operation(ctx)
     bucket_id = _business_invoice_bucket_id()
-    patch = CatalogueInvoicePatch(
-        counterparty_name=counterparty_name,
-        counterparty_country=counterparty_country,
-        notes=notes,
-        iva_category=iva_category,
-        operation_type=operation_type,
-        operation_date=(None if operation_date is None else _parse_iso_date(operation_date, label="operation-date")),
-        retention_rate=parse_optional_decimal_amount(retention_rate, label="retention-rate"),
-        retention_amount=parse_optional_decimal_amount(retention_amount, label="retention-amount"),
-        invoice_class=(None if invoice_class is None else require_invoice_class(invoice_class)),
-        series=series,
-        rectifies_invoice_number=rectifies_invoice_number,
+    patch_values = {
+        "counterparty_name": counterparty_name,
+        "counterparty_country": counterparty_country,
+        "notes": notes,
+        "iva_category": iva_category,
+        "operation_type": operation_type,
+        "operation_date": None if operation_date is None else _parse_iso_date(operation_date, label="operation-date"),
+        "retention_rate": parse_optional_decimal_amount(retention_rate, label="retention-rate"),
+        "retention_amount": parse_optional_decimal_amount(retention_amount, label="retention-amount"),
+        "invoice_class": None if invoice_class is None else require_invoice_class(invoice_class),
+        "series": series,
+        "rectifies_invoice_number": rectifies_invoice_number,
+    }
+    patch = CatalogueInvoicePatch.model_validate(
+        {key: value for key, value in patch_values.items() if value is not None}
     )
     lifecycle_ports = catalogue_lifecycle_ports_factory(ctx)(bucket_id=bucket_id)
     try:

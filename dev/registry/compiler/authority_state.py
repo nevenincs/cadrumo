@@ -9,6 +9,7 @@ signed artifact and identifies captures by that artifact's digest.
 from __future__ import annotations
 
 import hashlib
+import weakref
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from dataclasses import dataclass, field
@@ -85,7 +86,17 @@ class _CompilerBarrier:
 _state_lock = RLock()
 _barrier = _CompilerBarrier()
 _slots: dict[_AuthoringRootKey, _CompilerSlot] = {}
-_authority_sources: dict[int, Path] = {}
+#: Each compiler-owned authority's mutable evidence root, held beside a weak
+#: reference to the authority the entry was made for.
+#:
+#: The address alone cannot key this. CPython reuses the address of a collected
+#: object, and a development process compiles many short-lived authorities over
+#: temporary trees, so an entry made for a migration's scratch tree could be
+#: served to a later, unrelated authority that happened to land on the freed
+#: address -- silently handing one compilation another's evidence root. The weak
+#: reference decides identity: a recycled address no longer matches, and the
+#: lookup refuses instead of answering wrongly.
+_authority_sources: dict[int, tuple[weakref.ref[ValidatedRegistryAuthority], Path]] = {}
 _generation = 0
 
 
@@ -171,17 +182,23 @@ def cached_compilation(
 
 def register_authoring_authority(authority: ValidatedRegistryAuthority, *, source_root: Path) -> None:
     """Associate a development compilation result with its mutable evidence root."""
+    reference = weakref.ref(authority)
     with _state_lock:
-        _authority_sources[id(authority)] = source_root
+        for key, (held, _root) in list(_authority_sources.items()):
+            if held() is None:
+                del _authority_sources[key]
+        _authority_sources[id(authority)] = (reference, source_root)
 
 
 def source_root_for(authority: ValidatedRegistryAuthority) -> Path:
     """Return the explicit source root owned by a development compilation result."""
     with _state_lock:
-        try:
-            return _authority_sources[id(authority)]
-        except KeyError as exc:
-            raise RegistrySnapshotError("development source evidence requires a compiler-owned authority") from exc
+        entry = _authority_sources.get(id(authority))
+    if entry is not None:
+        held, source_root = entry
+        if held() is authority:
+            return source_root
+    raise RegistrySnapshotError("development source evidence requires a compiler-owned authority")
 
 
 @contextmanager

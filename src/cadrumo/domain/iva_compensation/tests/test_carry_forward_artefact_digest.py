@@ -23,7 +23,7 @@ from pydantic import ValidationError
 
 from ....core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ....core.period import Period
-from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ...calculations.registry.schema_references import RegistrySnapshotRef
 from ..carry_forward import IvaCompensationPeriodState
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]

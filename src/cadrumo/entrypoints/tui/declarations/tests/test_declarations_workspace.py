@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+import threading
 from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path
@@ -12,7 +13,7 @@ import pytest
 from textual.app import App, ComposeResult
 from textual.containers import VerticalScroll
 from textual.screen import Screen
-from textual.widgets import DataTable, Static
+from textual.widgets import Button, DataTable, Input, Static
 
 from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
 
@@ -50,11 +51,18 @@ from .....domain.modelos.filing_record import (
 )
 from .....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ...components.host import ScreenHostApp
+from ...modelo.lifecycle import ModeloLifecycleActionUnavailableError
 from ...navigation import TuiFocusIdentityV1, TuiScreenContextV1
 from ...tests.frame import geometry_band
 from ..controller import DeclarationsWorkspaceController, declarations_copy
 from ..filing_history import DeclarationsFilingHistoryScreen
-from ..models import FilingHandoffV1, ModeloWorkspaceScreenFactoryV1, RevisionHandoffV1
+from ..models import (
+    FilingHandoffV1,
+    ModeloWorkCreateHandoffV1,
+    ModeloWorkCreateResultV1,
+    ModeloWorkspaceScreenFactoryV1,
+    RevisionHandoffV1,
+)
 from ..overview import DeclarationsOverviewScreen
 from ..revisions import DeclarationsRevisionsScreen
 from ..routes import (
@@ -290,6 +298,7 @@ def _controller(
     modelo_workspace_factory: ModeloWorkspaceScreenFactoryV1 | None = None,
     revision_handoff: RevisionHandoffV1 | None = None,
     filing_handoff: FilingHandoffV1 | None = None,
+    work_create_handoff: ModeloWorkCreateHandoffV1 | None = None,
 ) -> DeclarationsWorkspaceController:
     return DeclarationsWorkspaceController(
         context or TuiScreenContextV1(destination="workbench.declarations"),
@@ -300,7 +309,105 @@ def _controller(
         modelo_workspace_factory=modelo_workspace_factory,
         revision_handoff=revision_handoff,
         filing_handoff=filing_handoff,
+        work_create_handoff=work_create_handoff,
     )
+
+
+@pytest.mark.asyncio
+async def test_declarations_create_selects_2025_work_and_refuses_invalid_input_before_handoff(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    calls: list[tuple[str, int, Period]] = []
+
+    def create(modelo: str, year: int, period: Period) -> ModeloWorkCreateResultV1:
+        calls.append((modelo, year, period))
+        return ModeloWorkCreateResultV1(reused=len(calls) > 1)
+
+    screen = DeclarationsOverviewScreen(_controller(_projection(authority_operation), work_create_handoff=create))
+    async with ScreenHostApp(screen).run_test(size=(100, 42)) as pilot:
+        await pilot.pause()
+        screen.query_one("#declarations-work-modelo", Input).value = "111"
+        screen.query_one("#declarations-work-year", Input).value = "2025"
+        screen.query_one("#declarations-work-period", Input).value = "2T"
+        screen.query_one("#declarations-work-create", Button).press()
+        await pilot.pause()
+        await pilot.app.workers.wait_for_complete()
+        assert calls == [("111", 2025, Period.from_year_and_code(2025, "2T"))]
+        assert "111" in str(screen.query_one("#declarations-work-create-notice", Static).render())
+        screen.query_one("#declarations-work-create", Button).press()
+        await pilot.pause()
+        await pilot.app.workers.wait_for_complete()
+        assert len(calls) == 2
+        screen.query_one("#declarations-work-year", Input).value = "1999"
+        screen.query_one("#declarations-work-create", Button).press()
+        await pilot.pause()
+        assert len(calls) == 2
+        screen.query_one("#declarations-work-year", Input).value = "2025"
+        screen.query_one("#declarations-work-period", Input).value = "not-a-period"
+        screen.query_one("#declarations-work-create", Button).press()
+        await pilot.pause()
+        assert len(calls) == 2
+
+
+@pytest.mark.asyncio
+async def test_declarations_create_reports_the_submitted_address_when_fields_change_mid_write(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    release = threading.Event()
+    calls: list[tuple[str, int, Period]] = []
+
+    def create(modelo: str, year: int, period: Period) -> ModeloWorkCreateResultV1:
+        calls.append((modelo, year, period))
+        assert release.wait(timeout=10)
+        return ModeloWorkCreateResultV1(reused=False)
+
+    screen = DeclarationsOverviewScreen(_controller(_projection(authority_operation), work_create_handoff=create))
+    async with ScreenHostApp(screen).run_test(size=(100, 42)) as pilot:
+        await pilot.pause()
+        screen.query_one("#declarations-work-modelo", Input).value = "111"
+        screen.query_one("#declarations-work-year", Input).value = "2025"
+        screen.query_one("#declarations-work-period", Input).value = "2T"
+        screen.query_one("#declarations-work-create", Button).press()
+        await pilot.pause()
+        screen.query_one("#declarations-work-modelo", Input).value = "115"
+        screen.query_one("#declarations-work-create", Button).press()
+        await pilot.pause()
+        release.set()
+        await pilot.app.workers.wait_for_complete()
+        await pilot.pause()
+        notice = str(screen.query_one("#declarations-work-create-notice", Static).render())
+
+    assert calls == [("111", 2025, Period.from_year_and_code(2025, "2T"))]
+    assert "Modelo 111" in notice
+    assert "Modelo 115" not in notice
+
+
+@pytest.mark.asyncio
+async def test_declarations_create_shows_the_application_refusal_as_itself(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    def create(modelo: str, year: int, period: Period) -> ModeloWorkCreateResultV1:
+        raise ModeloLifecycleActionUnavailableError(
+            translated_message="tui.declarations.work_create.refusal.not_applicable",
+            context={"modelo": modelo, "reason": "synthetic-reason"},
+        )
+
+    screen = DeclarationsOverviewScreen(_controller(_projection(authority_operation), work_create_handoff=create))
+    async with ScreenHostApp(screen).run_test(size=(100, 42)) as pilot:
+        await pilot.pause()
+        screen.query_one("#declarations-work-modelo", Input).value = "200"
+        screen.query_one("#declarations-work-year", Input).value = "2025"
+        screen.query_one("#declarations-work-period", Input).value = "0A"
+        screen.query_one("#declarations-work-create", Button).press()
+        await pilot.pause()
+        await pilot.app.workers.wait_for_complete()
+        await pilot.pause()
+        notice = str(screen.query_one("#declarations-work-create-notice", Static).render())
+
+    assert notice == declarations_copy(
+        "tui.declarations.work_create.refusal.not_applicable", modelo="200", reason="synthetic-reason"
+    )
+    assert "--allow-not-applicable" not in notice
 
 
 def _copy(screen: Screen[None]) -> str:

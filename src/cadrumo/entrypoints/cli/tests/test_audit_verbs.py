@@ -46,6 +46,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[Path]:
     # nothing else derives or re-reads this location -- it is a pure
     # Isolation destination for cadrumo_live_state_dir, never asserted upon.
     live_state_dir = tmp_path / "probe-live-state"
+    live_state_dir.mkdir()
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
         override_settings(cadrumo_live_state_dir=live_state_dir),

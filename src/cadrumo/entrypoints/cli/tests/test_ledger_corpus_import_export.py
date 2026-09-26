@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
@@ -116,3 +119,33 @@ def test_jsonl_export_roundtrips_back_through_import(tmp_path: Path) -> None:
     assert reimported.exit_code != 0, reimported.output
     assert "cannot be imported" in reimported.output
     assert len(_list_rows()) == before
+
+
+def test_jsonl_export_rows_match_ledger_readback_and_digest(tmp_path: Path) -> None:
+    """The exported bytes retain the canonical ledger meaning and row identity."""
+    _import_bbva()
+    readback = {str(row["transaction_id"]): row for row in _list_rows()}
+    assert len(readback) > 40
+
+    out = tmp_path / "canonical-ledger.jsonl"
+    result = _invoke(["--format", "json", "app", "ledger", "export", "--output", str(out), "--export-format", "jsonl"])
+    assert result.exit_code == 0, result.output
+    document = json.loads(result.output)
+    metadata = document.get("result", document)
+    payload = out.read_bytes()
+    exported_rows = [json.loads(line) for line in payload.decode("utf-8").splitlines()]
+
+    assert metadata["row_count"] == len(exported_rows) == len(readback)
+    assert metadata["sha256"] == hashlib.sha256(payload).hexdigest()
+    assert {row["transaction_id"] for row in exported_rows} == set(readback)
+    for exported in exported_rows:
+        source = readback[exported["transaction_id"]]
+        assert exported["bucket_id"]
+        assert exported["booked_date"] == source["booked_date"]
+        assert exported["effective_date"] == source["date"]
+        assert Decimal(exported["amount"]) == Decimal(source["amount"])
+        assert exported["currency"] == source["currency"]
+        assert exported["direction"] == source["direction"]
+        assert exported["invoice_id"] == (source["invoice_id"] or "")
+        assert exported["description"] == source["description"]
+        assert exported["business_classification"] == source["business_classification"]

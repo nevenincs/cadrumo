@@ -29,9 +29,6 @@ entries = [
   { key = "modelo.role.reduccion_trabajo", value = "irpf_rendimiento_trabajo_reduccion" },
   { key = "modelo.role.sal_reserva_especial", value = "is_sal_reserva_especial_dotacion" },
   { key = "modelo.role.declarante_selector", value = "irpf_toma_datos_declarante_selector" },
-  { key = "detail_override.prefix.perc", value = "perc." },
-  { key = "detail_override.prefix.perceptor", value = "perceptor." },
-  { key = "detail_override.prefix.inmueble", value = "inmueble." },
   { key = "applicability.source", value = "selected_modelo_revision" },
   { key = "source_kind", value = "calculate_input_declaration" },
 ]
@@ -60,9 +57,6 @@ entries = [
   { key = "modelo.role.reduccion_trabajo", value = "irpf_rendimiento_trabajo_reduccion" },
   { key = "modelo.role.sal_reserva_especial", value = "is_sal_reserva_especial_dotacion" },
   { key = "modelo.role.declarante_selector", value = "irpf_toma_datos_declarante_selector" },
-  { key = "detail_override.prefix.perc", value = "perc." },
-  { key = "detail_override.prefix.perceptor", value = "perceptor." },
-  { key = "detail_override.prefix.inmueble", value = "inmueble." },
   { key = "applicability.source", value = "selected_modelo_revision" },
   { key = "source_kind", value = "calculate_input_declaration" },
 ]

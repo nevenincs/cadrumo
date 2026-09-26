@@ -26,16 +26,31 @@ from pydantic import Field, NonNegativeInt, model_validator
 from ...core.aggregation import IntracomOperationType
 from ...core.country_code import CountryCodeAlpha2
 from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.hex import Hex64Str
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import InvoiceId
 from ...core.identity.tax_id import TaxIdIdentityToken
 from ...core.identity.transaction_ids import TransactionId
 from ...core.json_contract import OutputSchema
 from ...core.parsing.codes import IsoCurrencyCode
-from ...core.text_bounds import NonEmptyStr, NonNegativeDecimal, PositiveCount, PositiveDecimal
-from ...domain.invoices.enums import PaymentStatus
+from ...core.text_bounds import NonEmptyList, NonEmptyStr, NonNegativeDecimal, PositiveCount, PositiveDecimal
+from ...domain.invoices.enums import InvoiceClass, InvoiceOperationDateRole, IvaRate, PaymentStatus
 from ...domain.invoices.validators import validate_counterparty_tax_id, validate_country_code
 from ...domain.iva.classification import InvoiceKind
+from ...domain.iva.schema import IvaCategory, IvaRateKind
+
+
+class CatalogueInvoiceLinePayload(OutputSchema):
+    """One canonical persisted invoice line in the structured CLI readback."""
+
+    description: NonEmptyStr
+    quantity: PositiveDecimal
+    unit_price: NonNegativeDecimal
+    subtotal: NonNegativeDecimal
+    iva_rate: IvaRate
+    iva_amount: NonNegativeDecimal
+    spending_category_id: str | None = None
+    oss_rate_kind: IvaRateKind | None = None
 
 
 class CatalogueInvoiceRecordPayload(OutputSchema):
@@ -68,11 +83,21 @@ class CatalogueInvoiceRecordPayload(OutputSchema):
     currency: IsoCurrencyCode
     payment_status: PaymentStatus
     linked_transaction_ids: list[TransactionId] = Field(default_factory=list)
+    source_filename: NonEmptyStr | None = None
+    source_sha256: Hex64Str | None = None
+    source_row_index: PositiveCount | None = None
     notes: str = ""
     retention_rate: NonNegativeDecimal | None = None
     retention_amount: NonNegativeDecimal | None = None
     recargo_amount: NonNegativeDecimal | None = None
     operation_type: IntracomOperationType | None = None
+    lines: NonEmptyList[CatalogueInvoiceLinePayload]
+    invoice_class: InvoiceClass
+    series: str | None = None
+    operation_date: date | None = None
+    operation_date_role: InvoiceOperationDateRole | None = None
+    iva_category: IvaCategory | None = None
+    rectifies_invoice_number: str | None = None
     # The euro conversion stamp and the euro projection of the three totals.
     # Present at parity with the evidence-confirm surface through the shared
     # field tuple both projections read. A foreign invoice whose rate could not

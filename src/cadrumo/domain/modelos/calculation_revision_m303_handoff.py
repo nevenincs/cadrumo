@@ -445,14 +445,18 @@ class M303FilingInstanceEvidence(BaseModel):
 
     period: Period
     joint_return_elected: bool
-    annual_volume_nonzero: bool
+    #: DP30301 Nota 3 prints this answer only for a filer exempt from Modelo 390 in the last period.
+    annual_volume_nonzero: bool | None
     insolvency: M303InsolvencyFilingFact | None
-    exonerado_390: M303Exonerado390FilingEvidence
+    #: DP30301 Nota 4 asks for the Modelo 390 exemption only in the last period of the year.
+    exonerado_390: M303Exonerado390FilingEvidence | None
     regimen_simplificado: M303RegimenSimplificadoFilingEvidence
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _all_evidence_uses_the_filing_year(self) -> M303FilingInstanceEvidence:
+        if self.exonerado_390 is None and is_last_filing_period_of_year(self.period):
+            raise ModeloValidationError("M303 last-period filing evidence requires the Modelo 390 exemption evidence")
         if self.regimen_simplificado.rows.ejercicio != self.period.filing_year:
             raise ModeloValidationError("M303 filing evidence must use the work-period filing year")
         result = self.regimen_simplificado.calculation_result

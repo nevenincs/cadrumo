@@ -58,6 +58,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.domain.calculations.registry.authority_store.AuthorityStoreFormatError",
+        ErrorCode(
+            code="INTEGRITY_AUTHORITY_STORE_FORMAT",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.canonical_authority_store_format",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.domain.calculations.registry.bindings_previous_filing._PreviousFilingObservationAbsentError",
         ErrorCode(
             code="REFUSED_PREVIOUS_FILING_OBSERVATION_ABSENT",

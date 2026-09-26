@@ -5,7 +5,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Protocol
 
-from .catalogue_creation_ports import CatalogueInvoiceEventRepositoryPort, CatalogueInvoiceRepositoryPort
+from .catalogue_creation_ports import (
+    CatalogueInvoiceAuditCommitPort,
+    CatalogueInvoiceEventRepositoryPort,
+    CatalogueInvoiceRepositoryPort,
+)
 from .catalogue_reads_ports import InvoiceCatalogueReadPorts
 
 
@@ -16,6 +20,7 @@ class CatalogueLifecyclePorts:
     read_ports: InvoiceCatalogueReadPorts
     invoice_repository: CatalogueInvoiceRepositoryPort
     event_repository: CatalogueInvoiceEventRepositoryPort
+    audit_commit: CatalogueInvoiceAuditCommitPort
 
 
 class CatalogueLifecyclePortsFactory(Protocol):

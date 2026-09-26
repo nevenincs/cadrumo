@@ -97,7 +97,9 @@ def test_cli_retencion_observation_schema_violation_is_argument_validation(tmp_p
     profile-bound write guard. The guard runs ahead of the command body that
     parses ``--retencion-observation``, so the run needs a real active profile:
     without one the guard's no-active-profile refusal preempts the argument
-    error this test exists to pin.
+    error this test exists to pin. Modelo 111, 115 and 123 refuse the flag
+    outright -- their evidence comes from invoices -- so the parse is pinned on
+    Modelo 180, which still reads caller-authored observations.
     """
 
     missing_scheme = (
@@ -115,11 +117,11 @@ def test_cli_retencion_observation_schema_violation_is_argument_validation(tmp_p
                 "modelo",
                 "aggregate",
                 "--modelo",
-                "111",
+                "180",
                 "--year",
                 "2024",
                 "--period",
-                "1T",
+                "0A",
                 "--retencion-observation",
                 missing_scheme,
             ],
@@ -133,3 +135,47 @@ def test_cli_retencion_observation_schema_violation_is_argument_validation(tmp_p
     assert "scheme: Field required" in result.output
     assert "config repair" not in result.output
     assert "no longer matches the expected schema" not in result.output
+
+
+@pytest.mark.parametrize("modelo", ["111", "115", "123"])
+def test_cli_refuses_caller_authored_retenciones_for_invoice_withholding_modelos(tmp_path: Path, modelo: str) -> None:
+    """Modelo 111, 115 and 123 take withholding only from invoice evidence.
+
+    The observation is schema-valid, so the refusal can only come from the
+    modelo policy: the flag is not a writable retencion transport for them.
+    """
+    valid_observation = (
+        '{"source_kind": "ledger_transaction", "source_object_id": "txn-001",'
+        ' "perceptor_nif": "A12345678", "perceptor_name": "Empresa SL",'
+        ' "scheme": "rendimientos_trabajo", "taxable_base": "1000.00",'
+        ' "retencion_amount": "190.00", "accrued_on": "2024-01-15"}'
+    )
+
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        result = invoke_cached_cli(
+            [
+                "--language",
+                "en",
+                "app",
+                "modelo",
+                "aggregate",
+                "--modelo",
+                modelo,
+                "--year",
+                "2024",
+                "--period",
+                "1T",
+                "--retencion-observation",
+                valid_observation,
+            ],
+        )
+
+    assert result.exit_code == 2, result.output
+    if modelo == "123":
+        # Modelo 123 takes withholding only from its paying ledger transaction,
+        # so the refusal names that one accepted transport.
+        assert "--ledger-payment-withholding" in result.output
+        assert "nothing was written" in result.output
+    else:
+        assert f"--retencion-observation is not accepted for Modelo {modelo}" in result.output
+        assert "use invoice evidence" in result.output

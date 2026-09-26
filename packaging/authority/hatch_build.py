@@ -52,9 +52,11 @@ import os
 import re
 import sys
 from pathlib import Path
-from typing import Any, TypeGuard, override
+from typing import TYPE_CHECKING, Any, TypeGuard, cast, override
 
+from hatchling.builders.config import BuilderConfig
 from hatchling.builders.hooks.plugin.interface import BuildHookInterface
+from hatchling.plugin.manager import PluginManager
 
 #: Overrides where a source-tree build reads the published authority from.
 #: Unset, the pair is read from ``.authority/`` at the build root.
@@ -94,6 +96,43 @@ def _is_descriptor_mapping(value: object) -> TypeGuard[dict[str, object]]:
     if not _is_object_mapping(value):
         return False
     return all(isinstance(key, str) for key in value)
+
+
+def _runtime_build_hook_base() -> Any:
+    """Specialize Hatchling's hook base across its supported type API revisions.
+
+    Hatchling 1.32.3 exposes ``BuildHookInterface[BuilderConfig[PluginManager],
+    PluginManager]``.  Hatchling 1.32.4 removes the configuration generic and
+    reduces the hook interface to ``BuildHookInterface[BuilderConfig]``.  The
+    declared build requirement admits both releases, so evaluating either
+    spelling unconditionally prevents one of the supported isolated backends
+    from importing this hook.
+
+    The dynamic values only bridge the third-party runtime type API.  The
+    ``TYPE_CHECKING`` base below keeps the 1.32.3 protocol fully described to
+    static checkers, and unknown future shapes fail before any build data is
+    changed.
+    """
+    hook_parameter_count = len(getattr(BuildHookInterface, "__parameters__", ()))
+    config_parameter_count = len(getattr(BuilderConfig, "__parameters__", ()))
+    runtime_hook_interface = cast(Any, BuildHookInterface)
+    runtime_builder_config = cast(Any, BuilderConfig)
+    if (hook_parameter_count, config_parameter_count) == (1, 0):
+        return runtime_hook_interface[runtime_builder_config]
+    if (hook_parameter_count, config_parameter_count) == (2, 1):
+        return runtime_hook_interface[runtime_builder_config[PluginManager], PluginManager]
+    raise TypeError(
+        "unsupported Hatchling BuildHookInterface/BuilderConfig generic contract: "
+        f"{hook_parameter_count}/{config_parameter_count} parameters"
+    )
+
+
+if TYPE_CHECKING:
+
+    class _CustomBuildHookBase(BuildHookInterface[BuilderConfig[PluginManager], PluginManager]):
+        """Static view of the Hatchling 1.32.3 hook protocol."""
+else:
+    _CustomBuildHookBase = _runtime_build_hook_base()
 
 
 def _authority_root(build_root: Path) -> Path:
@@ -233,7 +272,7 @@ def _selected_pair(root: Path) -> tuple[Path, Path]:
     return descriptor, database
 
 
-class CustomBuildHook(BuildHookInterface):  # ty: ignore[missing-type-argument]  # reason: hatchling 1.32.4 made BuilderConfig non-generic and BuildHookInterface single-parameter, so no parameterisation type-checks across the supported >=1.32.3,<2 range; the bare base is what imports on both. Delete this once the floor moves past the arity change.
+class CustomBuildHook(_CustomBuildHookBase):
     """Force-include the descriptor-selected authority pair at the published path."""
 
     PLUGIN_NAME = "cadrumo-authority"

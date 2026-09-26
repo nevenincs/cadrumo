@@ -158,7 +158,7 @@ def _coerce_profile_fact_decimal(value: str) -> Decimal | None:
     return try_parse_canonical_decimal(value)
 
 
-def _coerce_profile_fact_value(value: object) -> object:
+def restore_profile_fact_value(value: object) -> object:
     """Restore Decimal / date types lost when ``UserProfileFactValue`` was JSON-encoded.
 
     JSON has no Decimal or date primitive, so ``model_dump_json`` emits both
@@ -249,7 +249,7 @@ class UserProfileFact(BaseModel):
     @classmethod
     @pydantic_validation_boundary
     def _restore_typed_value(cls, value: object) -> object:
-        return _coerce_profile_fact_value(value)
+        return restore_profile_fact_value(value)
 
     @field_validator("source")
     @classmethod
@@ -629,6 +629,7 @@ __all__ = [
     "decode_user_profile_record",
     "new_profile_id",
     "new_profile_snapshot_id",
+    "restore_profile_fact_value",
     "section_field_key",
     "validate_profile_fact",
     "validate_profile_schema_identity",

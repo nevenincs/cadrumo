@@ -25,7 +25,7 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.orden_applicability import RevisionLegalApplicabilityWindow
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues, RegistrySnapshot
-from cadrumo.domain.calculations.registry.schema_references import LegalReference
+from cadrumo.domain.calculations.registry.schema_references import LegalReference, LegalReferenceKind
 from cadrumo.domain.calculations.registry.snapshot import SUBSTANTIVE_LAW_KINDS, collect_snapshot_ref_ids
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
@@ -117,11 +117,15 @@ def _rebuild_with_legal_window(
     *,
     effective_from: date,
     effective_to: date | None,
+    kind: LegalReferenceKind | None = None,
 ) -> RegistrySnapshot:
     """Rebuild the M100 2025 snapshot with one legal ref moved into a new window."""
     modelo, catalogues = _modelo_and_catalogues()
     reference = catalogues.legal[legal_id]
-    restaged = reference.model_copy(update={"effective_from": effective_from, "effective_to": effective_to})
+    update: dict[str, object] = {"effective_from": effective_from, "effective_to": effective_to}
+    if kind is not None:
+        update["kind"] = kind
+    restaged = reference.model_copy(update=update)
     catalogues = catalogues.model_copy(
         update={"legal": {**catalogues.legal, legal_id: restaged}},
     )
@@ -222,6 +226,43 @@ def test_snapshot_accepts_legal_windows_that_touch_the_applicability_boundary(
     )
 
     assert snapshot.revision.id == _REVISION
+
+
+@pytest.mark.parametrize(
+    "kind",
+    [LegalReferenceKind.ORDEN, LegalReferenceKind.RESOLUCION, LegalReferenceKind.ACUERDO_PARLAMENTARIO],
+)
+def test_resolutions_and_parliamentary_agreements_keep_the_presentation_window(kind: LegalReferenceKind) -> None:
+    """A resolution or parliamentary agreement is judged as a procedural instrument.
+
+    Published once the tax period has closed, during the presentation window,
+    it still grounds the revision, exactly as an orden does; only
+    substantive law must be in force at the devengo date (the control below).
+    """
+    modelo, catalogues = _modelo_and_catalogues()
+    legal_id = _revision_scoped_procedural_legal_id(modelo, catalogues)
+    closes_on = RevisionLegalApplicabilityWindow.from_revision(modelo.revisions[_REVISION]).closes_on
+    assert closes_on is not None
+
+    snapshot = _rebuild_with_legal_window(legal_id, effective_from=closes_on, effective_to=None, kind=kind)
+
+    assert snapshot.revision.id == _REVISION
+
+
+def test_substantive_law_published_in_the_presentation_window_is_refused() -> None:
+    """The control: the same window on substantive law does not reach the devengo."""
+    modelo, catalogues = _modelo_and_catalogues()
+    legal_id = _revision_scoped_procedural_legal_id(modelo, catalogues)
+    closes_on = RevisionLegalApplicabilityWindow.from_revision(modelo.revisions[_REVISION]).closes_on
+    assert closes_on is not None
+
+    with pytest.raises(RegistryValidationError, match="outside their effective window"):
+        _rebuild_with_legal_window(
+            legal_id,
+            effective_from=closes_on,
+            effective_to=None,
+            kind=LegalReferenceKind.REAL_DECRETO,
+        )
 
 
 def test_modelo_level_legal_refs_stay_exempt_from_the_revision_window() -> None:

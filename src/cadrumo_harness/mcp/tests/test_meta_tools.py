@@ -56,6 +56,7 @@ def _blocked_descriptor() -> McpToolDescriptor:
             handoff=False,
             live_write=True,
             open_world=True,
+            reaches_aeat=True,
         ),
         verb_schema=VerbInputSchema(
             command_key="x.submit",

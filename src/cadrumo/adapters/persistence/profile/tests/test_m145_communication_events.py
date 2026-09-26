@@ -20,10 +20,6 @@ from pathlib import Path
 
 import pytest
 
-from .....adapters.outbound.aeat.export.registry_record_renderer import RegistryFixedWidthRecordRenderer
-from .....adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from .....adapters.persistence.profile.m145_communication_records import build_m145_communication_records_ports
-from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .....application.modelo.m145_communication_records import (
     M145CommunicationCreateCommand,
     M145CommunicationRecordValidationError,
@@ -34,6 +30,10 @@ from .....application.modelo.m145_communication_records import (
 )
 from .....domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....outbound.aeat.export.registry_record_renderer import RegistryFixedWidthRecordRenderer
+from ...storage.tests.secure_sql import isolated_runtime_profile
+from ..buckets import BucketEventHistoryRepository
+from ..m145_communication_records import build_m145_communication_records_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

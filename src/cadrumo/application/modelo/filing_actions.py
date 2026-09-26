@@ -51,7 +51,11 @@ from ...domain.calculations.registry.applicability import derive_taxpayer_files_
 from ...domain.calculations.registry.applicability_modelo202 import derive_modelo_202_modality
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.deadlines.models import TaxpayerProfile
-from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
+from ...domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionCatalogue,
+    CalculationRevisionState,
+)
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.filing_record import ModeloRecord, ModeloRecordCatalogue, ModeloRecordStatus
@@ -80,6 +84,13 @@ from .filing_action_ports import FilingActionPorts
 from .iva_wallet_gate import (
     require_persisted_iva_compensation_decision_matches_revision as _require_iva_compensation_revision_match,
 )
+from .lifecycle_clock_gate import (
+    ModeloLifecycleClockOperation,
+    filing_ordering_instants,
+    require_lifecycle_clock_not_before,
+)
+from .m123_count_authority_gate import Modelo123CountAuthorityStage, require_modelo_123_count_authority
+from .m193_settled_row_gate import Modelo193SettledRowStage, require_modelo_193_settled_row_amount_authority
 from .m303_regimen_simplificado_scope import (
     m303_regimen_simplificado_annual_summary_applies_to_profile,
     taxpayer_profile_for_work,
@@ -223,6 +234,10 @@ def file_modelo_revision(
             ``VERIFICADO_COMPLETO`` state.
         WorkUnitNotFoundError: When the revision's parent work
             unit cannot be loaded.
+        ModeloLifecycleClockPrecedesError: When ``clock`` precedes the
+            revision's or work unit's ``created_at``, the superseded record's
+            ``filed_at`` or its revision's ``created_at``; refused before
+            anything is persisted.
 
     See Also:
         :func:`~cadrumo.application.modelo.revision_persistence.persist_filed_revision`:
@@ -276,6 +291,15 @@ def file_modelo_revision(
         calculation_revision_id=calculation_revision_id,
         operation=RevisionParentOperation.FILE,
     )
+    # Before the idempotent re-file no-op: a revision verified before evidence
+    # was captured, or one carrying a Modelo 193 settled prior-accrual row,
+    # must not be returned as the filed answer.
+    require_modelo_123_count_authority(
+        work_unit,
+        retencion_ports=ports.retencion_observation_ports,
+        stage=Modelo123CountAuthorityStage.FILE,
+    )
+    require_modelo_193_settled_row_amount_authority(work_unit, target, stage=Modelo193SettledRowStage.FILE)
     if profile is None:
         from .profile_readiness_gate import load_modelo_work_profile
 
@@ -340,6 +364,13 @@ def file_modelo_revision(
     )
 
     now = clock or _utc_now()
+    _require_filing_clock_ordered(
+        now,
+        target=target,
+        work_unit=work_unit,
+        revisions=revisions,
+        filing_catalogue=fr_repo.load(),
+    )
     gate_engine = workflow_engine or _build_revision_workflow_engine(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
         operator_scope_ports=operator_scope_ports,
@@ -417,6 +448,37 @@ def _filed_revision_result_disposition(
         period=work_unit.period,
         refund_election=refund_election,
         payment_election=payment_election,
+    )
+
+
+def _require_filing_clock_ordered(
+    now: datetime,
+    *,
+    target: CalculationRevision,
+    work_unit: WorkUnit,
+    revisions: CalculationRevisionCatalogue,
+    filing_catalogue: ModeloRecordCatalogue,
+) -> None:
+    """Refuse a filing clock earlier than any instant the filing's writes are ordered after.
+
+    Runs before the workflow gate and the co-committed filing writes, so a
+    refused clock leaves no workflow run, filing record or advanced pointer.
+    """
+    prior_current = filing_catalogue.current_for(
+        bucket_id=work_unit.bucket_id,
+        modelo=work_unit.modelo,
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+    )
+    require_lifecycle_clock_not_before(
+        now,
+        operation=ModeloLifecycleClockOperation.FILE,
+        instants=filing_ordering_instants(
+            revision=target,
+            work_unit=work_unit,
+            prior_current=prior_current,
+            prior_revision=None if prior_current is None else revisions.get(prior_current.calculation_revision_id),
+        ),
     )
 
 

@@ -28,6 +28,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from enum import StrEnum
+from typing import Final
 from xml.etree.ElementTree import Element
 
 from ....core.decimal.coercion import coerce_decimal
@@ -89,6 +90,7 @@ class ParsedEInvoice:
         "customer_name",
         "customer_postal_code",
         "customer_tax_id",
+        "element_paths",
         "facturae_invoice_class",
         "grand_total",
         "invoice_date",
@@ -171,6 +173,13 @@ class ParsedEInvoice:
         # from a text node, so narrowing the haystack weakens no case that was
         # legitimately grounded before.
         self.record_text: str = ""
+        # Where a field was actually read from, for the fields whose location is
+        # not fixed by the format alone. A format that states a value in exactly
+        # one element needs no entry here and gets its location from the
+        # provenance table downstream; a format offering alternative blocks --
+        # Facturae's Spanish and overseas addresses -- can only report the
+        # element an operator would navigate to if the reader records it.
+        self.element_paths: dict[str, str] = {}
         self.lines: list[ParsedEInvoiceLine] = []
         self.iva_breakdown: list[tuple[Decimal | None, Decimal | None, Decimal | None]] = []
 
@@ -275,14 +284,26 @@ def _facturae_party_name(party: Element) -> str | None:
     return None
 
 
+#: Facturae's two mutually exclusive party address blocks.
+#:
+#: A party states its address in exactly one of them: ``AddressInSpain`` when it
+#: is established here, ``OverseasAddress`` when it is established abroad. Both
+#: carry a ``CountryCode``, so a reader that opens only the first recovers no
+#: country at all from precisely the documents whose country decides the
+#: treatment.
+_FACTURAE_ADDRESS_BLOCKS: Final = ("AddressInSpain", "OverseasAddress")
+
+
 def _facturae_postal_code(party: Element) -> str | None:
     """Return a Facturae party's Spanish postal code, or nothing.
 
     Scoped to ``AddressInSpain/PostCode``, the element Facturae dedicates to the
-    code. The sibling ``OverseasAddress`` block is deliberately not read: a party
-    established abroad has no Spanish IVA territory to resolve, so recovering
-    anything from it would produce a value the resolver must then discard, and
-    that block states its code jointly with the town rather than on its own.
+    code. ``OverseasAddress`` has no counterpart element: it states the code
+    jointly with the town as ``PostCodeAndTown``, and separating them would be an
+    inference about an unspecified format rather than a read. So a party
+    established abroad yields no postal code here, which is the honest result --
+    and costs nothing downstream, because the postal rung is consulted only where
+    the country evidence positively named Spain.
     """
     for address in _find_all(party, "AddressInSpain"):
         found = _direct_child_text(address, "PostCode")
@@ -291,12 +312,16 @@ def _facturae_postal_code(party: Element) -> str | None:
     return None
 
 
-def _facturae_country_code(party: Element) -> str | None:
-    """Return a Facturae party's stated country code, VERBATIM and in ISO alpha-3.
+def _facturae_country_code(party: Element) -> tuple[str, str] | None:
+    """Return ``(address block name, stated country code)``, or nothing.
 
-    Scoped to ``AddressInSpain/CountryCode``, the sibling of the ``PostCode``
-    element beside it, and read for the country half of the establishment
-    question the postal code answers only the sub-national half of.
+    The country half of the establishment question the postal code answers only
+    the sub-national half of, read from whichever of
+    :data:`_FACTURAE_ADDRESS_BLOCKS` the party states. Both blocks name the
+    country through the same ``CountryCode`` element, and the foreign one is the
+    case that most needs reading: a party in the overseas block has no Spanish
+    postal code to fall back on, so its stated country is the only establishment
+    evidence the document carries.
 
     **The value is carried exactly as stated, in the code system Facturae uses.**
     That system is ISO 3166-1 alpha-3 -- ``ESP``, not ``ES`` -- and translating it
@@ -304,16 +329,16 @@ def _facturae_country_code(party: Element) -> str | None:
     correspondence is registry data and the lookup belongs downstream; this is a
     read.
 
-    ``OverseasAddress`` is deliberately not consulted, matching
-    :func:`_facturae_postal_code`: that block is how a foreign-established party
-    states its address, and its country is reached through the same element name
-    there, so widening this walk would silently change WHICH address a party's
-    country is read from.
+    The block name is returned with the value because the two blocks are
+    different places in the document. Provenance that named the Spanish block for
+    a value read from the overseas one would point an operator at an element the
+    record does not contain.
     """
-    for address in _find_all(party, "AddressInSpain"):
-        found = _direct_child_text(address, "CountryCode")
-        if found:
-            return found
+    for block in _FACTURAE_ADDRESS_BLOCKS:
+        for address in _find_all(party, block):
+            found = _direct_child_text(address, "CountryCode")
+            if found:
+                return block, found
     return None
 
 
@@ -739,7 +764,14 @@ def _apply_facturae_parties(root: Element, parsed: ParsedEInvoice) -> None:
             setattr(parsed, f"{target}_tax_id", _first_text(found[0], "TaxIdentificationNumber"))
             setattr(parsed, f"{target}_name", _facturae_party_name(found[0]))
             setattr(parsed, f"{target}_postal_code", _facturae_postal_code(found[0]))
-            setattr(parsed, f"{target}_country_code", _facturae_country_code(found[0]))
+            stated_country = _facturae_country_code(found[0])
+            if stated_country is not None:
+                block, code = stated_country
+                setattr(parsed, f"{target}_country_code", code)
+                # Recorded from the walk rather than left to a per-format table:
+                # the two address blocks are alternatives, so only the read knows
+                # which one this party used.
+                parsed.element_paths[f"{target}_country_code"] = f"{party_tag}/{block}/CountryCode"
 
 
 def _apply_facturae_identification(invoice: Element, parsed: ParsedEInvoice) -> None:

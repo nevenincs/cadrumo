@@ -30,7 +30,13 @@ from ..command_spec import (
 )
 from ..command_spec import translation_key as _key
 from ._command_spec_schema import config_payload_schema as _schema
-from ._spec_policies import ENCRYPTED_DESTRUCTIVE, ENCRYPTED_READ, ENCRYPTED_WRITE, state_free_group_spec
+from ._spec_policies import (
+    AEAT_SESSION_WRITE,
+    ENCRYPTED_DESTRUCTIVE,
+    ENCRYPTED_READ,
+    ENCRYPTED_WRITE,
+    state_free_group_spec,
+)
 
 _OUTPUT_LANGUAGE = ValueContract(DeferredTarget("....core.external_constants", "OutputLanguage", __package__))
 _PHONE_STATE = ValueContract(
@@ -196,7 +202,7 @@ AUTH_COMMAND_SPECS = (
         "_auth",
         "auth_login",
         "AuthLoginPayload",
-        ENCRYPTED_WRITE,
+        AEAT_SESSION_WRITE,
         (
             _PROVIDER,
             _option("fresh", ("--fresh",), FLAG_VALUE, "cli.config.auth.login_fresh_help", flag=True),

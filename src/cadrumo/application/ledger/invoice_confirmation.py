@@ -58,8 +58,6 @@ from typing import TYPE_CHECKING, Final, NamedTuple, NoReturn
 
 from pydantic import BaseModel, Field
 
-from ...application.invoices.catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
-from ...application.invoices.catalogue_creation_ports import CatalogueCreationPorts
 from ...core.aggregation import IntracomOperationType
 from ...core.config import Settings
 from ...core.config import load_settings as _load_settings
@@ -75,6 +73,8 @@ from ...domain.invoices.models import Invoice, InvoiceCatalogue
 from ...domain.iva.classification import InvoiceKind
 from ...domain.iva.schema import IvaCategory
 from ...domain.iva.supply_nature import SupplyNature
+from ..invoices.catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
+from ..invoices.catalogue_creation_ports import CatalogueCreationPorts
 from .confirm_party_identity import (
     agreed_counterparty_tax_id,
     refuse_a_counterparty_that_is_the_filer,
@@ -713,8 +713,8 @@ def _build_confirmed_invoice_candidate(
         counterparty_country=counterparty_country,
         invoice_number=resolved_invoice_number,
         issued_at=resolved_invoice_date,
-        taxable_base=resolved_taxable_base,
-        iva_rate=resolved_iva_rate,
+        taxable_base=resolved_taxable_base if confirmed_lines is None else None,
+        iva_rate=resolved_iva_rate if confirmed_lines is None else None,
         currency=resolved_currency,
         notes=notes,
         iva_category=resolved_iva_category,

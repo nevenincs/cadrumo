@@ -16,10 +16,6 @@ from pathlib import Path
 
 import pytest
 
-from .....adapters.persistence.storage.tests.secure_sql import (
-    isolated_runtime_profile,
-    mutate_encrypted_secure_object_json,
-)
 from .....core.classification.policies import SensitivityClass
 from .....domain.buckets.event import (
     BucketEvent,
@@ -31,6 +27,10 @@ from .....domain.buckets.event import (
 from .....domain.buckets.event_repository import BucketEventHistoryPersistenceError
 from ...storage.envelope.contract import Envelope
 from ...storage.secure_object_namespaces import BUCKET_EVENT_HISTORY_NAMESPACE
+from ...storage.tests.secure_sql import (
+    isolated_runtime_profile,
+    mutate_encrypted_secure_object_json,
+)
 from ..buckets import BucketEventHistoryRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

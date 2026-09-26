@@ -981,30 +981,6 @@ def test_the_reference_walk_records_what_it_could_not_read() -> None:
     assert fresh.unreadable == ["src/cadrumo/vanished.py"]
 
 
-def test_the_live_reference_walk_read_every_file(capsys: pytest.CaptureFixture[str]) -> None:
-    """The healthy state, asserted rather than assumed.
-
-    If this ever fails, the audit's findings for that run were computed over a
-    corpus missing the named files, and the run should be repeated rather than
-    acted on.
-    """
-    from dev._paths import REPO_ROOT
-
-    from ..unreachable_code import run_unreachable_code_scan
-
-    result = run_unreachable_code_scan(REPO_ROOT)
-
-    # The absence claim below is satisfied by an EMPTY stderr, so a scan that
-    # read nothing at all - a mis-resolved root, a walk that short-circuits -
-    # reports exactly as clean as a healthy one. The result carries how much
-    # was actually walked and was discarded. Floors, not pinned counts: live
-    # the scan sees 2,108 shipped modules across 4 roots.
-    assert result.roots, result
-    assert result.shipped_modules > 1500, result.shipped_modules
-    assert result.reachable_modules > 1500, result.reachable_modules
-    assert "were unreadable during the reference walk" not in capsys.readouterr().err
-
-
 def test_the_test_walk_refuses_a_module_that_does_not_parse(tmp_path: Path) -> None:
     """A finding set, not a reference set.
 

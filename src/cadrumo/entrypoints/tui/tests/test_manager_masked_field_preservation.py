@@ -38,6 +38,7 @@ from ....application.user_profile.overview import (
     MASKED_PLACEHOLDER,
     ProfileFieldChoice,
     ProfileFieldView,
+    ProfileOverview,
     build_profile_overview,
 )
 from ....application.user_profile.registration import register_profile_with_credentials
@@ -90,7 +91,12 @@ def _live_overview():
         return build_profile_overview(record, label=_LABEL, schema=_profile_contexts_for_test()[1].schema)
 
 
-def _persist(path: str, value: str):
+def _persist(
+    path: str,
+    value: str,
+    expected_revision: int | None = None,
+    expected_content_digest: str | None = None,
+) -> ProfileOverview:
     """The production write door, so an edit here travels the real path."""
     # Building the overview validates facts against registry authority; lease it here, on whatever thread runs this.
     with bundled_indexed_authority().operation():
@@ -100,6 +106,8 @@ def _persist(path: str, value: str):
             profile_id=require_active_bucket_id(),
             path=path,
             value=value,
+            expected_revision=expected_revision,
+            expected_content_digest=expected_content_digest,
             profile_decode_context=_profile_decode_context_for_test,
         )
         return build_profile_overview(record, label=_LABEL, schema=_profile_contexts_for_test()[1].schema)

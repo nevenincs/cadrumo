@@ -47,19 +47,33 @@ def test_every_config_handler_and_schema_target_resolves() -> None:
         assert inspect.isclass(schema)
 
 
-def test_profile_schema_identities_preserve_compound_leaf_tokens() -> None:
+def test_profile_schema_identities_preserve_compound_command_tokens() -> None:
+    """A profile leaf's schema identity is its live command path, one segment per token.
+
+    A hyphenated token -- a leaf such as ``complete-setup`` or a group such as
+    ``plantilla-media`` -- stays one segment with ``_`` in place of ``-``. The
+    spec key cannot stand in for the path: it joins every level with ``_``, so
+    splitting it on ``_`` would break a compound group into two segments.
+    """
     from ..profile_command_specs import PROFILE_COMMAND_SPECS
 
-    leaves = tuple(spec for spec in PROFILE_COMMAND_SPECS if spec.result_schema.identity is not None)
+    graph = CommandSpecGraph((*ROOT_COMMAND_SPECS, *CONFIG_COMMAND_SPECS))
+    leaf_keys = {spec.key for spec in PROFILE_COMMAND_SPECS if spec.result_schema.identity is not None}
+    identities = {
+        node.spec.key: (node.path, node.spec.result_schema.identity)
+        for node in graph.nodes()
+        if node.spec.key in leaf_keys
+    }
 
-    assert all(
-        spec.result_schema.identity == f"{spec.parent_key.replace('_', '.')}.{spec.token.replace('-', '_')}"
-        for spec in leaves
-        if spec.parent_key is not None
-    )
-    expected_setup_command = "complete-setup"
-    complete_setup = next(spec for spec in leaves if spec.token == expected_setup_command)
-    assert complete_setup.result_schema.identity == "config.profile.complete_setup"
+    assert identities.keys() == leaf_keys
+    offenders = {
+        path: identity
+        for path, identity in identities.values()
+        if identity != ".".join(token.replace("-", "_") for token in path[1:])
+    }
+    assert not offenders, offenders
+    assert identities["config_profile_complete_setup"][1] == "config.profile.complete_setup"
+    assert identities["config_profile_plantilla_media_set"][1] == "config.profile.plantilla_media.set"
 
 
 def test_plain_handler_defaults_match_specs_except_variadic_wizard_boundary() -> None:

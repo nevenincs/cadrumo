@@ -21,13 +21,13 @@ from datetime import date
 
 import pytest
 
-from ....domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
-from ...modelos.dt12_reduccion import (
+from ...calculations.registry.tests.published_authority import PublishedGovernedFactSource
+from ..dt12_reduccion import (
     Dt12WindowBranch,
     dt12_regime_window_eligibility,
 )
-from ...modelos.errors import PensionReduccionError
-from ...modelos.modelo_fact_context import ModeloFactResolutionContext
+from ..errors import PensionReduccionError
+from ..modelo_fact_context import ModeloFactResolutionContext
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _CONTEXT = ModeloFactResolutionContext(

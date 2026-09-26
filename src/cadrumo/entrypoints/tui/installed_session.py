@@ -41,7 +41,7 @@ from __future__ import annotations
 
 import asyncio
 import sys
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from typing import TYPE_CHECKING
 
 from ...application.search.workbench import WorkbenchDestinationAdmission, WorkbenchDestinationAdmissionState
@@ -63,6 +63,8 @@ from .launcher import (
 )
 
 if TYPE_CHECKING:
+    from decimal import Decimal
+
     from textual.app import AutopilotCallbackType
 
     from ...application.user_profile.login_interaction import ProfileLoginChoice, ProfileLoginInventoryV1
@@ -73,6 +75,7 @@ if TYPE_CHECKING:
         ProfileSessionAdmissionV1,
     )
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ...domain.user_profile.plantilla_media import PlantillaMediaState, PlantillaMediaYear
 
 SESSION_COMPLETED = 0
 """The session ran to a clean end, including an operator who declined it."""
@@ -106,7 +109,18 @@ def compose_authenticated_account_inputs(
     from ...application.user_profile.fact_write import apply_manager_profile_field_mutation
     from ...application.user_profile.login_interaction import attempt_profile_login
     from ...application.user_profile.overview import build_profile_overview
+    from ...application.user_profile.plantilla_media_rows import (
+        PlantillaMediaWriteSurface,
+        list_plantilla_media_years,
+        remove_plantilla_media_year,
+        set_plantilla_media_year,
+    )
     from ...application.user_profile.profile_record_repository import ProfileRecordRepository
+    from ...application.user_profile.section_rows import (
+        add_profile_repeatable_section_row,
+        remove_profile_repeatable_section_row,
+        update_profile_repeatable_section_row,
+    )
     from ...core.credentials import assess_profile_password
     from .secret.passphrase import build_profile_passphrase_change_door
 
@@ -117,14 +131,111 @@ def compose_authenticated_account_inputs(
     )
     profile_schema = profile_decode_context.schema
 
-    def persist_profile_field(path: str, value: str) -> ProfileOverview:
+    def persist_profile_field(
+        path: str,
+        value: str,
+        expected_revision: int,
+        expected_content_digest: str,
+    ) -> ProfileOverview:
         applied = apply_manager_profile_field_mutation(
             profile_id=profile_id,
             path=path,
             value=value,
+            expected_revision=expected_revision,
+            expected_content_digest=expected_content_digest,
             profile_decode_context=profile_decode_context,
         )
         return build_profile_overview(applied, label=profile_label, schema=profile_schema)
+
+    def add_profile_row(
+        section_key: str,
+        values: Mapping[str, str],
+        expected_revision: int,
+        expected_content_digest: str,
+    ) -> ProfileOverview:
+        applied = add_profile_repeatable_section_row(
+            profile_id=profile_id,
+            section_key=section_key,
+            values=values,
+            schema=profile_schema,
+            profile_decode_context=profile_decode_context,
+            expected_revision=expected_revision,
+            expected_content_digest=expected_content_digest,
+        )
+        return build_profile_overview(applied.record, label=profile_label, schema=profile_schema)
+
+    def update_profile_row(
+        section_key: str,
+        row_key: str,
+        values: Mapping[str, str],
+        clear_fields: Sequence[str],
+        expected_revision: int,
+        expected_content_digest: str,
+    ) -> ProfileOverview:
+        applied = update_profile_repeatable_section_row(
+            profile_id=profile_id,
+            section_key=section_key,
+            row_key=row_key,
+            values=values,
+            clear_fields=clear_fields,
+            schema=profile_schema,
+            profile_decode_context=profile_decode_context,
+            expected_revision=expected_revision,
+            expected_content_digest=expected_content_digest,
+        )
+        return build_profile_overview(applied.record, label=profile_label, schema=profile_schema)
+
+    def remove_profile_row(
+        section_key: str,
+        row_key: str,
+        expected_revision: int,
+        expected_content_digest: str,
+    ) -> ProfileOverview:
+        applied = remove_profile_repeatable_section_row(
+            profile_id=profile_id,
+            section_key=section_key,
+            row_key=row_key,
+            schema=profile_schema,
+            profile_decode_context=profile_decode_context,
+            expected_revision=expected_revision,
+            expected_content_digest=expected_content_digest,
+        )
+        return build_profile_overview(applied.record, label=profile_label, schema=profile_schema)
+
+    def reloaded_overview() -> ProfileOverview:
+        """Project the record as storage holds it after a write that returns no record."""
+        current = ProfileRecordRepository.for_current_session(
+            profile_id,
+            profile_decode_context=profile_decode_context,
+        ).load(profile_id)
+        return build_profile_overview(current, label=profile_label, schema=profile_schema)
+
+    def list_plantilla_media() -> tuple[PlantillaMediaYear, ...]:
+        return list_plantilla_media_years(profile_id=profile_id, profile_decode_context=profile_decode_context)
+
+    def set_plantilla_media(
+        year: int,
+        average_workforce: Decimal,
+        state: PlantillaMediaState,
+    ) -> ProfileOverview:
+        set_plantilla_media_year(
+            profile_id=profile_id,
+            year=year,
+            average_workforce=average_workforce,
+            state=state,
+            surface=PlantillaMediaWriteSurface.MANAGER,
+            profile_decode_context=profile_decode_context,
+        )
+        return reloaded_overview()
+
+    def remove_plantilla_media(year: int) -> ProfileOverview:
+        remove_plantilla_media_year(
+            profile_id=profile_id,
+            year=year,
+            surface=PlantillaMediaWriteSurface.MANAGER,
+            profile_decode_context=profile_decode_context,
+        )
+        return reloaded_overview()
 
     def complete_setup() -> ProfileOverview:
         """Promote setup to complete through the repository door ``complete-setup`` uses."""
@@ -156,6 +267,12 @@ def compose_authenticated_account_inputs(
             schema=profile_schema,
         ),
         persist_profile_field=persist_profile_field,
+        add_profile_row=add_profile_row,
+        update_profile_row=update_profile_row,
+        remove_profile_row=remove_profile_row,
+        list_plantilla_media=list_plantilla_media,
+        set_plantilla_media=set_plantilla_media,
+        remove_plantilla_media=remove_plantilla_media,
         complete_setup=complete_setup,
         login_choices=tuple(login_choices),
         authenticate=authenticate,

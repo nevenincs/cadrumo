@@ -15,7 +15,7 @@ import json
 from dataclasses import dataclass
 from functools import cache
 from types import MappingProxyType
-from typing import Any, ClassVar, TypeGuard, override
+from typing import Any, ClassVar, TypeGuard, cast, override
 
 from pydantic import ConfigDict
 
@@ -33,6 +33,7 @@ from cadrumo.application.operator_surface.command_ports import (
     CommandCapabilityClass,
     CommandExecutionPolicy,
     CommandNodeKind,
+    CommandParameterDefault,
     CommandParameterMetadata,
     CommandPolicyMetadata,
     CommandRegistrationMetadata,
@@ -100,12 +101,12 @@ def _load_wire_manifest() -> dict[str, Any]:
         detail = completed.stderr.strip() or "the command-surface process returned no diagnostic"
         raise RuntimeError(f"command-surface process failed with exit code {completed.returncode}: {detail}")
     try:
-        payload = json.loads(completed.stdout)
+        payload: object = json.loads(completed.stdout)
     except json.JSONDecodeError as error:
         raise RuntimeError("command-surface process returned invalid JSON") from error
     if not isinstance(payload, dict):
         raise RuntimeError("command-surface process returned a non-object projection")
-    return payload
+    return cast("dict[str, Any]", payload)
 
 
 def _machine_secret_field(payload: dict[str, Any]) -> MachineSecretFieldMetadata:
@@ -151,6 +152,7 @@ _CAPABILITIES: tuple[Capability, ...] = (
     "profile-custody",
     "encrypted-facts",
     "network",
+    "aeat",
     "browser",
     "google",
     "calculation",
@@ -213,8 +215,23 @@ def _write_route(value: object) -> CommandWriteRouteValue:
     return value
 
 
+def _is_default_scalar(value: object) -> TypeGuard[bool | int | float | str | None]:
+    return value is None or isinstance(value, bool | int | float | str)
+
+
+def _parameter_default(value: object) -> CommandParameterDefault:
+    """Narrow a manifest default to the closed default shapes, a list becoming a tuple."""
+    if isinstance(value, list):
+        items: list[object] = cast("list[object]", value)
+        scalars = tuple(item for item in items if _is_default_scalar(item))
+        if len(scalars) == len(items):
+            return scalars
+    elif _is_default_scalar(value):
+        return value
+    raise RuntimeError(f"command-surface manifest contains an unsupported parameter default: {value!r}")
+
+
 def _command_parameter(payload: dict[str, Any]) -> CommandParameterMetadata:
-    default = payload.get("default")
     return CommandParameterMetadata(
         name=str(payload["name"]),
         kind=ParameterKind(str(payload["kind"])),
@@ -225,7 +242,7 @@ def _command_parameter(payload: dict[str, Any]) -> CommandParameterMetadata:
         is_flag=bool(payload["is_flag"]),
         multiple=bool(payload["multiple"]),
         choices=tuple(str(item) for item in payload.get("choices", ())),
-        default=tuple(default) if isinstance(default, list) else default,
+        default=_parameter_default(payload.get("default")),
         help=str(payload.get("help", "")),
     )
 

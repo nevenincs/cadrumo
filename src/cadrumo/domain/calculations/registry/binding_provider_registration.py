@@ -512,12 +512,14 @@ _REGISTRATIONS: Final[tuple[BindingProviderRegistration, ...]] = (
         RetencionesAggregationProvider,
         validate_retenciones_aggregation_binding,
         # The family folds a taxable base or retention into money and a
-        # distinct-perceptor headcount into an integer; both are authored facts
-        # of the same provider, so both channels are permitted.
-        channels=_MONEY_OR_COUNT_CHANNELS,
-        ops=_FOLD_OPS,
+        # distinct-perceptor/type-2 headcount into an integer; Modelo 180 also
+        # projects its already-materialized official type-2 rows through the
+        # shared row-binding exporter.  Both channels are authored facts of the
+        # same provider, so both are permitted.
+        channels=_MONEY_OR_COUNT_CHANNELS | _ROW_CHANNELS,
+        ops=_FOLD_OPS | _ROW_OPS,
         origins=frozenset({TerminalOriginClass.PERCEPTOR_OBSERVATION}),
-        output="scalar",
+        output="scalar_and_rows",
         resolver_id="retenciones_aggregation",
         stage="mesh",
     ),

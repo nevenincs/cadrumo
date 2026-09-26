@@ -24,6 +24,7 @@ from ...domain.modelos.protocols import (
 )
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+from ..aggregation.retencion_observations_repository import RetencionObservationPorts
 from ..calculations.iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
 from ..calculations.observations_repository import (
     CalculationObservationRepositoryProtocol,
@@ -69,6 +70,7 @@ class VerificationRepositoryBundle:
     justificante: JustificanteRepositoryProtocol
     draft_review_ports: DraftReviewPorts
     workflow_gate_ports: WorkflowGatePorts
+    retencion_observation_ports: RetencionObservationPorts
 
 
 VerificationRepositoryBundleFactory = Callable[[str], VerificationRepositoryBundle]

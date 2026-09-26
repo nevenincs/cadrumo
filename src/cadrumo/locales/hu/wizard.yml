@@ -399,6 +399,10 @@ wizard:
         help: Vesszővel elválasztott 111-es nyomtatvány nem kötelezett időszakok,
           ÉÉÉÉ:IDŐSZAK formátumban (például 2025:2T,2025:3T). Csak akkor használja,
           ha nem történt forrásadó-köteles kifizetés.
+      modelo-115-no-relevant-payment-periods:
+        help: Vesszővel elválasztott 115-ös nyomtatvány releváns városi bérleti kifizetés
+          nélküli időszakai ÉÉÉÉ:IDŐSZAK formátumban (például 2025:3T,2025:4T). Ez
+          kifejezett helyi bizonyíték, nem AEAT-benyújtási bizonyíték.
       monedas-virtuales-extranjero-above-threshold:
         help: Külföldi virtuális valuták meghaladják a 721-es nyomtatvány küszöbértékét
       name:
@@ -434,6 +438,12 @@ wizard:
         help: Forrásadóval terhelt díjazást fizet szakembereknek
       pays-rent-with-retencion:
         help: Forrásadóval terhelt helyi bérleti díjat fizet
+      premio-loteria-gravamen-especial-sin-retencion:
+        help: Különadó alá eső lottó- vagy fogadási nyereményt kapott forrásadó-levonás
+          és adóelőleg nélkül (136-os nyomtatvány)
+      premio-loteria-gravamen-especial-trimestres:
+        help: Negyedévek, amelyekben a nyereményt felvették, |-jellel elválasztott
+          ÉÉÉÉ-nT tokenekként (például 2025-1T|2025-3T)
       professional-income-withholding-ge-70pct:
         help: A szakmai jövedelmek legalább 70%-a előzetes forrásadóval terhelt
       representante-fiscal-nif:
@@ -612,6 +622,10 @@ wizard:
         help: ÉÉÉÉ:IDŐSZAK időszakok, amikor nem történt retención vagy ingreso a
           cuenta alá eső kifizetés, ezért nem nyújtandó be üres 111-es nyomtatvány.
         prompt: 111-es nyomtatvány forrásadó nélküli időszakok
+      modelo-115-no-relevant-payment-periods:
+        help: ÉÉÉÉ:IDŐSZAK időszakok, amikor nem történt releváns, forrásadó-köteles
+          városi bérleti kifizetés, ezért helyi nulla 115-ös számítás készíthető.
+        prompt: 115-ös nyomtatvány releváns kifizetés nélküli időszakai
       monedas-virtuales-extranjero-above-threshold:
         prompt: Külföldi virtuális valuták meghaladják a 721-es nyomtatvány küszöbértékét
       objective-estimation-modulos-iae-epigraph:
@@ -642,6 +656,13 @@ wizard:
         prompt: Forrásadóval terhelt díjazást fizet szakembereknek
       pays-rent-with-retencion:
         prompt: Forrásadóval terhelt helyi bérleti díjat fizet
+      premio-loteria-gravamen-especial-sin-retencion:
+        prompt: Különadó alá eső lottó- vagy fogadási nyereményt kapott forrásadó-levonás
+          és adóelőleg nélkül
+      premio-loteria-gravamen-especial-trimestres:
+        help: Naptári negyedévenként egy ÉÉÉÉ-nT token, |-jellel elválasztva (például
+          2025-1T|2025-3T). Minden negyedév külön 136-os bevallást nyit.
+        prompt: Negyedévek, amelyekben a nyereményt felvették
       professional-income-withholding-ge-70pct:
         prompt: A szakmai jövedelmek legalább 70%-a előzetes forrásadóval terhelt
       third-party-transactions-above-347-threshold:

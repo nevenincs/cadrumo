@@ -12,7 +12,6 @@ from cadrumo.domain.calculations.registry.tests.published_authority import (
     published_snapshot,
 )
 
-from ....application.filing.producer_snapshot import build_filing_producer_snapshot
 from ....core.filing_projection_ref import (
     M303RegimenSimplificadoActivityField,
     M303RegimenSimplificadoActivityProjectionRef,
@@ -51,6 +50,7 @@ from ....domain.iva.regimen_simplificado_rows import (
 )
 from ....domain.modelos.calculation_revision_m303_handoff import M303RegimenSimplificadoFilingEvidence
 from ...calculations.m303_regimen_simplificado import calculate_m303_regimen_simplificado_result
+from ..producer_snapshot import build_filing_producer_snapshot
 from ..projection import build_m303_filing_projection_plan
 from .test_producer_snapshot import _elections, _m303_filing_facts, _m303_profile, _presenter, _taxpayer_identity
 

@@ -27,13 +27,13 @@ See Also:
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import TYPE_CHECKING, Final, Literal, cast
+from typing import TYPE_CHECKING, Final, Literal
 
 from pydantic import BaseModel, PrivateAttr, ValidationError
 
-from ...core.bucket_pointer import resolve_active_bucket_id
+from ...core.bucket_pointer import read_pointer, resolve_active_bucket_id
 from ...core.config import load_settings, override_settings
-from ...core.errors.hierarchy import CadrumoError, InternalInvariantError
+from ...core.errors.hierarchy import ActiveProfilePointerError, CadrumoError, InternalInvariantError
 from ...core.logging import get_logger
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.operator_action_enums import (
@@ -76,6 +76,7 @@ class ProfileHealthStatus(StrEnum):
     """
 
     NONE = "none"
+    POINTER_UNREADABLE = "pointer_unreadable"
     DANGLING_POINTER = "dangling_pointer"
     PROFILE_LOCKED = "profile_locked"
     MISSING_PROFILE_RECORD = "missing_profile_record"
@@ -87,6 +88,7 @@ class ProfileHealthStatus(StrEnum):
 
 ProfileHealthStatusValue = Literal[
     ProfileHealthStatus.NONE,
+    ProfileHealthStatus.POINTER_UNREADABLE,
     ProfileHealthStatus.DANGLING_POINTER,
     ProfileHealthStatus.PROFILE_LOCKED,
     ProfileHealthStatus.MISSING_PROFILE_RECORD,
@@ -205,6 +207,7 @@ def _with_active_profile_label(health: ActiveProfileHealth, label: str | None) -
 
 
 _HEALTH_CONDITIONS: dict[ProfileHealthStatus, str] = {
+    ProfileHealthStatus.POINTER_UNREADABLE: "profile.active.pointer.valid",
     ProfileHealthStatus.DANGLING_POINTER: "profile.active.pointer_registered",
     ProfileHealthStatus.MISSING_PROFILE_RECORD: "profile.active.record_present",
     ProfileHealthStatus.PROFILE_RECORD_UNREADABLE: "profile.active.record_readable",
@@ -213,6 +216,7 @@ _HEALTH_CONDITIONS: dict[ProfileHealthStatus, str] = {
 }
 
 _HEALTH_EVIDENCE_IDS: dict[ProfileHealthStatus, str] = {
+    ProfileHealthStatus.POINTER_UNREADABLE: "profile.active.pointer.corruption",
     ProfileHealthStatus.DANGLING_POINTER: "profile.active.pointer.health",
     ProfileHealthStatus.MISSING_PROFILE_RECORD: "profile.active.record.presence",
     ProfileHealthStatus.PROFILE_RECORD_UNREADABLE: "profile.active.record.readability",
@@ -302,13 +306,11 @@ def _locked_profile_precondition_verdict(health: ActiveProfileHealth) -> Precond
 
 def _unavailable_profile_precondition_verdict(health: ActiveProfileHealth) -> PreconditionVerdict:
     """Build the typed outcome for one of the two unavailable-record statuses."""
-    status = cast(
-        Literal[
-            ProfileHealthStatus.MISSING_PROFILE_RECORD,
-            ProfileHealthStatus.PROFILE_RECORD_UNREADABLE,
-        ],
-        health.status,
-    )
+    status = health.status
+    if status is not ProfileHealthStatus.MISSING_PROFILE_RECORD and (
+        status is not ProfileHealthStatus.PROFILE_RECORD_UNREADABLE
+    ):
+        raise InternalInvariantError("unavailable-profile routing received a different health status")
     return unavailable_profile_record_verdict(
         status=status,
         source=health.source,
@@ -331,7 +333,7 @@ def _degraded_profile_precondition_verdict(health: ActiveProfileHealth) -> Preco
         profile_total_keys=health.profile_total_keys,
         missing_required_count=len(health.missing_required),
     )
-    if health.status in {"dangling_pointer", "capsule_unreadable"}:
+    if health.status in {"pointer_unreadable", "dangling_pointer", "capsule_unreadable"}:
         return _pointer_health_precondition_verdict(health, condition_id=condition_id, evidence=evidence)
     if health.status == "incomplete":
         return _incomplete_profile_precondition_verdict(health, condition_id=condition_id, evidence=evidence)
@@ -475,6 +477,25 @@ def _profile_record_unreadable_health(
             repairable_by_clearing_pointer=source == "pointer",
         ),
         label=label,
+    )
+
+
+def _pointer_unreadable_health(*, total_keys: int, error: ActiveProfilePointerError) -> ActiveProfileHealth:
+    """Project a present pointer record that does not read as a pointer.
+
+    Nothing is selected that could be assessed, and clearing the record is the
+    only repair that does not require guessing what it named.
+    """
+    return _finalise_health(
+        ActiveProfileHealth(
+            active_profile=None,
+            source="pointer",
+            status=ProfileHealthStatus.POINTER_UNREADABLE,
+            profile_record_error=_compact_error(error),
+            profile_total_keys=total_keys,
+            repairable_by_clearing_pointer=True,
+        ),
+        label=None,
     )
 
 
@@ -710,9 +731,16 @@ def assess_active_profile_health(
     """
     settings = load_settings()
     override = (settings.cadrumo_active_profile or "").strip()
+    total_keys = len(profile_keys(operation))
+    if not override:
+        # Read strictly even where a corrupt pointer is otherwise read as no
+        # selection: the command repairing it must see what it repairs.
+        try:
+            read_pointer(settings.cadrumo_local_storage_root)
+        except ActiveProfilePointerError as exc:
+            return _pointer_unreadable_health(total_keys=total_keys, error=exc)
     active_profile = resolve_active_bucket_id()
     source: ProfileSource = "env_override" if override else ("pointer" if active_profile is not None else "none")
-    total_keys = len(profile_keys(operation))
     if active_profile is None:
         return _assess_without_active_profile(source, total_keys)
     return _assess_selected_profile(active_profile, source, total_keys, state, operation)

@@ -18,7 +18,6 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....adapters.persistence.profile.tests.file_flow_test_support import calculation_ports_for_test
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.modelo.calculate_input import WorkCalculateInputBundle, calculate_modelo_work_revision
@@ -40,6 +39,7 @@ from ....domain.modelos.row_models import Modelo210AgrupacionRentaRow
 from ....domain.transactions.m210_income_classification import resolve_m210_payer_mode
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ....tests.cli_envelope import unwrap_envelope_notices
+from ...tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]

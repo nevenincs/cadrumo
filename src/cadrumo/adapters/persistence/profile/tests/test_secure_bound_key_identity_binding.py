@@ -33,12 +33,12 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl
 
-from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .....core.period import Period
 from .....domain.justificante.schema import Justificante
 from .....tests.aeat_literal_fixtures import justificante_wlpl_cotejo_url
 from ...storage.envelope.secure_bound_repository import SecureBoundRepository
 from ...storage.errors import SecureObjectRowIdentityError
+from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..justificante import JustificanteRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("authority_operation")]

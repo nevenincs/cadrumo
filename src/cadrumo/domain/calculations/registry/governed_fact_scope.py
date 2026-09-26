@@ -100,6 +100,20 @@ def validating_governed_facts(authority: GovernedFactSource) -> Generator[None]:
         _VALIDATING_GOVERNED_FACTS.reset(token)
 
 
+@contextmanager
+def outside_governed_fact_validation() -> Generator[None]:
+    """Run a block as if no registry validation were in progress.
+
+    A component that must acquire its own authority lease is only proven to do
+    so when no enclosing validation scope can lend it one.
+    """
+    token = _VALIDATING_GOVERNED_FACTS.set(None)
+    try:
+        yield
+    finally:
+        _VALIDATING_GOVERNED_FACTS.reset(token)
+
+
 def governed_facts_in_scope() -> GovernedFactSource | None:
     """Return the facts of the validation in progress, or ``None`` outside one."""
     return _VALIDATING_GOVERNED_FACTS.get()
@@ -159,5 +173,6 @@ __all__ = [
     "GovernedFactSource",
     "cache_governed_projection",
     "governed_facts_in_scope",
+    "outside_governed_fact_validation",
     "validating_governed_facts",
 ]

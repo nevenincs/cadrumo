@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 
 from ..command import run
+from ..paths import SCRATCH_PATH_BUDGET
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -256,7 +257,10 @@ def test_command_run_confines_child_temp_and_cache_paths(tmp_path: Path) -> None
     assert status == 0
     run_dir = next((tmp_path / ".logs" / "audit-runs").glob("*/*"))
     paths = json.loads((run_dir / "artifacts" / "paths.json").read_text(encoding="utf-8"))
-    assert Path(paths["temp"]).resolve() == (run_dir / "scratch").resolve()
+    scratch = Path(json.loads((run_dir / "run.json").read_text(encoding="utf-8"))["scratch"])
+    assert Path(paths["temp"]).resolve() == scratch.resolve()
+    # TEMP must stay short enough for tools that bind Unix-domain sockets under it.
+    assert len(paths["temp"]) <= SCRATCH_PATH_BUDGET, paths["temp"]
     assert Path(paths["cache"]).resolve() == (run_dir / "cache").resolve()
 
 

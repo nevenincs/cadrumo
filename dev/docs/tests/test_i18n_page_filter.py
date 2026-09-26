@@ -71,7 +71,7 @@ def test_staging_copies_only_the_selected_templates(tmp_path: Path) -> None:
     destination = tmp_path / "staged"
     destination.mkdir()
 
-    _stage_selected_templates(templates, ["how-to/wanted.md"], destination)
+    _stage_selected_templates(templates, ["how-to/wanted.md"], destination, tmp_path)
 
     staged = sorted(path.relative_to(destination).as_posix() for path in destination.rglob("*.pot"))
     assert staged == ["how-to/wanted.pot"]
@@ -84,6 +84,6 @@ def test_staging_refuses_a_page_with_no_extracted_template(tmp_path: Path) -> No
     destination.mkdir()
 
     with pytest.raises(SystemExit) as refusal:
-        _stage_selected_templates(templates, ["how-to/wanted.md"], destination)
+        _stage_selected_templates(templates, ["how-to/wanted.md"], destination, tmp_path)
     assert "how-to/wanted.md" in str(refusal.value)
     assert not list(destination.rglob("*.pot"))

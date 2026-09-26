@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable, Sequence
 from datetime import date
 from decimal import Decimal
-from typing import TYPE_CHECKING, Annotated, Literal, Self, cast
+from typing import TYPE_CHECKING, Annotated, Literal, Self
 
 from pydantic import BaseModel, BeforeValidator, Field, field_validator, model_validator
 
@@ -33,7 +33,6 @@ from .ledger_binding_selector_support import LedgerIvaFact, OssIossLedgerFact
 from .schema_base import coerce_enum_member, coerce_enum_tuple
 
 if TYPE_CHECKING:
-    from .authority import PinnedAuthorityOperation
     from .schema import BindingDefinition, ModeloRevision
 
 
@@ -97,7 +96,7 @@ class OssIossLedgerObservation(BaseModel):
         transaction_kind = require_transaction_kind(
             self.transaction_kind,
             effective_date=self.transaction_date,
-            operation=cast("PinnedAuthorityOperation", authority),
+            operation=authority,
         )
         catalogue = resolve_oss_ioss_regime_catalogue(
             effective_date=self.transaction_date,
@@ -155,9 +154,8 @@ class LedgerOssProvider(BaseModel):
         authority = governed_facts_in_scope()
         if authority is None:
             raise RegistryValidationError("ledger OSS binding validation requires candidate governed facts")
-        operation = cast("PinnedAuthorityOperation", authority)
         return tuple(
-            require_transaction_kind(kind, effective_date=today_madrid(), operation=operation) for kind in value
+            require_transaction_kind(kind, effective_date=today_madrid(), operation=authority) for kind in value
         )
 
     @field_validator("transaction_kinds", mode="after")

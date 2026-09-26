@@ -27,7 +27,6 @@ from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
 
-from ...application.calculations.observations_repository import ObservationSourceKind, observation_key
 from ...core.aeat_csv import normalise_aeat_csv
 from ...core.casilla_id import CasillaId
 from ...core.hashing import sha256_hex
@@ -43,6 +42,7 @@ from ...domain.modelos.filing_record import (
     ExternalEvidenceKind,
     declaration_kind_for_tipo_solicitud,
 )
+from ..calculations.observations_repository import ObservationSourceKind, observation_key
 from ..modelo.action_errors import ExternalModeloImportError
 from ..modelo.external_import_actions import ExternalFilingBaselineSource, external_filing_source_casillas
 from ..modelo.filing_chain_reconciliation import (

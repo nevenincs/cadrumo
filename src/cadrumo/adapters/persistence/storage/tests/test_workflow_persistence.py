@@ -13,12 +13,12 @@ from pathlib import Path
 
 import pytest
 
-from .....adapters.persistence.storage.bucket.directory_layout import bucket_paths
-from .....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from .....application.workflow.errors import WorkflowError
 from .....application.workflow.persistence import list_runs, load_run, save_run
 from .....application.workflow.run_models import WorkflowResult, WorkflowStage, WorkflowStep
 from .....core.directory_scan import scan_directory
+from ...tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
+from ..bucket.directory_layout import bucket_paths
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -29,7 +29,7 @@ _patch_secure_backend = bucket_scoped_runtime_profile_fixture(_BUCKET_ID, autous
 
 
 def _database_bytes(tmp_path: Path) -> bytes:
-    from .....adapters.persistence.storage.tests.secure_sql import read_db_at_rest_bytes
+    from .secure_sql import read_db_at_rest_bytes
 
     return read_db_at_rest_bytes(bucket_paths(tmp_path / "cadrumo-storage", _BUCKET_ID).database_file)
 
@@ -127,9 +127,9 @@ def test_reset_workflow_state_emit_failure_leaves_row_intact() -> None:
     through the repository's ``emit_reset`` constructor argument.
     """
 
-    from .....adapters.persistence.storage.secure_object_namespaces import WORKFLOW_STATE_NAMESPACE
     from .....application.workflow.persistence import WorkflowStateRepository
     from .....application.workflow.state_models import WorkflowState
+    from ..secure_object_namespaces import WORKFLOW_STATE_NAMESPACE
 
     def _raise(**_: object) -> None:
         raise _EmitError("simulated downstream emit failure")

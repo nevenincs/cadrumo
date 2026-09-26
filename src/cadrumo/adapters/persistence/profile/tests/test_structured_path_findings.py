@@ -45,12 +45,21 @@ from cadrumo.core.draft_discrepancy import DraftDiscrepancyKind
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.iva.regime_legend import resolve_regime_legends
 
-from ._evidence_test_support import _BUCKET_ID, _make_svc, isolated_settings, secure_objects
-from ._evidence_test_support import runtime_profile as runtime_profile
 from ._invoice_confirmation_test_support import (
     InvoiceAuthorityFixture,
     invoice_draft_extraction_kwargs,
 )
+from .evidence_test_support import (
+    BUCKET_ID as _BUCKET_ID,
+)
+from .evidence_test_support import (
+    isolated_settings,
+    secure_objects,
+)
+from .evidence_test_support import (
+    make_svc as _make_svc,
+)
+from .evidence_test_support import runtime_profile as runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 __all__ = ["isolated_settings", "runtime_profile", "secure_objects"]

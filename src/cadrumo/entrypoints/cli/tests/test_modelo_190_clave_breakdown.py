@@ -1,15 +1,4 @@
-"""The Modelo 190 aggregate output renders a per-clave retención breakdown.
-
-``aeat app modelo aggregate --modelo 190`` ingests the per-perceptor-clave
-withholding detail and persists it to the dedicated store the percepciones-count
-resolver reads. Previously its result surfaced only the observation/result
-totals, so a filer could not reconcile the annual figures against the per-clave
-amounts of the individual Modelo 111 quarterly filings. The command now projects
-the ingested withholding detail into a per-clave breakdown (distinct percepción
-count, percibido total, retención total) on both the JSON payload and the text
-output. The breakdown is a pure projection of the same store the calculate path
-reads (one-aggregation-path), not a recomputation of the M190 engine.
-"""
+"""Modelo 190 no longer accepts a direct annual-detail mutation transport."""
 
 from __future__ import annotations
 
@@ -22,7 +11,6 @@ from cadrumo.adapters.persistence.profile.tests.profile_registration import regi
 from ....adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend as _isolated_cli_backend,
 )
-from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from .cli_runner import invoke_cached_cli
 
 __all__ = ["_isolated_cli_backend"]
@@ -131,36 +119,10 @@ def _aggregate(args_format: list[str]):
     )
 
 
-def test_modelo_190_aggregate_json_carries_per_clave_breakdown() -> None:
-    """The JSON payload exposes one typed per-clave row with correct figures."""
+def test_modelo_190_aggregate_refuses_the_retired_raw_withholding_transport() -> None:
+    """Annual records must originate from the shared Modelo 111 evidence capture."""
     _create_profile()
 
     result = _aggregate(["--format", "json"])
-    assert result.exit_code == 0, result.output
-
-    payload = _payload(result.output)
-    assert payload["operation"] == "modelo.aggregate"
-    breakdown = {row["clave"]: row for row in payload["clave_breakdown"]}
-    assert set(breakdown) == {"A", "G"}
-
-    # Clave A: two distinct perceptores, percibido = 1000 + 500, retención = 190 + 95.
-    assert breakdown["A"]["percepcion_count"] == 2
-    assert breakdown["A"]["percibido_total"] == "1500.00"
-    assert breakdown["A"]["retencion_total"] == "285.00"
-    # Clave G: one percepción, percibido = dinerario + especie, retención = practicada + ingreso a cuenta.
-    assert breakdown["G"]["percepcion_count"] == 1
-    assert breakdown["G"]["percibido_total"] == "2100.00"
-    assert breakdown["G"]["retencion_total"] == "420.00"
-
-
-def test_modelo_190_aggregate_text_renders_per_clave_rows() -> None:
-    """The human text output lists one ``clave_breakdown`` row per clave."""
-    _create_profile()
-
-    result = _aggregate([])
-    assert result.exit_code == 0, result.output
-
-    output = result.output
-    assert "clave\tpercepcion_count\tpercibido_total\tretencion_total" in output
-    assert "clave_breakdown\tA\t2\t1500.00\t285.00" in output
-    assert "clave_breakdown\tG\t1\t2100.00\t420.00" in output
+    assert result.exit_code != 0
+    assert "--withholding-observation is not accepted for Modelo 190" in result.output

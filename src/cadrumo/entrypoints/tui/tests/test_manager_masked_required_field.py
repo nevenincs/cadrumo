@@ -36,7 +36,12 @@ from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.user_profile.fact_write import apply_manager_profile_field_mutation
 from ....application.user_profile.login_session import login_profile
-from ....application.user_profile.overview import MASKED_PLACEHOLDER, ProfileFieldView, build_profile_overview
+from ....application.user_profile.overview import (
+    MASKED_PLACEHOLDER,
+    ProfileFieldView,
+    ProfileOverview,
+    build_profile_overview,
+)
 from ....application.user_profile.registration import register_profile_with_credentials
 from ....core.bucket_pointer import require_active_bucket_id
 from ....core.classification.policies import SensitivityClass
@@ -88,7 +93,12 @@ def _live_overview():
         return build_profile_overview(record, label=_LABEL, schema=_profile_contexts_for_test()[1].schema)
 
 
-def _persist(path: str, value: str):
+def _persist(
+    path: str,
+    value: str,
+    expected_revision: int | None = None,
+    expected_content_digest: str | None = None,
+) -> ProfileOverview:
     """The production write door, so an edit here travels the real path."""
     # Building the overview validates facts against registry authority; lease it here, on whatever thread runs this.
     with bundled_indexed_authority().operation():
@@ -98,6 +108,8 @@ def _persist(path: str, value: str):
             profile_id=require_active_bucket_id(),
             path=path,
             value=value,
+            expected_revision=expected_revision,
+            expected_content_digest=expected_content_digest,
             profile_decode_context=_profile_decode_context_for_test,
         )
         return build_profile_overview(record, label=_LABEL, schema=_profile_contexts_for_test()[1].schema)
@@ -333,11 +345,10 @@ async def test_a_typed_value_still_reaches_the_record(tmp_path) -> None:
 
 @pytest.mark.asyncio
 async def test_an_empty_optional_masked_field_behaves_like_any_other_empty_field(tmp_path) -> None:
-    """Narrowing the reading must leave an optional blank uncomplained-about.
+    """Narrowing the reading must leave an optional blank unexceptional.
 
     An optional masked field holding nothing, saved blank, asks to clear
-    what is already clear. The refusal belongs to required fields alone,
-    so this must draw none.
+    what is already clear. The refusal belongs to required fields alone.
 
     It does reach the write door now, where before it was dismissed as a
     no-change -- so the second half measures what that costs rather than
@@ -361,7 +372,8 @@ async def test_an_empty_optional_masked_field_behaves_like_any_other_empty_field
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
             await _save(app, pilot, _view(required=False, present=False), "")
-            assert not _notice(app), f"an optional blank must draw no complaint, but reported {_notice(app)!r}"
+            masked_notice = _notice(app)
+            assert masked_notice, "the write door's successful empty save must be reported"
 
             plain = app._field_by_key[_PLAIN_PATH]
             assert not plain.masked and not plain.required and not plain.present, (
@@ -372,6 +384,10 @@ async def test_an_empty_optional_masked_field_behaves_like_any_other_empty_field
             app.app.screen.query_one("#edit-input", Input).value = ""
             await pilot.click("#btn-edit-save")
             await wait_until_settled(app, pilot)
+            assert _notice(app) == masked_notice, (
+                "a blank save on an empty masked field must be reported exactly as an unmasked one, "
+                f"but masked reported {masked_notice!r} and unmasked reported {_notice(app)!r}"
+            )
             pilot.app.exit(None)
 
         stored = _stored()

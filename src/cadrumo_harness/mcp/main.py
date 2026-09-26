@@ -23,7 +23,9 @@ Live AEAT submission is permanently forbidden: no live-write tool is ever expose
 from __future__ import annotations
 
 import argparse
+import io
 import os
+import sys
 from pathlib import Path
 
 from ._annotations import McpAnnotations, annotations_for_command
@@ -86,6 +88,12 @@ def main() -> None:
     # has no business seeing. ``setdefault`` leaves an operator's explicit
     # value alone.
     os.environ.setdefault("PYDANTIC_DISABLE_PLUGINS", "__all__")
+    # stderr carries the refusals and diagnostics a client reads verbatim. Text
+    # mode would translate every line ending to CRLF on Windows alone, so pin LF
+    # before anything writes and keep the byte stream platform-independent.
+    stderr = sys.stderr
+    if isinstance(stderr, io.TextIOWrapper):
+        stderr.reconfigure(newline="\n")
 
     from cadrumo.core.logging import configure_logging
 

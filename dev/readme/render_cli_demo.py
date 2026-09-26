@@ -28,14 +28,14 @@ OUTPUT_PATH = REPO_ROOT / "docs" / "_static" / "readme" / "cli-demo.gif"
 FONT_PATH = REPO_ROOT / "docs" / "_static" / "readme" / "fonts" / "CascadiaMono-Regular.ttf"
 FICHERO_PATH = DEMO_ROOT / "m115.boe"
 DISPLAY_COMMAND = (
-    "aeat app quickfile --modelo=115 --year=2026 --period=1T --casilla=04=0 --output=var/readme-demo/m115.boe"
+    "aeat app quickfile --modelo=115 --year=2025 --period=1T --casilla=04=0 --output=var/readme-demo/m115.boe"
 )
 _CLI_BOOTSTRAP = "from cadrumo.entrypoints.cli.bootstrap import main; main()"
 _CLI_ARGUMENTS = (
     "app",
     "quickfile",
     "--modelo=115",
-    "--year=2026",
+    "--year=2025",
     "--period=1T",
     "--casilla=04=0",
     "--output=var/readme-demo/m115.boe",
@@ -87,7 +87,7 @@ def _run_quickfile() -> tuple[str, ...]:
     expected_scalars = {
         "operation": ("quickfile",),
         "modelo": ("115",),
-        "filing_year": ("2026",),
+        "filing_year": ("2025",),
         "period": ("1T",),
         "registry_revision_id": ("2019-y-siguientes",),
         "completed": ("true",),
@@ -109,8 +109,8 @@ def _run_quickfile() -> tuple[str, ...]:
     actual_hash = sha256(payload).hexdigest()
     if reported_hash != actual_hash:
         raise RuntimeError(f"quickfile digest drifted: reported {reported_hash}, computed {actual_hash}")
-    period = Period.from_year_and_code(2026, "1T")
-    provider = build_runtime_schema_provider(modelos=("115",), filing_year=2026, period=period)
+    period = Period.from_year_and_code(2025, "1T")
+    provider = build_runtime_schema_provider(modelos=("115",), filing_year=2025, period=period)
     layout = provider.get_subview("115").export_layouts[0]
     parsed = parse_export_payload(layout, payload)
     if not parsed.fields:

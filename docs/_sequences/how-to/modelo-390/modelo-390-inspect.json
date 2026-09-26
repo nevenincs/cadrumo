@@ -302,7 +302,7 @@
           "created_at": "2026-04-01T09:00:00Z",
           "evidence_id": "5c15a2fb5cc808d5",
           "invoice_date": "2025-03-05",
-          "invoice_number": "sha256:45c2e503",
+          "invoice_number": "C-2025-0087",
           "iva_amount": "105",
           "iva_rate": "0.21",
           "media_kind": "pdf",
@@ -416,14 +416,13 @@
         "work",
         "calculate",
         "09420aa5c5d838d4a8a8b9198fa2adc02ff2573a0983d696a225f0269e6476b3",
-        "--m303-filing-evidence",
-        "fixtures/m303-filing-evidence-2025-1T.json"
+        "--no-joint-return-elected"
       ],
       "captures": [
         {
           "json_path": "result.calculation_revision_id",
           "name": "cr1",
-          "value": "71087046dc6f94cae12ea36505cc491c1c51e7377fc12c918c9d9a2cea4711c7"
+          "value": "38d8e4992410f5dfffc81a27e9d8f6a3786f133d13b13629f62837708c1e01d5"
         }
       ],
       "envelope": {
@@ -497,7 +496,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "71087046dc6f94cae12ea36505cc491c1c51e7377fc12c918c9d9a2cea4711c7",
+          "calculation_revision_id": "38d8e4992410f5dfffc81a27e9d8f6a3786f133d13b13629f62837708c1e01d5",
           "casilla_values": {
             "01": "0",
             "02": "0",
@@ -3985,7 +3984,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 71087046dc6f94cae12ea36505cc491c1c51e7377fc12c918c9d9a2cea4711c7 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 38d8e4992410f5dfffc81a27e9d8f6a3786f133d13b13629f62837708c1e01d5 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_iva_aggregation",
@@ -4046,7 +4045,7 @@
         "modelo",
         "work",
         "verify",
-        "71087046dc6f94cae12ea36505cc491c1c51e7377fc12c918c9d9a2cea4711c7"
+        "38d8e4992410f5dfffc81a27e9d8f6a3786f133d13b13629f62837708c1e01d5"
       ],
       "captures": [],
       "envelope": {
@@ -4087,7 +4086,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "71087046dc6f94cae12ea36505cc491c1c51e7377fc12c918c9d9a2cea4711c7",
+          "calculation_revision_id": "38d8e4992410f5dfffc81a27e9d8f6a3786f133d13b13629f62837708c1e01d5",
           "completeness_status": "complete",
           "findings": [
             {
@@ -4137,7 +4136,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "f37d894541ecbdeac3a91a6d00279b489cf435591f5ecf8edcaf75b1db6896a6",
+          "verification_report_id": "d5fbd8277a46460064efc8ddae4f6198e3f3612a6a25e9806d0df49b7be1075a",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
@@ -4158,7 +4157,7 @@
         "modelo",
         "work",
         "file",
-        "71087046dc6f94cae12ea36505cc491c1c51e7377fc12c918c9d9a2cea4711c7"
+        "38d8e4992410f5dfffc81a27e9d8f6a3786f133d13b13629f62837708c1e01d5"
       ],
       "captures": [],
       "envelope": {
@@ -4170,13 +4169,13 @@
           "aeat_register": null,
           "amends_filing_record_id": null,
           "bucket_id": "<bucket-id>",
-          "calculation_revision_id": "71087046dc6f94cae12ea36505cc491c1c51e7377fc12c918c9d9a2cea4711c7",
+          "calculation_revision_id": "38d8e4992410f5dfffc81a27e9d8f6a3786f133d13b13629f62837708c1e01d5",
           "confirmation": "pendiente",
           "declaration_kind": "original",
           "external_evidence": null,
           "filed_at": "2026-04-01T09:00:00+00:00",
           "filed_by": "docs-sequence-sandbox",
-          "filing_record_id": "be6421eab5f375dada110fa2407dcb2758ef16a43d0b1f7dd4037a1d8e70ac01",
+          "filing_record_id": "45005520cb5b32337ad0e69315be2fce5784a80105bdd83d65f3d7b9a7a33038",
           "filing_year": 2025,
           "kind": "internal_filing",
           "live_submission": false,
@@ -4279,14 +4278,13 @@
         "work",
         "calculate",
         "af6d15eead73e8acebfb6efaefcbde65819a23082408d091b4947d5697fb590c",
-        "--m303-filing-evidence",
-        "fixtures/m303-filing-evidence-2025-2T.json"
+        "--no-joint-return-elected"
       ],
       "captures": [
         {
           "json_path": "result.calculation_revision_id",
           "name": "cr2",
-          "value": "86c079345e1c7671e23498ff7aa31835f4252d7079aaadad0ae6303eab982036"
+          "value": "614db59cdf9c4993622e7f2a69deeae86905cf14f60e1a4ee7b6f5da18a8b5da"
         }
       ],
       "envelope": {
@@ -4360,7 +4358,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "86c079345e1c7671e23498ff7aa31835f4252d7079aaadad0ae6303eab982036",
+          "calculation_revision_id": "614db59cdf9c4993622e7f2a69deeae86905cf14f60e1a4ee7b6f5da18a8b5da",
           "casilla_values": {
             "01": "0",
             "02": "0",
@@ -7848,7 +7846,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 86c079345e1c7671e23498ff7aa31835f4252d7079aaadad0ae6303eab982036 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 614db59cdf9c4993622e7f2a69deeae86905cf14f60e1a4ee7b6f5da18a8b5da (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_iva_aggregation",
@@ -7898,7 +7896,7 @@
         "modelo",
         "work",
         "verify",
-        "86c079345e1c7671e23498ff7aa31835f4252d7079aaadad0ae6303eab982036"
+        "614db59cdf9c4993622e7f2a69deeae86905cf14f60e1a4ee7b6f5da18a8b5da"
       ],
       "captures": [],
       "envelope": {
@@ -7941,7 +7939,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "86c079345e1c7671e23498ff7aa31835f4252d7079aaadad0ae6303eab982036",
+          "calculation_revision_id": "614db59cdf9c4993622e7f2a69deeae86905cf14f60e1a4ee7b6f5da18a8b5da",
           "completeness_status": "complete",
           "findings": [
             {
@@ -8000,7 +7998,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "c3f32b56a8118aedded5aa50a1e355f07caeb439da18906f175ae0fbd81c1370",
+          "verification_report_id": "fcfe9f751fd567d4ede1fa4b352bc03689126322030d8ba06b7de857f03bfb52",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
@@ -8021,7 +8019,7 @@
         "modelo",
         "work",
         "file",
-        "86c079345e1c7671e23498ff7aa31835f4252d7079aaadad0ae6303eab982036"
+        "614db59cdf9c4993622e7f2a69deeae86905cf14f60e1a4ee7b6f5da18a8b5da"
       ],
       "captures": [],
       "envelope": {
@@ -8033,13 +8031,13 @@
           "aeat_register": null,
           "amends_filing_record_id": null,
           "bucket_id": "<bucket-id>",
-          "calculation_revision_id": "86c079345e1c7671e23498ff7aa31835f4252d7079aaadad0ae6303eab982036",
+          "calculation_revision_id": "614db59cdf9c4993622e7f2a69deeae86905cf14f60e1a4ee7b6f5da18a8b5da",
           "confirmation": "pendiente",
           "declaration_kind": "original",
           "external_evidence": null,
           "filed_at": "2026-04-01T09:00:00+00:00",
           "filed_by": "docs-sequence-sandbox",
-          "filing_record_id": "3114c7992792c9936ca1a426d8d89a061e9fe124e58a9a555101a37740a9418b",
+          "filing_record_id": "1c87403168aa121be86c1e0018aec4e7a1c48a86c5d3190580ad3802b2f84179",
           "filing_year": 2025,
           "kind": "internal_filing",
           "live_submission": false,
@@ -8142,14 +8140,13 @@
         "work",
         "calculate",
         "e214f91933b3bae05a0b032a61021b63be883fd5836372825eb06adc206d0a2c",
-        "--m303-filing-evidence",
-        "fixtures/m303-filing-evidence-2025-3T.json"
+        "--no-joint-return-elected"
       ],
       "captures": [
         {
           "json_path": "result.calculation_revision_id",
           "name": "cr3",
-          "value": "51b72042de4f3267771f72695a783caa38e21c28db9112722233f4a56d8068e8"
+          "value": "80828dc0ece81cfc7f5ce8f1ce1e691f500a809fdc955206c3f6918752edbdb8"
         }
       ],
       "envelope": {
@@ -8223,7 +8220,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "51b72042de4f3267771f72695a783caa38e21c28db9112722233f4a56d8068e8",
+          "calculation_revision_id": "80828dc0ece81cfc7f5ce8f1ce1e691f500a809fdc955206c3f6918752edbdb8",
           "casilla_values": {
             "01": "0",
             "02": "0",
@@ -11711,7 +11708,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 51b72042de4f3267771f72695a783caa38e21c28db9112722233f4a56d8068e8 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 80828dc0ece81cfc7f5ce8f1ce1e691f500a809fdc955206c3f6918752edbdb8 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_iva_aggregation",
@@ -11761,7 +11758,7 @@
         "modelo",
         "work",
         "verify",
-        "51b72042de4f3267771f72695a783caa38e21c28db9112722233f4a56d8068e8"
+        "80828dc0ece81cfc7f5ce8f1ce1e691f500a809fdc955206c3f6918752edbdb8"
       ],
       "captures": [],
       "envelope": {
@@ -11804,7 +11801,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "51b72042de4f3267771f72695a783caa38e21c28db9112722233f4a56d8068e8",
+          "calculation_revision_id": "80828dc0ece81cfc7f5ce8f1ce1e691f500a809fdc955206c3f6918752edbdb8",
           "completeness_status": "complete",
           "findings": [
             {
@@ -11863,7 +11860,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "d6e0ab92fe49b59c6190d9736e0536dfb5d5cb96727aa867d84aa2512e93f156",
+          "verification_report_id": "90b12be58400f133bf7b085da9d3fd3fa45e36245064234297415eb5d7811e6f",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
@@ -11884,7 +11881,7 @@
         "modelo",
         "work",
         "file",
-        "51b72042de4f3267771f72695a783caa38e21c28db9112722233f4a56d8068e8"
+        "80828dc0ece81cfc7f5ce8f1ce1e691f500a809fdc955206c3f6918752edbdb8"
       ],
       "captures": [],
       "envelope": {
@@ -11896,13 +11893,13 @@
           "aeat_register": null,
           "amends_filing_record_id": null,
           "bucket_id": "<bucket-id>",
-          "calculation_revision_id": "51b72042de4f3267771f72695a783caa38e21c28db9112722233f4a56d8068e8",
+          "calculation_revision_id": "80828dc0ece81cfc7f5ce8f1ce1e691f500a809fdc955206c3f6918752edbdb8",
           "confirmation": "pendiente",
           "declaration_kind": "original",
           "external_evidence": null,
           "filed_at": "2026-04-01T09:00:00+00:00",
           "filed_by": "docs-sequence-sandbox",
-          "filing_record_id": "5d0af9dacf5e450540932c48debb3c5450c317ebcf188ddffa4004b700db9d90",
+          "filing_record_id": "dbcaf0aef43f7cdc251fdb4f811f29c76ce2870e203fabdd912bb94aee7be259",
           "filing_year": 2025,
           "kind": "internal_filing",
           "live_submission": false,
@@ -12003,16 +12000,70 @@
         "app",
         "modelo",
         "work",
+        "attest-m303-exonerado-390",
+        "--year",
+        "2025",
+        "--period",
+        "4T",
+        "--observed-at",
+        "2025-12-31T12:00:00+00:00"
+      ],
+      "captures": [
+        {
+          "json_path": "result.attachment_id",
+          "name": "attestation4",
+          "value": "0d953599e52c75250bd72ca965049731b11cfea161ed5f969920c3f5594d3ac4"
+        },
+        {
+          "json_path": "result.sha256",
+          "name": "attestation_sha256_4",
+          "value": "0d953599e52c75250bd72ca965049731b11cfea161ed5f969920c3f5594d3ac4"
+        }
+      ],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "modelo.work.attest-m303-exonerado-390",
+        "notices": [],
+        "result": {
+          "attachment_id": "0d953599e52c75250bd72ca965049731b11cfea161ed5f969920c3f5594d3ac4",
+          "filing_year": 2025,
+          "operation": "modelo.work.attest-m303-exonerado-390",
+          "period": {
+            "code": "4T",
+            "filing_year": 2025
+          },
+          "sha256": "0d953599e52c75250bd72ca965049731b11cfea161ed5f969920c3f5594d3ac4"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "work",
         "calculate",
         "16b8f7f898fc8458c8dc67f8cdaf35f8382fc22e9f2e0742869ef82ef1b8e138",
-        "--m303-filing-evidence",
-        "fixtures/m303-filing-evidence-2025-4T.json"
+        "--no-joint-return-elected",
+        "--m303-exonerado-390-attachment-id",
+        "0d953599e52c75250bd72ca965049731b11cfea161ed5f969920c3f5594d3ac4",
+        "--m303-exonerado-390-sha256",
+        "0d953599e52c75250bd72ca965049731b11cfea161ed5f969920c3f5594d3ac4"
       ],
       "captures": [
         {
           "json_path": "result.calculation_revision_id",
           "name": "cr4",
-          "value": "7069cd8aa8646954638727d5224b8273d0c8090f7ec015997043e76ceb5ca9b3"
+          "value": "446cc1b5881f568cbfb9f8a825a1abda0bbacbfd6764cf032d4d29a269296cfb"
         }
       ],
       "envelope": {
@@ -12086,7 +12137,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "7069cd8aa8646954638727d5224b8273d0c8090f7ec015997043e76ceb5ca9b3",
+          "calculation_revision_id": "446cc1b5881f568cbfb9f8a825a1abda0bbacbfd6764cf032d4d29a269296cfb",
           "casilla_values": {
             "01": "0",
             "02": "0",
@@ -15574,7 +15625,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 7069cd8aa8646954638727d5224b8273d0c8090f7ec015997043e76ceb5ca9b3 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 446cc1b5881f568cbfb9f8a825a1abda0bbacbfd6764cf032d4d29a269296cfb (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_iva_aggregation",
@@ -15624,7 +15675,7 @@
         "modelo",
         "work",
         "verify",
-        "7069cd8aa8646954638727d5224b8273d0c8090f7ec015997043e76ceb5ca9b3"
+        "446cc1b5881f568cbfb9f8a825a1abda0bbacbfd6764cf032d4d29a269296cfb"
       ],
       "captures": [],
       "envelope": {
@@ -15667,7 +15718,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "7069cd8aa8646954638727d5224b8273d0c8090f7ec015997043e76ceb5ca9b3",
+          "calculation_revision_id": "446cc1b5881f568cbfb9f8a825a1abda0bbacbfd6764cf032d4d29a269296cfb",
           "completeness_status": "complete",
           "findings": [
             {
@@ -15726,7 +15777,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "b582545f6c7133b2636df50d4ceec1dd096b2548695d80611ef33d5289e2b55d",
+          "verification_report_id": "7f112bbf24ca00b6a0e6448b72f266e4a5714e4df55c53059213c2031e4a2b68",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
@@ -15747,7 +15798,7 @@
         "modelo",
         "work",
         "file",
-        "7069cd8aa8646954638727d5224b8273d0c8090f7ec015997043e76ceb5ca9b3"
+        "446cc1b5881f568cbfb9f8a825a1abda0bbacbfd6764cf032d4d29a269296cfb"
       ],
       "captures": [],
       "envelope": {
@@ -15759,13 +15810,13 @@
           "aeat_register": null,
           "amends_filing_record_id": null,
           "bucket_id": "<bucket-id>",
-          "calculation_revision_id": "7069cd8aa8646954638727d5224b8273d0c8090f7ec015997043e76ceb5ca9b3",
+          "calculation_revision_id": "446cc1b5881f568cbfb9f8a825a1abda0bbacbfd6764cf032d4d29a269296cfb",
           "confirmation": "pendiente",
           "declaration_kind": "original",
           "external_evidence": null,
           "filed_at": "2026-04-01T09:00:00+00:00",
           "filed_by": "docs-sequence-sandbox",
-          "filing_record_id": "3611b7b681068f56e5f9e157cb6a5a1df2677f8abf961efe2a574bf585b34c26",
+          "filing_record_id": "a0aaba5c73abef7a6921087420cef00833d3baca4679a9190fc19723c0c3361e",
           "filing_year": 2025,
           "kind": "internal_filing",
           "live_submission": false,
@@ -16125,7 +16176,7 @@
             "modelo-390-volumen-entregas-intracomunitarias-base": "0",
             "modelo-390-volumen-exportaciones-exentas-base": "0"
           },
-          "calculation_revision_id": "c1be54846682604827fa5fad4f2aba3ec4b2e2d103c66bd764f681a768ba4791",
+          "calculation_revision_id": "1e3ed16d916733d37a7718c1e22ff99db30be115c88a73be82d43247dfb90a8d",
           "casilla_values": {
             "decl.ejercicio": "2025",
             "decl.tipo-declaracion": "0",
@@ -25240,7 +25291,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision c1be54846682604827fa5fad4f2aba3ec4b2e2d103c66bd764f681a768ba4791 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 1e3ed16d916733d37a7718c1e22ff99db30be115c88a73be82d43247dfb90a8d (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_iva_aggregation",
@@ -25416,7 +25467,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "active_profile\tdocs-sequence-sandbox\noperation\tmodelo.work.list\ninclude_discarded\tFalse\nwork_unit_count\t5\nshort_work_unit_id\twork_unit_id\tmodelo\tyear\tperiod\trevision_id\tstate\tcurrent_revision\tfiled_revision\tname\nf0269e6476b3\t09420aa5c5d838d4a8a8b9198fa2adc02ff2573a0983d696a225f0269e6476b3\t303\t2025\t1T\t2025\tfiled\t9a2cea4711c7\t9a2cea4711c7\t303-2025-1T\n7d5697fb590c\taf6d15eead73e8acebfb6efaefcbde65819a23082408d091b4947d5697fb590c\t303\t2025\t2T\t2025\tfiled\t303eab982036\t303eab982036\t303-2025-2T\n6adc206d0a2c\te214f91933b3bae05a0b032a61021b63be883fd5836372825eb06adc206d0a2c\t303\t2025\t3T\t2025\tfiled\tf4a56d8068e8\tf4a56d8068e8\t303-2025-3T\nf82ef1b8e138\t16b8f7f898fc8458c8dc67f8cdaf35f8382fc22e9f2e0742869ef82ef1b8e138\t303\t2025\t4T\t2025\tfiled\te76ceb5ca9b3\te76ceb5ca9b3\t303-2025-4T\nb24b688e777b\t66d74724a7f3194144d855c6ccee80b76ca7ed72ad50f7192d7eb24b688e777b\t390\t2025\t0A\t2025\tdraft\t81a768ba4791\t\t390-2025-0A\nnotice\tmodelo.work.list.selection_required\tChoose one work unit before continuing.\n"
+      "text": "active_profile\tdocs-sequence-sandbox\noperation\tmodelo.work.list\ninclude_discarded\tFalse\nwork_unit_count\t5\nshort_work_unit_id\twork_unit_id\tmodelo\tyear\tperiod\trevision_id\tstate\tcurrent_revision\tfiled_revision\tname\nf0269e6476b3\t09420aa5c5d838d4a8a8b9198fa2adc02ff2573a0983d696a225f0269e6476b3\t303\t2025\t1T\t2025\tfiled\t37708c1e01d5\t37708c1e01d5\t303-2025-1T\n7d5697fb590c\taf6d15eead73e8acebfb6efaefcbde65819a23082408d091b4947d5697fb590c\t303\t2025\t2T\t2025\tfiled\tf5da18a8b5da\tf5da18a8b5da\t303-2025-2T\n6adc206d0a2c\te214f91933b3bae05a0b032a61021b63be883fd5836372825eb06adc206d0a2c\t303\t2025\t3T\t2025\tfiled\t918752edbdb8\t918752edbdb8\t303-2025-3T\nf82ef1b8e138\t16b8f7f898fc8458c8dc67f8cdaf35f8382fc22e9f2e0742869ef82ef1b8e138\t303\t2025\t4T\t2025\tfiled\t29a269296cfb\t29a269296cfb\t303-2025-4T\nb24b688e777b\t66d74724a7f3194144d855c6ccee80b76ca7ed72ad50f7192d7eb24b688e777b\t390\t2025\t0A\t2025\tdraft\t3247dfb90a8d\t\t390-2025-0A\nnotice\tmodelo.work.list.selection_required\tChoose one work unit before continuing.\n"
     },
     {
       "argv": [
@@ -25476,7 +25527,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "active_profile\tdocs-sequence-sandbox\noperation\tmodelo.work.status\nwork_unit_id\t66d74724a7f3194144d855c6ccee80b76ca7ed72ad50f7192d7eb24b688e777b\nshort_work_unit_id\tb24b688e777b\nmodelo\t390\nfiling_year\t2025\nperiod\t0A\nrevision_id\t2025\nname\t390-2025-0A\nstate\tdraft\ncurrent_calculation_revision_id\tc1be54846682604827fa5fad4f2aba3ec4b2e2d103c66bd764f681a768ba4791\nshort_current_calculation_revision_id\t81a768ba4791\nfiled_calculation_revision_id\t\nshort_filed_calculation_revision_id\t\ncurrent_filing_record_id\t\ncreated_at\t2026-04-01T09:00:00+00:00\nupdated_at\t2026-04-01T09:00:00+00:00\nplazo_closes_on\t2026-01-30\ndays_overdue\t61\nconditional_recargo_preview_band\tcompleted_months_2\nconditional_recargo_preview_pct\t3.00\nconditional_recargo_preview_interest_applies\tFalse\nconditional_recargo_preview_reference_on\t2026-04-01\nconditional_recargo_preview_assessment_status\tunassessed\nconditional_recargo_preview_legal_ref\tley-58-2003:art-27.2\nWARNING: voluntary filing period expired (Art. 27 LGT). The displayed rate is an unassessed preview; this application does not determine surcharge or interest liability.\nnotice\tmodelo.work.status.next_action\tThis active work unit can be calculated.\nnext_action\taeat app modelo work calculate 66d74724a7f3194144d855c6ccee80b76ca7ed72ad50f7192d7eb24b688e777b\n"
+      "text": "active_profile\tdocs-sequence-sandbox\noperation\tmodelo.work.status\nwork_unit_id\t66d74724a7f3194144d855c6ccee80b76ca7ed72ad50f7192d7eb24b688e777b\nshort_work_unit_id\tb24b688e777b\nmodelo\t390\nfiling_year\t2025\nperiod\t0A\nrevision_id\t2025\nname\t390-2025-0A\nstate\tdraft\ncurrent_calculation_revision_id\t1e3ed16d916733d37a7718c1e22ff99db30be115c88a73be82d43247dfb90a8d\nshort_current_calculation_revision_id\t3247dfb90a8d\nfiled_calculation_revision_id\t\nshort_filed_calculation_revision_id\t\ncurrent_filing_record_id\t\ncreated_at\t2026-04-01T09:00:00+00:00\nupdated_at\t2026-04-01T09:00:00+00:00\nplazo_closes_on\t2026-01-30\ndays_overdue\t61\nconditional_recargo_preview_band\tcompleted_months_2\nconditional_recargo_preview_pct\t3.00\nconditional_recargo_preview_interest_applies\tFalse\nconditional_recargo_preview_reference_on\t2026-04-01\nconditional_recargo_preview_assessment_status\tunassessed\nconditional_recargo_preview_legal_ref\tley-58-2003:art-27.2\nWARNING: voluntary filing period expired (Art. 27 LGT). The displayed rate is an unassessed preview; this application does not determine surcharge or interest liability.\nnotice\tmodelo.work.status.next_action\tThis active work unit can be calculated.\nnext_action\taeat app modelo work calculate 66d74724a7f3194144d855c6ccee80b76ca7ed72ad50f7192d7eb24b688e777b\n"
     },
     {
       "argv": [
@@ -25539,7 +25590,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "operation\tmodelo.work.revisions\nwork_unit_id_filter\t66d74724a7f3194144d855c6ccee80b76ca7ed72ad50f7192d7eb24b688e777b\nrevision_count\t1\nshort_calculation_revision_id\tcalculation_revision_id\tshort_work_unit_id\twork_unit_id\tstate\tcreated_at\n81a768ba4791\tc1be54846682604827fa5fad4f2aba3ec4b2e2d103c66bd764f681a768ba4791\tb24b688e777b\t66d74724a7f3194144d855c6ccee80b76ca7ed72ad50f7192d7eb24b688e777b\tborrador\t2026-04-01T09:00:00+00:00\n"
+      "text": "operation\tmodelo.work.revisions\nwork_unit_id_filter\t66d74724a7f3194144d855c6ccee80b76ca7ed72ad50f7192d7eb24b688e777b\nrevision_count\t1\nshort_calculation_revision_id\tcalculation_revision_id\tshort_work_unit_id\twork_unit_id\tstate\tcreated_at\n3247dfb90a8d\t1e3ed16d916733d37a7718c1e22ff99db30be115c88a73be82d43247dfb90a8d\tb24b688e777b\t66d74724a7f3194144d855c6ccee80b76ca7ed72ad50f7192d7eb24b688e777b\tborrador\t2026-04-01T09:00:00+00:00\n"
     },
     {
       "argv": [
@@ -25561,7 +25612,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "operation\tmodelo.work.revision\ncalculation_revision_id\tc1be54846682604827fa5fad4f2aba3ec4b2e2d103c66bd764f681a768ba4791\nwork_unit_id\t66d74724a7f3194144d855c6ccee80b76ca7ed72ad50f7192d7eb24b688e777b\nstate\tdraft\ncreated_at\t2026-04-01T09:00:00+00:00\nupdated_at\t2026-04-01T09:00:00+00:00\nresult summary Modelo 390 2025 0A\nrole\tcasilla\tvalue\tlabel\nkey_figure\tiva.anual.cuota-devengada-total\t1470.00\tTotal accrued VAT amount for the year\nkey_figure\tiva.anual.cuota-deducible-total\t105.00\tTotal deductible VAT amount for the year\nkey_figure\tiva.anual.resultado-regimen-general\t1365.00\tGeneral regime result\ncasilla\tdecl.ejercicio\t2025\ncasilla\tdecl.tipo-declaracion\t0\ncasilla\tiva.anual.aic.bienes.general.base\t0\ncasilla\tiva.anual.aic.bienes.reduced.base\t0\ncasilla\tiva.anual.aic.bienes.super_reduced.base\t0\ncasilla\tiva.anual.aic.bienes.tipo-0.base\t0\ncasilla\tiva.anual.aic.bienes.tipo-0.cuota\t0\ncasilla\tiva.anual.aic.bienes.tipo-10.base\t0\ncasilla\tiva.anual.aic.bienes.tipo-10.cuota\t0\ncasilla\tiva.anual.aic.bienes.tipo-2.base\t0\ncasilla\tiva.anual.aic.bienes.tipo-2.cuota\t0\ncasilla\tiva.anual.aic.bienes.tipo-21.base\t0\ncasilla\tiva.anual.aic.bienes.tipo-21.cuota\t0\ncasilla\tiva.anual.aic.bienes.tipo-4.base\t0\ncasilla\tiva.anual.aic.bienes.tipo-4.cuota\t0\ncasilla\tiva.anual.aic.bienes.tipo-5.base\t0\ncasilla\tiva.anual.aic.bienes.tipo-5.cuota\t0\ncasilla\tiva.anual.aic.bienes.tipo-7-5.base\t0\ncasilla\tiva.anual.aic.bienes.tipo-7-5.cuota\t0\ncasilla\tiva.anual.aic.bienes.zero.base\t0\ncasilla\tiva.anual.aic.servicios.general.base\t0\ncasilla\tiva.anual.aic.servicios.reduced.base\t0\ncasilla\tiva.anual.aic.servicios.super_reduced.base\t0\ncasilla\tiva.anual.aic.servicios.tipo-0.base\t0\ncasilla\tiva.anual.aic.servicios.tipo-0.cuota\t0\ncasilla\tiva.anual.aic.servicios.tipo-10.base\t0\ncasilla\tiva.anual.aic.servicios.tipo-10.cuota\t0\ncasilla\tiva.anual.aic.servicios.tipo-2.base\t0\ncasilla\tiva.anual.aic.servicios.tipo-2.cuota\t0\ncasilla\tiva.anual.aic.servicios.tipo-21.base\t0\ncasilla\tiva.anual.aic.servicios.tipo-21.cuota\t0\ncasilla\tiva.anual.aic.servicios.tipo-4.base\t0\ncasilla\tiva.anual.aic.servicios.tipo-4.cuota\t0\ncasilla\tiva.anual.aic.servicios.tipo-5.base\t0\ncasilla\tiva.anual.aic.servicios.tipo-5.cuota\t0\ncasilla\tiva.anual.aic.servicios.tipo-7-5.base\t0\ncasilla\tiva.anual.aic.servicios.tipo-7-5.cuota\t0\ncasilla\tiva.anual.aic.servicios.zero.base\t0\ncasilla\tiva.anual.autorepercutido.interior.base\t0\ncasilla\tiva.anual.autorepercutido.interior.cuota\t0\ncasilla\tiva.anual.autorepercutido.intracomunitaria\t0\ncasilla\tiva.anual.compensacion-cuotas-ejercicio-anterior\t0\ncasilla\tiva.anual.compensacion-generada-ejercicio-no-97\t0.00\ncasilla\tiva.anual.compensacion-ultimo-periodo-97\t0.00\ncasilla\tiva.anual.cuota-deducible-total\t105.00\tsum(iva.anual.soportado.interiores, iva.anual.soportado.importaciones, iva.anual.regularizacion-bienes-inversion, iva.anual.regularizacion-prorrata-definitiva, iva.anual.autorepercutido.intracomunitaria) = sum(105, 0, 0.00, 0.00, 0) = 105.00\ncasilla\tiva.anual.cuota-devengada-total\t1470.00\tsum(iva.anual.repercutido.general, iva.anual.repercutido.reducido, iva.anual.repercutido.super-reducido, iva.anual.autorepercutido.intracomunitaria, iva.anual.repercutido.recargo.general, iva.anual.repercutido.recargo.reducido, iva.anual.repercutido.recargo.super-reducido) = sum(1470, 0, 0, 0, 0, 0, 0) = 1470.00\ncasilla\tiva.anual.deducible.aic-corrientes.tipo-10.base\t0\ncasilla\tiva.anual.deducible.aic-corrientes.tipo-10.cuota\t0\ncasilla\tiva.anual.deducible.aic-corrientes.tipo-2.base\t0\ncasilla\tiva.anual.deducible.aic-corrientes.tipo-2.cuota\t0\ncasilla\tiva.anual.deducible.aic-corrientes.tipo-21.base\t0\ncasilla\tiva.anual.deducible.aic-corrientes.tipo-21.cuota\t0\ncasilla\tiva.anual.deducible.aic-corrientes.tipo-4.base\t0\ncasilla\tiva.anual.deducible.aic-corrientes.tipo-4.cuota\t0\ncasilla\tiva.anual.deducible.aic-corrientes.tipo-5.base\t0\ncasilla\tiva.anual.deducible.aic-corrientes.tipo-5.cuota\t0\ncasilla\tiva.anual.deducible.aic-corrientes.tipo-7-5.base\t0\ncasilla\tiva.anual.deducible.aic-corrientes.tipo-7-5.cuota\t0\ncasilla\tiva.anual.deducible.aic-corrientes.total.base\t0\ncasilla\tiva.anual.deducible.aic-corrientes.total.cuota\t0\ncasilla\tiva.anual.deducible.aic-inversion.tipo-10.base\t0\ncasilla\tiva.anual.deducible.aic-inversion.tipo-10.cuota\t0\ncasilla\tiva.anual.deducible.aic-inversion.tipo-2.base\t0\ncasilla\tiva.anual.deducible.aic-inversion.tipo-2.cuota\t0\ncasilla\tiva.anual.deducible.aic-inversion.tipo-21.base\t0\ncasilla\tiva.anual.deducible.aic-inversion.tipo-21.cuota\t0\ncasilla\tiva.anual.deducible.aic-inversion.tipo-4.base\t0\ncasilla\tiva.anual.deducible.aic-inversion.tipo-4.cuota\t0\ncasilla\tiva.anual.deducible.aic-inversion.tipo-5.base\t0\ncasilla\tiva.anual.deducible.aic-inversion.tipo-5.cuota\t0\ncasilla\tiva.anual.deducible.aic-inversion.tipo-7-5.base\t0\ncasilla\tiva.anual.deducible.aic-inversion.tipo-7-5.cuota\t0\ncasilla\tiva.anual.deducible.aic-inversion.total.base\t0\ncasilla\tiva.anual.deducible.aic-inversion.total.cuota\t0\ncasilla\tiva.anual.deducible.aic-servicios.tipo-10.base\t0\ncasilla\tiva.anual.deducible.aic-servicios.tipo-10.cuota\t0\ncasilla\tiva.anual.deducible.aic-servicios.tipo-2.base\t0\ncasilla\tiva.anual.deducible.aic-servicios.tipo-2.cuota\t0\ncasilla\tiva.anual.deducible.aic-servicios.tipo-21.base\t0\ncasilla\tiva.anual.deducible.aic-servicios.tipo-21.cuota\t0\ncasilla\tiva.anual.deducible.aic-servicios.tipo-4.base\t0\ncasilla\tiva.anual.deducible.aic-servicios.tipo-4.cuota\t0\ncasilla\tiva.anual.deducible.aic-servicios.tipo-5.base\t0\ncasilla\tiva.anual.deducible.aic-servicios.tipo-5.cuota\t0\ncasilla\tiva.anual.deducible.aic-servicios.tipo-7-5.base\t0\ncasilla\tiva.anual.deducible.aic-servicios.tipo-7-5.cuota\t0\ncasilla\tiva.anual.deducible.aic-servicios.total.base\t0\ncasilla\tiva.anual.deducible.aic-servicios.total.cuota\t0\ncasilla\tiva.anual.deducible.compensaciones-reagp.base\t0\ncasilla\tiva.anual.deducible.compensaciones-reagp.cuota\t0\ncasilla\tiva.anual.deducible.importaciones-corrientes.tipo-10.base\t0\ncasilla\tiva.anual.deducible.importaciones-corrientes.tipo-10.cuota\t0\ncasilla\tiva.anual.deducible.importaciones-corrientes.tipo-2.base\t0\ncasilla\tiva.anual.deducible.importaciones-corrientes.tipo-2.cuota\t0\ncasilla\tiva.anual.deducible.importaciones-corrientes.tipo-21.base\t0\ncasilla\tiva.anual.deducible.importaciones-corrientes.tipo-21.cuota\t0\ncasilla\tiva.anual.deducible.importaciones-corrientes.tipo-4.base\t0\ncasilla\tiva.anual.deducible.importaciones-corrientes.tipo-4.cuota\t0\ncasilla\tiva.anual.deducible.importaciones-corrientes.tipo-5.base\t0\ncasilla\tiva.anual.deducible.importaciones-corrientes.tipo-5.cuota\t0\ncasilla\tiva.anual.deducible.importaciones-corrientes.tipo-7-5.base\t0\ncasilla\tiva.anual.deducible.importaciones-corrientes.tipo-7-5.cuota\t0\ncasilla\tiva.anual.deducible.importaciones-corrientes.total.base\t0\ncasilla\tiva.anual.deducible.importaciones-inversion.tipo-10.base\t0\ncasilla\tiva.anual.deducible.importaciones-inversion.tipo-10.cuota\t0\ncasilla\tiva.anual.deducible.importaciones-inversion.tipo-2.base\t0\ncasilla\tiva.anual.deducible.importaciones-inversion.tipo-2.cuota\t0\ncasilla\tiva.anual.deducible.importaciones-inversion.tipo-21.base\t0\ncasilla\tiva.anual.deducible.importaciones-inversion.tipo-21.cuota\t0\ncasilla\tiva.anual.deducible.importaciones-inversion.tipo-4.base\t0\ncasilla\tiva.anual.deducible.importaciones-inversion.tipo-4.cuota\t0\ncasilla\tiva.anual.deducible.importaciones-inversion.tipo-5.base\t0\ncasilla\tiva.anual.deducible.importaciones-inversion.tipo-5.cuota\t0\ncasilla\tiva.anual.deducible.importaciones-inversion.tipo-7-5.base\t0\ncasilla\tiva.anual.deducible.importaciones-inversion.tipo-7-5.cuota\t0\ncasilla\tiva.anual.deducible.importaciones-inversion.total.base\t0\ncasilla\tiva.anual.deducible.importaciones-inversion.total.cuota\t0\ncasilla\tiva.anual.deducible.interiores-corrientes.tipo-10.base\t0\ncasilla\tiva.anual.deducible.interiores-corrientes.tipo-10.cuota\t0\ncasilla\tiva.anual.deducible.interiores-corrientes.tipo-2.base\t0\ncasilla\tiva.anual.deducible.interiores-corrientes.tipo-2.cuota\t0\ncasilla\tiva.anual.deducible.interiores-corrientes.tipo-21.base\t0\ncasilla\tiva.anual.deducible.interiores-corrientes.tipo-21.cuota\t0\ncasilla\tiva.anual.deducible.interiores-corrientes.tipo-4.base\t0\ncasilla\tiva.anual.deducible.interiores-corrientes.tipo-4.cuota\t0\ncasilla\tiva.anual.deducible.interiores-corrientes.tipo-5.base\t0\ncasilla\tiva.anual.deducible.interiores-corrientes.tipo-5.cuota\t0\ncasilla\tiva.anual.deducible.interiores-corrientes.tipo-7-5.base\t0\ncasilla\tiva.anual.deducible.interiores-corrientes.tipo-7-5.cuota\t0\ncasilla\tiva.anual.deducible.interiores-inversion.tipo-10.base\t0\ncasilla\tiva.anual.deducible.interiores-inversion.tipo-10.cuota\t0\ncasilla\tiva.anual.deducible.interiores-inversion.tipo-2.base\t0\ncasilla\tiva.anual.deducible.interiores-inversion.tipo-2.cuota\t0\ncasilla\tiva.anual.deducible.interiores-inversion.tipo-21.base\t0\ncasilla\tiva.anual.deducible.interiores-inversion.tipo-21.cuota\t0\ncasilla\tiva.anual.deducible.interiores-inversion.tipo-4.base\t0\ncasilla\tiva.anual.deducible.interiores-inversion.tipo-4.cuota\t0\ncasilla\tiva.anual.deducible.interiores-inversion.tipo-5.base\t0\ncasilla\tiva.anual.deducible.interiores-inversion.tipo-5.cuota\t0\ncasilla\tiva.anual.deducible.interiores-inversion.tipo-7-5.base\t0\ncasilla\tiva.anual.deducible.interiores-inversion.tipo-7-5.cuota\t0\ncasilla\tiva.anual.deducible.interiores-inversion.total.base\t0\ncasilla\tiva.anual.deducible.interiores-inversion.total.cuota\t0\ncasilla\tiva.anual.deducible.intragrupo-corrientes.tipo-10.base\t0\ncasilla\tiva.anual.deducible.intragrupo-corrientes.tipo-10.cuota\t0\ncasilla\tiva.anual.deducible.intragrupo-corrientes.tipo-2.base\t0\ncasilla\tiva.anual.deducible.intragrupo-corrientes.tipo-2.cuota\t0\ncasilla\tiva.anual.deducible.intragrupo-corrientes.tipo-21.base\t0\ncasilla\tiva.anual.deducible.intragrupo-corrientes.tipo-21.cuota\t0\ncasilla\tiva.anual.deducible.intragrupo-corrientes.tipo-4.base\t0\ncasilla\tiva.anual.deducible.intragrupo-corrientes.tipo-4.cuota\t0\ncasilla\tiva.anual.deducible.intragrupo-corrientes.tipo-5.base\t0\ncasilla\tiva.anual.deducible.intragrupo-corrientes.tipo-5.cuota\t0\ncasilla\tiva.anual.deducible.intragrupo-corrientes.tipo-7-5.base\t0\ncasilla\tiva.anual.deducible.intragrupo-corrientes.tipo-7-5.cuota\t0\ncasilla\tiva.anual.deducible.intragrupo-corrientes.total.base\t0\ncasilla\tiva.anual.deducible.intragrupo-corrientes.total.cuota\t0\ncasilla\tiva.anual.deducible.intragrupo-inversion.tipo-10.base\t0\ncasilla\tiva.anual.deducible.intragrupo-inversion.tipo-10.cuota\t0\ncasilla\tiva.anual.deducible.intragrupo-inversion.tipo-2.base\t0\ncasilla\tiva.anual.deducible.intragrupo-inversion.tipo-2.cuota\t0\ncasilla\tiva.anual.deducible.intragrupo-inversion.tipo-21.base\t0\ncasilla\tiva.anual.deducible.intragrupo-inversion.tipo-21.cuota\t0\ncasilla\tiva.anual.deducible.intragrupo-inversion.tipo-4.base\t0\ncasilla\tiva.anual.deducible.intragrupo-inversion.tipo-4.cuota\t0\ncasilla\tiva.anual.deducible.intragrupo-inversion.tipo-5.base\t0\ncasilla\tiva.anual.deducible.intragrupo-inversion.tipo-5.cuota\t0\ncasilla\tiva.anual.deducible.intragrupo-inversion.tipo-7-5.base\t0\ncasilla\tiva.anual.deducible.intragrupo-inversion.tipo-7-5.cuota\t0\ncasilla\tiva.anual.deducible.intragrupo-inversion.total.base\t0\ncasilla\tiva.anual.deducible.intragrupo-inversion.total.cuota\t0\ncasilla\tiva.anual.deducible.rectificacion-intragrupo.base\t0\ncasilla\tiva.anual.deducible.rectificacion-intragrupo.cuota\t0\ncasilla\tiva.anual.deducible.rectificacion.base\t0\ncasilla\tiva.anual.deducible.rectificacion.cuota\t0\ncasilla\tiva.anual.deducible.resolucion-firme-tipos-no-vigentes.base\t0\ncasilla\tiva.anual.deducible.resolucion-firme-tipos-no-vigentes.cuota\t0\ncasilla\tiva.anual.especificas.adquisiciones-interiores-exentas\t0\ncasilla\tiva.anual.especificas.adquisiciones-intracomunitarias-exentas\t0\ncasilla\tiva.anual.especificas.base-iva-soportado-no-deducible\t0\ncasilla\tiva.anual.especificas.criterio-caja-adquisiciones.base\t0\ncasilla\tiva.anual.especificas.criterio-caja-adquisiciones.cuota\t0\ncasilla\tiva.anual.especificas.criterio-caja-entregas.base\t0\ncasilla\tiva.anual.especificas.criterio-caja-entregas.cuota\t0\ncasilla\tiva.anual.especificas.entrega-interior-inversion-triangular\t0\ncasilla\tiva.anual.especificas.importaciones-exentas\t0\ncasilla\tiva.anual.especificas.operaciones-derecho-devolucion-mensual\t0\ncasilla\tiva.anual.especificas.servicios-tai-inversion-sujeto-pasivo\t0\ncasilla\tiva.anual.iva-importacion-diferimiento\t0\ncasilla\tiva.anual.liquidaciones.total-a-ingresar\t0\ncasilla\tiva.anual.liquidaciones.total-devoluciones-elementos-transporte\t0\ncasilla\tiva.anual.liquidaciones.total-devoluciones-mensuales\t0\ncasilla\tiva.anual.liquidaciones.total-resultados-negativos-m322\t0\ncasilla\tiva.anual.liquidaciones.total-resultados-positivos-m322\t0\ncasilla\tiva.anual.liquidaciones.ultimo-periodo-a-devolver\t0\ncasilla\tiva.anual.modificacion.bases-cuotas-intragrupo.base\t0\ncasilla\tiva.anual.modificacion.bases-cuotas-intragrupo.cuota\t0\ncasilla\tiva.anual.modificacion.bases-cuotas.base\t0\ncasilla\tiva.anual.modificacion.bases-cuotas.cuota\t0\ncasilla\tiva.anual.modificacion.concurso-acreedores.base\t0\ncasilla\tiva.anual.modificacion.concurso-acreedores.cuota\t0\ncasilla\tiva.anual.modificacion.recargo-concurso.base\t0\ncasilla\tiva.anual.modificacion.recargo-concurso.cuota\t0\ncasilla\tiva.anual.modificacion.recargo.base\t0\ncasilla\tiva.anual.modificacion.recargo.cuota\t0\ncasilla\tiva.anual.reconciliacion.deducible-303\t105.00\ncasilla\tiva.anual.reconciliacion.devengada-303\t1470.00\ncasilla\tiva.anual.reconciliacion.devengada-simplificado-303\t0\ncasilla\tiva.anual.reconciliacion.resultado-303\t1365.00\ncasilla\tiva.anual.regimen-simplificado.aic-bienes-cuota-devengada\t0\ncasilla\tiva.anual.regimen-simplificado.cuota-resultante-agricola\t0\ncasilla\tiva.anual.regimen-simplificado.cuota-resultante-no-agricola\t0\ncasilla\tiva.anual.regimen-simplificado.entrega-activos-fijos\t0\ncasilla\tiva.anual.regimen-simplificado.inversion-sujeto-pasivo\t0\ncasilla\tiva.anual.regimen-simplificado.iva-soportado-activos-fijos\t0\ncasilla\tiva.anual.regimen-simplificado.regularizacion-bienes-inversion\t0\ncasilla\tiva.anual.regimen-simplificado.resultado\t0\ncasilla\tiva.anual.regimen-simplificado.suma-deducciones\t0\ncasilla\tiva.anual.regularizacion-bienes-inversion\t0.00\ncasilla\tiva.anual.regularizacion-cuotas-art-80-cinco-5\t0\ncasilla\tiva.anual.regularizacion-prorrata-definitiva\t0.00\ncasilla\tiva.anual.repercutido.agencias-viajes.tipo-21.base\t0\ncasilla\tiva.anual.repercutido.agencias-viajes.tipo-21.cuota\t0\ncasilla\tiva.anual.repercutido.bienes-usados.tipo-0.base\t0\ncasilla\tiva.anual.repercutido.bienes-usados.tipo-0.cuota\t0\ncasilla\tiva.anual.repercutido.bienes-usados.tipo-10.base\t0\ncasilla\tiva.anual.repercutido.bienes-usados.tipo-10.cuota\t0\ncasilla\tiva.anual.repercutido.bienes-usados.tipo-2.base\t0\ncasilla\tiva.anual.repercutido.bienes-usados.tipo-2.cuota\t0\ncasilla\tiva.anual.repercutido.bienes-usados.tipo-21.base\t0\ncasilla\tiva.anual.repercutido.bienes-usados.tipo-21.cuota\t0\ncasilla\tiva.anual.repercutido.bienes-usados.tipo-4.base\t0\ncasilla\tiva.anual.repercutido.bienes-usados.tipo-4.cuota\t0\ncasilla\tiva.anual.repercutido.bienes-usados.tipo-5.base\t0\ncasilla\tiva.anual.repercutido.bienes-usados.tipo-5.cuota\t0\ncasilla\tiva.anual.repercutido.bienes-usados.tipo-7-5.base\t0\ncasilla\tiva.anual.repercutido.bienes-usados.tipo-7-5.cuota\t0\ncasilla\tiva.anual.repercutido.criterio-caja.tipo-0.base\t0\ncasilla\tiva.anual.repercutido.criterio-caja.tipo-0.cuota\t0\ncasilla\tiva.anual.repercutido.criterio-caja.tipo-10.base\t0\ncasilla\tiva.anual.repercutido.criterio-caja.tipo-10.cuota\t0\ncasilla\tiva.anual.repercutido.criterio-caja.tipo-2.base\t0\ncasilla\tiva.anual.repercutido.criterio-caja.tipo-2.cuota\t0\ncasilla\tiva.anual.repercutido.criterio-caja.tipo-21.base\t0\ncasilla\tiva.anual.repercutido.criterio-caja.tipo-21.cuota\t0\ncasilla\tiva.anual.repercutido.criterio-caja.tipo-4.base\t0\ncasilla\tiva.anual.repercutido.criterio-caja.tipo-4.cuota\t0\ncasilla\tiva.anual.repercutido.criterio-caja.tipo-5.base\t0\ncasilla\tiva.anual.repercutido.criterio-caja.tipo-5.cuota\t0\ncasilla\tiva.anual.repercutido.criterio-caja.tipo-7-5.base\t0\ncasilla\tiva.anual.repercutido.criterio-caja.tipo-7-5.cuota\t0\ncasilla\tiva.anual.repercutido.general\t1470\ncasilla\tiva.anual.repercutido.general.base\t7000\ncasilla\tiva.anual.repercutido.intragrupo.tipo-0.base\t0\ncasilla\tiva.anual.repercutido.intragrupo.tipo-0.cuota\t0\ncasilla\tiva.anual.repercutido.intragrupo.tipo-10.base\t0\ncasilla\tiva.anual.repercutido.intragrupo.tipo-10.cuota\t0\ncasilla\tiva.anual.repercutido.intragrupo.tipo-2.base\t0\ncasilla\tiva.anual.repercutido.intragrupo.tipo-2.cuota\t0\ncasilla\tiva.anual.repercutido.intragrupo.tipo-21.base\t0\ncasilla\tiva.anual.repercutido.intragrupo.tipo-21.cuota\t0\ncasilla\tiva.anual.repercutido.intragrupo.tipo-4.base\t0\ncasilla\tiva.anual.repercutido.intragrupo.tipo-4.cuota\t0\ncasilla\tiva.anual.repercutido.intragrupo.tipo-5.base\t0\ncasilla\tiva.anual.repercutido.intragrupo.tipo-5.cuota\t0\ncasilla\tiva.anual.repercutido.intragrupo.tipo-7-5.base\t0\ncasilla\tiva.anual.repercutido.intragrupo.tipo-7-5.cuota\t0\ncasilla\tiva.anual.repercutido.recargo.general\t0\ncasilla\tiva.anual.repercutido.recargo.reducido\t0\ncasilla\tiva.anual.repercutido.recargo.super-reducido\t0\ncasilla\tiva.anual.repercutido.recargo.tipo-0-26.base\t0\ncasilla\tiva.anual.repercutido.recargo.tipo-0-26.cuota\t0\ncasilla\tiva.anual.repercutido.recargo.tipo-0-5.base\t0\ncasilla\tiva.anual.repercutido.recargo.tipo-0-5.cuota\t0\ncasilla\tiva.anual.repercutido.recargo.tipo-0-62.base\t0\ncasilla\tiva.anual.repercutido.recargo.tipo-0-62.cuota\t0\ncasilla\tiva.anual.repercutido.recargo.tipo-0.base\t0\ncasilla\tiva.anual.repercutido.recargo.tipo-0.cuota\t0\ncasilla\tiva.anual.repercutido.recargo.tipo-1-4.base\t0\ncasilla\tiva.anual.repercutido.recargo.tipo-1-4.cuota\t0\ncasilla\tiva.anual.repercutido.recargo.tipo-1-75.base\t0\ncasilla\tiva.anual.repercutido.recargo.tipo-1-75.cuota\t0\ncasilla\tiva.anual.repercutido.recargo.tipo-1.base\t0\ncasilla\tiva.anual.repercutido.recargo.tipo-1.cuota\t0\ncasilla\tiva.anual.repercutido.recargo.tipo-5-2.base\t0\ncasilla\tiva.anual.repercutido.recargo.tipo-5-2.cuota\t0\ncasilla\tiva.anual.repercutido.reducido\t0\ncasilla\tiva.anual.repercutido.reducido.base\t0\ncasilla\tiva.anual.repercutido.super-reducido\t0\ncasilla\tiva.anual.repercutido.super-reducido.base\t0\ncasilla\tiva.anual.repercutido.tipo-0.base\t0\ncasilla\tiva.anual.repercutido.tipo-0.cuota\t0\ncasilla\tiva.anual.repercutido.tipo-10.base\t0\ncasilla\tiva.anual.repercutido.tipo-10.cuota\t0\ncasilla\tiva.anual.repercutido.tipo-2.base\t0\ncasilla\tiva.anual.repercutido.tipo-2.cuota\t0\ncasilla\tiva.anual.repercutido.tipo-21.base\t7000\ncasilla\tiva.anual.repercutido.tipo-21.cuota\t1470\ncasilla\tiva.anual.repercutido.tipo-4.base\t0\ncasilla\tiva.anual.repercutido.tipo-4.cuota\t0\ncasilla\tiva.anual.repercutido.tipo-5.base\t0\ncasilla\tiva.anual.repercutido.tipo-5.cuota\t0\ncasilla\tiva.anual.repercutido.tipo-7-5.base\t0\ncasilla\tiva.anual.repercutido.tipo-7-5.cuota\t0\ncasilla\tiva.anual.repercutido.zero.base\t0\ncasilla\tiva.anual.resultado-liquidacion\t0\ncasilla\tiva.anual.resultado-regimen-general\t1365.00\tsubtract(iva.anual.cuota-devengada-total, iva.anual.cuota-deducible-total) = subtract(1470.00, 105.00) = 1365.00\ncasilla\tiva.anual.sector-diferenciado-1.aic-corrientes.base\t0\ncasilla\tiva.anual.sector-diferenciado-1.aic-corrientes.cuota\t0\ncasilla\tiva.anual.sector-diferenciado-1.aic-inversion.base\t0\ncasilla\tiva.anual.sector-diferenciado-1.aic-inversion.cuota\t0\ncasilla\tiva.anual.sector-diferenciado-1.compensaciones-reagp.base\t0\ncasilla\tiva.anual.sector-diferenciado-1.compensaciones-reagp.cuota\t0\ncasilla\tiva.anual.sector-diferenciado-1.importaciones-corrientes.base\t0\ncasilla\tiva.anual.sector-diferenciado-1.importaciones-corrientes.cuota\t0\ncasilla\tiva.anual.sector-diferenciado-1.importaciones-inversion.base\t0\ncasilla\tiva.anual.sector-diferenciado-1.importaciones-inversion.cuota\t0\ncasilla\tiva.anual.sector-diferenciado-1.interiores-corrientes.base\t0\ncasilla\tiva.anual.sector-diferenciado-1.interiores-corrientes.cuota\t0\ncasilla\tiva.anual.sector-diferenciado-1.interiores-inversion.base\t0\ncasilla\tiva.anual.sector-diferenciado-1.interiores-inversion.cuota\t0\ncasilla\tiva.anual.sector-diferenciado-1.rectificacion.base\t0\ncasilla\tiva.anual.sector-diferenciado-1.rectificacion.cuota\t0\ncasilla\tiva.anual.sector-diferenciado-1.regularizacion-inversiones\t0\ncasilla\tiva.anual.sector-diferenciado-1.suma-deducciones\t0\ncasilla\tiva.anual.sector-diferenciado-2.aic-corrientes.base\t0\ncasilla\tiva.anual.sector-diferenciado-2.aic-corrientes.cuota\t0\ncasilla\tiva.anual.sector-diferenciado-2.aic-inversion.base\t0\ncasilla\tiva.anual.sector-diferenciado-2.aic-inversion.cuota\t0\ncasilla\tiva.anual.sector-diferenciado-2.compensaciones-reagp.base\t0\ncasilla\tiva.anual.sector-diferenciado-2.compensaciones-reagp.cuota\t0\ncasilla\tiva.anual.sector-diferenciado-2.importaciones-corrientes.base\t0\ncasilla\tiva.anual.sector-diferenciado-2.importaciones-corrientes.cuota\t0\ncasilla\tiva.anual.sector-diferenciado-2.importaciones-inversion.base\t0\ncasilla\tiva.anual.sector-diferenciado-2.importaciones-inversion.cuota\t0\ncasilla\tiva.anual.sector-diferenciado-2.interiores-corrientes.base\t0\ncasilla\tiva.anual.sector-diferenciado-2.interiores-corrientes.cuota\t0\ncasilla\tiva.anual.sector-diferenciado-2.interiores-inversion.base\t0\ncasilla\tiva.anual.sector-diferenciado-2.interiores-inversion.cuota\t0\ncasilla\tiva.anual.sector-diferenciado-2.rectificacion.base\t0\ncasilla\tiva.anual.sector-diferenciado-2.rectificacion.cuota\t0\ncasilla\tiva.anual.sector-diferenciado-2.regularizacion-inversiones\t0\ncasilla\tiva.anual.sector-diferenciado-2.suma-deducciones\t0\ncasilla\tiva.anual.sector-diferenciado-3.aic-corrientes.base\t0\ncasilla\tiva.anual.sector-diferenciado-3.aic-corrientes.cuota\t0\ncasilla\tiva.anual.sector-diferenciado-3.aic-inversion.base\t0\ncasilla\tiva.anual.sector-diferenciado-3.aic-inversion.cuota\t0\ncasilla\tiva.anual.sector-diferenciado-3.compensaciones-reagp.base\t0\ncasilla\tiva.anual.sector-diferenciado-3.compensaciones-reagp.cuota\t0\ncasilla\tiva.anual.sector-diferenciado-3.importaciones-corrientes.base\t0\ncasilla\tiva.anual.sector-diferenciado-3.importaciones-corrientes.cuota\t0\ncasilla\tiva.anual.sector-diferenciado-3.importaciones-inversion.base\t0\ncasilla\tiva.anual.sector-diferenciado-3.importaciones-inversion.cuota\t0\ncasilla\tiva.anual.sector-diferenciado-3.interiores-corrientes.base\t0\ncasilla\tiva.anual.sector-diferenciado-3.interiores-corrientes.cuota\t0\ncasilla\tiva.anual.sector-diferenciado-3.interiores-inversion.base\t0\ncasilla\tiva.anual.sector-diferenciado-3.interiores-inversion.cuota\t0\ncasilla\tiva.anual.sector-diferenciado-3.rectificacion.base\t0\ncasilla\tiva.anual.sector-diferenciado-3.rectificacion.cuota\t0\ncasilla\tiva.anual.sector-diferenciado-3.regularizacion-inversiones\t0\ncasilla\tiva.anual.sector-diferenciado-3.suma-deducciones\t0\ncasilla\tiva.anual.soportado.importaciones\t0\ncasilla\tiva.anual.soportado.interiores\t105\ncasilla\tiva.anual.soportado.interiores.base\t500\ncasilla\tiva.anual.suma-resultados\t0\ncasilla\tiva.anual.territorio.alava.porcentaje\t0\ncasilla\tiva.anual.territorio.compensacion-atribuible-comun\t0\ncasilla\tiva.anual.territorio.comun.porcentaje\t0\ncasilla\tiva.anual.territorio.guipuzcoa.porcentaje\t0\ncasilla\tiva.anual.territorio.navarra.porcentaje\t0\ncasilla\tiva.anual.territorio.resultado-anual-atribuible-comun\t0\ncasilla\tiva.anual.territorio.resultado-atribuible-comun\t0\ncasilla\tiva.anual.territorio.vizcaya.porcentaje\t0\ncasilla\tiva.anual.total-bases-cuotas-iva\t1470.00\tsum(iva.anual.repercutido.general, iva.anual.repercutido.reducido, iva.anual.repercutido.super-reducido, iva.anual.autorepercutido.intracomunitaria) = sum(1470, 0, 0, 0) = 1470.00\ncasilla\tiva.anual.total-bases-iva\t0\ncasilla\tiva.anual.volumen.agencias-viajes\t0\ncasilla\tiva.anual.volumen.bienes-de-inversion\t0\ncasilla\tiva.anual.volumen.bienes-usados\t0\ncasilla\tiva.anual.volumen.criterio-caja\t0\ncasilla\tiva.anual.volumen.entregas-intracomunitarias\t0\ncasilla\tiva.anual.volumen.exentas-sin-derecho-deduccion\t0\ncasilla\tiva.anual.volumen.exportaciones-exentas\t0\ncasilla\tiva.anual.volumen.inmuebles-financieras-no-habituales\t0\ncasilla\tiva.anual.volumen.intragrupo-arts-78-79\t0\ncasilla\tiva.anual.volumen.inversion-sujeto-pasivo\t0\ncasilla\tiva.anual.volumen.no-sujetas-reglas-localizacion\t0\ncasilla\tiva.anual.volumen.oss-no-sujetas-localizacion\t0\ncasilla\tiva.anual.volumen.oss-sujetas\t0\ncasilla\tiva.anual.volumen.reagp\t0\ncasilla\tiva.anual.volumen.recargo-equivalencia\t0\ncasilla\tiva.anual.volumen.regimen-general\t0\ncasilla\tiva.anual.volumen.regimen-simplificado\t0\ncasilla\tiva.anual.volumen.total\t0\n"
+      "text": "operation\tmodelo.work.revision\ncalculation_revision_id\t1e3ed16d916733d37a7718c1e22ff99db30be115c88a73be82d43247dfb90a8d\nwork_unit_id\t66d74724a7f3194144d855c6ccee80b76ca7ed72ad50f7192d7eb24b688e777b\nstate\tdraft\ncreated_at\t2026-04-01T09:00:00+00:00\nupdated_at\t2026-04-01T09:00:00+00:00\nresult summary Modelo 390 2025 0A\nrole\tcasilla\tvalue\tlabel\nkey_figure\tiva.anual.cuota-devengada-total\t1470.00\tTotal accrued VAT amount for the year\nkey_figure\tiva.anual.cuota-deducible-total\t105.00\tTotal deductible VAT amount for the year\nkey_figure\tiva.anual.resultado-regimen-general\t1365.00\tGeneral regime result\ncasilla\tdecl.ejercicio\t2025\ncasilla\tdecl.tipo-declaracion\t0\ncasilla\tiva.anual.aic.bienes.general.base\t0\ncasilla\tiva.anual.aic.bienes.reduced.base\t0\ncasilla\tiva.anual.aic.bienes.super_reduced.base\t0\ncasilla\tiva.anual.aic.bienes.tipo-0.base\t0\ncasilla\tiva.anual.aic.bienes.tipo-0.cuota\t0\ncasilla\tiva.anual.aic.bienes.tipo-10.base\t0\ncasilla\tiva.anual.aic.bienes.tipo-10.cuota\t0\ncasilla\tiva.anual.aic.bienes.tipo-2.base\t0\ncasilla\tiva.anual.aic.bienes.tipo-2.cuota\t0\ncasilla\tiva.anual.aic.bienes.tipo-21.base\t0\ncasilla\tiva.anual.aic.bienes.tipo-21.cuota\t0\ncasilla\tiva.anual.aic.bienes.tipo-4.base\t0\ncasilla\tiva.anual.aic.bienes.tipo-4.cuota\t0\ncasilla\tiva.anual.aic.bienes.tipo-5.base\t0\ncasilla\tiva.anual.aic.bienes.tipo-5.cuota\t0\ncasilla\tiva.anual.aic.bienes.tipo-7-5.base\t0\ncasilla\tiva.anual.aic.bienes.tipo-7-5.cuota\t0\ncasilla\tiva.anual.aic.bienes.zero.base\t0\ncasilla\tiva.anual.aic.servicios.general.base\t0\ncasilla\tiva.anual.aic.servicios.reduced.base\t0\ncasilla\tiva.anual.aic.servicios.super_reduced.base\t0\ncasilla\tiva.anual.aic.servicios.tipo-0.base\t0\ncasilla\tiva.anual.aic.servicios.tipo-0.cuota\t0\ncasilla\tiva.anual.aic.servicios.tipo-10.base\t0\ncasilla\tiva.anual.aic.servicios.tipo-10.cuota\t0\ncasilla\tiva.anual.aic.servicios.tipo-2.base\t0\ncasilla\tiva.anual.aic.servicios.tipo-2.cuota\t0\ncasilla\tiva.anual.aic.servicios.tipo-21.base\t0\ncasilla\tiva.anual.aic.servicios.tipo-21.cuota\t0\ncasilla\tiva.anual.aic.servicios.tipo-4.base\t0\ncasilla\tiva.anual.aic.servicios.tipo-4.cuota\t0\ncasilla\tiva.anual.aic.servicios.tipo-5.base\t0\ncasilla\tiva.anual.aic.servicios.tipo-5.cuota\t0\ncasilla\tiva.anual.aic.servicios.tipo-7-5.base\t0\ncasilla\tiva.anual.aic.servicios.tipo-7-5.cuota\t0\ncasilla\tiva.anual.aic.servicios.zero.base\t0\ncasilla\tiva.anual.autorepercutido.interior.base\t0\ncasilla\tiva.anual.autorepercutido.interior.cuota\t0\ncasilla\tiva.anual.autorepercutido.intracomunitaria\t0\ncasilla\tiva.anual.compensacion-cuotas-ejercicio-anterior\t0\ncasilla\tiva.anual.compensacion-generada-ejercicio-no-97\t0.00\ncasilla\tiva.anual.compensacion-ultimo-periodo-97\t0.00\ncasilla\tiva.anual.cuota-deducible-total\t105.00\tsum(iva.anual.soportado.interiores, iva.anual.soportado.importaciones, iva.anual.regularizacion-bienes-inversion, iva.anual.regularizacion-prorrata-definitiva, iva.anual.autorepercutido.intracomunitaria) = sum(105, 0, 0.00, 0.00, 0) = 105.00\ncasilla\tiva.anual.cuota-devengada-total\t1470.00\tsum(iva.anual.repercutido.general, iva.anual.repercutido.reducido, iva.anual.repercutido.super-reducido, iva.anual.autorepercutido.intracomunitaria, iva.anual.repercutido.recargo.general, iva.anual.repercutido.recargo.reducido, iva.anual.repercutido.recargo.super-reducido) = sum(1470, 0, 0, 0, 0, 0, 0) = 1470.00\ncasilla\tiva.anual.deducible.aic-corrientes.tipo-10.base\t0\ncasilla\tiva.anual.deducible.aic-corrientes.tipo-10.cuota\t0\ncasilla\tiva.anual.deducible.aic-corrientes.tipo-2.base\t0\ncasilla\tiva.anual.deducible.aic-corrientes.tipo-2.cuota\t0\ncasilla\tiva.anual.deducible.aic-corrientes.tipo-21.base\t0\ncasilla\tiva.anual.deducible.aic-corrientes.tipo-21.cuota\t0\ncasilla\tiva.anual.deducible.aic-corrientes.tipo-4.base\t0\ncasilla\tiva.anual.deducible.aic-corrientes.tipo-4.cuota\t0\ncasilla\tiva.anual.deducible.aic-corrientes.tipo-5.base\t0\ncasilla\tiva.anual.deducible.aic-corrientes.tipo-5.cuota\t0\ncasilla\tiva.anual.deducible.aic-corrientes.tipo-7-5.base\t0\ncasilla\tiva.anual.deducible.aic-corrientes.tipo-7-5.cuota\t0\ncasilla\tiva.anual.deducible.aic-corrientes.total.base\t0\ncasilla\tiva.anual.deducible.aic-corrientes.total.cuota\t0\ncasilla\tiva.anual.deducible.aic-inversion.tipo-10.base\t0\ncasilla\tiva.anual.deducible.aic-inversion.tipo-10.cuota\t0\ncasilla\tiva.anual.deducible.aic-inversion.tipo-2.base\t0\ncasilla\tiva.anual.deducible.aic-inversion.tipo-2.cuota\t0\ncasilla\tiva.anual.deducible.aic-inversion.tipo-21.base\t0\ncasilla\tiva.anual.deducible.aic-inversion.tipo-21.cuota\t0\ncasilla\tiva.anual.deducible.aic-inversion.tipo-4.base\t0\ncasilla\tiva.anual.deducible.aic-inversion.tipo-4.cuota\t0\ncasilla\tiva.anual.deducible.aic-inversion.tipo-5.base\t0\ncasilla\tiva.anual.deducible.aic-inversion.tipo-5.cuota\t0\ncasilla\tiva.anual.deducible.aic-inversion.tipo-7-5.base\t0\ncasilla\tiva.anual.deducible.aic-inversion.tipo-7-5.cuota\t0\ncasilla\tiva.anual.deducible.aic-inversion.total.base\t0\ncasilla\tiva.anual.deducible.aic-inversion.total.cuota\t0\ncasilla\tiva.anual.deducible.aic-servicios.tipo-10.base\t0\ncasilla\tiva.anual.deducible.aic-servicios.tipo-10.cuota\t0\ncasilla\tiva.anual.deducible.aic-servicios.tipo-2.base\t0\ncasilla\tiva.anual.deducible.aic-servicios.tipo-2.cuota\t0\ncasilla\tiva.anual.deducible.aic-servicios.tipo-21.base\t0\ncasilla\tiva.anual.deducible.aic-servicios.tipo-21.cuota\t0\ncasilla\tiva.anual.deducible.aic-servicios.tipo-4.base\t0\ncasilla\tiva.anual.deducible.aic-servicios.tipo-4.cuota\t0\ncasilla\tiva.anual.deducible.aic-servicios.tipo-5.base\t0\ncasilla\tiva.anual.deducible.aic-servicios.tipo-5.cuota\t0\ncasilla\tiva.anual.deducible.aic-servicios.tipo-7-5.base\t0\ncasilla\tiva.anual.deducible.aic-servicios.tipo-7-5.cuota\t0\ncasilla\tiva.anual.deducible.aic-servicios.total.base\t0\ncasilla\tiva.anual.deducible.aic-servicios.total.cuota\t0\ncasilla\tiva.anual.deducible.compensaciones-reagp.base\t0\ncasilla\tiva.anual.deducible.compensaciones-reagp.cuota\t0\ncasilla\tiva.anual.deducible.importaciones-corrientes.tipo-10.base\t0\ncasilla\tiva.anual.deducible.importaciones-corrientes.tipo-10.cuota\t0\ncasilla\tiva.anual.deducible.importaciones-corrientes.tipo-2.base\t0\ncasilla\tiva.anual.deducible.importaciones-corrientes.tipo-2.cuota\t0\ncasilla\tiva.anual.deducible.importaciones-corrientes.tipo-21.base\t0\ncasilla\tiva.anual.deducible.importaciones-corrientes.tipo-21.cuota\t0\ncasilla\tiva.anual.deducible.importaciones-corrientes.tipo-4.base\t0\ncasilla\tiva.anual.deducible.importaciones-corrientes.tipo-4.cuota\t0\ncasilla\tiva.anual.deducible.importaciones-corrientes.tipo-5.base\t0\ncasilla\tiva.anual.deducible.importaciones-corrientes.tipo-5.cuota\t0\ncasilla\tiva.anual.deducible.importaciones-corrientes.tipo-7-5.base\t0\ncasilla\tiva.anual.deducible.importaciones-corrientes.tipo-7-5.cuota\t0\ncasilla\tiva.anual.deducible.importaciones-corrientes.total.base\t0\ncasilla\tiva.anual.deducible.importaciones-inversion.tipo-10.base\t0\ncasilla\tiva.anual.deducible.importaciones-inversion.tipo-10.cuota\t0\ncasilla\tiva.anual.deducible.importaciones-inversion.tipo-2.base\t0\ncasilla\tiva.anual.deducible.importaciones-inversion.tipo-2.cuota\t0\ncasilla\tiva.anual.deducible.importaciones-inversion.tipo-21.base\t0\ncasilla\tiva.anual.deducible.importaciones-inversion.tipo-21.cuota\t0\ncasilla\tiva.anual.deducible.importaciones-inversion.tipo-4.base\t0\ncasilla\tiva.anual.deducible.importaciones-inversion.tipo-4.cuota\t0\ncasilla\tiva.anual.deducible.importaciones-inversion.tipo-5.base\t0\ncasilla\tiva.anual.deducible.importaciones-inversion.tipo-5.cuota\t0\ncasilla\tiva.anual.deducible.importaciones-inversion.tipo-7-5.base\t0\ncasilla\tiva.anual.deducible.importaciones-inversion.tipo-7-5.cuota\t0\ncasilla\tiva.anual.deducible.importaciones-inversion.total.base\t0\ncasilla\tiva.anual.deducible.importaciones-inversion.total.cuota\t0\ncasilla\tiva.anual.deducible.interiores-corrientes.tipo-10.base\t0\ncasilla\tiva.anual.deducible.interiores-corrientes.tipo-10.cuota\t0\ncasilla\tiva.anual.deducible.interiores-corrientes.tipo-2.base\t0\ncasilla\tiva.anual.deducible.interiores-corrientes.tipo-2.cuota\t0\ncasilla\tiva.anual.deducible.interiores-corrientes.tipo-21.base\t0\ncasilla\tiva.anual.deducible.interiores-corrientes.tipo-21.cuota\t0\ncasilla\tiva.anual.deducible.interiores-corrientes.tipo-4.base\t0\ncasilla\tiva.anual.deducible.interiores-corrientes.tipo-4.cuota\t0\ncasilla\tiva.anual.deducible.interiores-corrientes.tipo-5.base\t0\ncasilla\tiva.anual.deducible.interiores-corrientes.tipo-5.cuota\t0\ncasilla\tiva.anual.deducible.interiores-corrientes.tipo-7-5.base\t0\ncasilla\tiva.anual.deducible.interiores-corrientes.tipo-7-5.cuota\t0\ncasilla\tiva.anual.deducible.interiores-inversion.tipo-10.base\t0\ncasilla\tiva.anual.deducible.interiores-inversion.tipo-10.cuota\t0\ncasilla\tiva.anual.deducible.interiores-inversion.tipo-2.base\t0\ncasilla\tiva.anual.deducible.interiores-inversion.tipo-2.cuota\t0\ncasilla\tiva.anual.deducible.interiores-inversion.tipo-21.base\t0\ncasilla\tiva.anual.deducible.interiores-inversion.tipo-21.cuota\t0\ncasilla\tiva.anual.deducible.interiores-inversion.tipo-4.base\t0\ncasilla\tiva.anual.deducible.interiores-inversion.tipo-4.cuota\t0\ncasilla\tiva.anual.deducible.interiores-inversion.tipo-5.base\t0\ncasilla\tiva.anual.deducible.interiores-inversion.tipo-5.cuota\t0\ncasilla\tiva.anual.deducible.interiores-inversion.tipo-7-5.base\t0\ncasilla\tiva.anual.deducible.interiores-inversion.tipo-7-5.cuota\t0\ncasilla\tiva.anual.deducible.interiores-inversion.total.base\t0\ncasilla\tiva.anual.deducible.interiores-inversion.total.cuota\t0\ncasilla\tiva.anual.deducible.intragrupo-corrientes.tipo-10.base\t0\ncasilla\tiva.anual.deducible.intragrupo-corrientes.tipo-10.cuota\t0\ncasilla\tiva.anual.deducible.intragrupo-corrientes.tipo-2.base\t0\ncasilla\tiva.anual.deducible.intragrupo-corrientes.tipo-2.cuota\t0\ncasilla\tiva.anual.deducible.intragrupo-corrientes.tipo-21.base\t0\ncasilla\tiva.anual.deducible.intragrupo-corrientes.tipo-21.cuota\t0\ncasilla\tiva.anual.deducible.intragrupo-corrientes.tipo-4.base\t0\ncasilla\tiva.anual.deducible.intragrupo-corrientes.tipo-4.cuota\t0\ncasilla\tiva.anual.deducible.intragrupo-corrientes.tipo-5.base\t0\ncasilla\tiva.anual.deducible.intragrupo-corrientes.tipo-5.cuota\t0\ncasilla\tiva.anual.deducible.intragrupo-corrientes.tipo-7-5.base\t0\ncasilla\tiva.anual.deducible.intragrupo-corrientes.tipo-7-5.cuota\t0\ncasilla\tiva.anual.deducible.intragrupo-corrientes.total.base\t0\ncasilla\tiva.anual.deducible.intragrupo-corrientes.total.cuota\t0\ncasilla\tiva.anual.deducible.intragrupo-inversion.tipo-10.base\t0\ncasilla\tiva.anual.deducible.intragrupo-inversion.tipo-10.cuota\t0\ncasilla\tiva.anual.deducible.intragrupo-inversion.tipo-2.base\t0\ncasilla\tiva.anual.deducible.intragrupo-inversion.tipo-2.cuota\t0\ncasilla\tiva.anual.deducible.intragrupo-inversion.tipo-21.base\t0\ncasilla\tiva.anual.deducible.intragrupo-inversion.tipo-21.cuota\t0\ncasilla\tiva.anual.deducible.intragrupo-inversion.tipo-4.base\t0\ncasilla\tiva.anual.deducible.intragrupo-inversion.tipo-4.cuota\t0\ncasilla\tiva.anual.deducible.intragrupo-inversion.tipo-5.base\t0\ncasilla\tiva.anual.deducible.intragrupo-inversion.tipo-5.cuota\t0\ncasilla\tiva.anual.deducible.intragrupo-inversion.tipo-7-5.base\t0\ncasilla\tiva.anual.deducible.intragrupo-inversion.tipo-7-5.cuota\t0\ncasilla\tiva.anual.deducible.intragrupo-inversion.total.base\t0\ncasilla\tiva.anual.deducible.intragrupo-inversion.total.cuota\t0\ncasilla\tiva.anual.deducible.rectificacion-intragrupo.base\t0\ncasilla\tiva.anual.deducible.rectificacion-intragrupo.cuota\t0\ncasilla\tiva.anual.deducible.rectificacion.base\t0\ncasilla\tiva.anual.deducible.rectificacion.cuota\t0\ncasilla\tiva.anual.deducible.resolucion-firme-tipos-no-vigentes.base\t0\ncasilla\tiva.anual.deducible.resolucion-firme-tipos-no-vigentes.cuota\t0\ncasilla\tiva.anual.especificas.adquisiciones-interiores-exentas\t0\ncasilla\tiva.anual.especificas.adquisiciones-intracomunitarias-exentas\t0\ncasilla\tiva.anual.especificas.base-iva-soportado-no-deducible\t0\ncasilla\tiva.anual.especificas.criterio-caja-adquisiciones.base\t0\ncasilla\tiva.anual.especificas.criterio-caja-adquisiciones.cuota\t0\ncasilla\tiva.anual.especificas.criterio-caja-entregas.base\t0\ncasilla\tiva.anual.especificas.criterio-caja-entregas.cuota\t0\ncasilla\tiva.anual.especificas.entrega-interior-inversion-triangular\t0\ncasilla\tiva.anual.especificas.importaciones-exentas\t0\ncasilla\tiva.anual.especificas.operaciones-derecho-devolucion-mensual\t0\ncasilla\tiva.anual.especificas.servicios-tai-inversion-sujeto-pasivo\t0\ncasilla\tiva.anual.iva-importacion-diferimiento\t0\ncasilla\tiva.anual.liquidaciones.total-a-ingresar\t0\ncasilla\tiva.anual.liquidaciones.total-devoluciones-elementos-transporte\t0\ncasilla\tiva.anual.liquidaciones.total-devoluciones-mensuales\t0\ncasilla\tiva.anual.liquidaciones.total-resultados-negativos-m322\t0\ncasilla\tiva.anual.liquidaciones.total-resultados-positivos-m322\t0\ncasilla\tiva.anual.liquidaciones.ultimo-periodo-a-devolver\t0\ncasilla\tiva.anual.modificacion.bases-cuotas-intragrupo.base\t0\ncasilla\tiva.anual.modificacion.bases-cuotas-intragrupo.cuota\t0\ncasilla\tiva.anual.modificacion.bases-cuotas.base\t0\ncasilla\tiva.anual.modificacion.bases-cuotas.cuota\t0\ncasilla\tiva.anual.modificacion.concurso-acreedores.base\t0\ncasilla\tiva.anual.modificacion.concurso-acreedores.cuota\t0\ncasilla\tiva.anual.modificacion.recargo-concurso.base\t0\ncasilla\tiva.anual.modificacion.recargo-concurso.cuota\t0\ncasilla\tiva.anual.modificacion.recargo.base\t0\ncasilla\tiva.anual.modificacion.recargo.cuota\t0\ncasilla\tiva.anual.reconciliacion.deducible-303\t105.00\ncasilla\tiva.anual.reconciliacion.devengada-303\t1470.00\ncasilla\tiva.anual.reconciliacion.devengada-simplificado-303\t0\ncasilla\tiva.anual.reconciliacion.resultado-303\t1365.00\ncasilla\tiva.anual.regimen-simplificado.aic-bienes-cuota-devengada\t0\ncasilla\tiva.anual.regimen-simplificado.cuota-resultante-agricola\t0\ncasilla\tiva.anual.regimen-simplificado.cuota-resultante-no-agricola\t0\ncasilla\tiva.anual.regimen-simplificado.entrega-activos-fijos\t0\ncasilla\tiva.anual.regimen-simplificado.inversion-sujeto-pasivo\t0\ncasilla\tiva.anual.regimen-simplificado.iva-soportado-activos-fijos\t0\ncasilla\tiva.anual.regimen-simplificado.regularizacion-bienes-inversion\t0\ncasilla\tiva.anual.regimen-simplificado.resultado\t0\ncasilla\tiva.anual.regimen-simplificado.suma-deducciones\t0\ncasilla\tiva.anual.regularizacion-bienes-inversion\t0.00\ncasilla\tiva.anual.regularizacion-cuotas-art-80-cinco-5\t0\ncasilla\tiva.anual.regularizacion-prorrata-definitiva\t0.00\ncasilla\tiva.anual.repercutido.agencias-viajes.tipo-21.base\t0\ncasilla\tiva.anual.repercutido.agencias-viajes.tipo-21.cuota\t0\ncasilla\tiva.anual.repercutido.bienes-usados.tipo-0.base\t0\ncasilla\tiva.anual.repercutido.bienes-usados.tipo-0.cuota\t0\ncasilla\tiva.anual.repercutido.bienes-usados.tipo-10.base\t0\ncasilla\tiva.anual.repercutido.bienes-usados.tipo-10.cuota\t0\ncasilla\tiva.anual.repercutido.bienes-usados.tipo-2.base\t0\ncasilla\tiva.anual.repercutido.bienes-usados.tipo-2.cuota\t0\ncasilla\tiva.anual.repercutido.bienes-usados.tipo-21.base\t0\ncasilla\tiva.anual.repercutido.bienes-usados.tipo-21.cuota\t0\ncasilla\tiva.anual.repercutido.bienes-usados.tipo-4.base\t0\ncasilla\tiva.anual.repercutido.bienes-usados.tipo-4.cuota\t0\ncasilla\tiva.anual.repercutido.bienes-usados.tipo-5.base\t0\ncasilla\tiva.anual.repercutido.bienes-usados.tipo-5.cuota\t0\ncasilla\tiva.anual.repercutido.bienes-usados.tipo-7-5.base\t0\ncasilla\tiva.anual.repercutido.bienes-usados.tipo-7-5.cuota\t0\ncasilla\tiva.anual.repercutido.criterio-caja.tipo-0.base\t0\ncasilla\tiva.anual.repercutido.criterio-caja.tipo-0.cuota\t0\ncasilla\tiva.anual.repercutido.criterio-caja.tipo-10.base\t0\ncasilla\tiva.anual.repercutido.criterio-caja.tipo-10.cuota\t0\ncasilla\tiva.anual.repercutido.criterio-caja.tipo-2.base\t0\ncasilla\tiva.anual.repercutido.criterio-caja.tipo-2.cuota\t0\ncasilla\tiva.anual.repercutido.criterio-caja.tipo-21.base\t0\ncasilla\tiva.anual.repercutido.criterio-caja.tipo-21.cuota\t0\ncasilla\tiva.anual.repercutido.criterio-caja.tipo-4.base\t0\ncasilla\tiva.anual.repercutido.criterio-caja.tipo-4.cuota\t0\ncasilla\tiva.anual.repercutido.criterio-caja.tipo-5.base\t0\ncasilla\tiva.anual.repercutido.criterio-caja.tipo-5.cuota\t0\ncasilla\tiva.anual.repercutido.criterio-caja.tipo-7-5.base\t0\ncasilla\tiva.anual.repercutido.criterio-caja.tipo-7-5.cuota\t0\ncasilla\tiva.anual.repercutido.general\t1470\ncasilla\tiva.anual.repercutido.general.base\t7000\ncasilla\tiva.anual.repercutido.intragrupo.tipo-0.base\t0\ncasilla\tiva.anual.repercutido.intragrupo.tipo-0.cuota\t0\ncasilla\tiva.anual.repercutido.intragrupo.tipo-10.base\t0\ncasilla\tiva.anual.repercutido.intragrupo.tipo-10.cuota\t0\ncasilla\tiva.anual.repercutido.intragrupo.tipo-2.base\t0\ncasilla\tiva.anual.repercutido.intragrupo.tipo-2.cuota\t0\ncasilla\tiva.anual.repercutido.intragrupo.tipo-21.base\t0\ncasilla\tiva.anual.repercutido.intragrupo.tipo-21.cuota\t0\ncasilla\tiva.anual.repercutido.intragrupo.tipo-4.base\t0\ncasilla\tiva.anual.repercutido.intragrupo.tipo-4.cuota\t0\ncasilla\tiva.anual.repercutido.intragrupo.tipo-5.base\t0\ncasilla\tiva.anual.repercutido.intragrupo.tipo-5.cuota\t0\ncasilla\tiva.anual.repercutido.intragrupo.tipo-7-5.base\t0\ncasilla\tiva.anual.repercutido.intragrupo.tipo-7-5.cuota\t0\ncasilla\tiva.anual.repercutido.recargo.general\t0\ncasilla\tiva.anual.repercutido.recargo.reducido\t0\ncasilla\tiva.anual.repercutido.recargo.super-reducido\t0\ncasilla\tiva.anual.repercutido.recargo.tipo-0-26.base\t0\ncasilla\tiva.anual.repercutido.recargo.tipo-0-26.cuota\t0\ncasilla\tiva.anual.repercutido.recargo.tipo-0-5.base\t0\ncasilla\tiva.anual.repercutido.recargo.tipo-0-5.cuota\t0\ncasilla\tiva.anual.repercutido.recargo.tipo-0-62.base\t0\ncasilla\tiva.anual.repercutido.recargo.tipo-0-62.cuota\t0\ncasilla\tiva.anual.repercutido.recargo.tipo-0.base\t0\ncasilla\tiva.anual.repercutido.recargo.tipo-0.cuota\t0\ncasilla\tiva.anual.repercutido.recargo.tipo-1-4.base\t0\ncasilla\tiva.anual.repercutido.recargo.tipo-1-4.cuota\t0\ncasilla\tiva.anual.repercutido.recargo.tipo-1-75.base\t0\ncasilla\tiva.anual.repercutido.recargo.tipo-1-75.cuota\t0\ncasilla\tiva.anual.repercutido.recargo.tipo-1.base\t0\ncasilla\tiva.anual.repercutido.recargo.tipo-1.cuota\t0\ncasilla\tiva.anual.repercutido.recargo.tipo-5-2.base\t0\ncasilla\tiva.anual.repercutido.recargo.tipo-5-2.cuota\t0\ncasilla\tiva.anual.repercutido.reducido\t0\ncasilla\tiva.anual.repercutido.reducido.base\t0\ncasilla\tiva.anual.repercutido.super-reducido\t0\ncasilla\tiva.anual.repercutido.super-reducido.base\t0\ncasilla\tiva.anual.repercutido.tipo-0.base\t0\ncasilla\tiva.anual.repercutido.tipo-0.cuota\t0\ncasilla\tiva.anual.repercutido.tipo-10.base\t0\ncasilla\tiva.anual.repercutido.tipo-10.cuota\t0\ncasilla\tiva.anual.repercutido.tipo-2.base\t0\ncasilla\tiva.anual.repercutido.tipo-2.cuota\t0\ncasilla\tiva.anual.repercutido.tipo-21.base\t7000\ncasilla\tiva.anual.repercutido.tipo-21.cuota\t1470\ncasilla\tiva.anual.repercutido.tipo-4.base\t0\ncasilla\tiva.anual.repercutido.tipo-4.cuota\t0\ncasilla\tiva.anual.repercutido.tipo-5.base\t0\ncasilla\tiva.anual.repercutido.tipo-5.cuota\t0\ncasilla\tiva.anual.repercutido.tipo-7-5.base\t0\ncasilla\tiva.anual.repercutido.tipo-7-5.cuota\t0\ncasilla\tiva.anual.repercutido.zero.base\t0\ncasilla\tiva.anual.resultado-liquidacion\t0\ncasilla\tiva.anual.resultado-regimen-general\t1365.00\tsubtract(iva.anual.cuota-devengada-total, iva.anual.cuota-deducible-total) = subtract(1470.00, 105.00) = 1365.00\ncasilla\tiva.anual.sector-diferenciado-1.aic-corrientes.base\t0\ncasilla\tiva.anual.sector-diferenciado-1.aic-corrientes.cuota\t0\ncasilla\tiva.anual.sector-diferenciado-1.aic-inversion.base\t0\ncasilla\tiva.anual.sector-diferenciado-1.aic-inversion.cuota\t0\ncasilla\tiva.anual.sector-diferenciado-1.compensaciones-reagp.base\t0\ncasilla\tiva.anual.sector-diferenciado-1.compensaciones-reagp.cuota\t0\ncasilla\tiva.anual.sector-diferenciado-1.importaciones-corrientes.base\t0\ncasilla\tiva.anual.sector-diferenciado-1.importaciones-corrientes.cuota\t0\ncasilla\tiva.anual.sector-diferenciado-1.importaciones-inversion.base\t0\ncasilla\tiva.anual.sector-diferenciado-1.importaciones-inversion.cuota\t0\ncasilla\tiva.anual.sector-diferenciado-1.interiores-corrientes.base\t0\ncasilla\tiva.anual.sector-diferenciado-1.interiores-corrientes.cuota\t0\ncasilla\tiva.anual.sector-diferenciado-1.interiores-inversion.base\t0\ncasilla\tiva.anual.sector-diferenciado-1.interiores-inversion.cuota\t0\ncasilla\tiva.anual.sector-diferenciado-1.rectificacion.base\t0\ncasilla\tiva.anual.sector-diferenciado-1.rectificacion.cuota\t0\ncasilla\tiva.anual.sector-diferenciado-1.regularizacion-inversiones\t0\ncasilla\tiva.anual.sector-diferenciado-1.suma-deducciones\t0\ncasilla\tiva.anual.sector-diferenciado-2.aic-corrientes.base\t0\ncasilla\tiva.anual.sector-diferenciado-2.aic-corrientes.cuota\t0\ncasilla\tiva.anual.sector-diferenciado-2.aic-inversion.base\t0\ncasilla\tiva.anual.sector-diferenciado-2.aic-inversion.cuota\t0\ncasilla\tiva.anual.sector-diferenciado-2.compensaciones-reagp.base\t0\ncasilla\tiva.anual.sector-diferenciado-2.compensaciones-reagp.cuota\t0\ncasilla\tiva.anual.sector-diferenciado-2.importaciones-corrientes.base\t0\ncasilla\tiva.anual.sector-diferenciado-2.importaciones-corrientes.cuota\t0\ncasilla\tiva.anual.sector-diferenciado-2.importaciones-inversion.base\t0\ncasilla\tiva.anual.sector-diferenciado-2.importaciones-inversion.cuota\t0\ncasilla\tiva.anual.sector-diferenciado-2.interiores-corrientes.base\t0\ncasilla\tiva.anual.sector-diferenciado-2.interiores-corrientes.cuota\t0\ncasilla\tiva.anual.sector-diferenciado-2.interiores-inversion.base\t0\ncasilla\tiva.anual.sector-diferenciado-2.interiores-inversion.cuota\t0\ncasilla\tiva.anual.sector-diferenciado-2.rectificacion.base\t0\ncasilla\tiva.anual.sector-diferenciado-2.rectificacion.cuota\t0\ncasilla\tiva.anual.sector-diferenciado-2.regularizacion-inversiones\t0\ncasilla\tiva.anual.sector-diferenciado-2.suma-deducciones\t0\ncasilla\tiva.anual.sector-diferenciado-3.aic-corrientes.base\t0\ncasilla\tiva.anual.sector-diferenciado-3.aic-corrientes.cuota\t0\ncasilla\tiva.anual.sector-diferenciado-3.aic-inversion.base\t0\ncasilla\tiva.anual.sector-diferenciado-3.aic-inversion.cuota\t0\ncasilla\tiva.anual.sector-diferenciado-3.compensaciones-reagp.base\t0\ncasilla\tiva.anual.sector-diferenciado-3.compensaciones-reagp.cuota\t0\ncasilla\tiva.anual.sector-diferenciado-3.importaciones-corrientes.base\t0\ncasilla\tiva.anual.sector-diferenciado-3.importaciones-corrientes.cuota\t0\ncasilla\tiva.anual.sector-diferenciado-3.importaciones-inversion.base\t0\ncasilla\tiva.anual.sector-diferenciado-3.importaciones-inversion.cuota\t0\ncasilla\tiva.anual.sector-diferenciado-3.interiores-corrientes.base\t0\ncasilla\tiva.anual.sector-diferenciado-3.interiores-corrientes.cuota\t0\ncasilla\tiva.anual.sector-diferenciado-3.interiores-inversion.base\t0\ncasilla\tiva.anual.sector-diferenciado-3.interiores-inversion.cuota\t0\ncasilla\tiva.anual.sector-diferenciado-3.rectificacion.base\t0\ncasilla\tiva.anual.sector-diferenciado-3.rectificacion.cuota\t0\ncasilla\tiva.anual.sector-diferenciado-3.regularizacion-inversiones\t0\ncasilla\tiva.anual.sector-diferenciado-3.suma-deducciones\t0\ncasilla\tiva.anual.soportado.importaciones\t0\ncasilla\tiva.anual.soportado.interiores\t105\ncasilla\tiva.anual.soportado.interiores.base\t500\ncasilla\tiva.anual.suma-resultados\t0\ncasilla\tiva.anual.territorio.alava.porcentaje\t0\ncasilla\tiva.anual.territorio.compensacion-atribuible-comun\t0\ncasilla\tiva.anual.territorio.comun.porcentaje\t0\ncasilla\tiva.anual.territorio.guipuzcoa.porcentaje\t0\ncasilla\tiva.anual.territorio.navarra.porcentaje\t0\ncasilla\tiva.anual.territorio.resultado-anual-atribuible-comun\t0\ncasilla\tiva.anual.territorio.resultado-atribuible-comun\t0\ncasilla\tiva.anual.territorio.vizcaya.porcentaje\t0\ncasilla\tiva.anual.total-bases-cuotas-iva\t1470.00\tsum(iva.anual.repercutido.general, iva.anual.repercutido.reducido, iva.anual.repercutido.super-reducido, iva.anual.autorepercutido.intracomunitaria) = sum(1470, 0, 0, 0) = 1470.00\ncasilla\tiva.anual.total-bases-iva\t0\ncasilla\tiva.anual.volumen.agencias-viajes\t0\ncasilla\tiva.anual.volumen.bienes-de-inversion\t0\ncasilla\tiva.anual.volumen.bienes-usados\t0\ncasilla\tiva.anual.volumen.criterio-caja\t0\ncasilla\tiva.anual.volumen.entregas-intracomunitarias\t0\ncasilla\tiva.anual.volumen.exentas-sin-derecho-deduccion\t0\ncasilla\tiva.anual.volumen.exportaciones-exentas\t0\ncasilla\tiva.anual.volumen.inmuebles-financieras-no-habituales\t0\ncasilla\tiva.anual.volumen.intragrupo-arts-78-79\t0\ncasilla\tiva.anual.volumen.inversion-sujeto-pasivo\t0\ncasilla\tiva.anual.volumen.no-sujetas-reglas-localizacion\t0\ncasilla\tiva.anual.volumen.oss-no-sujetas-localizacion\t0\ncasilla\tiva.anual.volumen.oss-sujetas\t0\ncasilla\tiva.anual.volumen.reagp\t0\ncasilla\tiva.anual.volumen.recargo-equivalencia\t0\ncasilla\tiva.anual.volumen.regimen-general\t0\ncasilla\tiva.anual.volumen.regimen-simplificado\t0\ncasilla\tiva.anual.volumen.total\t0\n"
     },
     {
       "argv": [

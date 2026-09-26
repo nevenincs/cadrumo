@@ -17,7 +17,7 @@ from typing import Any, Final, TypeGuard
 
 from dev._paths import REPO_ROOT, UTF_8
 
-from .paths import allocate_run_directory
+from .paths import allocate_run_directory, allocate_scratch_directory, scratch_environment
 
 _UTF_8: Final[str] = UTF_8
 _IMPORT_BOUNDARIES_SIGNAL: Final[str] = "import-boundaries"
@@ -1348,7 +1348,7 @@ def _write_run_metadata(
         "scratch": str(scratch),
         "started_at": started.isoformat(),
     }
-    temporary = scratch / "run.json.tmp"
+    temporary = run_dir / "run.json.tmp"
     temporary.write_text(
         json.dumps(payload, indent=2) + "\n",
         encoding=_UTF_8,
@@ -1373,10 +1373,9 @@ def run(
     run_dir = allocate_run_directory(repository, family=family, label=label, now=started)
     artifacts = run_dir / "artifacts"
     cache = run_dir / "cache"
-    scratch = run_dir / "scratch"
     artifacts.mkdir(parents=True)
     cache.mkdir()
-    scratch.mkdir()
+    scratch = allocate_scratch_directory()
     log_path = run_dir / "run.log"
     # PowerShell can terminate every native process in a Ctrl+C pipeline before
     # Python receives a catchable KeyboardInterrupt. Seed a fail-closed record
@@ -1432,9 +1431,7 @@ def run(
     environment["CADRUMO_DEV_CACHE_DIR"] = str(cache)
     environment["CADRUMO_DEV_SCRATCH_DIR"] = str(scratch)
     environment["XDG_CACHE_HOME"] = str(cache)
-    environment["TEMP"] = str(scratch)
-    environment["TMP"] = str(scratch)
-    environment["TMPDIR"] = str(scratch)
+    environment.update(scratch_environment(scratch))
     with log_path.open("x", encoding=_UTF_8, newline="\n") as transcript:
         transcript.write(f"START {started.isoformat()} pid={os.getpid()}\n")
         transcript.write(f"COMMAND {' '.join(command)}\n")

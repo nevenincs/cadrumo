@@ -1,7 +1,7 @@
 [[revisions."2025-y-siguientes".bindings]]
 id = "modelo-193-perceptor-row-isin"
 # Design 193-204 codigo ISIN (2025 edition).
-provider = { kind = "withholding", fact = "row_field", row_field = "isin_code", grouping = "per_perceptor_clave", record = "perceptor", data_type = "text" }
+provider = { kind = "withholding", fact = "row_field", row_field = "isin_code", grouping = "per_perceptor_clave_devengo", record = "perceptor", data_type = "text" }
 value = { data_type = "text", channel = "row_set", row_grouping = "withholding" }
 aggregation = { op = "rows" }
 legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
@@ -11,5 +11,32 @@ additional_source_refs = ["aeat-modelo-193-procedure"]
 source_ref = "aeat-modelo-193-procedure"
 required_text = ["modelo 193"]
 
+[[revisions."2025-y-siguientes".bindings]]
+id = "modelo-193-perceptor-rows-base-total"
+# Design pp. 5-6, positions 145-159 (aeat-dr-193-2025): the sum of the BASE DE
+# RETENCIONES E INGRESOS A CUENTA field (152-164) over the perceptor records,
+# summed over the same rows the type-2 records are emitted from.
+provider = { kind = "withholding", fact = "grouped_row_sum", grouping = "per_perceptor_clave_devengo", row_field = "base_retenciones" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["aeat-modelo-193-296-note-2025"]
 
+[[revisions."2025-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-193-296-note-2025"
+required_text = ["modelo 193, declaración informativa resumen anual", "rentas sujetas a retención o ingreso a cuenta"]
 
+[[revisions."2025-y-siguientes".bindings]]
+id = "modelo-193-perceptor-rows-retenciones-total"
+# Design p. 6, positions 160-174 (aeat-dr-193-2025): the sum of the RETENCIONES
+# E INGRESOS A CUENTA field (169-181) over the perceptor records, summed over
+# the same rows the type-2 records are emitted from.
+provider = { kind = "withholding", fact = "grouped_row_sum", grouping = "per_perceptor_clave_devengo", row_field = "retencion_practicada" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+additional_source_refs = ["aeat-modelo-193-296-note-2025"]
+
+[[revisions."2025-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-193-296-note-2025"
+required_text = ["modelo 193, declaración informativa resumen anual", "se comunican las retenciones practicadas"]

@@ -94,7 +94,11 @@ from .modelo.declarations_workspace import (
     DeclarationsWorkspaceZoneObservationV1,
     project_declarations_workspace,
 )
-from .modelo.workspace_models import ModeloWorkspaceProjectionV1
+from .modelo.workspace_models import (
+    ModeloWorkspaceDomainRefusalV1,
+    ModeloWorkspaceLifecycleProjectionV1,
+    ModeloWorkspaceProjectionV1,
+)
 from .operations.registry import OperationPublicContractSetV1
 from .overview.agenda import OverviewAgenda, build_overview_agenda
 from .overview.calendar import build_overview_calendar
@@ -135,6 +139,24 @@ WORKBENCH_GENERATION_CONTRACT_VERSION: Literal[1] = 1
 
 _AEAT_SYNC_READER_UNAVAILABLE: Final[str] = "workbench.aeat_sync.reader_unavailable"
 _AEAT_SYNC_SNAPSHOT_PROJECTOR_UNAVAILABLE: Final[str] = "workbench.aeat_sync.snapshot_projector_unavailable"
+
+
+@dataclass(frozen=True, slots=True)
+class ModeloWorkspaceProjectedReadV1:
+    """One work unit's shared read: its projection, plus a graded refusal it fell back from.
+
+    The Modelo projection reader tries GRADED_SNAPSHOT first and falls back to
+    STATIC_INSPECTION on a taxpayer-facing refusal (``projection`` is always
+    the admitted result, graded or static). ``graded_refusal`` carries that
+    refusal honestly rather than discarding it: ``None`` means the graded
+    admission succeeded, and a refusal means it named why the calculated view
+    is unavailable and what would change that, for whichever destination
+    later opens this exact work unit to show.
+    """
+
+    projection: ModeloWorkspaceProjectionV1
+    graded_refusal: ModeloWorkspaceDomainRefusalV1 | None = None
+
 
 if TYPE_CHECKING:
     from ..domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -431,6 +453,16 @@ class WorkbenchGenerationInputsV1(BaseModel):
     declarations_calendar: WorkbenchGenerationSourceResultV1[DeclarationsCalendarProjectionV1]
     aeat_sync: WorkbenchGenerationSourceResultV1[AeatSyncWorkspaceProjectionV1]
     modelo: WorkbenchGenerationSourceResultV1[tuple[ModeloWorkspaceProjectionV1, ...]]
+    modelo_lifecycle: WorkbenchGenerationSourceResultV1[tuple[ModeloWorkspaceLifecycleProjectionV1, ...]] = (
+        WorkbenchGenerationSourceResultV1[tuple[ModeloWorkspaceLifecycleProjectionV1, ...]].never_captured(
+            refusal="workbench.modelo.lifecycle_not_captured",
+        )
+    )
+    modelo_graded_refusals: WorkbenchGenerationSourceResultV1[Mapping[str, ModeloWorkspaceDomainRefusalV1]] = (
+        WorkbenchGenerationSourceResultV1[Mapping[str, ModeloWorkspaceDomainRefusalV1]].never_captured(
+            refusal="workbench.modelo.graded_refusal_not_captured",
+        )
+    )
     ledger_admission: WorkbenchDestinationAdmission
     declarations_admission: WorkbenchDestinationAdmission
     aeat_sync_admission: WorkbenchDestinationAdmission
@@ -471,6 +503,8 @@ class WorkbenchGenerationV1(BaseModel):
     declarations_calendar: WorkbenchGenerationProjectionResultV1[DeclarationsCalendarProjectionV1]
     aeat_sync: WorkbenchGenerationProjectionResultV1[AeatSyncWorkspaceProjectionV1]
     modelo: WorkbenchGenerationProjectionResultV1[tuple[ModeloWorkspaceProjectionV1, ...]]
+    modelo_lifecycle: WorkbenchGenerationProjectionResultV1[tuple[ModeloWorkspaceLifecycleProjectionV1, ...]]
+    modelo_graded_refusals: WorkbenchGenerationProjectionResultV1[Mapping[str, ModeloWorkspaceDomainRefusalV1]]
     search: WorkbenchGenerationProjectionResultV1[InstalledWorkbenchSearchSnapshotV1]
     ledger_admission: WorkbenchDestinationAdmission
     declarations_admission: WorkbenchDestinationAdmission
@@ -531,7 +565,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
     settlement role produces -- not a zero.
     """
     operation_contracts: OperationPublicContractSetV1 | None = None
-    modelo_projection_reader: Callable[[WorkUnit], ModeloWorkspaceProjectionV1] | None = None
+    modelo_projection_reader: Callable[[WorkUnit], ModeloWorkspaceProjectedReadV1] | None = None
     ledger_action_ports: LedgerActionPorts | None = None
     """Outer-composed ledger ports for this profile, when the ledger is bound."""
     capture_memory: WorkbenchCaptureMemory | None = None
@@ -554,11 +588,12 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         revisions, calculations_revision = self.calculation_repository.load_revisioned()
         filings, filings_revision = self.filing_repository.load_revisioned()
         verification = self._load_verification_reports()
+        bucket_events = None if self.bucket_event_repository is None else self.bucket_event_repository.load()
         lifecycle_facts = (
             None
-            if self.bucket_event_repository is None
+            if bucket_events is None
             else _declarations_lifecycle_facts(
-                self.bucket_event_repository.load(),
+                bucket_events,
                 work_units=work_units,
                 revisions=revisions,
                 verification=verification,
@@ -605,7 +640,13 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             if ledger_ports is None
             else self._read_ledger(revisions.revisions, work_units, sources=ledger_sources, ports=ledger_ports)
         )
-        modelo = self._read_modelo(work_units)
+        modelo, modelo_graded_refusals = self._read_modelo(work_units)
+        modelo_lifecycle = self._read_modelo_lifecycle(
+            modelo,
+            work_units=work_units,
+            verification=verification,
+            filings=filings,
+        )
         aeat_sync, aeat_sync_refusal = self._read_aeat_sync(
             _declared_tax_id(raw_values),
             observed_at=observed_at,
@@ -622,6 +663,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             ledger_revision=ledger_revision,
             ledger_sources=ledger_sources,
             verification=verification,
+            bucket_events=bucket_events,
             custody_count=custody_count,
         ):
             raise InternalInvariantError("secure workbench generation changed during capture")
@@ -634,6 +676,8 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             aeat_sync=aeat_sync,
             aeat_sync_refusal=aeat_sync_refusal,
             modelo=modelo,
+            modelo_lifecycle=modelo_lifecycle,
+            modelo_graded_refusals=modelo_graded_refusals,
             work_units=work_units,
             verification=verification,
         )
@@ -648,6 +692,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         ledger_revision: tuple[str, str] | None,
         ledger_sources: tuple[TransactionCatalogue, InvoiceCatalogue] | None,
         verification: VerificationReportCatalogue | None,
+        bucket_events: BucketEventHistoryCatalogue | None,
         custody_count: int | None,
     ) -> bool:
         final_record = self.profile_repository.load(self.profile_id)
@@ -661,6 +706,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             and final_filings_revision == filings_revision
             and self._ledger_is_unchanged(ledger_revision, ledger_sources)
             and self._load_verification_reports() == verification
+            and (None if self.bucket_event_repository is None else self.bucket_event_repository.load()) == bucket_events
             and self._load_custody_count() == custody_count
         )
 
@@ -755,7 +801,9 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             invoices=sources[1],
         )
 
-    def _read_modelo(self, work_units: WorkUnitCatalogue) -> tuple[ModeloWorkspaceProjectionV1, ...] | None:
+    def _read_modelo(
+        self, work_units: WorkUnitCatalogue
+    ) -> tuple[tuple[ModeloWorkspaceProjectionV1, ...] | None, Mapping[str, ModeloWorkspaceDomainRefusalV1] | None]:
         """Project every current work unit, or refuse the whole Modelo source.
 
         A profile holding no work yields an empty tuple, which is a proven
@@ -765,14 +813,93 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         session: a partial tuple would silently omit a declaration the profile
         holds, and letting the failure escape would take Home, Ledger,
         Declarations and AEAT Sync down with it for one unsupported modelo.
+
+        The refusal map is keyed by ``work_unit_id`` and carries only the
+        units whose read fell back from GRADED_SNAPSHOT to STATIC_INSPECTION;
+        a unit admitted at its requested grade has no entry. It shares the
+        Modelo source's own availability rather than a second one of its own,
+        since it is read from the exact same reader call and can never
+        disagree about whether the source was read at all.
         """
         if self.modelo_projection_reader is None:
-            return None
+            return None, None
         reader = self.modelo_projection_reader
         try:
-            return tuple(reader(unit) for unit in work_units.values())
+            reads = tuple(reader(unit) for unit in work_units.values())
         except (ValueError, LookupError):
+            return None, None
+        projections = tuple(read.projection for read in reads)
+        refusals = {
+            str(unit.work_unit_id): read.graded_refusal
+            for unit, read in zip(work_units.values(), reads, strict=True)
+            if read.graded_refusal is not None
+        }
+        return projections, refusals
+
+    def _read_modelo_lifecycle(
+        self,
+        modelo: tuple[ModeloWorkspaceProjectionV1, ...] | None,
+        *,
+        work_units: WorkUnitCatalogue,
+        verification: VerificationReportCatalogue | None,
+        filings: ModeloRecordCatalogue,
+    ) -> tuple[ModeloWorkspaceLifecycleProjectionV1, ...] | None:
+        """Project lifecycle references from the same catalogues as this generation."""
+        if (
+            modelo is None
+            or verification is None
+            or self.verification_repository is None
+            or self.bucket_event_repository is None
+        ):
             return None
+        from .modelo.history import assemble_work_unit_history
+        from .modelo.history_ports import ModeloHistoryPorts
+
+        ports = ModeloHistoryPorts(
+            work_unit_repository=self.work_unit_repository,
+            calculation_repository=self.calculation_repository,
+            filing_repository=self.filing_repository,
+            verification_repository=self.verification_repository,
+            bucket_event_repository=self.bucket_event_repository,
+        )
+        rows: list[ModeloWorkspaceLifecycleProjectionV1] = []
+        units_by_id = {str(item.work_unit_id): item for item in work_units.values()}
+        for projection in modelo:
+            target = projection.target
+            if target.work_unit_id is None:
+                return None
+            unit = units_by_id.get(str(target.work_unit_id))
+            if unit is None:
+                return None
+            calculation_revision_id = unit.current_calculation_revision_id
+            report_id = next(
+                (
+                    report.verification_report_id
+                    for report in sorted(verification.values(), key=lambda item: str(item.verification_report_id))
+                    if report.calculation_revision_id == calculation_revision_id
+                ),
+                None,
+            )
+            filing_id = next(
+                (
+                    record.filing_record_id
+                    for record in sorted(filings.values(), key=lambda item: str(item.filing_record_id))
+                    if record.work_unit_id == unit.work_unit_id
+                    and record.calculation_revision_id == calculation_revision_id
+                ),
+                None,
+            )
+            history = assemble_work_unit_history(str(unit.work_unit_id), ports=ports, operation=self.operation)
+            rows.append(
+                ModeloWorkspaceLifecycleProjectionV1(
+                    target=target,
+                    calculation_revision_id=calculation_revision_id,
+                    verification_report_id=report_id,
+                    local_filing_record_id=filing_id,
+                    events=history.events,
+                )
+            )
+        return tuple(rows)
 
     def _read_aeat_sync(
         self,
@@ -1033,6 +1160,7 @@ def _refused_declarations_calendar(
         range=_calendar_query_range(as_of),
         entries=(),
         generated_at=observed_at,
+        evaluated_on=as_of,
         taxpayer_model_declared=False,
     )
     return project_declarations_calendar(
@@ -1048,9 +1176,16 @@ def _refused_declarations_calendar(
 
 
 def _calendar_query_range(as_of: date) -> OverviewCalendarRange:
-    """The calendar year the workbench schedules, containing ``as_of``."""
+    """Cover the latest completed filing year and the current calendar year.
+
+    Annual returns for the completed filing year can close in the current
+    calendar year, while its quarterly returns closed in the prior one.  A
+    current-year-only projection made those quarterly natural addresses
+    unreachable from the TUI even though the pinned authority still supports
+    them.
+    """
     return OverviewCalendarRange(
-        from_date=date(as_of.year, 1, 1),
+        from_date=date(as_of.year - 1, 1, 1),
         to_date=date(as_of.year, 12, 31),
     )
 
@@ -1456,6 +1591,8 @@ def _build_workbench_generation_inputs(
     aeat_sync: AeatSyncWorkspaceProjectionV1 | None,
     aeat_sync_refusal: NamespacedId,
     modelo: tuple[ModeloWorkspaceProjectionV1, ...] | None,
+    modelo_lifecycle: tuple[ModeloWorkspaceLifecycleProjectionV1, ...] | None,
+    modelo_graded_refusals: Mapping[str, ModeloWorkspaceDomainRefusalV1] | None,
     work_units: WorkUnitCatalogue,
     verification: VerificationReportCatalogue | None,
 ) -> WorkbenchGenerationInputsV1:
@@ -1493,6 +1630,16 @@ def _build_workbench_generation_inputs(
             modelo,
             observed_at=observed_at,
             refusal="workbench.modelo.bulk_reader_unavailable",
+        ),
+        modelo_lifecycle=_source_result(
+            modelo_lifecycle,
+            observed_at=observed_at,
+            refusal="workbench.modelo.lifecycle_reader_unavailable",
+        ),
+        modelo_graded_refusals=_source_result(
+            modelo_graded_refusals,
+            observed_at=observed_at,
+            refusal="workbench.modelo.graded_refusal_reader_unavailable",
         ),
         ledger_admission=_source_admission(
             "workbench.ledger",
@@ -1541,6 +1688,8 @@ def assemble_workbench_generation(inputs: WorkbenchGenerationInputsV1) -> Workbe
     declarations_calendar = _carry_projection(inputs.declarations_calendar)
     aeat_sync = _carry_projection(inputs.aeat_sync)
     modelo = _carry_projection(inputs.modelo)
+    modelo_lifecycle = _carry_projection(inputs.modelo_lifecycle)
+    modelo_graded_refusals = _carry_projection(inputs.modelo_graded_refusals)
     search = _assemble_search(
         ledger=ledger,
         declarations=declarations,
@@ -1558,6 +1707,8 @@ def assemble_workbench_generation(inputs: WorkbenchGenerationInputsV1) -> Workbe
         declarations_calendar=declarations_calendar,
         aeat_sync=aeat_sync,
         modelo=modelo,
+        modelo_lifecycle=modelo_lifecycle,
+        modelo_graded_refusals=modelo_graded_refusals,
         search=search,
         ledger_admission=inputs.ledger_admission,
         declarations_admission=inputs.declarations_admission,
@@ -1712,6 +1863,7 @@ def _missing_search(
 
 __all__ = [
     "InstalledWorkbenchGenerationProviderV1",
+    "ModeloWorkspaceProjectedReadV1",
     "ProfileRecordReadRepositoryV1",
     "SecureProfileWorkbenchGenerationReadDoorV1",
     "WorkbenchGenerationAvailability",

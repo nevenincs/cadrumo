@@ -19,7 +19,10 @@ import pytest
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 
 from ....domain.calculations.registry.schema import RegistrySnapshot
-from ....domain.calculations.registry.tests.published_authority import published_snapshot
+from ....domain.calculations.registry.tests.published_authority import (
+    published_snapshot,
+    published_supported_filing_years,
+)
 from ..profile_binding import inject_derived_anualidades_eligibility_facts
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
@@ -125,12 +128,39 @@ def test_stored_fact_at_the_derived_path_is_overwritten_by_the_computation() -> 
         assert fact_index[_key(2024)] is True
 
 
-@pytest.mark.parametrize("year", [2020, 2021, 2022, 2023, 2024, 2025])
-def test_all_in_scope_years_default_eligible(year: int) -> None:
+def test_a_snapshot_without_projection_is_keyed_by_its_own_filing_year() -> None:
+    """An unprojected snapshot still gets the flag, keyed by its filing year.
+
+    Formatting the optional authored year directly produced ``..._None``,
+    which no declared selector matches, so the injector returned without
+    deriving anything and the régimen went silently unresolved.
+    """
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        unprojected = _snapshot(2024).model_copy(update={"authored_filing_year": None})
         fact_index: dict[str, object] = {}
         fact_index_narrowed: Any = fact_index
         inject_derived_anualidades_eligibility_facts(
-            fact_index_narrowed, _snapshot(year), operation=_authority_operation_for_test
+            fact_index_narrowed, unprojected, operation=_authority_operation_for_test
         )
-        assert fact_index[_key(year)] is True
+        assert fact_index[_key(2024)] is True
+        assert not any(key.endswith("_None") for key in fact_index)
+
+
+def test_all_in_scope_years_default_eligible() -> None:
+    """Every filing year the published support envelope admits defaults eligible.
+
+    A projected year reuses its source revision's declared selector, so the
+    flag is keyed by the snapshot's authored year, the key the régimen
+    predicate of that same revision reads.
+    """
+    supported_years = published_supported_filing_years()
+    assert supported_years is not None
+    for year in supported_years.years:
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            snapshot = _snapshot(year)
+            fact_index: dict[str, object] = {}
+            fact_index_narrowed: Any = fact_index
+            inject_derived_anualidades_eligibility_facts(
+                fact_index_narrowed, snapshot, operation=_authority_operation_for_test
+            )
+            assert fact_index[_key(snapshot.authored_filing_year or snapshot.filing_year)] is True, year

@@ -32,9 +32,6 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from .....adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import (
-    active_profile_isolated_backend_fixture,
-)
 from .....application.modelo.reconciliation import (
     ModeloReconciliationCommand,
     modelo_reconcile,
@@ -62,6 +59,9 @@ from .....tests.inventory import FIXTURES_DIR
 from ....inbound.justificante.parser import parse_justificante
 from ...storage.errors import SecureObjectRevisionConflictError
 from ...storage.secure_object_namespaces import MODELO_RECONCILIATION_RECORDS_NAMESPACE
+from ...storage.tests.active_profile_isolated_backend_fixture import (
+    active_profile_isolated_backend_fixture,
+)
 from ..buckets import BucketEventHistoryRepository
 from ..modelo_reconciliation import ModeloReconciliationRecordRepository, modelo_reconciliation_record_key
 from ..modelos_work_units import WorkUnitCatalogueRepository

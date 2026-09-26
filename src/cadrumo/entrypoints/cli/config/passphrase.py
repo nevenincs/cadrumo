@@ -11,8 +11,9 @@ from pydantic import SecretStr
 from ....core.bucket_pointer import resolve_active_bucket_id as _resolve_active_bucket_id
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
+from ....core.json_contract import Notice, NoticeSeverity
 from ..common import activate_subcommand_output_language as _activate_subcommand_output_language
-from ..common import emit_envelope
+from ..common import emit_envelope, notice_lines
 from ..errors import CliRefusedBoundaryError
 from ..state_projection_support import authority_operation
 from .secure_input import MachineSecretPayload
@@ -159,6 +160,15 @@ def passphrase_reset(
             new_passphrase_confirmation=secrets.new_passphrase_confirmation.get_secret_value(),
             profile_decode_context=operation.profile_decode_context(),
         )
+    # A reset re-wraps the same data key, so it revokes nothing the key already
+    # protects; an operator resetting out of suspicion must learn that here.
+    notices = (
+        Notice(
+            code="config.passphrase.reset_scope",
+            severity=NoticeSeverity.INFO,
+            message=tr("cli.config.passphrase.reset_scope_notice"),
+        ),
+    )
     emit_envelope(
         ctx,
         command="config.passphrase.reset",
@@ -169,7 +179,8 @@ def passphrase_reset(
             dek_epoch_preserved=outcome.dek_epoch_preserved,
             recovery_enrollment_retained=outcome.recovery_enrollment_retained,
         ),
-        lines=list(_reset_lines(outcome)),
+        lines=[*notice_lines(notices), *_reset_lines(outcome)],
+        notices=notices,
     )
 
 

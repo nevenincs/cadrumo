@@ -12,6 +12,7 @@ from ..adapter_composition import ProfileAdapterComposition
 if TYPE_CHECKING:
     from ...application.aggregation.percepciones_observations_repository import PercepcionObservationPortsFactory
     from ...application.aggregation.retencion_observations_repository import RetencionObservationPortsFactory
+    from ...application.aggregation.withholding_observation_service import WithholdingObservationService
     from ...application.auth.apoderado_repository import ApoderadoConfigurationRepositoryFactory
     from ...application.auth.certificate_secret_backend import CertificateSecretBackendFactory
     from ...application.auth.operator_probe_ports import OperatorProbePorts
@@ -47,6 +48,7 @@ if TYPE_CHECKING:
     from ...application.state_projection_ports import StateProjectionReadPorts
     from ...application.user_profile.custody_ports import ProfileBucketStoragePort
     from ...application.user_profile.profile_read_ports import ProfileReadPortsFactory
+    from ...domain.attachments.protocols import AttachmentStoreProtocol
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 _ADAPTER_COMPOSITION_KEY = "adapter_composition"
@@ -120,6 +122,11 @@ def calculation_action_ports_factory(ctx: typer.Context) -> CalculationActionPor
     return _adapter_composition(ctx).calculation_action_ports_factory
 
 
+def attachment_store(ctx: typer.Context, *, bucket_id: str) -> AttachmentStoreProtocol:
+    """Return the root-composed encrypted attachment store for one profile bucket."""
+    return _adapter_composition(ctx).attachment_store_factory(bucket_id)
+
+
 def amendment_action_ports_factory(ctx: typer.Context) -> AmendmentActionPortsFactory:
     """Return the required amendment bundle factory from the CLI root."""
     return _adapter_composition(ctx).amendment_action_ports_factory
@@ -153,6 +160,11 @@ def censal_fetch_port(ctx: typer.Context) -> CensalFetchPort:
 def retencion_observation_ports_factory(ctx: typer.Context) -> RetencionObservationPortsFactory:
     """Return the required retención observation capability factory from the CLI root."""
     return _adapter_composition(ctx).retencion_observation_ports_factory
+
+
+def withholding_observation_service(ctx: typer.Context, *, bucket_id: str) -> WithholdingObservationService:
+    """Return the root-composed atomic withholding mutation service."""
+    return _adapter_composition(ctx).withholding_observation_service_factory(bucket_id)
 
 
 def percepcion_observation_ports_factory(ctx: typer.Context) -> PercepcionObservationPortsFactory:
@@ -267,6 +279,7 @@ def apoderado_config_repository_factory(ctx: typer.Context) -> ApoderadoConfigur
 __all__ = [
     "amendment_action_ports_factory",
     "apoderado_config_repository_factory",
+    "attachment_store",
     "bienes_inversion_repository_factory",
     "borrador_100_snapshot_repository_factory",
     "bucket_storage",
@@ -300,5 +313,6 @@ __all__ = [
     "review_package_signing_keypair_capability_factory",
     "state_projection_read_ports",
     "verification_repository_bundle_factory",
+    "withholding_observation_service",
     "work_lifecycle_ports_factory",
 ]

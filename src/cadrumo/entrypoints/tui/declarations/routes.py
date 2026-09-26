@@ -38,6 +38,7 @@ from .models import (
     DeclarationsDestinationIdV1,
     DeclarationsRouteTargetV1,
     FilingHandoffV1,
+    ModeloWorkCreateHandoffV1,
     ModeloWorkspaceScreenFactoryV1,
     RevisionHandoffV1,
 )
@@ -181,6 +182,7 @@ def declarations_screen_factory(
     calendar_projection: DeclarationsCalendarProjectionV1 | None = None,
     calendar_entry_handoff: CalendarEntryHandoffV1 | None = None,
     calendar_recovery_handoff: CalendarRecoveryHandoffV1 | None = None,
+    work_create_handoff: ModeloWorkCreateHandoffV1 | None = None,
 ) -> TuiScreenFactoryV1:
     """Bind only injected facts, admissions, and typed handoffs."""
     require_canonical_declarations_actions(
@@ -202,6 +204,7 @@ def declarations_screen_factory(
             calendar_projection=calendar_projection,
             calendar_entry_handoff=calendar_entry_handoff,
             calendar_recovery_handoff=calendar_recovery_handoff,
+            work_create_handoff=work_create_handoff,
         )
         # A caller that asks for a calendar row -- Home's agenda -- opens the
         # calendar itself; everything else opens on the overview, which

@@ -28,6 +28,18 @@ def _parse_values(tokens: list[str]) -> dict[str, str]:
     return values
 
 
+def _parse_row_key(row: str) -> str:
+    row_key = row.strip().lower()
+    if row_key == "base":
+        return ""
+    if row_key.isdecimal():
+        return str(int(row_key))
+    raise CliRefusedBoundaryError(
+        translated_message="cli.config.profile.row.invalid_row",
+        context={"row": row},
+    )
+
+
 def _refuse_unknown_repeatable_section(section: str, *, schema: object) -> None:
     """Name the sections this verb accepts when the requested one is not one.
 
@@ -90,4 +102,100 @@ def profile_add_row(
     )
 
 
-__all__ = ["profile_add_row"]
+def profile_edit_row(
+    ctx: typer.Context,
+    section: str,
+    row: str,
+    value: list[str] | None = None,
+    clear: list[str] | None = None,
+    output_language: OutputLanguage | None = None,
+) -> None:
+    """Modify one stable row, retaining omitted fields and clearing only explicit ones."""
+    activate_subcommand_output_language(ctx, output_language)
+    from ....application.user_profile.section_rows import update_profile_repeatable_section_row
+    from ..config_payloads import ConfigProfileRowChangeResult
+    from ._profile_support import resolve_active_profile_pointer
+
+    pointer = resolve_active_profile_pointer()
+    if pointer is None:
+        raise CliRefusedBoundaryError(translated_message="cli.config.profile.no_active_profile")
+    profile_decode_context = authority_operation(ctx).profile_decode_context()
+    _refuse_unknown_repeatable_section(section, schema=profile_decode_context.schema)
+    outcome = update_profile_repeatable_section_row(
+        profile_id=pointer.bucket_id,
+        section_key=section,
+        row_key=_parse_row_key(row),
+        values=_parse_values(value or []),
+        clear_fields=tuple(clear or ()),
+        schema=profile_decode_context.schema,
+        profile_decode_context=profile_decode_context,
+    )
+    result = ConfigProfileRowChangeResult(
+        profile_id=outcome.record.profile_id,
+        section=outcome.section_key,
+        row=outcome.row_key or "base",
+        changed=outcome.changed,
+        record_revision=outcome.record.record_revision,
+        content_digest=outcome.record.content_digest,
+    )
+    emit_envelope(
+        ctx,
+        command="config.profile.edit.row",
+        result=result,
+        lines=[
+            f"profile_id\t{result.profile_id}",
+            f"section\t{result.section}",
+            f"row\t{result.row}",
+            f"changed\t{str(result.changed).lower()}",
+            f"record_revision\t{result.record_revision}",
+        ],
+    )
+
+
+def profile_remove_row(
+    ctx: typer.Context,
+    section: str,
+    row: str,
+    output_language: OutputLanguage | None = None,
+) -> None:
+    """Remove one stable row through explicit clear tombstones."""
+    activate_subcommand_output_language(ctx, output_language)
+    from ....application.user_profile.section_rows import remove_profile_repeatable_section_row
+    from ..config_payloads import ConfigProfileRowChangeResult
+    from ._profile_support import resolve_active_profile_pointer
+
+    pointer = resolve_active_profile_pointer()
+    if pointer is None:
+        raise CliRefusedBoundaryError(translated_message="cli.config.profile.no_active_profile")
+    profile_decode_context = authority_operation(ctx).profile_decode_context()
+    _refuse_unknown_repeatable_section(section, schema=profile_decode_context.schema)
+    outcome = remove_profile_repeatable_section_row(
+        profile_id=pointer.bucket_id,
+        section_key=section,
+        row_key=_parse_row_key(row),
+        schema=profile_decode_context.schema,
+        profile_decode_context=profile_decode_context,
+    )
+    result = ConfigProfileRowChangeResult(
+        profile_id=outcome.record.profile_id,
+        section=outcome.section_key,
+        row=outcome.row_key or "base",
+        changed=True,
+        record_revision=outcome.record.record_revision,
+        content_digest=outcome.record.content_digest,
+    )
+    emit_envelope(
+        ctx,
+        command="config.profile.remove.row",
+        result=result,
+        lines=[
+            f"profile_id\t{result.profile_id}",
+            f"section\t{result.section}",
+            f"row\t{result.row}",
+            "changed\ttrue",
+            f"record_revision\t{result.record_revision}",
+        ],
+    )
+
+
+__all__ = ["profile_add_row", "profile_edit_row", "profile_remove_row"]

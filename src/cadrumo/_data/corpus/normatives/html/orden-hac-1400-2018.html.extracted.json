@@ -9,10 +9,16 @@
   "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
   "units": [
     {
-      "text": "Orden HAC/1400/2018, de 21 de diciembre, por la que se aprueba el modelo 233 (BOE-A-2018-17772) - Modelo 233\nOrden HAC/1400/2018, de 21 de diciembre, por la que se aprueba el modelo 233.\nArticulo 1. Aprobacion del modelo 233.\nSe aprueba el modelo 233, «Declaración informativa por gastos en guarderías o centros de educación infantil autorizados».\nArticulo 4. Plazo de presentacion.\nLa presentación de esta declaración informativa se realizará en el mes de enero de cada año en relación con la información correspondiente al año inmediato anterior.\nProvenance: verbatim excerpt transcribed from the BOE consolidated text (https://www.boe.es/buscar/act.php?id=BOE-A-2018-17772) via agent web fetch during the obligation-enrollment campaign, under explicit operator authorization. Pending operator re-verification.",
-      "title": null,
-      "section": null,
-      "anchor": null
+      "text": "Se aprueba el modelo 233, «Declaración informativa por gastos en guarderías o centros de educación infantil autorizados».",
+      "title": "Articulo 1. Aprobacion del modelo 233.",
+      "section": "Articulo 1. Aprobacion del modelo 233.",
+      "anchor": "#a1"
+    },
+    {
+      "text": "La presentación de esta declaración informativa se realizará en el mes de enero de cada año en relación con la información correspondiente al año inmediato anterior.",
+      "title": "Articulo 4. Plazo de presentacion.",
+      "section": "Articulo 4. Plazo de presentacion.",
+      "anchor": "#a4"
     }
   ]
 }

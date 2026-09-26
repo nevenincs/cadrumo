@@ -19,10 +19,9 @@ from datetime import UTC, datetime, timedelta, timezone
 import pytest
 from pydantic import ValidationError
 
-from ....domain.calculations.registry.tests.published_authority import leased_profile_create_context
-from ....domain.user_profile.values import ProfileSetupState
+from ...calculations.registry.tests.published_authority import leased_profile_create_context
 from ..portable_export import UserProfilePortableExport
-from ..values import UserProfileFact, UserProfileRecord, create_user_profile_record
+from ..values import ProfileSetupState, UserProfileFact, UserProfileRecord, create_user_profile_record
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("authority_operation")]
 

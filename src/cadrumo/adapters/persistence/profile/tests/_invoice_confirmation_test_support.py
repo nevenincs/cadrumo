@@ -20,40 +20,6 @@ from typing import ClassVar, NamedTuple, TypedDict, override
 import httpx
 import pytest
 
-from .....adapters.inbound.einvoice.application_translation import translate_parsed_einvoice
-from .....adapters.inbound.einvoice.parsers import parse_einvoice_document
-from .....adapters.inbound.einvoice.shape import probe_document_shape
-from .....adapters.inbound.einvoice.xml import EInvoiceXmlParseError
-from .....adapters.inbound.pdf.page_text_extraction import extract_pages_text_from_bytes
-from .....adapters.outbound.llm.consent import EvidenceConsentToken
-from .....adapters.outbound.llm.errors import LLMConsentError, LLMPdfRasterisationError, LLMProviderError
-from .....adapters.outbound.llm.evidence_draft_text import (
-    TextInvoiceFieldExtractor,
-    extract_invoice_fields_from_text,
-)
-from .....adapters.outbound.llm.evidence_draft_vision import (
-    LocalVisionDocumentTranscriber,
-    transcribe_document_images,
-)
-from .....adapters.outbound.llm.models import MultimodalImageInput
-from .....adapters.outbound.llm.preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
-from .....adapters.outbound.llm.providers.local import rasterise_pdf_pages_to_base64_png
-from .....adapters.outbound.llm.supply_nature_proposal import SupplyNatureProposer
-from .....adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from .....adapters.persistence.profile.catalogue_creation import build_catalogue_creation_ports
-from .....adapters.persistence.profile.counterparty_establishment import CounterpartyEstablishmentRepository
-from .....adapters.persistence.profile.invoice_confirmation import build_invoice_confirmation_ports
-from .....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from .....adapters.persistence.profile.purchase_invoice_evidence import (
-    LedgerEvidenceAttachmentIngestor,
-    LedgerEvidenceRepositoryAdapter,
-)
-from .....adapters.persistence.storage.attachment import AttachmentStore
-from .....adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
-from .....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from .....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from .....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
-from .....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from .....application.invoices.catalogue_creation_ports import CatalogueCreationPorts
 from .....application.ledger.counterparty_establishment_ports import CounterpartyEstablishmentRepositoryProtocol
 from .....application.ledger.document_transcription import DocumentTranscription
@@ -100,6 +66,40 @@ from .....tests.loopback_llm import (
     read_json_body,
     serving_loopback,
     write_json_response,
+)
+from ....inbound.einvoice.application_translation import translate_parsed_einvoice
+from ....inbound.einvoice.parsers import parse_einvoice_document
+from ....inbound.einvoice.shape import probe_document_shape
+from ....inbound.einvoice.xml import EInvoiceXmlParseError
+from ....inbound.pdf.page_text_extraction import extract_pages_text_from_bytes
+from ....outbound.llm.consent import EvidenceConsentToken
+from ....outbound.llm.errors import LLMConsentError, LLMPdfRasterisationError, LLMProviderError
+from ....outbound.llm.evidence_draft_text import (
+    TextInvoiceFieldExtractor,
+    extract_invoice_fields_from_text,
+)
+from ....outbound.llm.evidence_draft_vision import (
+    LocalVisionDocumentTranscriber,
+    transcribe_document_images,
+)
+from ....outbound.llm.models import MultimodalImageInput
+from ....outbound.llm.preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
+from ....outbound.llm.providers.local import rasterise_pdf_pages_to_base64_png
+from ....outbound.llm.supply_nature_proposal import SupplyNatureProposer
+from ...storage.attachment import AttachmentStore
+from ...storage.runtime_repository import secure_object_repository_for_bucket
+from ...storage.sql.secure_objects import SecureObjectRepository
+from ...storage.tests.profile_capsule_runtime import seed_test_profile_record
+from ...storage.tests.secure_sql import TestRuntimeProfile
+from ...tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
+from ..buckets import BucketEventHistoryRepository
+from ..catalogue_creation import build_catalogue_creation_ports
+from ..counterparty_establishment import CounterpartyEstablishmentRepository
+from ..invoice_confirmation import build_invoice_confirmation_ports
+from ..invoices import InvoiceCatalogueRepository
+from ..purchase_invoice_evidence import (
+    LedgerEvidenceAttachmentIngestor,
+    LedgerEvidenceRepositoryAdapter,
 )
 
 _BUCKET_ID = "29292929-2929-4929-8929-292929292929"

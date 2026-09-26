@@ -9,7 +9,7 @@ consumers that know resultado or Modelo 210 tipo-renta context call the sibling
 canonical matcher.
 
 Core types:
-:class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
+:class:`~cadrumo.domain.calculations.registry.schema_deadlines.DeadlineWindowDefinition`.
 """
 
 from __future__ import annotations
@@ -27,10 +27,8 @@ from .errors import DeadlineValidationError
 if TYPE_CHECKING:
     from ..calculations.registry.authority import PinnedAuthorityOperation
     from ..calculations.registry.deadline_coordinate import DeadlineSemanticCoordinate
-    from ..calculations.registry.schema import ModeloRevision
     from ..calculations.registry.schema_deadlines import DeadlineWindowDefinition
-
-    type DeadlineWindowProjection = tuple[str, ModeloRevision, DeadlineWindowDefinition]
+    from .engine import DeadlineWindowProjection
 
 
 def resolve_filing_closes_on(

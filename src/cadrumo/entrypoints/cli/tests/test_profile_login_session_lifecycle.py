@@ -82,7 +82,6 @@ def _run(
     root_flags = ("--format", "json") if as_json else ()
     settings: dict[str, object] = {
         "cadrumo_local_storage_root": storage_root,
-        "cadrumo_secret_store_dir": storage_root / "fallback-store",
         "cadrumo_output_language": "en",
     }
     if with_passphrase:

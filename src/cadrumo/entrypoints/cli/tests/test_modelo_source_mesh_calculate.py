@@ -36,7 +36,8 @@ from ....domain.usage_ratios.model import UsageRatioProfile
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.cli_envelope import unwrap_envelope_notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
-from ._m303_filing_evidence_support import write_m303_filing_evidence
+from ._m303_ordinary_cli_support import joint_return_options
+from ._modelo_work_ux_support import _capture_m115_invoice_withholding
 from .cli_runner import invoke_cached_cli
 
 __all__ = ["_isolated_cli_backend"]
@@ -45,7 +46,7 @@ __all__ = ["_isolated_cli_backend"]
 # body holds the same authority lease a CLI invocation holds.
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
-_IVA_WALLET_DECIDED_AT = datetime(2026, 5, 28, 16, 10, tzinfo=UTC)
+_IVA_WALLET_DECIDED_AT = datetime(2025, 4, 1, 16, 10, tzinfo=UTC)
 
 
 def _create_profile(**extra_facts: str) -> None:
@@ -61,6 +62,14 @@ def _create_profile(**extra_facts: str) -> None:
         "identity.surnames": "Operator",
         "activities.description": "design",
         "taxpayer_type.irpf_income_categories": "actividad_economica",
+        "censo.activity_start_date": "2025-01-01",
+        "tax_residence.jurisdiction_scope": "common_regime",
+        "iva.regime": "GENERAL",
+        "iva.m303_regime_composition": "general",
+        "iva.redeme_enrolled": "false",
+        "iva.cash_accounting_regime_enrolled": "false",
+        "iva.voluntary_sii_enrolled": "false",
+        "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
     }
     facts.update(extra_facts)
     register_cli_profile(label="operator", facts=facts, log_in=False)
@@ -101,11 +110,11 @@ def _create_work_unit(*, modelo: str, year: int, period: str) -> dict[str, str]:
 
 
 def _create_303_work_unit() -> dict[str, str]:
-    return _create_work_unit(modelo="303", year=2026, period="1T")
+    return _create_work_unit(modelo="303", year=2025, period="1T")
 
 
-def _create_115_work_unit() -> dict[str, str]:
-    return _create_work_unit(modelo="115", year=2026, period="1T")
+def _create_115_work_unit(*, year: int = 2026, period: str = "1T") -> dict[str, str]:
+    return _create_work_unit(modelo="115", year=year, period=period)
 
 
 def _create_111_work_unit() -> dict[str, str]:
@@ -119,7 +128,7 @@ def _create_180_work_unit() -> dict[str, str]:
 def _raw_transaction(
     provider_id: str,
     *,
-    booked_date: date = date(2026, 2, 10),
+    booked_date: date = date(2025, 2, 10),
     amount: Decimal,
 ) -> RawTransaction:
     return RawTransaction(
@@ -135,7 +144,7 @@ def _raw_transaction(
             source_sha256="f" * 64,
             source_row_index=1,
             source_format=SourceFormat.MANUAL,
-            ingested_at=datetime(2026, 2, 11, 12, 0, tzinfo=UTC),
+            ingested_at=datetime(2025, 2, 11, 12, 0, tzinfo=UTC),
             provider_name="manual-ledger",
         ),
         raw_fields={"source_kind": "ledger_transaction"},
@@ -173,7 +182,7 @@ def _transaction(
         "taxable_base": taxable_base,
         "iva_rate": iva_rate,
         "iva_amount": iva_amount,
-        "classified_at": datetime(2026, 2, 11, 13, 0, tzinfo=UTC),
+        "classified_at": datetime(2025, 2, 11, 13, 0, tzinfo=UTC),
         "classified_by": "manual",
     }
     if iva_category is not None:
@@ -347,39 +356,8 @@ def test_work_calculate_modelo_115_uses_retenciones_aggregation_observation() ->
     """M115 CLI calculation consumes persisted URBAN_RENTAL retención evidence."""
 
     _create_profile()
-    work_unit = _create_115_work_unit()
-    observation = json.dumps(
-        {
-            "source_kind": "ledger_transaction",
-            "source_object_id": "rent-ledger-row-001",
-            "perceptor_nif": "B12345678",
-            "perceptor_name": "Arrendador Ejemplo SL",
-            "scheme": "arrendamiento_urbano",
-            "taxable_base": "2700.00",
-            "retencion_amount": "513.00",
-            "accrued_on": "2026-03-15",
-        },
-    )
-
-    aggregated = invoke_cached_cli(
-        [
-            "--format",
-            "json",
-            "app",
-            "modelo",
-            "aggregate",
-            "--modelo",
-            "115",
-            "--year",
-            "2026",
-            "--period",
-            "1T",
-            "--retencion-observation",
-            observation,
-        ],
-    )
-    assert aggregated.exit_code == 0, aggregated.output
-    assert _payload(aggregated.output)["observation_count"] == 1
+    work_unit = _create_115_work_unit(year=2025)
+    _capture_m115_invoice_withholding()
 
     calculated = invoke_cached_cli(
         [
@@ -552,6 +530,95 @@ def test_work_calculate_modelo_111_no_retenciones_quarter_names_profile_attestat
     assert "withholding.modelo_111_no_retenciones_periods\t2025:2T,2025:3T,2025:4T" in shown.output
 
 
+def test_work_calculate_modelo_115_explicit_no_relevant_payment_attestation_materialises_zero(
+    tmp_path: Path,
+) -> None:
+    """Public Q3/Q4 profile evidence materialises local M115 zero history."""
+    _create_profile()
+    q3_work_unit = _create_115_work_unit(year=2025, period="3T")
+    q4_work_unit = _create_115_work_unit(year=2025, period="4T")
+
+    refused = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "work",
+            "calculate",
+            str(q3_work_unit["work_unit_id"]),
+        ],
+    )
+    assert refused.exit_code != 0, refused.output
+    assert json.loads(refused.output)["error"]["context"]["period"] == "3T"
+
+    attested = invoke_cached_cli(
+        [
+            "config",
+            "profile",
+            "edit",
+            "operator",
+            "--quiet",
+            "--modelo-115-no-relevant-payment-periods",
+            "2025:3T,2025:4T",
+        ],
+    )
+    assert attested.exit_code == 0, attested.output
+    shown = invoke_cached_cli(("config", "profile", "view", "operator"))
+    assert shown.exit_code == 0, shown.output
+    assert "withholding.modelo_115_no_relevant_payment_periods\t2025:3T,2025:4T" in shown.output
+
+    for period, work_unit in (("3T", q3_work_unit), ("4T", q4_work_unit)):
+        calculated = invoke_cached_cli(
+            [
+                "--format",
+                "json",
+                "app",
+                "modelo",
+                "work",
+                "calculate",
+                str(work_unit["work_unit_id"]),
+            ],
+        )
+        assert calculated.exit_code == 0, calculated.output
+        payload = _payload(calculated.output)
+        assert Decimal(payload["casilla_values"]["01"]) == Decimal("0")
+        assert Decimal(payload["casilla_values"]["02"]) == Decimal("0")
+        assert Decimal(payload["casilla_values"]["03"]) == Decimal("0")
+        assert Decimal(payload["casilla_values"]["05"]) == Decimal("0")
+        assert any(
+            "explicit no-relevant-payment attestation" in notice["message"]
+            for notice in unwrap_envelope_notices(calculated.output)
+            if notice["code"] == "modelo.work.calculate.source_advisory"
+        )
+        calculation_revision_id = payload["calculation_revision_id"]
+        assert isinstance(calculation_revision_id, str)
+        verified = invoke_cached_cli(
+            ["--format", "json", "app", "modelo", "work", "verify", calculation_revision_id],
+        )
+        assert verified.exit_code == 0, verified.output
+        output = tmp_path / f"modelo-115-2025-{period}.boe"
+        exported = invoke_cached_cli(
+            [
+                "--format",
+                "json",
+                "app",
+                "modelo",
+                "export",
+                "--revision",
+                calculation_revision_id,
+                "--output",
+                str(output),
+            ],
+        )
+        assert exported.exit_code == 0, exported.output
+        export_payload = _payload(exported.output)
+        assert export_payload["calculation_revision_id"] == calculation_revision_id
+        assert export_payload["modelo"] == "115"
+        assert output.exists()
+        assert output.stat().st_size > 0
+
+
 def test_work_calculate_modelo_115_classified_rent_row_requires_perceptor_evidence() -> None:
     """A classified rent ledger row alone must hard-stop instead of producing zeros."""
     from ....core.bucket_pointer import resolve_active_bucket_id
@@ -597,8 +664,13 @@ def test_work_calculate_modelo_115_classified_rent_row_requires_perceptor_eviden
     assert "115" in envelope["error"]["message"]
 
 
-def test_work_calculate_modelo_180_refuses_string_perceptor_casilla_with_detail_guidance() -> None:
-    """M180 perceptor string fields are refused before the decimal casilla parser."""
+def test_work_calculate_modelo_180_refuses_a_perceptor_row_field_before_parsing_its_value() -> None:
+    """A casilla the perceptor record fills once per row is refused for being a row field.
+
+    The value is a NIF, not a decimal, so the refusal must come from the
+    row-field rule rather than the decimal parser, and it names the casilla and
+    the record whose detail rows carry it.
+    """
 
     _create_profile()
     work_unit = _create_180_work_unit()
@@ -620,23 +692,24 @@ def test_work_calculate_modelo_180_refuses_string_perceptor_casilla_with_detail_
     assert calculated.exit_code != 0, calculated.output
     envelope = json.loads(calculated.output)
     assert envelope["error"]["code"] == "REFUSED_MODELO_CALCULATE_CASILLA_INPUT"
-    assert envelope["error"]["context"]["key"] == "perc.nif"
-    assert "perceptor/property detail rows are not supported" in envelope["error"]["message"]
-    assert "--retencion-observation" in envelope["error"]["message"]
+    assert envelope["error"]["context"]["casilla_ids"] == "perc.nif"
+    assert envelope["error"]["context"]["record_ids"]
+    # Which detail rows to supply is the operator's call, so the refusal is a
+    # typed operator decision rather than prose naming a command.
+    action = envelope["error"]["action"]
+    assert action["failed_condition_id"] == "modelo.work.calculate.caller_overrides.casilla_scalar"
+    assert action["no_recovery_outcome"] == "operator_decision"
+    assert action["action"] is None
+    assert "aeat" not in envelope["error"]["message"]
 
 
 def test_work_calculate_persists_ledger_source_mesh_observations(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str], *, operation: PinnedAuthorityOperation
+    capsys: pytest.CaptureFixture[str], *, operation: PinnedAuthorityOperation
 ) -> None:
     from ....core.bucket_pointer import resolve_active_bucket_id
 
     _create_profile()
     work_unit = _create_303_work_unit()
-    evidence_path = write_m303_filing_evidence(
-        tmp_path / "m303-filing-evidence.json",
-        Period.from_year_and_code(2026, "1T"),
-        operation=operation,
-    )
     # The CLI JSON output redacts ``bucket_id`` to the literal placeholder
     # ``"<bucket-id>"``; that placeholder is not a valid filesystem path
     # segment on Windows (``<`` / ``>`` are reserved). Resolve the real
@@ -659,7 +732,7 @@ def test_work_calculate_persists_ledger_source_mesh_observations(
         taxable_base=Decimal("50.00"),
         iva_amount=Decimal("10.50"),
         deduction_fact_kind=IvaDeductionFactKind.from_registry("domestic_current"),
-        deduction_locator="invoice:purchase-general-2026-1T",
+        deduction_locator="invoice:purchase-general-2025-1T",
     )
 
     # Seed ledger data and a zero-amount IVA wallet decision via a live
@@ -683,10 +756,10 @@ def test_work_calculate_persists_ledger_source_mesh_observations(
         )
         decision = IvaCompensationReconciliationDecision(
             taxpayer_nif="12345678Z",
-            target_year=2026,
-            target_period=Period.from_year_and_code(2026, "1T"),
-            target_registry_snapshot_ref=published_snapshot("303", filing_year=2026, period="1T").snapshot_ref,
-            source_registry_snapshot_refs=(published_snapshot("303", filing_year=2026, period="1T").snapshot_ref,),
+            target_year=2025,
+            target_period=Period.from_year_and_code(2025, "1T"),
+            target_registry_snapshot_ref=published_snapshot("303", filing_year=2025, period="1T").snapshot_ref,
+            source_registry_snapshot_refs=(published_snapshot("303", filing_year=2025, period="1T").snapshot_ref,),
             selected_authority="local_recurrence",
             selected_amount=Decimal("0"),
             wallet_amount=None,
@@ -695,11 +768,11 @@ def test_work_calculate_persists_ledger_source_mesh_observations(
                 IvaCompensationAuthoritySource(
                     source_kind="local_recurrence",
                     amount=Decimal("0"),
-                    source_locator="test:local-recurrence:2026:1T",
+                    source_locator="test:local-recurrence:2025:1T",
                     source_modelo="303",
-                    source_filing_year=2026,
-                    source_periods=(Period.from_year_and_code(2026, "1T"),),
-                    registry_snapshot_refs=(published_snapshot("303", filing_year=2026, period="1T").snapshot_ref,),
+                    source_filing_year=2025,
+                    source_periods=(Period.from_year_and_code(2025, "1T"),),
+                    registry_snapshot_refs=(published_snapshot("303", filing_year=2025, period="1T").snapshot_ref,),
                 ),
             ),
             override_amount=None,
@@ -720,8 +793,7 @@ def test_work_calculate_persists_ledger_source_mesh_observations(
             "work",
             "calculate",
             str(work_unit["work_unit_id"]),
-            "--m303-filing-evidence",
-            str(evidence_path),
+            *joint_return_options(),
         ],
     )
     assert result.exit_code == 0, result.output
@@ -843,10 +915,10 @@ def _seed_zero_iva_wallet_decision(bucket_id: str) -> None:
     with open_test_profile_session(bucket_id):
         decision = IvaCompensationReconciliationDecision(
             taxpayer_nif="12345678Z",
-            target_year=2026,
-            target_period=Period.from_year_and_code(2026, "1T"),
-            target_registry_snapshot_ref=published_snapshot("303", filing_year=2026, period="1T").snapshot_ref,
-            source_registry_snapshot_refs=(published_snapshot("303", filing_year=2026, period="1T").snapshot_ref,),
+            target_year=2025,
+            target_period=Period.from_year_and_code(2025, "1T"),
+            target_registry_snapshot_ref=published_snapshot("303", filing_year=2025, period="1T").snapshot_ref,
+            source_registry_snapshot_refs=(published_snapshot("303", filing_year=2025, period="1T").snapshot_ref,),
             selected_authority="local_recurrence",
             selected_amount=Decimal("0"),
             wallet_amount=None,
@@ -855,11 +927,11 @@ def _seed_zero_iva_wallet_decision(bucket_id: str) -> None:
                 IvaCompensationAuthoritySource(
                     source_kind="local_recurrence",
                     amount=Decimal("0"),
-                    source_locator="test:local-recurrence:2026:1T",
+                    source_locator="test:local-recurrence:2025:1T",
                     source_modelo="303",
-                    source_filing_year=2026,
-                    source_periods=(Period.from_year_and_code(2026, "1T"),),
-                    registry_snapshot_refs=(published_snapshot("303", filing_year=2026, period="1T").snapshot_ref,),
+                    source_filing_year=2025,
+                    source_periods=(Period.from_year_and_code(2025, "1T"),),
+                    registry_snapshot_refs=(published_snapshot("303", filing_year=2025, period="1T").snapshot_ref,),
                 ),
             ),
             override_amount=None,
@@ -872,9 +944,7 @@ def _seed_zero_iva_wallet_decision(bucket_id: str) -> None:
         IvaWalletDecisionRepository().save_decision(decision)
 
 
-def test_work_calculate_suppresses_advisory_for_cuota_less_intra_community_supply(
-    tmp_path: Path, *, operation: PinnedAuthorityOperation
-) -> None:
+def test_work_calculate_suppresses_advisory_for_cuota_less_intra_community_supply() -> None:
     """An INTRA_COMMUNITY_SUPPLY observation is cuota-less, so it raises NO advisory.
 
     Per the ``aeat-ledger-contract`` rule, an
@@ -890,11 +960,6 @@ def test_work_calculate_suppresses_advisory_for_cuota_less_intra_community_suppl
 
     _create_profile()
     work_unit = _create_303_work_unit()
-    evidence_path = write_m303_filing_evidence(
-        tmp_path / "m303-filing-evidence.json",
-        Period.from_year_and_code(2026, "1T"),
-        operation=operation,
-    )
     resolved = resolve_active_bucket_id()
     assert resolved is not None, "profile create must install an active-profile pointer"
     bucket_id = resolved
@@ -945,8 +1010,7 @@ def test_work_calculate_suppresses_advisory_for_cuota_less_intra_community_suppl
             "work",
             "calculate",
             str(work_unit["work_unit_id"]),
-            "--m303-filing-evidence",
-            str(evidence_path),
+            *joint_return_options(),
         ],
     )
     assert result.exit_code == 0, result.output
@@ -970,8 +1034,7 @@ def test_work_calculate_suppresses_advisory_for_cuota_less_intra_community_suppl
             "work",
             "calculate",
             str(work_unit["work_unit_id"]),
-            "--m303-filing-evidence",
-            str(evidence_path),
+            *joint_return_options(),
         ],
     )
     assert text_result.exit_code == 0, text_result.output
@@ -982,9 +1045,7 @@ def test_work_calculate_suppresses_advisory_for_cuota_less_intra_community_suppl
     assert "ADVISORY:" not in text_result.output
 
 
-def test_work_calculate_emits_no_advisory_when_all_iva_consumed(
-    tmp_path: Path, *, operation: PinnedAuthorityOperation
-) -> None:
+def test_work_calculate_emits_no_advisory_when_all_iva_consumed() -> None:
     """#64 converse: an all-consumed IVA observation set surfaces ZERO advisories.
 
     Anti-tautology guard for the advisory test above: only observations no
@@ -996,11 +1057,6 @@ def test_work_calculate_emits_no_advisory_when_all_iva_consumed(
 
     _create_profile()
     work_unit = _create_303_work_unit()
-    evidence_path = write_m303_filing_evidence(
-        tmp_path / "m303-filing-evidence.json",
-        Period.from_year_and_code(2026, "1T"),
-        operation=operation,
-    )
     resolved = resolve_active_bucket_id()
     assert resolved is not None, "profile create must install an active-profile pointer"
     bucket_id = resolved
@@ -1027,8 +1083,7 @@ def test_work_calculate_emits_no_advisory_when_all_iva_consumed(
             "work",
             "calculate",
             str(work_unit["work_unit_id"]),
-            "--m303-filing-evidence",
-            str(evidence_path),
+            *joint_return_options(),
         ],
     )
     assert result.exit_code == 0, result.output
@@ -1047,8 +1102,7 @@ def test_work_calculate_emits_no_advisory_when_all_iva_consumed(
             "work",
             "calculate",
             str(work_unit["work_unit_id"]),
-            "--m303-filing-evidence",
-            str(evidence_path),
+            *joint_return_options(),
         ],
     )
     assert text_result.exit_code == 0, text_result.output

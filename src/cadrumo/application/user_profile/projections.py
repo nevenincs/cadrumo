@@ -109,7 +109,7 @@ def facts_to_values(
         raise UserProfileValidationError("facts projection requires an explicit pinned profile schema")
     selector_index = _selector_index(schema)
     values: dict[str, str] = {}
-    for fact in facts:
+    for fact in _effective_facts_by_path(facts).values():
         if fact.value is None:
             continue
         selectors = selector_index.get(fact.path, (fact.path,))
@@ -193,6 +193,14 @@ def _in_window_order(facts: Sequence[UserProfileFact]) -> tuple[UserProfileFact,
 in_window_order = _in_window_order
 
 
+def _effective_facts_by_path(facts: Sequence[UserProfileFact]) -> dict[str, UserProfileFact]:
+    """Resolve the latest fact at each path without discarding explicit clears."""
+    effective: dict[str, UserProfileFact] = {}
+    for fact in _in_window_order(facts):
+        effective[fact.path] = fact
+    return effective
+
+
 def record_to_path_values(record: UserProfileRecord | UserProfileSnapshot | None) -> dict[str, str]:
     """Project a :class:`UserProfileRecord` (or snapshot) into a schema-path-keyed string mapping.
 
@@ -204,7 +212,9 @@ def record_to_path_values(record: UserProfileRecord | UserProfileSnapshot | None
     if record is None:
         return {}
     return {
-        fact.path: _render_fact_value(fact.value) for fact in _in_window_order(record.facts) if fact.value is not None
+        path: _render_fact_value(fact.value)
+        for path, fact in _effective_facts_by_path(record.facts).items()
+        if fact.value is not None
     }
 
 
@@ -265,7 +275,7 @@ def record_to_effective_facts(
     if record is None:
         return {}
     effective: dict[str, EffectiveFact] = {}
-    for fact in _in_window_order(record.facts):
+    for fact in _effective_facts_by_path(record.facts).values():
         effective[fact.path] = EffectiveFact(
             value=None if fact.value is None else _render_fact_value(fact.value),
             source=fact.source,
@@ -403,7 +413,7 @@ def profile_fact_index(record: object, schema: ProfileSchemaDefinition) -> dict[
         return {}
 
     index: dict[str, UserProfileFactValue] = {}
-    for fact in record.facts:
+    for fact in _effective_facts_by_path(record.facts).values():
         if fact.value is None:
             continue
         index[fact.path] = fact.value

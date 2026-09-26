@@ -402,6 +402,12 @@ def isolated_runtime_profile(
     storage_root = tmp_path / "cadrumo-storage"
     passphrase = load_settings().cadrumo_dev_test_database_password
     opened_at = datetime.now(UTC).replace(microsecond=0)
+    # A relocated secrets directory is an operator-selected override, which the
+    # storage tree refuses to create on the operator's behalf; this helper is
+    # that operator, so it creates the location it declares.
+    secret_overrides = storage_overrides(tmp_path, StorageCategory.SECRETS)
+    for location in secret_overrides.values():
+        location.mkdir(parents=True, exist_ok=True)
 
     with override_settings(
         cadrumo_local_storage_root=storage_root,
@@ -413,7 +419,7 @@ def isolated_runtime_profile(
         # floor, so no wrap weakens and the derivation stays real.
         cadrumo_profile_kdf_measure_calibration=False,
         cadrumo_secret_passphrase=passphrase,
-        **storage_overrides(tmp_path, StorageCategory.SECRETS),
+        **secret_overrides,
     ) as settings:
         dispose_engine(settings)
         session, paths = provision_test_profile_bucket_session(
@@ -605,17 +611,22 @@ def isolated_cli_runtime_profile(
     name it is given.
     """
 
+    overrides = storage_overrides(
+        tmp_path,
+        StorageCategory.RUNS,
+        StorageCategory.DRAFTS,
+        StorageCategory.TOKENS,
+        StorageCategory.FINANCIAL_TRANSACTIONS,
+        StorageCategory.INVOICES,
+    )
+    # Each is an operator-selected override, which the storage tree refuses to
+    # create on the operator's behalf; this helper is that operator, so it
+    # creates every location it declares, as isolated_runtime_profile does.
+    for location in overrides.values():
+        location.mkdir(parents=True, exist_ok=True)
+
     with (
-        override_settings(
-            **storage_overrides(
-                tmp_path,
-                StorageCategory.RUNS,
-                StorageCategory.DRAFTS,
-                StorageCategory.TOKENS,
-                StorageCategory.FINANCIAL_TRANSACTIONS,
-                StorageCategory.INVOICES,
-            ),
-        ),
+        override_settings(**overrides),
         isolated_runtime_profile(
             tmp_path=tmp_path,
             bucket_id=bucket_id,

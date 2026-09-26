@@ -21,42 +21,64 @@ exposes one law-selected revision plus two independently evaluated point
 assertions; it has no sequence over time, so a screen presenting a timeline
 would author a temporal claim no producer made.
 
-The ACTIONS line says in one plain sentence that this page suggests no
-next steps yet, rather than rendering an empty list. An empty actions panel reads as "there is nothing
-you can do"; the truth is "this producer does not say what you can do".
-Those are different claims, and only the second is true --
-:class:`ModeloWorkspaceCapabilityV1` and the refusal types declare
-``recovery_action`` and no producer populates it, while the surrounding
-application layer attaches ``ActionReference`` to comparable verdicts
-routinely. So the silence here is an omission upstream, not an absence of
-actions in the system, and the screen must not convert one into the other.
+The ACTIONS line names the catalogued next steps the producers actually
+attached, and says plainly when there are none addressable rather than
+rendering an empty list. The distinction the line has to keep is between "no
+step is suggested" and "no step can be addressed from here": a capability
+whose catalogued action binds a ``work_unit_id`` this target does not carry
+has a remedy that exists and is not reachable, and offering it would name a
+command the operator cannot run. Each action shown is the canonical
+:data:`OPERATOR_ACTION_CATALOGUE` entry the producer named, never a label
+invented on this screen.
 """
 
 from __future__ import annotations
 
+import asyncio
+from collections.abc import Awaitable, Callable
 from typing import TYPE_CHECKING, ClassVar, cast, override
 
 from textual.app import ComposeResult
 from textual.binding import Binding
-from textual.widgets import DataTable, Static
+from textual.widgets import Button, DataTable, Input, Select, Static
 
+from .....application.modelo.edit_models import (
+    ModeloEditWritableBindingOverrideSurfaceEntryV1,
+    ModeloEditWritableScalarSurfaceEntryV1,
+)
+from .....core.errors.error_codes import resolve_error_message
+from .....core.errors.hierarchy import CadrumoError
 from .....core.i18n.render import tr
+from .....core.logging import get_logger
+from .....core.operations import OperationTerminalCondition
+from .....core.payment_election import PaymentElection
+from .....core.presentation import NoticePresentation
+from .....core.prior_domiciliation_election import PriorDomiciliationElection
+from .....core.refund_election import RefundElection
 from ...components.account_chrome import AccountChromeScreen
-from ...components.app_access import TypedAppAccess
+from ...components.dialogs import ConfirmScreen
 from ...components.theme import toggle_appearance
-from ...components.widgets import ContentDataTable, ContentScroll, DisclosureGroup
+from ...components.widgets import ContentDataTable, ContentScroll, DisclosureGroup, NoticeBand
+from ...operations.controller import OperationController
+from ...operations.refusal_explanation import public_refusal_explanation
+from ..m303_evidence import OrdinaryM303FilingEvidenceScreen, OrdinaryM303FilingEvidenceSubmission
 from .controller import ModeloWorkspaceReadSession
 from .models import (
     assertion_label,
     capability_label,
     capability_row,
     disposition_label,
+    evidence_reference_label,
+    recovery_action_label,
     review_status_label,
     work_state_label,
+    workspace_refusal_fact_label,
+    workspace_refusal_reason_label,
 )
 from .technical_details import TechnicalDetailRowV1, mount_technical_details, producer_row
 
 if TYPE_CHECKING:
+    from .....application.modelo.operation_definitions import ModeloWorkCalculateOrdinaryM303EvidenceRequestV2
     from .models import ModeloWorkspaceDestinationIdV1
 
 _ADDRESS_ROW_KEYS: tuple[str, ...] = ("modelo", "filing_year", "period", "work_state")
@@ -64,8 +86,42 @@ _REVISION_ROW_KEYS: tuple[str, ...] = ("requested_assertion", "stored_assertion"
 _CAPABILITY_COLUMN_KEYS: tuple[str, ...] = ("capability", "disposition")
 _OTHER_DESTINATIONS: tuple[str, ...] = ("inputs", "results", "verification", "provenance", "filing")
 
+#: The Modelo 303 export elections, each rendered in the operator's words and
+#: pre-set to the same neutral default the command line applies when omitted.
+REFUND_ELECTION_LOCALE_KEYS: dict[RefundElection, str] = {
+    RefundElection.COMPENSAR: "tui.modelo.export.refund_election.compensar",
+    RefundElection.DEVOLVER: "tui.modelo.export.refund_election.devolver",
+}
+PAYMENT_ELECTION_LOCALE_KEYS: dict[PaymentElection, str] = {
+    PaymentElection.INGRESO: "tui.modelo.export.payment_election.ingreso",
+    PaymentElection.DOMICILIACION: "tui.modelo.export.payment_election.domiciliacion",
+    PaymentElection.CUENTA_CORRIENTE: "tui.modelo.export.payment_election.cuenta_corriente",
+}
+PRIOR_DOMICILIATION_ELECTION_LOCALE_KEYS: dict[PriorDomiciliationElection, str] = {
+    PriorDomiciliationElection.KEEP: "tui.modelo.export.prior_domiciliation_election.keep",
+    PriorDomiciliationElection.CANCEL_OR_MODIFY: "tui.modelo.export.prior_domiciliation_election.cancel_or_modify",
+}
 
-class ModeloWorkspaceOverviewScreen(TypedAppAccess, AccountChromeScreen):
+
+def edit_control_id(kind: str, key: str) -> str:
+    """Encode one registry edit key as a Textual widget id, one-to-one.
+
+    Semantic casilla ids such as ``iva.prorrata-volumen-con-derecho`` contain
+    characters a widget id may not, and one invalid id stops the whole screen
+    from composing. ASCII letters, digits and ``-`` pass through unchanged, so
+    numeric and hyphenated ids keep their spelling. Every other character,
+    including ``_`` itself, becomes ``_<hex>_``; because a literal ``_`` is
+    always escaped, every ``_`` in the result opens or closes an escape and
+    distinct keys can never produce the same id.
+    """
+    encoded = "".join(
+        character if (character.isascii() and character.isalnum()) or character == "-" else f"_{ord(character):x}_"
+        for character in key
+    )
+    return f"modelo-edit-{kind}-{encoded}"
+
+
+class ModeloWorkspaceOverviewScreen(AccountChromeScreen):
     """Address, revision coordinates, status, and the capability denominator."""
 
     BINDINGS: ClassVar = [
@@ -78,6 +134,7 @@ class ModeloWorkspaceOverviewScreen(TypedAppAccess, AccountChromeScreen):
         """Store the already-admitted session this destination frames."""
         super().__init__(id=id)
         self._session = session
+        self._action_in_flight = False
 
     @override
     def compose(self) -> ComposeResult:
@@ -90,6 +147,64 @@ class ModeloWorkspaceOverviewScreen(TypedAppAccess, AccountChromeScreen):
             )
             yield ContentDataTable[str](id="workspace-overview-destinations", cursor_type="row", zebra_stripes=True)
             yield Static(id="workspace-overview-actions")
+            yield Static(id="modelo-lifecycle-notice")
+            if self._session.lifecycle_actions is not None:
+                edit_baseline = getattr(self._session.lifecycle_actions, "edit_baseline", None)
+                if edit_baseline is not None:
+                    for entry in edit_baseline.permitted_surface:
+                        if isinstance(entry, ModeloEditWritableScalarSurfaceEntryV1):
+                            yield Input(
+                                placeholder=tr("tui.modelo.edit.scalar", casilla=entry.casilla_id),
+                                id=edit_control_id("scalar", str(entry.casilla_id)),
+                                classes="modelo-edit-value",
+                            )
+                        elif isinstance(entry, ModeloEditWritableBindingOverrideSurfaceEntryV1):
+                            yield Input(
+                                placeholder=tr("tui.modelo.edit.binding", binding=entry.binding_id),
+                                id=edit_control_id("binding", str(entry.binding_id)),
+                                classes="modelo-edit-value",
+                            )
+                    yield Button(tr("tui.modelo.edit.apply"), id="modelo-edit-apply")
+                yield Button(tr("application.modelo.lifecycle.calculate"), id="modelo-lifecycle-calculate")
+                yield Button(tr("application.modelo.lifecycle.verify"), id="modelo-lifecycle-verify")
+                yield Button(tr("application.modelo.lifecycle.file"), id="modelo-lifecycle-file")
+                yield Input(
+                    placeholder=tr("application.modelo.lifecycle.export_destination_placeholder"),
+                    id="modelo-lifecycle-export-path",
+                )
+                if self._is_m303_calculation():
+                    yield from self._compose_export_elections()
+                yield Button(tr("application.modelo.lifecycle.export"), id="modelo-lifecycle-export")
+
+    def _compose_export_elections(self) -> ComposeResult:
+        """Offer each declaration-shaping export election, pre-set to its neutral default and never blank."""
+        for control_id, label_key, keys, default in (
+            (
+                "modelo-lifecycle-export-refund-election",
+                "tui.modelo.export.refund_election.label",
+                REFUND_ELECTION_LOCALE_KEYS,
+                RefundElection.COMPENSAR,
+            ),
+            (
+                "modelo-lifecycle-export-payment-election",
+                "tui.modelo.export.payment_election.label",
+                PAYMENT_ELECTION_LOCALE_KEYS,
+                PaymentElection.INGRESO,
+            ),
+            (
+                "modelo-lifecycle-export-prior-domiciliation-election",
+                "tui.modelo.export.prior_domiciliation_election.label",
+                PRIOR_DOMICILIATION_ELECTION_LOCALE_KEYS,
+                PriorDomiciliationElection.KEEP,
+            ),
+        ):
+            yield Static(tr(label_key), markup=False)
+            yield Select[str](
+                tuple((tr(key), member.value) for member, key in keys.items()),
+                value=default.value,
+                allow_blank=False,
+                id=control_id,
+            )
 
     def on_mount(self) -> None:
         """Populate the header, the destination list, the disclosure groups, and the action notice."""
@@ -97,12 +212,57 @@ class ModeloWorkspaceOverviewScreen(TypedAppAccess, AccountChromeScreen):
         self.query_one("#workspace-overview-header", Static).update(
             tr("flows.modelo_workspace_overview.title", modelo=target.modelo)
         )
+        self._mount_graded_refusal_notice()
         self._mount_destinations()
         self._mount_address()
         self._mount_revision()
         self._mount_capabilities()
         self._mount_actions_disclosure()
         self._mount_technical_details()
+
+    def _mount_graded_refusal_notice(self) -> None:
+        """Show why this session's calculated view fell back to the form layout, when it did.
+
+        ``graded_refusal`` is present only when a GRADED_SNAPSHOT admission
+        was actually tried and refused for this exact work unit; a session
+        opened directly at STATIC_INSPECTION (no calculated view was ever
+        requested) carries none, and this mounts nothing for it. Reuses the
+        shared :class:`NoticeBand`/:class:`NoticePresentation` the rest of the
+        TUI already renders inert, already-resolved notices through, rather
+        than a page-specific widget: the reason is the refusal code's own
+        translated sentence, never its raw ``reconsideration_condition``
+        text, and the recovery action is the same catalogued
+        :func:`recovery_action_label` capability refusals already show.
+        """
+        refusal = self._session.graded_refusal
+        if refusal is None:
+            return
+        notices = [
+            NoticePresentation(
+                severity="warning",
+                message=workspace_refusal_reason_label(refusal.code),
+                action_target=None
+                if refusal.recovery_action is None
+                else recovery_action_label(refusal.recovery_action),
+            )
+        ]
+        if refusal.facts:
+            notices.append(
+                NoticePresentation(
+                    severity="info",
+                    message=", ".join(workspace_refusal_fact_label(fact) for fact in refusal.facts),
+                )
+            )
+        if refusal.evidence:
+            notices.append(
+                NoticePresentation(
+                    severity="info",
+                    message=", ".join(evidence_reference_label(reference) for reference in refusal.evidence),
+                )
+            )
+        notices.append(NoticePresentation(severity="info", message=tr("tui.modelo.workspace_refusal.static_fallback")))
+        body = self.query_one("#workspace-overview-body", ContentScroll)
+        body.mount(NoticeBand(notices, id="workspace-overview-graded-refusal"))
 
     def _mount_destinations(self) -> None:
         """List the declaration's other read pages; this page is the way into them.
@@ -125,6 +285,253 @@ class ModeloWorkspaceOverviewScreen(TypedAppAccess, AccountChromeScreen):
 
         destination = cast("ModeloWorkspaceDestinationIdV1", str(event.row_key.value))
         self.app.push_screen(resolve_destination(destination)(self._session))
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        """Run the selected lifecycle operation once through the shared modal."""
+        actions = self._session.lifecycle_actions
+        if actions is None:
+            return
+        if event.button.id == "modelo-lifecycle-calculate" and self._is_m303_calculation():
+            self._collect_ordinary_m303_evidence()
+            return
+        method_name = {
+            "modelo-edit-apply": "apply_edits",
+            "modelo-lifecycle-calculate": "calculate",
+            "modelo-lifecycle-verify": "verify",
+            "modelo-lifecycle-export": "export",
+        }.get(str(event.button.id))
+        if event.button.id == "modelo-lifecycle-file":
+            self._confirm_local_filing()
+            return
+        if method_name is None:
+            return
+        output_path = None
+        keyword_arguments: dict[str, object] = {}
+        if method_name == "apply_edits":
+            baseline = getattr(actions, "edit_baseline", None)
+            if baseline is None:
+                return
+            scalar_values: dict[str, str] = {}
+            binding_values: dict[str, str] = {}
+            for entry in baseline.permitted_surface:
+                if isinstance(entry, ModeloEditWritableScalarSurfaceEntryV1):
+                    value = self.query_one(f"#{edit_control_id('scalar', str(entry.casilla_id))}", Input).value.strip()
+                    if value:
+                        scalar_values[str(entry.casilla_id)] = value
+                elif isinstance(entry, ModeloEditWritableBindingOverrideSurfaceEntryV1):
+                    value = self.query_one(f"#{edit_control_id('binding', str(entry.binding_id))}", Input).value.strip()
+                    if value:
+                        binding_values[str(entry.binding_id)] = value
+            keyword_arguments = {"scalar_values": scalar_values, "binding_values": binding_values}
+        if method_name == "export":
+            output_path = self.query_one("#modelo-lifecycle-export-path", Input).value.strip()
+            if not output_path:
+                self._notice(tr("application.modelo.lifecycle.refusal.export_destination_required"))
+                return
+            keyword_arguments = self._export_elections()
+        submit = getattr(actions, method_name, None)
+        if submit is None:
+            return
+        if output_path is not None:
+            keyword_arguments["output_path"] = output_path
+        self._start_lifecycle_action(submit, keyword_arguments=keyword_arguments)
+
+    def _export_elections(self) -> dict[str, object]:
+        """Read the operator's export elections; a modelo that offers none submits the neutral defaults."""
+        if not self._is_m303_calculation():
+            return {
+                "refund_election": RefundElection.COMPENSAR,
+                "payment_election": PaymentElection.INGRESO,
+                "prior_domiciliation_election": PriorDomiciliationElection.KEEP,
+            }
+        return {
+            "refund_election": RefundElection(
+                str(self.query_one("#modelo-lifecycle-export-refund-election", Select).value)
+            ),
+            "payment_election": PaymentElection(
+                str(self.query_one("#modelo-lifecycle-export-payment-election", Select).value)
+            ),
+            "prior_domiciliation_election": PriorDomiciliationElection(
+                str(self.query_one("#modelo-lifecycle-export-prior-domiciliation-election", Select).value)
+            ),
+        }
+
+    def _is_m303_calculation(self) -> bool:
+        """Return whether Calculate must collect the ordinary Modelo 303 evidence form."""
+        return str(self._session.projection.target.modelo) == "303"
+
+    def _collect_ordinary_m303_evidence(self) -> None:
+        """Open one evidence form bound to the work unit selected on this immutable session."""
+        work_unit_id = self._session.projection.target.work_unit_id
+        asks_modelo_390 = getattr(self._session.lifecycle_actions, "asks_modelo_390", None)
+        if work_unit_id is None:
+            return
+        if not isinstance(asks_modelo_390, bool):
+            self._notice(tr("tui.modelo.m303_evidence.admission_unavailable"))
+            return
+        self.app.push_screen(
+            OrdinaryM303FilingEvidenceScreen(work_unit_id=str(work_unit_id), asks_modelo_390=asks_modelo_390),
+            self._calculate_with_ordinary_m303_evidence,
+        )
+
+    def _calculate_with_ordinary_m303_evidence(self, submission: OrdinaryM303FilingEvidenceSubmission | None) -> None:
+        """Submit only evidence returned for the same selected work unit, never a stale screen result.
+
+        Cancelling, a changed selection and a missing admission door each end
+        with a visible notice and no request: none of them may fall through to
+        a calculation that the operator did not complete.
+        """
+        if submission is None:
+            self._notice(tr("tui.modelo.m303_evidence.cancelled"))
+            return
+        actions = self._session.lifecycle_actions
+        target_work_unit_id = self._session.projection.target.work_unit_id
+        action_work_unit_id = None if actions is None else getattr(actions, "work_unit_id", None)
+        if (
+            target_work_unit_id is None
+            or str(target_work_unit_id) != submission.work_unit_id
+            or str(action_work_unit_id) != submission.work_unit_id
+        ):
+            self._notice(tr("tui.modelo.m303_evidence.stale_context"))
+            return
+        calculate = getattr(actions, "calculate", None)
+        author = getattr(actions, "author_ordinary_m303_filing_evidence", None)
+        existing_evidence = submission.existing_evidence
+        observed_at = submission.observed_at
+        if not isinstance(calculate, Callable) or (
+            existing_evidence is None and (observed_at is None or not isinstance(author, Callable))
+        ):
+            self._notice(tr("tui.modelo.m303_evidence.admission_unavailable"))
+            return
+        submit_calculation = cast("Callable[..., Awaitable[OperationController]]", calculate)
+        admit_evidence = cast("Callable[..., Awaitable[ModeloWorkCalculateOrdinaryM303EvidenceRequestV2]]", author)
+
+        async def submit() -> OperationController:
+            evidence = existing_evidence
+            if evidence is None:
+                evidence = await admit_evidence(
+                    joint_return_elected=submission.joint_return_elected,
+                    observed_at=observed_at,
+                )
+            return await submit_calculation(ordinary_m303_filing_evidence=evidence)
+
+        self._start_lifecycle_action(submit)
+
+    def _confirm_local_filing(self) -> None:
+        """Require an explicit acknowledgement before recording a local filing."""
+
+        def closed(confirmed: bool | None) -> None:
+            if confirmed:
+                actions = self._session.lifecycle_actions
+                submit = None if actions is None else getattr(actions, "file", None)
+                if isinstance(submit, Callable):
+                    self._start_lifecycle_action(cast("Callable[..., Awaitable[OperationController]]", submit))
+            else:
+                self._notice(tr("application.modelo.lifecycle.file_cancelled"))
+
+        self.app.push_screen(
+            ConfirmScreen(
+                title=tr("application.modelo.lifecycle.file_confirm_title"),
+                message=tr("application.modelo.lifecycle.file_confirm_message"),
+                confirm_label=tr("application.modelo.lifecycle.file_confirm_accept"),
+                cancel_label=tr("application.modelo.lifecycle.file_confirm_cancel"),
+            ),
+            closed,
+        )
+
+    def _start_lifecycle_action(
+        self,
+        submit: Callable[..., Awaitable[OperationController]],
+        *,
+        keyword_arguments: dict[str, object] | None = None,
+    ) -> None:
+        """Start one action in the exclusive lane so repeated activation cannot submit twice."""
+        if self._action_in_flight:
+            return
+        self._action_in_flight = True
+        self.run_worker(
+            self._open_lifecycle_modal(submit, keyword_arguments=keyword_arguments or {}),
+            group="modelo-lifecycle-action",
+            exclusive=True,
+        )
+
+    async def _open_lifecycle_modal(
+        self,
+        submit: Callable[..., Awaitable[OperationController]],
+        *,
+        keyword_arguments: dict[str, object],
+    ) -> None:
+        """Submit one public action and expose its exact terminal result in the operation modal.
+
+        A failure the action does not register is logged and shown as a plain
+        failure notice rather than raised: raising would end this worker with
+        the workspace left unable to run any later action.
+        """
+        from ...operations.modal import OperationModal
+
+        try:
+            controller = await submit(**keyword_arguments)
+        except CadrumoError as refusal:
+            self._action_in_flight = False
+            self._notice(resolve_error_message(refusal))
+            return
+        except Exception as failure:
+            self._action_in_flight = False
+            get_logger(__name__).error(
+                "modelo lifecycle action failed before its operation opened: %s",
+                type(failure).__qualname__,
+                exc_info=True,
+            )
+            self._notice(tr("operation.modal.terminal.failed"))
+            return
+        self.app.push_screen(OperationModal(controller), self._on_lifecycle_operation_settled)
+
+    def _on_lifecycle_operation_settled(self, outcome: object) -> None:
+        """Publish the terminal result and refresh only after success."""
+        from ...operations.modal import OperationModalSettledOutcomeV1
+
+        self._action_in_flight = False
+        if not isinstance(outcome, OperationModalSettledOutcomeV1):
+            return
+        condition = outcome.view_model.projection.terminal_condition
+        terminal_copy = (
+            None
+            if condition is None
+            else {
+                OperationTerminalCondition.SUCCEEDED: tr("operation.modal.terminal.succeeded"),
+                OperationTerminalCondition.REFUSED: tr("operation.modal.terminal.refused"),
+                OperationTerminalCondition.FAILED: tr("operation.modal.terminal.failed"),
+                OperationTerminalCondition.CANCELLED: tr("operation.modal.terminal.cancelled"),
+                OperationTerminalCondition.TIMED_OUT: tr("operation.modal.terminal.timed_out"),
+                OperationTerminalCondition.INTERRUPTED: tr("operation.modal.terminal.interrupted"),
+            }.get(condition)
+        )
+        explanation = (
+            public_refusal_explanation(outcome.view_model.receipt_ref)
+            if outcome.view_model.receipt_kind == "refusal"
+            else None
+        )
+        if terminal_copy is not None:
+            self._notice(terminal_copy if explanation is None else f"{terminal_copy}: {explanation}")
+        if condition is not OperationTerminalCondition.SUCCEEDED:
+            return
+        actions = self._session.lifecycle_actions
+        refresh = None if actions is None else getattr(actions, "refresh_after_success", None)
+        if isinstance(refresh, Callable):
+            self.run_worker(self._refresh_after_success(refresh), group="modelo-lifecycle-refresh", exclusive=True)
+
+    async def _refresh_after_success(self, refresh: Callable[[], object]) -> None:
+        """Capture one new generation, then return so reopening resolves its persisted state."""
+        try:
+            await asyncio.to_thread(refresh)
+        except CadrumoError as refusal:
+            self._notice(resolve_error_message(refusal))
+            return
+        self.dismiss(None)
+
+    def _notice(self, message: str) -> None:
+        """Retain a typed pre-submission refusal on the workspace surface."""
+        self.query_one("#modelo-lifecycle-notice", Static).update(message)
 
     def _mount_address(self) -> None:
         """Disclose the natural coordinate and the work state.
@@ -194,10 +601,25 @@ class ModeloWorkspaceOverviewScreen(TypedAppAccess, AccountChromeScreen):
             )
 
     def _mount_actions_disclosure(self) -> None:
-        """Say plainly that this page suggests no next steps yet."""
-        self.query_one("#workspace-overview-actions", Static).update(
-            tr("flows.modelo_workspace_overview.actions_not_carried")
-        )
+        """Name the catalogued next steps the producers attached, or say there are none.
+
+        Deduplicated across capabilities while preserving first appearance:
+        two capabilities may name the same remedy, and listing it twice would
+        read as two different things to do.
+        """
+        seen: list[str] = []
+        for capability in self._session.projection.capabilities:
+            action = capability.recovery_action
+            if action is None:
+                continue
+            label = recovery_action_label(action)
+            if label not in seen:
+                seen.append(label)
+        notice = self.query_one("#workspace-overview-actions", Static)
+        if not seen:
+            notice.update(tr("flows.modelo_workspace_overview.actions_none"))
+            return
+        notice.update(tr("flows.modelo_workspace_overview.actions_suggested", actions="; ".join(seen)))
 
     def _mount_technical_details(self) -> None:
         """Keep the raw identities and producer attribution, collapsed.
@@ -234,4 +656,4 @@ class ModeloWorkspaceOverviewScreen(TypedAppAccess, AccountChromeScreen):
         toggle_appearance(self.app)
 
 
-__all__ = ["ModeloWorkspaceOverviewScreen"]
+__all__ = ["ModeloWorkspaceOverviewScreen", "edit_control_id"]

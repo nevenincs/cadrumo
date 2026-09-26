@@ -111,6 +111,7 @@ Submodules
    cadrumo.core.json_contract
    cadrumo.core.json_shapes
    cadrumo.core.ledger_sort
+   cadrumo.core.legacy_workbook
    cadrumo.core.link_safety
    cadrumo.core.lockfile_unlink
    cadrumo.core.locks

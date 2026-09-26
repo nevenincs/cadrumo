@@ -216,7 +216,7 @@
             },
             "code": "censo.enrolment_unverified",
             "context": {
-              "affected_modelos": "100,130,136,303,360,390,714"
+              "affected_modelos": "130,303,360"
             },
             "message": "Censo enrolment unverified",
             "severity": "warning"
@@ -249,7 +249,37 @@
               "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 038 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "info"
+            "severity": "warning"
+          },
+          {
+            "action": {
+              "action": {
+                "action_id": "operator.overview.explain",
+                "cli_path": [
+                  "app",
+                  "overview",
+                  "explain"
+                ],
+                "target_command_key": "overview.explain"
+              },
+              "argument_bindings": [
+                {
+                  "argument_name": "modelo",
+                  "source": "operator_action.verdict_context",
+                  "source_evidence_id": null,
+                  "source_key": "modelo",
+                  "status": "resolved",
+                  "value": "100"
+                }
+              ]
+            },
+            "code": "overview.coverage.incomplete",
+            "context": {
+              "modelo": "100",
+              "reason": "applicable_window_missing"
+            },
+            "message": "The filing obligation 100 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
+            "severity": "warning"
           },
           {
             "action": {
@@ -279,7 +309,7 @@
               "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 111 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "info"
+            "severity": "warning"
           },
           {
             "action": {
@@ -309,7 +339,7 @@
               "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 115 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "info"
+            "severity": "warning"
           },
           {
             "action": {
@@ -339,7 +369,7 @@
               "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 117 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "info"
+            "severity": "warning"
           },
           {
             "action": {
@@ -369,7 +399,7 @@
               "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 122 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "info"
+            "severity": "warning"
           },
           {
             "action": {
@@ -399,7 +429,7 @@
               "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 123 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "info"
+            "severity": "warning"
           },
           {
             "action": {
@@ -429,7 +459,7 @@
               "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 126 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "info"
+            "severity": "warning"
           },
           {
             "action": {
@@ -459,7 +489,37 @@
               "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 128 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "info"
+            "severity": "warning"
+          },
+          {
+            "action": {
+              "action": {
+                "action_id": "operator.overview.explain",
+                "cli_path": [
+                  "app",
+                  "overview",
+                  "explain"
+                ],
+                "target_command_key": "overview.explain"
+              },
+              "argument_bindings": [
+                {
+                  "argument_name": "modelo",
+                  "source": "operator_action.verdict_context",
+                  "source_evidence_id": null,
+                  "source_key": "modelo",
+                  "status": "resolved",
+                  "value": "136"
+                }
+              ]
+            },
+            "code": "overview.coverage.incomplete",
+            "context": {
+              "modelo": "136",
+              "reason": "applicability_undetermined"
+            },
+            "message": "The filing obligation 136 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
+            "severity": "warning"
           },
           {
             "action": {
@@ -489,7 +549,7 @@
               "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 156 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "info"
+            "severity": "warning"
           },
           {
             "action": {
@@ -519,7 +579,7 @@
               "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 165 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "info"
+            "severity": "warning"
           },
           {
             "action": {
@@ -549,7 +609,7 @@
               "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 180 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "info"
+            "severity": "warning"
           },
           {
             "action": {
@@ -579,7 +639,7 @@
               "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 181 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "info"
+            "severity": "warning"
           },
           {
             "action": {
@@ -609,7 +669,7 @@
               "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 182 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "info"
+            "severity": "warning"
           },
           {
             "action": {
@@ -639,7 +699,7 @@
               "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 185 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "info"
+            "severity": "warning"
           },
           {
             "action": {
@@ -669,7 +729,7 @@
               "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 187 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "info"
+            "severity": "warning"
           },
           {
             "action": {
@@ -699,7 +759,7 @@
               "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 188 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "info"
+            "severity": "warning"
           },
           {
             "action": {
@@ -729,7 +789,7 @@
               "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 189 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "info"
+            "severity": "warning"
           },
           {
             "action": {
@@ -759,7 +819,7 @@
               "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 190 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "info"
+            "severity": "warning"
           },
           {
             "action": {
@@ -789,7 +849,7 @@
               "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 193 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "info"
+            "severity": "warning"
           },
           {
             "action": {
@@ -819,7 +879,7 @@
               "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 194 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "info"
+            "severity": "warning"
           },
           {
             "action": {
@@ -849,7 +909,7 @@
               "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 216 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "info"
+            "severity": "warning"
           },
           {
             "action": {
@@ -879,7 +939,7 @@
               "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 220 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "info"
+            "severity": "warning"
           },
           {
             "action": {
@@ -909,7 +969,7 @@
               "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 222 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "info"
+            "severity": "warning"
           },
           {
             "action": {
@@ -939,7 +999,7 @@
               "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 270 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "info"
+            "severity": "warning"
           },
           {
             "action": {
@@ -969,7 +1029,7 @@
               "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 280 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "info"
+            "severity": "warning"
           },
           {
             "action": {
@@ -999,7 +1059,7 @@
               "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 296 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "info"
+            "severity": "warning"
           },
           {
             "action": {
@@ -1029,7 +1089,7 @@
               "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 308 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "info"
+            "severity": "warning"
           },
           {
             "action": {
@@ -1059,7 +1119,7 @@
               "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 309 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "info"
+            "severity": "warning"
           },
           {
             "action": {
@@ -1089,7 +1149,7 @@
               "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 322 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "info"
+            "severity": "warning"
           },
           {
             "action": {
@@ -1119,7 +1179,7 @@
               "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 341 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "info"
+            "severity": "warning"
           },
           {
             "action": {
@@ -1149,7 +1209,7 @@
               "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 345 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "info"
+            "severity": "warning"
           },
           {
             "action": {
@@ -1179,7 +1239,7 @@
               "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 347 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "info"
+            "severity": "warning"
           },
           {
             "action": {
@@ -1209,7 +1269,7 @@
               "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 349 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "info"
+            "severity": "warning"
           },
           {
             "action": {
@@ -1239,7 +1299,7 @@
               "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 353 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "info"
+            "severity": "warning"
           },
           {
             "action": {
@@ -1269,7 +1329,37 @@
               "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 369 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "info"
+            "severity": "warning"
+          },
+          {
+            "action": {
+              "action": {
+                "action_id": "operator.overview.explain",
+                "cli_path": [
+                  "app",
+                  "overview",
+                  "explain"
+                ],
+                "target_command_key": "overview.explain"
+              },
+              "argument_bindings": [
+                {
+                  "argument_name": "modelo",
+                  "source": "operator_action.verdict_context",
+                  "source_evidence_id": null,
+                  "source_key": "modelo",
+                  "status": "resolved",
+                  "value": "390"
+                }
+              ]
+            },
+            "code": "overview.coverage.incomplete",
+            "context": {
+              "modelo": "390",
+              "reason": "applicable_window_missing"
+            },
+            "message": "The filing obligation 390 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
+            "severity": "warning"
           },
           {
             "action": {
@@ -1299,7 +1389,7 @@
               "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 490 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "info"
+            "severity": "warning"
           },
           {
             "action": {
@@ -1329,7 +1419,7 @@
               "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 576 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "info"
+            "severity": "warning"
           },
           {
             "action": {
@@ -1359,7 +1449,37 @@
               "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 604 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "info"
+            "severity": "warning"
+          },
+          {
+            "action": {
+              "action": {
+                "action_id": "operator.overview.explain",
+                "cli_path": [
+                  "app",
+                  "overview",
+                  "explain"
+                ],
+                "target_command_key": "overview.explain"
+              },
+              "argument_bindings": [
+                {
+                  "argument_name": "modelo",
+                  "source": "operator_action.verdict_context",
+                  "source_evidence_id": null,
+                  "source_key": "modelo",
+                  "status": "resolved",
+                  "value": "714"
+                }
+              ]
+            },
+            "code": "overview.coverage.incomplete",
+            "context": {
+              "modelo": "714",
+              "reason": "applicable_window_missing"
+            },
+            "message": "The filing obligation 714 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
+            "severity": "warning"
           },
           {
             "action": {
@@ -1389,7 +1509,7 @@
               "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 720 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "info"
+            "severity": "warning"
           },
           {
             "action": {
@@ -1419,7 +1539,7 @@
               "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 721 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "info"
+            "severity": "warning"
           },
           {
             "action": {
@@ -1449,19 +1569,37 @@
               "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 763 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
+            "severity": "warning"
+          },
+          {
+            "action": {
+              "action": {
+                "action_id": "operator.live.filed.pull_all",
+                "cli_path": [
+                  "app",
+                  "live",
+                  "filed",
+                  "pull-all"
+                ],
+                "target_command_key": "app.live.filed.pull_all"
+              },
+              "argument_bindings": []
+            },
+            "code": "overview.no_aeat_history",
+            "context": {
+              "observation_count": "0"
+            },
+            "message": "This profile holds no filing evidence AEAT confirmed.",
             "severity": "info"
           }
         ],
         "result": {
+          "as_of": "2026-04-01",
           "completeness": {
             "computable_modelos": [
-              "100",
               "130",
-              "136",
               "303",
-              "360",
-              "390",
-              "714"
+              "360"
             ],
             "defaulted_keys": [
               "art109_activity_income_withholding_ge_70pct",
@@ -1485,6 +1623,10 @@
               {
                 "modelo": "038",
                 "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "100",
+                "reason": "applicable_window_missing"
               },
               {
                 "modelo": "111",
@@ -1512,6 +1654,10 @@
               },
               {
                 "modelo": "128",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "136",
                 "reason": "applicability_undetermined"
               },
               {
@@ -1623,6 +1769,10 @@
                 "reason": "applicability_undetermined"
               },
               {
+                "modelo": "390",
+                "reason": "applicable_window_missing"
+              },
+              {
                 "modelo": "490",
                 "reason": "applicability_undetermined"
               },
@@ -1633,6 +1783,10 @@
               {
                 "modelo": "604",
                 "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "714",
+                "reason": "applicable_window_missing"
               },
               {
                 "modelo": "720",
@@ -1751,176 +1905,18 @@
               "993"
             ],
             "surfaced": [
-              "100",
               "130",
-              "136",
               "303",
-              "360",
-              "390",
-              "714"
+              "360"
             ]
           },
           "entries": [
             {
-              "adjusted_closes_on": "2026-01-20",
-              "aeat_submission_state": "not_observed",
-              "censo_enrolment_state": "unverified",
-              "detail_action": {
-                "action": {
-                  "action_id": "operator.overview.explain",
-                  "cli_path": [
-                    "app",
-                    "overview",
-                    "explain"
-                  ],
-                  "target_command_key": "overview.explain"
-                },
-                "argument_bindings": [
-                  {
-                    "argument_name": "modelo",
-                    "source": "operator_action.verdict_context",
-                    "source_evidence_id": null,
-                    "source_key": "modelo",
-                    "status": "resolved",
-                    "value": "136"
-                  },
-                  {
-                    "argument_name": "year",
-                    "source": "operator_action.verdict_context",
-                    "source_evidence_id": null,
-                    "source_key": "year",
-                    "status": "resolved",
-                    "value": 2025
-                  }
-                ]
-              },
-              "justificante_verified": false,
-              "local_filing_state": "not_ready_to_file",
-              "modelo": "136",
-              "period": "2025 4T",
-              "user_state": "late"
-            },
-            {
-              "adjusted_closes_on": "2026-01-30",
-              "aeat_submission_state": "not_observed",
-              "censo_enrolment_state": "unverified",
-              "detail_action": {
-                "action": {
-                  "action_id": "operator.overview.explain",
-                  "cli_path": [
-                    "app",
-                    "overview",
-                    "explain"
-                  ],
-                  "target_command_key": "overview.explain"
-                },
-                "argument_bindings": [
-                  {
-                    "argument_name": "modelo",
-                    "source": "operator_action.verdict_context",
-                    "source_evidence_id": null,
-                    "source_key": "modelo",
-                    "status": "resolved",
-                    "value": "130"
-                  },
-                  {
-                    "argument_name": "year",
-                    "source": "operator_action.verdict_context",
-                    "source_evidence_id": null,
-                    "source_key": "year",
-                    "status": "resolved",
-                    "value": 2025
-                  }
-                ]
-              },
-              "justificante_verified": false,
-              "local_filing_state": "not_ready_to_file",
-              "modelo": "130",
-              "period": "2025 4T",
-              "user_state": "late"
-            },
-            {
-              "adjusted_closes_on": "2026-01-30",
-              "aeat_submission_state": "not_observed",
-              "censo_enrolment_state": "unverified",
-              "detail_action": {
-                "action": {
-                  "action_id": "operator.overview.explain",
-                  "cli_path": [
-                    "app",
-                    "overview",
-                    "explain"
-                  ],
-                  "target_command_key": "overview.explain"
-                },
-                "argument_bindings": [
-                  {
-                    "argument_name": "modelo",
-                    "source": "operator_action.verdict_context",
-                    "source_evidence_id": null,
-                    "source_key": "modelo",
-                    "status": "resolved",
-                    "value": "303"
-                  },
-                  {
-                    "argument_name": "year",
-                    "source": "operator_action.verdict_context",
-                    "source_evidence_id": null,
-                    "source_key": "year",
-                    "status": "resolved",
-                    "value": 2025
-                  }
-                ]
-              },
-              "justificante_verified": false,
-              "local_filing_state": "not_ready_to_file",
-              "modelo": "303",
-              "period": "2025 4T",
-              "user_state": "late"
-            },
-            {
-              "adjusted_closes_on": "2026-01-30",
-              "aeat_submission_state": "not_observed",
-              "censo_enrolment_state": "unverified",
-              "detail_action": {
-                "action": {
-                  "action_id": "operator.overview.explain",
-                  "cli_path": [
-                    "app",
-                    "overview",
-                    "explain"
-                  ],
-                  "target_command_key": "overview.explain"
-                },
-                "argument_bindings": [
-                  {
-                    "argument_name": "modelo",
-                    "source": "operator_action.verdict_context",
-                    "source_evidence_id": null,
-                    "source_key": "modelo",
-                    "status": "resolved",
-                    "value": "390"
-                  },
-                  {
-                    "argument_name": "year",
-                    "source": "operator_action.verdict_context",
-                    "source_evidence_id": null,
-                    "source_key": "year",
-                    "status": "resolved",
-                    "value": 2025
-                  }
-                ]
-              },
-              "justificante_verified": false,
-              "local_filing_state": "not_ready_to_file",
-              "modelo": "390",
-              "period": "2025 0A",
-              "user_state": "late"
-            },
-            {
               "adjusted_closes_on": "2026-04-20",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
+              "closes_on": "2026-04-20",
+              "days_overdue": null,
               "detail_action": {
                 "action": {
                   "action_id": "operator.overview.explain",
@@ -1950,55 +1946,24 @@
                   }
                 ]
               },
+              "evaluated_on": "2026-04-01",
+              "holiday_coverage": "national_only",
+              "holiday_territory": null,
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
               "modelo": "130",
+              "payment_cutoff_on": "2026-04-15",
               "period": "2026 1T",
+              "recovery_action": null,
+              "shift_reason": "business_day",
               "user_state": "due"
             },
             {
               "adjusted_closes_on": "2026-04-20",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
-              "detail_action": {
-                "action": {
-                  "action_id": "operator.overview.explain",
-                  "cli_path": [
-                    "app",
-                    "overview",
-                    "explain"
-                  ],
-                  "target_command_key": "overview.explain"
-                },
-                "argument_bindings": [
-                  {
-                    "argument_name": "modelo",
-                    "source": "operator_action.verdict_context",
-                    "source_evidence_id": null,
-                    "source_key": "modelo",
-                    "status": "resolved",
-                    "value": "136"
-                  },
-                  {
-                    "argument_name": "year",
-                    "source": "operator_action.verdict_context",
-                    "source_evidence_id": null,
-                    "source_key": "year",
-                    "status": "resolved",
-                    "value": 2026
-                  }
-                ]
-              },
-              "justificante_verified": false,
-              "local_filing_state": "not_ready_to_file",
-              "modelo": "136",
-              "period": "2026 1T",
-              "user_state": "due"
-            },
-            {
-              "adjusted_closes_on": "2026-04-20",
-              "aeat_submission_state": "not_observed",
-              "censo_enrolment_state": "unverified",
+              "closes_on": "2026-04-20",
+              "days_overdue": null,
               "detail_action": {
                 "action": {
                   "action_id": "operator.overview.explain",
@@ -2028,94 +1993,24 @@
                   }
                 ]
               },
+              "evaluated_on": "2026-04-01",
+              "holiday_coverage": "national_only",
+              "holiday_territory": null,
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
               "modelo": "303",
+              "payment_cutoff_on": null,
               "period": "2026 1T",
-              "user_state": "due"
-            },
-            {
-              "adjusted_closes_on": "2026-06-30",
-              "aeat_submission_state": "not_observed",
-              "censo_enrolment_state": "unverified",
-              "detail_action": {
-                "action": {
-                  "action_id": "operator.overview.explain",
-                  "cli_path": [
-                    "app",
-                    "overview",
-                    "explain"
-                  ],
-                  "target_command_key": "overview.explain"
-                },
-                "argument_bindings": [
-                  {
-                    "argument_name": "modelo",
-                    "source": "operator_action.verdict_context",
-                    "source_evidence_id": null,
-                    "source_key": "modelo",
-                    "status": "resolved",
-                    "value": "100"
-                  },
-                  {
-                    "argument_name": "year",
-                    "source": "operator_action.verdict_context",
-                    "source_evidence_id": null,
-                    "source_key": "year",
-                    "status": "resolved",
-                    "value": 2025
-                  }
-                ]
-              },
-              "justificante_verified": false,
-              "local_filing_state": "not_ready_to_file",
-              "modelo": "100",
-              "period": "2025 0A",
-              "user_state": "due"
-            },
-            {
-              "adjusted_closes_on": "2026-06-30",
-              "aeat_submission_state": "not_observed",
-              "censo_enrolment_state": "unverified",
-              "detail_action": {
-                "action": {
-                  "action_id": "operator.overview.explain",
-                  "cli_path": [
-                    "app",
-                    "overview",
-                    "explain"
-                  ],
-                  "target_command_key": "overview.explain"
-                },
-                "argument_bindings": [
-                  {
-                    "argument_name": "modelo",
-                    "source": "operator_action.verdict_context",
-                    "source_evidence_id": null,
-                    "source_key": "modelo",
-                    "status": "resolved",
-                    "value": "714"
-                  },
-                  {
-                    "argument_name": "year",
-                    "source": "operator_action.verdict_context",
-                    "source_evidence_id": null,
-                    "source_key": "year",
-                    "status": "resolved",
-                    "value": 2025
-                  }
-                ]
-              },
-              "justificante_verified": false,
-              "local_filing_state": "not_ready_to_file",
-              "modelo": "714",
-              "period": "2025 0A",
+              "recovery_action": null,
+              "shift_reason": "business_day",
               "user_state": "due"
             },
             {
               "adjusted_closes_on": "2026-07-20",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
+              "closes_on": "2026-07-20",
+              "days_overdue": null,
               "detail_action": {
                 "action": {
                   "action_id": "operator.overview.explain",
@@ -2145,55 +2040,24 @@
                   }
                 ]
               },
+              "evaluated_on": "2026-04-01",
+              "holiday_coverage": "national_only",
+              "holiday_territory": null,
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
               "modelo": "130",
+              "payment_cutoff_on": "2026-07-15",
               "period": "2026 2T",
+              "recovery_action": null,
+              "shift_reason": "business_day",
               "user_state": "due"
             },
             {
               "adjusted_closes_on": "2026-07-20",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
-              "detail_action": {
-                "action": {
-                  "action_id": "operator.overview.explain",
-                  "cli_path": [
-                    "app",
-                    "overview",
-                    "explain"
-                  ],
-                  "target_command_key": "overview.explain"
-                },
-                "argument_bindings": [
-                  {
-                    "argument_name": "modelo",
-                    "source": "operator_action.verdict_context",
-                    "source_evidence_id": null,
-                    "source_key": "modelo",
-                    "status": "resolved",
-                    "value": "136"
-                  },
-                  {
-                    "argument_name": "year",
-                    "source": "operator_action.verdict_context",
-                    "source_evidence_id": null,
-                    "source_key": "year",
-                    "status": "resolved",
-                    "value": 2026
-                  }
-                ]
-              },
-              "justificante_verified": false,
-              "local_filing_state": "not_ready_to_file",
-              "modelo": "136",
-              "period": "2026 2T",
-              "user_state": "due"
-            },
-            {
-              "adjusted_closes_on": "2026-07-20",
-              "aeat_submission_state": "not_observed",
-              "censo_enrolment_state": "unverified",
+              "closes_on": "2026-07-20",
+              "days_overdue": null,
               "detail_action": {
                 "action": {
                   "action_id": "operator.overview.explain",
@@ -2223,16 +2087,24 @@
                   }
                 ]
               },
+              "evaluated_on": "2026-04-01",
+              "holiday_coverage": "national_only",
+              "holiday_territory": null,
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
               "modelo": "303",
+              "payment_cutoff_on": null,
               "period": "2026 2T",
+              "recovery_action": null,
+              "shift_reason": "business_day",
               "user_state": "due"
             },
             {
               "adjusted_closes_on": "2026-09-30",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
+              "closes_on": "2026-09-30",
+              "days_overdue": null,
               "detail_action": {
                 "action": {
                   "action_id": "operator.overview.explain",
@@ -2262,16 +2134,24 @@
                   }
                 ]
               },
+              "evaluated_on": "2026-04-01",
+              "holiday_coverage": "national_only",
+              "holiday_territory": null,
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
               "modelo": "360",
+              "payment_cutoff_on": null,
               "period": "2025 AD-HOC",
+              "recovery_action": null,
+              "shift_reason": "business_day",
               "user_state": "due"
             },
             {
               "adjusted_closes_on": "2026-10-20",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
+              "closes_on": "2026-10-20",
+              "days_overdue": null,
               "detail_action": {
                 "action": {
                   "action_id": "operator.overview.explain",
@@ -2301,55 +2181,24 @@
                   }
                 ]
               },
+              "evaluated_on": "2026-04-01",
+              "holiday_coverage": "national_only",
+              "holiday_territory": null,
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
               "modelo": "130",
+              "payment_cutoff_on": "2026-10-15",
               "period": "2026 3T",
+              "recovery_action": null,
+              "shift_reason": "business_day",
               "user_state": "due"
             },
             {
               "adjusted_closes_on": "2026-10-20",
               "aeat_submission_state": "not_observed",
               "censo_enrolment_state": "unverified",
-              "detail_action": {
-                "action": {
-                  "action_id": "operator.overview.explain",
-                  "cli_path": [
-                    "app",
-                    "overview",
-                    "explain"
-                  ],
-                  "target_command_key": "overview.explain"
-                },
-                "argument_bindings": [
-                  {
-                    "argument_name": "modelo",
-                    "source": "operator_action.verdict_context",
-                    "source_evidence_id": null,
-                    "source_key": "modelo",
-                    "status": "resolved",
-                    "value": "136"
-                  },
-                  {
-                    "argument_name": "year",
-                    "source": "operator_action.verdict_context",
-                    "source_evidence_id": null,
-                    "source_key": "year",
-                    "status": "resolved",
-                    "value": 2026
-                  }
-                ]
-              },
-              "justificante_verified": false,
-              "local_filing_state": "not_ready_to_file",
-              "modelo": "136",
-              "period": "2026 3T",
-              "user_state": "due"
-            },
-            {
-              "adjusted_closes_on": "2026-10-20",
-              "aeat_submission_state": "not_observed",
-              "censo_enrolment_state": "unverified",
+              "closes_on": "2026-10-20",
+              "days_overdue": null,
               "detail_action": {
                 "action": {
                   "action_id": "operator.overview.explain",
@@ -2379,10 +2228,16 @@
                   }
                 ]
               },
+              "evaluated_on": "2026-04-01",
+              "holiday_coverage": "national_only",
+              "holiday_territory": null,
               "justificante_verified": false,
               "local_filing_state": "not_ready_to_file",
               "modelo": "303",
+              "payment_cutoff_on": null,
               "period": "2026 3T",
+              "recovery_action": null,
+              "shift_reason": "business_day",
               "user_state": "due"
             }
           ],
@@ -2591,13 +2446,9 @@
             },
             {
               "affected_modelos": [
-                "100",
                 "130",
-                "136",
                 "303",
-                "360",
-                "390",
-                "714"
+                "360"
               ],
               "code": "censo.enrolment_unverified",
               "fix_action": {
@@ -2658,7 +2509,7 @@
           "out_of_plazo_warning": null,
           "profile_facts": {
             "art109_activity_income_withholding_ge_70pct": false,
-            "bienes_extranjero_above_threshold": false,
+            "bienes_extranjero_above_threshold": "",
             "does_intracomunitario": false,
             "entity_type": "natural_person",
             "has_employees": false,
@@ -2671,12 +2522,14 @@
             "iva.roi_enrolled": false,
             "iva_regime": "GENERAL",
             "legal_entity_form": "",
-            "monedas_virtuales_extranjero_above_threshold": false,
+            "monedas_virtuales_extranjero_above_threshold": "",
             "pays_capital_income_with_retencion": false,
             "pays_professionals_with_retencion": false,
             "pays_rent_with_retencion": false,
+            "premio_loteria_gravamen_especial_sin_retencion": "",
+            "premio_loteria_gravamen_especial_trimestres": "",
             "tax_id": "sha256:1c9f9632",
-            "third_party_transactions_above_347_threshold": false
+            "third_party_transactions_above_347_threshold": ""
           },
           "rationale": "Modelo 130 (pago fraccionado del IRPF): la persona física residente IRPF declara rendimientos de actividades económicas en estimación directa, que generan la obligación del pago fraccionado.",
           "scheduling_rationale": "Autonomo en estimacion directa salvo la excepcion Art. 109 por cobertura de retencion o ingreso a cuenta en actividades profesionales, agricolas, ganaderas o forestales.",

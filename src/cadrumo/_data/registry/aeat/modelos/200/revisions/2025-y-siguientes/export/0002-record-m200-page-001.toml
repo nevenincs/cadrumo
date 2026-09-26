@@ -1077,12 +1077,12 @@ source_refs = ['aeat-dr-200-2025']
 id = 'm200-2025.dp200001.f0113'
 offset = 616
 length = 12
-kind = 'header'
-producer_key = 'm200.identificador_de_fin_de_registro'
+kind = 'literal'
+literal = '</T20001000>'
 data_type = 'text'
 required = true
-padding = 'right_space'
-justification = 'left'
+padding = 'none'
+justification = 'none'
 signed = false
 legal_refs = [
     'ley-27-2014:art-41',

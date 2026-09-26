@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, override
 from pydantic import BaseModel
 
 from ...core.errors.error_codes import ErrorCategory, get_registered_error_code
-from ...core.errors.hierarchy import CadrumoError
+from ...core.errors.hierarchy import CadrumoError, InternalInvariantError
 from ...core.hashing import content_hash_hex
 from ...core.operations import (
     OperationDeadline,
@@ -24,7 +24,7 @@ from . import supervisor_context as _supervisor_context
 from ._execution_context import DefinitionBoundContext
 from ._supervisor_host import SupervisorHost
 from .capabilities import OperationRequestStoragePolicy
-from .errors import OperationDeclarationError, OperationUnsettledError
+from .errors import OperationDeclarationError, OperationExecutorReturnedNoResultError, OperationUnsettledError
 from .financial_operand import (
     OperationTransientFinancialOperandDelivery,
     OperationTransientFinancialOperandRequirement,
@@ -52,7 +52,6 @@ from .persistence.idempotency import OperationIdempotencyClaim
 from .persistence.journal import (
     OperationPersistedSnapshot,
 )
-from .persistence.leases import OperationLeaseDisposition
 from .registry import OperationDefinition, OperationReconciliationPolicy
 from .secret_submission import BoundEphemeralSecretAccess, OperationSecretRequirement, zeroize_secret_buffer
 
@@ -129,6 +128,19 @@ def _advanced_snapshot(
     )
 
 
+_SUSPENDED_LIFECYCLES = frozenset({OperationLifecycle.WAITING_FOR_INTERACTION, OperationLifecycle.WAITING_FOR_EXTERNAL})
+
+
+def _awaits_another_settler(snapshot: OperationPersistedSnapshot) -> bool:
+    """Whether a state left by a ``None`` return is settled by something other than the executor."""
+    return (
+        snapshot.lifecycle in _SUSPENDED_LIFECYCLES
+        or snapshot.pending_interaction is not None
+        or snapshot.cancellation_requested_at is not None
+        or snapshot.lifecycle is OperationLifecycle.TERMINAL
+    )
+
+
 class SupervisorExecutionMixin(SupervisorHost):
     """Own request binding, executor execution, and durable interaction stages."""
 
@@ -187,9 +199,9 @@ class SupervisorExecutionMixin(SupervisorHost):
         if existing_operation_id is not None:
             return existing_operation_id
         lease = self._candidate(identity, now)
-        result = await self._leases.acquire(lease, observed_at=now)
-        if result.disposition is not OperationLeaseDisposition.ACQUIRED:
-            return await self._resolve_conflict_submission(claim)
+        replayed_operation_id = await self._acquire_submission_lease(lease, claim=claim)
+        if replayed_operation_id is not None:
+            return replayed_operation_id
         self._leases_by_operation[identity.operation_id] = lease
         snapshot = OperationPersistedSnapshot(
             identity=identity,
@@ -577,11 +589,23 @@ class SupervisorExecutionMixin(SupervisorHost):
         snapshot: OperationPersistedSnapshot,
         result_ref: OperationReference | None,
     ) -> OperationPersistedSnapshot:
-        """Join an executor's domain result to successful settlement after it stops."""
+        """Join an executor's domain result to its settlement after it stops.
+
+        ``snapshot`` is the executor's own last committed state. A ``None``
+        return leaves the operation unsettled only when something else will
+        settle it: the executor suspended at a pending interaction or external
+        wait (whose response may already have been consumed), a cancellation
+        request is in flight, or the operation already settled. An
+        acknowledged cancellation settles as cancelled or timed out. Any other
+        ``None`` is an executor contract breach that nothing could ever
+        settle, so it settles as failed with a registered code.
+        """
         if result_ref is None:
             returned = await self.inspect(snapshot.identity.operation_id)
             if returned.cancellation_acknowledged_at is None:
-                return returned
+                if _awaits_another_settler(snapshot) or _awaits_another_settler(returned):
+                    return returned
+                return await self._settle_executor_failure(returned, OperationExecutorReturnedNoResultError())
             condition = self._acknowledged_cancellation_condition(returned)
             if condition is OperationTerminalCondition.TIMED_OUT:
                 self._validate_cancelled_settlement(returned)
@@ -654,6 +678,8 @@ class SupervisorExecutionMixin(SupervisorHost):
         executor_entered_at: datetime | None = None,
         discard_ephemeral_secret: bool = False,
     ) -> OperationPersistedSnapshot:
+        if lifecycle is OperationLifecycle.TERMINAL:
+            raise InternalInvariantError("a terminal transition is committed only by settlement with its receipt")
         self._require_pinned_definition(snapshot)
         now = self._clock()
         async with self._lease_lock(snapshot.identity.operation_id):

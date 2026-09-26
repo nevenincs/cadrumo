@@ -25,7 +25,7 @@ from cadrumo.adapters.persistence.profile.calculation_observations import (
     CalculationObservationRepository,
     IvaWalletDecisionRepository,
 )
-from cadrumo.adapters.persistence.profile.tests._iva_compensation_history_support import m303_registry_snapshot_ref
+from cadrumo.adapters.persistence.profile.tests.iva_compensation_history_support import m303_registry_snapshot_ref
 from cadrumo.adapters.persistence.storage.envelope.contract import Envelope
 from cadrumo.adapters.persistence.storage.errors import EnvelopeVersionError
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (

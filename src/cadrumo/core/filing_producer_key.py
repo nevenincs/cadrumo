@@ -246,6 +246,15 @@ class FilingProducerKey(StrEnum):
     M222_REGIMEN_REDUCIDA_DIMENSION = "m222.regimen_reducida_dimension"
     M222_CIFRA_NEGOCIOS_GRUPO_DOCE_MESES = "m222.cifra_negocios_grupo_doce_meses"
     M222_COOPERATIVA_FISCALMENTE_PROTEGIDA = "m222.cooperativa_fiscalmente_protegida"
+    #: The 2023-2024 diseño prints ONE enumerated slot, "Grupo de coperativas
+    #: fiscalmente protegida u Otros grupos fiscales con posibilidad de aplicar dos
+    #: tipos impositivos (ej. entidades ZEC)", whose values are "0" no consta, "1"
+    #: grupo cooperativas and "2" otros grupos fiscales. The 2025 diseño splits the
+    #: same question into the two independent X-marks above. Modelo 202's twin slot
+    #: is named on the same pattern for the same reason: naming this for the
+    #: cooperativa alone would drop the half of the slot that decides whether a
+    #: second tipo applies at all.
+    M222_COOPERATIVA_O_MULTIPLES_TIPOS = "m222.cooperativa_o_multiples_tipos"
     M222_REGIMEN_ENTIDADES_CAPITAL_RIESGO = "m222.regimen_entidades_capital_riesgo"
     M222_CIRCUNSTANCIA_CONCURRENTE = "m222.circunstancia_concurrente"
     M222_CIFRA_NEGOCIOS_PERIODO_ANTERIOR_TRAMO = "m222.cifra_negocios_periodo_anterior_tramo"
@@ -461,12 +470,6 @@ class FilingProducerKey(StrEnum):
     M200_IDENTIFICACION_EJERCICIO = "m200.identificacion_ejercicio"
     M200_IDENTIFICACION_TIPO_DE_EJERCICIO = "m200.identificacion_tipo_de_ejercicio"
     M200_IDENTIFICADOR_CLIENTE_EEDD_RESERVADO_PARA_LA = "m200.identificador_cliente_eedd_reservado_para_la"
-    M200_IDENTIFICADOR_DE_FIN_DE_REGISTRO = "m200.identificador_de_fin_de_registro"
-    M200_IDENTIFICADOR_DE_FIN_DE_REGISTRO_2 = "m200.identificador_de_fin_de_registro_2"
-    M200_IDENTIFICADOR_DE_FIN_DE_REGISTRO_3 = "m200.identificador_de_fin_de_registro_3"
-    M200_IDENTIFICADOR_DE_FIN_DE_REGISTRO_4 = "m200.identificador_de_fin_de_registro_4"
-    M200_IDENTIFICADOR_DE_FIN_DE_REGISTRO_5 = "m200.identificador_de_fin_de_registro_5"
-    M200_IDENTIFICADOR_DE_FIN_DE_REGISTRO_6 = "m200.identificador_de_fin_de_registro_6"
     M200_IMPORTE_A_DEVOLVER = "m200.importe_a_devolver"
     M200_IMPORTE_A_INGRESAR = "m200.importe_a_ingresar"
     M200_IMPORTE_NETO_DE_LA_CIFRA_DE_NEGOCIOS_DE_LOS = "m200.importe_neto_de_la_cifra_de_negocios_de_los"

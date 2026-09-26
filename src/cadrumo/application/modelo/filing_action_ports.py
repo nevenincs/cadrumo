@@ -21,6 +21,7 @@ from ...domain.modelos.protocols import (
 )
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
+from ..aggregation.retencion_observations_repository import RetencionObservationPorts
 from ..calculations.iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
 from ..calculations.observations_repository import (
     CalculationObservationRepositoryProtocol,
@@ -51,6 +52,7 @@ class FilingActionPorts:
     workflow_run_repository: WorkflowRunRepositoryProtocol
     draft_review_ports: DraftReviewPorts
     workflow_gate_ports: WorkflowGatePorts
+    retencion_observation_ports: RetencionObservationPorts
 
 
 class FilingActionPortsFactory(Protocol):

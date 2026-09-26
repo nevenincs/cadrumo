@@ -350,6 +350,17 @@ PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE = SecureObjectNamespaceDefinitio
     scope=StorageNamespaceScope.BUCKET_LOCAL,
     custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
 )
+PROFILE_ACTIVIDAD_ASSET_HISTORY_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="profile_actividad_asset_history",
+    namespace="cadrumo.persistence.profile.actividad_asset",
+    owner="cadrumo.adapters.persistence.profile.actividad_asset",
+    sensitivity=SensitivityClass.FINANCIAL,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="default",
+    default_object_key=SECURE_OBJECT_DEFAULT_KEY,
+    scope=StorageNamespaceScope.BUCKET_LOCAL,
+    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
+)
 PROFILE_PRORRATA_REGISTER_NAMESPACE = SecureObjectNamespaceDefinition(
     key="profile_prorrata_register",
     namespace="cadrumo.persistence.profile.prorrata_register",
@@ -436,6 +447,16 @@ WITHHOLDING_OBSERVATIONS_NAMESPACE = SecureObjectNamespaceDefinition(
     # the encrypted payload, never in a repository identifier. The clave/subclave
     # are non-identifying AEAT percepcion codes, so they stay plain in the key.
     object_key_grammar="{modelo}:{filing_year}:{period}:{sha256(perceptor_tax_id)}:{clave}:{subclave}",
+    scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
+)
+WITHHOLDING_WORKFLOW_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="withholding_workflow",
+    namespace="cadrumo.withholding.workflow",
+    owner="cadrumo.application.aggregation",
+    sensitivity=SensitivityClass.FINANCIAL,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="{window|generation|idempotency|guard}:{sha256(scope)}[:{sha256(value)}]",
     scope=StorageNamespaceScope.PROFILE_LOCAL,
     custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
 )

@@ -4,26 +4,22 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.core.hashing import sha256_hex
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.authority_artifact import (
     AuthorityArtifact,
-    AuthorityBuildIdentity,
     AuthorityEvidenceProjection,
 )
 from cadrumo.domain.calculations.registry.schema_base import RegistrySourceKind
 from cadrumo.domain.calculations.registry.source_byte_availability import source_bytes_are_embedded
+from cadrumo.domain.calculations.registry.tests.artifact_runtime_support import synthetic_build_receipts
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..authority_publication import _project_evidence, _project_source_evidence, require_evidence_closure
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_BUILD_IDENTITY = AuthorityBuildIdentity.from_inputs(
-    source_identity_digest=sha256_hex(b"source byte availability fixture sources"),
-    compiler_identity_digest=sha256_hex(b"source byte availability fixture compiler"),
-)
+_BUILD_IDENTITY, _COMPILER_CLOSURE = synthetic_build_receipts("source byte availability fixture sources")
 
 
 @pytest.fixture(scope="module")
@@ -42,6 +38,7 @@ def _artifact(compiled: ValidatedRegistryAuthority, evidence: AuthorityEvidenceP
         catalogues=compiled.catalogues,
         identity_digest=_BUILD_IDENTITY.identity_digest,
         build_identity=_BUILD_IDENTITY,
+        compiler_closure=_COMPILER_CLOSURE,
         profile_schema=compiled.profile_schema(),
         evidence=evidence,
     )

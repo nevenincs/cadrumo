@@ -168,7 +168,10 @@ def audit_layering(repo_root: Path) -> DimensionReport:
         )
 
     if result.returncode != 0:
-        diagnostic = [line.strip()[:500] for line in (result.stdout + result.stderr).splitlines() if line.strip()][:10]
+        diagnostic = (
+            _import_gate_diagnostics(result.stdout)
+            or [line.strip()[:500] for line in (result.stdout + result.stderr).splitlines() if line.strip()][:10]
+        )
         return DimensionReport(
             name="layering",
             status=Status.RED,
@@ -182,6 +185,30 @@ def audit_layering(repo_root: Path) -> DimensionReport:
         status=Status.GREEN,
         headline="authoritative import gate completed successfully",
     )
+
+
+def _import_gate_diagnostics(stdout: str) -> list[str]:
+    """Return the gate's own headline and reasons from its ``run_finished`` envelope.
+
+    The recipe's runner replaces the gate's text with one JSON envelope per event,
+    so slicing raw lines kept only the opening of a several-kilobyte object and
+    dropped the reasons it carries deeper in. An absent or unreadable envelope
+    returns nothing, and the caller falls back to the raw lines.
+    """
+    for line in reversed(stdout.splitlines()):
+        try:
+            envelope = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(envelope, dict) or envelope.get("event") != "run_finished":
+            continue
+        graph_authority = envelope.get("graph_authority")
+        operational = graph_authority.get("operational_reasons", []) if isinstance(graph_authority, dict) else []
+        failed = envelope.get("failed_reasons", [])
+        headline = envelope.get("headline")
+        reasons = [*operational, *failed] if isinstance(operational, list) and isinstance(failed, list) else []
+        return [str(item) for item in ([headline] if headline else []) + reasons]
+    return []
 
 
 # ---------------------------------------------------------------------------

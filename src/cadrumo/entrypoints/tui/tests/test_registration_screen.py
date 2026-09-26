@@ -43,10 +43,10 @@ from ....application.user_profile.login_session import logout_active_profile
 from ....application.user_profile.recovery_custody import profile_recovery_status
 from ....core.credentials import ProfilePasswordRefusalReason, assess_profile_password
 from ....core.i18n.render import tr
-from ....entrypoints.tui.components.host import ScreenHostApp
-from ....entrypoints.tui.components.status import PinnedStatusBar
-from ....entrypoints.tui.secret.credentials import assessment_refusal
-from ....entrypoints.tui.secret.registration import RecoveryCodeScreen, RecoveryOfferScreen, RegistrationScreen
+from ..components.host import ScreenHostApp
+from ..components.status import PinnedStatusBar
+from ..secret.credentials import assessment_refusal
+from ..secret.registration import RecoveryCodeScreen, RecoveryOfferScreen, RegistrationScreen
 from .fixture import recovery_enrollment_attempt, registration_attempt
 
 pytestmark = [

@@ -20,6 +20,9 @@ from ..retenciones_routing_integrity import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
+# The route check reads no year-dated authority, so any snapshot year serves.
+_FILING_YEAR = 2025
+
 
 def test_output_casilla_is_the_registry_validated_casilla_id() -> None:
     """The constant is a real, validated casilla id -- "06", not a bare string literal."""
@@ -64,27 +67,50 @@ def test_check_fires_only_when_the_declared_binding_has_nowhere_to_report() -> N
     declared = frozenset({route.binding_id})
 
     # All three conditions hold -- exactly one failure, naming both halves.
-    failures = check_m130_retenciones_output_casilla("130", frozenset(), unrelated_targets, declared)
+    failures = check_m130_retenciones_output_casilla(
+        "130", frozenset(), unrelated_targets, declared, filing_year=_FILING_YEAR
+    )
     assert len(failures) == 1
     assert route.output_casilla in failures[0]
     assert route.binding_id in failures[0]
 
     # The first-slice parameter is genuinely unused: same verdict either way.
-    assert check_m130_retenciones_output_casilla("130", frozenset(), frozenset(), declared) == failures
+    assert (
+        check_m130_retenciones_output_casilla("130", frozenset(), frozenset(), declared, filing_year=_FILING_YEAR)
+        == failures
+    )
 
     # Casilla present -- the binding has somewhere to report.
-    assert check_m130_retenciones_output_casilla("130", frozenset({"06"}), unrelated_targets, declared) == []
+    assert (
+        check_m130_retenciones_output_casilla(
+            "130", frozenset({"06"}), unrelated_targets, declared, filing_year=_FILING_YEAR
+        )
+        == []
+    )
 
     # Binding absent -- no redirect runs, so casilla 06 is not required.
-    assert check_m130_retenciones_output_casilla("130", frozenset(), unrelated_targets, frozenset()) == []
     assert (
-        check_m130_retenciones_output_casilla("130", frozenset(), unrelated_targets, frozenset({"some-other-binding"}))
+        check_m130_retenciones_output_casilla(
+            "130", frozenset(), unrelated_targets, frozenset(), filing_year=_FILING_YEAR
+        )
+        == []
+    )
+    assert (
+        check_m130_retenciones_output_casilla(
+            "130", frozenset(), unrelated_targets, frozenset({"some-other-binding"}), filing_year=_FILING_YEAR
+        )
         == []
     )
 
     # A non-130 modelo is outside this check's scope even when both hold.
-    assert check_m130_retenciones_output_casilla("100", frozenset(), unrelated_targets, declared) == []
-    assert check_m130_retenciones_output_casilla("303", frozenset(), unrelated_targets, declared) == []
+    assert (
+        check_m130_retenciones_output_casilla("100", frozenset(), unrelated_targets, declared, filing_year=_FILING_YEAR)
+        == []
+    )
+    assert (
+        check_m130_retenciones_output_casilla("303", frozenset(), unrelated_targets, declared, filing_year=_FILING_YEAR)
+        == []
+    )
 
 
 def test_modelo_130_revisions_declare_the_output_casilla() -> None:
