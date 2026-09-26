@@ -4076,28 +4076,65 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "modelo.export",
-        "error": {
-          "action": null,
-          "category": "REFUSED",
-          "code": "REFUSED_MODELO_EXPORT_PRODUCT_IDENTITY_UNAVAILABLE",
-          "context": {
-            "calculation_revision_id": "23862cfbc3813b353d2167f1722d1683b3bbc76b85455b2a75ad8b7df8be2fe2",
-            "developer_positions": "101-109",
-            "modelo": "303",
-            "program_positions": "93-96",
-            "record": "DP30300"
+        "notices": [
+          {
+            "action": null,
+            "code": "modelo.export.local_export_not_official_evidence",
+            "context": {
+              "evidence_status": "local_export_not_official_aeat_filing_evidence",
+              "filing_year": "2026",
+              "modelo": "303",
+              "period": "1T"
+            },
+            "message": "The local export is not official filing evidence.",
+            "severity": "warning"
           },
-          "message": "Official export is unavailable: the record design reserves the header fields \"Versión del Programa\" and \"NIF del desarrollador\" for the software developer, and no reviewed product identity exists for them. Cadrumo does not fill them with blanks or placeholders. The calculation and its verification remain valid; exporting needs a reviewed program identifier and developer NIF from the software developer.",
-          "retryable": false,
-          "runbook_id": null,
-          "trace_id": null
+          {
+            "action": null,
+            "code": "modelo.export.development_software_identity",
+            "context": {
+              "filing_year": "2026",
+              "modelo": "303",
+              "period": "1T",
+              "software_identity_grade": "development_mock"
+            },
+            "message": "The file header carries Cadrumo's all-zero development software identity; AEAT will not accept this file for presentation.",
+            "severity": "warning"
+          }
+        ],
+        "result": {
+          "bucket_event_id": "10dd0e25b4cdb33dbf5aae484b26ce2aafbf3dae17c6642614f64758a4323af9",
+          "bucket_id": "<bucket-id>",
+          "byte_size": 2948,
+          "calculation_revision_id": "23862cfbc3813b353d2167f1722d1683b3bbc76b85455b2a75ad8b7df8be2fe2",
+          "file_sha256": "77eba478ce87019b64cda1c7f3fe7d267a4c3ca80121481bdab96b886ec4c37e",
+          "filing_year": 2026,
+          "format": "fichero-boe",
+          "modelo": "303",
+          "operation": "modelo.export",
+          "output_path": "modelo-303.boe",
+          "payment_election": "ingreso",
+          "period": {
+            "code": "1T",
+            "filing_year": 2026
+          },
+          "prior_domiciliation_election": {
+            "baseline_evidence_reference_id": null,
+            "baseline_filing_record_id": null,
+            "baseline_result_disposition": null,
+            "baseline_source_header_locator": null,
+            "election": "keep"
+          },
+          "refund_election": null,
+          "resolved_result_disposition": "I",
+          "software_identity_grade": "development_mock",
+          "work_unit_id": "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d"
         },
-        "notices": [],
         "schema_version": "2",
-        "status": "error"
+        "status": "warning"
       },
-      "envelope_source": "stderr",
-      "exit_code": 2,
+      "envelope_source": "stdout",
+      "exit_code": 0,
       "kind": "result",
       "stderr_text": null,
       "text": null

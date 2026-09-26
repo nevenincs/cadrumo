@@ -19,6 +19,7 @@ from cadrumo.application.calculations.observations_repository import (
 from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
 
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
+from ...domain.filing.software_identity import AeatProductSoftwareIdentity
 from ...domain.justificante.protocols import JustificanteRepositoryProtocol
 from ...domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
@@ -39,7 +40,8 @@ class ModeloExportPorts:
 
     Every field is required.  The bundle is assembled by an outer composition
     root and passed unchanged through the application call chain; export never
-    manufactures a repository or resolves an implicit global store.
+    manufactures a repository, resolves an implicit global store, or chooses
+    the product software identity itself.
     """
 
     calculation: CalculationRevisionCatalogueRepositoryProtocol
@@ -55,6 +57,12 @@ class ModeloExportPorts:
     transaction: TransactionCatalogueRepositoryProtocol
     draft_review_ports: DraftReviewPorts
     retencion_observation_ports: RetencionObservationPorts
+    product_software_identity: AeatProductSoftwareIdentity
+    """Program identifier and developer NIF for layouts whose envelope prefix reserves them.
+
+    It is a property of the installed product, not of one command, so the
+    composition root supplies it once for every entrypoint that exports.
+    """
 
 
 class ModeloExportPortsFactory(Protocol):

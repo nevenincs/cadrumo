@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from enum import StrEnum
 from typing import Annotated
 
 from pydantic import BaseModel, Field, StringConstraints, model_validator
@@ -10,6 +11,7 @@ from pydantic import BaseModel, Field, StringConstraints, model_validator
 from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.hashing import sha256_hex
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.package_version import PACKAGE_VERSION
@@ -46,6 +48,26 @@ type AeatProgramIdentifier = Annotated[
 """Exact four-byte developer-authored software-version identifier for an AEAT header."""
 
 
+DEVELOPMENT_MOCK_PROGRAM_IDENTIFIER = "0000"
+"""All-zero program identifier of Cadrumo's development mock software identity."""
+
+DEVELOPMENT_MOCK_DEVELOPER_TAX_ID = "00000000T"
+"""All-zero, checksum-valid developer NIF of Cadrumo's development mock software identity."""
+
+DEVELOPMENT_MOCK_EVIDENCE_REFERENCE = "cadrumo:development-mock-software-identity:not-aeat-certified"
+"""Evidence reference naming the mock as uncertified, so no receipt can mistake it for a registration."""
+
+
+class AeatSoftwareIdentityGrade(StrEnum):
+    """Whether an export header's software identity is a reviewed registration or the development mock."""
+
+    REVIEWED = "reviewed"
+    """Caller-supplied program identifier and developer NIF backed by reviewed evidence."""
+
+    DEVELOPMENT_MOCK = "development_mock"
+    """Cadrumo's all-zero development identity: the rendered file is not presentable at AEAT."""
+
+
 class AeatProductSoftwareEvidence(BaseModel):
     """One immutable evidence item authorising an AEAT software identity.
 
@@ -64,9 +86,11 @@ class AeatProductSoftwareEvidence(BaseModel):
 class AeatProductSoftwareIdentity(BaseModel):
     """Explicit product/software authority for an AEAT export header.
 
-    No module-level instance is supplied. A caller must provide both the AEAT
+    No module-level instance is supplied. A caller provides both the AEAT
     program identifier and the developer's validated Spanish tax identifier
-    with reviewed evidence for every generated or emitted envelope.
+    with evidence for every generated or emitted envelope: either a reviewed
+    registration, or :func:`development_mock_software_identity`, whose
+    all-zero values and mock evidence must appear together.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -85,12 +109,61 @@ class AeatProductSoftwareIdentity(BaseModel):
         references = tuple(item.reference for item in self.evidence)
         if len(set(references)) != len(references):
             raise ValueError("AEAT product software evidence must not repeat a reference")
+        uses_mock_values = (
+            self.program_identifier == DEVELOPMENT_MOCK_PROGRAM_IDENTIFIER
+            or self.developer_tax_id == DEVELOPMENT_MOCK_DEVELOPER_TAX_ID
+        )
+        cites_mock_evidence = DEVELOPMENT_MOCK_EVIDENCE_REFERENCE in references
+        if uses_mock_values != cites_mock_evidence or (
+            uses_mock_values
+            and (
+                self.program_identifier != DEVELOPMENT_MOCK_PROGRAM_IDENTIFIER
+                or self.developer_tax_id != DEVELOPMENT_MOCK_DEVELOPER_TAX_ID
+            )
+        ):
+            raise ValueError(
+                "the all-zero development mock values and the mock evidence reference must appear together and whole",
+            )
         return self
+
+    @property
+    def grade(self) -> AeatSoftwareIdentityGrade:
+        """Derive the grade from the values, so a mock can never be relabelled as reviewed."""
+        if self.developer_tax_id == DEVELOPMENT_MOCK_DEVELOPER_TAX_ID:
+            return AeatSoftwareIdentityGrade.DEVELOPMENT_MOCK
+        return AeatSoftwareIdentityGrade.REVIEWED
+
+
+def development_mock_software_identity() -> AeatProductSoftwareIdentity:
+    """Return Cadrumo's development mock identity for envelope-prefixed export headers.
+
+    AEAT reserves the program identifier and developer NIF header fields for a
+    software developer it has registered. Cadrumo holds no such registration,
+    so exports stamp an all-zero identity that no reader can mistake for one;
+    every consumer reports the :attr:`AeatProductSoftwareIdentity.grade` so the
+    operator learns the file is not presentable at AEAT. The tax identifier is
+    validated like any other, so the caller must hold an authority operation.
+    """
+    return AeatProductSoftwareIdentity(
+        program_identifier=DEVELOPMENT_MOCK_PROGRAM_IDENTIFIER,
+        developer_tax_id=DEVELOPMENT_MOCK_DEVELOPER_TAX_ID,
+        evidence=(
+            AeatProductSoftwareEvidence(
+                reference=DEVELOPMENT_MOCK_EVIDENCE_REFERENCE,
+                digest=sha256_hex(DEVELOPMENT_MOCK_EVIDENCE_REFERENCE.encode("ascii")),
+            ),
+        ),
+    )
 
 
 __all__ = [
+    "DEVELOPMENT_MOCK_DEVELOPER_TAX_ID",
+    "DEVELOPMENT_MOCK_EVIDENCE_REFERENCE",
+    "DEVELOPMENT_MOCK_PROGRAM_IDENTIFIER",
     "AeatProductSoftwareEvidence",
     "AeatProductSoftwareIdentity",
     "AeatProgramIdentifier",
+    "AeatSoftwareIdentityGrade",
     "aeat_aux_version",
+    "development_mock_software_identity",
 ]

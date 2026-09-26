@@ -758,10 +758,10 @@ def test_persisted_m303_ledger_revision_verifies_and_exports(
                 output_path=output_path,
                 actor="operator",
                 prior_domiciliation_election=PriorDomiciliationElection.KEEP,
-                product_software_identity=_product_software_identity(),
             ),
             workflow_profile=workflow_profile(),
             export_ports=modelo_export_ports_for_test(
+                product_software_identity=_product_software_identity(),
                 bucket_id=_BUCKET_ID,
                 taxpayer_tax_id=_TAX_ID,
                 secure_objects=secure_objects,
@@ -956,10 +956,10 @@ def test_irene_sl_2024_local_m303_files_support_m390_verify_and_annual_export(
                 calculation_revision_id=annual.calculation_revision_id,
                 output_path=annual_output,
                 actor="irene",
-                product_software_identity=_product_software_identity(),
             ),
             workflow_profile=workflow_profile,
             export_ports=modelo_export_ports_for_test(
+                product_software_identity=_product_software_identity(),
                 bucket_id=_BUCKET_ID,
                 taxpayer_tax_id=_IRENE_TAX_ID,
                 secure_objects=secure_objects,

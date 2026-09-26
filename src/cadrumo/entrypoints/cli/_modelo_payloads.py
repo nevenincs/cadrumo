@@ -84,6 +84,7 @@ from ...domain.calculations.registry.ids import (
 from ...domain.calculations.registry.schema_base import LegalRefs, SourceRefs
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.calculations.registry.withholding_bindings import WithholdingClaveBreakdown
+from ...domain.filing.software_identity import AeatSoftwareIdentityGrade
 from ...domain.modelos.calculation_revision import CalculationRevisionState
 from ...domain.modelos.calculation_revision_amendment import M303RectificativaMotive
 from ...domain.modelos.codes import ModeloCode
@@ -1186,6 +1187,7 @@ class ModeloExportPayload(OutputSchema):
     payment_election: PaymentElection | None = None
     refund_election: RefundElection | None = None
     prior_domiciliation_election: PriorDomiciliationElectionProjection
+    software_identity_grade: AeatSoftwareIdentityGrade | None = None
 
     @classmethod
     def from_result(cls, result: _AppModeloExportResult) -> ModeloExportPayload:
@@ -1213,6 +1215,7 @@ class ModeloExportPayload(OutputSchema):
             payment_election=result.payment_election,
             refund_election=result.refund_election,
             prior_domiciliation_election=result.prior_domiciliation_election,
+            software_identity_grade=result.software_identity_grade,
         )
 
 

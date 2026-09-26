@@ -55,7 +55,6 @@ from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.refund_election import RefundElection
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.deadlines.models import TaxpayerProfile
-from ...domain.filing.software_identity import AeatProductSoftwareIdentity
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
 from ...domain.modelos.verification_report import VerificationReport
@@ -206,7 +205,6 @@ class QuickfileCommand(BaseModel):
     refund_election: RefundElection = RefundElection.COMPENSAR
     payment_election: PaymentElection = PaymentElection.INGRESO
     prior_domiciliation_election: PriorDomiciliationElection | None = None
-    product_software_identity: AeatProductSoftwareIdentity | None = None
     filing_instance_evidence: FilingInstanceEvidence | None = None
 
 
@@ -455,7 +453,6 @@ def run_modelo_quickfile(
                 refund_election=command.refund_election,
                 payment_election=command.payment_election,
                 prior_domiciliation_election=command.prior_domiciliation_election,
-                product_software_identity=command.product_software_identity,
             ),
             workflow_profile=workflow_profile,
             export_ports=modelo_export_ports,

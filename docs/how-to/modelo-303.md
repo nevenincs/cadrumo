@@ -8,10 +8,11 @@ enrolment alone remains quarterly. The registry's official title is "Modelo 303.
 Impuesto sobre el Valor Anadido. Autoliquidacion."
 
 Cadrumo does not submit Modelo 303 to the Agencia Estatal de Administración
-Tributaria (AEAT). Its registry carries the filing layout, but `export`
-currently refuses because the product has no reviewed AEAT product/software
-identity authority with which to stamp the envelope. Read the calculated box
-values back and enter them through the official AEAT channel yourself.
+Tributaria (AEAT). `export` writes the filing layout, but its envelope header
+carries Cadrumo's all-zero development software identity because the product
+holds no AEAT software-developer registration, so AEAT will not accept the
+file. Read the calculated box values back and enter them through the official
+AEAT channel yourself.
 
 The tool needs a master-key passphrase and prompts for it.
 
@@ -28,9 +29,9 @@ purchase invoice as encrypted evidence. The sequence then creates the draft,
 calculates it, verifies it, and records the local filed marker. Each
 load-bearing detail is explained under the sequence.
 
-The Modelo 303 export step refuses until reviewed product/software identity
-authority is available. Enter the calculated box values at the AEAT portal, as
-[File your modelo at the AEAT portal](file-at-aeat.md) describes.
+The Modelo 303 export writes a review file whose envelope carries the all-zero
+development software identity. Enter the calculated box values at the AEAT
+portal, as [File your modelo at the AEAT portal](file-at-aeat.md) describes.
 
 ```{cli-sequence} modelo-303-first-quarter
 :verify: Confirm the draft verifies, files locally, and the export refuses.
@@ -59,8 +60,8 @@ Load-bearing details:
   the evidence must already be on the expense row. A locked row cannot take a
   late attachment.
 - `verify` reports `completeness complete` and `granted true`, and `work file`
-  writes the local filed marker. `export` refuses because its envelope cannot
-  be stamped without reviewed product/software identity authority.
+  writes the local filed marker. `export` writes the file with the all-zero
+  development software identity and says so in a warning notice.
 - Casilla 65 ("% atribuible a la Administración del Estado") resolves to 100
   automatically for a común-territory profile, so casilla 66 and the headline
   casilla 71 (Resultado final) carry the full régimen-general result. This tool
@@ -251,10 +252,12 @@ revision. That evidence lets later staleness checks detect whether a
 contributing ledger row changed or disappeared. It is not a general lock on the
 whole ledger, and it does not freeze unrelated rows.
 
-`aeat app modelo export` refuses for Modelo 303 while Cadrumo has no reviewed
-AEAT product/software identity authority. That identity is a product-release
-fact, not taxpayer or presenter data, so the command never guesses it from the
-active profile. No upload file is produced without that authority.
+`aeat app modelo export` stamps Modelo 303's envelope with Cadrumo's all-zero
+development software identity (program `0000`, developer NIF `00000000T`),
+reports `software_identity_grade` as `development_mock`, and warns with
+`modelo.export.development_software_identity`. That identity is a
+product-release fact, not taxpayer or presenter data, so the command never
+takes it from the active profile. AEAT does not accept a file carrying it.
 
 Read the verified figures back with `aeat app modelo work revision` and enter
 them at the AEAT portal. Verification, the local filed marker, and the evidence

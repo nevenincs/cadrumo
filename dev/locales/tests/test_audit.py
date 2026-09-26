@@ -58,7 +58,6 @@ _IDENTITY_HEADING_KEYS = {
 # under ``cli.config.passphrase`` is its help pair and one refusal.
 _PROSE_KEYS = {
     "ca": {
-        "errors.refused.refused_modelo_export_product_identity_unavailable",
         "operation.modal.refusal.unsupported_cancellation_version",
         "operation.modal.refusal.unsupported_response_control_version",
         "tui.root.title",
@@ -83,7 +82,6 @@ _PROSE_KEYS = {
         "mcp.elicitation.refusal.no_channel",
     },
     "en": {
-        "errors.refused.refused_modelo_export_product_identity_unavailable",
         "operation.modal.refusal.unsupported_cancellation_version",
         "operation.modal.refusal.unsupported_response_control_version",
         "tui.root.title",
@@ -106,7 +104,6 @@ _PROSE_KEYS = {
         "mcp.elicitation.refusal.no_channel",
     },
     "es": {
-        "errors.refused.refused_modelo_export_product_identity_unavailable",
         "operation.modal.refusal.unsupported_cancellation_version",
         "operation.modal.refusal.unsupported_response_control_version",
         "tui.root.title",
@@ -128,7 +125,6 @@ _PROSE_KEYS = {
         "mcp.elicitation.refusal.no_channel",
     },
     "hu": {
-        "errors.refused.refused_modelo_export_product_identity_unavailable",
         "tui.root.title",
         "errors.auth.auth_former_product_session_state",
         "errors.internal.cli_outbound_payload_boundary",

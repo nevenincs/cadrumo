@@ -9,10 +9,10 @@ command at the end records a local marker only; it does not and cannot file on
 your behalf.
 
 How you present depends on the modelo. Modelo 130 exports a local fichero-BOE
-file for upload. Modelo 303's registry layout also exists, but its export
-currently refuses because Cadrumo has no reviewed AEAT product/software
-identity authority with which to stamp the envelope; key its calculated box
-values into the portal form instead.
+file for upload. Modelo 303's export writes a file too, but Cadrumo holds no
+AEAT software-developer registration, so its envelope header carries an
+all-zero development identity and AEAT will not accept that file; key its
+calculated box values into the portal form instead.
 
 ## Before you start
 

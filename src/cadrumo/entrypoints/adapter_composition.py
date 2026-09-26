@@ -469,6 +469,7 @@ def build_modelo_export_ports(
     from ..adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
     from ..application.modelo.export_ports import ModeloExportPorts
+    from ..domain.filing.software_identity import development_mock_software_identity
 
     normalized_bucket_id = bucket_id.strip()
     objects = secure_object_repository_for_bucket(normalized_bucket_id)
@@ -509,6 +510,9 @@ def build_modelo_export_ports(
         ),
         draft_review_ports=build_draft_review_ports(bucket_id=normalized_bucket_id),
         retencion_observation_ports=build_retencion_observation_ports(bucket_id=normalized_bucket_id),
+        # No AEAT-registered developer identity exists yet; the mock is graded
+        # on every export result so no surface presents its file as presentable.
+        product_software_identity=development_mock_software_identity(),
     )
 
 

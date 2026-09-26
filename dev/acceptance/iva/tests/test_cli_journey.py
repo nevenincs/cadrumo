@@ -15,10 +15,10 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 # Measured on a quiet host on 2026-09-23: 195 s wheel build and install, then 402 s of fresh-process
 # authenticated CLI calls. The budget is about twice that; revisit it when CLI start-up gets faster.
 @pytest.mark.timeout(900)
-def test_installed_cli_records_product_identity_block_after_verifying_ordinary_2025_m303(
+def test_installed_cli_exports_the_verified_ordinary_2025_m303_with_the_development_identity(
     tmp_path: Path, installed_wheel_aeat: Path
 ) -> None:
-    """The public path records its known export-authority blocker without claiming an export."""
+    """The public path exports the verified quarter, stamps the mock developer header and parses back its result."""
     repository_root = Path(__file__).resolve().parents[4]
     authority_root = repository_root / ".authority"
     assert (authority_root / "authority.current.json").is_file(), authority_root
@@ -41,19 +41,17 @@ def test_installed_cli_records_product_identity_block_after_verifying_ordinary_2
     assert receipt.verification_report_id
     assert receipt.verification_granted is True
     assert receipt.verification_status
-    assert receipt.export_status == "verified_export_blocked"
-    assert receipt.export_failure_code == "REFUSED_MODELO_EXPORT_PRODUCT_IDENTITY_UNAVAILABLE"
-    assert receipt.export_failure_diagnostic is not None
-    # The journey itself refuses unless the typed refusal context locates these fields at DP30300 93-96 and 101-109.
-    assert '"Versión del Programa"' in receipt.export_failure_diagnostic
-    assert '"NIF del desarrollador"' in receipt.export_failure_diagnostic
-    assert receipt.export_artifact is None
-    assert receipt.export_size is None
-    assert receipt.export_sha256 is None
-    assert receipt.export_layout_id is None
-    assert receipt.export_parser_verdict == "not_run_product_software_identity_pending"
-    assert receipt.exported_iva_resultado is None
-    assert receipt.local_export_only is None
+    assert receipt.export_status == "verified_exported"
+    assert receipt.export_software_identity_grade == "development_mock"
+    # The journey itself refuses unless DP30300 93-96 and 101-109 carry the all-zero development identity.
+    assert receipt.developer_header_record == "DP30300"
+    assert receipt.export_artifact == "<local-m303-export-artifact>"
+    assert receipt.export_size > 0
+    assert len(receipt.export_sha256) == 64
+    assert receipt.export_layout_id
+    assert receipt.export_parser_verdict == "canonical_export_parser_verified"
+    assert Decimal(receipt.exported_iva_resultado) == Decimal(receipt.iva_resultado)
+    assert receipt.local_export_only is True
     assert receipt.authority_generation
     assert receipt.executable_sha256
     assert receipt.purchase_artifact == "<synthetic-purchase-artifact>"
@@ -62,5 +60,4 @@ def test_installed_cli_records_product_identity_block_after_verifying_ordinary_2
     assert "m303-2025-1t.fichero-boe" not in rendered
     assert "profile_passphrase" not in rendered
     assert "attachment:" not in rendered
-    assert receipt.commands[-1].returncode != 0
-    assert all(command.returncode == 0 for command in receipt.commands[:-1])
+    assert all(command.returncode == 0 for command in receipt.commands)

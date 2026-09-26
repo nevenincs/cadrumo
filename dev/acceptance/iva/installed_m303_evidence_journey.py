@@ -89,11 +89,9 @@ _LAST_PERIOD_DAYS: Final = ((12, 15), (12, 18))
 _FIRST_QUARTER_DAYS: Final = ((2, 15), (2, 18))
 _MISMATCHED_ATTACHMENT_ID: Final = "a" * 64
 _MISMATCHED_SHA256: Final = "b" * 64
-_EXPORT_REFUSAL_CODE: Final = "REFUSED_MODELO_EXPORT_PRODUCT_IDENTITY_UNAVAILABLE"
-_EXPORT_REFUSAL_KEY: Final = "errors.refused.refused_modelo_export_product_identity_unavailable"
+_DEVELOPMENT_MOCK_HEADER: Final = {"program": b"0000", "developer": b"00000000T"}
 _EVIDENCE_SUBMIT_ID: Final = "#m303-evidence-submit"
 _ATTESTATION_REFUSAL_KEY: Final = "errors.refused.refused_modelo_m303_exonerado_390_attestation_unadmissible"
-_POSITION_KEYS: Final = ("record", "program_positions", "developer_positions")
 
 type ChildMode = Literal["tui-led-calculate", "tui-continue-calculate", "tui-joint-only-calculate", "tui-reopen"]
 
@@ -773,17 +771,31 @@ async def _listed_revision(pilot: Any, *, calculation_revision_id: str) -> tuple
 
 
 async def _attempt_export(pilot: Any, *, work_unit_id: str, output_path: str) -> TuiOutcome:
-    """Try the official export; its lasting workspace notice must carry the registry explanation."""
+    """Run the official export through the lifecycle control and classify its public terminal result."""
     from textual.widgets import Input
 
-    activation_id = installed_lifecycle_contract().export.activation_id
-    if activation_id is None:
+    binding = installed_lifecycle_contract().export
+    if binding.activation_id is None:
         raise InstalledTuiChildError("installed export binding declares no activation control")
     await _open_work(pilot, work_unit_id=work_unit_id)
     query_public_selector(pilot, "#modelo-lifecycle-export-path", Input).value = output_path
-    return await _settle_expected_refusal(
-        pilot, activation_id=activation_id, step="export", refusal_key=_EXPORT_REFUSAL_KEY
-    )
+    terminal = await activate_tui_operation(pilot, binding=binding)
+    return TuiOutcome(step="export", terminal_condition=terminal.terminal_condition, visible_notice_key=None)
+
+
+def _require_development_developer_header(payload: bytes, positions: tuple[str, str, str]) -> None:
+    """Refuse unless the official developer-header bytes carry the all-zero development identity."""
+    record, program_span, developer_span = positions
+    envelope_start = payload.find(b"<T303")
+    if envelope_start < 0:
+        raise IvaInstalledM303Error(f"Modelo 303 export carries no {record} envelope prefix")
+    for span, expected in (
+        (program_span, _DEVELOPMENT_MOCK_HEADER["program"]),
+        (developer_span, _DEVELOPMENT_MOCK_HEADER["developer"]),
+    ):
+        first, last = (int(bound) for bound in span.split("-"))
+        if payload[envelope_start + first - 1 : envelope_start + last] != expected:
+            raise IvaInstalledM303Error(f"{record} bytes {span} do not carry the development identity")
 
 
 async def _admit_session(pilot: Any, *, passphrase: str, seconds: float = 300.0) -> None:
@@ -1119,20 +1131,16 @@ def _tui_led_store(
         extra=("--calculation-revision-id", revisions[0], "--export-path", str(tui_export_path)),
     )
     tui_reopen = require_reopen(readback, scenario="tui_led")
-    require_outcomes(reopen_outcomes, {"export": ("refused", _EXPORT_REFUSAL_KEY)})
+    require_outcomes(reopen_outcomes, {"export": ("succeeded", None)})
     matches, verified = _read_revision(cli, revisions[0])
     if not (matches and verified):
         raise IvaInstalledM303Error("installed CLI readback of the TUI revision failed the oracle or verification")
     cli_export_path = args.output_root / "tui-led-cli-export.boe"
-    refused_export = cli.run(
-        ("app", "modelo", "export", work_unit_id, "--output", str(cli_export_path)), expect_refusal=True
-    )
-    error = _mapping(refused_export.get("error"), label="export refusal")
-    located = tuple(_mapping(error.get("context"), label="export refusal context").get(key) for key in _POSITION_KEYS)
-    if error.get("code") != _EXPORT_REFUSAL_CODE or located != export_positions:
-        raise IvaInstalledM303Error(f"installed CLI export refusal was {error.get('code')} at {located}")
-    if cli_export_path.exists() or tui_export_path.exists():
-        raise IvaInstalledM303Error("a refused official export wrote an artifact")
+    cli.run(("app", "modelo", "export", work_unit_id, "--output", str(cli_export_path)))
+    tui_bytes = tui_export_path.read_bytes()
+    if cli_export_path.read_bytes() != tui_bytes:
+        raise IvaInstalledM303Error("installed CLI and TUI exports of one revision wrote different bytes")
+    _require_development_developer_header(tui_bytes, export_positions)
     return StoreEvidence(
         scenario="tui_led",
         work_unit_id=work_unit_id,

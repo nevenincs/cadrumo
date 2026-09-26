@@ -1114,12 +1114,6 @@ errors:
       exportálásához döntés szükséges a korábbi csoportos beszedésről (megtartás,
       illetve visszavonás vagy módosítás); ilyen nem érkezett, ezért semmi sem íródott
       ki. Válasszon egyet, és exportáljon újra.
-    refused_modelo_export_product_identity_unavailable: 'A hivatalos export nem érhető
-      el: a rekordterv a „Versión del Programa” és a „NIF del desarrollador” fejlécmezőt
-      a szoftverfejlesztőnek tartja fenn, és ezekhez nincs ellenőrzött termékazonosító.
-      A Cadrumo nem tölti ki őket szóközökkel vagy helyettesítő értékekkel. A számítás
-      és annak ellenőrzése érvényes marad; az exporthoz a szoftverfejlesztőtől származó,
-      ellenőrzött programazonosító és fejlesztői NIF szükséges.'
     refused_modelo_ledger_evidence_recapture: A bevallás bizonyítékai nem csomagolhatók
       újra, mert a mögöttes főkönyvi tételek a lezárás óta megváltoztak. Számold újra
       a bevallást; az újrarögzítés csak a változatlan tételekhez csatolt bizonyítékot

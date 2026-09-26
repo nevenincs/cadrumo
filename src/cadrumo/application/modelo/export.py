@@ -80,17 +80,12 @@ from ...domain.calculations.registry.applicability import derive_taxpayer_files_
 from ...domain.calculations.registry.applicability_modelo202 import derive_modelo_202_modality
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.schema import BindingDefinition
-from ...domain.calculations.registry.schema_exports import (
-    AuxiliaryEnvelopeHeaderDefinition,
-    ExportLayoutDefinition,
-    FilingEnvelopeDefinition,
-    FilingEnvelopePrefixRole,
-)
+from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from ...domain.deadlines.models import ModeloIVAProfile, TaxpayerProfile
 from ...domain.filing.errors import FilingExportError
 from ...domain.filing.protocols import ModeloInputs
 from ...domain.filing.schema import ModeloCasillaProvenance, ModeloDraft
-from ...domain.filing.software_identity import AeatProductSoftwareIdentity
+from ...domain.filing.software_identity import AeatProductSoftwareIdentity, AeatSoftwareIdentityGrade
 from ...domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from ...domain.modelos.calculation_revision import (
     SEALED_REVISION_STATES,
@@ -100,7 +95,6 @@ from ...domain.modelos.errors import (
     ModeloError,
     ModeloExportError,
     ModeloExportPriorDomiciliationElectionRequiredError,
-    ModeloExportProductIdentityUnavailableError,
 )
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.prorrata_register.register import ProrrataRegister
@@ -359,9 +353,6 @@ class ModeloExportCommand(BaseModel):
         prior_domiciliation_election: Explicit Modelo 303 action for a prior
             domiciliation. It is required for Modelo 303; non-303 exports
             resolve the neutral ``KEEP`` value internally.
-        product_software_identity: Explicit, reviewed product/software
-            authority for the Modelo 303 DP30300 envelope. It is required for
-            Modelo 303 and is not inferred from a taxpayer or presenter.
     """
 
     model_config = _STRICT_FROZEN
@@ -375,7 +366,6 @@ class ModeloExportCommand(BaseModel):
     refund_election: RefundElection = RefundElection.COMPENSAR
     payment_election: PaymentElection = PaymentElection.INGRESO
     prior_domiciliation_election: PriorDomiciliationElection | None = None
-    product_software_identity: AeatProductSoftwareIdentity | None = None
 
 
 class ModeloExportResult(BaseModel):
@@ -407,6 +397,9 @@ class ModeloExportResult(BaseModel):
         refund_election: The semantic negative-result election when applicable.
         casilla_provenance: Regulatory grounding for casillas covered
             by the exported fichero-BOE layout.
+        software_identity_grade: Grade of the program identifier and
+            developer NIF stamped into an envelope-prefixed header, or
+            ``None`` when the selected layout renders no such header.
     """
 
     model_config = _STRICT_FROZEN
@@ -434,6 +427,7 @@ class ModeloExportResult(BaseModel):
     )
     casilla_provenance: tuple[ModeloCasillaProvenance, ...] = Field(default_factory=tuple)
     iva_wallet_decision_provenance: ModeloIvaWalletDecisionProvenance | None = None
+    software_identity_grade: AeatSoftwareIdentityGrade | None = None
     local_evidence_status: str = Field(default=_LOCAL_EXPORT_EVIDENCE_STATUS, min_length=1)
     official_evidence_message: str = Field(default=_LOCAL_EXPORT_OFFICIAL_EVIDENCE_MESSAGE, min_length=1)
     completeness_unverified: bool = Field(
@@ -1040,6 +1034,12 @@ def _persist_exported_draft(
     )
     export_subview = schema_provider.get_subview(str(work_unit.modelo))
     export_layout = export_subview.export_layouts[0] if export_subview.export_layouts else None
+    software_identity = (
+        export_ports.product_software_identity
+        if export_layout is not None
+        and (export_layout.filing_envelope is not None or export_layout.auxiliary_envelope_header is not None)
+        else None
+    )
     dictionary_values = (
         _compose_export_dictionary_values(
             draft=approved,
@@ -1067,7 +1067,7 @@ def _persist_exported_draft(
             producer_snapshot=producer_snapshot,
             dictionary_values=dictionary_values,
             prior_domiciliation_election=prior_domiciliation_election.election,
-            product_software_identity=command.product_software_identity,
+            product_software_identity=software_identity,
             schema_provider=schema_provider,
         )
         event = _emit_export_event(
@@ -1153,6 +1153,7 @@ def _persist_exported_draft(
         prior_domiciliation_election=prior_domiciliation_election,
         casilla_provenance=receipt.casilla_provenance,
         iva_wallet_decision_provenance=iva_wallet_provenance,
+        software_identity_grade=None if software_identity is None else software_identity.grade,
         completeness_unverified=completeness_unverified,
     )
 
@@ -1410,44 +1411,6 @@ def _require_modelo_export_clean_state(
     )
 
 
-def _product_identity_unavailable(
-    *,
-    work_unit: WorkUnit,
-    envelope: FilingEnvelopeDefinition | AuxiliaryEnvelopeHeaderDefinition | None,
-    calculation_revision_id: str,
-) -> ModeloExportProductIdentityUnavailableError:
-    """Name the developer-owned header fields, located by the selected record design, that block export.
-
-    Positions are 1-based byte ranges accumulated from the layout's declared
-    prefix fields, so the refusal points at the same bytes the official design
-    reserves for the program identifier and the developer's tax identifier.
-    """
-    positions: dict[FilingEnvelopePrefixRole, str] = {}
-    offset = 0
-    for field in () if envelope is None else envelope.prefix_fields:
-        if field.role in {FilingEnvelopePrefixRole.PROGRAM_IDENTIFIER, FilingEnvelopePrefixRole.DEVELOPER_TAX_ID}:
-            positions[field.role] = f"{offset + 1}-{offset + field.length}"
-        offset += field.length
-    program = positions.get(FilingEnvelopePrefixRole.PROGRAM_IDENTIFIER)
-    developer = positions.get(FilingEnvelopePrefixRole.DEVELOPER_TAX_ID)
-    if envelope is None or program is None or developer is None:
-        raise ModeloExportError(
-            f"Modelo {work_unit.modelo} export layout renders an envelope without locating its product identity",
-            context={"calculation_revision_id": calculation_revision_id},
-        )
-    return ModeloExportProductIdentityUnavailableError(
-        f"Modelo {work_unit.modelo} export needs {envelope.record_identity} header fields "
-        f"program identifier ({program}) and developer tax id ({developer}); no reviewed product identity exists",
-        context={
-            "calculation_revision_id": calculation_revision_id,
-            "modelo": str(work_unit.modelo),
-            "record": envelope.record_identity,
-            "program_positions": program,
-            "developer_positions": developer,
-        },
-    )
-
-
 def _resolve_modelo_exportprior_domiciliation(
     command: ModeloExportCommand,
     *,
@@ -1462,23 +1425,6 @@ def _resolve_modelo_exportprior_domiciliation(
         raise ModeloExportPriorDomiciliationElectionRequiredError(
             "Modelo 303 export requires an explicit prior-domiciliation election",
             context={"calculation_revision_id": command.calculation_revision_id, "modelo": str(work_unit.modelo)},
-        )
-    export_layouts = schema_provider.get_subview(str(work_unit.modelo)).export_layouts
-    # The product/software identity belongs to the layout's envelope prefix -- a
-    # filing envelope or an auxiliary header -- not to one modelo id.
-    renders_envelope_prefix = bool(export_layouts) and (
-        export_layouts[0].filing_envelope is not None or export_layouts[0].auxiliary_envelope_header is not None
-    )
-    if renders_envelope_prefix and command.product_software_identity is None:
-        raise _product_identity_unavailable(
-            work_unit=work_unit,
-            envelope=export_layouts[0].filing_envelope or export_layouts[0].auxiliary_envelope_header,
-            calculation_revision_id=command.calculation_revision_id,
-        )
-    if not renders_envelope_prefix and command.product_software_identity is not None:
-        raise ModeloExportError(
-            "product/software identity is only admitted for a layout that renders an envelope prefix",
-            context={"calculation_revision_id": command.calculation_revision_id},
         )
     prior_domiciliation_election = resolveprior_domiciliation_election(
         election=(

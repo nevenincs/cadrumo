@@ -608,6 +608,7 @@
           },
           "refund_election": null,
           "resolved_result_disposition": "I",
+          "software_identity_grade": null,
           "work_unit_id": "640a4c074dc06e4238ac45aad87d73d0a3c26458fbe3e1c766bc2d35589f9d5e"
         },
         "schema_version": "2",

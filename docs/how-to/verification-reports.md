@@ -178,10 +178,10 @@ draft; verify it before exporting" or "no exportable verified or filed revision
 exists". Verify the draft first, as in
 [After any fix: re-run verification](#after-any-fix-re-run-verification).
 
-Verified-complete is necessary but not sufficient. Modelo 303 export refuses
-even after verification grants when no reviewed product/software identity
-authority is available, with `FAIL_MODELO_EXPORT`. Check where the filing
-stands, then read the verified figures back and enter them at the AEAT portal:
+Verified-complete is what export requires. The Modelo 303 file it writes
+carries Cadrumo's all-zero development software identity, which AEAT does not
+accept for presentation. Check where the filing stands, then read the verified
+figures back and enter them at the AEAT portal:
 
 ```{cli-sequence} verification-reports-export-check
 :verify: Confirm the export refuses even once the saved calculation is verified.

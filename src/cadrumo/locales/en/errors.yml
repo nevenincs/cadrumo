@@ -1089,12 +1089,6 @@ errors:
     refused_modelo_export_prior_domiciliation_election_required: Modelo 303 export
       needs a choice for any earlier direct debit (keep it, or cancel or modify it);
       none was given, so nothing was written. Choose one and export again.
-    refused_modelo_export_product_identity_unavailable: 'Official export is unavailable:
-      the record design reserves the header fields "Versión del Programa" and "NIF
-      del desarrollador" for the software developer, and no reviewed product identity
-      exists for them. Cadrumo does not fill them with blanks or placeholders. The
-      calculation and its verification remain valid; exporting needs a reviewed program
-      identifier and developer NIF from the software developer.'
     refused_modelo_ledger_evidence_recapture: The evidence behind this filing cannot
       be re-bundled because the contributing ledger rows have changed since it was
       sealed. Recalculate the return instead; recapture only picks up evidence attached
