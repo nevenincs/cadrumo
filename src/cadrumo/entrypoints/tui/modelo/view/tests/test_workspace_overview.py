@@ -12,7 +12,7 @@ from enum import Enum
 from types import SimpleNamespace
 
 import pytest
-from textual.widgets import Button, Input, Select, Static
+from textual.widgets import Button, Checkbox, Input, Select, Static
 from textual.widgets.select import InvalidSelectValueError
 
 from ......adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -481,6 +481,7 @@ async def test_a_modelo_303_export_offers_each_election_preset_to_its_neutral_de
         for control in _ELECTION_CONTROLS:
             with pytest.raises(InvalidSelectValueError):
                 app.screen.query_one(control, Select).clear()
+        assert app.screen.query_one("#modelo-lifecycle-export-replace", Checkbox).value is False
         app.screen.query_one("#modelo-lifecycle-export-path", Input).value = "modelo-303.boe"
         app.screen.query_one(_ELECTION_CONTROLS[0], Select).value = RefundElection.DEVOLVER.value
         app.screen.query_one(_ELECTION_CONTROLS[2], Select).value = PriorDomiciliationElection.CANCEL_OR_MODIFY.value
@@ -493,6 +494,7 @@ async def test_a_modelo_303_export_offers_each_election_preset_to_its_neutral_de
             "refund_election": RefundElection.DEVOLVER,
             "payment_election": PaymentElection.INGRESO,
             "prior_domiciliation_election": PriorDomiciliationElection.CANCEL_OR_MODIFY,
+            "replace_existing": False,
             "output_path": "modelo-303.boe",
         }
     ]
@@ -502,7 +504,7 @@ async def test_a_modelo_303_export_offers_each_election_preset_to_its_neutral_de
 async def test_a_modelo_without_those_elections_exports_with_the_command_line_defaults(
     bucket_and_repository: tuple[str, WorkUnitCatalogueRepository],
 ) -> None:
-    """Modelo 130 offers no Modelo 303 choice, and submits what the command line applies when they are omitted."""
+    """Modelo 130 offers no Modelo 303 choice, submits the command-line defaults, and carries an explicit replace."""
     bucket_id, repository = bucket_and_repository
     actions = _ExportRecordingActions()
     app = ScreenHostApp(
@@ -513,6 +515,7 @@ async def test_a_modelo_without_those_elections_exports_with_the_command_line_de
         await pilot.pause()
         assert not app.screen.query(Select)
         app.screen.query_one("#modelo-lifecycle-export-path", Input).value = "modelo-130.boe"
+        app.screen.query_one("#modelo-lifecycle-export-replace", Checkbox).value = True
         app.screen.query_one("#modelo-lifecycle-export", Button).press()
         await pilot.pause()
         await app.workers.wait_for_complete()
@@ -522,6 +525,7 @@ async def test_a_modelo_without_those_elections_exports_with_the_command_line_de
             "refund_election": RefundElection.COMPENSAR,
             "payment_election": PaymentElection.INGRESO,
             "prior_domiciliation_election": PriorDomiciliationElection.KEEP,
+            "replace_existing": True,
             "output_path": "modelo-130.boe",
         }
     ]

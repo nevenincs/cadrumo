@@ -888,6 +888,9 @@ cli:
           Use el justificante AEAT, la consulta de declaraciones presentadas o el
           cotejo CSV tras presentar.
         output_help: Ruta donde escribir el artefacto fichero-BOE.
+        replace_help: Sustituye un archivo ya existente en --output. Sin esta opción
+          se rechaza un archivo de exportación existente para no destruir una exportación
+          anterior.
         revision_help: Identificador de la revisión de cálculo a exportar; por defecto,
           la revisión verificada o presentada más reciente de la unidad de trabajo.
         work_unit_id_help: Identificador de la unidad de trabajo (SHA-256 o prefijo

@@ -717,6 +717,34 @@ def test_staged_publication_publishes_the_caller_written_bytes_and_removes_the_s
         assert stat.S_IMODE(target.stat().st_mode) == 0o600
 
 
+def test_no_clobber_publication_refuses_an_existing_target_and_leaves_it_intact(tmp_path: Path) -> None:
+    """A target that appeared after the caller's check is refused atomically, never overwritten."""
+    target = tmp_path / "declaracion.txt"
+    target.write_bytes(b"EARLIER EXPORT")
+
+    with hardened_staged_publication(target) as staged:
+        staged.path.write_bytes(b"NEW EXPORT")
+        with pytest.raises(FileExistsError):
+            staged.publish(replace_existing=False)
+        assert not staged.published
+
+    assert target.read_bytes() == b"EARLIER EXPORT"
+    assert {child.name for child in scan_directory(tmp_path)} == {"declaracion.txt"}
+
+
+def test_no_clobber_publication_publishes_when_the_target_is_absent(tmp_path: Path) -> None:
+    target = tmp_path / "declaracion.txt"
+
+    with hardened_staged_publication(target) as staged:
+        staged.path.write_bytes(b"NEW EXPORT")
+        staged.publish(replace_existing=False)
+
+    assert target.read_bytes() == b"NEW EXPORT"
+    assert {child.name for child in scan_directory(tmp_path)} == {"declaracion.txt"}
+    if os.name != "nt":
+        assert stat.S_IMODE(target.stat().st_mode) == 0o600
+
+
 def test_staged_publication_discards_cleartext_staging_on_an_interrupt(tmp_path: Path) -> None:
     """A ``BaseException`` mid-work must not strand the staged payload on disk.
 

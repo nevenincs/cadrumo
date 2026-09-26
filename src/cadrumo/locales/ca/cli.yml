@@ -874,6 +874,9 @@ cli:
           AEAT, la consulta de declaracions presentades o el coteig CSV després de
           presentar.
         output_help: Ruta on escriure l'artefacte fichero-BOE.
+        replace_help: Substitueix un fitxer que ja existeix a --output. Sense aquesta
+          opció es rebutja un fitxer d'exportació existent per no destruir una exportació
+          anterior.
         revision_help: Identificador de la revisió de càlcul a exportar; per defecte,
           la revisió verificada o presentada més recent de la unitat de treball.
         work_unit_id_help: Identificador de la unitat de treball (SHA-256 o prefix

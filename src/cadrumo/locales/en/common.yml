@@ -1958,6 +1958,8 @@ tui:
         compensar: Carry forward to later periods (compensar)
         devolver: Request a refund (devolver)
         label: 'Negative result: carry it forward or request a refund'
+      replace_existing:
+        label: Replace a file already at this path
     finding_kind:
       advisory: Advice
       blocking_rule: Rule not met

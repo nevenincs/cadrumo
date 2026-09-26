@@ -128,6 +128,7 @@ def export_modelo_revision_for_cli(
     refund_election: RefundElection,
     payment_election: PaymentElection,
     prior_domiciliation_election: PriorDomiciliationElection,
+    replace_existing: bool,
     operation: PinnedAuthorityOperation,
     workflow_profile: TaxpayerProfile,
     export_ports: ModeloExportPorts,
@@ -149,6 +150,7 @@ def export_modelo_revision_for_cli(
                 refund_election=refund_election,
                 payment_election=payment_election,
                 prior_domiciliation_election=prior_domiciliation_election,
+                replace_existing=replace_existing,
             ),
             workflow_profile=workflow_profile,
             export_ports=export_ports,
@@ -214,6 +216,7 @@ def modelo_export_verb(
         refund_election=operator_input.refund_election,
         payment_election=operator_input.payment_election,
         prior_domiciliation_election=operator_input.prior_domiciliation_election,
+        replace_existing=operator_input.replace_existing,
         operation=authority_operation(ctx),
         workflow_profile=workflow_profile,
         export_ports=modelo_export_ports_factory(ctx)(

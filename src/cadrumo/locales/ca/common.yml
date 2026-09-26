@@ -2000,6 +2000,8 @@ tui:
         compensar: Compensar en períodes posteriors
         devolver: Sol·licitar la devolució
         label: 'Resultat negatiu: compensar o sol·licitar la devolució'
+      replace_existing:
+        label: Substituir el fitxer que ja existeixi en aquesta ruta
     finding_kind:
       advisory: Consell
       blocking_rule: Regla no complerta

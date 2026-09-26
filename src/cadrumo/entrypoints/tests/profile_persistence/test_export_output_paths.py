@@ -35,7 +35,12 @@ from cadrumo.application.modelo.action_errors import (
     ModeloPaymentElectionIncompatibleError,
     ModeloRefundAccountMissingError,
 )
-from cadrumo.application.modelo.export import ModeloExportCommand, ModeloExportOutputPathError, export_modelo_revision
+from cadrumo.application.modelo.export import (
+    ModeloExportCommand,
+    ModeloExportOutputPathError,
+    ModeloExportResult,
+    export_modelo_revision,
+)
 from cadrumo.application.modelo.revision_persistence import persist_filed_revision
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.directory_scan import (
@@ -991,57 +996,53 @@ def test_export_refuses_empty_output_path(
         assert not any(p.suffix == ".tmp" for p in iter_directory(tmp_path, recursive=True))
 
 
-def test_export_success_path_is_idempotent_overwrite(
+def test_export_refuses_an_existing_file_unless_the_operator_chooses_to_replace_it(
     isolated_backend: None,
     tmp_path: Path,
 ) -> None:
-    """A valid file destination still exports, and a second export overwrites it cleanly."""
+    """An earlier export is never silently destroyed; an explicit replace rewrites it identically."""
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        taxpayer_nif, _bucket_id, verified, work_repo, calc_repo, event_repo = build_verified_modelo_303_revision(
+        taxpayer_nif, bucket_id, verified, work_repo, calc_repo, event_repo = build_verified_modelo_303_revision(
             operation=_authority_operation_for_test,
         )
         output_path = tmp_path / "modelo-303.txt"
         profile = _typed_profile_with_charge_account(taxpayer_nif=taxpayer_nif, charge_iban=None)
 
-        first = export_modelo_revision(
-            ModeloExportCommand(
-                calculation_revision_id=verified.calculation_revision_id,
-                output_path=output_path,
-                actor="operator",
-                prior_domiciliation_election=PriorDomiciliationElection.KEEP,
-            ),
-            workflow_profile=profile,
-            export_ports=modelo_export_ports_for_test(
-                product_software_identity=_product_software_identity(),
-                taxpayer_tax_id=taxpayer_nif,
-                work_unit=work_repo,
-                calculation=calc_repo,
-                bucket_event=event_repo,
-            ),
-            clock=datetime(2026, 5, 21, 12, 3, tzinfo=UTC),
-            operation=_authority_operation_for_test,
-        )
-        assert output_path.exists()
-        assert first.byte_size == output_path.stat().st_size
+        def export(*, replace_existing: bool, minute: int) -> ModeloExportResult:
+            return export_modelo_revision(
+                ModeloExportCommand(
+                    calculation_revision_id=verified.calculation_revision_id,
+                    output_path=output_path,
+                    actor="operator",
+                    prior_domiciliation_election=PriorDomiciliationElection.KEEP,
+                    replace_existing=replace_existing,
+                ),
+                workflow_profile=profile,
+                export_ports=modelo_export_ports_for_test(
+                    product_software_identity=_product_software_identity(),
+                    taxpayer_tax_id=taxpayer_nif,
+                    work_unit=work_repo,
+                    calculation=calc_repo,
+                    bucket_event=event_repo,
+                ),
+                clock=datetime(2026, 5, 21, 12, minute, tzinfo=UTC),
+                operation=_authority_operation_for_test,
+            )
 
-        second = export_modelo_revision(
-            ModeloExportCommand(
-                calculation_revision_id=verified.calculation_revision_id,
-                output_path=output_path,
-                actor="operator",
-                prior_domiciliation_election=PriorDomiciliationElection.KEEP,
-            ),
-            workflow_profile=profile,
-            export_ports=modelo_export_ports_for_test(
-                product_software_identity=_product_software_identity(),
-                taxpayer_tax_id=taxpayer_nif,
-                work_unit=work_repo,
-                calculation=calc_repo,
-                bucket_event=event_repo,
-            ),
-            clock=datetime(2026, 5, 21, 12, 4, tzinfo=UTC),
-            operation=_authority_operation_for_test,
+        first = export(replace_existing=False, minute=3)
+        earlier_bytes = output_path.read_bytes()
+        exported_events = len(event_repo.load().for_bucket(bucket_id, event_types=(BucketEventType.MODELO_EXPORTED,)))
+
+        with pytest.raises(ModeloExportOutputPathError) as refused:
+            export(replace_existing=False, minute=4)
+        assert refused.value.context is not None
+        assert refused.value.context["reason"] == "path is an existing file"
+        assert output_path.read_bytes() == earlier_bytes
+        assert (
+            len(event_repo.load().for_bucket(bucket_id, event_types=(BucketEventType.MODELO_EXPORTED,)))
+            == exported_events
         )
-        assert output_path.exists()
-        assert second.file_sha256 == first.file_sha256
+
+        replaced = export(replace_existing=True, minute=5)
+        assert replaced.file_sha256 == first.file_sha256
         assert not (output_path.with_name(output_path.name + ".tmp")).exists()

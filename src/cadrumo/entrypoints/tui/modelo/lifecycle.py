@@ -199,6 +199,7 @@ class ModeloWorkspaceLifecycleDoor:
         refund_election: RefundElection,
         payment_election: PaymentElection,
         prior_domiciliation_election: PriorDomiciliationElection,
+        replace_existing: bool = False,
     ) -> OperationController:
         """Export the selected verified revision to the operator-selected path with the operator's elections."""
         return await self._submit(
@@ -211,6 +212,7 @@ class ModeloWorkspaceLifecycleDoor:
                     refund_election=refund_election,
                     payment_election=payment_election,
                     prior_domiciliation_election=prior_domiciliation_election,
+                    replace_existing=replace_existing,
                     actor=_ACTOR_REF,
                 ),
             )

@@ -880,6 +880,8 @@ cli:
           használja az AEAT justificante-t, a benyújtott bevallások lekérdezését vagy
           a CSV cotejo bizonyítékot.
         output_help: A fichero-BOE artefakt írásának elérési útja.
+        replace_help: Lecseréli a --output helyén már meglévő fájlt. Enélkül a meglévő
+          exportfájlt a program elutasítja, hogy egy korábbi export ne vesszen el.
         revision_help: 'Az exportálandó számítási revízió azonosítója; alapértelmezés:
           a munkaegység legújabb hitelesített-teljes vagy benyújtott revíziója.'
         work_unit_id_help: Munkaegység-azonosító (SHA-256 vagy egyértelmű előtag).

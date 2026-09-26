@@ -40,7 +40,7 @@ from typing import TYPE_CHECKING, ClassVar, cast, override
 
 from textual.app import ComposeResult
 from textual.binding import Binding
-from textual.widgets import Button, DataTable, Input, Select, Static
+from textual.widgets import Button, Checkbox, DataTable, Input, Select, Static
 
 from .....application.modelo.edit_models import (
     ModeloEditWritableBindingOverrideSurfaceEntryV1,
@@ -174,6 +174,11 @@ class ModeloWorkspaceOverviewScreen(AccountChromeScreen):
                 )
                 if self._is_m303_calculation():
                     yield from self._compose_export_elections()
+                yield Checkbox(
+                    tr("tui.modelo.export.replace_existing.label"),
+                    value=False,
+                    id="modelo-lifecycle-export-replace",
+                )
                 yield Button(tr("application.modelo.lifecycle.export"), id="modelo-lifecycle-export")
 
     def _compose_export_elections(self) -> ComposeResult:
@@ -329,6 +334,7 @@ class ModeloWorkspaceOverviewScreen(AccountChromeScreen):
                 self._notice(tr("application.modelo.lifecycle.refusal.export_destination_required"))
                 return
             keyword_arguments = self._export_elections()
+            keyword_arguments["replace_existing"] = self.query_one("#modelo-lifecycle-export-replace", Checkbox).value
         submit = getattr(actions, method_name, None)
         if submit is None:
             return

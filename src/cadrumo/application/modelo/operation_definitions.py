@@ -1055,6 +1055,9 @@ class ModeloExportRequest(CredentialFreeOperationRequest):
     refund_election: RefundElection = RefundElection.COMPENSAR
     payment_election: PaymentElection = PaymentElection.INGRESO
     prior_domiciliation_election: PriorDomiciliationElection = PriorDomiciliationElection.KEEP
+    #: Whether the operator chose to replace a file already at ``output_path``;
+    #: without that choice an existing file refuses the export.
+    replace_existing: bool = False
 
     #: The operator this invocation acts as; stamped onto the exported
     #: artefact through the command built from this request.
@@ -1124,6 +1127,7 @@ class ModeloExportExecutor:
             refund_election=payload.refund_election,
             payment_election=payload.payment_election,
             prior_domiciliation_election=payload.prior_domiciliation_election,
+            replace_existing=payload.replace_existing,
         )
         from ...core.bucket_pointer import require_active_bucket_id
 

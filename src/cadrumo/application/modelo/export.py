@@ -335,8 +335,9 @@ class ModeloExportCommand(BaseModel):
             revision to export. Must be in ``VERIFICADO_COMPLETO`` or
             ``FILED`` state.
         output_path: Absolute or working-directory-relative path to
-            write the fichero-BOE artefact. Parent directories are
-            created if missing.
+            write the fichero-BOE artefact. Its parent directory must
+            already exist; an existing file is refused unless
+            ``replace_existing`` is set.
         actor: Operator identifier captured into the
             ``MODELO_EXPORTED`` event payload and used as the draft
             ``approved_by`` field for the transient export draft.
@@ -353,6 +354,10 @@ class ModeloExportCommand(BaseModel):
         prior_domiciliation_election: Explicit Modelo 303 action for a prior
             domiciliation. It is required for Modelo 303; non-303 exports
             resolve the neutral ``KEEP`` value internally.
+        replace_existing: Whether the operator explicitly chose to replace a
+            file already at ``output_path``. An export is the artefact an
+            operator carries to AEAT, so destroying an earlier one is never
+            the default.
     """
 
     model_config = _STRICT_FROZEN
@@ -366,6 +371,7 @@ class ModeloExportCommand(BaseModel):
     refund_election: RefundElection = RefundElection.COMPENSAR
     payment_election: PaymentElection = PaymentElection.INGRESO
     prior_domiciliation_election: PriorDomiciliationElection | None = None
+    replace_existing: bool = False
 
 
 class ModeloExportResult(BaseModel):
@@ -450,7 +456,7 @@ def _sha256_ref(value: str) -> str:
     return f"sha256:{sha256_hex(value.encode('utf-8'))}"
 
 
-def _validate_output_path(output_path: Path) -> None:
+def _validate_output_path(output_path: Path, *, replace_existing: bool) -> None:
     """Refuse an unusable ``--output`` destination before writing any bytes.
 
     A clean typed refusal here is the only safe place to reject a bad
@@ -461,8 +467,9 @@ def _validate_output_path(output_path: Path) -> None:
 
     Raises:
         ModeloExportOutputPathError: When the path is empty, names an
-            existing directory, or its parent directory is missing or
-            not a directory.
+            existing directory, names an existing file the operator did not
+            choose to replace, or its parent directory is missing or not a
+            directory.
     """
     raw = str(output_path).strip()
     if not raw or raw == ".":
@@ -474,6 +481,11 @@ def _validate_output_path(output_path: Path) -> None:
         raise ModeloExportOutputPathError(
             translated_message="application.modelo.errors.export_output_path_invalid",
             context={"output_path": str(output_path), "reason": "path is an existing directory"},
+        )
+    if output_path.exists() and not replace_existing:
+        raise ModeloExportOutputPathError(
+            translated_message="application.modelo.errors.export_output_path_invalid",
+            context={"output_path": str(output_path), "reason": "path is an existing file"},
         )
     parent = output_path.parent
     if not parent.exists():
@@ -1087,7 +1099,12 @@ def _persist_exported_draft(
         # refusal that destination check raises, rather than surfacing a raw
         # traceback from inside the write substrate.
         try:
-            staged.publish()
+            staged.publish(replace_existing=command.replace_existing)
+        except FileExistsError as exc:
+            raise ModeloExportOutputPathError(
+                translated_message="application.modelo.errors.export_output_path_invalid",
+                context={"output_path": str(command.output_path), "reason": "path is an existing file"},
+            ) from exc
         except OSError as exc:
             raise ModeloExportOutputPathError(
                 translated_message="application.modelo.errors.export_output_path_invalid",
@@ -1588,7 +1605,7 @@ def export_modelo_revision(
     # bytes: an unusable --output (empty, existing directory, missing parent)
     # is a clean typed refusal here, never a raw OSError traceback at the
     # late publication — and never after cleartext financial bytes exist.
-    _validate_output_path(command.output_path)
+    _validate_output_path(command.output_path, replace_existing=command.replace_existing)
 
     prepared = _prepare_modelo_export(
         command,

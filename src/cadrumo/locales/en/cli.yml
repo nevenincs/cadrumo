@@ -821,6 +821,8 @@ cli:
           is not official AEAT filing evidence. Use AEAT justificante, declaration
           consultation, or CSV cotejo evidence after filing.
         output_help: Path to write the fichero-BOE artefact to.
+        replace_help: Replace a file already at --output. Without it, an existing
+          export file is refused so an earlier export is never destroyed.
         revision_help: Calculation revision id to export; defaults to the work unit's
           most recent verified-complete or filed revision.
         work_unit_id_help: Work unit id (SHA-256 or unambiguous prefix).

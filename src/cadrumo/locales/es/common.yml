@@ -2012,6 +2012,8 @@ tui:
         compensar: Compensar en periodos posteriores
         devolver: Solicitar la devolución
         label: 'Resultado negativo: compensar o solicitar la devolución'
+      replace_existing:
+        label: Sustituir el archivo que ya exista en esta ruta
     finding_kind:
       advisory: Consejo
       blocking_rule: Regla no cumplida

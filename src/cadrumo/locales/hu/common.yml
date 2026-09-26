@@ -1983,6 +1983,8 @@ tui:
         compensar: Továbbvitel a későbbi időszakokra (compensar)
         devolver: Visszatérítés kérése (devolver)
         label: 'Negatív eredmény: továbbvitel vagy visszatérítés kérése'
+      replace_existing:
+        label: Az ezen az útvonalon már meglévő fájl lecserélése
     finding_kind:
       advisory: Tanács
       blocking_rule: Nem teljesülő szabály

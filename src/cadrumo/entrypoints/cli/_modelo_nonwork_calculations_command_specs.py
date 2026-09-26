@@ -21,6 +21,7 @@ from ._modelo_nonwork_common_command_parameters import (
     _required_whole_number_option,
 )
 from .command_spec import (
+    FLAG_VALUE,
     CommandSpec,
     DeferredTarget,
     InvocationSpec,
@@ -154,6 +155,15 @@ MODELO_NONWORK_CALCULATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _optional_text_option("revision", ("--revision",), "cli.app.modelo.export.revision_help"),
             _optional_text_option("actor", ("--by",), "cli.app.modelo.export.actor_help"),
             *FILING_ELECTION_OPTIONS,
+            OptionSpec(
+                name="replace_existing",
+                declarations=("--replace",),
+                value=FLAG_VALUE,
+                default=ParameterDefault.value(False),
+                help_key=TranslationKey("cli.app.modelo.export.replace_help"),
+                is_flag=True,
+                flag_value=True,
+            ),
         ),
         policy=_MODEL_HANDOFF,
         handler=LazyBinding.available(DeferredTarget("._modelo_export_cli", "modelo_export_verb", __package__)),
