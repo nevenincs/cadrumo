@@ -7,7 +7,6 @@ legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 value = "2"
 date_axis = "filing_period"
 valid_from = 2019-01-01
-valid_to = 2023-12-31
 [[revisions."2019-2023".parameters.source_citations]]
 source_ref = "aeat-modelo-131-instructions"
 required_text = ["Casilla 04", "2 por 100", "casilla 03"]
@@ -20,7 +19,6 @@ legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 value = "2"
 date_axis = "filing_period"
 valid_from = 2019-01-01
-valid_to = 2023-12-31
 [[revisions."2019-2023".parameters.source_citations]]
 source_ref = "aeat-modelo-131-instructions"
 required_text = ["Casilla 06", "2 por 100", "casilla 05"]

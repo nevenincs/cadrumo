@@ -5,7 +5,7 @@ tags:
 date: '2026-09-27'
 modified: '2026-09-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:4d41706b5f049cdf38c010005e4a76446bdec1f4d705385c40d9a270e845d71d'
+body_hash: 'sha256:27681c8ccbcc0449f333f4406b1baa19d914a992f8bbed778fa64587b5882871'
 related:
   - "[[2026-09-27-registry-conformance-rectification-plan]]"
 ---
@@ -132,6 +132,24 @@ related:
 - `S12` `M` `.vault/adr/2026-09-21-assets-core-lifecycle-contract-adr.md`
 - `S12` `M` `.vault/adr/2026-09-21-retenciones-workflow-observation-payment-contract-adr.md`
 - `S12` `verify:` `vaultspec-core vault check all (27 errors, 519 warnings, identical to main)` -> `pass`
+- `S11` `A` `dev/registry/tests/test_parameter_rows_stay_open_across_editions.py`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2019-2023/parameters/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2024/parameters/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2024/revision.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2025/revision.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2026/parameters/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2019-2022/parameters/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2023-2024/revision.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2025-y-siguientes/revision.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/parameters/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023/revision.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2024-desde-09-y-3t/revision.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2024-hasta-08-y-2t/revision.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2025/revision.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2026-y-siguientes/revision.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/parameters/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/revision.toml`
+- `S11` `verify:` `pytest dev/registry/tests/test_parameter_rows_stay_open_across_editions.py` -> `pass`
 
 ## Notes
 
@@ -143,4 +161,5 @@ related:
 - `S10` A settled-row contributor persisted without its accrual year is now counted as settled in every supported year after the floor, where it was only counted after 2025: the gate over-refuses rather than lets a settled row through.
 - `S02` Registry-wide the fix brings 22 storage-rooted editions across 11 modelos into assessment; none currently states a droppable restatement, so no registry source changes.
 - `S12` The ruling list is returned to the operator in the session report rather than persisted, as the brief directs.
+- `S11` Partial: closed-window re-keying only. Late authoring in 180, 303, 131, 193, 190, 184, 123, 202, 222, 151, 182, 210, 390 and the low items, and the whole-family restatements under explicit roots, remain open; Modelo 200's 2024 rows in its 2025-y-siguientes edition are returned for ruling.
 
