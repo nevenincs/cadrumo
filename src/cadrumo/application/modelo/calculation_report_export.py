@@ -289,7 +289,6 @@ def build_modelo_calculation_report_for_revision(
         str(work_unit.modelo),
         filing_year=work_unit.period.filing_year,
         period=work_unit.period.registry_token,
-        revision_id=selected.id,
         grade=selected.effective_authority_grade,
     )
     verification_report_id, verification_outcome = _latest_verification_facts(
