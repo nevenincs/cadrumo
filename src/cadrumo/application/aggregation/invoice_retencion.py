@@ -25,12 +25,11 @@ declares it, and this module refuses to guess: choosing a scheme here would
 file a figure under a clave the taxpayer never asserted.
 
 The production caller is the ``modelo aggregate`` CLI: an operator (or the LLM
-operator on their behalf) declares ``(invoice, scheme)`` pairs via
-``--received-invoice-retencion``, and :func:`merge_manual_and_routed_retencion_observations`
-unions the resulting observations with any hand-typed
-``--retencion-observation`` rows into the ONE set the CLI passes to
-``persist_retencion_observations`` -- never two separate persist calls for one
-window, since that write is set-replace.
+operator on their behalf) declares one allocation via
+``--received-invoice-retencion``, which the CLI parses into an
+:class:`InvoiceWithholdingEvidenceRequest` and hands to
+:func:`build_invoice_withholding_capture`. The shared withholding producer owns
+the write, so this module never persists anything itself.
 
 See Also:
     :mod:`~.retenciones`
@@ -208,21 +207,6 @@ class InvoiceRetencionRouting(BaseModel):
 
     observations: tuple[RetencionObservation, ...]
     excluded: tuple[InvoiceRetencionProjection, ...]
-
-
-class InvoiceRetencionRouteRequest(BaseModel):
-    """One operator-declared ``(invoice, scheme)`` pair to route at aggregation time.
-
-    The wire shape the ``modelo aggregate`` CLI parses ``--received-invoice-retencion``
-    JSON into. The scheme is supplied here rather than read off the invoice for the
-    same reason :func:`project_received_invoice_retencion` never infers it: it is a
-    legal fact about the perceptor's activity the invoice record does not carry.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    invoice_id: InvoiceId
-    scheme: RetencionScheme
 
 
 class InvoiceWithholdingEvidenceError(CadrumoError):
@@ -566,7 +550,6 @@ def _defects_for(invoice: Invoice) -> Iterable[InvoiceRetencionProjectionDefect]
 __all__ = [
     "InvoiceRetencionProjection",
     "InvoiceRetencionProjectionDefect",
-    "InvoiceRetencionRouteRequest",
     "InvoiceRetencionRouting",
     "merge_manual_and_routed_retencion_observations",
     "project_received_invoice_retencion",
