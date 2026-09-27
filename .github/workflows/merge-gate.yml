@@ -73,7 +73,7 @@ jobs:
   gate:
     name: "Check: Scoped gate (Linux)"
     needs: lint
-    if: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && needs.lint.result == 'success' }}
+    if: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && ((github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && needs.lint.result == 'success') }}
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 60
     env:
@@ -124,7 +124,7 @@ jobs:
   verdict:
     name: "Check: Merge gate (Linux)"
     needs: [lint, gate]
-    if: ${{ !cancelled() }}
+    if: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && (!cancelled()) }}
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 5
     steps:

@@ -790,7 +790,7 @@ jobs:
     name: "${{ matrix.check-name }}"
     needs: [build-cohort, runtime-inventory]
     if: inputs.phase == 'prove'
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ startsWith(toJSON(matrix.os), '[') && contains(matrix.os, 'self-hosted') && matrix.os || fromJSON('["self-hosted","unmapped-fleet-runner"]') }}
     timeout-minutes: 120
     strategy:
       fail-fast: false
