@@ -10,7 +10,7 @@ related:
   - '[[2026-09-21-retenciones-workflow-observation-payment-contract-adr]]'
 modified: '2026-09-27'
 body_schema: body-v2
-body_hash: 'sha256:74999ffe9d8a8ea6ad20b0f5703c33970b037cd187da7cd465b9eecd9d7302f3'
+body_hash: 'sha256:de53c5689ecb9bd73c82999b858bd19da961770f82da8d564c923de1193d83f9'
 ---
 
 # `registry-conformance-rectification` plan
@@ -31,10 +31,10 @@ The brief's audit is orientation only. Every finding is re-measured against the 
 
 Make the collapse verifier, the delta converter and the parity comparison measure the live authority and storage-baseline editions correctly, each with an isolated detector test.
 
-- [ ] `P01.S01` - Resolve the collapse verifier's published authority from the working-tree publication and add a scoped modelo filter; `dev/registry/registry_collapse_verification.py`.
+- [x] `P01.S01` - Resolve the collapse verifier's published authority from the working-tree publication and add a scoped modelo filter; `dev/registry/registry_collapse_verification.py`.
 - [ ] `P01.S02` - Let drop-restatement read storage-baseline editions, not only string predecessors; `dev/registry/edition_delta_migration.py`.
 - [ ] `P01.S03` - Apply the filing schedule source reference default before comparing schedules; `dev/registry/registry_collapse_verification.py`.
-- [ ] `P01.S04` - Classify the indexed parity mapping-key order difference and fix the comparison or the ordering; `dev/registry/registry_collapse_verification.py`.
+- [x] `P01.S04` - Classify the indexed parity mapping-key order difference and fix the comparison or the ordering; `dev/registry/registry_collapse_verification.py`.
 
 ### Phase `P02` - Modelo 100 baseline relocation
 

@@ -13,6 +13,8 @@ from cadrumo.domain.calculations.registry.casilla_lineage import CasillaLineageO
 from cadrumo.domain.calculations.registry.lineage_attestation import LineageAttestation
 from cadrumo.domain.calculations.registry.schema import SupportedFilingYearsCatalogue
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+from dev._paths import REPO_ROOT
+from dev.packaging import authority_staging
 from dev.registry.edition_delta_migration import MigrationAssessment, assess_migration_state
 from dev.registry.tests.test_restated_family_merge import _build_modelo
 
@@ -432,3 +434,90 @@ def test_assessment_fixture_contains_complete_member_and_nested_override_finding
     formula_findings = [item for item in assessment.unresolved_duplication if item.get("family") == "formulas"]
     assert any(len(_finding_fields(item)) > 1 for item in formula_findings)
     assert any("expression.literal" in _finding_fields(item) for item in formula_findings)
+
+
+def test_published_authority_root_defaults_to_the_working_tree_publication(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv(authority_staging.AUTHORITY_ROOT_ENV, raising=False)
+
+    resolved = verification.published_authority_root()
+
+    assert resolved == (REPO_ROOT / authority_staging.AUTHORING_AUTHORITY_DIRECTORY).resolve()
+    assert resolved != (REPO_ROOT / "src" / "cadrumo" / "_data" / "registry" / "authority").resolve()
+
+
+def test_published_authority_root_honours_the_environment_and_an_explicit_root(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    configured = tmp_path / "configured-authority"
+    explicit = tmp_path / "explicit-authority"
+    monkeypatch.setenv(authority_staging.AUTHORITY_ROOT_ENV, str(configured))
+
+    assert verification.published_authority_root() == configured.resolve()
+    assert verification.published_authority_root(explicit) == explicit.resolve()
+
+
+def test_optional_tree_fingerprint_detects_a_publication_appearing(tmp_path: Path) -> None:
+    authority = tmp_path / "authority"
+    before = verification.fingerprint_optional_tree(authority)
+    authority.mkdir()
+    (authority / "authority.current.json").write_text("{}\n", encoding="utf-8", newline="\n")
+
+    after = verification.fingerprint_optional_tree(authority)
+
+    assert before == ()
+    assert before != after
+
+
+def test_scoped_verification_refuses_an_unknown_modelo(tmp_path: Path) -> None:
+    registry_root = tmp_path / "registry" / "aeat"
+    _build_modelo(registry_root / "modelos")
+    source_root = tmp_path / "data"
+    source_root.mkdir()
+
+    with pytest.raises(ValueError, match="unknown modelo identities requested: 000"):
+        verification.run_registry_verification(
+            registry_root=registry_root,
+            source_root=source_root,
+            work_dir=tmp_path / "work",
+            authority_root=tmp_path / "authority",
+            modelos=("000",),
+        )
+
+
+def test_first_difference_ignores_mapping_key_order_only() -> None:
+    before = {"family_dispositions": {"projection_endpoints": {"cause": "a"}, "extraction_profiles": {"cause": "b"}}}
+    after = {"family_dispositions": {"extraction_profiles": {"cause": "b"}, "projection_endpoints": {"cause": "a"}}}
+
+    assert verification._first_difference(before, after) is None
+
+
+def test_first_difference_detects_a_changed_mapping_key_set() -> None:
+    before = {"family_dispositions": {"projection_endpoints": {}, "extraction_profiles": {}}}
+    after = {"family_dispositions": {"projection_endpoints": {}}}
+
+    difference = verification._first_difference(before, after)
+
+    assert difference is not None
+    assert difference["location"] == "$.family_dispositions"
+    assert difference["reason"] == "mapping_keys_changed"
+
+
+def test_first_difference_detects_a_value_change_under_reordered_keys() -> None:
+    before = {"family_dispositions": {"projection_endpoints": {"cause": "a"}, "extraction_profiles": {"cause": "b"}}}
+    after = {"family_dispositions": {"extraction_profiles": {"cause": "c"}, "projection_endpoints": {"cause": "a"}}}
+
+    difference = verification._first_difference(before, after)
+
+    assert difference is not None
+    assert difference["location"] == "$.family_dispositions.extraction_profiles.cause"
+    assert difference["reason"] == "value_changed"
+
+
+def test_first_difference_still_detects_a_reordered_sequence() -> None:
+    before = {"formulas": [{"id": "a"}, {"id": "b"}]}
+    after = {"formulas": [{"id": "b"}, {"id": "a"}]}
+
+    difference = verification._first_difference(before, after)
+
+    assert difference is not None
+    assert difference["location"] == "$.formulas[0].id"
