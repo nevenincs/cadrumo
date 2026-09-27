@@ -1,7 +1,7 @@
 """Period-versioned IVA rate lookup tests.
 
 Confirms that :func:`cadrumo.domain.iva.lookup_rate` resolves the correct
-:class:`cadrumo.domain.iva.IvaRateRecord` record across the 2024 / 2025 ES window
+:class:`cadrumo.domain.iva.IvaRateRecord` record across the ES ordinary-row split
 boundary, and that the committed registry has no overlapping effective
 windows.
 """
@@ -9,7 +9,7 @@ windows.
 from __future__ import annotations
 
 from collections.abc import Iterator
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 from itertools import pairwise
 
@@ -32,6 +32,13 @@ _GENERAL = IvaRateKind("general")
 _REDUCED = IvaRateKind("reduced")
 _SUPER_REDUCED = IvaRateKind("super_reduced")
 _ZERO = IvaRateKind("zero")
+
+# RDL 20/2012 art. 23.Dos fixed the 21 % general rate from this day.
+_RDL_20_2012_GENERAL_RATE_START = date(2012, 9, 1)
+# The committed rate schedule splits its ordinary ES rows at this day without any rate
+# change; the pinned fixture mirrors that split so lookups straddle a row boundary.
+_ORDINARY_ROW_SPLIT = date(2025, 1, 1)
+_LAST_DAY_BEFORE_SPLIT = _ORDINARY_ROW_SPLIT - timedelta(days=1)
 
 
 def _mapping_fact(
@@ -154,11 +161,11 @@ def _pinned_iva_facts(
                     *(
                         (
                             _rate_variant(
-                                "iva-rate.es.general.2024.ordinary",
+                                f"iva-rate.es.general.{_LAST_DAY_BEFORE_SPLIT.year}.ordinary",
                                 kind="general",
                                 role="ordinary",
-                                valid_from=date(2024, 1, 1),
-                                valid_to=date(2024, 12, 31),
+                                valid_from=date(_LAST_DAY_BEFORE_SPLIT.year, 1, 1),
+                                valid_to=_LAST_DAY_BEFORE_SPLIT,
                                 pct="21",
                             ),
                         )
@@ -171,8 +178,8 @@ def _pinned_iva_facts(
                                 "iva-rate.es.general.2012-09-01.ordinary",
                                 kind="general",
                                 role="ordinary",
-                                valid_from=date(2012, 9, 1),
-                                valid_to=date(2024, 12, 31),
+                                valid_from=_RDL_20_2012_GENERAL_RATE_START,
+                                valid_to=_LAST_DAY_BEFORE_SPLIT,
                                 pct="21",
                             ),
                         )
@@ -183,8 +190,8 @@ def _pinned_iva_facts(
                         "iva-rate.es.reduced.2012-09-01.ordinary",
                         kind="reduced",
                         role="ordinary",
-                        valid_from=date(2012, 9, 1),
-                        valid_to=date(2024, 12, 31),
+                        valid_from=_RDL_20_2012_GENERAL_RATE_START,
+                        valid_to=_LAST_DAY_BEFORE_SPLIT,
                         pct="10",
                     ),
                     _rate_variant(
@@ -192,7 +199,7 @@ def _pinned_iva_facts(
                         kind="super_reduced",
                         role="ordinary",
                         valid_from=date(1995, 1, 1),
-                        valid_to=date(2024, 12, 31),
+                        valid_to=_LAST_DAY_BEFORE_SPLIT,
                         pct="4",
                     ),
                     _rate_variant(
@@ -212,24 +219,24 @@ def _pinned_iva_facts(
                         pct="0",
                     ),
                     _rate_variant(
-                        "iva-rate.es.general.2025-01-01.ordinary",
+                        f"iva-rate.es.general.{_ORDINARY_ROW_SPLIT.isoformat()}.ordinary",
                         kind="general",
                         role="ordinary",
-                        valid_from=date(2025, 1, 1),
+                        valid_from=_ORDINARY_ROW_SPLIT,
                         pct="21",
                     ),
                     _rate_variant(
-                        "iva-rate.es.reduced.2025-01-01.ordinary",
+                        f"iva-rate.es.reduced.{_ORDINARY_ROW_SPLIT.isoformat()}.ordinary",
                         kind="reduced",
                         role="ordinary",
-                        valid_from=date(2025, 1, 1),
+                        valid_from=_ORDINARY_ROW_SPLIT,
                         pct="10",
                     ),
                     _rate_variant(
-                        "iva-rate.es.super_reduced.2025-01-01.ordinary",
+                        f"iva-rate.es.super_reduced.{_ORDINARY_ROW_SPLIT.isoformat()}.ordinary",
                         kind="super_reduced",
                         role="ordinary",
-                        valid_from=date(2025, 1, 1),
+                        valid_from=_ORDINARY_ROW_SPLIT,
                         pct="4",
                     ),
                     _rate_variant(
@@ -317,19 +324,19 @@ def operation() -> Iterator[PinnedAuthorityOperation]:
         yield pinned
 
 
-def test_es_general_2024_rate(operation: PinnedAuthorityOperation) -> None:
-    """A 2024 date resolves the 21 % general rate.
+def test_es_general_rate_before_the_row_split(operation: PinnedAuthorityOperation) -> None:
+    """A date in the year before the row split resolves the 21 % general rate.
 
-    ``effective_from`` is 2012-09-01, not 2024-01-01. The earlier value was a
+    ``effective_from`` is 2012-09-01, not the first day of that year. The earlier value was a
     bulk-refresh boundary sitting in a field defined as "First date the rate
     applies", so the table asserted the general rate began in 2024 -- and this
     test asserted it back. RDL 20/2012 art. 23.Dos fixed 21 % from 1 September
     2012 and nothing has changed it since.
     """
-    rate = lookup_rate(_ES, _GENERAL, date(2024, 6, 15), operation=operation)
+    rate = lookup_rate(_ES, _GENERAL, date(_LAST_DAY_BEFORE_SPLIT.year, 6, 15), operation=operation)
     assert rate.pct == Decimal("21")
-    assert rate.effective_from == date(2012, 9, 1)
-    assert rate.effective_until == date(2024, 12, 31)
+    assert rate.effective_from == _RDL_20_2012_GENERAL_RATE_START
+    assert rate.effective_until == _LAST_DAY_BEFORE_SPLIT
 
 
 def test_rate_lookup_retains_the_matched_authority_provenance(operation: PinnedAuthorityOperation) -> None:
@@ -354,39 +361,39 @@ def test_rate_lookup_retains_the_matched_authority_provenance(operation: PinnedA
     assert len(resolved.authority_digest) == 64
 
 
-def test_es_general_2025_rate(operation: PinnedAuthorityOperation) -> None:
-    rate = lookup_rate(_ES, _GENERAL, date(2025, 6, 15), operation=operation)
+def test_es_general_rate_from_the_row_split(operation: PinnedAuthorityOperation) -> None:
+    rate = lookup_rate(_ES, _GENERAL, date(_ORDINARY_ROW_SPLIT.year, 6, 15), operation=operation)
     assert rate.pct == Decimal("21")
-    assert rate.effective_from == date(2025, 1, 1)
+    assert rate.effective_from == _ORDINARY_ROW_SPLIT
     assert rate.effective_until is None
 
 
-def test_es_general_2024_last_day(operation: PinnedAuthorityOperation) -> None:
-    """December 31 2024 still resolves to the 2024 record."""
-    rate = lookup_rate(_ES, _GENERAL, date(2024, 12, 31), operation=operation)
-    assert rate.effective_until == date(2024, 12, 31)
+def test_es_general_last_day_before_the_row_split(operation: PinnedAuthorityOperation) -> None:
+    """The last day before the split still resolves to the earlier record."""
+    rate = lookup_rate(_ES, _GENERAL, _LAST_DAY_BEFORE_SPLIT, operation=operation)
+    assert rate.effective_until == _LAST_DAY_BEFORE_SPLIT
 
 
-def test_es_general_2025_first_day(operation: PinnedAuthorityOperation) -> None:
-    """January 1 2025 resolves to the 2025 record (no overlap)."""
-    rate = lookup_rate(_ES, _GENERAL, date(2025, 1, 1), operation=operation)
-    assert rate.effective_from == date(2025, 1, 1)
+def test_es_general_first_day_of_the_row_split(operation: PinnedAuthorityOperation) -> None:
+    """The split day resolves to the later record (no overlap)."""
+    rate = lookup_rate(_ES, _GENERAL, _ORDINARY_ROW_SPLIT, operation=operation)
+    assert rate.effective_from == _ORDINARY_ROW_SPLIT
 
 
-def test_es_super_reduced_2024_and_2025_both_resolve(operation: PinnedAuthorityOperation) -> None:
-    """The 4 % super-reducido is registered for both years."""
-    rate_2024 = lookup_rate(_ES, _SUPER_REDUCED, date(2024, 6, 15), operation=operation)
-    rate_2025 = lookup_rate(_ES, _SUPER_REDUCED, date(2025, 6, 15), operation=operation)
-    assert rate_2024.pct == Decimal("4")
-    assert rate_2025.pct == Decimal("4")
+def test_es_super_reduced_resolves_on_both_sides_of_the_row_split(operation: PinnedAuthorityOperation) -> None:
+    """The 4 % super-reducido is registered on both sides of the split."""
+    before = lookup_rate(_ES, _SUPER_REDUCED, date(_LAST_DAY_BEFORE_SPLIT.year, 6, 15), operation=operation)
+    after = lookup_rate(_ES, _SUPER_REDUCED, date(_ORDINARY_ROW_SPLIT.year, 6, 15), operation=operation)
+    assert before.pct == Decimal("4")
+    assert after.pct == Decimal("4")
 
 
-def test_es_reduced_2024_and_2025_both_resolve(operation: PinnedAuthorityOperation) -> None:
-    """The 10 % reducido is registered for both years."""
-    rate_2024 = lookup_rate(_ES, _REDUCED, date(2024, 6, 15), operation=operation)
-    rate_2025 = lookup_rate(_ES, _REDUCED, date(2025, 6, 15), operation=operation)
-    assert rate_2024.pct == Decimal("10")
-    assert rate_2025.pct == Decimal("10")
+def test_es_reduced_resolves_on_both_sides_of_the_row_split(operation: PinnedAuthorityOperation) -> None:
+    """The 10 % reducido is registered on both sides of the split."""
+    before = lookup_rate(_ES, _REDUCED, date(_LAST_DAY_BEFORE_SPLIT.year, 6, 15), operation=operation)
+    after = lookup_rate(_ES, _REDUCED, date(_ORDINARY_ROW_SPLIT.year, 6, 15), operation=operation)
+    assert before.pct == Decimal("10")
+    assert after.pct == Decimal("10")
 
 
 def test_es_lookup_before_the_general_rate_existed_raises(operation: PinnedAuthorityOperation) -> None:
@@ -408,15 +415,15 @@ def test_es_lookup_before_the_general_rate_existed_raises(operation: PinnedAutho
     assert lookup_rate(_ES, _GENERAL, date(2012, 9, 1), operation=operation).pct == Decimal("21")
 
 
-def test_es_pre_2024_years_inside_prescripcion_now_resolve(operation: PinnedAuthorityOperation) -> None:
-    """2022 and 2023 price correctly, which is the point of the correction.
+def test_es_years_before_the_row_split_resolve_inside_prescripcion(operation: PinnedAuthorityOperation) -> None:
+    """Every full year between RDL 20/2012 and the split prices correctly, which is the point of the correction.
 
-    Both years sit inside the four-year prescripción window, and the registry
-    declares pre-2024 revisions on more than thirty modelos, so a taxpayer
-    amending either year needs the rate. Before the correction every tier
-    refused for both.
+    The years just before the split sit inside the four-year prescripción window,
+    and the registry declares earlier revisions on more than thirty modelos, so a
+    taxpayer amending one needs the rate. Before the correction every tier
+    refused for them.
     """
-    for year in (2022, 2023):
+    for year in range(_RDL_20_2012_GENERAL_RATE_START.year + 1, _ORDINARY_ROW_SPLIT.year):
         assert lookup_rate(_ES, _GENERAL, date(year, 6, 1), operation=operation).pct == Decimal("21")
         assert lookup_rate(_ES, _REDUCED, date(year, 6, 1), operation=operation).pct == Decimal("10")
 

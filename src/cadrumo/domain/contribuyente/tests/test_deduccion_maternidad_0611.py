@@ -63,6 +63,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _THRESHOLDS = registry_thresholds(2024)
 _FACT_CONTEXT = FamilyFactResolutionContext(PublishedGovernedFactSource(), date(2024, 12, 31), date(2024, 12, 31))
 _ART_81_1_MATERNITY_RELATIONS = art_81_1_maternity_relations(context=_FACT_CONTEXT)
+#: Ley 31/2022 added the Art. 81.1 post-birth alta increment from the exercise after the
+#: support floor; the floor itself is the last exercise without the route.
+_ALTA_POSTERIOR_FIRST_EXERCISE = PublishedGovernedFactSource().supported_filing_years().floor + 1
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -237,24 +240,28 @@ class TestAltaPosteriorNacimientoMes:
 
 
 class TestMaternidadAltaPosteriorIncrementApplies:
-    """The engine-side gate: a declared month plus the year-2023-onward boundary."""
+    """The engine-side gate: a declared month plus the first-increment-exercise boundary."""
 
-    def test_applies_from_2023_when_declared(self) -> None:
+    def test_applies_from_the_first_increment_exercise_when_declared(self) -> None:
         child = DescendantInfo(
-            birth_date=date(2023, 1, 1),
+            birth_date=date(_ALTA_POSTERIOR_FIRST_EXERCISE, 1, 1),
             meses_madre_trabajo=(5, 6, 7, 8, 9, 10, 11, 12),
             alta_posterior_nacimiento_mes=5,
         )
-        assert child.maternidad_alta_posterior_increment_applies(2023, context=_FACT_CONTEXT) is True
+        assert (
+            child.maternidad_alta_posterior_increment_applies(_ALTA_POSTERIOR_FIRST_EXERCISE, context=_FACT_CONTEXT)
+            is True
+        )
 
-    def test_does_not_apply_before_2023_even_when_declared(self) -> None:
+    def test_does_not_apply_before_the_first_increment_exercise_even_when_declared(self) -> None:
         """Same descendant, one filing year earlier: the route does not exist yet."""
         child = DescendantInfo(
-            birth_date=date(2020, 1, 1),
+            birth_date=date(_ALTA_POSTERIOR_FIRST_EXERCISE - 3, 1, 1),
             meses_madre_trabajo=(5, 6, 7, 8, 9, 10, 11, 12),
             alta_posterior_nacimiento_mes=5,
         )
-        assert child.maternidad_alta_posterior_increment_applies(2022, context=_FACT_CONTEXT) is False
+        earlier = _ALTA_POSTERIOR_FIRST_EXERCISE - 1
+        assert child.maternidad_alta_posterior_increment_applies(earlier, context=_FACT_CONTEXT) is False
 
     def test_does_not_apply_when_nothing_is_declared(self) -> None:
         child = DescendantInfo(birth_date=date(2023, 1, 1), meses_madre_trabajo=(5, 6, 7, 8, 9, 10, 11, 12))
@@ -354,31 +361,31 @@ class TestComputeDeduccionMaternidadAltaPosterior:
         )
         assert mixed == 950 + 800
 
-    def test_filing_years_before_2023_take_no_increment(self) -> None:
+    def test_filing_years_before_the_increment_take_no_increment(self) -> None:
         """The route is year-gated: the SAME pair and hijo id, one year earlier, gets nothing extra.
 
-        Proves the boundary runs both ways: 2023 grants the increment (asserted
-        above) and 2022 -- one year earlier, same inputs -- does not.
+        Proves the boundary runs both ways: the worked example's exercise grants the
+        increment (asserted above) and the year before -- same inputs -- does not.
         """
         from ..deduccion_maternidad import compute_deduccion_maternidad_0611
 
-        pre_2023 = compute_deduccion_maternidad_0611(
+        before_increment = compute_deduccion_maternidad_0611(
             [("mellizo_a", 8)],
-            filing_year=2022,
+            filing_year=_ALTA_POSTERIOR_FIRST_EXERCISE - 1,
             alta_posterior_hijos=frozenset({"mellizo_a"}),
         )
-        assert pre_2023 == 800
+        assert before_increment == 800
 
-    def test_filing_year_2022_never_exceeds_the_ordinary_1200_cap(self) -> None:
-        """The raised 1.350 cap must not leak into a pre-2023 filing year."""
+    def test_exercise_before_the_increment_never_exceeds_the_ordinary_1200_cap(self) -> None:
+        """The raised 1.350 cap must not leak into a filing year before the increment."""
         from ..deduccion_maternidad import compute_deduccion_maternidad_0611
 
-        pre_2023_capped = compute_deduccion_maternidad_0611(
+        before_increment_capped = compute_deduccion_maternidad_0611(
             [("0", 12)],
-            filing_year=2022,
+            filing_year=_ALTA_POSTERIOR_FIRST_EXERCISE - 1,
             alta_posterior_hijos=frozenset({"0"}),
         )
-        assert pre_2023_capped == 1200
+        assert before_increment_capped == 1200
 
 
 # ---------------------------------------------------------------------------

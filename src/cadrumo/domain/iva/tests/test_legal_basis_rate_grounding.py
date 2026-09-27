@@ -230,7 +230,7 @@ def test_liva_art_103_legal_entry_quotes_the_current_ten_per_cent_inclusive_marg
     assert any("exceda en un 10 por ciento o más" in t for t in required_text)
 
 
-def test_liva_art_103_corpus_records_the_ley_28_2014_amendment_of_apartado_dos() -> None:
+def test_liva_art_103_corpus_records_the_amendment_of_apartado_dos() -> None:
     """The bundled consolidated text dates the current redaction, so the year split is grounded, not assumed.
 
     The amendment note names Ley 28/2014 art. 1.26 as the modifier of apartado
@@ -274,17 +274,22 @@ def test_liva_art_103_margin_is_registry_data_not_a_python_constant() -> None:
     assert rule.inclusive is False
 
 
-def test_liva_art_103_pre_2015_ejercicio_is_refused_rather_than_guessed() -> None:
+# Ley 28/2014 art. 1.26 gave LIVA art. 103.Dos.2 its current redaction from this ejercicio.
+_LEY_28_2014_FIRST_EJERCICIO = 2015
+
+
+def test_liva_art_103_ejercicio_before_the_current_redaction_is_refused_rather_than_guessed() -> None:
     """TEETH: the repealed redaction has no citable authority, so it is refused."""
     from ..prorrata_especial_parameters import (
         ProrrataEspecialMandatoryParameterError,
         resolve_prorrata_especial_mandatory_parameters,
     )
 
+    repealed_ejercicio = _LEY_28_2014_FIRST_EJERCICIO - 1
     revision = published_revision("303", "2025")
     with pytest.raises(ProrrataEspecialMandatoryParameterError) as excinfo:
-        resolve_prorrata_especial_mandatory_parameters(revision, modelo_id="303", ejercicio=2014)
-    assert "does not resolve for ejercicio 2014" in str(excinfo.value)
+        resolve_prorrata_especial_mandatory_parameters(revision, modelo_id="303", ejercicio=repealed_ejercicio)
+    assert f"does not resolve for ejercicio {repealed_ejercicio}" in str(excinfo.value)
 
 
 # ---------------------------------------------------------------------------

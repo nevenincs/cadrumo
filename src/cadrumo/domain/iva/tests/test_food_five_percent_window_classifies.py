@@ -21,7 +21,7 @@ the defect was an absent window and an absent window fails at its edges first.
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 
 import pytest
@@ -34,17 +34,24 @@ from ..schema import EUMemberState, IvaRateKind
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _FIVE = Decimal("0.05")
+# RDL 20/2022 art. 72, with its three extensions, kept the 5 % food rate over this span.
+_RDL_20_2022_OPENS = date(2023, 1, 1)
+_RDL_20_2022_CLOSES = date(2024, 6, 30)
+# RD-ley 4/2024 kept 5 % over this span, then moved the arm to 7,5 % before withdrawing it.
+_RDL_4_2024_FIVE_PERCENT_OPENS = date(2024, 7, 1)
+_RDL_4_2024_FIVE_PERCENT_CLOSES = date(2024, 9, 30)
+_DAY = timedelta(days=1)
 
 
 @pytest.mark.parametrize(
     "on_date",
     (
-        pytest.param(date(2023, 1, 1), id="window-opens"),
-        pytest.param(date(2023, 6, 1), id="mid-2023"),
-        pytest.param(date(2024, 3, 1), id="first-half-2024"),
-        pytest.param(date(2024, 6, 30), id="rdl-20-2022-last-day"),
-        pytest.param(date(2024, 7, 1), id="rdl-4-2024-first-day"),
-        pytest.param(date(2024, 9, 30), id="rdl-4-2024-last-day"),
+        pytest.param(_RDL_20_2022_OPENS, id="window-opens"),
+        pytest.param(date(_RDL_20_2022_OPENS.year, 6, 1), id="first-window-opening-year"),
+        pytest.param(date(_RDL_20_2022_CLOSES.year, 3, 1), id="first-window-closing-year"),
+        pytest.param(_RDL_20_2022_CLOSES, id="first-window-last-day"),
+        pytest.param(_RDL_4_2024_FIVE_PERCENT_OPENS, id="successor-window-first-day"),
+        pytest.param(_RDL_4_2024_FIVE_PERCENT_CLOSES, id="successor-window-last-day"),
     ),
 )
 def test_the_five_percent_food_rate_classifies_across_its_whole_grounded_span(on_date: date) -> None:
@@ -61,9 +68,9 @@ def test_the_five_percent_food_rate_classifies_across_its_whole_grounded_span(on
 @pytest.mark.parametrize(
     "on_date",
     (
-        pytest.param(date(2022, 12, 31), id="day-before-rdl-20-2022"),
-        pytest.param(date(2024, 10, 1), id="day-after-rdl-4-2024-first-window"),
-        pytest.param(date(2025, 6, 1), id="after-withdrawal"),
+        pytest.param(_RDL_20_2022_OPENS - _DAY, id="day-before-first-window"),
+        pytest.param(_RDL_4_2024_FIVE_PERCENT_CLOSES + _DAY, id="day-after-successor-window"),
+        pytest.param(date(_RDL_4_2024_FIVE_PERCENT_CLOSES.year + 1, 6, 1), id="after-withdrawal"),
     ),
 )
 def test_the_five_percent_rate_stays_refused_outside_its_statutory_span(on_date: date) -> None:
