@@ -10,7 +10,7 @@ related:
   - '[[2026-09-21-retenciones-workflow-observation-payment-contract-adr]]'
 modified: '2026-09-27'
 body_schema: body-v2
-body_hash: 'sha256:ad08a07b2aaaef7c201040f628db88e64291e6a5ae87698305c7a6353c16af59'
+body_hash: 'sha256:e65618b468876f073c74c6f72fb28c8123f6f74eef34d368ad378498630b4720'
 ---
 
 # `registry-conformance-rectification` plan
@@ -42,7 +42,7 @@ Make the collapse verifier, the delta converter and the parity comparison measur
 Author the Modelo 100 identity, ledger and settlement chain, the amortization parameters and the root parameter windows at the earliest revision the law requires, keying only genuine divergences.
 
 - [x] `P02.S05` - Author the identity, ledger and settlement chain members at 2022, with 0195 at 2023, and delete the later copies; `src/cadrumo/_data/registry/aeat/modelos/100/`.
-- [ ] `P02.S06` - Author the 2022 amortization parameter baseline and key the 2023, 2024 and 2025 divergences; `src/cadrumo/_data/registry/aeat/modelos/100/`.
+- [x] `P02.S06` - Author the 2022 amortization parameter baseline and key the 2023, 2024 and 2025 divergences; `src/cadrumo/_data/registry/aeat/modelos/100/`.
 - [x] `P02.S07` - Open the root parameter windows at their statutory dates and drop window-only restatements; `src/cadrumo/_data/registry/aeat/modelos/100/`.
 
 ### Phase `P03` - consumer year bounds

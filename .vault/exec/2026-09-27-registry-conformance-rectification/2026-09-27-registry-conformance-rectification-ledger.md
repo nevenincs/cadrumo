@@ -5,7 +5,7 @@ tags:
 date: '2026-09-27'
 modified: '2026-09-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:8ccbbefd4a7d336180827f11929e5928d9ab8dcc170516685fe83c4cb9ccc9f8'
+body_hash: 'sha256:58b09cb65217b84ed8f1bc25c1704cf185e694587890a140f831135bcc8448fb'
 related:
   - "[[2026-09-27-registry-conformance-rectification-plan]]"
 ---
@@ -108,6 +108,15 @@ related:
 - `S07` `verify:` `just check-registry-gate` -> `pass`
 - `S07` `M` `dev/registry/tests/test_modelo_100_parameter_projection_across_horizon.py`
 - `S07` `verify:` `pytest dev (no failure beyond main; lane gate green after removing the merged worktree)` -> `pass`
+- `S06` `A` `dev/registry/tests/test_activity_asset_authority_across_supported_years.py`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/parameters/0001-declarations.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2023/parameters/0001-declarations.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2023/revision.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/parameters/0001-declarations.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/revision.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/parameters/0001-declarations.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/revision.toml`
+- `S06` `verify:` `just check-registry, check-bindings, check-registry-gate` -> `pass`
 
 ## Notes
 
