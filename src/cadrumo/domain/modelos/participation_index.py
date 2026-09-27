@@ -17,7 +17,7 @@ the composition-service single-writer discipline); it is a read-side cache, neve
 a second source of truth, and is fully rebuildable from the revision catalogue.
 
 The index is keyed by ``transaction_id`` and persisted one secure
-:class:`~cadrumo.adapters.persistence.storage.Envelope` per transaction, so a
+:class:`~cadrumo.adapters.persistence.storage.envelope.contract.Envelope` per transaction, so a
 revision over N contributing transactions co-emits N index upserts. Each upsert
 merges its new participation into that transaction's entry without disturbing
 the participations already recorded for it.

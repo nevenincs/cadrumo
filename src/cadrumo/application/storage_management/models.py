@@ -4,7 +4,7 @@ Every model here is an operator-facing projection of the core storage taxonomy
 plus what the filesystem currently holds.
 
 See Also:
-    :data:`~cadrumo.core.STORAGE_TAXONOMY`
+    :data:`~cadrumo.core.storage_taxonomy_locations.STORAGE_TAXONOMY`
         The declaration these rows project.
 """
 
