@@ -25,10 +25,7 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from cadrumo.domain.calculations.registry.calendar_ccaa_catalogue import (
-    require_calendar_ccaa,
-    resolve_calendar_ccaa_catalogue,
-)
+from cadrumo.domain.calculations.registry.calendar_ccaa_catalogue import resolve_calendar_ccaa_catalogue
 from cadrumo.domain.calculations.registry.tests.legal_text import legal_effective_to
 
 from ....core.directory_scan import scan_directory
@@ -52,7 +49,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 def _calendar_ccaa(operation: PinnedAuthorityOperation, code: str) -> CalendarCCAA:
     """Project a test territory through the pinned calendar-territory fact."""
-    return require_calendar_ccaa(code, effective_date=date(2025, 7, 1), authority=operation)
+    return resolve_calendar_ccaa_catalogue(effective_date=date(2025, 7, 1), authority=operation).require(code)
 
 
 # BOE-A-2024-26935 fixes the días inhábiles of the AGE for the calendar year its

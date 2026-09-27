@@ -12,7 +12,7 @@ from pydantic import ValidationError
 from ....core.period import Period
 from ....domain.calculations.registry.applicability import ApplicabilityVerdict, derive_modelo_applicability
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.calendar_ccaa_catalogue import require_calendar_ccaa
+from ....domain.calculations.registry.calendar_ccaa_catalogue import resolve_calendar_ccaa_catalogue
 from ....domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from ....domain.calculations.registry.tests.published_authority import (
     PublishedGovernedFactSource,
@@ -1152,7 +1152,9 @@ def _entry_for(obligation: ModeloDeadline, operation: PinnedAuthorityOperation, 
         holiday_territory=(
             None
             if territory is None
-            else require_calendar_ccaa(territory, effective_date=obligation.closes_on, authority=operation)
+            else resolve_calendar_ccaa_catalogue(effective_date=obligation.closes_on, authority=operation).require(
+                territory
+            )
         ),
         filing_evidence=(),
         live_censo_verified_profile_keys=None,

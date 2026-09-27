@@ -21,7 +21,7 @@ from datetime import date
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from cadrumo.domain.calculations.registry.calendar_ccaa_catalogue import require_calendar_ccaa
+from cadrumo.domain.calculations.registry.calendar_ccaa_catalogue import resolve_calendar_ccaa_catalogue
 from cadrumo.domain.calculations.registry.tests.legal_text import legal_effective_to
 
 from ..festivos import (
@@ -63,7 +63,7 @@ _CALENDAR_TERRITORIES = (
 
 
 def _territory(operation: PinnedAuthorityOperation, code: str, year: int = 2025) -> CalendarCCAA:
-    return require_calendar_ccaa(code, effective_date=date(year, 7, 1), authority=operation)
+    return resolve_calendar_ccaa_catalogue(effective_date=date(year, 7, 1), authority=operation).require(code)
 
 
 def _regional_dates(calendar: HolidayCalendar, territory: CalendarCCAA) -> set[date]:
