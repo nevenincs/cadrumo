@@ -73,18 +73,22 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _SUPPORT = published_supported_filing_years()
 assert _SUPPORT is not None, "the bundled registry declares no supported filing years"
 _HORIZON = _SUPPORT.horizon
-_ANNUAL_2026 = Period.from_year_and_code(_HORIZON, "0A")
-_Q4_2024 = Period.from_year_and_code(2024, "4T")
+_HORIZON_ANNUAL = Period.from_year_and_code(_HORIZON, "0A")
+# RD-ley 4/2024 steps the transitional food rates in the fourth quarter of the
+# exercise two above the support floor, so that quarter's law differs from the horizon's.
+_TRANSITIONAL_RATE_QUARTER = Period.from_year_and_code(_SUPPORT.floor + 2, "4T")
 
 
-def _compiled(*, operation: PinnedAuthorityOperation, period: Period = _ANNUAL_2026) -> str:
+def _compiled(*, operation: PinnedAuthorityOperation, period: Period = _HORIZON_ANNUAL) -> str:
     return build_invoice_extraction_prompt(period=period, operation=operation).text
 
 
 class TestCompiledEnumerationsComeFromTheRegistry:
     """The compiled numbers equal what the owning authority resolves for the period."""
 
-    @pytest.mark.parametrize("period", [_ANNUAL_2026, _Q4_2024], ids=["annual-2026", "q4-2024"])
+    @pytest.mark.parametrize(
+        "period", [_HORIZON_ANNUAL, _TRANSITIONAL_RATE_QUARTER], ids=["horizon-annual", "transitional-rate-quarter"]
+    )
     def test_iva_rates_equal_every_registered_spanish_rate_overlapping_the_period(
         self, period: Period, *, operation: PinnedAuthorityOperation
     ) -> None:
@@ -114,10 +118,11 @@ class TestCompiledEnumerationsComeFromTheRegistry:
     def test_retencion_rates_equal_the_rirpf_art_95_parameters_as_percentages(
         self, *, operation: PinnedAuthorityOperation
     ) -> None:
-        compiled = build_invoice_extraction_prompt(period=_ANNUAL_2026, operation=operation)
+        compiled = build_invoice_extraction_prompt(period=_HORIZON_ANNUAL, operation=operation)
 
         expected = sorted(
-            rate * Decimal("100") for rate in statutory_activity_retencion_rates(effective_date=_ANNUAL_2026.end_date)
+            rate * Decimal("100")
+            for rate in statutory_activity_retencion_rates(effective_date=_HORIZON_ANNUAL.end_date)
         )
 
         assert list(compiled.retencion_rate_pcts) == expected
@@ -132,8 +137,8 @@ class TestCompiledEnumerationsComeFromTheRegistry:
         the 2024 Q4 prompt and not into the 2026 one, with nothing in this
         package changed between the two calls.
         """
-        annual_2026 = build_invoice_extraction_prompt(period=_ANNUAL_2026, operation=operation)
-        q4_2024 = build_invoice_extraction_prompt(period=_Q4_2024, operation=operation)
+        annual_2026 = build_invoice_extraction_prompt(period=_HORIZON_ANNUAL, operation=operation)
+        q4_2024 = build_invoice_extraction_prompt(period=_TRANSITIONAL_RATE_QUARTER, operation=operation)
 
         assert Decimal("7.5") in q4_2024.iva_rate_pcts
         assert Decimal("7.5") not in annual_2026.iva_rate_pcts

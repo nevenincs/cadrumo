@@ -32,6 +32,7 @@ from .....domain.calculations.registry.bindings import RegistryModeloObservation
 from .....domain.calculations.registry.handoffs import relation_consumption_channels, relation_consumption_index
 from .....domain.calculations.registry.relations import RegistryFoldRequirement, relation_prefill_bindings_for_period
 from .....domain.calculations.registry.schema import RegistrySnapshot
+from .....domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from .....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
     revision_id_for_observation,
@@ -518,7 +519,16 @@ def test_orphaned_non_formula_binding_surfaces_advisory_diagnostic(tmp_path: Pat
     )
 
 
-def test_modelo_190_2025_empty_store_collapses_absent_m111_source_to_one_diagnostic(tmp_path: Path) -> None:
+# The newest authored Modelo 190 annual resumen sits one below the horizon, which
+# carries it forward; both exercises read the same Modelo 111 relations.
+_SUPPORT = PublishedGovernedFactSource().supported_filing_years()
+_ANNUAL_RESUMEN_YEARS = (_SUPPORT.horizon - 1, _SUPPORT.horizon)
+
+
+@pytest.mark.parametrize("filing_year", _ANNUAL_RESUMEN_YEARS)
+def test_modelo_190_empty_store_collapses_absent_m111_source_to_one_diagnostic(
+    tmp_path: Path, filing_year: int
+) -> None:
     """Ten Modelo 190 relations reading the same absent Modelo 111 quarter fold to one advisory.
 
     The real-corpus measurement the grouping change was built against: an
@@ -533,7 +543,7 @@ def test_modelo_190_2025_empty_store_collapses_absent_m111_source_to_one_diagnos
         isolated_runtime_profile(tmp_path=tmp_path),
     ):
         repository = CalculationObservationRepository()  # empty store — nothing to resolve
-        snapshot = _snapshot("190", 2025, "0A")
+        snapshot = _snapshot("190", filing_year, "0A")
         source_resolution = RelationPrefillSourceResolver(
             repository=repository,
             profile_read_ports=empty_profile_read_ports(),
@@ -543,14 +553,16 @@ def test_modelo_190_2025_empty_store_collapses_absent_m111_source_to_one_diagnos
             CalculationSourceContext(
                 bucket_id="operator",
                 modelo="190",
-                filing_year=2025,
-                period=Period.from_year_and_code(2025, "0A"),
+                filing_year=filing_year,
+                period=Period.from_year_and_code(filing_year, "0A"),
                 revision=snapshot.revision,
             ),
         )
 
     m111_diagnostics = [
-        diagnostic for diagnostic in source_resolution.diagnostics if diagnostic.message.startswith("modelo 111 2025")
+        diagnostic
+        for diagnostic in source_resolution.diagnostics
+        if diagnostic.message.startswith(f"modelo 111 {filing_year}")
     ]
     assert len(m111_diagnostics) == 1, (
         "one absent Modelo 111 source filing must fold to one diagnostic, not one per relation "

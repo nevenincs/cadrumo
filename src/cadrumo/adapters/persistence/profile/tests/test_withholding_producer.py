@@ -465,11 +465,14 @@ def test_unpaid_exigible_capital_reopens_and_later_settlement_does_not_duplicate
 
 
 @pytest.mark.parametrize("perception_key", ("A", "B", "D"))
-def test_modelo_193_pending_evidence_accepts_only_the_grounded_2025_keys(
+def test_modelo_193_pending_evidence_accepts_only_the_grounded_keys(
     perception_key: Literal["A", "B", "D"],
 ) -> None:
     """The special pending-payment contract never accepts an inferred clave."""
-    original = _capital_pending_payment_detail(transaction_date=date(2025, 12, 15))
+    # The pending-payment claves are grounded for accruals of this exercise; the
+    # grounding is the cited evidence's scope.
+    grounded_accrual_exercise = 2025
+    original = _capital_pending_payment_detail(transaction_date=date(grounded_accrual_exercise, 12, 15))
     annual_detail = original.actual_recipient_detail.model_copy(
         update={"clave": RetencionClave.from_registry(perception_key)}
     )

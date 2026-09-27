@@ -28,6 +28,7 @@ from decimal import Decimal
 
 import pytest
 
+from .....domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from .....tests.inventory import FIXTURES_DIR
 from ..parser import parse_declaracion
 from ._parser_boundary_m100_current_support import M100_CURRENT_YEAR_EXPECTED_CASILLAS
@@ -37,6 +38,11 @@ from ._parser_boundary_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
+
+_SUPPORT = PublishedGovernedFactSource().supported_filing_years()
+# The two newest authored editions below the projecting horizon, whose Diseno de
+# Registro dictionaries ground the committed synthetic fixtures.
+_CURRENT_YEAR_EDITIONS = (_SUPPORT.horizon - 2, _SUPPORT.horizon - 1)
 
 # Ground truth mirrors the amounts _generate_modelo_100_current.py stamps onto
 # the committed fixture PDFs (the single source of the fixture's printed values).
@@ -67,11 +73,7 @@ _M100_CURRENT_YEAR_EXPECTED_VALUES: dict[str, Decimal] = {
 
 @pytest.mark.parametrize(
     ("year", "profile_id"),
-    [
-        (2024, "modelo-100-declaracion-pdf"),
-        (2025, "modelo-100-declaracion-pdf"),
-    ],
-    ids=["2024", "2025"],
+    [(year, "modelo-100-declaracion-pdf") for year in _CURRENT_YEAR_EDITIONS],
 )
 def test_parser_extracts_modelo_100_current_year_profile_targets(year: int, profile_id: str) -> None:
     """Registry profile declares exactly the 21-casilla current-year target set."""
@@ -83,7 +85,7 @@ def test_parser_extracts_modelo_100_current_year_profile_targets(year: int, prof
         assert target.label_pattern
 
 
-@pytest.mark.parametrize("year", [2024, 2025], ids=["2024", "2025"])
+@pytest.mark.parametrize("year", _CURRENT_YEAR_EDITIONS)
 def test_parser_extracts_modelo_100_current_year_profile_targets_from_committed_synthetic_fixture(
     year: int,
 ) -> None:

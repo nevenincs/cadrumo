@@ -287,16 +287,19 @@ def test_registry_observation_from_filed_declaration_refuses_noncanonical_casill
 class TestParseListbox:
     """Verify :func:`_parse_listbox` extracts typed Declaracion rows from the post-Buscar HTML."""
 
-    def test_modelo_100_2022_parses_one_row(self) -> None:
-        """Assert the Modelo 100 / 2022 fixture parses to a single fully-populated row."""
-        html = (_FIXTURE_ROOT / "declaraciones-modelo-100-2022.html").read_text(encoding="utf-8")
-        rows = _parse_listbox(html, modelo="100", ejercicio=2022).rows
+    def test_modelo_100_listbox_fixture_parses_one_row(self) -> None:
+        """Assert the Modelo 100 listbox fixture parses to a single fully-populated row."""
+        # The captured listbox page is for one ejercicio; that ejercicio is the
+        # fixture's identity, so it is bound once here.
+        ejercicio = 2022
+        html = (_FIXTURE_ROOT / f"declaraciones-modelo-100-{ejercicio}.html").read_text(encoding="utf-8")
+        rows = _parse_listbox(html, modelo="100", ejercicio=ejercicio).rows
         assert len(rows) == 1
         row = rows[0]
         assert row.modelo == "100"
-        assert row.ejercicio == 2022
+        assert row.ejercicio == ejercicio
         assert row.expediente_id == "202210013522222A"
-        assert row.period == Period.from_year_and_code(2022, "0A")
+        assert row.period == Period.from_year_and_code(ejercicio, "0A")
         assert row.estado == "ALTA"
         assert row.presented_at == datetime(
             year=2024,

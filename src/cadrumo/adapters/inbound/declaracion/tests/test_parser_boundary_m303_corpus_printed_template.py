@@ -8,7 +8,7 @@ See Also:
         Single-fixture parser boundary check for the same current profile.
     :mod:`~adapters.inbound.declaracion.tests._parser_boundary_m303_support`
         Shared 2023-2024 corpus parameters and expected profile casilla set.
-    :mod:`~adapters.inbound.declaracion.tests.test_verification_chain_m303_2023_2024`
+    :mod:`~adapters.inbound.declaracion.tests.test_verification_chain_m303_corpus_printed_template`
         Engine verification chain that consumes the same parsed current-template
         specimens after this parser boundary is green.
     :class:`~adapters.inbound.declaracion.InboundDeclaracionObservation`

@@ -34,11 +34,17 @@ from decimal import Decimal
 import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from .....tests.inventory import FIXTURES_DIR
 from ..parser import parse_declaracion
 from ._parser_boundary_support import _expected_period, _modelo_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
+
+_SUPPORT = PublishedGovernedFactSource().supported_filing_years()
+# The two newest authored editions below the projecting horizon, whose Diseno de
+# Registro dictionaries ground the committed synthetic fixtures.
+_CURRENT_YEAR_EDITIONS = (_SUPPORT.horizon - 2, _SUPPORT.horizon - 1)
 
 # Ground truth mirrors the amounts _generate_misc_b.py stamps onto the
 # committed fixture PDF (the single source of the fixture's printed values);
@@ -62,15 +68,14 @@ _M131_CURRENT_YEAR_EXPECTED_VALUES: dict[CasillaId, Decimal] = {
 }
 
 _M131_CURRENT_YEAR_EXPECTED_CASILLAS = frozenset(_M131_CURRENT_YEAR_EXPECTED_VALUES)
+# The one committed synthetic Modelo 131 fixture, named for the exercise its body
+# stamps; it is reused for every current-year profile through a revision override.
+_COMMITTED_FIXTURE_NAME = "2024-1T.pdf"
 
 
 @pytest.mark.parametrize(
     ("year", "profile_id"),
-    [
-        (2024, "modelo-131-declaracion-pdf"),
-        (2025, "modelo-131-declaracion-pdf"),
-    ],
-    ids=["2024", "2025"],
+    [(year, "modelo-131-declaracion-pdf") for year in _CURRENT_YEAR_EDITIONS],
 )
 def test_parser_extracts_modelo_131_current_year_profile_targets(year: int, profile_id: str) -> None:
     """Registry profile declares exactly the 15-casilla current-year target set."""
@@ -83,7 +88,7 @@ def test_parser_extracts_modelo_131_current_year_profile_targets(year: int, prof
         assert target.bbox_anchor.box_number_pattern
 
 
-@pytest.mark.parametrize("year", [2024, 2025], ids=["2024", "2025"])
+@pytest.mark.parametrize("year", _CURRENT_YEAR_EDITIONS)
 def test_parser_extracts_modelo_131_current_year_profile_targets_from_committed_synthetic_fixture(
     year: int,
 ) -> None:
@@ -96,7 +101,7 @@ def test_parser_extracts_modelo_131_current_year_profile_targets_from_committed_
     the registry ``bbox_anchor.box_number_pattern`` and the real DR layout
     produces a zero-match parse failure on this fixture.
     """
-    pdf_path = FIXTURES_DIR / "justificantes" / "131" / "2024-1T.pdf"
+    pdf_path = FIXTURES_DIR / "justificantes" / "131" / _COMMITTED_FIXTURE_NAME
     assert pdf_path.is_file(), f"missing committed M131 synthetic fixture at {pdf_path}"
 
     # The committed fixture stamps "Ejercicio: 2024" in its printed body; force

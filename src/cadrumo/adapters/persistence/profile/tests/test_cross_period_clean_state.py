@@ -32,6 +32,7 @@ from .....core.period import Period
 from .....domain.calculations.registry.applicability_modelo202 import Modelo202Modality
 from .....domain.calculations.registry.authority import bundled_indexed_authority
 from .....domain.calculations.registry.schema import RegistrySnapshot
+from .....domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from .....domain.modelos.filing_record import ModeloRecordCatalogue, ModeloRecordStatus
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..calculation_observations import CalculationObservationRepository
@@ -90,6 +91,8 @@ from .cross_period_clean_state_support import (
 from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
+
+_SUPPORT = PublishedGovernedFactSource().supported_filing_years()
 
 
 def test_cross_period_clean_state_blocks_missing_required_prior_filings(tmp_path: Path) -> None:
@@ -241,14 +244,14 @@ def test_cross_period_requirements_preserve_previous_filing_presence_policy() ->
     assert requirement.source_presence_groups == (requirement.source_casilla_ids,)
 
 
-def test_cross_period_dependency_inventory_covers_declared_2026_target_modelos(
+def test_cross_period_dependency_inventory_covers_declared_horizon_target_modelos(
     tmp_path: Path,
 ) -> None:
     with (
         isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID),
         bundled_indexed_authority().operation() as operation,
     ):
-        inventory = cross_period_dependency_inventory(operation, filing_year=2026)
+        inventory = cross_period_dependency_inventory(operation, filing_year=_SUPPORT.horizon)
 
     assert inventory.target_modelos == (
         "130",
@@ -268,24 +271,25 @@ def test_cross_period_dependency_inventory_covers_declared_2026_target_modelos(
     assert "390" not in inventory.target_modelos
     assert any(
         item.target_modelo == "353"
-        and item.target_period == Period.from_year_and_code(2026, "12")
+        and item.target_period == Period.from_year_and_code(_SUPPORT.horizon, "12")
         and item.source_modelos == ("322",)
         for item in inventory.items
     )
 
 
-def test_cross_period_dependency_inventory_covers_renta_2025_target_modelo(
+def test_cross_period_dependency_inventory_covers_the_reviewed_renta_target_modelo(
     tmp_path: Path,
 ) -> None:
     with (
         isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID),
         bundled_indexed_authority().operation() as operation,
     ):
-        inventory = cross_period_dependency_inventory(operation, filing_year=2025, modelos=("100",))
+        # The newest authored Modelo 100 edition sits one below the projecting horizon.
+        inventory = cross_period_dependency_inventory(operation, filing_year=_SUPPORT.horizon - 1, modelos=("100",))
 
     assert inventory.target_modelos == ("100",)
     assert len(inventory.items) == 1
-    assert inventory.items[0].target_period == Period.from_year_and_code(2025, "0A")
+    assert inventory.items[0].target_period == Period.from_year_and_code(_SUPPORT.horizon - 1, "0A")
     # M115 (arrendamiento retenciones) and M180 (retenciones anuales arrendamiento)
     # dependency classifications were retired as dormant M100 rental-retention
     # sources; the surviving suffered-retencion sources are 111/123/193.
