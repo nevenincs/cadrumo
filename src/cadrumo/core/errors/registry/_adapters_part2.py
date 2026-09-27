@@ -588,6 +588,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.adapters.persistence.storage.custody.errors.ProfileCustodyPathAbsentError",
+        ErrorCode(
+            code="INTEGRITY_STORAGE_PROFILE_CUSTODY_PATH_ABSENT",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.integrity_storage_profile_custody_record",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.adapters.persistence.storage.custody.errors.ProfileCustodyConcurrentCapsuleChangeError",
         ErrorCode(
             code="LOCKED_STORAGE_PROFILE_CUSTODY_CAPSULE_GENERATION",
