@@ -6,7 +6,7 @@ tags:
 date: '2026-09-26'
 modified: '2026-09-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:71de7c079e24b566e63d8d975e2e59659a7c376f45b6ec25b7062a2b7172b116'
+body_hash: 'sha256:2a142eea228811f67d4adb18f92cb698758fd13b505d0a74ab9b4f4819aeb3c9'
 related:
   - '[[2026-09-26-export-parity-adr]]'
   - '[[2026-09-26-export-parity-audit]]'
@@ -15,6 +15,8 @@ related:
   - '[[2026-09-26-export-parity-calculation-summary-pdf-research]]'
   - '[[2026-09-26-export-parity-ledger]]'
   - '[[2026-09-26-export-parity-plan]]'
+  - '[[2026-09-27-export-parity-m390-adquisiciones-interiores-exentas-adr]]'
+  - '[[2026-09-27-export-parity-m390-adquisiciones-interiores-exentas-research]]'
   - '[[2026-09-27-export-parity-renta-withholding-sources-adr]]'
   - '[[2026-09-27-export-parity-renta-withholding-sources-research]]'
 ---
@@ -30,7 +32,8 @@ Auto-generated index of all documents tagged with `#export-parity`.
 - `2026-09-26-export-parity-adr` - `export-parity` adr: `development mock software identity for envelope exports` | (**status:** `accepted`)
 - `2026-09-26-export-parity-calculation-report-adr` - `export-parity` adr: `calculation report destinations for CSV and PDF` | (**status:** `accepted`)
 - `2026-09-26-export-parity-calculation-summary-pdf-adr` - `export-parity` adr: `calculation summary pdf` | (**status:** `accepted`)
-- `2026-09-27-export-parity-renta-withholding-sources-adr` - `export-parity` adr: `source Modelo 100 withholding credits from the perceptor side` | (**status:** `proposed`)
+- `2026-09-27-export-parity-m390-adquisiciones-interiores-exentas-adr` - `export-parity` adr: `m390 adquisiciones interiores exentas` | (**status:** `proposed`)
+- `2026-09-27-export-parity-renta-withholding-sources-adr` - `export-parity` adr: `source Modelo 100 withholding credits from the perceptor side` | (**status:** `accepted`)
 
 ### audit
 
@@ -47,4 +50,5 @@ Auto-generated index of all documents tagged with `#export-parity`.
 ### research
 
 - `2026-09-26-export-parity-calculation-summary-pdf-research` - `export-parity` research: `calculation summary pdf`
+- `2026-09-27-export-parity-m390-adquisiciones-interiores-exentas-research` - `export-parity` research: `m390 adquisiciones interiores exentas`
 - `2026-09-27-export-parity-renta-withholding-sources-research` - `export-parity` research: `renta withholding sources`
