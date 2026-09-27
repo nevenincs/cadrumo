@@ -5,7 +5,7 @@ tags:
 date: '2026-09-26'
 modified: '2026-09-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:fe1ab364a90eac4c3bb9498861e5ed8c92e900f3a24ffbdd01cfbaaa80fcdfa1'
+body_hash: 'sha256:4176fd0fbf17a2fc038c2ceb32687d78d7a5c6bbcc37b961c4622eb1a45767ca'
 related:
   - "[[2026-09-26-export-parity-plan]]"
 ---
@@ -132,6 +132,92 @@ related:
 - `S16` `M` `src/cadrumo/locales/es/cli.yml`
 - `S16` `M` `src/cadrumo/locales/hu/cli.yml`
 - `S16` `verify:` `ruff check, ruff format --check, ty check on the 13 changed modules` -> `pass`
+- `S09` `M` `dev/quality/metadata/import_load_targets.json`
+- `S09` `M` `docs/api/cadrumo.adapters.outbound.rst`
+- `S09` `A` `docs/api/cadrumo.adapters.outbound.workbook.calc_sheets_xlsx.rst`
+- `S09` `A` `docs/api/cadrumo.adapters.outbound.workbook.rst`
+- `S09` `A` `docs/api/cadrumo.application.modelo.calculation_report.rst`
+- `S09` `A` `docs/api/cadrumo.application.modelo.calculation_report_document.rst`
+- `S09` `A` `docs/api/cadrumo.application.modelo.calculation_report_export.rst`
+- `S09` `A` `docs/api/cadrumo.application.modelo.calculation_report_provenance_key.rst`
+- `S09` `A` `docs/api/cadrumo.application.modelo.export_sink.rst`
+- `S09` `M` `docs/api/cadrumo.application.modelo.rst`
+- `S09` `A` `docs/api/cadrumo.application.modelo.withholding_detail_gate.rst`
+- `S09` `M` `docs/api/cadrumo.application.storage.calc_sheets.rst`
+- `S09` `A` `docs/api/cadrumo.application.storage.calc_sheets.workbook_cells.rst`
+- `S09` `A` `docs/api/cadrumo.application.storage.calc_sheets.workbook_export.rst`
+- `S09` `A` `docs/api/cadrumo.core.calculation_report_format.rst`
+- `S09` `A` `docs/api/cadrumo.core.keyed_digest.rst`
+- `S09` `A` `docs/api/cadrumo.core.modelo_export_artefact.rst`
+- `S09` `M` `docs/api/cadrumo.core.rst`
+- `S09` `M` `src/cadrumo/application/modelo/_work_review_assembly.py`
+- `S09` `A` `src/cadrumo/application/modelo/calculation_report.py`
+- `S09` `A` `src/cadrumo/application/modelo/calculation_report_document.py`
+- `S09` `A` `src/cadrumo/application/modelo/calculation_report_export.py`
+- `S09` `A` `src/cadrumo/application/modelo/calculation_report_provenance_key.py`
+- `S09` `M` `src/cadrumo/application/modelo/export.py`
+- `S09` `M` `src/cadrumo/application/modelo/operation_definitions.py`
+- `S09` `A` `src/cadrumo/application/modelo/tests/_calculation_report_fixture.py`
+- `S09` `A` `src/cadrumo/application/modelo/tests/test_calculation_report.py`
+- `S09` `A` `src/cadrumo/application/modelo/tests/test_calculation_report_provenance_key.py`
+- `S09` `M` `src/cadrumo/application/modelo/tests/test_lifecycle_operation_conformance.py`
+- `S09` `M` `src/cadrumo/application/modelo/work_review.py`
+- `S09` `A` `src/cadrumo/core/calculation_report_format.py`
+- `S09` `M` `src/cadrumo/core/errors/registry/_application_part2.py`
+- `S09` `A` `src/cadrumo/core/keyed_digest.py`
+- `S09` `A` `src/cadrumo/core/modelo_export_artefact.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/_modelo_payloads.py`
+- `S09` `A` `src/cadrumo/entrypoints/cli/_modelo_work_report_cli.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/modelo_work_command_specs.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/tests/test_export_m303_surface_parity.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_work_command_specs.py`
+- `S09` `A` `src/cadrumo/entrypoints/cli/tests/test_modelo_work_report_verb.py`
+- `S09` `M` `src/cadrumo/entrypoints/operation_composition.py`
+- `S09` `M` `src/cadrumo/entrypoints/tests/profile_persistence/file_flow_test_support.py`
+- `S09` `A` `src/cadrumo/entrypoints/tests/profile_persistence/test_calculation_report_export.py`
+- `S09` `M` `src/cadrumo/entrypoints/tests/test_lifecycle_operation_composition.py`
+- `S09` `M` `src/cadrumo/entrypoints/tests/test_work_rename_operation.py`
+- `S09` `M` `src/cadrumo/entrypoints/tests/test_workspace_refresh_target_resolution.py`
+- `S09` `M` `src/cadrumo/entrypoints/tui/modelo/lifecycle.py`
+- `S09` `M` `src/cadrumo/entrypoints/tui/modelo/view/overview.py`
+- `S09` `M` `src/cadrumo/entrypoints/tui/modelo/view/tests/test_workspace_overview.py`
+- `S09` `M` `src/cadrumo/locales/ca/application.yml`
+- `S09` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S09` `M` `src/cadrumo/locales/ca/common.yml`
+- `S09` `M` `src/cadrumo/locales/en/application.yml`
+- `S09` `M` `src/cadrumo/locales/en/cli.yml`
+- `S09` `M` `src/cadrumo/locales/en/common.yml`
+- `S09` `M` `src/cadrumo/locales/es/application.yml`
+- `S09` `M` `src/cadrumo/locales/es/cli.yml`
+- `S09` `M` `src/cadrumo/locales/es/common.yml`
+- `S09` `M` `src/cadrumo/locales/hu/application.yml`
+- `S09` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S09` `M` `src/cadrumo/locales/hu/common.yml`
+- `S09` `verify:` `re-run on eeb12dc9: pytest (unit or integration) of the tests this commit added or changed (241 across S09 and S15)` -> `pass`
+- `S15` `M` `dev/quality/metadata/import_load_targets.json`
+- `S15` `M` `src/cadrumo/application/aggregation/invoice_retencion.py`
+- `S15` `M` `src/cadrumo/application/aggregation/source_mesh.py`
+- `S15` `M` `src/cadrumo/application/aggregation/tests/test_withholding_source_resolver.py`
+- `S15` `M` `src/cadrumo/application/aggregation/withholding_filing_cadence.py`
+- `S15` `M` `src/cadrumo/application/aggregation/withholding_source.py`
+- `S15` `M` `src/cadrumo/application/modelo/calculation_actions.py`
+- `S15` `M` `src/cadrumo/application/modelo/preconditions.py`
+- `S15` `A` `src/cadrumo/application/modelo/tests/invoice_catalogue_fake.py`
+- `S15` `M` `src/cadrumo/application/modelo/tests/test_actions.py`
+- `S15` `M` `src/cadrumo/application/modelo/tests/test_objective_estimation_exclusion_advisory.py`
+- `S15` `A` `src/cadrumo/application/modelo/tests/test_withholding_detail_gate.py`
+- `S15` `A` `src/cadrumo/application/modelo/tests/transaction_catalogue_fake.py`
+- `S15` `M` `src/cadrumo/application/modelo/verification_actions.py`
+- `S15` `A` `src/cadrumo/application/modelo/withholding_detail_gate.py`
+- `S15` `M` `src/cadrumo/domain/modelos/calculation_revision.py`
+- `S15` `A` `src/cadrumo/entrypoints/cli/tests/test_modelo_190_withholding_detail_gate.py`
+- `S15` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_m193_disclosure_phase_calculation.py`
+- `S15` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_renta_annual_reconciliations_fold_in_live.py`
+- `S15` `M` `src/cadrumo/locales/ca/application.yml`
+- `S15` `M` `src/cadrumo/locales/en/application.yml`
+- `S15` `M` `src/cadrumo/locales/es/application.yml`
+- `S15` `M` `src/cadrumo/locales/hu/application.yml`
+- `S15` `verify:` `re-run on eeb12dc9: pytest (unit or integration) of the tests this commit added or changed (241 across S09 and S15)` -> `pass`
 
 ## Notes
 
@@ -142,4 +228,6 @@ related:
 - `S08` TUI offline-workbook export is not yet wired (tracked for S10); S07's typed sink landed here, so S07 closes with it.
 - `S17` Structural gates (symbol usage, export consumption, reachability, import boundaries) and import load-target regeneration were not run for this Step: the session's permission classifier refused them; left for the operator.
 - `S16` Modelo 390 box [230] (adquisiciones interiores exentas) stays unbound: no bundled AEAT instruction defines its population. Modelo 303 boxes [30]/[31] (bienes de inversion) carry no binding on any revision, so an investment purchase lands in [28]/[29]; recorded as a finding.
+- `S09` Delivered in 8d5a949a; logged and closed after the fact during plan housekeeping.
+- `S15` Delivered in a55c3c2d; logged and closed after the fact during plan housekeeping.
 
