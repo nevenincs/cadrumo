@@ -51,8 +51,11 @@ _FILES = (
     "n26-savings.csv",
 )
 
-# Cross-year invoice: raised Dec 2025, settled Jan 2026 (README §Cross-period).
-_CROSS_YEAR_NEEDLE = "F-2025-024"
+# The synthetic corpus's cross-year invoice: raised in December of this exercise and
+# settled the following January (README §Cross-period). Its reference is fixture data.
+_CROSS_YEAR_RAISED_EXERCISE = 2025
+_CROSS_YEAR_SETTLED_EXERCISE = _CROSS_YEAR_RAISED_EXERCISE + 1
+_CROSS_YEAR_NEEDLE = f"F-{_CROSS_YEAR_RAISED_EXERCISE}-024"
 
 
 def _invoke(args: Sequence[str]) -> Result:
@@ -202,11 +205,11 @@ def test_full_year_total_equals_sum_of_its_quarters() -> None:
 
 
 # --- Cross-year transaction: raised one year, paid the next -----------------
-def test_cross_year_invoice_is_settled_in_2026_under_a_2025_reference() -> None:
-    """F-2025-024: raised Dec 2025, settled Jan 2026.
+def test_cross_year_invoice_is_settled_the_next_year_under_a_prior_year_reference() -> None:
+    """The cross-year invoice: raised in December, settled the following January.
 
-    The reviewer must spot that a 2026-dated cash row belongs (by devengo) to
-    2025. The CLI surfaces the settlement date and the invoice reference, but
+    The reviewer must spot that a next-year cash row belongs (by devengo) to
+    the raising year. The CLI surfaces the settlement date and the invoice reference, but
     nothing links the prior-year reference to the paid-year settlement — the
     devengo-vs-caja reconciliation is fully manual.
     """
@@ -218,31 +221,35 @@ def test_cross_year_invoice_is_settled_in_2026_under_a_2025_reference() -> None:
             cross_year.append(r)
     assert cross_year, f"corpus must contain the cross-year invoice {_CROSS_YEAR_NEEDLE}"
     row = cross_year[0]
-    # Settled (booked) in 2026 ...
-    assert _year_of(row) == 2026, row.get("date")
+    # Settled (booked) the following year ...
+    assert _year_of(row) == _CROSS_YEAR_SETTLED_EXERCISE, row.get("date")
     # ... but the invoice reference names the prior fiscal year. The operator,
     # not the CLI, must decide which year's Renta the income belongs to.
     desc_val = row.get("description")
-    assert isinstance(desc_val, str) and "2025" in desc_val, desc_val
+    assert isinstance(desc_val, str) and str(_CROSS_YEAR_RAISED_EXERCISE) in desc_val, desc_val
     assert row.get("direction") == "INCOMING", row
 
 
-def test_cross_year_invoice_falls_outside_a_2025_period_filter() -> None:
-    """The cash-date filter assigns the cross-year invoice to 2026, not 2025.
+def test_cross_year_invoice_falls_outside_its_raising_year_period_filter() -> None:
+    """The cash-date filter assigns the cross-year invoice to the settling year, not the raising one.
 
-    PAIN POINT: filtering by ``period=0A --filter year=2025`` (which keys off the
-    settlement / value date) hides an invoice that, by accrual, belongs to the
-    2025 Renta. A year-end reviewer working from the period filter alone would
-    under-count 2025 income by this row unless they reconcile devengo by hand.
+    PAIN POINT: filtering by ``period=0A --filter year=<raising year>`` (which keys off
+    the settlement / value date) hides an invoice that, by accrual, belongs to that
+    year's Renta. A year-end reviewer working from the period filter alone would
+    under-count its income by this row unless they reconcile devengo by hand.
     """
-    review_2025 = _invoke(["app", "ledger", "review", "--filter", "period=0A", "--filter", "year=2025"])
-    assert review_2025.exit_code == 0, review_2025.output
-    review_2026 = _invoke(["app", "ledger", "review", "--filter", "period=0A", "--filter", "year=2026"])
-    assert review_2026.exit_code == 0, review_2026.output
-    # The cross-year invoice settles in 2026, so the 2026 period view carries it
-    # and the 2025 period view does not — accrual placement is the operator's job.
-    assert _CROSS_YEAR_NEEDLE in review_2026.output, review_2026.output
-    assert _CROSS_YEAR_NEEDLE not in review_2025.output, review_2025.output
+    raised = _invoke(
+        ["app", "ledger", "review", "--filter", "period=0A", "--filter", f"year={_CROSS_YEAR_RAISED_EXERCISE}"]
+    )
+    assert raised.exit_code == 0, raised.output
+    settled = _invoke(
+        ["app", "ledger", "review", "--filter", "period=0A", "--filter", f"year={_CROSS_YEAR_SETTLED_EXERCISE}"]
+    )
+    assert settled.exit_code == 0, settled.output
+    # The cross-year invoice settles the following year, so that period view carries it
+    # and the raising year's view does not — accrual placement is the operator's job.
+    assert _CROSS_YEAR_NEEDLE in settled.output, settled.output
+    assert _CROSS_YEAR_NEEDLE not in raised.output, raised.output
 
 
 # --- M100 readiness surface: does one exist? --------------------------------

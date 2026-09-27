@@ -190,6 +190,9 @@ _M111_CASILLA_27: CasillaId = validated_casilla_id("27", surface="modelo 111 exp
 _M111_CASILLA_29: CasillaId = validated_casilla_id("29", surface="modelo 111 export test casilla")
 _M202_CASILLA_01: CasillaId = validated_casilla_id("01", surface="modelo 202 export test casilla")
 _M202_2023_2024_PRIOR_PAYMENTS_BINDING = "modelo-202-pagos-fraccionados-anteriores"
+# The last exercise of the Modelo 202 revision in force before the B2 tramos; the
+# exportable fixture revision below is seeded for its first period.
+_PRE_B2_LAST_EXERCISE = 2024
 
 _MODELO_111_INPUTS: dict[CasillaId, str] = {
     _M111_CASILLA_03: "180.25",
@@ -343,18 +346,20 @@ def _seed_modelo_111_revisions(
     return work_unit_id, tuple(revision_ids)
 
 
-def _seed_exportable_modelo_202_2024_revision(*, operation: PinnedAuthorityOperation) -> tuple[str, str]:
-    """Persist a verified-complete M202 2024 1P revision with the 2023-2024 binding channel."""
+def _seed_exportable_modelo_202_pre_b2_revision(*, operation: PinnedAuthorityOperation) -> tuple[str, str]:
+    """Persist a verified-complete pre-B2 M202 1P revision with the 2023-2024 binding channel."""
 
     state = workflow_state_repository().load()
     bucket_id = state.active_profile_bucket_id()
     assert bucket_id is not None
-    revision_id = active_registry_revision_id(modelo="202", filing_year=2024, period="1P", operation=operation)
-    filing_period = Period.from_year_and_code(2024, "1P")
+    revision_id = active_registry_revision_id(
+        modelo="202", filing_year=_PRE_B2_LAST_EXERCISE, period="1P", operation=operation
+    )
+    filing_period = Period.from_year_and_code(_PRE_B2_LAST_EXERCISE, "1P")
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
         modelo="202",
-        filing_year=2024,
+        filing_year=_PRE_B2_LAST_EXERCISE,
         period=filing_period,
         revision_id=revision_id,
     )
@@ -374,10 +379,10 @@ def _seed_exportable_modelo_202_2024_revision(*, operation: PinnedAuthorityOpera
         work_unit_id=work_unit_id,
         bucket_id=bucket_id,
         modelo=ModeloCode("202"),
-        filing_year=2024,
+        filing_year=_PRE_B2_LAST_EXERCISE,
         period=filing_period,
         revision_id=revision_id,
-        name="202-2024-1P",
+        name=f"202-{_PRE_B2_LAST_EXERCISE}-1P",
         created_at=now,
         updated_at=now,
         current_calculation_revision_id=calculation_revision_id,
@@ -389,7 +394,7 @@ def _seed_exportable_modelo_202_2024_revision(*, operation: PinnedAuthorityOpera
         registry_snapshot_ref=RegistrySnapshotRef(
             modelo="202",
             revision_id=revision_id,
-            modelo_year=2024,
+            modelo_year=_PRE_B2_LAST_EXERCISE,
             period="1P",
         ),
         state=CalculationRevisionState.VERIFICADO_COMPLETO,
@@ -398,7 +403,7 @@ def _seed_exportable_modelo_202_2024_revision(*, operation: PinnedAuthorityOpera
         casilla_values=casilla_values,
         observations=registry_grounded_observations(
             modelo="202",
-            filing_year=2024,
+            filing_year=_PRE_B2_LAST_EXERCISE,
             period="1P",
             casilla_values=casilla_values,
         ),
@@ -493,7 +498,7 @@ def test_export_modelo_111_emilio_legal_entity_uses_profile_identity_name(
     assert out.stat().st_size > 0
 
 
-def test_export_modelo_202_2024_emilio_refuses_missing_product_software_identity(
+def test_export_modelo_202_emilio_refuses_missing_product_software_identity(
     tmp_path: Path,
     *,
     operation: PinnedAuthorityOperation,
@@ -501,8 +506,8 @@ def test_export_modelo_202_2024_emilio_refuses_missing_product_software_identity
     """Envelope-bearing Modelo 202 exports require explicit product authority."""
 
     _set_emilio_legal_entity_export_profile()
-    _, calculation_revision_id = _seed_exportable_modelo_202_2024_revision(operation=operation)
-    out = tmp_path / "modelo-202-2024-1P.boe"
+    _, calculation_revision_id = _seed_exportable_modelo_202_pre_b2_revision(operation=operation)
+    out = tmp_path / f"modelo-202-{_PRE_B2_LAST_EXERCISE}-1P.boe"
 
     result = _invoke(
         [
@@ -514,7 +519,7 @@ def test_export_modelo_202_2024_emilio_refuses_missing_product_software_identity
             "--modelo",
             "202",
             "--year",
-            "2024",
+            str(_PRE_B2_LAST_EXERCISE),
             "--period",
             "1P",
             "--output",
@@ -587,7 +592,7 @@ def test_the_export_operation_and_the_command_line_reach_the_same_gate_for_one_r
     supplies.
     """
     _set_emilio_legal_entity_export_profile()
-    work_unit_id, calculation_revision_id = _seed_exportable_modelo_202_2024_revision(operation=operation)
+    work_unit_id, calculation_revision_id = _seed_exportable_modelo_202_pre_b2_revision(operation=operation)
     cli_out = tmp_path / "cli.boe"
     operation_out = tmp_path / "operation.boe"
 

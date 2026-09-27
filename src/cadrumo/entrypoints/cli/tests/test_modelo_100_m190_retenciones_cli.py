@@ -1,4 +1,4 @@
-"""CLI reproduction for M100/2025 work-retention binding equivalence."""
+"""CLI reproduction for M100 work-retention binding equivalence."""
 
 from __future__ import annotations
 
@@ -16,7 +16,10 @@ from cadrumo.application.calculations.observations_repository import APP_FILING_
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
 from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
-from ....domain.calculations.registry.tests.published_authority import published_snapshot
+from ....domain.calculations.registry.tests.published_authority import (
+    PublishedGovernedFactSource,
+    published_snapshot,
+)
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
@@ -24,6 +27,10 @@ from .cli_runner import invoke_cached_cli
 from .modelo_cli import create_modelo_work_unit_via_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+# The newest authored Modelo 100 edition sits one below the projecting horizon; its
+# prior-year carry reads the edition before it.
+_REVIEWED_EDITION = PublishedGovernedFactSource().supported_filing_years().horizon - 1
 
 _PROFILE_ID = "568d7ee0-33e4-4efb-8bae-5c4e97d9a1b7"
 _CAPTURED_AT = datetime(2026, 6, 29, 12, 0, tzinfo=UTC)
@@ -39,7 +46,7 @@ def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
         yield profile
 
 
-def _seed_m100_2025_profile(runtime_profile: TestRuntimeProfile) -> None:
+def _seed_m100_profile(runtime_profile: TestRuntimeProfile) -> None:
     record = create_user_profile_record(
         context=profile_authority_contexts()[0],
         profile_id=_PROFILE_ID,
@@ -81,33 +88,35 @@ def _seed_prior_year_zero_carry(runtime_profile: TestRuntimeProfile) -> None:
         CalculationObservationRepository(objects=runtime_profile.repository).prepare_observation_envelope(
             RegistryModeloObservation(
                 modelo="100",
-                filing_year=2024,
+                filing_year=_REVIEWED_EDITION - 1,
                 period="0A",
                 observations=registry_grounded_observations(
                     modelo="100",
-                    filing_year=2024,
+                    filing_year=_REVIEWED_EDITION - 1,
                     period="0A",
                     casilla_values={"1391": Decimal("0")},
                 ),
             ),
             source_kind=APP_FILING_SOURCE_KIND,
             captured_at=_CAPTURED_AT,
-            stamped_revision_id=str(published_snapshot("100", filing_year=2024, period="0A").revision.id),
+            stamped_revision_id=str(
+                published_snapshot("100", filing_year=_REVIEWED_EDITION - 1, period="0A").revision.id
+            ),
         )
     )
 
 
-def test_m100_2025_cli_m190_annual_retenciones_populates_0596(
+def test_m100_cli_m190_annual_retenciones_populates_0596(
     runtime_profile: TestRuntimeProfile,
 ) -> None:
     """Real CLI reproduction: accepted M190 annual-retention binding affects 0596."""
-    _seed_m100_2025_profile(runtime_profile)
+    _seed_m100_profile(runtime_profile)
     _seed_prior_year_zero_carry(runtime_profile)
     work_unit_id = create_modelo_work_unit_via_cli(
         modelo="100",
-        filing_year=2025,
+        filing_year=_REVIEWED_EDITION,
         period="0A",
-        revision="2025",
+        revision=str(_REVIEWED_EDITION),
     )
 
     result = invoke_cached_cli(

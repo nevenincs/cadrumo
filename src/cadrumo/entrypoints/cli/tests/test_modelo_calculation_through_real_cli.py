@@ -44,6 +44,10 @@ from .modelo_cli import create_modelo_work_unit_via_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
+# LIS DT 44ª (Ley 7/2024) sets its first transitional micro-empresa scale, 21 % / 22 %,
+# for periods initiated in this exercise.
+_DT44_FIRST_TRANSITIONAL_EXERCISE = 2025
+
 
 # ---------------------------------------------------------------------------
 # Fixture helpers
@@ -185,10 +189,10 @@ def _seed_legal_entity_profile(
 # bracket table, keyed on `filing_period`.
 
 
-def test_modelo_200_micro_empresa_pyme_cuota_2024(
+def test_modelo_200_micro_empresa_pyme_cuota_under_the_first_dt44_scale(
     runtime_profile: TestRuntimeProfile,
 ) -> None:
-    """Modelo 200 pyme cuota-íntegra for a micro-empresa ejercicio 2025.
+    """Modelo 200 pyme cuota-íntegra for a micro-empresa in the first DT 44ª ejercicio.
 
     Oracle: LIS disposición transitoria 44ª (added by Ley 7/2024,
     BOE-A-2024-26694), the transitional micro-empresa scale over LIS
@@ -208,13 +212,13 @@ def test_modelo_200_micro_empresa_pyme_cuota_2024(
     )
     work_unit_id = create_modelo_work_unit_via_cli(
         modelo="200",
-        filing_year=2025,
+        filing_year=_DT44_FIRST_TRANSITIONAL_EXERCISE,
         period="0A",
-        # Filing year 2025 resolves to the `2025-y-siguientes` revision; the
-        # registry's `2024` revision closes at 2024-12-31. A creation-time
+        # The first DT 44ª ejercicio resolves to the `2025-y-siguientes` revision;
+        # the registry's `2024` revision closes at 2024-12-31. A creation-time
         # revision may only NAME the law-determined one, never select a
         # different one, so pinning `2024` here was refused rather than
-        # silently computing ejercicio 2025 under the 2024 flat rate.
+        # silently computing the ejercicio under the earlier flat rate.
         revision="2025-y-siguientes",
     )
 
@@ -259,8 +263,8 @@ def test_modelo_200_micro_empresa_pyme_cuota_2024(
     cuota = payload["casilla_values"]["DP200014:00562"]
     # Oracle: 50.000,00 x 21 % + 50.000,00 x 22 % = 10.500,00 + 11.000,00 = 21.500,00 EUR
     assert Decimal(cuota) == Decimal("21500.00"), (
-        f"Modelo 200 pyme 2025 cuota-integra: expected 21500.00 EUR "
-        f"(LIS DT 44a, 21%/22% micro-empresa 2025), got {cuota!r}"
+        f"Modelo 200 pyme {_DT44_FIRST_TRANSITIONAL_EXERCISE} cuota-integra: expected 21500.00 EUR "
+        f"(LIS DT 44a, 21%/22% first-year micro-empresa scale), got {cuota!r}"
     )
 
 
