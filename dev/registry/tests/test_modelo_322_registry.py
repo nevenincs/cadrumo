@@ -17,7 +17,7 @@ from cadrumo.domain.iva.schema import IvaCategory, IvaLedgerObservationRole, Iva
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
-from .authored_edition_support import source_exercise, source_with_sha256
+from .authored_edition_support import source_first_exercise, source_with_sha256
 from .ledger_iva_aggregation_support import _deduction_provenance
 from .profile_schema_support import committed_registry_validator
 
@@ -26,7 +26,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures(
 # The one exercise the monthly legacy revision still selects: the one whose AEAT
 # calendar, found by its pinned bytes, is the cited evidence for every deadline day
 # below. December is filed under the following exercise's calendar.
-_CALENDAR_EXERCISE = source_exercise(
+_CALENDAR_EXERCISE = source_first_exercise(
     source_with_sha256("8d84b3067cce798dd6bfb2c83de3cf68bcd6e199ad584802ab9ee09fb9e53a09")
 )
 _LEGACY_MONTHLY_REVISION = "2008-2022"

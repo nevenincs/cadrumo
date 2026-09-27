@@ -36,7 +36,7 @@ from dev.registry.compiler.loader import modelo_fact_scope
 from dev.registry.edition_export_scenarios import M200_SCENARIO_PERIODS, m200_export_scenario
 from dev.registry.edition_round_trip import SYNTHETIC_TAX_ID
 
-from .authored_edition_support import source_exercise, source_with_sha256, sources_where
+from .authored_edition_support import source_first_exercise, source_with_sha256, sources_where
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -150,7 +150,7 @@ def test_modelo_200_validates_with_deadline_and_schedule_catalogue_refs() -> Non
 
 # The exercise of the official Modelo 200 design whose generated layout is published
 # at filing grade, found by the design's pinned bytes.
-_GENERATED_LAYOUT_EXERCISE = source_exercise(
+_GENERATED_LAYOUT_EXERCISE = source_first_exercise(
     source_with_sha256("92392cdb46d8e7c7f6e4e6477306570e15edfd64d5ea3e6d631e5cf847dd5509")
 )
 
@@ -177,7 +177,7 @@ def test_modelo_200_generated_layout_supports_a_filing_snapshot() -> None:
 # order fixes, read from the order's applicability; the campaign runs in the
 # following year.
 (_ORDER_CALENDAR_EXERCISE,) = (
-    source_exercise(source)
+    source_first_exercise(source)
     for source in sources_where(lambda source: source.id.startswith("boe-modelo-200-") and source.id.endswith("-form"))
 )
 

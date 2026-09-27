@@ -28,7 +28,7 @@ from ..compiler.loader import (
     load_modelo_directory,
 )
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
-from .authored_edition_support import authored_revisions, source_exercise, sources_where
+from .authored_edition_support import authored_revisions, source_first_exercise, sources_where
 from .profile_schema_support import committed_registry_validator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
@@ -45,7 +45,7 @@ _REVIEWED_REVISION = str(_REVIEWED_EDITION)
 # Orden HAC/623/2026 updates the deadline and approves the next form layout; its
 # year is the exercise the one bundled deadline-update source applies from.
 (_DEADLINE_ORDER_YEAR,) = (
-    source_exercise(source)
+    source_first_exercise(source)
     for source in sources_where(
         lambda source: source.id.startswith("boe-modelo-210-") and source.id.endswith("-deadline-update")
     )

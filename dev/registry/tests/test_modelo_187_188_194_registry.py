@@ -29,7 +29,7 @@ from cadrumo.domain.calculations.registry.temporal import select_revision
 
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
 from ..maintenance_support import resolve_record_design_binary
-from .authored_edition_support import legal_text_match, source_exercise, source_with_sha256
+from .authored_edition_support import legal_text_match, source_first_exercise, source_with_sha256
 from .profile_schema_support import committed_registry_validator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
@@ -39,10 +39,10 @@ _REVISION_BY_MODELO = {"187": "2022-y-siguientes", "188": "2023-y-siguientes", "
 # The first exercise each hash-pinned official design evidences, read from its
 # applicability, and the Modelo 194 edition that Orden HAC/1504/2024 supersedes: the
 # one before the exercise the Orden first applies to.
-_M187_DESIGN_EXERCISE = source_exercise(
+_M187_DESIGN_EXERCISE = source_first_exercise(
     source_with_sha256("c7a21c1feb9619380bb0da3e73066fa3c58c628f430bf85ed9dbea15b1308eb1")
 )
-_M188_DESIGN_EXERCISE = source_exercise(
+_M188_DESIGN_EXERCISE = source_first_exercise(
     source_with_sha256("30ced236b558de21383c3eba6339cb720fc9a704d38eaa574dd9be55cf90f9e3")
 )
 _M194_SUPERSEDED_EDITION = (

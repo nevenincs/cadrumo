@@ -16,6 +16,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.formula_runtime_ops import resolve_parameter
 from cadrumo.domain.calculations.registry.temporal import select_revision
+from cadrumo.domain.calculations.registry.tests.authored_editions import manual_editions_printing
 from cadrumo.domain.contribuyente.descendant import DescendantInfo
 from cadrumo.domain.contribuyente.family_fact_context import FamilyFactResolutionContext
 from cadrumo.domain.contribuyente.family_profile import RentaFamilyProfile
@@ -23,7 +24,6 @@ from cadrumo.domain.contribuyente.family_types import MinimoDescendientesThresho
 from cadrumo.domain.contribuyente.guarderia_mensual import parse_guarderia_mensual
 from cadrumo.domain.contribuyente.meses_trabajo import parse_meses_trabajo
 
-from .authored_edition_support import manual_editions_printing
 from .profile_schema_support import authored_history_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("authored_history_fact_scope")]

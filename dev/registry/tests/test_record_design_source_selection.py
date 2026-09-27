@@ -16,7 +16,7 @@ from cadrumo.domain.calculations.registry.schema_references import SourceReferen
 from .. import maintenance_support as _maintenance_support
 from ..compiler import corpus_catalogue as _corpus_catalogue
 from ..maintenance_support import resolve_record_design_binary
-from .authored_edition_support import authored_revisions, source_exercise, source_with_sha256
+from .authored_edition_support import authored_revisions, source_first_exercise, source_with_sha256
 from .catalogue_verification_support import _catalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -280,7 +280,7 @@ def test_record_design_selection_cannot_consult_registry_export_layouts() -> Non
 
 
 # The exercise of the hash-pinned official Modelo 200 design, read from its applicability.
-_M200_PINNED_DESIGN_EXERCISE = source_exercise(
+_M200_PINNED_DESIGN_EXERCISE = source_first_exercise(
     source_with_sha256("92392cdb46d8e7c7f6e4e6477306570e15edfd64d5ea3e6d631e5cf847dd5509")
 )
 

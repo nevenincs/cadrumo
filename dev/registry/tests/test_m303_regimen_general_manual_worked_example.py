@@ -160,11 +160,12 @@ from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
     IvaLedgerObservation,
     resolve_ledger_iva_aggregation_binding_values,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import manual_editions_printing
 from cadrumo.domain.iva.flow import IvaFlowDirection
 from cadrumo.domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 from dev.registry.compiler.authority import compiled_bundled_authority
 
-from .authored_edition_support import manual_editions_printing, manual_oracle_payloads
+from .authored_edition_support import manual_oracle_payloads
 from .ledger_iva_aggregation_support import (
     _category,
     _deduction_kind,

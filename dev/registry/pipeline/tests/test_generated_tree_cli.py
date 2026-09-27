@@ -15,7 +15,7 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ...compiler.authority import compiled_bundled_authority
 from ...compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
-from ...tests.authored_edition_support import source_exercise, source_with_sha256
+from ...tests.authored_edition_support import source_first_exercise, source_with_sha256
 from .._export_tree import render_complete_export_tree
 from .._tree_publication import (
     GeneratedExportTreePublicationContext,
@@ -208,7 +208,7 @@ def test_bootstrap_target_refuses_unenrolled_source_digest() -> None:
 #: pinned bytes; its applicability names the exercise, revision and generated layout.
 _M200_BOOTSTRAP_DESIGN_SHA256 = "ed4df89a451abc2184bc60a1d13ff53a3d38e9a6201698fb635cf0b8ee455218"
 _M200_BOOTSTRAP_DESIGN = source_with_sha256(_M200_BOOTSTRAP_DESIGN_SHA256)
-_M200_BOOTSTRAP_DESIGN_EXERCISE = source_exercise(_M200_BOOTSTRAP_DESIGN)
+_M200_BOOTSTRAP_DESIGN_EXERCISE = source_first_exercise(_M200_BOOTSTRAP_DESIGN)
 
 
 def test_bootstrap_target_enrolls_only_the_pinned_modelo_200_design() -> None:

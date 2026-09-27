@@ -15,14 +15,14 @@ from ..analysis.m390_2022_anchor_census import (
 )
 from ..compiler.loader import load_catalogue_file
 from ..pipeline.record_design_intermediate import RecordDesignIntermediate, load_record_design_intermediate
-from .authored_edition_support import source_exercise, source_with_sha256
+from .authored_edition_support import source_first_exercise, source_with_sha256
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 # The official record design whose numbered pages the census covers, found by its
 # pinned bytes; its applicability names the exercise.
 _CENSUS_DESIGN = source_with_sha256("7c6554f3182df51daaec37284dd891eb925e1f92df7e69bc01b8ccfb8e4f26fe")
-_CENSUS_DESIGN_EXERCISE = source_exercise(_CENSUS_DESIGN)
+_CENSUS_DESIGN_EXERCISE = source_first_exercise(_CENSUS_DESIGN)
 
 
 def _intermediate() -> RecordDesignIntermediate:

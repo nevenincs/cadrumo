@@ -10,7 +10,7 @@ from cadrumo.core.resources.bundled_data import bundled_path
 
 from ...compiler.authority import compiled_bundled_authority
 from ...compiler.loader import load_registry_tree
-from ...tests.authored_edition_support import source_exercise, source_with_sha256
+from ...tests.authored_edition_support import source_first_exercise, source_with_sha256
 from .._export_tree import render_complete_export_tree
 from ..record_design_intermediate import (
     RecordDesignIntermediate,
@@ -32,7 +32,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _SOURCE_SHA256 = "179c02eddc8bab411c249fc3fda19c7015d668e1dd7930d4af79f38998b9c5a7"
 _SOURCE = source_with_sha256(_SOURCE_SHA256)
 _SOURCE_REF = _SOURCE.id
-_DESIGN_EXERCISE = source_exercise(_SOURCE)
+_DESIGN_EXERCISE = source_first_exercise(_SOURCE)
 _PREDECESSOR_EXERCISE = _DESIGN_EXERCISE - 1
 _PREDECESSOR_SOURCE_REF = f"aeat-dr-390-{_PREDECESSOR_EXERCISE}"
 _PAGE_2_DELTA = {("Pág. 2", f"A{row}") for row in range(83, 102)}

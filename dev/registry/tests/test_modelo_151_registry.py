@@ -9,7 +9,7 @@ from cadrumo.domain.calculations.registry.schema import ModeloDefinition, Regist
 
 from ..compiler.legal_grounding import verify_legal_catalogue
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
-from .authored_edition_support import source_exercise, source_with_sha256
+from .authored_edition_support import source_first_exercise, source_with_sha256
 from .profile_schema_support import committed_registry_validator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
@@ -22,8 +22,8 @@ _FIRST_ERA_REVISION = "2015-2022"
 _CURRENT_ERA_REVISION = "2025-y-siguientes"
 _FIRST_ERA_SOURCE = source_with_sha256("997dc9cf5230a374716d04a5ae9aed0e9c659ee9352451843dbc5232d3f2137a")
 _CURRENT_ERA_SOURCE = source_with_sha256("7680e5a21935c22f4b63deb0c96956d63fbcb287c5eb67a552daa7768ca0fcb9")
-_FIRST_ERA_DESIGN_EXERCISE = source_exercise(_FIRST_ERA_SOURCE)
-_CURRENT_ERA_DESIGN_EXERCISE = source_exercise(_CURRENT_ERA_SOURCE)
+_FIRST_ERA_DESIGN_EXERCISE = source_first_exercise(_FIRST_ERA_SOURCE)
+_CURRENT_ERA_DESIGN_EXERCISE = source_first_exercise(_CURRENT_ERA_SOURCE)
 _FIRST_ERA_DESIGN = _FIRST_ERA_SOURCE.id
 _CURRENT_ERA_DESIGN = _CURRENT_ERA_SOURCE.id
 

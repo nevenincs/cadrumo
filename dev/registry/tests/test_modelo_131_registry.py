@@ -16,7 +16,7 @@ from cadrumo.domain.calculations.registry.tests.snapshot_support import build_sn
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
-from .authored_edition_support import source_exercise, source_with_sha256
+from .authored_edition_support import source_first_exercise, source_with_sha256
 from .profile_schema_support import committed_registry_validator, committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
@@ -89,7 +89,7 @@ def modelo_131_registry():
 # found by its pinned bytes; its applicability names the exercise. Its fourth
 # quarter is filed under the following exercise's calendar.
 _CALENDAR = source_with_sha256("8d84b3067cce798dd6bfb2c83de3cf68bcd6e199ad584802ab9ee09fb9e53a09")
-_CALENDAR_EXERCISE = source_exercise(_CALENDAR)
+_CALENDAR_EXERCISE = source_first_exercise(_CALENDAR)
 _CALENDAR_REF = _CALENDAR.id
 _NEXT_CALENDAR_REF = f"aeat-calendario-contribuyente-{_CALENDAR_EXERCISE + 1}"
 

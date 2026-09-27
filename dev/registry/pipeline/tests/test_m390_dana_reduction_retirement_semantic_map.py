@@ -12,7 +12,7 @@ from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefin
 
 from ...compiler.authority import compiled_bundled_authority
 from ...compiler.loader import load_registry_tree
-from ...tests.authored_edition_support import source_exercise, source_with_sha256
+from ...tests.authored_edition_support import source_first_exercise, source_with_sha256
 from .._export_tree import render_complete_export_tree
 from ..record_design_intermediate import (
     RecordDesignIntermediate,
@@ -33,7 +33,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _SOURCE_SHA256 = "6d33d8a4245976e55dc31ff85065b420f76d1588110dc1eb541a8039c5e3f252"
 _SOURCE = source_with_sha256(_SOURCE_SHA256)
 _SOURCE_REF = _SOURCE.id
-_DESIGN_EXERCISE = source_exercise(_SOURCE)
+_DESIGN_EXERCISE = source_first_exercise(_SOURCE)
 _PREDECESSOR_EXERCISE = _DESIGN_EXERCISE - 1
 _PREDECESSOR_SOURCE_REF = f"aeat-dr-390-{_PREDECESSOR_EXERCISE}"
 _DELTA_COUNTS = {

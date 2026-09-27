@@ -36,9 +36,8 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema_formula import BracketEntry, ParameterDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import manual_editions_printing
 from dev.registry.compiler.authority import compiled_bundled_authority
-
-from .authored_edition_support import manual_editions_printing
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

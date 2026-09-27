@@ -21,7 +21,7 @@ from cadrumo.domain.calculations.registry.export_value_policy import ExportValue
 
 from ...compiler.loader import load_catalogue_file
 from ...maintenance_support import resolve_record_design_binary
-from ...tests.authored_edition_support import source_exercise, source_with_sha256
+from ...tests.authored_edition_support import source_first_exercise, source_with_sha256
 from .. import _export_tree, render_profile, render_profile_eligibility
 from ..joined_record_design import (
     JoinedRecordDesign,
@@ -990,7 +990,7 @@ def test_real_m200_profile_exactly_covers_source_eligibility_and_excludes_variab
 #: The pinned Modelo 390 design whose committed render profile is checked, found by
 #: its bytes; its applicability names the exercise and the profile directory.
 _M390_PINNED_DESIGN = source_with_sha256("7c6554f3182df51daaec37284dd891eb925e1f92df7e69bc01b8ccfb8e4f26fe")
-_M390_PINNED_PROFILE_EXERCISE = source_exercise(_M390_PINNED_DESIGN)
+_M390_PINNED_PROFILE_EXERCISE = source_first_exercise(_M390_PINNED_DESIGN)
 
 
 def test_real_m390_pinned_profile_exactly_covers_source_eligibility_and_binds_day_first_dates() -> None:

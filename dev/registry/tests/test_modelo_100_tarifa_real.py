@@ -43,11 +43,12 @@ from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.ids import BindingId, RelationId
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+from cadrumo.domain.calculations.registry.tests.authored_editions import manual_editions_printing
 
 from ._modelo_100_registry_support import (
     _m100_2024_deduccion_maternidad_bindings,
 )
-from .authored_edition_support import authored_revisions_where, manual_editions_printing
+from .authored_edition_support import authored_revisions_where
 from .profile_schema_support import committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
