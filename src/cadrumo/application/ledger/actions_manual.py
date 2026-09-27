@@ -112,6 +112,16 @@ _MANUAL_PROVIDER_NAME = "manual-ledger"
 # callers thread the private `_evidence_authority=True` flag to pass the guard.
 _EVIDENCE_PATCH_FIELDS = frozenset({"purchase_invoice_evidence_id", "attachment_ids"})
 
+#: Optional command fields the manual source hash folds in only when they carry a
+#: value. That hash is recorded on every manual row's provenance and addresses
+#: every keyless row through its provider id, so it is part of the row's
+#: identity. A field added to the command after rows were first written would
+#: otherwise enter the hash as ``null`` for every command that never uses it,
+#: re-addressing ordinary movements whose content had not changed. Each field
+#: listed here must default to ``None``, so omitting it when absent loses nothing
+#: a present value would say.
+_SOURCE_HASH_FIELDS_OMITTED_WHEN_ABSENT = frozenset({"investment_asset_id"})
+
 
 def create_manual_transaction(
     command: ManualLedgerTransactionCommand,
@@ -1702,7 +1712,11 @@ def _provider_transaction_id(command: ManualLedgerTransactionCommand, *, occurre
 
 
 def _source_sha256(command: ManualLedgerTransactionCommand, *, occurred_at: datetime) -> str:
-    payload = command.model_dump(mode="json")
+    payload = {
+        name: value
+        for name, value in command.model_dump(mode="json").items()
+        if value is not None or name not in _SOURCE_HASH_FIELDS_OMITTED_WHEN_ABSENT
+    }
     payload["occurred_at"] = occurred_at.isoformat()
     return content_hash_hex(payload)
 
