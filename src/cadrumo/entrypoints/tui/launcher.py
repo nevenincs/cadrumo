@@ -828,7 +828,7 @@ def _ledger_generation_factory(
     """
     if current[0].ledger.projection is None:
         return None
-    from .ledger.routes import ledger_screen_factory
+    from .ledger.routes import actividad_asset_tui_actions, ledger_screen_factory
     from .ledger_doors import LedgerRecordDoors
 
     def create(context: TuiScreenContextV1) -> Screen[None]:
@@ -840,7 +840,6 @@ def _ledger_generation_factory(
         from ...domain.renta.actividad_asset.election import DirectEstimationRegime
         from ...domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
         from ...domain.renta.actividad_asset.schedule import AssetScheduleHistory, ScheduledAmortizationCharge
-        from .ledger.actividad_asset import ActivityAssetTuiActionsV1
         from .ledger_doors import (
             LedgerEvidenceDoor,
             LedgerImportDoor,
@@ -884,7 +883,7 @@ def _ledger_generation_factory(
             token = None if values is None else values.get("irpf.estimation_regime")
             return direct_estimation_modality(token, authority=operation)
 
-        activity_asset_actions = ActivityAssetTuiActionsV1(
+        activity_asset_actions = actividad_asset_tui_actions(
             operations=ActivityAssetOperations(
                 repository=ActividadAssetHistoryRepository(bucket_id=profile_id),
                 forecast_operation=forecast_asset,
