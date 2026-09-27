@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import base64
 import json
+from dataclasses import replace
 
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 
 from ....adapters.outbound.llm.client import LLMClient
+from ....adapters.outbound.llm.tests.load_headroom_support import admitting_vision_classify_client
 from ....adapters.outbound.llm.vision_classifier import LocalVisionLLMClassifier
 from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ....application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
@@ -46,8 +48,27 @@ _runtime_profile = bucket_scoped_runtime_profile_fixture(_BUCKET_ID)
 
 
 def _llm_ports(settings: Settings) -> LLMClassificationPorts:
-    """Compose the canonical reader ports against the encrypted test bucket."""
-    return compose_ledger_llm(bucket_id=_BUCKET_ID, settings=settings).ports
+    """Compose the canonical reader ports against the encrypted test bucket.
+
+    The vision reader is rebuilt on its own constructor seam with a client whose
+    measured reading admits the model it dispatches. The dispatch point refuses a
+    catalogued local model without measured headroom and fails closed where it
+    cannot read the accelerator, so without this the refusal these cases assert
+    would be the contention one raised before the transport was ever reached,
+    on a host whose GPU happens not to be readable.
+    """
+    ports = compose_ledger_llm(bucket_id=_BUCKET_ID, settings=settings).ports
+    return replace(
+        ports,
+        make_vision_classifier=lambda spec, model: VisionReader(
+            LocalVisionLLMClassifier(
+                spec=spec,
+                settings=settings,
+                model=model,
+                client=admitting_vision_classify_client(settings=settings, model=model),
+            )
+        ),
+    )
 
 
 def _admissible_measured_hardware_profile(model: str) -> HardwareProfile:
