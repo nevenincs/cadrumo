@@ -19,6 +19,7 @@ from ..adapters.persistence.operations.financial_operand_custody import (
 from ..adapters.persistence.operations.journal import OperationJournalRepository
 from ..adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from ..adapters.persistence.operations.secure_references import operation_secure_reference_repository
+from ..adapters.persistence.profile.review_package_signing import build_review_package_signing_keypair_capability
 from ..adapters.persistence.profile.sync_runs import SyncRunRecordRepository
 from ..adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
 from ..adapters.persistence.storage.operator_scope import build_operator_scope_ports
@@ -212,6 +213,10 @@ def build_production_operation_registry(
         certificate_secret_backend_factory=build_certificate_secret_backend,
         operator_scope_ports=resolved_operator_scope_ports,
         export_ports_factory=modelo_export_ports_factory,
+        # The calculation report's provenance key is derived from the profile's
+        # existing review-package signing key, so the export enrolment is bound
+        # to the adapter that already owns that key's custody.
+        signing_keypair_capability_factory=build_review_package_signing_keypair_capability,
         calculation_action_ports_factory=calculation_action_ports_factory,
         attachment_store_factory=attachment_store_factory,
         amendment_action_ports_factory=amendment_action_ports_factory,

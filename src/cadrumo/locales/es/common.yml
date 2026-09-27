@@ -2007,6 +2007,10 @@ tui:
       legal: Referencia legal
       source: Referencia de origen
     export:
+      artefact:
+        calculation_report_csv: Informe de cálculo (CSV), solo registro local
+        fichero_boe: Fichero BOE para presentar en la AEAT
+        label: Artefacto a exportar
       payment_election:
         cuenta_corriente: Cuenta corriente tributaria
         domiciliacion: Domiciliación bancaria

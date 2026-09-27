@@ -1361,6 +1361,7 @@ cli:
         discard_requires_yes: Discard is an auditable state transition. Re-run 'aeat
           app modelo work discard %{work_unit_id} --yes' to confirm.
         discard_yes_help: Explicitly confirm the discard operation
+        document_format_help: Document format of the calculation report.
         file_help: Mark a verified revision as internally filed. Does NOT submit to
           AEAT
         file_idempotent_noop: 'Idempotent no-op: calculation revision %{calculation_revision_id}
@@ -1469,6 +1470,8 @@ cli:
         observed_at_help: When you confirmed the attestation, as an ISO 8601 instant
           with a UTC offset (for example 2025-03-31T12:00:00+00:00); not before the
           quarter closes and not in the future.
+        output_help: Path to write the calculation report to; its parent directory
+          must exist.
         output_language_help: Output language for rendered messages.
         override_help: Binding value with KEY=VALUE syntax (repeatable); run `aeat
           app modelo bindings list --missing` to see the bindings the calculation
@@ -1534,6 +1537,15 @@ cli:
           exclusive 40.3 casilla 34 and 40.2 casilla 03 relation channels, setting
           the unused modality to 0 when entering manual values.
         rename_help: Update the display name of a work unit
+        report:
+          development_software_identity: The filing file for this modelo would carry
+            Cadrumo's all-zero development software identity; AEAT will not accept
+            that file for presentation.
+          errors:
+            calculation_required: Work unit {work_unit_id} for modelo {modelo} has
+              no calculation to report; calculate and verify it first.
+        report_help: Write the work unit's verified or filed calculation as a local
+          calculation report; it is not official AEAT evidence.
         rescate_contingencia_year_help: 'Year the pension-plan contingency (retirement,
           disability, death) occurred. Determines the LIRPF DT 12a apartado-4 time
           window (Ley 26/2014): if the window is closed for the rescate year, the

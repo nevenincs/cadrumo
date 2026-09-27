@@ -50,6 +50,7 @@ from .....core.errors.error_codes import resolve_error_message
 from .....core.errors.hierarchy import CadrumoError
 from .....core.i18n.render import tr
 from .....core.logging import get_logger
+from .....core.modelo_export_artefact import ModeloExportArtefact
 from .....core.operations import OperationTerminalCondition
 from .....core.payment_election import PaymentElection
 from .....core.presentation import NoticePresentation
@@ -100,6 +101,14 @@ PAYMENT_ELECTION_LOCALE_KEYS: dict[PaymentElection, str] = {
 PRIOR_DOMICILIATION_ELECTION_LOCALE_KEYS: dict[PriorDomiciliationElection, str] = {
     PriorDomiciliationElection.KEEP: "tui.modelo.export.prior_domiciliation_election.keep",
     PriorDomiciliationElection.CANCEL_OR_MODIFY: "tui.modelo.export.prior_domiciliation_election.cancel_or_modify",
+}
+
+#: The artefacts the export control offers, each in the operator's words. Every
+#: member of the closed axis appears, so an artefact the product can publish is
+#: never silently missing from the choice.
+EXPORT_ARTEFACT_LOCALE_KEYS: dict[ModeloExportArtefact, str] = {
+    ModeloExportArtefact.FICHERO_BOE: "tui.modelo.export.artefact.fichero_boe",
+    ModeloExportArtefact.CALCULATION_REPORT_CSV: "tui.modelo.export.artefact.calculation_report_csv",
 }
 
 
@@ -171,6 +180,13 @@ class ModeloWorkspaceOverviewScreen(AccountChromeScreen):
                 yield Input(
                     placeholder=tr("application.modelo.lifecycle.export_destination_placeholder"),
                     id="modelo-lifecycle-export-path",
+                )
+                yield Static(tr("tui.modelo.export.artefact.label"), markup=False)
+                yield Select[str](
+                    tuple((tr(key), member.value) for member, key in EXPORT_ARTEFACT_LOCALE_KEYS.items()),
+                    value=ModeloExportArtefact.FICHERO_BOE.value,
+                    allow_blank=False,
+                    id="modelo-lifecycle-export-artefact",
                 )
                 if self._is_m303_calculation():
                     yield from self._compose_export_elections()
@@ -335,6 +351,9 @@ class ModeloWorkspaceOverviewScreen(AccountChromeScreen):
                 return
             keyword_arguments = self._export_elections()
             keyword_arguments["replace_existing"] = self.query_one("#modelo-lifecycle-export-replace", Checkbox).value
+            keyword_arguments["artefact"] = ModeloExportArtefact(
+                str(self.query_one("#modelo-lifecycle-export-artefact", Select).value),
+            )
         submit = getattr(actions, method_name, None)
         if submit is None:
             return

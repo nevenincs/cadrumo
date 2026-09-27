@@ -47,6 +47,7 @@ from ....application.modelo.operation_definitions import (
 from ....application.operations.composition import OperationComposedServices
 from ....application.operations.models import OperationRequest
 from ....core.errors.hierarchy import CadrumoError
+from ....core.modelo_export_artefact import ModeloExportArtefact
 from ....core.payment_election import PaymentElection
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....core.refund_election import RefundElection
@@ -200,8 +201,14 @@ class ModeloWorkspaceLifecycleDoor:
         payment_election: PaymentElection,
         prior_domiciliation_election: PriorDomiciliationElection,
         replace_existing: bool = False,
+        artefact: ModeloExportArtefact = ModeloExportArtefact.FICHERO_BOE,
     ) -> OperationController:
-        """Export the selected verified revision to the operator-selected path with the operator's elections."""
+        """Export the selected verified revision to the operator-selected path with the operator's choices.
+
+        ``artefact`` names which export the operator asked for. It defaults to the
+        AEAT-compatible filing file so a caller that offers no choice submits the
+        export this door always submitted.
+        """
         return await self._submit(
             OperationRequest(
                 definition_id=MODELO_EXPORT_OPERATION_DEFINITION_ID,
@@ -213,6 +220,7 @@ class ModeloWorkspaceLifecycleDoor:
                     payment_election=payment_election,
                     prior_domiciliation_election=prior_domiciliation_election,
                     replace_existing=replace_existing,
+                    artefact=artefact,
                     actor=_ACTOR_REF,
                 ),
             )

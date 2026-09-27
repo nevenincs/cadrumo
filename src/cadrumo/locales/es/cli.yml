@@ -1474,6 +1474,7 @@ cli:
         discard_requires_yes: El descarte es una transición de estado auditable. Vuelva
           a ejecutar 'aeat app modelo work discard %{work_unit_id} --yes' para confirmar.
         discard_yes_help: Confirmar explícitamente la operación de descarte
+        document_format_help: Formato de documento del informe de cálculo.
         file_help: Marcar una revisión verificada como internamente presentada. NO
           envía a la AEAT
         file_idempotent_noop: 'Operación idempotente sin efecto: la revisión de cálculo
@@ -1590,6 +1591,8 @@ cli:
         observed_at_help: Cuándo confirmó la atestación, como instante ISO 8601 con
           desfase UTC (por ejemplo 2025-03-31T12:00:00+00:00); no antes del cierre
           del trimestre ni en el futuro.
+        output_help: Ruta donde escribir el informe de cálculo; su directorio padre
+          debe existir.
         output_language_help: Idioma de salida para los mensajes renderizados.
         override_help: Valor de binding con sintaxis KEY=VALUE (repetible); ejecuta
           `aeat app modelo bindings list --missing` para ver los bindings que requiere
@@ -1655,6 +1658,15 @@ cli:
           exclusivos 40.3 casilla 34 y 40.2 casilla 03, poniendo 0 en la modalidad
           no usada cuando introduzcas valores manuales.
         rename_help: Actualizar el nombre de visualización de una unidad de trabajo
+        report:
+          development_software_identity: El fichero de presentación de este modelo
+            llevaría la identidad de software de desarrollo de Cadrumo con todo ceros;
+            la AEAT no aceptará ese fichero para su presentación.
+          errors:
+            calculation_required: La unidad de trabajo {work_unit_id} del modelo {modelo}
+              no tiene cálculo que informar; calcúlela y verifíquela primero.
+        report_help: Escribe el cálculo verificado o presentado de la unidad de trabajo
+          como informe de cálculo local; no es evidencia oficial de la AEAT.
         rescate_contingencia_year_help: 'Año en que acaeció la contingencia (jubilación,
           incapacidad, fallecimiento) del plan de pensiones. Determina la ventana
           temporal del apartado 4 DT 12a LIRPF (Ley 26/2014): si la ventana está cerrada

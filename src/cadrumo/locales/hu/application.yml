@@ -791,6 +791,10 @@ application:
           listájához futtassa a `aeat app live borrador 100 list` parancsot.
         unsupported_modelo: A tervezetkötés nem támogatott a(z) %{modelo} modellhez;
           a regiszter manifesztjének deklarálnia kell a tervezet képességét.
+    calculation_report:
+      local_calculation_notice: 'Cadrumo helyi számítási jelentés. Nem az AEAT hivatalos
+        benyújtási bizonylata. A hivatalos bizonylatot az AEAT adja ki a benyújtás
+        után: justificante; benyújtott bevallások lekérdezése; vagy CSV-egyeztetés.'
     errors:
       amendment_complementaria_liability_decrease: A(z) {modelo} nyomtatvány {filing_year}
         adóévi {period} időszakára vonatkozó kiegészítő bevallás (complementaria)
@@ -866,6 +870,12 @@ application:
         hiányzik; a modell számítás nem folytatható.
       calculation_registry_snapshot_unresolved: A(z) %{modelo} modell, %{filing_year}
         bevallási év, %{period} időszak registry-pillanatképe nem oldható fel.
+      calculation_report_notice_unavailable: A(z) {report_language} jelentésnyelvhez
+        nincs helyi számítási nyilatkozat ({translation_key} katalóguskulcs); a rendszer
+        elutasítja a számítási jelentést ahelyett hogy e nélkül állítaná elő.
+      calculation_report_taxpayer_unknown: Az aktív profil nem ad meg adóazonosítót
+        és nevet. Töltse ki a profil azonosító adatait a számítási jelentés elkészítése
+        előtt; a jelentésnek meg kell mondania kinek a bevallását rögzíti.
       calculation_revision_id_is_discarded_work_unit: A(z) %{calculation_revision_id}
         azonosító selejtezett munkaegység, nem számítási revízió.
       calculation_revision_id_is_work_unit: A(z) %{calculation_revision_id} azonosító

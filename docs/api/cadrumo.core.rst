@@ -47,6 +47,7 @@ Submodules
    cadrumo.core.authority_grade
    cadrumo.core.base64_codec
    cadrumo.core.bucket_pointer
+   cadrumo.core.calculation_report_format
    cadrumo.core.calendar_shift
    cadrumo.core.capabilities
    cadrumo.core.casilla_id
@@ -110,6 +111,7 @@ Submodules
    cadrumo.core.iva_deduction_fact
    cadrumo.core.json_contract
    cadrumo.core.json_shapes
+   cadrumo.core.keyed_digest
    cadrumo.core.ledger_sort
    cadrumo.core.legacy_workbook
    cadrumo.core.link_safety
@@ -120,6 +122,7 @@ Submodules
    cadrumo.core.model_catalogue
    cadrumo.core.modelo
    cadrumo.core.modelo_232_codigos
+   cadrumo.core.modelo_export_artefact
    cadrumo.core.modelo_work_progress_state
    cadrumo.core.models
    cadrumo.core.notificacion_estado_servicio

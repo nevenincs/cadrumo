@@ -1977,6 +1977,10 @@ tui:
       legal: Jogszabályi hivatkozás
       source: Forráshivatkozás
     export:
+      artefact:
+        calculation_report_csv: Számítási jelentés (CSV), csak helyi nyilvántartás
+        fichero_boe: BOE-fájl az AEAT-nál való benyújtáshoz
+        label: Exportálandó dokumentum
       payment_election:
         cuenta_corriente: Adófolyószámla (cuenta corriente tributaria)
         domiciliacion: Csoportos beszedés (domiciliación)

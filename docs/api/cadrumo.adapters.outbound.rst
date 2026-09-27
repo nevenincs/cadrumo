@@ -20,3 +20,4 @@ Subpackages
    cadrumo.adapters.outbound.llm
    cadrumo.adapters.outbound.model_runtime
    cadrumo.adapters.outbound.storage
+   cadrumo.adapters.outbound.workbook

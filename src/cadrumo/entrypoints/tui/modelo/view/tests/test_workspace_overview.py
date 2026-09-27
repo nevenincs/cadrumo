@@ -31,6 +31,7 @@ from ......application.modelo.workspace_models import (
 )
 from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import tr
+from ......core.modelo_export_artefact import ModeloExportArtefact
 from ......core.payment_election import PaymentElection
 from ......core.prior_domiciliation_election import PriorDomiciliationElection
 from ......core.refund_election import RefundElection
@@ -46,6 +47,7 @@ from ..models import (
     workspace_refusal_reason_label,
 )
 from ..overview import (
+    EXPORT_ARTEFACT_LOCALE_KEYS,
     PAYMENT_ELECTION_LOCALE_KEYS,
     PRIOR_DOMICILIATION_ELECTION_LOCALE_KEYS,
     REFUND_ELECTION_LOCALE_KEYS,
@@ -482,6 +484,10 @@ async def test_a_modelo_303_export_offers_each_election_preset_to_its_neutral_de
             with pytest.raises(InvalidSelectValueError):
                 app.screen.query_one(control, Select).clear()
         assert app.screen.query_one("#modelo-lifecycle-export-replace", Checkbox).value is False
+        assert (
+            app.screen.query_one("#modelo-lifecycle-export-artefact", Select).value
+            == ModeloExportArtefact.FICHERO_BOE.value
+        )
         app.screen.query_one("#modelo-lifecycle-export-path", Input).value = "modelo-303.boe"
         app.screen.query_one(_ELECTION_CONTROLS[0], Select).value = RefundElection.DEVOLVER.value
         app.screen.query_one(_ELECTION_CONTROLS[2], Select).value = PriorDomiciliationElection.CANCEL_OR_MODIFY.value
@@ -495,6 +501,7 @@ async def test_a_modelo_303_export_offers_each_election_preset_to_its_neutral_de
             "payment_election": PaymentElection.INGRESO,
             "prior_domiciliation_election": PriorDomiciliationElection.CANCEL_OR_MODIFY,
             "replace_existing": False,
+            "artefact": ModeloExportArtefact.FICHERO_BOE,
             "output_path": "modelo-303.boe",
         }
     ]
@@ -513,7 +520,9 @@ async def test_a_modelo_without_those_elections_exports_with_the_command_line_de
 
     async with app.run_test() as pilot:
         await pilot.pause()
-        assert not app.screen.query(Select)
+        # The artefact choice is offered for every modelo; the declaration-shaping
+        # elections are the Modelo 303 ones and are absent here.
+        assert [control.id for control in app.screen.query(Select)] == ["modelo-lifecycle-export-artefact"]
         app.screen.query_one("#modelo-lifecycle-export-path", Input).value = "modelo-130.boe"
         app.screen.query_one("#modelo-lifecycle-export-replace", Checkbox).value = True
         app.screen.query_one("#modelo-lifecycle-export", Button).press()
@@ -526,7 +535,44 @@ async def test_a_modelo_without_those_elections_exports_with_the_command_line_de
             "payment_election": PaymentElection.INGRESO,
             "prior_domiciliation_election": PriorDomiciliationElection.KEEP,
             "replace_existing": True,
+            "artefact": ModeloExportArtefact.FICHERO_BOE,
             "output_path": "modelo-130.boe",
+        }
+    ]
+
+
+@pytest.mark.asyncio
+async def test_choosing_the_calculation_report_submits_that_artefact_not_the_filing_file(
+    bucket_and_repository: tuple[str, WorkUnitCatalogueRepository],
+) -> None:
+    """The artefact the operator picked is the artefact the export request carries."""
+    bucket_id, repository = bucket_and_repository
+    actions = _ExportRecordingActions()
+    app = ScreenHostApp(
+        ModeloWorkspaceOverviewScreen(_export_session(bucket_id, repository, modelo="130", actions=actions))
+    )
+
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        artefact = app.screen.query_one("#modelo-lifecycle-export-artefact", Select)
+        # Assigning a value the Select does not offer raises, so setting each
+        # member in turn proves every artefact is actually on the control.
+        for member in ModeloExportArtefact:
+            artefact.value = member.value
+        artefact.value = ModeloExportArtefact.CALCULATION_REPORT_CSV.value
+        app.screen.query_one("#modelo-lifecycle-export-path", Input).value = "modelo-130-report.csv"
+        app.screen.query_one("#modelo-lifecycle-export", Button).press()
+        await pilot.pause()
+        await app.workers.wait_for_complete()
+
+    assert actions.exported == [
+        {
+            "refund_election": RefundElection.COMPENSAR,
+            "payment_election": PaymentElection.INGRESO,
+            "prior_domiciliation_election": PriorDomiciliationElection.KEEP,
+            "replace_existing": False,
+            "artefact": ModeloExportArtefact.CALCULATION_REPORT_CSV,
+            "output_path": "modelo-130-report.csv",
         }
     ]
 
@@ -537,6 +583,7 @@ async def test_a_modelo_without_those_elections_exports_with_the_command_line_de
         (RefundElection, REFUND_ELECTION_LOCALE_KEYS),
         (PaymentElection, PAYMENT_ELECTION_LOCALE_KEYS),
         (PriorDomiciliationElection, PRIOR_DOMICILIATION_ELECTION_LOCALE_KEYS),
+        (ModeloExportArtefact, EXPORT_ARTEFACT_LOCALE_KEYS),
     ],
 )
 def test_every_election_member_has_a_label(election: type[Enum], keys: dict[object, str]) -> None:

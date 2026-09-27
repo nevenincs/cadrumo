@@ -749,6 +749,10 @@ application:
           with `aeat app live borrador 100 list`.
         unsupported_modelo: Borrador binding is not supported for modelo %{modelo};
           the registry manifest must declare the borrador capability.
+    calculation_report:
+      local_calculation_notice: 'Cadrumo local calculation report. Not official AEAT
+        filing evidence. Official evidence comes from AEAT after filing: justificante;
+        consulta de declaraciones presentadas; or CSV cotejo.'
     errors:
       amendment_complementaria_liability_decrease: A complementaria for modelo {modelo}
         filing year {filing_year} period {period} would lower the declared result
@@ -823,6 +827,12 @@ application:
         is missing; modelo calculation cannot continue.
       calculation_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
         filing year %{filing_year}, period %{period} could not be resolved.
+      calculation_report_notice_unavailable: No local-calculation statement is available
+        for report language {report_language} (catalogue key {translation_key}); the
+        calculation report is refused rather than produced without it.
+      calculation_report_taxpayer_unknown: The active profile declares no taxpayer
+        NIF and name. Complete the profile identity before writing a calculation report;
+        a report must say whose declaration it records.
       calculation_revision_id_is_discarded_work_unit: Identifier %{calculation_revision_id}
         is a discarded work unit, not a calculation revision.
       calculation_revision_id_is_work_unit: Identifier %{calculation_revision_id}

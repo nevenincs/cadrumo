@@ -1995,6 +1995,10 @@ tui:
       legal: Referència legal
       source: Referència d'origen
     export:
+      artefact:
+        calculation_report_csv: Informe de càlcul (CSV), només registre local
+        fichero_boe: Fitxer BOE per presentar a l'AEAT
+        label: Artefacte a exportar
       payment_election:
         cuenta_corriente: Compte corrent tributari
         domiciliacion: Domiciliació bancària

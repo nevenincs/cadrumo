@@ -6,6 +6,11 @@ line supplies, so a Modelo 303 export through it failed at the missing
 prior-domiciliation election, before the gate the command line reached. Both
 now carry the same elections, so both reach the missing reviewed product
 identity, which every official Modelo 303 envelope requires.
+
+The same parity is asserted for the calculation report, which both surfaces reach
+through one artefact choice on one request. The two documents cannot be compared
+byte for byte because each carries its own export timestamp; the rows are the
+content, and those are compared exactly.
 """
 
 from __future__ import annotations
@@ -17,12 +22,14 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.profile.tests.modelo_export_support import isolated_backend_context
+from cadrumo.application.modelo.calculation_report_document import CALCULATION_REPORT_CSV_PREAMBLE_PREFIX
 from cadrumo.application.modelo.operation_definitions import MODELO_EXPORT_OPERATION_DEFINITION_ID, ModeloExportRequest
 from cadrumo.application.operations.frontend_requests import (
     OperationObservationRequestV1,
     OperationObservationSuccessV1,
 )
 from cadrumo.application.operations.models import OperationRequest
+from cadrumo.core.modelo_export_artefact import ModeloExportArtefact
 from cadrumo.core.operations import OperationTerminalCondition
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli
@@ -33,7 +40,12 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 def _export_through_the_operation(
-    *, work_unit_id: str, calculation_revision_id: str, output_path: Path, operation: PinnedAuthorityOperation
+    *,
+    work_unit_id: str,
+    calculation_revision_id: str,
+    output_path: Path,
+    operation: PinnedAuthorityOperation,
+    artefact: ModeloExportArtefact = ModeloExportArtefact.FICHERO_BOE,
 ) -> tuple[OperationTerminalCondition | None, str | None]:
     """Submit the registered export operation with its default elections, as the TUI does."""
 
@@ -48,6 +60,7 @@ def _export_through_the_operation(
                         calculation_revision_id=calculation_revision_id,
                         output_path=str(output_path),
                         actor="operator",
+                        artefact=artefact,
                     ),
                 ),
                 actor_ref="operator:export-parity",
@@ -99,3 +112,50 @@ def test_a_modelo_303_revision_exports_identical_bytes_on_both_surfaces(tmp_path
     assert json.loads(cli.output)["result"]["software_identity_grade"] == "development_mock"
     assert condition is OperationTerminalCondition.SUCCEEDED, operation_code
     assert cli_out.read_bytes() == operation_out.read_bytes()
+
+
+def _report_table(path: Path) -> str:
+    """Return the report's row table, without the preamble that carries the stamp."""
+    return "\n".join(
+        line
+        for line in path.read_text(encoding="utf-8").splitlines()
+        if not line.startswith(CALCULATION_REPORT_CSV_PREAMBLE_PREFIX)
+    )
+
+
+def test_a_modelo_303_calculation_report_carries_the_same_rows_on_both_surfaces(tmp_path: Path) -> None:
+    """One revision reported from either surface yields the same rows and the same content digest."""
+    with isolated_backend_context(tmp_path), bundled_indexed_authority().operation() as operation:
+        _taxpayer_nif, _bucket_id, verified, *_repositories = build_verified_modelo_303_revision(operation=operation)
+        cli_out = tmp_path / "cli-303-report.csv"
+        operation_out = tmp_path / "operation-303-report.csv"
+
+        cli = invoke_cached_cli(
+            [
+                "--format",
+                "json",
+                "app",
+                "modelo",
+                "work",
+                "report",
+                verified.work_unit_id,
+                "--output",
+                str(cli_out),
+            ]
+        )
+        condition, operation_code = _export_through_the_operation(
+            work_unit_id=verified.work_unit_id,
+            calculation_revision_id=verified.calculation_revision_id,
+            output_path=operation_out,
+            operation=operation,
+            artefact=ModeloExportArtefact.CALCULATION_REPORT_CSV,
+        )
+
+    assert cli.exit_code == 0, cli.output
+    assert condition is OperationTerminalCondition.SUCCEEDED, operation_code
+    cli_payload = json.loads(cli.output)["result"]
+    assert cli_payload["document_format"] == ModeloExportArtefact.CALCULATION_REPORT_CSV.value.removeprefix(
+        "calculation_report_"
+    )
+    assert _report_table(cli_out) == _report_table(operation_out)
+    assert cli_payload["report_sha256"] in cli_out.read_text(encoding="utf-8")

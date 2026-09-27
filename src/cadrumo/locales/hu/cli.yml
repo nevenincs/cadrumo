@@ -1454,6 +1454,7 @@ cli:
         discard_requires_yes: 'Az eldobás auditálható állapotváltás. Futtassa újra:
           `aeat app modelo work discard %{work_unit_id} --yes` a megerősítéshez.'
         discard_yes_help: Az eldobási művelet explicit megerősítése.
+        document_format_help: A számítási jelentés dokumentumformátuma.
         file_help: Hitelesített revízió megjelölése belső benyújtottként. NEM nyújt
           be az AEAT-hoz.
         file_idempotent_noop: 'Idempotens nincs-művelet: a(z) %{calculation_revision_id}
@@ -1573,6 +1574,8 @@ cli:
         observed_at_help: A nyilatkozat megerősítésének időpontja ISO 8601 formátumban,
           UTC-eltolással (például 2025-03-31T12:00:00+00:00); nem lehet a negyedév
           zárása előtt és nem lehet jövőbeli.
+        output_help: Az útvonal, ahová a számítási jelentés kerül; a szülőkönyvtárnak
+          léteznie kell.
         output_language_help: A megjelenített üzenetek kimeneti nyelve.
         override_help: 'Kötési érték KEY=VALUE szintaxissal (ismételhető); futtassa:
           `aeat app modelo bindings list --missing` a hiányzó kötések megtekintéséhez.'
@@ -1638,6 +1641,15 @@ cli:
           rovat 03 relation csatornákat használd, és kézi érték megadásakor a nem
           használt modalitást állítsd 0-ra.'
         rename_help: Egy munkaegység megjelenítési nevének frissítése.
+        report:
+          development_software_identity: Ennek a modellnek a benyújtási fájlja a Cadrumo
+            csupa nullából álló fejlesztői szoftverazonosítóját hordozná; az AEAT
+            ezt a fájlt nem fogadja el benyújtásra.
+          errors:
+            calculation_required: A {modelo} modell {work_unit_id} munkaegységének
+              nincs jelenthető számítása; először számítsa ki és ellenőrizze.
+        report_help: A munkaegység ellenőrzött vagy benyújtott számítását helyi számítási
+          jelentésként írja ki; ez nem az AEAT hivatalos bizonylata.
         rescate_contingencia_year_help: 'Az az év, amikor a nyugdíjpénztári esemény
           (nyugdíjazás, rokkantság, halál) bekövetkezett. Meghatározza a LIRPF DT
           12a 4. bekezdés szerinti időablakot (26/2014 törvény): ha az ablak zárva

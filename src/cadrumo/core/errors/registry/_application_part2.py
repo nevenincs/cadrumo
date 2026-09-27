@@ -289,6 +289,26 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.modelo.calculation_report.CalculationReportNoticeUnavailableError",
+        ErrorCode(
+            code="REFUSED_CALCULATION_REPORT_NOTICE_UNAVAILABLE",
+            category=ErrorCategory.REFUSED,
+            message_key="application.modelo.errors.calculation_report_notice_unavailable",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.modelo.calculation_report_export.ModeloCalculationReportTaxpayerUnknownError",
+        ErrorCode(
+            code="REFUSED_CALCULATION_REPORT_TAXPAYER_UNKNOWN",
+            category=ErrorCategory.REFUSED,
+            message_key="application.modelo.errors.calculation_report_taxpayer_unknown",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.modelo.export.ModeloExportUnsupportedError",
         ErrorCode(
             code="REFUSED_MODELO_EXPORT_UNSUPPORTED",

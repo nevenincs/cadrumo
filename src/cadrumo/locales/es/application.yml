@@ -828,6 +828,11 @@ application:
           activos con `aeat app live borrador 100 list`.
         unsupported_modelo: El binding de borrador no está soportado para el modelo
           %{modelo}; el manifiesto del registro debe declarar la capacidad de borrador.
+    calculation_report:
+      local_calculation_notice: 'Informe de cálculo local de Cadrumo. No es evidencia
+        oficial de presentación ante la AEAT. La evidencia oficial la emite la AEAT
+        tras la presentación: justificante; consulta de declaraciones presentadas;
+        o cotejo por CSV.'
     errors:
       amendment_complementaria_liability_decrease: Una complementaria para el modelo
         {modelo}, ejercicio {filing_year}, período {period} rebajaría el resultado
@@ -907,6 +912,12 @@ application:
         %{missing_path}; el cálculo del modelo no puede continuar.
       calculation_registry_snapshot_unresolved: No se pudo resolver el snapshot de
         registro para el modelo {modelo}, ejercicio {filing_year}, periodo {period}.
+      calculation_report_notice_unavailable: No hay declaración de cálculo local disponible
+        para el idioma de informe {report_language} (clave de catálogo {translation_key});
+        se rechaza el informe de cálculo en lugar de producirlo sin ella.
+      calculation_report_taxpayer_unknown: El perfil activo no declara NIF ni nombre
+        del contribuyente. Complete la identidad del perfil antes de escribir un informe
+        de cálculo; un informe debe decir de quién es la declaración que recoge.
       calculation_revision_id_is_discarded_work_unit: El identificador %{calculation_revision_id}
         es una unidad de trabajo descartada, no una revisión de cálculo.
       calculation_revision_id_is_work_unit: El identificador %{calculation_revision_id}

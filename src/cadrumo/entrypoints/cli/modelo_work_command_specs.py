@@ -29,6 +29,7 @@ from .command_spec import (
     ResultSchemaSpec,
     SchemaState,
     SideEffect,
+    TranslationKey,
     ValueContract,
 )
 from .command_spec import translation_key as _key
@@ -48,6 +49,10 @@ _PAYMENT = ValueContract(DeferredTarget("...core.payment_election", "PaymentElec
 _DOMICILIATION = ValueContract(
     DeferredTarget("...core.prior_domiciliation_election", "PriorDomiciliationElection", __package__)
 )
+_REPORT_DOCUMENT_FORMAT = ValueContract(
+    DeferredTarget("...core.calculation_report_format", "CalculationReportDocumentFormat", __package__)
+)
+_PATH = ValueContract(DeferredTarget("pathlib", "Path"))
 
 
 def _boolean_choice(name: str, declaration: str, *, help_name: str) -> OptionSpec:
@@ -110,6 +115,15 @@ _WIZARD = _policy(
     frozenset({"local-state"}),
     "interactive",
     CommandWriteRoute.PROFILE_BOUND,
+)
+#: Reads the sealed revision and writes one operator-chosen file. Nothing in the
+#: profile changes, so the write route stays NONE: the artefact is the operator's
+#: from the moment it lands, exactly as the offline workbook export declares it.
+_REPORT = _policy(
+    frozenset({"calculation", "encrypted-facts"}),
+    frozenset({"local-state"}),
+    "local-io",
+    CommandWriteRoute.NONE,
 )
 
 
@@ -359,6 +373,40 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         _MODEL_READ,
         "._modelo_payloads",
         "WorkReviewResult",
+    ),
+    _leaf(
+        "report",
+        "._modelo_work_report_cli",
+        (
+            # ``--output`` leads because it is the one required parameter: the
+            # generated handler signature lists parameters in this order, and a
+            # required parameter may not follow one carrying a default.
+            _o(
+                "output",
+                "--output",
+                _PATH,
+                required=True,
+                transport_locus=TransportLocus.LOCAL_OUT,
+                transport_shape=TransportShape.FILE,
+                transport_role=TransportRole.PRIMARY,
+            ),
+            _a("work_unit_id"),
+            *_ADDRESS,
+            _o("document_format", "--document-format", _REPORT_DOCUMENT_FORMAT, default="csv"),
+            OptionSpec(
+                "replace_existing",
+                ("--replace",),
+                FLAG_VALUE,
+                ParameterDefault.value(False),
+                TranslationKey("cli.app.modelo.export.replace_help"),
+                is_flag=True,
+                flag_value=True,
+            ),
+            _LANG,
+        ),
+        _REPORT,
+        "._modelo_payloads",
+        "WorkReportResult",
     ),
     _leaf(
         "revisions",

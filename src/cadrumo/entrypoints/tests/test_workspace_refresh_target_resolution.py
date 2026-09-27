@@ -86,6 +86,7 @@ def _registry() -> OperationRegistry:
         certificate_secret_backend_factory=_unreachable_capability_factory,
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         export_ports_factory=_unreachable_capability_factory,
+        signing_keypair_capability_factory=_unreachable_capability_factory,
         calculation_action_ports_factory=_unreachable_capability_factory,
         attachment_store_factory=_unreachable_attachment_store_factory,
         amendment_action_ports_factory=_unreachable_capability_factory,

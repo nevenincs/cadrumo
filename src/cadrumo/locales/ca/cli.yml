@@ -1459,6 +1459,7 @@ cli:
         discard_requires_yes: El descart és una transició d'estat auditable. Torneu
           a executar 'aeat app modelo work discard %{work_unit_id} --yes' per confirmar.
         discard_yes_help: Confirmar explícitament l'operació de descart
+        document_format_help: Format de document de l'informe de càlcul.
         file_help: Marcar una revisió verificada com a internament presentada. NO
           envia a l'AEAT
         file_idempotent_noop: 'Operació idempotent sense efecte: la revisió de càlcul
@@ -1575,6 +1576,8 @@ cli:
         observed_at_help: Quan vau confirmar l'atestació, com a instant ISO 8601 amb
           desplaçament UTC (per exemple 2025-03-31T12:00:00+00:00); no abans del tancament
           del trimestre ni en el futur.
+        output_help: Camí on escriure l'informe de càlcul; el seu directori pare ha
+          d'existir.
         output_language_help: Idioma de sortida per als missatges renderitzats.
         override_help: Valor de binding amb sintaxi KEY=VALUE (repetible); executa
           `aeat app modelo bindings list --missing` per veure els bindings que necessita
@@ -1642,6 +1645,15 @@ cli:
           mútuament exclusius 40.3 casella 34 i 40.2 casella 03, posant 0 a la modalitat
           no usada quan introdueixis valors manuals.
         rename_help: Actualitzar el nom de visualització d'una unitat de treball
+        report:
+          development_software_identity: El fitxer de presentació d'aquest model portaria
+            la identitat de programari de desenvolupament de Cadrumo amb tot zeros;
+            l'AEAT no acceptarà aquest fitxer per presentar-lo.
+          errors:
+            calculation_required: La unitat de treball {work_unit_id} del model {modelo}
+              no té càlcul a informar; calculeu-la i verifiqueu-la primer.
+        report_help: Escriu el càlcul verificat o presentat de la unitat de treball
+          com a informe de càlcul local; no és evidència oficial de l'AEAT.
         rescate_contingencia_year_help: 'Any en que va esdevenir la contingència (jubilació,
           incapacitat, defunció) del pla de pensions. Determina la finestra temporal
           de l''apartat 4 DT 12a LIRPF (Llei 26/2014): si la finestra està tancada

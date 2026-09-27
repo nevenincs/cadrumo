@@ -24,21 +24,26 @@ from __future__ import annotations
 
 import asyncio
 import functools
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from datetime import date, datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
+from types import MappingProxyType
 from typing import TYPE_CHECKING, Annotated, Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, StringConstraints, model_validator
 
+from ...core.calculation_report_format import CalculationReportDocumentFormat
 from ...core.country_code import CountryCodeAlpha2
 from ...core.errors.hierarchy import CadrumoError
+from ...core.external_constants import OutputLanguage
 from ...core.filing_year import FilingYear
 from ...core.hex import Hex64Str
+from ...core.i18n.render import output_language as active_output_language
 from ...core.identity.bucket import BucketId
 from ...core.identity.digest import ContentDigest
 from ...core.identity.hex_ids import CalculationRevisionId, ModeloEditBaselineId, WorkUnitId
+from ...core.modelo_export_artefact import ModeloExportArtefact
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operations import (
     EFFECTS_WITHOUT_PARTIAL_COMMIT,
@@ -98,6 +103,10 @@ from .action_errors import M303FilingEvidenceError, modelo_edit_refusal_error
 from .amendment_action_ports import AmendmentActionPortsFactory
 from .amendment_actions import amend_modelo_revision
 from .calculation_action_ports import CalculationActionPortsFactory
+from .calculation_report_export import (
+    ModeloCalculationReportCommand,
+    export_modelo_calculation_report,
+)
 from .edit_contract import ModeloEditCompatibilityTupleV1, ModeloEditMutationFamily
 from .edit_models import (
     MAX_MODELO_EDIT_SURFACE_ENTRIES,
@@ -123,13 +132,14 @@ from .edit_models import (
 from .edit_receipt_ports import ModeloEditReceiptRepositoryFactory
 from .edit_services import DETAIL_ROW_NATURAL_KEY_SEPARATOR
 from .export import ModeloExportCommand, export_modelo_revision
-from .export_ports import ModeloExportPortsFactory
+from .export_ports import ModeloExportPorts, ModeloExportPortsFactory
 from .filing_action_ports import FilingActionPortsFactory
 from .filing_actions import file_modelo_revision
 from .m303_filing_evidence import m303_filing_evidence_failure
 from .m303_ordinary_filing_evidence_authoring import (
     author_ordinary_m303_evidence_for_work,
 )
+from .review_package_signing_ports import ReviewPackageSigningKeypairCapabilityFactory
 from .verification_actions import verify_modelo_revision
 from .work_lifecycle import discard_work_unit, get_work_unit, rename_work_unit
 from .work_lifecycle_ports import ActiveWorkLifecyclePortsFactory
@@ -1033,6 +1043,15 @@ def build_modelo_work_file_registration(
     )
 
 
+#: The document format each calculation-report artefact serialises to. A member of
+#: :class:`~cadrumo.core.modelo_export_artefact.ModeloExportArtefact` absent from
+#: this table is not a report artefact, which is what keeps the fichero-BOE member
+#: out of the report branch by construction rather than by a name comparison.
+_REPORT_DOCUMENT_FORMATS: Mapping[ModeloExportArtefact, CalculationReportDocumentFormat] = MappingProxyType(
+    {ModeloExportArtefact.CALCULATION_REPORT_CSV: CalculationReportDocumentFormat.CSV},
+)
+
+
 class ModeloExportRequest(CredentialFreeOperationRequest):
     """The revision to export, where the operator wants the artefact, and the elections that shape it.
 
@@ -1058,6 +1077,10 @@ class ModeloExportRequest(CredentialFreeOperationRequest):
     #: Whether the operator chose to replace a file already at ``output_path``;
     #: without that choice an existing file refuses the export.
     replace_existing: bool = False
+    #: Which artefact to publish. Defaults to the AEAT-compatible filing file, so
+    #: a caller that names no artefact gets the export it always got; a
+    #: calculation report is an explicit choice.
+    artefact: ModeloExportArtefact = ModeloExportArtefact.FICHERO_BOE
 
     #: The operator this invocation acts as; stamped onto the exported
     #: artefact through the command built from this request.
@@ -1099,10 +1122,12 @@ class ModeloExportExecutor:
         *,
         profile_resolver: ModeloWorkVerifyProfileResolver,
         export_ports_factory: ModeloExportPortsFactory,
+        signing_keypair_capability_factory: ReviewPackageSigningKeypairCapabilityFactory,
     ) -> None:
         """Bind the live profile the export gates are judged against."""
         self._profile_resolver = profile_resolver
         self._export_ports_factory = export_ports_factory
+        self._signing_keypair_capability_factory = signing_keypair_capability_factory
 
     async def execute(
         self,
@@ -1120,28 +1145,89 @@ class ModeloExportExecutor:
         await context.events.phase("modelo.export.preconditions")
         await context.events.effect(OperationEffect.UNKNOWN)
         payload = request.payload
-        command = ModeloExportCommand(
-            calculation_revision_id=payload.calculation_revision_id,
-            output_path=Path(payload.output_path),
-            actor=payload.actor,
-            refund_election=payload.refund_election,
-            payment_election=payload.payment_election,
-            prior_domiciliation_election=payload.prior_domiciliation_election,
-            replace_existing=payload.replace_existing,
-        )
         from ...core.bucket_pointer import require_active_bucket_id
 
         workflow_profile = self._profile_resolver(context.authority_operation)
-        result = export_modelo_revision(
-            command,
-            workflow_profile=workflow_profile,
-            operation=context.authority_operation,
-            export_ports=self._export_ports_factory(
-                bucket_id=require_active_bucket_id(),
-                m303_rectificativa_taxpayer_tax_id=workflow_profile.tax_id,
-            ),
+        active_bucket_id = require_active_bucket_id()
+        export_ports = self._export_ports_factory(
+            bucket_id=active_bucket_id,
+            m303_rectificativa_taxpayer_tax_id=workflow_profile.tax_id,
+        )
+        digest = (
+            self._published_fichero_boe_digest(
+                payload,
+                workflow_profile=workflow_profile,
+                export_ports=export_ports,
+                operation=context.authority_operation,
+            )
+            if payload.artefact is ModeloExportArtefact.FICHERO_BOE
+            else self._published_calculation_report_digest(
+                payload,
+                active_bucket_id=active_bucket_id,
+                export_ports=export_ports,
+                operation=context.authority_operation,
+            )
         )
         await context.events.effect(OperationEffect.UPDATED)
+        return digest
+
+    @staticmethod
+    def _published_fichero_boe_digest(
+        payload: ModeloExportRequest,
+        *,
+        workflow_profile: TaxpayerProfile,
+        export_ports: ModeloExportPorts,
+        operation: PinnedAuthorityOperation,
+    ) -> str:
+        """Publish the AEAT-compatible filing file and return its byte digest."""
+        result = export_modelo_revision(
+            ModeloExportCommand(
+                calculation_revision_id=payload.calculation_revision_id,
+                output_path=Path(payload.output_path),
+                actor=payload.actor,
+                refund_election=payload.refund_election,
+                payment_election=payload.payment_election,
+                prior_domiciliation_election=payload.prior_domiciliation_election,
+                replace_existing=payload.replace_existing,
+            ),
+            workflow_profile=workflow_profile,
+            operation=operation,
+            export_ports=export_ports,
+        )
+        return str(result.file_sha256)
+
+    def _published_calculation_report_digest(
+        self,
+        payload: ModeloExportRequest,
+        *,
+        active_bucket_id: str,
+        export_ports: ModeloExportPorts,
+        operation: PinnedAuthorityOperation,
+    ) -> str:
+        """Publish the calculation report and return its byte digest.
+
+        The declaration-shaping elections are not threaded here and their absence
+        is not an omission: they decide the fichero's "Tipo de declaracion", and a
+        calculation report declares nothing. The service the command line reaches
+        is the one reached here, so the two surfaces cannot produce different
+        reports for one revision.
+
+        The report language is this invocation's own render language, so a
+        full-screen session set to Catalan produces a Catalan report exactly as
+        the command line does under ``--output-language ca``.
+        """
+        result = export_modelo_calculation_report(
+            ModeloCalculationReportCommand(
+                calculation_revision_id=payload.calculation_revision_id,
+                document_format=_REPORT_DOCUMENT_FORMATS[payload.artefact],
+                report_language=OutputLanguage(active_output_language()),
+                output_path=Path(payload.output_path),
+                replace_existing=payload.replace_existing,
+            ),
+            export_ports=export_ports,
+            signing_keypair=self._signing_keypair_capability_factory(bucket_id=active_bucket_id),
+            operation=operation,
+        )
         return str(result.file_sha256)
 
 
@@ -1149,6 +1235,7 @@ def build_modelo_export_definition(
     *,
     profile_resolver: ModeloWorkVerifyProfileResolver = resolve_active_workflow_profile,
     export_ports_factory: ModeloExportPortsFactory,
+    signing_keypair_capability_factory: ReviewPackageSigningKeypairCapabilityFactory,
 ) -> OperationDefinition:
     """Bind the export authority to its registered operation contract."""
 
@@ -1156,6 +1243,7 @@ def build_modelo_export_definition(
         return ModeloExportExecutor(
             profile_resolver=profile_resolver,
             export_ports_factory=export_ports_factory,
+            signing_keypair_capability_factory=signing_keypair_capability_factory,
         )
 
     return OperationDefinition(
@@ -2347,6 +2435,7 @@ def build_modelo_lifecycle_operation_definitions(
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
     operator_scope_ports: OperatorScopePorts,
     export_ports_factory: ModeloExportPortsFactory,
+    signing_keypair_capability_factory: ReviewPackageSigningKeypairCapabilityFactory,
     calculation_action_ports_factory: CalculationActionPortsFactory,
     attachment_store_factory: Callable[[str], AttachmentStoreProtocol],
     amendment_action_ports_factory: AmendmentActionPortsFactory,
@@ -2370,7 +2459,10 @@ def build_modelo_lifecycle_operation_definitions(
             calculation_action_ports_factory=calculation_action_ports_factory,
             receipt_repository_factory=receipt_repository_factory,
         ),
-        build_modelo_export_definition(export_ports_factory=export_ports_factory),
+        build_modelo_export_definition(
+            export_ports_factory=export_ports_factory,
+            signing_keypair_capability_factory=signing_keypair_capability_factory,
+        ),
         build_modelo_work_amend_definition(amendment_action_ports_factory=amendment_action_ports_factory),
         build_modelo_work_discard_definition(work_lifecycle_ports_factory=work_lifecycle_ports_factory),
         build_modelo_work_file_definition(

@@ -441,6 +441,27 @@ class ModeloExportResult(BaseModel):
         return _COMPLETENESS_UNVERIFIED_MESSAGE
 
 
+def envelope_stamped_software_identity(
+    export_layout: ExportLayoutDefinition | None,
+    *,
+    product_software_identity: AeatProductSoftwareIdentity,
+) -> AeatProductSoftwareIdentity | None:
+    """Return the identity the selected layout's header reserves, or ``None``.
+
+    AEAT reserves the program identifier and developer NIF slots in an envelope
+    prefix or auxiliary envelope header. A layout that renders neither carries no
+    software identity at all, and claiming one for it would state a header fact
+    the file does not hold. Both the fichero-BOE writer and the calculation
+    report answer the question here so a report cannot name a grade the filing
+    file would not carry.
+    """
+    if export_layout is None:
+        return None
+    if export_layout.filing_envelope is None and export_layout.auxiliary_envelope_header is None:
+        return None
+    return product_software_identity
+
+
 def _sha256_ref(value: str) -> str:
     return f"sha256:{sha256_hex(value.encode('utf-8'))}"
 
@@ -492,7 +513,18 @@ def _raise_if_ledger_export_evidence_missing(revision: CalculationRevision) -> N
     )
 
 
-def _require_exportable_revision_state(revision: CalculationRevision) -> None:
+def require_exportable_revision_state(revision: CalculationRevision) -> None:
+    """Refuse a revision no export artefact may be produced from.
+
+    Only a sealed revision -- verificado-completo, presentado, or a superseded
+    presentado -- describes a settled calculation. A draft is still being
+    edited, so any artefact rendered from it would claim a state the revision
+    does not hold. Every modelo export destination applies this one rule rather
+    than restating the state set.
+
+    Raises:
+        CalculationRevisionStateError: The revision is not sealed.
+    """
     if revision.state not in SEALED_REVISION_STATES:
         raise CalculationRevisionStateError(
             translated_message="application.modelo.errors.export_revision_state_refused",
@@ -995,11 +1027,9 @@ def _persist_exported_draft(
     )
     export_subview = schema_provider.get_subview(str(work_unit.modelo))
     export_layout = export_subview.export_layouts[0] if export_subview.export_layouts else None
-    software_identity = (
-        export_ports.product_software_identity
-        if export_layout is not None
-        and (export_layout.filing_envelope is not None or export_layout.auxiliary_envelope_header is not None)
-        else None
+    software_identity = envelope_stamped_software_identity(
+        export_layout,
+        product_software_identity=export_ports.product_software_identity,
     )
     dictionary_values = (
         _compose_export_dictionary_values(
@@ -1263,18 +1293,34 @@ def _raise_if_deductible_iva_evidence_missing(revision: CalculationRevision) -> 
     )
 
 
-def _load_modelo_export_authorities(
-    command: ModeloExportCommand,
+def load_exportable_revision_target(
+    calculation_revision_id: CalculationRevisionId,
     *,
     active_bucket_id: str,
     export_ports: ModeloExportPorts,
     operation: PinnedAuthorityOperation,
 ) -> tuple[CalculationRevision, WorkUnit]:
-    revision = export_ports.calculation.load().get(command.calculation_revision_id)
+    """Resolve the revision an export addresses together with its work unit.
+
+    The lookup every modelo export destination shares: the revision must exist,
+    its registry coordinates must still resolve under the caller's pinned
+    authority generation, its work unit must exist and carry the filing-instance
+    evidence its lifecycle requires, and that work unit must live in the active
+    bucket. A destination that repeated any of these would be free to admit a
+    revision the fichero-BOE refuses.
+
+    Raises:
+        CalculationRevisionNotFoundError: No revision carries that id.
+        WorkUnitNotFoundError: The revision names a work unit that is absent.
+        ModeloExportError: The work unit lacks required filing-instance evidence.
+        ModeloExportCrossBucketRefusedError: The work unit belongs to another
+            bucket than the active one.
+    """
+    revision = export_ports.calculation.load().get(calculation_revision_id)
     if revision is None:
         raise CalculationRevisionNotFoundError(
             translated_message="application.modelo.errors.calculation_revision_not_found",
-            context={"calculation_revision_id": command.calculation_revision_id},
+            context={"calculation_revision_id": calculation_revision_id},
         )
     require_calculation_revision_coordinates_current(revision, operation=operation)
     work_unit = export_ports.work_unit.load().get(revision.work_unit_id)
@@ -1289,7 +1335,7 @@ def _load_modelo_export_authorities(
         raise ModeloExportError(
             translated_message="application.modelo.errors.export_draft_write_failed",
             context={
-                "calculation_revision_id": command.calculation_revision_id,
+                "calculation_revision_id": calculation_revision_id,
                 "cause_type": type(exc).__name__,
             },
         ) from exc
@@ -1409,8 +1455,8 @@ def _prepare_modelo_export(
     operation: PinnedAuthorityOperation,
 ) -> _PreparedModeloExport:
     """Load and validate every persisted authority required before export bytes."""
-    revision, work_unit = _load_modelo_export_authorities(
-        command,
+    revision, work_unit = load_exportable_revision_target(
+        command.calculation_revision_id,
         active_bucket_id=active_bucket_id,
         export_ports=export_ports,
         operation=operation,
@@ -1430,7 +1476,7 @@ def _prepare_modelo_export(
         filing_repository=export_ports.filing,
         justificante_repository=export_ports.justificante,
     )
-    _require_exportable_revision_state(revision)
+    require_exportable_revision_state(revision)
     # A handoff whose filed source was replaced makes the revision a statement
     # about superseded facts, so it is refused before anything judges that
     # revision's own evidence -- the order verification and filing keep too.
@@ -1597,5 +1643,8 @@ __all__ = [
     "ModeloExportUnsupportedError",
     "ModeloIvaWalletDecisionProvenance",
     "_raise_if_ledger_export_evidence_missing",
+    "envelope_stamped_software_identity",
     "export_modelo_revision",
+    "load_exportable_revision_target",
+    "require_exportable_revision_state",
 ]
