@@ -12,6 +12,7 @@ from pydantic import ValidationError
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.casilla_lineage import CasillaLineageOrigin
+from cadrumo.domain.calculations.registry.facts.schema import EntitySetFactPayload
 from cadrumo.domain.calculations.registry.lineage_attestation import LineageAttestation
 from cadrumo.domain.calculations.registry.schema import SupportedFilingYearsCatalogue
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
@@ -213,6 +214,21 @@ def test_typed_comparison_preserves_absence_false_zero_empty_and_order(tmp_path:
 
     assert result.status is verification.CheckStatus.FAILED
     assert result.differences[0]["reason"] == "value_changed"
+
+
+def test_typed_comparison_reads_an_entity_set_as_a_set() -> None:
+    """Equal entity sets compare equal however their members were inserted; a changed member still differs."""
+    members = ("subvencion_corriente", "subvencion_capital", "indemnizacion")
+    forward = EntitySetFactPayload(entities=frozenset(members))
+    backward = EntitySetFactPayload(entities=frozenset(reversed(members)))
+    changed = EntitySetFactPayload(entities=frozenset((*members[:2], "subvencion_explotacion")))
+
+    projected = verification._typed_projection(forward)
+
+    assert isinstance(projected, Mapping)
+    assert projected["entities"] == sorted(members)
+    assert verification._first_difference(projected, verification._typed_projection(backward)) is None
+    assert verification._first_difference(projected, verification._typed_projection(changed)) is not None
 
 
 def test_typed_comparison_normalizes_valid_lineage_sidecar_without_hiding_provenance(tmp_path: Path) -> None:

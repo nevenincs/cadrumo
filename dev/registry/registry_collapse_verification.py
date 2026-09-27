@@ -16,7 +16,9 @@ from typing import Final, TypedDict, cast
 from uuid import uuid4
 
 import tomlkit
+from pydantic_core import to_jsonable_python
 
+from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo.domain.calculations.registry.authority import (
     IndexedRegistryAuthority,
     PinnedAuthorityOperation,
@@ -237,16 +239,25 @@ def fingerprint_digest(entries: Iterable[FingerprintEntry]) -> str:
 
 
 def _typed_projection(value: object) -> object:
+    """Project a typed value to comparable JSON, members of an unordered set in canonical order.
+
+    A set's iteration order follows its insertion history, so two equal sets can
+    list their members differently; dumping straight to JSON would compare them
+    as sequences. The model is dumped in Python mode so a set stays a set, and
+    each leaf takes the JSON form Pydantic gives it.
+    """
     dump = getattr(value, "model_dump", None)
     if callable(dump):
-        return _typed_projection(dump(mode="json"))
+        return _typed_projection(dump(mode="python"))
     if isinstance(value, Mapping):
         return {
             str(key): _typed_projection(child) for key, child in value.items() if str(key) not in _REPRESENTATION_ONLY
         }
+    if isinstance(value, set | frozenset):
+        return sorted((_typed_projection(child) for child in value), key=canonical_json_bytes)
     if isinstance(value, list | tuple):
         return [_typed_projection(child) for child in value]
-    return value
+    return to_jsonable_python(value)
 
 
 def _first_difference(left: object, right: object, path: str = "$") -> Mapping[str, object] | None:
