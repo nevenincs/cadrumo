@@ -37,6 +37,7 @@ import json
 from collections.abc import Mapping
 from decimal import Decimal
 from pathlib import Path
+from types import MappingProxyType
 
 from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas
@@ -115,6 +116,16 @@ _PRINT_ORDER: tuple[CasillaId, ...] = (
     _CUOTA_LIQUIDA_ESTATAL_CASILLA,
     _CUOTA_LIQUIDA_AUTONOMICA_CASILLA,
 )
+
+
+def corpus_years() -> tuple[int, ...]:
+    """The years the committed borrador corpus carries a fixture for."""
+    return tuple(sorted(_CORPUS_VALUES))
+
+
+def corpus_casilla_values(year: int) -> Mapping[CasillaId, Decimal]:
+    """The casilla amounts the committed borrador fixture for ``year`` prints."""
+    return MappingProxyType(_CORPUS_VALUES[year])
 
 
 def _format_spanish_decimal(value: Decimal) -> str:
