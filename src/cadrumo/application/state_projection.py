@@ -109,7 +109,7 @@ from .ledger.preflight import (
 )
 from .ledger.usage_ratio_repository import UsageRatioProfileLoader
 from .operator_actions.models import PreconditionVerdict
-from .producer_capture import ProducerCapture, ProducerCaptureCoordinate, ProducerCaptureScope
+from .producer_capture import ProducerCapture, ProducerCaptureScope
 from .state_projection_auth import ProjectionAuthReadiness, build_auth_readiness
 from .state_projection_ports import StateProjectionReadPorts
 from .user_profile.commands import ProfilePreflightReport, ProfilePreflightRequirement
@@ -1397,19 +1397,6 @@ _READINESS_CAPTURE_SCOPE = ProducerCaptureScope(
     owner="application.state_projection",
     namespace="modelo.readiness",
 )
-
-
-def read_modelo_readiness_current_coordinate(
-    requests: tuple[ModeloReadinessRequest, ...],
-    *,
-    active_profile_id: str,
-    operation: PinnedAuthorityOperation,
-) -> ProducerCaptureCoordinate:
-    """Return the typed current coordinate for same-domain readiness validation."""
-    return _READINESS_CAPTURE_SCOPE.read_current_coordinate(
-        coordinate={"active_profile_id": active_profile_id, "requests": _readiness_request_coordinate(requests)},
-        observe=lambda: _readiness_owner_observation(active_profile_id, operation=operation),
-    )
 
 
 def capture_modelo_readiness(
