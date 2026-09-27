@@ -25,7 +25,7 @@ from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.binding_provider_registration import provider_model_for
 from cadrumo.domain.calculations.registry.binding_value_contract import BindingValueChannel
-from cadrumo.domain.calculations.registry.export_parse import _read_dictionary_text
+from cadrumo.domain.calculations.registry.export_parse import decode_dictionary_text
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.ids import BindingId, RelationId
 from cadrumo.domain.calculations.registry.profile_bindings import ProfileProvider
@@ -204,7 +204,7 @@ def _dictionary_labels(snapshot: RegistrySnapshot, catalogues: RegistryCatalogue
     layout = next(item for item in snapshot.revision.export_layouts if item.dictionary_source_ref is not None)
     assert layout.dictionary_source_ref is not None
     source = catalogues.sources[str(layout.dictionary_source_ref)]
-    text = _read_dictionary_text((bundled_path() / source.corpus_path).read_bytes())
+    text = decode_dictionary_text((bundled_path() / source.corpus_path).read_bytes())
     labels: dict[str, str] = {}
     for line in text.splitlines():
         match = re.match(r"^[A-Za-z0-9_]+=\[[^\]]*\]\[[^\]]*\]\[(\d{4})\]\[(.*)\]\s*$", line.strip())
