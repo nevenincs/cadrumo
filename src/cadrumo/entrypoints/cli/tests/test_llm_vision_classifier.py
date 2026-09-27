@@ -11,7 +11,11 @@ import pytest
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 
 from ....adapters.outbound.llm.client import LLMClient
-from ....adapters.outbound.llm.tests.load_headroom_support import admitting_vision_classify_client
+from ....adapters.outbound.llm.tests.load_headroom_support import (
+    admitting_text_classify_client,
+    admitting_vision_classify_client,
+)
+from ....adapters.outbound.llm.text_classifier import LocalTextLLMClassifier
 from ....adapters.outbound.llm.vision_classifier import LocalVisionLLMClassifier
 from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ....application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
@@ -38,7 +42,7 @@ from ....tests.llm_vision_evidence_support import (
     png_image,
     run_against_loopback_ollama,
 )
-from ..ledger_llm_composition import VisionReader, compose_ledger_llm
+from ..ledger_llm_composition import TextReader, VisionReader, compose_ledger_llm
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -50,16 +54,26 @@ _runtime_profile = bucket_scoped_runtime_profile_fixture(_BUCKET_ID)
 def _llm_ports(settings: Settings) -> LLMClassificationPorts:
     """Compose the canonical reader ports against the encrypted test bucket.
 
-    The vision reader is rebuilt on its own constructor seam with a client whose
-    measured reading admits the model it dispatches. The dispatch point refuses a
-    catalogued local model without measured headroom and fails closed where it
+    Both readers are rebuilt on their own constructor seams with clients whose
+    measured readings admit the model each dispatches. The dispatch point refuses
+    a catalogued local model without measured headroom and fails closed where it
     cannot read the accelerator, so without this the refusal these cases assert
     would be the contention one raised before the transport was ever reached,
     on a host whose GPU happens not to be readable.
+
+    The ports still do the resolving: only the client each reader carries
+    differs from what the composition root builds.
     """
     ports = compose_ledger_llm(bucket_id=_BUCKET_ID, settings=settings).ports
     return replace(
         ports,
+        make_text_classifier=lambda spec: TextReader(
+            LocalTextLLMClassifier(
+                spec=spec,
+                settings=settings,
+                client=admitting_text_classify_client(settings=settings),
+            )
+        ),
         make_vision_classifier=lambda spec, model: VisionReader(
             LocalVisionLLMClassifier(
                 spec=spec,
