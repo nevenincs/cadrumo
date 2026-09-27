@@ -488,6 +488,7 @@ def test_rendered_site_identity_and_static_marks_are_canonical(tmp_path: Path) -
     assert heading.get_text(" ", strip=True).startswith("Cadrumo documentation")
     assert "Copyright © 2026, the Cadrumo authors" in rendered.get_text(" ", strip=True)
     assert "advice from a qualified professional" in rendered.get_text(" ", strip=True)
+    assert rendered.find("link", rel="prefetch") is None
 
     namespace = "{http://www.w3.org/2000/svg}"
     for filename in ("cadrumo-mark-light.svg", "cadrumo-mark-dark.svg"):

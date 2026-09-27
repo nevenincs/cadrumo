@@ -1,0 +1,48 @@
+name: Cadrumo Documentation Availability
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: documentation-availability
+  cancel-in-progress: false
+
+jobs:
+  check:
+    name: "Check: Documentation availability (Linux)"
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Provision the monitoring runtime
+        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        with:
+          version: "0.11.29"
+          enable-cache: false
+      - name: Check both documentation mounts
+        run: uv run --no-project --python "$(cat .python-version)" dev/deploy/docs_health.py
+      - name: Report an availability failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          title='Documentation availability check failed'
+          existing=$(gh issue list --state open --search "$title in:title" --json number,title --jq '.[] | select(.title == "Documentation availability check failed") | .number' | head -n 1)
+          printf 'Public documentation verification failed. Inspect the HTTP checks and release identities.\n\nRun: %s\n' "$RUN_URL" > "$RUNNER_TEMP/docs-alert.md"
+          if [ -n "$existing" ]; then
+            gh issue edit "$existing" --body-file "$RUNNER_TEMP/docs-alert.md"
+          else
+            gh issue create --title "$title" --body-file "$RUNNER_TEMP/docs-alert.md"
+          fi

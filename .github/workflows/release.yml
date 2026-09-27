@@ -1423,6 +1423,9 @@ jobs:
 
   publish-docs:
     name: "Build: Documentation site (Linux)"
+    concurrency:
+      group: cadrumo-docs-production
+      cancel-in-progress: false
     # The `docs` phase republishes the documentation of `ref` alone: every
     # package job is skipped and none of their results is consulted.
     needs: [publish-pypi, acquire-pypi, acquire-homebrew, acquire-scoop]
@@ -1434,6 +1437,7 @@ jobs:
     environment: docs
     permissions:
       contents: read
+      issues: write
     steps:
       # The job runs the code it checks out with the dispatched ref's cache
       # token, so it builds only a commit that ref already carries: the
@@ -1497,6 +1501,6 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           CADRUMO_ALERT_WEBHOOK: ${{ vars.CADRUMO_ALERT_WEBHOOK }}
         run: |
-          echo "::error::Documentation publication failed. The release is unaffected and remains published." >&2
+          echo "::error::Documentation publication failed. Inspect the deployment verification and recovery result." >&2
           uv run --frozen python -m dev.release.alerting --stage "docs-publication" \
-            --detail "Documentation publication failed. The release is unaffected and remains published."
+            --detail "Documentation publication failed. Inspect the deployment verification and recovery result."
