@@ -427,7 +427,7 @@ def test_modelo_720_design_is_read_as_legal_effect_scoped_not_ejercicio_scoped()
     So its window is the date the orden took effect, one calendar year AHEAD of the
     earliest ejercicio it governs. Classifying it on the ejercicio axis would compare
     ejercicio 2012 against a 2013 start and raise the exact false positive
-    :func:`test_modelo_720_ejercicio_2012_is_covered_once_the_presentation_lag_is_read`
+    :func:`test_modelo_720_first_ejercicio_is_covered_once_the_presentation_lag_is_read`
     exists to forbid.
     """
     assert "aeat-dr-720" not in _ejercicio_scoped_designs()
