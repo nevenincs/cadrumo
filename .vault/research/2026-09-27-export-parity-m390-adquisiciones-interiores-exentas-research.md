@@ -5,7 +5,7 @@ tags:
 date: '2026-09-27'
 modified: '2026-09-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:ce65968e976b0f829203ec7d3064fe62bac74bd7b6d81a5512b639049a5c5e00'
+body_hash: 'sha256:b358e147510825aa3e5982ef693f0797ede2f19aca120e8d617aaae5f123a65f'
 related: []
 ---
 # `export-parity` research: `m390 adquisiciones interiores exentas`
@@ -75,6 +75,7 @@ From the bundled consolidated text (`src/cadrumo/_data/corpus/normatives/html/le
   - Web searches found consultas on recharged collective premiums (V0482-24, read in a third-party copy), the insurer's invoicing duty for exempt insurance (V1508-17, title only) and premiums paid as suplidos (V2656-20, title only). None addresses the IPS in the amount of an exempt acquisition or in [230].
   - The DGT's own search service was unusable on 2026-09-27. Number lookups returned HTTP 500. Free-text queries returned 502, 504, timeouts, or no results for "casilla 230" and "adquisiciones interiores exentas".
   - The absence is a search result, not proof that no consulta exists.
+  - A second search the same day found no further text. The Manual práctico IVA 2024 chapter on the 390 contents lists "Adquisiciones interiores exentas" with no explanation and no insurance example (https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/manual-iva-2024/capitulo-09-declaraciones-informativas-iva-379/declaracion-resumen-anual-modelo-390/contenido-modelo-390.html), and the AEAT IPS information page says nothing on the policyholder's IVA returns. Web search surfaced DGT numbers V0067-19, V1897-22, V0281-17 and V0982-15 for IPS and 390 terms, but the DGT service renders its documents by script and its document endpoint reset the connection, so none was read.
 - Two readings remain, and no official source adopts either for [230]:
   - Inclusion follows the LIVA's pattern of excluding only IVA from an "importe". It cannot understate the box.
   - Exclusion follows the IPS law, which keeps the tax and the surcharges out of the premium and passes the tax on as the IVA is passed on.
