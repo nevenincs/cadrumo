@@ -26,14 +26,14 @@ from ._modelo_100_registry_support import (
     _STATE_INTEGRAL_QUOTA_ART_62_REF,
     _modelo_100_revision,
 )
+from .authored_edition_support import newest_authored_edition
 from .profile_schema_support import committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _SUPPORT = committed_supported_filing_years()
-# The newest authored Modelo 100 edition sits one below the horizon, which projects
-# it forward; edition-specific declarations below are asserted against it.
-_REVIEWED_EDITION = _SUPPORT.horizon - 1
+# The newest Modelo 100 edition the registry authors; edition-specific declarations below are asserted against it.
+_REVIEWED_EDITION = newest_authored_edition("100")
 # The floor edition numbers its cuota chain differently; every later authored edition
 # carries the 0500-0546 run checked below, and the horizon only projects the newest one.
 _CONTIGUOUS_CUOTA_CHAIN_YEARS = tuple(year for year in _SUPPORT.years if _SUPPORT.floor < year < _SUPPORT.horizon)

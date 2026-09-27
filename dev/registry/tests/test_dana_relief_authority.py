@@ -62,6 +62,7 @@ from ..compiler.legal_grounding import (
     verify_legal_catalogue_grounding,
 )
 from ..compiler.loader import load_shared_catalogues
+from .authored_edition_support import legal_reference, legal_text_match
 from .profile_schema_support import committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -80,10 +81,20 @@ REDUCTION_REF = "real-decreto-ley-7-2024:art-11.2"
 #: The provision that says from when the reduction's norm is in force.
 ENTRY_INTO_FORCE_REF = "real-decreto-ley-7-2024:df-14"
 
-#: The day that provision puts RDL 7/2024 in force: the day after its BOE publication.
-#: Its year is the one exercise whose annual cuota art. 11.2 reduces, so it is the
-#: measure's own identity rather than a support coordinate.
-DANA_RELIEF_IN_FORCE_FROM = date(2024, 11, 13)
+
+def _dana_relief_in_force_from() -> date:
+    """Return the day the provision puts RDL 7/2024 in force: the day after its BOE publication.
+
+    The provision's own text states the rule and the catalogue records the publication
+    day. Its year is the one exercise whose annual cuota art. 11.2 reduces.
+    """
+    legal_text_match(ENTRY_INTO_FORCE_REF, r"entrara en vigor el dia siguiente al de su publicacion")
+    published_at = legal_reference(ENTRY_INTO_FORCE_REF).published_at
+    assert published_at is not None, f"{ENTRY_INTO_FORCE_REF} declares no publication day"
+    return published_at + timedelta(days=1)
+
+
+DANA_RELIEF_IN_FORCE_FROM = _dana_relief_in_force_from()
 DANA_RELIEF_EXERCISE_END = date(DANA_RELIEF_IN_FORCE_FROM.year, 12, 31)
 
 #: The corrección de errores, bundled as its own as-published artefact.

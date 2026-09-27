@@ -15,6 +15,7 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ...compiler.authority import compiled_bundled_authority
 from ...compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
+from ...tests.authored_edition_support import source_exercise, source_with_sha256
 from .._export_tree import render_complete_export_tree
 from .._tree_publication import (
     GeneratedExportTreePublicationContext,
@@ -203,19 +204,21 @@ def test_bootstrap_target_refuses_unenrolled_source_digest() -> None:
         )
 
 
-#: The exercise of the one reviewed Modelo 200 design enrolled as a bootstrap
-#: target; it names the cited design, its revision and its generated layout.
-_M200_BOOTSTRAP_DESIGN_EXERCISE = 2024
+#: The one reviewed Modelo 200 design enrolled as a bootstrap target, found by its
+#: pinned bytes; its applicability names the exercise, revision and generated layout.
+_M200_BOOTSTRAP_DESIGN_SHA256 = "ed4df89a451abc2184bc60a1d13ff53a3d38e9a6201698fb635cf0b8ee455218"
+_M200_BOOTSTRAP_DESIGN = source_with_sha256(_M200_BOOTSTRAP_DESIGN_SHA256)
+_M200_BOOTSTRAP_DESIGN_EXERCISE = source_exercise(_M200_BOOTSTRAP_DESIGN)
 
 
 def test_bootstrap_target_enrolls_only_the_pinned_modelo_200_design() -> None:
     """The absent tree may bootstrap only from its own reviewed source."""
-    source_ref = f"aeat-dr-200-{_M200_BOOTSTRAP_DESIGN_EXERCISE}"
+    source_ref = _M200_BOOTSTRAP_DESIGN.id
     target = reviewed_bootstrap_target(
         GeneratedTreeInvocation(
             "200", str(_M200_BOOTSTRAP_DESIGN_EXERCISE), source_ref, _M200_BOOTSTRAP_DESIGN_EXERCISE, "0A"
         ),
-        source_sha256="ed4df89a451abc2184bc60a1d13ff53a3d38e9a6201698fb635cf0b8ee455218",
+        source_sha256=_M200_BOOTSTRAP_DESIGN_SHA256,
     )
 
     assert target.layout_id == f"generated-modelo-200-{_M200_BOOTSTRAP_DESIGN_EXERCISE}-fichero"

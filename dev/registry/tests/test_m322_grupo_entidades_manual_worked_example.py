@@ -85,6 +85,7 @@ from cadrumo.domain.iva.flow import IvaFlowDirection
 from cadrumo.domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from .authored_edition_support import manual_editions_printing, manual_oracle_payloads
 from .ledger_iva_aggregation_support import _deduction_provenance
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
@@ -104,9 +105,12 @@ _CASILLA_RESULTADO: CasillaId = validated_casilla_id(
 )
 
 # The exercise of the AEAT Manual practico IVA edition whose worked example this
-# oracle reproduces. The expected figures are true only for that exercise, so it is
-# the identity of the cited evidence and is not parametrized over the envelope.
-_MANUAL_EXERCISE = 2024
+# oracle reproduces: the one the enrolled manual-oracle payload declares, which
+# must be an edition that prints the example's figures.
+(_MANUAL_EXERCISE,) = manual_oracle_payloads("322", "grupo-entidades-omega-dominante")
+assert _MANUAL_EXERCISE in manual_editions_printing(
+    "iva", "IVA devengado: 6.000", "IVA deducible: 2.000", "IVA devengado: 1.000"
+)
 _PERIOD = "03"
 
 

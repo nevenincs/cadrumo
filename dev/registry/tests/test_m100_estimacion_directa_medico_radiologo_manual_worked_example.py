@@ -180,6 +180,9 @@ from cadrumo.domain.calculations.registry.tests.scenarios import (
 from dev.registry.tests.manual_oracle_support import oracle_declared_figures
 from dev.registry.tests.profile_schema_support import authored_history_authority
 
+from .authored_edition_support import manual_oracle_payloads
+from .profile_schema_support import committed_supported_filing_years
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _CASILLA_0226: CasillaId = validated_casilla_id("0226", surface="_CASILLA_0226")
@@ -211,12 +214,14 @@ _RELATION_VALUES = {
 # Sourced from one place they cannot disagree; the declaration carries a
 # per-input line reference so a reviewer can check it against the page,
 # which is the claim it makes and the only one it makes.
-# The exercise of the AEAT Manual practico de Renta edition whose caso practico this
-# oracle reproduces. It lies below the support floor, so it is the identity of the
-# cited worked example and is not parametrized over the support envelope.
-_MANUAL_EXERCISE = 2020
-
-_ORACLE_PAYLOAD_NAME = f"modelo-100-{_MANUAL_EXERCISE}-estimacion-directa-simplificada.json"
+# The AEAT Manual practico de Renta edition whose caso practico this oracle
+# reproduces: of the enrolled manual-oracle payloads for this scenario, the one
+# whose edition lies below the support floor.
+((_MANUAL_EXERCISE, _ORACLE_PAYLOAD_NAME),) = (
+    (exercise, payload)
+    for exercise, payload in manual_oracle_payloads("100", "medico-radiologo-simplificada").items()
+    if exercise < committed_supported_filing_years().floor
+)
 
 
 def _scenario(*, es_normal: Decimal, expected_0226: Decimal, scenario_id: str) -> RegistryCalculationScenario:

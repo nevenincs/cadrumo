@@ -38,6 +38,8 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema_formula import BracketEntry, ParameterDefinition
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from .authored_edition_support import manual_editions_printing
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 #: Rounding band. See the module docstring: cents, not a defect budget.
@@ -161,9 +163,9 @@ def test_no_stale_accumulated_cuota_exemptions() -> None:
 # that must appear in the bundled AEAT manual cannot be satisfied that way.
 # ---------------------------------------------------------------------------
 
-#: The exercise whose Region de Murcia scale Decreto-ley 4/2022 enacts and whose
-#: AEAT Manual practico reproduces it; the identity of both cited sources.
-_MURCIA_DECRETO_LEY_EXERCISE = 2022
+#: The one bundled AEAT Manual practico de Renta edition that prints the Region de
+#: Murcia scale Decreto-ley 4/2022 enacts, with its top-rung cuota and rate.
+(_MURCIA_DECRETO_LEY_EXERCISE,) = manual_editions_printing("renta", "Región de Murcia", "8.716,67", "22,70")
 
 #: Cuota integra at 60.000,00 EUR, as enacted by Decreto-ley 4/2022 de la Region
 #: de Murcia. See the _KNOWN_BREAKS entry for why it exceeds what the tranches

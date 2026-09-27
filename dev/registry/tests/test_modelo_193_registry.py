@@ -30,16 +30,14 @@ from cadrumo.domain.deadlines.errors import DeadlineValidationError
 from cadrumo.domain.deadlines.festivos import shift_deadline
 from dev.registry.compiler.authority import compiled_bundled_authority
 
-from .profile_schema_support import committed_supported_filing_years
+from .authored_edition_support import newest_authored_editions
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_SUPPORT = committed_supported_filing_years()
-# The newest authored edition, one below the horizon, whose declarant totals count
+# The newest Modelo 193 edition the registry authors, whose declarant totals count
 # and sum the type 2 records; the edition before it aggregates the quarterly
 # Modelo 123 filings instead.
-_RECORD_TOTALS_EDITION = _SUPPORT.horizon - 1
-_QUARTERLY_AGGREGATE_EDITION = _RECORD_TOTALS_EDITION - 1
+_QUARTERLY_AGGREGATE_EDITION, _RECORD_TOTALS_EDITION = newest_authored_editions("193", 2)
 
 
 def test_modelo_193_guidance_and_layout_sources_are_separated() -> None:

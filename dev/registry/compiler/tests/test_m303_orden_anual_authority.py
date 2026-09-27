@@ -30,6 +30,7 @@ from cadrumo.domain.iva.regimen_simplificado_rows import (
 )
 
 from ...maintenance_support import check_m303_annual_orden_manifest
+from ...tests.authored_edition_support import source_exercise, source_reference
 from ...tests.profile_schema_support import committed_supported_filing_years
 from .._m303_orden_source import extract_m303_annual_orden_source
 from ..authority import compiled_bundled_authority
@@ -41,11 +42,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures(
 _SUPPORT = committed_supported_filing_years()
 
 # Orden HFP/1335/2021, disposicion adicional cuarta, grants the Lorca reduction for
-# the one exercise it develops. That exercise is the identity of the cited reduction,
-# so it is bound here once; the successor exercise is the next annual Orden's.
-_LORCA_REDUCTION_EXERCISE = 2022
-_LORCA_SUCCESSOR_EXERCISE = _LORCA_REDUCTION_EXERCISE + 1
+# the one exercise it develops; the catalogued Orden applies to exactly that
+# exercise. The successor exercise is the next annual Orden's.
 _LORCA_ORDEN_SOURCE_REF = "boe-orden-hfp-1335-2021-iva-authority"
+_LORCA_REDUCTION_EXERCISE = source_exercise(source_reference(_LORCA_ORDEN_SOURCE_REF))
+_LORCA_SUCCESSOR_EXERCISE = _LORCA_REDUCTION_EXERCISE + 1
 _LORCA_REDUCTION_ID = f"lorca-{_LORCA_REDUCTION_EXERCISE}-reduction"
 _LORCA_RECORD_DESIGN = f"aeat-dr-303-{_LORCA_REDUCTION_EXERCISE}"
 

@@ -7,17 +7,17 @@ import pytest
 from cadrumo.application.modelo.semantic_role_resolution import casilla_id_for_unique_revision_semantic_role
 
 from ._modelo_100_registry_support import _modelo_100_revision
+from .authored_edition_support import authored_revisions, legal_reference
 from .profile_schema_support import committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _SUPPORT = committed_supported_filing_years()
-# The authored-history edition, below the support floor, whose 0426 is the employer
-# anexo C.3 slot; its dictionaries and XSD are the cited evidence.
-_EMPLOYER_ANEXO_C3_EDITION = 2021
 # From the floor every authored edition repurposes 0426 as the worker contribution
 # slot; the horizon only projects the newest of them.
-_WORKER_CONTRIBUTION_EDITIONS = tuple(year for year in _SUPPORT.years if year < _SUPPORT.horizon)
+_WORKER_CONTRIBUTION_EDITIONS = tuple(
+    revision.valid_from.year for revision in authored_revisions("100") if revision.valid_from.year >= _SUPPORT.floor
+)
 
 _PREVISION_SOCIAL_SECTION = ("toma_datos_ampliada", "red_base_imponible", "red_prevision_social")
 _ART_51_REF = "ley-35-2006:art-51"
@@ -25,6 +25,10 @@ _ART_51_REF = "ley-35-2006:art-51"
 # catalogue redaction (effective_from 2023-01-01, Ley 31/2022 art. 62.1); it
 # cites the version-scoped 2021-only redaction (Ley 11/2020 art. 62.2) instead.
 _ART_52_REF = "ley-35-2006:art-52-2021"
+# The authored-history edition, below the support floor, whose 0426 is the employer
+# anexo C.3 slot: the one exercise that art. 52 redaction is in force for. Its
+# dictionaries and XSD are the cited evidence.
+_EMPLOYER_ANEXO_C3_EDITION = legal_reference(_ART_52_REF).effective_from.year
 _AEAT_ANEXO_C3_DICTIONARY_REF = f"aeat-dr-100-{_EMPLOYER_ANEXO_C3_EDITION}-dictionary"
 _AEAT_ANEXO_C3_INPUT_DICTIONARY_REF = f"aeat-dr-100-{_EMPLOYER_ANEXO_C3_EDITION}-input-dictionary"
 _AEAT_ANEXO_C3_XSD_REF = f"aeat-dr-100-{_EMPLOYER_ANEXO_C3_EDITION}-xsd"

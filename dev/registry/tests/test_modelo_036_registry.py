@@ -8,6 +8,7 @@ import pytest
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.domain.calculations.registry.tests.legal_text import spanish_date
 
 from ..conformance.registry_schema_support import (
     committed_modelo as _committed_modelo,
@@ -15,6 +16,7 @@ from ..conformance.registry_schema_support import (
 from ..conformance.registry_schema_support import (
     committed_snapshot as _committed_snapshot,
 )
+from .authored_edition_support import legal_text_match
 from .profile_schema_support import committed_registry_validator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
@@ -57,8 +59,10 @@ def test_modelo_036_metadata_matches_its_approving_and_amending_ordenes() -> Non
 
 
 # The day Orden HAC/1526/2024 (disposicion final unica) makes the amended census
-# forms applicable; the identity of the cited provision, not a support coordinate.
-_AMENDED_FORMS_APPLY_FROM = date(2025, 2, 3)
+# forms applicable, read from the provision's own text.
+_AMENDED_FORMS_APPLY_FROM = spanish_date(
+    *legal_text_match("orden-hac-1526-2024:df-unica", r"entrara en vigor el dia (\d+) de (\w+) de (\d{4})").groups()
+)
 
 
 def test_modelo_036_revision_starts_when_the_amending_orden_applies() -> None:

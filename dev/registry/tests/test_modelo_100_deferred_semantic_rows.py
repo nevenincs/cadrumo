@@ -18,15 +18,13 @@ from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 
 from ..compiler.producer_inventory import producer_inventory
 from ._modelo_100_registry_support import _loaded_registry
-from .profile_schema_support import committed_supported_filing_years
+from .authored_edition_support import newest_authored_editions
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_SUPPORT = committed_supported_filing_years()
-# The newest authored Modelo 100 edition sits one below the horizon, which projects
-# it forward; its deferred rows are measured against the edition just before it.
-_DEFERRED_EDITION = str(_SUPPORT.horizon - 1)
-_PRIOR_EDITION = str(_SUPPORT.horizon - 2)
+# The newest Modelo 100 edition the registry authors; its deferred rows are measured
+# against the edition just before it.
+_PRIOR_EDITION, _DEFERRED_EDITION = (str(edition) for edition in newest_authored_editions("100", 2))
 
 
 _FOCUS_ROWS: tuple[tuple[str, str], ...] = (

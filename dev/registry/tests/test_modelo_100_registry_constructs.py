@@ -48,14 +48,13 @@ from ._modelo_100_registry_support import (
     _modelo_100_with_revision,
     _source_root,
 )
-from .profile_schema_support import committed_supported_filing_years, load_user_profile_schema
+from .authored_edition_support import newest_authored_edition
+from .profile_schema_support import load_user_profile_schema
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
-_SUPPORT = committed_supported_filing_years()
-# The newest authored Modelo 100 edition sits one below the horizon, which projects
-# it forward; edition-specific declarations below are asserted against it.
-_REVIEWED_EDITION = _SUPPORT.horizon - 1
+# The newest Modelo 100 edition the registry authors; edition-specific declarations below are asserted against it.
+_REVIEWED_EDITION = newest_authored_edition("100")
 
 _SNAPSHOT_IDENTIFIER_KEYED_MAPS = (
     "legal",

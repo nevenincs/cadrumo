@@ -15,12 +15,14 @@ from ..analysis.m390_2022_anchor_census import (
 )
 from ..compiler.loader import load_catalogue_file
 from ..pipeline.record_design_intermediate import RecordDesignIntermediate, load_record_design_intermediate
+from .authored_edition_support import source_exercise, source_with_sha256
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-# The exercise of the official record design the census module pins; it names the
-# cited design rather than a support coordinate.
-_CENSUS_DESIGN_EXERCISE = 2022
+# The official record design whose numbered pages the census covers, found by its
+# pinned bytes; its applicability names the exercise.
+_CENSUS_DESIGN = source_with_sha256("7c6554f3182df51daaec37284dd891eb925e1f92df7e69bc01b8ccfb8e4f26fe")
+_CENSUS_DESIGN_EXERCISE = source_exercise(_CENSUS_DESIGN)
 
 
 def _intermediate() -> RecordDesignIntermediate:
@@ -29,7 +31,7 @@ def _intermediate() -> RecordDesignIntermediate:
     return load_record_design_intermediate(
         source_root,
         catalogues.sources,
-        source_ref=f"aeat-dr-390-{_CENSUS_DESIGN_EXERCISE}",
+        source_ref=_CENSUS_DESIGN.id,
         filing_year=_CENSUS_DESIGN_EXERCISE,
         design_epoch=str(_CENSUS_DESIGN_EXERCISE),
     )

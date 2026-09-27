@@ -39,15 +39,14 @@ from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from ._modelo_100_registry_support import (
     _m100_2024_deduccion_maternidad_bindings,
 )
-from .profile_schema_support import committed_supported_filing_years
+from .authored_edition_support import newest_authored_edition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_SUPPORT = committed_supported_filing_years()
-# The newest authored Modelo 100 edition sits one below the horizon, which projects
-# it forward; the edition before it carries its own retenciones binding set. Both
-# are exercised because each wires casillas 0596/0597 from different sources.
-_REVIEWED_EDITION = _SUPPORT.horizon - 1
+# The newest Modelo 100 edition the registry authors; the edition before it carries
+# its own retenciones binding set. Both are exercised because each wires casillas
+# 0596/0597 from different sources.
+_REVIEWED_EDITION = newest_authored_edition("100")
 _PRIOR_EDITION = _REVIEWED_EDITION - 1
 
 
@@ -73,9 +72,11 @@ _M100_TOTAL_PAGOS_A_CUENTA_CASILLA: CasillaId = validated_casilla_id(
 _M100_CUOTA_DIFERENCIAL_CASILLA: CasillaId = validated_casilla_id("0610", surface="_M100_CUOTA_DIFERENCIAL_CASILLA")
 
 _PRIOR_DATE_CONTEXT = {"filing_period": date(_PRIOR_EDITION, 12, 31)}
-_PRIOR_DATE_BINDINGS: dict[BindingId, date] = {"renta-profile-taxpayer-birth-date": date(1975, 6, 15)}
+_PRIOR_DATE_BINDINGS: dict[BindingId, date] = {"renta-profile-taxpayer-birth-date": date(_PRIOR_EDITION - 50, 6, 15)}
 _REVIEWED_DATE_CONTEXT = {"filing_period": date(_REVIEWED_EDITION, 12, 31)}
-_REVIEWED_DATE_BINDINGS: dict[BindingId, date] = {"renta-profile-taxpayer-birth-date": date(1975, 6, 15)}
+_REVIEWED_DATE_BINDINGS: dict[BindingId, date] = {
+    "renta-profile-taxpayer-birth-date": date(_REVIEWED_EDITION - 50, 6, 15)
+}
 # The scenarios model no maritime worker under the art. 75 Ley 19/1994 path.
 _REVIEWED_BOOLEAN_BINDINGS: dict[BindingId, bool] = {"renta-maritime-path-rebeca": False}
 

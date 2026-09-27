@@ -73,6 +73,7 @@ from ...compiler.authority import compiled_bundled_authority
 from ...compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from ...compiler.loader import load_modelo_directory, load_registry_tree
 from ...compiler.supplementary_orden import compile_supplementary_ordenes
+from ...tests.authored_edition_support import authored_revisions_where
 from .._export_tree import render_complete_export_tree
 from .._tree_check import GeneratedExportTreeCheckContext, check_generated_export_tree
 from .._tree_validation import GeneratedExportTreeValidationContext
@@ -90,12 +91,6 @@ from ._generated_tree_test_support import isolated_authorities, isolated_authori
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-# The exercise of the official record design whose committed generated target is
-# proven here. It names the cited design, so it is bound once rather than
-# derived from the support envelope.
-_DESIGN_EXERCISE = 2026
-_DESIGN_SOURCE_REF = f"aeat-dr-303-{_DESIGN_EXERCISE}"
-
 
 #: Provenance stamped onto directly-constructed projections in this module. A
 #: result must name the registry declaration its figures came from; these tests
@@ -106,11 +101,15 @@ _DESIGN_SOURCE_REF = f"aeat-dr-303-{_DESIGN_EXERCISE}"
 
 
 def _m303_generated_tree():
+    """Return the committed generated target of the open-ended Modelo 303 revision."""
+    (open_ended,) = authored_revisions_where("303", lambda revision: revision.valid_to is None)
     return next(
-        tree
-        for tree in generated_export_trees()
-        if tree.modelo == "303" and tree.source_ref == _DESIGN_SOURCE_REF and tree.epoch == str(_DESIGN_EXERCISE)
+        tree for tree in generated_export_trees() if tree.modelo == "303" and tree.revision == str(open_ended.id)
     )
+
+
+# The exercise of the official record design that target is generated from.
+_DESIGN_EXERCISE = _m303_generated_tree().filing_year
 
 
 def _tree_bytes(export_root: Path) -> dict[str, bytes]:

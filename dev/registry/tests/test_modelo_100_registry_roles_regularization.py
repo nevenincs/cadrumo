@@ -5,12 +5,13 @@ from __future__ import annotations
 import pytest
 
 from ._modelo_100_registry_support import _modelo_100_revision
+from .authored_edition_support import oldest_authored_edition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 # The oldest authored Modelo 100 revision, a storage root below the support floor,
 # whose rectification IBAN is still the root regularization account.
-_ROOT_EDITION = 2020
+_ROOT_EDITION = oldest_authored_edition("100")
 
 _REGULARIZATION_ART_97_REF = "ley-35-2006:art-97"
 _RECTIFICATION_IBAN_ROLE = "irpf_rectificacion_iban"

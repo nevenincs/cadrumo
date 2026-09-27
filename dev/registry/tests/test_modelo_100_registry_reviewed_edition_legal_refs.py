@@ -35,14 +35,13 @@ from ._modelo_100_registry_support import (
     _modelo_100_revision,
     _modelo_100_snapshot,
 )
-from .profile_schema_support import committed_supported_filing_years
+from .authored_edition_support import newest_authored_edition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_SUPPORT = committed_supported_filing_years()
-# The newest authored Modelo 100 edition sits one below the horizon, which projects
-# it forward; the section counts and reference sets asserted here are that edition's.
-_REVIEWED_EDITION = _SUPPORT.horizon - 1
+# The newest Modelo 100 edition the registry authors; the section counts and
+# reference sets asserted here are that edition's.
+_REVIEWED_EDITION = newest_authored_edition("100")
 
 
 def test_modelo_100_autonomic_deduction_sections_use_art77_only() -> None:

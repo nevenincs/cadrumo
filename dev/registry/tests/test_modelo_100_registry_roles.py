@@ -50,19 +50,19 @@ from ._modelo_100_registry_support import (
     _modelo_100_revision,
     _modelo_100_snapshot,
 )
+from .authored_edition_support import newest_authored_edition, oldest_authored_edition
 from .profile_schema_support import committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _SUPPORT = committed_supported_filing_years()
-# The newest authored Modelo 100 edition sits one below the horizon, which projects
-# it forward; edition-specific declarations below are asserted against it.
-_REVIEWED_EDITION = _SUPPORT.horizon - 1
+# The newest Modelo 100 edition the registry authors; edition-specific declarations below are asserted against it.
+_REVIEWED_EDITION = newest_authored_edition("100")
 # The floor edition carries the two ampliacion rows of the maternity deduction.
 _MATERNITY_EXTENSION_EDITION = _SUPPORT.floor
 # The oldest authored Modelo 100 revision, a storage root below the support floor;
 # its dictionary and XSD are the cited evidence for the ordinal slot.
-_ORDINAL_SLOT_ROOT_EDITION = 2020
+_ORDINAL_SLOT_ROOT_EDITION = oldest_authored_edition("100")
 
 
 def test_modelo_100_trabajo_otros_gastos_role_is_decimal_across_revisions() -> None:

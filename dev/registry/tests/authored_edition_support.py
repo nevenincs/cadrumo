@@ -9,6 +9,7 @@ retired or re-scoped rather than silently pointing at a hand-written year.
 from __future__ import annotations
 
 import json
+import re
 from collections.abc import Callable
 from functools import cache
 from pathlib import Path
@@ -20,6 +21,7 @@ from cadrumo.domain.calculations.registry.schema_references import LegalReferenc
 from dev.corpus.manual_corpus_sidecar import MANUAL_CORPUS_TEXT_SIDECAR_SUFFIX, ManualCorpusTextSidecar
 
 from ..compiler.authority import compiled_bundled_authority
+from ..compiler.legal_grounding import published_legal_evidence_text
 
 
 def authored_revisions(modelo_id: str) -> tuple[ModeloRevision, ...]:
@@ -62,6 +64,29 @@ def source_reference(source_id: str) -> SourceReference:
 def legal_reference(legal_id: str) -> LegalReference:
     """Return one compiled legal declaration."""
     return compiled_bundled_authority().catalogues.legal[legal_id]
+
+
+def legal_text_match(legal_id: str, pattern: str) -> re.Match[str]:
+    """Return the first match of ``pattern`` in the anchored corpus text of one legal citation.
+
+    The text is the normalised provision the compiled citation anchors, so a test whose
+    expectation is a statutory window reads it from the provision's own wording.
+    """
+    text = published_legal_evidence_text(legal_reference(legal_id), source_root=bundled_path())
+    match = re.search(pattern, text)
+    if match is None:
+        raise LookupError(f"{legal_id}: the anchored text does not match {pattern!r}")
+    return match
+
+
+def revision_covering(modelo_id: str, exercise: int) -> ModeloRevision:
+    """Return the one authored revision of a modelo whose window covers ``exercise``."""
+    (revision,) = (
+        revision
+        for revision in authored_revisions(modelo_id)
+        if revision.valid_from.year <= exercise and (revision.valid_to is None or exercise <= revision.valid_to.year)
+    )
+    return revision
 
 
 def source_with_sha256(sha256: str) -> SourceReference:
@@ -111,3 +136,18 @@ def _sidecar(path: Path) -> ManualCorpusTextSidecar | None:
     if not path.is_file():
         return None
     return ManualCorpusTextSidecar.model_validate_json(path.read_text(encoding="utf-8"))
+
+
+def manual_oracle_payloads(modelo_id: str, scenario: str) -> dict[int, str]:
+    """Return, per exercise, the bundled manual-oracle payload file of one worked-example scenario.
+
+    A payload declares the modelo and the exercise its manual edition prints the
+    example for, and names its scenario ``m<modelo>-<exercise>-<scenario>``.
+    """
+    payloads: dict[int, str] = {}
+    for path in sorted(bundled_path("corpus", "manual_oracles").glob("*.json")):
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        exercise = payload.get("filing_year")
+        if payload.get("modelo") == modelo_id and payload.get("scenario_id") == f"m{modelo_id}-{exercise}-{scenario}":
+            payloads[int(exercise)] = path.name
+    return payloads

@@ -12,6 +12,7 @@ from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefin
 
 from ...compiler.authority import compiled_bundled_authority
 from ...compiler.loader import load_registry_tree
+from ...tests.authored_edition_support import source_exercise, source_with_sha256
 from .._export_tree import render_complete_export_tree
 from ..record_design_intermediate import (
     RecordDesignIntermediate,
@@ -26,14 +27,15 @@ from ..semantic_map import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-# The exercise of the official record design this map is reviewed against. It is
-# the identity of the cited design, not a support coordinate; the predecessor
-# design it is diffed against is the preceding exercise's.
-_DESIGN_EXERCISE = 2025
-_PREDECESSOR_EXERCISE = _DESIGN_EXERCISE - 1
-_SOURCE_REF = f"aeat-dr-390-{_DESIGN_EXERCISE}"
-_PREDECESSOR_SOURCE_REF = f"aeat-dr-390-{_PREDECESSOR_EXERCISE}"
+# The official record design this map is reviewed against, found by its pinned bytes;
+# its catalogued applicability names the exercise. The predecessor design it is
+# diffed against is the preceding exercise's.
 _SOURCE_SHA256 = "6d33d8a4245976e55dc31ff85065b420f76d1588110dc1eb541a8039c5e3f252"
+_SOURCE = source_with_sha256(_SOURCE_SHA256)
+_SOURCE_REF = _SOURCE.id
+_DESIGN_EXERCISE = source_exercise(_SOURCE)
+_PREDECESSOR_EXERCISE = _DESIGN_EXERCISE - 1
+_PREDECESSOR_SOURCE_REF = f"aeat-dr-390-{_PREDECESSOR_EXERCISE}"
 _DELTA_COUNTS = {
     "Pág. 2": 42,
     "Pág. 2 bis": 8,

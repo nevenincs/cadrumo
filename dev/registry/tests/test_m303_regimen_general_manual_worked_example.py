@@ -164,6 +164,7 @@ from cadrumo.domain.iva.flow import IvaFlowDirection
 from cadrumo.domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from .authored_edition_support import manual_editions_printing, manual_oracle_payloads
 from .ledger_iva_aggregation_support import (
     _category,
     _deduction_kind,
@@ -212,9 +213,10 @@ _MANUAL_1T_LEAF_FIGURES: dict[CasillaId, Decimal] = {
 }
 
 # The exercise of the AEAT Manual practico IVA edition whose worked example this
-# oracle reproduces. The expected figures are true only for that exercise, so it is
-# the identity of the cited evidence and is not parametrized over the envelope.
-_MANUAL_EXERCISE = 2024
+# oracle reproduces: the one the enrolled manual-oracle payload declares, which
+# must be an edition that prints the example's figures.
+(_MANUAL_EXERCISE,) = manual_oracle_payloads("303", "regimen-general-1t-recargo-intracomunitaria-importacion")
+assert _MANUAL_EXERCISE in manual_editions_printing("iva", "Diferencia: 6.288 euros")
 _PERIOD = "1T"
 _DEVENGO_DATE = date(_MANUAL_EXERCISE, 3, 31)
 

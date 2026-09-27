@@ -15,6 +15,7 @@ from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalo
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
 
 from ..compiler.fact_loader import load_governed_facts
+from .authored_edition_support import legal_text_match
 from .profile_schema_support import authored_history_supported_filing_years, committed_supported_filing_years
 
 _IDS = frozenset(
@@ -29,12 +30,11 @@ _IDS = frozenset(
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _SUPPORT = committed_supported_filing_years()
-# LIRPF DT 32 first raises these thresholds for 2016, an authored-history
-# coordinate below the support floor, so the provision's own start is bound here.
-_DT32_FIRST_EXERCISE = 2016
-# The last annual extension of DT 32 covers the exercise two above the support
-# floor; the article 31 baseline governs every later exercise.
-_DT32_LAST_EXTENDED_EXERCISE = _SUPPORT.floor + 2
+# LIRPF DT 32 raises these thresholds for the span of exercises its heading names;
+# the article 31 baseline governs every later exercise.
+_DT32_WINDOW = legal_text_match("ley-35-2006:dt-32", r"en los ejercicios (\d{4}) a (\d{4})")
+_DT32_FIRST_EXERCISE = int(_DT32_WINDOW.group(1))
+_DT32_LAST_EXTENDED_EXERCISE = int(_DT32_WINDOW.group(2))
 
 
 def _catalogue() -> GovernedFactCatalogue:

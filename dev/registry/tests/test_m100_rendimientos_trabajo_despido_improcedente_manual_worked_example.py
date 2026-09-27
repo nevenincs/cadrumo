@@ -143,6 +143,9 @@ from cadrumo.domain.calculations.registry.tests.scenarios import (
 from dev.registry.tests.manual_oracle_support import oracle_declared_figures
 from dev.registry.tests.profile_schema_support import authored_history_authority
 
+from .authored_edition_support import manual_oracle_payloads
+from .profile_schema_support import committed_supported_filing_years
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
@@ -188,12 +191,14 @@ _RELATION_VALUES = {
 # line stating the figure the scenario uses, not at the raw fact it was
 # derived from -- a locator that points at 10.100 for an input of 20.300
 # would assert a reviewability it does not have.
-# The exercise of the AEAT Manual practico de Renta edition whose caso practico this
-# oracle reproduces. It lies below the support floor, so it is the identity of the
-# cited worked example and is not parametrized over the support envelope.
-_MANUAL_EXERCISE = 2020
-
-_ORACLE_PAYLOAD_NAME = f"modelo-100-{_MANUAL_EXERCISE}-rendimientos-trabajo-despido-improcedente.json"
+# The AEAT Manual practico de Renta edition whose caso practico this oracle
+# reproduces: of the enrolled manual-oracle payloads for this scenario, the one
+# whose edition lies below the support floor.
+((_MANUAL_EXERCISE, _ORACLE_PAYLOAD_NAME),) = (
+    (exercise, payload)
+    for exercise, payload in manual_oracle_payloads("100", "despido-improcedente-discapacidad").items()
+    if exercise < committed_supported_filing_years().floor
+)
 
 
 def _scenario(*, reduccion_art_20: Decimal, expected_0025: Decimal, scenario_id: str) -> RegistryCalculationScenario:

@@ -30,6 +30,7 @@ from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from ..compiler.validator import RegistryValidator
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from .authored_edition_support import authored_revisions_where
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -125,9 +126,17 @@ def test_modelo_220_annual_window_opens_july_and_closes_after_25_natural_days() 
     assert window.closes_on == date(2025, 7, 25)
 
 
-# The one exercise an official Modelo 220 design and approving order evidence; it
-# is the identity of both cited sources, and no successor order is bundled.
-_M220_EVIDENCED_EXERCISE = 2025
+# The one Modelo 220 revision that cites a bundled approving form order beside its
+# design; no successor order is bundled.
+(_M220_EVIDENCED_EXERCISE,) = (
+    revision.valid_from.year
+    for revision in authored_revisions_where(
+        "220",
+        lambda revision: any(
+            ref.startswith("boe-modelo-220-") and ref.endswith("-form") for ref in revision.source_refs
+        ),
+    )
+)
 
 
 def test_modelo_220_evidenced_revision_sources_match_the_revision_window() -> None:

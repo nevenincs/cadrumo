@@ -8,14 +8,12 @@ from ._modelo_100_registry_support import (
     _AUTONOMIC_DEDUCTION_ART_77_REF,
     _modelo_100_snapshot,
 )
-from .profile_schema_support import committed_supported_filing_years
+from .authored_edition_support import newest_authored_edition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_SUPPORT = committed_supported_filing_years()
-# The newest authored Modelo 100 edition sits one below the horizon, which projects
-# it forward; its printed labels name its own exercise and the one before it.
-_REVIEWED_EDITION = _SUPPORT.horizon - 1
+# The newest Modelo 100 edition the registry authors; its printed labels name its own exercise and the one before it.
+_REVIEWED_EDITION = newest_authored_edition("100")
 
 _LA_RIOJA_DEDUCTION_SECTION = ("resultados", "deduccion_autonomica_res", "la_rioja_res")
 _LA_RIOJA_FIJACION_POBLACION_RURAL_ROLE = "irpf_deduccion_la_rioja_fijacion_poblacion_rural"

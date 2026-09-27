@@ -10,6 +10,7 @@ from cadrumo.core.resources.bundled_data import bundled_path
 
 from ...compiler.authority import compiled_bundled_authority
 from ...compiler.loader import load_registry_tree
+from ...tests.authored_edition_support import source_exercise, source_with_sha256
 from .._export_tree import render_complete_export_tree
 from ..record_design_intermediate import (
     RecordDesignIntermediate,
@@ -25,14 +26,15 @@ from ..source_defects import source_defects_for
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-# The exercise of the official record design this map is reviewed against. It is
-# the identity of the cited design, not a support coordinate; the predecessor
-# design it is diffed against is the preceding exercise's.
-_DESIGN_EXERCISE = 2023
-_PREDECESSOR_EXERCISE = _DESIGN_EXERCISE - 1
-_SOURCE_REF = f"aeat-dr-390-{_DESIGN_EXERCISE}"
-_PREDECESSOR_SOURCE_REF = f"aeat-dr-390-{_PREDECESSOR_EXERCISE}"
+# The official record design this map is reviewed against, found by its pinned bytes;
+# its catalogued applicability names the exercise. The predecessor design it is
+# diffed against is the preceding exercise's.
 _SOURCE_SHA256 = "179c02eddc8bab411c249fc3fda19c7015d668e1dd7930d4af79f38998b9c5a7"
+_SOURCE = source_with_sha256(_SOURCE_SHA256)
+_SOURCE_REF = _SOURCE.id
+_DESIGN_EXERCISE = source_exercise(_SOURCE)
+_PREDECESSOR_EXERCISE = _DESIGN_EXERCISE - 1
+_PREDECESSOR_SOURCE_REF = f"aeat-dr-390-{_PREDECESSOR_EXERCISE}"
 _PAGE_2_DELTA = {("Pág. 2", f"A{row}") for row in range(83, 102)}
 _PAGE_2_DELTA_OWNERS = (
     (

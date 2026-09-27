@@ -50,6 +50,7 @@ from ..conformance.registry_schema_support import (
 from ..conformance.registry_schema_support import (
     committed_snapshot as _committed_snapshot,
 )
+from .authored_edition_support import newest_authored_edition
 from .profile_schema_support import committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -377,8 +378,8 @@ def test_no_revision_raises_typed_subclass_with_structured_natural_key() -> None
 def test_modelo_390_horizon_projects_the_nearest_authored_revision() -> None:
     """The absent horizon edition projects from the newest authored one instead of becoming a support gap."""
     support = committed_supported_filing_years()
-    # The committed Modelo 390 authors its newest edition one below the horizon.
-    newest_authored = support.horizon - 1
+    newest_authored = newest_authored_edition("390")
+    assert newest_authored < support.horizon
     revision = select_revision(_committed_modelo_390(), filing_year=support.horizon, period="0A", support=support)
     resolution = revision_temporal_resolution(
         revision,

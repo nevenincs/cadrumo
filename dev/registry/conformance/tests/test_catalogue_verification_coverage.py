@@ -36,6 +36,7 @@ from ...maintenance_support import (
     resolve_record_design_binary,
     revision_selection_coordinates,
 )
+from ...tests.authored_edition_support import newest_authored_edition
 from ...tests.catalogue_verification_support import registry_tree
 from ..coverage import (
     EvidenceTierCoverageGate,
@@ -156,10 +157,10 @@ def _record_design_sources_cover(sources: Sequence[SourceReference], evidence_da
     )
 
 
-# The one exercise an official Modelo 220 record design (``aeat-dr-220-<exercise>``)
-# evidences. It is the identity of that design, so it is bound once; the successor
-# is the exercise no design evidences.
-_M220_EVIDENCED_EXERCISE = 2025
+# The newest Modelo 220 revision the registry authors, whose record design
+# (``aeat-dr-220-<exercise>``) is the last one catalogued; the successor is the
+# exercise no design evidences.
+_M220_EVIDENCED_EXERCISE = newest_authored_edition("220")
 _M220_UNEVIDENCED_SUCCESSOR = _M220_EVIDENCED_EXERCISE + 1
 
 
