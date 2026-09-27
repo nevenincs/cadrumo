@@ -138,6 +138,7 @@ def deploy_assets(account: CloudflareAccount, document: dict[str, Any], root: Pa
             files=files,
         )
         completion = uploaded.get("jwt", completion)
+        print(f"Uploaded {len(group)} static content hashes to {script}", flush=True)
     if not completion:
         raise ValueError("Static asset upload did not complete")
     metadata = {

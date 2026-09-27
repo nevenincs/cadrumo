@@ -54,6 +54,11 @@ def test_static_delivery_preserves_both_mounts_and_local_search_runtime(tmp_path
     assert 'href="/cadrumo/docs/en/"' in document["mirror_errors"]["404.html"]
     assert config["html_handling"] == "none"
     assert config["run_worker_first"] is False
+    dynamic_seen = False
+    for rule in config["_redirects"].splitlines():
+        dynamic = "*" in rule.split()[0] or ":" in rule.split()[0]
+        assert not dynamic_seen or dynamic, "Exact rules after a wildcard consume the dynamic-rule allowance"
+        dynamic_seen |= dynamic
 
 
 def test_manifest_detects_changed_bytes_and_missing_search(tmp_path: Path) -> None:
@@ -81,7 +86,7 @@ def test_static_limits_fail_before_upload(tmp_path: Path) -> None:
         asset_layout(document)
     document = fixture_release(tmp_path)
     row = document["objects"]["index.html"]
-    document["objects"].update({f"extra/{index}.html": row for index in range(10_001)})
+    document["objects"].update({f"extra/file{index}.html": row for index in range(10_001)})
     with pytest.raises(ValueError, match="file allowance"):
         asset_layout(document)
 
@@ -119,8 +124,81 @@ def test_publish_lock_blocks_overlap_and_releases_after_error(monkeypatch: pytes
     assert not state
 
 
-def test_manifest_cannot_escape_recovery_directory(tmp_path: Path) -> None:
+@pytest.mark.parametrize("unsafe", ["../escape", "C:/escape", "safe\n/injected", "safe path/file"])
+def test_manifest_cannot_escape_recovery_directory(tmp_path: Path, unsafe: str) -> None:
     document = fixture_release(tmp_path)
-    document["objects"]["../escape"] = document["objects"]["index.html"]
+    document["objects"][unsafe] = document["objects"]["index.html"]
     with pytest.raises(ValueError, match="Unsafe release path"):
         asset_layout(document)
+
+
+def test_failed_public_verification_restores_previous_deployment(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from dev.deploy import docs_static_site as publisher
+    from dev.deploy.cloudflare_api import CloudflareAccount
+
+    document = fixture_release(tmp_path)
+    calls: list[str] = []
+    previous = {"release": "old-20260926T000000Z"}
+    monkeypatch.setattr(publisher, "deploy_assets", lambda *args, script: calls.append(script) or "new-version")
+    monkeypatch.setattr(publisher, "_verify_candidate", lambda *_args: calls.append("candidate-verified"))
+    monkeypatch.setattr(publisher, "cloudflare_call", lambda *_args: [])
+    monkeypatch.setattr(publisher, "list_keys", lambda *_args: {"delivery/active.json"})
+    monkeypatch.setattr(publisher, "read_object", lambda *_args: json.dumps(previous).encode())
+    monkeypatch.setattr(publisher, "active_version", lambda *_args: "old-version")
+    monkeypatch.setattr(publisher, "ensure_routes", lambda *_args: calls.append("routes-switched"))
+    monkeypatch.setattr(publisher, "_await_release_served", lambda release: calls.append("await:" + release))
+    monkeypatch.setattr(publisher, "_await_static_delivery", lambda release: calls.append("static:" + release))
+
+    def verify(release: str) -> None:
+        if release == RELEASE:
+            raise ValueError("public response failed")
+        calls.append("previous-verified")
+
+    monkeypatch.setattr(publisher, "_verify_public_delivery", verify)
+    monkeypatch.setattr(publisher, "restore_version", lambda _account, version: calls.append("restore:" + version))
+    monkeypatch.setattr(publisher, "_restore_routes", lambda *_args: calls.append("routes-restored"))
+    credentials = publisher.DeliveryCredentials(
+        CloudflareAccount("account", "token"), R2Bucket("account", "private", "key", "secret")
+    )
+    with pytest.raises(ValueError, match="public response failed"):
+        publisher._activate_static_release(credentials, document, tmp_path, "zone")
+    assert calls.index("candidate-verified") < calls.index("routes-switched")
+    assert calls[-4:] == ["restore:old-version", "routes-restored", "await:old-20260926T000000Z", "previous-verified"]
+
+
+def test_candidate_failure_never_activates_production(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from dev.deploy import docs_static_site as publisher
+    from dev.deploy.cloudflare_api import CloudflareAccount
+
+    calls: list[str] = []
+    monkeypatch.setattr(publisher, "deploy_assets", lambda *args, script: calls.append(script) or "candidate-version")
+
+    def refuse(*_args: Any) -> None:
+        raise ValueError("candidate failed")
+
+    monkeypatch.setattr(publisher, "_verify_candidate", refuse)
+    credentials = publisher.DeliveryCredentials(
+        CloudflareAccount("account", "token"), R2Bucket("account", "private", "key", "secret")
+    )
+    with pytest.raises(ValueError, match="candidate failed"):
+        publisher._activate_static_release(credentials, fixture_release(tmp_path), tmp_path, "zone")
+    assert calls == ["cadrumo-docs-candidate"]
+
+
+def test_cutover_waits_for_static_even_when_release_identity_is_unchanged(monkeypatch: pytest.MonkeyPatch) -> None:
+    from dev.deploy import docs_static_site as publisher
+
+    responses = iter(
+        [
+            (200, {publisher.RELEASE_HEADER: RELEASE}),
+            (200, {publisher.RELEASE_HEADER: RELEASE, "x-cadrumo-docs-delivery": "static"}),
+            (200, {publisher.RELEASE_HEADER: RELEASE, "x-cadrumo-docs-delivery": "static"}),
+        ]
+    )
+    monkeypatch.setattr(publisher, "_endpoint_response", lambda _url: next(responses))
+    monkeypatch.setattr(publisher, "_RELEASE_POLL_SECONDS", 0)
+    publisher._await_static_delivery(RELEASE)
+    with pytest.raises(StopIteration):
+        next(responses)

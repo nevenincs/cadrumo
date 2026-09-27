@@ -53,6 +53,8 @@ def validate_manifest(document: Any) -> dict[str, Any]:
             or not key
             or key.startswith("/")
             or "\\" in key
+            or ":" in key
+            or any(character.isspace() or ord(character) < 32 for character in key)
             or any(part in {"", ".", ".."} for part in key.split("/"))
         ):
             raise ValueError("Unsafe release path")
@@ -63,6 +65,14 @@ def validate_manifest(document: Any) -> dict[str, Any]:
                 raise ValueError(f"Invalid {name}: {key}")
         if not isinstance(row.get("content_type"), str) or not row["content_type"]:
             raise ValueError(f"Missing content type: {key}")
+    mirrors = document.get("mirror_errors")
+    error_pages = {key for key in objects if key == "404.html" or key.endswith("/404.html")}
+    if (
+        not isinstance(mirrors, dict)
+        or set(mirrors) != error_pages
+        or not all(isinstance(text, str) for text in mirrors.values())
+    ):
+        raise ValueError("Missing or invalid mirror error pages")
     return document
 
 
@@ -137,6 +147,11 @@ def delivery_config(document: dict[str, Any]) -> dict[str, Any]:
                 redirects.append(
                     f"{mount}/{path}/* https://{PUBLIC_HOST}/releases/{document['release']}/{path}/:splat 302"
                 )
+                sample = min(key for key in objects if key.startswith(path + "/"))
+                redirects.append(
+                    f"{mount}/_health/{language}/{kind} "
+                    f"https://{PUBLIC_HOST}/releases/{document['release']}/{sample} 302"
+                )
         roots = sorted({key.split("/")[1] for key in objects if key.startswith("en/")})
         for root in roots:
             if root in {"index.html", "404.html"} or root.startswith("."):
@@ -147,7 +162,14 @@ def delivery_config(document: dict[str, Any]) -> dict[str, Any]:
             else:
                 redirects.append(f"{mount}/{root}/* {mount}/en/{root}/:splat 301")
                 redirects.append(f"{mount}/{root} {mount}/en/{root}/ 301")
-    dynamic = sum("*" in row.split()[0] or ":" in row.split()[0] for row in redirects)
+
+    # Cloudflare treats every rule after the first dynamic rule as dynamic,
+    # including exact paths for the second mount. Partition globally first.
+    def is_dynamic(row: str) -> bool:
+        return "*" in row.split()[0] or ":" in row.split()[0]
+
+    redirects.sort(key=is_dynamic)
+    dynamic = sum(is_dynamic(row) for row in redirects)
     if dynamic > 100 or len(redirects) - dynamic > 2000:
         raise ValueError("Static redirects exceed platform limits")
     headers = (
@@ -157,6 +179,7 @@ def delivery_config(document: dict[str, Any]) -> dict[str, Any]:
         "  Referrer-Policy: strict-origin-when-cross-origin\n"
         "  Strict-Transport-Security: max-age=31536000\n"
         f"  X-Cadrumo-Docs-Release: {document['release']}\n"
+        "  X-Cadrumo-Docs-Delivery: static\n"
     )
     return {
         "html_handling": "none",

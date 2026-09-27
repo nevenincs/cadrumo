@@ -294,11 +294,15 @@ re-run the failed jobs of the same run.
 ## Documentation site
 
 The user documentation is served at `https://cadrumo.neve.md/docs/` and
-`https://neve.md/cadrumo/docs/` by the Cloudflare Worker `cadrumo-docs`, from the
-private R2 bucket `cadrumo-docs`. After the channels are reacquired, the `publish-docs`
+`https://neve.md/cadrumo/docs/` by the assets-only service `cadrumo-docs-static`.
+The private R2 bucket `cadrumo-docs` retains complete releases. Only Pagefind index
+and fragment payloads are public in `cadrumo-docs-search`, served directly through
+`cadrumo-docs-search.neve.md` with immutable, year-long caching. Static documentation
+requests do not execute a Worker. After the channels are reacquired, the `publish-docs`
 job of the publish phase builds the site from the proven commit, uploads it as a new
-release under `releases/<tag>-<UTC instant>/`, deploys the Worker with that release id
-and checks both mounts live. Every response carries the `x-cadrumo-docs-release`
+release under `releases/<tag>-<UTC instant>/`, verifies both object inventories and
+seals a manifest of sizes and hashes. It tests a candidate deployment before switching
+both mounts, then verifies the public deployment. Served files carry the `x-cadrumo-docs-release`
 header naming the release it came from. Each language has its own root (`/en/`,
 `/es/`, `/ca/`, `/hu/`); the apex serves only the language chooser, and any other
 apex path redirects to the same page under `/en/`.
@@ -306,8 +310,11 @@ apex path redirects to the same page under `/en/`.
 The job runs in the `docs` environment and refuses to start without its five secrets:
 `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_API_TOKEN` (a token limited to deploying the Worker
 and its routes on `neve.md`), `CADRUMO_DOCS_R2_BUCKET`, `CADRUMO_DOCS_R2_ACCESS_KEY_ID`
-and `CADRUMO_DOCS_R2_SECRET_ACCESS_KEY` (an R2 key limited to that bucket). A failed
-documentation publish does not affect the release.
+and `CADRUMO_DOCS_R2_SECRET_ACCESS_KEY` (an R2 key limited to the private archive and
+public search buckets). Failed verification restores the preceding static version and
+documentation routes. A failure alert links to the run; inspect its recovery checks.
+The separate documentation availability workflow checks both public mounts every
+15 minutes once installed on the default branch.
 
 To republish the documentation of a ref without a release, dispatch the `docs` phase:
 
@@ -321,8 +328,27 @@ Locally, the same credentials are read from `env/.env`:
 | --- | --- |
 | `just docs-site-preview` | Build and validate every site root; uploads nothing. |
 | `just docs-publish` | Build, upload, deploy and verify one release. |
-| `just docs-rollback <release id>` | Serve an earlier uploaded release again; uploads nothing. |
+| `just docs-rollback <release id>` | Verify a completed release's full inventories and static bytes, upload its static assets if needed, activate it and check both mounts. Unsealed or incomplete archives are rejected. |
 | `just docs-site-provision` | One-time zone wiring: proxy `cadrumo.neve.md` through Cloudflare and disable the redirect rules on `neve.md/cadrumo/docs`. Needs a token with DNS and redirect-rule access. Run it only once a release is live on the Worker routes; `python -m dev.deploy.docs_static_site publish --confirm publish-cadrumo-docs --cutover` publishes and wires the zone in that order. |
+
+To reconcile storage, cache, CORS and scoped transport rules, load the delivery
+credentials and run `uv run python -m dev.deploy.docs_static_site configure
+--confirm configure-cadrumo-docs --snapshot var/docs-config-before`. The snapshot
+directory must not exist. This operator command requires bucket configuration and
+zone rule permissions beyond the ordinary publisher token. Obsolete TLS requests
+are blocked only on the documentation paths; hostname-specific handshake controls
+require Cloudflare Advanced Certificate Manager.
+
+Local and CI publishers share the atomic R2 lock `delivery/deployment-lock.json`.
+A crashed publisher leaves its owner and creation time there. Confirm that no local
+process or Actions run still owns it before removing that one lock through the R2
+dashboard. Never clear a lock simply because an upload is slow. The verified active
+and previous release identities are recorded in `delivery/active.json`.
+
+Keep archived releases and completed manifests until a retention review confirms
+they are neither active nor needed for recovery. Publishing performs no automatic
+deletion; never apply an age-only lifecycle rule to these buckets. Run the public
+checks locally with `python dev/deploy/docs_health.py`.
 
 ## Authorities
 

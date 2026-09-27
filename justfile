@@ -1155,13 +1155,6 @@ test-workbook-parity:
 test-locale-spelling:
     uv run --no-sync pytest -v -n0 -m external_tool dev/locales/tests
 
-# Run the documentation Worker's unit tests. They carry `external_tool`
-# because the Worker is JavaScript and runs under Node.
-[doc('Run the documentation Worker unit tests under Node (external_tool marker).')]
-[group('test')]
-test-docs-worker:
-    uv run --no-sync pytest -v -n0 -m external_tool dev/deploy/tests/test_docs_worker.py
-
 # Run the Homebrew/Scoop channel-artifact conformance tests. These bind
 # the generated formula and manifest to a real built cohort. Explicit paths
 # and -n0, never marker selection alone: a marker-filtered xdist run holds

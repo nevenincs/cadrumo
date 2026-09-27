@@ -8,7 +8,7 @@ related:
   - '[[2026-09-27-website-repository-boundary-docs-static-delivery-adr]]'
 modified: '2026-09-27'
 body_schema: body-v2
-body_hash: 'sha256:ce272cdd0aacbac082bb4216a82165344577b441ae9e19154173fd947c3e1d49'
+body_hash: 'sha256:6d25e00ca84329b479ba613534ddbb7a5723398931ecafe38e9d3f698dff862c'
 ---
 
 # `docs-delivery-hardening` plan
@@ -22,7 +22,7 @@ Authorization: the user instructed "Action and fix the findings" after reviewing
 ## Steps
 
 - [x] `S01` - Implement verified static manifests and serialized recoverable publication; `dev/deploy/docs_asset_delivery.py, dev/deploy/docs_asset_manifest.py, dev/deploy/r2_objects.py, dev/deploy/tests/test_docs_asset_delivery.py`.
-- [ ] `S02` - Integrate publishing rollback monitoring and CI safeguards; `dev/deploy/docs_static_site.py, dev/deploy/docs_delivery_settings.py, .github/workflows/release.yml, .github/workflows/docs-health.yml, dev/deploy/tests/, docs/development/`.
+- [x] `S02` - Integrate publishing rollback monitoring and CI safeguards; `dev/deploy/, .github/workflows/release.yml, .github/workflows/docs-health.yml, RELEASING.md, justfile, dev/tests/test_lane_reachability.py, worker/`.
 - [ ] `S03` - Migrate the verified release configure scoped delivery and validate production; `dev/deploy/, var/docs-hardening/, .vault/audit/`.
 
 ## Parallelization
