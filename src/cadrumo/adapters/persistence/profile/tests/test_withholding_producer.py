@@ -54,6 +54,7 @@ from cadrumo.application.aggregation.withholding_recognition import (
 from cadrumo.core.aggregation import BindingSourceKind, RetencionClave, RetencionScheme
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingObservation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
@@ -469,9 +470,10 @@ def test_modelo_193_pending_evidence_accepts_only_the_grounded_keys(
     perception_key: Literal["A", "B", "D"],
 ) -> None:
     """The special pending-payment contract never accepts an inferred clave."""
-    # The pending-payment claves are grounded for accruals of this exercise; the
-    # grounding is the cited evidence's scope.
-    grounded_accrual_exercise = 2025
+    # The pending-disclosure rows are grounded by the record design of the newest
+    # Modelo 193 revision the registry authors; its first exercise is the accrual
+    # exercise the grounding covers.
+    grounded_accrual_exercise = newest_authored_edition("193")
     original = _capital_pending_payment_detail(transaction_date=date(grounded_accrual_exercise, 12, 15))
     annual_detail = original.actual_recipient_detail.model_copy(
         update={"clave": RetencionClave.from_registry(perception_key)}

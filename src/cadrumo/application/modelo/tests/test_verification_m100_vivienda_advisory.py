@@ -22,6 +22,8 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.application.modelo.tests.verification_substance_fixtures import workflow_profile
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
+from cadrumo.domain.calculations.registry.tests.published_authority import published_legal_reference
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
@@ -47,15 +49,15 @@ _FECHA_CONSTRUCCION: CasillaId = validated_casilla_id(
     surface="test_verification_m100_vivienda_advisory",
 )
 _SUPPORT = PublishedGovernedFactSource().supported_filing_years()
-# The two newest authored Modelo 100 editions below the projecting horizon ship the
-# advisory; revision ids are their exercises.
-_YEARS = tuple(str(year) for year in (_SUPPORT.horizon - 2, _SUPPORT.horizon - 1))
-# LIRPF DT 18: only acquisitions before this day keep the transitional deduction.
-_TRANSITIONAL_CUTOFF = date(2013, 1, 1)
+# The two newest Modelo 100 revisions the registry authors ship the advisory.
+_YEARS = tuple(str(revision.id) for revision in authored_revisions("100")[-2:])
+# LIRPF DT 18: only acquisitions before the day it enters into force keep the
+# transitional deduction.
+_TRANSITIONAL_CUTOFF = published_legal_reference("ley-35-2006:dt-18").effective_from
 
 
 def _predicate_id(year: str) -> str:
-    return f"modelo-100-{year}-deduccion-vivienda-habitual-requiere-adquisicion-anterior-2013"
+    return f"modelo-100-{year}-deduccion-vivienda-habitual-requiere-adquisicion-anterior-{_TRANSITIONAL_CUTOFF.year}"
 
 
 def _vivienda_advisory_predicate(year: str) -> VerificationPredicateDefinition:

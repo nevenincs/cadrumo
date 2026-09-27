@@ -13,8 +13,9 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition
+
 from ....domain.calculations.registry.tests.published_authority import (
-    PublishedGovernedFactSource,
     published_snapshot,
 )
 from .._settlement_grade_advisory import collect_settlement_not_computed_diagnostics
@@ -22,9 +23,8 @@ from ..settlement_casilla import SETTLEMENT_SEMANTIC_ROLES
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-# The newest authored Modelo 100 edition, one below the projecting horizon, computes
-# the settlement casillas.
-_REVIEWED_EDITION = PublishedGovernedFactSource().supported_filing_years().horizon - 1
+# The newest Modelo 100 edition the registry authors computes the settlement casillas.
+_REVIEWED_EDITION = newest_authored_edition("100")
 
 
 def _revision(modelo: str, year: int, period: str):

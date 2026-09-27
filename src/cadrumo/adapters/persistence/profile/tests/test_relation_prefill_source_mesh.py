@@ -18,6 +18,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition
+
 from .....application.aggregation.source_mesh import CalculationSourceContext, CalculationSourceResolution
 from .....application.calculations.relation_prefill import (
     RelationPrefillSourceResolver,
@@ -519,10 +521,10 @@ def test_orphaned_non_formula_binding_surfaces_advisory_diagnostic(tmp_path: Pat
     )
 
 
-# The newest authored Modelo 190 annual resumen sits one below the horizon, which
-# carries it forward; both exercises read the same Modelo 111 relations.
+# The newest Modelo 190 annual resumen the registry authors, and the projecting
+# horizon that carries it forward; both exercises read the same Modelo 111 relations.
 _SUPPORT = PublishedGovernedFactSource().supported_filing_years()
-_ANNUAL_RESUMEN_YEARS = (_SUPPORT.horizon - 1, _SUPPORT.horizon)
+_ANNUAL_RESUMEN_YEARS = (newest_authored_edition("190"), _SUPPORT.horizon)
 
 
 @pytest.mark.parametrize("filing_year", _ANNUAL_RESUMEN_YEARS)

@@ -11,6 +11,7 @@ from __future__ import annotations
 import json
 from collections.abc import Callable
 from functools import cache
+from itertools import pairwise
 
 from .....core.corpus_text import normalise_corpus_text
 from .....core.resources.bundled_data import bundled_path
@@ -126,3 +127,22 @@ def deadline_source_with_sha256(modelo_id: str, sha256: str) -> SourceReference:
     if len(matches) != 1:
         raise LookupError(f"modelo {modelo_id}: expected one deadline source pinned to {sha256}, found {len(matches)}")
     return matches[0]
+
+
+def open_ended_revision(modelo_id: str) -> RevisionSelectionMetadata:
+    """Return the one authored revision of a modelo that has no end date."""
+    (revision,) = (revision for revision in authored_revisions(modelo_id) if revision.valid_to is None)
+    return revision
+
+
+def split_exercise_revisions(modelo_id: str) -> tuple[RevisionSelectionMetadata, RevisionSelectionMetadata]:
+    """Return the early and late revisions of the one exercise two authored designs split."""
+    revisions = authored_revisions(modelo_id)
+    split = [
+        (earlier, later)
+        for earlier, later in pairwise(revisions)
+        if earlier.valid_from.year == later.valid_from.year
+    ]
+    if len(split) != 1:
+        raise LookupError(f"modelo {modelo_id}: expected one exercise split across two designs, found {len(split)}")
+    return split[0]

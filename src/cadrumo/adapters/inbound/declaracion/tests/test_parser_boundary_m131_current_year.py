@@ -29,22 +29,23 @@ See Also:
 
 from __future__ import annotations
 
+import json
 from decimal import Decimal
 
 import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
+from .....domain.calculations.registry.tests.authored_editions import single_exercise_editions
 from .....tests.inventory import FIXTURES_DIR
 from ..parser import parse_declaracion
 from ._parser_boundary_support import _expected_period, _modelo_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
 
-_SUPPORT = PublishedGovernedFactSource().supported_filing_years()
-# The two newest authored editions below the projecting horizon, whose Diseno de
-# Registro dictionaries ground the committed synthetic fixtures.
-_CURRENT_YEAR_EDITIONS = (_SUPPORT.horizon - 2, _SUPPORT.horizon - 1)
+# The Modelo 131 editions authored for a single exercise; the open-ended edition has
+# its own round-trip test. Their Diseno de Registro dictionaries ground the committed
+# synthetic fixture.
+_CURRENT_YEAR_EDITIONS = single_exercise_editions("131")
 
 # Ground truth mirrors the amounts _generate_misc_b.py stamps onto the
 # committed fixture PDF (the single source of the fixture's printed values);
@@ -68,9 +69,13 @@ _M131_CURRENT_YEAR_EXPECTED_VALUES: dict[CasillaId, Decimal] = {
 }
 
 _M131_CURRENT_YEAR_EXPECTED_CASILLAS = frozenset(_M131_CURRENT_YEAR_EXPECTED_VALUES)
-# The one committed synthetic Modelo 131 fixture, named for the exercise its body
-# stamps; it is reused for every current-year profile through a revision override.
-_COMMITTED_FIXTURE_NAME = "2024-1T.pdf"
+# The one committed synthetic Modelo 131 formula-verification fixture; it is reused
+# for every current-year profile through a revision override.
+(_COMMITTED_FIXTURE,) = (
+    path.with_suffix(".pdf")
+    for path in (FIXTURES_DIR / "justificantes" / "131").glob("*-1T.json")
+    if json.loads(path.read_text(encoding="utf-8"))["role"] == "formula_verification"
+)
 
 
 @pytest.mark.parametrize(
@@ -101,7 +106,7 @@ def test_parser_extracts_modelo_131_current_year_profile_targets_from_committed_
     the registry ``bbox_anchor.box_number_pattern`` and the real DR layout
     produces a zero-match parse failure on this fixture.
     """
-    pdf_path = FIXTURES_DIR / "justificantes" / "131" / _COMMITTED_FIXTURE_NAME
+    pdf_path = _COMMITTED_FIXTURE
     assert pdf_path.is_file(), f"missing committed M131 synthetic fixture at {pdf_path}"
 
     # The committed fixture stamps "Ejercicio: 2024" in its printed body; force

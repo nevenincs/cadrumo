@@ -8,6 +8,8 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
+
 from ....core.period import Period
 from ....core.prorrata_register import (
     ProrrataEspecialTransitionKind,
@@ -39,9 +41,9 @@ from ..m303_arrivals import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-# The exercise of the official Modelo 303 design that introduces the prorrata
-# transition and supplier-regime arrival fields; the cited design's identity.
-_PRORRATA_TRANSITION_DESIGN_EXERCISE = 2026
+# The current open-ended Modelo 303 design, which carries the prorrata transition and
+# supplier-regime arrival fields.
+_PRORRATA_TRANSITION_DESIGN_EXERCISE = open_ended_revision("303").valid_from.year
 
 _DESIGN_Q1 = Period.from_year_and_code(_PRORRATA_TRANSITION_DESIGN_EXERCISE, "1T")
 _DESIGN_Q2 = Period.from_year_and_code(_PRORRATA_TRANSITION_DESIGN_EXERCISE, "2T")

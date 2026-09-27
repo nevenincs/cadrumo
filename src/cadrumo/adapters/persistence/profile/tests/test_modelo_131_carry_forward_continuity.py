@@ -48,6 +48,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import single_exercise_editions
+
 from .....application.calculations.binding_prefill import resolve_bindings_from_local_store
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -70,10 +72,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _MODELO = "131"
 _SUPPORT = PublishedGovernedFactSource().supported_filing_years()
-# The two newest authored ejercicios below the projecting horizon, each under its
-# own orden de modulos; the carry chain is exercised across them.
-_YEAR_N = _SUPPORT.horizon - 2
-_YEAR_N_PLUS_1 = _YEAR_N + 1
+# The two newest Modelo 131 editions the registry authors for a single exercise, each
+# under its own orden de modulos; the carry chain is exercised across them.
+_YEAR_N, _YEAR_N_PLUS_1 = single_exercise_editions("131")[-2:]
+assert _YEAR_N_PLUS_1 == _YEAR_N + 1, "the carry chain needs consecutive Modelo 131 editions"
 
 # A capture instant after both ejercicios have closed.
 _CLOCK = datetime(_YEAR_N + 2, 2, 1, 9, 0, 0, tzinfo=UTC)

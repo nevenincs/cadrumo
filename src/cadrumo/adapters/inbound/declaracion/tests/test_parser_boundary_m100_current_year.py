@@ -24,11 +24,11 @@ See Also:
 
 from __future__ import annotations
 
+import json
 from decimal import Decimal
 
 import pytest
 
-from .....domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from .....tests.inventory import FIXTURES_DIR
 from ..parser import parse_declaracion
 from ._parser_boundary_m100_current_support import M100_CURRENT_YEAR_EXPECTED_CASILLAS
@@ -39,10 +39,26 @@ from ._parser_boundary_support import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
 
-_SUPPORT = PublishedGovernedFactSource().supported_filing_years()
-# The two newest authored editions below the projecting horizon, whose Diseno de
-# Registro dictionaries ground the committed synthetic fixtures.
-_CURRENT_YEAR_EDITIONS = (_SUPPORT.horizon - 2, _SUPPORT.horizon - 1)
+
+def _formula_verification_fixture_exercises(modelo: str, period: str) -> tuple[int, ...]:
+    """Return the exercises of the committed synthetic fixtures generated for formula verification.
+
+    Each fixture's sidecar names its role, and its file name is the exercise its body stamps.
+    """
+    root = FIXTURES_DIR / "justificantes" / modelo
+    return tuple(
+        sorted(
+            int(sidecar.stem.removesuffix(f"-{period}"))
+            for sidecar in root.glob(f"*-{period}.json")
+            if json.loads(sidecar.read_text(encoding="utf-8"))["role"] == "formula_verification"
+        )
+    )
+
+
+# The editions whose committed synthetic fixtures are generated for formula
+# verification against the current Diseno de Registro dictionaries.
+_CURRENT_YEAR_EDITIONS = _formula_verification_fixture_exercises("100", "0A")
+assert _CURRENT_YEAR_EDITIONS, "no committed Modelo 100 formula-verification fixture"
 
 # Ground truth mirrors the amounts _generate_modelo_100_current.py stamps onto
 # the committed fixture PDFs (the single source of the fixture's printed values).

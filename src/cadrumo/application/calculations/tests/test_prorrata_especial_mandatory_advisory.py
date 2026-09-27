@@ -15,11 +15,13 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions_where
 
 from ....core.json_contract import NoticeSeverity
 from ....domain.calculations.registry.schema_base import ThresholdComparison
 from ....domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource, published_revision
 from ....domain.iva.prorrata_especial_parameters import (
+    PRORRATA_ESPECIAL_MANDATORY_PARAMETER_ID,
     ProrrataEspecialMandatoryParameterError,
     ProrrataEspecialMandatoryParameters,
     resolve_prorrata_especial_mandatory_parameters,
@@ -29,9 +31,28 @@ from ..prorrata_regularizacion import build_prorrata_especial_mandatory_advisory
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _SUPPORT = PublishedGovernedFactSource().supported_filing_years()
-# Ley 28/2014 gives art. 103.Dos.2.o its current ten-percent redaction from this
-# ejercicio; the cited provision's own start, below the support floor.
-_CURRENT_REDACTION_FIRST_EJERCICIO = 2015
+
+
+def _first_grounded_ejercicio() -> int:
+    """Return the earliest ejercicio any authored Modelo 303 revision grounds the margin for.
+
+    Only the current Ley 28/2014 redaction of art. 103.Dos.2 is declared, and only
+    from the first authored revision that carries it; an earlier ejercicio has no
+    citable margin in this tree.
+    """
+    return min(
+        value.valid_from.year
+        for revision in authored_revisions_where(
+            "303",
+            lambda candidate: any(p.id == PRORRATA_ESPECIAL_MANDATORY_PARAMETER_ID for p in candidate.parameters),
+        )
+        for parameter in revision.parameters
+        if parameter.id == PRORRATA_ESPECIAL_MANDATORY_PARAMETER_ID
+        for value in parameter.values
+    )
+
+
+_FIRST_GROUNDED_EJERCICIO = _first_grounded_ejercicio()
 
 
 #: An explicit resolved margin. These tests exercise the PREDICATE and the
@@ -166,11 +187,11 @@ def test_an_ejercicio_before_the_current_redaction_is_refused_at_the_resolver() 
     """TEETH: the uncitable redaction is refused rather than silently reused.
 
     The advisory itself no longer decides anything by year, so the defence
-    against applying today's margin to a 2014 ejercicio lives one layer up, at
+    against applying today's margin to an ungrounded ejercicio lives one layer up, at
     the resolver that would have to supply the bundle.
     """
     revision = published_revision("303", _ESPECIAL_PARAMS.revision_id)
-    ejercicio = _CURRENT_REDACTION_FIRST_EJERCICIO - 1
+    ejercicio = _FIRST_GROUNDED_EJERCICIO - 1
     with pytest.raises(ProrrataEspecialMandatoryParameterError) as excinfo:
         resolve_prorrata_especial_mandatory_parameters(revision, modelo_id="303", ejercicio=ejercicio)
     assert f"does not resolve for ejercicio {ejercicio}" in str(excinfo.value)

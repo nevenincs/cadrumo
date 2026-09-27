@@ -66,15 +66,16 @@ from cadrumo.application.aggregation.withholding_source import WithholdingSource
 from cadrumo.core.aggregation import AggregationCaptureKind, BindingSourceKind, CalculationSourceLineageRole
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingObservation
 from cadrumo.domain.user_profile.values import UserProfileFact
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-# The accrual exercise the Modelo 193 pending-disclosure rows are grounded for; the
-# grounding is the cited evidence's scope, so it is bound once. The coupon is
-# collected in the following exercise.
-_GROUNDED_ACCRUAL_EXERCISE = 2025
+# The Modelo 193 pending-disclosure rows are grounded by the record design of the
+# newest Modelo 193 revision the registry authors; its first exercise is the accrual
+# exercise the grounding covers. The coupon is collected in the following exercise.
+_GROUNDED_ACCRUAL_EXERCISE = newest_authored_edition("193")
 _COLLECTION_EXERCISE = _GROUNDED_ACCRUAL_EXERCISE + 1
 _PENDING_NIF = "999999999"
 _MANUAL_NIF = "33333333P"

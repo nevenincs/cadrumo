@@ -59,6 +59,7 @@ from cadrumo.application.calculations.observations_repository import ResultDispo
 from cadrumo.core.result_disposition import ResultDisposition
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+from cadrumo.domain.calculations.registry.tests.authored_editions import split_exercise_revisions
 
 from .....application.calculations.observations_repository import observation_key
 from .....core.casilla_id import CasillaId, validated_casilla_id
@@ -94,13 +95,14 @@ _YEAR_N_PLUS_1 = 2026
 # source 2T is governed by ``aeat-dr-303-2024-early`` and the target 3T by
 # ``aeat-dr-303-2024-late``; both are the accepted official M303 sources for
 # their respective registry revisions.
-# The exercise the official Modelo 303 design splits at 09/3T into an early and a
-# late revision; it is the identity of both cited designs.
-_SPLIT_DESIGN_EXERCISE = 2024
+# The one exercise the registry authors as two Modelo 303 designs, split at 09/3T
+# into an early and a late revision.
+_EARLY_DESIGN, _LATE_DESIGN = split_exercise_revisions("303")
+_SPLIT_DESIGN_EXERCISE = _EARLY_DESIGN.valid_from.year
 _EARLY_DESIGN_PERIOD = "2T"
 _LATE_DESIGN_PERIOD = "3T"
-_EARLY_DESIGN_REVISION = f"{_SPLIT_DESIGN_EXERCISE}-hasta-08-y-2t"
-_LATE_DESIGN_REVISION = f"{_SPLIT_DESIGN_EXERCISE}-desde-09-y-3t"
+_EARLY_DESIGN_REVISION = str(_EARLY_DESIGN.id)
+_LATE_DESIGN_REVISION = str(_LATE_DESIGN.id)
 
 #: The relation that carries the prior-period saldo into casilla 110, and the
 #: binding/casilla it targets. Declared in the 303 2023+ revision.

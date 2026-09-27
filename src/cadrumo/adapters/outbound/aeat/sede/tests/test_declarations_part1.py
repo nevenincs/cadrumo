@@ -289,10 +289,14 @@ class TestParseListbox:
 
     def test_modelo_100_listbox_fixture_parses_one_row(self) -> None:
         """Assert the Modelo 100 listbox fixture parses to a single fully-populated row."""
-        # The captured listbox page is for one ejercicio; that ejercicio is the
-        # fixture's identity, so it is bound once here.
-        ejercicio = 2022
-        html = (_FIXTURE_ROOT / f"declaraciones-modelo-100-{ejercicio}.html").read_text(encoding="utf-8")
+        # The one captured listbox page is for one ejercicio, which its file name records.
+        (fixture,) = (
+            path
+            for path in _FIXTURE_ROOT.glob("declaraciones-modelo-100-*.html")
+            if path.stem.removeprefix("declaraciones-modelo-100-").isdigit()
+        )
+        ejercicio = int(fixture.stem.removeprefix("declaraciones-modelo-100-"))
+        html = fixture.read_text(encoding="utf-8")
         rows = _parse_listbox(html, modelo="100", ejercicio=ejercicio).rows
         assert len(rows) == 1
         row = rows[0]

@@ -282,15 +282,24 @@ def test_liva_art_103_ejercicio_before_the_current_redaction_is_refused_rather_t
         resolve_prorrata_especial_mandatory_parameters,
     )
 
-    # The newest authored Modelo 303 revision that declares the margin, and the
-    # ejercicio just before the first one its declared windows reach: the Ley 28/2014
-    # redaction starts there, and nothing grounds the repealed one before it.
-    (revision,) = authored_revisions_where(
+    # Only the current Ley 28/2014 redaction is declared, from the first authored revision
+    # that carries the margin; the ejercicio before it has no citable margin. The newest
+    # declaring revision is asked for it.
+    declaring = authored_revisions_where(
         "303",
         lambda candidate: any(p.id == PRORRATA_ESPECIAL_MANDATORY_PARAMETER_ID for p in candidate.parameters),
-    )[-1:]
-    declared = next(p for p in revision.parameters if p.id == PRORRATA_ESPECIAL_MANDATORY_PARAMETER_ID)
-    repealed_ejercicio = min(value.valid_from for value in declared.values).year - 1
+    )
+    repealed_ejercicio = (
+        min(
+            value.valid_from.year
+            for candidate in declaring
+            for parameter in candidate.parameters
+            if parameter.id == PRORRATA_ESPECIAL_MANDATORY_PARAMETER_ID
+            for value in parameter.values
+        )
+        - 1
+    )
+    revision = declaring[-1]
     with pytest.raises(ProrrataEspecialMandatoryParameterError) as excinfo:
         resolve_prorrata_especial_mandatory_parameters(revision, modelo_id="303", ejercicio=repealed_ejercicio)
     assert f"does not resolve for ejercicio {repealed_ejercicio}" in str(excinfo.value)

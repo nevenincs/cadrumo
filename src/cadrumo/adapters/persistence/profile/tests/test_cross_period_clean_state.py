@@ -15,6 +15,7 @@ from cadrumo.application.calculations.tests.cross_period_verdict_support import 
     suppressed_first_year_fractional,
     suppressed_pre_activity,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition
 
 from .....application.calculations.cross_period_clean_state import (
     cross_period_dependency_inventory,
@@ -284,12 +285,14 @@ def test_cross_period_dependency_inventory_covers_the_reviewed_renta_target_mode
         isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID),
         bundled_indexed_authority().operation() as operation,
     ):
-        # The newest authored Modelo 100 edition sits one below the projecting horizon.
-        inventory = cross_period_dependency_inventory(operation, filing_year=_SUPPORT.horizon - 1, modelos=("100",))
+        # The newest Modelo 100 edition the registry authors.
+        inventory = cross_period_dependency_inventory(
+            operation, filing_year=newest_authored_edition("100"), modelos=("100",)
+        )
 
     assert inventory.target_modelos == ("100",)
     assert len(inventory.items) == 1
-    assert inventory.items[0].target_period == Period.from_year_and_code(_SUPPORT.horizon - 1, "0A")
+    assert inventory.items[0].target_period == Period.from_year_and_code(newest_authored_edition("100"), "0A")
     # M115 (arrendamiento retenciones) and M180 (retenciones anuales arrendamiento)
     # dependency classifications were retired as dormant M100 rental-retention
     # sources; the surviving suffered-retencion sources are 111/123/193.

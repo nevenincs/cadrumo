@@ -39,6 +39,7 @@ from cadrumo.core.config import override_settings
 from cadrumo.core.errors.error_codes import resolve_error_message
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 from cadrumo.domain.modelos.work_unit import derive_work_unit_id
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
@@ -149,9 +150,8 @@ class TestS01CreationGate:
         self, *, operation: PinnedAuthorityOperation
     ) -> None:
         """Smoke test: the open-ended design's first 1T resolves to its own revision."""
-        # The exercise whose official design opens the open-ended Modelo 303 revision;
-        # it is the cited design's identity.
-        design_exercise = 2026
+        # The first exercise of the open-ended Modelo 303 revision the registry authors.
+        design_exercise = open_ended_revision("303").valid_from.year
         result = law_selected_revision_for_work_target(
             modelo="303",
             filing_year=design_exercise,

@@ -28,6 +28,7 @@ from functools import lru_cache
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.tests.authored_editions import manual_editions_printing
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ....domain.calculations.registry.schema import RegistrySnapshot
@@ -46,12 +47,14 @@ from ..profile_binding import resolve_maternidad_meses
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 # The exercise of the AEAT Manual practico de Renta worked example this module
-# reproduces, and the first the alta-posterior increment applies to; the cited
-# example's identity rather than a support coordinate.
-_MANUAL_EXERCISE = 2023
+# reproduces: the earliest edition that prints it, which is also the first exercise
+# the alta-posterior increment applies to.
+_MANUAL_EXERCISE = min(
+    manual_editions_printing("renta", "alta en la seguridad social con posterioridad al nacimiento y 30 dias cotizados")
+)
 
 _BUCKET = "0de41ce4-0000-4000-8000-000000000611"
-_T0 = datetime(2026, 8, 5, 10, 0, tzinfo=UTC)
+_T0 = datetime(_MANUAL_EXERCISE + 3, 8, 5, 10, 0, tzinfo=UTC)
 
 #: Both mellizos: born January 2023, alta completed in May 2023 -- eight
 #: qualifying months (May-December).
@@ -119,7 +122,7 @@ def test_the_older_hijo_mayor_figure_reproduces_through_the_real_resolver() -> N
     """The manual's older-child line, isolated: four months, one increment, 550."""
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         older_hijo = DescendantInfo(
-            birth_date=date(2020, 9, 2),
+            birth_date=date(_MANUAL_EXERCISE - 3, 9, 2),
             meses_madre_trabajo=(5, 6, 7, 8),
             alta_posterior_nacimiento_mes=5,
         )

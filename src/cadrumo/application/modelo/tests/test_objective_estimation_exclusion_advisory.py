@@ -8,6 +8,7 @@ from typing import Any
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.tests.legal_text import legal_text_match
 from cadrumo.domain.deadlines.models import IrpfEstimationRegime, IVARegime
 
 from ....core.period import Period
@@ -29,9 +30,11 @@ from ..verification_actions import _collect_revision_verification_findings
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _SUPPORT = PublishedGovernedFactSource().supported_filing_years()
-# The last annual extension of LIRPF DT 32 covers the exercise two above the support
-# floor; every later supported exercise is governed by the article 31 baseline.
-_DT32_LAST_EXTENDED_EXERCISE = _SUPPORT.floor + 2
+# LIRPF DT 32 raises the article 31 thresholds for the span of exercises its heading
+# names; every later supported exercise is governed by the article 31 baseline.
+_DT32_LAST_EXTENDED_EXERCISE = int(
+    legal_text_match("ley-35-2006:dt-32", r"en los ejercicios (\d{4}) a (\d{4})").group(2)
+)
 _ARTICLE31_YEARS = tuple(year for year in _SUPPORT.years if year > _DT32_LAST_EXTENDED_EXERCISE)
 
 _T0 = datetime(2026, 1, 15, 12, 0, 0, tzinfo=UTC)

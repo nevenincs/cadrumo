@@ -13,6 +13,7 @@ from cadrumo.core.refund_election import RefundElection
 from cadrumo.core.result_disposition import ResultDisposition
 from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from cadrumo.domain.calculations.registry.export_parse import parse_export_payload
+from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_editions
 from cadrumo.domain.contribuyente.entity_type import EntityType
 from cadrumo.domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime
 from cadrumo.domain.filing.errors import FilingExportValidationError
@@ -56,11 +57,11 @@ from ..revision_replay_inputs import revision_filing_replay_inputs
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _SUPPORT = PublishedGovernedFactSource().supported_filing_years()
-# The two newest authored Modelo 100 editions below the projecting horizon; both
-# accept the payee salary certificate as the 0596 retenciones source.
-_SALARY_CERTIFICATE_EDITIONS = (_SUPPORT.horizon - 2, _SUPPORT.horizon - 1)
+# The two newest Modelo 100 editions the registry authors; both accept the payee
+# salary certificate as the 0596 retenciones source.
+_SALARY_CERTIFICATE_EDITIONS = newest_authored_editions("100", 2)
 
-_CLOCK = datetime(2026, 6, 27, 12, 45, tzinfo=UTC)
+_CLOCK = datetime(_SUPPORT.horizon, 6, 27, 12, 45, tzinfo=UTC)
 _BUCKET_ID = "e6d780ee-3271-4087-a705-7cc7e97010c9"  # was 'revision-replay-inputs'
 _M390_EJERCICIO_CASILLA: CasillaId = validated_casilla_id(
     "decl.ejercicio",

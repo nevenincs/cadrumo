@@ -35,6 +35,7 @@ from cadrumo.domain.calculations.registry.authority import (
 from cadrumo.domain.calculations.registry.authority import (
     bundled_indexed_authority as _indexed_authority_for_test,
 )
+from cadrumo.domain.calculations.registry.tests.legal_text import legal_text_match, spanish_date
 from cadrumo.domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from cadrumo.domain.iva.schema import EUMemberState, IvaCategory, IvaRateKind, IvaRateRecord, require_eu_member_state
 
@@ -74,9 +75,16 @@ _SUPPORT = published_supported_filing_years()
 assert _SUPPORT is not None, "the bundled registry declares no supported filing years"
 _HORIZON = _SUPPORT.horizon
 _HORIZON_ANNUAL = Period.from_year_and_code(_HORIZON, "0A")
-# RD-ley 4/2024 steps the transitional food rates in the fourth quarter of the
-# exercise two above the support floor, so that quarter's law differs from the horizon's.
-_TRANSITIONAL_RATE_QUARTER = Period.from_year_and_code(_SUPPORT.floor + 2, "4T")
+# RD-ley 4/2024 art. 1.Dos steps the transitional food rates from the start its second
+# clause prints, a fourth quarter whose law differs from the horizon's.
+_TRANSITIONAL_RATE_STEP = spanish_date(
+    *legal_text_match(
+        "real-decreto-ley-4-2024:art-1", r"dos\. con efectos desde el (\d{1,2}) de (\w+) de (\d{4})"
+    ).groups()
+)
+_TRANSITIONAL_RATE_QUARTER = Period.from_year_and_code(
+    _TRANSITIONAL_RATE_STEP.year, f"{(_TRANSITIONAL_RATE_STEP.month - 1) // 3 + 1}T"
+)
 
 
 def _compiled(*, operation: PinnedAuthorityOperation, period: Period = _HORIZON_ANNUAL) -> str:

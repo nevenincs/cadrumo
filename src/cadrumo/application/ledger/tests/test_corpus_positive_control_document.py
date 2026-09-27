@@ -53,9 +53,25 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _CORPUS = Path(__file__).parent / "_evidence_corpus"
 
-#: The control document's corpus identity, shared by both of its renderings.
-_CONTROL_DOC_ID = "OP-PUR-COM-2026-0005"
-_LAYOUT_MINIMAL_ID = f"{_CONTROL_DOC_ID}_layout-minimal"
+#: The control document's text-layer rendering, found by its pinned bytes; its
+#: recorded corpus identity names the document both renderings share.
+_LAYOUT_MINIMAL_SHA256 = "ffea3053adbc998c850ac3253b10b929ba2594b580b39a5c546eaa71aea984d2"
+_LAYOUT_MINIMAL_SUFFIX = "_layout-minimal"
+
+
+def _layout_minimal_doc_id() -> str:
+    (doc_id,) = (
+        declared["corpus_doc_id"]
+        for sidecar in scan_directory(_CORPUS, pattern="*.provenance.json")
+        if (declared := STR_KEYED_MAPPING_ADAPTER.validate_json(sidecar.read_text(encoding="utf-8"))).get("sha256")
+        == _LAYOUT_MINIMAL_SHA256
+    )
+    assert isinstance(doc_id, str) and doc_id.endswith(_LAYOUT_MINIMAL_SUFFIX), doc_id
+    return doc_id
+
+
+_LAYOUT_MINIMAL_ID = _layout_minimal_doc_id()
+_CONTROL_DOC_ID = _LAYOUT_MINIMAL_ID.removesuffix(_LAYOUT_MINIMAL_SUFFIX)
 _CAMERA_PHOTO_ID = f"{_CONTROL_DOC_ID}_camera-photo"
 
 #: The document's own figures, as printed. Read from the document, not chosen.

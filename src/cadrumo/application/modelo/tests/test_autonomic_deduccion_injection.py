@@ -19,6 +19,7 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition
 
 from ....domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ....domain.user_profile.values import UserProfileFactValue
@@ -27,9 +28,9 @@ from ..profile_binding import inject_derived_autonomic_deduccion_facts
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _SUPPORT = PublishedGovernedFactSource().supported_filing_years()
-# The newest authored Modelo 100 edition, one below the projecting horizon, is the
-# one whose Madrid nacimiento/adopcion casilla consumes the injected facts.
-_REVIEWED_EDITION = _SUPPORT.horizon - 1
+# The newest Modelo 100 edition the registry authors is the one whose Madrid
+# nacimiento/adopcion casilla consumes the injected facts.
+_REVIEWED_EDITION = newest_authored_edition("100")
 
 _COUNT_KEY = "renta_family.madrid_nacimiento_adopcion_eligible_count"
 _OTROS_KEY = "renta_family.unidad_familiar_otros_miembros_base"
@@ -64,7 +65,7 @@ def test_shared_custody_child_injects_prorrateo_weighted_half() -> None:
 
 def test_out_of_window_child_leaves_count_at_zero_default() -> None:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        facts = _facts(**{"renta_family.descendiente.0.birth_date": "2019-01-01"})
+        facts = _facts(**{"renta_family.descendiente.0.birth_date": f"{_REVIEWED_EDITION - 6}-01-01"})
         inject_derived_autonomic_deduccion_facts(facts, _REVIEWED_EDITION, operation=_authority_operation_for_test)
         assert facts[_COUNT_KEY] == Decimal("0")
 

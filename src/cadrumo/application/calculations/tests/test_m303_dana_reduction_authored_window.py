@@ -8,6 +8,8 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.published_authority import published_legal_reference
+
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.errors import RegistryValidationError
@@ -32,9 +34,9 @@ from ..m303_regimen_simplificado import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _DANA_FACT_ID = "rdl-7-2024-art-11-2:iva-simplificado-reduccion-cuota-devengada"
-# RDL 7/2024 art. 11.2 reduces the annual simplified cuota of this one exercise; it is
-# the measure's own identity rather than a support coordinate.
-_DANA_RELIEF_EXERCISE = 2024
+# RDL 7/2024 art. 11.2 reduces the annual simplified cuota of the exercise it enters
+# into force in; the published provision names that exercise.
+_DANA_RELIEF_EXERCISE = published_legal_reference("real-decreto-ley-7-2024:art-11.2").effective_from.year
 _SUPPORT = PublishedGovernedFactSource().supported_filing_years()
 
 
