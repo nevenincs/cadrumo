@@ -61,10 +61,12 @@ from ...domain.transactions.protocols import TransactionCatalogueRepositoryProto
 from ...domain.usage_ratios.errors import CensoRatioMismatchError
 from ..aggregation.iva_ledger import (
     IVA_LEDGER_COUNTERPARTY_GATE_REASONS,
+    IVA_LEDGER_DEDUCTION_GATE_REASONS,
     IVA_LEDGER_MISSING_FACT_REASONS,
     IvaLedgerAggregationIssueReason,
     iva_ledger_missing_fact_reasons,
     validate_iva_ledger_counterparty_category,
+    validate_iva_ledger_deduction_classification,
 )
 from ..user_profile.censo_sync import raw_afectacion_ratio_for_record
 from .transaction_repository import transaction_catalogue_repository
@@ -102,6 +104,15 @@ class LedgerPreflightIssueReason(StrEnum):
     # place at all was silently accepted as a third country. The operator is
     # sent to the same field either way, which is why both name establishment.
     MISSING_COUNTERPARTY_ESTABLISHMENT_ON_EXPORT = "missing_counterparty_establishment_on_export"
+    # The row declares an input-IVA deduction the law does not grant on it: an
+    # exempt or not-subject purchase classified as an ordinary domestic
+    # deduction, an investment kind with no reciprocal asset identity, a kind
+    # whose required evidence authority is not the one attached, or deduction
+    # authority carried on an output row. Reported here rather than only at
+    # calculation because the answer depends on nothing the operator cannot see
+    # on their own row, and until it was reported the taxpayer met an internal
+    # defect naming a model class instead of the field to correct.
+    INADMISSIBLE_DEDUCTION_CLASSIFICATION = "inadmissible_deduction_classification"
     MISSING_PROPORTIONALITY_REFERENCE = "missing_proportionality_reference"
     UNSUPPORTED_CURRENCY = "unsupported_currency"
     UNSUPPORTED_PERIOD = "unsupported_period"
@@ -272,6 +283,7 @@ def preflight_transaction_catalogue(
         issues.extend(
             _issues_for_transaction(
                 transaction,
+                period=resolved_period,
                 operation=operation,
                 censo_ratio_mismatch_detail=censo_ratio_mismatch_detail,
                 missing_home_office_afectacion_detail=missing_home_office_afectacion_detail,
@@ -591,6 +603,7 @@ def _home_office_preflight_issues(
 def _iva_preflight_issues(
     transaction: Transaction,
     *,
+    period: Period,
     operation: PinnedAuthorityOperation,
 ) -> tuple[LedgerPreflightIssue, ...]:
     # Trabajo (nómina) incoming rows are IVA-exempt by definition: an
@@ -618,12 +631,26 @@ def _iva_preflight_issues(
                 d5_issue.detail,
             ),
         )
+    deduction_issue = validate_iva_ledger_deduction_classification(
+        transaction,
+        period=period,
+        operation=operation,
+    )
+    if deduction_issue is not None:
+        issues.append(
+            _preflight_issue(
+                transaction,
+                _preflight_reason_for_iva_issue(deduction_issue.reason),
+                deduction_issue.detail,
+            ),
+        )
     return tuple(issues)
 
 
 def _issues_for_transaction(
     transaction: Transaction,
     *,
+    period: Period,
     operation: PinnedAuthorityOperation,
     censo_ratio_mismatch_detail: str | None = None,
     missing_home_office_afectacion_detail: str | None = None,
@@ -656,7 +683,7 @@ def _issues_for_transaction(
             missing_home_office_afectacion_detail=missing_home_office_afectacion_detail,
         ),
     )
-    issues.extend(_iva_preflight_issues(transaction, operation=operation))
+    issues.extend(_iva_preflight_issues(transaction, period=period, operation=operation))
     return tuple(issues)
 
 
@@ -702,9 +729,11 @@ def _transaction_is_trabajo_income(
 
 #: The preflight counterpart of every aggregation reason that reaches preflight.
 #:
-#: Preflight consumes exactly two aggregation screens --
-#: :func:`~cadrumo.application.aggregation.iva_ledger_missing_fact_reasons` and
+#: Preflight consumes exactly three aggregation screens --
+#: :func:`~cadrumo.application.aggregation.iva_ledger_missing_fact_reasons`,
 #: :func:`~cadrumo.application.aggregation.validate_iva_ledger_counterparty_category`
+#: and
+#: :func:`~cadrumo.application.aggregation.validate_iva_ledger_deduction_classification`
 #: -- so this mapping's domain is their union, not the whole enum. The lookup is
 #: a bare subscript and therefore total by construction: an arriving reason that
 #: is absent here raises rather than resolving to a wrong operator message.
@@ -727,14 +756,17 @@ _PREFLIGHT_REASON_BY_IVA_ISSUE: Final[Mapping[IvaLedgerAggregationIssueReason, L
     IvaLedgerAggregationIssueReason.MISSING_COUNTERPARTY_ESTABLISHMENT_ON_EXPORT: (
         LedgerPreflightIssueReason.MISSING_COUNTERPARTY_ESTABLISHMENT_ON_EXPORT
     ),
+    IvaLedgerAggregationIssueReason.INADMISSIBLE_DEDUCTION_CLASSIFICATION: (
+        LedgerPreflightIssueReason.INADMISSIBLE_DEDUCTION_CLASSIFICATION
+    ),
 }
 
 #: The detail sentence preflight writes for each missing-fact reason.
 #:
-#: A narrower domain than the mapping above, deliberately: the counterparty gate
-#: already composes its own localised detail, which preflight carries through
-#: verbatim rather than re-authoring. Only the missing-fact screen arrives here
-#: with no sentence of its own.
+#: A narrower domain than the mapping above, deliberately: the counterparty and
+#: deduction-admissibility gates already compose their own localised detail,
+#: which preflight carries through verbatim rather than re-authoring. Only the
+#: missing-fact screen arrives here with no sentence of its own.
 _PREFLIGHT_DETAIL_BY_IVA_ISSUE: Final[Mapping[IvaLedgerAggregationIssueReason, str]] = {
     IvaLedgerAggregationIssueReason.MISSING_TAXABLE_BASE: "transaction has no taxable_base fact",
     IvaLedgerAggregationIssueReason.MISSING_IVA_AMOUNT: "transaction has no iva_amount fact",
@@ -746,9 +778,9 @@ _PREFLIGHT_DETAIL_BY_IVA_ISSUE: Final[Mapping[IvaLedgerAggregationIssueReason, s
 
 #: Aggregation reasons that cannot reach preflight, each with why it cannot.
 #:
-#: The counterpart half of the partition. Preflight runs the two screens named
-#: above and nothing else; every other member of the enum is raised inside
-#: ``_project_iva_transaction``, on the projection path preflight never enters.
+#: The counterpart half of the partition. Preflight runs the three screens named
+#: above and nothing else; every other member of the enum is raised on the
+#: classification path those screens do not report from.
 #: Recording them by hand is the point -- a member added to the enum belongs on
 #: exactly one side, and the gate refuses to let a new one ship on neither.
 #:
@@ -787,7 +819,9 @@ _IVA_ISSUE_REASONS_NOT_REACHING_PREFLIGHT: Final[Mapping[IvaLedgerAggregationIss
         "projection-path prorrata attachment; preflight screens the usage-ratio reference instead"
     ),
     IvaLedgerAggregationIssueReason.MISSING_DEDUCTION_CLASSIFICATION: (
-        "projection-path deduction taxonomy gate; preflight does not resolve immutable deduction evidence"
+        "classification-path deduction taxonomy gate; the deduction screen reaches it and deliberately does not "
+        "report it, because an absent classification is supplied at the ledger write while this layer reports only "
+        "a present one the law does not grant"
     ),
     IvaLedgerAggregationIssueReason.UNSUPPORTED_IVA_CATEGORY: (
         "projection-path category resolution; preflight screens non-declarable categories itself"
@@ -839,6 +873,13 @@ OPERATOR_ACTION_BY_IVA_LEDGER_AGGREGATION_ISSUE: Mapping[
         IvaLedgerAggregationIssueReason.MISSING_DEDUCTION_CLASSIFICATION: (
             OperatorActionAxis.COMPLETE_DOCUMENT_EVIDENCE
         ),
+        # Not COMPLETE_DOCUMENT_EVIDENCE like its absent sibling: the evidence
+        # is already attached and it is one of the declared facts that is wrong,
+        # so the operator resolves a disagreement rather than supplying a
+        # missing document.
+        IvaLedgerAggregationIssueReason.INADMISSIBLE_DEDUCTION_CLASSIFICATION: (
+            OperatorActionAxis.RESOLVE_VALUE_DIVERGENCE
+        ),
     },
 )
 """Total operator-action projection for every native IVA ledger issue."""
@@ -865,11 +906,11 @@ if set(OPERATOR_ACTION_BY_IVA_LEDGER_AGGREGATION_ISSUE) != set(IvaLedgerAggregat
 # What differs is the SHAPE of the classification, and only because the axes
 # differ. That guard maps one enum onto one target and needs no second side,
 # because every DraftDiscrepancyKind is a real defect its single consumer acts
-# on. This enum has TWO consumers with different reach: the projection path
-# raises all twenty members, and preflight runs two of the screens and never
-# enters the rest. Thirteen members therefore have no preflight counterpart to
-# map onto, and inventing one would ship an operator-facing message for a
-# condition this layer cannot detect -- the failure this guard was written against.
+# on. This enum has TWO consumers with different reach: calculation raises every
+# member, and preflight runs a subset of the screens. The members outside that
+# subset have no preflight counterpart to map onto, and inventing one would ship
+# an operator-facing message for a condition this layer does not report -- the
+# failure this guard was written against.
 # The partition records that reachability fact per member instead. Its sibling
 # is right that an exemption ROW would be the worse shape on an axis where
 # severity is a product choice; here the second side is a structural fact about
@@ -880,7 +921,9 @@ if set(OPERATOR_ACTION_BY_IVA_LEDGER_AGGREGATION_ISSUE) != set(IvaLedgerAggregat
 # aggregation package, and the shared members are deliberately shared with the
 # renta ledger enum for cross-ledger telemetry, so it is not this module's to
 # make.
-_reaching_preflight = IVA_LEDGER_MISSING_FACT_REASONS | IVA_LEDGER_COUNTERPARTY_GATE_REASONS
+_reaching_preflight = (
+    IVA_LEDGER_MISSING_FACT_REASONS | IVA_LEDGER_COUNTERPARTY_GATE_REASONS | IVA_LEDGER_DEDUCTION_GATE_REASONS
+)
 _classified = set(_PREFLIGHT_REASON_BY_IVA_ISSUE) | set(_IVA_ISSUE_REASONS_NOT_REACHING_PREFLIGHT)
 
 if _classified != set(IvaLedgerAggregationIssueReason):

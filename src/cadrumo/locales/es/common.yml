@@ -42,6 +42,10 @@ aggregation:
     errors:
       bucket_mismatch: El bucket del repositorio de movimientos no coincide con el
         bucket de agregación solicitado.
+      deduction_authority_on_non_deducible_row: Una fila de IVA que no soporta cuota
+        deducible no puede llevar una clasificación de deducción; la categoría de
+        IVA %{category} se liquida como %{flow_direction}. Elimine el tipo de deducción
+        declarado o corrija la categoría.
       differentiated_sector_inactive_for_filing_year: Un sector diferenciado está
         inactivo para el ejercicio.
       differentiated_sector_without_filing_year_entry: Un sector diferenciado no tiene
@@ -52,6 +56,10 @@ aggregation:
         efectos del IVA española no es válida para una operación intracomunitaria.
       eu_member_state_on_export_transaction: Las operaciones de exportación o asimiladas
         no pueden llevar un Estado miembro de la UE; recibido %{member_state}.
+      inadmissible_deduction_classification: 'El tipo de deducción de IVA declarado
+        %{deduction_fact_kind} no es admisible en una fila de la categoría de IVA
+        %{iva_category}: %{refusal}. Corrija el tipo de deducción declarado, la categoría
+        de IVA o la evidencia vinculada.'
       investment_observations_missing_bienes_inversion_authority: Las observaciones
         de IVA de inversión requieren el registro explícito de bienes de inversión
         y una autoridad de perfil coincidente.

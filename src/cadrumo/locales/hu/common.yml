@@ -39,6 +39,10 @@ aggregation:
   iva_ledger:
     errors:
       bucket_mismatch: A tranzakciós tár vödre nem egyezik a kért aggregálási vödörrel.
+      deduction_authority_on_non_deducible_row: Az olyan áfasor, amely nem hordoz
+        levonható adóösszeget, nem viselhet levonási osztályozást; a %{category} áfakategória
+        %{flow_direction} irányban számol el. Törölje a megadott levonási típust,
+        vagy javítsa a kategóriát.
       differentiated_sector_inactive_for_filing_year: Egy elkülönített szektor inaktív
         a bevallási évre.
       differentiated_sector_without_filing_year_entry: Egy elkülönített szektorhoz
@@ -49,6 +53,9 @@ aggregation:
         nem érvényes Közösségen belüli ügylethez.
       eu_member_state_on_export_transaction: 'Export vagy exporttal egy tekintet alá
         eső ügylet nem tartalmazhat EU-tagállamot; kapott érték: %{member_state}.'
+      inadmissible_deduction_classification: 'A megadott %{deduction_fact_kind} áfalevonási
+        típus nem fogadható el a %{iva_category} áfakategóriába tartozó sornál: %{refusal}.
+        Javítsa a megadott levonási típust, az áfakategóriát vagy a hozzárendelt bizonyítékot.'
       investment_observations_missing_bienes_inversion_authority: A beruházási áfa-megfigyelésekhez
         kifejezett tárgyi eszköz nyilvántartás és egyező profiljogosultság szükséges.
       missing_counterparty_establishment_on_export: Az export azért mentes, mert az

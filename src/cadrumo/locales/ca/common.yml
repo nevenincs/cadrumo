@@ -42,6 +42,10 @@ aggregation:
     errors:
       bucket_mismatch: El bucket del repositori de moviments no coincideix amb el
         bucket d'agregació sol·licitat.
+      deduction_authority_on_non_deducible_row: Una fila d'IVA que no suporta quota
+        deduïble no pot portar una classificació de deducció; la categoria d'IVA %{category}
+        es liquida com %{flow_direction}. Elimineu el tipus de deducció declarat o
+        corregiu la categoria.
       differentiated_sector_inactive_for_filing_year: Un sector diferenciat està inactiu
         per a l'exercici.
       differentiated_sector_without_filing_year_entry: Un sector diferenciat no té
@@ -52,6 +56,10 @@ aggregation:
         efectes de l'IVA espanyola no és vàlida per a una operació intracomunitària.
       eu_member_state_on_export_transaction: Les operacions d'exportació o assimilades
         no poden portar un Estat membre de la UE; rebut %{member_state}.
+      inadmissible_deduction_classification: 'El tipus de deducció d''IVA declarat
+        %{deduction_fact_kind} no és admissible en una fila de la categoria d''IVA
+        %{iva_category}: %{refusal}. Corregiu el tipus de deducció declarat, la categoria
+        d''IVA o l''evidència vinculada.'
       investment_observations_missing_bienes_inversion_authority: Les observacions
         d'IVA d'inversió requereixen el registre explícit de béns d'inversió i una
         autoritat de perfil coincident.

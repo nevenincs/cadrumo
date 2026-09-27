@@ -207,6 +207,25 @@ class IvaLedgerAggregationIssueReason(StrEnum):
     MISSING_COUNTERPARTY_ESTABLISHMENT_ON_EXPORT = "missing_counterparty_establishment_on_export"
     CASH_ACCOUNTING_EXCLUDED_CATEGORY = "cash_accounting_excluded_category"
     MISSING_DEDUCTION_CLASSIFICATION = "missing_deduction_classification"
+    # The sibling of the reason above, one step further along. There the
+    # deduction taxonomy is ABSENT; here it is PRESENT and the combination it
+    # names has no legal authority -- an exempt purchase classified as an
+    # ordinary domestic deduction, an investment kind with no reciprocal asset
+    # identity, a kind whose required evidence authority is not the one
+    # attached, or deduction authority carried on an output row.
+    #
+    # Both are operator data errors, and the distinction matters because the
+    # remedies differ: an absent classification is supplied, an inadmissible one
+    # is CORRECTED. Collapsing them would tell a taxpayer to classify a row they
+    # already classified.
+    #
+    # Separate from the screens above it because admissibility is not derivable
+    # from any single declared field: it is the closed pairing table in fact
+    # 0085, resolved by the domain validator. Until this reason existed that
+    # validator ran only inside the observation's own model validator, AFTER
+    # every typed gate, so the operator's data error surfaced as an internal
+    # payload-boundary defect with no row, no field and no remedy named.
+    INADMISSIBLE_DEDUCTION_CLASSIFICATION = "inadmissible_deduction_classification"
 
 
 #: The traceable-exclusion ``detail`` annotation: elides rather than refusing.
@@ -1506,6 +1525,38 @@ def validate_iva_ledger_counterparty_category(
     )
 
 
+def validate_iva_ledger_deduction_classification(
+    transaction: Transaction,
+    *,
+    period: Period,
+    operation: PinnedAuthorityOperation,
+) -> IvaLedgerAggregationIssue | None:
+    """Return the deduction-admissibility gate issue for a ledger row, or ``None``.
+
+    The readiness layer's entry into the per-transaction IVA pipeline. It runs
+    the real pre-observation gates in their real order and reports only the
+    deduction verdict, so a readiness finding cannot contradict what calculation
+    will do with the row: a row an earlier gate excludes yields nothing here,
+    exactly as it contributes nothing there. Deriving the same facts a second
+    time in this layer would have produced the opposite failure -- a readiness
+    report blocking a filing over a row the projection path had already
+    excluded for an unrelated reason.
+
+    Scoped to rows that actually carry deduction authority. A row with neither a
+    kind nor a provenance cannot be inadmissible on this axis, and skipping it
+    keeps the readiness pass off the classification pipeline for the ordinary
+    majority of a ledger.
+    """
+    if transaction.deduction_fact_kind is None and transaction.deduction_provenance is None:
+        return None
+    from ._iva_transaction import iva_transaction_gate_issue
+
+    issue = iva_transaction_gate_issue(transaction, resolved_period=period, operation=operation)
+    if issue is None or issue.reason not in IVA_LEDGER_DEDUCTION_GATE_REASONS:
+        return None
+    return issue
+
+
 def business_proportionality_for(transaction: Transaction) -> Decimal | None:
     return business_proportion(transaction.business_classification, transaction.business_pct)
 
@@ -1552,6 +1603,16 @@ IVA_LEDGER_COUNTERPARTY_GATE_REASONS: Final[frozenset[IvaLedgerAggregationIssueR
         IvaLedgerAggregationIssueReason.EU_MEMBER_STATE_ON_EXPORT_TRANSACTION,
         IvaLedgerAggregationIssueReason.MISSING_COUNTERPARTY_ESTABLISHMENT_ON_EXPORT,
     },
+)
+
+#: Every reason :func:`validate_iva_ledger_deduction_classification` can emit.
+#:
+#: One member, and still declared as a set for the same reason its two siblings
+#: are: the readiness layer derives its own mapped domain from the union of the
+#: screens it runs, so a screen that gains a second reason has to move this set
+#: rather than arrive at a bare subscript with no entry.
+IVA_LEDGER_DEDUCTION_GATE_REASONS: Final[frozenset[IvaLedgerAggregationIssueReason]] = frozenset(
+    {IvaLedgerAggregationIssueReason.INADMISSIBLE_DEDUCTION_CLASSIFICATION},
 )
 
 
@@ -1632,4 +1693,5 @@ __all__ = [
     "iva_ledger_missing_fact_reasons",
     "resolve_iva_ledger_binding_values",
     "validate_iva_ledger_counterparty_category",
+    "validate_iva_ledger_deduction_classification",
 ]

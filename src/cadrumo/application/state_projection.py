@@ -531,6 +531,7 @@ OPERATOR_ACTION_BY_MODELO_READINESS_LEDGER_ISSUE: Mapping[
         ),
         LedgerPreflightIssueReason.EU_MEMBER_STATE_ON_EXPORT_TRANSACTION: OperatorActionAxis.RESOLVE_IDENTITY,
         LedgerPreflightIssueReason.MISSING_COUNTERPARTY_ESTABLISHMENT_ON_EXPORT: (OperatorActionAxis.RESOLVE_IDENTITY),
+        LedgerPreflightIssueReason.INADMISSIBLE_DEDUCTION_CLASSIFICATION: (OperatorActionAxis.RESOLVE_VALUE_DIVERGENCE),
         LedgerPreflightIssueReason.MISSING_PROPORTIONALITY_REFERENCE: (OperatorActionAxis.COMPLETE_DOCUMENT_EVIDENCE),
         LedgerPreflightIssueReason.UNSUPPORTED_CURRENCY: OperatorActionAxis.IMPORT_LEDGER_DATA,
         LedgerPreflightIssueReason.UNSUPPORTED_PERIOD: OperatorActionAxis.IMPORT_LEDGER_DATA,

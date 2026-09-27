@@ -40,6 +40,9 @@ aggregation:
     errors:
       bucket_mismatch: Transaction repository bucket does not match the requested
         aggregation bucket.
+      deduction_authority_on_non_deducible_row: An IVA row that bears no deductible
+        cuota cannot carry a deduction classification; IVA category %{category} settles
+        as %{flow_direction}. Remove the declared deduction kind, or correct the category.
       differentiated_sector_inactive_for_filing_year: A differentiated sector is inactive
         for the filing year.
       differentiated_sector_without_filing_year_entry: A differentiated sector has
@@ -50,6 +53,9 @@ aggregation:
         is not valid for an intra-community transaction.
       eu_member_state_on_export_transaction: Export or export-assimilated operations
         must not carry an EU member state; got %{member_state}.
+      inadmissible_deduction_classification: 'The declared IVA deduction kind %{deduction_fact_kind}
+        is not admissible for a row in IVA category %{iva_category}: %{refusal}. Correct
+        the declared deduction kind, the IVA category, or the linked evidence.'
       investment_observations_missing_bienes_inversion_authority: Investment IVA observations
         require the explicit bienes de inversión register and a matching profile authority.
       missing_counterparty_establishment_on_export: An export is exempt because the
