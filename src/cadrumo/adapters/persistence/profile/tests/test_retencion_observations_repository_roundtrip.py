@@ -28,8 +28,6 @@ from cadrumo.adapters.persistence.storage.errors import PathContainmentError, Se
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.aggregation.retencion_observations_repository import (
     RetencionObservationPersistenceError,
-    RetencionObservationPorts,
-    persist_retencion_observations,
     retencion_observation_key,
 )
 from cadrumo.application.aggregation.retenciones import RetencionObservation, aggregate_retenciones_111
@@ -190,27 +188,6 @@ def test_replace_observations_drops_removed_perceptor_no_stale_row(tmp_path: Pat
         loaded = repo.load_observations("180", period)
         assert len(loaded) == 2
         assert {o.perceptor_nif for o in loaded} == {"11111111H", "22222222J"}
-
-
-def test_persist_helper_writes_set_readable_by_load(tmp_path: Path) -> None:
-    """The shared write helper persists the set the resolver later reads (one source for both surfaces)."""
-    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        period = Period.from_year_and_code(2024, "0A")
-        observations = (
-            _observation(nif="11111111H", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("100")),
-            _observation(nif="22222222J", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("200")),
-        )
-        persist_retencion_observations(
-            ports=RetencionObservationPorts(
-                repository=RetencionObservationRepositoryAdapter(objects=profile.repository)
-            ),
-            modelo="180",
-            filing_year=2024,
-            period=period,
-            observations=observations,
-        )
-        loaded = RetencionObservationRepositoryAdapter(objects=profile.repository).load_observations("180", period)
-        assert set(loaded) == set(observations)
 
 
 def test_failed_replacement_leaves_the_prior_window_intact(tmp_path: Path) -> None:

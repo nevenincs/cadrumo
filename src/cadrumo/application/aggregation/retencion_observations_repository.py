@@ -150,39 +150,10 @@ class RetencionObservationPortsFactory(Protocol):
         ...
 
 
-def persist_retencion_observations(
-    *,
-    ports: RetencionObservationPorts,
-    modelo: str,
-    filing_year: int,
-    period: Period,
-    observations: Sequence[RetencionObservation],
-    source_kind: AggregationCaptureKind = AggregationCaptureKind.AGGREGATE_PULL,
-) -> None:
-    """The ONE shared write path every per-perceptor producer calls.
-
-    Factoring the persist behind a single application helper makes store
-    completeness STRUCTURAL rather than per-entrypoint discipline a future
-    producer could forget (an unwritten producer -> an incomplete store -> a
-    pull≠calculate divergence). Writes to the active bucket's encrypted
-    store with SET-REPLACE semantics so pull and calculate read one source.
-    aggregate_per_modelo stays pure — persistence is the entrypoint's job, not the
-    aggregator's (aeat-architecture-boundaries).
-    """
-    ports.repository.replace_observations(
-        modelo=modelo,
-        filing_year=filing_year,
-        period=period,
-        observations=observations,
-        source_kind=source_kind,
-    )
-
-
 __all__ = [
     "RetencionObservationPersistenceError",
     "RetencionObservationPorts",
     "RetencionObservationPortsFactory",
     "RetencionObservationRepository",
-    "persist_retencion_observations",
     "retencion_observation_key",
 ]

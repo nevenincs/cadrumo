@@ -11,6 +11,7 @@ still supports.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from datetime import date
 from decimal import Decimal
 
@@ -24,7 +25,8 @@ from .....application.aggregation.withholding_recognition import (
     WithholdingRecipientTaxRegime,
     WithholdingRecipientTaxStatus,
 )
-from .....core.aggregation import RetencionClave, RetencionScheme
+from .....core.aggregation import AggregationCaptureKind, RetencionClave, RetencionScheme
+from .....core.period import Period
 from .....domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from .....domain.calculations.registry.withholding_bindings import WithholdingObservation
 from .....domain.transactions.enums import TransactionDirection, TransactionLifecycleState
@@ -49,6 +51,11 @@ CAPITAL_EXIGIBLE_ON = date(CAPITAL_YEAR, 6, 30)
 CAPITAL_PAID_ON = date(CAPITAL_YEAR, 7, 2)
 CAPITAL_HOLDER_NIF = "22222222J"
 CAPITAL_HOLDER_NAME = "Titular Sintetico"
+
+MANUAL_HOLDER_NIF = "33333333P"
+MANUAL_HOLDER_NAME = "Perceptor Manual Sintetico"
+MANUAL_BASE = Decimal("500.00")
+MANUAL_RETENCION = Decimal("95.00")
 
 
 def capital_payment(
@@ -127,6 +134,64 @@ def capital_pending_payment(transaction: Transaction, *, transaction_date: date)
     )
 
 
+def manual_capital_row(
+    *,
+    filing_year: int,
+    source_id: str = "manual-coupon",
+    source_allocation_id: str = "manual-1",
+    base: Decimal | None = None,
+    retencion: Decimal | None = None,
+) -> WithholdingObservation:
+    """Return one hand-declared ordinary key B row for a second synthetic holder.
+
+    The row reuses the pending-payment holder detail as its field template so it
+    carries every Modelo 193 type-2 field non-default, then overrides the holder
+    identity. ``base`` and ``retencion`` override the template's own declared
+    amounts only when supplied, so a caller asserting hand-derived totals states
+    them explicitly and a caller asserting row identity keeps the template's.
+    """
+    template = capital_pending_payment(
+        capital_payment(provider_id=source_id),
+        transaction_date=date(filing_year, 5, 5),
+    ).actual_recipient_detail
+    update: dict[str, object] = {
+        "source_id": source_id,
+        "source_allocation_id": source_allocation_id,
+        "perceptor_tax_id": MANUAL_HOLDER_NIF,
+        "perceptor_legal_name": MANUAL_HOLDER_NAME,
+    }
+    if base is not None:
+        update["percibido_dinerario"] = base
+        update["base_retenciones"] = base
+    if retencion is not None:
+        update["retencion_practicada"] = retencion
+    return template.model_copy(update=update)
+
+
+def seed_manual_percepcion_window(
+    objects: object,
+    *,
+    filing_year: int,
+    observations: Sequence[WithholdingObservation],
+) -> None:
+    """Write a hand-declared annual percepción window straight to its encrypted store.
+
+    A hand-declared row has no producer: :class:`WithholdingProducer` narrows
+    every command to a counterpart source kind (ledger transaction or invoice
+    evidence), so an operator-declared row cannot be captured through it and the
+    store adapter is the only write that reaches this state. Capture-backed rows
+    belong to :func:`withholding_producer`, never here.
+    """
+    assert isinstance(objects, SecureObjectRepository)
+    PercepcionObservationRepositoryAdapter(objects=objects).replace_observations(
+        modelo="193",
+        filing_year=filing_year,
+        period=Period.from_year_and_code(filing_year, "0A"),
+        observations=observations,
+        source_kind=AggregationCaptureKind.AGGREGATE_PULL,
+    )
+
+
 def withholding_producer(objects: object) -> WithholdingProducer:
     """Return the shared producer over the encrypted workflow store of ``objects``."""
     assert isinstance(objects, SecureObjectRepository)
@@ -150,8 +215,14 @@ __all__ = [
     "CAPITAL_NET",
     "CAPITAL_PAID_ON",
     "CAPITAL_YEAR",
+    "MANUAL_BASE",
+    "MANUAL_HOLDER_NAME",
+    "MANUAL_HOLDER_NIF",
+    "MANUAL_RETENCION",
     "capital_payment",
     "capital_pending_payment",
     "capital_request",
+    "manual_capital_row",
+    "seed_manual_percepcion_window",
     "withholding_producer",
 ]

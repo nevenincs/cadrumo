@@ -48,9 +48,14 @@ from cadrumo.adapters.persistence.profile.tests.ledger_capital_support import (
     CAPITAL_HOLDER_NIF,
     CAPITAL_IRPF,
     CAPITAL_YEAR,
+    MANUAL_BASE,
+    MANUAL_HOLDER_NIF,
+    MANUAL_RETENCION,
     capital_payment,
     capital_pending_payment,
     capital_request,
+    manual_capital_row,
+    seed_manual_percepcion_window,
     withholding_producer,
 )
 from cadrumo.adapters.persistence.profile.tests.modelo_export_ports_support import modelo_export_ports_for_test
@@ -63,14 +68,8 @@ from cadrumo.application.aggregation.ledger_payment_withholding import (
     build_ledger_payment_withholding_capture,
 )
 from cadrumo.application.aggregation.m193_phase_materialization import Modelo193PhaseMaterializationError
-from cadrumo.application.aggregation.percepciones_observations_repository import (
-    PercepcionObservationPorts,
-    persist_percepcion_observations,
-)
-from cadrumo.application.aggregation.retencion_observations_repository import (
-    RetencionObservationPorts,
-    persist_retencion_observations,
-)
+from cadrumo.application.aggregation.percepciones_observations_repository import PercepcionObservationPorts
+from cadrumo.application.aggregation.retencion_observations_repository import RetencionObservationPorts
 from cadrumo.application.aggregation.retenciones import (
     Modelo193CapitalDetail,
     Modelo193NonpaymentCause,
@@ -91,7 +90,12 @@ from cadrumo.application.modelo.export import ModeloExportCommand, export_modelo
 from cadrumo.application.modelo.m193_settled_row_gate import Modelo193SettledRowAmountAuthorityUnresolvedError
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
-from cadrumo.core.aggregation import BindingSourceKind, CalculationSourceLineageRole, RetencionScheme
+from cadrumo.core.aggregation import (
+    AggregationCaptureKind,
+    BindingSourceKind,
+    CalculationSourceLineageRole,
+    RetencionScheme,
+)
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.errors.error_codes import get_registered_error_code
 from cadrumo.core.period import Period
@@ -124,9 +128,6 @@ _RETENCION_BINDING = "modelo-193-perceptor-row-retencion"
 
 _PENDING_NIF = "999999999"
 _PENDING_NAME = "VALORES PENDIENTE DE ABONO"
-_MANUAL_NIF = "33333333P"
-_MANUAL_BASE = Decimal("500.00")
-_MANUAL_RETENCION = Decimal("95.00")
 _UNRESOLVED_AMOUNTS = "m193_settled_row_amounts_unresolved_authority"
 _SETTLED_ROW_REFUSAL = "REFUSED_MODELO_193_SETTLED_ROW_AMOUNT_AUTHORITY_UNRESOLVED"
 
@@ -214,27 +215,11 @@ def _capture_pending_coupon(objects: SecureObjectRepository) -> None:
 
 def _persist_manual_accrual_year_row(objects: SecureObjectRepository) -> None:
     """Declare one ordinary key B row by hand: 500.00 base, 19% withheld."""
-    template = capital_pending_payment(
-        capital_payment(provider_id="manual-coupon"),
-        transaction_date=date(CAPITAL_YEAR, 5, 5),
-    ).actual_recipient_detail
-    persist_percepcion_observations(
-        ports=PercepcionObservationPorts(repository=PercepcionObservationRepositoryAdapter(objects=objects)),
-        modelo="193",
+    seed_manual_percepcion_window(
+        objects,
         filing_year=CAPITAL_YEAR,
-        period=Period.from_year_and_code(CAPITAL_YEAR, "0A"),
         observations=[
-            template.model_copy(
-                update={
-                    "source_id": "manual-coupon",
-                    "source_allocation_id": "manual-1",
-                    "perceptor_tax_id": _MANUAL_NIF,
-                    "perceptor_legal_name": "Perceptor Manual Sintetico",
-                    "percibido_dinerario": _MANUAL_BASE,
-                    "base_retenciones": _MANUAL_BASE,
-                    "retencion_practicada": _MANUAL_RETENCION,
-                }
-            )
+            manual_capital_row(filing_year=CAPITAL_YEAR, base=MANUAL_BASE, retencion=MANUAL_RETENCION),
         ],
     )
 
@@ -248,11 +233,11 @@ def _persist_pending_accrual_row(objects: SecureObjectRepository, *, accrual_yea
     """
     exigible_on, paid_on = date(accrual_year, 12, 15), date(accrual_year + 1, 1, 20)
     transaction = capital_payment(provider_id=f"coupon-{exigible_on.isoformat()}", booked_date=paid_on)
-    persist_retencion_observations(
-        ports=RetencionObservationPorts(repository=RetencionObservationRepositoryAdapter(objects=objects)),
+    RetencionObservationRepositoryAdapter(objects=objects).replace_observations(
         modelo="123",
         filing_year=exigible_on.year,
         period=Period.from_year_and_code(exigible_on.year, "4T"),
+        source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         observations=[
             RetencionObservation(
                 source_kind=BindingSourceKind.LEDGER_TRANSACTION,
@@ -300,8 +285,8 @@ def test_a_manual_row_and_a_pending_capture_total_the_accrual_year_declarant_fro
     assert Decimal(revision.casilla_values[_RETENCIONES_TOTAL]) == Decimal("285.00")
 
     rows = _rows_by_nif(revision.row_binding_values)
-    assert set(rows) == {_MANUAL_NIF, _PENDING_NIF}
-    pending, manual = rows[_PENDING_NIF], rows[_MANUAL_NIF]
+    assert set(rows) == {MANUAL_HOLDER_NIF, _PENDING_NIF}
+    pending, manual = rows[_PENDING_NIF], rows[MANUAL_HOLDER_NIF]
     assert pending[_PENDIENTE_BINDING] == "X"
     assert pending[_NIF_REPRESENTANTE_BINDING] == _PENDING_NIF
     assert pending[_NAME_BINDING] == _PENDING_NAME
@@ -310,8 +295,8 @@ def test_a_manual_row_and_a_pending_capture_total_the_accrual_year_declarant_fro
     assert Decimal(pending[_RETENCION_BINDING]) == CAPITAL_IRPF
     assert _PENDIENTE_BINDING not in manual
     assert _ACCRUAL_YEAR_BINDING not in manual
-    assert Decimal(manual[_BASE_BINDING]) == _MANUAL_BASE
-    assert Decimal(manual[_RETENCION_BINDING]) == _MANUAL_RETENCION
+    assert Decimal(manual[_BASE_BINDING]) == MANUAL_BASE
+    assert Decimal(manual[_RETENCION_BINDING]) == MANUAL_RETENCION
 
     withholding_refs = [
         ref for ref in revision.source_provenance if ref.resolver_id == WithholdingSourceResolver.resolver_id

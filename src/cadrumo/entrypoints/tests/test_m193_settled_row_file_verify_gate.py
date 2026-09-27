@@ -26,13 +26,15 @@ from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueReposi
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from cadrumo.adapters.persistence.profile.percepciones_observations import PercepcionObservationRepositoryAdapter
 from cadrumo.adapters.persistence.profile.retencion_observations import RetencionObservationRepositoryAdapter
 from cadrumo.adapters.persistence.profile.tests.ledger_capital_support import (
     CAPITAL_YEAR,
+    MANUAL_HOLDER_NIF,
     capital_payment,
     capital_pending_payment,
     capital_request,
+    manual_capital_row,
+    seed_manual_percepcion_window,
     withholding_producer,
 )
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
@@ -41,10 +43,6 @@ from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObject
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.aggregation.ledger_payment_withholding import build_ledger_payment_withholding_capture
-from cadrumo.application.aggregation.percepciones_observations_repository import (
-    PercepcionObservationPorts,
-    persist_percepcion_observations,
-)
 from cadrumo.application.aggregation.retenciones import RetencionObservation
 from cadrumo.application.aggregation.tests.withholding_filer_profile_support import (
     quarterly_filer_cadence,
@@ -100,7 +98,6 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 _BUCKET_ID = "00000000-0000-4000-8000-000000000193"
 _T0 = datetime(CAPITAL_YEAR + 1, 2, 1, 9, 0, tzinfo=UTC)
 _FILE_LEAF = "modelo.work.file"
-_MANUAL_NIF = "33333333P"
 _FINDING_KEY = "application.modelo.findings.m193_settled_row_amount_authority_unresolved"
 
 
@@ -188,25 +185,10 @@ def _capture_coupon_collected_next_year(objects: SecureObjectRepository) -> None
 
 def _persist_manual_row(objects: SecureObjectRepository, *, filing_year: int) -> None:
     """Declare one ordinary key B row by hand for a second, synthetic holder."""
-    template = capital_pending_payment(
-        capital_payment(provider_id="manual-coupon"),
-        transaction_date=date(filing_year, 5, 5),
-    ).actual_recipient_detail
-    persist_percepcion_observations(
-        ports=PercepcionObservationPorts(repository=PercepcionObservationRepositoryAdapter(objects=objects)),
-        modelo="193",
+    seed_manual_percepcion_window(
+        objects,
         filing_year=filing_year,
-        period=Period.from_year_and_code(filing_year, "0A"),
-        observations=[
-            template.model_copy(
-                update={
-                    "source_id": "manual-coupon",
-                    "source_allocation_id": "manual-1",
-                    "perceptor_tax_id": _MANUAL_NIF,
-                    "perceptor_legal_name": "Perceptor Manual Sintetico",
-                }
-            )
-        ],
+        observations=[manual_capital_row(filing_year=filing_year)],
     )
 
 
@@ -220,7 +202,7 @@ def _seed_declarant_retenciones(objects: SecureObjectRepository, *, filing_year:
             RetencionObservation(
                 source_kind=BindingSourceKind.LEDGER_TRANSACTION,
                 source_object_id=f"declarant-{filing_year}",
-                perceptor_nif=_MANUAL_NIF,
+                perceptor_nif=MANUAL_HOLDER_NIF,
                 perceptor_name="Perceptor Manual Sintetico",
                 scheme=RetencionScheme("intereses"),
                 taxable_base=Decimal("1000.00"),

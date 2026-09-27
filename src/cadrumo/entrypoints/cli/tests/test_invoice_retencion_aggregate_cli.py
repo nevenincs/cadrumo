@@ -1,15 +1,15 @@
 """Received-invoice retención reaches Modelo 111 through the aggregate CLI (#45).
 
-``route_invoice_retenciones`` / ``project_received_invoice_retencion``
-(``application/aggregation/_invoice_retencion.py``) had zero production callers:
-the primitive was correct and covered by
-``test_invoice_retencion_routing.py``, but nothing invoked it, so a received
-invoice's retención never reached the per-perceptor store Modelo 111 reads. The
-gates below assert the CLI wiring end to end -- that the Modelo 111 casilla
-value MOVES after routing a real invoice through
+``build_invoice_withholding_capture``
+(``application/aggregation/invoice_retencion.py``) is only a translation: it
+turns one invoice into the shared producer's capture command and writes nothing
+itself. A unit test of that translation cannot show a received invoice's
+retención reaching the per-perceptor store Modelo 111 reads. The gates below
+assert the CLI wiring end to end -- that the Modelo 111 casilla value MOVES
+after capturing a real invoice through
 ``aeat app modelo aggregate --received-invoice-retencion`` -- not merely that
-the routing primitive returns a value, which the pre-existing suite already
-proved and which is exactly why this gap survived unnoticed.
+the translation returns a command, which is exactly the gap that once let an
+unwired projection survive unnoticed.
 """
 
 from __future__ import annotations

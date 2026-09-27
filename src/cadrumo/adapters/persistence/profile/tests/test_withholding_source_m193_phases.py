@@ -28,9 +28,12 @@ from cadrumo.adapters.persistence.profile.tests.ledger_capital_support import (
     CAPITAL_HOLDER_NIF,
     CAPITAL_IRPF,
     CAPITAL_YEAR,
+    MANUAL_HOLDER_NIF,
     capital_payment,
     capital_pending_payment,
     capital_request,
+    manual_capital_row,
+    seed_manual_percepcion_window,
     withholding_producer,
 )
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
@@ -46,10 +49,7 @@ from cadrumo.application.aggregation.m193_phase_materialization import (
     Modelo193PhaseRow,
     materialize_modelo_193_disclosure_phases,
 )
-from cadrumo.application.aggregation.percepciones_observations_repository import (
-    PercepcionObservationPorts,
-    persist_percepcion_observations,
-)
+from cadrumo.application.aggregation.percepciones_observations_repository import PercepcionObservationPorts
 from cadrumo.application.aggregation.retencion_observations_repository import RetencionObservationPorts
 from cadrumo.application.aggregation.retenciones import Modelo193NonpaymentCause, Modelo193PendingPaymentEvidence
 from cadrumo.application.aggregation.source_mesh import (
@@ -79,7 +79,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _GROUNDED_ACCRUAL_EXERCISE = CAPITAL_YEAR
 _COLLECTION_EXERCISE = _GROUNDED_ACCRUAL_EXERCISE + 1
 _PENDING_NIF = "999999999"
-_MANUAL_NIF = "33333333P"
 _COUPON_ALLOCATION_ID = f"coupon-allocation-{_GROUNDED_ACCRUAL_EXERCISE}-06"
 _NIF_BINDING = "modelo-193-perceptor-row-nif"
 _PENDIENTE_BINDING = "modelo-193-perceptor-row-pendiente"
@@ -144,28 +143,15 @@ def _collected_same_year() -> LedgerPaymentWithholdingCapture:
 
 def _manual_row(*, source_id: str, source_allocation_id: str) -> WithholdingObservation:
     """A hand-declared key B 193 row for a second, synthetic holder."""
-    template = capital_pending_payment(
-        capital_payment(provider_id="manual-coupon"),
-        transaction_date=date(_GROUNDED_ACCRUAL_EXERCISE, 5, 5),
-    ).actual_recipient_detail
-    return template.model_copy(
-        update={
-            "source_id": source_id,
-            "source_allocation_id": source_allocation_id,
-            "perceptor_tax_id": _MANUAL_NIF,
-            "perceptor_legal_name": "Perceptor Manual Sintetico",
-        }
+    return manual_capital_row(
+        filing_year=_GROUNDED_ACCRUAL_EXERCISE,
+        source_id=source_id,
+        source_allocation_id=source_allocation_id,
     )
 
 
 def _persist_manual(objects: SecureObjectRepository, row: WithholdingObservation) -> None:
-    persist_percepcion_observations(
-        ports=PercepcionObservationPorts(repository=PercepcionObservationRepositoryAdapter(objects=objects)),
-        modelo="193",
-        filing_year=_GROUNDED_ACCRUAL_EXERCISE,
-        period=Period.from_year_and_code(_GROUNDED_ACCRUAL_EXERCISE, "0A"),
-        observations=[row],
-    )
+    seed_manual_percepcion_window(objects, filing_year=_GROUNDED_ACCRUAL_EXERCISE, observations=[row])
 
 
 def _resolve(
@@ -304,7 +290,7 @@ def test_a_manual_row_and_a_phase_row_compose_one_source(
             profile.repository, authority_operation, bucket_id=profile.bucket_id, filing_year=_GROUNDED_ACCRUAL_EXERCISE
         )
 
-    assert sorted(_row_values(resolution, _NIF_BINDING)) == sorted([_MANUAL_NIF, _PENDING_NIF])
+    assert sorted(_row_values(resolution, _NIF_BINDING)) == sorted([MANUAL_HOLDER_NIF, _PENDING_NIF])
     assert _row_values(resolution, _PENDIENTE_BINDING) == ["X"]
     assert resolution.diagnostics == ()
     primaries = [row for row in resolution.provenance if row.lineage_role is CalculationSourceLineageRole.PRIMARY]
@@ -458,7 +444,7 @@ def test_an_ordinary_manual_row_carries_no_unresolved_amount_advisory(
             profile.repository, authority_operation, bucket_id=profile.bucket_id, filing_year=_GROUNDED_ACCRUAL_EXERCISE
         )
 
-    assert _row_values(resolution, _NIF_BINDING) == [_MANUAL_NIF]
+    assert _row_values(resolution, _NIF_BINDING) == [MANUAL_HOLDER_NIF]
     assert resolution.diagnostics == ()
 
 
