@@ -208,6 +208,16 @@ llm = [
   # be refused.
   "nvidia-ml-py>=13,<14",
 ]
+# The calculation-summary PDF destination (`aeat app modelo work report
+# --document-format pdf`). ReportLab (BSD) lays out the pages; the tagging,
+# attachment and metadata pass runs on the already-declared `pikepdf`, and
+# verifying a summary needs no extra at all. ReportLab depends only on Pillow
+# and charset-normalizer, both already in the core closure. Lazily imported
+# behind `PDF_EXTRA`; without it the destination refuses before reading the
+# store.
+pdf = [
+  "reportlab>=5.0.1,<6",
+]
 # Deliberately absent: an `agent` extra. The operator agent harness, its
 # reviewed operating data, accessors, and MCP runtime are a separate
 # `cadrumo_harness` package shipped alongside it in this distribution.
@@ -229,6 +239,7 @@ all = [
   "cadrumo[anthropic]",
   "cadrumo[ofx]",
   "cadrumo[llm]",
+  "cadrumo[pdf]",
 ]
 
 [build-system]
@@ -521,7 +532,10 @@ dev = [
   "pytest-xdist>=3.6.0",
   # Reproducible light-theme CLI GIFs for the repository README.
   "pillow==12.3.0",
-  # Used only to generate synthetic fixture PDFs in tests.
+  # Generates synthetic fixture PDFs in tests, and is the `pdf` extra's
+  # exclusive requirement: without it here the extra's probe reads ABSENT in
+  # the dev environment and the calculation-summary suite refuses instead of
+  # rendering.
   "reportlab>=4.4.10",
   # libxml2 binding. Test support imports `lxml.etree` directly to compile the
   # bundled AEAT record-design XSDs as validation oracles; declaring it makes

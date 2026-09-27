@@ -1361,7 +1361,10 @@ cli:
         discard_requires_yes: Discard is an auditable state transition. Re-run 'aeat
           app modelo work discard %{work_unit_id} --yes' to confirm.
         discard_yes_help: Explicitly confirm the discard operation
-        document_format_help: Document format of the calculation report.
+        document_format_help: 'Document format of the calculation report: csv, or
+          pdf for the signed calculation summary (needs the optional pdf extra).'
+        document_only_help: Check the document alone, without opening the active profile's
+          store; without --trusted-key a valid result stays unpinned.
         file_help: Mark a verified revision as internally filed. Does NOT submit to
           AEAT
         file_idempotent_noop: 'Idempotent no-op: calculation revision %{calculation_revision_id}
@@ -1546,6 +1549,24 @@ cli:
               no calculation to report; calculate and verify it first.
         report_help: Write the work unit's verified or filed calculation as a local
           calculation report; it is not official AEAT evidence.
+        report_verify:
+          errors:
+            file_not_found: No calculation summary was found at {path}.
+            trusted_key_invalid: --trusted-key must be a 64-character hexadecimal
+              Ed25519 public key.
+          later_changes: The summary matches the store as it stood at export; the
+            revision has moved on in its lifecycle since (for example, it was filed
+            or superseded).
+          refused: The calculation summary could not be verified; the checks name
+            the reason.
+          unpinned: 'The summary is consistent and its signature is valid, but no
+            key was pinned: give --trusted-key with the key received through another
+            channel, or verify it against the store of the profile that signed it.'
+        report_verify_help: 'Verify a calculation summary PDF: its integrity signature,
+          embedded data and pages, and, unless --document-only is given, that the
+          active profile''s encrypted store still reproduces it; this is not official
+          AEAT evidence.'
+        report_verify_path_help: Path of the calculation summary PDF to verify.
         rescate_contingencia_year_help: 'Year the pension-plan contingency (retirement,
           disability, death) occurred. Determines the LIRPF DT 12a apartado-4 time
           window (Ley 26/2014): if the window is closed for the rescate year, the
@@ -1652,6 +1673,8 @@ cli:
         status_calculate_summary: This active work unit can be calculated.
         status_discarded_summary: This work unit is discarded, so calculation is unavailable.
         status_help: Show the metadata of one work unit
+        trusted_key_help: Ed25519 public key (64 hex characters) you trust, received
+          through another channel; the summary must be signed with it.
         verify_help: Verify a draft calculation revision against the verified-complete
           contract
         verify_idempotent_noop: 'Idempotent no-op: calculation revision %{calculation_revision_id}

@@ -832,6 +832,72 @@ application:
         oficial de presentació davant l''AEAT. L''evidència oficial l''emet l''AEAT
         després de la presentació: justificant; consulta de declaracions presentades;
         o acarament per CSV.'
+    calculation_summary:
+      column_amount: Import
+      column_casilla: Casella
+      column_concept: Concepte
+      fact_exported_at: Exportat
+      fact_filing: Presentació
+      fact_revision_state: Estat de la revisió
+      fact_taxpayer: Contribuent
+      fact_verification: Verificació
+      filing_none: No presentat
+      filing_recorded: Presentació registrada a Cadrumo; la prova oficial és el justificant
+        de l'AEAT
+      footer_notice: 'Càlcul local de Cadrumo: no és evidència oficial de l''AEAT'
+      grade_development_mock: desenvolupament (no presentable)
+      grade_reviewed: revisada
+      identity_development_mock: 'Identitat de programari de desenvolupament (programa
+        {program}, NIF del desenvolupador {developer_tax_id}): el fitxer de presentació
+        d''aquest model no es pot presentar a l''AEAT.'
+      identity_none: El disseny de registre d'aquest model no reserva cap identitat
+        de programari.
+      identity_reviewed: 'Identitat de programari revisada: el fitxer de presentació
+        d''aquest model porta una identitat de programari registrada.'
+      legend: 'Valors: una xifra, inclòs un zero, és un valor calculat; «sense dada»
+        indica que la revisió no va registrar cap valor per a la casella; «n/a · no
+        aplicable» indica que el registre demostra que la casella no s''aplica a aquest
+        període.'
+      notice_title: 'Càlcul local: no és un justificant de l''AEAT'
+      page_counter: Pàgina {page} de {pages}
+      section_unnamed: Caselles
+      signature_meaning: La signatura d'integritat de Cadrumo adjunta a aquest PDF
+        acredita que la clau d'aquest perfil va declarar que, en l'instant d'exportació
+        segons el rellotge d'aquesta instal·lació, la revisió, l'informe de verificació,
+        la instantània del registre i la generació de l'autoritat indicats van produir
+        exactament aquest informe, aquest CSV i aquestes pàgines. No acredita l'acceptació
+        ni la presentació davant l'AEAT, la correcció jurídica, la veracitat de les
+        dades, la identitat ni el consentiment del contribuent, una hora de confiança
+        ni que la clau pertanyi a una persona concreta. Compareu l'empremta de la
+        clau amb una rebuda per un altre canal abans de confiar-hi.
+      state_borrador: Esborrany
+      state_descartado: Descartat
+      state_presentado: Presentat
+      state_presentado_supersedido: Presentat i substituït
+      state_verificado_completo: Verificat complet
+      subtitle: Exercici {year} · Període {period} · Revisió del registre {registry_revision}
+      title: Resum del càlcul · Model {modelo}
+      trace_authority_generation: Generació lògica de l'autoritat del registre
+      trace_calculation_revision: Revisió del càlcul
+      trace_csv_sha256: SHA-256 del CSV adjunt
+      trace_filing_record: Registre de presentació
+      trace_heading: Traçabilitat i integritat
+      trace_ledger_snapshot: Empremta de la instantània del llibre registre
+      trace_none: cap
+      trace_registry_snapshot: Instantània del registre (model · revisió · any · període)
+      trace_report_sha256: SHA-256 de l'informe (JSON adjunt)
+      trace_signing_key: Empremta de la clau de signatura (SHA-256)
+      trace_software_identity: Grau d'identitat de programari
+      trace_verification_report: Informe de verificació
+      trace_work_unit: Unitat de treball
+      value_absent: sense dada
+      value_false: 'No'
+      value_not_applicable: n/a · no aplicable
+      value_true: Sí
+      verification_blocked: Bloquejada
+      verification_complete: Completa
+      verification_incomplete: Incompleta
+      verification_none: Sense verificació registrada
     errors:
       amendment_complementaria_liability_decrease: Una complementària per al model
         {modelo}, exercici {filing_year}, període {period} rebaixaria el resultat
@@ -924,6 +990,14 @@ application:
       calculation_revision_not_found: No s'ha trobat cap revisió de càlcul amb id=%{calculation_revision_id}.
       calculation_revision_parent_work_unit_discarded: La revisió de càlcul %{calculation_revision_id}
         pertany a la unitat de treball descartada %{work_unit_id}.
+      calculation_summary_chrome_unavailable: Falta el text {translation_key} del
+        resum del càlcul en l'idioma {report_language}; el resum es rebutja en lloc
+        de produir-se sense aquest text.
+      calculation_summary_pdf_unavailable: El resum del càlcul en PDF necessita el
+        complement opcional «{extra}», que aquesta instal·lació no té. Instal·leu-lo
+        amb pip install cadrumo[{extra}] i torneu-ho a provar; verificar un resum
+        no el necessita.
+      calculation_summary_pdf_unreadable: El fitxer no és un PDF llegible ({error_type}).
       caller_casilla_source_binding_conflict: 'Les entrades de casella aportades no
         poden sobreescriure caselles vinculades a una font derivada del dipòsit (caselles
         vinculades a font): %{casillas}.'

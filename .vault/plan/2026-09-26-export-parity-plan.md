@@ -14,7 +14,7 @@ related:
   - '[[2026-09-26-export-parity-calculation-summary-pdf-adr]]'
 modified: '2026-09-27'
 body_schema: body-v2
-body_hash: 'sha256:45ce0cbf96d64908a53655f1b1dcefd105d80d2c504888406f6b7e3c61b5160b'
+body_hash: 'sha256:aa5ad6dd4462d2b5a5fb325569173de7fb63ce5df44e171264228768ddd49acd'
 ---
 
 # `export-parity` plan
@@ -43,7 +43,7 @@ The live working ledger is the gitignored campaign scratch home; durable finding
 - [x] `S07` - Introduce the typed export destination contract and refuse to overwrite an existing export file; `src/cadrumo/application/modelo/**, src/cadrumo/entrypoints/**`.
 - [x] `S08` - Wire the offline XLSX workbook destination from the shared calc-sheets plan; `src/cadrumo/adapters/outbound/**, src/cadrumo/application/storage/calc_sheets/**, src/cadrumo/entrypoints/**`.
 - [x] `S09` - Build the typed calculation-report builder with traceability facts and the CSV destination, and wire it to the CLI and TUI; the PDF moves to its own designed artefact (operator direction 2026-09-26); `src/cadrumo/application/**, src/cadrumo/entrypoints/**`.; `src/cadrumo/application/**, src/cadrumo/entrypoints/**`.
-- [ ] `S12` - Design the calculation-summary PDF as its own artefact (human-readable and machine-readable, embedded data, calculation certification, metadata hash identifiers traceable to the encrypted store), record it as a proposed ADR amending the calculation-report decision, and implement it only after operator acceptance; `.vault/research/**, .vault/adr/**, src/cadrumo/application/**, src/cadrumo/adapters/outbound/**, src/cadrumo/entrypoints/**`.; `.vault/research/**, .vault/adr/**, src/cadrumo/application/**, src/cadrumo/adapters/outbound/**, src/cadrumo/entrypoints/**`.
+- [x] `S12` - Design the calculation-summary PDF as its own artefact (human-readable and machine-readable, embedded data, calculation certification, metadata hash identifiers traceable to the encrypted store), record it as a proposed ADR amending the calculation-report decision, and implement it only after operator acceptance; `.vault/research/**, .vault/adr/**, src/cadrumo/application/**, src/cadrumo/adapters/outbound/**, src/cadrumo/entrypoints/**`.; `.vault/research/**, .vault/adr/**, src/cadrumo/application/**, src/cadrumo/adapters/outbound/**, src/cadrumo/entrypoints/**`.
 - [x] `S10` - Give the TUI export the widened public result so it states evidence status, completeness and identity grade; `src/cadrumo/application/modelo/operation_definitions.py, src/cadrumo/entrypoints/tui/**`.
 - [ ] `S11` - Run CLI and TUI parity lanes per modelo family and year for every format, including both cross-year carry lanes, and render the export matrix; `scratch/export-parity/**, dev/acceptance/export_parity/**`.
 

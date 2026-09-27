@@ -15,6 +15,7 @@ Subpackages
 
    cadrumo.adapters.outbound.aeat
    cadrumo.adapters.outbound.browser_runtime
+   cadrumo.adapters.outbound.calculation_summary_pdf
    cadrumo.adapters.outbound.fx
    cadrumo.adapters.outbound.google
    cadrumo.adapters.outbound.llm

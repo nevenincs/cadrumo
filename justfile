@@ -1147,6 +1147,16 @@ test-smoke:
 test-workbook-parity:
     uv run --no-sync pytest -v -n0 -m external_tool dev/registry/parity/tests/test_workbook_parity.py
 
+# Validate calculation summary PDFs with veraPDF, an independent archival and
+# accessibility validator fetched as a checksum-pinned jar, and run the summary
+# tests that need OpenSSL. Both need tools the dependency set does not install
+# (Java, OpenSSL), so neither runs in the default lanes.
+[doc('Validate calculation summary PDFs with veraPDF (PDF/A-3a, 3u, PDF/UA-1) and run the OpenSSL signature recipe test.')]
+[group('test')]
+test-calculation-summary-pdf:
+    uv run --no-sync python -m dev.acceptance.calculation_summary_pdf.verapdf_conformance
+    uv run --no-sync pytest -v -n0 -m external_tool src/cadrumo/adapters/outbound/calculation_summary_pdf/tests
+
 # Run the locale orthography tests. These carry `external_tool` because they
 # read the pinned Hunspell dictionaries that `setup-locale-spelling` installs
 # from npm, which the default unit lane cannot assume.

@@ -795,6 +795,72 @@ application:
       local_calculation_notice: 'Cadrumo helyi számítási jelentés. Nem az AEAT hivatalos
         benyújtási bizonylata. A hivatalos bizonylatot az AEAT adja ki a benyújtás
         után: justificante; benyújtott bevallások lekérdezése; vagy CSV-egyeztetés.'
+    calculation_summary:
+      column_amount: Összeg
+      column_casilla: Mező
+      column_concept: Megnevezés
+      fact_exported_at: Exportálva
+      fact_filing: Benyújtás
+      fact_revision_state: Számítási változat állapota
+      fact_taxpayer: Adózó
+      fact_verification: Ellenőrzés
+      filing_none: Nincs benyújtva
+      filing_recorded: A benyújtás rögzítve a Cadrumóban; a hivatalos bizonyíték az
+        AEAT bizonylata
+      footer_notice: 'Cadrumo helyi számítás: nem hivatalos AEAT-bizonyíték'
+      grade_development_mock: fejlesztői (nem benyújtható)
+      grade_reviewed: ellenőrzött
+      identity_development_mock: 'Fejlesztői szoftverazonosító (program: {program},
+        fejlesztői NIF: {developer_tax_id}): ennek a nyomtatványnak a benyújtási fájlja
+        nem nyújtható be az AEAT-hoz.'
+      identity_none: A nyomtatvány rekordterve nem tartalmaz helyet szoftverazonosítónak.
+      identity_reviewed: 'Ellenőrzött szoftverazonosító: a nyomtatvány benyújtási
+        fájlja regisztrált szoftverazonosítót tartalmaz.'
+      legend: 'Értékek: a szám – a nullát is beleértve – számított érték; a „nincs
+        adat” azt jelenti, hogy a számítási változat nem rögzített értéket a mezőhöz;
+        az „n/a · nem alkalmazandó” azt jelenti, hogy a nyilvántartás igazolja: a
+        mező erre az időszakra nem vonatkozik.'
+      notice_title: 'Helyi számítás: nem AEAT-bizonylat'
+      page_counter: '{page}. oldal / {pages}'
+      section_unnamed: Mezők
+      signature_meaning: 'A PDF-be ágyazott Cadrumo sértetlenségi aláírás azt igazolja,
+        hogy ennek a profilnak a kulcsa kijelentette: az exportálás pillanatában,
+        e telepítés órája szerint, a megnevezett számítási változat, ellenőrzési jelentés,
+        nyilvántartási pillanatkép és hatósági generáció pontosan ezt a jelentést,
+        ezt a CSV-t és ezeket az oldalakat eredményezte. Nem igazolja az AEAT általi
+        elfogadást vagy a benyújtást, a jogi helyességet, a bemenő adatok valódiságát,
+        az adózó személyazonosságát vagy hozzájárulását, megbízható időpontot, sem
+        azt, hogy a kulcs egy megnevezett személyé. Mielőtt megbízna a kulcsban, vesse
+        össze az ujjlenyomatát egy más csatornán kapott ujjlenyomattal.'
+      state_borrador: Tervezet
+      state_descartado: Elvetett
+      state_presentado: Benyújtott
+      state_presentado_supersedido: Benyújtott, felváltott
+      state_verificado_completo: Teljeskörűen ellenőrzött
+      subtitle: '{year}. adóév · {period} időszak · Nyilvántartási változat: {registry_revision}'
+      title: Számítási összesítő · {modelo} nyomtatvány
+      trace_authority_generation: A nyilvántartási hatóság logikai generációja
+      trace_calculation_revision: Számítási változat
+      trace_csv_sha256: A beágyazott CSV SHA-256 értéke
+      trace_filing_record: Benyújtási nyilvántartás
+      trace_heading: Nyomonkövethetőség és sértetlenség
+      trace_ledger_snapshot: Főkönyvi pillanatkép ujjlenyomata
+      trace_none: nincs
+      trace_registry_snapshot: Nyilvántartási pillanatkép (nyomtatvány · változat
+        · év · időszak)
+      trace_report_sha256: A jelentés SHA-256 értéke (beágyazott JSON)
+      trace_signing_key: Az aláírókulcs ujjlenyomata (SHA-256)
+      trace_software_identity: Szoftverazonosító besorolása
+      trace_verification_report: Ellenőrzési jelentés
+      trace_work_unit: Munkaegység
+      value_absent: nincs adat
+      value_false: Nem
+      value_not_applicable: n/a · nem alkalmazandó
+      value_true: Igen
+      verification_blocked: Blokkolt
+      verification_complete: Teljes
+      verification_incomplete: Hiányos
+      verification_none: Nincs rögzített ellenőrzés
     errors:
       amendment_complementaria_liability_decrease: A(z) {modelo} nyomtatvány {filing_year}
         adóévi {period} időszakára vonatkozó kiegészítő bevallás (complementaria)
@@ -885,6 +951,14 @@ application:
         azonosítóval.
       calculation_revision_parent_work_unit_discarded: A(z) %{calculation_revision_id}
         számítási revízió a selejtezett %{work_unit_id} munkaegységhez tartozik.
+      calculation_summary_chrome_unavailable: A számítási összesítő {translation_key}
+        szövege hiányzik a(z) {report_language} nyelven; az összesítő elkészítése
+        ezért elutasítva.
+      calculation_summary_pdf_unavailable: A számítási összesítő PDF-hez a nem kötelező
+        „{extra}” kiegészítő szükséges, amely ebben a telepítésben nincs meg. Telepítse
+        a pip install cadrumo[{extra}] paranccsal, majd próbálja újra; az összesítő
+        ellenőrzéséhez nincs rá szükség.
+      calculation_summary_pdf_unreadable: A fájl nem olvasható PDF ({error_type}).
       caller_casilla_source_binding_conflict: 'A hívó rovat bemenetek nem írhatják
         felül a bucket-ből származtatott forráshoz kötött rovatokat (forráshoz kötött
         rovatok): %{casillas}.'

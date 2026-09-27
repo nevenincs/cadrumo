@@ -753,6 +753,69 @@ application:
       local_calculation_notice: 'Cadrumo local calculation report. Not official AEAT
         filing evidence. Official evidence comes from AEAT after filing: justificante;
         consulta de declaraciones presentadas; or CSV cotejo.'
+    calculation_summary:
+      column_amount: Amount
+      column_casilla: Casilla
+      column_concept: Concept
+      fact_exported_at: Exported
+      fact_filing: Filing
+      fact_revision_state: Revision state
+      fact_taxpayer: Taxpayer
+      fact_verification: Verification
+      filing_none: Not filed
+      filing_recorded: Filing recorded in Cadrumo; the official proof is the AEAT
+        receipt
+      footer_notice: 'Cadrumo local calculation: not official AEAT evidence'
+      grade_development_mock: development (not presentable)
+      grade_reviewed: reviewed
+      identity_development_mock: 'Development software identity (program {program},
+        developer NIF {developer_tax_id}): the filing file for this modelo cannot
+        be presented at AEAT.'
+      identity_none: This modelo's record design reserves no software identity.
+      identity_reviewed: 'Reviewed software identity: the filing file for this modelo
+        carries a registered software identity.'
+      legend: 'Values: a figure, zero included, is a calculated value; “no data” means
+        the revision recorded no value for the casilla; “n/a · not applicable” means
+        the registry proves the casilla does not apply to this period.'
+      notice_title: 'Local calculation: not an AEAT receipt'
+      page_counter: Page {page} of {pages}
+      section_unnamed: Casillas
+      signature_meaning: The Cadrumo integrity signature embedded in this PDF attests
+        that this profile's key declared that, at the export instant by this installation's
+        clock, the named revision, verification report, registry snapshot and authority
+        generation produced exactly this report, this CSV and these pages. It does
+        not attest AEAT acceptance or filing, legal correctness, the truth of the
+        inputs, the taxpayer's identity or consent, a trusted time, or that the key
+        belongs to a named person. Compare the key fingerprint with one received through
+        another channel before trusting it.
+      state_borrador: Draft
+      state_descartado: Discarded
+      state_presentado: Filed
+      state_presentado_supersedido: Filed, superseded
+      state_verificado_completo: Verified complete
+      subtitle: Filing year {year} · Period {period} · Registry revision {registry_revision}
+      title: Calculation summary · Modelo {modelo}
+      trace_authority_generation: Registry authority logical generation
+      trace_calculation_revision: Calculation revision
+      trace_csv_sha256: Embedded CSV SHA-256
+      trace_filing_record: Filing record
+      trace_heading: Traceability and integrity
+      trace_ledger_snapshot: Ledger snapshot fingerprint
+      trace_none: none
+      trace_registry_snapshot: Registry snapshot (modelo · revision · year · period)
+      trace_report_sha256: Report SHA-256 (embedded JSON)
+      trace_signing_key: Signing key fingerprint (SHA-256)
+      trace_software_identity: Software identity grade
+      trace_verification_report: Verification report
+      trace_work_unit: Work unit
+      value_absent: no data
+      value_false: 'No'
+      value_not_applicable: n/a · not applicable
+      value_true: 'Yes'
+      verification_blocked: Blocked
+      verification_complete: Complete
+      verification_incomplete: Incomplete
+      verification_none: No verification recorded
     errors:
       amendment_complementaria_liability_decrease: A complementaria for modelo {modelo}
         filing year {filing_year} period {period} would lower the declared result
@@ -840,6 +903,14 @@ application:
       calculation_revision_not_found: No calculation revision found with id=%{calculation_revision_id}.
       calculation_revision_parent_work_unit_discarded: Calculation revision %{calculation_revision_id}
         belongs to discarded work unit %{work_unit_id}.
+      calculation_summary_chrome_unavailable: The calculation summary text {translation_key}
+        is missing for language {report_language}; the summary is refused rather than
+        produced without it.
+      calculation_summary_pdf_unavailable: The calculation summary PDF needs the optional
+        “{extra}” extra, which this installation does not have. Install it with pip
+        install cadrumo[{extra}] and try again; verifying a summary does not need
+        it.
+      calculation_summary_pdf_unreadable: The file is not a readable PDF ({error_type}).
       caller_casilla_source_binding_conflict: 'Caller casilla inputs cannot override
         bucket-derived source-bound casillas (source bound casillas): %{casillas}.'
       computed_casilla_binding_conflict: 'Bucket-derived inputs target computed casillas

@@ -1454,7 +1454,12 @@ cli:
         discard_requires_yes: 'Az eldobás auditálható állapotváltás. Futtassa újra:
           `aeat app modelo work discard %{work_unit_id} --yes` a megerősítéshez.'
         discard_yes_help: Az eldobási művelet explicit megerősítése.
-        document_format_help: A számítási jelentés dokumentumformátuma.
+        document_format_help: 'A számítási jelentés dokumentumformátuma: csv, vagy
+          pdf az aláírt számítási összesítőhöz (a nem kötelező pdf kiegészítő szükséges
+          hozzá).'
+        document_only_help: Csak a dokumentum ellenőrzése, az aktív profil tárolójának
+          megnyitása nélkül; --trusted-key nélkül az érvényes eredmény kulcshoz nem
+          rögzített marad.
         file_help: Hitelesített revízió megjelölése belső benyújtottként. NEM nyújt
           be az AEAT-hoz.
         file_idempotent_noop: 'Idempotens nincs-művelet: a(z) %{calculation_revision_id}
@@ -1650,6 +1655,25 @@ cli:
               nincs jelenthető számítása; először számítsa ki és ellenőrizze.
         report_help: A munkaegység ellenőrzött vagy benyújtott számítását helyi számítási
           jelentésként írja ki; ez nem az AEAT hivatalos bizonylata.
+        report_verify:
+          errors:
+            file_not_found: 'Nem található számítási összesítő itt: {path}.'
+            trusted_key_invalid: A --trusted-key értékének 64 hexadecimális karakterből
+              álló Ed25519 nyilvános kulcsnak kell lennie.
+          later_changes: Az összesítő egyezik a tároló exportáláskori állapotával;
+            a számítási változat azóta továbblépett az életciklusában (például benyújtották
+            vagy felváltották).
+          refused: A számítási összesítőt nem sikerült ellenőrizni; az ellenőrzések
+            megnevezik az okot.
+          unpinned: 'Az összesítő következetes és az aláírása érvényes, de egyetlen
+            kulcs sincs rögzítve: adja meg a --trusted-key kapcsolóval a más csatornán
+            kapott kulcsot, vagy ellenőrizze az aláíró profil tárolójával szemben.'
+        report_verify_help: 'Számítási összesítő PDF ellenőrzése: a sértetlenségi
+          aláírás, a beágyazott adatok és az oldalak, valamint – ha nincs megadva
+          a --document-only – hogy az aktív profil titkosított tárolója még mindig
+          ugyanezt állítja elő; ez nem az AEAT hivatalos bizonylata.'
+        report_verify_path_help: Az ellenőrizendő számítási összesítő PDF elérési
+          útja.
         rescate_contingencia_year_help: 'Az az év, amikor a nyugdíjpénztári esemény
           (nyugdíjazás, rokkantság, halál) bekövetkezett. Meghatározza a LIRPF DT
           12a 4. bekezdés szerinti időablakot (26/2014 törvény): ha az ablak zárva
@@ -1762,6 +1786,8 @@ cli:
         status_discarded_summary: Ez a munkaegység el van vetve, ezért a számítás
           nem érhető el.
         status_help: Egy munkaegység metaadatainak megjelenítése.
+        trusted_key_help: Megbízható Ed25519 nyilvános kulcs (64 hexadecimális karakter),
+          amelyet más csatornán kapott; az összesítőt ezzel kell aláírni.
         verify_help: Tervezet számítási revízió hitelesítése a hitelesített-teljes
           szerződéssel szemben.
         verify_idempotent_noop: 'Idempotens nincs-művelet: a(z) %{calculation_revision_id}

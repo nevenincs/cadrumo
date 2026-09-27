@@ -125,6 +125,16 @@ _REPORT = _policy(
     "local-io",
     CommandWriteRoute.NONE,
 )
+#: Reads a summary file and, unless the check is document-only, rebuilds the
+#: report from the store. It writes no file; the profile's signing keypair is
+#: minted on first use, exactly as the report verb mints it, which is the one
+#: local-state effect it can have.
+_REPORT_VERIFY = _policy(
+    frozenset({"calculation", "encrypted-facts"}),
+    frozenset({"local-state"}),
+    "compute",
+    CommandWriteRoute.NONE,
+)
 
 
 def _o(
@@ -407,6 +417,27 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         _REPORT,
         "._modelo_payloads",
         "WorkReportResult",
+    ),
+    _leaf(
+        "report-verify",
+        "._modelo_work_report_cli",
+        (
+            ArgumentSpec(
+                "path",
+                _PATH,
+                ParameterDefault.required(),
+                _key("cli.app.modelo.work.report_verify_path_help"),
+                transport_locus=TransportLocus.LOCAL_IN,
+                transport_shape=TransportShape.FILE,
+                transport_role=TransportRole.PRIMARY,
+            ),
+            _o("trusted_key", "--trusted-key"),
+            _o("document_only", "--document-only", FLAG_VALUE, flag=True),
+            _LANG,
+        ),
+        _REPORT_VERIFY,
+        "._modelo_payloads",
+        "WorkReportVerifyResult",
     ),
     _leaf(
         "revisions",

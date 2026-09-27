@@ -19,6 +19,12 @@ and the terminal interface cannot disagree about them: the filer's own identity,
 which the report shows in full, and the derived key every source reference is
 digested with.
 
+The calculation summary PDF is the one format that needs more than the report: an
+outbound writer to draw it, supplied by the calling surface, and the profile's
+signing keypair to certify it, resolved here through the same capability the
+provenance key comes from. It is refused before any profile state is read when
+the optional ``pdf`` extra is absent, or when the surface supplies no writer.
+
 See Also:
     :func:`~cadrumo.application.modelo.export.load_exportable_revision_target`:
         The shared revision lookup.
@@ -53,9 +59,15 @@ from ...domain.modelos.filing_record import ModeloRecord, ModeloRecordStatus
 from ...domain.modelos.verification_report import VerificationCompletenessStatus
 from ...domain.modelos.work_unit import WorkUnit
 from ..calculations.verification_report_gate import require_verification_report_coordinates_current
+from ..export.errors import ExportFormatError
 from ..filing.runtime import build_runtime_schema_provider
 from .calculation_report import ModeloCalculationReport, build_modelo_calculation_report
-from .calculation_report_document import CalculationReportDocument, serialize_calculation_report
+from .calculation_report_document import (
+    CalculationReportDocument,
+    CalculationSummaryPdfRendering,
+    require_calculation_summary_pdf_available,
+    serialize_calculation_report,
+)
 from .calculation_report_provenance_key import derive_calculation_report_provenance_key
 from .export import (
     ModeloExportNoActiveBucketError,
@@ -66,9 +78,11 @@ from .export import (
 from .export_ports import ModeloExportPorts
 from .export_sink import LocalFileExportReceipt, LocalFileExportSink
 from .profile_export_binding import resolve_export_identity
+from .review_package_signing import ensure_review_package_signing_keypair
 from .work_review import build_modelo_work_review_casillas
 
 if TYPE_CHECKING:
+    from .calculation_summary_pdf_ports import CalculationSummaryPdfWriter
     from .review_package_signing_ports import ReviewPackageSigningKeypairCapability
 
 
@@ -139,6 +153,10 @@ class ModeloCalculationReportResult(BaseModel):
     row_count: NonNegativeInt
     software_identity_grade: AeatSoftwareIdentityGrade | None
     local_calculation_notice: str = Field(min_length=1)
+    #: Fingerprint of the profile key the document is certified with -- the value
+    #: a recipient compares out of band before trusting its signature. ``None``
+    #: for a format that carries no signature.
+    signing_key_fingerprint: ContentDigest | None = None
 
 
 def _latest_verification_facts(
@@ -315,6 +333,7 @@ def export_modelo_calculation_report(
     signing_keypair: ReviewPackageSigningKeypairCapability,
     operation: PinnedAuthorityOperation,
     clock: datetime | None = None,
+    pdf_writer: CalculationSummaryPdfWriter | None = None,
 ) -> ModeloCalculationReportResult:
     """Publish one sealed revision's calculation report to the operator's path.
 
@@ -328,21 +347,35 @@ def export_modelo_calculation_report(
             choice.
         export_ports: The persisted authorities this invocation reads.
         signing_keypair: The profile's signing-keypair capability, from which the
-            provenance digest key is derived in memory.
+            provenance digest key is derived in memory, and which certifies a
+            summary PDF.
         operation: The caller's pinned authority operation.
         clock: UTC instant stamped as the export timestamp; the current instant
             when omitted.
+        pdf_writer: The outbound writer that draws a summary PDF. Required for
+            the PDF format and ignored by every other.
 
     Returns:
         :class:`ModeloCalculationReportResult`: The published file's identity and
         the report's own canonical digest.
 
     Raises:
+        CalculationSummaryPdfUnavailableError: The PDF was asked for and the
+            optional ``pdf`` extra is not installed.
+        ExportFormatError: The PDF was asked for and the surface supplied no
+            writer.
         ModeloExportNoActiveBucketError: No active profile bucket is configured.
         ModeloExportOutputPathError: The destination cannot receive the document.
     """
     from ...core.bucket_pointer import resolve_active_bucket_id
 
+    if command.document_format is CalculationReportDocumentFormat.PDF:
+        require_calculation_summary_pdf_available()
+        if pdf_writer is None:
+            raise ExportFormatError(
+                translated_message="errors.refused.refused_export_format",
+                context={"export_format": str(command.document_format)},
+            )
     active_bucket_id = resolve_active_bucket_id()
     if active_bucket_id is None:
         raise ModeloExportNoActiveBucketError(
@@ -359,7 +392,21 @@ def export_modelo_calculation_report(
         report_language=command.report_language,
         exported_at=clock or _utc_now(),
     )
-    document = serialize_calculation_report(report, document_format=command.document_format)
+    document = serialize_calculation_report(
+        report,
+        document_format=command.document_format,
+        pdf_rendering=(
+            None
+            if pdf_writer is None or command.document_format is not CalculationReportDocumentFormat.PDF
+            else CalculationSummaryPdfRendering(
+                writer=pdf_writer,
+                keypair=ensure_review_package_signing_keypair(
+                    bucket_id=active_bucket_id,
+                    signing_keypair=signing_keypair,
+                ),
+            )
+        ),
+    )
     return _report_result(
         report=report,
         document=document,
@@ -397,6 +444,7 @@ def _report_result(
         row_count=header.row_count,
         software_identity_grade=header.software_identity_grade,
         local_calculation_notice=header.local_calculation_notice,
+        signing_key_fingerprint=document.signing_key_fingerprint,
     )
 
 

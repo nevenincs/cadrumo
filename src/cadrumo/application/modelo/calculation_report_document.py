@@ -14,6 +14,13 @@ product emits. The preamble lines lead with ``#`` and carry no delimiter, so the
 product's own tabular reader resolves them as metadata above the header rather
 than as table rows.
 
+The PDF document is the calculation summary. It embeds the report's canonical
+bytes and exactly the CSV document above, presents the strings
+:mod:`~cadrumo.application.modelo.calculation_summary_presentation` decides, and
+is signed through the profile key the caller supplies. Its pages are drawn by an
+outbound adapter the caller supplies too, because writing one needs the optional
+``pdf`` extra and this module must import without it.
+
 See Also:
     :mod:`cadrumo.application.modelo.calculation_report`:
         Builds the typed report this module renders.
@@ -24,22 +31,36 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
-from typing import Final
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Final
 
 from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
 from ...core.calculation_report_format import CalculationReportDocumentFormat
 from ...core.errors.hierarchy import pydantic_validation_boundary
-from ...core.external_constants import CSV_MIME_TYPE, UTF_8_ENCODING
+from ...core.external_constants import CSV_MIME_TYPE, PDF_MIME_TYPE, UTF_8_ENCODING
 from ...core.hashing import sha256_hex
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.optional_extras import PDF_EXTRA, MissingOptionalExtraError, require_optional_extra
+from ...core.product_identity import PRODUCT_IDENTITY
+from ...domain.modelos.errors import ModeloExportError
 from ..export.errors import ExportFormatError
 from ..export.tabular import ExportSerializationFormat, serialize_tabular_rows
 from .calculation_report import (
     ModeloCalculationReport,
     ModeloCalculationReportRow,
 )
+from .calculation_report_certification import (
+    CalculationReportCertification,
+    certify_calculation_report,
+    signing_key_fingerprint,
+)
+from .calculation_summary_pdf_ports import CalculationSummaryPdfRequest, CalculationSummaryPdfWriter
+from .calculation_summary_presentation import build_calculation_summary_presentation
+
+if TYPE_CHECKING:
+    from .review_package_signing import ReviewPackageSigningKeypair
 
 CALCULATION_REPORT_CSV_FIELDNAMES: Final[tuple[str, ...]] = (
     "casilla_id",
@@ -87,10 +108,50 @@ _PROVENANCE_ROW_SEPARATOR: Final[str] = " "
 
 _FORMAT_WIRE_NAMES: Final[Mapping[CalculationReportDocumentFormat, tuple[str, str]]] = {
     CalculationReportDocumentFormat.CSV: (CSV_MIME_TYPE, "csv"),
+    CalculationReportDocumentFormat.PDF: (PDF_MIME_TYPE, "pdf"),
 }
 """Media type and filename extension each document format is named by on the wire."""
 
 _REFUSED_DOCUMENT_FORMAT_MESSAGE = "errors.refused.refused_export_format"
+
+
+class CalculationSummaryPdfUnavailableError(ModeloExportError):
+    """This installation cannot write a calculation summary PDF.
+
+    Raised when the optional ``pdf`` extra is not installed, before any profile
+    state is read, so an operator learns the destination is unavailable -- and
+    how to make it available -- rather than meeting a late import failure after
+    taxpayer figures were assembled. Verifying a summary needs no extra and is
+    never refused for this reason.
+    """
+
+
+def require_calculation_summary_pdf_available() -> None:
+    """Refuse the summary PDF destination when its optional extra is absent.
+
+    Raises:
+        CalculationSummaryPdfUnavailableError: The ``pdf`` extra is not installed.
+    """
+    try:
+        require_optional_extra(PDF_EXTRA)
+    except MissingOptionalExtraError as exc:
+        raise CalculationSummaryPdfUnavailableError(
+            translated_message="application.modelo.errors.calculation_summary_pdf_unavailable",
+            context={"extra": PDF_EXTRA.extra, "import_name": PDF_EXTRA.import_name},
+        ) from exc
+
+
+@dataclass(frozen=True, slots=True)
+class CalculationSummaryPdfRendering:
+    """What producing a summary PDF needs beyond the report itself.
+
+    ``writer`` is the outbound adapter that draws and assembles the pages;
+    ``keypair`` is the profile's signing keypair, held in memory for the one
+    signature the summary carries and never passed to the writer.
+    """
+
+    writer: CalculationSummaryPdfWriter
+    keypair: ReviewPackageSigningKeypair
 
 
 class CalculationReportDocument(BaseModel):
@@ -112,6 +173,9 @@ class CalculationReportDocument(BaseModel):
     sha256: ContentDigest
     #: Rows of the report the payload carries, excluding any header or preamble.
     row_count: NonNegativeInt
+    #: Fingerprint of the key the document's integrity statement is signed with,
+    #: for the formats that carry one; ``None`` for a format that is not signed.
+    signing_key_fingerprint: ContentDigest | None = None
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -203,8 +267,67 @@ def _serialize_csv(report: ModeloCalculationReport) -> bytes:
     return preamble.encode(UTF_8_ENCODING) + table.payload
 
 
-DOCUMENT_SERIALIZERS: Final[Mapping[CalculationReportDocumentFormat, Callable[[ModeloCalculationReport], bytes]]] = {
-    CalculationReportDocumentFormat.CSV: _serialize_csv,
+def serialize_calculation_report_csv(report: ModeloCalculationReport) -> bytes:
+    """Return the CSV document's bytes: the preamble, then the fixed-column table.
+
+    Public because the summary PDF embeds exactly these bytes, and a verifier
+    proves an embedded CSV was derived from the embedded report by re-running it.
+    """
+    return _serialize_csv(report)
+
+
+def _serialize_pdf(report: ModeloCalculationReport, rendering: CalculationSummaryPdfRendering) -> bytes:
+    """Render the summary PDF, embedding the report and its CSV and signing both."""
+    csv_bytes = _serialize_csv(report)
+    csv_sha256 = sha256_hex(csv_bytes)
+    keypair = rendering.keypair
+
+    def certify(visible_layer_sha256: str, /) -> CalculationReportCertification:
+        return certify_calculation_report(
+            report,
+            csv_sha256=csv_sha256,
+            visible_layer_sha256=visible_layer_sha256,
+            keypair=keypair,
+        )
+
+    request = CalculationSummaryPdfRequest(
+        presentation=build_calculation_summary_presentation(
+            report,
+            csv_sha256=csv_sha256,
+            signing_key_fingerprint=signing_key_fingerprint(keypair.public_key_hex),
+            brand=PRODUCT_IDENTITY.display_name,
+        ),
+        report_bytes=report.canonical_bytes(),
+        report_sha256=report.report_sha256,
+        csv_bytes=csv_bytes,
+        exported_at=report.header.exported_at,
+    )
+    return rendering.writer(request, certify=certify)
+
+
+def _csv_document(report: ModeloCalculationReport, _rendering: CalculationSummaryPdfRendering | None) -> bytes:
+    return _serialize_csv(report)
+
+
+def _pdf_document(report: ModeloCalculationReport, rendering: CalculationSummaryPdfRendering | None) -> bytes:
+    if rendering is None:
+        # A surface that offers the PDF must supply its writer and the profile
+        # key; one that does not is refused as not offering the format.
+        raise ExportFormatError(
+            translated_message=_REFUSED_DOCUMENT_FORMAT_MESSAGE,
+            context={"export_format": str(CalculationReportDocumentFormat.PDF)},
+        )
+    return _serialize_pdf(report, rendering)
+
+
+DOCUMENT_SERIALIZERS: Final[
+    Mapping[
+        CalculationReportDocumentFormat,
+        Callable[[ModeloCalculationReport, CalculationSummaryPdfRendering | None], bytes],
+    ]
+] = {
+    CalculationReportDocumentFormat.CSV: _csv_document,
+    CalculationReportDocumentFormat.PDF: _pdf_document,
 }
 """The serialiser enrolled for each document format.
 
@@ -218,6 +341,7 @@ def serialize_calculation_report(
     report: ModeloCalculationReport,
     *,
     document_format: CalculationReportDocumentFormat,
+    pdf_rendering: CalculationSummaryPdfRendering | None = None,
 ) -> CalculationReportDocument:
     """Serialise ``report`` into ``document_format``.
 
@@ -225,13 +349,16 @@ def serialize_calculation_report(
         report: The typed calculation report to render. Its content is rendered
             as-is; nothing is added, derived or omitted here.
         document_format: The serialisation the operator asked for.
+        pdf_rendering: The writer and signing keypair a PDF needs; ignored by
+            every other format.
 
     Returns:
         :class:`CalculationReportDocument`: The payload with the byte size,
         digest and row count it carries.
 
     Raises:
-        ExportFormatError: ``document_format`` has no serialiser.
+        ExportFormatError: ``document_format`` has no serialiser, or is the PDF
+            and no rendering was supplied.
     """
     serializer = DOCUMENT_SERIALIZERS.get(document_format)
     wire_names = _FORMAT_WIRE_NAMES.get(document_format)
@@ -240,7 +367,7 @@ def serialize_calculation_report(
             translated_message=_REFUSED_DOCUMENT_FORMAT_MESSAGE,
             context={"export_format": str(document_format)},
         )
-    payload = serializer(report)
+    payload = serializer(report, pdf_rendering)
     media_type, extension = wire_names
     return CalculationReportDocument(
         document_format=document_format,
@@ -250,6 +377,11 @@ def serialize_calculation_report(
         byte_size=len(payload),
         sha256=sha256_hex(payload),
         row_count=len(report.rows),
+        signing_key_fingerprint=(
+            None
+            if pdf_rendering is None or document_format is not CalculationReportDocumentFormat.PDF
+            else signing_key_fingerprint(pdf_rendering.keypair.public_key_hex)
+        ),
     )
 
 
@@ -259,7 +391,11 @@ __all__ = [
     "CALCULATION_REPORT_DIGEST_PREAMBLE_KEY",
     "DOCUMENT_SERIALIZERS",
     "CalculationReportDocument",
+    "CalculationSummaryPdfRendering",
+    "CalculationSummaryPdfUnavailableError",
     "calculation_report_csv_preamble_lines",
     "calculation_report_csv_row",
+    "require_calculation_summary_pdf_available",
     "serialize_calculation_report",
+    "serialize_calculation_report_csv",
 ]

@@ -25,9 +25,14 @@ class CalculationReportDocumentFormat(StrEnum):
         CSV: The report's rows as a delimited table with fixed columns, above a
             commented preamble carrying the report's header facts. Machine
             readable, and the format a reviewer diffs or loads into a sheet.
+        PDF: The calculation summary: a tagged, archival page rendering of the
+            report for a person to read, carrying the report's canonical bytes,
+            its CSV and a signed integrity statement as embedded files. Needs
+            the optional ``pdf`` extra to write, and nothing optional to verify.
     """
 
     CSV = "csv"
+    PDF = "pdf"
 
 
 __all__ = ["CalculationReportDocumentFormat"]

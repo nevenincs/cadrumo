@@ -58,6 +58,9 @@ _IDENTITY_HEADING_KEYS = {
 # under ``cli.config.passphrase`` is its help pair and one refusal.
 _PROSE_KEYS = {
     "ca": {
+        "application.modelo.calculation_summary.filing_recorded",
+        "application.modelo.calculation_summary.footer_notice",
+        "application.modelo.calculation_summary.signature_meaning",
         "application.modelo.calculation_report.local_calculation_notice",
         "cli.app.modelo.work.report.development_software_identity",
         "operation.modal.refusal.unsupported_cancellation_version",
@@ -84,6 +87,9 @@ _PROSE_KEYS = {
         "mcp.elicitation.refusal.no_channel",
     },
     "en": {
+        "application.modelo.calculation_summary.filing_recorded",
+        "application.modelo.calculation_summary.footer_notice",
+        "application.modelo.calculation_summary.signature_meaning",
         "application.modelo.calculation_report.local_calculation_notice",
         "cli.app.modelo.work.report.development_software_identity",
         "operation.modal.refusal.unsupported_cancellation_version",
@@ -108,6 +114,9 @@ _PROSE_KEYS = {
         "mcp.elicitation.refusal.no_channel",
     },
     "es": {
+        "application.modelo.calculation_summary.filing_recorded",
+        "application.modelo.calculation_summary.footer_notice",
+        "application.modelo.calculation_summary.signature_meaning",
         "application.modelo.calculation_report.local_calculation_notice",
         "cli.app.modelo.work.report.development_software_identity",
         "operation.modal.refusal.unsupported_cancellation_version",
@@ -131,6 +140,8 @@ _PROSE_KEYS = {
         "mcp.elicitation.refusal.no_channel",
     },
     "hu": {
+        "application.modelo.calculation_summary.footer_notice",
+        "application.modelo.calculation_summary.signature_meaning",
         "application.modelo.calculation_report.local_calculation_notice",
         "cli.app.modelo.work.report.development_software_identity",
         "tui.root.title",

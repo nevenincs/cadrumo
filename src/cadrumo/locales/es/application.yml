@@ -833,6 +833,72 @@ application:
         oficial de presentación ante la AEAT. La evidencia oficial la emite la AEAT
         tras la presentación: justificante; consulta de declaraciones presentadas;
         o cotejo por CSV.'
+    calculation_summary:
+      column_amount: Importe
+      column_casilla: Casilla
+      column_concept: Concepto
+      fact_exported_at: Exportado
+      fact_filing: Presentación
+      fact_revision_state: Estado de la revisión
+      fact_taxpayer: Contribuyente
+      fact_verification: Verificación
+      filing_none: No presentado
+      filing_recorded: Presentación registrada en Cadrumo; la prueba oficial es el
+        justificante de la AEAT
+      footer_notice: 'Cálculo local de Cadrumo: no es evidencia oficial de la AEAT'
+      grade_development_mock: desarrollo (no presentable)
+      grade_reviewed: revisada
+      identity_development_mock: 'Identidad de software de desarrollo (programa {program},
+        NIF de desarrollador {developer_tax_id}): el fichero de presentación de este
+        modelo no es presentable en la AEAT.'
+      identity_none: El diseño de registro de este modelo no reserva identidad de
+        software.
+      identity_reviewed: 'Identidad de software revisada: el fichero de presentación
+        de este modelo lleva una identidad de software registrada.'
+      legend: 'Valores: una cifra, incluido un cero, es un valor calculado; «sin dato»
+        indica que la revisión no registró valor para la casilla; «n/a · no aplicable»
+        indica que el registro demuestra que la casilla no aplica a este periodo.'
+      notice_title: 'Cálculo local: no es un justificante de la AEAT'
+      page_counter: Página {page} de {pages}
+      section_unnamed: Casillas
+      signature_meaning: La firma de integridad de Cadrumo adjunta a este PDF acredita
+        que la clave de este perfil declaró que, en el instante de exportación según
+        el reloj de esta instalación, la revisión, el informe de verificación, la
+        instantánea del registro y la generación de la autoridad indicados produjeron
+        exactamente este informe, este CSV y estas páginas. No acredita la aceptación
+        ni la presentación ante la AEAT, la corrección jurídica, la veracidad de los
+        datos, la identidad ni el consentimiento del contribuyente, una hora de confianza
+        ni que la clave pertenezca a una persona concreta. Compare la huella de la
+        clave con una recibida por otro canal antes de confiar en ella.
+      state_borrador: Borrador
+      state_descartado: Descartado
+      state_presentado: Presentado
+      state_presentado_supersedido: Presentado y sustituido
+      state_verificado_completo: Verificado completo
+      subtitle: Ejercicio {year} · Periodo {period} · Revisión del registro {registry_revision}
+      title: Resumen del cálculo · Modelo {modelo}
+      trace_authority_generation: Generación lógica de la autoridad del registro
+      trace_calculation_revision: Revisión del cálculo
+      trace_csv_sha256: SHA-256 del CSV adjunto
+      trace_filing_record: Registro de presentación
+      trace_heading: Trazabilidad e integridad
+      trace_ledger_snapshot: Huella de la instantánea del libro registro
+      trace_none: ninguno
+      trace_registry_snapshot: Instantánea del registro (modelo · revisión · año ·
+        periodo)
+      trace_report_sha256: SHA-256 del informe (JSON adjunto)
+      trace_signing_key: Huella de la clave de firma (SHA-256)
+      trace_software_identity: Grado de identidad de software
+      trace_verification_report: Informe de verificación
+      trace_work_unit: Unidad de trabajo
+      value_absent: sin dato
+      value_false: 'No'
+      value_not_applicable: n/a · no aplicable
+      value_true: Sí
+      verification_blocked: Bloqueada
+      verification_complete: Completa
+      verification_incomplete: Incompleta
+      verification_none: Sin verificación registrada
     errors:
       amendment_complementaria_liability_decrease: Una complementaria para el modelo
         {modelo}, ejercicio {filing_year}, período {period} rebajaría el resultado
@@ -925,6 +991,14 @@ application:
       calculation_revision_not_found: No existe ninguna revisión de cálculo con id=%{calculation_revision_id}.
       calculation_revision_parent_work_unit_discarded: La revisión de cálculo {calculation_revision_id}
         pertenece a la unidad de trabajo descartada {work_unit_id}.
+      calculation_summary_chrome_unavailable: Falta el texto {translation_key} del
+        resumen del cálculo en el idioma {report_language}; el resumen se rechaza
+        en lugar de producirse sin él.
+      calculation_summary_pdf_unavailable: El resumen del cálculo en PDF necesita
+        el complemento opcional «{extra}», que no está instalado en esta instalación.
+        Instálelo con pip install cadrumo[{extra}] y vuelva a intentarlo; verificar
+        un resumen no lo necesita.
+      calculation_summary_pdf_unreadable: El archivo no es un PDF legible ({error_type}).
       caller_casilla_source_binding_conflict: 'Las entradas de casilla del operador
         no pueden sobrescribir casillas vinculadas a una fuente derivada del bucket
         (casillas vinculadas a fuente): %{casillas}.'

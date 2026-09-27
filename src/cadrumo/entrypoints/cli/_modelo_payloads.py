@@ -41,6 +41,13 @@ from ...application.calculations.observations_repository import (
     PriorDomiciliationElectionProjection,
 )
 from ...application.modelo.calculation_report_export import ModeloCalculationReportResult
+from ...application.modelo.calculation_report_verification import (
+    CalculationSummaryCheckName,
+    CalculationSummaryVerification,
+    CalculationSummaryVerificationLayer,
+    CalculationSummaryVerificationOutcome,
+    CalculationSummaryVerificationReason,
+)
 from ...application.modelo.result_summary_payload import ResultSummaryRowPayload
 from ...application.modelo.work_plazo import validate_modelo_work_deadline_posture
 from ...application.modelo.work_review import (
@@ -812,6 +819,9 @@ class WorkReportResult(OutputSchema):
     row_count: NonNegativeInt
     software_identity_grade: AeatSoftwareIdentityGrade | None = None
     local_calculation_notice: str
+    #: Fingerprint of the profile key a summary PDF is certified with; ``None``
+    #: for a document format that carries no signature.
+    signing_key_fingerprint: str | None = None
 
     @classmethod
     def from_result(cls, result: ModeloCalculationReportResult) -> WorkReportResult:
@@ -833,6 +843,62 @@ class WorkReportResult(OutputSchema):
             row_count=result.row_count,
             software_identity_grade=result.software_identity_grade,
             local_calculation_notice=result.local_calculation_notice,
+            signing_key_fingerprint=result.signing_key_fingerprint,
+        )
+
+
+class WorkReportVerifyCheck(OutputSchema):
+    """One check ``work report-verify`` ran, and the reason it reported, if any."""
+
+    check: CalculationSummaryCheckName
+    layer: CalculationSummaryVerificationLayer
+    reason: CalculationSummaryVerificationReason | None = None
+    detail: str | None = None
+    refuses: bool
+
+
+class WorkReportVerifyResult(OutputSchema):
+    """JSON envelope for ``aeat app modelo work report-verify``.
+
+    Projects :class:`~cadrumo.application.modelo.calculation_report_verification.CalculationSummaryVerification`.
+    Carries the verdict, every check that ran and the identifiers the summary's
+    signed statement names -- never a taxpayer figure or identity, which stay in
+    the file being verified.
+    """
+
+    operation: Literal["modelo.work.report_verify"] = "modelo.work.report_verify"
+    path: str
+    outcome: CalculationSummaryVerificationOutcome
+    store_checked: bool
+    reasons: list[CalculationSummaryVerificationReason]
+    checks: list[WorkReportVerifyCheck]
+    calculation_revision_id: CalculationRevisionId | None = None
+    report_sha256: str | None = None
+    statement_sha256: str | None = None
+    signing_key_fingerprint: str | None = None
+
+    @classmethod
+    def from_verification(cls, verification: CalculationSummaryVerification, *, path: object) -> WorkReportVerifyResult:
+        """Project the application verdict onto the JSON transport shape."""
+        return cls(
+            path=str(path),
+            outcome=verification.outcome,
+            store_checked=verification.store_checked,
+            reasons=list(verification.reasons),
+            checks=[
+                WorkReportVerifyCheck(
+                    check=check.check,
+                    layer=check.layer,
+                    reason=check.reason,
+                    detail=check.detail,
+                    refuses=check.refuses,
+                )
+                for check in verification.checks
+            ],
+            calculation_revision_id=verification.calculation_revision_id,
+            report_sha256=verification.report_sha256,
+            statement_sha256=verification.statement_sha256,
+            signing_key_fingerprint=verification.signing_key_fingerprint,
         )
 
 

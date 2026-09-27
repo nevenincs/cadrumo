@@ -5,7 +5,7 @@ tags:
 date: '2026-09-26'
 modified: '2026-09-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:72e30896246123a074a839ef8b5ae1ab0590ebf2cb70eca08934babc9b42af49'
+body_hash: 'sha256:0c5827fc03fca7a5fa460b0f13c1573962326dc805b9db34e587b1bc6a004082'
 related:
   - "[[2026-09-26-export-parity-plan]]"
 ---
@@ -234,6 +234,94 @@ related:
 - `S10` `M` `src/cadrumo/locales/es/common.yml`
 - `S10` `M` `src/cadrumo/locales/hu/common.yml`
 - `S10` `verify:` `agent worktree: focused suites 1464 pass; ruff/format/ty clean; import load targets and apidocs regenerated; symbol/export/reachability counts 12/10/1; import boundaries clean` -> `pass`
+- `S12` `M` `THIRD_PARTY_NOTICES.md`
+- `S12` `A` `dev/acceptance/calculation_summary_pdf/__init__.py`
+- `S12` `A` `dev/acceptance/calculation_summary_pdf/tests/__init__.py`
+- `S12` `A` `dev/acceptance/calculation_summary_pdf/tests/test_verapdf_conformance.py`
+- `S12` `A` `dev/acceptance/calculation_summary_pdf/verapdf_conformance.py`
+- `S12` `M` `dev/locales/tests/test_audit.py`
+- `S12` `M` `dev/packaging/tests/test_dependency_surface.py`
+- `S12` `M` `dev/quality/metadata/import_load_targets.json`
+- `S12` `M` `dev/tests/test_wheel_content_boundary.py`
+- `S12` `A` `docs/api/cadrumo.adapters.outbound.calculation_summary_pdf.rst`
+- `S12` `A` `docs/api/cadrumo.adapters.outbound.calculation_summary_pdf.structure_tagging.rst`
+- `S12` `A` `docs/api/cadrumo.adapters.outbound.calculation_summary_pdf.summary_container.rst`
+- `S12` `A` `docs/api/cadrumo.adapters.outbound.calculation_summary_pdf.summary_fonts.rst`
+- `S12` `A` `docs/api/cadrumo.adapters.outbound.calculation_summary_pdf.summary_layout.rst`
+- `S12` `A` `docs/api/cadrumo.adapters.outbound.calculation_summary_pdf.summary_reading.rst`
+- `S12` `M` `docs/api/cadrumo.adapters.outbound.rst`
+- `S12` `A` `docs/api/cadrumo.application.modelo.calculation_report_certification.rst`
+- `S12` `A` `docs/api/cadrumo.application.modelo.calculation_report_verification.rst`
+- `S12` `A` `docs/api/cadrumo.application.modelo.calculation_summary_pdf_ports.rst`
+- `S12` `A` `docs/api/cadrumo.application.modelo.calculation_summary_presentation.rst`
+- `S12` `M` `docs/api/cadrumo.application.modelo.rst`
+- `S12` `A` `docs/how-to/calculation-summary.md`
+- `S12` `M` `docs/how-to/index.md`
+- `S12` `M` `docs/index.md`
+- `S12` `A` `docs/locales/ca/LC_MESSAGES/how-to/calculation-summary.po`
+- `S12` `M` `docs/locales/ca/LC_MESSAGES/how-to/index.po`
+- `S12` `M` `docs/locales/ca/LC_MESSAGES/index.po`
+- `S12` `A` `docs/locales/es/LC_MESSAGES/how-to/calculation-summary.po`
+- `S12` `M` `docs/locales/es/LC_MESSAGES/how-to/index.po`
+- `S12` `M` `docs/locales/es/LC_MESSAGES/index.po`
+- `S12` `A` `docs/locales/hu/LC_MESSAGES/how-to/calculation-summary.po`
+- `S12` `M` `docs/locales/hu/LC_MESSAGES/how-to/index.po`
+- `S12` `M` `docs/locales/hu/LC_MESSAGES/index.po`
+- `S12` `M` `justfile`
+- `S12` `M` `pyproject.toml`
+- `S12` `A` `src/cadrumo/_data/calculation_summary_pdf/color/sRGB-IEC61966-2.1.icc`
+- `S12` `A` `src/cadrumo/_data/calculation_summary_pdf/fonts/HankenGrotesk-Bold.ttf`
+- `S12` `A` `src/cadrumo/_data/calculation_summary_pdf/fonts/HankenGrotesk-OFL.txt`
+- `S12` `A` `src/cadrumo/_data/calculation_summary_pdf/fonts/HankenGrotesk-Regular.ttf`
+- `S12` `A` `src/cadrumo/_data/calculation_summary_pdf/fonts/HankenGrotesk-SemiBold.ttf`
+- `S12` `A` `src/cadrumo/_data/calculation_summary_pdf/fonts/JetBrainsMono-Bold.ttf`
+- `S12` `A` `src/cadrumo/_data/calculation_summary_pdf/fonts/JetBrainsMono-OFL.txt`
+- `S12` `A` `src/cadrumo/_data/calculation_summary_pdf/fonts/JetBrainsMono-Regular.ttf`
+- `S12` `A` `src/cadrumo/adapters/outbound/calculation_summary_pdf/__init__.py`
+- `S12` `A` `src/cadrumo/adapters/outbound/calculation_summary_pdf/structure_tagging.py`
+- `S12` `A` `src/cadrumo/adapters/outbound/calculation_summary_pdf/summary_container.py`
+- `S12` `A` `src/cadrumo/adapters/outbound/calculation_summary_pdf/summary_fonts.py`
+- `S12` `A` `src/cadrumo/adapters/outbound/calculation_summary_pdf/summary_layout.py`
+- `S12` `A` `src/cadrumo/adapters/outbound/calculation_summary_pdf/summary_reading.py`
+- `S12` `A` `src/cadrumo/adapters/outbound/calculation_summary_pdf/tests/__init__.py`
+- `S12` `A` `src/cadrumo/adapters/outbound/calculation_summary_pdf/tests/summary_report_support.py`
+- `S12` `A` `src/cadrumo/adapters/outbound/calculation_summary_pdf/tests/test_summary_fonts.py`
+- `S12` `A` `src/cadrumo/adapters/outbound/calculation_summary_pdf/tests/test_summary_structure.py`
+- `S12` `A` `src/cadrumo/adapters/outbound/calculation_summary_pdf/tests/test_summary_verification.py`
+- `S12` `A` `src/cadrumo/adapters/outbound/calculation_summary_pdf/tests/test_summary_writer.py`
+- `S12` `A` `src/cadrumo/application/modelo/calculation_report_certification.py`
+- `S12` `M` `src/cadrumo/application/modelo/calculation_report_document.py`
+- `S12` `M` `src/cadrumo/application/modelo/calculation_report_export.py`
+- `S12` `A` `src/cadrumo/application/modelo/calculation_report_verification.py`
+- `S12` `A` `src/cadrumo/application/modelo/calculation_summary_pdf_ports.py`
+- `S12` `A` `src/cadrumo/application/modelo/calculation_summary_presentation.py`
+- `S12` `A` `src/cadrumo/application/modelo/tests/test_calculation_report_certification.py`
+- `S12` `A` `src/cadrumo/application/modelo/tests/test_calculation_summary_presentation.py`
+- `S12` `M` `src/cadrumo/core/calculation_report_format.py`
+- `S12` `M` `src/cadrumo/core/errors/registry/_adapters_part3.py`
+- `S12` `M` `src/cadrumo/core/errors/registry/_application_part2.py`
+- `S12` `M` `src/cadrumo/core/optional_extras.py`
+- `S12` `M` `src/cadrumo/entrypoints/cli/_modelo_payloads.py`
+- `S12` `M` `src/cadrumo/entrypoints/cli/_modelo_work_report_cli.py`
+- `S12` `M` `src/cadrumo/entrypoints/cli/modelo_work_command_specs.py`
+- `S12` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_work_command_specs.py`
+- `S12` `A` `src/cadrumo/entrypoints/cli/tests/test_modelo_work_report_pdf_verb.py`
+- `S12` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_work_report_verb.py`
+- `S12` `A` `src/cadrumo/entrypoints/tests/profile_persistence/test_calculation_summary_pdf.py`
+- `S12` `M` `src/cadrumo/locales/ca/adapters.yml`
+- `S12` `M` `src/cadrumo/locales/ca/application.yml`
+- `S12` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S12` `M` `src/cadrumo/locales/en/adapters.yml`
+- `S12` `M` `src/cadrumo/locales/en/application.yml`
+- `S12` `M` `src/cadrumo/locales/en/cli.yml`
+- `S12` `M` `src/cadrumo/locales/es/adapters.yml`
+- `S12` `M` `src/cadrumo/locales/es/application.yml`
+- `S12` `M` `src/cadrumo/locales/es/cli.yml`
+- `S12` `M` `src/cadrumo/locales/hu/adapters.yml`
+- `S12` `M` `src/cadrumo/locales/hu/application.yml`
+- `S12` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S12` `M` `uv.lock`
+- `S12` `verify:` `agent worktree: veraPDF 27/27 expectations, wheel content boundary 12, uv lock --check` -> `pass`
 
 ## Notes
 
@@ -247,4 +335,5 @@ related:
 - `S09` Delivered in 8d5a949a; logged and closed after the fact during plan housekeeping.
 - `S15` Delivered in a55c3c2d; logged and closed after the fact during plan housekeeping.
 - `S10` CLI/TUI parity is split by the import boundary: a CLI test checks the envelope against the operation result, TUI pilots check the visible table against independently measured file facts. The unverified-completeness case uses a hand-built service result (no verified-revision fixture exists for 165/185/189).
+- `S12` Integration fixes: the absent-value label dropped its em dash (operator rule: no em dash on a rendered page) and three PDF statements that name the producing software joined the product-identity inventory. The TUI PDF option is not wired yet; the hook is recorded for the next Step.
 

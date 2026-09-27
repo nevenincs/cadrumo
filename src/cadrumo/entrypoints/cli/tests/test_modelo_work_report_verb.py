@@ -272,7 +272,7 @@ def test_the_document_format_choice_is_the_closed_declared_set(
 ) -> None:
     """A format the product does not serialise is refused by the parser, not at the sink."""
     work_unit_id, _ = _seed_current_sealed_revision(operation=operation)
-    output = tmp_path / "modelo-111-report.pdf"
+    output = tmp_path / "modelo-111-report.html"
 
     refused = _invoke(
         (
@@ -282,7 +282,7 @@ def test_the_document_format_choice_is_the_closed_declared_set(
             "report",
             work_unit_id,
             "--document-format",
-            "pdf",
+            "html",
             "--output",
             str(output),
         ),
