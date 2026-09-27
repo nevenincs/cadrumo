@@ -11,8 +11,17 @@ runner without one.
 from __future__ import annotations
 
 from collections.abc import Sequence
+from dataclasses import replace
+
+import httpx
 
 from .....application.ledger.document_transcription import DocumentTranscription
+from .....application.ledger.invoice_draft_extraction_ports import (
+    EvidenceConsentProof,
+    InvoiceDraftExtractionPorts,
+    InvoiceDraftReaderUnavailableError,
+    VisionImage,
+)
 from .....application.ledger.invoice_draft_records import InvoiceDraft
 from .....application.ledger.invoice_extraction_authority import InvoiceExtractionAuthorityValues
 from .....application.provisioning import (
@@ -27,9 +36,11 @@ from .....core.config import Settings
 from .....core.config_support import LLMProvider
 from .....core.hardware import AcceleratorKind
 from .....core.model_catalogue import model_candidate
-from .....domain.calculations.registry.authority import PinnedAuthorityOperation
+from .....core.optional_extras import MissingOptionalExtraError
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from .....domain.iva.supply_nature import SupplyNature
 from ..client import LLMClient
+from ..errors import LLMProviderError
 from ..evidence_draft_text import TextInvoiceFieldExtractor
 from ..evidence_draft_vision import VISION_TRANSCRIPTION_PROMPT_ID, LocalVisionDocumentTranscriber
 from ..models import MultimodalImageInput
@@ -177,6 +188,74 @@ def propose_supply_nature_under_admitted_load(lines: Sequence[str], *, settings:
     """Propose an invoice's supply nature on the LOCAL route, under an admitting measurement."""
     proposer = SupplyNatureProposer(settings=settings, client=admitting_supply_nature_client(settings=settings))
     return proposer.propose(list(lines)).nature
+
+
+def extraction_ports_under_admitted_load(ports: InvoiceDraftExtractionPorts) -> InvoiceDraftExtractionPorts:
+    """Return ``ports`` with each ON-HOST reader dispatch under an admitting measurement.
+
+    Mirrors the composition root's own local branches, including where the
+    authority operation is opened: per call, from the bundled indexed authority,
+    so the read runs under the same authority production gives it and only the
+    client's measured reading differs. The off-host branches are delegated back
+    to ``ports`` untouched, because a provider that reads off host is never
+    assessed for on-host headroom.
+
+    The reader-unavailable wrapping is reproduced too: these ports are the ones
+    the extraction use case reads through, and it distinguishes an unavailable
+    reader from a refusal.
+    """
+
+    def read_text(
+        transcription: DocumentTranscription,
+        settings: Settings,
+        provider: LLMProvider | None,
+        consent_token: EvidenceConsentProof | None,
+        authority_values: object,
+    ) -> InvoiceDraft:
+        if provider is not None:
+            return ports.read_text(transcription, settings, provider, consent_token, authority_values)
+        try:
+            if not isinstance(authority_values, InvoiceExtractionAuthorityValues):
+                raise TypeError("text reader requires resolved invoice extraction authority values")
+            with bundled_indexed_authority().operation() as operation:
+                return extract_invoice_text_under_admitted_load(
+                    transcription,
+                    settings=settings,
+                    authority_values=authority_values,
+                    operation=operation,
+                )
+        except (MissingOptionalExtraError, LLMProviderError, httpx.HTTPError) as exc:
+            raise InvoiceDraftReaderUnavailableError(exc) from exc
+
+    def propose_supply_nature(transcription: DocumentTranscription, settings: Settings) -> SupplyNature | None:
+        try:
+            return propose_supply_nature_under_admitted_load(transcription.text.splitlines(), settings=settings)
+        except Exception:
+            return None
+
+    def transcribe_vision(
+        images: tuple[VisionImage, ...],
+        source_content_sha256: str,
+        settings: Settings,
+        provider: LLMProvider | None,
+        consent_token: EvidenceConsentProof | None,
+    ) -> DocumentTranscription:
+        if provider is not None:
+            return ports.transcribe_vision(images, source_content_sha256, settings, provider, consent_token)
+        try:
+            inputs = tuple(MultimodalImageInput.from_base64(image.base64_data, image.media_type) for image in images)
+            return transcribe_document_images_under_admitted_load(
+                inputs, source_content_sha256=source_content_sha256, settings=settings
+            )
+        except (MissingOptionalExtraError, LLMProviderError, httpx.HTTPError) as exc:
+            raise InvoiceDraftReaderUnavailableError(exc) from exc
+
+    return replace(
+        ports,
+        read_text=read_text,
+        propose_supply_nature=propose_supply_nature,
+        transcribe_vision=transcribe_vision,
+    )
 
 
 def extract_invoice_text_under_admitted_load(
