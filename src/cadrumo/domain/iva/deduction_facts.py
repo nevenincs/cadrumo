@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from decimal import Decimal
+from typing import Final
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -22,6 +23,20 @@ from ..calculations.registry.iva_flow_catalogue import require_iva_flow_directio
 from .errors import IvaValidationError
 from .flow import IvaFlowDirection
 from .schema import IvaCategory, IvaRateKind
+
+#: The fact-0085 source families one deduction kind can belong to.
+#:
+#: Each family names three declarations that have to agree before a
+#: classification carries authority: ``kind.<family>`` lists the kinds it covers,
+#: ``category.<family>`` the IVA categories that bear such a deduction, and
+#: ``flow.<family>`` the flows that settle it. This tuple is the single place the
+#: families are enumerated -- :func:`admits_iva_deduction_classification` reads it
+#: to answer whether any deduction arises at all, and
+#: :func:`_validate_non_rectification_category` reads it to check the declared
+#: kind against the row. Two enumerations would be free to disagree about which
+#: rows bear a deduction, and the two answers reach the operator as opposite
+#: refusals on one row.
+_DEDUCTION_SOURCE_FAMILIES: Final = ("domestic", "import", "intra_eu", "reagp")
 
 
 class IvaDeductionClassificationProvenance(BaseModel):
@@ -148,6 +163,57 @@ def _validate_non_rectification_identity(
         raise IvaValidationError("only rectification may carry signed negative IVA evidence")
 
 
+def _source_family_for_kind(kind: IvaDeductionFactKind, declarations: Mapping[str, str]) -> str | None:
+    """Return the fact-0085 source family ``kind`` belongs to, or ``None``."""
+    return next(
+        (
+            family
+            for family in _DEDUCTION_SOURCE_FAMILIES
+            if kind.value in _declared_values(declarations, f"kind.{family}")
+        ),
+        None,
+    )
+
+
+def _source_families_admitting(
+    category: IvaCategory,
+    flow_direction: IvaFlowDirection,
+    declarations: Mapping[str, str],
+) -> tuple[str, ...]:
+    """Return every fact-0085 family whose category and flow this row satisfies."""
+    return tuple(
+        family
+        for family in _DEDUCTION_SOURCE_FAMILIES
+        if category.value in _declared_values(declarations, f"category.{family}")
+        and flow_direction.value in _declared_flow_values(declarations, f"flow.{family}")
+    )
+
+
+def admits_iva_deduction_classification(
+    *,
+    category: IvaCategory,
+    flow_direction: IvaFlowDirection,
+) -> bool:
+    """Return whether fact 0085 grants any deduction on this category and flow.
+
+    LIVA art. 92.Uno makes the object of a deduction a cuota that was devengada
+    in the territory and borne by direct repercusión; where the operation raises
+    no cuota there is no deduction fact to classify at all. Fact 0085 states that
+    closed set as the ``category``/``flow`` pairs of its source families, so this
+    asks the registry rather than restating the law. An exempt (LIVA art. 20) or
+    not-subject (art. 7) domestic purchase belongs to no family, and a recargo de
+    equivalencia purchase is non-deductible acquisition cost.
+
+    Callers ask it from both sides of one decision: whether a deduction
+    classification is REQUIRED on a row, and whether a present one has any
+    authority. Answering the first from the flow direction deadlocked every
+    zero-cuota purchase -- a received row settles as ``soportado`` whatever it is,
+    so no kind satisfied the requirement and every kind failed admissibility.
+    """
+    declarations = _registry_iva_deduction_declarations()
+    return bool(_source_families_admitting(category, flow_direction, declarations))
+
+
 def _validate_non_rectification_category(
     *,
     kind: IvaDeductionFactKind,
@@ -156,26 +222,16 @@ def _validate_non_rectification_category(
     flow_direction: IvaFlowDirection,
     declarations: Mapping[str, str],
 ) -> None:
-    kind_value = kind.value
-    category_value = category.value
-    flow_value = flow_direction.value
-    if kind_value in _declared_values(declarations, "kind.domestic"):
-        allowed_categories = _declared_values(declarations, "category.domestic")
-        allowed_flows = _declared_flow_values(declarations, "flow.domestic")
-    elif kind_value in _declared_values(declarations, "kind.import"):
-        allowed_categories = _declared_values(declarations, "category.import")
-        allowed_flows = _declared_flow_values(declarations, "flow.import")
-    elif kind_value in _declared_values(declarations, "kind.intra_eu"):
-        allowed_categories = _declared_values(declarations, "category.intra_eu")
-        allowed_flows = _declared_flow_values(declarations, "flow.intra_eu")
-    elif kind_value in _declared_values(declarations, "kind.reagp"):
-        allowed_categories = _declared_values(declarations, "category.reagp")
-        allowed_flows = _declared_flow_values(declarations, "flow.reagp")
-        if rate_kind.value != _required_declaration(declarations, "rate.reagp"):
-            raise IvaValidationError("registry-selected compensation rate is not admissible")
-    else:
+    family = _source_family_for_kind(kind, declarations)
+    if family is None:
         return
-    if category_value not in allowed_categories or flow_value not in allowed_flows:
+    # Read by family name rather than branched on one: fact 0085 pins a single
+    # admissible rate tier for the REAGP compensation family (``rate.reagp``) and
+    # declares no such key for the families whose cuota is an ordinary tipo.
+    required_rate = declarations.get(f"rate.{family}")
+    if required_rate is not None and rate_kind.value != required_rate:
+        raise IvaValidationError("registry-selected compensation rate is not admissible")
+    if family not in _source_families_admitting(category, flow_direction, declarations):
         raise IvaValidationError("registry-selected deduction category and flow are not an admissible pair")
 
 
@@ -229,6 +285,7 @@ def validate_iva_deduction_fact(
 
 __all__ = [
     "IvaDeductionClassificationProvenance",
+    "admits_iva_deduction_classification",
     "required_deduction_evidence_authority",
     "validate_iva_deduction_fact",
 ]

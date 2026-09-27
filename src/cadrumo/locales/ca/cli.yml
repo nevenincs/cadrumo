@@ -3008,6 +3008,9 @@ cli:
       help: Classificar un moviment del llibre al perfil actiu
       id_help: Id del moviment del llibre a classificar
       id_required: Cal un id de transacció quan no s'usa --file.
+      investment_asset_id_help: Identitat del registre de béns d'inversió contra la
+        qual es dedueix aquesta adquisició, tal com consta en aquest registre. Obligatòria
+        amb un tipus de deducció d'inversió i rebutjada en qualsevol altre.
       irpf_category_help: Identificador de categoria d'IRPF. Les factures professionals
         cobrades en net fan servir actividad_economica; els lloguers pagats en net
         fan servir arrendamiento_local o arrendamiento_vivienda_afecto. Royalties

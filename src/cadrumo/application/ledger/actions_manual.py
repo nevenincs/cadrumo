@@ -1162,6 +1162,12 @@ def _command_from_patch(
         "deduction_fact_kind",
         current.deduction_fact_kind,
     )
+    investment_asset_id = optional_patched(
+        patch,
+        patch_fields,
+        "investment_asset_id",
+        current.investment_asset_id,
+    )
     counterparty_country = optional_patched(
         patch,
         patch_fields,
@@ -1235,6 +1241,7 @@ def _command_from_patch(
         notes=notes,
         iva_category=iva_category,
         deduction_fact_kind=deduction_fact_kind,
+        investment_asset_id=investment_asset_id,
         counterparty_country=counterparty_country,
         counterparty_identification_state=counterparty_identification_state,
         source_jurisdiction=(
@@ -1561,6 +1568,7 @@ def _transaction_from_command(
         "iva_category": command.iva_category,
         "deduction_fact_kind": command.deduction_fact_kind,
         "deduction_provenance": _invoice_evidence_provenance(command, evidence_records=evidence_records),
+        "investment_asset_id": command.investment_asset_id,
         "counterparty_country": command.counterparty_country,
         "counterparty_identification_state": command.counterparty_identification_state,
         "source_jurisdiction": command.source_jurisdiction,

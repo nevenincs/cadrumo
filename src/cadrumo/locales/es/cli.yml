@@ -3035,6 +3035,9 @@ cli:
       help: Clasificar un movimiento del libro en el perfil activo
       id_help: Id del movimiento del libro a clasificar
       id_required: Se requiere un id de transacción cuando no se usa --file.
+      investment_asset_id_help: Identidad del registro de bienes de inversión contra
+        la que se deduce esta adquisición, tal como consta en ese registro. Obligatoria
+        con un tipo de deducción de inversión y rechazada en cualquier otro.
       irpf_category_help: Identificador de categoría de IRPF. Las facturas profesionales
         cobradas en neto usan actividad_economica; los alquileres pagados en neto
         usan arrendamiento_local o arrendamiento_vivienda_afecto. Royalties y los

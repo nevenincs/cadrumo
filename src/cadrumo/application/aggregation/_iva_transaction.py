@@ -28,7 +28,11 @@ from ...domain.iva.components import (
     registry_component_presence_token,
     registry_kind_applicability_token,
 )
-from ...domain.iva.deduction_facts import IvaDeductionClassificationProvenance, validate_iva_deduction_fact
+from ...domain.iva.deduction_facts import (
+    IvaDeductionClassificationProvenance,
+    admits_iva_deduction_classification,
+    validate_iva_deduction_fact,
+)
 from ...domain.iva.errors import IvaValidationError
 from ...domain.iva.flow import (
     IvaFlowDirection,
@@ -491,12 +495,23 @@ def _resolve_iva_transaction_classification(
     )
     # Input IVA is deductible only on an exact fact kind with immutable
     # provenance; refusing here reports the row instead of failing the run.
+    #
+    # Asked of fact 0085 rather than of the flow alone. Every RECEIVED row settles
+    # as ``soportado``, while LIVA art. 92.Uno grants a deduction only of a cuota
+    # that was devengada and repercutida -- so on an exempt (art. 20) or
+    # not-subject (art. 7) purchase, or a recargo de equivalencia acquisition
+    # cost, there is no deduction fact to classify and fact 0085 admits no kind
+    # for one. Demanding a classification there left the operator nothing to
+    # supply: no kind satisfied this gate and every kind failed the admissibility
+    # gate below, so an exempt insurance premium and a RETA quota could not be
+    # declared at all.
+    #
+    # Not a test of whether THIS row's cuota is zero. A 0 % tipo is sujeta y no
+    # exenta, so fact 0085 keeps ``domestic_zero`` in the domestic family and its
+    # deduction identity stays required.
     if (
         is_deducible_flow(flow_direction)
-        and effective_category
-        != resolve_iva_category_catalogue(effective_date=effective_date, authority=operation).require(
-            "recargo_equivalencia"
-        )
+        and admits_iva_deduction_classification(category=effective_category, flow_direction=flow_direction)
         and (transaction.deduction_fact_kind is None or transaction.deduction_provenance is None)
     ):
         return _IvaTransactionOutcome(
@@ -515,13 +530,11 @@ def _resolve_iva_transaction_classification(
     inadmissible_deduction = _inadmissible_deduction_issue(
         transaction,
         transaction_id=transaction_id,
-        transaction_date=effective_date,
         category=effective_category,
         rate_kind=rate_kind,
         flow_direction=flow_direction,
         base_amount=amounts.base_amount,
         iva_amount=amounts.iva_amount,
-        operation=operation,
     )
     if inadmissible_deduction is not None:
         return _IvaTransactionOutcome(gate_issue=inadmissible_deduction)
@@ -532,13 +545,11 @@ def _inadmissible_deduction_issue(
     transaction: Transaction,
     *,
     transaction_id: str,
-    transaction_date: date,
     category: IvaCategory,
     rate_kind: IvaRateKind,
     flow_direction: IvaFlowDirection,
     base_amount: Decimal,
     iva_amount: Decimal,
-    operation: PinnedAuthorityOperation,
 ) -> IvaLedgerAggregationIssue | None:
     """Return why a PRESENT deduction classification is inadmissible, or ``None``.
 
@@ -566,13 +577,21 @@ def _inadmissible_deduction_issue(
     deduction_provenance = transaction.deduction_provenance
     if deduction_fact_kind is None and deduction_provenance is None:
         return None
-    category_catalogue = resolve_iva_category_catalogue(effective_date=transaction_date, authority=operation)
-    if not is_deducible_flow(flow_direction) or category == category_catalogue.require("recargo_equivalencia"):
-        # An output row's cuota is repercutida and a recargo de equivalencia
-        # purchase is non-deductible acquisition cost, so on neither is there a
-        # deducible fact for an evidence authority to establish. Carrying one
-        # anyway is not a harmless extra field: it is a claim to deduct on a row
-        # whose flow cannot be deducted, which is the over-deduction direction.
+    if deduction_fact_kind is None or deduction_provenance is None:
+        # Half declared: a kind with no evidence behind it, or evidence naming no
+        # kind. The pairing validator below needs both to say anything, so the one
+        # question answerable here is whether the row bears a deducible cuota for
+        # an authority to attach to at all. Where it does, the gap is ABSENCE and
+        # MISSING_DEDUCTION_CLASSIFICATION owns it; where it does not -- an output
+        # row's repercutida cuota, an exempt or not-subject purchase, a recargo de
+        # equivalencia acquisition cost -- there is nothing to complete and the
+        # half-declaration is itself the error. Falling through, it reached the
+        # operator as a payload-boundary defect from the observation's validator.
+        if is_deducible_flow(flow_direction) and admits_iva_deduction_classification(
+            category=category,
+            flow_direction=flow_direction,
+        ):
+            return None
         return IvaLedgerAggregationIssue(
             transaction_id=transaction_id,
             reason=IvaLedgerAggregationIssueReason.INADMISSIBLE_DEDUCTION_CLASSIFICATION,
@@ -582,8 +601,12 @@ def _inadmissible_deduction_issue(
                 flow_direction=flow_direction.value,
             ),
         )
-    if deduction_fact_kind is None or deduction_provenance is None:
-        return None
+    # A COMPLETE classification is refused by the validator itself, which names
+    # the declared kind and the exact refusal. Screening the flow and the
+    # admissible families here first would answer the same rows with a message
+    # that names neither, so the specific answer is left to speak: fact 0085's
+    # family table is what :func:`admits_iva_deduction_classification` reads, so a
+    # row it admits nothing for cannot pass the validator either.
     try:
         validate_iva_deduction_fact(
             kind=deduction_fact_kind,
@@ -860,13 +883,11 @@ def _cash_accounting_observations(
         inadmissible_deduction = _inadmissible_deduction_issue(
             transaction,
             transaction_id=transaction.transaction_id,
-            transaction_date=payment_date,
             category=category,
             rate_kind=rate_kind,
             flow_direction=flow_direction,
             base_amount=base_amount,
             iva_amount=iva_amount * proportionality,
-            operation=operation,
         )
         if inadmissible_deduction is not None:
             return inadmissible_deduction

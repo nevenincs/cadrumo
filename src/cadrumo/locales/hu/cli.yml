@@ -2994,6 +2994,10 @@ cli:
       help: Egyetlen főkönyvi tranzakció besorolása az aktív profilban.
       id_help: A besorolandó főkönyvi tranzakció azonosítója.
       id_required: Tranzakció-azonosító szükséges, ha a --file nincs megadva.
+      investment_asset_id_help: Annak a beruházási javak nyilvántartási bejegyzésnek
+        az azonosítója, amellyel szemben ez a beszerzés levonásra kerül, a bejegyzésben
+        szereplő alakban. Beruházási levonási típusnál kötelező, minden más típusnál
+        elutasított.
       irpf_category_help: IRPF-kategória azonosítója. Nettó szakmai számlákhoz actividad_economica;
         nettó bérleti díjakhoz arrendamiento_local vagy arrendamiento_vivienda_afecto.
         A Royalties és az SGAE-bevétel capital mobiliario a LIRPF 25.4. cikke szerint,

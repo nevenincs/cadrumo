@@ -20,7 +20,11 @@ from ....core.time.clock import today_madrid
 from ....core.type_guards import is_object_list_or_tuple
 from ....core.unit_proportion import UnitProportion
 from ...iva.components import registry_category_projection
-from ...iva.deduction_facts import IvaDeductionClassificationProvenance, validate_iva_deduction_fact
+from ...iva.deduction_facts import (
+    IvaDeductionClassificationProvenance,
+    admits_iva_deduction_classification,
+    validate_iva_deduction_fact,
+)
 from ...iva.flow import (
     IvaFlowDirection,
     is_deducible_flow,
@@ -232,11 +236,19 @@ class IvaLedgerObservation(BaseModel):
                 "exemption_article is only valid when category is DOMESTIC_EXEMPT; "
                 f"got category {self.category.value!r}",
             )
-        if not is_deducible_flow(self.flow_direction) or self.category == category_catalogue.require(
-            "recargo_equivalencia"
+        # Fact 0085, not the flow direction, decides whether a deduction arises on
+        # this row. Every RECEIVED operation settles as ``soportado``, and LIVA
+        # art. 92.Uno grants a deduction only of a cuota devengada and borne by
+        # repercusión, so an exempt (art. 20) or not-subject (art. 7) purchase and
+        # a recargo de equivalencia acquisition raise none to classify. Keyed on
+        # the flow alone, this required authority that the same fact then refused,
+        # leaving those rows representable in no form at all.
+        if not is_deducible_flow(self.flow_direction) or not admits_iva_deduction_classification(
+            category=self.category,
+            flow_direction=self.flow_direction,
         ):
             if self.deduction_fact_kind is not None or self.deduction_provenance is not None:
-                raise RegistryValidationError("output IVA facts cannot carry deduction authority")
+                raise RegistryValidationError("an IVA row bearing no deducible cuota cannot carry deduction authority")
             return self
         if self.deduction_fact_kind is None or self.deduction_provenance is None:
             raise RegistryValidationError("input IVA facts require exact deduction authority")

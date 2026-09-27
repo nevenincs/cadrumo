@@ -2794,6 +2794,9 @@ cli:
       help: Classify one ledger transaction in the active profile
       id_help: Ledger transaction id to classify
       id_required: A transaction id is required when --file is not provided.
+      investment_asset_id_help: Identity of the bienes de inversión register record
+        this acquisition deducts against, as declared on that record. Required by
+        an investment deduction kind and refused on any other.
       irpf_category_help: IRPF category id. Net-paid professional invoices use actividad_economica;
         net-paid rents use arrendamiento_local or arrendamiento_vivienda_afecto. Royalties
         and SGAE income are capital mobiliario under LIRPF art. 25.4 when the taxpayer

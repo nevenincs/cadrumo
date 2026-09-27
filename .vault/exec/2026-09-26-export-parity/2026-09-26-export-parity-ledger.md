@@ -5,7 +5,7 @@ tags:
 date: '2026-09-26'
 modified: '2026-09-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:492022ce38734e3afb4c32d119152d9e77897391d7ae4c3b67d36dc10d0ef434'
+body_hash: 'sha256:fe1ab364a90eac4c3bb9498861e5ed8c92e900f3a24ffbdd01cfbaaa80fcdfa1'
 related:
   - "[[2026-09-26-export-parity-plan]]"
 ---
@@ -113,6 +113,25 @@ related:
 - `S17` `M` `src/cadrumo/domain/renta/ledger_expenses.py`
 - `S17` `A` `src/cadrumo/entrypoints/cli/tests/test_register_owned_acquisition_cli.py`
 - `S17` `verify:` `ruff check, ruff format --check, ty check on the changed modules` -> `pass`
+- `S16` `M` `src/cadrumo/application/aggregation/_iva_transaction.py`
+- `S16` `A` `src/cadrumo/application/aggregation/tests/test_zero_cuota_purchases_need_no_deduction_classification.py`
+- `S16` `M` `src/cadrumo/application/ledger/actions_common.py`
+- `S16` `M` `src/cadrumo/application/ledger/actions_manual.py`
+- `S16` `M` `src/cadrumo/application/ledger/models.py`
+- `S16` `A` `src/cadrumo/application/ledger/tests/test_preflight_zero_cuota_inputs.py`
+- `S16` `M` `src/cadrumo/domain/calculations/registry/ledger_iva_bindings.py`
+- `S16` `M` `src/cadrumo/domain/iva/deduction_facts.py`
+- `S16` `A` `src/cadrumo/domain/iva/tests/test_deduction_classification_admissibility.py`
+- `S16` `M` `src/cadrumo/entrypoints/cli/_app_ledger_classification_command_specs.py`
+- `S16` `M` `src/cadrumo/entrypoints/cli/_app_ledger_foundation_command_specs.py`
+- `S16` `M` `src/cadrumo/entrypoints/cli/_ledger.py`
+- `S16` `M` `src/cadrumo/entrypoints/cli/tests/test_app_ledger_common_parameter_identities.py`
+- `S16` `A` `src/cadrumo/entrypoints/cli/tests/test_m303_zero_cuota_and_investment_inputs_cli.py`
+- `S16` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S16` `M` `src/cadrumo/locales/en/cli.yml`
+- `S16` `M` `src/cadrumo/locales/es/cli.yml`
+- `S16` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S16` `verify:` `ruff check, ruff format --check, ty check on the 13 changed modules` -> `pass`
 
 ## Notes
 
@@ -122,4 +141,5 @@ related:
 - `S08` S07 verification in 6869e1a2 ran only the default unit lane; the integration tests of the same files were re-run here and pass.
 - `S08` TUI offline-workbook export is not yet wired (tracked for S10); S07's typed sink landed here, so S07 closes with it.
 - `S17` Structural gates (symbol usage, export consumption, reachability, import boundaries) and import load-target regeneration were not run for this Step: the session's permission classifier refused them; left for the operator.
+- `S16` Modelo 390 box [230] (adquisiciones interiores exentas) stays unbound: no bundled AEAT instruction defines its population. Modelo 303 boxes [30]/[31] (bienes de inversion) carry no binding on any revision, so an investment purchase lands in [28]/[29]; recorded as a finding.
 
