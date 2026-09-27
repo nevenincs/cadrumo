@@ -88,26 +88,26 @@ def source_exercise(source: SourceReference) -> int:
 
 
 @cache
-def _manual_edition_texts(manual_id: str) -> Mapping[int, str]:
-    # Each edition directory carries a manifest naming the exercise it covers, and the
-    # committed corpus-text sidecar holds the edition's normalised text.
+def _manual_edition_texts(manual_id: str) -> tuple[tuple[int, str], ...]:
+    # Each manual part directory carries a manifest naming the exercise its edition
+    # covers, and the committed corpus-text sidecar holds that part's normalised text.
     corpus_root = bundled_path("corpus", "manuals", manual_id)
     text_root = bundled_path("manual_corpus_text", "manuals", manual_id)
-    texts: dict[int, str] = {}
+    texts: list[tuple[int, str]] = []
     for manifest_path in sorted(corpus_root.glob("**/manifest.json")):
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         edition_dir = manifest_path.parent.relative_to(corpus_root)
         sidecar = text_root / edition_dir / f"{manifest['relative_pdf_path']}.corpus_text.json"
         if sidecar.is_file():
-            texts[int(manifest["year"])] = json.loads(sidecar.read_text(encoding="utf-8"))["normalised_text"]
-    return texts
+            texts.append((int(manifest["year"]), json.loads(sidecar.read_text(encoding="utf-8"))["normalised_text"]))
+    return tuple(texts)
 
 
 def manual_editions_printing(manual_id: str, *phrases: str) -> tuple[int, ...]:
-    """Return the exercises of the bundled AEAT manual editions whose text prints every phrase."""
+    """Return the exercises of the bundled AEAT manual editions one of whose parts prints every phrase."""
     wanted = tuple(normalise_corpus_text(phrase) for phrase in phrases)
     return tuple(
-        sorted(edition for edition, text in _manual_edition_texts(manual_id).items() if all(p in text for p in wanted))
+        sorted({edition for edition, text in _manual_edition_texts(manual_id) if all(p in text for p in wanted)})
     )
 
 
@@ -119,11 +119,11 @@ def manual_edition_matches(manual_id: str, pattern: str) -> Mapping[int, re.Matc
     print it are absent.
     """
     compiled = re.compile(pattern)
-    return {
-        edition: match
-        for edition, text in sorted(_manual_edition_texts(manual_id).items())
-        if (match := compiled.search(text)) is not None
-    }
+    matches: dict[int, re.Match[str]] = {}
+    for edition, text in _manual_edition_texts(manual_id):
+        if edition not in matches and (match := compiled.search(text)) is not None:
+            matches[edition] = match
+    return dict(sorted(matches.items()))
 
 
 def deadline_source_with_sha256(modelo_id: str, sha256: str) -> SourceReference:
