@@ -1,9 +1,12 @@
 """Synthetic ledger-paid movable-capital withholding shared by capture and calculation tests.
 
-One synthetic June 2025 interest coupon: 1000.00 gross, 19% IRPF (190.00)
-withheld, so the bank paid the holder 1000.00 - 190.00 = 810.00. The coupon
-became exigible on 30 June and was paid on 2 July, so recognition falls on the
-exigibility date and the withholding belongs to the 2025 second quarter.
+One synthetic June interest coupon of :data:`CAPITAL_YEAR`: 1000.00 gross, 19%
+IRPF (190.00) withheld, so the bank paid the holder 1000.00 - 190.00 = 810.00.
+The coupon became exigible on 30 June and was paid on 2 July, so recognition
+falls on the exigibility date and the withholding belongs to that year's second
+quarter. :data:`CAPITAL_YEAR` is the last closed exercise of the support
+envelope, so a coupon left uncollected there is settled in a year the envelope
+still supports.
 """
 
 from __future__ import annotations
@@ -22,6 +25,7 @@ from .....application.aggregation.withholding_recognition import (
     WithholdingRecipientTaxStatus,
 )
 from .....core.aggregation import RetencionClave, RetencionScheme
+from .....domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from .....domain.calculations.registry.withholding_bindings import WithholdingObservation
 from .....domain.transactions.enums import TransactionDirection, TransactionLifecycleState
 from .....domain.transactions.models import Transaction
@@ -30,18 +34,26 @@ from ..percepciones_observations import PercepcionObservationRepositoryAdapter
 from ..retencion_observations import RetencionObservationRepositoryAdapter
 from ..withholding_observation_workflow import WithholdingObservationWorkflowAdapter
 
+
+def _last_closed_exercise() -> int:
+    support = published_supported_filing_years()
+    assert support is not None, "the published authority declares no support envelope"
+    return support.horizon - 1
+
+
+CAPITAL_YEAR = _last_closed_exercise()
 CAPITAL_GROSS = Decimal("1000.00")
 CAPITAL_IRPF = Decimal("190.00")
 CAPITAL_NET = CAPITAL_GROSS - CAPITAL_IRPF
-CAPITAL_EXIGIBLE_ON = date(2025, 6, 30)
-CAPITAL_PAID_ON = date(2025, 7, 2)
+CAPITAL_EXIGIBLE_ON = date(CAPITAL_YEAR, 6, 30)
+CAPITAL_PAID_ON = date(CAPITAL_YEAR, 7, 2)
 CAPITAL_HOLDER_NIF = "22222222J"
 CAPITAL_HOLDER_NAME = "Titular Sintetico"
 
 
 def capital_payment(
     *,
-    provider_id: str = "coupon-2025-06",
+    provider_id: str = f"coupon-{CAPITAL_YEAR}-06",
     amount: Decimal = CAPITAL_NET,
     booked_date: date = CAPITAL_PAID_ON,
     direction: TransactionDirection = TransactionDirection.OUTGOING,
@@ -66,15 +78,15 @@ def capital_request(transaction: Transaction, **update: object) -> LedgerPayment
         "scheme": RetencionScheme("intereses"),
         "recipient_tax_status": WithholdingRecipientTaxStatus.RESIDENT,
         "recipient_tax_regime": WithholdingRecipientTaxRegime.IRPF,
-        "payment_event_id": "coupon-payment-2025-07",
-        "allocation_id": "coupon-allocation-2025-06",
+        "payment_event_id": f"coupon-payment-{CAPITAL_YEAR}-07",
+        "allocation_id": f"coupon-allocation-{CAPITAL_YEAR}-06",
         "gross_base": CAPITAL_GROSS,
         "withholding_amount": CAPITAL_IRPF,
         "net_settlement": CAPITAL_NET,
-        "idempotency_key": "coupon-capture-2025-06",
+        "idempotency_key": f"coupon-capture-{CAPITAL_YEAR}-06",
         "perceptor_nif": CAPITAL_HOLDER_NIF,
         "perceptor_name": CAPITAL_HOLDER_NAME,
-        "exigibility_event_id": "coupon-exigible-2025-06",
+        "exigibility_event_id": f"coupon-exigible-{CAPITAL_YEAR}-06",
         "exigibility_occurred_on": CAPITAL_EXIGIBLE_ON,
     }
     return LedgerPaymentWithholdingEvidenceRequest.model_validate(payload | update)
@@ -137,6 +149,7 @@ __all__ = [
     "CAPITAL_IRPF",
     "CAPITAL_NET",
     "CAPITAL_PAID_ON",
+    "CAPITAL_YEAR",
     "capital_payment",
     "capital_pending_payment",
     "capital_request",

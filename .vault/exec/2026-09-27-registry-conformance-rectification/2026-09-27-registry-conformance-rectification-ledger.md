@@ -5,7 +5,7 @@ tags:
 date: '2026-09-27'
 modified: '2026-09-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:c064a29396d1411ce7c4bbe14898dabb34c227c9422c481344490147ffff74a7'
+body_hash: 'sha256:0e917a5191e8fc1605798dca706327d398c72a89c99294b36328f63f5a01d40b'
 related:
   - "[[2026-09-27-registry-conformance-rectification-plan]]"
 ---
@@ -125,6 +125,27 @@ related:
 - `S09` `M` `src/cadrumo/domain/renta/actividad_asset/claims.py`
 - `S09` `M` `src/cadrumo/domain/renta/actividad_asset/tests/test_claims.py`
 - `S09` `verify:` `pytest src/cadrumo/domain/renta/actividad_asset/tests/test_claims.py (7 passed)` -> `pass`
+- `S09` `M` `src/cadrumo/_data/registry/aeat/legal/irpf.toml`
+- `S09` `M` `src/cadrumo/application/aggregation/withholding_recognition.py`
+- `S09` `M` `src/cadrumo/application/aggregation/tests/test_withholding_recognition.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/profile/tests/test_ledger_payment_withholding.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/profile/tests/test_withholding_monthly_filer_capture.py`
+- `S09` `verify:` `just check-registry, check-bindings, check-registry-gate` -> `pass`
+- `S10` `M` `src/cadrumo/application/aggregation/m193_phase_materialization.py`
+- `S10` `M` `src/cadrumo/application/aggregation/withholding_source.py`
+- `S10` `M` `src/cadrumo/application/modelo/m193_settled_row_gate.py`
+- `S10` `M` `src/cadrumo/application/aggregation/tests/withholding_filer_profile_support.py`
+- `S10` `M` `src/cadrumo/adapters/persistence/profile/tests/ledger_capital_support.py`
+- `S10` `M` `src/cadrumo/adapters/persistence/profile/tests/test_ledger_payment_capital_withholding.py`
+- `S10` `M` `src/cadrumo/adapters/persistence/profile/tests/test_withholding_producer.py`
+- `S10` `M` `src/cadrumo/adapters/persistence/profile/tests/test_withholding_source_m193_phases.py`
+- `S10` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_payment_capital_withholding_aggregate_cli.py`
+- `S10` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_m193_disclosure_phase_calculation.py`
+- `S10` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_m193_settled_amount_advisory_calculate.py`
+- `S10` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_m193_settled_row_export_gate.py`
+- `S10` `M` `src/cadrumo/entrypoints/tests/test_m123_count_authority_gate.py`
+- `S10` `M` `src/cadrumo/entrypoints/tests/test_m193_settled_row_file_verify_gate.py`
+- `S10` `verify:` `pytest withholding and 193 test set (3653 passed; 9 failures identical on main)` -> `pass`
 
 ## Notes
 
@@ -133,4 +154,5 @@ related:
 - `S05` The final-settlement manual-anchor test still names its manual ejercicio as a literal until the evidence-derived manual-edition selector from the test-year scrub is merged.
 - `S07` Two parameters keep their stated windows: the renewables availability flag is keyed on transaction_date, and renta-guarderia-incremento-cap-anual exists only in the 2024 edition.
 - `S07` Correction: editions carried the closed rows of earlier editions, which table readers such as the accumulated-cuota gate read as current law; each edition now states only its in-force rows, with a progressive bracket table kept whole.
+- `S10` A settled-row contributor persisted without its accrual year is now counted as settled in every supported year after the floor, where it was only counted after 2025: the gate over-refuses rather than lets a settled row through.
 

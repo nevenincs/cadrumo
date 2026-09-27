@@ -1,10 +1,11 @@
 """A Modelo 193 revision carrying a settled prior-accrual row is never written out as a fichero.
 
-A key B coupon exigible in 2025 and collected in January 2026 is a pending row
-of the 2025 Modelo 193 and a settled prior-accrual row of the 2026 one. No
+A key B coupon exigible in the last closed exercise and collected the next January
+is a pending row of that exercise's Modelo 193 and a settled prior-accrual row of
+the next one. No
 official source settles the base and withholding the payment-year record
-declares, so export refuses that 2026 revision from what it persisted. The
-2025 revision carrying the pending row, and a 2026 revision of manual rows
+declares, so export refuses that collection-year revision from what it persisted. The
+accrual-year revision carrying the pending row, and a collection-year revision of manual rows
 only, pass the refusal. Real encrypted store, producer, calculation and export
 services over the published authority.
 """
@@ -27,6 +28,7 @@ from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCata
 from cadrumo.adapters.persistence.profile.percepciones_observations import PercepcionObservationRepositoryAdapter
 from cadrumo.adapters.persistence.profile.retencion_observations import RetencionObservationRepositoryAdapter
 from cadrumo.adapters.persistence.profile.tests.ledger_capital_support import (
+    CAPITAL_YEAR,
     capital_payment,
     capital_pending_payment,
     capital_request,
@@ -47,6 +49,7 @@ from cadrumo.application.aggregation.percepciones_observations_repository import
 )
 from cadrumo.application.aggregation.retenciones import RetencionObservation
 from cadrumo.application.aggregation.tests.withholding_filer_profile_support import (
+    published_pending_disclosure_years,
     quarterly_filer_cadence,
     quarterly_filer_cadence_for,
 )
@@ -69,6 +72,7 @@ from cadrumo.core.operator_action_enums import NoRecoveryOutcome
 from cadrumo.core.period import Period
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision
 from cadrumo.domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
@@ -78,7 +82,7 @@ from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _BUCKET_ID = "00000000-0000-4000-8000-000000000193"
-_T0 = datetime(2026, 2, 1, 9, 0, tzinfo=UTC)
+_T0 = datetime(CAPITAL_YEAR + 1, 2, 1, 9, 0, tzinfo=UTC)
 _LEAF = "modelo.export"
 _MANUAL_NIF = "33333333P"
 
@@ -144,20 +148,20 @@ def _m193_bucket(tmp_path: Path, *, filing_year: int, operation: PinnedAuthority
 
 
 def _capture_coupon_collected_next_year(objects: SecureObjectRepository) -> None:
-    """Capture a key B coupon exigible on 15 December 2025 and collected on 20 January 2026."""
-    paid_on = date(2026, 1, 20)
-    transaction = capital_payment(provider_id="coupon-2025-12", booked_date=paid_on)
+    """Capture a key B coupon exigible on 15 December of CAPITAL_YEAR and collected on 20 January of the next year."""
+    paid_on = date(CAPITAL_YEAR + 1, 1, 20)
+    transaction = capital_payment(provider_id=f"coupon-{CAPITAL_YEAR}-12", booked_date=paid_on)
     capture = build_ledger_payment_withholding_capture(
         transaction,
         catalogue_revision_id="c" * 64,
         request=capital_request(
             transaction,
-            payment_event_id="coupon-payment-2026-01",
-            exigibility_occurred_on=date(2025, 12, 15),
+            payment_event_id=f"coupon-payment-{CAPITAL_YEAR + 1}-01",
+            exigibility_occurred_on=date(CAPITAL_YEAR, 12, 15),
             modelo_193_pending_payment=capital_pending_payment(transaction, transaction_date=paid_on),
         ),
-        applicable_year=2025,
-        cadence=quarterly_filer_cadence(2025),
+        applicable_year=CAPITAL_YEAR,
+        cadence=quarterly_filer_cadence(CAPITAL_YEAR),
     )
     assert (
         withholding_producer(objects).capture(capture.command, cadence=quarterly_filer_cadence_for(capture.command))
@@ -291,8 +295,8 @@ def test_a_settled_prior_accrual_row_refuses_export_and_writes_nothing(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     """The refusal is typed, has no command action, and leaves no fichero, event or state change."""
-    export_path = tmp_path / "modelo-193-2026-0A.txt"
-    with _m193_bucket(tmp_path, filing_year=2026, operation=operation) as bucket:
+    export_path = tmp_path / f"modelo-193-{CAPITAL_YEAR + 1}-0A.txt"
+    with _m193_bucket(tmp_path, filing_year=CAPITAL_YEAR + 1, operation=operation) as bucket:
         _capture_coupon_collected_next_year(bucket.objects)
         revision = _calculate(bucket)
         assert _phase_contributors(revision) == 1
@@ -315,10 +319,10 @@ def test_a_settled_prior_accrual_row_refuses_export_and_writes_nothing(
     (condition_evidence,) = verdict.evidence
     assert condition_evidence.values["settled_prior_accrual_rows"] == 1
     assert condition_evidence.values["amount_authority_resolved"] is False
-    assert condition_evidence.values["year"] == 2026
+    assert condition_evidence.values["year"] == CAPITAL_YEAR + 1
     assert get_registered_error_code(error).code == "REFUSED_MODELO_193_SETTLED_ROW_AMOUNT_AUTHORITY_UNRESOLVED"
     assert not export_path.exists()
-    assert list(tmp_path.glob("modelo-193-2026-0A*")) == []
+    assert list(tmp_path.glob(f"modelo-193-{CAPITAL_YEAR + 1}-0A*")) == []
     assert exported == []
     assert after == revision
 
@@ -326,37 +330,52 @@ def test_a_settled_prior_accrual_row_refuses_export_and_writes_nothing(
 def test_a_pending_row_in_its_accrual_year_is_not_refused_by_the_settled_row_gate(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
-    """The same coupon is a pending row in 2025, so export proceeds past the gate to its later checks."""
-    with _m193_bucket(tmp_path, filing_year=2025, operation=operation) as bucket:
+    """The same coupon is a pending row in its accrual year, so export proceeds past the gate to its later checks."""
+    with _m193_bucket(tmp_path, filing_year=CAPITAL_YEAR, operation=operation) as bucket:
         _capture_coupon_collected_next_year(bucket.objects)
         revision = _calculate(bucket)
         assert _phase_contributors(revision) == 1
 
         # The draft is unverified, so the lifecycle check that follows the gate refuses it.
         with pytest.raises(CalculationRevisionStateError):
-            _export(bucket, revision.calculation_revision_id, tmp_path / "modelo-193-2025-0A.txt", operation=operation)
+            _export(
+                bucket,
+                revision.calculation_revision_id,
+                tmp_path / f"modelo-193-{CAPITAL_YEAR}-0A.txt",
+                operation=operation,
+            )
 
 
 def test_ordinary_rows_in_a_payment_year_are_not_refused_by_the_settled_row_gate(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
-    """A 2026 revision of hand-declared rows carries no phase contributor, so the gate passes it."""
-    with _m193_bucket(tmp_path, filing_year=2026, operation=operation) as bucket:
-        _persist_manual_row(bucket.objects, filing_year=2026)
+    """A collection-year revision of hand-declared rows carries no phase contributor, so the gate passes it."""
+    with _m193_bucket(tmp_path, filing_year=CAPITAL_YEAR + 1, operation=operation) as bucket:
+        _persist_manual_row(bucket.objects, filing_year=CAPITAL_YEAR + 1)
         revision = _calculate(bucket)
         assert _phase_contributors(revision) == 0
 
         # The draft is unverified, so the lifecycle check that follows the gate refuses it.
         with pytest.raises(CalculationRevisionStateError):
-            _export(bucket, revision.calculation_revision_id, tmp_path / "modelo-193-2026-0A.txt", operation=operation)
+            _export(
+                bucket,
+                revision.calculation_revision_id,
+                tmp_path / f"modelo-193-{CAPITAL_YEAR + 1}-0A.txt",
+                operation=operation,
+            )
 
 
-@pytest.mark.parametrize(
-    ("filing_year", "may_settle"),
-    [(2024, False), (2025, False), (2026, True), (2027, True)],
-)
-def test_only_a_year_after_the_grounded_accrual_year_can_hold_a_settled_row(
-    filing_year: int, *, may_settle: bool
-) -> None:
+def test_every_supported_modelo_193_edition_grounds_the_pending_disclosure() -> None:
+    """Each record design the envelope selects prints the pending field for keys A, B and D."""
+    support = published_supported_filing_years()
+    assert support is not None
+    assert published_pending_disclosure_years() == frozenset(support.years)
+
+
+def test_only_a_year_after_a_grounded_accrual_year_can_hold_a_settled_row() -> None:
     """The phase materialisation's accrual-year bound is what tells a settled row from a pending one."""
-    assert modelo_193_phase_rows_may_settle_prior_accruals(filing_year) is may_settle
+    grounded = published_pending_disclosure_years()
+    first = min(grounded)
+    assert not modelo_193_phase_rows_may_settle_prior_accruals(first, pending_disclosure_years=grounded)
+    for year in sorted(grounded - {first}):
+        assert modelo_193_phase_rows_may_settle_prior_accruals(year, pending_disclosure_years=grounded)

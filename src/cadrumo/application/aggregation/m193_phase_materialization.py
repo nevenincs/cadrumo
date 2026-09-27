@@ -19,14 +19,35 @@ from pydantic import BaseModel, Field, model_validator
 from ...core.aggregation import BindingSourceKind
 from ...core.errors.hierarchy import CadrumoError
 from ...core.filing_year import FilingYear
+from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.withholding_bindings import WithholdingObservation
 from .retenciones import Modelo193CapitalDetail, RetencionObservation
 
 _PENDING_PERCEPTOR_NIF = "999999999"
 _PENDING_PERCEPTOR_NAME = "VALORES PENDIENTE DE ABONO"
-_PHASE_ACCRUAL_YEARS: frozenset[int] = frozenset({2025})
-"""Accrual years whose pending-payment disclosure is grounded; any other accrual year is refused."""
+_PENDING_FLAG_ROLE = "payee_pendiente_flag"
+_ANNUAL_PERIOD = "0A"
+
+
+def modelo_193_pending_disclosure_years(operation: PinnedAuthorityOperation) -> frozenset[int]:
+    """Supported accrual years whose Modelo 193 edition declares the pending-payment disclosure field.
+
+    The record design grounds the disclosure (keys A, B and D, an ``X`` in the
+    pending field and the ``VALORES PENDIENTE DE ABONO`` perceptor); a year whose
+    selected edition declares no such field has no grounded disclosure and is
+    refused.
+    """
+    modelo = Modelo("193")
+    return frozenset(
+        year
+        for year in operation.supported_filing_years().years
+        if any(
+            str(casilla.semantic_role) == _PENDING_FLAG_ROLE
+            for casilla in operation.revision_for_context(modelo, filing_year=year, period=_ANNUAL_PERIOD).casillas
+        )
+    )
 
 
 class Modelo193DisclosurePhase(StrEnum):
@@ -154,8 +175,12 @@ def materialize_modelo_193_disclosure_phases(
     observations: Iterable[RetencionObservation],
     *,
     filing_year: int,
+    pending_disclosure_years: frozenset[int],
 ) -> tuple[Modelo193PhaseRow, ...]:
-    """Derive active 2025 pending and later-settlement disclosure rows.
+    """Derive active pending and later-settlement disclosure rows.
+
+    ``pending_disclosure_years`` are the accrual years whose Modelo 193 edition
+    grounds the disclosure, from :func:`modelo_193_pending_disclosure_years`.
 
     Callers provide active rows read from the existing encrypted 123
     projection.  This function neither creates an annual cache nor contributes
@@ -169,7 +194,7 @@ def materialize_modelo_193_disclosure_phases(
         if capital is None:
             continue
         recognized_on = date.fromisoformat(str(observation.accrued_on))
-        if recognized_on.year not in _PHASE_ACCRUAL_YEARS:
+        if recognized_on.year not in pending_disclosure_years:
             raise Modelo193PhaseMaterializationError("unsupported_accrual_year")
         allocation_key = (
             observation.source_kind.value,
@@ -192,17 +217,21 @@ def materialize_modelo_193_disclosure_phases(
     return tuple(sorted(rows, key=_phase_sort_key))
 
 
-def modelo_193_phase_rows_may_settle_prior_accruals(filing_year: int) -> bool:
+def modelo_193_phase_rows_may_settle_prior_accruals(
+    filing_year: int,
+    *,
+    pending_disclosure_years: frozenset[int],
+) -> bool:
     """Whether a disclosure phase row of ``filing_year`` can be a settled prior-accrual row.
 
     A phase row is pending in its accrual year and settled in a later payment
     year, and only the accrual years this module grounds can materialise at
     all. A phase row persisted without its accrual year leaves a consumer
     holding only the filing year, so it asks here: false means every phase row
-    of that year is pending. Were a later accrual year grounded, a year holding both phases
-    answers true, which over-refuses rather than lets a settled row through.
+    of that year is pending. A year holding both phases answers true, which
+    over-refuses rather than lets a settled row through.
     """
-    return any(filing_year > accrual_year for accrual_year in _PHASE_ACCRUAL_YEARS)
+    return any(filing_year > accrual_year for accrual_year in pending_disclosure_years)
 
 
 def _validate_active_evidence(
@@ -314,5 +343,6 @@ __all__ = [
     "Modelo193PhaseRow",
     "Modelo193SettledAmountAuthorityAdvisory",
     "materialize_modelo_193_disclosure_phases",
+    "modelo_193_pending_disclosure_years",
     "modelo_193_phase_rows_may_settle_prior_accruals",
 ]

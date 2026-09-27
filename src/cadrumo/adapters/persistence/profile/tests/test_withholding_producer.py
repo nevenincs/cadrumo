@@ -28,7 +28,10 @@ from cadrumo.application.aggregation.retenciones import (
     aggregate_retenciones_180,
 )
 from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
-from cadrumo.application.aggregation.tests.withholding_filer_profile_support import quarterly_filer_cadence
+from cadrumo.application.aggregation.tests.withholding_filer_profile_support import (
+    published_pending_disclosure_years,
+    quarterly_filer_cadence,
+)
 from cadrumo.application.aggregation.withholding_observation_service import (
     ABSENT_WITHHOLDING_GENERATION_ID,
     SourceLiabilitySnapshot,
@@ -371,7 +374,9 @@ def test_unpaid_exigible_capital_reopens_and_later_settlement_does_not_duplicate
         assert persisted[0].accrued_on == "2025-12-15"
         assert persisted[0].modelo_193_capital is not None
         assert persisted[0].modelo_193_capital.settlement_event is None
-        pending_at_accrual = materialize_modelo_193_disclosure_phases(persisted, filing_year=2025)
+        pending_at_accrual = materialize_modelo_193_disclosure_phases(
+            persisted, filing_year=2025, pending_disclosure_years=published_pending_disclosure_years()
+        )
         assert len(pending_at_accrual) == 1
         pending = pending_at_accrual[0]
         assert pending.phase is Modelo193DisclosurePhase.PENDING
@@ -430,10 +435,12 @@ def test_unpaid_exigible_capital_reopens_and_later_settlement_does_not_duplicate
         pending_after_settlement = materialize_modelo_193_disclosure_phases(
             persisted_after_settlement,
             filing_year=2025,
+            pending_disclosure_years=published_pending_disclosure_years(),
         )
         settlement_phase = materialize_modelo_193_disclosure_phases(
             persisted_after_settlement,
             filing_year=2026,
+            pending_disclosure_years=published_pending_disclosure_years(),
         )
         assert [row.phase for row in pending_after_settlement] == [Modelo193DisclosurePhase.PENDING]
         assert [row.phase for row in settlement_phase] == [Modelo193DisclosurePhase.SETTLED_PRIOR_ACCRUAL]
@@ -444,7 +451,14 @@ def test_unpaid_exigible_capital_reopens_and_later_settlement_does_not_duplicate
         assert settled_row.annual_detail.accrual_year == 2025
         assert settled_row.annual_detail.pendiente_flag is None
         assert settled_row.amount_authority_advisory is not None
-        assert materialize_modelo_193_disclosure_phases(persisted_after_settlement, filing_year=2027) == ()
+        assert (
+            materialize_modelo_193_disclosure_phases(
+                persisted_after_settlement,
+                filing_year=2027,
+                pending_disclosure_years=published_pending_disclosure_years(),
+            )
+            == ()
+        )
 
         replay = reopened_producer.capture(settled_command, cadence=quarterly_filer_cadence(2025))
         assert replay is not None and replay.mutation.replayed

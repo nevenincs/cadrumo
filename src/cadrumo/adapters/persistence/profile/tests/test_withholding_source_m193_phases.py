@@ -8,8 +8,9 @@ producer, real resolver and the published authority's 193 revision.
 
 A capital capture is anchored to the ledger payment, so every captured
 allocation carries its settlement event: "unpaid at year end" is a coupon
-exigible in 2025 and collected in January 2026, which is PENDING in the 2025
-source and SETTLED_PRIOR_ACCRUAL in the 2026 source.
+exigible in December of the last closed exercise and collected the next January,
+which is PENDING in the accrual year's source and SETTLED_PRIOR_ACCRUAL in the
+next year's source.
 """
 
 from __future__ import annotations
@@ -26,6 +27,7 @@ from cadrumo.adapters.persistence.profile.tests.ledger_capital_support import (
     CAPITAL_GROSS,
     CAPITAL_HOLDER_NIF,
     CAPITAL_IRPF,
+    CAPITAL_YEAR,
     capital_payment,
     capital_pending_payment,
     capital_request,
@@ -57,6 +59,7 @@ from cadrumo.application.aggregation.source_mesh import (
 )
 from cadrumo.application.aggregation.tests.withholding_filer_profile_support import (
     LARGE_COMPANY_FACTS,
+    published_pending_disclosure_years,
     quarterly_filer_cadence,
     quarterly_filer_cadence_for,
     withholding_work_profile,
@@ -66,16 +69,14 @@ from cadrumo.application.aggregation.withholding_source import WithholdingSource
 from cadrumo.core.aggregation import AggregationCaptureKind, BindingSourceKind, CalculationSourceLineageRole
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingObservation
 from cadrumo.domain.user_profile.values import UserProfileFact
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-# The Modelo 193 pending-disclosure rows are grounded by the record design of the
-# newest Modelo 193 revision the registry authors; its first exercise is the accrual
-# exercise the grounding covers. The coupon is collected in the following exercise.
-_GROUNDED_ACCRUAL_EXERCISE = newest_authored_edition("193")
+# The coupon accrues in the shared fixture's exercise, whose selected Modelo 193
+# edition grounds the pending disclosure, and is collected in the following one.
+_GROUNDED_ACCRUAL_EXERCISE = CAPITAL_YEAR
 _COLLECTION_EXERCISE = _GROUNDED_ACCRUAL_EXERCISE + 1
 _PENDING_NIF = "999999999"
 _MANUAL_NIF = "33333333P"
@@ -97,7 +98,7 @@ def _capture(capture: LedgerPaymentWithholdingCapture, objects: SecureObjectRepo
 
 
 def _collected_next_year(coupon: str = "") -> tuple[str, LedgerPaymentWithholdingCapture]:
-    """A key B coupon exigible 15 December 2025 that the holder collected on 20 January 2026.
+    """A key B coupon exigible 15 December of the accrual exercise that the holder collected on 20 January of the next year.
 
     ``coupon`` distinguishes a second coupon's identities from the first's.
     """
@@ -130,7 +131,7 @@ def _collected_next_year(coupon: str = "") -> tuple[str, LedgerPaymentWithholdin
 
 
 def _collected_same_year() -> LedgerPaymentWithholdingCapture:
-    """A coupon exigible 30 June 2025 and paid 2 July 2025, with no pending evidence."""
+    """A coupon exigible 30 June and paid 2 July of the accrual exercise, with no pending evidence."""
     transaction = capital_payment()
     return build_ledger_payment_withholding_capture(
         transaction,
@@ -338,11 +339,13 @@ def test_a_manual_row_declaring_a_captured_allocation_refuses(
     }
 
 
-def test_a_later_accrual_carrying_pending_evidence_is_refused(
+def test_an_accrual_below_the_support_floor_carrying_pending_evidence_is_refused(
     tmp_path: Path,
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    """Pending disclosure is grounded for 2025 accruals only; a 2026 accrual stops the 2026 source."""
+    """No selected Modelo 193 edition grounds a pending disclosure below the floor, so it stops the floor-year source."""
+    floor = authority_operation.supported_filing_years().floor
+    below = floor - 1
     _source_id, capture = _collected_next_year()
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         _capture(capture, profile.repository)
@@ -350,22 +353,20 @@ def test_a_later_accrual_carrying_pending_evidence_is_refused(
         (captured,) = retenciones.load_observations("123", Period.from_year_and_code(_GROUNDED_ACCRUAL_EXERCISE, "4T"))
         retenciones.replace_observations(
             modelo="123",
-            filing_year=_COLLECTION_EXERCISE,
-            period=Period.from_year_and_code(_COLLECTION_EXERCISE, "1T"),
+            filing_year=below,
+            period=Period.from_year_and_code(below, "4T"),
             observations=[
                 captured.model_copy(
                     update={
-                        "source_object_id": f"coupon-{_COLLECTION_EXERCISE}-01",
-                        "accrued_on": f"{_COLLECTION_EXERCISE}-01-10",
+                        "source_object_id": f"coupon-{below}-12",
+                        "accrued_on": f"{below}-12-15",
                     }
                 )
             ],
             source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
         with pytest.raises(Modelo193PhaseMaterializationError) as exc_info:
-            _resolve(
-                profile.repository, authority_operation, bucket_id=profile.bucket_id, filing_year=_COLLECTION_EXERCISE
-            )
+            _resolve(profile.repository, authority_operation, bucket_id=profile.bucket_id, filing_year=floor)
 
     assert exc_info.value.refusal_code == "unsupported_accrual_year"
 
@@ -417,8 +418,12 @@ def test_the_settled_row_advisory_is_structured_on_the_phase_row(tmp_path: Path)
             objects=profile.repository
         ).load_source_observations_through_year("123", _COLLECTION_EXERCISE)
 
-    (pending,) = materialize_modelo_193_disclosure_phases(stored, filing_year=_GROUNDED_ACCRUAL_EXERCISE)
-    (settled,) = materialize_modelo_193_disclosure_phases(stored, filing_year=_COLLECTION_EXERCISE)
+    (pending,) = materialize_modelo_193_disclosure_phases(
+        stored, filing_year=_GROUNDED_ACCRUAL_EXERCISE, pending_disclosure_years=published_pending_disclosure_years()
+    )
+    (settled,) = materialize_modelo_193_disclosure_phases(
+        stored, filing_year=_COLLECTION_EXERCISE, pending_disclosure_years=published_pending_disclosure_years()
+    )
     assert pending.amount_authority_advisory is None
     advisory = settled.amount_authority_advisory
     assert advisory is not None
