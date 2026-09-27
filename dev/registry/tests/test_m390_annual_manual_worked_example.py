@@ -36,7 +36,7 @@ Each quarter's own printed "TOTAL CUOTA DEVENGADA" itself sums that quarter's
 own printed "Recargo de equivalencia" line (1T 1.248, 2T 624, 3T 1.248,
 4T 624 = 3.744 anual, LIVA art. 161) - the same cross-quarter fact the M303
 casilla-27 grounding used (see
-test_m303_2024_regimen_general_manual_worked_example.py).
+test_m303_regimen_general_manual_worked_example.py).
 
 Per-quarter category breakdown fed to the registry as :class:`IvaLedgerObservation`
 rows (each row's base/iva/recargo is the manual's own printed per-quarter
@@ -212,7 +212,10 @@ _CASILLA_TOTAL_BASES_CUOTAS_IVA: CasillaId = validated_casilla_id(
 )
 _M390_BIENES_INVERSION_REGULARIZACION_BINDING = "modelo-390-bienes-inversion-regularizacion-casilla-63"
 
-_FILING_YEAR = 2024
+# The exercise of the AEAT Manual practico IVA edition whose worked example this
+# oracle reproduces. The expected figures are true only for that exercise, so it is
+# the identity of the cited evidence and is not parametrized over the envelope.
+_MANUAL_EXERCISE = 2024
 _PERIOD = "0A"
 
 
@@ -220,7 +223,7 @@ def _dg_repercutido(ledger_id: str, *, day_month: tuple[int, int], base: Decimal
     month, day = day_month
     return {
         "ledger_id": ledger_id,
-        "transaction_date": date(2024, month, day),
+        "transaction_date": date(_MANUAL_EXERCISE, month, day),
         "category": IvaCategory("domestic_general"),
         "rate_kind": IvaRateKind("general"),
         "flow_direction": IvaFlowDirection.from_registry("repercutido"),
@@ -234,7 +237,7 @@ def _aic(ledger_id: str, *, day_month: tuple[int, int], base: Decimal, iva: Deci
     month, day = day_month
     return {
         "ledger_id": ledger_id,
-        "transaction_date": date(2024, month, day),
+        "transaction_date": date(_MANUAL_EXERCISE, month, day),
         "category": IvaCategory("intra_community_acquisition_reverse_charge"),
         "rate_kind": IvaRateKind("general"),
         "flow_direction": IvaFlowDirection.from_registry("inversion_sujeto_pasivo"),
@@ -243,7 +246,7 @@ def _aic(ledger_id: str, *, day_month: tuple[int, int], base: Decimal, iva: Deci
         "deduction_fact_kind": IvaDeductionFactKind.from_registry("intra_eu_current"),
         "deduction_provenance": _deduction_provenance(
             IvaDeductionFactKind.from_registry("intra_eu_current"),
-            source_locator=f"manual-iva-2024:{ledger_id}",
+            source_locator=f"manual-iva-{_MANUAL_EXERCISE}:{ledger_id}",
         ),
     }
 
@@ -252,7 +255,7 @@ def _dg_soportado(ledger_id: str, *, day_month: tuple[int, int], base: Decimal, 
     month, day = day_month
     return {
         "ledger_id": ledger_id,
-        "transaction_date": date(2024, month, day),
+        "transaction_date": date(_MANUAL_EXERCISE, month, day),
         "category": IvaCategory("domestic_general"),
         "rate_kind": IvaRateKind("general"),
         "flow_direction": IvaFlowDirection.from_registry("soportado"),
@@ -261,7 +264,7 @@ def _dg_soportado(ledger_id: str, *, day_month: tuple[int, int], base: Decimal, 
         "deduction_fact_kind": IvaDeductionFactKind.from_registry("domestic_current"),
         "deduction_provenance": _deduction_provenance(
             IvaDeductionFactKind.from_registry("domestic_current"),
-            source_locator=f"manual-iva-2024:{ledger_id}",
+            source_locator=f"manual-iva-{_MANUAL_EXERCISE}:{ledger_id}",
         ),
     }
 
@@ -270,7 +273,7 @@ def _dr_soportado(ledger_id: str, *, day_month: tuple[int, int], base: Decimal, 
     month, day = day_month
     return {
         "ledger_id": ledger_id,
-        "transaction_date": date(2024, month, day),
+        "transaction_date": date(_MANUAL_EXERCISE, month, day),
         "category": IvaCategory("domestic_reduced"),
         "rate_kind": IvaRateKind("reduced"),
         "flow_direction": IvaFlowDirection.from_registry("soportado"),
@@ -279,7 +282,7 @@ def _dr_soportado(ledger_id: str, *, day_month: tuple[int, int], base: Decimal, 
         "deduction_fact_kind": IvaDeductionFactKind.from_registry("domestic_current"),
         "deduction_provenance": _deduction_provenance(
             IvaDeductionFactKind.from_registry("domestic_current"),
-            source_locator=f"manual-iva-2024:{ledger_id}",
+            source_locator=f"manual-iva-{_MANUAL_EXERCISE}:{ledger_id}",
         ),
     }
 
@@ -288,7 +291,7 @@ def _import_soportado(ledger_id: str, *, day_month: tuple[int, int], base: Decim
     month, day = day_month
     return {
         "ledger_id": ledger_id,
-        "transaction_date": date(2024, month, day),
+        "transaction_date": date(_MANUAL_EXERCISE, month, day),
         "category": IvaCategory("import_third_country"),
         "rate_kind": IvaRateKind("general"),
         "flow_direction": IvaFlowDirection.from_registry("soportado"),
@@ -297,7 +300,7 @@ def _import_soportado(ledger_id: str, *, day_month: tuple[int, int], base: Decim
         "deduction_fact_kind": IvaDeductionFactKind.from_registry("import_current"),
         "deduction_provenance": _deduction_provenance(
             IvaDeductionFactKind.from_registry("import_current"),
-            source_locator=f"manual-iva-2024:{ledger_id}",
+            source_locator=f"manual-iva-{_MANUAL_EXERCISE}:{ledger_id}",
         ),
     }
 
@@ -373,7 +376,7 @@ def _calculate(
     include_recargo: bool,
     regularizacion_prorrata: Decimal | None = None,
 ) -> RegistryCalculationResult:
-    snapshot = compiled_bundled_authority().snapshot("390", filing_year=_FILING_YEAR, period=_PERIOD)
+    snapshot = compiled_bundled_authority().snapshot("390", filing_year=_MANUAL_EXERCISE, period=_PERIOD)
     binding_values: dict[str, Decimal] = {
         # This scenario grounds only the ledger-derived annual totals against
         # the manual's own four-quarter arithmetic; it does not exercise the
@@ -399,11 +402,11 @@ def _calculate(
         snapshot,
         inputs=inputs,
         binding_values=binding_values,
-        date_context={"filing_period": date(2025, 1, 30)},
+        date_context={"filing_period": date(_MANUAL_EXERCISE + 1, 1, 30)},
     )
 
 
-def test_m390_2024_annual_manual_worked_example_devengada_deducible_resultado() -> None:
+def test_m390_annual_manual_worked_example_devengada_deducible_resultado() -> None:
     """Annual devengada/deducible/resultado = 88.416 / 68.202 / 20.214.
 
     Oracle: AEAT Manual practico IVA 2024, Cap. 9, pag. 293-302, the sum of
@@ -515,7 +518,7 @@ def _dr_super_reducido_repercutido(
     month, day = day_month
     return {
         "ledger_id": ledger_id,
-        "transaction_date": date(2024, month, day),
+        "transaction_date": date(_MANUAL_EXERCISE, month, day),
         "category": IvaCategory("domestic_super_reduced"),
         "rate_kind": IvaRateKind("super_reduced"),
         "flow_direction": IvaFlowDirection.from_registry("repercutido"),
@@ -536,7 +539,7 @@ def _calculate_with_super_reducido_recargo(*, include_super_reducido_recargo: bo
     general/reducido tiers are proven above rather than asserting an absolute
     figure the manual never states.
     """
-    snapshot = compiled_bundled_authority().snapshot("390", filing_year=_FILING_YEAR, period=_PERIOD)
+    snapshot = compiled_bundled_authority().snapshot("390", filing_year=_MANUAL_EXERCISE, period=_PERIOD)
     observations = (
         *_annual_observations(include_recargo=True),
         IvaLedgerObservation(
@@ -564,7 +567,7 @@ def _calculate_with_super_reducido_recargo(*, include_super_reducido_recargo: bo
         snapshot,
         inputs=inputs,
         binding_values=binding_values,
-        date_context={"filing_period": date(2025, 1, 30)},
+        date_context={"filing_period": date(_MANUAL_EXERCISE + 1, 1, 30)},
     )
 
 
@@ -598,13 +601,13 @@ def test_m390_super_reducido_recargo_delta() -> None:
     assert with_recargo.values[_CASILLA_RESULTADO] - without_recargo.values[_CASILLA_RESULTADO] == Decimal("50.00")
 
 
-def test_m390_2024_manual_grounding_is_enrolled_and_raises_independently_grounded_fraction(
+def test_m390_manual_grounding_is_enrolled_and_raises_independently_grounded_fraction(
     registry_authority: ValidatedRegistryAuthority,
 ) -> None:
     """The manual-oracle grounding of the three annual totals is enrolled, not
     just computed.
 
-    Mirrors ``test_m303_2024_manual_grounding_is_enrolled_and_raises_independently_grounded_fraction``
+    Mirrors ``test_m303_manual_grounding_is_enrolled_and_raises_independently_grounded_fraction``
     (see ``test_external_oracle_grounding_enrolled.py`` for the shared
     registry-honesty gate this proves reaches the live, VALIDATED
     :class:`RegistryVerificationPolicy` fold for M390 as well as M303). Not
@@ -613,7 +616,7 @@ def test_m390_2024_manual_grounding_is_enrolled_and_raises_independently_grounde
     from a synthetic fixture.
     """
     authority = registry_authority
-    snapshot = authority.snapshot("390", filing_year=_FILING_YEAR, period=_PERIOD)
+    snapshot = authority.snapshot("390", filing_year=_MANUAL_EXERCISE, period=_PERIOD)
     policy = snapshot.verification_policy()
 
     for casilla_id in (_CASILLA_DEVENGADA, _CASILLA_DEDUCIBLE, _CASILLA_RESULTADO):

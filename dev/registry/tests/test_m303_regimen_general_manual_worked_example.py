@@ -211,9 +211,12 @@ _MANUAL_1T_LEAF_FIGURES: dict[CasillaId, Decimal] = {
     _CASILLA_RESULTADO_REGIMEN_GENERAL_46: Decimal("6288.00"),
 }
 
-_FILING_YEAR = 2024
+# The exercise of the AEAT Manual practico IVA edition whose worked example this
+# oracle reproduces. The expected figures are true only for that exercise, so it is
+# the identity of the cited evidence and is not parametrized over the envelope.
+_MANUAL_EXERCISE = 2024
 _PERIOD = "1T"
-_DEVENGO_DATE = date(2024, 3, 31)
+_DEVENGO_DATE = date(_MANUAL_EXERCISE, 3, 31)
 
 with validating_governed_facts(compiled_bundled_authority()):
     _GENERAL_RATE_KIND = _rate_kind("general", effective_date=_DEVENGO_DATE)
@@ -253,7 +256,7 @@ def _op(
     )
     return IvaLedgerObservation(
         ledger_id=ledger_id,
-        transaction_date=date(2024, 1, day if day <= 28 else 28),
+        transaction_date=date(_MANUAL_EXERCISE, 1, day if day <= 28 else 28),
         category=category,
         rate_kind=rate_kind,
         flow_direction=flow,
@@ -358,7 +361,7 @@ def _quarter_observations(*, include_recargo: bool) -> tuple[IvaLedgerObservatio
 
 
 def _calculate(*, include_recargo: bool) -> RegistryCalculationResult:
-    snapshot = compiled_bundled_authority().snapshot("303", filing_year=_FILING_YEAR, period=_PERIOD)
+    snapshot = compiled_bundled_authority().snapshot("303", filing_year=_MANUAL_EXERCISE, period=_PERIOD)
     binding_values = {
         # "Cuota a compensar de periodos anteriores: 3.000 euros" (pag. 294).
         "modelo-303-compensacion-pendiente-anteriores": Decimal("3000.00"),
@@ -374,12 +377,12 @@ def _calculate(*, include_recargo: bool) -> RegistryCalculationResult:
         snapshot,
         inputs=inputs,
         binding_values=binding_values,
-        date_context={"filing_period": date(2024, 3, 31)},
+        date_context={"filing_period": date(_MANUAL_EXERCISE, 3, 31)},
     )
 
 
 @pytest.mark.usefixtures("governed_fact_scope")
-def test_m303_2024_1t_manual_worked_example_devengada_deducible_resultado() -> None:
+def test_m303_first_quarter_manual_worked_example_devengada_deducible_resultado() -> None:
     """27/45/69/71 = 23.088 / 16.800 / 3.288 / 3.288 for the manual's 1T solucion.
 
     Oracle: AEAT Manual practico IVA 2024, Cap. 9, pag. 293-294, "Liquidacion
@@ -398,7 +401,7 @@ def test_m303_2024_1t_manual_worked_example_devengada_deducible_resultado() -> N
 
 
 @pytest.mark.usefixtures("governed_fact_scope")
-def test_m303_2024_1t_manual_worked_example_per_casilla_leaves() -> None:
+def test_m303_first_quarter_manual_worked_example_per_casilla_leaves() -> None:
     """Each leaf the manual states verbatim is reproduced in its own casilla.
 
     Oracle: the same "Liquidacion primer trimestre" solucion (pag. 293-294)
@@ -443,7 +446,7 @@ def test_casilla_27_anti_tautology_recargo_changes_total_cuota_devengada() -> No
     assert with_recargo.values[_CASILLA_71] - without_recargo.values[_CASILLA_71] == Decimal("1248.00")
 
 
-def test_m303_2024_manual_grounding_is_enrolled_and_raises_independently_grounded_fraction(
+def test_m303_manual_grounding_is_enrolled_and_raises_independently_grounded_fraction(
     registry_authority: ValidatedRegistryAuthority,
 ) -> None:
     """The manual-oracle grounding of 27/45/69/71 is enrolled, not just computed.
@@ -463,7 +466,7 @@ def test_m303_2024_manual_grounding_is_enrolled_and_raises_independently_grounde
     hand-computed or asserted from a synthetic fixture.
     """
     authority = registry_authority
-    snapshot = authority.snapshot("303", filing_year=_FILING_YEAR, period=_PERIOD)
+    snapshot = authority.snapshot("303", filing_year=_MANUAL_EXERCISE, period=_PERIOD)
     policy = snapshot.verification_policy()
 
     grounded_here = (

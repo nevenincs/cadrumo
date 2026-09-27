@@ -15,7 +15,7 @@ from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalo
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
 
 from ..compiler.fact_loader import load_governed_facts
-from .profile_schema_support import authored_history_supported_filing_years
+from .profile_schema_support import authored_history_supported_filing_years, committed_supported_filing_years
 
 _IDS = frozenset(
     (
@@ -27,6 +27,14 @@ _IDS = frozenset(
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_SUPPORT = committed_supported_filing_years()
+# LIRPF DT 32 first raises these thresholds for 2016, an authored-history
+# coordinate below the support floor, so the provision's own start is bound here.
+_DT32_FIRST_EXERCISE = 2016
+# The last annual extension of DT 32 covers the exercise two above the support
+# floor; the article 31 baseline governs every later exercise.
+_DT32_LAST_EXTENDED_EXERCISE = _SUPPORT.floor + 2
 
 
 def _catalogue() -> GovernedFactCatalogue:
@@ -57,13 +65,16 @@ def _value(fact_id: str, effective_date: date) -> Decimal:
         ("lirpf-dt-32:eo-exclusion-compras-eur", "250000", "150000"),
     ),
 )
-def test_dt32_override_ends_after_2024(fact_id: str, override: str, baseline: str) -> None:
-    assert _value(fact_id, date(2016, 1, 1)) == Decimal(override)
-    assert _value(fact_id, date(2024, 12, 31)) == Decimal(override)
-    assert _value(fact_id, date(2025, 1, 1)) == Decimal(baseline)
+def test_dt32_override_ends_after_its_last_extended_exercise(fact_id: str, override: str, baseline: str) -> None:
+    assert _value(fact_id, date(_DT32_FIRST_EXERCISE, 1, 1)) == Decimal(override)
+    assert _value(fact_id, date(_DT32_LAST_EXTENDED_EXERCISE, 12, 31)) == Decimal(override)
+    assert _value(fact_id, date(_DT32_LAST_EXTENDED_EXERCISE + 1, 1, 1)) == Decimal(baseline)
+    for year in _SUPPORT.years:
+        expected = override if year <= _DT32_LAST_EXTENDED_EXERCISE else baseline
+        assert _value(fact_id, date(year, 1, 1)) == Decimal(expected), year
 
 
-def test_agricultural_threshold_is_direct_article31_fact_from_2016() -> None:
+def test_agricultural_threshold_is_direct_article31_fact_from_the_dt32_start() -> None:
     fact_id = "lirpf-art-31:eo-exclusion-rendimientos-agricolas-ganaderos-forestales-eur"
-    assert _value(fact_id, date(2016, 1, 1)) == Decimal("250000")
-    assert _value(fact_id, date(2026, 1, 1)) == Decimal("250000")
+    for year in (_DT32_FIRST_EXERCISE, *_SUPPORT.years):
+        assert _value(fact_id, date(year, 1, 1)) == Decimal("250000"), year

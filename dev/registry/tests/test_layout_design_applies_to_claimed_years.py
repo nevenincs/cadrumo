@@ -372,7 +372,7 @@ def test_presentation_calendar_years_spans_a_window_crossing_a_calendar_boundary
     assert _presentation_calendar_years(2020, windows) == {2020, 2021}
 
 
-def test_modelo_720_ejercicio_2012_is_covered_once_the_presentation_lag_is_read() -> None:
+def test_modelo_720_first_ejercicio_is_covered_once_the_presentation_lag_is_read() -> None:
     """The concrete false positive this check exists to no longer raise, pinned by name.
 
     Orden HAP/72/2013's own disposición final única (read from the bundled corpus)

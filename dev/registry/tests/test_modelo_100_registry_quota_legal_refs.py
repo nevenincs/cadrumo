@@ -26,8 +26,17 @@ from ._modelo_100_registry_support import (
     _STATE_INTEGRAL_QUOTA_ART_62_REF,
     _modelo_100_revision,
 )
+from .profile_schema_support import committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_SUPPORT = committed_supported_filing_years()
+# The newest authored Modelo 100 edition sits one below the horizon, which projects
+# it forward; edition-specific declarations below are asserted against it.
+_REVIEWED_EDITION = _SUPPORT.horizon - 1
+# The floor edition numbers its cuota chain differently; every later authored edition
+# carries the 0500-0546 run checked below, and the horizon only projects the newest one.
+_CONTIGUOUS_CUOTA_CHAIN_YEARS = tuple(year for year in _SUPPORT.years if _SUPPORT.floor < year < _SUPPORT.horizon)
 
 _LIVE_M100_YEARS = tuple(range(2020, 2026))
 _ANUALIDADES_FORMULA_YEARS = tuple(range(2022, 2026))
@@ -111,8 +120,8 @@ def test_modelo_100_general_liquidable_and_cuota_chain_exclude_unrelated_article
             assert _FRACTIONAL_PAYMENT_ARTICLE_REF not in formula.legal_refs, (filing_year, formula.id)
 
 
-def test_modelo_100_2025_scale_result_casillas_use_scale_articles_not_fractional_payment_article() -> None:
-    revision = _revision_for(2025)
+def test_modelo_100_scale_result_casillas_use_scale_articles_not_fractional_payment_article() -> None:
+    revision = _revision_for(_REVIEWED_EDITION)
     casillas_by_id = {
         casilla.id: casilla for casilla in revision.casillas if casilla.id in _SCALE_RESULT_EXPECTED_ART_BY_CASILLA_2025
     }
@@ -165,8 +174,8 @@ def test_modelo_100_anualidades_formula_uses_child_support_articles() -> None:
         assert "resto de la base liquidable general" in required_text
 
 
-def test_modelo_100_anualidades_casilla_is_manual_input_pre_2022() -> None:
-    """2020/2021 carry 0527 as a manual scalar input with no sum formula."""
+def test_modelo_100_anualidades_casilla_is_manual_input_before_the_per_child_block() -> None:
+    """The editions before the per-child block carry 0527 as a manual scalar input with no sum formula."""
     for filing_year in _ANUALIDADES_MANUAL_INPUT_YEARS:
         expected_refs = {
             _STATE_CHILD_SUPPORT_ANNUITIES_ART_64_REF,
@@ -188,8 +197,9 @@ def test_modelo_100_anualidades_casilla_is_manual_input_pre_2022() -> None:
         assert expected_refs <= set(anualidades_casilla.legal_refs)
 
 
-def test_modelo_100_2025_cuota_chain_casillas_do_not_cite_fractional_payment_article() -> None:
-    revision = _revision_for(2025)
+@pytest.mark.parametrize("filing_year", _CONTIGUOUS_CUOTA_CHAIN_YEARS)
+def test_modelo_100_cuota_chain_casillas_do_not_cite_fractional_payment_article(filing_year: int) -> None:
+    revision = _revision_for(filing_year)
     checked = [casilla for casilla in revision.casillas if casilla.id.isdigit() and "0500" <= casilla.id <= "0546"]
 
     assert {casilla.id for casilla in checked} == {f"{number:04d}" for number in range(500, 547)}

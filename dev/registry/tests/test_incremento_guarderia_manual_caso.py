@@ -26,7 +26,9 @@ from .profile_schema_support import authored_history_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("authored_history_fact_scope")]
 
-_YEAR = 2020
+# The exercise of the AEAT Renta manual worked caso. It lies below the support
+# floor, so it is the identity of the cited example rather than a support coordinate.
+_CASO_EXERCISE = 2020
 
 #: "puede alcanzar hasta 1.000 euros anuales". Supplied by the caller in
 #: production from its registry parameter; named here so the expectation below
@@ -78,10 +80,10 @@ def test_a_child_who_never_turns_three_keeps_months_after_september() -> None:
         segundo_ciclo_infantil_inicio_mes=None,
     )
 
-    assert child.guarderia_needs_segundo_ciclo_month(_YEAR, context=_context(_YEAR)) is False
+    assert child.guarderia_needs_segundo_ciclo_month(_CASO_EXERCISE, context=_context(_CASO_EXERCISE)) is False
     assert RentaFamilyProfile(descendientes=(child,)).incremento_guarderia_0613(
-        _YEAR,
-        thresholds=_authored_thresholds(_YEAR),
+        _CASO_EXERCISE,
+        thresholds=_authored_thresholds(_CASO_EXERCISE),
         cap_anual=_CAP_ANUAL,
-        context=_context(_YEAR),
+        context=_context(_CASO_EXERCISE),
     ) == Decimal("666.67")

@@ -103,16 +103,19 @@ _CASILLA_RESULTADO: CasillaId = validated_casilla_id(
     surface="_CASILLA_RESULTADO",
 )
 
-_FILING_YEAR = 2024
+# The exercise of the AEAT Manual practico IVA edition whose worked example this
+# oracle reproduces. The expected figures are true only for that exercise, so it is
+# the identity of the cited evidence and is not parametrized over the envelope.
+_MANUAL_EXERCISE = 2024
 _PERIOD = "03"
 
 
 def _calculate(*, devengado: Decimal, deducible: Decimal) -> RegistryCalculationResult:
-    snapshot = compiled_bundled_authority().snapshot("322", filing_year=_FILING_YEAR, period=_PERIOD)
+    snapshot = compiled_bundled_authority().snapshot("322", filing_year=_MANUAL_EXERCISE, period=_PERIOD)
     observations = (
         IvaLedgerObservation(
             ledger_id="devengado-general",
-            transaction_date=date(2024, 3, 15),
+            transaction_date=date(_MANUAL_EXERCISE, 3, 15),
             category=IvaCategory("domestic_general"),
             rate_kind=IvaRateKind("general"),
             flow_direction=IvaFlowDirection.from_registry("repercutido"),
@@ -122,7 +125,7 @@ def _calculate(*, devengado: Decimal, deducible: Decimal) -> RegistryCalculation
         ),
         IvaLedgerObservation(
             ledger_id="deducible-general",
-            transaction_date=date(2024, 3, 15),
+            transaction_date=date(_MANUAL_EXERCISE, 3, 15),
             category=IvaCategory("domestic_general"),
             rate_kind=IvaRateKind("general"),
             flow_direction=IvaFlowDirection.from_registry("soportado"),
@@ -142,11 +145,11 @@ def _calculate(*, devengado: Decimal, deducible: Decimal) -> RegistryCalculation
         snapshot,
         inputs=inputs,
         binding_values=binding_values,
-        date_context={"filing_period": date(2024, 3, 31)},
+        date_context={"filing_period": date(_MANUAL_EXERCISE, 3, 31)},
     )
 
 
-def test_m322_2024_omega_dominante_manual_worked_example() -> None:
+def test_m322_omega_dominante_manual_worked_example() -> None:
     """OMEGA, S.A.: devengada/deducible/resultado = 6.000 / 2.000 / 4.000.
 
     Oracle: AEAT Manual practico IVA 2024, Cap. 6, pag. 199, "Sociedad OMEGA,
@@ -160,7 +163,7 @@ def test_m322_2024_omega_dominante_manual_worked_example() -> None:
     assert result.values[_CASILLA_RESULTADO] == Decimal("4000.00")
 
 
-def test_m322_2024_delta_dependiente_manual_worked_example() -> None:
+def test_m322_delta_dependiente_manual_worked_example() -> None:
     """DELTA, S.A.: devengada/deducible/resultado = 1.000 / 2.000 / -1.000.
 
     Oracle: AEAT Manual practico IVA 2024, Cap. 6, pag. 199, "Sociedad DELTA,
@@ -175,7 +178,7 @@ def test_m322_2024_delta_dependiente_manual_worked_example() -> None:
     assert result.values[_CASILLA_RESULTADO] == Decimal("-1000.00")
 
 
-def test_m322_2024_manual_grounding_is_enrolled_and_raises_independently_grounded_fraction(
+def test_m322_manual_grounding_is_enrolled_and_raises_independently_grounded_fraction(
     registry_authority: ValidatedRegistryAuthority,
 ) -> None:
     """The manual-oracle grounding of the three settlement totals is enrolled,
@@ -190,7 +193,7 @@ def test_m322_2024_manual_grounding_is_enrolled_and_raises_independently_grounde
     synthetic fixture.
     """
     authority = registry_authority
-    snapshot = authority.snapshot("322", filing_year=_FILING_YEAR, period=_PERIOD)
+    snapshot = authority.snapshot("322", filing_year=_MANUAL_EXERCISE, period=_PERIOD)
     policy = snapshot.verification_policy()
 
     for casilla_id in (_CASILLA_DEVENGADA, _CASILLA_DEDUCIBLE, _CASILLA_RESULTADO):

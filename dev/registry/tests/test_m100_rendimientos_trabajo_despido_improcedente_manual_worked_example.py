@@ -165,12 +165,12 @@ _SOURCE_REFS_0025 = ("lirpf-cuota-chain-authority",)
 
 # The 2020 revision's entire formula tree references exactly two bindings
 # (es-normal, tax-residence-ccaa) and two relations (rel-130, rel-131 pagos
-# fraccionados) directly by id (see test_m100_2020_estimacion_directa_manual_
+# fraccionados) directly by id (see test_m100_estimacion_directa_medico_radiologo_manual_
 # worked_example.py's module docstring for the full accounting); supplying
 # these is sufficient for calculate_registry_snapshot to evaluate the WHOLE
 # 2020 revision without raising on a missing binding/relation elsewhere in
 # the tree.
-_REL_2020 = {
+_RELATION_VALUES = {
     "renta-modelo-130-pagos-fraccionados": Decimal("0"),
     "renta-modelo-131-pagos-fraccionados": Decimal("0"),
 }
@@ -188,7 +188,12 @@ _REL_2020 = {
 # line stating the figure the scenario uses, not at the raw fact it was
 # derived from -- a locator that points at 10.100 for an input of 20.300
 # would assert a reviewability it does not have.
-_ORACLE_PAYLOAD_NAME = "modelo-100-2020-rendimientos-trabajo-despido-improcedente.json"
+# The exercise of the AEAT Manual practico de Renta edition whose caso practico this
+# oracle reproduces. It lies below the support floor, so it is the identity of the
+# cited worked example and is not parametrized over the support envelope.
+_MANUAL_EXERCISE = 2020
+
+_ORACLE_PAYLOAD_NAME = f"modelo-100-{_MANUAL_EXERCISE}-rendimientos-trabajo-despido-improcedente.json"
 
 
 def _scenario(*, reduccion_art_20: Decimal, expected_0025: Decimal, scenario_id: str) -> RegistryCalculationScenario:
@@ -197,14 +202,14 @@ def _scenario(*, reduccion_art_20: Decimal, expected_0025: Decimal, scenario_id:
     return RegistryCalculationScenario(
         id=scenario_id,
         modelo="100",
-        revision="2020",
-        filing_year=2020,
+        revision=str(_MANUAL_EXERCISE),
+        filing_year=_MANUAL_EXERCISE,
         period="0A",
         inputs=inputs,
         binding_values={"renta-modelo-100-estimacion-directa-es-normal": Decimal("1")},
         enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
-        relation_values=_REL_2020,
-        date_context={"filing_period": date(2020, 12, 31)},
+        relation_values=_RELATION_VALUES,
+        date_context={"filing_period": date(_MANUAL_EXERCISE, 12, 31)},
         expected_outputs=(
             RegistryScenarioExpectedOutput(
                 target_casilla_id=_CASILLA_0012,
@@ -231,7 +236,9 @@ def _scenario(*, reduccion_art_20: Decimal, expected_0025: Decimal, scenario_id:
                 source_refs=_SOURCE_REFS_0025,
             ),
         ),
-        notes=("raw_evidence_locator: corpus/manuals/renta/2020/part1/source.pdf.extracted.md#L8256-L8362",),
+        notes=(
+            f"raw_evidence_locator: corpus/manuals/renta/{_MANUAL_EXERCISE}/part1/source.pdf.extracted.md#L8256-L8362",
+        ),
     )
 
 
@@ -250,7 +257,7 @@ def test_0025_manual_worked_example_despido_improcedente_discapacidad() -> None:
     scenario = _scenario(
         reduccion_art_20=Decimal("3292.50"),
         expected_0025=Decimal("5837.50"),
-        scenario_id="m100-2020-0025-manual-despido-improcedente-discapacidad",
+        scenario_id=f"m100-{_MANUAL_EXERCISE}-0025-manual-despido-improcedente-discapacidad",
     )
     # Resolved through the compiler's authored authority: the published span
     # begins at the supported floor, so this ejercicio's coordinate cannot be
@@ -274,7 +281,7 @@ def test_0025_anti_tautology_art20_reduccion_change_changes_value() -> None:
     with_reduccion = _scenario(
         reduccion_art_20=Decimal("3292.50"),
         expected_0025=Decimal("5837.50"),
-        scenario_id="m100-2020-0025-anti-tautology-with-reduccion",
+        scenario_id=f"m100-{_MANUAL_EXERCISE}-0025-anti-tautology-with-reduccion",
     )
     with_reduccion_report = run_registry_calculation_scenario(with_reduccion, authority=authored_history_authority())
     assert_registry_scenario_matches(with_reduccion_report)
@@ -287,7 +294,7 @@ def test_0025_anti_tautology_art20_reduccion_change_changes_value() -> None:
     without_reduccion = _scenario(
         reduccion_art_20=Decimal("0.00"),
         expected_0025=Decimal("0.00"),
-        scenario_id="m100-2020-0025-anti-tautology-without-reduccion",
+        scenario_id=f"m100-{_MANUAL_EXERCISE}-0025-anti-tautology-without-reduccion",
     )
     without_reduccion_report = run_registry_calculation_scenario(
         without_reduccion, authority=authored_history_authority()
@@ -320,7 +327,7 @@ def test_0025_manual_grounding_is_enrolled_and_raises_independently_grounded_fra
     asserted from a synthetic fixture.
     """
     authority = authored_history_registry_authority
-    snapshot = authority.snapshot("100", filing_year=2020, period="0A")
+    snapshot = authority.snapshot("100", filing_year=_MANUAL_EXERCISE, period="0A")
     policy = snapshot.verification_policy()
 
     for casilla_id in (_CASILLA_0012, _CASILLA_0017, _CASILLA_0022, _CASILLA_0025):

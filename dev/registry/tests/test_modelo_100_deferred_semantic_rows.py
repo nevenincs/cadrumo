@@ -1,6 +1,6 @@
-"""Regression guards for the deferred Modelo 100/2025 semantic rows.
+"""Regression guards for the deferred semantic rows of the newest authored Modelo 100 edition.
 
-The 2025 declarations for casillas 0150, 0613, and 1481 are measured
+That edition's declarations for casillas 0150, 0613, and 1481 are measured
 cross-revision divergences.  They must not acquire a prior-year producer until
 their row-specific legal, input-contract, and independent-value evidence has
 been accepted.  These tests exercise the loaded registry graph so an
@@ -18,8 +18,15 @@ from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 
 from ..compiler.producer_inventory import producer_inventory
 from ._modelo_100_registry_support import _loaded_registry
+from .profile_schema_support import committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_SUPPORT = committed_supported_filing_years()
+# The newest authored Modelo 100 edition sits one below the horizon, which projects
+# it forward; its deferred rows are measured against the edition just before it.
+_DEFERRED_EDITION = str(_SUPPORT.horizon - 1)
+_PRIOR_EDITION = str(_SUPPORT.horizon - 2)
 
 
 _FOCUS_ROWS: tuple[tuple[str, str], ...] = (
@@ -34,15 +41,15 @@ def _casilla(revision: ModeloRevision, casilla_id: str):
 
 
 @pytest.mark.parametrize(("casilla_id", "prior_producer_kind"), _FOCUS_ROWS)
-def test_m100_2025_focus_rows_do_not_inherit_prior_revision_producers(
+def test_m100_deferred_focus_rows_do_not_inherit_prior_revision_producers(
     casilla_id: str,
     prior_producer_kind: str,
 ) -> None:
-    """A prior-year formula or relation is not evidence for the 2025 row."""
+    """A prior-year formula or relation is not evidence for the deferred row."""
     modelos_by_id, _catalogues = _loaded_registry()
     modelo = modelos_by_id["100"]
-    prior_revision = modelo.revisions["2024"]
-    current_revision = modelo.revisions["2025"]
+    prior_revision = modelo.revisions[_PRIOR_EDITION]
+    current_revision = modelo.revisions[_DEFERRED_EDITION]
 
     prior_inventory = producer_inventory(prior_revision)
     current_inventory = producer_inventory(current_revision)
@@ -60,12 +67,12 @@ def test_m100_2025_focus_rows_do_not_inherit_prior_revision_producers(
     assert trace.binding is None
 
 
-def test_m100_2025_0613_has_no_guarderia_profile_producer() -> None:
-    """The 2024 guarderia profile inputs are not silently treated as 2025 facts."""
+def test_m100_deferred_0613_has_no_guarderia_profile_producer() -> None:
+    """The prior edition's guarderia profile inputs are not silently treated as deferred-edition facts."""
     modelos_by_id, _catalogues = _loaded_registry()
     modelo = modelos_by_id["100"]
-    prior_revision = modelo.revisions["2024"]
-    current_revision = modelo.revisions["2025"]
+    prior_revision = modelo.revisions[_PRIOR_EDITION]
+    current_revision = modelo.revisions[_DEFERRED_EDITION]
 
     def profile_guarderia_binding_ids(revision: ModeloRevision) -> set[str]:
         return {
@@ -80,10 +87,10 @@ def test_m100_2025_0613_has_no_guarderia_profile_producer() -> None:
     assert current_ids == set()
 
 
-def test_m100_2025_1481_has_no_modelo_131_relation_source() -> None:
-    """The only 2025 M131 relation remains the declared payments handoff."""
+def test_m100_deferred_1481_has_no_modelo_131_relation_source() -> None:
+    """The deferred edition's only M131 relation remains the declared payments handoff."""
     modelos_by_id, _catalogues = _loaded_registry()
-    revision = modelos_by_id["100"].revisions["2025"]
+    revision = modelos_by_id["100"].revisions[_DEFERRED_EDITION]
 
     m131_bindings = [
         (provider.declared_source_casilla_ids[0], binding.id)

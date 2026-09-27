@@ -48,9 +48,14 @@ from ._modelo_100_registry_support import (
     _modelo_100_with_revision,
     _source_root,
 )
-from .profile_schema_support import load_user_profile_schema
+from .profile_schema_support import committed_supported_filing_years, load_user_profile_schema
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
+
+_SUPPORT = committed_supported_filing_years()
+# The newest authored Modelo 100 edition sits one below the horizon, which projects
+# it forward; edition-specific declarations below are asserted against it.
+_REVIEWED_EDITION = _SUPPORT.horizon - 1
 
 _SNAPSHOT_IDENTIFIER_KEYED_MAPS = (
     "legal",
@@ -188,8 +193,8 @@ def test_modelo_100_dependent_modelos_construct_covers_dependency_members() -> N
     assert set(dependencies.bindings) == filed_dependency_bindings
 
 
-def test_modelo_100_2025_member_grounded_constructs_do_not_declare_extra_legal_refs() -> None:
-    snapshot = _modelo_100_snapshot()
+def test_modelo_100_member_grounded_constructs_do_not_declare_extra_legal_refs() -> None:
+    snapshot = _modelo_100_snapshot(_REVIEWED_EDITION)
     revision = snapshot.revision
     resolved_constructs = {construct.id: construct for construct in revision.constructs}
     member_indexes = {

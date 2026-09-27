@@ -199,7 +199,7 @@ _SOURCE_REFS = ("lirpf-cuota-chain-authority",)
 # is therefore sufficient for ``calculate_registry_snapshot`` to evaluate
 # the WHOLE 2020 revision (not just the 0226 chain) without raising on a
 # missing binding/relation elsewhere in the tree.
-_REL_2020 = {
+_RELATION_VALUES = {
     "renta-modelo-130-pagos-fraccionados": Decimal("0"),
     "renta-modelo-131-pagos-fraccionados": Decimal("0"),
 }
@@ -211,23 +211,28 @@ _REL_2020 = {
 # Sourced from one place they cannot disagree; the declaration carries a
 # per-input line reference so a reviewer can check it against the page,
 # which is the claim it makes and the only one it makes.
-_ORACLE_PAYLOAD_NAME = "modelo-100-2020-estimacion-directa-simplificada.json"
+# The exercise of the AEAT Manual practico de Renta edition whose caso practico this
+# oracle reproduces. It lies below the support floor, so it is the identity of the
+# cited worked example and is not parametrized over the support envelope.
+_MANUAL_EXERCISE = 2020
+
+_ORACLE_PAYLOAD_NAME = f"modelo-100-{_MANUAL_EXERCISE}-estimacion-directa-simplificada.json"
 
 
 def _scenario(*, es_normal: Decimal, expected_0226: Decimal, scenario_id: str) -> RegistryCalculationScenario:
     return RegistryCalculationScenario(
         id=scenario_id,
         modelo="100",
-        revision="2020",
-        filing_year=2020,
+        revision=str(_MANUAL_EXERCISE),
+        filing_year=_MANUAL_EXERCISE,
         period="0A",
         inputs=oracle_declared_figures(_ORACLE_PAYLOAD_NAME),
         binding_values={
             "renta-modelo-100-estimacion-directa-es-normal": es_normal,
         },
         enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
-        relation_values=_REL_2020,
-        date_context={"filing_period": date(2020, 12, 31)},
+        relation_values=_RELATION_VALUES,
+        date_context={"filing_period": date(_MANUAL_EXERCISE, 12, 31)},
         expected_outputs=(
             RegistryScenarioExpectedOutput(
                 target_casilla_id=_CASILLA_0226,
@@ -236,7 +241,10 @@ def _scenario(*, es_normal: Decimal, expected_0226: Decimal, scenario_id: str) -
                 source_refs=_SOURCE_REFS,
             ),
         ),
-        notes=("raw_evidence_locator: corpus/manuals/renta/2020/part1/source.pdf.extracted.md#L15992-L16145",),
+        notes=(
+            "raw_evidence_locator: "
+            f"corpus/manuals/renta/{_MANUAL_EXERCISE}/part1/source.pdf.extracted.md#L15992-L16145",
+        ),
     )
 
 
@@ -255,7 +263,7 @@ def test_0226_manual_worked_example_medico_radiologo_simplificada() -> None:
     scenario = _scenario(
         es_normal=Decimal("0"),
         expected_0226=Decimal("58100.00"),
-        scenario_id="m100-2020-0226-manual-medico-radiologo-simplificada",
+        scenario_id=f"m100-{_MANUAL_EXERCISE}-0226-manual-medico-radiologo-simplificada",
     )
     # Resolved through the compiler's authored authority: the published span
     # begins at the supported floor, so this ejercicio's coordinate cannot be
@@ -280,7 +288,7 @@ def test_0226_anti_tautology_modalidad_switch_changes_value() -> None:
     simplificada = _scenario(
         es_normal=Decimal("0"),
         expected_0226=Decimal("58100.00"),
-        scenario_id="m100-2020-0226-anti-tautology-simplificada",
+        scenario_id=f"m100-{_MANUAL_EXERCISE}-0226-anti-tautology-simplificada",
     )
     simplificada_report = run_registry_calculation_scenario(simplificada, authority=authored_history_authority())
     assert_registry_scenario_matches(simplificada_report)
@@ -293,7 +301,7 @@ def test_0226_anti_tautology_modalidad_switch_changes_value() -> None:
     normal = _scenario(
         es_normal=Decimal("1"),
         expected_0226=Decimal("0.00"),
-        scenario_id="m100-2020-0226-anti-tautology-normal",
+        scenario_id=f"m100-{_MANUAL_EXERCISE}-0226-anti-tautology-normal",
     )
     normal_report = run_registry_calculation_scenario(normal, authority=authored_history_authority())
     assert simplificada_report.calculation.values[_CASILLA_0226] != normal_report.calculation.values[_CASILLA_0226], (
@@ -321,7 +329,7 @@ def test_0226_manual_grounding_is_enrolled_and_raises_independently_grounded_fra
     or asserted from a synthetic fixture.
     """
     authority = authored_history_registry_authority
-    snapshot = authority.snapshot("100", filing_year=2020, period="0A")
+    snapshot = authority.snapshot("100", filing_year=_MANUAL_EXERCISE, period="0A")
     policy = snapshot.verification_policy()
 
     assert _CASILLA_0226 in policy.externally_grounded_casilla_ids

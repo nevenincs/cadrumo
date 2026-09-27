@@ -15,13 +15,20 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export import clasificar_casillas_oficiales
 
 from ..compiler.authority import compiled_bundled_authority
+from .profile_schema_support import committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_SUPPORT = committed_supported_filing_years()
+# The official XML dictionary first publishes the dictionary-only ANOASDLG family
+# field for the exercise two above the support floor; earlier editions omit it.
+_FAMILY_FIELD_FIRST_DICTIONARY_EXERCISE = _SUPPORT.floor + 2
 
-def test_m100_2024_uses_the_official_xml_dictionary_and_requires_its_authority() -> None:
+
+@pytest.mark.parametrize("filing_year", _SUPPORT.years)
+def test_m100_uses_the_official_xml_dictionary_and_requires_its_authority(filing_year: int) -> None:
     authority = compiled_bundled_authority()
-    revision = authority.snapshot("100", filing_year=2024, period="0A").revision
+    revision = authority.snapshot("100", filing_year=filing_year, period="0A").revision
 
     with pytest.raises(RegistryValidationError, match="requires published sources and source payloads"):
         clasificar_casillas_oficiales(revision)
@@ -41,6 +48,8 @@ def test_m100_2024_uses_the_official_xml_dictionary_and_requires_its_authority()
     )
 
     assert statuses[validated_casilla_id("0001", surface="M100 official box 0001")] is EstadoCasillaOficial.ADDRESSED
-    assert statuses[validated_casilla_id("ANOASDLG", surface="M100 dictionary-only family field")] is (
-        EstadoCasillaOficial.UNDEFINED
-    )
+    family_field = validated_casilla_id("ANOASDLG", surface="M100 dictionary-only family field")
+    if filing_year >= _FAMILY_FIELD_FIRST_DICTIONARY_EXERCISE:
+        assert statuses[family_field] is EstadoCasillaOficial.UNDEFINED
+    else:
+        assert family_field not in statuses

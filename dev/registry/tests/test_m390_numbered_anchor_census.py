@@ -1,4 +1,4 @@
-"""Exact parser-owned 2022 Modelo 390 numbered-page census."""
+"""Exact parser-owned Modelo 390 numbered-page census of the pinned census design."""
 
 from __future__ import annotations
 
@@ -18,6 +18,10 @@ from ..pipeline.record_design_intermediate import RecordDesignIntermediate, load
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+# The exercise of the official record design the census module pins; it names the
+# cited design rather than a support coordinate.
+_CENSUS_DESIGN_EXERCISE = 2022
+
 
 def _intermediate() -> RecordDesignIntermediate:
     source_root = bundled_path()
@@ -25,9 +29,9 @@ def _intermediate() -> RecordDesignIntermediate:
     return load_record_design_intermediate(
         source_root,
         catalogues.sources,
-        source_ref="aeat-dr-390-2022",
-        filing_year=2022,
-        design_epoch="2022",
+        source_ref=f"aeat-dr-390-{_CENSUS_DESIGN_EXERCISE}",
+        filing_year=_CENSUS_DESIGN_EXERCISE,
+        design_epoch=str(_CENSUS_DESIGN_EXERCISE),
     )
 
 
@@ -36,7 +40,7 @@ def _replace_first_page(intermediate: RecordDesignIntermediate, fields: tuple[ob
     return intermediate.model_copy(update={"sheets": (page, *intermediate.sheets[1:])})
 
 
-def test_2022_numbered_page_census_retains_the_exact_537_parser_anchor_set() -> None:
+def test_m390_numbered_page_census_retains_the_exact_537_parser_anchor_set() -> None:
     census = census_m390_2022_numbered_anchors(_intermediate())
 
     assert census.anchor_count == M390_2022_NUMBERED_ANCHOR_COUNT == 537

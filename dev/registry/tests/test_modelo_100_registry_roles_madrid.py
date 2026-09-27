@@ -15,8 +15,14 @@ from ._modelo_100_registry_support import (
     _MADRID_DEDUCTION_SECTION,
     _modelo_100_snapshot,
 )
+from .profile_schema_support import committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_SUPPORT = committed_supported_filing_years()
+# The newest authored Modelo 100 edition sits one below the horizon, which projects
+# it forward; its printed labels name its own exercise and the one before it.
+_REVIEWED_EDITION = _SUPPORT.horizon - 1
 
 _MADRID_NUEVOS_CONTRIBUYENTES_ROLE = "irpf_deduccion_madrid_nuevos_contribuyentes_extranjero"
 _MADRID_NUEVOS_CONTRIBUYENTES_GENERADO_ROLE = "irpf_deduccion_madrid_nuevos_contribuyentes_generado"
@@ -33,8 +39,8 @@ _LEGACY_MADRID_M26_PENDING_ROLES = frozenset(
 )
 
 
-def test_modelo_100_madrid_2025_m26_nuevos_contribuyentes_pending_roles_follow_official_family() -> None:
-    revision = _modelo_100_snapshot(2025).revision
+def test_modelo_100_madrid_m26_nuevos_contribuyentes_pending_roles_follow_official_family() -> None:
+    revision = _modelo_100_snapshot(_REVIEWED_EDITION).revision
     expected_ids = {"2022", "2023", "2030", "2031", "2032"}
     casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in expected_ids}
     legacy_roles = [
@@ -47,13 +53,13 @@ def test_modelo_100_madrid_2025_m26_nuevos_contribuyentes_pending_roles_follow_o
     assert set(casillas_by_id) == expected_ids
 
     previous_pending_1 = casillas_by_id["2022"]
-    assert previous_pending_1.label == "Importe generado en 2024 pendiente de aplicación"
+    assert previous_pending_1.label == f"Importe generado en {_REVIEWED_EDITION - 1} pendiente de aplicación"
     assert tuple(previous_pending_1.section) == _MADRID_DEDUCTION_SECTION
     assert previous_pending_1.semantic_role == _MADRID_NUEVOS_CONTRIBUYENTES_PENDIENTE_1_ROLE
     assert _AUTONOMIC_DEDUCTION_ART_77_REF in previous_pending_1.legal_refs
 
     previous_pending = casillas_by_id["2023"]
-    assert previous_pending.label == "Importe generado en 2024 pendiente de aplicación"
+    assert previous_pending.label == f"Importe generado en {_REVIEWED_EDITION - 1} pendiente de aplicación"
     assert tuple(previous_pending.section) == _MADRID_DEDUCTION_SECTION
     assert previous_pending.semantic_role == _MADRID_NUEVOS_CONTRIBUYENTES_PENDIENTE_EJERCICIO_ANTERIOR_ROLE
     assert _AUTONOMIC_DEDUCTION_ART_77_REF in previous_pending.legal_refs
@@ -65,13 +71,13 @@ def test_modelo_100_madrid_2025_m26_nuevos_contribuyentes_pending_roles_follow_o
     assert _AUTONOMIC_DEDUCTION_ART_77_REF in parent.legal_refs
 
     generated = casillas_by_id["2031"]
-    assert generated.label == "Importe generado en 2025"
+    assert generated.label == f"Importe generado en {_REVIEWED_EDITION}"
     assert tuple(generated.section) == _MADRID_DEDUCTION_SECTION
     assert generated.semantic_role == _MADRID_NUEVOS_CONTRIBUYENTES_GENERADO_ROLE
     assert _AUTONOMIC_DEDUCTION_ART_77_REF in generated.legal_refs
 
     current_pending = casillas_by_id["2032"]
-    assert current_pending.label == "Importe generado en 2025 pendiente de aplicación"
+    assert current_pending.label == f"Importe generado en {_REVIEWED_EDITION} pendiente de aplicación"
     assert tuple(current_pending.section) == _MADRID_DEDUCTION_SECTION
     assert current_pending.semantic_role == _MADRID_NUEVOS_CONTRIBUYENTES_PENDIENTE_ROLE
     assert _AUTONOMIC_DEDUCTION_ART_77_REF in current_pending.legal_refs

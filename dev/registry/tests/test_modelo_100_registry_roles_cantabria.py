@@ -9,8 +9,14 @@ from ._modelo_100_registry_support import (
     _modelo_100_revision,
     _modelo_100_snapshot,
 )
+from .profile_schema_support import committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_SUPPORT = committed_supported_filing_years()
+# The newest authored Modelo 100 edition sits one below the horizon, which projects
+# it forward; its printed labels name its own exercise and the one before it.
+_REVIEWED_EDITION = _SUPPORT.horizon - 1
 
 _CANTABRIA_DEDUCTION_SECTION = ("resultados", "deduccion_autonomica_res", "cantabria_res")
 _CANTABRIA_DESPLAZAMIENTO_NUEVOS_RESIDENTES_ROLE = "irpf_deduccion_cantabria_desplazamiento_nuevos_residentes"
@@ -80,8 +86,8 @@ _EXPECTED_CANTABRIA_OBRAS_MEJORA_CURRENT_LABELS = {
 }
 
 
-def test_modelo_100_cantabria_2025_desplazamiento_nuevos_residentes_roles_follow_cant20_family() -> None:
-    revision = _modelo_100_snapshot(2025).revision
+def test_modelo_100_cantabria_desplazamiento_nuevos_residentes_roles_follow_cant20_family() -> None:
+    revision = _modelo_100_snapshot(_REVIEWED_EDITION).revision
     casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in {"0773", "0776", "1715"}}
     legacy_roles = [
         casilla.semantic_role
@@ -99,20 +105,20 @@ def test_modelo_100_cantabria_2025_desplazamiento_nuevos_residentes_roles_follow
     assert _AUTONOMIC_DEDUCTION_ART_77_REF in parent.legal_refs
 
     generated = casillas_by_id["0776"]
-    assert generated.label == "Importe generado en 2025"
+    assert generated.label == f"Importe generado en {_REVIEWED_EDITION}"
     assert tuple(generated.section) == _CANTABRIA_DEDUCTION_SECTION
     assert generated.semantic_role == _CANTABRIA_DESPLAZAMIENTO_NUEVOS_RESIDENTES_GENERADO_ROLE
     assert _AUTONOMIC_DEDUCTION_ART_77_REF in generated.legal_refs
 
     pending = casillas_by_id["1715"]
-    assert pending.label == "Importe generado en 2025 pendiente de aplicación"
+    assert pending.label == f"Importe generado en {_REVIEWED_EDITION} pendiente de aplicación"
     assert tuple(pending.section) == _CANTABRIA_DEDUCTION_SECTION
     assert pending.semantic_role == _CANTABRIA_DESPLAZAMIENTO_NUEVOS_RESIDENTES_PENDIENTE_ROLE
     assert _AUTONOMIC_DEDUCTION_ART_77_REF in pending.legal_refs
 
 
-def test_modelo_100_cantabria_2025_nuevos_contribuyentes_extranjero_roles_follow_cant23_family() -> None:
-    revision = _modelo_100_snapshot(2025).revision
+def test_modelo_100_cantabria_nuevos_contribuyentes_extranjero_roles_follow_cant23_family() -> None:
+    revision = _modelo_100_snapshot(_REVIEWED_EDITION).revision
     casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in {"1708", "1714", "1717"}}
     legacy_roles = [
         casilla.semantic_role
@@ -132,20 +138,22 @@ def test_modelo_100_cantabria_2025_nuevos_contribuyentes_extranjero_roles_follow
     assert _AUTONOMIC_DEDUCTION_ART_77_REF in parent.legal_refs
 
     generated = casillas_by_id["1714"]
-    assert generated.label == "Importe generado en 2025"
+    assert generated.label == f"Importe generado en {_REVIEWED_EDITION}"
     assert tuple(generated.section) == _CANTABRIA_DEDUCTION_SECTION
     assert generated.semantic_role == _CANTABRIA_NUEVOS_CONTRIBUYENTES_EXTRANJERO_GENERADO_ROLE
     assert _AUTONOMIC_DEDUCTION_ART_77_REF in generated.legal_refs
 
     pending = casillas_by_id["1717"]
-    assert pending.label == "Importe generado en 2025 pendiente de aplicación"
+    assert pending.label == f"Importe generado en {_REVIEWED_EDITION} pendiente de aplicación"
     assert tuple(pending.section) == _CANTABRIA_DEDUCTION_SECTION
     assert pending.semantic_role == _CANTABRIA_NUEVOS_CONTRIBUYENTES_EXTRANJERO_PENDIENTE_ROLE
     assert _AUTONOMIC_DEDUCTION_ART_77_REF in pending.legal_refs
 
 
-@pytest.mark.parametrize("filing_year", [2020, 2021, 2022, 2023])
-def test_modelo_100_cantabria_2020_2023_obras_mejora_slots_keep_historical_cant3aa_shape(
+# The editions whose official labels are recorded above, keyed by the exercise each
+# edition prints; the recorded label text is the cited evidence for each shape.
+@pytest.mark.parametrize("filing_year", sorted(_EXPECTED_CANTABRIA_OBRAS_MEJORA_HISTORICAL_LABELS))
+def test_modelo_100_cantabria_historical_obras_mejora_slots_keep_cant3aa_shape(
     filing_year: int,
 ) -> None:
     revision = _modelo_100_revision(filing_year)
@@ -172,8 +180,8 @@ def test_modelo_100_cantabria_2020_2023_obras_mejora_slots_keep_historical_cant3
     assert _AUTONOMIC_DEDUCTION_ART_77_REF in current_pending.legal_refs
 
 
-@pytest.mark.parametrize("filing_year", [2024, 2025])
-def test_modelo_100_cantabria_2024_2025_obras_mejora_roles_follow_cant3_family(filing_year: int) -> None:
+@pytest.mark.parametrize("filing_year", sorted(_EXPECTED_CANTABRIA_OBRAS_MEJORA_CURRENT_LABELS))
+def test_modelo_100_cantabria_current_obras_mejora_roles_follow_cant3_family(filing_year: int) -> None:
     revision = _modelo_100_revision(filing_year)
     casillas_by_id = {
         casilla.id: casilla
