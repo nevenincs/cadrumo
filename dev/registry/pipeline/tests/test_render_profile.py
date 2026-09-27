@@ -986,16 +986,21 @@ def test_real_m200_profile_exactly_covers_source_eligibility_and_excludes_variab
     )
 
 
-def test_real_m390_2022_profile_exactly_covers_source_eligibility_and_binds_day_first_dates() -> None:
-    """The 2022 M390 profile binds all nine blank numeric fields to its pinned source."""
+#: The exercise of the pinned Modelo 390 design whose committed render profile is
+#: checked; it names the cited design and its profile directory.
+_M390_PINNED_PROFILE_EXERCISE = 2022
+
+
+def test_real_m390_pinned_profile_exactly_covers_source_eligibility_and_binds_day_first_dates() -> None:
+    """The pinned M390 profile binds all nine blank numeric fields to its pinned source."""
     source_root = bundled_path()
     catalogues = load_catalogue_file(bundled_path("registry", "aeat", "legal", "iva.toml"))
     intermediate = load_record_design_intermediate(
         source_root,
         catalogues.sources,
-        source_ref="aeat-dr-390-2022",
-        filing_year=2022,
-        design_epoch="2022",
+        source_ref=f"aeat-dr-390-{_M390_PINNED_PROFILE_EXERCISE}",
+        filing_year=_M390_PINNED_PROFILE_EXERCISE,
+        design_epoch=str(_M390_PINNED_PROFILE_EXERCISE),
     )
     eligibility = project_render_profile_eligibility(field for sheet in intermediate.sheets for field in sheet.fields)
     design_identity = RenderProfileDesignIdentity(
@@ -1007,11 +1012,13 @@ def test_real_m390_2022_profile_exactly_covers_source_eligibility_and_binds_day_
     resolved = resolve_record_design_binary(
         source_root,
         catalogues.sources,
-        source_ref="aeat-dr-390-2022",
-        filing_year=2022,
-        design_epoch="2022",
+        source_ref=f"aeat-dr-390-{_M390_PINNED_PROFILE_EXERCISE}",
+        filing_year=_M390_PINNED_PROFILE_EXERCISE,
+        design_epoch=str(_M390_PINNED_PROFILE_EXERCISE),
     )
-    profile_directory = Path(__file__).parents[2] / "render_profiles" / "modelo_390" / "2022"
+    profile_directory = (
+        Path(__file__).parents[2] / "render_profiles" / "modelo_390" / str(_M390_PINNED_PROFILE_EXERCISE)
+    )
     profile = load_render_profile(profile_directory)
     evidence = load_render_profile_source_evidence(resolved.path, profile)
     validate_render_profile_authority(profile, design_identity, eligibility, evidence)

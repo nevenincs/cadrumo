@@ -203,16 +203,24 @@ def test_bootstrap_target_refuses_unenrolled_source_digest() -> None:
         )
 
 
-def test_bootstrap_target_enrolls_only_the_pinned_modelo_200_2024_design() -> None:
-    """The absent 2024 tree may bootstrap only from its own reviewed source."""
+#: The exercise of the one reviewed Modelo 200 design enrolled as a bootstrap
+#: target; it names the cited design, its revision and its generated layout.
+_M200_BOOTSTRAP_DESIGN_EXERCISE = 2024
+
+
+def test_bootstrap_target_enrolls_only_the_pinned_modelo_200_design() -> None:
+    """The absent tree may bootstrap only from its own reviewed source."""
+    source_ref = f"aeat-dr-200-{_M200_BOOTSTRAP_DESIGN_EXERCISE}"
     target = reviewed_bootstrap_target(
-        GeneratedTreeInvocation("200", "2024", "aeat-dr-200-2024", 2024, "0A"),
+        GeneratedTreeInvocation(
+            "200", str(_M200_BOOTSTRAP_DESIGN_EXERCISE), source_ref, _M200_BOOTSTRAP_DESIGN_EXERCISE, "0A"
+        ),
         source_sha256="ed4df89a451abc2184bc60a1d13ff53a3d38e9a6201698fb635cf0b8ee455218",
     )
 
-    assert target.layout_id == "generated-modelo-200-2024-fichero"
+    assert target.layout_id == f"generated-modelo-200-{_M200_BOOTSTRAP_DESIGN_EXERCISE}-fichero"
     assert target.line_ending == "crlf"
-    assert target.source_ref == "aeat-dr-200-2024"
+    assert target.source_ref == source_ref
     assert target.supersedes_layout_id is None
     assert target.superseded_construct_references == 0
 

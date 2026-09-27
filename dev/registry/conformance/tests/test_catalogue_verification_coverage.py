@@ -156,32 +156,48 @@ def _record_design_sources_cover(sources: Sequence[SourceReference], evidence_da
     )
 
 
-def test_modelo_220_2025_scope_refuses_an_unevidenced_2026_successor() -> None:
+# The one exercise an official Modelo 220 record design (``aeat-dr-220-<exercise>``)
+# evidences. It is the identity of that design, so it is bound once; the successor
+# is the exercise no design evidences.
+_M220_EVIDENCED_EXERCISE = 2025
+_M220_UNEVIDENCED_SUCCESSOR = _M220_EVIDENCED_EXERCISE + 1
+
+
+def test_modelo_220_scope_refuses_an_unevidenced_successor_exercise() -> None:
     """The shared source-matrix predicate must bite if M220 is widened again."""
     modelos, catalogues = registry_tree()
     modelo = next(candidate for candidate in modelos if candidate.id == "220")
-    revision = modelo.revisions["2025"]
+    revision_id = str(_M220_EVIDENCED_EXERCISE)
+    revision = modelo.revisions[revision_id]
 
-    assert (revision.valid_from, revision.valid_to) == (date(2025, 1, 1), date(2025, 12, 31))
-    assert (revision.period_selector.year_from, revision.period_selector.year_to) == (2025, 2025)
-    assert select_revision(modelo, filing_year=2025, period="0A").id == "2025"
+    assert (revision.valid_from, revision.valid_to) == (
+        date(_M220_EVIDENCED_EXERCISE, 1, 1),
+        date(_M220_EVIDENCED_EXERCISE, 12, 31),
+    )
+    assert (revision.period_selector.year_from, revision.period_selector.year_to) == (
+        _M220_EVIDENCED_EXERCISE,
+        _M220_EVIDENCED_EXERCISE,
+    )
+    assert select_revision(modelo, filing_year=_M220_EVIDENCED_EXERCISE, period="0A").id == revision_id
     with pytest.raises(NoRevisionForPeriodError):
-        select_revision(modelo, filing_year=2026, period="0A")
+        select_revision(modelo, filing_year=_M220_UNEVIDENCED_SUCCESSOR, period="0A")
 
     widened_revision = revision.model_copy(
-        update={"period_selector": revision.period_selector.model_copy(update={"year_to": 2026})},
+        update={
+            "period_selector": revision.period_selector.model_copy(update={"year_to": _M220_UNEVIDENCED_SUCCESSOR})
+        },
     )
-    widened_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, "2025": widened_revision}})
+    widened_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, revision_id: widened_revision}})
     sources = [
         catalogues.sources[source_ref]
         for source_ref in widened_revision.source_refs
         if catalogues.sources[source_ref].kind == "record_design"
     ]
 
-    assert tuple(source.id for source in sources) == ("aeat-dr-220-2025",)
-    assert sources[0].applies_to == date(2025, 12, 31)
-    assert select_revision(widened_modelo, filing_year=2026, period="0A").id == "2025"
-    assert not _record_design_sources_cover(sources, date(2026, 12, 31))
+    assert tuple(source.id for source in sources) == (f"aeat-dr-220-{_M220_EVIDENCED_EXERCISE}",)
+    assert sources[0].applies_to == date(_M220_EVIDENCED_EXERCISE, 12, 31)
+    assert select_revision(widened_modelo, filing_year=_M220_UNEVIDENCED_SUCCESSOR, period="0A").id == revision_id
+    assert not _record_design_sources_cover(sources, date(_M220_UNEVIDENCED_SUCCESSOR, 12, 31))
 
 
 def test_modelo_038_refuses_unevidenced_history_and_keeps_historical_pdf_unselected() -> None:
