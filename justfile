@@ -1511,6 +1511,7 @@ gate-local:
     @just check-registry
     @just check-repository
     @just check-dependency-vulnerabilities
+    @just docs-build
     @just docs-check
     @just test-product
     @just test-registry
