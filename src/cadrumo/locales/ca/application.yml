@@ -1262,6 +1262,28 @@ application:
         justificativa (vincle %{binding_id}, origen %{source_kind_code}, motiu %{diagnostic_reason_code}).
       transaction_evidence_missing_output: Una transacció repercutida no té evidència
         justificativa (vincle %{binding_id}, origen %{source_kind_code}, motiu %{diagnostic_reason_code}).
+      withholding_detail_absent_against_ledger_evidence: 'El model %{modelo} %{filing_year}
+        no declara cap percepció per a cap perceptor, però el llibre registre recull
+        rendes sotmeses a retenció satisfetes en aquest exercici: %{contradicting_invoice_count}
+        factura o factures rebudes que declaren una retenció que el contribuent deu
+        com a retenidor i %{contradicting_ledger_row_count} apunt o apunts de pagament
+        en una categoria IRPF de retenció. El detall %{source_family} del model %{source_modelo}
+        és buit, per la qual cosa res no les declara. Registreu-les mitjançant la
+        superfície d''agregació del model abans de verificar.'
+      withholding_detail_absent_attested: 'El model %{modelo} %{filing_year} no declara
+        cap percepció per a cap perceptor, i el període o períodes %{attested_periods}
+        consten atestats mitjançant la dada de perfil %{attestation_profile_path}
+        com a no haver satisfet cap renda sotmesa a retenció. No escau presentar resum
+        anual en un exercici en què no es va satisfer cap de les rendes que declara.
+        Reviseu l''exercici si es va abonar alguna renda exempta o inferior al llindar
+        de retenció: aquestes es declaren encara que no s''hagi practicat cap retenció.
+        Aquesta preparació local no és una presentació davant l''AEAT.'
+      withholding_detail_absent_unproven: 'El model %{modelo} %{filing_year} no declara
+        cap percepció per a cap perceptor i res no prova aquesta absència: el detall
+        %{source_family} del model %{source_modelo} és buit i el període o períodes
+        %{unattested_periods} no consten declarats sense retencions. Registreu els
+        registres per perceptor mitjançant la superfície d''agregació del model, o
+        declareu cada període mitjançant la dada de perfil %{attestation_profile_path}.'
     iva_wallet:
       correct_no_record: No existeix cap registre de compensació sembrat per a %{filing_year}/%{period}.
         Executa primer 'aeat app modelo iva-wallet seed'; la correcció sobreescriu

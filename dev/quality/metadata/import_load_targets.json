@@ -885,6 +885,7 @@
         "cadrumo.application.modelo.verification_predicates",
         "cadrumo.application.modelo.verification_repository_ports",
         "cadrumo.application.modelo.verify_selector",
+        "cadrumo.application.modelo.withholding_detail_gate",
         "cadrumo.application.modelo.work_addressing",
         "cadrumo.application.modelo.work_create_policy",
         "cadrumo.application.modelo.work_lifecycle",

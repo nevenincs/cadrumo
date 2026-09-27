@@ -1267,6 +1267,28 @@ application:
         motivo %{diagnostic_reason_code}).
       transaction_evidence_missing_output: Una transacción repercutida no tiene evidencia
         justificativa (vínculo %{binding_id}, origen %{source_kind_code}, motivo %{diagnostic_reason_code}).
+      withholding_detail_absent_against_ledger_evidence: 'El modelo %{modelo} %{filing_year}
+        no declara ninguna percepción para ningún perceptor, pero el libro registro
+        recoge rentas sometidas a retención satisfechas en ese ejercicio: %{contradicting_invoice_count}
+        factura(s) recibida(s) que declara(n) una retención que el contribuyente debe
+        como retenedor y %{contradicting_ledger_row_count} apunte(s) de pago en una
+        categoría IRPF de retención. El detalle %{source_family} del modelo %{source_modelo}
+        está vacío, por lo que nada las declara. Regístrelas mediante la superficie
+        de agregación del modelo antes de verificar.'
+      withholding_detail_absent_attested: 'El modelo %{modelo} %{filing_year} no declara
+        ninguna percepción para ningún perceptor, y el periodo o periodos %{attested_periods}
+        constan atestiguados mediante el dato de perfil %{attestation_profile_path}
+        como no haber satisfecho ninguna renta sometida a retención. No procede presentar
+        resumen anual en un ejercicio en el que no se satisfizo ninguna de las rentas
+        que declara. Revise el ejercicio si se abonó alguna renta exenta o inferior
+        al umbral de retención: esas se declaran aunque no se haya practicado retención
+        alguna. Esta preparación local no es una presentación ante la AEAT.'
+      withholding_detail_absent_unproven: 'El modelo %{modelo} %{filing_year} no declara
+        ninguna percepción para ningún perceptor y nada prueba esa ausencia: el detalle
+        %{source_family} del modelo %{source_modelo} está vacío y el periodo o periodos
+        %{unattested_periods} no constan declarados sin retenciones. Registre los
+        registros por perceptor mediante la superficie de agregación del modelo, o
+        declare cada periodo mediante el dato de perfil %{attestation_profile_path}.'
     iva_wallet:
       correct_no_record: No existe ningún registro de compensación sembrado para %{filing_year}/%{period}.
         Ejecuta primero 'aeat app modelo iva-wallet seed'; la corrección sobrescribe

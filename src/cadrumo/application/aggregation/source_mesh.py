@@ -178,6 +178,18 @@ CalculationSourceDiagnosticReason = Literal[
     # period by exactly this substitution.
     "devengo_date_proxy_attribution",
     "oss_no_live_source",
+    # An annual withholding summary whose per-perceptor-clave detail store holds
+    # NO observation for the year. The bound percepciones count is still
+    # materialised as an explicit zero so the casilla gets its fact and the
+    # calculate/pull surfaces stay identical, but the zero is a claim the store
+    # cannot support: the filing obligation for these resúmenes anuales is
+    # triggered by SATISFYING the declared rentas, so a declaration with no
+    # type-2 record either omits percepciones that exist or is not owed at all.
+    # Kept a reason of its own rather than folded into "source_issue" because a
+    # verification gate has to route on it: this is the one absence that must
+    # never reach filing grade unattended, and a shared advisory reason cannot
+    # be told apart from the advisories that legitimately pass.
+    "withholding_detail_absent",
     "missing_transaction_evidence",
     "administrador_retencion_rate_mismatch",
     # An ISSUED-side retención the ledger INFERRED from a cash shortfall whose

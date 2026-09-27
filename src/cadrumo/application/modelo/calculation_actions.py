@@ -1570,13 +1570,14 @@ _DurableSourceIssueReason = Literal[
     "unrouted_declarable_quantity",
     "iva_selected_scope_evidence_failure",
     "iva_compensation_annual_source_evidence_failure",
+    "withholding_detail_absent",
 ]
 
 
 def _durable_source_issue_reason(diagnostic: CalculationSourceDiagnostic) -> _DurableSourceIssueReason | None:
     """Narrow a diagnostic reason to the durable subset, or ``None``.
 
-    Both durable reasons describe a value ABSENT from the filing, which is what
+    Every durable reason describes a value ABSENT from the filing, which is what
     a verification or export gate reading the persisted revision needs; every
     other reason is calculate-time operator feedback that dies with the
     response. Written as explicit comparisons rather than a set membership test
@@ -1592,6 +1593,8 @@ def _durable_source_issue_reason(diagnostic: CalculationSourceDiagnostic) -> _Du
         return "iva_selected_scope_evidence_failure"
     if diagnostic.reason == "iva_compensation_annual_source_evidence_failure":
         return "iva_compensation_annual_source_evidence_failure"
+    if diagnostic.reason == "withholding_detail_absent":
+        return "withholding_detail_absent"
     return None
 
 

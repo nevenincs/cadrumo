@@ -308,7 +308,7 @@ def build_invoice_withholding_capture(
         raise InvoiceWithholdingEvidenceError("invoice_identity_mismatch")
     if cadence.filing_year != applicable_year:
         raise InvoiceWithholdingEvidenceError("filer_cadence_year_mismatch")
-    defects = tuple(_defects_for(invoice))
+    defects = invoice_retencion_liability_defects(invoice)
     if defects:
         raise InvoiceWithholdingEvidenceError(defects[0].value)
     base = invoice.base_total_eur
@@ -433,7 +433,7 @@ def project_received_invoice_retencion(
         The verdict, carrying either the routed observation or the defects that
         excluded it.
     """
-    defects = tuple(_defects_for(invoice))
+    defects = invoice_retencion_liability_defects(invoice)
     if defects:
         return InvoiceRetencionProjection(invoice_id=invoice.invoice_id, observation=None, defects=defects)
     base = invoice.base_total_eur
@@ -534,8 +534,15 @@ def merge_manual_and_routed_retencion_observations(
     return (*manual_observations, *routed_observations)
 
 
-def _defects_for(invoice: Invoice) -> Iterable[InvoiceRetencionProjectionDefect]:
-    """Yield every reason the invoice does not route.
+def invoice_retencion_liability_defects(invoice: Invoice) -> tuple[InvoiceRetencionProjectionDefect, ...]:
+    """Return every reason the invoice carries no routable retenedor-liability retención.
+
+    An empty tuple is the positive answer: this received invoice declares a
+    retención the taxpayer owes as retenedor and that the per-perceptor store
+    should therefore hold. Public because it is the ONE predicate for that
+    question -- a later filing-grade gate compares the ledger against the store
+    and must ask it exactly as the routing does, not with a second copy free to
+    drift from the Axis-A role table.
 
     Accumulating rather than short-circuiting, so an operator fixing a record
     sees everything wrong with it in one pass.
@@ -547,20 +554,22 @@ def _defects_for(invoice: Invoice) -> Iterable[InvoiceRetencionProjectionDefect]
     a local ``kind is RECEIVED`` test would be a second, unvalidated copy of
     the same fact, free to drift from the table the rest of the engine reads.
     """
+    defects: list[InvoiceRetencionProjectionDefect] = []
     if invoice.iva_category is None:
-        yield InvoiceRetencionProjectionDefect.IVA_TREATMENT_UNDECLARED
+        defects.append(InvoiceRetencionProjectionDefect.IVA_TREATMENT_UNDECLARED)
     elif category_components(invoice.iva_category, invoice.kind).retencion_role != registry_retencion_role_token(
         "taxpayer_liability",
     ):
-        yield InvoiceRetencionProjectionDefect.NOT_A_RETENEDOR_LIABILITY
+        defects.append(InvoiceRetencionProjectionDefect.NOT_A_RETENEDOR_LIABILITY)
     if invoice.retention_amount is None or invoice.retention_amount == Decimal("0"):
-        yield InvoiceRetencionProjectionDefect.NO_RETENCION_DECLARED
+        defects.append(InvoiceRetencionProjectionDefect.NO_RETENCION_DECLARED)
     if invoice.counterparty_country != _SPANISH_COUNTRY_CODE:
-        yield InvoiceRetencionProjectionDefect.NON_RESIDENT_SUPPLIER
+        defects.append(InvoiceRetencionProjectionDefect.NON_RESIDENT_SUPPLIER)
     if invoice.currency != DEFAULT_CURRENCY and invoice.fx_rate is None:
-        yield InvoiceRetencionProjectionDefect.FX_UNRESOLVED
+        defects.append(InvoiceRetencionProjectionDefect.FX_UNRESOLVED)
     if invoice.counterparty_tax_id is None:
-        yield InvoiceRetencionProjectionDefect.MISSING_COUNTERPARTY_TAX_ID
+        defects.append(InvoiceRetencionProjectionDefect.MISSING_COUNTERPARTY_TAX_ID)
+    return tuple(defects)
 
 
 __all__ = [
@@ -568,6 +577,7 @@ __all__ = [
     "InvoiceRetencionProjectionDefect",
     "InvoiceRetencionRouteRequest",
     "InvoiceRetencionRouting",
+    "invoice_retencion_liability_defects",
     "merge_manual_and_routed_retencion_observations",
     "project_received_invoice_retencion",
     "route_invoice_retenciones",

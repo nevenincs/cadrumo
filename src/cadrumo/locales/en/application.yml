@@ -1151,6 +1151,26 @@ application:
         evidence (binding %{binding_id}, source %{source_kind_code}, reason %{diagnostic_reason_code}).
       transaction_evidence_missing_output: An output transaction has no supporting
         evidence (binding %{binding_id}, source %{source_kind_code}, reason %{diagnostic_reason_code}).
+      withholding_detail_absent_against_ledger_evidence: 'Modelo %{modelo} %{filing_year}
+        declares no percepción for any perceptor, but the ledger records rentas subject
+        to retención satisfied in that year: %{contradicting_invoice_count} received
+        invoice(s) declaring a retención the taxpayer owes as retenedor, and %{contradicting_ledger_row_count}
+        outgoing row(s) in a withholding IRPF category. The %{source_family} detail
+        for Modelo %{source_modelo} is empty, so nothing declares them. Register them
+        through the modelo aggregate surface before verifying.'
+      withholding_detail_absent_attested: 'Modelo %{modelo} %{filing_year} declares
+        no percepción for any perceptor, and period(s) %{attested_periods} are attested
+        through the profile fact %{attestation_profile_path} as having satisfied no
+        renta subject to retención. No resumen anual is owed for a year in which none
+        of the rentas it declares was satisfied. Review the year if an exempt renta,
+        or one below the retención threshold, was paid: those are declared even when
+        nothing was withheld. This local preparation is not an AEAT submission.'
+      withholding_detail_absent_unproven: 'Modelo %{modelo} %{filing_year} declares
+        no percepción for any perceptor and nothing proves that absence: the %{source_family}
+        detail for Modelo %{source_modelo} is empty, and period(s) %{unattested_periods}
+        carry no no-retención attestation. Register the per-perceptor records through
+        the modelo aggregate surface, or attest every period through the profile fact
+        %{attestation_profile_path}.'
     iva_wallet:
       correct_no_record: No seeded compensation record exists for %{filing_year}/%{period}.
         Run 'aeat app modelo iva-wallet seed' first; correction overwrites an existing

@@ -1221,6 +1221,27 @@ application:
         ok: %{diagnostic_reason_code}).'
       transaction_evidence_missing_output: 'Egy fizetendő tranzakcióhoz nincs alátámasztó
         bizonyíték (kötés: %{binding_id}, forrás: %{source_kind_code}, ok: %{diagnostic_reason_code}).'
+      withholding_detail_absent_against_ledger_evidence: 'A %{modelo} modell %{filing_year}
+        egyetlen kedvezményezettre sem jelent be kifizetést, a könyvelés viszont adólevonás
+        alá eső, ebben az évben kifizetett jövedelmeket rögzít: %{contradicting_invoice_count}
+        olyan bejövő számlát, amely az adózó által levonásra kötelezettként tartozott
+        adót tünteti fel, és %{contradicting_ledger_row_count} kimenő könyvelési sort
+        levonásos IRPF-kategóriában. A %{source_modelo} modell %{source_family} tételei
+        üresek, így semmi sem vallja be őket. Ellenőrzés előtt rögzítse őket a modell
+        összesítő felületén.'
+      withholding_detail_absent_attested: 'A %{modelo} modell %{filing_year} egyetlen
+        kedvezményezettre sem jelent be kifizetést, és a %{attested_periods} időszakról
+        a %{attestation_profile_path} profiladat azt tanúsítja, hogy nem fizettek
+        ki adólevonás alá eső jövedelmet. Nem kell éves összesítőt benyújtani olyan
+        évről, amelyben az általa bevallott jövedelmek egyikét sem fizették ki. Tekintse
+        át az évet, ha adómentes vagy a levonási küszöb alatti jövedelmet fizettek
+        ki: ezeket levonás nélkül is be kell vallani. Ez a helyi előkészítés nem AEAT-benyújtás.'
+      withholding_detail_absent_unproven: 'A %{modelo} modell %{filing_year} egyetlen
+        kedvezményezettre sem jelent be kifizetést, és semmi sem bizonyítja ezt a
+        hiányt: a %{source_modelo} modell %{source_family} tételei üresek, a %{unattested_periods}
+        időszakra pedig nincs levonásmentességi nyilatkozat. Rögzítse a kedvezményezettenkénti
+        tételeket a modell összesítő felületén, vagy nyilatkozzon minden időszakról
+        a %{attestation_profile_path} profiladat útján.'
     iva_wallet:
       correct_no_record: 'Nincs beállított kompenzációs rekord ehhez: %{filing_year}/%{period}.
         Először futtassa a ''aeat app modelo iva-wallet seed'' parancsot; a javítás

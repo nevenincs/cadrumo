@@ -21,8 +21,10 @@ from ....core.aggregation import (
     AggregationCaptureKind,
     BindingAggregation,
     BindingAggregationOp,
+    BindingSourceKind,
     RetencionClave,
 )
+from ....core.modelo import Modelo
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
@@ -35,7 +37,7 @@ from ..retencion_observations_repository import RetencionObservationPorts
 from ..retenciones import RetencionObservation
 from ..source_mesh import CalculationSourceContext
 from ..withholding_filing_cadence import WithholdingFilingCadenceError
-from ..withholding_source import WithholdingSourceResolver
+from ..withholding_source import WithholdingSourceResolver, annual_withholding_periodic_source
 from .withholding_filer_profile_support import (
     LARGE_COMPANY_FACTS,
     PUBLIC_ADMINISTRATION_FACTS,
@@ -308,6 +310,45 @@ def test_resolver_materialises_zero_with_advisory_on_empty_store(authority_opera
     assert len(resolution.diagnostics) == 1
     assert resolution.diagnostics[0].source_kind == "withholding"
     assert "materialised as zero" in resolution.diagnostics[0].message
+
+
+def test_empty_store_advisory_is_routable_and_grounded(authority_operation: PinnedAuthorityOperation) -> None:
+    """The empty-store advisory carries the durable reason, a remedy and the binding's own refs.
+
+    A verification gate has to route on the reason rather than on prose, and the
+    advisory must survive onto the persisted revision, so the reason is the
+    dedicated ``withholding_detail_absent`` member rather than the shared
+    ``source_issue``.
+    """
+    binding = _percepcion_binding()
+    resolution = _resolver(_InMemoryPercepcionObservationRepository()).resolve(
+        _context(_revision_with(binding), withholding_work_profile(authority_operation))
+    )
+
+    diagnostic = resolution.diagnostics[0]
+    assert diagnostic.reason == "withholding_detail_absent"
+    assert diagnostic.binding_source is BindingSourceKind.WITHHOLDING
+    assert diagnostic.remedy is not None
+    assert "modelo aggregate surface" in diagnostic.remedy
+    assert "attest every periodic window" in diagnostic.remedy
+    assert diagnostic.legal_refs == tuple(sorted(_M190_WITHHOLDING_LEGAL_REFS))
+    assert diagnostic.source_refs == tuple(sorted(_M190_WITHHOLDING_SOURCE_REFS))
+
+
+def test_a_populated_store_raises_no_absence_advisory(authority_operation: PinnedAuthorityOperation) -> None:
+    """The routable absence reason is raised only for a genuinely empty window."""
+    resolution = _resolver(_two_quarter_repository()).resolve(
+        _context(_revision_with(_percepcion_binding()), withholding_work_profile(authority_operation))
+    )
+
+    assert not [diagnostic for diagnostic in resolution.diagnostics if diagnostic.reason == "withholding_detail_absent"]
+
+
+def test_annual_withholding_periodic_source_reads_the_composition_table() -> None:
+    """The gate's view of the folded periodic modelo is the resolver's own composition."""
+    assert annual_withholding_periodic_source("190") == Modelo("111")
+    assert annual_withholding_periodic_source("193") == Modelo("123")
+    assert annual_withholding_periodic_source("115") is None
 
 
 def test_resolver_silent_when_revision_declares_no_withholding_binding() -> None:

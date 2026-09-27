@@ -356,7 +356,8 @@ def test_an_empty_withholding_store_keeps_its_advisory_on_the_calculate_result(
     empty_store = [
         diagnostic
         for diagnostic in result.source_diagnostics
-        if diagnostic.binding_source is BindingSourceKind.WITHHOLDING and diagnostic.reason == "source_issue"
+        if diagnostic.binding_source is BindingSourceKind.WITHHOLDING
+        and diagnostic.reason == "withholding_detail_absent"
     ]
     assert len(empty_store) == 1
     assert "materialised as zero" in empty_store[0].message
