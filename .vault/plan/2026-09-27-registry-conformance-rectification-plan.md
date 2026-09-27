@@ -10,7 +10,7 @@ related:
   - '[[2026-09-21-retenciones-workflow-observation-payment-contract-adr]]'
 modified: '2026-09-27'
 body_schema: body-v2
-body_hash: 'sha256:f63568481e1d1dbe788746b38c0c4e00dd346ec05922ab73eb2e91a3235e59b1'
+body_hash: 'sha256:66b597a6e34389db79675f71bc6a2e09f8c4fbe5476a4fd5eafd8f1b03bf4628'
 ---
 
 # `registry-conformance-rectification` plan
@@ -32,7 +32,7 @@ The brief's audit is orientation only. Every finding is re-measured against the 
 Make the collapse verifier, the delta converter and the parity comparison measure the live authority and storage-baseline editions correctly, each with an isolated detector test.
 
 - [x] `P01.S01` - Resolve the collapse verifier's published authority from the working-tree publication and add a scoped modelo filter; `dev/registry/registry_collapse_verification.py`.
-- [ ] `P01.S02` - Let drop-restatement read storage-baseline editions, not only string predecessors; `dev/registry/edition_delta_migration.py`.
+- [x] `P01.S02` - Let drop-restatement read storage-baseline editions, not only string predecessors; `dev/registry/edition_delta_migration.py`.
 - [ ] `P01.S03` - Apply the filing schedule source reference default before comparing schedules; `dev/registry/registry_collapse_verification.py`.
 - [x] `P01.S04` - Classify the indexed parity mapping-key order difference and fix the comparison or the ordering; `dev/registry/registry_collapse_verification.py`.
 - [x] `P01.S13` - Compose export layouts and scope snapshots to the selected edition before the indexed parity comparison; `dev/registry/registry_collapse_verification.py`.

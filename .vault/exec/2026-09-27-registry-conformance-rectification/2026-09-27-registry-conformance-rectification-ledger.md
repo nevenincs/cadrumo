@@ -5,7 +5,7 @@ tags:
 date: '2026-09-27'
 modified: '2026-09-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:0e917a5191e8fc1605798dca706327d398c72a89c99294b36328f63f5a01d40b'
+body_hash: 'sha256:bff49410bd644f2753800af8544456b645799e07d6aa9588b8f8210df45013af'
 related:
   - "[[2026-09-27-registry-conformance-rectification-plan]]"
 ---
@@ -146,6 +146,9 @@ related:
 - `S10` `M` `src/cadrumo/entrypoints/tests/test_m123_count_authority_gate.py`
 - `S10` `M` `src/cadrumo/entrypoints/tests/test_m193_settled_row_file_verify_gate.py`
 - `S10` `verify:` `pytest withholding and 193 test set (3653 passed; 9 failures identical on main)` -> `pass`
+- `S02` `M` `dev/registry/edition_delta_migration.py`
+- `S02` `A` `dev/registry/tests/test_edition_delta_drop_restatement.py`
+- `S02` `verify:` `pytest dev/registry (2965 passed; the one failure passes alone)` -> `pass`
 
 ## Notes
 
@@ -155,4 +158,5 @@ related:
 - `S07` Two parameters keep their stated windows: the renewables availability flag is keyed on transaction_date, and renta-guarderia-incremento-cap-anual exists only in the 2024 edition.
 - `S07` Correction: editions carried the closed rows of earlier editions, which table readers such as the accumulated-cuota gate read as current law; each edition now states only its in-force rows, with a progressive bracket table kept whole.
 - `S10` A settled-row contributor persisted without its accrual year is now counted as settled in every supported year after the floor, where it was only counted after 2025: the gate over-refuses rather than lets a settled row through.
+- `S02` Registry-wide the fix brings 22 storage-rooted editions across 11 modelos into assessment; none currently states a droppable restatement, so no registry source changes.
 
