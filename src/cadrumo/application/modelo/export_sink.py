@@ -14,7 +14,6 @@ interface calls destinations, which name pages rather than places bytes land.
 
 from __future__ import annotations
 
-import hashlib
 import os
 from collections.abc import Generator
 from contextlib import contextmanager
@@ -23,6 +22,7 @@ from pathlib import Path
 from pydantic import BaseModel, NonNegativeInt
 
 from ...core.atomic_write import StagedPublication, hardened_staged_publication
+from ...core.hashing import sha256_hex
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.modelos.errors import ModeloExportError
@@ -126,7 +126,7 @@ class LocalFileExportSink(BaseModel):
         return LocalFileExportReceipt(
             path=self.path,
             byte_size=len(payload),
-            sha256=hashlib.sha256(payload).hexdigest(),
+            sha256=sha256_hex(payload),
         )
 
 

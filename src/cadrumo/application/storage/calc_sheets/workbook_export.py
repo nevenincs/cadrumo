@@ -20,7 +20,6 @@ See Also:
 
 from __future__ import annotations
 
-import hashlib
 from collections.abc import Callable
 from typing import Protocol
 
@@ -29,6 +28,7 @@ from pydantic import BaseModel, Field, NonNegativeInt, PositiveInt, model_valida
 from ....core.casilla_id import CasillaId
 from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.filing_year import FilingYear
+from ....core.hashing import sha256_hex
 from ....core.identity.digest import ContentDigest
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.period import Period
@@ -90,7 +90,7 @@ class ModeloWorkbookExport(BaseModel):
             raise ValueError(
                 f"workbook byte_size {self.byte_size} does not match the payload length {len(self.payload)}",
             )
-        digest = hashlib.sha256(self.payload).hexdigest()
+        digest = sha256_hex(self.payload)
         if self.sha256 != digest:
             raise ValueError("workbook sha256 does not match the payload digest")
         return self
@@ -175,7 +175,7 @@ def export_modelo_workbook(
         filing_year=plan.metadata.filing_year,
         payload=payload,
         byte_size=len(payload),
-        sha256=hashlib.sha256(payload).hexdigest(),
+        sha256=sha256_hex(payload),
         tab_names=tuple(tab.value for tab in TabName),
         casilla_count=len(_covered_casilla_ids(plan)),
     )
