@@ -9041,6 +9041,158 @@ family = "bindings"
 selector = {revision = "2023", id = "renta-profile-taxpayer-sex"}
 sequence_additions = {legal_refs = ["orden-hac-242-2025:art-3"], source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["Modelo 100", "ejercicio 2024"]}], source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]}
 sequence_removals = {legal_refs = [0], source_citations = [0], source_refs = [0, 1, 2, 3]}
+[[revisions."2024".family_overrides]]
+family = "parameters"
+selector = {revision = "2023", id = "renta-actividad-inmovilizado-amortizacion-normal-coeficiente-lineal-maximo"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["Tabla de coeficientes de amortización lineal", "Sistemas y programas informáticos", "Obra civil general 2 por 100 100 años", "Sistemas y programas informáticos 33 por 100 6 años"]}], source_refs = ["aeat-renta-2024-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+[[revisions."2024".family_overrides]]
+family = "parameters"
+selector = {revision = "2023", id = "renta-actividad-inmovilizado-amortizacion-normal-periodo-maximo-anos"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["Tabla de coeficientes de amortización lineal", "Sistemas y programas informáticos", "Obra civil general 2 por 100 100 años", "Sistemas y programas informáticos 33 por 100 6 años"]}], source_refs = ["aeat-renta-2024-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+[[revisions."2024".family_overrides]]
+family = "parameters"
+selector = {revision = "2023", id = "renta-actividad-inmovilizado-amortizacion-simplificada-coeficiente-lineal-maximo"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["Tabla de amortizaciones simplificada", "Edificios y otras construcciones", "Edificios y otras construcciones 3 por 100 68 años", "Olivar 2 por 100 100 años"]}], source_refs = ["aeat-renta-2024-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+[[revisions."2024".family_overrides]]
+family = "parameters"
+selector = {revision = "2023", id = "renta-actividad-inmovilizado-amortizacion-simplificada-periodo-maximo-anos"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["Tabla de amortizaciones simplificada", "Edificios y otras construcciones", "Edificios y otras construcciones 3 por 100 68 años", "Olivar 2 por 100 100 años"]}], source_refs = ["aeat-renta-2024-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+[[revisions."2024".family_overrides]]
+family = "parameters"
+selector = {revision = "2023", id = "renta-actividad-inmovilizado-intangible-vida-util-no-estimable-limite-anual"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["no pueda estimarse de manera fiable", "veinteava parte de su importe", "la amortización será deducible con el límite anual máximo de la veinteava parte de su importe (el 5 por 100)."]}], source_refs = ["aeat-renta-2024-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+[[revisions."2024".family_overrides]]
+family = "parameters"
+selector = {revision = "2023", id = "renta-actividad-fondo-comercio-amortizacion-limite-anual"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["fondo de comercio", "veinteava parte de su importe", "la amortización del fondo de comercio será deducible con el límite anual máximo de la veinteava"]}], source_refs = ["aeat-renta-2024-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+[[revisions."2024".family_overrides]]
+family = "parameters"
+selector = {revision = "2023", id = "renta-actividad-inmovilizado-material-nuevo-libertad-amortizacion-umbral-unitario"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["valor unitario no exceda de", "25.000 euros referido al período impositivo", "cuyo valor unitario no exceda de 300 euros, hasta el límite de 25.000 euros referido al período impositivo."]}], source_refs = ["aeat-renta-2024-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+[[revisions."2024".family_overrides]]
+family = "parameters"
+selector = {revision = "2023", id = "renta-actividad-inmovilizado-material-nuevo-libertad-amortizacion-limite-anual"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["valor unitario no exceda de", "25.000 euros referido al período impositivo", "cuyo valor unitario no exceda de 300 euros, hasta el límite de 25.000 euros referido al período impositivo."]}], source_refs = ["aeat-renta-2024-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+[[revisions."2024".family_overrides]]
+family = "parameters"
+selector = {revision = "2023", id = "renta-actividad-inmovilizado-amortizacion-normal-metodo-admitido"}
+sequence_additions = {keyed_brackets = [{key = "material:charging_infrastructure_free", value = "1", valid_from = 2024-01-01}, {key = "material:electric_vehicle_free", value = "1", valid_from = 2024-01-01}], legal_refs = ["ley-27-2014:da-18"], source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["Otros sistemas de amortización son:", "Se ajuste a un plan formulado por el contribuyente y aceptado por la", "Con carácter general, el inmovilizado intangible se amortizará atendiendo a su vida útil.", "Sistemas y programas informáticos 33 por 100 6 años", "Los edificios, el mobiliario y los enseres no podrán acogerse a la amortización mediante números dígitos."]}], source_refs = ["aeat-renta-2024-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 2, 3, 4, 7, 5, 6]}
+[[revisions."2024".family_overrides]]
+family = "parameters"
+selector = {revision = "2023", id = "renta-actividad-inmovilizado-amortizacion-simplificada-metodo-admitido"}
+sequence_additions = {keyed_brackets = [{key = "material:charging_infrastructure_free", value = "1", valid_from = 2024-01-01}, {key = "material:electric_vehicle_free", value = "1", valid_from = 2024-01-01}], legal_refs = ["ley-27-2014:da-18"], source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["amortizaciones del inmovilizado material se practicarán de forma lineal, en función de la", "de estimación directa, modalidad normal o simplificada, la libertad de amortización resulta"]}], source_refs = ["aeat-renta-2024-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 2, 5, 3, 4]}
+[[revisions."2024".family_overrides]]
+family = "parameters"
+selector = {revision = "2023", id = "renta-actividad-inmovilizado-amortizacion-clase-edificio"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["Los edificios, mobiliario y enseres no podrán amortizarse mediante el método de", "edificios cuya antigüedad sea inferior a diez años."]}], source_refs = ["aeat-renta-2024-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+[[revisions."2024".family_overrides]]
+family = "parameters"
+selector = {revision = "2023", id = "renta-actividad-inmovilizado-amortizacion-clase-mobiliario-enseres"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["Los edificios, mobiliario y enseres no podrán amortizarse mediante el método de", "Los edificios, el mobiliario y los enseres no podrán acogerse a la amortización mediante números dígitos."]}], source_refs = ["aeat-renta-2024-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+[[revisions."2024".family_overrides]]
+family = "parameters"
+selector = {revision = "2023", id = "renta-actividad-inmovilizado-amortizacion-porcentaje-constante-ponderacion"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["1,5, si el elemento tiene un período de amortización inferior a 5 años.", "2,5, si el elemento tiene un período de amortización igual o superior a 8 años."]}], source_refs = ["aeat-renta-2024-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+[[revisions."2024".family_overrides]]
+family = "parameters"
+selector = {revision = "2023", id = "renta-actividad-inmovilizado-amortizacion-porcentaje-constante-umbral-periodo-medio"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["2, si el elemento tiene un período de amortización igual o superior a 5 años e inferior a"]}], source_refs = ["aeat-renta-2024-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+[[revisions."2024".family_overrides]]
+family = "parameters"
+selector = {revision = "2023", id = "renta-actividad-inmovilizado-amortizacion-porcentaje-constante-umbral-periodo-largo"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["2,5, si el elemento tiene un período de amortización igual o superior a 8 años."]}], source_refs = ["aeat-renta-2024-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+[[revisions."2024".family_overrides]]
+family = "parameters"
+selector = {revision = "2023", id = "renta-actividad-inmovilizado-amortizacion-porcentaje-constante-minimo"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["El porcentaje constante así determinado no podrá ser inferior al 11 por 100."]}], source_refs = ["aeat-renta-2024-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+[[revisions."2024".family_overrides]]
+family = "parameters"
+selector = {revision = "2023", id = "renta-actividad-inmovilizado-amortizacion-usado-multiplicador-coeficiente-maximo"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["el coeficiente máximo utilizable será el doble del coeficiente de amortización lineal"]}], source_refs = ["aeat-renta-2024-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+[[revisions."2024".family_overrides]]
+family = "parameters"
+selector = {revision = "2023", id = "renta-actividad-inmovilizado-amortizacion-edificio-usado-antiguedad-minima"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["edificios cuya antigüedad sea inferior a diez años."]}], source_refs = ["aeat-renta-2024-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+[[revisions."2024".family_overrides]]
+family = "parameters"
+selector = {revision = "2023", id = "renta-actividad-inmovilizado-amortizacion-erd-cifra-negocios-umbral"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["anterior (ejercicio 2023) haya sido inferior a 10 millones de euros, cualquiera que sea el"]}], source_refs = ["aeat-renta-2024-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+[[revisions."2024".family_overrides]]
+family = "parameters"
+selector = {revision = "2023", id = "renta-actividad-inmovilizado-amortizacion-erd-multiplicador-coeficiente-maximo"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["multiplicar por 2 el coeficiente lineal máximo previsto en las tablas de amortización"]}], source_refs = ["aeat-renta-2024-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+[[revisions."2024".family_overrides]]
+family = "parameters"
+selector = {revision = "2023", id = "renta-actividad-inmovilizado-amortizacion-erd-intangible-indefinido-multiplicador"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["podrán aplicar el porcentaje del 150 por 100 al importe que resulte deducible"]}], source_refs = ["aeat-renta-2024-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+[[revisions."2024".family_overrides]]
+family = "parameters"
+selector = {revision = "2023", id = "renta-actividad-inmovilizado-amortizacion-idi-edificio-periodo"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["lineal durante un período de 10 años, en la parte que se hallen afectos a las actividades"]}], source_refs = ["aeat-renta-2024-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+[[revisions."2024".family_overrides]]
+family = "parameters"
+selector = {revision = "2023", id = "renta-actividad-inmovilizado-amortizacion-erd-empleo-inversion-por-unidad-plantilla"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["importe resultante de multiplicar la cifra de 120.000 euros por el incremento de la"]}], source_refs = ["aeat-renta-2024-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+[[revisions."2024".family_overrides]]
+family = "parameters"
+selector = {revision = "2023", id = "renta-actividad-inmovilizado-amortizacion-renovables-inversion-maxima"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["beneficiarse del régimen de libertad de amortización será de 500.000 euros."]}], source_refs = ["aeat-renta-2024-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+[[revisions."2024".family_overrides]]
+family = "parameters"
+selector = {revision = "2023", id = "renta-actividad-inmovilizado-amortizacion-renovables-primer-ejercicio"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["El artículo 18 del Real Decreto-ley 8/2023, de 27 de diciembre, modificó la disposición", "Se podrán amortizar libremente en el período impositivo 2024 las inversiones en", "o que se inicien o concluyan en 2024 (cuando la entrada en funcionamiento se produzca en 2024)."]}], source_refs = ["aeat-renta-2024-manual-parte1"], values = [{value = "2023", date_axis = "filing_period", valid_from = 2023-01-01, valid_to = 2023-12-31}, {value = "2024", date_axis = "filing_period", valid_from = 2024-01-01}]}
+sequence_removals = {source_citations = [0], source_refs = [0], values = [0]}
+[[revisions."2024".family_overrides]]
+family = "parameters"
+selector = {revision = "2023", id = "renta-actividad-inmovilizado-amortizacion-renovables-ultimo-ejercicio"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["El artículo 18 del Real Decreto-ley 8/2023, de 27 de diciembre, modificó la disposición", "Se podrán amortizar libremente en el período impositivo 2024 las inversiones en", "o que se inicien o concluyan en 2024 (cuando la entrada en funcionamiento se produzca en 2024)."]}], source_refs = ["aeat-renta-2024-manual-parte1"], values = [{value = "2023", date_axis = "filing_period", valid_from = 2023-01-01, valid_to = 2023-12-31}, {value = "2024", date_axis = "filing_period", valid_from = 2024-01-01}]}
+sequence_removals = {source_citations = [0], source_refs = [0], values = [0]}
+[[revisions."2024".family_overrides]]
+family = "parameters"
+selector = {revision = "2023", id = "renta-actividad-inmovilizado-amortizacion-renovables-puesta-a-disposicion-admitida"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["Que las instalaciones se han de haber puesto a disposición del contribuyente a partir", "del 20 de octubre de 2022."]}], source_refs = ["aeat-renta-2024-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+[[revisions."2024".family_overrides]]
+family = "parameters"
+selector = {revision = "2023", id = "renta-actividad-inmovilizado-amortizacion-clase-vehiculo-restringido"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["Esta excepción no es aplicable a los automóviles de turismo y sus remolques, las"]}], source_refs = ["aeat-renta-2024-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+[[revisions."2024".family_overrides]]
+family = "parameters"
+selector = {revision = "2023", id = "renta-actividad-inmovilizado-amortizacion-clase-admite-material"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["Tabla de coeficientes de amortización lineal", "Sistemas y programas informáticos"]}], source_refs = ["aeat-renta-2024-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+[[revisions."2024".family_overrides]]
+family = "parameters"
+selector = {revision = "2023", id = "renta-actividad-inmovilizado-amortizacion-clase-admite-intangible"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["Tabla de coeficientes de amortización lineal", "Sistemas y programas informáticos"]}], source_refs = ["aeat-renta-2024-manual-parte1"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
 [[revisions."2024".family_removals]]
 family = "extraction_profiles"
 selector = {revision = "2023", id = "modelo-100-borrador-pdf"}

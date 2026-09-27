@@ -103,3 +103,1951 @@ required_text = ["62 ÷ 365", "valor catastral"]
 value = "365"
 date_axis = "filing_period"
 valid_from = 2022-01-01
+[[revisions."2022".parameters]]
+id = "renta-actividad-inmovilizado-amortizacion-normal-coeficiente-lineal-maximo"
+data_type = "keyed_bracket_table"
+unit = "percent"
+legal_refs = ["ley-35-2006:art-28", "ley-27-2014:art-12"]
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "obra-civil-general"
+value = "2"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "obra-civil-pavimentos"
+value = "6"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "obra-civil-infraestructuras-mineras"
+value = "7"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "central-hidraulica"
+value = "2"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "central-nuclear"
+value = "3"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "central-carbon"
+value = "4"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "central-renovable"
+value = "7"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "central-otra"
+value = "5"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "edificio-industrial"
+value = "3"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "terreno-escombrera"
+value = "4"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "almacen-deposito"
+value = "7"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "edificio-comercial-administrativo-servicios-vivienda"
+value = "2"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "instalacion-subestacion-red"
+value = "5"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "instalacion-cables"
+value = "7"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "instalacion-resto"
+value = "10"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "maquinaria"
+value = "12"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "equipo-medico"
+value = "15"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "transporte-locomotora-vagon-traccion"
+value = "8"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "transporte-buque-aeronave"
+value = "10"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "transporte-interno"
+value = "10"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "transporte-externo"
+value = "16"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "transporte-autocamion"
+value = "20"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "mobiliario"
+value = "10"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "lenceria"
+value = "25"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "cristaleria"
+value = "50"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "util-herramienta"
+value = "25"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "molde-matriz-modelo"
+value = "33"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "enseres-otros"
+value = "15"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "equipo-electronico"
+value = "20"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "equipo-proceso-informacion"
+value = "25"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "intangible-software"
+value = "33"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "intangible-audiovisual"
+value = "33"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "otro-elemento"
+value = "10"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Tabla de coeficientes de amortización lineal", "Sistemas y programas informáticos", "Obra civil general 2 por 100 100 años", "Sistemas y programas informáticos 33 por 100 6 años"]
+[[revisions."2022".parameters]]
+id = "renta-actividad-inmovilizado-amortizacion-normal-periodo-maximo-anos"
+data_type = "keyed_bracket_table"
+unit = "years"
+legal_refs = ["ley-35-2006:art-28", "ley-27-2014:art-12"]
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "obra-civil-general"
+value = "100"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "obra-civil-pavimentos"
+value = "34"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "obra-civil-infraestructuras-mineras"
+value = "30"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "central-hidraulica"
+value = "100"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "central-nuclear"
+value = "60"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "central-carbon"
+value = "50"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "central-renovable"
+value = "30"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "central-otra"
+value = "40"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "edificio-industrial"
+value = "68"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "terreno-escombrera"
+value = "50"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "almacen-deposito"
+value = "30"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "edificio-comercial-administrativo-servicios-vivienda"
+value = "100"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "instalacion-subestacion-red"
+value = "40"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "instalacion-cables"
+value = "30"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "instalacion-resto"
+value = "20"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "maquinaria"
+value = "18"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "equipo-medico"
+value = "14"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "transporte-locomotora-vagon-traccion"
+value = "25"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "transporte-buque-aeronave"
+value = "20"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "transporte-interno"
+value = "20"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "transporte-externo"
+value = "14"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "transporte-autocamion"
+value = "10"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "mobiliario"
+value = "20"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "lenceria"
+value = "8"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "cristaleria"
+value = "4"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "util-herramienta"
+value = "8"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "molde-matriz-modelo"
+value = "6"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "enseres-otros"
+value = "14"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "equipo-electronico"
+value = "10"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "equipo-proceso-informacion"
+value = "8"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "intangible-software"
+value = "6"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "intangible-audiovisual"
+value = "6"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "otro-elemento"
+value = "20"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Tabla de coeficientes de amortización lineal", "Sistemas y programas informáticos", "Obra civil general 2 por 100 100 años", "Sistemas y programas informáticos 33 por 100 6 años"]
+[[revisions."2022".parameters]]
+id = "renta-actividad-inmovilizado-amortizacion-simplificada-coeficiente-lineal-maximo"
+data_type = "keyed_bracket_table"
+unit = "percent"
+legal_refs = ["ley-35-2006:art-28", "rd-439-2007:art-30"]
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "edificio-otra-construccion"
+value = "3"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "instalacion-mobiliario-enseres-resto-material"
+value = "10"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "maquinaria"
+value = "12"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "transporte"
+value = "16"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "equipo-informacion-software"
+value = "26"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "util-herramienta"
+value = "30"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "ganado-vacuno-porcino-ovino-caprino"
+value = "16"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "ganado-equino-frutal-no-citrico"
+value = "8"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "frutal-citrico-vinedo"
+value = "4"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "olivar"
+value = "2"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Tabla de amortizaciones simplificada", "Edificios y otras construcciones", "Edificios y otras construcciones 3 por 100 68 años", "Olivar 2 por 100 100 años"]
+[[revisions."2022".parameters]]
+id = "renta-actividad-inmovilizado-amortizacion-simplificada-periodo-maximo-anos"
+data_type = "keyed_bracket_table"
+unit = "years"
+legal_refs = ["ley-35-2006:art-28", "rd-439-2007:art-30"]
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "edificio-otra-construccion"
+value = "68"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "instalacion-mobiliario-enseres-resto-material"
+value = "20"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "maquinaria"
+value = "18"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "transporte"
+value = "14"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "equipo-informacion-software"
+value = "10"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "util-herramienta"
+value = "8"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "ganado-vacuno-porcino-ovino-caprino"
+value = "14"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "ganado-equino-frutal-no-citrico"
+value = "25"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "frutal-citrico-vinedo"
+value = "50"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "olivar"
+value = "100"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Tabla de amortizaciones simplificada", "Edificios y otras construcciones", "Edificios y otras construcciones 3 por 100 68 años", "Olivar 2 por 100 100 años"]
+[[revisions."2022".parameters]]
+id = "renta-actividad-inmovilizado-intangible-vida-util-no-estimable-limite-anual"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["ley-35-2006:art-28", "ley-27-2014:art-12"]
+
+[[revisions."2022".parameters.values]]
+value = "5"
+date_axis = "filing_period"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["no pueda estimarse de manera fiable", "veinteava parte de su importe", "la amortización será deducible con el límite anual máximo de la veinteava parte de su importe (el 5 por 100)."]
+[[revisions."2022".parameters]]
+id = "renta-actividad-fondo-comercio-amortizacion-limite-anual"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["ley-35-2006:art-28", "ley-27-2014:art-12"]
+
+[[revisions."2022".parameters.values]]
+value = "5"
+date_axis = "filing_period"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["fondo de comercio", "veinteava parte de su importe", "la amortización del fondo de comercio será deducible con el límite anual máximo de la veinteava"]
+[[revisions."2022".parameters]]
+id = "renta-actividad-inmovilizado-material-nuevo-libertad-amortizacion-umbral-unitario"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-28"]
+
+[[revisions."2022".parameters.values]]
+value = "300"
+date_axis = "filing_period"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["valor unitario no exceda de", "25.000 euros referido al período impositivo", "cuyo valor unitario no exceda de 300 euros, hasta el límite de 25.000 euros referido al período impositivo."]
+[[revisions."2022".parameters]]
+id = "renta-actividad-inmovilizado-material-nuevo-libertad-amortizacion-limite-anual"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-28"]
+
+[[revisions."2022".parameters.values]]
+value = "25000"
+date_axis = "filing_period"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["valor unitario no exceda de", "25.000 euros referido al período impositivo", "cuyo valor unitario no exceda de 300 euros, hasta el límite de 25.000 euros referido al período impositivo."]
+[[revisions."2022".parameters]]
+id = "renta-actividad-inmovilizado-amortizacion-normal-metodo-admitido"
+data_type = "keyed_bracket_table"
+unit = "flag"
+legal_refs = ["ley-35-2006:art-28", "ley-27-2014:art-12", "rd-634-2015:art-5", "rd-634-2015:art-6", "rd-634-2015:art-7", "ley-27-2014:art-102"]
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "material:linear"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "material:constant_percentage"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "material:sum_of_digits"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "material:approved_plan"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "material:low_value_free"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "material:research_development_free"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "material:research_development_building"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "material:small_enterprise_employment_free"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "intangible:linear"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "intangible:constant_percentage"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "intangible:sum_of_digits"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "intangible:approved_plan"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "intangible:intangible_useful_life"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "intangible:intangible_indefinite_life"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "intangible:goodwill"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "intangible:research_development_free"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "intangible:small_enterprise_employment_free"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Otros sistemas de amortización son:", "Se ajuste a un plan formulado por el contribuyente y aceptado por la", "Con carácter general, el inmovilizado intangible se amortizará atendiendo a su vida útil.", "Sistemas y programas informáticos 33 por 100 6 años", "Los edificios, el mobiliario y los enseres no podrán acogerse a la amortización mediante números dígitos."]
+[[revisions."2022".parameters]]
+id = "renta-actividad-inmovilizado-amortizacion-simplificada-metodo-admitido"
+data_type = "keyed_bracket_table"
+unit = "flag"
+legal_refs = ["ley-35-2006:art-28", "rd-439-2007:art-30", "ley-27-2014:art-12", "ley-27-2014:art-102"]
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "material:linear"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "material:constant_percentage"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "material:sum_of_digits"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "material:approved_plan"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "material:low_value_free"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "material:research_development_free"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "material:research_development_building"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "material:small_enterprise_employment_free"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "intangible:linear"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "intangible:intangible_useful_life"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "intangible:intangible_indefinite_life"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "intangible:goodwill"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "intangible:research_development_free"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "intangible:small_enterprise_employment_free"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["amortizaciones del inmovilizado material se practicarán de forma lineal, en función de la", "de estimación directa, modalidad normal o simplificada, la libertad de amortización resulta"]
+[[revisions."2022".parameters]]
+id = "renta-actividad-inmovilizado-amortizacion-clase-edificio"
+data_type = "keyed_bracket_table"
+unit = "flag"
+legal_refs = ["ley-27-2014:art-12", "rd-634-2015:art-4", "rd-634-2015:art-5", "rd-634-2015:art-6"]
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "obra-civil-general"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "obra-civil-pavimentos"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "obra-civil-infraestructuras-mineras"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "central-hidraulica"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "central-nuclear"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "central-carbon"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "central-renovable"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "central-otra"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "edificio-industrial"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "terreno-escombrera"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "almacen-deposito"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "edificio-comercial-administrativo-servicios-vivienda"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "instalacion-subestacion-red"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "instalacion-cables"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "instalacion-resto"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "maquinaria"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "equipo-medico"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "transporte-locomotora-vagon-traccion"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "transporte-buque-aeronave"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "transporte-interno"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "transporte-externo"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "transporte-autocamion"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "mobiliario"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "lenceria"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "cristaleria"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "util-herramienta"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "molde-matriz-modelo"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "enseres-otros"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "equipo-electronico"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "equipo-proceso-informacion"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "intangible-software"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "intangible-audiovisual"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "otro-elemento"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "edificio-otra-construccion"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "instalacion-mobiliario-enseres-resto-material"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "transporte"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "equipo-informacion-software"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "ganado-vacuno-porcino-ovino-caprino"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "ganado-equino-frutal-no-citrico"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "frutal-citrico-vinedo"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "olivar"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Los edificios, mobiliario y enseres no podrán amortizarse mediante el método de", "edificios cuya antigüedad sea inferior a diez años."]
+[[revisions."2022".parameters]]
+id = "renta-actividad-inmovilizado-amortizacion-clase-mobiliario-enseres"
+data_type = "keyed_bracket_table"
+unit = "flag"
+legal_refs = ["ley-27-2014:art-12", "rd-634-2015:art-5", "rd-634-2015:art-6"]
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "obra-civil-general"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "obra-civil-pavimentos"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "obra-civil-infraestructuras-mineras"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "central-hidraulica"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "central-nuclear"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "central-carbon"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "central-renovable"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "central-otra"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "edificio-industrial"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "terreno-escombrera"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "almacen-deposito"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "edificio-comercial-administrativo-servicios-vivienda"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "instalacion-subestacion-red"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "instalacion-cables"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "instalacion-resto"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "maquinaria"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "equipo-medico"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "transporte-locomotora-vagon-traccion"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "transporte-buque-aeronave"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "transporte-interno"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "transporte-externo"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "transporte-autocamion"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "mobiliario"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "lenceria"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "cristaleria"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "util-herramienta"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "molde-matriz-modelo"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "enseres-otros"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "equipo-electronico"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "equipo-proceso-informacion"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "intangible-software"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "intangible-audiovisual"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "otro-elemento"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "edificio-otra-construccion"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "instalacion-mobiliario-enseres-resto-material"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "transporte"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "equipo-informacion-software"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "ganado-vacuno-porcino-ovino-caprino"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "ganado-equino-frutal-no-citrico"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "frutal-citrico-vinedo"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "olivar"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Los edificios, mobiliario y enseres no podrán amortizarse mediante el método de", "Los edificios, el mobiliario y los enseres no podrán acogerse a la amortización mediante números dígitos."]
+[[revisions."2022".parameters]]
+id = "renta-actividad-inmovilizado-amortizacion-porcentaje-constante-ponderacion"
+data_type = "keyed_bracket_table"
+unit = "factor"
+legal_refs = ["ley-27-2014:art-12", "rd-634-2015:art-5"]
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "periodo-corto"
+value = "1.5"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "periodo-medio"
+value = "2"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "periodo-largo"
+value = "2.5"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["1,5, si el elemento tiene un período de amortización inferior a 5 años.", "2,5, si el elemento tiene un período de amortización igual o superior a 8 años."]
+[[revisions."2022".parameters]]
+id = "renta-actividad-inmovilizado-amortizacion-porcentaje-constante-umbral-periodo-medio"
+data_type = "integer"
+unit = "years"
+legal_refs = ["ley-27-2014:art-12", "rd-634-2015:art-5"]
+
+[[revisions."2022".parameters.values]]
+value = "5"
+date_axis = "filing_period"
+comparison = "inclusive"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["2, si el elemento tiene un período de amortización igual o superior a 5 años e inferior a"]
+[[revisions."2022".parameters]]
+id = "renta-actividad-inmovilizado-amortizacion-porcentaje-constante-umbral-periodo-largo"
+data_type = "integer"
+unit = "years"
+legal_refs = ["ley-27-2014:art-12", "rd-634-2015:art-5"]
+
+[[revisions."2022".parameters.values]]
+value = "8"
+date_axis = "filing_period"
+comparison = "inclusive"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["2,5, si el elemento tiene un período de amortización igual o superior a 8 años."]
+[[revisions."2022".parameters]]
+id = "renta-actividad-inmovilizado-amortizacion-porcentaje-constante-minimo"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["ley-27-2014:art-12", "rd-634-2015:art-5"]
+
+[[revisions."2022".parameters.values]]
+value = "11"
+date_axis = "filing_period"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["El porcentaje constante así determinado no podrá ser inferior al 11 por 100."]
+[[revisions."2022".parameters]]
+id = "renta-actividad-inmovilizado-amortizacion-usado-multiplicador-coeficiente-maximo"
+data_type = "keyed_bracket_table"
+unit = "factor"
+legal_refs = ["ley-27-2014:art-12", "rd-634-2015:art-4", "rd-439-2007:art-30"]
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "normal:material"
+value = "2"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["el coeficiente máximo utilizable será el doble del coeficiente de amortización lineal"]
+[[revisions."2022".parameters]]
+id = "renta-actividad-inmovilizado-amortizacion-edificio-usado-antiguedad-minima"
+data_type = "integer"
+unit = "years"
+legal_refs = ["rd-634-2015:art-4"]
+
+[[revisions."2022".parameters.values]]
+value = "10"
+date_axis = "filing_period"
+comparison = "inclusive"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["edificios cuya antigüedad sea inferior a diez años."]
+[[revisions."2022".parameters]]
+id = "renta-actividad-inmovilizado-amortizacion-turno-normal-horas"
+data_type = "keyed_bracket_table"
+unit = "hours"
+legal_refs = ["rd-634-2015:art-4", "rd-439-2007:art-30"]
+source_refs = ["boe-ris-statutory-facts"]
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "normal"
+value = "8"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "boe-ris-statutory-facts"
+required_text = ["se utilice diariamente en más de un turno normal de trabajo", "por el cociente entre las horas diarias habitualmente trabajadas y ocho horas"]
+[[revisions."2022".parameters]]
+id = "renta-actividad-inmovilizado-amortizacion-erd-cifra-negocios-umbral"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-27-2014:art-101", "ley-35-2006:art-28"]
+
+[[revisions."2022".parameters.values]]
+value = "10000000"
+date_axis = "filing_period"
+comparison = "inclusive"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["anterior (ejercicio 2021) haya sido inferior a 10 millones de euros, cualquiera que sea el"]
+[[revisions."2022".parameters]]
+id = "renta-actividad-inmovilizado-amortizacion-erd-multiplicador-coeficiente-maximo"
+data_type = "decimal"
+unit = "factor"
+legal_refs = ["ley-27-2014:art-103", "rd-439-2007:art-30"]
+
+[[revisions."2022".parameters.values]]
+value = "2"
+date_axis = "filing_period"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["multiplicar por 2 el coeficiente lineal máximo previsto en las tablas de amortización"]
+[[revisions."2022".parameters]]
+id = "renta-actividad-inmovilizado-amortizacion-erd-intangible-indefinido-multiplicador"
+data_type = "decimal"
+unit = "factor"
+legal_refs = ["ley-27-2014:art-103", "ley-27-2014:art-12"]
+
+[[revisions."2022".parameters.values]]
+value = "1.5"
+date_axis = "filing_period"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["podrán aplicar el porcentaje del 150 por 100 al importe que resulte deducible"]
+[[revisions."2022".parameters]]
+id = "renta-actividad-inmovilizado-amortizacion-idi-edificio-periodo"
+data_type = "integer"
+unit = "years"
+legal_refs = ["ley-27-2014:art-12"]
+
+[[revisions."2022".parameters.values]]
+value = "10"
+date_axis = "filing_period"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["lineal durante un período de 10 años, en la parte que se hallen afectos a las actividades"]
+[[revisions."2022".parameters]]
+id = "renta-actividad-inmovilizado-amortizacion-erd-empleo-inversion-por-unidad-plantilla"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-27-2014:art-102"]
+
+[[revisions."2022".parameters.values]]
+value = "120000"
+date_axis = "filing_period"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["importe resultante de multiplicar la cifra de 120.000 euros por el incremento de la"]
+[[revisions."2022".parameters]]
+id = "renta-actividad-inmovilizado-amortizacion-clase-vehiculo-restringido"
+data_type = "keyed_bracket_table"
+unit = "flag"
+legal_refs = ["rd-439-2007:art-22", "ley-35-2006:art-29"]
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "obra-civil-general"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "obra-civil-pavimentos"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "obra-civil-infraestructuras-mineras"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "central-hidraulica"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "central-nuclear"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "central-carbon"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "central-renovable"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "central-otra"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "edificio-industrial"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "terreno-escombrera"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "almacen-deposito"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "edificio-comercial-administrativo-servicios-vivienda"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "instalacion-subestacion-red"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "instalacion-cables"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "instalacion-resto"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "maquinaria"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "equipo-medico"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "transporte-locomotora-vagon-traccion"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "transporte-buque-aeronave"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "transporte-interno"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "transporte-externo"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "transporte-autocamion"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "mobiliario"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "lenceria"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "cristaleria"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "util-herramienta"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "molde-matriz-modelo"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "enseres-otros"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "equipo-electronico"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "equipo-proceso-informacion"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "intangible-software"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "intangible-audiovisual"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "otro-elemento"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "edificio-otra-construccion"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "instalacion-mobiliario-enseres-resto-material"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "transporte"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "equipo-informacion-software"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "ganado-vacuno-porcino-ovino-caprino"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "ganado-equino-frutal-no-citrico"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "frutal-citrico-vinedo"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "olivar"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Esta excepción no es aplicable a los automóviles de turismo y sus remolques, las"]
+[[revisions."2022".parameters]]
+id = "renta-actividad-inmovilizado-amortizacion-clase-admite-material"
+data_type = "keyed_bracket_table"
+unit = "flag"
+legal_refs = ["ley-27-2014:art-12", "rd-439-2007:art-30"]
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "obra-civil-general"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "obra-civil-pavimentos"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "obra-civil-infraestructuras-mineras"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "central-hidraulica"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "central-nuclear"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "central-carbon"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "central-renovable"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "central-otra"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "edificio-industrial"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "terreno-escombrera"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "almacen-deposito"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "edificio-comercial-administrativo-servicios-vivienda"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "instalacion-subestacion-red"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "instalacion-cables"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "instalacion-resto"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "maquinaria"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "equipo-medico"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "transporte-locomotora-vagon-traccion"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "transporte-buque-aeronave"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "transporte-interno"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "transporte-externo"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "transporte-autocamion"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "mobiliario"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "lenceria"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "cristaleria"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "util-herramienta"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "molde-matriz-modelo"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "enseres-otros"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "equipo-electronico"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "equipo-proceso-informacion"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "intangible-software"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "intangible-audiovisual"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "otro-elemento"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "edificio-otra-construccion"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "instalacion-mobiliario-enseres-resto-material"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "transporte"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "equipo-informacion-software"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "ganado-vacuno-porcino-ovino-caprino"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "ganado-equino-frutal-no-citrico"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "frutal-citrico-vinedo"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "olivar"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Tabla de coeficientes de amortización lineal", "Sistemas y programas informáticos"]
+[[revisions."2022".parameters]]
+id = "renta-actividad-inmovilizado-amortizacion-clase-admite-intangible"
+data_type = "keyed_bracket_table"
+unit = "flag"
+legal_refs = ["ley-27-2014:art-12", "rd-439-2007:art-30"]
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "obra-civil-general"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "obra-civil-pavimentos"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "obra-civil-infraestructuras-mineras"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "central-hidraulica"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "central-nuclear"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "central-carbon"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "central-renovable"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "central-otra"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "edificio-industrial"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "terreno-escombrera"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "almacen-deposito"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "edificio-comercial-administrativo-servicios-vivienda"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "instalacion-subestacion-red"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "instalacion-cables"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "instalacion-resto"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "maquinaria"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "equipo-medico"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "transporte-locomotora-vagon-traccion"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "transporte-buque-aeronave"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "transporte-interno"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "transporte-externo"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "transporte-autocamion"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "mobiliario"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "lenceria"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "cristaleria"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "util-herramienta"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "molde-matriz-modelo"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "enseres-otros"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "equipo-electronico"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "equipo-proceso-informacion"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "intangible-software"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "intangible-audiovisual"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "otro-elemento"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "edificio-otra-construccion"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "instalacion-mobiliario-enseres-resto-material"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "transporte"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "equipo-informacion-software"
+value = "1"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "ganado-vacuno-porcino-ovino-caprino"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "ganado-equino-frutal-no-citrico"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "frutal-citrico-vinedo"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.keyed_brackets]]
+key = "olivar"
+value = "0"
+valid_from = 2022-01-01
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Tabla de coeficientes de amortización lineal", "Sistemas y programas informáticos"]

@@ -21,3 +21,70 @@ valid_from = 2023-01-01
 # the rule that awards it. The sibling age-band parameters carry their band in the
 # FILENAME rather than in a field, which is the same gap from the other side.
 
+[[revisions."2023".parameters]]
+id = "renta-actividad-inmovilizado-amortizacion-renovables-inversion-maxima"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-27-2014:da-17"]
+
+[[revisions."2023".parameters.values]]
+value = "500000"
+date_axis = "filing_period"
+valid_from = 2023-01-01
+
+[[revisions."2023".parameters.source_citations]]
+source_ref = "aeat-renta-2023-manual-parte1"
+required_text = ["beneficiarse del régimen de libertad de amortización será de 500.000 euros."]
+[[revisions."2023".parameters]]
+id = "renta-actividad-inmovilizado-amortizacion-renovables-primer-ejercicio"
+data_type = "integer"
+unit = "year"
+legal_refs = ["ley-27-2014:da-17"]
+
+[[revisions."2023".parameters.values]]
+value = "2023"
+date_axis = "filing_period"
+valid_from = 2023-01-01
+
+[[revisions."2023".parameters.source_citations]]
+source_ref = "aeat-renta-2023-manual-parte1"
+required_text = ["Se podrán amortizar libremente en el período impositivo 2023 las inversiones en", "Que la entrada en funcionamiento de las nuevas instalaciones deberá producirse en el año 2023."]
+[[revisions."2023".parameters]]
+id = "renta-actividad-inmovilizado-amortizacion-renovables-ultimo-ejercicio"
+data_type = "integer"
+unit = "year"
+legal_refs = ["ley-27-2014:da-17"]
+
+[[revisions."2023".parameters.values]]
+value = "2023"
+date_axis = "filing_period"
+valid_from = 2023-01-01
+
+[[revisions."2023".parameters.source_citations]]
+source_ref = "aeat-renta-2023-manual-parte1"
+required_text = ["Se podrán amortizar libremente en el período impositivo 2023 las inversiones en", "Que la entrada en funcionamiento de las nuevas instalaciones deberá producirse en el año 2023."]
+[[revisions."2023".parameters]]
+id = "renta-actividad-inmovilizado-amortizacion-renovables-puesta-a-disposicion-admitida"
+data_type = "integer"
+unit = "flag"
+legal_refs = ["ley-27-2014:da-17"]
+
+[revisions."2023".parameters.non_filing_axis_admission]
+date_axis = "transaction_date"
+legal_ref = "ley-27-2014:da-17"
+reason = "LIS DA 17a.1 admits installations by the date they were made available to the taxpayer (from the entry into force of RDL 18/2022), an event that can precede the tax period by years; the filing period fixes only when the installation enters service, so it cannot express which installations qualify."
+
+[[revisions."2023".parameters.values]]
+value = "0"
+date_axis = "transaction_date"
+valid_from = 2015-01-01
+valid_to = 2022-10-19
+
+[[revisions."2023".parameters.values]]
+value = "1"
+date_axis = "transaction_date"
+valid_from = 2022-10-20
+
+[[revisions."2023".parameters.source_citations]]
+source_ref = "aeat-renta-2023-manual-parte1"
+required_text = ["Que las instalaciones se han de haber puesto a disposición del contribuyente a partir", "del 20 de octubre de 2022."]
