@@ -214,7 +214,7 @@ class ProjectionObligation(BaseModel):
 
     Attributes:
         modelo: Modelo identifier.
-        period: Typed :class:`~cadrumo.core.Period` for the obligation window.
+        period: Typed :class:`~cadrumo.core.period.Period` for the obligation window.
         opens_on: First day the filing window accepts submissions.
         closes_on: Last day the filing window accepts submissions.
         status: The engine :class:`ObligationStatus`.
@@ -378,7 +378,7 @@ class ModeloReadinessRequest(BaseModel):
     pass.
 
     Attributes:
-        period: Typed :class:`~cadrumo.core.Period` scoping the readiness
+        period: Typed :class:`~cadrumo.core.period.Period` scoping the readiness
             check, or ``None`` when the caller omits the period (the
             projection uses the annual ``0A`` period for registry and
             ledger preflight resolution).
@@ -619,13 +619,13 @@ class ProjectionModeloReadiness(BaseModel):
             supplied by the current profile or ledger state.
         missing_bindings: Missing :class:`ProjectionModeloBindingRequirement`
             records for unresolved calculation inputs.
-        period: Typed :class:`~cadrumo.core.Period` the readiness check was
+        period: Typed :class:`~cadrumo.core.period.Period` the readiness check was
             scoped to.
         ledger_preflight_required: Whether the registry declares any
             ledger aggregation binding requiring ledger preflight.
         ledger_ready: Ledger-preflight verdict, or ``None`` when no
             ledger preflight was required.
-        ledger_period: The :class:`~cadrumo.core.Period` the ledger preflight
+        ledger_period: The :class:`~cadrumo.core.period.Period` the ledger preflight
             was scoped to, or ``None`` when no ledger preflight was run.
         ledger_issues: Blocking :class:`LedgerPreflightIssue` rows.
         per_operation_requirements_assessed: Whether the per-modelo
@@ -1144,7 +1144,7 @@ def _build_missing_binding_requirements(
 def _ledger_period_for_modelo_readiness(request: ModeloReadinessRequest) -> Period:
     """Return the typed ledger period for the ledger preflight.
 
-    Returns the typed :class:`~cadrumo.core.Period` on the request directly.
+    Returns the typed :class:`~cadrumo.core.period.Period` on the request directly.
     When the request carries no period the annual ``0A`` fallback is returned.
     """
     if request.period is None:
