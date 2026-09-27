@@ -5,7 +5,7 @@ tags:
 date: '2026-09-27'
 modified: '2026-09-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:5198202bd7934430d23c7351ca58cf4b3dd7a601d9bd3967506df6e6a1d8ca14'
+body_hash: 'sha256:a7553b4f378d95140fc29d8ecf5f145d7f338c2d23abc9a095f2e007494870da'
 related:
   - "[[2026-09-27-registry-conformance-rectification-plan]]"
 ---
@@ -92,10 +92,25 @@ related:
 - `S13` `M` `dev/registry/registry_collapse_verification.py`
 - `S13` `M` `dev/registry/tests/test_registry_collapse_verification.py`
 - `S13` `verify:` `python -m dev.registry.registry_collapse_verification --modelo 100 (complete, indexed 3307 coordinates)` -> `pass`
+- `S07` `M` `dev/registry/compiler/modelo_projections.py`
+- `S07` `M` `dev/registry/tests/test_modelo_100_filing_surface_across_supported_years.py`
+- `S07` `A` `dev/registry/tests/test_modelo_100_parameter_projection_across_horizon.py`
+- `S07` `M` `dev/registry/tests/test_modelo_projections.py`
+- `S07` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2020/parameters/0001-declarations.toml`
+- `S07` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2021/revision.toml`
+- `S07` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/parameters/0001-declarations.toml`
+- `S07` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/revision.toml`
+- `S07` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2023/parameters/0001-declarations.toml`
+- `S07` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2023/revision.toml`
+- `S07` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/revision.toml`
+- `S07` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/parameters/0001-declarations.toml`
+- `S07` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/revision.toml`
+- `S07` `verify:` `just check-registry-gate` -> `pass`
 
 ## Notes
 
 - `S04` Classified as a comparison artefact: family_dispositions is a typed Mapping; shares the S01 commit because both change the same comparator module
 - `S05` Modelo 100 2022 casilla 0670 stays manual: the official dictionary label signs of 1913 and 1916 contradict the manual; returned to the operator for ruling.
 - `S05` The final-settlement manual-anchor test still names its manual ejercicio as a literal until the evidence-derived manual-edition selector from the test-year scrub is merged.
+- `S07` Two parameters keep their stated windows: the renewables availability flag is keyed on transaction_date, and renta-guarderia-incremento-cap-anual exists only in the 2024 edition.
 

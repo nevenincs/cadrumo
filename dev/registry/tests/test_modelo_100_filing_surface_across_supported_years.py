@@ -33,7 +33,7 @@ from cadrumo.domain.calculations.registry.schema import RegistryCatalogues, Regi
 from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 
-from ..compiler.loader import load_modelo_directory, load_shared_catalogues
+from ..compiler.loader import load_shared_catalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -45,16 +45,7 @@ def _supported_years() -> tuple[int, ...]:
     return support.years
 
 
-@cache
-def _authored_supported_years() -> tuple[int, ...]:
-    """Supported years for which Modelo 100 has an edition of its own, not a projection."""
-    modelo = load_modelo_directory(bundled_path("registry", "aeat", "modelos", "100"))
-    authored = {revision.valid_from.year for revision in modelo.revisions.values()}
-    return tuple(year for year in _supported_years() if year in authored)
-
-
 SUPPORTED_YEARS = _supported_years()
-AUTHORED_SUPPORTED_YEARS = _authored_supported_years()
 
 _IDENTITY_CASILLA_BINDINGS: Mapping[str, str] = {
     "DPNIF_D": "renta-profile-tax-id",
@@ -330,7 +321,7 @@ def _settle(snapshot: RegistrySnapshot, filing_year: int, *, work_certificate: D
     return {str(key): value for key, value in result.values.items()}
 
 
-@pytest.mark.parametrize("filing_year", AUTHORED_SUPPORTED_YEARS)
+@pytest.mark.parametrize("filing_year", SUPPORTED_YEARS)
 def test_settlement_chain_credits_the_work_certificate_against_the_cuota(
     edition: Callable[[int], RegistrySnapshot], filing_year: int
 ) -> None:

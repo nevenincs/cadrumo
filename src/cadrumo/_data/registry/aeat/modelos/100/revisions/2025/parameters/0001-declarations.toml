@@ -12,7 +12,6 @@ required_text = ["Reserva para Inversiones en Canarias", "rendimiento neto"]
 value = "80"
 date_axis = "filing_period"
 valid_from = 2025-01-01
-valid_to = 2025-12-31
 [[revisions."2025".parameters]]
 id = "renta-ric-materializacion-plazo-anos"
 data_type = "decimal"
@@ -27,7 +26,6 @@ required_text = ["Reserva para Inversiones en Canarias", "tres años"]
 value = "3"
 date_axis = "filing_period"
 valid_from = 2025-01-01
-valid_to = 2025-12-31
 [[revisions."2025".parameters]]
 id = "renta-ric-mantenimiento-plazo-anos"
 data_type = "decimal"
@@ -42,7 +40,6 @@ required_text = ["Reserva para Inversiones en Canarias", "cinco años"]
 value = "5"
 date_axis = "filing_period"
 valid_from = 2025-01-01
-valid_to = 2025-12-31
 [[revisions."2025".parameters]]
 id = "renta-zec-tipo-gravamen-reducido"
 data_type = "ratio"
@@ -57,7 +54,6 @@ required_text = ["Zona Especial Canaria", "tipo de gravamen"]
 value = "4"
 date_axis = "filing_period"
 valid_from = 2025-01-01
-valid_to = 2025-12-31
 [[revisions."2025".parameters]]
 id = "renta-estimacion-objetiva-reduccion-general-rate"
 data_type = "ratio"
@@ -72,7 +68,6 @@ required_text = ["estimación objetiva", "reducción general"]
 value = "5"
 date_axis = "filing_period"
 valid_from = 2025-01-01
-valid_to = 2025-12-31
 [[revisions."2025".parameters]]
 id = "renta-estimacion-objetiva-indice-corrector-empresas-pequena-dimension-rate"
 data_type = "ratio"
@@ -87,7 +82,6 @@ required_text = ["estimación objetiva", "índice corrector"]
 value = "10"
 date_axis = "filing_period"
 valid_from = 2025-01-01
-valid_to = 2025-12-31
 [[revisions."2025".parameters]]
 id = "renta-atribucion-rentas-rate-pass-through"
 data_type = "ratio"
@@ -102,8 +96,6 @@ required_text = ["régimen de atribución de rentas", "atribuirán a los socios"
 value = "100"
 date_axis = "filing_period"
 valid_from = 2025-01-01
-valid_to = 2025-12-31
-
 # -----------------------------------------------------------------------------
 # Mínimo del contribuyente (LIRPF arts. 56 + 57 + 73).
 # The statutory baseline is 5,550 EUR per LIRPF art. 57. Autonomous
@@ -132,7 +124,6 @@ required_text = ["721,70 euros por cada hijo nacido o adoptado"]
 value = "721.70"
 date_axis = "filing_period"
 valid_from = 2025-01-01
-valid_to = 2025-12-31
 [[revisions."2025".parameters]]
 id = "renta-deduccion-madrid-nacimiento-adopcion-limite-contribuyente-individual"
 data_type = "money"
@@ -148,7 +139,6 @@ required_text = ["30.930 euros en tributación individual"]
 value = "30930"
 date_axis = "filing_period"
 valid_from = 2025-01-01
-valid_to = 2025-12-31
 [[revisions."2025".parameters]]
 id = "renta-deduccion-madrid-nacimiento-adopcion-limite-contribuyente-conjunta"
 data_type = "money"
@@ -164,7 +154,6 @@ required_text = ["37.322,20 euros en tributación conjunta"]
 value = "37322.20"
 date_axis = "filing_period"
 valid_from = 2025-01-01
-valid_to = 2025-12-31
 [[revisions."2025".parameters]]
 id = "renta-deduccion-madrid-nacimiento-adopcion-limite-unidad-familiar"
 data_type = "money"
@@ -180,7 +169,6 @@ required_text = ["61.860 euros"]
 value = "61860"
 date_axis = "filing_period"
 valid_from = 2025-01-01
-valid_to = 2025-12-31
 [[revisions."2025".parameters]]
 id = "renta-eo-agraria-reduccion-jovenes-rate"
 data_type = "ratio"
@@ -195,7 +183,6 @@ required_text = ["Reducción agricultores jóvenes", "25 por 100"]
 value = "25"
 date_axis = "filing_period"
 valid_from = 2025-01-01
-valid_to = 2025-12-31
 [[revisions."2025".parameters]]
 id = "renta-eo-agraria-reduccion-irregularidad-rate"
 data_type = "ratio"
@@ -210,7 +197,6 @@ required_text = ["REDUCCIÓN POR IRREGULARIDAD", "30 POR 100"]
 value = "30"
 date_axis = "filing_period"
 valid_from = 2025-01-01
-valid_to = 2025-12-31
 [[revisions."2025".parameters]]
 id = "renta-eo-agraria-reduccion-irregularidad-cap"
 data_type = "money"
@@ -225,7 +211,6 @@ required_text = ["citada reducción no podrá superar el importe de 300.000 euro
 value = "300000"
 date_axis = "filing_period"
 valid_from = 2025-01-01
-valid_to = 2025-12-31
 # Modelo 100 Art. 58.1 LIRPF rentas ceiling conditioning the mínimo por
 # descendientes. A descendant holding rentas anuales (excluidas las exentas)
 # above this figure generates no mínimo, so the ceiling is an eligibility
@@ -259,7 +244,6 @@ required_text = ["Está exenta el 50 por 100 de los ingresos íntegros procedent
 value = "0.50"
 date_axis = "filing_period"
 valid_from = 2025-01-01
-valid_to = 2025-12-31
 [[revisions."2025".parameters]]
 id = "lirpf-art-7p-exemption-cap"
 data_type = "money"
@@ -275,7 +259,6 @@ required_text = ["límite máximo de 60.100 euros anuales"]
 value = "60100"
 date_axis = "filing_period"
 valid_from = 2025-01-01
-valid_to = 2025-12-31
 # Mínimo del contribuyente aplicable al GRAVAMEN AUTONÓMICO para residentes en
 # Andalucía (Ley 22/2009 art. 46.1.a cede esta competencia a la comunidad).
 # Importe general, es decir el aplicable al contribuyente menor de 65 años; los
@@ -294,7 +277,6 @@ required_text = ["5.790 euros anuales con carácter general"]
 value = "5790"
 date_axis = "filing_period"
 valid_from = 2025-01-01
-valid_to = 2025-12-31
 # Mínimo del contribuyente aplicable al GRAVAMEN AUTONÓMICO para residentes en
 # Principado de Asturias (Ley 22/2009 art. 46.1.a cede esta competencia a la comunidad).
 # Importe general, es decir el aplicable al contribuyente menor de 65 años; los
@@ -313,7 +295,6 @@ required_text = ["6.105 euros anuales con carácter general"]
 value = "6105"
 date_axis = "filing_period"
 valid_from = 2025-01-01
-valid_to = 2025-12-31
 # Mínimo del contribuyente aplicable al GRAVAMEN AUTONÓMICO para residentes en
 # Canarias (Ley 22/2009 art. 46.1.a cede esta competencia a la comunidad).
 # Importe general, es decir el aplicable al contribuyente menor de 65 años; los
@@ -332,7 +313,6 @@ required_text = ["5.606 euros anuales con carácter general"]
 value = "5606"
 date_axis = "filing_period"
 valid_from = 2025-01-01
-valid_to = 2025-12-31
 # Mínimo del contribuyente aplicable al GRAVAMEN AUTONÓMICO para residentes en
 # Galicia (Ley 22/2009 art. 46.1.a cede esta competencia a la comunidad).
 # Importe general, es decir el aplicable al contribuyente menor de 65 años; los
@@ -351,7 +331,6 @@ required_text = ["5.789 euros anuales con carácter general"]
 value = "5789"
 date_axis = "filing_period"
 valid_from = 2025-01-01
-valid_to = 2025-12-31
 # Mínimo del contribuyente aplicable al GRAVAMEN AUTONÓMICO para residentes en
 # Madrid (Ley 22/2009 art. 46.1.a cede esta competencia a la comunidad).
 # Importe general, es decir el aplicable al contribuyente menor de 65 años; los
@@ -370,7 +349,6 @@ required_text = ["Mínimo del contribuyente"]
 value = "5956.65"
 date_axis = "filing_period"
 valid_from = 2025-01-01
-valid_to = 2025-12-31
 # Mínimo del contribuyente aplicable al GRAVAMEN AUTONÓMICO para residentes en
 # Comunitat Valenciana (Ley 22/2009 art. 46.1.a cede esta competencia a la comunidad).
 # Importe general, es decir el aplicable al contribuyente menor de 65 años; los
@@ -389,8 +367,6 @@ required_text = ["6.105 euros anuales con carácter general"]
 value = "6105"
 date_axis = "filing_period"
 valid_from = 2025-01-01
-valid_to = 2025-12-31
-
 # 2025 IRPF activity-asset linear-amortization authority. The coefficient and
 # maximum-period tables are parallel exact-key catalogues: an absent regime,
 # method, or class is unsupported and must never fall back to a nearby row.
@@ -401,39 +377,39 @@ data_type = "keyed_bracket_table"
 unit = "percent"
 legal_refs = ["ley-35-2006:art-28", "ley-27-2014:art-12"]
 keyed_brackets = [
-  { key = "obra-civil-general", value = "2", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "obra-civil-pavimentos", value = "6", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "obra-civil-infraestructuras-mineras", value = "7", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "central-hidraulica", value = "2", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "central-nuclear", value = "3", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "central-carbon", value = "4", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "central-renovable", value = "7", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "central-otra", value = "5", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "edificio-industrial", value = "3", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "terreno-escombrera", value = "4", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "almacen-deposito", value = "7", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "edificio-comercial-administrativo-servicios-vivienda", value = "2", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "instalacion-subestacion-red", value = "5", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "instalacion-cables", value = "7", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "instalacion-resto", value = "10", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "maquinaria", value = "12", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "equipo-medico", value = "15", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "transporte-locomotora-vagon-traccion", value = "8", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "transporte-buque-aeronave", value = "10", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "transporte-interno", value = "10", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "transporte-externo", value = "16", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "transporte-autocamion", value = "20", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "mobiliario", value = "10", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "lenceria", value = "25", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "cristaleria", value = "50", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "util-herramienta", value = "25", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "molde-matriz-modelo", value = "33", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "enseres-otros", value = "15", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "equipo-electronico", value = "20", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "equipo-proceso-informacion", value = "25", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "intangible-software", value = "33", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "intangible-audiovisual", value = "33", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "otro-elemento", value = "10", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "obra-civil-general", value = "2", valid_from = 2025-01-01},
+  { key = "obra-civil-pavimentos", value = "6", valid_from = 2025-01-01},
+  { key = "obra-civil-infraestructuras-mineras", value = "7", valid_from = 2025-01-01},
+  { key = "central-hidraulica", value = "2", valid_from = 2025-01-01},
+  { key = "central-nuclear", value = "3", valid_from = 2025-01-01},
+  { key = "central-carbon", value = "4", valid_from = 2025-01-01},
+  { key = "central-renovable", value = "7", valid_from = 2025-01-01},
+  { key = "central-otra", value = "5", valid_from = 2025-01-01},
+  { key = "edificio-industrial", value = "3", valid_from = 2025-01-01},
+  { key = "terreno-escombrera", value = "4", valid_from = 2025-01-01},
+  { key = "almacen-deposito", value = "7", valid_from = 2025-01-01},
+  { key = "edificio-comercial-administrativo-servicios-vivienda", value = "2", valid_from = 2025-01-01},
+  { key = "instalacion-subestacion-red", value = "5", valid_from = 2025-01-01},
+  { key = "instalacion-cables", value = "7", valid_from = 2025-01-01},
+  { key = "instalacion-resto", value = "10", valid_from = 2025-01-01},
+  { key = "maquinaria", value = "12", valid_from = 2025-01-01},
+  { key = "equipo-medico", value = "15", valid_from = 2025-01-01},
+  { key = "transporte-locomotora-vagon-traccion", value = "8", valid_from = 2025-01-01},
+  { key = "transporte-buque-aeronave", value = "10", valid_from = 2025-01-01},
+  { key = "transporte-interno", value = "10", valid_from = 2025-01-01},
+  { key = "transporte-externo", value = "16", valid_from = 2025-01-01},
+  { key = "transporte-autocamion", value = "20", valid_from = 2025-01-01},
+  { key = "mobiliario", value = "10", valid_from = 2025-01-01},
+  { key = "lenceria", value = "25", valid_from = 2025-01-01},
+  { key = "cristaleria", value = "50", valid_from = 2025-01-01},
+  { key = "util-herramienta", value = "25", valid_from = 2025-01-01},
+  { key = "molde-matriz-modelo", value = "33", valid_from = 2025-01-01},
+  { key = "enseres-otros", value = "15", valid_from = 2025-01-01},
+  { key = "equipo-electronico", value = "20", valid_from = 2025-01-01},
+  { key = "equipo-proceso-informacion", value = "25", valid_from = 2025-01-01},
+  { key = "intangible-software", value = "33", valid_from = 2025-01-01},
+  { key = "intangible-audiovisual", value = "33", valid_from = 2025-01-01},
+  { key = "otro-elemento", value = "10", valid_from = 2025-01-01},
 ]
 [[revisions."2025".parameters.source_citations]]
 source_ref = "aeat-renta-2025-manual-parte1"
@@ -445,39 +421,39 @@ data_type = "keyed_bracket_table"
 unit = "years"
 legal_refs = ["ley-35-2006:art-28", "ley-27-2014:art-12"]
 keyed_brackets = [
-  { key = "obra-civil-general", value = "100", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "obra-civil-pavimentos", value = "34", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "obra-civil-infraestructuras-mineras", value = "30", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "central-hidraulica", value = "100", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "central-nuclear", value = "60", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "central-carbon", value = "50", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "central-renovable", value = "30", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "central-otra", value = "40", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "edificio-industrial", value = "68", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "terreno-escombrera", value = "50", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "almacen-deposito", value = "30", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "edificio-comercial-administrativo-servicios-vivienda", value = "100", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "instalacion-subestacion-red", value = "40", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "instalacion-cables", value = "30", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "instalacion-resto", value = "20", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "maquinaria", value = "18", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "equipo-medico", value = "14", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "transporte-locomotora-vagon-traccion", value = "25", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "transporte-buque-aeronave", value = "20", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "transporte-interno", value = "20", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "transporte-externo", value = "14", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "transporte-autocamion", value = "10", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "mobiliario", value = "20", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "lenceria", value = "8", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "cristaleria", value = "4", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "util-herramienta", value = "8", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "molde-matriz-modelo", value = "6", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "enseres-otros", value = "14", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "equipo-electronico", value = "10", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "equipo-proceso-informacion", value = "8", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "intangible-software", value = "6", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "intangible-audiovisual", value = "6", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "otro-elemento", value = "20", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "obra-civil-general", value = "100", valid_from = 2025-01-01},
+  { key = "obra-civil-pavimentos", value = "34", valid_from = 2025-01-01},
+  { key = "obra-civil-infraestructuras-mineras", value = "30", valid_from = 2025-01-01},
+  { key = "central-hidraulica", value = "100", valid_from = 2025-01-01},
+  { key = "central-nuclear", value = "60", valid_from = 2025-01-01},
+  { key = "central-carbon", value = "50", valid_from = 2025-01-01},
+  { key = "central-renovable", value = "30", valid_from = 2025-01-01},
+  { key = "central-otra", value = "40", valid_from = 2025-01-01},
+  { key = "edificio-industrial", value = "68", valid_from = 2025-01-01},
+  { key = "terreno-escombrera", value = "50", valid_from = 2025-01-01},
+  { key = "almacen-deposito", value = "30", valid_from = 2025-01-01},
+  { key = "edificio-comercial-administrativo-servicios-vivienda", value = "100", valid_from = 2025-01-01},
+  { key = "instalacion-subestacion-red", value = "40", valid_from = 2025-01-01},
+  { key = "instalacion-cables", value = "30", valid_from = 2025-01-01},
+  { key = "instalacion-resto", value = "20", valid_from = 2025-01-01},
+  { key = "maquinaria", value = "18", valid_from = 2025-01-01},
+  { key = "equipo-medico", value = "14", valid_from = 2025-01-01},
+  { key = "transporte-locomotora-vagon-traccion", value = "25", valid_from = 2025-01-01},
+  { key = "transporte-buque-aeronave", value = "20", valid_from = 2025-01-01},
+  { key = "transporte-interno", value = "20", valid_from = 2025-01-01},
+  { key = "transporte-externo", value = "14", valid_from = 2025-01-01},
+  { key = "transporte-autocamion", value = "10", valid_from = 2025-01-01},
+  { key = "mobiliario", value = "20", valid_from = 2025-01-01},
+  { key = "lenceria", value = "8", valid_from = 2025-01-01},
+  { key = "cristaleria", value = "4", valid_from = 2025-01-01},
+  { key = "util-herramienta", value = "8", valid_from = 2025-01-01},
+  { key = "molde-matriz-modelo", value = "6", valid_from = 2025-01-01},
+  { key = "enseres-otros", value = "14", valid_from = 2025-01-01},
+  { key = "equipo-electronico", value = "10", valid_from = 2025-01-01},
+  { key = "equipo-proceso-informacion", value = "8", valid_from = 2025-01-01},
+  { key = "intangible-software", value = "6", valid_from = 2025-01-01},
+  { key = "intangible-audiovisual", value = "6", valid_from = 2025-01-01},
+  { key = "otro-elemento", value = "20", valid_from = 2025-01-01},
 ]
 [[revisions."2025".parameters.source_citations]]
 source_ref = "aeat-renta-2025-manual-parte1"
@@ -489,16 +465,16 @@ data_type = "keyed_bracket_table"
 unit = "percent"
 legal_refs = ["ley-35-2006:art-28", "rd-439-2007:art-30"]
 keyed_brackets = [
-  { key = "edificio-otra-construccion", value = "3", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "instalacion-mobiliario-enseres-resto-material", value = "10", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "maquinaria", value = "12", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "transporte", value = "16", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "equipo-informacion-software", value = "26", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "util-herramienta", value = "30", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "ganado-vacuno-porcino-ovino-caprino", value = "16", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "ganado-equino-frutal-no-citrico", value = "8", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "frutal-citrico-vinedo", value = "4", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "olivar", value = "2", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "edificio-otra-construccion", value = "3", valid_from = 2025-01-01},
+  { key = "instalacion-mobiliario-enseres-resto-material", value = "10", valid_from = 2025-01-01},
+  { key = "maquinaria", value = "12", valid_from = 2025-01-01},
+  { key = "transporte", value = "16", valid_from = 2025-01-01},
+  { key = "equipo-informacion-software", value = "26", valid_from = 2025-01-01},
+  { key = "util-herramienta", value = "30", valid_from = 2025-01-01},
+  { key = "ganado-vacuno-porcino-ovino-caprino", value = "16", valid_from = 2025-01-01},
+  { key = "ganado-equino-frutal-no-citrico", value = "8", valid_from = 2025-01-01},
+  { key = "frutal-citrico-vinedo", value = "4", valid_from = 2025-01-01},
+  { key = "olivar", value = "2", valid_from = 2025-01-01},
 ]
 [[revisions."2025".parameters.source_citations]]
 source_ref = "aeat-renta-2025-manual-parte1"
@@ -510,16 +486,16 @@ data_type = "keyed_bracket_table"
 unit = "years"
 legal_refs = ["ley-35-2006:art-28", "rd-439-2007:art-30"]
 keyed_brackets = [
-  { key = "edificio-otra-construccion", value = "68", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "instalacion-mobiliario-enseres-resto-material", value = "20", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "maquinaria", value = "18", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "transporte", value = "14", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "equipo-informacion-software", value = "10", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "util-herramienta", value = "8", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "ganado-vacuno-porcino-ovino-caprino", value = "14", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "ganado-equino-frutal-no-citrico", value = "25", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "frutal-citrico-vinedo", value = "50", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "olivar", value = "100", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "edificio-otra-construccion", value = "68", valid_from = 2025-01-01},
+  { key = "instalacion-mobiliario-enseres-resto-material", value = "20", valid_from = 2025-01-01},
+  { key = "maquinaria", value = "18", valid_from = 2025-01-01},
+  { key = "transporte", value = "14", valid_from = 2025-01-01},
+  { key = "equipo-informacion-software", value = "10", valid_from = 2025-01-01},
+  { key = "util-herramienta", value = "8", valid_from = 2025-01-01},
+  { key = "ganado-vacuno-porcino-ovino-caprino", value = "14", valid_from = 2025-01-01},
+  { key = "ganado-equino-frutal-no-citrico", value = "25", valid_from = 2025-01-01},
+  { key = "frutal-citrico-vinedo", value = "50", valid_from = 2025-01-01},
+  { key = "olivar", value = "100", valid_from = 2025-01-01},
 ]
 [[revisions."2025".parameters.source_citations]]
 source_ref = "aeat-renta-2025-manual-parte1"
@@ -534,7 +510,6 @@ legal_refs = ["ley-35-2006:art-28", "ley-27-2014:art-12"]
 value = "5"
 date_axis = "filing_period"
 valid_from = 2025-01-01
-valid_to = 2025-12-31
 [[revisions."2025".parameters.source_citations]]
 source_ref = "aeat-renta-2025-manual-parte1"
 required_text = ["no pueda estimarse de manera fiable", "veinteava parte de su importe"]
@@ -548,7 +523,6 @@ legal_refs = ["ley-35-2006:art-28", "ley-27-2014:art-12"]
 value = "5"
 date_axis = "filing_period"
 valid_from = 2025-01-01
-valid_to = 2025-12-31
 [[revisions."2025".parameters.source_citations]]
 source_ref = "aeat-renta-2025-manual-parte1"
 required_text = ["fondo de comercio", "veinteava parte de su importe"]
@@ -562,7 +536,6 @@ legal_refs = ["ley-35-2006:art-28"]
 value = "300"
 date_axis = "filing_period"
 valid_from = 2025-01-01
-valid_to = 2025-12-31
 [[revisions."2025".parameters.source_citations]]
 source_ref = "aeat-renta-2025-manual-parte1"
 required_text = ["valor unitario no exceda de", "25.000 euros referido al período impositivo"]
@@ -576,7 +549,6 @@ legal_refs = ["ley-35-2006:art-28"]
 value = "25000"
 date_axis = "filing_period"
 valid_from = 2025-01-01
-valid_to = 2025-12-31
 [[revisions."2025".parameters.source_citations]]
 source_ref = "aeat-renta-2025-manual-parte1"
 required_text = ["valor unitario no exceda de", "25.000 euros referido al período impositivo"]
@@ -594,27 +566,27 @@ data_type = "keyed_bracket_table"
 unit = "flag"
 legal_refs = ["ley-35-2006:art-28", "ley-27-2014:art-12", "rd-634-2015:art-5", "rd-634-2015:art-6", "rd-634-2015:art-7", "ley-27-2014:da-18", "ley-27-2014:art-102", "ley-27-2014:da-17"]
 keyed_brackets = [
-  { key = "material:linear", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "material:constant_percentage", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "material:sum_of_digits", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "material:approved_plan", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "material:low_value_free", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "material:research_development_free", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "material:research_development_building", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "material:charging_infrastructure_free", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "material:electric_vehicle_free", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "material:small_enterprise_employment_free", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "material:renewable_self_consumption_free", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "intangible:linear", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "intangible:constant_percentage", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "intangible:sum_of_digits", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "intangible:approved_plan", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "intangible:intangible_useful_life", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "intangible:intangible_indefinite_life", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "intangible:goodwill", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "intangible:research_development_free", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "intangible:small_enterprise_employment_free", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "intangible:renewable_self_consumption_free", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "material:linear", value = "1", valid_from = 2025-01-01},
+  { key = "material:constant_percentage", value = "1", valid_from = 2025-01-01},
+  { key = "material:sum_of_digits", value = "1", valid_from = 2025-01-01},
+  { key = "material:approved_plan", value = "1", valid_from = 2025-01-01},
+  { key = "material:low_value_free", value = "1", valid_from = 2025-01-01},
+  { key = "material:research_development_free", value = "1", valid_from = 2025-01-01},
+  { key = "material:research_development_building", value = "1", valid_from = 2025-01-01},
+  { key = "material:charging_infrastructure_free", value = "1", valid_from = 2025-01-01},
+  { key = "material:electric_vehicle_free", value = "1", valid_from = 2025-01-01},
+  { key = "material:small_enterprise_employment_free", value = "1", valid_from = 2025-01-01},
+  { key = "material:renewable_self_consumption_free", value = "1", valid_from = 2025-01-01},
+  { key = "intangible:linear", value = "1", valid_from = 2025-01-01},
+  { key = "intangible:constant_percentage", value = "1", valid_from = 2025-01-01},
+  { key = "intangible:sum_of_digits", value = "1", valid_from = 2025-01-01},
+  { key = "intangible:approved_plan", value = "1", valid_from = 2025-01-01},
+  { key = "intangible:intangible_useful_life", value = "1", valid_from = 2025-01-01},
+  { key = "intangible:intangible_indefinite_life", value = "1", valid_from = 2025-01-01},
+  { key = "intangible:goodwill", value = "1", valid_from = 2025-01-01},
+  { key = "intangible:research_development_free", value = "1", valid_from = 2025-01-01},
+  { key = "intangible:small_enterprise_employment_free", value = "0", valid_from = 2025-01-01},
+  { key = "intangible:renewable_self_consumption_free", value = "0", valid_from = 2025-01-01},
 ]
 [[revisions."2025".parameters.source_citations]]
 source_ref = "aeat-renta-2025-manual-parte1"
@@ -630,24 +602,24 @@ data_type = "keyed_bracket_table"
 unit = "flag"
 legal_refs = ["ley-35-2006:art-28", "rd-439-2007:art-30", "ley-27-2014:art-12", "ley-27-2014:da-18", "ley-27-2014:art-102", "ley-27-2014:da-17"]
 keyed_brackets = [
-  { key = "material:linear", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "material:constant_percentage", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "material:sum_of_digits", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "material:approved_plan", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "material:low_value_free", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "material:research_development_free", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "material:research_development_building", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "material:charging_infrastructure_free", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "material:electric_vehicle_free", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "material:small_enterprise_employment_free", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "material:renewable_self_consumption_free", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "intangible:linear", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "intangible:intangible_useful_life", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "intangible:intangible_indefinite_life", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "intangible:goodwill", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "intangible:research_development_free", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "intangible:small_enterprise_employment_free", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "intangible:renewable_self_consumption_free", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "material:linear", value = "1", valid_from = 2025-01-01},
+  { key = "material:constant_percentage", value = "0", valid_from = 2025-01-01},
+  { key = "material:sum_of_digits", value = "0", valid_from = 2025-01-01},
+  { key = "material:approved_plan", value = "0", valid_from = 2025-01-01},
+  { key = "material:low_value_free", value = "1", valid_from = 2025-01-01},
+  { key = "material:research_development_free", value = "1", valid_from = 2025-01-01},
+  { key = "material:research_development_building", value = "1", valid_from = 2025-01-01},
+  { key = "material:charging_infrastructure_free", value = "1", valid_from = 2025-01-01},
+  { key = "material:electric_vehicle_free", value = "1", valid_from = 2025-01-01},
+  { key = "material:small_enterprise_employment_free", value = "1", valid_from = 2025-01-01},
+  { key = "material:renewable_self_consumption_free", value = "1", valid_from = 2025-01-01},
+  { key = "intangible:linear", value = "1", valid_from = 2025-01-01},
+  { key = "intangible:intangible_useful_life", value = "1", valid_from = 2025-01-01},
+  { key = "intangible:intangible_indefinite_life", value = "1", valid_from = 2025-01-01},
+  { key = "intangible:goodwill", value = "1", valid_from = 2025-01-01},
+  { key = "intangible:research_development_free", value = "1", valid_from = 2025-01-01},
+  { key = "intangible:small_enterprise_employment_free", value = "0", valid_from = 2025-01-01},
+  { key = "intangible:renewable_self_consumption_free", value = "0", valid_from = 2025-01-01},
 ]
 [[revisions."2025".parameters.source_citations]]
 source_ref = "aeat-renta-2025-manual-parte1"
@@ -664,47 +636,47 @@ data_type = "keyed_bracket_table"
 unit = "flag"
 legal_refs = ["ley-27-2014:art-12", "rd-634-2015:art-4", "rd-634-2015:art-5", "rd-634-2015:art-6"]
 keyed_brackets = [
-  { key = "obra-civil-general", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "obra-civil-pavimentos", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "obra-civil-infraestructuras-mineras", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "central-hidraulica", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "central-nuclear", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "central-carbon", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "central-renovable", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "central-otra", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "edificio-industrial", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "terreno-escombrera", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "almacen-deposito", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "edificio-comercial-administrativo-servicios-vivienda", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "instalacion-subestacion-red", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "instalacion-cables", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "instalacion-resto", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "maquinaria", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "equipo-medico", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "transporte-locomotora-vagon-traccion", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "transporte-buque-aeronave", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "transporte-interno", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "transporte-externo", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "transporte-autocamion", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "mobiliario", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "lenceria", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "cristaleria", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "util-herramienta", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "molde-matriz-modelo", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "enseres-otros", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "equipo-electronico", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "equipo-proceso-informacion", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "intangible-software", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "intangible-audiovisual", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "otro-elemento", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "edificio-otra-construccion", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "instalacion-mobiliario-enseres-resto-material", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "transporte", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "equipo-informacion-software", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "ganado-vacuno-porcino-ovino-caprino", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "ganado-equino-frutal-no-citrico", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "frutal-citrico-vinedo", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "olivar", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "obra-civil-general", value = "0", valid_from = 2025-01-01},
+  { key = "obra-civil-pavimentos", value = "0", valid_from = 2025-01-01},
+  { key = "obra-civil-infraestructuras-mineras", value = "0", valid_from = 2025-01-01},
+  { key = "central-hidraulica", value = "0", valid_from = 2025-01-01},
+  { key = "central-nuclear", value = "0", valid_from = 2025-01-01},
+  { key = "central-carbon", value = "0", valid_from = 2025-01-01},
+  { key = "central-renovable", value = "0", valid_from = 2025-01-01},
+  { key = "central-otra", value = "0", valid_from = 2025-01-01},
+  { key = "edificio-industrial", value = "1", valid_from = 2025-01-01},
+  { key = "terreno-escombrera", value = "1", valid_from = 2025-01-01},
+  { key = "almacen-deposito", value = "1", valid_from = 2025-01-01},
+  { key = "edificio-comercial-administrativo-servicios-vivienda", value = "1", valid_from = 2025-01-01},
+  { key = "instalacion-subestacion-red", value = "0", valid_from = 2025-01-01},
+  { key = "instalacion-cables", value = "0", valid_from = 2025-01-01},
+  { key = "instalacion-resto", value = "0", valid_from = 2025-01-01},
+  { key = "maquinaria", value = "0", valid_from = 2025-01-01},
+  { key = "equipo-medico", value = "0", valid_from = 2025-01-01},
+  { key = "transporte-locomotora-vagon-traccion", value = "0", valid_from = 2025-01-01},
+  { key = "transporte-buque-aeronave", value = "0", valid_from = 2025-01-01},
+  { key = "transporte-interno", value = "0", valid_from = 2025-01-01},
+  { key = "transporte-externo", value = "0", valid_from = 2025-01-01},
+  { key = "transporte-autocamion", value = "0", valid_from = 2025-01-01},
+  { key = "mobiliario", value = "0", valid_from = 2025-01-01},
+  { key = "lenceria", value = "0", valid_from = 2025-01-01},
+  { key = "cristaleria", value = "0", valid_from = 2025-01-01},
+  { key = "util-herramienta", value = "0", valid_from = 2025-01-01},
+  { key = "molde-matriz-modelo", value = "0", valid_from = 2025-01-01},
+  { key = "enseres-otros", value = "0", valid_from = 2025-01-01},
+  { key = "equipo-electronico", value = "0", valid_from = 2025-01-01},
+  { key = "equipo-proceso-informacion", value = "0", valid_from = 2025-01-01},
+  { key = "intangible-software", value = "0", valid_from = 2025-01-01},
+  { key = "intangible-audiovisual", value = "0", valid_from = 2025-01-01},
+  { key = "otro-elemento", value = "0", valid_from = 2025-01-01},
+  { key = "edificio-otra-construccion", value = "1", valid_from = 2025-01-01},
+  { key = "instalacion-mobiliario-enseres-resto-material", value = "0", valid_from = 2025-01-01},
+  { key = "transporte", value = "0", valid_from = 2025-01-01},
+  { key = "equipo-informacion-software", value = "0", valid_from = 2025-01-01},
+  { key = "ganado-vacuno-porcino-ovino-caprino", value = "0", valid_from = 2025-01-01},
+  { key = "ganado-equino-frutal-no-citrico", value = "0", valid_from = 2025-01-01},
+  { key = "frutal-citrico-vinedo", value = "0", valid_from = 2025-01-01},
+  { key = "olivar", value = "0", valid_from = 2025-01-01},
 ]
 [[revisions."2025".parameters.source_citations]]
 source_ref = "aeat-renta-2025-manual-parte1"
@@ -718,47 +690,47 @@ data_type = "keyed_bracket_table"
 unit = "flag"
 legal_refs = ["ley-27-2014:art-12", "rd-634-2015:art-5", "rd-634-2015:art-6"]
 keyed_brackets = [
-  { key = "obra-civil-general", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "obra-civil-pavimentos", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "obra-civil-infraestructuras-mineras", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "central-hidraulica", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "central-nuclear", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "central-carbon", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "central-renovable", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "central-otra", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "edificio-industrial", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "terreno-escombrera", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "almacen-deposito", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "edificio-comercial-administrativo-servicios-vivienda", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "instalacion-subestacion-red", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "instalacion-cables", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "instalacion-resto", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "maquinaria", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "equipo-medico", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "transporte-locomotora-vagon-traccion", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "transporte-buque-aeronave", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "transporte-interno", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "transporte-externo", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "transporte-autocamion", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "mobiliario", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "lenceria", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "cristaleria", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "util-herramienta", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "molde-matriz-modelo", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "enseres-otros", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "equipo-electronico", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "equipo-proceso-informacion", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "intangible-software", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "intangible-audiovisual", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "otro-elemento", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "edificio-otra-construccion", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "instalacion-mobiliario-enseres-resto-material", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "transporte", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "equipo-informacion-software", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "ganado-vacuno-porcino-ovino-caprino", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "ganado-equino-frutal-no-citrico", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "frutal-citrico-vinedo", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "olivar", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "obra-civil-general", value = "0", valid_from = 2025-01-01},
+  { key = "obra-civil-pavimentos", value = "0", valid_from = 2025-01-01},
+  { key = "obra-civil-infraestructuras-mineras", value = "0", valid_from = 2025-01-01},
+  { key = "central-hidraulica", value = "0", valid_from = 2025-01-01},
+  { key = "central-nuclear", value = "0", valid_from = 2025-01-01},
+  { key = "central-carbon", value = "0", valid_from = 2025-01-01},
+  { key = "central-renovable", value = "0", valid_from = 2025-01-01},
+  { key = "central-otra", value = "0", valid_from = 2025-01-01},
+  { key = "edificio-industrial", value = "0", valid_from = 2025-01-01},
+  { key = "terreno-escombrera", value = "0", valid_from = 2025-01-01},
+  { key = "almacen-deposito", value = "0", valid_from = 2025-01-01},
+  { key = "edificio-comercial-administrativo-servicios-vivienda", value = "0", valid_from = 2025-01-01},
+  { key = "instalacion-subestacion-red", value = "0", valid_from = 2025-01-01},
+  { key = "instalacion-cables", value = "0", valid_from = 2025-01-01},
+  { key = "instalacion-resto", value = "0", valid_from = 2025-01-01},
+  { key = "maquinaria", value = "0", valid_from = 2025-01-01},
+  { key = "equipo-medico", value = "0", valid_from = 2025-01-01},
+  { key = "transporte-locomotora-vagon-traccion", value = "0", valid_from = 2025-01-01},
+  { key = "transporte-buque-aeronave", value = "0", valid_from = 2025-01-01},
+  { key = "transporte-interno", value = "0", valid_from = 2025-01-01},
+  { key = "transporte-externo", value = "0", valid_from = 2025-01-01},
+  { key = "transporte-autocamion", value = "0", valid_from = 2025-01-01},
+  { key = "mobiliario", value = "1", valid_from = 2025-01-01},
+  { key = "lenceria", value = "1", valid_from = 2025-01-01},
+  { key = "cristaleria", value = "1", valid_from = 2025-01-01},
+  { key = "util-herramienta", value = "1", valid_from = 2025-01-01},
+  { key = "molde-matriz-modelo", value = "1", valid_from = 2025-01-01},
+  { key = "enseres-otros", value = "1", valid_from = 2025-01-01},
+  { key = "equipo-electronico", value = "0", valid_from = 2025-01-01},
+  { key = "equipo-proceso-informacion", value = "0", valid_from = 2025-01-01},
+  { key = "intangible-software", value = "0", valid_from = 2025-01-01},
+  { key = "intangible-audiovisual", value = "0", valid_from = 2025-01-01},
+  { key = "otro-elemento", value = "0", valid_from = 2025-01-01},
+  { key = "edificio-otra-construccion", value = "0", valid_from = 2025-01-01},
+  { key = "instalacion-mobiliario-enseres-resto-material", value = "1", valid_from = 2025-01-01},
+  { key = "transporte", value = "0", valid_from = 2025-01-01},
+  { key = "equipo-informacion-software", value = "0", valid_from = 2025-01-01},
+  { key = "ganado-vacuno-porcino-ovino-caprino", value = "0", valid_from = 2025-01-01},
+  { key = "ganado-equino-frutal-no-citrico", value = "0", valid_from = 2025-01-01},
+  { key = "frutal-citrico-vinedo", value = "0", valid_from = 2025-01-01},
+  { key = "olivar", value = "0", valid_from = 2025-01-01},
 ]
 [[revisions."2025".parameters.source_citations]]
 source_ref = "aeat-renta-2025-manual-parte1"
@@ -773,9 +745,9 @@ data_type = "keyed_bracket_table"
 unit = "factor"
 legal_refs = ["ley-27-2014:art-12", "rd-634-2015:art-5"]
 keyed_brackets = [
-  { key = "periodo-corto", value = "1.5", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "periodo-medio", value = "2", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "periodo-largo", value = "2.5", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "periodo-corto", value = "1.5", valid_from = 2025-01-01},
+  { key = "periodo-medio", value = "2", valid_from = 2025-01-01},
+  { key = "periodo-largo", value = "2.5", valid_from = 2025-01-01},
 ]
 [[revisions."2025".parameters.source_citations]]
 source_ref = "aeat-renta-2025-manual-parte1"
@@ -791,7 +763,6 @@ legal_refs = ["ley-27-2014:art-12", "rd-634-2015:art-5"]
 value = "5"
 date_axis = "filing_period"
 valid_from = 2025-01-01
-valid_to = 2025-12-31
 comparison = "inclusive"
 [[revisions."2025".parameters.source_citations]]
 source_ref = "aeat-renta-2025-manual-parte1"
@@ -807,7 +778,6 @@ legal_refs = ["ley-27-2014:art-12", "rd-634-2015:art-5"]
 value = "8"
 date_axis = "filing_period"
 valid_from = 2025-01-01
-valid_to = 2025-12-31
 comparison = "inclusive"
 [[revisions."2025".parameters.source_citations]]
 source_ref = "aeat-renta-2025-manual-parte1"
@@ -823,7 +793,6 @@ legal_refs = ["ley-27-2014:art-12", "rd-634-2015:art-5"]
 value = "11"
 date_axis = "filing_period"
 valid_from = 2025-01-01
-valid_to = 2025-12-31
 [[revisions."2025".parameters.source_citations]]
 source_ref = "aeat-renta-2025-manual-parte1"
 required_text = ["El porcentaje constante así determinado no podrá ser inferior al 11 por 100."]
@@ -839,7 +808,7 @@ data_type = "keyed_bracket_table"
 unit = "factor"
 legal_refs = ["ley-27-2014:art-12", "rd-634-2015:art-4", "rd-439-2007:art-30"]
 keyed_brackets = [
-  { key = "normal:material", value = "2", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "normal:material", value = "2", valid_from = 2025-01-01},
 ]
 [[revisions."2025".parameters.source_citations]]
 source_ref = "aeat-renta-2025-manual-parte1"
@@ -855,7 +824,6 @@ legal_refs = ["rd-634-2015:art-4"]
 value = "10"
 date_axis = "filing_period"
 valid_from = 2025-01-01
-valid_to = 2025-12-31
 comparison = "inclusive"
 [[revisions."2025".parameters.source_citations]]
 source_ref = "aeat-renta-2025-manual-parte1"
@@ -872,7 +840,7 @@ unit = "hours"
 legal_refs = ["rd-634-2015:art-4", "rd-439-2007:art-30"]
 source_refs = ["boe-ris-statutory-facts"]
 keyed_brackets = [
-  { key = "normal", value = "8", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "normal", value = "8", valid_from = 2025-01-01},
 ]
 [[revisions."2025".parameters.source_citations]]
 source_ref = "boe-ris-statutory-facts"
@@ -889,7 +857,6 @@ legal_refs = ["ley-27-2014:art-101", "ley-35-2006:art-28"]
 value = "10000000"
 date_axis = "filing_period"
 valid_from = 2025-01-01
-valid_to = 2025-12-31
 comparison = "inclusive"
 [[revisions."2025".parameters.source_citations]]
 source_ref = "aeat-renta-2025-manual-parte1"
@@ -906,7 +873,6 @@ legal_refs = ["ley-27-2014:art-103", "rd-439-2007:art-30"]
 value = "2"
 date_axis = "filing_period"
 valid_from = 2025-01-01
-valid_to = 2025-12-31
 [[revisions."2025".parameters.source_citations]]
 source_ref = "aeat-renta-2025-manual-parte1"
 required_text = ["multiplicar por 2 el coeficiente lineal máximo previsto en las tablas de amortización"]
@@ -926,7 +892,6 @@ legal_refs = ["ley-27-2014:art-103", "ley-27-2014:art-12"]
 value = "1.5"
 date_axis = "filing_period"
 valid_from = 2025-01-01
-valid_to = 2025-12-31
 [[revisions."2025".parameters.source_citations]]
 source_ref = "aeat-renta-2025-manual-parte1"
 required_text = ["podrán aplicar el porcentaje del 150 por 100 al importe que resulte deducible"]
@@ -941,7 +906,6 @@ legal_refs = ["ley-27-2014:art-12"]
 value = "10"
 date_axis = "filing_period"
 valid_from = 2025-01-01
-valid_to = 2025-12-31
 [[revisions."2025".parameters.source_citations]]
 source_ref = "aeat-renta-2025-manual-parte1"
 required_text = ["lineal durante un período de 10 años, en la parte que se hallen afectos a las actividades"]
@@ -957,7 +921,6 @@ legal_refs = ["ley-27-2014:da-18"]
 value = "2024"
 date_axis = "filing_period"
 valid_from = 2025-01-01
-valid_to = 2025-12-31
 [[revisions."2025".parameters.source_citations]]
 source_ref = "aeat-renta-2025-manual-parte1"
 required_text = ["Que entren en funcionamiento en los períodos impositivos que se inicien en los años"]
@@ -974,7 +937,6 @@ legal_refs = ["ley-27-2014:da-18"]
 value = "2025"
 date_axis = "filing_period"
 valid_from = 2025-01-01
-valid_to = 2025-12-31
 [[revisions."2025".parameters.source_citations]]
 source_ref = "aeat-renta-2025-manual-parte1"
 required_text = ["Que entren en funcionamiento en los períodos impositivos que se inicien en los años 2024 y 2025."]
@@ -991,7 +953,6 @@ legal_refs = ["ley-27-2014:da-18"]
 value = "2024"
 date_axis = "filing_period"
 valid_from = 2025-01-01
-valid_to = 2025-12-31
 [[revisions."2025".parameters.source_citations]]
 source_ref = "aeat-renta-2025-manual-parte1"
 required_text = ["Inversiones en vehículos nuevos FCV, FCHV, BEV, REEV o PHEV"]
@@ -1005,7 +966,6 @@ legal_refs = ["ley-27-2014:da-18"]
 value = "2025"
 date_axis = "filing_period"
 valid_from = 2025-01-01
-valid_to = 2025-12-31
 [[revisions."2025".parameters.source_citations]]
 source_ref = "aeat-renta-2025-manual-parte1"
 required_text = ["Que entren en funcionamiento en los períodos impositivos que se inicien en 2024 y 2025."]
@@ -1022,7 +982,6 @@ legal_refs = ["ley-27-2014:art-102"]
 value = "120000"
 date_axis = "filing_period"
 valid_from = 2025-01-01
-valid_to = 2025-12-31
 [[revisions."2025".parameters.source_citations]]
 source_ref = "aeat-renta-2025-manual-parte1"
 required_text = ["importe resultante de multiplicar la cifra de 120.000 euros por el incremento de la"]
@@ -1038,7 +997,6 @@ legal_refs = ["ley-27-2014:da-17"]
 value = "500000"
 date_axis = "filing_period"
 valid_from = 2025-01-01
-valid_to = 2025-12-31
 [[revisions."2025".parameters.source_citations]]
 source_ref = "aeat-renta-2025-manual-parte1"
 required_text = ["beneficiarse del régimen de libertad de amortización será de 500.000 euros."]
@@ -1061,7 +1019,6 @@ source_refs = ["aeat-renta-2025-manual-parte1", "aeat-nota-efectos-rdl-16-2025-r
 value = "2025"
 date_axis = "filing_period"
 valid_from = 2025-01-01
-valid_to = 2025-12-31
 [[revisions."2025".parameters.source_citations]]
 source_ref = "aeat-renta-2025-manual-parte1"
 required_text = ["Atención: el artículo 17 Uno del Real Decreto-ley 16/2025, de 23 de diciembre (BOE de", "impositivos que se inicien o concluyan en 2025, cuando la entrada en funcionamiento se", "Se podrán amortizar libremente en el período impositivo 2025 las inversiones en"]
@@ -1079,7 +1036,6 @@ source_refs = ["aeat-renta-2025-manual-parte1", "aeat-nota-efectos-rdl-16-2025-r
 value = "2025"
 date_axis = "filing_period"
 valid_from = 2025-01-01
-valid_to = 2025-12-31
 [[revisions."2025".parameters.source_citations]]
 source_ref = "aeat-renta-2025-manual-parte1"
 required_text = ["Atención: el artículo 17 Uno del Real Decreto-ley 16/2025, de 23 de diciembre (BOE de", "impositivos que se inicien o concluyan en 2025, cuando la entrada en funcionamiento se", "Se podrán amortizar libremente en el período impositivo 2025 las inversiones en"]
@@ -1121,47 +1077,47 @@ data_type = "keyed_bracket_table"
 unit = "flag"
 legal_refs = ["rd-439-2007:art-22", "ley-35-2006:art-29"]
 keyed_brackets = [
-  { key = "obra-civil-general", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "obra-civil-pavimentos", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "obra-civil-infraestructuras-mineras", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "central-hidraulica", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "central-nuclear", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "central-carbon", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "central-renovable", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "central-otra", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "edificio-industrial", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "terreno-escombrera", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "almacen-deposito", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "edificio-comercial-administrativo-servicios-vivienda", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "instalacion-subestacion-red", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "instalacion-cables", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "instalacion-resto", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "maquinaria", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "equipo-medico", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "transporte-locomotora-vagon-traccion", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "transporte-buque-aeronave", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "transporte-interno", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "transporte-externo", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "transporte-autocamion", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "mobiliario", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "lenceria", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "cristaleria", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "util-herramienta", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "molde-matriz-modelo", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "enseres-otros", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "equipo-electronico", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "equipo-proceso-informacion", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "intangible-software", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "intangible-audiovisual", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "otro-elemento", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "edificio-otra-construccion", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "instalacion-mobiliario-enseres-resto-material", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "transporte", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "equipo-informacion-software", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "ganado-vacuno-porcino-ovino-caprino", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "ganado-equino-frutal-no-citrico", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "frutal-citrico-vinedo", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "olivar", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "obra-civil-general", value = "0", valid_from = 2025-01-01},
+  { key = "obra-civil-pavimentos", value = "0", valid_from = 2025-01-01},
+  { key = "obra-civil-infraestructuras-mineras", value = "0", valid_from = 2025-01-01},
+  { key = "central-hidraulica", value = "0", valid_from = 2025-01-01},
+  { key = "central-nuclear", value = "0", valid_from = 2025-01-01},
+  { key = "central-carbon", value = "0", valid_from = 2025-01-01},
+  { key = "central-renovable", value = "0", valid_from = 2025-01-01},
+  { key = "central-otra", value = "0", valid_from = 2025-01-01},
+  { key = "edificio-industrial", value = "0", valid_from = 2025-01-01},
+  { key = "terreno-escombrera", value = "0", valid_from = 2025-01-01},
+  { key = "almacen-deposito", value = "0", valid_from = 2025-01-01},
+  { key = "edificio-comercial-administrativo-servicios-vivienda", value = "0", valid_from = 2025-01-01},
+  { key = "instalacion-subestacion-red", value = "0", valid_from = 2025-01-01},
+  { key = "instalacion-cables", value = "0", valid_from = 2025-01-01},
+  { key = "instalacion-resto", value = "0", valid_from = 2025-01-01},
+  { key = "maquinaria", value = "0", valid_from = 2025-01-01},
+  { key = "equipo-medico", value = "0", valid_from = 2025-01-01},
+  { key = "transporte-locomotora-vagon-traccion", value = "0", valid_from = 2025-01-01},
+  { key = "transporte-buque-aeronave", value = "1", valid_from = 2025-01-01},
+  { key = "transporte-interno", value = "0", valid_from = 2025-01-01},
+  { key = "transporte-externo", value = "1", valid_from = 2025-01-01},
+  { key = "transporte-autocamion", value = "0", valid_from = 2025-01-01},
+  { key = "mobiliario", value = "0", valid_from = 2025-01-01},
+  { key = "lenceria", value = "0", valid_from = 2025-01-01},
+  { key = "cristaleria", value = "0", valid_from = 2025-01-01},
+  { key = "util-herramienta", value = "0", valid_from = 2025-01-01},
+  { key = "molde-matriz-modelo", value = "0", valid_from = 2025-01-01},
+  { key = "enseres-otros", value = "0", valid_from = 2025-01-01},
+  { key = "equipo-electronico", value = "0", valid_from = 2025-01-01},
+  { key = "equipo-proceso-informacion", value = "0", valid_from = 2025-01-01},
+  { key = "intangible-software", value = "0", valid_from = 2025-01-01},
+  { key = "intangible-audiovisual", value = "0", valid_from = 2025-01-01},
+  { key = "otro-elemento", value = "0", valid_from = 2025-01-01},
+  { key = "edificio-otra-construccion", value = "0", valid_from = 2025-01-01},
+  { key = "instalacion-mobiliario-enseres-resto-material", value = "0", valid_from = 2025-01-01},
+  { key = "transporte", value = "1", valid_from = 2025-01-01},
+  { key = "equipo-informacion-software", value = "0", valid_from = 2025-01-01},
+  { key = "ganado-vacuno-porcino-ovino-caprino", value = "0", valid_from = 2025-01-01},
+  { key = "ganado-equino-frutal-no-citrico", value = "0", valid_from = 2025-01-01},
+  { key = "frutal-citrico-vinedo", value = "0", valid_from = 2025-01-01},
+  { key = "olivar", value = "0", valid_from = 2025-01-01},
 ]
 [[revisions."2025".parameters.source_citations]]
 source_ref = "aeat-renta-2025-manual-parte1"
@@ -1176,47 +1132,47 @@ data_type = "keyed_bracket_table"
 unit = "flag"
 legal_refs = ["ley-27-2014:art-12", "rd-439-2007:art-30"]
 keyed_brackets = [
-  { key = "obra-civil-general", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "obra-civil-pavimentos", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "obra-civil-infraestructuras-mineras", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "central-hidraulica", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "central-nuclear", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "central-carbon", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "central-renovable", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "central-otra", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "edificio-industrial", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "terreno-escombrera", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "almacen-deposito", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "edificio-comercial-administrativo-servicios-vivienda", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "instalacion-subestacion-red", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "instalacion-cables", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "instalacion-resto", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "maquinaria", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "equipo-medico", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "transporte-locomotora-vagon-traccion", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "transporte-buque-aeronave", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "transporte-interno", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "transporte-externo", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "transporte-autocamion", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "mobiliario", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "lenceria", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "cristaleria", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "util-herramienta", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "molde-matriz-modelo", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "enseres-otros", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "equipo-electronico", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "equipo-proceso-informacion", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "intangible-software", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "intangible-audiovisual", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "otro-elemento", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "edificio-otra-construccion", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "instalacion-mobiliario-enseres-resto-material", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "transporte", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "equipo-informacion-software", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "ganado-vacuno-porcino-ovino-caprino", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "ganado-equino-frutal-no-citrico", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "frutal-citrico-vinedo", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "olivar", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "obra-civil-general", value = "1", valid_from = 2025-01-01},
+  { key = "obra-civil-pavimentos", value = "1", valid_from = 2025-01-01},
+  { key = "obra-civil-infraestructuras-mineras", value = "1", valid_from = 2025-01-01},
+  { key = "central-hidraulica", value = "1", valid_from = 2025-01-01},
+  { key = "central-nuclear", value = "1", valid_from = 2025-01-01},
+  { key = "central-carbon", value = "1", valid_from = 2025-01-01},
+  { key = "central-renovable", value = "1", valid_from = 2025-01-01},
+  { key = "central-otra", value = "1", valid_from = 2025-01-01},
+  { key = "edificio-industrial", value = "1", valid_from = 2025-01-01},
+  { key = "terreno-escombrera", value = "1", valid_from = 2025-01-01},
+  { key = "almacen-deposito", value = "1", valid_from = 2025-01-01},
+  { key = "edificio-comercial-administrativo-servicios-vivienda", value = "1", valid_from = 2025-01-01},
+  { key = "instalacion-subestacion-red", value = "1", valid_from = 2025-01-01},
+  { key = "instalacion-cables", value = "1", valid_from = 2025-01-01},
+  { key = "instalacion-resto", value = "1", valid_from = 2025-01-01},
+  { key = "maquinaria", value = "1", valid_from = 2025-01-01},
+  { key = "equipo-medico", value = "1", valid_from = 2025-01-01},
+  { key = "transporte-locomotora-vagon-traccion", value = "1", valid_from = 2025-01-01},
+  { key = "transporte-buque-aeronave", value = "1", valid_from = 2025-01-01},
+  { key = "transporte-interno", value = "1", valid_from = 2025-01-01},
+  { key = "transporte-externo", value = "1", valid_from = 2025-01-01},
+  { key = "transporte-autocamion", value = "1", valid_from = 2025-01-01},
+  { key = "mobiliario", value = "1", valid_from = 2025-01-01},
+  { key = "lenceria", value = "1", valid_from = 2025-01-01},
+  { key = "cristaleria", value = "1", valid_from = 2025-01-01},
+  { key = "util-herramienta", value = "1", valid_from = 2025-01-01},
+  { key = "molde-matriz-modelo", value = "1", valid_from = 2025-01-01},
+  { key = "enseres-otros", value = "1", valid_from = 2025-01-01},
+  { key = "equipo-electronico", value = "1", valid_from = 2025-01-01},
+  { key = "equipo-proceso-informacion", value = "1", valid_from = 2025-01-01},
+  { key = "intangible-software", value = "0", valid_from = 2025-01-01},
+  { key = "intangible-audiovisual", value = "0", valid_from = 2025-01-01},
+  { key = "otro-elemento", value = "1", valid_from = 2025-01-01},
+  { key = "edificio-otra-construccion", value = "1", valid_from = 2025-01-01},
+  { key = "instalacion-mobiliario-enseres-resto-material", value = "1", valid_from = 2025-01-01},
+  { key = "transporte", value = "1", valid_from = 2025-01-01},
+  { key = "equipo-informacion-software", value = "1", valid_from = 2025-01-01},
+  { key = "ganado-vacuno-porcino-ovino-caprino", value = "1", valid_from = 2025-01-01},
+  { key = "ganado-equino-frutal-no-citrico", value = "1", valid_from = 2025-01-01},
+  { key = "frutal-citrico-vinedo", value = "1", valid_from = 2025-01-01},
+  { key = "olivar", value = "1", valid_from = 2025-01-01},
 ]
 [[revisions."2025".parameters.source_citations]]
 source_ref = "aeat-renta-2025-manual-parte1"
@@ -1230,47 +1186,47 @@ data_type = "keyed_bracket_table"
 unit = "flag"
 legal_refs = ["ley-27-2014:art-12", "rd-439-2007:art-30"]
 keyed_brackets = [
-  { key = "obra-civil-general", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "obra-civil-pavimentos", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "obra-civil-infraestructuras-mineras", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "central-hidraulica", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "central-nuclear", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "central-carbon", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "central-renovable", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "central-otra", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "edificio-industrial", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "terreno-escombrera", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "almacen-deposito", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "edificio-comercial-administrativo-servicios-vivienda", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "instalacion-subestacion-red", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "instalacion-cables", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "instalacion-resto", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "maquinaria", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "equipo-medico", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "transporte-locomotora-vagon-traccion", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "transporte-buque-aeronave", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "transporte-interno", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "transporte-externo", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "transporte-autocamion", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "mobiliario", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "lenceria", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "cristaleria", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "util-herramienta", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "molde-matriz-modelo", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "enseres-otros", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "equipo-electronico", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "equipo-proceso-informacion", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "intangible-software", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "intangible-audiovisual", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "otro-elemento", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "edificio-otra-construccion", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "instalacion-mobiliario-enseres-resto-material", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "transporte", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "equipo-informacion-software", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "ganado-vacuno-porcino-ovino-caprino", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "ganado-equino-frutal-no-citrico", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "frutal-citrico-vinedo", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
-  { key = "olivar", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "obra-civil-general", value = "0", valid_from = 2025-01-01},
+  { key = "obra-civil-pavimentos", value = "0", valid_from = 2025-01-01},
+  { key = "obra-civil-infraestructuras-mineras", value = "0", valid_from = 2025-01-01},
+  { key = "central-hidraulica", value = "0", valid_from = 2025-01-01},
+  { key = "central-nuclear", value = "0", valid_from = 2025-01-01},
+  { key = "central-carbon", value = "0", valid_from = 2025-01-01},
+  { key = "central-renovable", value = "0", valid_from = 2025-01-01},
+  { key = "central-otra", value = "0", valid_from = 2025-01-01},
+  { key = "edificio-industrial", value = "0", valid_from = 2025-01-01},
+  { key = "terreno-escombrera", value = "0", valid_from = 2025-01-01},
+  { key = "almacen-deposito", value = "0", valid_from = 2025-01-01},
+  { key = "edificio-comercial-administrativo-servicios-vivienda", value = "0", valid_from = 2025-01-01},
+  { key = "instalacion-subestacion-red", value = "0", valid_from = 2025-01-01},
+  { key = "instalacion-cables", value = "0", valid_from = 2025-01-01},
+  { key = "instalacion-resto", value = "0", valid_from = 2025-01-01},
+  { key = "maquinaria", value = "0", valid_from = 2025-01-01},
+  { key = "equipo-medico", value = "0", valid_from = 2025-01-01},
+  { key = "transporte-locomotora-vagon-traccion", value = "0", valid_from = 2025-01-01},
+  { key = "transporte-buque-aeronave", value = "0", valid_from = 2025-01-01},
+  { key = "transporte-interno", value = "0", valid_from = 2025-01-01},
+  { key = "transporte-externo", value = "0", valid_from = 2025-01-01},
+  { key = "transporte-autocamion", value = "0", valid_from = 2025-01-01},
+  { key = "mobiliario", value = "0", valid_from = 2025-01-01},
+  { key = "lenceria", value = "0", valid_from = 2025-01-01},
+  { key = "cristaleria", value = "0", valid_from = 2025-01-01},
+  { key = "util-herramienta", value = "0", valid_from = 2025-01-01},
+  { key = "molde-matriz-modelo", value = "0", valid_from = 2025-01-01},
+  { key = "enseres-otros", value = "0", valid_from = 2025-01-01},
+  { key = "equipo-electronico", value = "0", valid_from = 2025-01-01},
+  { key = "equipo-proceso-informacion", value = "0", valid_from = 2025-01-01},
+  { key = "intangible-software", value = "1", valid_from = 2025-01-01},
+  { key = "intangible-audiovisual", value = "1", valid_from = 2025-01-01},
+  { key = "otro-elemento", value = "0", valid_from = 2025-01-01},
+  { key = "edificio-otra-construccion", value = "0", valid_from = 2025-01-01},
+  { key = "instalacion-mobiliario-enseres-resto-material", value = "0", valid_from = 2025-01-01},
+  { key = "transporte", value = "0", valid_from = 2025-01-01},
+  { key = "equipo-informacion-software", value = "1", valid_from = 2025-01-01},
+  { key = "ganado-vacuno-porcino-ovino-caprino", value = "0", valid_from = 2025-01-01},
+  { key = "ganado-equino-frutal-no-citrico", value = "0", valid_from = 2025-01-01},
+  { key = "frutal-citrico-vinedo", value = "0", valid_from = 2025-01-01},
+  { key = "olivar", value = "0", valid_from = 2025-01-01},
 ]
 [[revisions."2025".parameters.source_citations]]
 source_ref = "aeat-renta-2025-manual-parte1"

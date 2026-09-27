@@ -12,7 +12,6 @@ required_text = ["Comunidad de Madrid", "2.498,40 euros anuales por el primer de
 value = "2498.40"
 date_axis = "filing_period"
 valid_from = 2022-01-01
-valid_to = 2022-12-31
 [[revisions."2022".parameters]]
 id = "renta-minimo-descendientes-madrid-segundo-hijo"
 data_type = "money"
@@ -27,7 +26,6 @@ required_text = ["Comunidad de Madrid", "2.810,70 euros anuales por el segundo"]
 value = "2810.70"
 date_axis = "filing_period"
 valid_from = 2022-01-01
-valid_to = 2022-12-31
 [[revisions."2022".parameters]]
 id = "renta-minimo-descendientes-madrid-menor-tres-anos"
 data_type = "money"
@@ -42,7 +40,6 @@ required_text = ["Comunidad de Madrid", "se aumentará en 2.914,80 euros anuales
 value = "2914.80"
 date_axis = "filing_period"
 valid_from = 2022-01-01
-valid_to = 2022-12-31
 [[revisions."2022".parameters]]
 id = "renta-minimo-descendientes-named-detail-limit"
 data_type = "integer"
@@ -57,7 +54,6 @@ required_text = ["mínimo por descendientes"]
 value = "3"
 date_axis = "filing_period"
 valid_from = 2022-01-01
-valid_to = 2022-12-31
 # Modelo 100 Art. 58.1 LIRPF rentas ceiling conditioning the mínimo por
 # descendientes. A descendant holding rentas anuales (excluidas las exentas)
 # above this figure generates no mínimo, so the ceiling is an eligibility
