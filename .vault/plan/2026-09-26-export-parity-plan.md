@@ -11,7 +11,8 @@ related:
   - '[[2026-06-03-modelo-export-workbook-parity-adr]]'
   - '[[2026-06-03-modelo-export-visual-design-adr]]'
   - '[[2026-09-26-export-parity-calculation-report-adr]]'
-modified: '2026-09-26'
+  - '[[2026-09-26-export-parity-calculation-summary-pdf-adr]]'
+modified: '2026-09-27'
 body_schema: body-v2
 body_hash: 'sha256:196ed8febaf310e9ab4cca86f4c93e58c0cc8982b48b19642e9ea87895385675'
 ---

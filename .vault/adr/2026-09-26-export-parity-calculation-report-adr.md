@@ -3,14 +3,15 @@ tags:
   - '#adr'
   - '#export-parity'
 date: '2026-09-26'
-modified: '2026-09-26'
+modified: '2026-09-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:6d3d23a3e0ab3fcf90b2cf780794a6d56af95d5a57c835907f83bc1b07312add'
+body_hash: 'sha256:7a06d883c2a45821bbae21607d943d24d5915eb4c9ba56733f8dde16d5bc48c2'
 related:
   - "[[2026-09-26-export-parity-audit]]"
   - "[[2026-09-07-tuimodelo-export-destinations-adr]]"
   - "[[2026-06-03-modelo-export-workbook-parity-adr]]"
   - "[[2026-06-03-modelo-export-visual-design-adr]]"
+  - '[[2026-09-26-export-parity-calculation-summary-pdf-adr]]'
 ---
 
 # `export-parity` adr: `calculation report destinations for CSV and PDF` | (**status:** `accepted`)
@@ -42,7 +43,7 @@ A verified or filed modelo calculation can leave the product only as its filing 
 
 ## Implementation
 
-An application builder turns one verified or filed calculation revision and its pinned registry snapshot into a typed calculation report: header facts (modelo, year, period, revision id and state, authority generation, export timestamp), then one row per casilla the revision carries, with section path, casilla number and id, label, value state (value, absent, not applicable), typed value, input kind, legal references and source provenance. The CSV destination serialises the rows through the existing tabular serializer with fixed columns. The PDF destination renders the same report with reportlab, installed through a new optional extra, in the visual design's palette with a local-calculation banner. Both are enrolled in the typed destination contract with the filing file and the workbook, refuse to overwrite an existing file, and are reachable from the CLI and the TUI through the same application service.
+An application builder turns one verified or filed calculation revision and its pinned registry snapshot into a typed calculation report: header facts (modelo, year, period, revision id and state, authority generation, export timestamp), then one row per casilla the revision carries, with section path, casilla number and id, label, value state (value, absent, not applicable), typed value, input kind, legal references and source provenance. The CSV destination serialises the rows through the existing tabular serializer with fixed columns. The PDF destination renders the same report as a PDF/A-3a, PDF/UA-1 document embedding the report and CSV with a signed integrity statement, as decided in `2026-09-26-export-parity-calculation-summary-pdf-adr` (amendment accepted 2026-09-27). Both are enrolled in the typed destination contract with the filing file and the workbook, refuse to overwrite an existing file, and are reachable from the CLI and the TUI through the same application service.
 
 ## Rationale
 
