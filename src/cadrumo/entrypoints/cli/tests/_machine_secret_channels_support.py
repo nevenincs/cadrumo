@@ -68,6 +68,15 @@ _DURABLE_SNAPSHOT_SOURCE = dedent(
             and "log" not in path.name.lower()
             and not path.name.endswith("-shm")
         }
+
+    def descriptor_identity(descriptor):
+        # A closed number is reused by the next open in the same process, so
+        # "still open" means the number still names the file it named before.
+        try:
+            opened = os.fstat(descriptor)
+        except OSError:
+            return None
+        return (opened.st_dev, opened.st_ino, opened.st_mode & 0o170000)
     """
 )
 
@@ -106,6 +115,9 @@ _HARNESS = (
                     profile_decode_context=operation.profile_decode_context(),
                 )
         before_dispatch = durable_snapshot(settings.cadrumo_local_storage_root)
+        asserted_closed = {
+            descriptor: descriptor_identity(descriptor) for descriptor in payload.get("assert_closed_descriptors", [])
+        }
         sys.argv = ["cadrumo", *sys.argv[2:]]
         defer_logging_configuration()
         try:
@@ -131,10 +143,8 @@ _HARNESS = (
                 print("S14_DESCRIPTOR_CONSUMED", file=sys.stderr)
                 exit_code = exit_code or 96
             os.close(descriptor)
-        for descriptor in payload.get("assert_closed_descriptors", []):
-            try:
-                os.fstat(descriptor)
-            except OSError:
+        for descriptor, identity in asserted_closed.items():
+            if descriptor_identity(descriptor) != identity:
                 print("S13_DESCRIPTOR_CLOSED", file=sys.stderr)
             else:
                 print("S13_DESCRIPTOR_OPEN", file=sys.stderr)
@@ -209,6 +219,7 @@ _WINDOWS_HANDLE_HARNESS = (
                     profile_decode_context=operation.profile_decode_context(),
                 )
         before_dispatch = durable_snapshot(settings.cadrumo_local_storage_root)
+        identities = {descriptor: descriptor_identity(descriptor) for descriptor in descriptors}
         sys.argv[:] = argv
         defer_logging_configuration()
         try:
@@ -237,9 +248,7 @@ _WINDOWS_HANDLE_HARNESS = (
                 os.close(descriptor)
             descriptors.clear()
         for descriptor in descriptors:
-            try:
-                os.fstat(descriptor)
-            except OSError:
+            if descriptor_identity(descriptor) != identities[descriptor]:
                 print("S13_DESCRIPTOR_CLOSED", file=sys.stderr)
             else:
                 print("S13_DESCRIPTOR_OPEN", file=sys.stderr)
