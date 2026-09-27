@@ -5,40 +5,15 @@ tags:
 date: '2026-09-27'
 modified: '2026-09-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:3fefe09b92a01e83a749cb87796313485962a4b42d206e2c2222371099a30728'
+body_hash: 'sha256:4d41706b5f049cdf38c010005e4a76446bdec1f4d705385c40d9a270e845d71d'
 related:
   - "[[2026-09-27-registry-conformance-rectification-plan]]"
 ---
-
-<!-- Machine-owned, whole file: `vaultspec-core vault exec log` creates it
-     on first use and appends every row; never hand-edit it. Add no
-     frontmatter fields. Wiki-links belong in `related:` only.
-
-     ONE ledger per plan, the only execution artifact. Each row's first
-     column names its Step. -->
 
 # `registry-conformance-rectification` ledger
 
 ## Changes
 
-<!-- MECHANICAL LOG, append-only, one row per path touched per Step, written
-     by `--row`:
-       - `S##` `A` `path`   added
-       - `S##` `M` `path`   modified
-       - `S##` `D` `path`   deleted
-       - `S##` `R` `old` -> `new`   renamed
-     Paths are repo-relative, in backticks. No prose: the Step row states the
-     intent and the commit carries the diff.
-
-     Optional per-Step rows, written by `--verify` and `--by`:
-       - `S##` `verify:` `<command>` -> `pass` | `fail`
-       - `S##` `by:` `<persona>`
-
-     Rows are appended in Step order and never rewritten. Only rows in this
-     section register a Step as covered. `--note` adds a `## Notes` section
-     ONLY on exception (data loss, skipped work, a scaffold left in code, a
-     persistent failure), one `S##`-prefixed line each; it is otherwise
-     omitted. -->
 - `S04` `M` `dev/registry/registry_collapse_verification.py`
 - `S04` `M` `dev/registry/tests/test_registry_collapse_verification.py`
 - `S04` `verify:` `pytest dev/registry/tests/test_registry_collapse_verification.py` -> `pass`
@@ -152,6 +127,11 @@ related:
 - `S03` `M` `dev/registry/registry_collapse_verification.py`
 - `S03` `M` `dev/registry/tests/test_registry_collapse_verification.py`
 - `S03` `verify:` `pytest dev/registry/tests/test_registry_collapse_verification.py` -> `pass`
+- `S12` `A` `.vault/research/2026-09-27-registry-conformance-rectification-research.md`
+- `S12` `M` `.vault/adr/2026-09-23-assets-core-amortization-method-set-adr.md`
+- `S12` `M` `.vault/adr/2026-09-21-assets-core-lifecycle-contract-adr.md`
+- `S12` `M` `.vault/adr/2026-09-21-retenciones-workflow-observation-payment-contract-adr.md`
+- `S12` `verify:` `vaultspec-core vault check all (27 errors, 519 warnings, identical to main)` -> `pass`
 
 ## Notes
 
@@ -162,4 +142,5 @@ related:
 - `S07` Correction: editions carried the closed rows of earlier editions, which table readers such as the accumulated-cuota gate read as current law; each edition now states only its in-force rows, with a progressive bracket table kept whole.
 - `S10` A settled-row contributor persisted without its accrual year is now counted as settled in every supported year after the floor, where it was only counted after 2025: the gate over-refuses rather than lets a settled row through.
 - `S02` Registry-wide the fix brings 22 storage-rooted editions across 11 modelos into assessment; none currently states a droppable restatement, so no registry source changes.
+- `S12` The ruling list is returned to the operator in the session report rather than persisted, as the brief directs.
 

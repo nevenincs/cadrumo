@@ -3,13 +3,14 @@ tags:
   - '#adr'
   - '#retenciones-workflow'
 date: '2026-09-21'
-modified: '2026-09-24'
+modified: '2026-09-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:61ab703548420d5b176bd980ee1513aba65c1cbe71f84aef8463bb21272ff142'
+body_hash: 'sha256:d0fb4c23f6bd0f9e6b414b90f13467a5e4916cad8d5934b0df83efd063ddea8a'
 related:
   - "[[2026-09-21-retenciones-workflow-observation-payment-contract-reference]]"
   - "[[2026-09-21-retenciones-recognition-property-authority-research]]"
   - '[[2026-09-24-retenciones-workflow-withholding-domain-grounding-research]]'
+  - '[[2026-09-27-registry-conformance-rectification-research]]'
 ---
 
 # `retenciones-workflow` adr: `observation payment contract` | (**status:** `accepted`)
@@ -126,3 +127,10 @@ migration, producer rewiring, annual materializer, and a narrow accepted-TUI ADR
 Existing developer observations are not silently migrated. Implementation must prove failure
 atomicity, stale-baseline refusal, replay behavior, partial/multiple payment timing, quarterly to
 annual reconciliation, current-schema anti-tolerance, and all four frontend paths.
+
+## Amendment 2026-09-27
+
+Authorized by the operator's registry conformance rectification brief of 2026-09-27, recorded as the approval basis of `2026-09-27-registry-conformance-rectification-plan`, on the evidence in `2026-09-27-registry-conformance-rectification-research`. The accepted body above is preserved; where it differs, this section governs.
+
+- The recognition rules apply to every applicable year of the registry support envelope, floor 2022: each rule names the RIRPF provisions it rests on (arts. 78, 94 and 98), catalogued with their BOE text and required to be in force for the whole of every supported year. The filer cadence still refuses a year outside the envelope.
+- The Modelo 193 pending and settled-prior-accrual disclosure applies to every accrual year whose selected Modelo 193 edition declares the pending field, rather than to 2025 alone; every supported edition declares it. A settled-row contributor persisted without its accrual year is treated as settled in any supported year after the first grounded accrual year.

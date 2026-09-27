@@ -10,7 +10,7 @@ related:
   - '[[2026-09-21-retenciones-workflow-observation-payment-contract-adr]]'
 modified: '2026-09-27'
 body_schema: body-v2
-body_hash: 'sha256:3cceab236219255be22be4399449bcb11c5bd68fbec578fdca9a5a946f3bea69'
+body_hash: 'sha256:aa97bed08e04269ab7a7a839d9ef111dc4d35c497f4781b5af56a128d6ec965d'
 ---
 
 # `registry-conformance-rectification` plan
@@ -58,7 +58,7 @@ Replace hard-coded tax-year equality in consumers with canonical revision select
 Rectify verified late authoring and closed windows in other modelos, and return the collected ruling items to the operator.
 
 - [ ] `P04.S11` - Rectify verified late authoring and closed windows per modelo, one writer each; `src/cadrumo/_data/registry/aeat/modelos/`.
-- [ ] `P04.S12` - Amend the three governing decisions for the 2022 baseline and return the ruling list; `.vault/adr/`.
+- [x] `P04.S12` - Amend the three governing decisions for the 2022 baseline and return the ruling list; `.vault/adr/`.
 
 ## Parallelization
 
