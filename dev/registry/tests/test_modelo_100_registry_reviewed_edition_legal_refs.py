@@ -1,4 +1,4 @@
-"""Modelo 100 2025 section and payment legal-reference registry tests."""
+"""Modelo 100 section and payment legal-reference registry tests for the reviewed edition."""
 
 from __future__ import annotations
 
@@ -35,12 +35,17 @@ from ._modelo_100_registry_support import (
     _modelo_100_revision,
     _modelo_100_snapshot,
 )
+from .authored_edition_support import newest_authored_edition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+# The newest Modelo 100 edition the registry authors; the section counts and
+# reference sets asserted here are that edition's.
+_REVIEWED_EDITION = newest_authored_edition("100")
 
-def test_modelo_100_2025_autonomic_deduction_sections_use_art77_only() -> None:
-    revision = _modelo_100_snapshot(2025).revision
+
+def test_modelo_100_autonomic_deduction_sections_use_art77_only() -> None:
+    revision = _modelo_100_snapshot(_REVIEWED_EDITION).revision
     expected_refs = {_AUTONOMIC_DEDUCTION_ART_77_REF, "orden-hac-277-2026:art-3"}
     for section, expected_count in _AUTONOMIC_DEDUCTION_2025_SECTION_COUNTS.items():
         checked = [casilla for casilla in revision.casillas if tuple(casilla.section[:2]) == section]
@@ -66,8 +71,8 @@ def test_modelo_100_2025_autonomic_deduction_sections_use_art77_only() -> None:
         assert not offenders
 
 
-def test_modelo_100_2025_result_sections_do_not_cite_fractional_payment_article() -> None:
-    revision = _modelo_100_snapshot(2025).revision
+def test_modelo_100_result_sections_do_not_cite_fractional_payment_article() -> None:
+    revision = _modelo_100_snapshot(_REVIEWED_EDITION).revision
     for section, expected_count in _NO_FRACTIONAL_PAYMENT_2025_SECTION_COUNTS.items():
         checked = [casilla for casilla in revision.casillas if tuple(casilla.section[:2]) == section]
 
@@ -80,8 +85,8 @@ def test_modelo_100_2025_result_sections_do_not_cite_fractional_payment_article(
         assert not offenders
 
 
-def test_modelo_100_2025_input_sections_do_not_cite_fractional_payment_article() -> None:
-    revision = _modelo_100_snapshot(2025).revision
+def test_modelo_100_input_sections_do_not_cite_fractional_payment_article() -> None:
+    revision = _modelo_100_snapshot(_REVIEWED_EDITION).revision
     for section, expected_count in _NO_FRACTIONAL_PAYMENT_2025_INPUT_SECTION_COUNTS.items():
         checked = [casilla for casilla in revision.casillas if tuple(casilla.section[:2]) == section]
 
@@ -94,8 +99,8 @@ def test_modelo_100_2025_input_sections_do_not_cite_fractional_payment_article()
         assert not offenders
 
 
-def test_modelo_100_2025_input_sections_do_not_cite_payments_on_account_article() -> None:
-    revision = _modelo_100_snapshot(2025).revision
+def test_modelo_100_input_sections_do_not_cite_payments_on_account_article() -> None:
+    revision = _modelo_100_snapshot(_REVIEWED_EDITION).revision
     for section, expected_count in _NO_PAYMENTS_ON_ACCOUNT_2025_INPUT_SECTION_COUNTS.items():
         checked = [casilla for casilla in revision.casillas if tuple(casilla.section[:2]) == section]
 
@@ -108,8 +113,8 @@ def test_modelo_100_2025_input_sections_do_not_cite_payments_on_account_article(
         assert not offenders
 
 
-def test_modelo_100_2025_payments_on_account_article_stays_on_payment_casillas_only() -> None:
-    revision = _modelo_100_snapshot(2025).revision
+def test_modelo_100_payments_on_account_article_stays_on_payment_casillas_only() -> None:
+    revision = _modelo_100_snapshot(_REVIEWED_EDITION).revision
     observed = {
         casilla.id: tuple(casilla.section[:2])
         for casilla in revision.casillas
@@ -138,8 +143,8 @@ def test_modelo_100_fractional_payment_casilla_carries_payment_obligation_and_am
     assert expected_refs <= set(casilla.legal_refs)
 
 
-def test_modelo_100_2025_gain_sections_use_capital_gains_refs_only() -> None:
-    revision = _modelo_100_snapshot(2025).revision
+def test_modelo_100_gain_sections_use_capital_gains_refs_only() -> None:
+    revision = _modelo_100_snapshot(_REVIEWED_EDITION).revision
     for section, expected_count in _CAPITAL_GAINS_2025_SECTION_COUNTS.items():
         checked = [casilla for casilla in revision.casillas if tuple(casilla.section[:2]) == section]
 
@@ -152,8 +157,8 @@ def test_modelo_100_2025_gain_sections_use_capital_gains_refs_only() -> None:
         assert not offenders
 
 
-def test_modelo_100_2025_attribution_mode_flags_use_attribution_refs_only() -> None:
-    revision = _modelo_100_snapshot(2025).revision
+def test_modelo_100_attribution_mode_flags_use_attribution_refs_only() -> None:
+    revision = _modelo_100_snapshot(_REVIEWED_EDITION).revision
     casillas = {casilla.id: casilla for casilla in revision.casillas}
     offenders = {
         casilla_id: casillas[casilla_id].legal_refs
@@ -164,8 +169,8 @@ def test_modelo_100_2025_attribution_mode_flags_use_attribution_refs_only() -> N
     assert not offenders
 
 
-def test_modelo_100_2025_casillas_do_not_retain_full_income_chapter_span() -> None:
-    revision = _modelo_100_snapshot(2025).revision
+def test_modelo_100_casillas_do_not_retain_full_income_chapter_span() -> None:
+    revision = _modelo_100_snapshot(_REVIEWED_EDITION).revision
     offenders = {
         casilla.id: casilla.legal_refs
         for casilla in revision.casillas
@@ -175,8 +180,8 @@ def test_modelo_100_2025_casillas_do_not_retain_full_income_chapter_span() -> No
     assert not offenders
 
 
-def test_modelo_100_2025_inmueble_continuity_uses_inmueble_refs_only() -> None:
-    revision = _modelo_100_snapshot(2025).revision
+def test_modelo_100_inmueble_continuity_uses_inmueble_refs_only() -> None:
+    revision = _modelo_100_snapshot(_REVIEWED_EDITION).revision
     checked = [
         evolution
         for evolution in revision.casilla_continuidad_evolutions
@@ -192,8 +197,8 @@ def test_modelo_100_2025_inmueble_continuity_uses_inmueble_refs_only() -> None:
     assert not offenders
 
 
-def test_modelo_100_2025_anexo_c_base_negative_general_uses_member_refs_only() -> None:
-    snapshot = _modelo_100_snapshot(2025)
+def test_modelo_100_anexo_c_base_negative_general_uses_member_refs_only() -> None:
+    snapshot = _modelo_100_snapshot(_REVIEWED_EDITION)
     revision = snapshot.revision
     construct = snapshot.constructs[_ANEXO_C_BASE_NEGATIVE_GENERAL_CONSTRUCT_ID]
     casillas = {casilla.id: casilla for casilla in revision.casillas}
@@ -220,8 +225,8 @@ def test_modelo_100_2025_anexo_c_base_negative_general_uses_member_refs_only() -
     assert set(construct.legal_refs) == _ANEXO_C_BASE_NEGATIVE_GENERAL_REFS
 
 
-def test_modelo_100_2025_objective_estimation_sections_use_activity_refs_only() -> None:
-    revision = _modelo_100_snapshot(2025).revision
+def test_modelo_100_objective_estimation_sections_use_activity_refs_only() -> None:
+    revision = _modelo_100_snapshot(_REVIEWED_EDITION).revision
     # The Fase 4a EO-agraria reducciones (casillas 1549, 1551, 1555, AJ)
     # legitimately cite their own binding provisions in addition to the
     # section's activity-chapter default: DA-1 Orden HAC/1347/2024
@@ -253,8 +258,8 @@ def test_modelo_100_2025_objective_estimation_sections_use_activity_refs_only() 
         assert not offenders
 
 
-def test_modelo_100_2025_artistic_activity_reductions_use_da60_refs_only() -> None:
-    revision = _modelo_100_snapshot(2025).revision
+def test_modelo_100_artistic_activity_reductions_use_da60_refs_only() -> None:
+    revision = _modelo_100_snapshot(_REVIEWED_EDITION).revision
     casillas = {casilla.id: casilla for casilla in revision.casillas}
     offenders = {
         casilla_id: casillas[casilla_id].legal_refs
@@ -265,8 +270,8 @@ def test_modelo_100_2025_artistic_activity_reductions_use_da60_refs_only() -> No
     assert not offenders
 
 
-def test_modelo_100_2025_non_payment_metadata_do_not_cite_fractional_payment_article() -> None:
-    revision = _modelo_100_snapshot(2025).revision
+def test_modelo_100_non_payment_metadata_do_not_cite_fractional_payment_article() -> None:
+    revision = _modelo_100_snapshot(_REVIEWED_EDITION).revision
 
     bindings = {binding.id: binding for binding in revision.bindings}
     constructs = {construct.id: construct for construct in revision.constructs}

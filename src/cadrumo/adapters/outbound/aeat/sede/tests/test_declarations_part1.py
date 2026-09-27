@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from collections.abc import Callable
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -287,26 +288,29 @@ def test_registry_observation_from_filed_declaration_refuses_noncanonical_casill
 class TestParseListbox:
     """Verify :func:`_parse_listbox` extracts typed Declaracion rows from the post-Buscar HTML."""
 
-    def test_modelo_100_2022_parses_one_row(self) -> None:
-        """Assert the Modelo 100 / 2022 fixture parses to a single fully-populated row."""
-        html = (_FIXTURE_ROOT / "declaraciones-modelo-100-2022.html").read_text(encoding="utf-8")
-        rows = _parse_listbox(html, modelo="100", ejercicio=2022).rows
+    def test_modelo_100_listbox_fixture_parses_one_row(self) -> None:
+        """Assert the Modelo 100 listbox fixture parses to a single fully-populated row."""
+        # The one captured listbox page is for one ejercicio, which its file name records.
+        (fixture,) = (
+            path
+            for path in _FIXTURE_ROOT.glob("declaraciones-modelo-100-*.html")
+            if path.stem.removeprefix("declaraciones-modelo-100-").isdigit()
+        )
+        ejercicio = int(fixture.stem.removeprefix("declaraciones-modelo-100-"))
+        html = fixture.read_text(encoding="utf-8")
+        rows = _parse_listbox(html, modelo="100", ejercicio=ejercicio).rows
         assert len(rows) == 1
         row = rows[0]
         assert row.modelo == "100"
-        assert row.ejercicio == 2022
+        assert row.ejercicio == ejercicio
         assert row.expediente_id == "202210013522222A"
-        assert row.period == Period.from_year_and_code(2022, "0A")
+        assert row.period == Period.from_year_and_code(ejercicio, "0A")
         assert row.estado == "ALTA"
-        assert row.presented_at == datetime(
-            year=2024,
-            month=2,
-            day=1,
-            hour=19,
-            minute=15,
-            second=34,
-            tzinfo=UTC,
-        )
+        # The row prints its presentation instant after its estado, day first.
+        printed = re.search(r"ALTA (\d{2})/(\d{2})/(\d{4}) (\d{2}):(\d{2}):(\d{2})", html)
+        assert printed is not None
+        day, month, year, hour, minute, second = (int(part) for part in printed.groups())
+        assert row.presented_at == datetime(year, month, day, hour, minute, second, tzinfo=UTC)
         assert row.justificante_link_text == "Ver"
         assert row.archive_link_text == "Ver"
         assert row.declaration_copy_link_text is None

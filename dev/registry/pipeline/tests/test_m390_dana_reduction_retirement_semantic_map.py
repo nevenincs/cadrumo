@@ -1,4 +1,4 @@
-"""Exact-source Modelo 390 2025 semantic-map and render-profile coverage."""
+"""Exact-source Modelo 390 semantic map for the design that retires the page 5 DANA reduction rows."""
 
 from __future__ import annotations
 
@@ -12,6 +12,7 @@ from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefin
 
 from ...compiler.authority import compiled_bundled_authority
 from ...compiler.loader import load_registry_tree
+from ...tests.authored_edition_support import source_exercise, source_with_sha256
 from .._export_tree import render_complete_export_tree
 from ..record_design_intermediate import (
     RecordDesignIntermediate,
@@ -26,8 +27,15 @@ from ..semantic_map import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_SOURCE_REF = "aeat-dr-390-2025"
+# The official record design this map is reviewed against, found by its pinned bytes;
+# its catalogued applicability names the exercise. The predecessor design it is
+# diffed against is the preceding exercise's.
 _SOURCE_SHA256 = "6d33d8a4245976e55dc31ff85065b420f76d1588110dc1eb541a8039c5e3f252"
+_SOURCE = source_with_sha256(_SOURCE_SHA256)
+_SOURCE_REF = _SOURCE.id
+_DESIGN_EXERCISE = source_exercise(_SOURCE)
+_PREDECESSOR_EXERCISE = _DESIGN_EXERCISE - 1
+_PREDECESSOR_SOURCE_REF = f"aeat-dr-390-{_PREDECESSOR_EXERCISE}"
 _DELTA_COUNTS = {
     "Pág. 2": 42,
     "Pág. 2 bis": 8,
@@ -113,30 +121,32 @@ def _assert_layout_owner(entry: SemanticMapEntry, field: ExportFieldDefinition) 
     assert entry.source_refs == field.source_refs
 
 
-def test_m390_2025_bijects_every_parser_anchor_to_the_reviewed_revision_owner() -> None:
+def test_m390_dana_reduction_retirement_bijects_every_parser_anchor_to_the_reviewed_revision_owner() -> None:
     authority = compiled_bundled_authority()
-    revision = authority.modelo("390").revisions["2025"]
-    design_2024 = _design("aeat-dr-390-2024", filing_year=2024, epoch="2024")
-    design = _design(_SOURCE_REF, filing_year=2025, epoch="2025")
-    fields_2024 = _field_index(design_2024)
+    revision = authority.modelo("390").revisions[str(_DESIGN_EXERCISE)]
+    predecessor_design = _design(
+        _PREDECESSOR_SOURCE_REF, filing_year=_PREDECESSOR_EXERCISE, epoch=str(_PREDECESSOR_EXERCISE)
+    )
+    design = _design(_SOURCE_REF, filing_year=_DESIGN_EXERCISE, epoch=str(_DESIGN_EXERCISE))
+    predecessor_fields = _field_index(predecessor_design)
     fields = _field_index(design)
-    delta = {key for key in fields_2024.keys() | fields.keys() if fields_2024.get(key) != fields.get(key)}
+    delta = {key for key in predecessor_fields.keys() | fields.keys() if predecessor_fields.get(key) != fields.get(key)}
 
-    assert len(fields_2024) == 621
+    assert len(predecessor_fields) == 621
     assert len(fields) == 612
     assert Counter(record for record, _cell in delta) == Counter(_DELTA_COUNTS)
-    assert fields_2024.keys() - fields.keys() == _REMOVED_PAGE_5_ANCHORS
-    assert not fields.keys() - fields_2024.keys()
-    assert len(set(fields_2024) & set(fields) - delta) == 523
+    assert predecessor_fields.keys() - fields.keys() == _REMOVED_PAGE_5_ANCHORS
+    assert not fields.keys() - predecessor_fields.keys()
+    assert len(set(predecessor_fields) & set(fields) - delta) == 523
     assert sum(len(header.fields) for header in design.auxiliary_envelope_headers) == 13
 
-    semantic_map_2024 = load_semantic_map(Path("dev/registry/mappings/modelo_390/2024"))
-    semantic_map = load_semantic_map(Path("dev/registry/mappings/modelo_390/2025"))
-    entries_2024 = _entry_index(semantic_map_2024.entries)
+    predecessor_map = load_semantic_map(Path(f"dev/registry/mappings/modelo_390/{_PREDECESSOR_EXERCISE}"))
+    semantic_map = load_semantic_map(Path(f"dev/registry/mappings/modelo_390/{_DESIGN_EXERCISE}"))
+    predecessor_entries = _entry_index(predecessor_map.entries)
     entries = _entry_index(semantic_map.entries)
-    stable = set(fields_2024) & set(fields) - delta
-    assert {key: _stable_payload(entries_2024[key], "2024") for key in stable} == {
-        key: _stable_payload(entries[key], "2025") for key in stable
+    stable = set(predecessor_fields) & set(fields) - delta
+    assert {key: _stable_payload(predecessor_entries[key], str(_PREDECESSOR_EXERCISE)) for key in stable} == {
+        key: _stable_payload(entries[key], str(_DESIGN_EXERCISE)) for key in stable
     }
 
     layout_records: dict[str, ExportRecordDefinition] = {
@@ -188,14 +198,16 @@ def test_m390_2025_bijects_every_parser_anchor_to_the_reviewed_revision_owner() 
     assert {anchor for anchor in filler_anchors if anchor[0] == "Pág. 5"} == _RETIRED_PAGE_5_SLOTS
 
 
-def test_m390_2025_profile_and_map_render_all_numbered_anchors_from_the_exact_source(tmp_path: Path) -> None:
+def test_m390_dana_reduction_retirement_profile_and_map_render_all_numbered_anchors_from_the_exact_source(
+    tmp_path: Path,
+) -> None:
     inputs = revision_render_inputs(
         compiled_bundled_authority(),
         modelo="390",
-        revision="2025",
+        revision=str(_DESIGN_EXERCISE),
         source_ref=_SOURCE_REF,
         bootstrap_transport=GeneratedExportBootstrapTransport(
-            layout_id="generated-modelo-390-2025-fichero",
+            layout_id=f"generated-modelo-390-{_DESIGN_EXERCISE}-fichero",
             line_ending="crlf",
             source_ref=_SOURCE_REF,
             source_sha256=_SOURCE_SHA256,
@@ -204,7 +216,7 @@ def test_m390_2025_profile_and_map_render_all_numbered_anchors_from_the_exact_so
 
     rendered = render_complete_export_tree(
         tmp_path / "export",
-        revision_id="2025",
+        revision_id=str(_DESIGN_EXERCISE),
         joined=inputs.joined,
         semantic_map=inputs.semantic_map,
         transport_profile=inputs.transport_profile,

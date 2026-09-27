@@ -9,7 +9,7 @@ Ground truth (bundled AEAT Manual practico IVA 2024):
 
 The manual's "Ejemplo" (pag. 199-200), continuing from the OMEGA/DELTA
 individual Modelo 322 settlements (see
-test_m322_2024_grupo_entidades_manual_worked_example.py), states:
+test_m322_grupo_entidades_manual_worked_example.py), states:
 
     "El dia 20 de abril, la entidad dominante, presentara una
     autoliquidacion mensual en el modelo agregado 353, en la que integrara
@@ -81,6 +81,7 @@ from cadrumo.domain.iva.flow import IvaFlowDirection
 from cadrumo.domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from .authored_edition_support import manual_editions_printing, manual_oracle_payloads
 from .ledger_iva_aggregation_support import _deduction_provenance
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
@@ -99,7 +100,11 @@ _CASILLA_RESULTADO: CasillaId = validated_casilla_id(
     surface="_CASILLA_RESULTADO",
 )
 
-_FILING_YEAR = 2024
+# The exercise of the AEAT Manual practico IVA edition whose worked example this
+# oracle reproduces: the one the enrolled manual-oracle payload declares, which
+# must be an edition that prints the example's figures.
+(_MANUAL_EXERCISE,) = manual_oracle_payloads("353", "grupo-entidades-omega-delta-agregado")
+assert _MANUAL_EXERCISE in manual_editions_printing("iva", "Resultado autoliquidacion: 3.000")
 _PERIOD = "03"
 
 # The three cross-modelo reconciliation bindings (per_grupo_member
@@ -113,11 +118,11 @@ _RECONCILIATION_BINDING_IDS = (
 
 
 def _calculate() -> object:
-    snapshot = compiled_bundled_authority().snapshot("353", filing_year=_FILING_YEAR, period=_PERIOD)
+    snapshot = compiled_bundled_authority().snapshot("353", filing_year=_MANUAL_EXERCISE, period=_PERIOD)
     observations = (
         IvaLedgerObservation(
             ledger_id="grupo-devengado-general",
-            transaction_date=date(2024, 3, 15),
+            transaction_date=date(_MANUAL_EXERCISE, 3, 15),
             category=IvaCategory("domestic_general"),
             rate_kind=IvaRateKind("general"),
             flow_direction=IvaFlowDirection.from_registry("repercutido"),
@@ -129,7 +134,7 @@ def _calculate() -> object:
         ),
         IvaLedgerObservation(
             ledger_id="grupo-deducible-general",
-            transaction_date=date(2024, 3, 15),
+            transaction_date=date(_MANUAL_EXERCISE, 3, 15),
             category=IvaCategory("domestic_general"),
             rate_kind=IvaRateKind("general"),
             flow_direction=IvaFlowDirection.from_registry("soportado"),
@@ -152,11 +157,11 @@ def _calculate() -> object:
         snapshot,
         inputs=inputs,
         binding_values=binding_values,
-        date_context={"filing_period": date(2024, 3, 31)},
+        date_context={"filing_period": date(_MANUAL_EXERCISE, 3, 31)},
     )
 
 
-def test_m353_2024_grupo_omega_delta_manual_worked_example() -> None:
+def test_m353_grupo_omega_delta_manual_worked_example() -> None:
     """Grupo devengada/deducible/resultado = 7.000 / 4.000 / 3.000.
 
     Oracle: AEAT Manual practico IVA 2024, Cap. 6, pag. 199-200. The
@@ -172,7 +177,7 @@ def test_m353_2024_grupo_omega_delta_manual_worked_example() -> None:
     assert result.values[_CASILLA_RESULTADO] == Decimal("3000.00")
 
 
-def test_m353_2024_manual_grounding_is_enrolled_and_raises_independently_grounded_fraction(
+def test_m353_manual_grounding_is_enrolled_and_raises_independently_grounded_fraction(
     registry_authority: ValidatedRegistryAuthority,
 ) -> None:
     """The manual-oracle grounding of the three aggregated totals is
@@ -187,7 +192,7 @@ def test_m353_2024_manual_grounding_is_enrolled_and_raises_independently_grounde
     synthetic fixture.
     """
     authority = registry_authority
-    snapshot = authority.snapshot("353", filing_year=_FILING_YEAR, period=_PERIOD)
+    snapshot = authority.snapshot("353", filing_year=_MANUAL_EXERCISE, period=_PERIOD)
     policy = snapshot.verification_policy()
 
     for casilla_id in (_CASILLA_DEVENGADA, _CASILLA_DEDUCIBLE, _CASILLA_RESULTADO):

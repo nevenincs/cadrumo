@@ -53,12 +53,32 @@ from ..authority import PinnedAuthorityOperation
 from ..errors import FilingYearOutsideSupportEnvelopeError
 from ..formula_runtime import calculate_registry_snapshot
 from ..schema import RegistrySnapshot
-from .published_authority import published_authored_revision, published_supported_filing_years
+from .authored_editions import authored_revisions_where
+from .published_authority import (
+    PublishedGovernedFactSource,
+    published_authored_revision,
+    published_revision,
+    published_supported_filing_years,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 _SEPARATE_ESCALA_YEARS = (2022, 2023)
 _MANUAL_ANUALIDADES_YEARS = (2020, 2021)
+# The authored revisions below the support floor that declare 1741-1759 as Anexo C
+# pension fields; the retired sum formula wrongly read those fields into 0527.
+_ANEXO_C_PENSION_FIELD_IDS = ("1741", "1744", "1749", "1754", "1759")
+_ANEXO_C_OVERLAP_REVISIONS = tuple(
+    str(revision.id)
+    for revision in authored_revisions_where(
+        "100",
+        lambda revision: (
+            revision.valid_from.year < PublishedGovernedFactSource().supported_filing_years().floor
+            and set(_ANEXO_C_PENSION_FIELD_IDS) <= {str(casilla.id) for casilla in revision.casillas}
+        ),
+    )
+)
+assert _ANEXO_C_OVERLAP_REVISIONS, "no below-floor Modelo 100 revision declares the Anexo C pension fields"
 _TOLERANCE = Decimal("0.01")
 
 # LIRPF art. 63 escala general estatal tramos (BOE consolidated Ley 35/2006
@@ -262,21 +282,24 @@ def test_pre_floor_casilla_0527_is_authored_manual_and_filing_selection_refuses(
         _snapshot(registry_authority, year)
 
 
-def test_2021_casilla_0527_is_manual_and_not_derived_from_anexo_c_pension_fields() -> None:
-    """2021 regression: 0527 must not derive from the Anexo C pension fields.
+@pytest.mark.parametrize("revision_id", _ANEXO_C_OVERLAP_REVISIONS)
+def test_anexo_c_overlap_revision_casilla_0527_is_manual_and_not_derived_from_pension_fields(
+    revision_id: str,
+) -> None:
+    """Anexo C overlap regression: 0527 must not derive from the Anexo C pension fields.
 
-    In the 2021 revision, casillas 1741/1744/1749/1754/1759 are Anexo C
+    In these revisions, casillas 1741/1744/1749/1754/1759 are Anexo C
     aportaciones/contribuciones a sistemas de previsión social fields (a
     contribuyente-reduccion-derecho text flag plus per-exercise pension
     pending-application amounts) — NOT the per-child anualidades por alimentos
     block that only exists from 2022 onward. Casilla 0527 (IMPALIM) is a
-    single scalar manual input per the bundled 2021 AEAT XSD
+    single scalar manual input per the revision's bundled AEAT XSD
     (`maxOccurs="1"`, no repeating child structure). No formula may read the
     Anexo C fields into 0527 (the retired sum formula did). The year lies below
     the filing floor, so the authored declarations are what is inspected.
     """
-    revision = published_authored_revision("100", year=2021)
-    anexo_c_ids = {_c(value) for value in ("1741", "1744", "1749", "1754", "1759")}
+    revision = published_revision("100", revision_id)
+    anexo_c_ids = {_c(value) for value in _ANEXO_C_PENSION_FIELD_IDS}
     assert anexo_c_ids <= {casilla.id for casilla in revision.casillas}
 
     assert "renta-anualidades-alimentos-hijos-suma" not in {formula.id for formula in revision.formulas}

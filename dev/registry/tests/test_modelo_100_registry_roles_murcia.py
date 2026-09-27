@@ -9,8 +9,12 @@ from ._modelo_100_registry_support import (
     _modelo_100_revision,
     _modelo_100_snapshot,
 )
+from .authored_edition_support import newest_authored_edition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+# The newest Modelo 100 edition the registry authors; its printed labels name its own exercise and the one before it.
+_REVIEWED_EDITION = newest_authored_edition("100")
 
 _MURCIA_DEDUCTION_SECTION = ("resultados", "deduccion_autonomica_res", "murcia_res")
 _MURCIA_RECURSOS_ENERGETICOS_ROLE = "irpf_deduccion_murcia_recursos_energeticos_renovables"
@@ -83,8 +87,8 @@ def test_modelo_100_murcia_mu4_recursos_energeticos_roles_are_family_specific(fi
     assert _AUTONOMIC_DEDUCTION_ART_77_REF in pending.legal_refs
 
 
-def test_modelo_100_murcia_2025_generated_pending_rows_follow_official_mu_families() -> None:
-    revision = _modelo_100_snapshot(2025).revision
+def test_modelo_100_murcia_generated_pending_rows_follow_official_mu_families() -> None:
+    revision = _modelo_100_snapshot(_REVIEWED_EDITION).revision
     expected_ids = {"2155", "2156", "2157", "2162", "2163", "2164", "2165", "2166"}
     casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in expected_ids}
     legacy_roles = [
@@ -97,13 +101,13 @@ def test_modelo_100_murcia_2025_generated_pending_rows_follow_official_mu_famili
     assert set(casillas_by_id) == expected_ids
 
     mu4_previous = casillas_by_id["2163"]
-    assert mu4_previous.label == "Importe generado en 2024 pendiente de aplicación"
+    assert mu4_previous.label == f"Importe generado en {_REVIEWED_EDITION - 1} pendiente de aplicación"
     assert tuple(mu4_previous.section) == _MURCIA_DEDUCTION_SECTION
     assert mu4_previous.semantic_role == _MURCIA_RECURSOS_ENERGETICOS_PENDIENTE_1_ROLE
     assert _AUTONOMIC_DEDUCTION_ART_77_REF in mu4_previous.legal_refs
 
     mu4_previous_extra = casillas_by_id["2166"]
-    assert mu4_previous_extra.label == "Importe generado en 2024 pendiente de aplicación"
+    assert mu4_previous_extra.label == f"Importe generado en {_REVIEWED_EDITION - 1} pendiente de aplicación"
     assert tuple(mu4_previous_extra.section) == _MURCIA_DEDUCTION_SECTION
     assert mu4_previous_extra.semantic_role == _MURCIA_RECURSOS_ENERGETICOS_PENDIENTE_EJERCICIO_ANTERIOR_ROLE
     assert _AUTONOMIC_DEDUCTION_ART_77_REF in mu4_previous_extra.legal_refs
@@ -115,13 +119,13 @@ def test_modelo_100_murcia_2025_generated_pending_rows_follow_official_mu_famili
     assert _AUTONOMIC_DEDUCTION_ART_77_REF in vehicle_amount.legal_refs
 
     vehicle_generated = casillas_by_id["2156"]
-    assert vehicle_generated.label == "Importe generado en 2025"
+    assert vehicle_generated.label == f"Importe generado en {_REVIEWED_EDITION}"
     assert tuple(vehicle_generated.section) == _MURCIA_DEDUCTION_SECTION
     assert vehicle_generated.semantic_role == _MURCIA_VEHICULO_GENERADO_ROLE
     assert _AUTONOMIC_DEDUCTION_ART_77_REF in vehicle_generated.legal_refs
 
     vehicle_pending = casillas_by_id["2164"]
-    assert vehicle_pending.label == "Importe generado en 2025 pendiente de aplicación"
+    assert vehicle_pending.label == f"Importe generado en {_REVIEWED_EDITION} pendiente de aplicación"
     assert tuple(vehicle_pending.section) == _MURCIA_DEDUCTION_SECTION
     assert vehicle_pending.semantic_role == _MURCIA_VEHICULO_PENDIENTE_ROLE
     assert _AUTONOMIC_DEDUCTION_ART_77_REF in vehicle_pending.legal_refs
@@ -133,13 +137,13 @@ def test_modelo_100_murcia_2025_generated_pending_rows_follow_official_mu_famili
     assert _AUTONOMIC_DEDUCTION_ART_77_REF in infrastructure.legal_refs
 
     infrastructure_generated = casillas_by_id["2162"]
-    assert infrastructure_generated.label == "Importe generado en 2025"
+    assert infrastructure_generated.label == f"Importe generado en {_REVIEWED_EDITION}"
     assert tuple(infrastructure_generated.section) == _MURCIA_DEDUCTION_SECTION
     assert infrastructure_generated.semantic_role == _MURCIA_INFRAESTRUCTURAS_GENERADO_ROLE
     assert _AUTONOMIC_DEDUCTION_ART_77_REF in infrastructure_generated.legal_refs
 
     infrastructure_pending = casillas_by_id["2165"]
-    assert infrastructure_pending.label == "Importe generado en 2025 pendiente de aplicación"
+    assert infrastructure_pending.label == f"Importe generado en {_REVIEWED_EDITION} pendiente de aplicación"
     assert tuple(infrastructure_pending.section) == _MURCIA_DEDUCTION_SECTION
     assert infrastructure_pending.semantic_role == _MURCIA_INFRAESTRUCTURAS_PENDIENTE_ROLE
     assert _AUTONOMIC_DEDUCTION_ART_77_REF in infrastructure_pending.legal_refs

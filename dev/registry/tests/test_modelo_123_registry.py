@@ -10,12 +10,20 @@ import pytest
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues, RegistrySnapshot
 from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from .profile_schema_support import committed_supported_filing_years
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_SUPPORT = committed_supported_filing_years()
+# The revision whose casilla 06 sums retenciones and regularizacion, and the
+# Orden HAC/56/2024 revision that replaces it with split base sub-totals.
+_RETENCIONES_SUM_REVISION = "2019-2023"
+_SPLIT_BASE_REVISION = "2024-y-siguientes"
 
 _SUPPORTED_DEADLINES = {
     2022: (
@@ -330,8 +338,8 @@ def test_m123_casilla_06_invariant_to_nperceptores() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_m123_2019_2023_casilla_06_invariant_to_nperceptores_and_base() -> None:
-    """2019-2023 revision: casilla 06 is retenciones+regularizacion, not base.
+def test_m123_retenciones_sum_revision_casilla_06_invariant_to_nperceptores_and_base() -> None:
+    """Retenciones-sum revision: casilla 06 is retenciones+regularizacion, not base.
 
     Authority: BOE Modelo 123 annex text citation "( 03 + 05 )".
     Inputs 01 (nperceptores) and 02 (base retenciones) are
@@ -340,13 +348,28 @@ def test_m123_2019_2023_casilla_06_invariant_to_nperceptores_and_base() -> None:
     """
     authority = compiled_bundled_authority()
     modelo, catalogues = authority.modelo("123"), authority.catalogues
+    revision = modelo.revisions[_RETENCIONES_SUM_REVISION]
+    covered_years = tuple(
+        year
+        for year in _SUPPORT.years
+        if revision.valid_from.year <= year and (revision.valid_to is None or year <= revision.valid_to.year)
+    )
+    assert covered_years
+    for filing_year in covered_years:
+        _assert_casilla_06_sums_retenciones(modelo, catalogues, filing_year)
+
+
+def _assert_casilla_06_sums_retenciones(
+    modelo: ModeloDefinition, catalogues: RegistryCatalogues, filing_year: int
+) -> None:
     snapshot = build_snapshot(
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2022,
+        filing_year=filing_year,
         period="1T",
     )
+    assert snapshot.revision.id == _RETENCIONES_SUM_REVISION
     result = calculate_registry_snapshot(
         snapshot,
         inputs={
@@ -357,11 +380,11 @@ def test_m123_2019_2023_casilla_06_invariant_to_nperceptores_and_base() -> None:
             _M123_2019_2023_PREVIOUS_RESULT_CASILLA: Decimal("0.00"),
             _M123_2019_2023_INGRESO_CASILLA: Decimal("0.00"),
         },
-        date_context={"filing_period": date(2022, 12, 31)},
+        date_context={"filing_period": date(filing_year, 12, 31)},
     )
     casilla_06 = result.values[_M123_2019_2023_RESULTADO_CASILLA]
     assert casilla_06 == Decimal("100.00"), (
-        f"casilla 06 (suma retenciones+regularizacion = [03]+[05]) "
+        f"{filing_year}: casilla 06 (suma retenciones+regularizacion = [03]+[05]) "
         f"should be 100.00 (= retenciones + 0), got {casilla_06}; "
         f"nperceptores (01=7) and base (02=42000) must not contribute"
     )
@@ -373,8 +396,8 @@ def test_m123_2019_2023_casilla_06_invariant_to_nperceptores_and_base() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_m123_2024_carries_base_total_implies_retenciones_total_advisory() -> None:
-    """The M123 2024-y-siguientes revision guards the base-to-retenciones handoff.
+def test_m123_split_base_revision_carries_base_total_implies_retenciones_total_advisory() -> None:
+    """The M123 split-base revision guards the base-to-retenciones handoff on every supported year it covers.
 
     Casilla 06 (base total = [04] + [05]) and casilla 09 (retenciones total =
     [07] + [08]) are both formula-computed from independently manual leaf
@@ -385,8 +408,15 @@ def test_m123_2024_carries_base_total_implies_retenciones_total_advisory() -> No
     The ADVISORY `implies_nonzero` predicate therefore surfaces a finding
     rather than silently granting VERIFICADO_COMPLETO.
     """
-    snapshot = _snapshot_2024()
+    revision_start = compiled_bundled_authority().modelo("123").revisions[_SPLIT_BASE_REVISION].valid_from.year
+    covered_years = tuple(year for year in _SUPPORT.years if year >= revision_start)
+    assert covered_years
+    for filing_year in covered_years:
+        _assert_base_total_implies_retenciones_total(_snapshot_2024(filing_year))
 
+
+def _assert_base_total_implies_retenciones_total(snapshot: RegistrySnapshot) -> None:
+    assert snapshot.revision.id == _SPLIT_BASE_REVISION
     # Named for the revision it lives on, matching its sibling
     # `modelo-123-2024-y-siguientes-base-declarada-cuando-rentas-positivas`;
     # the revision is `2024-y-siguientes`, not `2024`.

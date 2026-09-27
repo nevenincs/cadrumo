@@ -1,9 +1,9 @@
-"""Sofia's M100/2025 annual expense inspection must survive work creation.
+"""Sofia's Modelo 100 annual expense inspection must survive work creation.
 
 This regression exercises the live application path that was blocked before any
-Modelo 100 calculation could run: work-unit creation for revision 2025, followed
-by the bucket-aggregation calculate that fills source-owned annual expense
-casillas from real ledger transactions.
+Modelo 100 calculation could run: work-unit creation for the newest authored
+revision, followed by the bucket-aggregation calculate that fills source-owned
+annual expense casillas from real ledger transactions.
 """
 
 from __future__ import annotations
@@ -37,6 +37,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.ids import BindingId
+from ....domain.calculations.registry.tests.authored_editions import authored_revisions
 from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
     revision_id_for_observation,
@@ -63,20 +64,23 @@ def bucket_id() -> str:
     return _BUCKET_ID
 
 
-_YEAR = 2025
+# The newest Modelo 100 revision the registry authors, calculated during the Renta
+# campaign that follows its exercise.
+_REVISION = authored_revisions("100")[-1]
+_YEAR = _REVISION.valid_from.year
 _ANNUAL_PERIOD = "0A"
-_REVISION_ID = "2025"
-_T0 = datetime(2026, 6, 29, 10, 0, tzinfo=UTC)
-_T1 = datetime(2026, 6, 29, 11, 0, tzinfo=UTC)
+_REVISION_ID = str(_REVISION.id)
+_T0 = datetime(_YEAR + 1, 6, 29, 10, 0, tzinfo=UTC)
+_T1 = datetime(_YEAR + 1, 6, 29, 11, 0, tzinfo=UTC)
 
 _M100_SS_CASILLA: CasillaId = validated_casilla_id("0186", surface="_M100_SS_CASILLA")
 _M100_OTHER_EXPENSES_CASILLA: CasillaId = validated_casilla_id(
     "0199",
     surface="_M100_OTHER_EXPENSES_CASILLA",
 )
-_M100_2024_NEGATIVE_GENERAL_BASE_CARRY_CASILLA: CasillaId = validated_casilla_id(
+_M100_PRIOR_YEAR_NEGATIVE_GENERAL_BASE_CARRY_CASILLA: CasillaId = validated_casilla_id(
     "1391",
-    surface="_M100_2024_NEGATIVE_GENERAL_BASE_CARRY_CASILLA",
+    surface="_M100_PRIOR_YEAR_NEGATIVE_GENERAL_BASE_CARRY_CASILLA",
 )
 _ESTIMACION_DIRECTA_NORMAL_BINDING: BindingId = "renta-modelo-100-estimacion-directa-es-normal"
 _M100_SS_BINDING: BindingId = "renta-ledger-expense-0186-deductible"
@@ -116,8 +120,8 @@ def _seed_sofia_profile(objects: SecureObjectRepository) -> None:
             UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
             UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
             UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-            UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
-            UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
+            UserProfileFact(path="censo.activity_start_date", value=date(_YEAR - 5, 1, 1)),
+            UserProfileFact(path="renta_taxpayer.birth_date", value=date(_YEAR - 45, 3, 15)),
             UserProfileFact(path="renta_taxpayer.sex", value="M"),
             UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
             UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),
@@ -218,13 +222,13 @@ def _seed_prior_year_m100_zero_carry(objects: SecureObjectRepository) -> None:
         CalculationObservationRepository(objects=objects).prepare_observation_envelope(
             RegistryModeloObservation(
                 modelo="100",
-                filing_year=2024,
+                filing_year=_YEAR - 1,
                 period=_ANNUAL_PERIOD,
                 observations=registry_grounded_observations(
                     modelo="100",
-                    filing_year=2024,
+                    filing_year=_YEAR - 1,
                     period=_ANNUAL_PERIOD,
-                    casilla_values={_M100_2024_NEGATIVE_GENERAL_BASE_CARRY_CASILLA: Decimal("0")},
+                    casilla_values={_M100_PRIOR_YEAR_NEGATIVE_GENERAL_BASE_CARRY_CASILLA: Decimal("0")},
                 ),
             ),
             source_kind=APP_FILING_SOURCE_KIND,
@@ -232,13 +236,13 @@ def _seed_prior_year_m100_zero_carry(objects: SecureObjectRepository) -> None:
             stamped_revision_id=revision_id_for_observation(
                 RegistryModeloObservation(
                     modelo="100",
-                    filing_year=2024,
+                    filing_year=_YEAR - 1,
                     period=_ANNUAL_PERIOD,
                     observations=registry_grounded_observations(
                         modelo="100",
-                        filing_year=2024,
+                        filing_year=_YEAR - 1,
                         period=_ANNUAL_PERIOD,
-                        casilla_values={_M100_2024_NEGATIVE_GENERAL_BASE_CARRY_CASILLA: Decimal("0")},
+                        casilla_values={_M100_PRIOR_YEAR_NEGATIVE_GENERAL_BASE_CARRY_CASILLA: Decimal("0")},
                     ),
                 )
             ),
@@ -257,7 +261,7 @@ def _m100_caller_zero_bindings() -> dict[BindingId, Decimal]:
     return values
 
 
-def test_sofia_m100_2025_work_create_and_calculate_exposes_0186_and_0199(
+def test_sofia_m100_work_create_and_calculate_exposes_0186_and_0199(
     secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     """Work create must not treat the M100 modalidad selector as export layout."""
@@ -265,7 +269,7 @@ def test_sofia_m100_2025_work_create_and_calculate_exposes_0186_and_0199(
     transactions = _seed_sofia_ledger(secure_objects)
     _seed_prior_year_m100_zero_carry(secure_objects)
 
-    # This was Sofia's blocker: resolving/creating M100/2025 work raised the
+    # This was Sofia's blocker: resolving/creating the annual M100 work raised the
     # internal export-selector projection error before a calculation existed.
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,

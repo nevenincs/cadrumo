@@ -41,11 +41,14 @@ from ..binding_selector_utils import selector_as_dict
 from ..errors import RegistryValidationError
 from ..formula_runtime import calculate_registry_snapshot
 from ..schema_formula import ParameterDefinition
-from .published_authority import published_legal_evidence_text, published_snapshot
+from .published_authority import published_legal_evidence_text, published_legal_reference, published_snapshot
 from .registry_tree import bundled_modelo_components
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
+# LIS DT 44ª (Ley 7/2024) sets its first transitional rates -- micro-empresa 21/22 % and
+# art. 101 ERD 24 % -- for the first exercise the published provision is in force.
+_DT44_FIRST_TRANSITIONAL_EXERCISE = published_legal_reference("ley-27-2014:dt-44").effective_from.year
 _DISPATCH_BINDING = "modelo-200-profile-legal-entity-form"
 _M200_RESULTADO_CONTABLE_CASILLA: CasillaId = validated_casilla_id("00501", surface="_M200_RESULTADO_CONTABLE_CASILLA")
 _M200_CORRECCIONES_AUMENTO_CASILLA: CasillaId = validated_casilla_id(
@@ -417,7 +420,7 @@ def test_dispatch_binding_is_a_profile_sourced_enum_binding() -> None:
     assert "ley-27-2014:art-29" in binding.legal_refs
 
 
-def test_erd_parameter_encodes_the_ley_31_2022_rate() -> None:
+def test_erd_parameter_encodes_the_budget_law_art_39_rate() -> None:
     """The ERD parameter encodes the Ley 31/2022 Art. 39 flat 23 % rate.
 
     Ley 31/2022 Art. 39 modified LIS Art. 29 to introduce a 23 %
@@ -514,8 +517,8 @@ def test_tipo_gravamen_dispatch_routes_erd_23_when_incn_below_1m() -> None:
     )
 
 
-def test_tipo_gravamen_dispatch_routes_2025_micro_display_rate_to_first_tranche() -> None:
-    """Persona repro: a 2025 micro-company prints 21 while cuota is 10.500.
+def test_tipo_gravamen_dispatch_routes_dt44_first_year_micro_display_rate_to_first_tranche() -> None:
+    """Persona repro: a DT 44ª first-year micro-company prints 21 while cuota is 10.500.
 
     Dario's CLI run used an SL with INCN below 1M and a 50.000 base. The
     cuota already followed LIS DT 44ª at 21 %, but 00558 incorrectly echoed
@@ -535,15 +538,15 @@ def test_tipo_gravamen_dispatch_routes_2025_micro_display_rate_to_first_tranche(
             "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
         },
         relation_values=dict(_M200_PAGOS_RELATIONS_ZERO),
-        date_context={"filing_period": date(2025, 12, 31)},
+        date_context={"filing_period": date(_DT44_FIRST_TRANSITIONAL_EXERCISE, 12, 31)},
     )
 
     assert result.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("21")
     assert result.values[_M200_CUOTA_INTEGRA_CASILLA] == Decimal("10500.00")
 
 
-def test_tipo_gravamen_dispatch_routes_2025_micro_cuota_to_rest_tranche() -> None:
-    """A 2025 micro-company above 50.000 EUR uses the second tranche."""
+def test_tipo_gravamen_dispatch_routes_dt44_first_year_micro_cuota_to_rest_tranche() -> None:
+    """A DT 44ª first-year micro-company above 50.000 EUR uses the second tranche."""
     result = calculate_registry_snapshot(
         _snapshot(),
         inputs=_base_inputs(Decimal("100000")),
@@ -557,7 +560,7 @@ def test_tipo_gravamen_dispatch_routes_2025_micro_cuota_to_rest_tranche() -> Non
             "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
         },
         relation_values=dict(_M200_PAGOS_RELATIONS_ZERO),
-        date_context={"filing_period": date(2025, 12, 31)},
+        date_context={"filing_period": date(_DT44_FIRST_TRANSITIONAL_EXERCISE, 12, 31)},
     )
 
     assert result.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("21")
@@ -596,10 +599,10 @@ def test_tipo_gravamen_dispatch_routes_general_25_when_incn_at_or_above_1m() -> 
     assert result.values[_M200_CUOTA_INTEGRA_CASILLA] == Decimal("250000.00")
 
 
-def test_tipo_gravamen_dispatch_routes_art101_erd_below_10m_from_2025() -> None:
+def test_tipo_gravamen_dispatch_routes_art101_erd_below_10m_under_dt44() -> None:
     """INCN below 10M and at least 1M routes to the art.101 ERD schedule.
 
-    For a 2025 filing period, LIS DT 44ª fixes the art.101 ERD rate at
+    For the first DT 44ª filing period, LIS DT 44ª fixes the art.101 ERD rate at
     24%. A sociedad anónima with prior-period INCN 7.000.000 EUR is not
     a micro-empresa, but is below the art.101 10M threshold, so both the
     displayed rate and cuota path must use the ERD schedule.
@@ -617,14 +620,14 @@ def test_tipo_gravamen_dispatch_routes_art101_erd_below_10m_from_2025() -> None:
             "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
         },
         relation_values=dict(_M200_PAGOS_RELATIONS_ZERO),
-        date_context={"filing_period": date(2025, 12, 31)},
+        date_context={"filing_period": date(_DT44_FIRST_TRANSITIONAL_EXERCISE, 12, 31)},
     )
 
     assert result.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("24")
     assert result.values[_M200_CUOTA_INTEGRA_CASILLA] == Decimal("240000.00")
 
 
-def test_tipo_gravamen_dispatch_keeps_general_rate_at_art101_boundary_from_2025() -> None:
+def test_tipo_gravamen_dispatch_keeps_general_rate_at_art101_boundary_under_dt44() -> None:
     """INCN at 10M is outside art.101 ERD and stays on the general rate."""
     result = calculate_registry_snapshot(
         _snapshot(),
@@ -639,7 +642,7 @@ def test_tipo_gravamen_dispatch_keeps_general_rate_at_art101_boundary_from_2025(
             "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
         },
         relation_values=dict(_M200_PAGOS_RELATIONS_ZERO),
-        date_context={"filing_period": date(2025, 12, 31)},
+        date_context={"filing_period": date(_DT44_FIRST_TRANSITIONAL_EXERCISE, 12, 31)},
     )
 
     assert result.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("25")

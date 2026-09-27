@@ -22,6 +22,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.calendar_ccaa_catalogue import require_calendar_ccaa
+from cadrumo.domain.calculations.registry.tests.legal_text import legal_effective_to
 
 from ..festivos import (
     CalendarCCAA,
@@ -32,6 +33,11 @@ from ..festivos import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+# Each días inhábiles resolution fixes the calendar of the year its in-force window
+# closes on; the dates asserted against it are transcribed from its ANEXO.
+_BOE_A_2024_26935_EXERCISE = legal_effective_to("resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo").year
+_BOE_A_2025_23702_EXERCISE = legal_effective_to("resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo").year
 
 _CALENDAR_TERRITORIES = (
     "ES-AN",
@@ -64,15 +70,15 @@ def _regional_dates(calendar: HolidayCalendar, territory: CalendarCCAA) -> set[d
     return {holiday.holiday_date for holiday in calendar.ccaa if holiday.ccaa_code == territory}
 
 
-def test_the_2026_calendar_resolves_from_its_own_publication() -> None:
+def test_a_calendar_resolves_from_its_own_publication() -> None:
     with bundled_indexed_authority().operation() as operation:
-        calendar = load_holiday_calendar(2026, operation=operation)
+        calendar = load_holiday_calendar(_BOE_A_2025_23702_EXERCISE, operation=operation)
 
-    assert calendar.year == 2026
+    assert calendar.year == _BOE_A_2025_23702_EXERCISE
     assert calendar.boe_url is not None
     assert "BOE-A-2025-23702" in calendar.boe_url
     # Viernes Santo 2026 is inhábil in todo el territorio nacional.
-    assert date(2026, 4, 3) in {holiday.holiday_date for holiday in calendar.national}
+    assert date(_BOE_A_2025_23702_EXERCISE, 4, 3) in {holiday.holiday_date for holiday in calendar.national}
 
 
 @pytest.mark.parametrize("year", [2024, 2025, 2026])
@@ -85,17 +91,17 @@ def test_every_calendar_territory_is_verified(year: int) -> None:
     assert len(calendar.verified_territories) == len(_CALENDAR_TERRITORIES)
 
 
-def test_madrid_2025_holds_jueves_santo_and_not_the_municipal_almudena() -> None:
+def test_madrid_holds_jueves_santo_and_not_the_municipal_almudena() -> None:
     with bundled_indexed_authority().operation() as operation:
-        calendar = load_holiday_calendar(2025, operation=operation)
-        madrid = _regional_dates(calendar, _territory(operation, "ES-MD"))
-        valencia = _regional_dates(calendar, _territory(operation, "ES-VC"))
-        catalonia = _regional_dates(calendar, _territory(operation, "ES-CT"))
+        calendar = load_holiday_calendar(_BOE_A_2024_26935_EXERCISE, operation=operation)
+        madrid = _regional_dates(calendar, _territory(operation, "ES-MD", _BOE_A_2024_26935_EXERCISE))
+        valencia = _regional_dates(calendar, _territory(operation, "ES-VC", _BOE_A_2024_26935_EXERCISE))
+        catalonia = _regional_dates(calendar, _territory(operation, "ES-CT", _BOE_A_2024_26935_EXERCISE))
 
-    assert date(2025, 4, 17) in madrid
-    assert date(2025, 11, 10) not in madrid
-    assert date(2025, 4, 17) not in valencia
-    assert date(2025, 4, 17) not in catalonia
+    assert date(_BOE_A_2024_26935_EXERCISE, 4, 17) in madrid
+    assert date(_BOE_A_2024_26935_EXERCISE, 11, 10) not in madrid
+    assert date(_BOE_A_2024_26935_EXERCISE, 4, 17) not in valencia
+    assert date(_BOE_A_2024_26935_EXERCISE, 4, 17) not in catalonia
 
 
 def test_san_esteban_is_not_a_catalan_regional_day_because_aran_replaces_it() -> None:
@@ -134,8 +140,8 @@ def test_jueves_santo_moves_a_madrid_deadline_past_easter_but_not_a_catalan_one(
     assert catalonia.coverage is DeadlineHolidayCoverage.NATIONAL_AND_TERRITORY
 
 
-def test_the_2025_publication_cites_the_dias_inhabiles_resolution() -> None:
+def test_the_calendar_publication_cites_the_dias_inhabiles_resolution() -> None:
     with bundled_indexed_authority().operation() as operation:
-        calendar = load_holiday_calendar(2025, operation=operation)
+        calendar = load_holiday_calendar(_BOE_A_2024_26935_EXERCISE, operation=operation)
 
     assert calendar.boe_url == "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"

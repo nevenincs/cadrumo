@@ -66,7 +66,7 @@ _SLICE_HTML = _NORMATIVES / "html" / "orden-hap-2250-2015-art-4.html"
 _MARKED_ANNEX_HTML = _NORMATIVES / "html" / "orden-eha-3435-2007.html"
 _UNMARKED_ANNEX_HTML = _NORMATIVES / "html" / "orden-hfp-1359-2023.html"
 _MODULES_2025_HTML = _NORMATIVES / "html" / "orden-hac-1347-2024.html"
-_MODULES_2022_HTML = _NORMATIVES / "html" / "orden-hfp-1335-2021.html"
+_LORCA_REDUCTION_MODULES_HTML = _NORMATIVES / "html" / "orden-hfp-1335-2021.html"
 _APARTADO_ORDINAL_HTML = _NORMATIVES / "html" / "orden-hac-3625-2003-art-3.html"
 _ORDINAL_PARAGRAPH_HTML = _NORMATIVES / "html" / "boe-a-2011-208-modelo-145.html"
 # A real single-article slice whose heading names an ordinal beyond the
@@ -81,7 +81,7 @@ def test_worked_example_files_exist() -> None:
     assert _MARKED_ANNEX_HTML.is_file(), _MARKED_ANNEX_HTML
     assert _UNMARKED_ANNEX_HTML.is_file(), _UNMARKED_ANNEX_HTML
     assert _MODULES_2025_HTML.is_file(), _MODULES_2025_HTML
-    assert _MODULES_2022_HTML.is_file(), _MODULES_2022_HTML
+    assert _LORCA_REDUCTION_MODULES_HTML.is_file(), _LORCA_REDUCTION_MODULES_HTML
     assert _APARTADO_ORDINAL_HTML.is_file(), _APARTADO_ORDINAL_HTML
     assert _ORDINAL_PARAGRAPH_HTML.is_file(), _ORDINAL_PARAGRAPH_HTML
 
@@ -257,9 +257,9 @@ def test_iva_instructions_and_activity_tables_become_atomic_citation_units() -> 
     assert "Salones e institutos de belleza" not in hairdressing.text
 
 
-def test_2022_iva_units_preserve_the_legacy_table_shape_and_lorca_reduction() -> None:
-    """The source-neutral annual parser keeps 2022's multi-value table rows exact."""
-    output = build_outputs(_MODULES_2022_HTML, repo_root=_REPO_ROOT)[0]
+def test_lorca_reduction_modulos_orden_iva_units_preserve_the_legacy_table_shape() -> None:
+    """The source-neutral annual parser keeps the Lorca-reduction orden's multi-value table rows exact."""
+    output = build_outputs(_LORCA_REDUCTION_MODULES_HTML, repo_root=_REPO_ROOT)[0]
     fragments = {unit.anchor: unit for unit in output.units if unit.anchor}
 
     iva_table_anchors = tuple(

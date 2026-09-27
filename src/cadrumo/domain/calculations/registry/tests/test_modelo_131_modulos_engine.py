@@ -352,7 +352,7 @@ class TestModulosIndicesCorrectoresGenerales:
         expected = _expected_modulos_generales(minorado, epigrafe="673.1", inicio_actividad=Decimal("0.80"))
         assert modulos == expected
 
-    def test_inicio_actividad_after_exceso_regression_b1347_2024_orden_order(self) -> None:
+    def test_inicio_actividad_after_exceso_regression_follows_hac_1347_orden_order(self) -> None:
         """b.4 MUST be applied AFTER b.3 (exceso), never before — regression for the reversed-order defect.
 
         Orden HAC/1347/2024 Anexo II, instrucción 2.3: "Los índices

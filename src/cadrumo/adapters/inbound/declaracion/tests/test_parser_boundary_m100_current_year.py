@@ -24,6 +24,7 @@ See Also:
 
 from __future__ import annotations
 
+import json
 from decimal import Decimal
 
 import pytest
@@ -37,6 +38,27 @@ from ._parser_boundary_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
+
+
+def _formula_verification_fixture_exercises(modelo: str, period: str) -> tuple[int, ...]:
+    """Return the exercises of the committed synthetic fixtures generated for formula verification.
+
+    Each fixture's sidecar names its role, and its file name is the exercise its body stamps.
+    """
+    root = FIXTURES_DIR / "justificantes" / modelo
+    return tuple(
+        sorted(
+            int(sidecar.stem.removesuffix(f"-{period}"))
+            for sidecar in root.glob(f"*-{period}.json")
+            if json.loads(sidecar.read_text(encoding="utf-8"))["role"] == "formula_verification"
+        )
+    )
+
+
+# The editions whose committed synthetic fixtures are generated for formula
+# verification against the current Diseno de Registro dictionaries.
+_CURRENT_YEAR_EDITIONS = _formula_verification_fixture_exercises("100", "0A")
+assert _CURRENT_YEAR_EDITIONS, "no committed Modelo 100 formula-verification fixture"
 
 # Ground truth mirrors the amounts _generate_modelo_100_current.py stamps onto
 # the committed fixture PDFs (the single source of the fixture's printed values).
@@ -67,11 +89,7 @@ _M100_CURRENT_YEAR_EXPECTED_VALUES: dict[str, Decimal] = {
 
 @pytest.mark.parametrize(
     ("year", "profile_id"),
-    [
-        (2024, "modelo-100-declaracion-pdf"),
-        (2025, "modelo-100-declaracion-pdf"),
-    ],
-    ids=["2024", "2025"],
+    [(year, "modelo-100-declaracion-pdf") for year in _CURRENT_YEAR_EDITIONS],
 )
 def test_parser_extracts_modelo_100_current_year_profile_targets(year: int, profile_id: str) -> None:
     """Registry profile declares exactly the 21-casilla current-year target set."""
@@ -83,7 +101,7 @@ def test_parser_extracts_modelo_100_current_year_profile_targets(year: int, prof
         assert target.label_pattern
 
 
-@pytest.mark.parametrize("year", [2024, 2025], ids=["2024", "2025"])
+@pytest.mark.parametrize("year", _CURRENT_YEAR_EDITIONS)
 def test_parser_extracts_modelo_100_current_year_profile_targets_from_committed_synthetic_fixture(
     year: int,
 ) -> None:

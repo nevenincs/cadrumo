@@ -1,4 +1,4 @@
-"""The DANA 2024 relief authority refuses four specific ways of being wrong.
+"""The DANA relief authority refuses four specific ways of being wrong.
 
 The measure this guards is RDL 7/2024 art. 11.2: a 25 per cent reduction of the
 2024 annual IVA regimen simplificado cuota devengada por operaciones
@@ -62,6 +62,7 @@ from ..compiler.legal_grounding import (
     verify_legal_catalogue_grounding,
 )
 from ..compiler.loader import load_shared_catalogues
+from .authored_edition_support import legal_reference, legal_text_match
 from .profile_schema_support import committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -79,6 +80,22 @@ REDUCTION_REF = "real-decreto-ley-7-2024:art-11.2"
 
 #: The provision that says from when the reduction's norm is in force.
 ENTRY_INTO_FORCE_REF = "real-decreto-ley-7-2024:df-14"
+
+
+def _dana_relief_in_force_from() -> date:
+    """Return the day the provision puts RDL 7/2024 in force: the day after its BOE publication.
+
+    The provision's own text states the rule and the catalogue records the publication
+    day. Its year is the one exercise whose annual cuota art. 11.2 reduces.
+    """
+    legal_text_match(ENTRY_INTO_FORCE_REF, r"entrara en vigor el dia siguiente al de su publicacion")
+    published_at = legal_reference(ENTRY_INTO_FORCE_REF).published_at
+    assert published_at is not None, f"{ENTRY_INTO_FORCE_REF} declares no publication day"
+    return published_at + timedelta(days=1)
+
+
+DANA_RELIEF_IN_FORCE_FROM = _dana_relief_in_force_from()
+DANA_RELIEF_EXERCISE_END = date(DANA_RELIEF_IN_FORCE_FROM.year, 12, 31)
 
 #: The corrección de errores, bundled as its own as-published artefact.
 CORRECTION_REF = "correccion-errores-rdl-6-2024"
@@ -380,7 +397,7 @@ def test_the_reduction_fact_cites_the_three_authorities_the_measure_needs() -> N
     assert not unresolved, f"the reduction fact cites legal refs outside the DANA authority: {unresolved!r}"
 
 
-def test_the_reduction_fact_resolves_only_for_the_lawful_2024_window() -> None:
+def test_the_reduction_fact_resolves_only_for_the_lawful_window() -> None:
     """The legal entry into force and annual scope bound the canonical fact."""
     authority = dana_authority()
     resolved = resolve_governed_fact(
@@ -388,18 +405,21 @@ def test_the_reduction_fact_resolves_only_for_the_lawful_2024_window() -> None:
         query=ScalarFactQuery(
             fact_id=REDUCTION_FACT,
             date_axis=DateAxis.FILING_PERIOD,
-            effective_date=date(2024, 12, 31),
+            effective_date=DANA_RELIEF_EXERCISE_END,
         ),
         authority_digest="0" * 64,
         support=committed_supported_filing_years(),
     )
     assert isinstance(resolved.payload, ScalarFactPayload)
     assert str(resolved.payload.value) == "0.25"
-    assert resolved.valid_from == date(2024, 11, 13)
-    assert resolved.valid_to == date(2024, 12, 31)
+    assert resolved.valid_from == DANA_RELIEF_IN_FORCE_FROM
+    assert resolved.valid_to == DANA_RELIEF_EXERCISE_END
     assert {citation.source_ref for citation in resolved.source_citations} == set(DANA_SOURCE_REFS)
 
-    for effective_date in (date(2024, 11, 12), date(2025, 1, 1)):
+    for effective_date in (
+        DANA_RELIEF_IN_FORCE_FROM - timedelta(days=1),
+        DANA_RELIEF_EXERCISE_END + timedelta(days=1),
+    ):
         with pytest.raises(RegistryValidationError, match="has no variant for the exact query context"):
             resolve_governed_fact(
                 catalogue=authority.facts,

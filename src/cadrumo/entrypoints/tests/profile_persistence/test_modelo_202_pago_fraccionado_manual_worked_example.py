@@ -1,16 +1,19 @@
 """Oracle test for M202 casilla 03, grounded against the AEAT Manual practico de
-Sociedades 2024's own worked example (Cap. 15, "El pago fraccionado del Impuesto
-sobre Sociedades", apartado "A) Calculo del pago fraccionado: modalidad
-articulo 40.2 de la LIS", "Ejemplo", paginas 811-812).
+Sociedades's own worked example (Cap. 15, "El pago fraccionado del Impuesto sobre
+Sociedades", apartado "A) Calculo del pago fraccionado: modalidad articulo 40.2
+de la LIS", "Ejemplo").
 
-Ground truth (bundled AEAT Manual practico de Sociedades 2024):
+Every bundled manual edition prints the example for the pagos fraccionados of the
+exercise after its own, with the same figures; the scenarios run for each such
+exercise an authored Modelo 202 revision covers. The enrolled manual oracle
+payload cites the edition below:
 
     raw_evidence_locator: corpus/manuals/sociedades/2024/source.pdf#Pag.811-812
 
 The manual walks "la Sociedad Limitada <<M>>" (ejercicio economico coincide con
-el ano natural) through the THREE 2025 pagos fraccionados under modalidad art.
-40.2 LIS, printing an independent AEAT-computed casilla-03 figure for each
-instalment (quoted verbatim below):
+el ano natural) through the THREE pagos fraccionados of the exercise under
+modalidad art. 40.2 LIS, printing an independent AEAT-computed casilla-03 figure
+for each instalment (quoted verbatim below from the edition the oracle cites):
 
     "Primer pago. Primeros veinte dias naturales del mes de abril de 2025:
      Base del pago fraccionado: (12.000 - 2.000) = 10.000 euros.
@@ -28,7 +31,7 @@ instalment (quoted verbatim below):
      18% de (3.000 - 500) = 450 euros, que, segun el modelo 202, debera
      ingresar."
 
-Registry mapping (M202 2025-y-siguientes revision):
+Registry mapping (M202 revision covering the exercise):
 
     casilla "03" "Mod. 40.2 LIS - A ingresar" = formula
     `modelo-202-modalidad-40-2-a-ingresar`: 18% x casilla "01" (Base del pago
@@ -40,11 +43,11 @@ Registry mapping (M202 2025-y-siguientes revision):
     determination rule quoted in the manual's own "Casilla 01. Base del pago
     fraccionado" apartado ("La cuota integra del ultimo periodo impositivo...
     minorado en las deducciones y bonificaciones, asi como en las retenciones
-    e ingresos a cuenta"), so casilla "01" = 10.000,00 EUR (1P, from ejercicio
-    2023's cuota 12.000 - retenciones 2.000) and casilla "01" = 2.500,00 EUR
-    (2P/3P, from ejercicio 2024's cuota 3.000 - retenciones 500). The 18%
-    percentage is the registry parameter `is.modalidad_cuota.percentage`
-    (value "18" for `date_axis = "filing_period"`, `valid_from = 2025-01-01`).
+    e ingresos a cuenta"), so casilla "01" = 10.000,00 EUR (1P, from the
+    ejercicio two years earlier: cuota 12.000 - retenciones 2.000) and casilla
+    "01" = 2.500,00 EUR (2P/3P, from the prior ejercicio once declared: cuota
+    3.000 - retenciones 500). The 18% percentage is the registry parameter
+    `is.modalidad_cuota.percentage` (`date_axis = "filing_period"`).
 
     The registry's casilla "01" binding
     (`modelo-202-2025-y-siguientes-cuota-base-ejercicio-anterior`,
@@ -73,8 +76,10 @@ multiplicative work, not returning a constant or ignoring casilla "01".
 
 from __future__ import annotations
 
+import json
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
@@ -96,8 +101,14 @@ from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
+from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.ids import BindingId
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    authored_revisions_where,
+    manual_edition_matches,
+)
+from cadrumo.domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from cadrumo.domain.period import calculation_filing_date
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
@@ -121,10 +132,69 @@ def bucket_id() -> str:
     return _BUCKET_ID
 
 
-_T0 = datetime(2026, 1, 15, 9, 0, tzinfo=UTC)
-_T1 = datetime(2026, 1, 15, 10, 0, tzinfo=UTC)
 _M202 = "202"
-_FILING_YEAR = 2025
+
+_BINDING_INCN: BindingId = "modelo-202-incn-prior-12-months"
+_BINDING_CUOTA_BASE_EJERCICIO_ANTERIOR: BindingId = "modelo-202-cuota-base-ejercicio-anterior"
+_BINDING_PAGOS_FRACCIONADOS_ANTERIORES: BindingId = "modelo-202-pagos-fraccionados-anteriores"
+
+# The pagos-fraccionados exercise each manual edition's example walks, read from the
+# example's own heading so the figures below are bound to the text that prints them.
+_EXAMPLE_PAYMENT_EXERCISE_BY_EDITION = {
+    edition: int(match.group(1))
+    for edition, match in manual_edition_matches(
+        "sociedades",
+        r"pagos fraccionados que debe realizar en el ano (\d{4}): primer pago\. .{0,120}?"
+        r"base del pago fraccionado: \(12\.000 - 2\.000\) = 10\.000 euros\. "
+        r"18% de 10\.000 euros = 1\.800 euros.{0,400}?segundo pago\. .{0,120}?"
+        r"18% de \(3\.000 - 500\) = 450 euros",
+    ).items()
+}
+
+
+def _exercise_binds_the_example_inputs(exercise: int) -> bool:
+    """Whether an authored revision covering the exercise declares the bindings the example feeds."""
+    fed = {_BINDING_INCN, _BINDING_CUOTA_BASE_EJERCICIO_ANTERIOR, _BINDING_PAGOS_FRACCIONADOS_ANTERIORES}
+    return any(
+        revision.valid_from.year <= exercise and (revision.valid_to is None or exercise <= revision.valid_to.year)
+        for revision in authored_revisions_where(
+            _M202, lambda candidate: fed <= {binding.id for binding in candidate.bindings}
+        )
+    )
+
+
+_SUPPORT = PublishedGovernedFactSource().supported_filing_years()
+_EXAMPLE_EXERCISES = tuple(
+    exercise
+    for exercise in sorted(_EXAMPLE_PAYMENT_EXERCISE_BY_EDITION.values())
+    if exercise in _SUPPORT.years and _exercise_binds_the_example_inputs(exercise)
+)
+
+
+def _manual_oracle() -> tuple[int, str]:
+    """Return the exercise and cited locator of the enrolled Modelo 202 manual oracle."""
+    matches = []
+    for path in sorted(Path(bundled_path("corpus", "manual_oracles")).glob("*.json")):
+        raw = json.loads(path.read_text(encoding="utf-8"))
+        if raw.get("modelo") == _M202 and raw.get("source_kind") == "aeat_manual_worked_example":
+            matches.append((int(raw["filing_year"]), str(raw["raw_evidence_locator"])))
+    (oracle,) = matches
+    return oracle
+
+
+_ORACLE_EXERCISE, _ORACLE_LOCATOR = _manual_oracle()
+assert _ORACLE_EXERCISE in _EXAMPLE_EXERCISES
+
+
+def _profile_instant(exercise: int) -> datetime:
+    """Sociedad "M" is registered as the exercise opens, before its first instalment."""
+    return datetime(exercise, 1, 15, 9, 0, tzinfo=UTC)
+
+
+def _clock(exercise: int, hour: int) -> datetime:
+    """The scenario runs in the January after the exercise's last instalment."""
+    return datetime(exercise + 1, 1, 15, hour, 0, tzinfo=UTC)
+
 
 # Manual casilla inputs (Ejemplo, quoted verbatim in the module docstring).
 _CASILLA_RESULTADO_DECLARACION_ANTERIOR: CasillaId = validated_casilla_id(
@@ -134,10 +204,6 @@ _CASILLA_RESULTADO_DECLARACION_ANTERIOR: CasillaId = validated_casilla_id(
 
 # Target/oracle casilla.
 _CASILLA_A_INGRESAR: CasillaId = validated_casilla_id("03", surface="_CASILLA_A_INGRESAR")
-
-_BINDING_INCN: BindingId = "modelo-202-incn-prior-12-months"
-_BINDING_CUOTA_BASE_EJERCICIO_ANTERIOR: BindingId = "modelo-202-cuota-base-ejercicio-anterior"
-_BINDING_PAGOS_FRACCIONADOS_ANTERIORES: BindingId = "modelo-202-pagos-fraccionados-anteriores"
 
 # INCN below the LIS art. 40.3 mandatory-modality threshold (6.000.000 EUR)
 # so the art. 40.2 lane (clave 03) is offered; the manual's Sociedad "M" is
@@ -150,7 +216,7 @@ _BASE_SEGUNDO_TERCER_PAGO_EXPECTED = Decimal("2500.00")
 _A_INGRESAR_SEGUNDO_TERCER_PAGO_EXPECTED = Decimal("450.00")
 
 
-def _seed_sociedad_m_profile() -> None:
+def _seed_sociedad_m_profile(exercise: int) -> None:
     """Seed the M202 legal-entity profile scaffold for the manual's Sociedad "M".
 
     ``incn_prior_12_months`` is fed below the LIS art. 40.3 mandatory-modality
@@ -179,8 +245,8 @@ def _seed_sociedad_m_profile() -> None:
             UserProfileFact(path="tax_residence.ccaa", value="madrid"),
             UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
         ),
-        created_at=_T0,
-        updated_at=_T0,
+        created_at=_profile_instant(exercise),
+        updated_at=_profile_instant(exercise),
         context=_profile_creation_context_for_test(),
     )
     seed_test_profile_record(record)
@@ -189,26 +255,27 @@ def _seed_sociedad_m_profile() -> None:
 def _calculate_m202(
     secure_objects: SecureObjectRepository,
     *,
+    exercise: int,
     period_code: str,
     cuota_base_ejercicio_anterior: Decimal,
     operation: PinnedAuthorityOperation,
 ) -> BucketAggregationCalculationResult:
-    """Run the live M202/2025 calculate with the manual's Ejemplo casilla inputs."""
-    _seed_sociedad_m_profile()
+    """Run the live M202 calculate for the exercise with the manual's Ejemplo casilla inputs."""
+    _seed_sociedad_m_profile(exercise)
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     bucket_event_repo = BucketEventHistoryRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(objects=secure_objects)
-    snapshot = published_authority_operation().snapshot(_M202, filing_year=_FILING_YEAR, period=period_code)
+    snapshot = published_authority_operation().snapshot(_M202, filing_year=exercise, period=period_code)
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo=_M202,
-        filing_year=_FILING_YEAR,
-        period=Period.from_year_and_code(_FILING_YEAR, period_code),
+        filing_year=exercise,
+        period=Period.from_year_and_code(exercise, period_code),
         revision_id=snapshot.revision.id,
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bucket_event_repo),
-        clock=_T0,
+        clock=_clock(exercise, 9),
         operation=operation,
     )
     with calculation_ports_for_test(
@@ -228,35 +295,42 @@ def _calculate_m202(
                 _BINDING_PAGOS_FRACCIONADOS_ANTERIORES: Decimal("0"),
             },
             ports=_calculation_ports_210,
-            clock=_T1,
+            clock=_clock(exercise, 10),
         )
 
 
-def test_m202_2025_primer_pago_manual_worked_example(
-    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
+@pytest.mark.parametrize("exercise", _EXAMPLE_EXERCISES)
+def test_m202_primer_pago_manual_worked_example(
+    secure_objects: SecureObjectRepository, exercise: int, *, operation: PinnedAuthorityOperation
 ) -> None:
     """1P casilla "03" = 1.800,00 EUR (base 10.000,00, 18%).
 
-    Oracle: AEAT Manual practico de Sociedades 2024, Cap. 15, Ejemplo, "Primer
-    pago" (pagina 811): "Base del pago fraccionado: (12.000 - 2.000) = 10.000
+    Oracle: AEAT Manual practico de Sociedades, Cap. 15, Ejemplo, "Primer
+    pago": "Base del pago fraccionado: (12.000 - 2.000) = 10.000
     euros. 18% de 10.000 euros = 1.800 euros".
     """
     result = _calculate_m202(
-        secure_objects, period_code="1P", cuota_base_ejercicio_anterior=_BASE_PRIMER_PAGO_EXPECTED, operation=operation
+        secure_objects,
+        exercise=exercise,
+        period_code="1P",
+        cuota_base_ejercicio_anterior=_BASE_PRIMER_PAGO_EXPECTED,
+        operation=operation,
     )
     assert result.revision.casilla_values[_CASILLA_A_INGRESAR] == _A_INGRESAR_PRIMER_PAGO_EXPECTED
 
 
-def test_m202_2025_segundo_pago_manual_worked_example(
-    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
+@pytest.mark.parametrize("exercise", _EXAMPLE_EXERCISES)
+def test_m202_segundo_pago_manual_worked_example(
+    secure_objects: SecureObjectRepository, exercise: int, *, operation: PinnedAuthorityOperation
 ) -> None:
     """2P casilla "03" = 450,00 EUR (base 2.500,00, 18%).
 
-    Oracle: AEAT Manual practico de Sociedades 2024, Cap. 15, Ejemplo, "Segundo
-    pago" (pagina 811): "18% de (3.000 - 500) = 450 euros".
+    Oracle: AEAT Manual practico de Sociedades, Cap. 15, Ejemplo, "Segundo
+    pago": "18% de (3.000 - 500) = 450 euros".
     """
     result = _calculate_m202(
         secure_objects,
+        exercise=exercise,
         period_code="2P",
         cuota_base_ejercicio_anterior=_BASE_SEGUNDO_TERCER_PAGO_EXPECTED,
         operation=operation,
@@ -264,18 +338,19 @@ def test_m202_2025_segundo_pago_manual_worked_example(
     assert result.revision.casilla_values[_CASILLA_A_INGRESAR] == _A_INGRESAR_SEGUNDO_TERCER_PAGO_EXPECTED
 
 
-def test_m202_2025_tercer_pago_manual_worked_example(
-    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
+@pytest.mark.parametrize("exercise", _EXAMPLE_EXERCISES)
+def test_m202_tercer_pago_manual_worked_example(
+    secure_objects: SecureObjectRepository, exercise: int, *, operation: PinnedAuthorityOperation
 ) -> None:
     """3P casilla "03" = 450,00 EUR (base 2.500,00, 18%), same figures as 2P.
 
-    Oracle: AEAT Manual practico de Sociedades 2024, Cap. 15, Ejemplo, "Tercer
-    pago" (pagina 811): "18% de (3.000 - 500) = 450 euros" - the manual states
-    the third instalment reuses the same ejercicio-2024 cuota/retenciones as
-    the second.
+    Oracle: AEAT Manual practico de Sociedades, Cap. 15, Ejemplo, "Tercer
+    pago": "18% de (3.000 - 500) = 450 euros" - the manual states the third
+    instalment reuses the same prior-ejercicio cuota/retenciones as the second.
     """
     result = _calculate_m202(
         secure_objects,
+        exercise=exercise,
         period_code="3P",
         cuota_base_ejercicio_anterior=_BASE_SEGUNDO_TERCER_PAGO_EXPECTED,
         operation=operation,
@@ -283,19 +358,22 @@ def test_m202_2025_tercer_pago_manual_worked_example(
     assert result.revision.casilla_values[_CASILLA_A_INGRESAR] == _A_INGRESAR_SEGUNDO_TERCER_PAGO_EXPECTED
 
 
+@pytest.mark.parametrize("exercise", _EXAMPLE_EXERCISES)
 @pytest.mark.parametrize(
-    ("period_code", "cuota_base_ejercicio_anterior", "expected_filing_date"),
+    ("period_code", "cuota_base_ejercicio_anterior", "filing_month", "filing_day"),
     (
-        ("1P", _BASE_PRIMER_PAGO_EXPECTED, date(2025, 4, 30)),
-        ("2P", _BASE_SEGUNDO_TERCER_PAGO_EXPECTED, date(2025, 10, 31)),
-        ("3P", _BASE_SEGUNDO_TERCER_PAGO_EXPECTED, date(2025, 12, 31)),
+        ("1P", _BASE_PRIMER_PAGO_EXPECTED, 4, 30),
+        ("2P", _BASE_SEGUNDO_TERCER_PAGO_EXPECTED, 10, 31),
+        ("3P", _BASE_SEGUNDO_TERCER_PAGO_EXPECTED, 12, 31),
     ),
 )
 def test_m202_calculation_revision_replays_to_draft_on_the_same_sanctioned_filing_date(
     secure_objects: SecureObjectRepository,
+    exercise: int,
     period_code: str,
     cuota_base_ejercicio_anterior: Decimal,
-    expected_filing_date: date,
+    filing_month: int,
+    filing_day: int,
     *,
     operation: PinnedAuthorityOperation,
 ) -> None:
@@ -308,12 +386,14 @@ def test_m202_calculation_revision_replays_to_draft_on_the_same_sanctioned_filin
     """
     calculated = _calculate_m202(
         secure_objects,
+        exercise=exercise,
         period_code=period_code,
         cuota_base_ejercicio_anterior=cuota_base_ejercicio_anterior,
         operation=operation,
     ).revision
     work_unit = WorkUnitCatalogueRepository(objects=secure_objects).load().get(calculated.work_unit_id)
     assert work_unit is not None
+    expected_filing_date = date(exercise, filing_month, filing_day)
     assert calculation_filing_date(work_unit.period) == expected_filing_date
     assert filing_period_date(work_unit.period) == expected_filing_date
 
@@ -334,8 +414,9 @@ def test_m202_calculation_revision_replays_to_draft_on_the_same_sanctioned_filin
     assert draft_values[_CASILLA_A_INGRESAR] == calculated.casilla_values[_CASILLA_A_INGRESAR]
 
 
+@pytest.mark.parametrize("exercise", _EXAMPLE_EXERCISES)
 def test_casilla_01_anti_tautology_delta_changes_casilla_03_proportionally(
-    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
+    secure_objects: SecureObjectRepository, exercise: int, *, operation: PinnedAuthorityOperation
 ) -> None:
     """Anti-tautology: the manual's own base delta must produce its own result delta.
 
@@ -348,10 +429,15 @@ def test_casilla_01_anti_tautology_delta_changes_casilla_03_proportionally(
     manual's own 1.800,00 - 450,00 = 1.350,00.
     """
     primer_pago = _calculate_m202(
-        secure_objects, period_code="1P", cuota_base_ejercicio_anterior=_BASE_PRIMER_PAGO_EXPECTED, operation=operation
+        secure_objects,
+        exercise=exercise,
+        period_code="1P",
+        cuota_base_ejercicio_anterior=_BASE_PRIMER_PAGO_EXPECTED,
+        operation=operation,
     )
     segundo_pago = _calculate_m202(
         secure_objects,
+        exercise=exercise,
         period_code="2P",
         cuota_base_ejercicio_anterior=_BASE_SEGUNDO_TERCER_PAGO_EXPECTED,
         operation=operation,
@@ -369,7 +455,7 @@ def test_casilla_01_anti_tautology_delta_changes_casilla_03_proportionally(
     )
 
 
-def test_m202_2025_manual_grounding_is_enrolled_and_raises_independently_grounded_fraction() -> None:
+def test_m202_manual_grounding_is_enrolled_and_raises_independently_grounded_fraction() -> None:
     """The manual-oracle grounding of casilla "03" is enrolled, not just computed.
 
     A companion registry-honesty gate
@@ -385,10 +471,15 @@ def test_m202_2025_manual_grounding_is_enrolled_and_raises_independently_grounde
     M202 rather than sitting inert in TOML. Not tautological: the grounded
     set and the fraction are read from the registry's own declared and
     validated data, never hand-computed or asserted from a synthetic
-    fixture.
+    fixture. The exercise is the one the enrolled oracle payload declares, and the
+    manual edition it cites prints the example for that exercise.
     """
+    cited_edition = next(
+        edition for edition in _EXAMPLE_PAYMENT_EXERCISE_BY_EDITION if f"/sociedades/{edition}/" in _ORACLE_LOCATOR
+    )
+    assert _EXAMPLE_PAYMENT_EXERCISE_BY_EDITION[cited_edition] == _ORACLE_EXERCISE
     authority = published_authority_operation()
-    snapshot = authority.snapshot(_M202, filing_year=_FILING_YEAR, period="1P")
+    snapshot = authority.snapshot(_M202, filing_year=_ORACLE_EXERCISE, period="1P")
     policy = snapshot.verification_policy()
 
     assert _CASILLA_A_INGRESAR in policy.externally_grounded_casilla_ids

@@ -1,9 +1,9 @@
-"""Independent 2025 Modelo 131 activity-identity prerequisite.
+"""Independent Modelo 131 activity-identity prerequisite.
 
 The bundled AEAT Modelo 131 instructions require an IAE epigraph for each
 independent activity and describe its rendimiento neto as an annual-base
 amount used for the quarterly payment calculation.  The existing M131 oracle
-tables independently transcribe the 2025 Orden HAC/1347/2024 coefficients.
+tables independently transcribe the Orden HAC/1347/2024 coefficients.
 
 This test is deliberately only a source-capability prerequisite.  It keeps
 the activity-level values keyed by epigraph and does not synthesize an
@@ -18,9 +18,13 @@ import pytest
 
 from .....core.authority_grade import RegistryAuthorityGrade
 from ..formula_runtime import calculate_registry_snapshot
-from .published_authority import published_snapshot
+from .published_authority import published_legal_reference, published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+# Orden HAC/1347/2024 fixes the modulos coefficients for the exercise it is in force;
+# the expected activity values below are transcribed from it.
+_ORDEN_HAC_1347_2024_EXERCISE = published_legal_reference("orden-hac-1347-2024:art-4").effective_from.year
 
 _PERIODS = ("1T", "2T", "3T", "4T")
 _ZERO_MODULE_INPUTS = {
@@ -56,7 +60,9 @@ _ACTIVITY_CASES = {
 
 
 def _calculate_activity_value(period: str, epigrafe: str, module_inputs: dict[str, Decimal]) -> Decimal:
-    snapshot = published_snapshot("131", filing_year=2025, period=period, grade=RegistryAuthorityGrade.CALCULATION)
+    snapshot = published_snapshot(
+        "131", filing_year=_ORDEN_HAC_1347_2024_EXERCISE, period=period, grade=RegistryAuthorityGrade.CALCULATION
+    )
     assert snapshot.filing_period is not None
     result = calculate_registry_snapshot(
         snapshot,
@@ -68,7 +74,7 @@ def _calculate_activity_value(period: str, epigrafe: str, module_inputs: dict[st
     return result.values["modulos-rendimiento-neto-actividad"]
 
 
-def test_2025_activity_identity_preserves_annual_base_across_quarters() -> None:
+def test_activity_identity_preserves_annual_base_across_quarters() -> None:
     """Each independent activity keeps its own annual-base result in 1T-4T."""
     observed = {
         period: {

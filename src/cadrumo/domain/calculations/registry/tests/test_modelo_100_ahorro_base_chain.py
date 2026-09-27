@@ -34,18 +34,21 @@ The anti-tautology property is enforced by tests that vary the input and verify 
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import date
 from decimal import Decimal
 
 import pytest
 
 from .....core.aggregation import BindingAggregationOp
+from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from ..binding_aggregation import binding_aggregation_op
 from ..formula_runtime import calculate_registry_snapshot
 from ..relations import relation_prefill_bindings_for_period, resolve_relation_values
 from ..schema import RegistrySnapshot
 from ._modelo_100_registry_support import M100_2024_EMPTY_MATERNIDAD_BINDINGS
+from .authored_editions import newest_authored_edition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -53,7 +56,9 @@ _M100_2024_MATERNIDAD_BINDINGS = M100_2024_EMPTY_MATERNIDAD_BINDINGS
 
 # ── shared date contexts ──────────────────────────────────────────────────────
 _DATE_2024 = {"filing_period": date(2024, 12, 31)}
-_DATE_2025 = {"filing_period": date(2025, 12, 31)}
+# The newest Modelo 100 edition the registry authors.
+_REVIEWED_EDITION = newest_authored_edition("100")
+_DATE_REVIEWED_EDITION = {"filing_period": date(_REVIEWED_EDITION, 12, 31)}
 
 # ── minimal binding_values required by M100 2024/2025 bound casillas ─────────
 _BINDINGS_2024: dict[str, Decimal] = {
@@ -244,15 +249,18 @@ def test_0460_scales_proportionally_with_capital_mobiliario_input(m100_2024_snap
     )
 
 
-# ── 2025 revision: same defect must also be fixed ─────────────────────────────
+# ── reviewed edition: same defect must also be fixed ──────────────────────────
 
 
-def test_2025_0029_dividends_20000_populates_0460(m100_2025_snapshot: RegistrySnapshot) -> None:
-    """2025 revision: same Art. 49.1.a chain must hold.
+def test_reviewed_edition_0029_dividends_20000_populates_0460(
+    registry_snapshot: Callable[..., RegistrySnapshot],
+) -> None:
+    """The reviewed edition: same Art. 49.1.a chain must hold.
 
-    Both the 2024 and 2025 formulas had the same missing-0041 defect.
+    Every shipped M100 revision had the same missing-0041 defect.
     """
-    _bindings_2025: dict[str, Decimal] = {
+    snapshot = registry_snapshot("100", _REVIEWED_EDITION, "0A", grade=RegistryAuthorityGrade.CALCULATION)
+    bindings: dict[str, Decimal] = {
         # The production profile resolver supplies this predicate as 1/0 from
         # taxpayer_type.irpf_income_categories; the scenario models a directa filer.
         "renta-profile-has-economic-activity": Decimal("1"),
@@ -278,26 +286,26 @@ def test_2025_0029_dividends_20000_populates_0460(m100_2025_snapshot: RegistrySn
         "renta-maritime-annual-salary": Decimal("0"),
         "renta-maritime-qualifying-days": Decimal("0"),
     }
-    # 2025 revision requires all cross-model relation values; supply zeros for
+    # The reviewed edition requires all cross-model relation values; supply zeros for
     # all relations so the ahorro chain can be exercised in isolation.
-    relation_values_2025 = resolve_relation_values(
-        m100_2025_snapshot.revision,
+    relation_values = resolve_relation_values(
+        snapshot.revision,
         {
             binding.id: (
                 Decimal("0") if binding_aggregation_op(binding) == BindingAggregationOp.COPY else (Decimal("0"),)
             )
-            for binding, _ in relation_prefill_bindings_for_period(m100_2025_snapshot.revision, period="0A")
+            for binding, _ in relation_prefill_bindings_for_period(snapshot.revision, period="0A")
         },
         period="0A",
     )
     result = calculate_registry_snapshot(
-        m100_2025_snapshot,
+        snapshot,
         inputs={_CAPITAL_MOBILIARIO_DIVIDENDOS_CASILLA: Decimal("20000")},
-        date_context=_DATE_2025,
+        date_context=_DATE_REVIEWED_EDITION,
         enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
-        binding_values=_bindings_2025,
-        relation_values=relation_values_2025,
-        date_binding_values={"renta-profile-taxpayer-birth-date": date(1975, 6, 15)},
+        binding_values=bindings,
+        relation_values=relation_values,
+        date_binding_values={"renta-profile-taxpayer-birth-date": date(_REVIEWED_EDITION - 50, 6, 15)},
         # Art. 75 Ley 19/1994 maritime-worker exemption path; neutral false
         # when the chain under test is unrelated.
         boolean_binding_values={"renta-maritime-path-rebeca": False},
@@ -305,7 +313,7 @@ def test_2025_0029_dividends_20000_populates_0460(m100_2025_snapshot: RegistrySn
     values = dict(result.values)
 
     assert values[_BASE_IMPONIBLE_AHORRO_CASILLA] >= Decimal("20000"), (
-        f"2025: casilla 0460 = {values[_BASE_IMPONIBLE_AHORRO_CASILLA]!r}; expected ≥ 20000.  "
-        "Defect #181 also affects the 2025 revision.  "
-        "Check 2025/formulas/0168-renta-base-imponible-del-ahorro.toml."
+        f"{_REVIEWED_EDITION}: casilla 0460 = {values[_BASE_IMPONIBLE_AHORRO_CASILLA]!r}; expected ≥ 20000.  "
+        f"Defect #181 also affects the {_REVIEWED_EDITION} revision.  "
+        "Check its renta-base-imponible-del-ahorro formula."
     )

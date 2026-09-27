@@ -1,22 +1,19 @@
-"""Modelo 131 estimación-objetiva módulos engine — 2024 historical back-fill.
+"""Modelo 131 estimación-objetiva módulos engine — Orden HAC/1425/2025 roll-forward parity.
 
-The 2024 revision's módulos engine (fase 1ª rendimiento neto previo, fase 2ª
-rendimiento neto minorado, fase 3ª rendimiento neto de módulos, fase 4ª
-reducción general) was authored after the 2025 and 2026 revisions already
-carried it. Orden HFP/1359/2023 (the 2024 filing year's applicable Orden)
-reproduces the same euro figures as Orden HAC/1347/2024 for every currently
-tabled activity, the same reducción general (5 por ciento), the same
-incentivos-al-empleo coeficiente/tramos, and the same índice corrector de
-exceso (1,30) with matching cuantías (confirmed by a full numeric diff of the
-bundled corpus text at authoring time).
+The 2026 revision replicates the 2025 revision's four-fase módulos engine
+(coefficient table, casillas, formulas, verification predicates) because the
+bundled Orden HAC/1425/2025 Anexo II reproduces the same euro figures as Orden
+HAC/1347/2024 for every currently-tabled activity
+(confirmed by a full numeric diff of the corpus text at authoring time: every
+signos/módulos rendimiento figure, every índice-corrector-de-exceso cuantía,
+the reducción general, and the incentivos-al-empleo tramos/incremento
+coefficients are byte-identical between the two Ordenes).
 
 Non-tautological: the expected figures below are transcribed independently
-from the bundled ``corpus/normatives/html/orden-hfp-1359-2023.html`` — the
-2024 filing year's own applicable Orden — and the fase 2ª/3ª/4ª arithmetic is
+from the bundled ``corpus/normatives/html/orden-hac-1425-2025.html`` — the
+2026 filing year's own applicable Orden — and the fase 2ª/3ª/4ª arithmetic is
 reproduced by an independent helper (not the registry formula under test)
-before being compared against the engine's output. A dedicated date-axis
-section proves the year-scoped coefficient parameters do not leak across
-revision boundaries.
+before being compared against the engine's output.
 
 See Also:
     :mod:`~domain.calculations.registry._formula_runtime_m131`
@@ -24,16 +21,13 @@ See Also:
     :func:`~domain.calculations.registry.calculate_registry_snapshot`
         Public registry calculation entry point exercised by the parity cases.
     :mod:`~domain.calculations.registry.tests.test_modelo_131_modulos_engine`
-        Baseline 2025 módulos-engine behavior this back-fill must reproduce.
-    :mod:`~domain.calculations.registry.tests.test_modelo_131_modulos_engine_2026_rollforward`
-        Sibling roll-forward proof for the 2026 revision.
-    ``src/cadrumo/_data/registry/aeat/modelos/131/revisions/2024/formulas/``
-        Registry-authored 2024 formula chain under test.
+        Baseline 2025 módulos-engine behavior this roll-forward must preserve.
+    ``src/cadrumo/_data/registry/aeat/modelos/131/revisions/2026/formulas/``
+        Registry-authored 2026 formula chain under test.
 """
 
 from __future__ import annotations
 
-from datetime import date
 from decimal import Decimal
 
 import pytest
@@ -41,16 +35,19 @@ import pytest
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.money.rounding import round_to_cents
 from ..formula_runtime import calculate_registry_snapshot
-from ..temporal import select_revision
-from .published_authority import published_snapshot
-from .registry_tree import bundled_registry_tree
+from .published_authority import published_legal_reference, published_snapshot
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-# Rendimiento anual por unidad antes de amortización (Orden HFP/1359/2023
-# Anexo II, filing year 2024), independently transcribed from the 2024 Orden
+# Orden HAC/1425/2025 fixes the módulos for the exercise it is in force, and Orden
+# HAC/1347/2024 for the one before; both Ordenes are the transcription sources cited below.
+_ORDEN_HAC_1425_2025_EXERCISE = published_legal_reference("orden-hac-1425-2025:art-4").effective_from.year
+_ORDEN_HAC_1347_2024_EXERCISE = published_legal_reference("orden-hac-1347-2024:art-4").effective_from.year
+
+# Rendimiento anual por unidad antes de amortización (Orden HAC/1425/2025
+# Anexo II, filing year 2026), independently transcribed from the 2026 Orden
 # corpus text for cross-check — a discrepancy between these literals and the
-# registry parameter values would fail the assertions below, proving the 2024
+# registry parameter values would fail the assertions below, proving the 2026
 # coefficient table is grounded (not merely copy-pasted from 2025 without
 # re-verification).
 _PELUQUERIA_972_1 = {
@@ -65,12 +62,12 @@ _AUTOTAXI_721_2 = {
     3: Decimal("45.08"),  # distancia recorrida (1.000 km)
 }
 
-_REDUCCION_GENERAL_2024 = Decimal("0.05")
+_REDUCCION_GENERAL = Decimal("0.05")
 
 # Fase 2ª — coeficiente por tramos del número de unidades del módulo
-# "personal asalariado" (Orden HFP/1359/2023 Anexo II, instrucción 2.2.a),
+# "personal asalariado" (Orden HAC/1425/2025 Anexo II, instrucción 2.2.a),
 # independently transcribed for cross-check against the registry's
-# m131-modulos-coeficiente-tramos-asalariados-2024 bracket_table parameter.
+# m131-modulos-coeficiente-tramos-asalariados-2026 bracket_table parameter.
 _COEFICIENTE_INCREMENTO_ASALARIADOS = Decimal("0.40")
 _TRAMOS_ASALARIADOS = (
     (Decimal("0"), Decimal("1.00"), Decimal("0.10")),
@@ -80,10 +77,10 @@ _TRAMOS_ASALARIADOS = (
     (Decimal("8.00"), None, Decimal("0.30")),
 )
 
-# Fase 3ª — índice corrector de exceso (Orden HFP/1359/2023 Anexo II,
+# Fase 3ª — índice corrector de exceso (Orden HAC/1425/2025 Anexo II,
 # instrucción 2.3.b.3): índice 1,30 applied to the excess over the tabled
-# cuantía. Independently transcribed from the 2024 Orden Anexo II table,
-# matching the registry's m131-modulos-cuantia-exceso-2024 parameter.
+# cuantía. Independently transcribed from the 2026 Orden Anexo II table,
+# matching the registry's m131-modulos-cuantia-exceso-2026 parameter.
 _INDICE_EXCESO = Decimal("1.30")
 _CUANTIA_EXCESO_972_1 = Decimal("18051.81")
 
@@ -91,7 +88,7 @@ _CUANTIA_EXCESO_972_1 = Decimal("18051.81")
 def _coeficiente_tramos(base: Decimal) -> Decimal:
     """Reproduce the coeficiente-por-tramos progressive-bracket lookup.
 
-    Mirrors the registry's ``m131-modulos-coeficiente-tramos-asalariados-2024``
+    Mirrors the registry's ``m131-modulos-coeficiente-tramos-asalariados-2026``
     bracket_table (cumulative fixed_addition + marginal_rate x remainder),
     independently transcribed here rather than re-derived from the formula
     under test.
@@ -122,7 +119,7 @@ def _expected_modulos(minorado: Decimal, *, cuantia: Decimal | None) -> Decimal:
     return round_to_cents(cuantia + _INDICE_EXCESO * (minorado - cuantia))
 
 
-def _run_modulos_engine_2024(
+def _run_hac_1425_engine(
     epigrafe: str | None,
     *,
     modulo_1: Decimal = Decimal("0"),
@@ -130,7 +127,9 @@ def _run_modulos_engine_2024(
     modulo_3: Decimal = Decimal("0"),
     modulo_4: Decimal = Decimal("0"),
 ) -> tuple[Decimal, Decimal, Decimal, Decimal]:
-    snapshot = published_snapshot("131", filing_year=2024, period="1T", grade=RegistryAuthorityGrade.CALCULATION)
+    snapshot = published_snapshot(
+        "131", filing_year=_ORDEN_HAC_1425_2025_EXERCISE, period="1T", grade=RegistryAuthorityGrade.CALCULATION
+    )
     assert snapshot.filing_period is not None
     text_inputs = {"modulos-epigrafe": epigrafe} if epigrafe else {}
     result = calculate_registry_snapshot(
@@ -158,12 +157,12 @@ def _run_modulos_engine_2024(
     )
 
 
-class TestPeluqueria9721EstimacionObjetiva2024:
-    """Epígrafe IAE 972.1 (Servicios de peluquería) on the 2024 revision."""
+class TestPeluqueria9721EstimacionObjetivaHac1425Orden:
+    """Epígrafe IAE 972.1 (Servicios de peluquería) on the Orden HAC/1425/2025 revision."""
 
-    def test_fase_1_rendimiento_neto_previo_matches_2024_orden_coefficients(self) -> None:
+    def test_fase_1_rendimiento_neto_previo_matches_hac_1425_orden_coefficients(self) -> None:
         # 2 personal asalariado, 1 personal no asalariado, 50 m2 local, 30 (100 kWh).
-        previo, _minorado, _modulos, _actividad = _run_modulos_engine_2024(
+        previo, _minorado, _modulos, _actividad = _run_hac_1425_engine(
             "972.1",
             modulo_1=Decimal("2"),
             modulo_2=Decimal("1"),
@@ -178,8 +177,8 @@ class TestPeluqueria9721EstimacionObjetiva2024:
         )
         assert previo == expected_previo == Decimal("23153.67")
 
-    def test_fases_2_3_4_reproduce_independent_computation_on_2024_orden(self) -> None:
-        previo, minorado, modulos, actividad = _run_modulos_engine_2024(
+    def test_fases_2_3_4_reproduce_independent_computation_on_hac_1425_orden(self) -> None:
+        previo, minorado, modulos, actividad = _run_hac_1425_engine(
             "972.1",
             modulo_1=Decimal("2"),
             modulo_2=Decimal("1"),
@@ -192,18 +191,18 @@ class TestPeluqueria9721EstimacionObjetiva2024:
             modulo_1_coefficient=_PELUQUERIA_972_1[1],
         )
         expected_modulos = _expected_modulos(expected_minorado, cuantia=_CUANTIA_EXCESO_972_1)
-        expected_actividad = round_to_cents(expected_modulos - expected_modulos * _REDUCCION_GENERAL_2024)
+        expected_actividad = round_to_cents(expected_modulos - expected_modulos * _REDUCCION_GENERAL)
         assert minorado == expected_minorado == Decimal("22363.20")
         assert modulos == expected_modulos == Decimal("23656.62")
         assert actividad == expected_actividad == Decimal("22473.79")
 
 
-class TestAutotaxi7212EstimacionObjetiva2024:
-    """Epígrafe IAE 721.2 (Transporte por autotaxis) on the 2024 revision."""
+class TestAutotaxi7212EstimacionObjetivaHac1425Orden:
+    """Epígrafe IAE 721.2 (Transporte por autotaxis) on the Orden HAC/1425/2025 revision."""
 
-    def test_fase_1_rendimiento_neto_previo_matches_2024_orden_coefficients(self) -> None:
+    def test_fase_1_rendimiento_neto_previo_matches_hac_1425_orden_coefficients(self) -> None:
         # 0 personal asalariado, 1 personal no asalariado (titular), 40 (1.000 km).
-        previo, _minorado, _modulos, _actividad = _run_modulos_engine_2024(
+        previo, _minorado, _modulos, _actividad = _run_hac_1425_engine(
             "721.2",
             modulo_1=Decimal("0"),
             modulo_2=Decimal("1"),
@@ -213,11 +212,11 @@ class TestAutotaxi7212EstimacionObjetiva2024:
         assert previo == expected_previo == Decimal("9460.09")
 
 
-class TestModulos2024PartialTableCoverageDoesNotSilentlyMisattribute:
-    """A 2024 activity absent from the phased dataset resolves to zero, not a fabricated figure."""
+class TestHac1425OrdenPartialTableCoverageDoesNotSilentlyMisattribute:
+    """An Orden HAC/1425/2025 activity absent from the phased dataset resolves to zero, not a fabricated figure."""
 
-    def test_untabled_epigrafe_resolves_to_zero_on_2024_revision(self) -> None:
-        previo, minorado, modulos, actividad = _run_modulos_engine_2024(
+    def test_untabled_epigrafe_resolves_to_zero_on_hac_1425_orden_revision(self) -> None:
+        previo, minorado, modulos, actividad = _run_hac_1425_engine(
             "699.9",  # not an Orden Anexo II épigrafe — remains untabled
             modulo_1=Decimal("5"),
             modulo_2=Decimal("3"),
@@ -227,21 +226,21 @@ class TestModulos2024PartialTableCoverageDoesNotSilentlyMisattribute:
         assert modulos == Decimal("0")
         assert actividad == Decimal("0")
 
-    def test_2024_and_2025_engines_agree_for_the_same_tabled_activity(self) -> None:
+    def test_hac_1347_and_hac_1425_orden_engines_agree_for_the_same_tabled_activity(self) -> None:
         """Cross-revision parity proof.
 
-        The 2024 and 2025 engines must produce the same rendimiento-neto-de-la-
+        The 2025 and 2026 engines must produce the same rendimiento-neto-de-la-
         actividad figure for the same declared units on an épigrafe whose Orden
         coefficients are byte-identical across both years — an independent check
-        that the 2024 back-fill did not silently drift from its 2025 source
+        that the 2026 replication did not silently drift from its 2025 source
         (aeat-calculation-aggregation).
         """
-        snapshot_2025 = published_snapshot(
-            "131", filing_year=2025, period="1T", grade=RegistryAuthorityGrade.CALCULATION
+        predecessor_snapshot = published_snapshot(
+            "131", filing_year=_ORDEN_HAC_1347_2024_EXERCISE, period="1T", grade=RegistryAuthorityGrade.CALCULATION
         )
-        assert snapshot_2025.filing_period is not None
-        result_2025 = calculate_registry_snapshot(
-            snapshot_2025,
+        assert predecessor_snapshot.filing_period is not None
+        predecessor_result = calculate_registry_snapshot(
+            predecessor_snapshot,
             inputs={
                 "modulos-1-unidades": Decimal("2"),
                 "modulos-2-unidades": Decimal("1"),
@@ -254,73 +253,14 @@ class TestModulos2024PartialTableCoverageDoesNotSilentlyMisattribute:
                 "modulos-minoracion-inversion": Decimal("0"),
             },
             text_inputs={"modulos-epigrafe": "972.1"},
-            date_context={"filing_period": snapshot_2025.filing_period.end_date},
+            date_context={"filing_period": predecessor_snapshot.filing_period.end_date},
         )
-        _previo_2024, _minorado_2024, _modulos_2024, actividad_2024 = _run_modulos_engine_2024(
+        _previo, _minorado, _modulos, actividad = _run_hac_1425_engine(
             "972.1",
             modulo_1=Decimal("2"),
             modulo_2=Decimal("1"),
             modulo_3=Decimal("50"),
             modulo_4=Decimal("30"),
         )
-        actividad_2025 = result_2025.values["modulos-rendimiento-neto-actividad"]
-        assert actividad_2024 == actividad_2025 == Decimal("22473.79")
-
-
-class TestModulos2024DateAxisBoundaries:
-    """Historical date-axis boundaries: the 2024 revision and its módulos
-    coefficient table are scoped to calendar year 2024 and do not leak into
-    neighbouring revisions.
-    """
-
-    def test_filing_year_2024_selects_the_2024_revision_across_the_calendar_year(self) -> None:
-        modelos, _catalogues = bundled_registry_tree()
-        modelo_131 = next(modelo for modelo in modelos if modelo.id == "131")
-        revision = select_revision(modelo_131, filing_year=2024, period="1T", on=date(2024, 1, 1))
-        assert revision.id == "2024"
-        revision = select_revision(modelo_131, filing_year=2024, period="4T", on=date(2024, 12, 31))
-        assert revision.id == "2024"
-
-    def test_filing_year_boundaries_do_not_cross_into_the_2024_revision(self) -> None:
-        modelos, _catalogues = bundled_registry_tree()
-        modelo_131 = next(modelo for modelo in modelos if modelo.id == "131")
-        # 2023-12-31 (the last day before the 2024 revision's valid_from)
-        # resolves to the flatter historical 2019-2023 revision, not 2024.
-        revision_2023 = select_revision(modelo_131, filing_year=2023, period="4T", on=date(2023, 12, 31))
-        assert revision_2023.id == "2019-2023"
-        # 2025-01-01 (the first day after the 2024 revision's valid_to)
-        # resolves to the 2025 revision, not 2024.
-        revision_2025 = select_revision(modelo_131, filing_year=2025, period="1T", on=date(2025, 1, 1))
-        assert revision_2025.id == "2025"
-
-    def test_2024_coefficient_parameters_are_scoped_to_calendar_year_2024(self) -> None:
-        snapshot = published_snapshot("131", filing_year=2024, period="1T", grade=RegistryAuthorityGrade.CALCULATION)
-        coeficientes = next(
-            parameter for parameter in snapshot.revision.parameters if parameter.id == "m131-modulos-coeficientes"
-        )
-        for row in coeficientes.keyed_brackets:
-            assert row.valid_from == date(2024, 1, 1)
-            assert row.valid_to == date(2024, 12, 31)
-
-        reduccion_general = next(
-            parameter for parameter in snapshot.revision.parameters if parameter.id == "m131-modulos-reduccion-general"
-        )
-        for value in reduccion_general.values:
-            assert value.valid_from == date(2024, 1, 1)
-            assert value.valid_to == date(2024, 12, 31)
-
-    def test_2024_and_2025_coefficient_tables_are_year_scoped(self) -> None:
-        """The 2024 and 2025 revisions share the coefficient parameter's identity;
-        neither revision's snapshot carries a row dated in the other year."""
-        for year in (2024, 2025):
-            snapshot = published_snapshot(
-                "131", filing_year=year, period="1T", grade=RegistryAuthorityGrade.CALCULATION
-            )
-            coeficientes = next(
-                parameter for parameter in snapshot.revision.parameters if parameter.id == "m131-modulos-coeficientes"
-            )
-            assert coeficientes.keyed_brackets, year
-            for row in coeficientes.keyed_brackets:
-                assert row.valid_from is not None
-                assert row.valid_from.year == year
-                assert row.valid_to is None or row.valid_to.year == year
+        predecessor_actividad = predecessor_result.values["modulos-rendimiento-neto-actividad"]
+        assert predecessor_actividad == actividad == Decimal("22473.79")

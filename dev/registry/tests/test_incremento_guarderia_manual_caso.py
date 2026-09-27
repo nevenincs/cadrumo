@@ -1,9 +1,10 @@
-"""Art. 81.2 guardería ceiling scope on the AEAT Renta 2020 worked case (casilla 0613).
+"""Art. 81.2 guardería ceiling scope on an AEAT Renta worked case (casilla 0613).
 
-Filing year 2020 lies below the published supported-year floor, so the published
-generation refuses to answer it. The authored registry still carries the 2020
-revision and the governed facts that dated it, and this case inspects that
-authored source through the development compiler's validated authority.
+The earliest editions that print the case lie below the published supported-year
+floor, so the published generation refuses to answer them. The authored registry
+still carries those revisions and the governed facts that dated them, and this
+case inspects that authored source through the development compiler's validated
+authority.
 """
 
 from __future__ import annotations
@@ -22,11 +23,14 @@ from cadrumo.domain.contribuyente.family_types import MinimoDescendientesThresho
 from cadrumo.domain.contribuyente.guarderia_mensual import parse_guarderia_mensual
 from cadrumo.domain.contribuyente.meses_trabajo import parse_meses_trabajo
 
+from .authored_edition_support import manual_editions_printing
 from .profile_schema_support import authored_history_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("authored_history_fact_scope")]
 
-_YEAR = 2020
+# Every bundled AEAT Renta manual edition that prints this worked caso: its eight
+# nursery months (January to June, October and November) and its 666,64 result.
+_CASO_EDITIONS = manual_editions_printing("renta", "666,64", "octubre y noviembre")
 
 #: "puede alcanzar hasta 1.000 euros anuales". Supplied by the caller in
 #: production from its registry parameter; named here so the expectation below
@@ -56,10 +60,11 @@ def _context(filing_year: int) -> FamilyFactResolutionContext:
     return FamilyFactResolutionContext(authored_history_authority(), coordinate, coordinate)
 
 
-def test_a_child_who_never_turns_three_keeps_months_after_september() -> None:
-    """The boundary pin, on AEAT's own 2020 caso — the ceiling is scoped, not general.
+@pytest.mark.parametrize("caso_exercise", _CASO_EDITIONS)
+def test_a_child_who_never_turns_three_keeps_months_after_september(caso_exercise: int) -> None:
+    """The boundary pin, on AEAT's own caso — the ceiling is scoped, not general.
 
-    Renta 2020 works a child who is two all year with NON-CONTIGUOUS nursery
+    The Renta manual works a child who is two all year with NON-CONTIGUOUS nursery
     months: January to June, plus OCTOBER and NOVEMBER, to eight months. Both of
     those fall after September, and AEAT counts them. A ceiling applied outside
     the turning-three período would silently drop two months the authority
@@ -71,17 +76,17 @@ def test_a_child_who_never_turns_three_keeps_months_after_september() -> None:
     not chased.
     """
     child = DescendantInfo(
-        birth_date=date(2018, 1, 31),
+        birth_date=date(caso_exercise - 2, 1, 31),
         meses_madre_trabajo=parse_meses_trabajo("1-12", field="test"),
         gastos_guarderia_euros=0,
         gastos_guarderia_mensuales=parse_guarderia_mensual("1-6:500;10:500;11:500", field="test"),
         segundo_ciclo_infantil_inicio_mes=None,
     )
 
-    assert child.guarderia_needs_segundo_ciclo_month(_YEAR, context=_context(_YEAR)) is False
+    assert child.guarderia_needs_segundo_ciclo_month(caso_exercise, context=_context(caso_exercise)) is False
     assert RentaFamilyProfile(descendientes=(child,)).incremento_guarderia_0613(
-        _YEAR,
-        thresholds=_authored_thresholds(_YEAR),
+        caso_exercise,
+        thresholds=_authored_thresholds(caso_exercise),
         cap_anual=_CAP_ANUAL,
-        context=_context(_YEAR),
+        context=_context(caso_exercise),
     ) == Decimal("666.67")

@@ -14,7 +14,10 @@ from ....domain.calculations.registry.applicability import ApplicabilityVerdict,
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.calendar_ccaa_catalogue import require_calendar_ccaa
 from ....domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
-from ....domain.calculations.registry.tests.published_authority import published_supported_filing_years
+from ....domain.calculations.registry.tests.published_authority import (
+    PublishedGovernedFactSource,
+    published_supported_filing_years,
+)
 from ....domain.contribuyente.entity_type import EntityType, LegalEntityForm
 from ....domain.deadlines.engine import DeadlineEngine
 from ....domain.deadlines.festivos import DeadlineHolidayCoverage
@@ -65,6 +68,8 @@ from .calendar_test_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_SUPPORT = PublishedGovernedFactSource().supported_filing_years()
 
 _M303_CENSO_ENROLMENT_KEYS = frozenset(
     {
@@ -916,28 +921,30 @@ def test_build_orders_entries_by_close_then_modelo_then_period(
     assert keys == sorted(keys)
 
 
-def test_build_preserves_each_modelo_303_2025_obligation_once_in_canonical_order(
+@pytest.mark.parametrize("filing_year", _SUPPORT.years)
+def test_build_preserves_each_modelo_303_obligation_once_in_canonical_order(
     authority_operation: PinnedAuthorityOperation,
+    filing_year: int,
 ) -> None:
     """Overview must not erase or multiply legal rows while projecting a schedule."""
     calendar = build_overview_calendar(
         _profile(),
-        OverviewCalendarRange(from_date=date(2025, 1, 1), to_date=date(2026, 2, 28)),
+        OverviewCalendarRange(from_date=date(filing_year, 1, 1), to_date=date(filing_year + 1, 2, 28)),
         operation=authority_operation,
-        today=date(2025, 1, 1),
+        today=date(filing_year, 1, 1),
     )
 
     coordinates = tuple(
         (entry.modelo, entry.period.filing_year, entry.period.registry_token)
         for entry in calendar.entries
-        if entry.modelo == "303" and entry.period.filing_year == 2025
+        if entry.modelo == "303" and entry.period.filing_year == filing_year
     )
 
     assert coordinates == (
-        ("303", 2025, "1T"),
-        ("303", 2025, "2T"),
-        ("303", 2025, "3T"),
-        ("303", 2025, "4T"),
+        ("303", filing_year, "1T"),
+        ("303", filing_year, "2T"),
+        ("303", filing_year, "3T"),
+        ("303", filing_year, "4T"),
     )
 
 
@@ -993,19 +1000,20 @@ def test_calendar_preserves_every_applicable_engine_row_for_all_supported_years(
         assert actual == expected, filing_year
 
 
-def test_build_tape_invocation_2025q4_through_2026q2_spans_year_boundary(
+def test_build_tape_invocation_from_prior_q4_through_horizon_q2_spans_year_boundary(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    """``--from 2025-10-01 --to 2026-07-20`` spans multiple years."""
+    """A ``--from``/``--to`` range from the prior fourth quarter into the horizon spans multiple years."""
+    horizon = _SUPPORT.horizon
     calendar = build_overview_calendar(
         _profile(),
-        OverviewCalendarRange(from_date=date(2025, 10, 1), to_date=date(2026, 7, 20)),
+        OverviewCalendarRange(from_date=date(horizon - 1, 10, 1), to_date=date(horizon, 7, 20)),
         operation=authority_operation,
-        today=date(2026, 5, 3),
+        today=date(horizon, 5, 3),
     )
     years = {entry.period.filing_year for entry in calendar.entries}
-    # The range straddles 2025 -> 2026, so both years must contribute.
-    assert 2025 in years or 2026 in years
+    # The range straddles the year boundary, so both years must contribute.
+    assert horizon - 1 in years or horizon in years
 
 
 def test_build_user_state_matches_engine_status_per_entry(

@@ -1,9 +1,11 @@
-"""Oracle test for M200 2024 casillas 00562/00592/00611, grounded against the
-AEAT Manual practico de Sociedades 2024's own "Ejemplo 1" worked example
-(Cap. 6, "Liquidacion del Impuesto sobre Sociedades: Determinacion de la deuda
-tributaria", "Cuota liquida minima (casilla 00619)", paginas 392-396).
+"""Oracle test for M200 casillas 00562/00592/00611, grounded against the AEAT
+Manual practico de Sociedades's own "Ejemplo 1" worked example (Cap. 6,
+"Liquidacion del Impuesto sobre Sociedades: Determinacion de la deuda
+tributaria", "Cuota liquida minima (casilla 00619)").
 
-Ground truth (bundled AEAT Manual practico de Sociedades 2024):
+The scenarios run for every bundled manual edition that prints the example's
+figures and whose exercise an authored Modelo 200 revision covers. The enrolled
+manual oracle payload cites the edition below:
 
     raw_evidence_locator: corpus/manuals/sociedades/2024/source.pdf#Pag.392-396
 
@@ -24,7 +26,7 @@ printed tables are quoted verbatim below and both are graded in this module
       "Cuota integra = Base imponible (2.000.000) x Tipo de gravamen (25%) =
        500.000 euros"
 
-    Liquidacion del IS 2024 (sin tributacion minima) (pag. 393-394), quoted
+    Liquidacion del IS (sin tributacion minima) (pag. 393-394), quoted
     verbatim:
       "Resultado cuenta de perdidas y ganancias [00500] 2.000.000"
       "Base imponible [00552] 2.000.000"
@@ -50,7 +52,7 @@ printed tables are quoted verbatim below and both are graded in this module
       "Cuota liquida [00592] 300.000 -"
       "Resultado de la liquidacion [01586] 300.000 -"
 
-Registry mapping (M200 2024 revision):
+Registry mapping (M200 revision covering the edition):
 
     casilla DP200014:00562 "Cuota integra" = formula
       `modelo-200-cuota-integra`: BI despues de la reserva de nivelacion
@@ -96,7 +98,7 @@ Registry mapping (M200 2024 revision):
       1.0 x (00592 - 0 - 0) = 00592 (no retenciones, no forales, and the
       taxpayer's tributacion_estado_porcentaje profile binding fed 100 -
       comun-regimen, matching the manual's scenario which mentions no
-      regimen foral). No Modelo 202 pagos fraccionados are seeded for 2024
+      regimen foral). No Modelo 202 pagos fraccionados are seeded for the exercise
       (the manual's Ejemplo 1 does not mention any pago a cuenta), so both
       M202 relations are seeded filed-zero (casillas 34 and 03) exactly as
       the proven `test_modelo_200_fold_in_live` fold-in scaffold does, making
@@ -121,6 +123,7 @@ formula that ignores casilla 00619 entirely.
 
 from __future__ import annotations
 
+import json
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -150,6 +153,7 @@ from cadrumo.core.period import Period
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions, manual_editions_printing
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
     revision_id_for_observation,
@@ -176,11 +180,8 @@ def bucket_id() -> str:
     return _BUCKET_ID
 
 
-_T0 = datetime(2026, 1, 15, 9, 0, tzinfo=UTC)
-_T1 = datetime(2026, 1, 15, 10, 0, tzinfo=UTC)
 _M200 = "200"
 _M202 = "202"
-_FILING_YEAR = 2024
 
 # Manual casilla inputs (Ejemplo 1, quoted verbatim in the module docstring).
 #
@@ -191,7 +192,6 @@ _FILING_YEAR = 2024
 # starting point. The FIGURE is the same 2.000.000 the example states twice,
 # and its locator cites both statements. That box choice predates this
 # declaration and is unchanged by it.
-_ORACLE_PAYLOAD_NAME = "modelo-200-2024-ejemplo1-tributacion-minima-empresa-grande.json"
 
 
 class _DeclaredInputs(BaseModel):
@@ -215,11 +215,9 @@ class _ManualWorkedExample(BaseModel):
     declared_inputs: _DeclaredInputs | None = None
 
 
-def _oracle_declared_figures(oracle_payload_name: str) -> dict[CasillaId, Decimal]:
-    path = Path(bundled_path("corpus", "manual_oracles")) / oracle_payload_name
-    payload = _ManualWorkedExample.model_validate_json(path.read_text(encoding="utf-8"))
+def _oracle_declared_figures(payload: _ManualWorkedExample) -> dict[CasillaId, Decimal]:
     declared = payload.declared_inputs
-    assert declared is not None, f"{oracle_payload_name} must declare its scenario inputs"
+    assert declared is not None, f"{payload.scenario_id} must declare its scenario inputs"
     return {
         validated_casilla_id(casilla_id, surface=casilla_id): Decimal(value)
         for casilla_id, value in declared.by_casilla_id.items()
@@ -259,13 +257,61 @@ _M202_PAGO_OUTPUT_40_2: CasillaId = validated_casilla_id("03", surface="_M202_PA
 _M202_PAGO_PERIODS = ("1P", "2P", "3P")
 
 
+def _ejemplo1_oracle() -> _ManualWorkedExample:
+    """Return the bundled manual oracle that grades Ejemplo 1's Modelo 200 cuota chain."""
+    graded = {_CASILLA_CUOTA_INTEGRA, _CASILLA_CUOTA_LIQUIDA, _CASILLA_CUOTA_DIFERENCIAL}
+    matches = []
+    for path in sorted(Path(bundled_path("corpus", "manual_oracles")).glob("*.json")):
+        raw = json.loads(path.read_text(encoding="utf-8"))
+        if raw.get("modelo") == _M200 and set(raw.get("expected_by_casilla_id", ())) == graded:
+            matches.append(_ManualWorkedExample.model_validate(raw))
+    (oracle,) = matches
+    return oracle
+
+
+_EJEMPLO1_ORACLE = _ejemplo1_oracle()
+
+
+def _authored_m200_exercise(exercise: int) -> bool:
+    return any(
+        revision.valid_from.year <= exercise and (revision.valid_to is None or exercise <= revision.valid_to.year)
+        for revision in authored_revisions(_M200)
+    )
+
+
+# Every Sociedades manual edition that prints Ejemplo 1's liquidacion rows, restricted
+# to the exercises an authored Modelo 200 revision covers.
+_EJEMPLO1_EDITIONS = tuple(
+    exercise
+    for exercise in manual_editions_printing(
+        "sociedades",
+        "Cuota integra [00562] 500.000",
+        "Cuota liquida minima [00619] 300.000",
+        "Cuota liquida [00592] 270.000",
+        "Cuota liquida [00592] 300.000",
+    )
+    if _authored_m200_exercise(exercise)
+)
+assert _EJEMPLO1_ORACLE.filing_year in _EJEMPLO1_EDITIONS
+
+
+def _profile_instant(filing_year: int) -> datetime:
+    """The sociedad and its zero instalments are recorded in the January after the exercise."""
+    return datetime(filing_year + 1, 1, 15, 9, 0, tzinfo=UTC)
+
+
+def _clock(filing_year: int, hour: int) -> datetime:
+    """The scenario runs in the January after the exercise's declaration fell due."""
+    return datetime(filing_year + 2, 1, 15, hour, 0, tzinfo=UTC)
+
+
 _CUOTA_INTEGRA_EXPECTED = Decimal("500000.00")
 _CUOTA_INTEGRA_AJUSTADA_POSITIVA_EXPECTED = Decimal("350000.00")
 _CUOTA_LIQUIDA_SIN_MINIMA_EXPECTED = Decimal("270000.00")
 _CUOTA_LIQUIDA_CON_MINIMA_EXPECTED = Decimal("300000.00")
 
 
-def _seed_sociedad_profile() -> None:
+def _seed_sociedad_profile(filing_year: int) -> None:
     """Seed the standard M200 legal-entity profile scaffold for Ejemplo 1.
 
     ``incn_prior_12_months`` is fed 25.000.000 - matching the manual's own
@@ -295,14 +341,14 @@ def _seed_sociedad_profile() -> None:
             UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=Decimal("25000000")),
             UserProfileFact(path="taxpayer_type.tributacion_estado_porcentaje", value=Decimal("100")),
         ),
-        created_at=_T0,
-        updated_at=_T0,
+        created_at=_profile_instant(filing_year),
+        updated_at=_profile_instant(filing_year),
         context=_profile_creation_context_for_test(),
     )
     seed_test_profile_record(record)
 
 
-def _seed_zero_m202_pagos() -> None:
+def _seed_zero_m202_pagos(filing_year: int) -> None:
     """Seed same-year M202 instalments as filed zero, so the M200 cuota-
     diferencial formula's direct M202 relation operands resolve.
     """
@@ -312,11 +358,11 @@ def _seed_zero_m202_pagos() -> None:
             obs_repo.prepare_observation_envelope(
                 RegistryModeloObservation(
                     modelo=_M202,
-                    filing_year=_FILING_YEAR,
+                    filing_year=filing_year,
                     period=period,
                     observations=registry_grounded_observations(
                         modelo=_M202,
-                        filing_year=_FILING_YEAR,
+                        filing_year=filing_year,
                         period=period,
                         casilla_values={
                             _M202_PAGO_OUTPUT: Decimal("0"),
@@ -325,15 +371,15 @@ def _seed_zero_m202_pagos() -> None:
                     ),
                 ),
                 source_kind=APP_FILING_SOURCE_KIND,
-                captured_at=_T0,
+                captured_at=_profile_instant(filing_year),
                 stamped_revision_id=revision_id_for_observation(
                     RegistryModeloObservation(
                         modelo=_M202,
-                        filing_year=_FILING_YEAR,
+                        filing_year=filing_year,
                         period=period,
                         observations=registry_grounded_observations(
                             modelo=_M202,
-                            filing_year=_FILING_YEAR,
+                            filing_year=filing_year,
                             period=period,
                             casilla_values={
                                 _M202_PAGO_OUTPUT: Decimal("0"),
@@ -349,12 +395,13 @@ def _seed_zero_m202_pagos() -> None:
 def _calculate_m200(
     secure_objects: SecureObjectRepository,
     *,
+    filing_year: int,
     cuota_liquida_minima: Decimal,
     operation: PinnedAuthorityOperation,
 ) -> BucketAggregationCalculationResult:
-    """Run the live M200/2024/0A calculate with Ejemplo 1's manual casilla inputs."""
-    _seed_sociedad_profile()
-    _seed_zero_m202_pagos()
+    """Run the live M200 0A calculate for the exercise with Ejemplo 1's manual casilla inputs."""
+    _seed_sociedad_profile(filing_year)
+    _seed_zero_m202_pagos(filing_year)
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     bucket_event_repo = BucketEventHistoryRepository(objects=secure_objects)
@@ -362,18 +409,18 @@ def _calculate_m200(
     invoice_repo = InvoiceCatalogueRepository(objects=secure_objects)
     snapshot = published_authority_operation().snapshot(
         _M200,
-        filing_year=_FILING_YEAR,
+        filing_year=filing_year,
         period="0A",
         grade=RegistryAuthorityGrade.CALCULATION,
     )
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo=_M200,
-        filing_year=_FILING_YEAR,
-        period=Period.from_year_and_code(_FILING_YEAR, "0A"),
+        filing_year=filing_year,
+        period=Period.from_year_and_code(filing_year, "0A"),
         revision_id=snapshot.revision.id,
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bucket_event_repo),
-        clock=_T0,
+        clock=_clock(filing_year, 9),
         operation=operation,
     )
     with calculation_ports_for_test(
@@ -387,24 +434,25 @@ def _calculate_m200(
         return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             casilla_inputs={
-                **_oracle_declared_figures(_ORACLE_PAYLOAD_NAME),
+                **_oracle_declared_figures(_EJEMPLO1_ORACLE),
                 # Not declared: the cuota líquida mínima is what this scenario ASSERTS
                 # (casillas 00592 and 00611), so supplying it as a declared input would
                 # have the oracle check the figure it was handed.
                 _CASILLA_CUOTA_LIQUIDA_MINIMA: cuota_liquida_minima,
             },
             ports=_calculation_ports_375,
-            clock=_T1,
+            clock=_clock(filing_year, 10),
         )
 
 
-def test_m200_2024_ejemplo1_con_tributacion_minima_manual_worked_example(
-    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
+@pytest.mark.parametrize("filing_year", _EJEMPLO1_EDITIONS)
+def test_m200_ejemplo1_con_tributacion_minima_manual_worked_example(
+    secure_objects: SecureObjectRepository, filing_year: int, *, operation: PinnedAuthorityOperation
 ) -> None:
     """00562/00582/00592/00611 = 500.000/350.000/300.000/300.000, con tributacion minima.
 
-    Oracle: AEAT Manual practico de Sociedades 2024, Cap. 6, "Cuota liquida
-    minima (casilla 00619)", Ejemplo 1, paginas 392-396 - final liquidacion
+    Oracle: AEAT Manual practico de Sociedades, Cap. 6, "Cuota liquida
+    minima (casilla 00619)", Ejemplo 1 - final liquidacion
     once LIS art. 30 bis tributacion minima is applied: "Cuota integra [00562]
     500.000", "Cuota integra ajustada positiva [00582] 350.000", "Cuota
     liquida minima [00619] 300.000", "Cuota liquida [00592] 300.000". The
@@ -417,7 +465,9 @@ def test_m200_2024_ejemplo1_con_tributacion_minima_manual_worked_example(
     downstream max(00619, ...) cuota-liquida/cuota-diferencial chain that
     IS a registry formula under test.
     """
-    result = _calculate_m200(secure_objects, cuota_liquida_minima=Decimal("300000.00"), operation=operation)
+    result = _calculate_m200(
+        secure_objects, filing_year=filing_year, cuota_liquida_minima=Decimal("300000.00"), operation=operation
+    )
     values = result.revision.casilla_values
 
     assert values[_CASILLA_CUOTA_INTEGRA] == _CUOTA_INTEGRA_EXPECTED
@@ -426,26 +476,30 @@ def test_m200_2024_ejemplo1_con_tributacion_minima_manual_worked_example(
     assert values[_CASILLA_CUOTA_DIFERENCIAL] == _CUOTA_LIQUIDA_CON_MINIMA_EXPECTED
 
 
-def test_m200_2024_ejemplo1_sin_tributacion_minima_manual_worked_example(
-    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
+@pytest.mark.parametrize("filing_year", _EJEMPLO1_EDITIONS)
+def test_m200_ejemplo1_sin_tributacion_minima_manual_worked_example(
+    secure_objects: SecureObjectRepository, filing_year: int, *, operation: PinnedAuthorityOperation
 ) -> None:
     """00592/00611 = 270.000, sin tributacion minima (00619 = 0).
 
-    Oracle: the SAME manual Ejemplo 1's OTHER printed table (paginas 393-394),
-    "Liquidacion del IS 2024 (sin tributacion minima)": "Cuota liquida minima
+    Oracle: the SAME manual Ejemplo 1's OTHER printed table,
+    "Liquidacion del IS (sin tributacion minima)": "Cuota liquida minima
     [00619] 0", "Cuota liquida [00592] 270.000", "Resultado de la liquidacion
     [01586] 270.000". Every other raw input (00501/00573/00588) is identical
     to the con-minima scenario; only casilla 00619 changes (300.000 -> 0).
     """
-    result = _calculate_m200(secure_objects, cuota_liquida_minima=Decimal("0"), operation=operation)
+    result = _calculate_m200(
+        secure_objects, filing_year=filing_year, cuota_liquida_minima=Decimal("0"), operation=operation
+    )
     values = result.revision.casilla_values
 
     assert values[_CASILLA_CUOTA_LIQUIDA] == _CUOTA_LIQUIDA_SIN_MINIMA_EXPECTED
     assert values[_CASILLA_CUOTA_DIFERENCIAL] == _CUOTA_LIQUIDA_SIN_MINIMA_EXPECTED
 
 
+@pytest.mark.parametrize("filing_year", _EJEMPLO1_EDITIONS)
 def test_casilla_00619_anti_tautology_floor_changes_cuota_liquida(
-    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
+    secure_objects: SecureObjectRepository, filing_year: int, *, operation: PinnedAuthorityOperation
 ) -> None:
     """Anti-tautology: raising casilla 00619 from 0 to 300.000 must raise 00592/00611
     by exactly the manual's own delta (30.000 = 300.000 - 270.000).
@@ -456,8 +510,12 @@ def test_casilla_00619_anti_tautology_floor_changes_cuota_liquida(
     AEAT-printed figures from the SAME worked example (never hand-computed
     from the formula under test).
     """
-    sin_minima = _calculate_m200(secure_objects, cuota_liquida_minima=Decimal("0"), operation=operation)
-    con_minima = _calculate_m200(secure_objects, cuota_liquida_minima=Decimal("300000.00"), operation=operation)
+    sin_minima = _calculate_m200(
+        secure_objects, filing_year=filing_year, cuota_liquida_minima=Decimal("0"), operation=operation
+    )
+    con_minima = _calculate_m200(
+        secure_objects, filing_year=filing_year, cuota_liquida_minima=Decimal("300000.00"), operation=operation
+    )
 
     delta = Decimal("300000.00") - Decimal("270000.00")
     assert (
@@ -472,7 +530,7 @@ def test_casilla_00619_anti_tautology_floor_changes_cuota_liquida(
     )
 
 
-def test_m200_2024_manual_grounding_is_enrolled_and_raises_independently_grounded_fraction() -> None:
+def test_m200_manual_grounding_is_enrolled_and_raises_independently_grounded_fraction() -> None:
     """The manual-oracle grounding of 00562/00592/00611 is enrolled, not just computed.
 
     A companion registry-honesty gate
@@ -488,12 +546,12 @@ def test_m200_2024_manual_grounding_is_enrolled_and_raises_independently_grounde
     for M200 rather than sitting inert in TOML. Not tautological: the
     grounded set and the fraction are read from the registry's own declared
     and validated data, never hand-computed or asserted from a synthetic
-    fixture.
+    fixture. The edition is the one the enrolled oracle payload cites.
     """
     authority = published_authority_operation()
     snapshot = authority.snapshot(
         _M200,
-        filing_year=_FILING_YEAR,
+        filing_year=_EJEMPLO1_ORACLE.filing_year,
         period="0A",
         grade=RegistryAuthorityGrade.CALCULATION,
     )

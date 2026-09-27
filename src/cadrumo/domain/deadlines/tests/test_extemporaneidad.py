@@ -23,7 +23,10 @@ from ....core.period import Period
 from ....core.result_disposition import ResultDisposition
 from ...calculations.registry.authority import PinnedAuthorityOperation
 from ...calculations.registry.errors import FilingYearOutsideSupportEnvelopeError, RegistrySnapshotError
-from ...calculations.registry.tests.published_authority import published_supported_filing_years
+from ...calculations.registry.tests.published_authority import (
+    PublishedGovernedFactSource,
+    published_supported_filing_years,
+)
 from ..plazo import resolve_filing_closes_on, resolve_filing_window
 from ..recargo import (
     build_recovery_for_overdue,
@@ -112,18 +115,19 @@ def test_ten_completed_months_no_interest(operation: PinnedAuthorityOperation) -
 # ---------------------------------------------------------------------------
 
 
-def test_resolve_filing_closes_on_m130_2026_q1_returns_date() -> None:
-    """M130 Q1 2026 closes_on is registered and resolvable.
+@pytest.mark.parametrize("year", PublishedGovernedFactSource().supported_filing_years().years)
+def test_resolve_filing_closes_on_returns_the_m130_first_quarter_date(year: int) -> None:
+    """M130 Q1 closes_on is registered and resolvable for every supported year.
 
     M130 (pagos fraccionados IRPF estimación directa) has deadline
-    windows for 2026 registered in the canonical TOML.  The resolver
+    windows registered in the canonical TOML.  The resolver
     must return a non-None date for the Q1 window.
     """
-    closes_on = resolve_filing_closes_on("130", 2026, Period.from_year_and_code(2026, "1T"))
+    closes_on = resolve_filing_closes_on("130", year, Period.from_year_and_code(year, "1T"))
     assert closes_on is not None
     assert isinstance(closes_on, date)
-    # M130 Q1 2026: typically closes on 2026-04-20 (AEAT plazo trimestral).
-    assert closes_on.year == 2026
+    # M130 Q1 typically closes on 20 April (AEAT plazo trimestral).
+    assert closes_on.year == year
     assert closes_on.month in (4, 5)  # April/May for Q1 plazo
 
 

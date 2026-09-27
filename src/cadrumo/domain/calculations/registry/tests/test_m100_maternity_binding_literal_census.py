@@ -1,4 +1,4 @@
-"""Keep the M100 2024 maternity binding value at its single domain-backed home."""
+"""Keep the M100 maternity binding value at its single domain-backed home."""
 
 from __future__ import annotations
 
@@ -33,7 +33,7 @@ def _binding_literal_locations(*, source_root: Path, binding_key: str) -> tuple[
     return tuple(sorted(locations))
 
 
-def test_m100_2024_maternity_binding_literal_has_one_shared_registry_test_home() -> None:
+def test_m100_maternity_binding_literal_has_one_shared_registry_test_home() -> None:
     """The shared helper, rather than its scenario consumers, owns the literal."""
     locations = _binding_literal_locations(
         source_root=_REGISTRY_TESTS_ROOT,
@@ -43,7 +43,7 @@ def test_m100_2024_maternity_binding_literal_has_one_shared_registry_test_home()
     assert tuple(path for path, _line in locations) == (_SHARED_HELPER,)
 
 
-def test_m100_2024_maternity_binding_census_detects_a_raw_literal_mutation() -> None:
+def test_m100_maternity_binding_census_detects_a_raw_literal_mutation() -> None:
     """A raw scenario literal remains observable to this AST census."""
     binding_key = _maternity_binding_key()
     tree = ast.parse(f"values = {{{binding_key!r}: 0}}")
