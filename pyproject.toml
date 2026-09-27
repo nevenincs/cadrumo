@@ -1279,6 +1279,8 @@ ignore-path = [
   "docs/_inventories",
   "docs/api",
   "docs/cli",
+  # Vendored font and its licence, reproduced verbatim rather than authored.
+  "docs/_static/readme/fonts",
 ]
 max-line-length = 100
 
