@@ -867,7 +867,7 @@ def _ledger_generation_factory(
         ) -> ScheduledAmortizationCharge:
             return forecast_activity_asset_charge(
                 revision,
-                modelo_100_revision=operation.revision("100", str(covered_from.year)),
+                modelo_100_revision=operation.revision_for_context("100", filing_year=covered_from.year, period="0A"),
                 authority_generation=operation.pin().logical_generation,
                 covered_from=covered_from,
                 covered_until=covered_until,

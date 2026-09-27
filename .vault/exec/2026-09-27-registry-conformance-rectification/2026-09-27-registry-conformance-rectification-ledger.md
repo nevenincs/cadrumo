@@ -5,7 +5,7 @@ tags:
 date: '2026-09-27'
 modified: '2026-09-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:58b09cb65217b84ed8f1bc25c1704cf185e694587890a140f831135bcc8448fb'
+body_hash: 'sha256:b4300a30738dee7fb5afdb046fa33ffd62ff1a5976753ba0e0a0fe880c447286'
 related:
   - "[[2026-09-27-registry-conformance-rectification-plan]]"
 ---
@@ -117,6 +117,11 @@ related:
 - `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/parameters/0001-declarations.toml`
 - `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/revision.toml`
 - `S06` `verify:` `just check-registry, check-bindings, check-registry-gate` -> `pass`
+- `S08` `M` `dev/registry/tests/test_activity_asset_authority_across_supported_years.py`
+- `S08` `M` `src/cadrumo/domain/calculations/registry/actividad_asset_bindings.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/_actividad_asset_cli.py`
+- `S08` `M` `src/cadrumo/entrypoints/tui/launcher.py`
+- `S08` `verify:` `ruff check, ruff format, ty on touched files` -> `pass`
 
 ## Notes
 

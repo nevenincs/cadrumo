@@ -10,7 +10,7 @@ related:
   - '[[2026-09-21-retenciones-workflow-observation-payment-contract-adr]]'
 modified: '2026-09-27'
 body_schema: body-v2
-body_hash: 'sha256:e65618b468876f073c74c6f72fb28c8123f6f74eef34d368ad378498630b4720'
+body_hash: 'sha256:4f72cbc4907e0be129518c0f3ccb1e1451fa05d34d947aa5bc3817b33971807d'
 ---
 
 # `registry-conformance-rectification` plan
@@ -49,7 +49,7 @@ Author the Modelo 100 identity, ledger and settlement chain, the amortization pa
 
 Replace hard-coded tax-year equality in consumers with canonical revision selection and grounded per-year rules.
 
-- [ ] `P03.S08` - Select the activity-asset revision canonically instead of by tax-year equality; `src/cadrumo/domain/calculations/registry/actividad_asset_bindings.py`.
+- [x] `P03.S08` - Select the activity-asset revision canonically instead of by tax-year equality; `src/cadrumo/domain/calculations/registry/actividad_asset_bindings.py`.
 - [ ] `P03.S09` - Ground the Modelo 130 asset projection and withholding recognition for 2022 to 2024; `src/cadrumo/application/aggregation/`.
 - [ ] `P03.S10` - Remove the Modelo 193 phase materialization year pin; `src/cadrumo/application/aggregation/m193_phase_materialization.py`.
 

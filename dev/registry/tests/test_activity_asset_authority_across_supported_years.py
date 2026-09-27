@@ -19,6 +19,7 @@ import pytest
 
 from cadrumo.application.calculations.actividad_asset_schedule import forecast_activity_asset_charge
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.actividad_asset_bindings import resolve_activity_asset_schedule_authority
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.tests.authored_editions import manual_editions_printing
 from cadrumo.domain.renta.actividad_asset.election import (
@@ -137,3 +138,20 @@ def test_charging_point_free_depreciation_is_admitted_exactly_where_the_manual_p
     else:
         with pytest.raises(ActividadAssetUnsupportedError):
             _charge(charger, year, free_amount="2500")
+
+
+def test_an_edition_that_begins_after_the_tax_year_is_refused() -> None:
+    """Canonical selection may serve a later year from an earlier edition, never the reverse."""
+    later = max(_supported_years(), key=lambda year: _edition(year).valid_from)
+    edition = _edition(later)
+    earlier_year = edition.valid_from.year - 1
+    asset = _asset(_linear("maquinaria"), basis="10000", in_service=date(earlier_year, 1, 1))
+
+    with pytest.raises(ActividadAssetUnsupportedError, match="begins after tax year"):
+        resolve_activity_asset_schedule_authority(
+            edition,
+            tax_year=earlier_year,
+            asset_revision=asset,
+            authority_generation="candidate-source",
+            workforce=(),
+        )
