@@ -5,7 +5,7 @@ tags:
 date: '2026-09-27'
 modified: '2026-09-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:b4300a30738dee7fb5afdb046fa33ffd62ff1a5976753ba0e0a0fe880c447286'
+body_hash: 'sha256:c064a29396d1411ce7c4bbe14898dabb34c227c9422c481344490147ffff74a7'
 related:
   - "[[2026-09-27-registry-conformance-rectification-plan]]"
 ---
@@ -122,6 +122,9 @@ related:
 - `S08` `M` `src/cadrumo/entrypoints/cli/_actividad_asset_cli.py`
 - `S08` `M` `src/cadrumo/entrypoints/tui/launcher.py`
 - `S08` `verify:` `ruff check, ruff format, ty on touched files` -> `pass`
+- `S09` `M` `src/cadrumo/domain/renta/actividad_asset/claims.py`
+- `S09` `M` `src/cadrumo/domain/renta/actividad_asset/tests/test_claims.py`
+- `S09` `verify:` `pytest src/cadrumo/domain/renta/actividad_asset/tests/test_claims.py (7 passed)` -> `pass`
 
 ## Notes
 
