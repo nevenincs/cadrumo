@@ -18,13 +18,13 @@ import pytest
 
 from .....core.authority_grade import RegistryAuthorityGrade
 from ..formula_runtime import calculate_registry_snapshot
-from .published_authority import published_snapshot
+from .published_authority import published_legal_reference, published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-# Orden HAC/1347/2024 fixes the modulos coefficients for this exercise; the expected
-# activity values below are transcribed from it.
-_ORDEN_HAC_1347_2024_EXERCISE = 2025
+# Orden HAC/1347/2024 fixes the modulos coefficients for the exercise it is in force;
+# the expected activity values below are transcribed from it.
+_ORDEN_HAC_1347_2024_EXERCISE = published_legal_reference("orden-hac-1347-2024:art-4").effective_from.year
 
 _PERIODS = ("1T", "2T", "3T", "4T")
 _ZERO_MODULE_INPUTS = {

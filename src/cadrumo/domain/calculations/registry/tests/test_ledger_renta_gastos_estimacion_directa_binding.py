@@ -31,16 +31,15 @@ from ..ledger_renta_gastos_estimacion_directa_bindings import (
 )
 from ..relations import relation_prefill_bindings_for_period
 from ..schema import BindingDefinition, ModeloRevision, RegistrySnapshot
-from .published_authority import PublishedGovernedFactSource
+from .authored_editions import newest_authored_edition
 from .registry_tree import bundled_modelo_components
 from .snapshot_support import build_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_SUPPORT = PublishedGovernedFactSource().supported_filing_years()
-# The newest authored Modelo 100 edition sits one below the projecting horizon;
-# its ledger expense bindings are the ones resolved here.
-_REVIEWED_EDITION = _SUPPORT.horizon - 1
+# The newest Modelo 100 edition the registry authors; its ledger expense bindings
+# are the ones resolved here.
+_REVIEWED_EDITION = newest_authored_edition("100")
 
 _M100_GASTO_SS_CASILLA: CasillaId = validated_casilla_id(
     "0186",
@@ -258,7 +257,7 @@ def test_modelo_100_renta_ledger_expense_bindings_resolve_to_bound_casillas(
             binding.id: Decimal("0")
             for binding, _provider in relation_prefill_bindings_for_period(revision, period=snapshot.period)
         },
-        date_binding_values={"renta-profile-taxpayer-birth-date": date(1980, 1, 1)},
+        date_binding_values={"renta-profile-taxpayer-birth-date": date(_REVIEWED_EDITION - 45, 1, 1)},
         date_context={"filing_period": date(_REVIEWED_EDITION, 12, 31)},
     )
 

@@ -36,16 +36,13 @@ from ..formula_runtime import calculate_registry_snapshot
 from ..ids import BindingId, RelationId
 from ..schema import RegistrySnapshot
 from ._modelo_100_registry_support import M100_2024_EMPTY_MATERNIDAD_BINDINGS
-from .published_authority import PublishedGovernedFactSource
+from .authored_editions import newest_authored_editions
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_SUPPORT = PublishedGovernedFactSource().supported_filing_years()
-# The newest authored Modelo 100 edition sits one below the horizon, which projects
-# it forward; the edition before it carries its own retenciones binding set. Both
-# are exercised because each wires casillas 0596/0597 from different sources.
-_REVIEWED_EDITION = _SUPPORT.horizon - 1
-_PRIOR_EDITION = _REVIEWED_EDITION - 1
+# The two newest Modelo 100 editions the registry authors. Both are exercised because
+# each wires casillas 0596/0597 from different sources.
+_PRIOR_EDITION, _REVIEWED_EDITION = newest_authored_editions("100", 2)
 
 
 @pytest.fixture
@@ -72,9 +69,11 @@ _M100_TOTAL_PAGOS_A_CUENTA_CASILLA: CasillaId = validated_casilla_id(
 _M100_CUOTA_DIFERENCIAL_CASILLA: CasillaId = validated_casilla_id("0610", surface="_M100_CUOTA_DIFERENCIAL_CASILLA")
 
 _PRIOR_DATE_CONTEXT = {"filing_period": date(_PRIOR_EDITION, 12, 31)}
-_PRIOR_DATE_BINDINGS: dict[BindingId, date] = {"renta-profile-taxpayer-birth-date": date(1975, 6, 15)}
+_PRIOR_DATE_BINDINGS: dict[BindingId, date] = {"renta-profile-taxpayer-birth-date": date(_PRIOR_EDITION - 50, 6, 15)}
 _REVIEWED_DATE_CONTEXT = {"filing_period": date(_REVIEWED_EDITION, 12, 31)}
-_REVIEWED_DATE_BINDINGS: dict[BindingId, date] = {"renta-profile-taxpayer-birth-date": date(1975, 6, 15)}
+_REVIEWED_DATE_BINDINGS: dict[BindingId, date] = {
+    "renta-profile-taxpayer-birth-date": date(_REVIEWED_EDITION - 50, 6, 15)
+}
 
 _PRIOR_RELATION_VALUES: dict[RelationId, Decimal] = {
     # m111/m123/m193 are exercised through the binding channel (see

@@ -41,13 +41,13 @@ from ..applicability_modelo202 import (
     resolve_modelo_202_art_40_3_incn_threshold,
 )
 from ..formula_runtime import calculate_registry_snapshot
-from .published_authority import published_snapshot
+from .published_authority import published_legal_reference, published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 # LIS DT 44ª (Ley 7/2024) sets its first transitional rates -- micro-empresa 21/22 % and
-# art. 101 ERD 24 % -- for periods initiated in this exercise.
-_DT44_FIRST_TRANSITIONAL_EXERCISE = 2025
+# art. 101 ERD 24 % -- for the first exercise the published provision is in force.
+_DT44_FIRST_TRANSITIONAL_EXERCISE = published_legal_reference("ley-27-2014:dt-44").effective_from.year
 _FORM_BINDING = "modelo-200-profile-legal-entity-form"
 _NEW_ENTITY_BINDING = "modelo-200-profile-new-entity-flag"
 _INCN_BINDING = "modelo-200-profile-incn-prior-12-months"

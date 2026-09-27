@@ -16,15 +16,25 @@ from ..relations import relation_prefill_bindings_for_period, relation_source_re
 from ..schema import ModeloDefinition, RegistryCatalogues
 from ..schema_input_kind import InputKind
 from ..schema_surfaces import CasillaDefinition
-from .published_authority import published_legal_evidence_text, published_supported_filing_years
+from .authored_editions import authored_revisions
+from .published_authority import (
+    PublishedGovernedFactSource,
+    published_legal_evidence_text,
+    published_supported_filing_years,
+)
 from .registry_tree import bundled_modelo_components
 from .snapshot_support import build_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
-# The authored Modelo 714 event-period revision approved by Orden HFP/207/2022; it lies
-# below the support floor and stays a storage root whose declarations are inspected.
-_BELOW_FLOOR_EVENT_REVISION = 2021
+# The authored Modelo 714 event-period revisions below the support floor; they stay
+# storage roots whose declarations are inspected but never selected for filing.
+_BELOW_FLOOR_EVENT_REVISIONS = tuple(
+    str(revision.id)
+    for revision in authored_revisions("714")
+    if revision.valid_from.year < PublishedGovernedFactSource().supported_filing_years().floor
+)
+assert _BELOW_FLOOR_EVENT_REVISIONS, "the registry authors no Modelo 714 revision below the support floor"
 
 _PATRIMONIO_BASE_IMPONIBLE_CASILLA: CasillaId = validated_casilla_id(
     "patrimonio.base-imponible",
@@ -241,15 +251,17 @@ def test_modelo_714_boe_form_source_is_layout_only() -> None:
     assert "boe-modelo-714-layout" in revision.source_refs
 
 
-def test_modelo_714_below_floor_revision_declares_constructs() -> None:
+@pytest.mark.parametrize("revision_id", _BELOW_FLOOR_EVENT_REVISIONS)
+def test_modelo_714_below_floor_revision_declares_constructs(revision_id: str) -> None:
     modelo, _ = _load_modelo_714()
-    revision = modelo.revisions[str(_BELOW_FLOOR_EVENT_REVISION)]
-    assert revision.constructs, f"714 {_BELOW_FLOOR_EVENT_REVISION} revision must declare constructs"
+    revision = modelo.revisions[revision_id]
+    assert revision.constructs, f"714 {revision_id} revision must declare constructs"
     construct_ids = {c.id for c in revision.constructs}
     assert "m714-patrimonio-calculation" in construct_ids
 
 
-def test_modelo_714_below_floor_revision_cuota_integra_computed_via_grounded_escala() -> None:
+@pytest.mark.parametrize("revision_id", _BELOW_FLOOR_EVENT_REVISIONS)
+def test_modelo_714_below_floor_revision_cuota_integra_computed_via_grounded_escala(revision_id: str) -> None:
     """Cuota íntegra (29) is computed from the Ley 19/1991 art. 30 escala.
 
     Base imponible and base liquidable stay manual. The downstream art.31 joint
@@ -257,7 +269,7 @@ def test_modelo_714_below_floor_revision_cuota_integra_computed_via_grounded_esc
     plus explicit M714 exclusion inputs.
     """
     modelo, _ = _load_modelo_714()
-    revision = modelo.revisions[str(_BELOW_FLOOR_EVENT_REVISION)]
+    revision = modelo.revisions[revision_id]
     # The sole cuota-íntegra formula is the real, art.30-grounded escala — not a placeholder.
     escala_formula = next(f for f in revision.formulas if f.target_casilla_id == _PATRIMONIO_CUOTA_INTEGRA_CASILLA)
     assert escala_formula.id == "patrimonio-cuota-integra-escala-estatal"
@@ -384,15 +396,18 @@ def test_modelo_714_art31_joint_limit_calculates_from_same_year_m100_relations()
     )
 
 
-def test_modelo_714_snapshot_refuses_the_authored_event_period_below_the_supported_floor() -> None:
+@pytest.mark.parametrize("revision_id", _BELOW_FLOOR_EVENT_REVISIONS)
+def test_modelo_714_snapshot_refuses_the_authored_event_period_below_the_supported_floor(
+    revision_id: str,
+) -> None:
     # The below-floor revision stays authored (its declarations are inspected above),
     # but filing selection must refuse a year below the published support floor.
-    event_year = _BELOW_FLOOR_EVENT_REVISION
     supported_years = published_supported_filing_years()
     assert supported_years is not None
-    assert supported_years.floor > event_year
     modelo, catalogues = _load_modelo_714()
-    assert modelo.revisions[str(event_year)].period_selector.years == (event_year,)
+    event_year = modelo.revisions[revision_id].valid_from.year
+    assert supported_years.floor > event_year
+    assert modelo.revisions[revision_id].period_selector.years == (event_year,)
     with pytest.raises(FilingYearOutsideSupportEnvelopeError) as excinfo:
         build_snapshot(
             modelo,
@@ -402,7 +417,7 @@ def test_modelo_714_snapshot_refuses_the_authored_event_period_below_the_support
             period="0A",
         )
     # The refusal is the envelope's, and it says so: the event year IS authored.
-    assert str(event_year) in excinfo.value.covering_revision_ids
+    assert revision_id in excinfo.value.covering_revision_ids
 
 
 def test_modelo_714_snapshot_builds_for_the_supported_floor_event_period() -> None:

@@ -35,14 +35,14 @@ import pytest
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.money.rounding import round_to_cents
 from ..formula_runtime import calculate_registry_snapshot
-from .published_authority import published_snapshot
+from .published_authority import published_legal_reference, published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-# Orden HAC/1425/2025 fixes the módulos for this exercise, and Orden HAC/1347/2024
-# for the one before; both Ordenes are the transcription sources cited below.
-_ORDEN_HAC_1425_2025_EXERCISE = 2026
-_ORDEN_HAC_1347_2024_EXERCISE = 2025
+# Orden HAC/1425/2025 fixes the módulos for the exercise it is in force, and Orden
+# HAC/1347/2024 for the one before; both Ordenes are the transcription sources cited below.
+_ORDEN_HAC_1425_2025_EXERCISE = published_legal_reference("orden-hac-1425-2025:art-4").effective_from.year
+_ORDEN_HAC_1347_2024_EXERCISE = published_legal_reference("orden-hac-1347-2024:art-4").effective_from.year
 
 # Rendimiento anual por unidad antes de amortización (Orden HAC/1425/2025
 # Anexo II, filing year 2026), independently transcribed from the 2026 Orden

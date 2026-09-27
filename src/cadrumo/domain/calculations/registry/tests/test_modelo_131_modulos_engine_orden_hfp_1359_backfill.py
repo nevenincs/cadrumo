@@ -42,15 +42,15 @@ from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.money.rounding import round_to_cents
 from ..formula_runtime import calculate_registry_snapshot
 from ..temporal import select_revision
-from .published_authority import published_snapshot
+from .published_authority import published_legal_reference, published_snapshot
 from .registry_tree import bundled_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
-# Orden HFP/1359/2023 fixes the módulos for this exercise, and Orden HAC/1347/2024
-# for the next; both Ordenes are the transcription sources cited below.
-_ORDEN_HFP_1359_2023_EXERCISE = 2024
-_ORDEN_HAC_1347_2024_EXERCISE = 2025
+# Orden HFP/1359/2023 fixes the módulos for the exercise it is in force, and Orden
+# HAC/1347/2024 for the next; both Ordenes are the transcription sources cited below.
+_ORDEN_HFP_1359_2023_EXERCISE = published_legal_reference("orden-hfp-1359-2023:art-4").effective_from.year
+_ORDEN_HAC_1347_2024_EXERCISE = published_legal_reference("orden-hac-1347-2024:art-4").effective_from.year
 
 # Rendimiento anual por unidad antes de amortización (Orden HFP/1359/2023
 # Anexo II, filing year 2024), independently transcribed from the 2024 Orden
@@ -293,10 +293,14 @@ class TestHfp1359OrdenDateAxisBoundaries:
         exercise = _ORDEN_HFP_1359_2023_EXERCISE
         modelos, _catalogues = bundled_registry_tree()
         modelo_131 = next(modelo for modelo in modelos if modelo.id == "131")
-        # The last day before the revision's valid_from resolves to the flatter
-        # historical 2019-2023 revision.
+        # The last day before the revision's valid_from resolves to the flatter historical
+        # revision the registry authors immediately before it.
+        authored_before = max(
+            (revision for revision in modelo_131.revisions.values() if revision.valid_from.year < exercise),
+            key=lambda revision: revision.valid_from,
+        )
         preceding = select_revision(modelo_131, filing_year=exercise - 1, period="4T", on=date(exercise - 1, 12, 31))
-        assert preceding.id == "2019-2023"
+        assert preceding.id == authored_before.id
         # The first day after its valid_to resolves to the Orden HAC/1347/2024 revision.
         successor = _ORDEN_HAC_1347_2024_EXERCISE
         following = select_revision(modelo_131, filing_year=successor, period="1T", on=date(successor, 1, 1))

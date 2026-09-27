@@ -6,14 +6,15 @@ import pytest
 
 from .....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ..inventory_bindings import InventoryProvider
+from .authored_editions import newest_authored_edition
 from .published_authority import PublishedGovernedFactSource, published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _SUPPORT = PublishedGovernedFactSource().supported_filing_years()
-# The newest authored Modelo 100 edition sits one below the horizon, which carries
-# its inventory templates forward; both exercises must load them exactly.
-_REVIEWED_EDITION = _SUPPORT.horizon - 1
+# The newest Modelo 100 edition the registry authors; the horizon carries its
+# inventory templates forward, so every later supported exercise must load them.
+_REVIEWED_EDITION = newest_authored_edition("100")
 
 
 @pytest.mark.parametrize("filing_year", tuple(year for year in _SUPPORT.years if year >= _REVIEWED_EDITION))

@@ -72,6 +72,7 @@ from ._cross_dependency_calculation_support import (
     _grounded_observations,
     _observations_from_requirements,
 )
+from .authored_editions import authored_revisions_where
 from .published_authority import PublishedGovernedFactSource, published_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
@@ -920,14 +921,37 @@ def test_modelo_100_payment_calculation_consumes_real_modelo_130_quarterly_regis
     assert "renta-modelo-130-pagos-fraccionados" in entries[_M100_PAGOS_FRACCIONADOS_INGRESADOS_CASILLA].operand_refs
 
 
-# The Modelo 100 edition two below the projecting horizon: the relation set the
-# observation helper below enumerates is that edition's; the newer edition adds the
-# attribution and annual-summary relations.
-_RELATION_SET_EDITION = PublishedGovernedFactSource().supported_filing_years().horizon - 2
+# The relations the observation helper below knows how to observe. The test runs on
+# every supported Modelo 100 edition the registry authors whose relation set stays
+# inside them; a newer edition adding attribution or annual-summary relations drops out.
+_OBSERVED_RENTA_RELATIONS = frozenset(
+    {
+        "renta-modelo-131-pagos-fraccionados",
+        "renta-modelo-130-pagos-fraccionados",
+        "renta-modelo-131-rendimiento-neto-modulos",
+        "renta-modelo-111-retenciones-periodicas",
+        "renta-modelo-123-retenciones-periodicas",
+        "renta-modelo-193-retenciones-anuales",
+    }
+)
+_RELATION_SET_EDITIONS = tuple(
+    revision.valid_from.year
+    for revision in authored_revisions_where(
+        "100",
+        lambda revision: (
+            revision.valid_from.year in PublishedGovernedFactSource().supported_filing_years().years
+            and {binding.id for binding, _ in relation_prefill_bindings_for_period(revision)}
+            <= _OBSERVED_RENTA_RELATIONS
+        ),
+    )
+)
+assert _RELATION_SET_EDITIONS, "no supported Modelo 100 edition keeps to the observed relation set"
 
 
+@pytest.mark.parametrize("filing_year", _RELATION_SET_EDITIONS)
 def test_modelo_100_m131_pagos_fraccionados_cumulative_wires_to_casilla_0604(
     registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
+    filing_year: int,
 ) -> None:
     """M100: four quarterly M131 filings of €450 each aggregate to €1800 via relation resolution.
 
@@ -940,7 +964,6 @@ def test_modelo_100_m131_pagos_fraccionados_cumulative_wires_to_casilla_0604(
     summation error would produce a wrong total.  M131 uses 450 per quarter so the expected
     M131 aggregate is 1800 and M130 aggregate is 1000.
     """
-    filing_year = _RELATION_SET_EDITION
     snapshot = registry_snapshot("100", filing_year, "0A")
     requirements = relation_source_requirements(snapshot.revision, filing_year=filing_year, period="0A")
 
@@ -949,7 +972,7 @@ def test_modelo_100_m131_pagos_fraccionados_cumulative_wires_to_casilla_0604(
 
     observations = _observations_from_requirements(
         requirements,
-        lambda requirement, period_index: _renta_2024_relation_observed_value(
+        lambda requirement, period_index: _renta_quarterly_relation_observed_value(
             requirement,
             period_index,
             m130_quarterly_amounts=m130_quarterly_amounts,
@@ -993,22 +1016,23 @@ def test_modelo_100_m131_pagos_fraccionados_cumulative_wires_to_casilla_0604(
     }
 
 
+@pytest.mark.parametrize("filing_year", _RELATION_SET_EDITIONS)
 def test_modelo_100_m131_pagos_fraccionados_anti_tautology_proportional_change(
     registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
+    filing_year: int,
 ) -> None:
     """Changing M131 quarterly amount from 300 to 450 causes the resolved relation value to increase by 600.
 
     This is the anti-tautology proof: the resolution is not a copy of the input but a real
     sum of four quarterly filings.  Any arithmetic error in the aggregation would break this.
     """
-    filing_year = _RELATION_SET_EDITION
     snapshot = registry_snapshot("100", filing_year, "0A")
     requirements = relation_source_requirements(snapshot.revision, filing_year=filing_year, period="0A")
 
     def _resolve_0604_relations(m131_quarterly: Decimal) -> Decimal:
         obs = _observations_from_requirements(
             requirements,
-            lambda requirement, period_index: _renta_2024_relation_observed_value(
+            lambda requirement, period_index: _renta_quarterly_relation_observed_value(
                 requirement,
                 period_index,
                 m130_quarterly_amounts=(Decimal("100"), Decimal("100"), Decimal("100"), Decimal("100")),
@@ -1156,7 +1180,7 @@ def _renta_relation_observed_value(requirement: RegistryFoldRequirement, period_
     raise AssertionError(f"unhandled relation requirement {relation_id}")
 
 
-def _renta_2024_relation_observed_value(
+def _renta_quarterly_relation_observed_value(
     requirement: RegistryFoldRequirement,
     period_index: int,
     *,
@@ -1176,7 +1200,7 @@ def _renta_2024_relation_observed_value(
         "renta-modelo-193-retenciones-anuales",
     }:
         return Decimal("0")
-    raise AssertionError(f"unhandled 2024 relation requirement {relation_id}")
+    raise AssertionError(f"unhandled relation requirement {relation_id}")
 
 
 def _renta_relation_observed_value_from_modelo_130_results(

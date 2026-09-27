@@ -21,6 +21,7 @@ from ._cross_dependency_calculation_support import (
     _casilla_inputs,
     _observations_from_requirements,
 )
+from .authored_editions import authored_revisions
 from .published_authority import (
     PublishedGovernedFactSource,
     published_authored_revision,
@@ -153,8 +154,17 @@ def test_modelo_202_revision_selection_refuses_years_below_the_supported_floor(
 def test_modelo_202_pre_b2_revision_total_correcciones_aumentos_excludes_complementario_column(
     registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
 ) -> None:
-    # Every supported exercise the revision before the B2 tramos covers keeps the shape.
-    revision_window = published_revision("202", "2023-2024")
+    # The B2 tramos arrive with the first revision that declares casilla 67; the revision
+    # the registry authors right before it keeps the pre-B2 shape for every supported
+    # exercise it covers.
+    revisions = authored_revisions("202")
+    first_b2 = next(
+        index
+        for index, metadata in enumerate(revisions)
+        if "67" in {casilla.id for casilla in published_revision("202", str(metadata.id)).casillas}
+    )
+    assert first_b2 > 0
+    revision_window = revisions[first_b2 - 1]
     covered_years = tuple(
         year
         for year in PublishedGovernedFactSource().supported_filing_years().years
@@ -163,15 +173,15 @@ def test_modelo_202_pre_b2_revision_total_correcciones_aumentos_excludes_complem
     )
     assert covered_years
     for filing_year in covered_years:
-        _assert_pre_b2_correcciones_shape(registry_snapshot, filing_year)
+        _assert_pre_b2_correcciones_shape(registry_snapshot, filing_year, str(revision_window.id))
 
 
 def _assert_pre_b2_correcciones_shape(
-    registry_snapshot: Callable[[str, int, str], RegistrySnapshot], filing_year: int
+    registry_snapshot: Callable[[str, int, str], RegistrySnapshot], filing_year: int, revision_id: str
 ) -> None:
     snapshot = registry_snapshot("202", filing_year, "2P")
     revision = snapshot.revision
-    assert revision.id == "2023-2024"
+    assert revision.id == revision_id
     casilla_ids = {casilla.id for casilla in revision.casillas}
     assert "67" not in casilla_ids
     assert {"61", "62", "63", "64", "65", "66"}.isdisjoint(casilla_ids)

@@ -16,6 +16,7 @@ import pytest
 
 from ..errors import RegistryValidationError
 from ..formula_runtime_ops import read_parameter
+from .published_authority import published_legal_reference
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -42,8 +43,9 @@ def test_read_parameter_returns_a_decimal_for_a_registered_modelo_100_parameter(
     )
 
 
-# Ley 35/2006 DA 56 raised the simplified-direct-estimation rate for this tax period only.
-_DA56_TEMPORARY_RATE_EXERCISE = 2023
+# Ley 35/2006 DA 56 raised the simplified-direct-estimation rate for the one tax
+# period its in-force window covers; the published provision names that exercise.
+_DA56_TEMPORARY_RATE_EXERCISE = published_legal_reference("ley-35-2006:da-56").effective_from.year
 
 
 def test_read_parameter_returns_the_da56_temporary_rate() -> None:

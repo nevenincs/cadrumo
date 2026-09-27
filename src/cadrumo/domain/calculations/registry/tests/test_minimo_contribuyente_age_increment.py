@@ -29,15 +29,14 @@ from .....core.casilla_id import CasillaId, validated_casilla_id
 from ..formula_runtime import calculate_registry_snapshot
 from ..schema import RegistrySnapshot
 from ._modelo_100_registry_support import M100_2024_EMPTY_MATERNIDAD_BINDINGS
-from .published_authority import PublishedGovernedFactSource, published_snapshot
+from .authored_editions import newest_authored_editions
+from .published_authority import published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
-_SUPPORT = PublishedGovernedFactSource().supported_filing_years()
-# The two newest authored Modelo 100 editions sit below the projecting horizon; each
-# carries its own binding set, so each has its own calculation helper below.
-_PRIOR_EDITION = _SUPPORT.horizon - 2
-_REVIEWED_EDITION = _SUPPORT.horizon - 1
+# The two newest Modelo 100 editions the registry authors; each carries its own
+# binding set, so each has its own calculation helper below.
+_PRIOR_EDITION, _REVIEWED_EDITION = newest_authored_editions("100", 2)
 
 _MINIMO_CONTRIBUYENTE_ESTATAL_CASILLA: CasillaId = validated_casilla_id(
     "0511",

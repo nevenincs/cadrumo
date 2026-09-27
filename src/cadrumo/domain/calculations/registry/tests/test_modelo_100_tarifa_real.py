@@ -44,14 +44,22 @@ from ..formula_runtime import calculate_registry_snapshot
 from ..ids import BindingId, RelationId
 from ..schema import RegistrySnapshot
 from ._modelo_100_registry_support import M100_2024_EMPTY_MATERNIDAD_BINDINGS
-from .published_authority import PublishedGovernedFactSource
+from .authored_editions import authored_revisions_where, manual_editions_printing
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_SUPPORT = PublishedGovernedFactSource().supported_filing_years()
-# The exercise whose state and Cataluna scales, minimos and age supplements the
-# expected cuotas below are computed from: two below the support horizon.
-_TARIFF_EXERCISE = _SUPPORT.horizon - 2
+# The Modelo 100 edition these cuotas are computed for: the newest one whose AEAT Renta
+# manual prints the Cataluna scale the expected cuotas use and whose declared bindings
+# are the ones the fixture below supplies (it still carries the maternidad binding).
+_TARIFF_EXERCISE = max(
+    set(manual_editions_printing("renta", "17.707,20", "33.007,20"))
+    & {
+        revision.valid_from.year
+        for revision in authored_revisions_where(
+            "100", lambda revision: "renta-profile-deduccion-maternidad" in {b.id for b in revision.bindings}
+        )
+    }
+)
 
 
 @pytest.fixture

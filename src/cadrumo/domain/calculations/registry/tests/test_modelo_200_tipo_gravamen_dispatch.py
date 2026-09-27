@@ -41,14 +41,14 @@ from ..binding_selector_utils import selector_as_dict
 from ..errors import RegistryValidationError
 from ..formula_runtime import calculate_registry_snapshot
 from ..schema_formula import ParameterDefinition
-from .published_authority import published_legal_evidence_text, published_snapshot
+from .published_authority import published_legal_evidence_text, published_legal_reference, published_snapshot
 from .registry_tree import bundled_modelo_components
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 # LIS DT 44ª (Ley 7/2024) sets its first transitional rates -- micro-empresa 21/22 % and
-# art. 101 ERD 24 % -- for periods initiated in this exercise.
-_DT44_FIRST_TRANSITIONAL_EXERCISE = 2025
+# art. 101 ERD 24 % -- for the first exercise the published provision is in force.
+_DT44_FIRST_TRANSITIONAL_EXERCISE = published_legal_reference("ley-27-2014:dt-44").effective_from.year
 _DISPATCH_BINDING = "modelo-200-profile-legal-entity-form"
 _M200_RESULTADO_CONTABLE_CASILLA: CasillaId = validated_casilla_id("00501", surface="_M200_RESULTADO_CONTABLE_CASILLA")
 _M200_CORRECCIONES_AUMENTO_CASILLA: CasillaId = validated_casilla_id(

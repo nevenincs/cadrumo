@@ -48,7 +48,7 @@ from ..formula_runtime import calculate_registry_snapshot
 from ..relations import relation_prefill_bindings_for_period, resolve_relation_values
 from ..schema import RegistrySnapshot
 from ._modelo_100_registry_support import M100_2024_EMPTY_MATERNIDAD_BINDINGS
-from .published_authority import PublishedGovernedFactSource
+from .authored_editions import newest_authored_edition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -56,8 +56,8 @@ _M100_2024_MATERNIDAD_BINDINGS = M100_2024_EMPTY_MATERNIDAD_BINDINGS
 
 # ── shared date contexts ──────────────────────────────────────────────────────
 _DATE_2024 = {"filing_period": date(2024, 12, 31)}
-# The newest authored Modelo 100 edition sits one below the projecting horizon.
-_REVIEWED_EDITION = PublishedGovernedFactSource().supported_filing_years().horizon - 1
+# The newest Modelo 100 edition the registry authors.
+_REVIEWED_EDITION = newest_authored_edition("100")
 _DATE_REVIEWED_EDITION = {"filing_period": date(_REVIEWED_EDITION, 12, 31)}
 
 # ── minimal binding_values required by M100 2024/2025 bound casillas ─────────
@@ -305,7 +305,7 @@ def test_reviewed_edition_0029_dividends_20000_populates_0460(
         enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         binding_values=bindings,
         relation_values=relation_values,
-        date_binding_values={"renta-profile-taxpayer-birth-date": date(1975, 6, 15)},
+        date_binding_values={"renta-profile-taxpayer-birth-date": date(_REVIEWED_EDITION - 50, 6, 15)},
         # Art. 75 Ley 19/1994 maritime-worker exemption path; neutral false
         # when the chain under test is unrelated.
         boolean_binding_values={"renta-maritime-path-rebeca": False},

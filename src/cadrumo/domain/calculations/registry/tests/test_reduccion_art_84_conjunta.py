@@ -25,7 +25,7 @@ from decimal import Decimal
 import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from .published_authority import PublishedGovernedFactSource
+from .authored_editions import newest_authored_editions
 
 # Importing the renta package registers the first-slice routing cross-domain
 # snapshot check required by Modelo 100 parity scenarios run via scenarios.
@@ -38,11 +38,9 @@ from .scenarios import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_SUPPORT = PublishedGovernedFactSource().supported_filing_years()
-# The two newest authored Modelo 100 editions below the projecting horizon; each ships
-# its own binding set, and Art. 84 LIRPF fixes the same reducción in both.
-_PRIOR_EDITION = _SUPPORT.horizon - 2
-_REVIEWED_EDITION = _SUPPORT.horizon - 1
+# The two newest Modelo 100 editions the registry authors; each ships its own binding
+# set, and Art. 84 LIRPF fixes the same reducción in both.
+_PRIOR_EDITION, _REVIEWED_EDITION = newest_authored_editions("100", 2)
 
 _REDUCCION_ART_84_CASILLA: CasillaId = validated_casilla_id("0461", surface="_REDUCCION_ART_84_CASILLA")
 _ART_84_LEGAL_REFS = ("ley-35-2006:art-82", "ley-35-2006:art-83", "ley-35-2006:art-84")
@@ -144,7 +142,7 @@ def _scenario(
         enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         relation_values=_ZERO_RELATIONS,
         date_context={"filing_period": date(filing_year, 12, 31)},
-        date_binding_values={"renta-profile-taxpayer-birth-date": date(1980, 6, 15)},
+        date_binding_values={"renta-profile-taxpayer-birth-date": date(filing_year - 45, 6, 15)},
         expected_outputs=(
             RegistryScenarioExpectedOutput(
                 target_casilla_id=_REDUCCION_ART_84_CASILLA,

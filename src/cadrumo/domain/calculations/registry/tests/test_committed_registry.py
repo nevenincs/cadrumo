@@ -18,10 +18,10 @@ from ..export_parse import parse_export_payload
 from ..formula_runtime import calculate_registry_snapshot
 from ..relations import resolve_relation_values
 from ..schema import RegistrySnapshot
+from .authored_editions import authored_revisions
 from .published_authority import (
     PublishedGovernedFactSource,
     published_authored_revision,
-    published_revision,
     published_supported_filing_years,
 )
 
@@ -175,8 +175,9 @@ def test_committed_modelo_123_registry_snapshot_calculates_current_totals(
 def test_committed_modelo_123_registry_snapshot_uses_the_retenciones_sum_shape(
     registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
 ) -> None:
-    # Every supported exercise the retenciones-sum revision covers keeps its shape.
-    revision_window = published_revision("123", "2019-2023")
+    # The retenciones-sum shape is the original Modelo 123 design: the oldest revision
+    # the registry authors. Every supported exercise it covers keeps that shape.
+    revision_window = authored_revisions("123")[0]
     covered_years = tuple(
         year
         for year in PublishedGovernedFactSource().supported_filing_years().years
@@ -185,11 +186,11 @@ def test_committed_modelo_123_registry_snapshot_uses_the_retenciones_sum_shape(
     )
     assert covered_years
     for filing_year in covered_years:
-        _assert_retenciones_sum_shape(registry_snapshot, filing_year)
+        _assert_retenciones_sum_shape(registry_snapshot, filing_year, str(revision_window.id))
 
 
 def _assert_retenciones_sum_shape(
-    registry_snapshot: Callable[[str, int, str], RegistrySnapshot], filing_year: int
+    registry_snapshot: Callable[[str, int, str], RegistrySnapshot], filing_year: int, revision_id: str
 ) -> None:
     snapshot = registry_snapshot("123", filing_year, "4T")
     result = calculate_registry_snapshot(
@@ -207,7 +208,7 @@ def _assert_retenciones_sum_shape(
         date_context={"filing_period": date(filing_year, 12, 31)},
     )
 
-    assert snapshot.revision.id == "2019-2023"
+    assert snapshot.revision.id == revision_id
     assert tuple(casilla.id for casilla in snapshot.revision.casillas) == (
         "01",
         "02",

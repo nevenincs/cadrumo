@@ -23,6 +23,7 @@ from ._registry_scenarios_support import (
     _simplified_direct_estimation_cap_scenario,
     _tributacion_conjunta_family_joint_archetype_scenario,
 )
+from .published_authority import published_legal_reference
 from .scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
@@ -139,9 +140,9 @@ def test_registry_scenario_reports_trace_contract_mismatches() -> None:
         assert_registry_scenario_matches(report)
 
 
-# Ley 35/2006 DA 56 raised the simplified-direct-estimation rate for this tax period only;
-# the scenario's expected casilla and manual citation are that exercise's.
-_DA56_TEMPORARY_RATE_EXERCISE = 2023
+# Ley 35/2006 DA 56 raised the simplified-direct-estimation rate for the one tax
+# period its in-force window covers; the published provision names that exercise.
+_DA56_TEMPORARY_RATE_EXERCISE = published_legal_reference("ley-35-2006:da-56").effective_from.year
 
 
 def test_modelo_100_simplified_expenses_use_temporary_da56_rate() -> None:

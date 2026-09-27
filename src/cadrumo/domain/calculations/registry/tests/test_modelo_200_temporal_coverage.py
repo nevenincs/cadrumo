@@ -54,13 +54,13 @@ from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from ..formula_runtime import calculate_registry_snapshot
 from ..schema_input_kind import InputKind
-from .published_authority import published_snapshot
+from .published_authority import published_legal_reference, published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-# The last exercise before Ley 7/2024 replaced the LIS art. 29 flat 23 % pyme rate
-# with the DT 44ª tranche scale; its window is the historical back-fill under test.
-_PRE_TRANCHE_PYME_EXERCISE = 2024
+# The last exercise before LIS DT 44ª (Ley 7/2024) replaced the art. 29 flat 23 % pyme
+# rate with its tranche scale; its window is the historical back-fill under test.
+_PRE_TRANCHE_PYME_EXERCISE = published_legal_reference("ley-27-2014:dt-44").effective_from.year - 1
 _DISPATCH_BINDING = "modelo-200-profile-legal-entity-form"
 _M200_RESULTADO_CONTABLE_CASILLA: CasillaId = validated_casilla_id("00501", surface="_M200_RESULTADO_CONTABLE_CASILLA")
 _M200_DEDUCCION_DOBLE_IMPOSICION_CASILLA: CasillaId = validated_casilla_id(

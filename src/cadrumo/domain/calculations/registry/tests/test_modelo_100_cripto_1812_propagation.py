@@ -76,7 +76,7 @@ _M100_CRIPTO_GANANCIA_SUMA_CASILLA: CasillaId = validated_casilla_id(
 def _calculate(snapshot: RegistrySnapshot, valor_1804: Decimal):
     revision = snapshot.revision
     enum_binding_values = {b.id: "madrid" for b in revision.bindings if ("ccaa" in b.id or "residence" in b.id)}
-    date_binding_values = {b.id: date(1975, 6, 15) for b in revision.bindings if "birth" in b.id}
+    date_binding_values = {b.id: date(snapshot.filing_year - 50, 6, 15) for b in revision.bindings if "birth" in b.id}
     typed_ids = set(enum_binding_values) | set(date_binding_values)
     binding_values = {b.id: Decimal("0") for b in revision.bindings if b.id not in typed_ids}
     relation_values = {
