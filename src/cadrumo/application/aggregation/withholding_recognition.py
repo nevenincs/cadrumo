@@ -7,11 +7,8 @@ storage and accepts no caller-authored ``recognized_on`` value.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from datetime import date
 from enum import StrEnum
-from types import MappingProxyType
-from typing import Final
 
 from pydantic import BaseModel, Field
 
@@ -20,21 +17,11 @@ from ...core.models import STRICT_FROZEN_CONFIG
 
 
 class WithholdingRecognitionRule(StrEnum):
-    """The recognition rules the governing provisions ground."""
+    """The recognition rules the RIRPF grounds: art. 78, with art. 94 for exigibility and art. 98 for formalization."""
 
     PAID_OR_SATISFIED = "paid_or_satisfied"
     EXIGIBILITY_OR_EARLIER_PAYMENT = "exigibility_or_earlier_payment"
     FORMALIZATION = "formalization"
-
-
-RECOGNITION_RULE_PROVISIONS: Final[Mapping[WithholdingRecognitionRule, tuple[str, ...]]] = MappingProxyType(
-    {
-        WithholdingRecognitionRule.PAID_OR_SATISFIED: ("rd-439-2007:art-78",),
-        WithholdingRecognitionRule.EXIGIBILITY_OR_EARLIER_PAYMENT: ("rd-439-2007:art-78", "rd-439-2007:art-94"),
-        WithholdingRecognitionRule.FORMALIZATION: ("rd-439-2007:art-78", "rd-439-2007:art-98"),
-    }
-)
-"""The RIRPF provisions each rule applies; every applicable year must lie inside their effective window."""
 
 
 class WithholdingRecipientTaxStatus(StrEnum):
@@ -123,8 +110,8 @@ def derive_withholding_recognition(
     """Derive recognition from grounded evidence or refuse before mutation.
 
     The applicable year is the filer cadence's, which the callers resolve through
-    the support envelope; the rules themselves come from the RIRPF provisions in
-    :data:`RECOGNITION_RULE_PROVISIONS`.
+    the support envelope; the rules themselves come from the RIRPF provisions
+    :class:`WithholdingRecognitionRule` cites.
 
     ``modelo`` is intentionally optional while rule derivation is shared.  The
     formalization representation is retained as evidence, but filing into 123
@@ -218,7 +205,6 @@ def _reject_event(event: WithholdingDatedEvent | None, refusal_code: str) -> Non
 
 
 __all__ = [
-    "RECOGNITION_RULE_PROVISIONS",
     "WithholdingDatedEvent",
     "WithholdingIncomeKind",
     "WithholdingOperationKind",

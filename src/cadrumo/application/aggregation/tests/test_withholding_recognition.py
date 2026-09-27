@@ -9,7 +9,6 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.application.aggregation.withholding_recognition import (
-    RECOGNITION_RULE_PROVISIONS,
     WithholdingDatedEvent,
     WithholdingIncomeKind,
     WithholdingOperationKind,
@@ -37,6 +36,13 @@ def _supported_years() -> tuple[int, ...]:
 
 _YEAR = _supported_years()[0]
 
+#: The RIRPF provisions each rule applies, as the rule enum cites them.
+_RULE_PROVISIONS: dict[WithholdingRecognitionRule, tuple[str, ...]] = {
+    WithholdingRecognitionRule.PAID_OR_SATISFIED: ("rd-439-2007:art-78",),
+    WithholdingRecognitionRule.EXIGIBILITY_OR_EARLIER_PAYMENT: ("rd-439-2007:art-78", "rd-439-2007:art-94"),
+    WithholdingRecognitionRule.FORMALIZATION: ("rd-439-2007:art-78", "rd-439-2007:art-98"),
+}
+
 
 def _evidence(year: int = _YEAR, **overrides: object) -> WithholdingRecognitionEvidence:
     values: dict[str, object] = {
@@ -54,7 +60,7 @@ def _evidence(year: int = _YEAR, **overrides: object) -> WithholdingRecognitionE
 @pytest.mark.parametrize("year", _supported_years())
 def test_every_rule_provision_is_in_force_throughout_every_supported_year(year: int) -> None:
     """A rule applies to a year only while the RIRPF provisions it rests on are in force for all of it."""
-    for rule, provisions in RECOGNITION_RULE_PROVISIONS.items():
+    for rule, provisions in _RULE_PROVISIONS.items():
         for provision in provisions:
             reference = published_legal_reference(provision)
             assert reference.effective_from <= date(year, 1, 1), (rule, provision, year)
@@ -66,8 +72,8 @@ def test_every_rule_provision_is_in_force_throughout_every_supported_year(year: 
 
 
 def test_every_rule_names_its_governing_provisions() -> None:
-    assert set(RECOGNITION_RULE_PROVISIONS) == set(WithholdingRecognitionRule)
-    assert all(RECOGNITION_RULE_PROVISIONS.values())
+    assert set(_RULE_PROVISIONS) == set(WithholdingRecognitionRule)
+    assert all(_RULE_PROVISIONS.values())
 
 
 @pytest.mark.parametrize("year", _supported_years())
