@@ -73,7 +73,9 @@ id = "modelo-390-iva-anual-cuota-deducible-total"
 target_casilla_id = "iva.anual.cuota-deducible-total"
 expression = { op = "add", args = [
     { casilla_id = "iva.anual.soportado.interiores" },
+    { casilla_id = "iva.anual.deducible.interiores-inversion.total.cuota" },
     { casilla_id = "iva.anual.soportado.importaciones" },
+    { casilla_id = "iva.anual.deducible.importaciones-inversion.total.cuota" },
     { casilla_id = "iva.anual.regularizacion-bienes-inversion" },
     { casilla_id = "iva.anual.regularizacion-prorrata-definitiva" },
     { casilla_id = "iva.anual.autorepercutido.intracomunitaria" },

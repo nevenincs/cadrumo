@@ -67,8 +67,16 @@ op = "add"
 [[revisions.2022.formulas.expression.args]]
 casilla_id = "iva.soportado.interiores"
 
+# Box [45] adds the bienes de inversión cuotas [31] and [35] to the corrientes
+# ones; the AIC leg [39] is already inside iva.autorepercutido.intracomunitaria.
+[[revisions.2022.formulas.expression.args]]
+casilla_id = "31"
+
 [[revisions.2022.formulas.expression.args]]
 casilla_id = "iva.soportado.importaciones"
+
+[[revisions.2022.formulas.expression.args]]
+casilla_id = "35"
 
 [[revisions.2022.formulas.expression.args]]
 casilla_id = "iva.autorepercutido.intracomunitaria"

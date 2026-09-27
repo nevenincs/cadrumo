@@ -217,6 +217,15 @@ def test_modelo_303_iva_bindings_resolve_end_to_end_with_substrate_observations(
         "modelo-303-criterio-caja-entregas-art75-cuota": Decimal("0"),
         "modelo-303-criterio-caja-adquisiciones-base": Decimal("0"),
         "modelo-303-criterio-caja-adquisiciones-cuota": Decimal("0"),
+        # Every deducible row here is a corriente, so the bienes de inversión
+        # boxes [30]/[31], [34]/[35] and [38]/[39] resolve to zero while the
+        # corrientes pairs above carry the whole deduction.
+        "modelo-303-iva-soportado-interiores-bienes-inversion-base": Decimal("0"),
+        "modelo-303-iva-soportado-interiores-bienes-inversion-cuota": Decimal("0"),
+        "modelo-303-iva-soportado-importaciones-bienes-inversion-base": Decimal("0"),
+        "modelo-303-iva-soportado-importaciones-bienes-inversion-cuota": Decimal("0"),
+        "modelo-303-iva-autorepercutido-intracomunitaria-deducible-bienes-inversion-base": Decimal("0"),
+        "modelo-303-iva-autorepercutido-intracomunitaria-deducible-bienes-inversion-cuota": Decimal("0"),
     }
 
 

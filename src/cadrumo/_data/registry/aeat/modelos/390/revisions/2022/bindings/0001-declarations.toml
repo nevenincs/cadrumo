@@ -36,7 +36,7 @@ required_text = ["modelo 390"]
 
 [[revisions."2022".bindings]]
 id = "modelo-390-iva-soportado-interiores-cuota"
-provider = { kind = "ledger_iva_aggregation", categories = ["domestic_general", "domestic_reduced", "domestic_super_reduced"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "soportado", fact = "iva_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+provider = { kind = "ledger_iva_aggregation", categories = ["domestic_general", "domestic_reduced", "domestic_super_reduced"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "soportado", fact = "iva_amount_sum", deduction_fact_kinds = ["domestic_current", "rectification"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
@@ -51,10 +51,64 @@ required_text = ["modelo 390"]
 # imports. Selects import_third_country soportado lines across the rate tiers.
 [[revisions."2022".bindings]]
 id = "modelo-390-iva-soportado-importaciones-cuota"
-provider = { kind = "ledger_iva_aggregation", categories = ["import_third_country"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "soportado", fact = "iva_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+provider = { kind = "ledger_iva_aggregation", categories = ["import_third_country"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "soportado", fact = "iva_amount_sum", deduction_fact_kinds = ["import_current", "rectification"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-17", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+# Annual bienes de inversión totals [50]/[51] and [54]/[55], the resumen of the
+# quarterly Modelo 303 boxes [30]/[31] and [34]/[35]. The diseño de registro
+# gives both origins a corrientes and a bienes de inversión block, and the row
+# is told apart by nothing but its fact-0085 deduction kind, exactly as on the
+# quarterly form: the corrientes bindings above name the complementary kinds,
+# so the annual totals equal the sum of the four quarters box by box.
+[[revisions."2022".bindings]]
+id = "modelo-390-iva-soportado-interiores-bienes-inversion-cuota"
+provider = { kind = "ledger_iva_aggregation", categories = ["domestic_general", "domestic_reduced", "domestic_super_reduced"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "soportado", fact = "iva_amount_sum", deduction_fact_kinds = ["domestic_investment"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-107", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-iva-soportado-interiores-bienes-inversion-base"
+provider = { kind = "ledger_iva_aggregation", categories = ["domestic_general", "domestic_reduced", "domestic_super_reduced"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "soportado", fact = "base_amount_sum", deduction_fact_kinds = ["domestic_investment"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-107", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-iva-soportado-importaciones-bienes-inversion-cuota"
+provider = { kind = "ledger_iva_aggregation", categories = ["import_third_country"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "soportado", fact = "iva_amount_sum", deduction_fact_kinds = ["import_investment"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-86", "ley-37-1992:art-92", "ley-37-1992:art-107", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-iva-soportado-importaciones-bienes-inversion-base"
+provider = { kind = "ledger_iva_aggregation", categories = ["import_third_country"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "soportado", fact = "base_amount_sum", deduction_fact_kinds = ["import_investment"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-86", "ley-37-1992:art-92", "ley-37-1992:art-107", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2022".bindings.source_citations]]
@@ -321,7 +375,7 @@ required_text = ["modelo 390"]
 
 [[revisions."2022".bindings]]
 id = "modelo-390-iva-soportado-interiores-base"
-provider = { kind = "ledger_iva_aggregation", categories = ["domestic_general", "domestic_reduced", "domestic_super_reduced"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "soportado", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+provider = { kind = "ledger_iva_aggregation", categories = ["domestic_general", "domestic_reduced", "domestic_super_reduced"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "soportado", fact = "base_amount_sum", deduction_fact_kinds = ["domestic_current", "rectification"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]

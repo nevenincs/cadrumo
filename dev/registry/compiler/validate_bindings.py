@@ -30,7 +30,11 @@ each one names a declaration that cannot resolve to the value it promises:
 * a ``rows`` binding whose declared ``record`` or ``row_field`` is present but
   not a string. Such a selector cannot be held to the row-slot uniqueness above,
   and passing it over would let a selector schema change retire the uniqueness
-  refusal silently rather than break it.
+  refusal silently rather than break it;
+* two deducible ``ledger_iva_aggregation`` bindings that split one quantity by
+  deduction kind and still both claim a kind. The corrientes and bienes de
+  inversión boxes of Modelo 303 and 390 read the same category, rate and flow,
+  so an overlap declares the same deduction in both boxes.
 
 The remaining check, an unreferenced binding without the explicit
 ``non_calculation`` disposition, is :func:`unreferenced_binding_advisories` and
@@ -56,6 +60,7 @@ from cadrumo.domain.calculations.registry.binding_provider_registration import (
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
 from cadrumo.domain.calculations.registry.binding_targets import binding_consumers
 from cadrumo.domain.calculations.registry.binding_temporal import BindingApplicabilityKind
+from cadrumo.domain.calculations.registry.ledger_iva_bindings import deducible_deduction_kind_overlaps
 from cadrumo.domain.calculations.registry.prorrata_regularizacion_bindings import ProrrataRegularizacionProvider
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 
@@ -144,7 +149,23 @@ def validate_binding_registration_section(*, prefix: str, revision: ModeloRevisi
     failures.extend(_alternate_contract_failures(prefix=prefix, revision=revision))
     failures.extend(_prorrata_duplicate_failures(prefix=prefix, revision=revision))
     failures.extend(_duplicate_row_field_failures(prefix=prefix, revision=revision))
+    failures.extend(_deduction_kind_overlap_failures(prefix=prefix, revision=revision))
     return failures
+
+
+def _deduction_kind_overlap_failures(*, prefix: str, revision: ModeloRevision) -> list[str]:
+    """Refuse deducible bindings that split one quantity by deduction kind but overlap.
+
+    The detection is the domain's own, so this refusal and any runtime reader
+    agree on what a partition is; this module only words it as a failure.
+    """
+    return [
+        f"{prefix}: deducible bindings {list(overlap.binding_ids)} split one ledger IVA quantity by "
+        f"deduction kind but both claim "
+        f"{'every kind' if overlap.shared_kinds is None else [str(kind) for kind in overlap.shared_kinds]}; "
+        f"a row of that kind is declared in both boxes"
+        for overlap in deducible_deduction_kind_overlaps(revision)
+    ]
 
 
 def _prorrata_duplicate_failures(*, prefix: str, revision: ModeloRevision) -> list[str]:

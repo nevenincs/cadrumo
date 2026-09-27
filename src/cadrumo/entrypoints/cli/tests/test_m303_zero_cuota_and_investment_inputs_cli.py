@@ -11,7 +11,8 @@ assertions are about what an operator can actually file.
   no cuota to deduct.
 * A bien de inversión above the LIVA art. 108 threshold deducts its cuota against
   a reciprocal bienes-inversión register record, which the row names through
-  ``--investment-asset-id``.
+  ``--investment-asset-id``. The form gives that cuota its own pair of boxes,
+  [30]/[31], beside the corrientes pair [28]/[29].
 
 The casilla arithmetic is stated in the assertions rather than read from the
 implementation, and the two zero-cuota rows are asserted to reach no Modelo 303
@@ -412,11 +413,18 @@ def test_the_quarter_files_with_every_purchase_kind_in_it(
     # Devengado: the single taxable sale, base and cuota.
     assert values["07"] == str(_SALE_BASE)
     assert values["iva.repercutido.general"] == str(_SALE_CUOTA)
-    # Deducible operaciones interiores: the corriente purchase plus the bien de
-    # inversión. 200.00 + 4000.00 = 4200.00 of base, 42.00 + 840.00 = 882.00 of
-    # cuota. The two zero-cuota rows add nothing to either.
-    assert values["28"] == str(_PURCHASE_BASE + _INVESTMENT_BASE)
-    assert values["iva.soportado.interiores"] == str(_PURCHASE_CUOTA + _INVESTMENT_CUOTA)
+    # Deducible operaciones interiores corrientes [28]/[29]: the corriente
+    # purchase alone, 200.00 of base and 42.00 of cuota. The two zero-cuota rows
+    # add nothing to either.
+    assert values["28"] == str(_PURCHASE_BASE)
+    assert values["29"] == str(_PURCHASE_CUOTA)
+    assert values["iva.soportado.interiores"] == str(_PURCHASE_CUOTA)
+    # Deducible operaciones interiores con bienes de inversión [30]/[31]: the
+    # ordenador alone, 4000.00 of base and 840.00 of cuota.
+    assert values["30"] == str(_INVESTMENT_BASE)
+    assert values["31"] == str(_INVESTMENT_CUOTA)
+    # Total a deducir [45] adds both cuotas: 42.00 + 840.00 = 882.00.
+    assert values["45"] == str(_PURCHASE_CUOTA + _INVESTMENT_CUOTA)
     # Resultado régimen general: 210.00 devengada less 882.00 deducible.
     assert values["iva.resultado-regimen-general"] == str(
         _SALE_CUOTA - (_PURCHASE_CUOTA + _INVESTMENT_CUOTA),

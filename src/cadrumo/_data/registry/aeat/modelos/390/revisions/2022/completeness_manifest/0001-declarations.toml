@@ -353,3 +353,19 @@ number = "iva.anual.aic.servicios.reduced.base"
 [[revisions."2022".completeness_manifest.casillas]]
 casilla_id = "iva.anual.aic.servicios.general.base"
 number = "iva.anual.aic.servicios.general.base"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.interiores-inversion.total.base"
+number = "50"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.interiores-inversion.total.cuota"
+number = "51"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.importaciones-inversion.total.base"
+number = "54"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.importaciones-inversion.total.cuota"
+number = "55"

@@ -65,7 +65,9 @@ number = "30"
 section = ["iva", "regimen_general", "deducible"]
 semantic_role = "dr303_30"
 continuidad_id = "dr303-30"
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+input_kind = "bound"
+binding = "modelo-303-iva-soportado-interiores-bienes-inversion-base"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-108", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "31"
@@ -73,7 +75,9 @@ number = "31"
 section = ["iva", "regimen_general", "deducible"]
 semantic_role = "dr303_31"
 continuidad_id = "dr303-31"
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+input_kind = "bound"
+binding = "modelo-303-iva-soportado-interiores-bienes-inversion-cuota"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-108", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "32"
@@ -97,7 +101,9 @@ number = "34"
 section = ["iva", "regimen_general", "deducible"]
 semantic_role = "dr303_34"
 continuidad_id = "dr303-34"
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+input_kind = "bound"
+binding = "modelo-303-iva-soportado-importaciones-bienes-inversion-base"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-108", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "35"
@@ -105,7 +111,9 @@ number = "35"
 section = ["iva", "regimen_general", "deducible"]
 semantic_role = "dr303_35"
 continuidad_id = "dr303-35"
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+input_kind = "bound"
+binding = "modelo-303-iva-soportado-importaciones-bienes-inversion-cuota"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-108", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "36"
@@ -129,7 +137,9 @@ number = "38"
 section = ["iva", "regimen_general", "deducible"]
 semantic_role = "dr303_38"
 continuidad_id = "dr303-38"
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+input_kind = "bound"
+binding = "modelo-303-iva-autorepercutido-intracomunitaria-deducible-bienes-inversion-base"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-108", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "39"
@@ -137,7 +147,9 @@ number = "39"
 section = ["iva", "regimen_general", "deducible"]
 semantic_role = "dr303_39"
 continuidad_id = "dr303-39"
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+input_kind = "bound"
+binding = "modelo-303-iva-autorepercutido-intracomunitaria-deducible-bienes-inversion-cuota"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-108", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "40"

@@ -376,6 +376,12 @@ def test_modelo_390_declares_iva_aggregation_bindings_for_annual_resumen(revisio
         "modelo-390-iva-soportado-interiores-cuota",
         "modelo-390-iva-soportado-interiores-base",
         "modelo-390-iva-soportado-importaciones-cuota",
+        # The bienes de inversión totals [50]/[51] and [54]/[55], split from the
+        # corrientes ones above by the row's deduction kind.
+        "modelo-390-iva-soportado-interiores-bienes-inversion-cuota",
+        "modelo-390-iva-soportado-interiores-bienes-inversion-base",
+        "modelo-390-iva-soportado-importaciones-bienes-inversion-cuota",
+        "modelo-390-iva-soportado-importaciones-bienes-inversion-base",
         "modelo-390-iva-autorepercutido-intracomunitaria-cuota",
         "modelo-390-iva-recargo-equivalencia-general-cuota",
         "modelo-390-iva-recargo-equivalencia-reducido-cuota",

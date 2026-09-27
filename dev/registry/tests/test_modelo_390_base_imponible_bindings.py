@@ -196,7 +196,9 @@ def test_annual_base_bindings_resolve_non_zero() -> None:
     # blind-base layer and the domestic-reverse-charge (ISP interior) base --
     # this fixture carries no adquisiciones intracomunitarias or ISP interior
     # rows at all, so every tier of those families is legitimately absent here.
-    _new_family_markers = ("-aic-", "-autorepercutido-interior-")
+    # Nor does it carry a bien de inversión, so the [50]/[54] investment bases
+    # are absent for the same reason.
+    _new_family_markers = ("-aic-", "-autorepercutido-interior-", "-bienes-inversion-")
     base_bindings = {
         key: value
         for key, value in resolved.items()
