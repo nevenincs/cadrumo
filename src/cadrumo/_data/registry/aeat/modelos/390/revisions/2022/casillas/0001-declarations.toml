@@ -2000,6 +2000,8 @@ semantic_role = "iva_importacion_diferimiento"
 continuidad_id = "iva-importacion-diferimiento"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the pagina 6 resultado / tributacion por razon de territorio block on the bundled Diseno de Registros."
+input_kind = "bound"
+binding = "modelo-390-prev-303-iva-importacion-aduana"
 legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
 # Box [87] - '8. Tributación razón de territorio - Administraciones - Territorio común [87]' (offset 98, length 5).
@@ -2263,11 +2265,26 @@ legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "rd-1624-1992:art-71
 # the foral administrations, and that attribution is established by the
 # Concierto Economico con el Pais Vasco and the Convenio Economico de Navarra,
 # neither of which is defined in the legal catalogue; grounding them on a LIVA
-# framework article alone would assert a provenance they do not have. Box [659]
-# (IVA a la importacion con opcion de diferimiento) is deferred for the same
-# reason -- its establishing provision is not in the catalogue either.
+# framework article alone would assert a provenance they do not have.
 #
-# All are optional operator inputs; a blank slot is a valid zero.
+# Apartado 7 is a calculation, not operator input. The Manual practico de IVA
+# (capitulo 9, "7. Resultado de la liquidacion anual", identical in the 2022,
+# 2023, 2024 and 2025 editions) defines [84] as [65] + [83] + [658] and [86] as
+# ([84] + [659]) - [85]. [658] and [659] restate over the year the Modelo 303
+# boxes [76] (regularizacion cuotas art. 80.Cinco.5a LIVA) and [77] (IVA a la
+# importacion liquidado por la Aduana), which the diseno de registro of every
+# supported year adds into that period's result. [85] is the credit of earlier
+# ejercicios the year's autoliquidaciones applied in box [78], read from the one
+# FIFO compensation partition that also yields [97] and [662]. None of the five
+# can default to a blank zero: each is computed or bound, and an unresolved
+# source leaves the box unresolved.
+#
+# Apartado 9 keeps [95], [96], [524], [98], [525] and [526] as operator input:
+# they need the sign of each period's result, a monthly-refund register, the
+# modelo 308 or the modelo 322, none of which the sources above carry. The
+# ADVISORY predicate modelo-390-resultado-liquidacion-equals-resultados-
+# liquidaciones holds them to [86] = [95] - [97] - [98] - [662], so a blank one
+# that contradicts the computed result is reported rather than filed silently.
 
 # Box [658] - "7. Resultado liquidacion anual - Regularizacion cuotas art. 80.Cinco.5ª LIVA [658]" (offset 13, length 17).
 [[revisions."2022".casillas]]
@@ -2280,6 +2297,8 @@ semantic_role = "iva_regularizacion_cuotas_art_80_cinco_5"
 continuidad_id = "iva-regularizacion-cuotas-art-80-cinco-5"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of pagina 6 on the bundled Diseno de Registros."
+input_kind = "bound"
+binding = "modelo-390-prev-303-regularizacion-cuotas-art-80-cinco-5"
 legal_refs = ["ley-37-1992:art-80", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 # Apartado 8 ("Tributacion por razon de territorio") restates this box at offset
 # 123 with a byte-identical label, so the same casilla is written twice.
@@ -2295,6 +2314,8 @@ semantic_role = "iva_suma_resultados"
 continuidad_id = "iva-suma-resultados"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of pagina 6 on the bundled Diseno de Registros."
+input_kind = "computed"
+formula = "modelo-390-iva-anual-suma-resultados"
 legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 # Apartado 8 ("Tributacion por razon de territorio") restates this box at offset
 # 140 with a byte-identical label, so the same casilla is written twice.
@@ -2310,6 +2331,8 @@ continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:455 (sha256 0164fbea6f50) prints box [85] (9 64 17 Num 7. Resultado liquidación anual - Compensación de cuotas...); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of pagina 6 on the bundled Diseno de Registros."
+input_kind = "bound"
+binding = "modelo-390-prev-303-compensacion-ejercicio-anterior"
 legal_refs = ["ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
 # Box [86] - "7. Resultado liquidacion anual - Resultado de la liquidacion [86]" (offset 81, length 17).
@@ -2323,6 +2346,8 @@ continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:456 (sha256 0164fbea6f50) prints box [86] (10 81 17 N 7. Resultado liquidación anual - Resultado de la liquida...); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of pagina 6 on the bundled Diseno de Registros."
+input_kind = "computed"
+formula = "modelo-390-iva-anual-resultado-liquidacion"
 legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
 # Box [95] - "9. Resultado de las liquidaciones - Total resultados a ingresar autoliquidaciones de IVA del ejercicio [95]" (offset 225, length 17).
@@ -4480,3 +4505,21 @@ continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/1
 input_kind = "bound"
 binding = "modelo-390-volumen-exportaciones-exentas-base"
 legal_refs = ["ley-37-1992:art-21", "ley-37-1992:art-22", "ley-37-1992:art-121", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+
+# The apartado 9 side of the annual identity [86] = [95] - [97] - [98] - [662]
+# (Manual practico de IVA 2022-2025, capitulo 9, apartados 7 and 9 and their
+# worked examples). Not a box of its own: it lets the ADVISORY predicate
+# modelo-390-resultado-liquidacion-equals-resultados-liquidaciones hold the
+# apartado 9 operator inputs to the computed [86].
+[[revisions."2022".casillas]]
+id = "iva.anual.reconciliacion.resultados-liquidaciones"
+number = "iva.anual.reconciliacion.resultados-liquidaciones"
+section = ["iva", "anual", "reconciliacion"]
+semantic_role = "iva_anual_reconciliacion_resultados_liquidaciones"
+continuidad_id = "iva-anual-reconciliacion-resultados-liquidaciones"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/14-390-ejercicio-2022-actualizado-04-01-23-491-kb-xlsx.xlsx.extracted.md (sha256 7c6554f3182d) numbers no box for this row and it states none; it is the apartado 9 side of the annual identity [86] = [95] - [97] - [98] - [662] that corpus/manuals/iva/2022/source.pdf pag. 237-240 works through, not a field of the design."
+input_kind = "computed"
+formula = "modelo-390-iva-anual-reconciliacion-resultados-liquidaciones"
+internal_only = true
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]

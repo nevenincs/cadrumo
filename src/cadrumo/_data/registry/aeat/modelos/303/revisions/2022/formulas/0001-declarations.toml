@@ -321,3 +321,30 @@ op = "negate"
 
 [[revisions.2022.formulas.expression.args.args]]
 casilla_id = "iva.resultado"
+
+# Box [71] "Resultado de la liquidacion ( [69] - [70] )", as the 2022 diseno de
+# registro prints it (corpus/aeat_official/disenos_registro/modelo_303/files/
+# 02-303-ejercicio-2022-y-siguientes-actualizado-27-12-2021-332-kb-xlsx.xlsx,
+# pagina 3, campo 26). [69] is iva.resultado and [70] the amount an earlier
+# autoliquidacion of the same period already paid. Left as operator input, a
+# 2022 period with a result filed [71] as zero and its disposition as "N", which
+# the compensation carry then refused to read.
+[[revisions.2022.formulas]]
+id = "modelo-303-iva-resultado-final"
+target_casilla_id = "71"
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30"]
+additional_source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
+
+[[revisions.2022.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2022.formulas.expression]
+op = "subtract"
+
+[[revisions.2022.formulas.expression.args]]
+casilla_id = "iva.resultado"
+
+[[revisions.2022.formulas.expression.args]]
+casilla_id = "70"

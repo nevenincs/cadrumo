@@ -13,6 +13,7 @@ from pydantic import ValidationError
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.tests.iva_compensation_history_support import (
+    _BOX_85_BINDING,
     _BOX_97_BINDING,
     _BOX_662_BINDING,
     _M303_COMPENSACION_APLICADA_CASILLA,
@@ -246,12 +247,12 @@ def test_modelo_390_partition_refuses_missing_intermediate_m303_periods(tmp_path
             )
 
     assert not resolution.binding_values
-    assert set(resolution.unresolved_binding_ids) == {_BOX_97_BINDING, _BOX_662_BINDING}
+    assert set(resolution.unresolved_binding_ids) == {_BOX_85_BINDING, _BOX_97_BINDING, _BOX_662_BINDING}
     assert {
         diagnostic.binding_id
         for diagnostic in resolution.diagnostics
         if diagnostic.reason == "iva_compensation_annual_source_evidence_failure"
-    } == {_BOX_97_BINDING, _BOX_662_BINDING}
+    } == {_BOX_85_BINDING, _BOX_97_BINDING, _BOX_662_BINDING}
 
 
 def test_modelo_390_partition_accepts_explicit_zero_intermediate_m303_periods(tmp_path: Path) -> None:
@@ -331,6 +332,8 @@ def test_modelo_390_partition_accepts_explicit_zero_intermediate_m303_periods(tm
 
     assert resolution.binding_values[_BOX_97_BINDING] == Decimal("50.00")
     assert resolution.binding_values[_BOX_662_BINDING] == Decimal("0.00")
+    # 1T filed [78] = [87] = 0.00, so no credit came from earlier years: a proven zero.
+    assert resolution.binding_values[_BOX_85_BINDING] == Decimal("0.00")
     assert not resolution.unresolved_binding_ids
     assert not {
         diagnostic.binding_id
@@ -413,7 +416,10 @@ def test_modelo_390_compensation_bindings_resolve_from_secure_iva_history(tmp_pa
             "modelo-390-prev-303-resultado-regimen-general",
         }
         assert not annual_partition.relation_values
-        assert not annual_partition.unresolved_binding_ids
+        # These quarters state no box 78 or 87, so the credit the year opened with
+        # is unknown: box 85 stays unresolved instead of reading as zero.
+        assert annual_partition.unresolved_binding_ids == (_BOX_85_BINDING,)
+        assert _BOX_85_BINDING not in annual_partition.binding_values
         assert all(rv.provenance == "local_filing" for rv in relation_vals.values if rv.value is not None)
 
 

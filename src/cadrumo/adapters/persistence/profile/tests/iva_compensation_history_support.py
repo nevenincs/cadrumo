@@ -79,6 +79,7 @@ _M303_PRINTED_COMPENSATION_REFERENCE_CASILLA: CasillaId = validated_casilla_id("
 #: for a given ejercicio appears late in that same year.
 _M390_EJERCICIO = 2025
 
+_BOX_85_BINDING = "modelo-390-prev-303-compensacion-ejercicio-anterior"
 _BOX_97_BINDING = "modelo-390-prev-303-compensacion-ultimo-periodo"
 _BOX_662_BINDING = "modelo-390-prev-303-compensacion-generada-ejercicio-no-97"
 

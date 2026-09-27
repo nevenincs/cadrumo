@@ -229,3 +229,11 @@ number = "38"
 [[revisions.2022.completeness_manifest.casillas]]
 casilla_id = "39"
 number = "39"
+
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "70"
+number = "70"
+
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "71"
+number = "71"

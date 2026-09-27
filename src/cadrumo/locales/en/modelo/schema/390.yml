@@ -108,6 +108,9 @@ modelo:
               on Form 303 returns
           iva-anual-reconciliacion-resultado-303:
             label: Annual reconciliation - result declared on Form 303 returns
+          iva-anual-reconciliacion-resultados-liquidaciones:
+            label: Annual reconciliation - results of the year's returns ([95] - [97]
+              - [98] - [662])
           iva-anual-regimen-simplificado-aic-bienes-cuota-devengada:
             label: Accrued VAT on intra-Community acquisitions
           iva-anual-regimen-simplificado-cuota-resultante-agricola:

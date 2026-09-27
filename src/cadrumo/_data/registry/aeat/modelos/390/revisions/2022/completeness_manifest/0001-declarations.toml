@@ -369,3 +369,31 @@ number = "54"
 [[revisions."2022".completeness_manifest.casillas]]
 casilla_id = "iva.anual.deducible.importaciones-inversion.total.cuota"
 number = "55"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.regularizacion-cuotas-art-80-cinco-5"
+number = "658"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.suma-resultados"
+number = "84"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.iva-importacion-diferimiento"
+number = "659"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.compensacion-cuotas-ejercicio-anterior"
+number = "85"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.resultado-liquidacion"
+number = "86"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.liquidaciones.total-a-ingresar"
+number = "95"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.liquidaciones.ultimo-periodo-a-devolver"
+number = "98"

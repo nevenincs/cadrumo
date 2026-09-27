@@ -2366,3 +2366,59 @@ id = "modelo-390.page_1.representante-personas-juridicas-represent-3-notaria"
 provider = { kind = "manual_input", record = "page_1", field = "representante-personas-juridicas-represent-3-notaria", offset = 960, length = 12, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["ley-37-1992:art-164", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+
+# Apartado 7 inputs read from the year's Modelo 303 autoliquidaciones.
+#
+# [85] "Compensacion de cuotas del ejercicio anterior": the Manual practico de
+# IVA, capitulo 9 (2022 pag. 237, same text 2023-2025), makes it the credit
+# "generadas en ejercicios anteriores y aplicadas en el ejercicio (es decir, que
+# se hubiesen consignado en la casilla 78 de alguna de las autoliquidaciones del
+# periodo)". Credit generated inside the year and applied later in it is not in
+# [85]. The oldest credit is applied first, as the manual's second example
+# (pag. 239-240, [85] = 200 out of 400 applied) shows, so the figure is the part
+# of the year's opening box [110] its box [78] entries consumed: one output of
+# the same FIFO partition as [97] and [662].
+[[revisions."2022".bindings]]
+id = "modelo-390-prev-303-compensacion-ejercicio-anterior"
+provider = { kind = "iva_compensation_annual_partition", source_modelo = "303", source_casilla_ids = ["iva.compensacion-generada-periodo", "iva.compensacion-aplicada-periodo", "iva.compensacion-disponible-fin-periodo", "iva.compensacion-pendiente-periodos-posteriores"], source_periods = ["1T", "2T", "3T", "4T"], partition_output = "prior_year_applied_amount" }
+value = { data_type = "money", channel = "decimal" }
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+# [658] restates the year's Modelo 303 box [76] "Regularizacion cuotas art.
+# 80.cinco.5a LIVA", which every supported 303 diseno adds into [64] = [46] +
+# [58] + [76] exactly as the 390 adds [658] into [84].
+[[revisions."2022".bindings]]
+id = "modelo-390-prev-303-regularizacion-cuotas-art-80-cinco-5"
+provider = { kind = "relation_prefill", relation_kind = "annual_summary", dependency_role = "periodic_to_annual_summary", source_modelo = "303", source_casilla_id = "76", temporal = { kind = "same_filing_year_periods", source_periods = ["1T", "2T", "3T", "4T"] } }
+applicability = { kind = "target_periods", periods = ["0A"] }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-80", "ley-37-1992:art-99", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+# [659] restates the year's Modelo 303 box [77] "IVA a la importacion liquidado
+# por la Aduana pendiente de ingreso", which every supported 303 diseno adds into
+# [69] = [66] + [77] - [78] + [68] exactly as the 390 adds [659] into [86]. The
+# manual limits both to the importers that opted for deferral; an importer that
+# did not opt leaves [77] blank on each 303 and so [659] resolves to zero.
+[[revisions."2022".bindings]]
+id = "modelo-390-prev-303-iva-importacion-aduana"
+provider = { kind = "relation_prefill", relation_kind = "annual_summary", dependency_role = "periodic_to_annual_summary", source_modelo = "303", source_casilla_id = "77", temporal = { kind = "same_filing_year_periods", source_periods = ["1T", "2T", "3T", "4T"] } }
+applicability = { kind = "target_periods", periods = ["0A"] }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]

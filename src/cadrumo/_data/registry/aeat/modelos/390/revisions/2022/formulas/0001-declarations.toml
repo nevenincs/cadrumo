@@ -100,3 +100,69 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71",
 [[revisions."2022".formulas.source_citations]]
 source_ref = "aeat-modelo-390-procedure"
 required_text = ["modelo 390"]
+
+# Apartado 7, "Resultado de la liquidacion anual". The Manual practico de IVA,
+# capitulo 9, states the two boxes the same way in its 2022 (pag. 237), 2023,
+# 2024 and 2025 editions: "Casilla 84: ... el sumatorio de las liquidaciones
+# efectuadas en el regimen general (casilla 65) y en el regimen simplificado
+# (casilla 83) al que se anadira el importe de la casilla 658" and "Casilla 86:
+# ... el importe resultante de restar a la suma de las casillas (84) y (659) el
+# importe de la casilla (85)". The diseno de registro of every supported year
+# keeps [658], [84], [659], [85] and [86] in apartado 7 with those numbers, so
+# no year diverges.
+[[revisions."2022".formulas]]
+id = "modelo-390-iva-anual-suma-resultados"
+target_casilla_id = "iva.anual.suma-resultados"
+expression = { op = "add", args = [
+    { casilla_id = "iva.anual.resultado-regimen-general" },
+    { casilla_id = "iva.anual.regimen-simplificado.resultado" },
+    { casilla_id = "iva.anual.regularizacion-cuotas-art-80-cinco-5" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-80", "ley-37-1992:art-88", "ley-37-1992:art-92", "ley-37-1992:art-122", "ley-37-1992:art-123", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2022".formulas]]
+id = "modelo-390-iva-anual-resultado-liquidacion"
+target_casilla_id = "iva.anual.resultado-liquidacion"
+expression = { op = "subtract", args = [
+    { op = "add", args = [
+        { casilla_id = "iva.anual.suma-resultados" },
+        { casilla_id = "iva.anual.iva-importacion-diferimiento" },
+    ] },
+    { casilla_id = "iva.anual.compensacion-cuotas-ejercicio-anterior" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+# The apartado 9 side of the annual identity. The Manual practico de IVA 2022,
+# capitulo 9 (pag. 237-240), closes each of its three compensation examples on
+# it: 0 - 200 - 500 = -700 with [85] = 800 and [84] = 100; 100 - 500 - 200 = -600
+# with no [85]; 100 - 500 = -400 with [85] = 200.
+[[revisions."2022".formulas]]
+id = "modelo-390-iva-anual-reconciliacion-resultados-liquidaciones"
+target_casilla_id = "iva.anual.reconciliacion.resultados-liquidaciones"
+expression = { op = "subtract", args = [
+    { casilla_id = "iva.anual.liquidaciones.total-a-ingresar" },
+    { op = "add", args = [
+        { casilla_id = "iva.anual.compensacion-ultimo-periodo-97" },
+        { casilla_id = "iva.anual.liquidaciones.ultimo-periodo-a-devolver" },
+        { casilla_id = "iva.anual.compensacion-generada-ejercicio-no-97" },
+    ] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
