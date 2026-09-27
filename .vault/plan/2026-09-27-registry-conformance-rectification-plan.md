@@ -10,7 +10,7 @@ related:
   - '[[2026-09-21-retenciones-workflow-observation-payment-contract-adr]]'
 modified: '2026-09-27'
 body_schema: body-v2
-body_hash: 'sha256:d60584822a2c2bc12914995e0e8e1e5172f64740129aeaefce972b3afc371a2c'
+body_hash: 'sha256:8ebf375f8264df264ee32cf6a9093fe6bdfa4d41b4c19bb4c7c966d359f6fde0'
 ---
 
 # `registry-conformance-rectification` plan
@@ -35,6 +35,7 @@ Make the collapse verifier, the delta converter and the parity comparison measur
 - [ ] `P01.S02` - Let drop-restatement read storage-baseline editions, not only string predecessors; `dev/registry/edition_delta_migration.py`.
 - [ ] `P01.S03` - Apply the filing schedule source reference default before comparing schedules; `dev/registry/registry_collapse_verification.py`.
 - [x] `P01.S04` - Classify the indexed parity mapping-key order difference and fix the comparison or the ordering; `dev/registry/registry_collapse_verification.py`.
+- [x] `P01.S13` - Compose export layouts and scope snapshots to the selected edition before the indexed parity comparison; `dev/registry/registry_collapse_verification.py`.
 
 ### Phase `P02` - Modelo 100 baseline relocation
 

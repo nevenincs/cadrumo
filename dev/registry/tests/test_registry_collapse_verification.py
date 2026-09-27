@@ -521,3 +521,75 @@ def test_first_difference_still_detects_a_reordered_sequence() -> None:
 
     assert difference is not None
     assert difference["location"] == "$.formulas[0].id"
+
+
+def test_indexed_temporal_selection_composes_the_export_layouts_the_source_revision_carries() -> None:
+    """Selection loads the base revision, so the verifier must compose its layouts before comparing.
+
+    The source side's selected revision carries its export layouts; comparing
+    it with the layout-free base revision reported every layout-bearing
+    coordinate as a changed revision.
+    """
+    from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+
+    with bundled_indexed_authority().operation() as operation:
+        support = operation.supported_filing_years()
+        bearing = next(
+            (modelo_id, revision_id)
+            for modelo_id, revision_id in sorted(operation.revision_ids())
+            if operation.revision_with_export_layouts(modelo_id, revision_id).export_layouts
+            and support.admits_filing_year(operation.revision(modelo_id, revision_id).valid_from.year)
+            and operation.revision(modelo_id, revision_id).period_selector.declared_periods
+        )
+        modelo_id, revision_id = bearing
+        base = operation.revision(modelo_id, revision_id)
+        coordinate = verification.RequestCoordinate(
+            filing_year=base.valid_from.year,
+            period=str(base.period_selector.declared_periods[0]),
+            on=None,
+            revision_id=revision_id,
+            case="layout-bearing",
+        )
+
+        result = verification._indexed_selection_result(operation, modelo_id, coordinate)
+
+        assert result["outcome"] == "selected", result
+        assert result["value"] == verification._typed_projection(
+            operation.revision_with_export_layouts(modelo_id, revision_id)
+        )
+        assert result["value"] != verification._typed_projection(base)
+
+
+def test_snapshot_comparison_ignores_unselected_editions_but_not_the_selected_one() -> None:
+    """The indexed runtime scopes a snapshot's modelo to the edition it selected.
+
+    An in-memory authority keeps every edition there. Editions the snapshot did
+    not select carry none of its meaning, so they must not register as a
+    difference, while any change to the selected edition still must.
+    """
+    from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+
+    with bundled_indexed_authority().operation() as operation:
+        support = operation.supported_filing_years()
+        directory = operation.modelo_directory("100")
+        editions = sorted(str(revision.id) for revision in directory.revisions)
+        snapshot = operation.snapshot("100", filing_year=support.floor, period="0A")
+        other_id = next(revision_id for revision_id in editions if revision_id != str(snapshot.revision.id))
+        other = operation.revision("100", other_id)
+    widened = snapshot.model_copy(
+        update={
+            "modelo": snapshot.modelo.model_copy(
+                update={"revisions": {**snapshot.modelo.revisions, other.id: other}},
+            )
+        }
+    )
+    changed = snapshot.model_copy(update={"revision": snapshot.revision.model_copy(update={"parameters": ()})})
+    coordinate = verification.RequestCoordinate(
+        filing_year=support.floor, period="0A", on=None, revision_id=None, case="floor"
+    )
+
+    def result(value: object) -> object:
+        return verification._snapshot_result(lambda *_args, **_kwargs: value, "100", coordinate)
+
+    assert verification._first_difference(result(snapshot), result(widened), "$") is None
+    assert verification._first_difference(result(snapshot), result(changed), "$") is not None

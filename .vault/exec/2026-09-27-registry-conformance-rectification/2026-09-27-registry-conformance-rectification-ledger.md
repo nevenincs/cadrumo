@@ -5,7 +5,7 @@ tags:
 date: '2026-09-27'
 modified: '2026-09-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:ad14bd46ad9ef82d6071f43a509688fe4bcace48c9c766c02c93137ab3a9096a'
+body_hash: 'sha256:5198202bd7934430d23c7351ca58cf4b3dd7a601d9bd3967506df6e6a1d8ca14'
 related:
   - "[[2026-09-27-registry-conformance-rectification-plan]]"
 ---
@@ -89,6 +89,9 @@ related:
 - `S05` `M` `src/cadrumo/tests/fixtures/borrador/modelo_100_2023.json`
 - `S05` `M` `src/cadrumo/tests/fixtures/borrador/modelo_100_2023.pdf`
 - `S05` `verify:` `just check-registry-gate` -> `pass`
+- `S13` `M` `dev/registry/registry_collapse_verification.py`
+- `S13` `M` `dev/registry/tests/test_registry_collapse_verification.py`
+- `S13` `verify:` `python -m dev.registry.registry_collapse_verification --modelo 100 (complete, indexed 3307 coordinates)` -> `pass`
 
 ## Notes
 

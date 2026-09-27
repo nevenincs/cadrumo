@@ -39,6 +39,7 @@ from cadrumo.domain.calculations.registry.schema import (
     REVISION_SCHEMA_FAMILY_FIELDS,
     ModeloDefinition,
     ModeloRevision,
+    RegistrySnapshot,
     SupportedFilingYearsCatalogue,
 )
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
@@ -878,9 +879,25 @@ def _snapshot_result(
             on=None if coordinate.on is None else date.fromisoformat(coordinate.on),
             revision_id=coordinate.revision_id,
         )
-        return {"outcome": "admitted", "value": _typed_projection(value)}
+        return {"outcome": "admitted", "value": _typed_projection(_scoped_to_selected_edition(value))}
     except Exception as exc:
         return {"outcome": "refused", "error_type": type(exc).__name__, "detail": str(exc)}
+
+
+def _scoped_to_selected_edition(snapshot: object) -> object:
+    """Keep only the selected edition in the snapshot's modelo.
+
+    The indexed runtime composes a snapshot's modelo from the one revision it
+    selected, while an in-memory authority keeps every edition there; the
+    editions the snapshot did not select are not part of its meaning.
+    """
+    if not isinstance(snapshot, RegistrySnapshot):
+        return snapshot
+    selected = snapshot.revision.id
+    revisions = {
+        revision_id: revision for revision_id, revision in snapshot.modelo.revisions.items() if revision_id == selected
+    }
+    return snapshot.model_copy(update={"modelo": snapshot.modelo.model_copy(update={"revisions": revisions})})
 
 
 def _indexed_selection_result(
@@ -909,7 +926,9 @@ def _indexed_selection_result(
             "requested_filing_year": resolution.requested_filing_year,
             "authored_filing_year": resolution.authored_filing_year,
             "projection_direction": str(resolution.projection_direction),
-            "value": _typed_projection(selected),
+            # Selection loads the base revision; the source side's revision carries its
+            # export layouts, so the indexed value is composed the same way.
+            "value": _typed_projection(operation.revision_with_export_layouts(modelo_id, str(selected.id))),
         }
     except Exception as exc:
         return {"outcome": "refused", "error_type": type(exc).__name__, "detail": str(exc)}
