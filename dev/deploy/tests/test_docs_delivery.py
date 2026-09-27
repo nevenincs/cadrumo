@@ -51,6 +51,7 @@ def test_the_live_checks_cover_every_root_404_and_mount_redirect_on_both_mounts(
             assert checks[f"{base_url}/{language}/"] == 200
         assert checks[f"{base_url}/{_MISSING_DOCS_PATH}"] == 404
         assert checks[base_url] == 301
+        assert checks[f"{base_url}?cadrumo_delivery_check=1"] == 301
 
 
 def test_missing_credentials_are_named_together_without_their_values() -> None:
@@ -68,3 +69,4 @@ def test_an_apex_page_is_checked_to_redirect_to_the_source_language_root() -> No
         assert checks[deep_link] == 301
         assert expected_redirect(deep_link) == f"{mount}/en/search.html"
         assert expected_redirect(base_url) == f"{mount}/"
+        assert expected_redirect(base_url + "?q=invoice") == f"{mount}/?q=invoice"

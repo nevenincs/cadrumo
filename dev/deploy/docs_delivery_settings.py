@@ -59,6 +59,7 @@ def configure_delivery(account: CloudflareAccount, zone: str, snapshot: Path) ->
         "http_request_cache_settings",
         "http_response_headers_transform",
         "http_request_firewall_custom",
+        "http_request_dynamic_redirect",
     )
     before = {phase: optional_get(account, f"/zones/{zone}/rulesets/phases/{phase}/entrypoint") for phase in phases}
     before["cors"] = optional_get(account, f"{base}/cors")
@@ -184,3 +185,26 @@ def configure_delivery(account: CloudflareAccount, zone: str, snapshot: Path) ->
         },
     )
     _call(account, "PATCH", f"/zones/{zone}/cache/tiered_cache_smart_topology_enable", json={"value": "on"})
+    # Exact Worker routes do not match a bare mount with a query string.
+    # Keep those requests off the unrelated origin without matching /docsfoo.
+    reconcile_rule(
+        account,
+        zone,
+        "http_request_dynamic_redirect",
+        {
+            "ref": "cadrumo_bare_mount_query",
+            "description": "Preserve queries when normalizing bare documentation mounts",
+            "expression": '(http.request.uri.query ne "" and ((http.host eq "cadrumo.neve.md" '
+            'and http.request.uri.path eq "/docs") or (http.host eq "neve.md" '
+            'and http.request.uri.path eq "/cadrumo/docs")))',
+            "action": "redirect",
+            "enabled": True,
+            "action_parameters": {
+                "from_value": {
+                    "target_url": {"expression": 'concat("https://", http.host, http.request.uri.path, "/")'},
+                    "status_code": 301,
+                    "preserve_query_string": True,
+                }
+            },
+        },
+    )

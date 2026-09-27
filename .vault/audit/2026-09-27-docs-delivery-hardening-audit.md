@@ -5,7 +5,7 @@ tags:
 date: '2026-09-27'
 modified: '2026-09-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:d0cd035fceb642df189073dc72416cd9f85a5191885400f512afedb04c6b0b0a'
+body_hash: 'sha256:713245b5685499756d9f51be7f08be106649a6383cc678d9844fb812f4074b41'
 related:
   - "[[2026-09-27-docs-delivery-hardening-plan]]"
 ---
@@ -43,6 +43,24 @@ The publisher now requires the static delivery marker on both public roots, incl
 
 The broader lane-reachability suite has six failures caused by discovery of another contributor's nested `.claude/worktrees/agent-a7e74860a37e5cce6/` checkout. The failure lists name that nested copy, not changed deployment files. Its 39 other lane tests pass. Do not remove or rewrite that checkout as part of this migration. This is an existing workspace completeness limitation, not a passing repository-wide gate.
 
+### production-cutover | low | Verified release now serves through native assets and direct R2
+
+At 05:16:51 UTC on 2026-09-27, production activated static version `16f13780-f0be-43e3-9c5e-91f5d5b0e823` for release `feature-docsbuild-20260924T081959Z`. Both service records report assets present and no executable modules; their reported fetch handlers are platform metadata, not an uploaded module. The old proxy has no public routes. Both release archives and recovery metadata remain private. Full verification compared 69,745 private objects and 61,562 public search objects before sealing.
+
+All 72 directory checks across both mounts match archived bytes and carry the static marker. HTML ETags, warm HITs, HEAD, 304 revalidation, missing-page 404s, and all language health probes pass. Public search responses retain wildcard read CORS, immutable one-year cache metadata, warm HITs, and a tested 32-byte 206 range. The canonical landing remains 200 without the documentation release header; similarly named non-docs paths no longer reach this deployment. GraphQL returned no documentation invocations for the interval starting 05:17 UTC, queried at 05:21 UTC. Evidence: `var/docs-hardening/activation.json`, `deployed-state.json`, `live-http.json`, `analytics-after.json`, and `retention.json`.
+
+### query-routing | medium | Bare-mount query bypass found and corrected
+
+Exact Worker routes do not match a bare mount carrying a query. A scoped zone redirect now normalizes only those two paths and preserves the full query. Normal native deep-link redirects already preserve queries. The publisher's candidate and production checks now exercise the query case and accept equivalent absolute or relative destinations. Fresh public probes return 301 to the correct same-host mount with the original query intact.
+
+### transport-and-prefetch | low | Scoped transport verified and theme prefetch removed from future builds
+
+Live TLS 1.1 requests to docs return 403, TLS 1.2 returns 200, and the unrelated landing still accepts its existing protocols. The public R2 domain rejects TLS 1.1 during the handshake. The original archived HTML explicitly prefetches two theme logos, which Cloudflare route delivery declines with 503. Browser request headers prove these failures are prefetch-only; ordinary logo requests, navigation and real search succeed. A shared Furo base-template override removes those speculative links from future builds; its real Sphinx rendering test passes. The currently preserved archive retains its original bytes until the next normal documentation publication.
+
+### ci-handoff | low | Protected main requires the project pull-request checks
+
+GitHub rejected the authorized direct main push under its PR and required-check rules. The reviewed changes are submitted through PR 693. Source checks and the dependency-free monitoring command pass locally; the workflow explicitly provisions Python through the pinned uv setup action. Scheduled monitoring becomes active only after the PR reaches the default branch. The ongoing required checks are not reported as passing or merged prematurely. No production runtime depends on the ignored `var/docs-hardening/` scratch directory.
+
 ## Recommendations
 
-PASS for S01 and S02 after revision: no unresolved critical or high implementation findings. S03 still requires production activation and verification. The platform conditional behavior and hostname handshake limits remain explicitly recorded. No paid subscription or archive deletion is authorized by this plan.
+PASS for the reviewed implementation and live migration: no unresolved critical or high implementation findings. Complete the protected-branch CI handoff and run the scheduled monitor after merge. The platform conditional behavior, scoped handshake limits, and existing archive's logo-prefetch behavior remain explicitly recorded. No paid subscription or archive deletion was performed.

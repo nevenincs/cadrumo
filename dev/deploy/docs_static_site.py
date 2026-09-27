@@ -26,7 +26,7 @@ from datetime import UTC, datetime
 from http.client import HTTPConnection, HTTPException, HTTPSConnection
 from pathlib import Path
 from typing import Any, Final
-from urllib.parse import urlsplit
+from urllib.parse import urljoin, urlsplit
 
 from defusedxml import ElementTree
 
@@ -800,6 +800,7 @@ def public_delivery_checks() -> tuple[tuple[str, int], ...]:
         checks.extend((f"{base_url}/{language}/", 200) for language in localized_languages())
         checks.append((f"{base_url}/{_MISSING_DOCS_PATH}", 404))
         checks.append((base_url, 301))
+        checks.append((f"{base_url}?cadrumo_delivery_check=1", 301))
         checks.append((f"{base_url}/{_APEX_DEEP_LINK}", 301))
     return tuple(checks)
 
@@ -810,11 +811,13 @@ def expected_redirect(url: str) -> str:
     The bare mount redirects to its directory; an apex page redirects to the same
     page under the source-language root.
     """
-    path = urlsplit(url).path
+    parsed = urlsplit(url)
+    path = parsed.path
+    query = f"?{parsed.query}" if parsed.query else ""
     if path.endswith(f"/{_APEX_DEEP_LINK}"):
         mount = path[: -len(_APEX_DEEP_LINK) - 1]
-        return f"{mount}/{_docs_i18n.DEFAULT_SOURCE_LANGUAGE}/{_APEX_DEEP_LINK}"
-    return f"{path}/"
+        return f"{mount}/{_docs_i18n.DEFAULT_SOURCE_LANGUAGE}/{_APEX_DEEP_LINK}{query}"
+    return f"{path}/{query}"
 
 
 def _published_body(url: str) -> bytes:
@@ -933,7 +936,7 @@ def _delivery_mismatch(url: str, expected_status: int, release: str) -> str | No
         return f"expected HTTP {expected_status}, received HTTP {actual_status}"
     if expected_status != 301 and headers.get(RELEASE_HEADER) != release:
         return f"answered from release {headers.get(RELEASE_HEADER)!r}, not {release!r}"
-    if expected_status == 301 and headers.get("location") != expected_redirect(url):
+    if expected_status == 301 and urljoin(url, headers.get("location", "")) != urljoin(url, expected_redirect(url)):
         return f"redirected to {headers.get('location')!r}, not to {expected_redirect(url)!r}"
     return None
 
@@ -1087,7 +1090,8 @@ def _verify_candidate(account: CloudflareAccount, release: str) -> None:
     host = f"https://{CANDIDATE_SCRIPT}.{subdomain}.workers.dev"
     deadline = time.monotonic() + _RELEASE_WAIT_SECONDS
     for url, expected in public_delivery_checks():
-        candidate = host + urlsplit(url).path
+        parsed = urlsplit(url)
+        candidate = host + parsed.path + (f"?{parsed.query}" if parsed.query else "")
         while (mismatch := _delivery_mismatch(candidate, expected, release)) is not None:
             if time.monotonic() > deadline:
                 raise ValueError(f"Candidate verification failed for {candidate}: {mismatch}")

@@ -5,7 +5,7 @@ tags:
 date: '2026-09-27'
 modified: '2026-09-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:54bdd166b588ee5a649c41d544a0907f5a86e7019373b773a5800b3554cf2888'
+body_hash: 'sha256:837cc8f763f7445855a054a876d6ebf6986a2cce3e0ecfb8f581c1b49141f954'
 related:
   - "[[2026-09-27-docs-delivery-hardening-plan]]"
 ---
@@ -65,6 +65,15 @@ related:
 - `S02` `M` `dev/tests/test_lane_reachability.py`
 - `S02` `A` `.vault/audit/2026-09-27-docs-delivery-hardening-audit.md`
 - `S02` `verify:` `Final focused deployment lane 103 tests; Ruff ty actionlint zizmor` -> `pass`
+- `S03` `M` `.github/workflows/docs-health.yml`
+- `S03` `M` `dev/deploy/docs_delivery_settings.py`
+- `S03` `M` `dev/deploy/docs_static_site.py`
+- `S03` `M` `dev/deploy/tests/test_docs_delivery.py`
+- `S03` `M` `dev/docs/tests/test_docs_build.py`
+- `S03` `A` `docs/_templates/base.html`
+- `S03` `M` `.vault/audit/2026-09-27-docs-delivery-hardening-audit.md`
+- `S03` `verify:` `Sealed inventories; 72 public directory byte comparisons; all language health probes; browser navigation; native delivery metadata; TLS and cache probes` -> `pass`
+- `S03` `verify:` `Query-preservation checks, 24 focused publisher tests and real Sphinx identity render` -> `pass`
 
 ## Notes
 
