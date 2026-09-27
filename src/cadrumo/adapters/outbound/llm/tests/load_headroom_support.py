@@ -28,14 +28,13 @@ from .....application.provisioning import (
     AcceleratorDevice,
     AcceleratorReading,
     HardwareProfile,
-    ModelRole,
     SystemMemoryReading,
     select_model_for_role,
 )
 from .....core.config import Settings
 from .....core.config_support import LLMProvider
 from .....core.hardware import AcceleratorKind
-from .....core.model_catalogue import model_candidate
+from .....core.model_catalogue import ModelRole, model_candidate
 from .....core.optional_extras import MissingOptionalExtraError
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from .....domain.iva.supply_nature import SupplyNature
