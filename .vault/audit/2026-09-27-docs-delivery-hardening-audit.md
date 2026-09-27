@@ -5,7 +5,7 @@ tags:
 date: '2026-09-27'
 modified: '2026-09-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:713245b5685499756d9f51be7f08be106649a6383cc678d9844fb812f4074b41'
+body_hash: 'sha256:9377d349d7842f7d99e74d11fa8368f8b8a7e5b53acdb6d953c7636a858ab5e5'
 related:
   - "[[2026-09-27-docs-delivery-hardening-plan]]"
 ---
@@ -61,6 +61,16 @@ Live TLS 1.1 requests to docs return 403, TLS 1.2 returns 200, and the unrelated
 
 GitHub rejected the authorized direct main push under its PR and required-check rules. The reviewed changes are submitted through PR 693. Source checks and the dependency-free monitoring command pass locally; the workflow explicitly provisions Python through the pinned uv setup action. Scheduled monitoring becomes active only after the PR reaches the default branch. The ongoing required checks are not reported as passing or merged prematurely. No production runtime depends on the ignored `var/docs-hardening/` scratch directory.
 
+### import-inventory | medium | New deployment modules required regenerated load metadata
+
+The first protected-branch CI run failed its import gate. The local reproduction identified stale `dev` load-target metadata after four deployment modules were added. Regenerated `dev/quality/metadata/import_load_targets.json` through `dev.quality.import_load_probe --compile-targets`; the diff adds exactly those four modules. The complete import gate now exits zero: 15 dependency contracts kept, 2,900 governed modules loaded, zero hard findings. Evidence: `var/docs-hardening/import-gate-after.log`. This corrects the integration omission without weakening the gate; the updated commit still requires CI verification.
+
+### recovery-exercise | low | Real version restoration and overlapping publisher exclusion passed
+
+A content-identical temporary native asset version was deployed under the R2 lock, then the publisher's recovery operation restored production version `16f13780-f0be-43e3-9c5e-91f5d5b0e823`. Both public mount checks passed afterwards. A second real lock acquisition while the first owner held the lock returned HTTP 412; the original owner released it correctly. Evidence: `var/docs-hardening/live-recovery.json` and `live-lock.json`. No archived content changed during either exercise.
+### workflow-contracts | medium | Availability checks now follow the repository CI contract
+
+The completed first CI run confirmed stale import metadata and four workflow contract failures; its remaining 1,005 scoped tests passed. Corrected the workflow and job names, removed the Python override in favor of `.python-version`, and removed the cron trigger to preserve the accepted `2026-07-21-ci-discipline-adr` zero-schedule decision. Every publication still verifies both mounts; the standalone availability workflow is dispatch-only. The owning 45 CI contract tests pass without test changes. The earlier scheduled-monitor descriptions in this audit describe the initial proposal, not the final deployment cadence. PASS for the correction; the next protected-branch CI run remains required.
 ## Recommendations
 
-PASS for the reviewed implementation and live migration: no unresolved critical or high implementation findings. Complete the protected-branch CI handoff and run the scheduled monitor after merge. The platform conditional behavior, scoped handshake limits, and existing archive's logo-prefetch behavior remain explicitly recorded. No paid subscription or archive deletion was performed.
+PASS for the reviewed implementation and live migration: no unresolved critical or high implementation findings. Complete the protected-branch CI handoff and dispatch the availability check after merge. The platform conditional behavior, scoped handshake limits, and existing archive's logo-prefetch behavior remain explicitly recorded. No paid subscription or archive deletion was performed.

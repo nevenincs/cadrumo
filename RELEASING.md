@@ -313,8 +313,8 @@ and its routes on `neve.md`), `CADRUMO_DOCS_R2_BUCKET`, `CADRUMO_DOCS_R2_ACCESS_
 and `CADRUMO_DOCS_R2_SECRET_ACCESS_KEY` (an R2 key limited to the private archive and
 public search buckets). Failed verification restores the preceding static version and
 documentation routes. A failure alert links to the run; inspect its recovery checks.
-The separate documentation availability workflow checks both public mounts every
-15 minutes once installed on the default branch.
+Every publication verifies both public mounts. The separate documentation availability
+workflow repeats these checks on demand with `gh workflow run docs-health.yml --ref main`.
 
 To republish the documentation of a ref without a release, dispatch the `docs` phase:
 

@@ -6,9 +6,10 @@ date: '2026-09-27'
 tier: L1
 related:
   - '[[2026-09-27-website-repository-boundary-docs-static-delivery-adr]]'
+  - '[[2026-07-21-ci-discipline-adr]]'
 modified: '2026-09-27'
 body_schema: body-v2
-body_hash: 'sha256:5e8da188c85864c36e9202990db1052a4df6c09ba280b862bf2ddeb7931a47ca'
+body_hash: 'sha256:c363c39aa1f1c5d06bdd9bb6780bd329fb959ae291c8db3acf8cb29ac7d1a529'
 ---
 
 # `docs-delivery-hardening` plan
@@ -22,7 +23,7 @@ Authorization: the user instructed "Action and fix the findings" after reviewing
 ## Steps
 
 - [x] `S01` - Implement verified static manifests and serialized recoverable publication; `dev/deploy/docs_asset_delivery.py, dev/deploy/docs_asset_manifest.py, dev/deploy/r2_objects.py, dev/deploy/tests/test_docs_asset_delivery.py`.
-- [x] `S02` - Integrate publishing rollback monitoring and CI safeguards; `dev/deploy/, .github/workflows/release.yml, .github/workflows/docs-health.yml, RELEASING.md, justfile, dev/tests/test_lane_reachability.py, worker/`.
+- [x] `S02` - Integrate publishing rollback monitoring and CI safeguards; `dev/deploy/, dev/quality/metadata/import_load_targets.json, .github/workflows/release.yml, .github/workflows/docs-health.yml, RELEASING.md, justfile, dev/tests/test_lane_reachability.py, worker/`.
 - [x] `S03` - Migrate the verified release configure scoped delivery and validate production; `dev/deploy/, dev/docs/tests/test_docs_build.py, docs/_templates/base.html, .github/workflows/docs-health.yml, var/docs-hardening/, .vault/audit/`.
 
 ## Parallelization

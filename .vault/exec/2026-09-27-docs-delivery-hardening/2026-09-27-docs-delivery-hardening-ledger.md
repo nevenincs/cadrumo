@@ -5,7 +5,7 @@ tags:
 date: '2026-09-27'
 modified: '2026-09-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:837cc8f763f7445855a054a876d6ebf6986a2cce3e0ecfb8f581c1b49141f954'
+body_hash: 'sha256:e4149995b5f495ecba0245a7101111411d6e9773d3e59aa8ee93ef2c5f918ce0'
 related:
   - "[[2026-09-27-docs-delivery-hardening-plan]]"
 ---
@@ -74,6 +74,10 @@ related:
 - `S03` `M` `.vault/audit/2026-09-27-docs-delivery-hardening-audit.md`
 - `S03` `verify:` `Sealed inventories; 72 public directory byte comparisons; all language health probes; browser navigation; native delivery metadata; TLS and cache probes` -> `pass`
 - `S03` `verify:` `Query-preservation checks, 24 focused publisher tests and real Sphinx identity render` -> `pass`
+- `S02` `M` `dev/quality/metadata/import_load_targets.json`
+- `S02` `verify:` `uv run --no-sync python -m dev.quality.import_gate` -> `pass`
+- `S02` `verify:` `45 CI workflow contract tests` -> `pass`
+- `S02` `verify:` `just check-workflows and check-workflow-security` -> `pass`
 
 ## Notes
 

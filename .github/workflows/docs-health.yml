@@ -1,8 +1,6 @@
-name: Documentation availability
+name: Cadrumo Documentation Availability
 
 on:
-  schedule:
-    - cron: '7,22,37,52 * * * *'
   workflow_dispatch:
 
 permissions:
@@ -14,6 +12,7 @@ concurrency:
 
 jobs:
   check:
+    name: "Check: Documentation availability (Linux)"
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 5
     permissions:
@@ -27,10 +26,9 @@ jobs:
         uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
         with:
           version: "0.11.29"
-          python-version: "3.13"
           enable-cache: false
       - name: Check both documentation mounts
-        run: uv run --no-project --python 3.13 dev/deploy/docs_health.py
+        run: uv run --no-project --python "$(cat .python-version)" dev/deploy/docs_health.py
       - name: Report an availability failure
         if: failure()
         env:
