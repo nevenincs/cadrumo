@@ -18,7 +18,7 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 
 from ....core.json_contract import NoticeSeverity
 from ....domain.calculations.registry.schema_base import ThresholdComparison
-from ....domain.calculations.registry.tests.published_authority import published_revision
+from ....domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource, published_revision
 from ....domain.iva.prorrata_especial_parameters import (
     ProrrataEspecialMandatoryParameterError,
     ProrrataEspecialMandatoryParameters,
@@ -27,6 +27,11 @@ from ....domain.iva.prorrata_especial_parameters import (
 from ..prorrata_regularizacion import build_prorrata_especial_mandatory_advisory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_SUPPORT = PublishedGovernedFactSource().supported_filing_years()
+# Ley 28/2014 gives art. 103.Dos.2.o its current ten-percent redaction from this
+# ejercicio; the cited provision's own start, below the support floor.
+_CURRENT_REDACTION_FIRST_EJERCICIO = 2015
 
 
 #: An explicit resolved margin. These tests exercise the PREDICATE and the
@@ -74,7 +79,8 @@ def test_advisory_fires_when_general_exceeds_especial_by_more_than_ten_percent()
         assert notice.context["legal_refs"] == "ley-37-1992:art-103"
 
 
-def test_advisory_fires_at_exactly_ten_percent_boundary_from_2015() -> None:
+@pytest.mark.parametrize("ejercicio", _SUPPORT.years)
+def test_advisory_fires_at_exactly_ten_percent_boundary_in_every_supported_ejercicio(ejercicio: int) -> None:
     """Art. 103.Dos.2.º reads "exceda en un 10 por ciento o más", so the boundary itself is obligatory.
 
     110 against 100 is an excess of exactly ten percent. "O más" reaches the
@@ -85,8 +91,8 @@ def test_advisory_fires_at_exactly_ten_percent_boundary_from_2015() -> None:
         notice = build_prorrata_especial_mandatory_advisory(
             deduction_under_general=Decimal("110.00"),
             deduction_under_especial=Decimal("100.00"),
-            ejercicio=2026,
-            parameters=_especial_params_for(2026),
+            ejercicio=ejercicio,
+            parameters=_especial_params_for(ejercicio),
             operation=_authority_operation_for_test,
         )
 
@@ -101,8 +107,8 @@ def test_advisory_fires_at_exactly_ten_percent_boundary_from_2015() -> None:
             build_prorrata_especial_mandatory_advisory(
                 deduction_under_general=Decimal("109.99"),
                 deduction_under_especial=Decimal("100.00"),
-                ejercicio=2026,
-                parameters=_especial_params_for(2026),
+                ejercicio=ejercicio,
+                parameters=_especial_params_for(ejercicio),
                 operation=_authority_operation_for_test,
             )
             is None
@@ -156,17 +162,18 @@ def test_the_advisory_envelope_reports_the_margin_it_was_handed() -> None:
         assert notice.context["margin_inclusive"] == "false"
 
 
-def test_a_pre_2015_ejercicio_is_refused_at_the_resolver() -> None:
+def test_an_ejercicio_before_the_current_redaction_is_refused_at_the_resolver() -> None:
     """TEETH: the uncitable redaction is refused rather than silently reused.
 
     The advisory itself no longer decides anything by year, so the defence
     against applying today's margin to a 2014 ejercicio lives one layer up, at
     the resolver that would have to supply the bundle.
     """
-    revision = published_revision("303", "2025")
+    revision = published_revision("303", _ESPECIAL_PARAMS.revision_id)
+    ejercicio = _CURRENT_REDACTION_FIRST_EJERCICIO - 1
     with pytest.raises(ProrrataEspecialMandatoryParameterError) as excinfo:
-        resolve_prorrata_especial_mandatory_parameters(revision, modelo_id="303", ejercicio=2014)
-    assert "does not resolve for ejercicio 2014" in str(excinfo.value)
+        resolve_prorrata_especial_mandatory_parameters(revision, modelo_id="303", ejercicio=ejercicio)
+    assert f"does not resolve for ejercicio {ejercicio}" in str(excinfo.value)
 
 
 def test_advisory_silent_when_general_does_not_exceed_especial() -> None:

@@ -53,8 +53,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _CORPUS = Path(__file__).parent / "_evidence_corpus"
 
-_LAYOUT_MINIMAL_ID = "OP-PUR-COM-2026-0005_layout-minimal"
-_CAMERA_PHOTO_ID = "OP-PUR-COM-2026-0005_camera-photo"
+#: The control document's corpus identity, shared by both of its renderings.
+_CONTROL_DOC_ID = "OP-PUR-COM-2026-0005"
+_LAYOUT_MINIMAL_ID = f"{_CONTROL_DOC_ID}_layout-minimal"
+_CAMERA_PHOTO_ID = f"{_CONTROL_DOC_ID}_camera-photo"
 
 #: The document's own figures, as printed. Read from the document, not chosen.
 _BASE = Decimal("766.30")

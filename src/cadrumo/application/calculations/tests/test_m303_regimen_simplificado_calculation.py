@@ -36,6 +36,10 @@ from ..m303_regimen_simplificado import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+# RDL 7/2024 art. 11.2 reduces the annual simplified cuota of this one exercise; it is
+# the measure's own identity rather than a support coordinate.
+_DANA_RELIEF_EXERCISE = 2024
+
 
 @pytest.fixture
 def authority_operation() -> Iterator[PinnedAuthorityOperation]:
@@ -170,8 +174,10 @@ def test_lorca_calculation_across_registry_support_envelope(authority_operation)
             )
 
 
-def test_2024_annual_dana_reduces_each_eligible_activity_once_from_bundled_authority(authority_operation) -> None:
-    period = Period.from_year_and_code(2024, "4T")
+def test_relief_exercise_annual_dana_reduces_each_eligible_activity_once_from_bundled_authority(
+    authority_operation,
+) -> None:
+    period = Period.from_year_and_code(_DANA_RELIEF_EXERCISE, "4T")
     scope, rows, snapshot = _annual_snapshot_and_rows(period)
     eligibility = M303DANAEligibilityEvidence(
         eligible=True,
@@ -216,8 +222,8 @@ def test_2024_annual_dana_reduces_each_eligible_activity_once_from_bundled_autho
     )
 
 
-def test_dana_eligibility_is_refused_outside_the_2024_annual_result(authority_operation) -> None:
-    period = Period.from_year_and_code(2024, "3T")
+def test_dana_eligibility_is_refused_outside_the_relief_exercise_annual_result(authority_operation) -> None:
+    period = Period.from_year_and_code(_DANA_RELIEF_EXERCISE, "3T")
     scope, rows, snapshot = _annual_snapshot_and_rows(period)
     eligibility = M303DANAEligibilityEvidence(
         eligible=True,
@@ -268,8 +274,8 @@ def test_dana_fact_outside_its_explicit_legal_window_refuses(authority_operation
         _resolve_dana_fact(authority_operation, effective_date)
 
 
-def test_2025_annual_result_refuses_dana_evidence_and_applies_no_reduction(authority_operation) -> None:
-    period = Period.from_year_and_code(2025, "4T")
+def test_post_relief_annual_result_refuses_dana_evidence_and_applies_no_reduction(authority_operation) -> None:
+    period = Period.from_year_and_code(_DANA_RELIEF_EXERCISE + 1, "4T")
     scope, rows, snapshot = _annual_snapshot_and_rows(period)
     eligibility = M303DANAEligibilityEvidence(
         eligible=True,

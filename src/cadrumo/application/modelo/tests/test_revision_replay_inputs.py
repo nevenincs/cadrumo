@@ -24,6 +24,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.calculations.registry.temporal import select_revision
+from ....domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from ....domain.deadlines.models import TaxpayerProfile
@@ -53,6 +54,11 @@ from ...filing.runtime import ModeloOperatorProfile, build_runtime_schema_provid
 from ..revision_replay_inputs import revision_filing_replay_inputs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
+
+_SUPPORT = PublishedGovernedFactSource().supported_filing_years()
+# The two newest authored Modelo 100 editions below the projecting horizon; both
+# accept the payee salary certificate as the 0596 retenciones source.
+_SALARY_CERTIFICATE_EDITIONS = (_SUPPORT.horizon - 2, _SUPPORT.horizon - 1)
 
 _CLOCK = datetime(2026, 6, 27, 12, 45, tzinfo=UTC)
 _BUCKET_ID = "e6d780ee-3271-4087-a705-7cc7e97010c9"  # was 'revision-replay-inputs'
@@ -233,8 +239,9 @@ def test_revision_replay_inputs_keep_applicable_m100_pagos_relation_unresolved()
     assert replay_inputs["renta-modelo-131-pagos-fraccionados"] == "0"
 
 
-def test_revision_replay_inputs_recover_salary_certificate_binding_for_m100_2024_0596() -> None:
-    work_unit = _work_unit(modelo="100", filing_year=2024, period_code="0A")
+@pytest.mark.parametrize("filing_year", _SALARY_CERTIFICATE_EDITIONS)
+def test_revision_replay_inputs_recover_salary_certificate_binding_for_m100_0596(filing_year: int) -> None:
+    work_unit = _work_unit(modelo="100", filing_year=filing_year, period_code="0A")
     revision = _revision(
         work_unit,
         input_values_by_casilla_id={_M100_RETENCIONES_TRABAJO_CASILLA: "4500"},
@@ -248,8 +255,9 @@ def test_revision_replay_inputs_recover_salary_certificate_binding_for_m100_2024
     assert _M100_M111_RETENCIONES_BINDING not in replay_inputs
 
 
-def test_revision_replay_inputs_recover_m100_2024_0596_from_verified_revision_values() -> None:
-    work_unit = _work_unit(modelo="100", filing_year=2024, period_code="0A")
+@pytest.mark.parametrize("filing_year", _SALARY_CERTIFICATE_EDITIONS)
+def test_revision_replay_inputs_recover_m100_0596_from_verified_revision_values(filing_year: int) -> None:
+    work_unit = _work_unit(modelo="100", filing_year=filing_year, period_code="0A")
     revision = _revision(
         work_unit,
         state=CalculationRevisionState.VERIFICADO_COMPLETO,

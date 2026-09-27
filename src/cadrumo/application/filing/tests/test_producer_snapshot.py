@@ -928,8 +928,8 @@ def test_m303_filing_facts_resolver_refuses_non_official_period_before_producer_
         )
 
 
-def test_real_2026_dp30301_source_pins_a16_a30_lexical_domains() -> None:
-    """The official 2026 design pins the A16-A30 lexical domains verbatim.
+def test_real_open_ended_design_dp30301_source_pins_a16_a30_lexical_domains() -> None:
+    """The official open-ended design pins the A16-A30 lexical domains verbatim.
 
     This case once also asserted that A29, the non-zero annual volume marker,
     had NO producer key. That pin was written while the box was unmodelled and

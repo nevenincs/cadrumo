@@ -39,17 +39,21 @@ from ..m303_arrivals import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_Q1_2026 = Period.from_year_and_code(2026, "1T")
-_Q2_2026 = Period.from_year_and_code(2026, "2T")
-_Q4_2026 = Period.from_year_and_code(2026, "4T")
-_DECEMBER_2026 = Period.from_year_and_code(2026, "12")
+# The exercise of the official Modelo 303 design that introduces the prorrata
+# transition and supplier-regime arrival fields; the cited design's identity.
+_PRORRATA_TRANSITION_DESIGN_EXERCISE = 2026
+
+_DESIGN_Q1 = Period.from_year_and_code(_PRORRATA_TRANSITION_DESIGN_EXERCISE, "1T")
+_DESIGN_Q2 = Period.from_year_and_code(_PRORRATA_TRANSITION_DESIGN_EXERCISE, "2T")
+_DESIGN_Q4 = Period.from_year_and_code(_PRORRATA_TRANSITION_DESIGN_EXERCISE, "4T")
+_DESIGN_DECEMBER = Period.from_year_and_code(_PRORRATA_TRANSITION_DESIGN_EXERCISE, "12")
 _DEFAULT_CASH_ACCOUNTING_TREATMENT = IvaCashAccountingTreatment("none")
 
 
 def _observation(
     ledger_id: str,
     *,
-    transaction_date: date = date(2026, 2, 11),
+    transaction_date: date = date(_PRORRATA_TRANSITION_DESIGN_EXERCISE, 2, 11),
     cash_accounting_treatment: IvaCashAccountingTreatment = _DEFAULT_CASH_ACCOUNTING_TREATMENT,
 ) -> IvaLedgerObservation:
     return IvaLedgerObservation(
@@ -67,7 +71,7 @@ def _observation(
 
 def test_supplier_regime_arrival_uses_only_in_period_canonical_iva_observations() -> None:
     aggregation = IvaLedgerAggregation(
-        period=_Q1_2026,
+        period=_DESIGN_Q1,
         observations=(
             _observation("ordinary-sale"),
             _observation(
@@ -77,28 +81,28 @@ def test_supplier_regime_arrival_uses_only_in_period_canonical_iva_observations(
         ),
     )
 
-    arrival = resolve_m303_supplier_regime_arrival(period=_Q1_2026, iva_aggregation=aggregation)
+    arrival = resolve_m303_supplier_regime_arrival(period=_DESIGN_Q1, iva_aggregation=aggregation)
 
-    assert arrival.period == _Q1_2026
+    assert arrival.period == _DESIGN_Q1
     assert arrival.recipient_of_cash_accounting_operations is True
     assert arrival.source_ledger_ids == ("supplier-regime-purchase",)
 
 
 def test_supplier_regime_arrival_refuses_mismatched_or_out_of_period_canonical_evidence() -> None:
-    aggregation = IvaLedgerAggregation(period=_Q1_2026, observations=(_observation("supplier-regime"),))
+    aggregation = IvaLedgerAggregation(period=_DESIGN_Q1, observations=(_observation("supplier-regime"),))
 
     with pytest.raises(
         AggregationValidationError,
         match=r"aggregation\.m303_arrivals\.errors\.supplier_regime_aggregation_period_mismatch",
     ):
-        resolve_m303_supplier_regime_arrival(period=_Q2_2026, iva_aggregation=aggregation)
+        resolve_m303_supplier_regime_arrival(period=_DESIGN_Q2, iva_aggregation=aggregation)
 
     malformed_aggregation = IvaLedgerAggregation(
-        period=_Q1_2026,
+        period=_DESIGN_Q1,
         observations=(
             _observation(
                 "outside-period",
-                transaction_date=date(2026, 4, 1),
+                transaction_date=date(_PRORRATA_TRANSITION_DESIGN_EXERCISE, 4, 1),
                 cash_accounting_treatment=IvaCashAccountingTreatment("supplier_regime"),
             ),
         ),
@@ -107,27 +111,27 @@ def test_supplier_regime_arrival_refuses_mismatched_or_out_of_period_canonical_e
         AggregationValidationError,
         match=r"aggregation\.m303_arrivals\.errors\.supplier_regime_observations_outside_period",
     ):
-        resolve_m303_supplier_regime_arrival(period=_Q1_2026, iva_aggregation=malformed_aggregation)
+        resolve_m303_supplier_regime_arrival(period=_DESIGN_Q1, iva_aggregation=malformed_aggregation)
 
 
 def test_prorrata_transition_arrival_carries_option_register_evidence() -> None:
     option = ProrrataEspecialTransitionEvidence(
         kind=ProrrataEspecialTransitionKind.from_registry("opcion"),
-        evidence_reference="modelo-303-2026-1t-prorrata-opcion",
+        evidence_reference=f"modelo-303-{_PRORRATA_TRANSITION_DESIGN_EXERCISE}-1t-prorrata-opcion",
     )
     entry = ProrrataRegisterEntry(
-        ejercicio=2026,
+        ejercicio=_PRORRATA_TRANSITION_DESIGN_EXERCISE,
         regime=ProrrataRegisterRegime.from_registry("especial"),
         especial_transition=option,
         source_registry_snapshot_refs=(),
     )
 
     arrival = resolve_m303_prorrata_transition_arrival(
-        period=_Q4_2026,
+        period=_DESIGN_Q4,
         prorrata_register=ProrrataRegister(entries=(entry,)),
     )
 
-    assert arrival.period == _Q4_2026
+    assert arrival.period == _DESIGN_Q4
     assert arrival.is_applicable is True
     assert arrival.transition == ProrrataEspecialTransitionKind.from_registry("opcion")
     assert arrival.register_evidence == (entry,)
@@ -135,31 +139,31 @@ def test_prorrata_transition_arrival_carries_option_register_evidence() -> None:
 
 def test_prorrata_transition_arrival_is_blank_before_the_modelo_303_final_period() -> None:
     entry = ProrrataRegisterEntry(
-        ejercicio=2026,
+        ejercicio=_PRORRATA_TRANSITION_DESIGN_EXERCISE,
         regime=ProrrataRegisterRegime.from_registry("especial"),
         especial_transition=ProrrataEspecialTransitionEvidence(
             kind=ProrrataEspecialTransitionKind.from_registry("opcion"),
-            evidence_reference="modelo-303-2026-prorrata-opcion",
+            evidence_reference=f"modelo-303-{_PRORRATA_TRANSITION_DESIGN_EXERCISE}-prorrata-opcion",
         ),
         source_registry_snapshot_refs=(),
     )
     register = ProrrataRegister(entries=(entry,))
 
-    arrival = resolve_m303_prorrata_transition_arrival(period=_Q1_2026, prorrata_register=register)
+    arrival = resolve_m303_prorrata_transition_arrival(period=_DESIGN_Q1, prorrata_register=register)
 
     assert arrival.is_applicable is False
     assert arrival.transition is None
     assert arrival.register_evidence == ()
 
 
-def test_prorrata_transition_applicability_matches_the_official_2026_note_6() -> None:
+def test_prorrata_transition_applicability_matches_the_official_design_note_6() -> None:
     source = bundled_path(
         "corpus",
         "aeat_official",
         "disenos_registro",
         "modelo_303",
         "files",
-        "01-303-ejercicio-2026-y-siguientes-actualizado-28-01-26-378-kb-xlsx.xlsx.extracted.md",
+        f"01-303-ejercicio-{_PRORRATA_TRANSITION_DESIGN_EXERCISE}-y-siguientes-actualizado-28-01-26-378-kb-xlsx.xlsx.extracted.md",
     ).read_text(encoding="utf-8")
 
     assert "Nota 6:" in source
@@ -167,7 +171,7 @@ def test_prorrata_transition_applicability_matches_the_official_2026_note_6() ->
     assert "Blanco para periodos distintos del último (12 y 4T)" in source
     assert (
         M303ProrrataTransitionArrival(
-            period=_DECEMBER_2026,
+            period=_DESIGN_DECEMBER,
             transition=None,
             register_evidence=(),
         ).is_applicable
@@ -177,22 +181,22 @@ def test_prorrata_transition_applicability_matches_the_official_2026_note_6() ->
 
 def test_prorrata_register_rejects_both_option_and_revocation_for_one_ejercicio() -> None:
     option_entry = ProrrataRegisterEntry(
-        ejercicio=2026,
+        ejercicio=_PRORRATA_TRANSITION_DESIGN_EXERCISE,
         sector_id="retail",
         regime=ProrrataRegisterRegime.from_registry("especial"),
         especial_transition=ProrrataEspecialTransitionEvidence(
             kind=ProrrataEspecialTransitionKind.from_registry("opcion"),
-            evidence_reference="modelo-303-2026-retail-opcion",
+            evidence_reference=f"modelo-303-{_PRORRATA_TRANSITION_DESIGN_EXERCISE}-retail-opcion",
         ),
         source_registry_snapshot_refs=(),
     )
     revocation_entry = ProrrataRegisterEntry(
-        ejercicio=2026,
+        ejercicio=_PRORRATA_TRANSITION_DESIGN_EXERCISE,
         sector_id="wholesale",
         regime=ProrrataRegisterRegime.from_registry("general"),
         especial_transition=ProrrataEspecialTransitionEvidence(
             kind=ProrrataEspecialTransitionKind.from_registry("revocacion"),
-            evidence_reference="modelo-303-2026-wholesale-revocacion",
+            evidence_reference=f"modelo-303-{_PRORRATA_TRANSITION_DESIGN_EXERCISE}-wholesale-revocacion",
         ),
         source_registry_snapshot_refs=(),
     )
@@ -201,7 +205,7 @@ def test_prorrata_register_rejects_both_option_and_revocation_for_one_ejercicio(
         ProrrataRegister(
             entries=(
                 ProrrataRegisterEntry(
-                    ejercicio=2025,
+                    ejercicio=_PRORRATA_TRANSITION_DESIGN_EXERCISE - 1,
                     sector_id="wholesale",
                     regime=ProrrataRegisterRegime.from_registry("especial"),
                     especial_transition=None,
@@ -217,7 +221,7 @@ def test_prorrata_transition_arrival_does_not_infer_an_option_from_an_existing_e
     register = ProrrataRegister(
         entries=(
             ProrrataRegisterEntry(
-                ejercicio=2026,
+                ejercicio=_PRORRATA_TRANSITION_DESIGN_EXERCISE,
                 regime=ProrrataRegisterRegime.from_registry("especial"),
                 especial_transition=None,
                 source_registry_snapshot_refs=(),
@@ -225,7 +229,7 @@ def test_prorrata_transition_arrival_does_not_infer_an_option_from_an_existing_e
         ),
     )
 
-    arrival = resolve_m303_prorrata_transition_arrival(period=_Q4_2026, prorrata_register=register)
+    arrival = resolve_m303_prorrata_transition_arrival(period=_DESIGN_Q4, prorrata_register=register)
 
     assert arrival.is_applicable is True
     assert arrival.transition is None
@@ -234,11 +238,11 @@ def test_prorrata_transition_arrival_does_not_infer_an_option_from_an_existing_e
 
 def test_prorrata_register_refuses_a_revocation_without_a_prior_especial_state() -> None:
     entry = ProrrataRegisterEntry(
-        ejercicio=2026,
+        ejercicio=_PRORRATA_TRANSITION_DESIGN_EXERCISE,
         regime=ProrrataRegisterRegime.from_registry("general"),
         especial_transition=ProrrataEspecialTransitionEvidence(
             kind=ProrrataEspecialTransitionKind.from_registry("revocacion"),
-            evidence_reference="modelo-303-2026-revocacion",
+            evidence_reference=f"modelo-303-{_PRORRATA_TRANSITION_DESIGN_EXERCISE}-revocacion",
         ),
         source_registry_snapshot_refs=(),
     )
@@ -249,18 +253,18 @@ def test_prorrata_register_refuses_a_revocation_without_a_prior_especial_state()
 
 def test_prorrata_transition_arrival_accepts_a_revocation_after_the_prior_especial_state() -> None:
     revocation_entry = ProrrataRegisterEntry(
-        ejercicio=2026,
+        ejercicio=_PRORRATA_TRANSITION_DESIGN_EXERCISE,
         regime=ProrrataRegisterRegime.from_registry("general"),
         especial_transition=ProrrataEspecialTransitionEvidence(
             kind=ProrrataEspecialTransitionKind.from_registry("revocacion"),
-            evidence_reference="modelo-303-2026-revocacion",
+            evidence_reference=f"modelo-303-{_PRORRATA_TRANSITION_DESIGN_EXERCISE}-revocacion",
         ),
         source_registry_snapshot_refs=(),
     )
     register = ProrrataRegister(
         entries=(
             ProrrataRegisterEntry(
-                ejercicio=2025,
+                ejercicio=_PRORRATA_TRANSITION_DESIGN_EXERCISE - 1,
                 regime=ProrrataRegisterRegime.from_registry("especial"),
                 especial_transition=None,
                 source_registry_snapshot_refs=(),
@@ -269,7 +273,7 @@ def test_prorrata_transition_arrival_accepts_a_revocation_after_the_prior_especi
         ),
     )
 
-    arrival = resolve_m303_prorrata_transition_arrival(period=_Q4_2026, prorrata_register=register)
+    arrival = resolve_m303_prorrata_transition_arrival(period=_DESIGN_Q4, prorrata_register=register)
 
     assert arrival.is_applicable is True
     assert arrival.transition == ProrrataEspecialTransitionKind.from_registry("revocacion")
@@ -279,7 +283,7 @@ def test_prorrata_transition_arrival_accepts_a_revocation_after_the_prior_especi
 def test_prorrata_transition_arrival_requires_complete_current_year_register_coverage() -> None:
     """A final-period artifact never treats missing sector declarations as NO."""
     current = ProrrataRegisterEntry(
-        ejercicio=2026,
+        ejercicio=_PRORRATA_TRANSITION_DESIGN_EXERCISE,
         sector_id="retail",
         regime=ProrrataRegisterRegime.from_registry("general"),
         especial_transition=None,
@@ -305,21 +309,21 @@ def test_prorrata_transition_arrival_requires_complete_current_year_register_cov
         AggregationValidationError,
         match=r"aggregation\.m303_arrivals\.errors\.prorrata_register_incomplete_current_year_declaration",
     ):
-        resolve_m303_prorrata_transition_arrival(period=_Q4_2026, prorrata_register=register)
+        resolve_m303_prorrata_transition_arrival(period=_DESIGN_Q4, prorrata_register=register)
 
-    assert resolve_m303_prorrata_transition_arrival(period=_Q1_2026, prorrata_register=register).transition is None
+    assert resolve_m303_prorrata_transition_arrival(period=_DESIGN_Q1, prorrata_register=register).transition is None
 
     complete_register = ProrrataRegister(
         entries=(
             ProrrataRegisterEntry(
-                ejercicio=2026,
+                ejercicio=_PRORRATA_TRANSITION_DESIGN_EXERCISE,
                 regime=ProrrataRegisterRegime.from_registry("general"),
                 especial_transition=None,
                 source_registry_snapshot_refs=(),
             ),
             current,
             ProrrataRegisterEntry(
-                ejercicio=2026,
+                ejercicio=_PRORRATA_TRANSITION_DESIGN_EXERCISE,
                 sector_id="leasing",
                 regime=ProrrataRegisterRegime.from_registry("general"),
                 especial_transition=None,
@@ -329,7 +333,7 @@ def test_prorrata_transition_arrival_requires_complete_current_year_register_cov
         sector_definitions=register.sector_definitions,
     )
 
-    arrival = resolve_m303_prorrata_transition_arrival(period=_Q4_2026, prorrata_register=complete_register)
+    arrival = resolve_m303_prorrata_transition_arrival(period=_DESIGN_Q4, prorrata_register=complete_register)
     assert arrival.transition is None
     assert arrival.register_evidence == ()
 
@@ -339,7 +343,7 @@ def test_prorrata_transition_arrival_refuses_an_empty_final_period_register() ->
         AggregationValidationError,
         match=r"aggregation\.m303_arrivals\.errors\.prorrata_register_incomplete_current_year_declaration",
     ):
-        resolve_m303_prorrata_transition_arrival(period=_Q4_2026, prorrata_register=ProrrataRegister())
+        resolve_m303_prorrata_transition_arrival(period=_DESIGN_Q4, prorrata_register=ProrrataRegister())
 
 
 def test_arrival_evidence_axes_are_required_and_explicit_empty_or_null_values_remain_valid() -> None:
@@ -349,7 +353,7 @@ def test_arrival_evidence_axes_are_required_and_explicit_empty_or_null_values_re
 
     assert (
         M303SupplierRegimeArrival(
-            period=_Q1_2026,
+            period=_DESIGN_Q1,
             recipient_of_cash_accounting_operations=False,
             source_ledger_ids=(),
         ).source_ledger_ids
@@ -357,7 +361,7 @@ def test_arrival_evidence_axes_are_required_and_explicit_empty_or_null_values_re
     )
     assert (
         M303ProrrataTransitionArrival(
-            period=_Q1_2026,
+            period=_DESIGN_Q1,
             transition=None,
             register_evidence=(),
         ).transition
@@ -366,9 +370,9 @@ def test_arrival_evidence_axes_are_required_and_explicit_empty_or_null_values_re
 
     with pytest.raises(ValidationError):
         M303SupplierRegimeArrival.model_validate(
-            {"period": _Q1_2026, "recipient_of_cash_accounting_operations": False},
+            {"period": _DESIGN_Q1, "recipient_of_cash_accounting_operations": False},
         )
     with pytest.raises(ValidationError):
-        M303ProrrataTransitionArrival.model_validate({"period": _Q1_2026, "register_evidence": ()})
+        M303ProrrataTransitionArrival.model_validate({"period": _DESIGN_Q1, "register_evidence": ()})
     with pytest.raises(ValidationError):
-        M303ProrrataTransitionArrival.model_validate({"period": _Q1_2026, "transition": None})
+        M303ProrrataTransitionArrival.model_validate({"period": _DESIGN_Q1, "transition": None})

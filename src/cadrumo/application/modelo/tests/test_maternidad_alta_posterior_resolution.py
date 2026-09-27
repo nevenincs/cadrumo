@@ -45,12 +45,17 @@ from ..profile_binding import resolve_maternidad_meses
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
+# The exercise of the AEAT Manual practico de Renta worked example this module
+# reproduces, and the first the alta-posterior increment applies to; the cited
+# example's identity rather than a support coordinate.
+_MANUAL_EXERCISE = 2023
+
 _BUCKET = "0de41ce4-0000-4000-8000-000000000611"
 _T0 = datetime(2026, 8, 5, 10, 0, tzinfo=UTC)
 
 #: Both mellizos: born January 2023, alta completed in May 2023 -- eight
 #: qualifying months (May-December).
-_MELLIZO_BIRTH = date(2023, 1, 15)
+_MELLIZO_BIRTH = date(_MANUAL_EXERCISE, 1, 15)
 
 
 @lru_cache
@@ -78,12 +83,14 @@ def _mellizo(meses: tuple[int, ...], *, alta_mes: int | None) -> DescendantInfo:
     )
 
 
-def test_a_declared_completion_month_is_carried_for_2023() -> None:
-    """The resolved ``alta_posterior_hijos`` set names the declared child in 2023."""
+def test_a_declared_completion_month_is_carried_for_the_manual_exercise() -> None:
+    """The resolved ``alta_posterior_hijos`` set names the declared child in the manual exercise."""
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         record = _record(_mellizo((5, 6, 7, 8, 9, 10, 11, 12), alta_mes=5))
 
-        resolution = resolve_maternidad_meses(record, _snapshot(2023), operation=_authority_operation_for_test)
+        resolution = resolve_maternidad_meses(
+            record, _snapshot(_MANUAL_EXERCISE), operation=_authority_operation_for_test
+        )
 
         assert resolution.pairs == (("0", 8),)
         assert resolution.alta_posterior_hijos == frozenset({"0"})
@@ -96,10 +103,12 @@ def test_the_manual_worked_example_reproduces_through_the_real_resolver() -> Non
             _mellizo((5, 6, 7, 8, 9, 10, 11, 12), alta_mes=5), _mellizo((5, 6, 7, 8, 9, 10, 11, 12), alta_mes=5)
         )
 
-        resolution = resolve_maternidad_meses(record, _snapshot(2023), operation=_authority_operation_for_test)
+        resolution = resolve_maternidad_meses(
+            record, _snapshot(_MANUAL_EXERCISE), operation=_authority_operation_for_test
+        )
         deduccion = compute_deduccion_maternidad_0611(
             list(resolution.pairs),
-            filing_year=2023,
+            filing_year=_MANUAL_EXERCISE,
             alta_posterior_hijos=resolution.alta_posterior_hijos,
         )
 
@@ -116,10 +125,12 @@ def test_the_older_hijo_mayor_figure_reproduces_through_the_real_resolver() -> N
         )
         record = _record(older_hijo)
 
-        resolution = resolve_maternidad_meses(record, _snapshot(2023), operation=_authority_operation_for_test)
+        resolution = resolve_maternidad_meses(
+            record, _snapshot(_MANUAL_EXERCISE), operation=_authority_operation_for_test
+        )
         deduccion = compute_deduccion_maternidad_0611(
             list(resolution.pairs),
-            filing_year=2023,
+            filing_year=_MANUAL_EXERCISE,
             alta_posterior_hijos=resolution.alta_posterior_hijos,
         )
 
@@ -150,13 +161,15 @@ def test_the_same_declared_profile_carries_no_increment_one_filing_year_earlier(
     """
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         child = DescendantInfo(
-            birth_date=date(2021, 6, 1),
+            birth_date=date(_MANUAL_EXERCISE - 2, 6, 1),
             meses_madre_trabajo=(5, 6, 7, 8, 9, 10, 11, 12),
             alta_posterior_nacimiento_mes=5,
         )
         record = _record(child)
 
-        resolution = resolve_maternidad_meses(record, _snapshot(2022), operation=_authority_operation_for_test)
+        resolution = resolve_maternidad_meses(
+            record, _snapshot(_MANUAL_EXERCISE - 1), operation=_authority_operation_for_test
+        )
 
         assert resolution.alta_posterior_hijos == frozenset()
         assert resolution.pairs == ()
@@ -164,7 +177,7 @@ def test_the_same_declared_profile_carries_no_increment_one_filing_year_earlier(
 
         deduccion = compute_deduccion_maternidad_0611(
             list(resolution.pairs),
-            filing_year=2022,
+            filing_year=_MANUAL_EXERCISE - 1,
             alta_posterior_hijos=resolution.alta_posterior_hijos,
         )
         assert deduccion == 0
@@ -175,7 +188,9 @@ def test_a_child_with_no_declared_completion_month_is_never_in_the_increment_set
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         record = _record(_mellizo((1, 2, 3, 4, 5, 6, 7, 8), alta_mes=None))
 
-        resolution = resolve_maternidad_meses(record, _snapshot(2023), operation=_authority_operation_for_test)
+        resolution = resolve_maternidad_meses(
+            record, _snapshot(_MANUAL_EXERCISE), operation=_authority_operation_for_test
+        )
 
         assert resolution.alta_posterior_hijos == frozenset()
 
@@ -196,7 +211,9 @@ def test_an_ineligible_child_is_never_in_the_increment_set_even_with_a_declared_
         )
         record = _record(non_cohabiting)
 
-        resolution = resolve_maternidad_meses(record, _snapshot(2023), operation=_authority_operation_for_test)
+        resolution = resolve_maternidad_meses(
+            record, _snapshot(_MANUAL_EXERCISE), operation=_authority_operation_for_test
+        )
 
         assert resolution.pairs == ()
         assert resolution.alta_posterior_hijos == frozenset()

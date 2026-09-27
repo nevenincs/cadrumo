@@ -12,6 +12,7 @@ from cadrumo.domain.deadlines.models import IrpfEstimationRegime, IVARegime
 
 from ....core.period import Period
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ....domain.deadlines.models import TaxpayerProfile
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -26,6 +27,12 @@ from .._objective_estimation_advisory import _objective_estimation_exclusion_adv
 from ..verification_actions import _collect_revision_verification_findings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
+
+_SUPPORT = PublishedGovernedFactSource().supported_filing_years()
+# The last annual extension of LIRPF DT 32 covers the exercise two above the support
+# floor; every later supported exercise is governed by the article 31 baseline.
+_DT32_LAST_EXTENDED_EXERCISE = _SUPPORT.floor + 2
+_ARTICLE31_YEARS = tuple(year for year in _SUPPORT.years if year > _DT32_LAST_EXTENDED_EXERCISE)
 
 _T0 = datetime(2026, 1, 15, 12, 0, 0, tzinfo=UTC)
 
@@ -173,7 +180,8 @@ def test_objective_estimation_exclusion_advisory_fires_for_settled_year_excess()
     assert all("parameter_id" not in finding.message_facts for finding in findings)
 
 
-def test_objective_estimation_exclusion_advisory_reverts_to_article31_in_2025() -> None:
+@pytest.mark.parametrize("filing_year", _ARTICLE31_YEARS)
+def test_objective_estimation_exclusion_advisory_reverts_to_article31_after_dt32(filing_year: int) -> None:
     profile = _objective_profile(
         objective_estimation_prior_year_gross_income_eur=Decimal("250000.01"),
         objective_estimation_prior_year_invoice_gross_income_eur=Decimal("125000.01"),
@@ -182,23 +190,26 @@ def test_objective_estimation_exclusion_advisory_reverts_to_article31_in_2025() 
     )
 
     findings = _objective_estimation_exclusion_advisory_findings(
-        work_unit=_work_unit(filing_year=2025),
+        work_unit=_work_unit(filing_year=filing_year),
         profile=profile,
     )
 
     assert len(findings) == 4
-    assert all(finding.message_facts["filing_year"] == 2025 for finding in findings)
+    assert all(finding.message_facts["filing_year"] == filing_year for finding in findings)
     assert {finding.legal_refs for finding in findings} == {("ley-35-2006:art-31",)}
     assert {finding.source_refs for finding in findings} == {("boe-lirpf-art-31-2016-01-01",)}
 
 
-def test_objective_estimation_exclusion_advisory_uses_article31_in_2026() -> None:
+@pytest.mark.parametrize("filing_year", _ARTICLE31_YEARS)
+def test_objective_estimation_exclusion_advisory_uses_article31_for_the_invoice_threshold(
+    filing_year: int,
+) -> None:
     profile = _objective_profile(
         objective_estimation_prior_year_invoice_gross_income_eur=Decimal("125000.01"),
     )
 
     findings = _objective_estimation_exclusion_advisory_findings(
-        work_unit=_work_unit(filing_year=2026),
+        work_unit=_work_unit(filing_year=filing_year),
         profile=profile,
     )
 

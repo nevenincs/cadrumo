@@ -13,11 +13,18 @@ from __future__ import annotations
 
 import pytest
 
-from ....domain.calculations.registry.tests.published_authority import published_snapshot
+from ....domain.calculations.registry.tests.published_authority import (
+    PublishedGovernedFactSource,
+    published_snapshot,
+)
 from .._settlement_grade_advisory import collect_settlement_not_computed_diagnostics
 from ..settlement_casilla import SETTLEMENT_SEMANTIC_ROLES
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+# The newest authored Modelo 100 edition, one below the projecting horizon, computes
+# the settlement casillas.
+_REVIEWED_EDITION = PublishedGovernedFactSource().supported_filing_years().horizon - 1
 
 
 def _revision(modelo: str, year: int, period: str):
@@ -47,10 +54,10 @@ def test_advises_exactly_the_manual_settlement_casillas_m100(year: int) -> None:
     assert all(d.source_kind == "settlement_casilla" for d in diagnostics)
 
 
-def test_no_advisory_when_m100_settlement_is_computed_2025() -> None:
-    """M100 2025 computes the settlement (input_kind == computed) → no advisory."""
-    revision = _revision("100", 2025, "0A")
-    # fixture sanity: the settlement casillas ARE computed on 2025.
+def test_no_advisory_when_m100_settlement_is_computed() -> None:
+    """The reviewed M100 edition computes the settlement (input_kind == computed) → no advisory."""
+    revision = _revision("100", _REVIEWED_EDITION, "0A")
+    # fixture sanity: the settlement casillas ARE computed on the reviewed edition.
     assert any(
         casilla.semantic_role in SETTLEMENT_SEMANTIC_ROLES and str(casilla.input_kind) == "computed"
         for casilla in revision.casillas

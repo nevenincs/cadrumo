@@ -1,4 +1,4 @@
-"""Modelo 100 2024 profile-backed personal/family registry coverage."""
+"""Modelo 100 profile-backed personal/family registry coverage on every edition that carries it."""
 
 from __future__ import annotations
 
@@ -15,11 +15,12 @@ from ....core.aggregation import BindingSourceKind
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.tests.published_authority import (
-    leased_profile_create_context as _profile_creation_context_for_test,
-)
-from ....domain.calculations.registry.tests.published_authority import (
+    PublishedGovernedFactSource,
     published_profile_schema,
     published_snapshot,
+)
+from ....domain.calculations.registry.tests.published_authority import (
+    leased_profile_create_context as _profile_creation_context_for_test,
 )
 from ....domain.user_profile.registry_contract import profile_binding_selectors
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
@@ -27,6 +28,12 @@ from ...user_profile.projections import profile_fact_index
 from ..profile_binding import resolve_profile_binding_value
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
+
+_SUPPORT = PublishedGovernedFactSource().supported_filing_years()
+# The Modelo 100 edition two above the support floor is the first whose personal and
+# family construct is bound to the profile; every later supported year keeps it.
+_PROFILE_BACKED_FIRST_EDITION = _SUPPORT.floor + 2
+_PROFILE_BACKED_YEARS = tuple(year for year in _SUPPORT.years if year >= _PROFILE_BACKED_FIRST_EDITION)
 
 _PROFILE_ID = "10000000-0000-4000-8000-000000000366"
 _BUCKET_ID = _PROFILE_ID
@@ -76,7 +83,7 @@ _SCALAR_PROFILE_BINDING_VALUES: Mapping[str, object] = {
     "renta-profile-spouse-birth-date": date(1978, 7, 22),
     "renta-profile-spouse-sex": "M",
     "renta-profile-taxpayer-disability-grade": Decimal("0"),
-    "renta-profile-taxpayer-death-date": date(2024, 11, 3),
+    "renta-profile-taxpayer-death-date": date(_PROFILE_BACKED_FIRST_EDITION, 11, 3),
     "renta-profile-spouse-disability-grade": Decimal("0"),
     "renta-profile-spouse-non-resident-irpf": True,
     "renta-profile-spouse-eu-eea-resident": True,
@@ -100,8 +107,8 @@ _ROW_BINDINGS: Mapping[str, tuple[str, str]] = {
 }
 
 
-def _snapshot_2024() -> RegistrySnapshot:
-    return published_snapshot("100", filing_year=2024, period="0A")
+def _snapshot(filing_year: int) -> RegistrySnapshot:
+    return published_snapshot("100", filing_year=filing_year, period="0A")
 
 
 def _full_profile() -> UserProfileRecord:
@@ -118,7 +125,7 @@ def _full_profile() -> UserProfileRecord:
             UserProfileFact(path="renta_taxpayer.marital_status", value="2"),
             UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
             UserProfileFact(path="renta_taxpayer.disability_grade", value="0"),
-            UserProfileFact(path="renta_taxpayer.death_date", value=date(2024, 11, 3)),
+            UserProfileFact(path="renta_taxpayer.death_date", value=date(_PROFILE_BACKED_FIRST_EDITION, 11, 3)),
             UserProfileFact(path="renta_spouse.tax_id", value="98765432B"),
             UserProfileFact(path="renta_spouse.surnames", value="Martinez"),
             UserProfileFact(path="renta_spouse.name", value="Carlos"),
@@ -137,8 +144,9 @@ def _full_profile() -> UserProfileRecord:
     )
 
 
-def test_modelo_100_2024_personal_family_construct_is_profile_backed() -> None:
-    snapshot = _snapshot_2024()
+@pytest.mark.parametrize("filing_year", _PROFILE_BACKED_YEARS)
+def test_modelo_100_personal_family_construct_is_profile_backed(filing_year: int) -> None:
+    snapshot = _snapshot(filing_year)
     construct = snapshot.constructs["renta-personal-family"]
     casillas = {casilla.id: casilla for casilla in snapshot.revision.casillas}
     bindings = {binding.id: binding for binding in snapshot.revision.bindings}
@@ -155,8 +163,9 @@ def test_modelo_100_2024_personal_family_construct_is_profile_backed() -> None:
         assert selector.dictionary_field == casilla_id
 
 
-def test_modelo_100_2024_profile_binding_selectors_target_real_profile_schema() -> None:
-    snapshot = _snapshot_2024()
+@pytest.mark.parametrize("filing_year", _PROFILE_BACKED_YEARS)
+def test_modelo_100_profile_binding_selectors_target_real_profile_schema(filing_year: int) -> None:
+    snapshot = _snapshot(filing_year)
     schema = published_profile_schema()
     schema_selectors = {f"{section.key}.{field.key}" for section in schema.sections for field in section.fields} | {
         selector for section in schema.sections for field in section.fields for selector in field.model_selectors
@@ -170,8 +179,9 @@ def test_modelo_100_2024_profile_binding_selectors_target_real_profile_schema() 
         assert not missing, f"{binding_id}: selectors outside profile schema: {sorted(missing)}"
 
 
-def test_modelo_100_2024_scalar_profile_values_resolve_from_real_profile_facts() -> None:
-    snapshot = _snapshot_2024()
+@pytest.mark.parametrize("filing_year", _PROFILE_BACKED_YEARS)
+def test_modelo_100_scalar_profile_values_resolve_from_real_profile_facts(filing_year: int) -> None:
+    snapshot = _snapshot(filing_year)
     schema = published_profile_schema()
     facts = profile_fact_index(_full_profile(), schema)
     bindings = {binding.id: binding for binding in snapshot.revision.bindings}
@@ -181,8 +191,9 @@ def test_modelo_100_2024_scalar_profile_values_resolve_from_real_profile_facts()
         assert value == expected, f"{binding_id}: expected {expected!r}, got {value!r}"
 
 
-def test_modelo_100_2024_family_row_bindings_address_repeating_profile_collections() -> None:
-    snapshot = _snapshot_2024()
+@pytest.mark.parametrize("filing_year", _PROFILE_BACKED_YEARS)
+def test_modelo_100_family_row_bindings_address_repeating_profile_collections(filing_year: int) -> None:
+    snapshot = _snapshot(filing_year)
     bindings = {binding.id: binding for binding in snapshot.revision.bindings}
 
     for binding_id, (collection, field) in _ROW_BINDINGS.items():
