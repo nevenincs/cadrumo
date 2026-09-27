@@ -11,14 +11,15 @@ from cadrumo.domain.calculations.registry.schema import ModeloDefinition, Regist
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from .authored_edition_support import legal_reference
 from .profile_schema_support import committed_registry_validator, committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 _SUPPORT = committed_supported_filing_years()
-# The day Orden EHA/789/2010 makes the Modelo 360 form applicable; the identity of
-# the cited order rather than a support coordinate.
-_APPROVING_ORDEN_APPLIES_FROM = date(2010, 4, 1)
+# The day Orden EHA/789/2010 makes the Modelo 360 form applicable, as the catalogued
+# approving article is in force from.
+_APPROVING_ORDEN_APPLIES_FROM = legal_reference("orden-eha-789-2010:art-1").effective_from
 
 
 def _load_modelo_360() -> tuple[ModeloDefinition, RegistryCatalogues]:

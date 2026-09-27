@@ -19,6 +19,7 @@ from ._record_design_support import (
     _official_record_design_sheets,
     _page_one_data_type,
 )
+from .authored_edition_support import source_exercise, source_with_sha256
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -152,8 +153,10 @@ def test_modelo_131_registry_bindings_cover_official_structured_records() -> Non
 
 
 # The exercise of the official DPA design (``_WORKBOOK_2024``) that carries the Lorca,
-# Palma and DANA territorial reduction fields; the cited workbook's identity.
-_TERRITORIAL_REDUCTION_DESIGN_EXERCISE = 2024
+# Palma and DANA territorial reduction fields, found by the design's pinned bytes.
+_TERRITORIAL_REDUCTION_DESIGN_EXERCISE = source_exercise(
+    source_with_sha256("83e40d7d4d64c3b2da570d5e70a650685de036277df3ce077b0569a2235aa06f")
+)
 
 
 def test_modelo_131_dpa_territorial_reduction_fields_carry_specific_legal_basis() -> None:

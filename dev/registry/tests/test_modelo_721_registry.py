@@ -17,6 +17,7 @@ from cadrumo.tests.inventory import REPO_ROOT
 from ..compiler.corpus_catalogue import verify_source_file
 from ..compiler.legal_grounding import verify_legal_catalogue
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from .authored_edition_support import legal_text_match
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
@@ -148,9 +149,17 @@ def test_modelo_721_selects_only_its_two_hash_pinned_boe_form_spec_eras() -> Non
         assert carried.id == "2024"
 
 
-# The Modelo 721 package that HAC/1504/2024 closes by substituting its anexo; the
-# package's exercise is the identity of the cited BOE text.
-_SUPERSEDED_PACKAGE_EXERCISE = 2023
+# The Modelo 721 package that HAC/1504/2024 closes by substituting its anexo: the
+# exercise before the one the Orden first applies to.
+_SUPERSEDED_PACKAGE_EXERCISE = (
+    int(
+        legal_text_match(
+            "orden-hac-1504-2024:df-unica",
+            r"aplicable, por primera vez, a las declaraciones informativas correspondientes al ejercicio (\d{4})",
+        ).group(1)
+    )
+    - 1
+)
 
 
 def test_modelo_721_refuses_a_mutated_superseded_selector_past_its_boe_package_window() -> None:

@@ -28,18 +28,28 @@ from ..compiler.loader import (
     load_modelo_directory,
 )
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from .authored_edition_support import authored_revisions, source_exercise, sources_where
 from .profile_schema_support import committed_registry_validator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
-# The Modelo 210 edition these declarations are reviewed on: its exercise is the
-# revision's identity and the prefix of the predicate ids it declares, so it is bound
-# once rather than derived from the support envelope.
-_REVIEWED_EDITION = 2025
+# The Modelo 210 edition these declarations are reviewed on: the newest single-exercise
+# revision the registry authors. Its exercise is the revision's identity and the
+# prefix of the predicate ids it declares.
+_REVIEWED_EDITION = max(
+    revision.valid_from.year
+    for revision in authored_revisions("210")
+    if revision.valid_to is not None and revision.valid_to.year == revision.valid_from.year
+)
 _REVIEWED_REVISION = str(_REVIEWED_EDITION)
 # Orden HAC/623/2026 updates the deadline and approves the next form layout; its
-# year is the identity of the cited order.
-_DEADLINE_ORDER_YEAR = 2026
+# year is the exercise the one bundled deadline-update source applies from.
+(_DEADLINE_ORDER_YEAR,) = (
+    source_exercise(source)
+    for source in sources_where(
+        lambda source: source.id.startswith("boe-modelo-210-") and source.id.endswith("-deadline-update")
+    )
+)
 
 _M210_FORM_ORDER_REF = "orden-eha-3316-2010:art-1"
 _M210_AGRUPACION_ORDER_REF = "orden-eha-3316-2010:art-2"

@@ -40,14 +40,19 @@ from ._synthetic_locale_fixtures import (
     _synthetic_locale_scope,
     _write_test_label,
 )
+from .authored_edition_support import authored_revisions
 from .profile_schema_support import committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _SUPPORT = committed_supported_filing_years()
-# The Modelo 100 XML dictionary first publishes the descendant/ascendant family
-# fields for the edition two above the support floor.
-_FAMILY_FIELD_FIRST_EDITION = _SUPPORT.floor + 2
+# The first authored Modelo 100 edition that carries the descendant/ascendant family
+# fields its XML dictionary publishes.
+_FAMILY_FIELD_FIRST_EDITION = next(
+    revision.valid_from.year
+    for revision in authored_revisions("100")
+    if any(c.id == "ANOASDLG" for c in revision.casillas)
+)
 
 _TEST_CASILLA_ID: CasillaId = validated_casilla_id("test_casilla", surface="_TEST_CASILLA_ID")
 

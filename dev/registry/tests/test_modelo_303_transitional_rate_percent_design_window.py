@@ -59,14 +59,19 @@ from cadrumo.domain.calculations.registry.ledger_iva_bindings import resolve_led
 from cadrumo.domain.period import calculation_filing_date
 
 from ..compiler.authority import compiled_bundled_authority
+from .authored_edition_support import legal_text_match
 from .profile_schema_support import committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _SUPPORT = committed_supported_filing_years()
-# RD-ley 4/2024 and the late split design flip the transitional rungs at the
-# 10/4T boundary of the exercise two above the support floor.
-_TRANSITIONAL_FLIP_EXERCISE = _SUPPORT.floor + 2
+# RD-ley 4/2024 and the late split design flip the transitional rungs at the 10/4T
+# boundary of the exercise its second rate tranche takes effect in.
+_TRANSITIONAL_FLIP_EXERCISE = int(
+    legal_text_match(
+        "real-decreto-ley-4-2024:art-1", r"dos\. con efectos desde el \d{1,2} de octubre de (\d{4})"
+    ).group(1)
+)
 
 _CASILLA_154: CasillaId = validated_casilla_id("154", surface="_CASILLA_154")
 _CASILLA_166: CasillaId = validated_casilla_id("166", surface="_CASILLA_166")

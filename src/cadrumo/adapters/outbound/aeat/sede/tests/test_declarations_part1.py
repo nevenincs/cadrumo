@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from collections.abc import Callable
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -305,15 +306,11 @@ class TestParseListbox:
         assert row.expediente_id == "202210013522222A"
         assert row.period == Period.from_year_and_code(ejercicio, "0A")
         assert row.estado == "ALTA"
-        assert row.presented_at == datetime(
-            year=2024,
-            month=2,
-            day=1,
-            hour=19,
-            minute=15,
-            second=34,
-            tzinfo=UTC,
-        )
+        # The row prints its presentation instant after its estado, day first.
+        printed = re.search(r"ALTA (\d{2})/(\d{2})/(\d{4}) (\d{2}):(\d{2}):(\d{2})", html)
+        assert printed is not None
+        day, month, year, hour, minute, second = (int(part) for part in printed.groups())
+        assert row.presented_at == datetime(year, month, day, hour, minute, second, tzinfo=UTC)
         assert row.justificante_link_text == "Ver"
         assert row.archive_link_text == "Ver"
         assert row.declaration_copy_link_text is None

@@ -13,7 +13,9 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.tests.inventory import REPO_ROOT
 
 from ..compiler.corpus_catalogue import verify_source_file
+from .authored_edition_support import authored_revisions, source_reference
 from .catalogue_verification_support import _catalogues, registry_tree
+from .profile_schema_support import committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -303,10 +305,26 @@ def _manual_extracted_text(corpus_path: str) -> str:
     return "\n".join(texts)
 
 
-# The authored-history Modelo 100 revision whose record-design dictionary drifted
-# from its AEAT manual. It lies below the support floor and names both cited
-# sources, so it is bound once rather than derived from the envelope.
-_M100_DICTIONARY_DRIFT_EXERCISE = 2021
+def _dictionary_drift_exercise() -> int:
+    """Return the authored-history Modelo 100 edition whose dictionary drifted from its manual.
+
+    Below the support floor, it is the one edition whose casilla 0302 cites its AEAT
+    Renta manual beside its record-design dictionary.
+    """
+    floor = committed_supported_filing_years().floor
+    (exercise,) = (
+        revision.valid_from.year
+        for revision in authored_revisions("100")
+        if revision.valid_from.year < floor
+        and any(
+            casilla.id == "0302" and any(source_reference(ref).kind == "manual_pdf" for ref in casilla.source_refs)
+            for casilla in revision.casillas
+        )
+    )
+    return exercise
+
+
+_M100_DICTIONARY_DRIFT_EXERCISE = _dictionary_drift_exercise()
 _M100_DICTIONARY_SOURCE = f"aeat-dr-100-{_M100_DICTIONARY_DRIFT_EXERCISE}-dictionary"
 _M100_MANUAL_SOURCE = f"aeat-renta-{_M100_DICTIONARY_DRIFT_EXERCISE}-manual-parte1"
 

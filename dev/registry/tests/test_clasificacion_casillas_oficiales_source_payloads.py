@@ -15,14 +15,19 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export import clasificar_casillas_oficiales
 
 from ..compiler.authority import compiled_bundled_authority
+from .authored_edition_support import authored_revisions
 from .profile_schema_support import committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _SUPPORT = committed_supported_filing_years()
-# The official XML dictionary first publishes the dictionary-only ANOASDLG family
-# field for the exercise two above the support floor; earlier editions omit it.
-_FAMILY_FIELD_FIRST_DICTIONARY_EXERCISE = _SUPPORT.floor + 2
+# The first authored Modelo 100 edition that carries the ANOASDLG family field of
+# its official XML dictionary; earlier editions omit it.
+_FAMILY_FIELD_FIRST_DICTIONARY_EXERCISE = next(
+    revision.valid_from.year
+    for revision in authored_revisions("100")
+    if any(c.id == "ANOASDLG" for c in revision.casillas)
+)
 
 
 @pytest.mark.parametrize("filing_year", _SUPPORT.years)

@@ -32,6 +32,7 @@ from cadrumo.domain.calculations.registry.schema_references import LegalReferenc
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
+from .authored_edition_support import legal_text_match
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -161,9 +162,11 @@ def test_valid_orden_aplicabilidad_passes_all_checks() -> None:
     assert len(hard) == 0, f"Unexpected hard failures: {hard}"
 
 
-# The Modelo 100 exercise whose form Orden HAC/277/2026 approves; its filing campaign
-# runs in the following year. The order is the identity of the cited evidence.
-_FORM_ORDER_EXERCISE = 2025
+# The Modelo 100 exercise whose form Orden HAC/277/2026 approves, as the approving
+# article names it; its filing campaign runs in the following year.
+_FORM_ORDER_EXERCISE = int(
+    legal_text_match("orden-hac-277-2026:art-3", r"personas fisicas\. ejercicio (\d{4})»").group(1)
+)
 
 
 def _modelo_100_form_order_edition() -> tuple[ModeloDefinition, RegistryCatalogues]:

@@ -20,6 +20,7 @@ from ._modelo_303_registry_support import (
     _M303_RECORD_DESIGN_SOURCE_BY_REVISION,
     load_modelo_303,
 )
+from .authored_edition_support import source_exercise, source_with_sha256
 from .profile_schema_support import committed_registry_validator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
@@ -309,9 +310,11 @@ def test_modelo_303_quarterly_deadlines_match_orden_eha_3786_2008_art_7() -> Non
 
 
 # The exercise whose AEAT calendario del contribuyente grounds the deadline days checked
-# below; the calendar is the cited evidence. Its fourth quarter and December are
+# below, found by the calendar's pinned bytes. Its fourth quarter and December are
 # filed under the following exercise's calendar.
-_CALENDAR_EXERCISE = 2023
+_CALENDAR_EXERCISE = source_exercise(
+    source_with_sha256("4c3810a801129ea6651fd09de84ea628db9c984ec02b19d3c9fca6c7737a8eac")
+)
 
 
 def test_modelo_303_calendar_exercise_deadlines_exactly_cover_declared_quarterly_and_monthly_schedules() -> None:
@@ -458,8 +461,10 @@ def test_modelo_303_open_ended_revision_supported_periods_are_fully_materialised
 
 
 # The exercise whose AEAT domiciliacion calendar grounds the SII monthly deadline
-# days checked below; the calendar is the cited evidence.
-_SII_CALENDAR_EXERCISE = 2026
+# days checked below, found by the calendar's pinned bytes.
+_SII_CALENDAR_EXERCISE = source_exercise(
+    source_with_sha256("02b6e745820b1083de32fb2c325ba465806987bf093c9a59e7e5782f42beb469")
+)
 
 
 def test_modelo_303_sii_monthly_deadlines_are_exactly_grounded() -> None:

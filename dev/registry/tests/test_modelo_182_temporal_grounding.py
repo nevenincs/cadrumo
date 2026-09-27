@@ -14,12 +14,15 @@ from cadrumo.domain.calculations.registry.errors import (
 
 from ..compiler.authority import compiled_bundled_authority
 from ._gate_support import assert_deadline_window_for_filing_year, assert_edition_opens_at_filing_year
+from .authored_edition_support import source_exercise, source_with_sha256
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-# The one edition the Orden HAC/1430/2025 design evidences; its first exercise is
-# the edition's identity rather than a support coordinate.
-_EVIDENCED_EDITION = 2025
+# The one edition the Orden HAC/1430/2025 design evidences, found by the design's
+# pinned bytes; its applicability names the edition's first exercise.
+_EVIDENCED_EDITION = source_exercise(
+    source_with_sha256("90eac5615609f6bec7bf5c9fa9386253e80bd0e26997747fbb1160c3da180831")
+)
 
 #: Wide enough to cross the support floor in both directions, and to reach past
 #: the last filing year any edition declares a window for.

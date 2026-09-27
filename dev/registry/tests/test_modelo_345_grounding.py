@@ -20,13 +20,13 @@ from ._gate_support import (
     assert_edition_opens_at_filing_year,
     assert_sole_current_edition,
 )
+from .authored_edition_support import newest_authored_edition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
-# The sole current edition this grounding test reviews. Its first exercise is the
-# edition's identity, established by the ordenes asserted below, so it is bound once
-# rather than derived from the support envelope.
-_CURRENT_EDITION = 2025
+# The sole current edition this grounding test reviews: the newest one the registry
+# authors, whose ordenes are asserted below.
+_CURRENT_EDITION = newest_authored_edition("345")
 
 _M345_LEGAL_REFS = {
     "orden-hfp-823-2022:art-1",

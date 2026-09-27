@@ -13,6 +13,7 @@ from cadrumo.domain.calculations.registry.tests.snapshot_support import build_sn
 from cadrumo.tests.aeat_literal_fixtures import aeat_host
 
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from .authored_edition_support import oldest_authored_edition
 from .profile_schema_support import committed_registry_validator, committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
@@ -76,9 +77,10 @@ def test_committed_modelo_347_resolves_revision_by_filing_year(filing_year: int)
     )
 
 
-# The first ejercicio the official Modelo 347 design (``aeat-dr-347-<ejercicio>``)
-# was published for; the three ejercicios before it are deliberately unserved.
-_FIRST_DESIGN_EJERCICIO = 2011
+# The first ejercicio of the oldest Modelo 347 revision the registry authors, whose
+# official design (``aeat-dr-347-<ejercicio>``) it serves; the three ejercicios
+# before it are deliberately unserved.
+_FIRST_DESIGN_EJERCICIO = oldest_authored_edition("347")
 
 
 @pytest.mark.parametrize("filing_year", range(_FIRST_DESIGN_EJERCICIO - 3, _FIRST_DESIGN_EJERCICIO))

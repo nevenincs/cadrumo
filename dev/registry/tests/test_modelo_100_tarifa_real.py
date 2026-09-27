@@ -47,14 +47,25 @@ from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from ._modelo_100_registry_support import (
     _m100_2024_deduccion_maternidad_bindings,
 )
+from .authored_edition_support import authored_revisions_where, manual_editions_printing
 from .profile_schema_support import committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _SUPPORT = committed_supported_filing_years()
 # The exercise whose state and Cataluna scales, minimos and age supplements the
-# expected cuotas below are computed from: two below the support horizon.
-_TARIFF_EXERCISE = _SUPPORT.horizon - 2
+# expected cuotas below are computed from: the newest Modelo 100 edition whose AEAT
+# Renta manual prints the Cataluna scale the expected cuotas use and whose declared
+# bindings are the ones the fixture supplies (it still carries the maternidad binding).
+_TARIFF_EXERCISE = max(
+    set(manual_editions_printing("renta", "17.707,20", "33.007,20"))
+    & {
+        revision.valid_from.year
+        for revision in authored_revisions_where(
+            "100", lambda revision: "renta-profile-deduccion-maternidad" in {b.id for b in revision.bindings}
+        )
+    }
+)
 
 
 @pytest.fixture

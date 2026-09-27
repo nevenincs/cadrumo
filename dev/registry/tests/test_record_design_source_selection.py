@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 import inspect
+from itertools import pairwise
 
 import pytest
 
@@ -15,6 +16,7 @@ from cadrumo.domain.calculations.registry.schema_references import SourceReferen
 from .. import maintenance_support as _maintenance_support
 from ..compiler import corpus_catalogue as _corpus_catalogue
 from ..maintenance_support import resolve_record_design_binary
+from .authored_edition_support import authored_revisions, source_exercise, source_with_sha256
 from .catalogue_verification_support import _catalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -105,8 +107,12 @@ def test_rejects_modelo_390_hash_drift() -> None:
 
 
 # The exercise the official Modelo 303 design splits into an early and a late
-# edition; the identity of both cited designs.
-_M303_SPLIT_DESIGN_EXERCISE = 2024
+# edition: the one exercise two authored revisions share.
+(_M303_SPLIT_DESIGN_EXERCISE,) = (
+    earlier.valid_from.year
+    for earlier, later in pairwise(authored_revisions("303"))
+    if earlier.valid_from.year == later.valid_from.year
+)
 
 
 def test_verifies_both_explicit_modelo_303_split_design_epochs_without_date_only_selection() -> None:
@@ -273,8 +279,10 @@ def test_record_design_selection_cannot_consult_registry_export_layouts() -> Non
     assert not {name for name in reached if "export" in name or "layout" in name}, sorted(reached)
 
 
-# The exercise of the hash-pinned official Modelo 200 design; the cited design's identity.
-_M200_PINNED_DESIGN_EXERCISE = 2025
+# The exercise of the hash-pinned official Modelo 200 design, read from its applicability.
+_M200_PINNED_DESIGN_EXERCISE = source_exercise(
+    source_with_sha256("92392cdb46d8e7c7f6e4e6477306570e15edfd64d5ea3e6d631e5cf847dd5509")
+)
 
 
 def test_resolves_the_hash_pinned_modelo_200_binary() -> None:
