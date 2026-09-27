@@ -1970,6 +1970,47 @@ tui:
         label: 'Negative result: carry it forward or request a refund'
       replace_existing:
         label: Replace a file already at this path
+      result:
+        close: Close
+        completeness:
+          not_assessed: 'Not assessed: a calculation report is not a filing file'
+          not_flagged: No completeness warning raised by the export
+          unverified: 'Not verified: the revision declares no completeness manifest'
+        evidence_status:
+          local_calculation_report_not_official_aeat_filing_evidence: Local calculation
+            report; not official AEAT filing evidence
+          local_export_not_official_aeat_filing_evidence: Local export; not official
+            AEAT filing evidence
+        label:
+          byte_size: Size (bytes)
+          calculation_revision_id: Calculation revision
+          completeness: Completeness
+          evidence_status: Evidence status
+          export_format: Format
+          file_sha256: SHA-256 of the file
+          output_path: File
+          software_identity_grade: Software identity in the file header
+        software_identity_grade:
+          development_mock: Development identity (all zeros); not accepted by AEAT
+          none: 'None: this file''s layout has no software identity slot'
+          reviewed: Reviewed software registration
+        title: Export result
+        unavailable: The export finished, but its result could not be read, so its
+          evidence status, completeness and software identity are unknown. Check the
+          file before relying on it.
+        warning:
+          completeness_unverified: 'This filing file was not completeness-verified:
+            its revision declares no completeness manifest, so the structural-parity
+            check could not confirm that every required box reached the file. Review
+            the exported boxes against the official Diseño de Registros before filing.'
+          development_software_identity: The file header carries the all-zero development
+            software identity; AEAT will not accept this file for presentation.
+          development_software_identity_of_filing_file: The filing file for this modelo
+            would carry the all-zero development software identity; AEAT will not
+            accept that file for presentation.
+          not_official: 'This file is not official AEAT filing evidence. Official
+            evidence comes from AEAT after filing: justificante; consulta de declaraciones
+            presentadas; or CSV cotejo.'
     finding_kind:
       advisory: Advice
       blocking_rule: Rule not met

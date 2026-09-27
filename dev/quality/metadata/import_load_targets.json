@@ -2218,6 +2218,7 @@
         "cadrumo.entrypoints.tui.ledger.workspace_presentation",
         "cadrumo.entrypoints.tui.ledger_doors",
         "cadrumo.entrypoints.tui.modelo",
+        "cadrumo.entrypoints.tui.modelo.export_result",
         "cadrumo.entrypoints.tui.modelo.installed_workspace",
         "cadrumo.entrypoints.tui.modelo.lifecycle",
         "cadrumo.entrypoints.tui.modelo.m303_evidence",

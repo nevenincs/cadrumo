@@ -27,6 +27,7 @@ import functools
 from collections.abc import Callable, Mapping
 from datetime import date, datetime, timedelta
 from decimal import Decimal, InvalidOperation
+from enum import StrEnum
 from pathlib import Path
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Annotated, Final, Literal
@@ -61,6 +62,7 @@ from ...core.refund_election import RefundElection
 from ...core.time.clock import now as _utc_now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.ids import RevisionId
+from ...domain.filing.software_identity import AeatSoftwareIdentityGrade
 from ...domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind, M303RectificativaMotive
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.row_models import (
@@ -105,6 +107,7 @@ from .amendment_actions import amend_modelo_revision
 from .calculation_action_ports import CalculationActionPortsFactory
 from .calculation_report_export import (
     ModeloCalculationReportCommand,
+    ModeloCalculationReportResult,
     export_modelo_calculation_report,
 )
 from .edit_contract import ModeloEditCompatibilityTupleV1, ModeloEditMutationFamily
@@ -131,7 +134,7 @@ from .edit_models import (
 )
 from .edit_receipt_ports import ModeloEditReceiptRepositoryFactory
 from .edit_services import DETAIL_ROW_NATURAL_KEY_SEPARATOR
-from .export import ModeloExportCommand, export_modelo_revision
+from .export import ModeloExportCommand, ModeloExportResult, export_modelo_revision
 from .export_ports import ModeloExportPorts, ModeloExportPortsFactory
 from .filing_action_ports import FilingActionPortsFactory
 from .filing_actions import file_modelo_revision
@@ -1050,6 +1053,10 @@ def build_modelo_work_file_registration(
 _REPORT_DOCUMENT_FORMATS: Mapping[ModeloExportArtefact, CalculationReportDocumentFormat] = MappingProxyType(
     {ModeloExportArtefact.CALCULATION_REPORT_CSV: CalculationReportDocumentFormat.CSV},
 )
+#: The same table read back, so a report receipt names the artefact that was asked for.
+_REPORT_ARTEFACTS: Mapping[CalculationReportDocumentFormat, ModeloExportArtefact] = MappingProxyType(
+    {document_format: artefact for artefact, document_format in _REPORT_DOCUMENT_FORMATS.items()},
+)
 
 
 class ModeloExportRequest(CredentialFreeOperationRequest):
@@ -1087,26 +1094,139 @@ class ModeloExportRequest(CredentialFreeOperationRequest):
     actor: Annotated[str, Field(min_length=1, max_length=128)]
 
 
-class ModeloExportPublicResultV1(BaseModel):
-    """Evidence that one export happened, without the exported material.
+class ModeloExportEvidenceStatus(StrEnum):
+    """What one exported artefact is worth as evidence, in the export service's own terms.
+
+    Neither artefact is official AEAT evidence; the two members keep apart the
+    filing file an operator may present and the calculation record that can
+    never be presented, because the remedy an operator reads differs.
+
+    Attributes:
+        LOCAL_EXPORT_NOT_OFFICIAL_AEAT_FILING_EVIDENCE: The filing file's own
+            status token. Official evidence comes from AEAT only after filing.
+        LOCAL_CALCULATION_REPORT_NOT_OFFICIAL_AEAT_FILING_EVIDENCE: A calculation
+            report, whose receipt always carries the local-calculation notice
+            saying it is not official AEAT filing evidence.
+    """
+
+    LOCAL_EXPORT_NOT_OFFICIAL_AEAT_FILING_EVIDENCE = "local_export_not_official_aeat_filing_evidence"
+    LOCAL_CALCULATION_REPORT_NOT_OFFICIAL_AEAT_FILING_EVIDENCE = (
+        "local_calculation_report_not_official_aeat_filing_evidence"
+    )
+
+
+class ModeloExportCompleteness(StrEnum):
+    """What one export's receipt says about whether every required casilla reached the file.
+
+    The export service states completeness only as a warning: it flags a
+    fixed-width filing file whose revision declares no completeness manifest,
+    because the structural-parity check could not run. Its silence is not a
+    verification, so it keeps its own member rather than reading as verified.
+
+    Attributes:
+        UNVERIFIED: The receipt flags the filing file as not completeness-verified.
+        NOT_FLAGGED: The filing file's receipt raises no completeness warning.
+        NOT_ASSESSED: A calculation report, which makes no completeness statement.
+    """
+
+    UNVERIFIED = "unverified"
+    NOT_FLAGGED = "not_flagged"
+    NOT_ASSESSED = "not_assessed"
+
+
+class ModeloExportSettledResult(BaseModel):
+    """The export service's own receipt for one settled export, kept behind the secure operand boundary.
+
+    Exactly one receipt is present: the filing file's or the calculation
+    report's. The receipt is stored whole rather than as chosen fields, so the
+    public result is a projection of the very object the command line renders
+    and no surface re-derives a fact from anything else.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    fichero_boe: ModeloExportResult | None = None
+    calculation_report: ModeloCalculationReportResult | None = None
+
+    @model_validator(mode="after")
+    def _exactly_one_receipt(self) -> ModeloExportSettledResult:
+        """Refuse a settlement naming no artefact, or two."""
+        if (self.fichero_boe is None) == (self.calculation_report is None):
+            raise ValueError("a settled export carries exactly one receipt")
+        return self
+
+
+class ModeloExportPublicResultV2(BaseModel):
+    """Evidence that one export happened and what it could establish, without the exported material.
 
     Custody of the artefact is the operator's from the moment it lands: this
     result names the file and fingerprints it so a later reader can prove which
-    bytes were produced, and carries none of them.
+    bytes were produced, and carries none of them. It also carries the three
+    facts an operator needs before relying on the file -- its evidence status,
+    its completeness and the grade of the software identity in its header -- so
+    an incomplete or development-grade export is stated, never implied.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
 
-    result_version: int = 1
+    result_version: int = 2
     calculation_revision_id: Annotated[str, Field(min_length=1, max_length=128)]
+    artefact: ModeloExportArtefact
+    #: The receipt's own format token: ``fichero-boe`` or the report's
+    #: serialisation, exactly as the command line prints it.
+    export_format: Annotated[str, Field(min_length=1, max_length=64)]
     #: ``pattern=r"\S"`` refuses an all-whitespace destination, which
     #: ``min_length`` alone admits. NOT stripped: a path must stay byte-exact,
     #: and silently trimming one would mask a typo rather than surface it.
     output_path: Annotated[str, Field(min_length=1, max_length=4096, pattern=r"\S")]
     byte_size: NonNegativeInt
     file_sha256: ContentDigest
-    export_format: Annotated[str, Field(min_length=1, max_length=64)]
+    #: ``None`` when the artefact's layout reserves no software-identity slot.
+    software_identity_grade: AeatSoftwareIdentityGrade | None
+    evidence_status: ModeloExportEvidenceStatus
+    completeness: ModeloExportCompleteness
     handoff_required: bool = True
+
+
+def _project_modelo_export_result(result: BaseModel, terminal_receipt: OperationTerminalReceipt, /) -> BaseModel:
+    """Project the service's settled receipt into the public export result.
+
+    Every fact is read from the receipt the export service returned; the only
+    translation is from its field spelling into the closed public vocabulary.
+    """
+    del terminal_receipt
+    settled = ModeloExportSettledResult.model_validate(result, strict=True)
+    if settled.fichero_boe is not None:
+        filing = settled.fichero_boe
+        return ModeloExportPublicResultV2(
+            calculation_revision_id=filing.calculation_revision_id,
+            artefact=ModeloExportArtefact.FICHERO_BOE,
+            export_format=filing.format,
+            output_path=str(filing.output_path),
+            byte_size=filing.byte_size,
+            file_sha256=filing.file_sha256,
+            software_identity_grade=filing.software_identity_grade,
+            evidence_status=ModeloExportEvidenceStatus(filing.local_evidence_status),
+            completeness=(
+                ModeloExportCompleteness.UNVERIFIED
+                if filing.completeness_unverified
+                else ModeloExportCompleteness.NOT_FLAGGED
+            ),
+        )
+    report = settled.calculation_report
+    if report is None:
+        raise ValueError("a settled export carries exactly one receipt")
+    return ModeloExportPublicResultV2(
+        calculation_revision_id=report.calculation_revision_id,
+        artefact=_REPORT_ARTEFACTS[report.document_format],
+        export_format=report.document_format.value,
+        output_path=str(report.output_path),
+        byte_size=report.byte_size,
+        file_sha256=report.file_sha256,
+        software_identity_grade=report.software_identity_grade,
+        evidence_status=ModeloExportEvidenceStatus.LOCAL_CALCULATION_REPORT_NOT_OFFICIAL_AEAT_FILING_EVIDENCE,
+        completeness=ModeloExportCompleteness.NOT_ASSESSED,
+    )
 
 
 class ModeloExportExecutor:
@@ -1134,11 +1254,16 @@ class ModeloExportExecutor:
         request: OperationRequest[ModeloExportRequest],
         context: OperationExecutorContext,
     ) -> str | None:
-        """Delegate to the export authority and return the artefact digest.
+        """Delegate to the export authority and keep its receipt as the settled result.
 
         The command is built from the journalled request, so the identity an
         artefact is stamped with is the one this invocation recorded rather
         than whatever a closure happened to hold when the definition was built.
+
+        The service's receipt is stored behind the secure operand boundary and
+        its reference settles the operation, so a surface reads the evidence
+        status, completeness and identity grade the service stated rather than
+        a digest it would have to explain on its own.
 
         Publishes its entry phase only -- see DELEGATED PHASE REPORTING above.
         """
@@ -1153,34 +1278,38 @@ class ModeloExportExecutor:
             bucket_id=active_bucket_id,
             m303_rectificativa_taxpayer_tax_id=workflow_profile.tax_id,
         )
-        digest = (
-            self._published_fichero_boe_digest(
-                payload,
-                workflow_profile=workflow_profile,
-                export_ports=export_ports,
-                operation=context.authority_operation,
+        settled = (
+            ModeloExportSettledResult(
+                fichero_boe=self._published_fichero_boe(
+                    payload,
+                    workflow_profile=workflow_profile,
+                    export_ports=export_ports,
+                    operation=context.authority_operation,
+                )
             )
             if payload.artefact is ModeloExportArtefact.FICHERO_BOE
-            else self._published_calculation_report_digest(
-                payload,
-                active_bucket_id=active_bucket_id,
-                export_ports=export_ports,
-                operation=context.authority_operation,
+            else ModeloExportSettledResult(
+                calculation_report=self._published_calculation_report(
+                    payload,
+                    active_bucket_id=active_bucket_id,
+                    export_ports=export_ports,
+                    operation=context.authority_operation,
+                )
             )
         )
         await context.events.effect(OperationEffect.UPDATED)
-        return digest
+        return await context.operands.put(settled, written_at=_utc_now())
 
     @staticmethod
-    def _published_fichero_boe_digest(
+    def _published_fichero_boe(
         payload: ModeloExportRequest,
         *,
         workflow_profile: TaxpayerProfile,
         export_ports: ModeloExportPorts,
         operation: PinnedAuthorityOperation,
-    ) -> str:
-        """Publish the AEAT-compatible filing file and return its byte digest."""
-        result = export_modelo_revision(
+    ) -> ModeloExportResult:
+        """Publish the AEAT-compatible filing file and return the service's receipt."""
+        return export_modelo_revision(
             ModeloExportCommand(
                 calculation_revision_id=payload.calculation_revision_id,
                 output_path=Path(payload.output_path),
@@ -1194,17 +1323,16 @@ class ModeloExportExecutor:
             operation=operation,
             export_ports=export_ports,
         )
-        return str(result.file_sha256)
 
-    def _published_calculation_report_digest(
+    def _published_calculation_report(
         self,
         payload: ModeloExportRequest,
         *,
         active_bucket_id: str,
         export_ports: ModeloExportPorts,
         operation: PinnedAuthorityOperation,
-    ) -> str:
-        """Publish the calculation report and return its byte digest.
+    ) -> ModeloCalculationReportResult:
+        """Publish the calculation report and return the service's receipt.
 
         The declaration-shaping elections are not threaded here and their absence
         is not an omission: they decide the fichero's "Tipo de declaracion", and a
@@ -1216,7 +1344,7 @@ class ModeloExportExecutor:
         full-screen session set to Catalan produces a Catalan report exactly as
         the command line does under ``--output-language ca``.
         """
-        result = export_modelo_calculation_report(
+        return export_modelo_calculation_report(
             ModeloCalculationReportCommand(
                 calculation_revision_id=payload.calculation_revision_id,
                 document_format=_REPORT_DOCUMENT_FORMATS[payload.artefact],
@@ -1228,7 +1356,6 @@ class ModeloExportExecutor:
             signing_keypair=self._signing_keypair_capability_factory(bucket_id=active_bucket_id),
             operation=operation,
         )
-        return str(result.file_sha256)
 
 
 def build_modelo_export_definition(
@@ -1249,7 +1376,7 @@ def build_modelo_export_definition(
     return OperationDefinition(
         definition_id=MODELO_EXPORT_OPERATION_DEFINITION_ID,
         request_type=ModeloExportRequest,
-        result_type=ModeloExportPublicResultV1,
+        result_type=ModeloExportSettledResult,
         executor_factory=OperationExecutorFactory(
             request_type=ModeloExportRequest,
             executor_type=ModeloExportExecutor,
@@ -1288,11 +1415,12 @@ def build_modelo_export_registration(
         ),
         result_schema=OperationSchemaBindingV1.bind(
             schema_id="modelo.export.result",
-            schema_version=1,
-            model_type=ModeloExportPublicResultV1,
+            schema_version=2,
+            model_type=ModeloExportPublicResultV2,
         ),
         workspace_refresh_target_schema=_modelo_workspace_refresh_target_binding(definition.definition_id),
         workspace_refresh_adapter=resolve_modelo_work_unit_refresh_target,
+        result_projector=_project_modelo_export_result,
     )
 
 
@@ -2382,9 +2510,12 @@ __all__ = [
     "ModeloEditApplyExecutor",
     "ModeloEditApplyOperationRequestV1",
     "ModeloEditApplyPublicResultV1",
+    "ModeloExportCompleteness",
+    "ModeloExportEvidenceStatus",
     "ModeloExportExecutor",
-    "ModeloExportPublicResultV1",
+    "ModeloExportPublicResultV2",
     "ModeloExportRequest",
+    "ModeloExportSettledResult",
     "ModeloWorkAmendBaseline",
     "ModeloWorkAmendExecutor",
     "ModeloWorkAmendOverride",

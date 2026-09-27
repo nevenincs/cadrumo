@@ -19,7 +19,7 @@ from ...application.auth.tests.certificate_secret_fakes import InMemoryCertifica
 from ...application.modelo.operation_definitions import (
     MODELO_WORK_RENAME_OPERATION_DEFINITION_ID,
     ModeloExportExecutor,
-    ModeloExportPublicResultV1,
+    ModeloExportPublicResultV2,
     ModeloExportRequest,
     ModeloWorkAmendBaseline,
     ModeloWorkAmendExecutor,
@@ -386,7 +386,7 @@ def _export_definition():
 
 def test_the_export_result_fingerprints_the_artefact_and_carries_no_bytes() -> None:
     """Custody of the artefact is the operator's; the result only proves which bytes."""
-    fields = set(ModeloExportPublicResultV1.model_fields)
+    fields = set(ModeloExportPublicResultV2.model_fields)
 
     assert {"output_path", "byte_size", "file_sha256"} <= fields
     for carrier in ("bytes", "content", "payload", "document"):

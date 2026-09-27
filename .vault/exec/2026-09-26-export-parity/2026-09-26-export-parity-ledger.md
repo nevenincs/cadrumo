@@ -5,7 +5,7 @@ tags:
 date: '2026-09-26'
 modified: '2026-09-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:4176fd0fbf17a2fc038c2ceb32687d78d7a5c6bbcc37b961c4622eb1a45767ca'
+body_hash: 'sha256:72e30896246123a074a839ef8b5ae1ab0590ebf2cb70eca08934babc9b42af49'
 related:
   - "[[2026-09-26-export-parity-plan]]"
 ---
@@ -218,6 +218,22 @@ related:
 - `S15` `M` `src/cadrumo/locales/es/application.yml`
 - `S15` `M` `src/cadrumo/locales/hu/application.yml`
 - `S15` `verify:` `re-run on eeb12dc9: pytest (unit or integration) of the tests this commit added or changed (241 across S09 and S15)` -> `pass`
+- `S10` `M` `dev/quality/metadata/import_load_targets.json`
+- `S10` `A` `docs/api/cadrumo.entrypoints.tui.modelo.export_result.rst`
+- `S10` `M` `docs/api/cadrumo.entrypoints.tui.modelo.rst`
+- `S10` `M` `src/cadrumo/application/modelo/operation_definitions.py`
+- `S10` `A` `src/cadrumo/entrypoints/cli/tests/test_export_result_surface_parity.py`
+- `S10` `M` `src/cadrumo/entrypoints/tests/test_work_rename_operation.py`
+- `S10` `A` `src/cadrumo/entrypoints/tui/modelo/export_result.py`
+- `S10` `M` `src/cadrumo/entrypoints/tui/modelo/lifecycle.py`
+- `S10` `M` `src/cadrumo/entrypoints/tui/modelo/view/overview.py`
+- `S10` `A` `src/cadrumo/entrypoints/tui/modelo/view/tests/test_export_result_lifecycle.py`
+- `S10` `A` `src/cadrumo/entrypoints/tui/modelo/view/tests/test_export_result_screen.py`
+- `S10` `M` `src/cadrumo/locales/ca/common.yml`
+- `S10` `M` `src/cadrumo/locales/en/common.yml`
+- `S10` `M` `src/cadrumo/locales/es/common.yml`
+- `S10` `M` `src/cadrumo/locales/hu/common.yml`
+- `S10` `verify:` `agent worktree: focused suites 1464 pass; ruff/format/ty clean; import load targets and apidocs regenerated; symbol/export/reachability counts 12/10/1; import boundaries clean` -> `pass`
 
 ## Notes
 
@@ -230,4 +246,5 @@ related:
 - `S16` Modelo 390 box [230] (adquisiciones interiores exentas) stays unbound: no bundled AEAT instruction defines its population. Modelo 303 boxes [30]/[31] (bienes de inversion) carry no binding on any revision, so an investment purchase lands in [28]/[29]; recorded as a finding.
 - `S09` Delivered in 8d5a949a; logged and closed after the fact during plan housekeeping.
 - `S15` Delivered in a55c3c2d; logged and closed after the fact during plan housekeeping.
+- `S10` CLI/TUI parity is split by the import boundary: a CLI test checks the envelope against the operation result, TUI pilots check the visible table against independently measured file facts. The unverified-completeness case uses a hand-built service result (no verified-revision fixture exists for 165/185/189).
 

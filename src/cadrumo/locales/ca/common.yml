@@ -2014,6 +2014,50 @@ tui:
         label: 'Resultat negatiu: compensar o sol·licitar la devolució'
       replace_existing:
         label: Substituir el fitxer que ja existeixi en aquesta ruta
+      result:
+        close: Tanca
+        completeness:
+          not_assessed: 'No avaluada: un informe de càlcul no és un fitxer de presentació'
+          not_flagged: L'exportació no ha emès cap avís d'integritat
+          unverified: 'Sense verificar: la revisió no declara cap manifest d''integritat'
+        evidence_status:
+          local_calculation_report_not_official_aeat_filing_evidence: Informe de càlcul
+            local; no és evidència oficial de presentació davant l'AEAT
+          local_export_not_official_aeat_filing_evidence: Exportació local; no és
+            evidència oficial de presentació davant l'AEAT
+        label:
+          byte_size: Mida (bytes)
+          calculation_revision_id: Revisió del càlcul
+          completeness: Integritat
+          evidence_status: Estat com a evidència
+          export_format: Format
+          file_sha256: SHA-256 del fitxer
+          output_path: Fitxer
+          software_identity_grade: Identitat de programari a la capçalera del fitxer
+        software_identity_grade:
+          development_mock: Identitat de desenvolupament (tot zeros); l'AEAT no l'accepta
+          none: 'Cap: el disseny d''aquest fitxer no reserva espai per a la identitat
+            de programari'
+          reviewed: Registre de programari revisat
+        title: Resultat de l'exportació
+        unavailable: L'exportació ha acabat, però no se n'ha pogut llegir el resultat,
+          de manera que se'n desconeixen l'estat com a evidència, la integritat i
+          la identitat de programari. Reviseu el fitxer abans de confiar-hi.
+        warning:
+          completeness_unverified: 'No s''ha verificat la integritat d''aquest fitxer
+            de presentació: la seva revisió no declara cap manifest d''integritat,
+            de manera que la comprovació de paritat estructural no ha pogut confirmar
+            que totes les caselles obligatòries arribin al fitxer. Reviseu les caselles
+            exportades amb el Diseño de Registros oficial abans de presentar.'
+          development_software_identity: La capçalera del fitxer porta la identitat
+            de programari de desenvolupament amb tot zeros; l'AEAT no acceptarà aquest
+            fitxer per presentar-lo.
+          development_software_identity_of_filing_file: El fitxer de presentació d'aquest
+            model portaria la identitat de programari de desenvolupament amb tot zeros;
+            l'AEAT no acceptarà aquest fitxer per presentar-lo.
+          not_official: 'Aquest fitxer no és evidència oficial de presentació davant
+            l''AEAT. L''evidència oficial l''emet l''AEAT després de la presentació:
+            justificant; consulta de declaracions presentades; o acarament per CSV.'
     finding_kind:
       advisory: Consell
       blocking_rule: Regla no complerta

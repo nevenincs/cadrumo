@@ -46,6 +46,7 @@ from .....application.modelo.edit_models import (
     ModeloEditWritableBindingOverrideSurfaceEntryV1,
     ModeloEditWritableScalarSurfaceEntryV1,
 )
+from .....application.modelo.operation_definitions import MODELO_EXPORT_OPERATION_DEFINITION_ID
 from .....core.errors.error_codes import resolve_error_message
 from .....core.errors.hierarchy import CadrumoError
 from .....core.i18n.render import tr
@@ -62,6 +63,7 @@ from ...components.theme import toggle_appearance
 from ...components.widgets import ContentDataTable, ContentScroll, DisclosureGroup, NoticeBand
 from ...operations.controller import OperationController
 from ...operations.refusal_explanation import public_refusal_explanation
+from ..export_result import ModeloExportResultScreen
 from ..m303_evidence import OrdinaryM303FilingEvidenceScreen, OrdinaryM303FilingEvidenceSubmission
 from .controller import ModeloWorkspaceReadSession
 from .models import (
@@ -79,7 +81,11 @@ from .models import (
 from .technical_details import TechnicalDetailRowV1, mount_technical_details, producer_row
 
 if TYPE_CHECKING:
-    from .....application.modelo.operation_definitions import ModeloWorkCalculateOrdinaryM303EvidenceRequestV2
+    from .....application.modelo.operation_definitions import (
+        ModeloExportPublicResultV2,
+        ModeloWorkCalculateOrdinaryM303EvidenceRequestV2,
+    )
+    from .....application.operations.frontend_projection import OperationPublicProjectionV1
     from .models import ModeloWorkspaceDestinationIdV1
 
 _ADDRESS_ROW_KEYS: tuple[str, ...] = ("modelo", "filing_year", "period", "work_state")
@@ -512,7 +518,12 @@ class ModeloWorkspaceOverviewScreen(AccountChromeScreen):
         self.app.push_screen(OperationModal(controller), self._on_lifecycle_operation_settled)
 
     def _on_lifecycle_operation_settled(self, outcome: object) -> None:
-        """Publish the terminal result and refresh only after success."""
+        """Publish the terminal result and refresh only after success.
+
+        A successful export first states the facts its result carries, because
+        the refresh closes this page and an operator must see what the file is
+        worth before the workspace moves on.
+        """
         from ...operations.modal import OperationModalSettledOutcomeV1
 
         self._action_in_flight = False
@@ -542,8 +553,52 @@ class ModeloWorkspaceOverviewScreen(AccountChromeScreen):
             return
         actions = self._session.lifecycle_actions
         refresh = None if actions is None else getattr(actions, "refresh_after_success", None)
+        projection = outcome.view_model.projection
+        settled_export_result = None if actions is None else getattr(actions, "settled_export_result", None)
+        if projection.definition_id == MODELO_EXPORT_OPERATION_DEFINITION_ID and isinstance(
+            settled_export_result, Callable
+        ):
+            self.run_worker(
+                self._state_export_result(
+                    cast("Callable[..., Awaitable[ModeloExportPublicResultV2 | None]]", settled_export_result),
+                    projection,
+                    refresh=refresh if isinstance(refresh, Callable) else None,
+                ),
+                group="modelo-lifecycle-export-result",
+                exclusive=True,
+            )
+            return
         if isinstance(refresh, Callable):
             self.run_worker(self._refresh_after_success(refresh), group="modelo-lifecycle-refresh", exclusive=True)
+
+    async def _state_export_result(
+        self,
+        resolve: Callable[..., Awaitable[ModeloExportPublicResultV2 | None]],
+        projection: OperationPublicProjectionV1,
+        *,
+        refresh: Callable[[], object] | None,
+    ) -> None:
+        """Show the settled export's own facts, then refresh once the operator has closed them.
+
+        A result that cannot be read opens the same statement saying so, rather
+        than skipping it: the file exists either way, and its evidence status,
+        completeness and software identity are then unknown, not fine.
+        """
+        try:
+            result = await resolve(projection)
+        except Exception as failure:
+            get_logger(__name__).error(
+                "modelo export result could not be resolved: %s",
+                type(failure).__qualname__,
+                exc_info=True,
+            )
+            result = None
+
+        def closed(_: object) -> None:
+            if refresh is not None:
+                self.run_worker(self._refresh_after_success(refresh), group="modelo-lifecycle-refresh", exclusive=True)
+
+        self.app.push_screen(ModeloExportResultScreen(result), closed)
 
     async def _refresh_after_success(self, refresh: Callable[[], object]) -> None:
         """Capture one new generation, then return so reopening resolves its persisted state."""

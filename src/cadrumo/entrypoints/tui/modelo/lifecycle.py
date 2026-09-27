@@ -37,6 +37,7 @@ from ....application.modelo.operation_definitions import (
     MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID,
     ModeloEditApplyOperationRequestV1,
     ModeloEditApplySubmissionV1,
+    ModeloExportPublicResultV2,
     ModeloExportRequest,
     ModeloWorkCalculateOrdinaryM303EvidenceRequestV2,
     ModeloWorkCalculateRequest,
@@ -45,9 +46,15 @@ from ....application.modelo.operation_definitions import (
     ModeloWorkVerifyRequest,
 )
 from ....application.operations.composition import OperationComposedServices
+from ....application.operations.frontend_projection import OperationPublicProjectionV1
+from ....application.operations.frontend_requests import (
+    OperationResultProjectionRequestV1,
+    OperationResultProjectionSuccessV1,
+)
 from ....application.operations.models import OperationRequest
 from ....core.errors.hierarchy import CadrumoError
 from ....core.modelo_export_artefact import ModeloExportArtefact
+from ....core.operations import OperationTerminalCondition
 from ....core.payment_election import PaymentElection
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....core.refund_election import RefundElection
@@ -225,6 +232,35 @@ class ModeloWorkspaceLifecycleDoor:
                 ),
             )
         )
+
+    async def settled_export_result(self, projection: OperationPublicProjectionV1) -> ModeloExportPublicResultV2 | None:
+        """Resolve one settled export's public result through the composed result door.
+
+        ``None`` when the projection is not a successful export or its result
+        cannot be resolved; the caller states that absence rather than inventing
+        the facts the result would have carried.
+        """
+        schema = projection.definition_contract.result_schema
+        if (
+            projection.definition_id != MODELO_EXPORT_OPERATION_DEFINITION_ID
+            or projection.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+            or schema is None
+        ):
+            return None
+        resolved = await self.services.result.resolve(
+            OperationResultProjectionRequestV1(
+                operation_id=projection.operation_id,
+                terminal_revision=projection.revision,
+                definition_contract_digest=projection.definition_contract.definition_contract_digest,
+                result_schema=schema,
+            ),
+            ModeloExportPublicResultV2,
+        )
+        if not isinstance(resolved, OperationResultProjectionSuccessV1) or not isinstance(
+            resolved.projection, ModeloExportPublicResultV2
+        ):
+            return None
+        return resolved.projection
 
     def _require_calculation_revision(self) -> str:
         if self.calculation_revision_id is None:
