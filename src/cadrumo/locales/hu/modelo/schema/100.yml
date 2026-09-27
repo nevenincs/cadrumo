@@ -3669,6 +3669,9 @@ modelo:
         renta-economic-activities:
           field:
             title: '100-as nyomtatvány: a gazdasági tevékenységtől való függőség bizonyítékai'
+        renta-final-settlement:
+          field:
+            title: '100-as nyomtatvány: vég settlement result'
         renta-mini-model-deduccion-madrid-nacimiento-adopcion:
           field:
             title: '100-as nyomtatvány 2025: Madridi autonóm közösség születési/örökbefogadási
@@ -3682,6 +3685,9 @@ modelo:
         renta-payments-retentions:
           field:
             title: '100-as nyomtatvány: levonások és adóelőleg-fizetések'
+        renta-personal-family:
+          field:
+            title: '100-as nyomtatvány: a személyi és családi profil adatai'
         renta-real-estate-capital:
           field:
             title: '100-as nyomtatvány: az ingatlantőkétől való függőség bizonyítékai'
@@ -8205,6 +8211,67 @@ modelo:
             '1916':
               label: Az engedélyezett bölcsődék vagy óvodák költségei utáni növekmény
                 (a 2021. adóévben nem alkalmazott összegek)
+            ANOASDLG:
+              label: Felmenő születési dátuma
+            APENOMDLG:
+              label: Gyermek vagy leszármazott családi és utóneve
+            APENOMDLG_ASC:
+              label: Felmenő családi és utóneve
+            CONVASDLG:
+              label: Több leszármazottjával együtt élő felmenő
+            DECFAL:
+              label: Első bevalló elhalálozási dátuma
+            DNIASDLG:
+              label: Felmenő adóazonosító száma
+            DPFNAC_C:
+              label: Házastárs születési dátuma
+            DPFNAC_D:
+              help: Adja meg az első bevalló születési dátumát.
+              label: Első bevalló születési dátuma
+            DPGMIN_C:
+              label: Házastárs fogyatékossági foka
+            DPGMIN_D:
+              label: Első bevalló fogyatékossági foka
+            DPNIF_C:
+              label: Házastárs adóazonosító száma
+            DPNIF_D:
+              label: Első bevalló adóazonosító száma
+            DP_APENOM_C:
+              label: Házastárs családi és utóneve
+            DP_APENOM_D:
+              label: Első bevalló családi és utóneve
+            ECIVIL:
+              label: Első nyilatkozattevő családi állapot
+            FALLASDLG:
+              label: Felmenő elhalálozási dátuma
+            FALLDLG:
+              label: Gyermek vagy leszármazott elhalálozási dátuma
+            FNACDLG:
+              label: Gyermek vagy leszármazott születési dátuma
+            HIJOSUE:
+              label: EU- vagy EGT-rezidens gyermekek vagy leszármazottak
+            MINUSDLG:
+              label: Gyermek vagy leszármazott fogyatékossági kódja
+            NIFDLG:
+              label: Gyermek vagy leszármazott adóazonosító száma
+            NORESIDENTE:
+              label: Nem rezidens, nem IRPF adófizető házastárs
+            PCTMINASDLG:
+              label: Fogyatékosság-kulcs Ascendencia
+            PH18:
+              label: 18 év alatti gyermekek a családi egységben
+            RESIDENTEUE:
+              label: EU- vagy EGT-rezidens házastárs
+            SEXO_C:
+              label: Házastárs neme
+            SEXO_D:
+              label: Első bevalló neme
+            TIPOTRIBUTACION:
+              label: Az adózás típusa
+            ZCCAD:
+              label: Lakóhelyi autonóm közösség
+            ZRUE2:
+              label: a házastárs EU- vagy EGT-országa
           construct:
             renta-dependent-modelos:
               field:
@@ -15684,60 +15751,21 @@ modelo:
             A:
               label: 'Levonásra jogosító beruházás: az állandó lakóhely megszerzése
                 és/vagy építése'
-            ANOASDLG:
-              label: Felmenő születési dátuma
-            APENOMDLG:
-              label: Gyermek vagy leszármazott családi és utóneve
-            APENOMDLG_ASC:
-              label: Felmenő családi és utóneve
             C:
               label: 'Levonásra jogosító beruházás: az állandó lakóhely felújítása
                 vagy bővítése'
-            CONVASDLG:
-              label: Több leszármazottjával együtt élő felmenő
             D:
               label: 'A levonás alapja (felső határ: 100 000 euró): az új vagy nemrég
                 alapított vállalkozásokba történő beruházások utáni levonás teljes
                 összege'
-            DECFAL:
-              label: Első bevalló elhalálozási dátuma
-            DNIASDLG:
-              label: Felmenő adóazonosító száma
-            DPFNAC_C:
-              label: Házastárs születési dátuma
-            DPFNAC_D:
-              help: Adja meg az első bevalló születési dátumát.
-              label: Első bevalló születési dátuma
-            DPGMIN_C:
-              label: Házastárs fogyatékossági foka
-            DPGMIN_D:
-              label: Első bevalló fogyatékossági foka
-            DPNIF_C:
-              label: Házastárs adóazonosító száma
-            DPNIF_D:
-              label: Első bevalló adóazonosító száma
-            DP_APENOM_C:
-              label: Házastárs családi és utóneve
-            DP_APENOM_D:
-              label: Első bevalló családi és utóneve
             E:
               label: Levonásra jogosító megfizetett összegek
-            ECIVIL:
-              label: Első nyilatkozattevő családi állapot
-            FALLASDLG:
-              label: Felmenő elhalálozási dátuma
-            FALLDLG:
-              label: Gyermek vagy leszármazott elhalálozási dátuma
-            FNACDLG:
-              label: Gyermek vagy leszármazott születési dátuma
             G:
               label: 'Levonásra jogosító összeg (*): kiemelt mecenatúra-tevékenységekhez
                 nyújtott hozzájárulások, az adóalap 15%-áig'
             H:
               label: 'Levonásra jogosító összeg (**): a 2002. december 23-i 49/2002.
                 sz. törvény hatálya alá tartozó szervezeteknek nyújtott adományok'
-            HIJOSUE:
-              label: EU- vagy EGT-rezidens gyermekek vagy leszármazottak
             I:
               label: 'Levonásra jogosító összegek (*): a spanyol nemzeti örökség,
                 valamint a Spanyolországban található, az UNESCO által világörökséggé
@@ -15747,28 +15775,6 @@ modelo:
               label: 'Levonásra jogosító összeg (**): a 2002. december 23-i 49/2002.
                 sz. törvény hatálya alá nem tartozó alapítványoknak és közhasznú egyesületeknek
                 nyújtott adományok'
-            MINUSDLG:
-              label: Gyermek vagy leszármazott fogyatékossági kódja
-            NIFDLG:
-              label: Gyermek vagy leszármazott adóazonosító száma
-            NORESIDENTE:
-              label: Nem rezidens, nem IRPF adófizető házastárs
-            PCTMINASDLG:
-              label: Fogyatékosság-kulcs Ascendencia
-            PH18:
-              label: 18 év alatti gyermekek a családi egységben
-            RESIDENTEUE:
-              label: EU- vagy EGT-rezidens házastárs
-            SEXO_C:
-              label: Házastárs neme
-            SEXO_D:
-              label: Első bevalló neme
-            TIPOTRIBUTACION:
-              label: Az adózás típusa
-            ZCCAD:
-              label: Lakóhelyi autonóm közösség
-            ZRUE2:
-              label: a házastárs EU- vagy EGT-országa
             prestacion-inss-maternidad-paternidad-exenta:
               label: Az INSS által folyósított adómentes anyasági és apasági ellátások
           construct:
@@ -18067,9 +18073,6 @@ modelo:
             renta-dependent-modelos:
               field:
                 title: '100-as nyomtatvány: a függő modelloktól származó adatok'
-            renta-final-settlement:
-              field:
-                title: '100-as nyomtatvány: vég settlement result'
             renta-mini-model-actividades-economicas-objetiva:
               field:
                 title: '100-as nyomtatvány 2025: az objektív adózás összesítő mezői'
@@ -18090,8 +18093,5 @@ modelo:
               field:
                 title: '100-as nyomtatvány 2025: atribucion / imputacion szerinti
                   jövedelmek aggregators'
-            renta-personal-family:
-              field:
-                title: '100-as nyomtatvány: a személyi és családi profil adatai'
           field:
             label: Adóév 2025

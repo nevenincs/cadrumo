@@ -5,8 +5,8 @@ chain test.  Each fixture contains formula-consistent casilla values derived
 from the registry engine:
 
     leaf input  0505 (base liquidable general sometida a gravamen)
-    computed    0545 (cuota integra estatal) = lookup_bracket(0505, escala-estatal)
-    computed    0546 (cuota integra autonomica) = lookup_bracket_by_ccaa(0505, escalas)
+    computed    0545 (cuota integra estatal) = escala-estatal(0505) - escala-estatal(minimo)
+    computed    0546 (cuota integra autonomica) = escala-ccaa(0505) - escala-ccaa(minimo)
     computed    0585 (cuota liquida estatal incrementada) = 0570 + deducciones-estatales
     computed    0586 (cuota liquida autonomica incrementada) = 0571 + deducciones-autonomicas
 
@@ -69,9 +69,10 @@ _CUOTA_LIQUIDA_AUTONOMICA_CASILLA = validated_casilla_id(
 # ---------------------------------------------------------------------------
 # Engine-derived corpus values (Cataluna CCAA, simplificada, zero deductions)
 # Values anchored to registry bracket tables.  See module docstring.
-# Derived by running calculate_registry_snapshot with
-# inputs={_BASE_LIQUIDABLE_GENERAL_CASILLA: Decimal("30000.00")}
-# for each year with binding renta-{year}-profile-tax-residence-ccaa='cataluna'.
+# Derived by running calculate_registry_snapshot for a base liquidable general
+# of 30.000,00 EUR with renta-profile-tax-residence-ccaa='cataluna'. Editions
+# that apply the mínimo personal (Ley 35/2006 art.63.1.2º and art.74.1.2º)
+# subtract the escala applied to the 5.550 EUR mínimo from each cuota íntegra.
 # ---------------------------------------------------------------------------
 
 _CORPUS_VALUES: dict[int, dict[CasillaId, Decimal]] = {
@@ -84,17 +85,17 @@ _CORPUS_VALUES: dict[int, dict[CasillaId, Decimal]] = {
     },
     2022: {
         _BASE_LIQUIDABLE_GENERAL_CASILLA: Decimal("30000.00"),
-        _CUOTA_INTEGRA_ESTATAL_CASILLA: Decimal("3582.75"),
-        _CUOTA_INTEGRA_AUTONOMICA_CASILLA: Decimal("3749.10"),
-        _CUOTA_LIQUIDA_ESTATAL_CASILLA: Decimal("3582.75"),
-        _CUOTA_LIQUIDA_AUTONOMICA_CASILLA: Decimal("3749.10"),
+        _CUOTA_INTEGRA_ESTATAL_CASILLA: Decimal("3055.50"),
+        _CUOTA_INTEGRA_AUTONOMICA_CASILLA: Decimal("3166.35"),
+        _CUOTA_LIQUIDA_ESTATAL_CASILLA: Decimal("3055.50"),
+        _CUOTA_LIQUIDA_AUTONOMICA_CASILLA: Decimal("3166.35"),
     },
     2023: {
         _BASE_LIQUIDABLE_GENERAL_CASILLA: Decimal("30000.00"),
-        _CUOTA_INTEGRA_ESTATAL_CASILLA: Decimal("3582.75"),
-        _CUOTA_INTEGRA_AUTONOMICA_CASILLA: Decimal("3749.10"),
-        _CUOTA_LIQUIDA_ESTATAL_CASILLA: Decimal("3582.75"),
-        _CUOTA_LIQUIDA_AUTONOMICA_CASILLA: Decimal("3749.10"),
+        _CUOTA_INTEGRA_ESTATAL_CASILLA: Decimal("3055.50"),
+        _CUOTA_INTEGRA_AUTONOMICA_CASILLA: Decimal("3166.35"),
+        _CUOTA_LIQUIDA_ESTATAL_CASILLA: Decimal("3055.50"),
+        _CUOTA_LIQUIDA_AUTONOMICA_CASILLA: Decimal("3166.35"),
     },
 }
 

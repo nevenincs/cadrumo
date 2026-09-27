@@ -8,6 +8,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from .....core.casilla_id import validated_casilla_id
 from ..errors import RegistrySnapshotError, RegistryValidationError
 from ._registry_scenarios_support import (
     _estimacion_objetiva_modulos_archetype_scenario,
@@ -148,13 +149,22 @@ def test_modelo_100_2023_simplified_expenses_use_temporary_da56_rate() -> None:
         filing_year=2023,
         period="0A",
         inputs=_inputs({"0171": Decimal("10000.00")}),
+        hand_typed_bound_casillas={
+            validated_casilla_id("0171"): (
+                "isolates the difficult-justification rate applied to 0180; the ledger-income aggregation "
+                "feeding this casilla is out of its scope and is covered separately"
+            ),
+        },
         binding_values={
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("0"),
+            "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
+            "renta-profile-declaration-type": Decimal("1"),
         },
         relation_values={
             "renta-modelo-130-pagos-fraccionados": Decimal("0"),
             "renta-modelo-131-pagos-fraccionados": Decimal("0"),
         },
+        date_binding_values={"renta-profile-taxpayer-birth-date": date(1975, 6, 15)},
         enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         date_context={"filing_period": date(2023, 12, 31)},
         expected_outputs=(

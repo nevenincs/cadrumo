@@ -1,4 +1,4 @@
-[[revisions."2024".constructs]]
+[[revisions."2022".constructs]]
 id = "renta-final-settlement"
 legal_refs = [
     "ley-35-2006:art-22",
@@ -17,10 +17,10 @@ legal_refs = [
     "rd-439-2007:art-110",
 ]
 source_refs = [
-    "aeat-dr-100-2024-dictionary",
-    "aeat-dr-100-2024-xsd",
-    "boe-modelo-100-2024-form",
-    "aeat-renta-2024-manual-parte1",
+    "aeat-dr-100-2022-dictionary",
+    "aeat-dr-100-2022-xsd",
+    "boe-modelo-100-2022-form",
+    "aeat-renta-2022-manual-parte1",
     "lirpf-cuota-chain-authority",
 ]
 formulas = [
@@ -29,28 +29,20 @@ formulas = [
     "renta-cuota-resultante-autoliquidacion",
     "renta-total-pagos-a-cuenta",
     "renta-cuota-diferencial",
-    "renta-resultado-declaracion",
-    # Personal-family deduction inputs (Ley 35/2006 art. 82 marriage axis;
-    # art. 81-bis incremento por gastos en guardería).
-    "renta-matrimonio-vigente-todo-anio",
-    "renta-matrimonio-mes-inicio",
-    "renta-matrimonio-mes-fin",
-    "renta-deduccion-maternidad-0611",
-    "renta-incremento-guarderia-0613",
 ]
 application_links = [
     "modelo-100-calculation",
     "modelo-100-workflow",
 ]
-[[revisions."2024".constructs]]
+[[revisions."2022".constructs]]
 id = "renta-anexo-c-base-liquidable-negativa-general"
 legal_refs = ["ley-35-2006:art-50"]
 source_refs = [
-    "aeat-dr-100-2024-dictionary",
-    "aeat-dr-100-2024-input-dictionary",
-    "aeat-dr-100-2024-xsd",
-    "aeat-renta-2024-manual-parte1",
-    "boe-modelo-100-2024-form",
+    "aeat-dr-100-2022-dictionary",
+    "aeat-dr-100-2022-input-dictionary",
+    "aeat-dr-100-2022-xsd",
+    "aeat-renta-2022-manual-parte1",
+    "boe-modelo-100-2022-form",
 ]
 casilla_ids = [
     "1388",
@@ -59,14 +51,14 @@ bindings = [
     "renta-base-liquidable-negativa-general-anterior",
 ]
 dependency_classifications = ["renta-dep-100"]
-[[revisions."2024".constructs]]
+[[revisions."2022".constructs]]
 id = "renta-personal-family"
-legal_refs = ["orden-hac-242-2025:art-3", "ley-35-2006:art-57", "ley-35-2006:art-58", "ley-35-2006:art-59", "ley-35-2006:art-60", "ley-35-2006:art-64", "ley-35-2006:art-74", "ley-35-2006:art-75-2015", "ley-35-2006:art-81-bis", "ley-35-2006:art-82", "ley-35-2006:art-83"]
+legal_refs = ["orden-hfp-310-2023:art-3", "ley-35-2006:art-57", "ley-35-2006:art-58", "ley-35-2006:art-59", "ley-35-2006:art-60", "ley-35-2006:art-64", "ley-35-2006:art-74", "ley-35-2006:art-75-2015", "ley-35-2006:art-81-bis", "ley-35-2006:art-82", "ley-35-2006:art-83"]
 source_refs = [
-    "aeat-dr-100-2024-dictionary",
-    "aeat-dr-100-2024-xsd",
-    "aeat-renta-2024-manual-parte1",
-    "boe-modelo-100-2024-form",
+    "aeat-dr-100-2022-dictionary",
+    "aeat-dr-100-2022-xsd",
+    "aeat-renta-2022-manual-parte1",
+    "boe-modelo-100-2022-form",
 ]
 bindings = [
     "renta-profile-tax-id",

@@ -1,7 +1,10 @@
-"""Structural wiring test for the M100 2024 CCAA-deduction / final-settlement
-chain: cuota integra -> cuota liquida (estatal + autonomica) -> cuota liquida
-total -> cuota resultante de la autoliquidacion -> cuota diferencial ->
-resultado de la declaracion.
+"""Structural wiring test for the M100 CCAA-deduction / final-settlement
+chain, anchored on the Renta 2024 manual's Aragon worked example: cuota
+integra -> cuota liquida (estatal + autonomica) -> cuota liquida total ->
+cuota resultante de la autoliquidacion -> cuota diferencial -> resultado de
+la declaracion. The chain's identities in every supported year are covered by
+the development registry's support-year tests; this module keeps the figures
+the manual prints for its own ejercicio.
 
 Grounding posture (see aeat-quality-gates and
 no-silent-under-declaration): the bundled AEAT Manual practico
@@ -59,7 +62,10 @@ from .scenarios import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_M100_2024_MATERNIDAD_BINDINGS = M100_2024_EMPTY_MATERNIDAD_BINDINGS
+#: The ejercicio of the manual worked example the anchor figures reproduce.
+_MANUAL_EJERCICIO = 2024
+
+_MATERNIDAD_BINDINGS = M100_2024_EMPTY_MATERNIDAD_BINDINGS
 
 
 _CUOTA_INTEGRA_ESTATAL: CasillaId = validated_casilla_id("0545", surface="0545")
@@ -85,7 +91,7 @@ def _bindings(*, retencion: str) -> dict[str, Decimal]:
         # Art. 81.1 is profile-derived at the application boundary. This
         # direct registry scenario has no profile facts, so it supplies the
         # resolved no-descendant scalar just as the profile resolver would.
-        **_M100_2024_MATERNIDAD_BINDINGS,
+        **_MATERNIDAD_BINDINGS,
         "renta-profile-incremento-guarderia": Decimal("0"),
         "renta-profile-cotizaciones-ss-madre": Decimal("0"),
         "renta-profile-descendientes-guarderia": Decimal("0"),
@@ -101,7 +107,7 @@ def _bindings(*, retencion: str) -> dict[str, Decimal]:
     }
 
 
-_REL_2024: dict[str, Decimal] = {
+_RELATION_VALUES: dict[str, Decimal] = {
     # m111/m123/m193 are exercised through the binding channel above (see
     # _bindings()); duplicating them here would conflict with a non-zero
     # retencion on the binding channel and confuse two channels asserting one
@@ -115,8 +121,8 @@ def _scenario(*, retencion: str, scenario_id: str) -> RegistryCalculationScenari
     return RegistryCalculationScenario(
         id=scenario_id,
         modelo="100",
-        revision="2024",
-        filing_year=2024,
+        revision=str(_MANUAL_EJERCICIO),
+        filing_year=_MANUAL_EJERCICIO,
         period="0A",
         inputs={
             _BASE_LIQUIDABLE_GENERAL_LEAF: Decimal("23900.00"),
@@ -124,8 +130,8 @@ def _scenario(*, retencion: str, scenario_id: str) -> RegistryCalculationScenari
         },
         binding_values=_bindings(retencion=retencion),
         enum_binding_values={"renta-profile-tax-residence-ccaa": "aragon"},
-        relation_values=_REL_2024,
-        date_context={"filing_period": date(2024, 12, 31)},
+        relation_values=_RELATION_VALUES,
+        date_context={"filing_period": date(_MANUAL_EJERCICIO, 12, 31)},
         date_binding_values={"renta-profile-taxpayer-birth-date": date(1980, 6, 15)},
         # The harness requires at least one expected output; anchor it on the
         # manual-grounded cuota integra estatal (2.406,50, grounded in the
@@ -139,7 +145,9 @@ def _scenario(*, retencion: str, scenario_id: str) -> RegistryCalculationScenari
                 source_refs=("lirpf-cuota-chain-authority",),
             ),
         ),
-        notes=("raw_evidence_locator: corpus/manuals/renta/2024/part1/source.pdf.extracted.md#L58455-L58460",),
+        notes=(
+            f"raw_evidence_locator: corpus/manuals/renta/{_MANUAL_EJERCICIO}/part1/source.pdf.extracted.md#L58455-L58460",
+        ),
     )
 
 
@@ -164,7 +172,7 @@ def test_final_settlement_chain_composes_manual_definitional_identities() -> Non
     cuota resultante = cuota liquida total, cuota diferencial = cuota resultante
     - pagos a cuenta, resultado = cuota diferencial.
     """
-    values = _values(_scenario(retencion="0", scenario_id="m100-2024-final-settlement-no-pagos"))
+    values = _values(_scenario(retencion="0", scenario_id="m100-final-settlement-no-pagos"))
 
     cuota_integra_estatal = _required_value(values, _CUOTA_INTEGRA_ESTATAL)
     cuota_integra_autonomica = _required_value(values, _CUOTA_INTEGRA_AUTONOMICA)
@@ -204,8 +212,8 @@ def test_final_settlement_pagos_a_cuenta_subtraction_is_wired() -> None:
     no-pagos scenario, proving the pagos-a-cuenta subtraction is evaluated and
     not a passthrough constant.
     """
-    baseline = _values(_scenario(retencion="0", scenario_id="m100-2024-settlement-baseline"))
-    with_retencion = _values(_scenario(retencion="1000", scenario_id="m100-2024-settlement-retencion"))
+    baseline = _values(_scenario(retencion="0", scenario_id="m100-settlement-baseline"))
+    with_retencion = _values(_scenario(retencion="1000", scenario_id="m100-settlement-retencion"))
 
     assert baseline[_TOTAL_PAGOS_A_CUENTA] == Decimal("0.00")
     assert with_retencion[_TOTAL_PAGOS_A_CUENTA] == Decimal("1000.00")

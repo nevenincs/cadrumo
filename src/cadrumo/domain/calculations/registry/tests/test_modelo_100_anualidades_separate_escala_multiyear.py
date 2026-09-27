@@ -120,6 +120,11 @@ def _run(
         "renta-profile-anualidades-sin-minimo-descendientes": flag,
         "renta-profile-minimo-descendientes-estatal": Decimal("0"),
         "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
+        # An individual filer without minor children in the unit, and no
+        # negative general base carried in from earlier ejercicios.
+        "renta-profile-declaration-type": Decimal("1"),
+        "renta-profile-family-minor-children-in-unit": Decimal("0"),
+        "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
     }
     relation_values = {
         "renta-modelo-130-pagos-fraccionados": Decimal("0"),
@@ -132,6 +137,7 @@ def _run(
         enum_binding_values={"renta-profile-tax-residence-ccaa": "cataluna"},
         binding_values=binding_values,
         relation_values=relation_values,
+        date_binding_values={"renta-profile-taxpayer-birth-date": date(1975, 6, 15)},
     )
     return {_c(k): result.values[_c(k)] for k in ("0505", "0521", "0527", "0528", "0530", "0532", "0545")}
 
