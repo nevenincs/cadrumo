@@ -33,7 +33,7 @@ from cadrumo.domain.calculations.registry.facts.resolution import (
     ScalarFactQuery,
 )
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFactFamily
-from cadrumo.domain.calculations.registry.keyed_families import CANONICAL_FAMILY_SPECS
+from cadrumo.domain.calculations.registry.keyed_families import CANONICAL_FAMILY_SPECS, inline_family_source_default
 from cadrumo.domain.calculations.registry.revision_order import revisions_coexist
 from cadrumo.domain.calculations.registry.schema import (
     REVISION_SCHEMA_FAMILY_FIELDS,
@@ -535,6 +535,26 @@ def assessment_coverage_gaps(
     )
 
 
+def _with_family_source_default(raw_revision: Mapping[str, object], section: str) -> object:
+    """Return one family's raw members with the edition's ``source_refs`` default bound as the loader binds it.
+
+    Selection metadata validates each member's grounding, so a member relying on
+    its edition's family default must carry that default before validation, or
+    the revision is reported unresolved for a reference the loader supplies. A
+    malformed family is passed through for validation to refuse.
+    """
+    members = raw_revision.get(section, ())
+    if not isinstance(members, list | tuple):
+        return members
+    spec = next(spec for spec in CANONICAL_FAMILY_SPECS if spec.section == section)
+    return tuple(
+        inline_family_source_default(member, raw_revision, spec.source_default_key)
+        if isinstance(member, Mapping)
+        else member
+        for member in members
+    )
+
+
 def root_eligibility(modelo_dir: Path) -> tuple[Mapping[str, object], ...]:
     """Classify every revision/family edge without treating an explicit root as invisible."""
     try:
@@ -564,8 +584,8 @@ def root_eligibility(modelo_dir: Path) -> tuple[Mapping[str, object], ...]:
                         "valid_from": raw_revision.get("valid_from"),
                         "valid_to": raw_revision.get("valid_to"),
                         "period_selector": raw_revision.get("period_selector"),
-                        "deadline_windows": raw_revision.get("deadline_windows", ()),
-                        "filing_schedules": raw_revision.get("filing_schedules", ()),
+                        "deadline_windows": _with_family_source_default(raw_revision, "deadline_windows"),
+                        "filing_schedules": _with_family_source_default(raw_revision, "filing_schedules"),
                     }
                 )
             )

@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import shutil
+from collections.abc import Mapping
 from dataclasses import replace
 from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.casilla_lineage import CasillaLineageOrigin
 from cadrumo.domain.calculations.registry.lineage_attestation import LineageAttestation
 from cadrumo.domain.calculations.registry.schema import SupportedFilingYearsCatalogue
@@ -593,3 +595,41 @@ def test_snapshot_comparison_ignores_unselected_editions_but_not_the_selected_on
 
     assert verification._first_difference(result(snapshot), result(widened), "$") is None
     assert verification._first_difference(result(snapshot), result(changed), "$") is not None
+
+
+def _unresolved_rows(modelo_dir: Path) -> list[Mapping[str, object]]:
+    return [
+        row
+        for row in verification.root_eligibility(modelo_dir)
+        if row["status"] is verification.RootEligibility.UNRESOLVED
+    ]
+
+
+def _schedule_defaulted_modelo(tmp_path: Path) -> Path:
+    """A copied modelo whose filing schedules take their source refs from the edition default."""
+    modelos = bundled_path("registry", "aeat", "modelos")
+    for modelo_dir in sorted(modelos.iterdir()):
+        manifests = sorted((modelo_dir / "revisions").glob("*/revision.toml"))
+        if any("\nfiling_schedule_source_refs = " in manifest.read_text(encoding="utf-8") for manifest in manifests):
+            target = tmp_path / modelo_dir.name
+            shutil.copytree(modelo_dir, target)
+            return target
+    raise LookupError("no modelo grounds its filing schedules through the edition default")
+
+
+def test_root_eligibility_binds_the_filing_schedule_source_default(tmp_path: Path) -> None:
+    """A schedule relying on its edition's source default is resolved, as the loader resolves it."""
+    assert _unresolved_rows(_schedule_defaulted_modelo(tmp_path)) == []
+
+
+def test_root_eligibility_still_refuses_a_schedule_left_without_any_source(tmp_path: Path) -> None:
+    modelo_dir = _schedule_defaulted_modelo(tmp_path)
+    for manifest in sorted((modelo_dir / "revisions").glob("*/revision.toml")):
+        text = manifest.read_text(encoding="utf-8")
+        manifest.write_text(
+            "\n".join(line for line in text.splitlines() if not line.startswith("filing_schedule_source_refs = "))
+            + "\n",
+            encoding="utf-8",
+        )
+
+    assert _unresolved_rows(modelo_dir)

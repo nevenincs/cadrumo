@@ -5,7 +5,7 @@ tags:
 date: '2026-09-27'
 modified: '2026-09-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:bff49410bd644f2753800af8544456b645799e07d6aa9588b8f8210df45013af'
+body_hash: 'sha256:3fefe09b92a01e83a749cb87796313485962a4b42d206e2c2222371099a30728'
 related:
   - "[[2026-09-27-registry-conformance-rectification-plan]]"
 ---
@@ -149,6 +149,9 @@ related:
 - `S02` `M` `dev/registry/edition_delta_migration.py`
 - `S02` `A` `dev/registry/tests/test_edition_delta_drop_restatement.py`
 - `S02` `verify:` `pytest dev/registry (2965 passed; the one failure passes alone)` -> `pass`
+- `S03` `M` `dev/registry/registry_collapse_verification.py`
+- `S03` `M` `dev/registry/tests/test_registry_collapse_verification.py`
+- `S03` `verify:` `pytest dev/registry/tests/test_registry_collapse_verification.py` -> `pass`
 
 ## Notes
 
