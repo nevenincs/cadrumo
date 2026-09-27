@@ -62,7 +62,7 @@ _TARIFF_EXERCISE = max(
     & {
         revision.valid_from.year
         for revision in authored_revisions_where(
-            "100", lambda revision: "renta-profile-deduccion-maternidad" in {b.id for b in revision.bindings}
+            "100", lambda revision: set(_m100_2024_deduccion_maternidad_bindings()) <= {b.id for b in revision.bindings}
         )
     }
 )
