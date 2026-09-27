@@ -7,6 +7,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import revision_before_first_declaring
+
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ._modelo_empty_profile_fixture import _isolated_backend
 from ._profile_cli_support import seed_profile
@@ -20,9 +22,12 @@ _M202_INCN_BINDING = "modelo-202-incn-prior-12-months"
 _M202_CUOTA_BASE_BINDING = "modelo-202-cuota-base-ejercicio-anterior"
 _M202_PRIOR_PAYMENTS_BINDING = "modelo-202-pagos-fraccionados-anteriores"
 _M202_2023_2024_PRIOR_PAYMENTS_BINDING = "modelo-202-pagos-fraccionados-anteriores"
-# The revision in force before the Modelo 202 B2 tramos, and its last exercise.
-_PRE_B2_REVISION = "2023-2024"
-_PRE_B2_LAST_EXERCISE = 2024
+# The Modelo 202 revision the registry authors right before the first one that declares
+# the B2 tramo casilla 67, and its last exercise.
+_PRE_B2 = revision_before_first_declaring("202", "67")
+_PRE_B2_REVISION = str(_PRE_B2.id)
+assert _PRE_B2.valid_to is not None
+_PRE_B2_LAST_EXERCISE = _PRE_B2.valid_to.year
 _MISSING_M202_BINDINGS = {
     _M202_INCN_BINDING,
     _M202_CUOTA_BASE_BINDING,

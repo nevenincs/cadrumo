@@ -12,12 +12,12 @@ import pytest
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.application.calculations.observations_repository import APP_FILING_SOURCE_KIND
+from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition
 
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
 from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.tests.published_authority import (
-    PublishedGovernedFactSource,
     published_snapshot,
 )
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
@@ -28,9 +28,9 @@ from .modelo_cli import create_modelo_work_unit_via_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-# The newest authored Modelo 100 edition sits one below the projecting horizon; its
-# prior-year carry reads the edition before it.
-_REVIEWED_EDITION = PublishedGovernedFactSource().supported_filing_years().horizon - 1
+# The newest Modelo 100 edition the registry authors; its prior-year carry reads the
+# edition before it.
+_REVIEWED_EDITION = newest_authored_edition("100")
 
 _PROFILE_ID = "568d7ee0-33e4-4efb-8bae-5c4e97d9a1b7"
 _CAPTURED_AT = datetime(2026, 6, 29, 12, 0, tzinfo=UTC)
@@ -67,8 +67,8 @@ def _seed_m100_profile(runtime_profile: TestRuntimeProfile) -> None:
             UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
             UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
             UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-            UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
-            UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
+            UserProfileFact(path="censo.activity_start_date", value=date(_REVIEWED_EDITION - 5, 1, 1)),
+            UserProfileFact(path="renta_taxpayer.birth_date", value=date(_REVIEWED_EDITION - 45, 3, 15)),
             UserProfileFact(path="renta_taxpayer.sex", value="H"),
             UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
             UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),

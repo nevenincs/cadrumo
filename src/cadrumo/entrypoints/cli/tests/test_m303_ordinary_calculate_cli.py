@@ -9,6 +9,7 @@ from typing import cast
 import pytest
 from click.testing import Result
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 
 from ....adapters.outbound.fx.tests.recorded_ecb_rates import recorded_ecb_rate_provider
@@ -26,7 +27,6 @@ from ....application.modelo.tests.profile_fixture_values import MODELO_READY_PRO
 from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.period import Period
 from ....domain.calculations.registry.tests.published_authority import (
-    PublishedGovernedFactSource,
     published_snapshot,
 )
 from ....domain.invoices.service import link_transaction
@@ -49,9 +49,10 @@ pytestmark = [
     pytest.mark.usefixtures("authority_operation"),
 ]
 
-# The newest exercise below the projecting horizon: every quarter of it has closed,
-# so both its first and its terminal quarter can be authored here.
-_EXERCISE = PublishedGovernedFactSource().supported_filing_years().horizon - 1
+# The newest exercise the registry authors a closed Modelo 303 design for: every
+# quarter of it has an authored window, so both its first and its terminal quarter
+# can be authored here.
+_EXERCISE = max(revision.valid_from.year for revision in authored_revisions("303") if revision.valid_to is not None)
 _PERIOD = Period.from_year_and_code(_EXERCISE, "1T")
 _WALLET_DECIDED_AT = datetime(_EXERCISE, 4, 1, 10, tzinfo=UTC)
 

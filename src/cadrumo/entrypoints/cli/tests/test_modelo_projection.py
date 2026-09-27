@@ -55,13 +55,13 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition, revision_covering
 
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
 from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ....domain.calculations.registry.tests.published_authority import (
-    PublishedGovernedFactSource,
     published_snapshot,
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
@@ -339,8 +339,8 @@ def test_modelo_project_uses_revision_declared_default_bindings(
     defaults are not passed to the engine when that revision does not declare them.
     """
 
-    # The newest authored Modelo 100 edition sits one below the projecting horizon.
-    filing_year = PublishedGovernedFactSource().supported_filing_years().horizon - 1
+    # The newest Modelo 100 edition the registry authors.
+    filing_year = newest_authored_edition("100")
     _seed_autónomo_profile(runtime_profile)
     seed_m130_income_transaction(
         amount=_Q_INGRESOS,
@@ -352,7 +352,7 @@ def test_modelo_project_uses_revision_declared_default_bindings(
         modelo="130",
         filing_year=filing_year,
         period="1T",
-        revision="2019-y-siguientes",
+        revision=str(revision_covering("130", filing_year).id),
     )
     calc_result = invoke_cached_cli(
         [

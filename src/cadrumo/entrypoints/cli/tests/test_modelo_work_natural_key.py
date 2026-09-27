@@ -12,6 +12,7 @@ from ....adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend as _isolated_cli_backend,
 )
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
+from ....domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ....tests.cli_envelope import unwrap_envelope_notices as _notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ._m130_source_support import seed_m130_expense_transaction, seed_m130_income_transaction
@@ -80,11 +81,12 @@ def _create_first_year_activity_profile() -> None:
     )
 
 
-# The accepted blank-ledger 1T draft values come from this exercise's acceptance evidence.
-_BLANK_LEDGER_ACCEPTANCE_EXERCISE = 2024
+# The blank-ledger 1T draft values hold for every supported exercise: the activity
+# starts on its first day, so no prior-year state or earlier quarter feeds the draft.
+_SUPPORTED_EXERCISES = PublishedGovernedFactSource().supported_filing_years().years
 
 
-def _create_autonoma_activity_profile() -> None:
+def _create_autonoma_activity_profile(exercise: int) -> None:
     register_cli_profile(
         label="autonoma",
         facts={
@@ -93,7 +95,7 @@ def _create_autonoma_activity_profile() -> None:
             "identity.name": "Ana",
             "identity.surnames": "Persona",
             "activities.description": "consultoria",
-            "censo.activity_start_date": f"{_BLANK_LEDGER_ACCEPTANCE_EXERCISE}-01-01",
+            "censo.activity_start_date": f"{exercise}-01-01",
             "taxpayer_type.irpf_income_categories": "actividad_economica",
             "irpf.estimation_regime": "directa_simplificada",
             "iva.regime": "GENERAL",
@@ -340,7 +342,8 @@ def test_modelo_130_verify_by_natural_key_refuses_without_clean_cross_period_sta
     assert blocking["action"] is None
 
 
-def test_autonoma_m130_first_quarter_calculate_by_natural_key_from_blank_ledger_state() -> None:
+@pytest.mark.parametrize("exercise", _SUPPORTED_EXERCISES)
+def test_autonoma_m130_first_quarter_calculate_by_natural_key_from_blank_ledger_state(exercise: int) -> None:
     """The reported first-quarter blank-state ledger flow stays on the public CLI path.
 
     The expected casillas come from the acceptance evidence, not from
@@ -349,22 +352,22 @@ def test_autonoma_m130_first_quarter_calculate_by_natural_key_from_blank_ledger_
     the accepted 1T draft values 01=3000, 02=600, 03=2400, 19=380.
     """
 
-    _create_autonoma_activity_profile()
+    _create_autonoma_activity_profile(exercise)
     seed_m130_income_transaction(
         amount=Decimal("3000.00"),
-        filing_year=_BLANK_LEDGER_ACCEPTANCE_EXERCISE,
+        filing_year=exercise,
         source_key="autonoma-blank-1t",
     )
     seed_m130_expense_transaction(
         amount=Decimal("600.00"),
-        filing_year=_BLANK_LEDGER_ACCEPTANCE_EXERCISE,
+        filing_year=exercise,
         source_key="autonoma-blank-1t",
     )
     created = _invoke(
         [
             "--format", "json",
             "app", "modelo", "work", "create",
-            "--modelo", "130", "--year", str(_BLANK_LEDGER_ACCEPTANCE_EXERCISE), "--period", "1T",
+            "--modelo", "130", "--year", str(exercise), "--period", "1T",
         ],
     )  # fmt: skip
     assert created.exit_code == 0, created.output
@@ -373,7 +376,7 @@ def test_autonoma_m130_first_quarter_calculate_by_natural_key_from_blank_ledger_
         [
             "--format", "json",
             "app", "modelo", "work", "calculate",
-            "--modelo", "130", "--year", str(_BLANK_LEDGER_ACCEPTANCE_EXERCISE), "--period", "1T",
+            "--modelo", "130", "--year", str(exercise), "--period", "1T",
             "--by", "Ana",
         ],
     )  # fmt: skip

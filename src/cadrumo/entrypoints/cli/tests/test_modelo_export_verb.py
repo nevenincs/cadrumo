@@ -13,6 +13,7 @@ import pytest
 from click.testing import Result
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import set_active_test_profile_facts
+from cadrumo.domain.calculations.registry.tests.authored_editions import revision_before_first_declaring
 
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -190,9 +191,12 @@ _M111_CASILLA_27: CasillaId = validated_casilla_id("27", surface="modelo 111 exp
 _M111_CASILLA_29: CasillaId = validated_casilla_id("29", surface="modelo 111 export test casilla")
 _M202_CASILLA_01: CasillaId = validated_casilla_id("01", surface="modelo 202 export test casilla")
 _M202_2023_2024_PRIOR_PAYMENTS_BINDING = "modelo-202-pagos-fraccionados-anteriores"
-# The last exercise of the Modelo 202 revision in force before the B2 tramos; the
-# exportable fixture revision below is seeded for its first period.
-_PRE_B2_LAST_EXERCISE = 2024
+# The last exercise of the Modelo 202 revision the registry authors right before the
+# first one that declares the B2 tramo casilla 67; the exportable fixture revision
+# below is seeded for its first period.
+_PRE_B2 = revision_before_first_declaring("202", "67")
+assert _PRE_B2.valid_to is not None
+_PRE_B2_LAST_EXERCISE = _PRE_B2.valid_to.year
 
 _MODELO_111_INPUTS: dict[CasillaId, str] = {
     _M111_CASILLA_03: "180.25",

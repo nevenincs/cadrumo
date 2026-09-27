@@ -139,10 +139,32 @@ def split_exercise_revisions(modelo_id: str) -> tuple[RevisionSelectionMetadata,
     """Return the early and late revisions of the one exercise two authored designs split."""
     revisions = authored_revisions(modelo_id)
     split = [
-        (earlier, later)
-        for earlier, later in pairwise(revisions)
-        if earlier.valid_from.year == later.valid_from.year
+        (earlier, later) for earlier, later in pairwise(revisions) if earlier.valid_from.year == later.valid_from.year
     ]
     if len(split) != 1:
         raise LookupError(f"modelo {modelo_id}: expected one exercise split across two designs, found {len(split)}")
     return split[0]
+
+
+def revision_covering(modelo_id: str, exercise: int) -> RevisionSelectionMetadata:
+    """Return the one authored revision of a modelo whose window covers ``exercise``."""
+    (revision,) = (
+        revision
+        for revision in authored_revisions(modelo_id)
+        if revision.valid_from.year <= exercise and (revision.valid_to is None or exercise <= revision.valid_to.year)
+    )
+    return revision
+
+
+def revision_before_first_declaring(modelo_id: str, casilla_id: str) -> RevisionSelectionMetadata:
+    """Return the authored revision right before the first one that declares ``casilla_id``."""
+    revisions = authored_revisions(modelo_id)
+    with bundled_indexed_authority().operation() as operation:
+        first = next(
+            index
+            for index, metadata in enumerate(revisions)
+            if casilla_id in {casilla.id for casilla in operation.revision(modelo_id, str(metadata.id)).casillas}
+        )
+    if first == 0:
+        raise LookupError(f"modelo {modelo_id}: casilla {casilla_id} is declared by the oldest revision")
+    return revisions[first - 1]

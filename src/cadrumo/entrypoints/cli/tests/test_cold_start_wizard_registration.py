@@ -47,13 +47,13 @@ import pytest
 from ....core.config import Settings
 from ....core.storage_taxonomy import StorageCategory
 from ....core.storage_taxonomy_locations import storage_location
-from ....domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
+from ....domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from ....tests.inventory import REPO_ROOT
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-# The newest authored Modelo 100 edition sits one below the projecting horizon.
-_M100_REVIEWED_EDITION = PublishedGovernedFactSource().supported_filing_years().horizon - 1
+# The newest Modelo 100 edition the registry authors.
+_M100_REVIEWED_EDITION = newest_authored_edition("100")
 
 
 # The internal registration-guard messages that must never reach the operator
