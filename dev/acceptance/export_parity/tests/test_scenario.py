@@ -18,6 +18,7 @@ from ..scenario import (
     YEARS,
     WithholdingDuty,
     build_year,
+    m303_compensation_pending_after,
     m303_quarter,
     m303_results_with_compensation,
     withholding_practised,
@@ -52,6 +53,26 @@ def test_furniture_above_the_floor_is_the_only_investment_input_and_opens_a_comp
         Decimal("0"),
         Decimal("14.70"),
     )
+
+
+def test_a_negative_quarter_leaves_its_excess_for_later_periods_until_absorbed() -> None:
+    # 2023: 2T 210.00 - 1472.10 = -1262.10 left; 3T 924.00 - 296.10 - 1262.10 = -634.20
+    # left; 4T 945.00 - 296.10 - 634.20 = 14.70 a ingresar, so nothing is left.
+    assert m303_compensation_pending_after(2023, "1T") == Decimal("0")
+    assert m303_compensation_pending_after(2023, "2T") == Decimal("1262.10")
+    assert m303_compensation_pending_after(2023, "3T") == Decimal("634.20")
+    assert m303_compensation_pending_after(2023, "4T") == Decimal("0")
+
+
+def test_a_fourth_quarter_a_ingresar_leaves_a_proven_zero_for_the_next_year() -> None:
+    # 2024 4T: issued 5600 x 21 % = 1176.00; received material 150 + software 60 +
+    # adviser 300 + rent 900 = 1410 x 21 % = 296.10; 1176.00 - 296.10 = 879.90 a ingresar.
+    quarter = m303_quarter(2024, "4T")
+
+    assert quarter.devengado == Decimal("1176.00")
+    assert quarter.deducible == Decimal("296.10")
+    assert quarter.quarter_result == Decimal("879.90")
+    assert m303_compensation_pending_after(2024, "4T") == Decimal("0")
 
 
 def test_every_scenario_year_closes_its_fourth_quarter_without_a_cross_year_carry() -> None:

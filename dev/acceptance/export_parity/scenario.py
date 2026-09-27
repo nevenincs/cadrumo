@@ -351,6 +351,31 @@ def m303_quarter(year: int, period: str) -> M303QuarterOracle:
     )
 
 
+def _m303_compensation_chain(year: int) -> tuple[tuple[Decimal, Decimal], ...]:
+    """(result after compensation, cuotas left to compensate) for each quarter of ``year``.
+
+    A negative quarter is compensated in later periods (LIVA art. 99.5). The
+    activity start year opens with nothing to compensate; any later year opens
+    with what the previous year's last quarter left pending.
+    """
+    pending = Decimal("0") if year == ACTIVITY_START.year else m303_compensation_pending_after(year - 1, QUARTERS[-1])
+    chain: list[tuple[Decimal, Decimal]] = []
+    for period in QUARTERS:
+        net = m303_quarter(year, period).quarter_result - pending
+        pending = -net if net < 0 else Decimal("0")
+        chain.append((max(net, Decimal("0")), pending))
+    return tuple(chain)
+
+
+def m303_compensation_pending_after(year: int, period: str) -> Decimal:
+    """Cuotas a compensar that quarter ``period`` of ``year`` leaves for later periods.
+
+    A quarter whose result, after applying what earlier quarters left, is a
+    result a ingresar leaves a proven zero, never an unknown.
+    """
+    return _m303_compensation_chain(year)[QUARTERS.index(period)][1]
+
+
 def m303_results_with_compensation(year: int) -> tuple[Decimal, ...]:
     """Quarter results after carrying negative results forward inside the year.
 
@@ -358,15 +383,11 @@ def m303_results_with_compensation(year: int) -> tuple[Decimal, ...]:
     scenario keeps every year's fourth quarter non-negative, so no carry crosses
     into the next year.
     """
-    pending = Decimal("0")
-    results: list[Decimal] = []
-    for period in QUARTERS:
-        net = m303_quarter(year, period).quarter_result - pending
-        pending = -net if net < 0 else Decimal("0")
-        results.append(max(net, Decimal("0")))
+    chain = _m303_compensation_chain(year)
+    pending = chain[-1][1]
     if pending:
         raise ValueError(f"scenario year {year} leaves {pending} IVA to compensate across years")
-    return tuple(results)
+    return tuple(result for result, _pending in chain)
 
 
 def withholding_practised(year: int, period: str, duty: WithholdingDuty) -> tuple[Decimal, Decimal, int]:
@@ -431,6 +452,7 @@ __all__ = [
     "YearScenario",
     "activity_year",
     "build_year",
+    "m303_compensation_pending_after",
     "m303_quarter",
     "m303_results_with_compensation",
     "money",

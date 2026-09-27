@@ -43,6 +43,7 @@ from .scenario import (
     WithholdingDuty,
     activity_year,
     build_year,
+    m303_compensation_pending_after,
 )
 
 RECEIPT_SCHEMA: Final = "export-parity.seed-receipt/v1"
@@ -745,6 +746,26 @@ class _Seeder:
             self._complete(f"{stage}.import")
         self._done(stage)
 
+    def carry_m303_compensation(self, year: int) -> None:
+        """Declare the Modelo 303 compensación the prior year's last quarter left pending.
+
+        The first quarter of ``year`` reads that balance as its cuotas pendientes
+        de compensación, and the IVA wallet gate refuses it until the balance
+        has an authority. A return filed outside Cadrumo enters as the IVA
+        wallet's opening balance for its period, the amount being what the
+        oracle's quarter left for later periods: a proven zero when that quarter
+        was a result a ingresar, never an absent value.
+        """
+        stage = f"carry-m303:{year}"
+        if not self._stage(stage):
+            return
+        prior, period = year - 1, QUARTERS[-1]
+        if self._pending(f"{stage}.seed"):
+            seeded = self._result(_m303_opening_balance_args(prior, period), stage=f"{stage}.seed")
+            self._remember(f"iva-wallet:303:{prior}:{period}", seeded.get("provenance", ""))
+            self._complete(f"{stage}.seed")
+        self._done(stage)
+
     # -- modelo lifecycle ---------------------------------------------------------
 
     def _lifecycle(self, modelo: str, year: int, period: str, extra: Callable[[], Sequence[str]] = tuple) -> None:
@@ -885,6 +906,36 @@ class _Seeder:
         return frozenset(_binding_ids(listed))
 
 
+def _m303_opening_balance_args(year: int, period: str) -> tuple[str, ...]:
+    """The IVA wallet opening balance a Modelo 303 filed outside the store left for later periods."""
+    return (
+        "app",
+        "modelo",
+        "iva-wallet",
+        "seed",
+        "--filing-year",
+        str(year),
+        "--period",
+        period,
+        "--amount",
+        _money(m303_compensation_pending_after(year, period)),
+        "--confirm",
+    )
+
+
+def carried_years(years: Sequence[int], *, stages: Sequence[str], carry_evidence: str) -> tuple[int, ...]:
+    """The seeded years whose prior-year facts the carry lane brings in.
+
+    Only the synthetic lane carries, only for a year whose predecessor is not
+    itself seeded, and only when modelos are calculated. The honest lane
+    carries nothing, so a first year after the activity start keeps its
+    product refusals.
+    """
+    if carry_evidence != "synthetic_csv_register" or "modelos" not in stages:
+        return ()
+    return tuple(year for year in years if year - 1 not in years)
+
+
 def _is_investment_good(item: ReceivedInvoice) -> bool:
     return any(asset.asset_id == item.asset_id and asset.is_iva_investment_good for asset in ASSETS)
 
@@ -1002,9 +1053,11 @@ def run_seed(
         cli, receipt=receipt, receipt_path=receipt_path, artifact_dir=run_dir / "evidence", first_year=min(years)
     )
     seeder.profile()
+    carried = carried_years(years, stages=stages, carry_evidence=carry_evidence)
     for year in years:
-        if carry_evidence == "synthetic_csv_register" and year - 1 not in years and "modelos" in stages:
+        if year in carried:
             seeder.carry_in(year)
+            seeder.carry_m303_compensation(year)
         for stage in stages:
             getattr(seeder, stage)(year)
     receipt.save(receipt_path)
