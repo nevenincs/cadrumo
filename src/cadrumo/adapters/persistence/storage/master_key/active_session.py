@@ -47,6 +47,7 @@ from ..bucket.errors import BucketLockedError
 from ..errors import SecretStoreError
 from .bucket_session import BucketSession
 from .live_sessions import close_all_live_bucket_sessions
+from .profile_worker_binding import profile_worker_binding
 
 _log = get_logger(__name__)
 
@@ -88,6 +89,7 @@ def activate_session(session: BucketSession) -> Generator[None]:
             the column-level encryption key for the duration of the
             block.
     """
+    profile_worker_binding.require_session(session)
     with active_session.override(session):
         yield
 
@@ -111,6 +113,7 @@ def bind_active_bucket_session(session: BucketSession) -> None:
     Args:
         session: The unlocked :class:`BucketSession` to bind.
     """
+    profile_worker_binding.require_session(session)
     active_session.bind(session)
 
 
@@ -128,6 +131,7 @@ def _require_fresh_active_session() -> BucketSession:
         BucketLockedError: When the active session has expired.
     """
     session = active_session.get()
+    profile_worker_binding.require_session(session)
     if session is None:
         raise NoActiveBucketSessionError()
     if session.is_expired(now()):
@@ -183,7 +187,7 @@ def get_active_hmac_subkey(context: bytes) -> bytes:
 
 def has_active_bucket_session() -> bool:
     """Return whether an active :class:`BucketSession` is bound."""
-    return active_session.get() is not None
+    return current_active_bucket_session() is not None
 
 
 class ActiveProfileSessionPresenceAdapter(ActiveProfileSessionPresencePort):
@@ -206,7 +210,9 @@ def current_active_bucket_session() -> BucketSession | None:
     context; :func:`activate_session`, :func:`suspend_active_session`, and
     :func:`close_active_bucket_session` own binding changes.
     """
-    return active_session.get()
+    session = active_session.get()
+    profile_worker_binding.require_session(session)
+    return session
 
 
 def session_serves_bucket(session: BucketSession | None, bucket_id: str) -> TypeGuard[BucketSession]:
@@ -253,7 +259,7 @@ def active_bucket_session_serves(bucket_id: str) -> bool:
     :func:`~application.auth.operator_scope.active_profile_storage_span`; this
     function owns the bucket-identity half that every caller needs.
     """
-    return session_serves_bucket(active_session.get(), bucket_id)
+    return session_serves_bucket(current_active_bucket_session(), bucket_id)
 
 
 def close_active_bucket_session() -> None:

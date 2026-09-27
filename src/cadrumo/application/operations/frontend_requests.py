@@ -36,6 +36,10 @@ from .secret_submission import OperationSecretRequirement
 
 _PUBLIC_CONFIG = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
 
+# The common observation projection is owned by this versioned service, rather
+# than by any one domain operation's result schema.
+OPERATION_OBSERVATION_PROJECTION_ID = "operation.observation"
+
 
 class OperationObservationRefusalCode(StrEnum):
     """Stable refusal codes for operation observation requests."""

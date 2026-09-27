@@ -9,10 +9,11 @@ explicit timeout.
 
 This runtime wraps the call in a per-tier timeout: generous for the
 AEAT-sede / live family, tighter for local mutations,
-tight for local reads. On timeout it terminates the WHOLE process tree - a
-Playwright pull spawns a browser child, so killing only the ``aeat`` process
-would strand the browser - and returns a typed timed-out result the caller
-renders as an instructive, localized refusal. The tier is derived from the
+tight for local reads. On timeout it attempts cleanup and returns a
+typed timed-out result. POSIX cleanup signals only the process group created
+at launch, while its direct child is still alive; descendants that leave that
+group or outlive its leader are not contained. Windows uses best-effort tree
+termination. The tier is derived from the
 command's own annotations, so it tracks the classification the gates already use.
 Migration to the (deprecated-in-v1, redesigned-in-RC) MCP Tasks mechanism is
 deferred until the v2 SDK is stable.
@@ -115,9 +116,10 @@ class SupervisedResult(BaseModel):
     ``executable`` is the exact first argv element passed to
     :class:`subprocess.Popen`, giving payload-free telemetry an observation of
     the child origin rather than a separate resolver query. ``timed_out`` is
-    true when the process exceeded its tier ceiling and its process tree was
-    terminated; ``stdout``/``stderr``/``returncode`` carry the completed process
-    output otherwise (and best-effort partial output on timeout).
+    true when the call exceeded its tier ceiling and cleanup was attempted;
+    it does not certify descendant containment. ``stdout``/``stderr``/``returncode``
+    carry the completed process output otherwise (and best-effort partial output
+    on timeout).
     """
 
     model_config = _STRICT_FROZEN
@@ -129,19 +131,13 @@ class SupervisedResult(BaseModel):
     timed_out: bool
 
 
-async def _terminate_tree(process: asyncio.subprocess.Process) -> None:
-    """Terminate ``process`` and every child it spawned.
+async def _terminate_tree(process: asyncio.subprocess.Process, *, owned_process_group: int | None) -> None:
+    """Attempt cleanup using only group ownership established at launch.
 
-    A live pull spawns a browser child, so killing only the top process would
-    strand it. On Windows ``taskkill /T`` walks the tree; on POSIX the child was
-    started in its own session so the whole process group is signalled.
-
-    Every path must kill something. An unresolvable ``taskkill`` (a trimmed
-    ``PATH``, a hardened image) previously returned having terminated nothing at
-    all, so a hung call left its whole tree running and the timeout refusal was a
-    lie. Falling back to ``process.kill()`` still cannot reach a grandchild
-    browser, but killing the direct child is strictly better than killing
-    nothing, and it keeps the supervised contract honest.
+    Never resolve the child's current group as authority to signal it. Once
+    the direct child has exited, decline group signalling: a saved numeric
+    group ID alone is insufficient to establish continuing ownership.
+    Windows retains its best-effort taskkill/immediate-child behavior.
     """
     if process.returncode is not None:
         return
@@ -164,8 +160,11 @@ async def _terminate_tree(process: asyncio.subprocess.Process) -> None:
         if returncode is None:
             _kill_process(process)
         return
+    if owned_process_group is None:
+        _kill_process(process)
+        return
     try:
-        os.killpg(os.getpgid(process.pid), signal.SIGKILL)
+        os.killpg(owned_process_group, signal.SIGKILL)
     except (ProcessLookupError, PermissionError):
         _kill_process(process)
 
@@ -186,13 +185,13 @@ async def _create_process(
     *,
     stdin_payload: str | None,
     creationflags: int = 0,
-    start_new_session: bool = False,
     env: Mapping[str, str] | None = None,
-) -> asyncio.subprocess.Process:
-    """Start a no-shell child with isolated streams and an optional stdin payload."""
+) -> tuple[asyncio.subprocess.Process, int | None]:
+    """Start a no-shell child and retain its launch-owned POSIX group identity."""
     if not argv:
         raise ValueError("a subprocess argv must contain an executable")
-    return await asyncio.create_subprocess_exec(
+    start_new_session = sys.platform != "win32"
+    process = await asyncio.create_subprocess_exec(
         *argv,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
@@ -201,6 +200,7 @@ async def _create_process(
         creationflags=creationflags,
         start_new_session=start_new_session,
     )
+    return process, process.pid if start_new_session else None
 
 
 async def _communicate(
@@ -235,16 +235,12 @@ async def _run_supervised_async(
 ) -> SupervisedResult:
     """Run one child asynchronously so Ruff's shell heuristic is inapplicable."""
     creationflags = 0
-    start_new_session = False
     if sys.platform == "win32":
         creationflags = subprocess.CREATE_NEW_PROCESS_GROUP
-    else:
-        start_new_session = True
-    process = await _create_process(
+    process, owned_process_group = await _create_process(
         argv,
         stdin_payload=stdin_payload,
         creationflags=creationflags,
-        start_new_session=start_new_session,
     )
     try:
         stdout, stderr = await _communicate(
@@ -255,7 +251,7 @@ async def _run_supervised_async(
             timeout_s=timeout_s,
         )
     except TimeoutError:
-        await _terminate_tree(process)
+        await _terminate_tree(process, owned_process_group=owned_process_group)
         try:
             stdout, stderr = await _communicate(
                 process,
@@ -292,7 +288,7 @@ async def _run_captured_async(
     env: Mapping[str, str] | None,
 ) -> subprocess.CompletedProcess[str]:
     """Run one no-shell child and expose the stdlib completed-process shape."""
-    process = await _create_process(
+    process, owned_process_group = await _create_process(
         argv,
         stdin_payload=stdin_payload,
         env=env,
@@ -307,7 +303,7 @@ async def _run_captured_async(
             timeout_s=timeout_s,
         )
     except TimeoutError as error:
-        await _terminate_tree(process)
+        await _terminate_tree(process, owned_process_group=owned_process_group)
         with contextlib.suppress(TimeoutError):
             await _communicate(
                 process,
@@ -375,7 +371,7 @@ def run_captured(
     stdin_payload: str | None = None,
     env: Mapping[str, str] | None = None,
 ) -> subprocess.CompletedProcess[str]:
-    """Run a bounded no-shell child and return decoded stdout and stderr."""
+    """Capture a no-shell child, using a new POSIX session for timeout cleanup."""
     return _completed_off_any_loop(
         _run_captured_async(
             argv,
@@ -396,12 +392,13 @@ def run_supervised(
     errors: str = "replace",
     stdin_payload: str | None = None,
 ) -> SupervisedResult:
-    """Run ``argv`` with a wall-clock ceiling and process-tree termination.
+    """Run ``argv`` with a wall-clock ceiling and best-effort process cleanup.
 
-    The child is started in its own process group / session so its whole tree can
-    be signalled, ``stdin`` is isolated to ``DEVNULL`` (an agent console never
-    answers an interactive prompt), and on timeout the tree is terminated and
-    ``timed_out`` is set. Best-effort partial output is captured after a kill.
+    On POSIX the child starts a new session whose group can be signalled while
+    the child remains alive. This does not contain descendants that leave the
+    group. ``stdin`` defaults to ``DEVNULL`` (an agent console never
+    answers an interactive prompt), and on timeout cleanup is attempted and
+    ``timed_out`` is set. Best-effort partial output is captured after cleanup.
 
     Returns:
         The :class:`SupervisedResult`.

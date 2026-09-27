@@ -3,8 +3,8 @@
 Proves the contract with REAL subprocesses (no
 mocks): a fast command completes and reports its output; a command that exceeds
 its tier ceiling is terminated - promptly, not waited out - and reports
-``timed_out``; a process that spawns a child is killed as a tree, not left with a
-stranded grandchild; and the timeout tier is derived from the command
+``timed_out``; a child-spawning call also returns within its cleanup bound;
+and the timeout tier is derived from the command
 annotations. The localized refusal envelope is asserted through the real ``tr``
 catalogue.
 """
@@ -92,10 +92,9 @@ def test_a_hung_command_is_terminated_promptly_not_waited_out() -> None:
     assert elapsed < 20.0
 
 
-def test_a_child_spawning_process_is_killed_as_a_tree() -> None:
-    # The parent spawns a long-sleeping grandchild then sleeps itself; on timeout
-    # the whole tree must be signalled. We assert the call returns promptly (the
-    # tree was terminated) rather than blocking on the grandchild.
+def test_a_child_spawning_process_times_out_promptly() -> None:
+    # This checks bounded return, not descendant death. The isolated POSIX
+    # cleanup tests separately observe processes in the launch-owned group.
     script = (
         "import subprocess, sys, time; "
         "subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(60)']); "

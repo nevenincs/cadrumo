@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import secrets
+from dataclasses import dataclass, field
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 from enum import Enum, StrEnum
@@ -95,6 +96,15 @@ class OperationRequest[RequestPayloadT: BaseModel](BaseModel):
         )
         _require_deeply_immutable_payload(self.payload, path="payload", visiting=set())
         return self
+
+
+@dataclass(frozen=True, slots=True)
+class OperationStoredInvocation:
+    """Owner-only stored operands for fresh authorization, never a public projection."""
+
+    identity: OperationIdentity
+    request: OperationRequest[BaseModel] = field(repr=False)
+    lifecycle: OperationLifecycle
 
 
 class OperationTerminalReceipt(BaseModel):

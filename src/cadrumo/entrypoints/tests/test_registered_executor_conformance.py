@@ -78,6 +78,7 @@ from ...application.operations.registry import (
     OperationDefinition,
     OperationRegistry,
 )
+from ...application.user_profile.automation_operations import build_automation_operation_definitions
 from ...application.user_profile.bundle_export_contracts import ProfileBundleExportPurpose
 from ...application.user_profile.censal_observation import (
     CensalObservation,
@@ -224,6 +225,16 @@ def _registered_definition_ids() -> tuple[str, ...]:
 _EXPECTATIONS: Mapping[str, _RegisteredExecutorConformanceCase] = {
     case.definition_id: case
     for case in (
+        *(
+            _RegisteredExecutorConformanceCase(
+                definition.definition_id,
+                OperationTerminalCondition.REFUSED,
+                OperationEffect.NONE,
+                expected_phase_codes=(),
+                expected_refusal_ref="REFUSED_AUTOMATION_ADMINISTRATION",
+            )
+            for definition in build_automation_operation_definitions()
+        ),
         _RegisteredExecutorConformanceCase(
             "auth.profile.login", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
         ),
@@ -745,6 +756,15 @@ def _payload(
     values: dict[str, object]
     secret: bytes | None = None
     subject_ref = f"profile:{profile_id}"
+    if definition.definition_id in {item.definition_id for item in build_automation_operation_definitions()}:
+        # The default production graph has no trusted runtime owner. The
+        # dedicated administration integration suite proves positive execution
+        # of every member with real custody and an explicitly bound owner.
+        return (
+            subject_ref,
+            definition.request_type.model_validate({"profile_id": profile_id, "request_id": UUID(int=1)}),
+            b"synthetic" if definition.ephemeral_secret is not None else None,
+        )
     match definition.definition_id:
         case "auth.profile.login":
             values = {"profile_id": profile_id}

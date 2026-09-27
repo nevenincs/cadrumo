@@ -206,6 +206,8 @@ def admit_profile_session(
             bucket_id=bucket_id,
             resume_refusal=refusal,
         )
+    if bucket_id is not None and outcome.bucket_id != bucket_id:
+        raise InternalInvariantError("credential journey authenticated a different profile from the requested target")
     _require_admitted_session(outcome.bucket_id, origin="credential journey")
     return ProfileSessionAdmissionV1(
         state=ProfileSessionAdmissionState.AUTHENTICATED,

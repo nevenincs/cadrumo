@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from collections.abc import Callable
 from enum import StrEnum
 from functools import cached_property
@@ -16,7 +17,7 @@ from pydantic import (
 )
 
 from ...core.errors.hierarchy import InternalInvariantError, pydantic_validation_boundary
-from ...core.hashing import content_hash_hex
+from ...core.hashing import canonical_json_bytes, content_hash_hex, reject_duplicate_json_members, reject_json_constant
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operations import (
@@ -43,6 +44,7 @@ from ._registry_contracts import (
 from ._registry_contracts import (
     validate_public_registration as _validate_public_registration,
 )
+from .access_port import OperationAccessResolver
 from .capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,
@@ -435,6 +437,7 @@ class OperationPublicDefinitionRegistrationV1(BaseModel):
     review_projector: OperationReviewProjector | None = None
     workspace_refresh_adapter: OperationWorkspaceRefreshAdapter | None = None
     result_projector: OperationResultProjector | None = None
+    access_resolver: OperationAccessResolver | None = None
 
     @field_validator("schema_bindings")
     @classmethod
@@ -451,6 +454,8 @@ class OperationPublicDefinitionRegistrationV1(BaseModel):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _validate_adapter_signatures(self) -> OperationPublicDefinitionRegistrationV1:
+        if self.access_resolver is not None:
+            _require_positional_callable_signature(self.access_resolver, arity=2, label="Access resolver")
         if self.review_projector is not None:
             _require_positional_callable_signature(self.review_projector, arity=2, label="REVIEW projector")
         if self.workspace_refresh_adapter is not None:
@@ -468,10 +473,12 @@ class OperationPublicDefinitionRegistrationV1(BaseModel):
         definition: OperationDefinition,
         request_schema_id: OperationPublicSchemaId,
         request_schema_version: int = 1,
+        access_resolver: OperationAccessResolver | None = None,
     ) -> OperationPublicDefinitionRegistrationV1:
         """Bind the common operation shape with no public result or projection."""
         return cls.compose(
             definition=definition,
+            access_resolver=access_resolver,
             request_schema=OperationSchemaBindingV1.bind(
                 schema_id=request_schema_id,
                 schema_version=request_schema_version,
@@ -493,6 +500,7 @@ class OperationPublicDefinitionRegistrationV1(BaseModel):
         review_projector: OperationReviewProjector | None = None,
         workspace_refresh_adapter: OperationWorkspaceRefreshAdapter | None = None,
         result_projector: OperationResultProjector | None = None,
+        access_resolver: OperationAccessResolver | None = None,
     ) -> OperationPublicDefinitionRegistrationV1:
         """Compose a manifest and its runtime-only bindings from one definition."""
         bindings = tuple(
@@ -527,6 +535,7 @@ class OperationPublicDefinitionRegistrationV1(BaseModel):
             review_projector=review_projector,
             workspace_refresh_adapter=workspace_refresh_adapter,
             result_projector=result_projector,
+            access_resolver=access_resolver,
         )
 
 
@@ -640,7 +649,13 @@ class OperationRegistry(BaseModel):
         definition = self.lookup(definition_id)
         if definition.capabilities.request_storage is not OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL:
             raise ValueError("operation definition does not use credential-free journal request storage")
-        return definition.request_type.model_validate_json(raw)
+        return self.decode_request_payload(definition_id, raw)
+
+    def decode_request_payload(self, definition_id: str, raw: str | bytes) -> BaseModel:
+        """Decode exact registered operands, rejecting ambiguous nested JSON too."""
+        definition = self.lookup(definition_id)
+        value = json.loads(raw, object_pairs_hook=reject_duplicate_json_members, parse_constant=reject_json_constant)
+        return definition.request_type.model_validate_json(canonical_json_bytes(value))
 
 
 def operation_public_schema_reference(identity: OperationSchemaIdentityV1) -> str:

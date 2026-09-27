@@ -24,6 +24,7 @@ from ._supervisor_execution import SupervisorExecutionMixin
 from ._supervisor_lease import OperationSupervisorLeaseMixin
 from ._supervisor_reconciliation import SupervisorReconciliationMixin
 from ._supervisor_settlement import SupervisorSettlementMixin
+from .authorization import OperationExecutionAuthority
 from .event_replay import OperationEventCursor
 from .financial_operand_submission import (
     BoundTransientFinancialOperandAccess,
@@ -38,6 +39,7 @@ from .models import (
     OperationIdentity,
     OperationReference,
     OperationRequest,
+    OperationStoredInvocation,
 )
 from .persistence.events import (
     OperationNoticeEvent,
@@ -53,6 +55,7 @@ from .persistence.journal import (
     OperationSecureReferenceStore,
 )
 from .persistence.leases import (
+    OperationLeaseObservationDisposition,
     OperationLeaseToken,
     OperationOwnerLease,
 )
@@ -131,9 +134,11 @@ class OperationSupervisor(
         response_authority_issuer: OperationResponseAuthorityIssuer | None = None,
         response_token_factory: Callable[[], str] = _supervisor_context.new_response_token,
         financial_operand_custody: OperationFinancialOperandCustodyRepository | None = None,
+        execution_authority: OperationExecutionAuthority | None = None,
     ) -> None:
         """Bind the registry and durable ports for one process owner."""
         self.registry = registry
+        self._execution_authority = execution_authority
         self._authority_operation = authority_operation
         self._journal = journal
         self._event_stream = event_stream
@@ -264,6 +269,63 @@ class OperationSupervisor(
     async def observe(self, operation_id: OperationId) -> OperationPersistedSnapshot:
         """Return the latest durable operation observation."""
         return await self.inspect(operation_id)
+
+    async def stored_invocation(
+        self, operation_id: OperationId, *, require_idle: bool = False
+    ) -> OperationStoredInvocation:
+        """Resolve exact pinned operands for the authenticated host's policy owner.
+
+        This internal door grants neither execution nor disclosure. The host
+        must check current authority before using or projecting the invocation.
+        Response capabilities cannot be recovered through it.
+        """
+        snapshot = await self.inspect(operation_id)
+        if require_idle:
+            self._require_idle_invocation(operation_id)
+        payload = await self._resolve_request_payload(snapshot, self._require_pinned_definition(snapshot))
+        return OperationStoredInvocation(
+            identity=snapshot.identity,
+            request=OperationRequest(
+                definition_id=snapshot.identity.definition_id,
+                subject_ref=snapshot.identity.subject_ref,
+                payload=payload,
+            ),
+            lifecycle=snapshot.lifecycle,
+        )
+
+    def _require_idle_invocation(self, operation_id: OperationId) -> None:
+        tasks = (
+            self._executor_tasks.get(operation_id),
+            self._settlement_tasks.get(operation_id),
+            self._continuation_tasks.get(operation_id),
+            self._cleanup_tasks.get(operation_id),
+        )
+        if any(task is not None and not task.done() for task in tasks):
+            raise ValueError("operation still has live local execution or settlement")
+
+    async def continue_operation(self, operation_id: OperationId) -> OperationPersistedSnapshot:
+        """Continue admitted intent through canonical lease recovery, never blind replay.
+
+        A newly authorized host binding is required when execution authority is
+        configured. A current local execution cannot be retargeted. Recorded
+        interrupted work is reconciled; only declared resumable checkpoints can
+        re-enter an executor.
+        """
+        snapshot = await self.inspect(operation_id)
+        self._require_idle_invocation(operation_id)
+        if snapshot.lifecycle is OperationLifecycle.TERMINAL:
+            return snapshot
+        observed, instant = await self._inspect_reconciliation_lease(operation_id, snapshot)
+        if observed.disposition is OperationLeaseObservationDisposition.ACTIVE:
+            # Exact owner/token verification; another live owner remains busy.
+            await self._require_owned_lease(snapshot.identity, instant)
+            if snapshot.lifecycle is not OperationLifecycle.CREATED:
+                raise ValueError("owned nonterminal invocation requires its original continuation")
+        else:
+            snapshot = await self.reconcile(operation_id)
+        if snapshot.lifecycle is OperationLifecycle.CREATED:
+            return await self.start(operation_id)
+        return snapshot
 
     async def replay(
         self,

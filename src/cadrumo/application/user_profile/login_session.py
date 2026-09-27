@@ -45,7 +45,8 @@ See Also:
 from __future__ import annotations
 
 import os
-from collections.abc import Callable
+from collections.abc import Callable, Generator
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import StrEnum
@@ -197,6 +198,19 @@ class _CandidateProfileLogin:
         self.closed = True
         self.record_session.close()
         self.session.close()
+
+
+@dataclass(frozen=True, slots=True)
+class ProfileLoginCandidate:
+    """Borrowed password-proven material, never a frontend result or durable receipt.
+
+    A trusted profile worker may copy the session's key into its exact custody
+    after its session authority admits the accompanying outcome. The enclosing
+    authentication context always destroys this candidate on exit.
+    """
+
+    outcome: ProfileLoginOutcome
+    session: ProfileBucketSessionPort
 
 
 @dataclass(slots=True)
@@ -908,6 +922,58 @@ def login_profile(
             outcome = _finish_candidate_login(attempt=attempt, candidate=candidate)
     refresh_active_profile_output_language()
     return outcome
+
+
+@contextmanager
+def authenticate_profile_candidate(
+    *,
+    bucket_id: UUID,
+    passphrase_callback: Callable[[], str],
+    profile_decode_context: ProfileDecodeContext,
+    now: datetime | None = None,
+) -> Generator[ProfileLoginCandidate]:
+    """Prove an exact profile without replacing another connection's live custody.
+
+    Reuse login throttling, envelope/sentinel proof and configured human windows.
+    No active pointer, process binding, acceleration receipt or human session is
+    published here. Only the runtime authority can promote the borrowed result.
+    """
+    instant = _now() if now is None else now
+    storage_root = effective_storage_root()
+    target = resolve_login_target(str(bucket_id))
+    if target.bucket_id != str(bucket_id):
+        _refuse_handover("candidate target differs from the requested profile")
+    evaluation = _profile_login_sessions().evaluate_throttle(
+        storage_root=storage_root,
+        bucket_id=target.bucket_id,
+        now=instant,
+    )
+    if evaluation.throttled:
+        raise ProfileLoginThrottledError(remaining_seconds=evaluation.remaining_seconds)
+    candidate = _authenticate_candidate_or_record_failure(
+        bucket_id=target.bucket_id,
+        storage_root=storage_root,
+        now=instant,
+        passphrase_callback=passphrase_callback,
+        profile_decode_context=profile_decode_context,
+    )
+    try:
+        _profile_login_sessions().reset_throttle(storage_root=storage_root, bucket_id=target.bucket_id)
+        yield ProfileLoginCandidate(
+            outcome=ProfileLoginOutcome(
+                bucket_id=target.bucket_id,
+                label=target.label,
+                authenticated_at=candidate.session.opened_at,
+                idle_deadline=candidate.session.idle_deadline,
+                absolute_deadline=candidate.session.absolute_deadline,
+                session_persisted=False,
+                already_authenticated=False,
+                closed_previous_bucket_id=None,
+            ),
+            session=candidate.session,
+        )
+    finally:
+        candidate.close()
 
 
 def authenticate_profile_for_invocation(

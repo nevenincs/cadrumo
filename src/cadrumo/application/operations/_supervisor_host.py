@@ -27,6 +27,7 @@ if TYPE_CHECKING:
     )
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ._execution_context import DefinitionBoundContext
+    from .authorization import OperationExecutionAuthority
     from .financial_operand import (
         OperationTransientFinancialOperandDelivery,
         OperationTransientFinancialOperandRequirement,
@@ -67,6 +68,7 @@ class SupervisorHost:
 
     if TYPE_CHECKING:
         registry: OperationRegistry
+        _execution_authority: OperationExecutionAuthority | None
         _authority_operation: PinnedAuthorityOperation
         _journal: OperationJournal
         _leases: OperationLeaseRepository

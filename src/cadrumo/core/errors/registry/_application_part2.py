@@ -9,6 +9,46 @@ from ._application_profile_bundle import PROFILE_BUNDLE_ERROR_CODES
 
 DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
+        "cadrumo.application.user_profile.access_errors.ProfileAccessRefusedError",
+        ErrorCode(
+            code="REFUSED_PROFILE_ACCESS",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_storage_profile_custody",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.runtime.contracts.RuntimeRefusalError",
+        ErrorCode(
+            code="REFUSED_LOCAL_RUNTIME",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_operator_surface_contract",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.user_profile.automation_custody_port.AutomationCustodyError",
+        ErrorCode(
+            code="REFUSED_AUTOMATION_CUSTODY",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_storage_profile_custody",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.user_profile.automation_operations.AutomationAdministrationRefusedError",
+        ErrorCode(
+            code="REFUSED_AUTOMATION_ADMINISTRATION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_storage_profile_custody",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.modelo.work_addressing.ModeloWorkCaptureError",
         ErrorCode(
             code="REFUSED_MODELO_WORK_CAPTURE_NOT_CURRENT",

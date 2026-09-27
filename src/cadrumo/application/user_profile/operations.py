@@ -9,6 +9,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, NonNegativeInt, SecretStr, field_validator
 
+from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identity.digest import ContentDigest
@@ -24,6 +25,7 @@ from ...core.operations import (
 )
 from ...core.operations import profile_operation_subject as _profile_subject
 from ...core.time.clock import now
+from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,
@@ -32,6 +34,7 @@ from ..operations.capabilities import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
+from ..operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from ..operations.models import OperationRequest
 from ..operations.owner import OperationExecutorContext
 from ..operations.registry import (
@@ -42,6 +45,16 @@ from ..operations.registry import (
     OperationReconciliationPolicy,
 )
 from ..operations.secret_submission import OperationEphemeralSecretDeclaration
+from .access_contracts import (
+    AccessAction,
+    AccessDenialCode,
+    Availability,
+    DisclosureCategory,
+    DisclosurePermission,
+    OperationAccessPolicy,
+    OperationAccessRequest,
+)
+from .access_errors import ProfileAccessRefusedError
 from .bundle_export import export_profile_bundle
 from .bundle_export_contracts import (
     ProfileBundleExportPurpose,
@@ -210,19 +223,23 @@ class ProfileFieldMutationOperationExecutor:
         await context.events.phase(_PROFILE_FIELD_MUTATION_PHASES[0])
         await context.events.effect(OperationEffect.UNKNOWN)
         await context.events.phase(_PROFILE_FIELD_MUTATION_PHASES[1])
-        record = await asyncio.to_thread(
-            apply_manager_profile_field_mutation,
-            profile_id=str(payload.profile_id),
-            path=payload.path,
-            value=payload.value,
-            profile_decode_context=context.authority_operation.profile_decode_context(),
-        )
-        result = ProfileMutationOperationResult(
-            profile_id=payload.profile_id,
-            record_revision=record.record_revision,
-            content_digest=record.content_digest,
-        )
-        result_ref = await _result_reference(result, context)
+        async with context.cancellation.irreversible_section():
+            record = await await_cancellation_complete(
+                asyncio.to_thread(
+                    apply_manager_profile_field_mutation,
+                    profile_id=str(payload.profile_id),
+                    path=payload.path,
+                    value=payload.value,
+                    profile_decode_context=context.authority_operation.profile_decode_context(),
+                ),
+                task_name="profile-field-mutation",
+            )
+            result = ProfileMutationOperationResult(
+                profile_id=payload.profile_id,
+                record_revision=record.record_revision,
+                content_digest=record.content_digest,
+            )
+            result_ref = await _result_reference(result, context)
         await context.events.effect(OperationEffect.UPDATED)
         await context.events.phase(_PROFILE_FIELD_MUTATION_PHASES[2])
         return result_ref
@@ -242,22 +259,26 @@ class ProfileRepeatableRowMutationOperationExecutor:
         values = {item.field_key: item.value for item in payload.values}
         await context.events.effect(OperationEffect.UNKNOWN)
         await context.events.phase(_PROFILE_REPEATABLE_ROW_MUTATION_PHASES[1])
-        mutation = await asyncio.to_thread(
-            add_profile_repeatable_section_row,
-            profile_id=str(payload.profile_id),
-            section_key=payload.section_key,
-            values=values,
-            schema=context.authority_operation.profile_schema(),
-            profile_decode_context=context.authority_operation.profile_decode_context(),
-        )
-        result = ProfileRepeatableRowMutationOperationResult(
-            profile_id=payload.profile_id,
-            record_revision=mutation.record.record_revision,
-            content_digest=mutation.record.content_digest,
-            section_key=mutation.section_key,
-            row_index=mutation.row_index,
-        )
-        result_ref = await _result_reference(result, context)
+        async with context.cancellation.irreversible_section():
+            mutation = await await_cancellation_complete(
+                asyncio.to_thread(
+                    add_profile_repeatable_section_row,
+                    profile_id=str(payload.profile_id),
+                    section_key=payload.section_key,
+                    values=values,
+                    schema=context.authority_operation.profile_schema(),
+                    profile_decode_context=context.authority_operation.profile_decode_context(),
+                ),
+                task_name="profile-repeatable-row-mutation",
+            )
+            result = ProfileRepeatableRowMutationOperationResult(
+                profile_id=payload.profile_id,
+                record_revision=mutation.record.record_revision,
+                content_digest=mutation.record.content_digest,
+                section_key=mutation.section_key,
+                row_index=mutation.row_index,
+            )
+            result_ref = await _result_reference(result, context)
         await context.events.effect(OperationEffect.UPDATED)
         await context.events.phase(_PROFILE_REPEATABLE_ROW_MUTATION_PHASES[2])
         return result_ref
@@ -402,6 +423,59 @@ def build_user_profile_operation_definitions() -> tuple[OperationDefinition, ...
     return USER_PROFILE_OPERATION_DEFINITIONS
 
 
+def resolve_profile_mutation_access(
+    request: OperationRequest[BaseModel], context: OperationAccessContext, /
+) -> ResolvedOperationAccess:
+    """Authorize profile facts as profile-wide work, without tax-period impersonation."""
+    payload = request.payload
+    if not isinstance(payload, ProfileFieldMutationOperationRequest | ProfileRepeatableRowMutationOperationRequest):
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+    if payload.profile_id != context.profile_id or request.subject_ref != _profile_subject(str(payload.profile_id)):
+        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    return ResolvedOperationAccess(
+        request=OperationAccessRequest(
+            profile_id=payload.profile_id,
+            definition_id=request.definition_id,
+            action=context.action,
+            frontend=context.frontend,
+            periods=frozenset(),
+            period_independent=True,
+            destination_id=context.destination_id,
+        ),
+        policy=OperationAccessPolicy(
+            definition_id=request.definition_id,
+            definition_contract_digest=context.contract.definition_contract_digest,
+            actions=frozenset(
+                {
+                    AccessAction.SUBMIT,
+                    AccessAction.START,
+                    AccessAction.RESUME,
+                    AccessAction.COMMIT,
+                    AccessAction.CANCEL,
+                    AccessAction.OBSERVE,
+                }
+            ),
+            disclosures=frozenset(
+                (
+                    DisclosurePermission(
+                        destination_id=context.destination_id,
+                        projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
+                        category=DisclosureCategory.OPERATION_METADATA,
+                    ),
+                )
+            )
+            if context.action is AccessAction.OBSERVE
+            else frozenset(),
+            periods=frozenset(),
+            allow_period_independent=True,
+            backend=Availability.AVAILABLE,
+            published_authority=context.published_authority,
+            provider=Availability.NOT_REQUIRED,
+            transaction_authority_required=False,
+        ),
+    )
+
+
 def build_user_profile_operation_registrations(
     definitions: tuple[OperationDefinition, ...],
 ) -> tuple[OperationPublicDefinitionRegistrationV1, ...]:
@@ -412,6 +486,13 @@ def build_user_profile_operation_registrations(
                 OperationPublicDefinitionRegistrationV1.compose_request_only(
                     definition=definition,
                     request_schema_id=f"{definition.definition_id}.request",
+                    access_resolver=resolve_profile_mutation_access
+                    if definition.definition_id
+                    in {
+                        PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID,
+                        PROFILE_REPEATABLE_ROW_MUTATION_OPERATION_DEFINITION_ID,
+                    }
+                    else None,
                 )
                 for definition in definitions
             ),

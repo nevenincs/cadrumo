@@ -58,6 +58,7 @@ from ..application.modelo.operation_definitions import (
 )
 from ..application.modelo.verification_repository_ports import VerificationRepositoryBundleFactory
 from ..application.modelo.work_lifecycle_ports import ActiveWorkLifecyclePortsFactory
+from ..application.operations.authorization import OperationExecutionAuthority
 from ..application.operations.composition import (
     OperationComposedServices,
     compose_operation_services,
@@ -68,6 +69,11 @@ from ..application.operations.registry import (
 )
 from ..application.storage.calc_sheets.export_service import export_modelo_to_sheets
 from ..application.storage.calc_sheets.records import SheetExportPlan, TabName
+from ..application.user_profile.automation_operations import (
+    AutomationAdministrationFactory,
+    build_automation_operation_definitions,
+    build_automation_operation_registrations,
+)
 from ..application.user_profile.censal_operation import (
     build_censal_operation_definition,
     build_censal_operation_registration,
@@ -198,6 +204,7 @@ def build_production_operation_registry(
     modelo_edit_receipt_repository_factory: ModeloEditReceiptRepositoryFactory = build_modelo_edit_receipt_repository,
     verification_repository_bundle_factory: VerificationRepositoryBundleFactory = build_verification_repository_bundle,
     operator_scope_ports: OperatorScopePorts | None = None,
+    automation_administration_factory: AutomationAdministrationFactory | None = None,
 ) -> OperationRegistry:
     """Build the sole immutable production inventory from the owner facades."""
     resolved_settings = settings or load_settings()
@@ -208,6 +215,7 @@ def build_production_operation_registry(
         else build_auth_operation_definitions(ports=build_auth_operation_ports(resolved_operator_scope_ports))
     )
     profile_definitions = build_user_profile_operation_definitions()
+    automation_definitions = build_automation_operation_definitions(automation_administration_factory)
     modelo_definitions = build_modelo_lifecycle_operation_definitions(
         certificate_secret_backend_factory=build_certificate_secret_backend,
         operator_scope_ports=resolved_operator_scope_ports,
@@ -252,6 +260,7 @@ def build_production_operation_registry(
             (
                 *resolved_auth_definitions,
                 *profile_definitions,
+                *automation_definitions,
                 *modelo_definitions,
                 resolved_censal_definition,
                 filed_history_definition,
@@ -266,6 +275,7 @@ def build_production_operation_registry(
             (
                 *build_auth_operation_registrations(resolved_auth_definitions),
                 *build_user_profile_operation_registrations(profile_definitions),
+                *build_automation_operation_registrations(automation_definitions),
                 *build_modelo_lifecycle_operation_registrations(modelo_definitions),
                 build_censal_operation_registration(resolved_censal_definition),
                 build_filed_history_operation_registration(filed_history_definition),
@@ -291,6 +301,9 @@ def compose_operation_dependencies(
     modelo_edit_receipt_repository_factory: ModeloEditReceiptRepositoryFactory = build_modelo_edit_receipt_repository,
     verification_repository_bundle_factory: VerificationRepositoryBundleFactory = build_verification_repository_bundle,
     operator_scope_ports: OperatorScopePorts | None = None,
+    automation_administration_factory: AutomationAdministrationFactory | None = None,
+    execution_authority: OperationExecutionAuthority | None = None,
+    execution_authority_factory: Callable[[OperationRegistry], OperationExecutionAuthority] | None = None,
 ) -> OperationComposedServices:
     """Compose the immutable production registry and all public services.
 
@@ -301,6 +314,8 @@ def compose_operation_dependencies(
     the same graph can own pre-login and post-login execution without retaining
     a stale profile repository.
     """
+    if execution_authority is not None and execution_authority_factory is not None:
+        raise ValueError("operation authority must have one owner")
     resolved_settings = settings or load_settings()
     resolved_operator_scope_ports = operator_scope_ports or build_operator_scope_ports()
     storage_root = effective_storage_root(settings=resolved_settings)
@@ -315,8 +330,11 @@ def compose_operation_dependencies(
         modelo_edit_receipt_repository_factory=modelo_edit_receipt_repository_factory,
         verification_repository_bundle_factory=verification_repository_bundle_factory,
         operator_scope_ports=resolved_operator_scope_ports,
+        automation_administration_factory=automation_administration_factory,
     )
     journal = OperationJournalRepository(storage_root=storage_root)
+    if execution_authority_factory is not None:
+        execution_authority = execution_authority_factory(registry)
     leases = OperationLeaseFilesystemRepository(storage_root=storage_root)
     operands = operation_secure_reference_repository()
     return compose_operation_services(
@@ -334,6 +352,7 @@ def compose_operation_dependencies(
         execution_timeout=_EXECUTION_TIMEOUT,
         cleanup_timeout=_CLEANUP_TIMEOUT,
         financial_operand_custody=OperationFinancialOperandCustodyFilesystemRepository(settings=resolved_settings),
+        execution_authority=execution_authority,
     )
 
 

@@ -19,10 +19,12 @@ from ...core.operations import (
     OperationLifecycle,
     OperationTerminalCondition,
 )
+from ..user_profile.access_contracts import AccessAction
 from . import models as operation_models
 from . import supervisor_context as _supervisor_context
 from ._execution_context import DefinitionBoundContext
 from ._supervisor_host import SupervisorHost
+from .authorization import invoke_authorized
 from .capabilities import OperationRequestStoragePolicy
 from .errors import OperationDeclarationError, OperationExecutorReturnedNoResultError, OperationUnsettledError
 from .financial_operand import (
@@ -161,6 +163,8 @@ class SupervisorExecutionMixin(SupervisorHost):
             definition_id=request.definition_id,
             subject_ref=request.subject_ref,
         )
+        if self._execution_authority is not None:
+            await self._execution_authority.require(identity=identity, request=request, action=AccessAction.SUBMIT)
         request_storage = definition.capabilities.request_storage
         if request_storage is OperationRequestStoragePolicy.SECURE_REFERENCE:
             if self._operands is None:
@@ -277,6 +281,10 @@ class SupervisorExecutionMixin(SupervisorHost):
             payload=payload,
             idempotency_key=None,
         )
+        if self._execution_authority is not None:
+            await self._execution_authority.require(
+                identity=snapshot.identity, request=request, action=AccessAction.START
+            )
         started = OperationNoticeEvent(
             identity=snapshot.identity,
             revision=0,
@@ -313,7 +321,13 @@ class SupervisorExecutionMixin(SupervisorHost):
             self._execute_and_settle(
                 operation_id=operation_id,
                 context=context,
-                executor=executor.execute(request, executor_context),
+                executor=invoke_authorized(
+                    self._execution_authority,
+                    identity=running.identity,
+                    request=request,
+                    action=AccessAction.START,
+                    executor=lambda: executor.execute(request, executor_context),
+                ),
             ),
             name=f"operation-settlement-{operation_id}",
         )

@@ -530,6 +530,14 @@ def test_registry_canonicalises_and_resolves_definition_and_action_identity() ->
         registry.definitions = ()
 
 
+@pytest.mark.parametrize("raw", ['{"value":"a","value":"b"}', '{"value":NaN}', '{"value":"a","unknown":true}'])
+def test_registered_payload_decoder_refuses_ambiguous_or_extra_members(raw: str) -> None:
+    registry = OperationRegistry(definitions=(definition(definition_id="profile.sync"),))
+    assert registry.decode_request_payload("profile.sync", '{"value":"a"}') == RequestPayload(value="a")
+    with pytest.raises(ValueError):
+        registry.decode_request_payload("profile.sync", raw)
+
+
 def test_registry_refuses_unknown_and_ambiguous_identities() -> None:
     item = definition(definition_id="profile.sync", action_id="operator.profile.sync")
     registry = OperationRegistry(definitions=(item,))
