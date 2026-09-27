@@ -59,6 +59,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures(
 
 _SEPARATE_ESCALA_YEARS = (2022, 2023)
 _MANUAL_ANUALIDADES_YEARS = (2020, 2021)
+# The below-floor revision whose AEAT XSD reuses 1741-1759 for Anexo C pension
+# fields; the retired sum formula wrongly read them into 0527.
+_ANEXO_C_OVERLAP_REVISION = 2021
 _TOLERANCE = Decimal("0.01")
 
 # LIRPF art. 63 escala general estatal tramos (BOE consolidated Ley 35/2006
@@ -256,8 +259,8 @@ def test_pre_floor_casilla_0527_is_authored_manual_and_filing_selection_refuses(
         _snapshot(registry_authority, year)
 
 
-def test_2021_casilla_0527_is_manual_and_not_derived_from_anexo_c_pension_fields() -> None:
-    """2021 regression: 0527 must not derive from the Anexo C pension fields.
+def test_anexo_c_overlap_revision_casilla_0527_is_manual_and_not_derived_from_pension_fields() -> None:
+    """Anexo C overlap regression: 0527 must not derive from the Anexo C pension fields.
 
     In the 2021 revision, casillas 1741/1744/1749/1754/1759 are Anexo C
     aportaciones/contribuciones a sistemas de previsión social fields (a
@@ -269,7 +272,7 @@ def test_2021_casilla_0527_is_manual_and_not_derived_from_anexo_c_pension_fields
     Anexo C fields into 0527 (the retired sum formula did). The year lies below
     the filing floor, so the authored declarations are what is inspected.
     """
-    revision = published_authored_revision("100", year=2021)
+    revision = published_authored_revision("100", year=_ANEXO_C_OVERLAP_REVISION)
     anexo_c_ids = {_c(value) for value in ("1741", "1744", "1749", "1754", "1759")}
     assert anexo_c_ids <= {casilla.id for casilla in revision.casillas}
 

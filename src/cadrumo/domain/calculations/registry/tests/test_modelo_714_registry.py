@@ -22,6 +22,10 @@ from .snapshot_support import build_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
+# The authored Modelo 714 event-period revision approved by Orden HFP/207/2022; it lies
+# below the support floor and stays a storage root whose declarations are inspected.
+_BELOW_FLOOR_EVENT_REVISION = 2021
+
 _PATRIMONIO_BASE_IMPONIBLE_CASILLA: CasillaId = validated_casilla_id(
     "patrimonio.base-imponible",
     surface="_PATRIMONIO_BASE_IMPONIBLE_CASILLA",
@@ -237,15 +241,15 @@ def test_modelo_714_boe_form_source_is_layout_only() -> None:
     assert "boe-modelo-714-layout" in revision.source_refs
 
 
-def test_modelo_714_revision_2021_declares_constructs() -> None:
+def test_modelo_714_below_floor_revision_declares_constructs() -> None:
     modelo, _ = _load_modelo_714()
-    revision = modelo.revisions["2021"]
-    assert revision.constructs, "714 2021 revision must declare constructs"
+    revision = modelo.revisions[str(_BELOW_FLOOR_EVENT_REVISION)]
+    assert revision.constructs, f"714 {_BELOW_FLOOR_EVENT_REVISION} revision must declare constructs"
     construct_ids = {c.id for c in revision.constructs}
     assert "m714-patrimonio-calculation" in construct_ids
 
 
-def test_modelo_714_revision_2021_cuota_integra_computed_via_grounded_escala() -> None:
+def test_modelo_714_below_floor_revision_cuota_integra_computed_via_grounded_escala() -> None:
     """Cuota íntegra (29) is computed from the Ley 19/1991 art. 30 escala.
 
     Base imponible and base liquidable stay manual. The downstream art.31 joint
@@ -253,7 +257,7 @@ def test_modelo_714_revision_2021_cuota_integra_computed_via_grounded_escala() -
     plus explicit M714 exclusion inputs.
     """
     modelo, _ = _load_modelo_714()
-    revision = modelo.revisions["2021"]
+    revision = modelo.revisions[str(_BELOW_FLOOR_EVENT_REVISION)]
     # The sole cuota-íntegra formula is the real, art.30-grounded escala — not a placeholder.
     escala_formula = next(f for f in revision.formulas if f.target_casilla_id == _PATRIMONIO_CUOTA_INTEGRA_CASILLA)
     assert escala_formula.id == "patrimonio-cuota-integra-escala-estatal"
@@ -380,24 +384,25 @@ def test_modelo_714_art31_joint_limit_calculates_from_same_year_m100_relations()
     )
 
 
-def test_modelo_714_snapshot_refuses_the_authored_2021_event_period_below_the_supported_floor() -> None:
-    # The 2021 revision stays authored (its declarations are inspected above), but
-    # filing selection must refuse a year below the published support floor.
+def test_modelo_714_snapshot_refuses_the_authored_event_period_below_the_supported_floor() -> None:
+    # The below-floor revision stays authored (its declarations are inspected above),
+    # but filing selection must refuse a year below the published support floor.
+    event_year = _BELOW_FLOOR_EVENT_REVISION
     supported_years = published_supported_filing_years()
     assert supported_years is not None
-    assert supported_years.floor > 2021
+    assert supported_years.floor > event_year
     modelo, catalogues = _load_modelo_714()
-    assert modelo.revisions["2021"].period_selector.years == (2021,)
+    assert modelo.revisions[str(event_year)].period_selector.years == (event_year,)
     with pytest.raises(FilingYearOutsideSupportEnvelopeError) as excinfo:
         build_snapshot(
             modelo,
             catalogues,
             source_root=bundled_path(),
-            filing_year=2021,
+            filing_year=event_year,
             period="0A",
         )
-    # The refusal is the envelope's, and it says so: 2021 IS authored.
-    assert "2021" in excinfo.value.covering_revision_ids
+    # The refusal is the envelope's, and it says so: the event year IS authored.
+    assert str(event_year) in excinfo.value.covering_revision_ids
 
 
 def test_modelo_714_snapshot_builds_for_the_supported_floor_event_period() -> None:

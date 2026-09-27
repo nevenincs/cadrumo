@@ -45,6 +45,9 @@ from .published_authority import published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
+# LIS DT 44ª (Ley 7/2024) sets its first transitional rates -- micro-empresa 21/22 % and
+# art. 101 ERD 24 % -- for periods initiated in this exercise.
+_DT44_FIRST_TRANSITIONAL_EXERCISE = 2025
 _FORM_BINDING = "modelo-200-profile-legal-entity-form"
 _NEW_ENTITY_BINDING = "modelo-200-profile-new-entity-flag"
 _INCN_BINDING = "modelo-200-profile-incn-prior-12-months"
@@ -299,8 +302,8 @@ def test_micro_empresa_lane_anchor_at_50000_eur_first_tranche_boundary() -> None
 # ---------------------------------------------------------------------
 
 
-def test_art101_erd_lane_applies_dt44_2025_rate_below_10m() -> None:
-    """An art.101 ERD profile reaches the 2025 DT 44ª 24% rate.
+def test_art101_erd_lane_applies_dt44_first_transitional_rate_below_10m() -> None:
+    """An art.101 ERD profile reaches the first DT 44ª 24% rate.
 
     LIS art. 101 covers entities whose prior-period INCN is below
     10.000.000 EUR. LIS DT 44ª fixes those entities at 24% for periods
@@ -314,14 +317,14 @@ def test_art101_erd_lane_applies_dt44_2025_rate_below_10m() -> None:
         form="sl",
         new_entity=Decimal("0"),
         incn=Decimal("7000000"),
-        filing_period=date(2025, 12, 31),
+        filing_period=date(_DT44_FIRST_TRANSITIONAL_EXERCISE, 12, 31),
     )
     boundary_general = _cuota_for(
         base=Decimal("1000000"),
         form="sl",
         new_entity=Decimal("0"),
         incn=Decimal("10000000"),
-        filing_period=date(2025, 12, 31),
+        filing_period=date(_DT44_FIRST_TRANSITIONAL_EXERCISE, 12, 31),
     )
 
     assert erd == Decimal("240000.00")

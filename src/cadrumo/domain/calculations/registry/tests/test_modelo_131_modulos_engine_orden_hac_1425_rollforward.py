@@ -1,4 +1,4 @@
-"""Modelo 131 estimación-objetiva módulos engine — 2026 roll-forward parity.
+"""Modelo 131 estimación-objetiva módulos engine — Orden HAC/1425/2025 roll-forward parity.
 
 The 2026 revision replicates the 2025 revision's four-fase módulos engine
 (coefficient table, casillas, formulas, verification predicates) because the
@@ -39,6 +39,11 @@ from .published_authority import published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+# Orden HAC/1425/2025 fixes the módulos for this exercise, and Orden HAC/1347/2024
+# for the one before; both Ordenes are the transcription sources cited below.
+_ORDEN_HAC_1425_2025_EXERCISE = 2026
+_ORDEN_HAC_1347_2024_EXERCISE = 2025
+
 # Rendimiento anual por unidad antes de amortización (Orden HAC/1425/2025
 # Anexo II, filing year 2026), independently transcribed from the 2026 Orden
 # corpus text for cross-check — a discrepancy between these literals and the
@@ -57,7 +62,7 @@ _AUTOTAXI_721_2 = {
     3: Decimal("45.08"),  # distancia recorrida (1.000 km)
 }
 
-_REDUCCION_GENERAL_2026 = Decimal("0.05")
+_REDUCCION_GENERAL = Decimal("0.05")
 
 # Fase 2ª — coeficiente por tramos del número de unidades del módulo
 # "personal asalariado" (Orden HAC/1425/2025 Anexo II, instrucción 2.2.a),
@@ -114,7 +119,7 @@ def _expected_modulos(minorado: Decimal, *, cuantia: Decimal | None) -> Decimal:
     return round_to_cents(cuantia + _INDICE_EXCESO * (minorado - cuantia))
 
 
-def _run_modulos_engine_2026(
+def _run_hac_1425_engine(
     epigrafe: str | None,
     *,
     modulo_1: Decimal = Decimal("0"),
@@ -122,7 +127,9 @@ def _run_modulos_engine_2026(
     modulo_3: Decimal = Decimal("0"),
     modulo_4: Decimal = Decimal("0"),
 ) -> tuple[Decimal, Decimal, Decimal, Decimal]:
-    snapshot = published_snapshot("131", filing_year=2026, period="1T", grade=RegistryAuthorityGrade.CALCULATION)
+    snapshot = published_snapshot(
+        "131", filing_year=_ORDEN_HAC_1425_2025_EXERCISE, period="1T", grade=RegistryAuthorityGrade.CALCULATION
+    )
     assert snapshot.filing_period is not None
     text_inputs = {"modulos-epigrafe": epigrafe} if epigrafe else {}
     result = calculate_registry_snapshot(
@@ -150,12 +157,12 @@ def _run_modulos_engine_2026(
     )
 
 
-class TestPeluqueria9721EstimacionObjetiva2026:
-    """Epígrafe IAE 972.1 (Servicios de peluquería) on the 2026 revision."""
+class TestPeluqueria9721EstimacionObjetivaHac1425Orden:
+    """Epígrafe IAE 972.1 (Servicios de peluquería) on the Orden HAC/1425/2025 revision."""
 
-    def test_fase_1_rendimiento_neto_previo_matches_2026_orden_coefficients(self) -> None:
+    def test_fase_1_rendimiento_neto_previo_matches_hac_1425_orden_coefficients(self) -> None:
         # 2 personal asalariado, 1 personal no asalariado, 50 m2 local, 30 (100 kWh).
-        previo, _minorado, _modulos, _actividad = _run_modulos_engine_2026(
+        previo, _minorado, _modulos, _actividad = _run_hac_1425_engine(
             "972.1",
             modulo_1=Decimal("2"),
             modulo_2=Decimal("1"),
@@ -170,8 +177,8 @@ class TestPeluqueria9721EstimacionObjetiva2026:
         )
         assert previo == expected_previo == Decimal("23153.67")
 
-    def test_fases_2_3_4_reproduce_independent_computation_on_2026_orden(self) -> None:
-        previo, minorado, modulos, actividad = _run_modulos_engine_2026(
+    def test_fases_2_3_4_reproduce_independent_computation_on_hac_1425_orden(self) -> None:
+        previo, minorado, modulos, actividad = _run_hac_1425_engine(
             "972.1",
             modulo_1=Decimal("2"),
             modulo_2=Decimal("1"),
@@ -184,18 +191,18 @@ class TestPeluqueria9721EstimacionObjetiva2026:
             modulo_1_coefficient=_PELUQUERIA_972_1[1],
         )
         expected_modulos = _expected_modulos(expected_minorado, cuantia=_CUANTIA_EXCESO_972_1)
-        expected_actividad = round_to_cents(expected_modulos - expected_modulos * _REDUCCION_GENERAL_2026)
+        expected_actividad = round_to_cents(expected_modulos - expected_modulos * _REDUCCION_GENERAL)
         assert minorado == expected_minorado == Decimal("22363.20")
         assert modulos == expected_modulos == Decimal("23656.62")
         assert actividad == expected_actividad == Decimal("22473.79")
 
 
-class TestAutotaxi7212EstimacionObjetiva2026:
-    """Epígrafe IAE 721.2 (Transporte por autotaxis) on the 2026 revision."""
+class TestAutotaxi7212EstimacionObjetivaHac1425Orden:
+    """Epígrafe IAE 721.2 (Transporte por autotaxis) on the Orden HAC/1425/2025 revision."""
 
-    def test_fase_1_rendimiento_neto_previo_matches_2026_orden_coefficients(self) -> None:
+    def test_fase_1_rendimiento_neto_previo_matches_hac_1425_orden_coefficients(self) -> None:
         # 0 personal asalariado, 1 personal no asalariado (titular), 40 (1.000 km).
-        previo, _minorado, _modulos, _actividad = _run_modulos_engine_2026(
+        previo, _minorado, _modulos, _actividad = _run_hac_1425_engine(
             "721.2",
             modulo_1=Decimal("0"),
             modulo_2=Decimal("1"),
@@ -205,11 +212,11 @@ class TestAutotaxi7212EstimacionObjetiva2026:
         assert previo == expected_previo == Decimal("9460.09")
 
 
-class TestModulos2026PartialTableCoverageDoesNotSilentlyMisattribute:
-    """A 2026 activity absent from the phased dataset resolves to zero, not a fabricated figure."""
+class TestHac1425OrdenPartialTableCoverageDoesNotSilentlyMisattribute:
+    """An Orden HAC/1425/2025 activity absent from the phased dataset resolves to zero, not a fabricated figure."""
 
-    def test_untabled_epigrafe_resolves_to_zero_on_2026_revision(self) -> None:
-        previo, minorado, modulos, actividad = _run_modulos_engine_2026(
+    def test_untabled_epigrafe_resolves_to_zero_on_hac_1425_orden_revision(self) -> None:
+        previo, minorado, modulos, actividad = _run_hac_1425_engine(
             "699.9",  # not an Orden Anexo II épigrafe — remains untabled
             modulo_1=Decimal("5"),
             modulo_2=Decimal("3"),
@@ -219,7 +226,7 @@ class TestModulos2026PartialTableCoverageDoesNotSilentlyMisattribute:
         assert modulos == Decimal("0")
         assert actividad == Decimal("0")
 
-    def test_2025_and_2026_engines_agree_for_the_same_tabled_activity(self) -> None:
+    def test_hac_1347_and_hac_1425_orden_engines_agree_for_the_same_tabled_activity(self) -> None:
         """Cross-revision parity proof.
 
         The 2025 and 2026 engines must produce the same rendimiento-neto-de-la-
@@ -228,12 +235,12 @@ class TestModulos2026PartialTableCoverageDoesNotSilentlyMisattribute:
         that the 2026 replication did not silently drift from its 2025 source
         (aeat-calculation-aggregation).
         """
-        snapshot_2025 = published_snapshot(
-            "131", filing_year=2025, period="1T", grade=RegistryAuthorityGrade.CALCULATION
+        predecessor_snapshot = published_snapshot(
+            "131", filing_year=_ORDEN_HAC_1347_2024_EXERCISE, period="1T", grade=RegistryAuthorityGrade.CALCULATION
         )
-        assert snapshot_2025.filing_period is not None
-        result_2025 = calculate_registry_snapshot(
-            snapshot_2025,
+        assert predecessor_snapshot.filing_period is not None
+        predecessor_result = calculate_registry_snapshot(
+            predecessor_snapshot,
             inputs={
                 "modulos-1-unidades": Decimal("2"),
                 "modulos-2-unidades": Decimal("1"),
@@ -246,14 +253,14 @@ class TestModulos2026PartialTableCoverageDoesNotSilentlyMisattribute:
                 "modulos-minoracion-inversion": Decimal("0"),
             },
             text_inputs={"modulos-epigrafe": "972.1"},
-            date_context={"filing_period": snapshot_2025.filing_period.end_date},
+            date_context={"filing_period": predecessor_snapshot.filing_period.end_date},
         )
-        _previo_2026, _minorado_2026, _modulos_2026, actividad_2026 = _run_modulos_engine_2026(
+        _previo, _minorado, _modulos, actividad = _run_hac_1425_engine(
             "972.1",
             modulo_1=Decimal("2"),
             modulo_2=Decimal("1"),
             modulo_3=Decimal("50"),
             modulo_4=Decimal("30"),
         )
-        actividad_2025 = result_2025.values["modulos-rendimiento-neto-actividad"]
-        assert actividad_2025 == actividad_2026 == Decimal("22473.79")
+        predecessor_actividad = predecessor_result.values["modulos-rendimiento-neto-actividad"]
+        assert predecessor_actividad == actividad == Decimal("22473.79")

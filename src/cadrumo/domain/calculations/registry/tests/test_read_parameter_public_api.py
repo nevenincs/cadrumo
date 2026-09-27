@@ -42,8 +42,12 @@ def test_read_parameter_returns_a_decimal_for_a_registered_modelo_100_parameter(
     )
 
 
-def test_read_parameter_returns_2023_temporary_da56_rate() -> None:
-    """The 2023 EDS difficult-justification rate is the DA 56 temporary 7%.
+# Ley 35/2006 DA 56 raised the simplified-direct-estimation rate for this tax period only.
+_DA56_TEMPORARY_RATE_EXERCISE = 2023
+
+
+def test_read_parameter_returns_the_da56_temporary_rate() -> None:
+    """The DA 56 exercise's EDS difficult-justification rate is the temporary 7%.
 
     Ley 35/2006 DA 56 elevated the RIRPF art. 30 percentage only for the 2023
     tax period. This guard prevents the current 5% rate from being flattened
@@ -51,13 +55,14 @@ def test_read_parameter_returns_2023_temporary_da56_rate() -> None:
     """
     value = read_parameter(
         "100",
-        "2023",
+        str(_DA56_TEMPORARY_RATE_EXERCISE),
         "renta-estimacion-directa-simplificada-gastos-dificil-justificacion-rate",
-        date_context={"filing_period": date(2023, 12, 31)},
+        date_context={"filing_period": date(_DA56_TEMPORARY_RATE_EXERCISE, 12, 31)},
     )
     assert isinstance(value, Decimal)
     assert value == Decimal("7"), (
-        f"Expected the 2023 DA 56 gastos-difícil-justificación rate stored as Decimal('7'), got {value!r}."
+        f"Expected the {_DA56_TEMPORARY_RATE_EXERCISE} DA 56 gastos-difícil-justificación rate stored as "
+        f"Decimal('7'), got {value!r}."
     )
 
 

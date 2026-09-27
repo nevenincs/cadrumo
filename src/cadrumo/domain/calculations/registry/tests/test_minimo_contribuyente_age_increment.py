@@ -1,6 +1,6 @@
 """Oracle tests for M100 casilla 0511 -- minimo del contribuyente (parte estatal).
 
-Ground truth: Art. 57.1.b LIRPF + AEAT renta manual (both 2024 and 2025
+Ground truth: Art. 57.1.b LIRPF + AEAT renta manual (both authored
 editions).  Age is reckoned at 31 December of the filing year (year-end).
 
     Under 65         ->  5 550,00 EUR  (base only, Art. 57.1.a)
@@ -29,9 +29,15 @@ from .....core.casilla_id import CasillaId, validated_casilla_id
 from ..formula_runtime import calculate_registry_snapshot
 from ..schema import RegistrySnapshot
 from ._modelo_100_registry_support import M100_2024_EMPTY_MATERNIDAD_BINDINGS
-from .published_authority import published_snapshot
+from .published_authority import PublishedGovernedFactSource, published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
+
+_SUPPORT = PublishedGovernedFactSource().supported_filing_years()
+# The two newest authored Modelo 100 editions sit below the projecting horizon; each
+# carries its own binding set, so each has its own calculation helper below.
+_PRIOR_EDITION = _SUPPORT.horizon - 2
+_REVIEWED_EDITION = _SUPPORT.horizon - 1
 
 _MINIMO_CONTRIBUYENTE_ESTATAL_CASILLA: CasillaId = validated_casilla_id(
     "0511",
@@ -48,8 +54,8 @@ def _m100_2024_deduccion_maternidad_bindings() -> dict[str, Decimal]:
     return dict(M100_2024_EMPTY_MATERNIDAD_BINDINGS)
 
 
-# Relation values required by the 2024 snapshot (zero - not exercised).
-_REL_2024 = {
+# Relation values required by the prior-edition snapshot (zero - not exercised).
+_REL_PRIOR_EDITION = {
     "renta-modelo-111-retenciones-periodicas": Decimal("0"),
     "renta-modelo-123-retenciones-periodicas": Decimal("0"),
     "renta-modelo-193-retenciones-anuales": Decimal("0"),
@@ -57,8 +63,8 @@ _REL_2024 = {
     "renta-modelo-131-pagos-fraccionados": Decimal("0"),
 }
 
-# Relation values required by the 2025 snapshot (zero - not exercised).
-_REL_2025 = {
+# Relation values required by the reviewed-edition snapshot (zero - not exercised).
+_REL_REVIEWED_EDITION = {
     "renta-modelo-111-retenciones-periodicas": Decimal("0"),
     "renta-modelo-123-retenciones-periodicas": Decimal("0"),
     "renta-modelo-193-retenciones-anuales": Decimal("0"),
@@ -67,13 +73,13 @@ _REL_2025 = {
 }
 
 
-def _calc_2024(birth_date: date) -> Mapping[CasillaId, Decimal]:
-    """Run the 2024 snapshot calculation for a single-taxpayer scenario."""
-    snap = _snapshot(2024)
+def _calc_prior_edition(birth_date: date) -> Mapping[CasillaId, Decimal]:
+    """Run the prior-edition snapshot calculation for a single-taxpayer scenario."""
+    snap = _snapshot(_PRIOR_EDITION)
     result = calculate_registry_snapshot(
         snap,
         inputs={},
-        date_context={"filing_period": date(2024, 12, 31)},
+        date_context={"filing_period": date(_PRIOR_EDITION, 12, 31)},
         binding_values={
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
             "renta-modelo-111-retenciones-periodicas": Decimal("0"),
@@ -97,19 +103,19 @@ def _calc_2024(birth_date: date) -> Mapping[CasillaId, Decimal]:
             "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
         },
         enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
-        relation_values=_REL_2024,
+        relation_values=_REL_PRIOR_EDITION,
         date_binding_values={"renta-profile-taxpayer-birth-date": birth_date},
     )
     return result.values
 
 
-def _calc_2025(birth_date: date) -> Mapping[CasillaId, Decimal]:
-    """Run the 2025 snapshot calculation for a single-taxpayer scenario."""
-    snap = _snapshot(2025)
+def _calc_reviewed_edition(birth_date: date) -> Mapping[CasillaId, Decimal]:
+    """Run the reviewed-edition snapshot calculation for a single-taxpayer scenario."""
+    snap = _snapshot(_REVIEWED_EDITION)
     result = calculate_registry_snapshot(
         snap,
         inputs={},
-        date_context={"filing_period": date(2025, 12, 31)},
+        date_context={"filing_period": date(_REVIEWED_EDITION, 12, 31)},
         binding_values={
             # Estimación directa normal filer -> declares economic activity;
             # the production profile resolver supplies this predicate as 1/0 from
@@ -123,7 +129,7 @@ def _calc_2025(birth_date: date) -> Mapping[CasillaId, Decimal]:
             "renta-profile-marriage-full-year": Decimal("0"),
             "renta-profile-marriage-month-start": Decimal("0"),
             "renta-profile-marriage-month-end": Decimal("0"),
-            # BIN-pendiente fresh-filer baseline (2025 binding).
+            # BIN-pendiente fresh-filer baseline (reviewed-edition binding).
             "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
             # Madrid nacimiento/adopción deducción (casilla 1039) profile-derived
             # facts; neutral zero when the chain under test is unrelated.
@@ -139,63 +145,56 @@ def _calc_2025(birth_date: date) -> Mapping[CasillaId, Decimal]:
         },
         boolean_binding_values={"renta-maritime-path-rebeca": False},
         enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
-        relation_values=_REL_2025,
+        relation_values=_REL_REVIEWED_EDITION,
         date_binding_values={"renta-profile-taxpayer-birth-date": birth_date},
     )
     return result.values
 
 
+_CALCULATORS = {
+    _PRIOR_EDITION: _calc_prior_edition,
+    _REVIEWED_EDITION: _calc_reviewed_edition,
+}
+
+
 # ---------------------------------------------------------------------------
-# 2024 oracle tests -- Art. 57.1.b LIRPF, three age brackets
+# Oracle tests -- Art. 57.1.b LIRPF, three age brackets, both authored editions
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.parametrize("filing_year", tuple(_CALCULATORS))
 @pytest.mark.parametrize(
-    ("birth_date", "expected", "label"),
+    ("age_at_year_end", "month", "day", "expected", "label"),
     [
-        # Born 1959-03-15: turns 65 on 15 March 2024 -> age at year-end = 65
-        (date(1959, 3, 15), Decimal("6700.00"), "age-65-primer-tramo"),
-        # Born 1949-03-15: turns 75 on 15 March 2024 -> age at year-end = 75
-        (date(1949, 3, 15), Decimal("8100.00"), "age-75-segundo-tramo"),
-        # Born 1965-01-01: turns 59 in 2024 -> under 65, base only
-        (date(1965, 1, 1), Decimal("5550.00"), "under-65-base-only"),
-        # Born 1959-12-15: turns 65 on 15 Dec 2024, still 65 at year-end
-        (date(1959, 12, 15), Decimal("6700.00"), "age-65-december-born"),
+        # Turns 65 in March of the exercise -> age at year-end = 65
+        (65, 3, 15, Decimal("6700.00"), "age-65-primer-tramo"),
+        # Turns 75 in March of the exercise -> age at year-end = 75
+        (75, 3, 15, Decimal("8100.00"), "age-75-segundo-tramo"),
+        # Turns 59 during the exercise -> under 65, base only
+        (59, 1, 1, Decimal("5550.00"), "under-65-base-only"),
+        # Turns 65 in mid-December, still 65 at year-end
+        (65, 12, 15, Decimal("6700.00"), "age-65-december-born"),
     ],
 )
-def test_0511_age_bracket_2024(birth_date: date, expected: Decimal, label: str) -> None:
-    """Casilla 0511 returns the correct age-derived amount for 2024 filing year.
+def test_0511_age_bracket(
+    filing_year: int,
+    age_at_year_end: int,
+    month: int,
+    day: int,
+    expected: Decimal,
+    label: str,
+) -> None:
+    """Casilla 0511 returns the correct age-derived amount for each authored edition.
 
-    Values are grounded in Art. 57.1.b LIRPF and the AEAT renta 2024 manual
+    Values are grounded in Art. 57.1.b LIRPF and the AEAT renta manual
     (section Minimo del contribuyente).  Base 5 550 EUR, +1 150 EUR for age >= 65,
     +1 400 EUR additional for age >= 75.
     """
-    values = _calc_2024(birth_date)
+    birth_date = date(filing_year - age_at_year_end, month, day)
+    values = _CALCULATORS[filing_year](birth_date)
     actual = values[_MINIMO_CONTRIBUYENTE_ESTATAL_CASILLA]
     assert actual == expected, (
-        f"0511 ({label}): got {actual!r}, expected {expected!r} (birth_date={birth_date}, filing_year=2024)"
-    )
-
-
-# ---------------------------------------------------------------------------
-# 2025 oracle tests -- same brackets apply under orden-hac-277-2026
-# ---------------------------------------------------------------------------
-
-
-@pytest.mark.parametrize(
-    ("birth_date", "expected", "label"),
-    [
-        (date(1960, 3, 15), Decimal("6700.00"), "age-65-primer-tramo"),
-        (date(1950, 3, 15), Decimal("8100.00"), "age-75-segundo-tramo"),
-        (date(1966, 1, 1), Decimal("5550.00"), "under-65-base-only"),
-    ],
-)
-def test_0511_age_bracket_2025(birth_date: date, expected: Decimal, label: str) -> None:
-    """Casilla 0511 returns the correct age-derived amount for 2025 filing year."""
-    values = _calc_2025(birth_date)
-    actual = values[_MINIMO_CONTRIBUYENTE_ESTATAL_CASILLA]
-    assert actual == expected, (
-        f"0511 ({label}): got {actual!r}, expected {expected!r} (birth_date={birth_date}, filing_year=2025)"
+        f"0511 ({label}): got {actual!r}, expected {expected!r} (birth_date={birth_date}, filing_year={filing_year})"
     )
 
 
@@ -204,14 +203,15 @@ def test_0511_age_bracket_2025(birth_date: date, expected: Decimal, label: str) 
 # ---------------------------------------------------------------------------
 
 
-def test_0511_birth_date_change_alters_value_2024() -> None:
+@pytest.mark.parametrize("filing_year", tuple(_CALCULATORS))
+def test_0511_birth_date_change_alters_value(filing_year: int) -> None:
     """Moving birth_date across the 65-year threshold changes casilla 0511.
 
     Proves the formula is genuinely age-sensitive and does not return a
     constant regardless of date input.
     """
-    values_under_65 = _calc_2024(date(1965, 1, 1))  # 59 at year-end 2024
-    values_over_65 = _calc_2024(date(1959, 3, 15))  # 65 at year-end 2024
+    values_under_65 = _CALCULATORS[filing_year](date(filing_year - 59, 1, 1))
+    values_over_65 = _CALCULATORS[filing_year](date(filing_year - 65, 3, 15))
 
     v_under = values_under_65[_MINIMO_CONTRIBUYENTE_ESTATAL_CASILLA]
     v_over = values_over_65[_MINIMO_CONTRIBUYENTE_ESTATAL_CASILLA]

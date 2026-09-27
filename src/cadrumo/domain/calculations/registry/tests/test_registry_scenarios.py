@@ -139,13 +139,19 @@ def test_registry_scenario_reports_trace_contract_mismatches() -> None:
         assert_registry_scenario_matches(report)
 
 
-def test_modelo_100_2023_simplified_expenses_use_temporary_da56_rate() -> None:
-    """The 2023 EDS difficult-justification rate is 7%, not the current 5%."""
+# Ley 35/2006 DA 56 raised the simplified-direct-estimation rate for this tax period only;
+# the scenario's expected casilla and manual citation are that exercise's.
+_DA56_TEMPORARY_RATE_EXERCISE = 2023
+
+
+def test_modelo_100_simplified_expenses_use_temporary_da56_rate() -> None:
+    """The DA 56 exercise's EDS difficult-justification rate is 7%, not the current 5%."""
+    exercise = _DA56_TEMPORARY_RATE_EXERCISE
     scenario = RegistryCalculationScenario(
-        id="modelo-100-2023-estimacion-directa-simplificada-da56-rate",
+        id=f"modelo-100-{exercise}-estimacion-directa-simplificada-da56-rate",
         modelo="100",
-        revision="2023",
-        filing_year=2023,
+        revision=str(exercise),
+        filing_year=exercise,
         period="0A",
         inputs=_inputs({"0171": Decimal("10000.00")}),
         binding_values={
@@ -156,7 +162,7 @@ def test_modelo_100_2023_simplified_expenses_use_temporary_da56_rate() -> None:
             "renta-modelo-131-pagos-fraccionados": Decimal("0"),
         },
         enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
-        date_context={"filing_period": date(2023, 12, 31)},
+        date_context={"filing_period": date(exercise, 12, 31)},
         expected_outputs=(
             _expected(
                 "0222",
@@ -169,7 +175,7 @@ def test_modelo_100_2023_simplified_expenses_use_temporary_da56_rate() -> None:
                 ),
                 operand_casilla_refs=_operand_casilla_refs("0180", "0218"),
                 legal_refs=("ley-35-2006:art-30", "ley-35-2006:da-56", "rd-439-2007:art-30"),
-                source_refs=("aeat-renta-2023-manual-parte1", "lirpf-cuota-chain-authority"),
+                source_refs=(f"aeat-renta-{exercise}-manual-parte1", "lirpf-cuota-chain-authority"),
             ),
         ),
     )

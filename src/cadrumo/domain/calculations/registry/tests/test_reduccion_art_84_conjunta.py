@@ -25,6 +25,7 @@ from decimal import Decimal
 import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
+from .published_authority import PublishedGovernedFactSource
 
 # Importing the renta package registers the first-slice routing cross-domain
 # snapshot check required by Modelo 100 parity scenarios run via scenarios.
@@ -37,20 +38,16 @@ from .scenarios import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_SUPPORT = PublishedGovernedFactSource().supported_filing_years()
+# The two newest authored Modelo 100 editions below the projecting horizon; each ships
+# its own binding set, and Art. 84 LIRPF fixes the same reducción in both.
+_PRIOR_EDITION = _SUPPORT.horizon - 2
+_REVIEWED_EDITION = _SUPPORT.horizon - 1
+
 _REDUCCION_ART_84_CASILLA: CasillaId = validated_casilla_id("0461", surface="_REDUCCION_ART_84_CASILLA")
 _ART_84_LEGAL_REFS = ("ley-35-2006:art-82", "ley-35-2006:art-83", "ley-35-2006:art-84")
-_ART_84_SOURCE_REFS_2024 = (
-    "aeat-dr-100-2024-dictionary",
-    "boe-modelo-100-2024-form",
-    "aeat-renta-2024-manual-parte1",
-)
-_ART_84_SOURCE_REFS_2025 = (
-    "aeat-dr-100-2025-dictionary",
-    "boe-modelo-100-2025-form",
-    "aeat-renta-2025-manual-parte1",
-)
 
-_REL_2024 = {
+_ZERO_RELATIONS = {
     "renta-modelo-111-retenciones-periodicas": Decimal("0"),
     "renta-modelo-123-retenciones-periodicas": Decimal("0"),
     "renta-modelo-193-retenciones-anuales": Decimal("0"),
@@ -58,15 +55,7 @@ _REL_2024 = {
     "renta-modelo-131-pagos-fraccionados": Decimal("0"),
 }
 
-_REL_2025 = {
-    "renta-modelo-111-retenciones-periodicas": Decimal("0"),
-    "renta-modelo-123-retenciones-periodicas": Decimal("0"),
-    "renta-modelo-193-retenciones-anuales": Decimal("0"),
-    "renta-modelo-130-pagos-fraccionados": Decimal("0"),
-    "renta-modelo-131-pagos-fraccionados": Decimal("0"),
-}
-
-_BASE_BINDINGS_2024 = {
+_PRIOR_EDITION_BINDINGS = {
     "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
     "renta-modelo-111-retenciones-periodicas": Decimal("0"),
     "renta-modelo-123-retenciones-periodicas": Decimal("0"),
@@ -85,16 +74,31 @@ _BASE_BINDINGS_2024 = {
     "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
 }
 
-_BASE_BINDINGS_2025 = {
+_REVIEWED_EDITION_BINDINGS = {
     "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
     "renta-modelo-184-atribucion-actividades-economicas": Decimal("0"),
     # matrimonio-sobrevenido bindings — 0 means marriage pre-dates filing year (full year)
     "renta-profile-marriage-full-year": Decimal("0"),
     "renta-profile-marriage-month-start": Decimal("0"),
     "renta-profile-marriage-month-end": Decimal("0"),
-    # BIN-pendiente fresh-filer baseline (2025 binding).
+    # BIN-pendiente fresh-filer baseline (reviewed-edition binding).
     "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
 }
+
+
+_EDITIONS = {
+    _PRIOR_EDITION: _PRIOR_EDITION_BINDINGS,
+    _REVIEWED_EDITION: _REVIEWED_EDITION_BINDINGS,
+}
+
+
+def _art_84_source_refs(filing_year: int) -> tuple[str, ...]:
+    """The edition's own record design, BOE form and AEAT manual ground the reducción."""
+    return (
+        f"aeat-dr-100-{filing_year}-dictionary",
+        f"boe-modelo-100-{filing_year}-form",
+        f"aeat-renta-{filing_year}-manual-parte1",
+    )
 
 
 def test_0461_casilla_grounding_uses_art84_not_base_liquidable_art50() -> None:
@@ -106,7 +110,7 @@ def test_0461_casilla_grounding_uses_art84_not_base_liquidable_art50() -> None:
     assert any("3.400 euros" in text for text in art_84.required_text)
     assert any("2.150 euros" in text for text in art_84.required_text)
 
-    for revision_id in ("2024", "2025"):
+    for revision_id in (str(year) for year in _EDITIONS):
         revision = modelo.revisions[revision_id]
         casilla = next(casilla for casilla in revision.casillas if casilla.id == _REDUCCION_ART_84_CASILLA)
         formula = next(
@@ -118,86 +122,56 @@ def test_0461_casilla_grounding_uses_art84_not_base_liquidable_art50() -> None:
         assert "ley-35-2006:art-84" in formula.legal_refs
 
 
-def _scenario_2024(
-    scenario_id: str,
+def _scenario(
+    filing_year: int,
+    scenario_label: str,
     declaration_type: Decimal,
     minor_children_in_unit: Decimal,
     expected_0461: Decimal,
 ) -> RegistryCalculationScenario:
     return RegistryCalculationScenario(
-        id=scenario_id,
+        id=f"m100-{filing_year}-0461-{scenario_label}",
         modelo="100",
-        revision="2024",
-        filing_year=2024,
+        revision=str(filing_year),
+        filing_year=filing_year,
         period="0A",
         inputs={},
         binding_values={
-            **_BASE_BINDINGS_2024,
+            **_EDITIONS[filing_year],
             "renta-profile-declaration-type": declaration_type,
             "renta-profile-family-minor-children-in-unit": minor_children_in_unit,
         },
         enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
-        relation_values=_REL_2024,
-        date_context={"filing_period": date(2024, 12, 31)},
+        relation_values=_ZERO_RELATIONS,
+        date_context={"filing_period": date(filing_year, 12, 31)},
         date_binding_values={"renta-profile-taxpayer-birth-date": date(1980, 6, 15)},
         expected_outputs=(
             RegistryScenarioExpectedOutput(
                 target_casilla_id=_REDUCCION_ART_84_CASILLA,
                 value=expected_0461,
                 legal_refs=_ART_84_LEGAL_REFS,
-                source_refs=_ART_84_SOURCE_REFS_2024,
-            ),
-        ),
-    )
-
-
-def _scenario_2025(
-    scenario_id: str,
-    declaration_type: Decimal,
-    minor_children_in_unit: Decimal,
-    expected_0461: Decimal,
-) -> RegistryCalculationScenario:
-    return RegistryCalculationScenario(
-        id=scenario_id,
-        modelo="100",
-        revision="2025",
-        filing_year=2025,
-        period="0A",
-        inputs={},
-        binding_values={
-            **_BASE_BINDINGS_2025,
-            "renta-profile-declaration-type": declaration_type,
-            "renta-profile-family-minor-children-in-unit": minor_children_in_unit,
-        },
-        enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
-        relation_values=_REL_2025,
-        date_context={"filing_period": date(2025, 12, 31)},
-        date_binding_values={"renta-profile-taxpayer-birth-date": date(1980, 6, 15)},
-        expected_outputs=(
-            RegistryScenarioExpectedOutput(
-                target_casilla_id=_REDUCCION_ART_84_CASILLA,
-                value=expected_0461,
-                legal_refs=_ART_84_LEGAL_REFS,
-                source_refs=_ART_84_SOURCE_REFS_2025,
+                source_refs=_art_84_source_refs(filing_year),
             ),
         ),
     )
 
 
 # ---------------------------------------------------------------------------
-# 2024 oracle tests
+# Oracle tests, run against both authored editions
 # ---------------------------------------------------------------------------
 
 
-def test_0461_conjunta_tipo_1_matrimonio_yields_3400_2024() -> None:
+@pytest.mark.parametrize("filing_year", tuple(_EDITIONS))
+def test_0461_conjunta_tipo_1_matrimonio_yields_3400(filing_year: int) -> None:
     """declaration_type=2 (conjunta) + minor_children_in_unit=0 (tipo-1 matrimonio) → 0461 = €3,400.
 
     Oracle: Art. 84.2.1 LIRPF — unidad familiar tipo 1 (matrimonio) electing
     tributación conjunta receives reducción €3,400 in base imponible general.
-    Source: AEAT Renta 2024 Manual, section Tributación conjunta, cuadro.
+    Source: the edition's AEAT Renta Manual, section Tributación conjunta, cuadro.
     """
-    scenario = _scenario_2024(
-        "m100-2024-0461-conjunta-tipo-1-3400",
+    scenario = _scenario(
+        filing_year,
+        "conjunta-tipo-1-3400",
         declaration_type=Decimal("2"),
         minor_children_in_unit=Decimal("0"),
         expected_0461=Decimal("3400.00"),
@@ -206,14 +180,16 @@ def test_0461_conjunta_tipo_1_matrimonio_yields_3400_2024() -> None:
     assert_registry_scenario_matches(report)
 
 
-def test_0461_individual_yields_0_2024() -> None:
+@pytest.mark.parametrize("filing_year", tuple(_EDITIONS))
+def test_0461_individual_yields_0(filing_year: int) -> None:
     """declaration_type=1 (individual) → 0461 = €0.
 
     Oracle: Art. 84 LIRPF applies only to tributación conjunta (declaration_type=2).
     Individual declarations receive no reducción por unidad familiar.
     """
-    scenario = _scenario_2024(
-        "m100-2024-0461-individual-zero",
+    scenario = _scenario(
+        filing_year,
+        "individual-zero",
         declaration_type=Decimal("1"),
         minor_children_in_unit=Decimal("0"),
         expected_0461=Decimal("0.00"),
@@ -222,16 +198,18 @@ def test_0461_individual_yields_0_2024() -> None:
     assert_registry_scenario_matches(report)
 
 
-def test_0461_conjunta_tipo_2_monoparental_yields_2150_2024() -> None:
+@pytest.mark.parametrize("filing_year", tuple(_EDITIONS))
+def test_0461_conjunta_tipo_2_monoparental_yields_2150(filing_year: int) -> None:
     """declaration_type=2 (conjunta) + minor_children_in_unit=1 (tipo-2 monoparental) → 0461 = €2,150.
 
     Oracle: Art. 84.2.2° LIRPF — unidad familiar tipo 2 (monoparental, soltero/separado
     con hijos a cargo) electing tributación conjunta receives reducción €2,150 in the
     base imponible general via casilla 0461.
-    Source: AEAT Renta 2024 Manual, section Tributación conjunta, cuadro reducción.
+    Source: the edition's AEAT Renta Manual, section Tributación conjunta, cuadro reducción.
     """
-    scenario = _scenario_2024(
-        "m100-2024-0461-conjunta-tipo-2-monoparental-2150",
+    scenario = _scenario(
+        filing_year,
+        "conjunta-tipo-2-monoparental-2150",
         declaration_type=Decimal("2"),
         minor_children_in_unit=Decimal("1"),
         expected_0461=Decimal("2150.00"),
@@ -240,95 +218,23 @@ def test_0461_conjunta_tipo_2_monoparental_yields_2150_2024() -> None:
     assert_registry_scenario_matches(report)
 
 
-def test_0461_anti_tautology_declaration_type_change_2024() -> None:
+@pytest.mark.parametrize("filing_year", tuple(_EDITIONS))
+def test_0461_anti_tautology_declaration_type_change(filing_year: int) -> None:
     """Changing declaration_type from 2 to 1 must flip 0461 from €3,400 to €0.
 
     Anti-tautology: a formula that returns a constant cannot pass both this
-    and test_0461_conjunta_tipo_1_matrimonio_yields_3400_2024 simultaneously.
+    and test_0461_conjunta_tipo_1_matrimonio_yields_3400 simultaneously.
     """
-    conjunta_scenario = _scenario_2024(
-        "m100-2024-0461-anti-tautology-conjunta",
+    conjunta_scenario = _scenario(
+        filing_year,
+        "anti-tautology-conjunta",
         declaration_type=Decimal("2"),
         minor_children_in_unit=Decimal("0"),
         expected_0461=Decimal("3400.00"),
     )
-    individual_scenario = _scenario_2024(
-        "m100-2024-0461-anti-tautology-individual",
-        declaration_type=Decimal("1"),
-        minor_children_in_unit=Decimal("0"),
-        expected_0461=Decimal("0.00"),
-    )
-    for scenario in (conjunta_scenario, individual_scenario):
-        report = run_registry_calculation_scenario(scenario)
-        assert_registry_scenario_matches(report)
-
-    conjunta_report = run_registry_calculation_scenario(conjunta_scenario)
-    individual_report = run_registry_calculation_scenario(individual_scenario)
-    assert (
-        conjunta_report.calculation.values[_REDUCCION_ART_84_CASILLA]
-        != individual_report.calculation.values[_REDUCCION_ART_84_CASILLA]
-    ), "0461 must differ between declaration_type=2 and declaration_type=1"
-
-
-# ---------------------------------------------------------------------------
-# 2025 oracle tests
-# ---------------------------------------------------------------------------
-
-
-def test_0461_conjunta_tipo_1_matrimonio_yields_3400_2025() -> None:
-    """declaration_type=2 (conjunta) + minor_children_in_unit=0 (tipo-1 matrimonio) → 0461 = €3,400.
-
-    Oracle: Art. 84.2.1 LIRPF — unidad familiar tipo 1 (matrimonio) electing
-    tributación conjunta receives reducción €3,400 in base imponible general.
-    Source: AEAT Renta 2025 Manual, section Tributación conjunta, cuadro.
-    """
-    scenario = _scenario_2025(
-        "m100-2025-0461-conjunta-tipo-1-3400",
-        declaration_type=Decimal("2"),
-        minor_children_in_unit=Decimal("0"),
-        expected_0461=Decimal("3400.00"),
-    )
-    report = run_registry_calculation_scenario(scenario)
-    assert_registry_scenario_matches(report)
-
-
-def test_0461_individual_yields_0_2025() -> None:
-    """declaration_type=1 (individual) → 0461 = €0 in 2025."""
-    scenario = _scenario_2025(
-        "m100-2025-0461-individual-zero",
-        declaration_type=Decimal("1"),
-        minor_children_in_unit=Decimal("0"),
-        expected_0461=Decimal("0.00"),
-    )
-    report = run_registry_calculation_scenario(scenario)
-    assert_registry_scenario_matches(report)
-
-
-def test_0461_conjunta_tipo_2_monoparental_yields_2150_2025() -> None:
-    """declaration_type=2 + minor_children_in_unit=1 (tipo-2 monoparental) → 0461 = €2,150 in 2025.
-
-    Oracle: Art. 84.2.2° LIRPF — same €2,150 reducción applies to the 2025 revision.
-    """
-    scenario = _scenario_2025(
-        "m100-2025-0461-conjunta-tipo-2-monoparental-2150",
-        declaration_type=Decimal("2"),
-        minor_children_in_unit=Decimal("1"),
-        expected_0461=Decimal("2150.00"),
-    )
-    report = run_registry_calculation_scenario(scenario)
-    assert_registry_scenario_matches(report)
-
-
-def test_0461_anti_tautology_declaration_type_change_2025() -> None:
-    """Changing declaration_type from 2 to 1 must flip 0461 from €3,400 to €0 in 2025."""
-    conjunta_scenario = _scenario_2025(
-        "m100-2025-0461-anti-tautology-conjunta",
-        declaration_type=Decimal("2"),
-        minor_children_in_unit=Decimal("0"),
-        expected_0461=Decimal("3400.00"),
-    )
-    individual_scenario = _scenario_2025(
-        "m100-2025-0461-anti-tautology-individual",
+    individual_scenario = _scenario(
+        filing_year,
+        "anti-tautology-individual",
         declaration_type=Decimal("1"),
         minor_children_in_unit=Decimal("0"),
         expected_0461=Decimal("0.00"),

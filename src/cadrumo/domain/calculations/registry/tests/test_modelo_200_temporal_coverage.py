@@ -58,6 +58,9 @@ from .published_authority import published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+# The last exercise before Ley 7/2024 replaced the LIS art. 29 flat 23 % pyme rate
+# with the DT 44ª tranche scale; its window is the historical back-fill under test.
+_PRE_TRANCHE_PYME_EXERCISE = 2024
 _DISPATCH_BINDING = "modelo-200-profile-legal-entity-form"
 _M200_RESULTADO_CONTABLE_CASILLA: CasillaId = validated_casilla_id("00501", surface="_M200_RESULTADO_CONTABLE_CASILLA")
 _M200_DEDUCCION_DOBLE_IMPOSICION_CASILLA: CasillaId = validated_casilla_id(
@@ -95,8 +98,8 @@ def _snapshot_2024():
 # ---------------------------------------------------------------------------
 
 
-def test_pyme_sl_2024_cuota_resolves_without_bracket_no_window() -> None:
-    """A 2024 IS filing for an SL (pyme/micro-empresa profile) must not raise.
+def test_pyme_sl_pre_tranche_exercise_cuota_resolves_without_bracket_no_window() -> None:
+    """A pre-tranche IS filing for an SL (pyme/micro-empresa profile) must not raise.
 
     Before the contract backfill the ``is.modelo-200.tipo-gravamen-pyme``
     bracket table had no window for dates in 2024, so
@@ -130,7 +133,7 @@ def test_pyme_sl_2024_cuota_resolves_without_bracket_no_window() -> None:
             "modelo-200-pagos-fraccionados-anuales": Decimal("0"),
             "modelo-200-pagos-fraccionados-anuales-40-2": Decimal("0"),
         },
-        date_context={"filing_period": date(2024, 12, 31)},
+        date_context={"filing_period": date(_PRE_TRANCHE_PYME_EXERCISE, 12, 31)},
     )
     # The cuota íntegra for a micro-empresa SL at the 2024 flat pyme rate
     # (23 %, LIS Art. 29 pre-2025 regime) on a 100.000 EUR base must be
@@ -142,8 +145,8 @@ def test_pyme_sl_2024_cuota_resolves_without_bracket_no_window() -> None:
     )
 
 
-def test_pyme_bracket_2024_window_is_present_in_registry() -> None:
-    """The 2024 pyme bracket window exists at 23 % in the registry.
+def test_pyme_bracket_pre_tranche_window_is_present_in_registry() -> None:
+    """The pre-tranche pyme bracket window exists at 23 % in the registry.
 
     After the contract backfill ``is.modelo-200.tipo-gravamen-pyme`` must carry a
     window covering 2024-01-01 to 2024-12-31 with ``marginal_rate = 0.23``.
@@ -152,11 +155,13 @@ def test_pyme_bracket_2024_window_is_present_in_registry() -> None:
     """
     parameters = {p.id: p for p in _snapshot_2024().revision.parameters}
     parameter = parameters["is.modelo-200.tipo-gravamen-pyme"]
-    brackets_2024 = [b for b in parameter.brackets if b.valid_from == date(2024, 1, 1)]
-    assert brackets_2024, "is.modelo-200.tipo-gravamen-pyme must have at least one bracket for 2024-01-01"
+    pre_tranche_brackets = [b for b in parameter.brackets if b.valid_from == date(_PRE_TRANCHE_PYME_EXERCISE, 1, 1)]
+    assert pre_tranche_brackets, (
+        f"is.modelo-200.tipo-gravamen-pyme must have at least one bracket for {_PRE_TRANCHE_PYME_EXERCISE}-01-01"
+    )
     # The 2024 flat rate was 23 % (pre-tranche regime).
-    assert any(b.marginal_rate == Decimal("0.23") for b in brackets_2024), (
-        "2024 bracket must carry the LIS Art. 29 pre-2025 pyme flat rate of 23 %"
+    assert any(b.marginal_rate == Decimal("0.23") for b in pre_tranche_brackets), (
+        f"{_PRE_TRANCHE_PYME_EXERCISE} bracket must carry the LIS Art. 29 pre-2025 pyme flat rate of 23 %"
     )
 
 
