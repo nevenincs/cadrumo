@@ -145,7 +145,7 @@ class _Seeder:
         listed = self._result(("app", "ledger", "list"), stage="lookup.transactions")
         rows = listed.get("rows")
         matches = [
-            row["transaction_id"]
+            str(row["transaction_id"])
             for row in (rows if isinstance(rows, list) else ())
             if isinstance(row, dict) and row.get("description") == description
         ]
@@ -158,7 +158,7 @@ class _Seeder:
         listed = self._result(("app", "ledger", "invoice", "list", "--kind", kind), stage="lookup.invoices")
         rows = listed.get("rows")
         matches = [
-            row["invoice_id"]
+            str(row["invoice_id"])
             for row in (rows if isinstance(rows, list) else ())
             if isinstance(row, dict) and row.get("invoice_number") == number
         ]
@@ -252,6 +252,16 @@ class _Seeder:
                     "BUSINESS",
                     "--category-id",
                     "cuotas_autonomos_ss",
+                    # A Social Security quota is outside the IVA taxable event (LIVA art. 7):
+                    # its base is declared with a zero tipo and cuota, never inferred.
+                    "--taxable-base",
+                    "300.00",
+                    "--iva-rate",
+                    "0",
+                    "--iva-amount",
+                    "0.00",
+                    "--iva-category",
+                    "operacion_no_sujeta",
                     "--source-jurisdiction",
                     "ES",
                     "--idempotency-key",
@@ -493,6 +503,7 @@ class _Seeder:
                         "BUSINESS",
                         "--deduction-kind",
                         "domestic_investment" if _is_investment_good(item) else "domestic_current",
+                        *_investment_asset_args(item),
                         "--counterparty-country",
                         "ES",
                         "--reaffirm",
@@ -876,6 +887,13 @@ class _Seeder:
 
 def _is_investment_good(item: ReceivedInvoice) -> bool:
     return any(asset.asset_id == item.asset_id and asset.is_iva_investment_good for asset in ASSETS)
+
+
+def _investment_asset_args(item: ReceivedInvoice) -> tuple[str, ...]:
+    """Name the bienes-inversion record an investment deduction must reciprocate."""
+    if item.asset_id is None or not _is_investment_good(item):
+        return ()
+    return ("--investment-asset-id", item.asset_id)
 
 
 def _binding_ids(document: object) -> Iterator[str]:
