@@ -1,4 +1,4 @@
-"""Grounded 2025 M100 inventory row-template registry data."""
+"""Grounded M100 inventory row-template registry data."""
 
 from __future__ import annotations
 
@@ -6,13 +6,19 @@ import pytest
 
 from .....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ..inventory_bindings import InventoryProvider
-from .published_authority import published_snapshot
+from .published_authority import PublishedGovernedFactSource, published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_SUPPORT = PublishedGovernedFactSource().supported_filing_years()
+# The newest authored Modelo 100 edition sits one below the horizon, which carries
+# its inventory templates forward; both exercises must load them exactly.
+_REVIEWED_EDITION = _SUPPORT.horizon - 1
 
-def test_m100_2025_loads_exact_grounded_inventory_operation_templates() -> None:
-    revision = published_snapshot("100", filing_year=2025, period="0A").revision
+
+@pytest.mark.parametrize("filing_year", tuple(year for year in _SUPPORT.years if year >= _REVIEWED_EDITION))
+def test_m100_loads_exact_grounded_inventory_operation_templates(filing_year: int) -> None:
+    revision = published_snapshot("100", filing_year=filing_year, period="0A").revision
     bindings = tuple(binding for binding in revision.bindings if binding.source is BindingSourceKind.INVENTORY)
 
     assert {binding.id for binding in bindings} == {
@@ -33,7 +39,7 @@ def test_m100_2025_loads_exact_grounded_inventory_operation_templates() -> None:
         binding.provider.target_casilla_id for binding in bindings if isinstance(binding.provider, InventoryProvider)
     } == {"0177", "0181", "0182"}
     assert all(binding.legal_refs == ("ley-35-2006:art-30",) for binding in bindings)
-    assert all(binding.source_refs == ("aeat-renta-2025-manual-parte1",) for binding in bindings)
+    assert all(binding.source_refs == (f"aeat-renta-{_REVIEWED_EDITION}-manual-parte1",) for binding in bindings)
 
 
 def test_inventory_templates_carry_no_taxpayer_activity_identity_or_legacy_shape() -> None:

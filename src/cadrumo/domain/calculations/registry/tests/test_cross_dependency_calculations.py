@@ -72,7 +72,7 @@ from ._cross_dependency_calculation_support import (
     _grounded_observations,
     _observations_from_requirements,
 )
-from .published_authority import published_supported_filing_years
+from .published_authority import PublishedGovernedFactSource, published_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
@@ -493,7 +493,7 @@ _ANNUAL_SUMMARY_RELATION_CASES = (
         frozenset({"modelo-193-123-base-anual", "modelo-193-123-retenciones-anual"}),
         "modelo-193-123-base-anual",
         "modelo-193-123-retenciones-anual",
-        id="modelo-193-2024",
+        id="modelo-193-quarterly-aggregate-edition",
     ),
 )
 
@@ -920,10 +920,16 @@ def test_modelo_100_payment_calculation_consumes_real_modelo_130_quarterly_regis
     assert "renta-modelo-130-pagos-fraccionados" in entries[_M100_PAGOS_FRACCIONADOS_INGRESADOS_CASILLA].operand_refs
 
 
-def test_modelo_100_2024_m131_pagos_fraccionados_cumulative_wires_to_casilla_0604(
+# The Modelo 100 edition two below the projecting horizon: the relation set the
+# observation helper below enumerates is that edition's; the newer edition adds the
+# attribution and annual-summary relations.
+_RELATION_SET_EDITION = PublishedGovernedFactSource().supported_filing_years().horizon - 2
+
+
+def test_modelo_100_m131_pagos_fraccionados_cumulative_wires_to_casilla_0604(
     registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
 ) -> None:
-    """M100 2024: four quarterly M131 filings of €450 each aggregate to €1800 via relation resolution.
+    """M100: four quarterly M131 filings of €450 each aggregate to €1800 via relation resolution.
 
     Verifies the binding/relation wiring from M131 quarterly filings (casilla 15) into the
     M100 pagos-fraccionados-ingresados aggregation targeting casilla 0604.  Exercises the
@@ -934,7 +940,7 @@ def test_modelo_100_2024_m131_pagos_fraccionados_cumulative_wires_to_casilla_060
     summation error would produce a wrong total.  M131 uses 450 per quarter so the expected
     M131 aggregate is 1800 and M130 aggregate is 1000.
     """
-    filing_year = 2024
+    filing_year = _RELATION_SET_EDITION
     snapshot = registry_snapshot("100", filing_year, "0A")
     requirements = relation_source_requirements(snapshot.revision, filing_year=filing_year, period="0A")
 
@@ -987,7 +993,7 @@ def test_modelo_100_2024_m131_pagos_fraccionados_cumulative_wires_to_casilla_060
     }
 
 
-def test_modelo_100_2024_m131_pagos_fraccionados_anti_tautology_proportional_change(
+def test_modelo_100_m131_pagos_fraccionados_anti_tautology_proportional_change(
     registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
 ) -> None:
     """Changing M131 quarterly amount from 300 to 450 causes the resolved relation value to increase by 600.
@@ -995,7 +1001,7 @@ def test_modelo_100_2024_m131_pagos_fraccionados_anti_tautology_proportional_cha
     This is the anti-tautology proof: the resolution is not a copy of the input but a real
     sum of four quarterly filings.  Any arithmetic error in the aggregation would break this.
     """
-    filing_year = 2024
+    filing_year = _RELATION_SET_EDITION
     snapshot = registry_snapshot("100", filing_year, "0A")
     requirements = relation_source_requirements(snapshot.revision, filing_year=filing_year, period="0A")
 
