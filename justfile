@@ -43,45 +43,32 @@ default:
 
 # ── Bootstrap / Install ──────────────────────────────────────────────────────
 
-# Complete new-worktree provisioning. The first command owns the locked Python
-# sync and default Vaultspec enrollment. RAG then provisions its managed models,
-# Qdrant binary, and MCP integration. Authority publication runs last so the
-# installed application consumes a generation compiled from the final tree.
-[doc('Fully initialize a new worktree: Python, Vaultspec, RAG, and runtime authority.')]
+# Everything a developer needs in a new worktree: `setup`, then the RAG service
+# with its models and MCP integration, then the runtime authority. The editable
+# build inside `uv sync` usually publishes the authority already, so publication
+# runs only when the published generation is stale for this tree.
+[doc('Initialize a new worktree for development: setup, RAG, and the runtime authority.')]
 [group('setup')]
-init:
-    uv run --isolated --no-project --python 3.13.11 -- python -m dev.init all
+init: setup
     uv run --no-sync vaultspec-rag install --upgrade --yes
-    uv run --no-sync python -m dev.registry.pipeline publish-authority
+    uv run --no-sync python -m dev.registry.pipeline publish-authority --if-stale
 
-# Canonical checkout setup. This is the minimal convergence facade: it creates
-# the pinned Python environment, installs repository tooling, and materializes
-# local environment configuration. Workstation tools and browser binaries are
-# optional capabilities and therefore have separate commands below.
-[doc('Converge a checkout with Python, repository tooling, and local environment configuration.')]
+# The locked Python environment, local configuration, and repository tooling.
+# CI and the devcontainer run this; each step is idempotent, so re-running it
+# converges an existing checkout. Browser and workstation tools are optional
+# and have their own recipes below.
+[doc('Sync the locked Python environment, env/.env, and repository tooling.')]
 [group('setup')]
 setup:
-    uv run --isolated --no-project --python 3.13.11 -- python -m dev.init all
-
-[doc('Synchronize the pinned Python environment from uv.lock.')]
-[group('setup')]
-setup-python:
-    uv run --isolated --no-project --python 3.13.11 -- python -m dev.init python
-
-[doc('Install repository tooling, including pinned actionlint, after the Python environment is available.')]
-[group('setup')]
-setup-repository-tools:
-    uv run --isolated --no-project --python 3.13.11 -- python -m dev.init tools
+    uv sync --locked --extra workbook-windows --group dev
+    uv run --no-sync python -m dev.env setup
+    uv run --no-sync vaultspec-core install --upgrade
+    uv run --no-sync python -m dev.actionlint --install
 
 [doc('Install the pinned Hunspell dictionaries used by check-locales.')]
 [group('setup')]
 setup-locale-spelling:
     npm ci --ignore-scripts --no-audit --no-fund
-
-[doc('Check checkout setup state without writing a report or changing files.')]
-[group('setup')]
-setup-check:
-    uv run --isolated --no-project --python 3.13.11 -- python -m dev.init check
 
 # Optional workstation CLI prerequisites for non-Python audit recipes. This is
 # deliberately outside the minimal checkout setup.
@@ -92,8 +79,9 @@ setup-workstation-tools:
 
 # ── Environment Setup and Doctor ─────────────────────────────────────────────
 
-# Copy env/.env.example → env/.env if the latter is missing. No-op otherwise.
-[doc('Copy env/.env.example to env/.env if the latter is missing; no-op otherwise.')]
+# Create env/.env from env/.env.example when missing, then port the values set
+# in the main worktree's env/.env. Values this worktree sets are never replaced.
+[doc('Create env/.env when missing and port the values set in the main worktree; never prints a value.')]
 [group('setup')]
 setup-env:
     uv run --no-sync python -m dev.env setup
@@ -391,7 +379,7 @@ check-api-stubs:
     @uv run --no-sync python -m dev.docs.apidocs scaffold --check
 
 # Verify workflow syntax and shell contracts without changing workflows. If
-# actionlint is unavailable, the check reports `just setup-repository-tools`.
+# actionlint is unavailable, `just setup` installs the pinned version.
 [doc('Verify workflow syntax and shell contracts without changing workflows.')]
 [group('check')]
 check-workflows:

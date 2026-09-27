@@ -134,6 +134,7 @@ dependencies = [
 [project.scripts]
 aeat = "cadrumo.entrypoints.cli.bootstrap:main"
 cadrumo-mcp = "cadrumo_harness.mcp.main:main"
+cadrumo-runtime = "cadrumo.entrypoints.runtime.bootstrap:main"
 
 [project.urls]
 Homepage = "https://github.com/nevenincs/cadrumo"
@@ -480,7 +481,7 @@ dev = [
   # `src/cadrumo/` runtime path imports it. It lives here, not in [project.dependencies],
   # so production installs stay lean — a PEP 735 group is a valid direct-dep location
   # for the `[tool.uv.sources]` cu130 pin per vaultspec-rag's torch_config, and
-  # `just setup-install` installs the dev group so contributors still get GPU torch.
+  # `just setup` installs the dev group so contributors still get GPU torch.
   "torch>=2.4",
   # Import-linter for layered-architecture boundary enforcement.
   # Contract definition lives in `.importlinter` at repo root; activated by
@@ -758,15 +759,6 @@ convention = "google"
 # repository-owned paths is not an injection surface.
 # Developer quality/docs/audit runners invoke fixed tool argv or explicit
 # wrapper argv; Ruff's subprocess heuristic cannot infer those local contracts.
-# `just bootstrap` runs every bootstrap step through a fixed argv declared as
-# data in `dev/init/plan.py` and resolved through `shutil.which`. Nothing
-# reaches it from a user, an environment variable, or a file: the argv is
-# literal in the plan, and the resolution exists only so Windows `.cmd`
-# shims spawn without a shell. There is no injection surface to check for.
-"dev/init/process.py" = ["S603"]
-"dev/init/venv.py" = ["S603"]
-"dev/init/hooks.py" = ["S603"]
-"dev/init/probe.py" = ["S603"]
 "dev/audit/complexity.py" = ["S603"]
 "dev/audit/report.py" = ["S603"]
 "dev/audit/semantic.py" = ["S603"]
@@ -869,8 +861,6 @@ convention = "google"
 "dev/quality/types.py" = ["S603", "S607"]
 # The environment provisioning drivers: every argv is a literal vector built in
 # the module, never from user input, and none uses a shell.
-"dev/env/_install.py" = ["S603"]
-"dev/env/_venv.py" = ["S603", "S607"]
 "dev/env/_workstation.py" = ["S603", "S607"]
 "dev/test_runs/lanes.py" = ["S603", "S607"]
 "dev/release/preview.py" = ["S603", "S607"]
