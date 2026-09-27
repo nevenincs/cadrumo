@@ -1,4 +1,4 @@
-"""M100/2025 retenciones-credit casillas fold in periodic withholding filings (LIVE path).
+"""Newest M100 edition: retenciones-credit casillas fold in periodic withholding filings (LIVE path).
 
 The annual IRPF declaration (Modelo 100) credits the withholdings already
 practised during the year against the cuota. Two of those credit casillas are
@@ -16,11 +16,11 @@ output through the enrolled :class:`RelationPrefillSourceResolver`:
 
 This module proves both folds work end-to-end on the LIVE operator calculate
 path (:func:`calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`)
-for the **2025** revision: four filed M111 quarters fold into ``0596`` and four
-filed M123 quarters fold into ``0597``. This is the 2025 port of the 2024
-proof in ``test_modelo_100_retenciones_credit_fold_in_live``.
+for the **newest authored** revision: four filed M111 quarters fold into ``0596``
+and four filed M123 quarters fold into ``0597``. This carries the proof in
+``test_modelo_100_retenciones_credit_fold_in_live`` onto the newest edition.
 
-The M100/2025 ``0604`` ("Pagos fraccionados ingresados") casilla is *computed*
+The newest edition's ``0604`` ("Pagos fraccionados ingresados") casilla is *computed*
 by a formula that references the M130 and M131 pagos-fraccionados relations
 DIRECTLY, so the engine raises ``RegistryValidationError`` for any of those
 relations it cannot resolve. The full-snapshot live calculate therefore also
@@ -43,7 +43,8 @@ registry IRPF formula — it proves the enrolled relation resolver wires the fou
 prior periodic filings through to each annual credit casilla.
 
 Legal grounding: LIRPF art. 99 + RIRPF art. 108 (withholding source filings) +
-Orden HAC/277/2026 art. 3 (M100/2025 form approval, BOE-A-2026-7041).
+the Orden HAC that approves the edition's form (for the 2025 exercise, Orden
+HAC/277/2026 art. 3, BOE-A-2026-7041).
 """
 
 from __future__ import annotations
@@ -90,6 +91,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.ids import BindingId
+from ....domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
     revision_id_for_observation,
@@ -112,9 +114,11 @@ def bucket_id() -> str:
     return _BUCKET_ID
 
 
-_T0 = datetime(2026, 6, 10, 10, 0, tzinfo=UTC)
-_T1 = datetime(2026, 6, 10, 11, 0, tzinfo=UTC)
-_YEAR = 2025
+# The newest Modelo 100 edition the registry authors, calculated during the Renta
+# campaign that follows it.
+_YEAR = newest_authored_edition("100")
+_T0 = datetime(_YEAR + 1, 6, 10, 10, 0, tzinfo=UTC)
+_T1 = datetime(_YEAR + 1, 6, 10, 11, 0, tzinfo=UTC)
 _ANNUAL_PERIOD = "0A"
 _QUARTERS: tuple[str, ...] = ("1T", "2T", "3T", "4T")
 _RELATION_PREFILL_SOURCE = "relation_prefill"
@@ -136,7 +140,7 @@ _M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: CasillaId = validated_casilla_id
 )
 
 # Four DISTINCT non-equal quarterly M111 c28 retenciones-rendimientos-del-trabajo
-# values for 2025. Distinctness makes the annual fold unmistakable: an
+# values for the exercise. Distinctness makes the annual fold unmistakable: an
 # off-by-one-quarter or coincidental sum cannot satisfy the assertion.
 _M111_C28_BY_PERIOD: dict[str, Decimal] = {
     "1T": Decimal("155.00"),
@@ -217,7 +221,7 @@ def _seed_quarterly_filing(
 def _seed_pagos_quarters(*, obs_repo: CalculationObservationRepository) -> None:
     """Seed the M130 (four distinct quarters) and M131 (true zero) pagos legs.
 
-    The M100/2025 0604 formula references both pagos relations directly; the
+    The annual 0604 formula references both pagos relations directly; the
     engine raises for any it cannot resolve. Seeding them keeps the
     full-snapshot calculate from raising before the retenciones casillas
     0596 / 0597 resolve.  These values are not asserted by this module.
@@ -273,9 +277,9 @@ def _seed_prior_year_m100_zero_carry(secure_objects: SecureObjectRepository) -> 
 
 
 def _seed_taxpayer_unit_profile(secure_objects: SecureObjectRepository) -> None:
-    """Seed a single-taxpayer ``UserProfileRecord`` covering M100/2025 profile bindings.
+    """Seed a single-taxpayer ``UserProfileRecord`` covering the annual M100 profile bindings.
 
-    The M100/2025 annual revision declares ``source = "profile"`` bindings (the
+    The annual M100 revision declares ``source = "profile"`` bindings (the
     taxpayer birth date, CCAA, declaration type, sex, marital status, marriage
     indicators, and the family/descendants counts). Without them the engine
     refuses the bound casillas that consume them before it ever reaches the
@@ -302,12 +306,12 @@ def _seed_taxpayer_unit_profile(secure_objects: SecureObjectRepository) -> None:
             UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
             UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
             UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-            UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+            UserProfileFact(path="censo.activity_start_date", value=date(_YEAR - 5, 1, 1)),
             # Modelo 111 refuses a defaulted colegio-concertado declaration: the fichero
             # carries the row as filer data, so it must be stated rather than assumed.
             # False is the truthful value for this natural-person filer.
             UserProfileFact(path="withholding.colegio_concertado", value=False),
-            UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
+            UserProfileFact(path="renta_taxpayer.birth_date", value=date(_YEAR - 45, 3, 15)),
             UserProfileFact(path="renta_taxpayer.sex", value="H"),
             UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
             UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),
@@ -325,9 +329,9 @@ def _seed_taxpayer_unit_profile(secure_objects: SecureObjectRepository) -> None:
 
 
 def _non_relation_zero_bindings() -> dict[BindingId, Decimal]:
-    """Zero-default M100/2025 bindings the caller must supply (manual_input and previous_filing).
+    """Zero-default annual M100 bindings the caller must supply (manual_input and previous_filing).
 
-    The annual M100/2025 revision binds casillas via several source kinds.
+    The annual M100 revision binds casillas via several source kinds.
     ``profile`` and ``relation_prefill`` sources are resolved by the live mesh
     automatically and MUST NOT appear in ``binding_values`` (the lock rejects
     them, and ``relation_prefill`` must be left unset so the enrolled resolver
@@ -367,7 +371,7 @@ def _non_relation_zero_bindings() -> dict[BindingId, Decimal]:
 def _calculate_m100_annual(
     secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> BucketAggregationCalculationResult:
-    """Run the live M100/2025/0A calculate over the seeded bucket.
+    """Run the live annual M100 0A calculate over the seeded bucket.
 
     Seeds the taxpayer profile and zero-defaults non-profile/non-relation
     bindings so the engine reaches the retenciones casillas; the
@@ -408,20 +412,20 @@ def _calculate_m100_annual(
         )
 
 
-def test_m100_2025_retenciones_credits_fold_in_periodic_filings_on_live_calculate(
+def test_m100_newest_edition_retenciones_credits_fold_in_periodic_filings_on_live_calculate(
     secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
-    """E2E/2025: four filed M111 quarters fold into 0596 and four M123 quarters into 0597.
+    """E2E: four filed M111 quarters fold into 0596 and four M123 quarters into 0597.
 
-    With four M111/2025 quarters recorded as filed observations (each carrying a
-    DISTINCT c28) and four M123/2025 quarters (each carrying a DISTINCT c09), a
-    live calculate of the M100/2025 annual draws both retenciones-credit relations
+    With four M111 quarters recorded as filed observations (each carrying a
+    DISTINCT c28) and four M123 quarters (each carrying a DISTINCT c09), a
+    live calculate of the annual M100 draws both retenciones-credit relations
     through the enrolled ``RelationPrefillSourceResolver``: casilla 0596 equals the
     summed four M111 c28 quarters and casilla 0597 equals the summed four M123 c09
     quarters. The M130/M131 pagos legs are seeded only so the 0604 formula resolves
     and the calculate reaches the retenciones casillas.
 
-    Legal grounding: LIRPF art. 99 + RIRPF art. 108 + Orden HAC/277/2026 art. 3.
+    Legal grounding: LIRPF art. 99 + RIRPF art. 108 + the edition's form-approval Orden.
     """
     obs_repo = CalculationObservationRepository()
     expected_trabajo = _assert_distinct_positive(_M111_C28_BY_PERIOD)
@@ -453,11 +457,11 @@ def test_m100_2025_retenciones_credits_fold_in_periodic_filings_on_live_calculat
     casilla_0596 = Decimal(values[_M100_TRABAJO_CASILLA])
     casilla_0597 = Decimal(values[_M100_CAPITAL_MOBILIARIO_CASILLA])
     assert casilla_0596 == expected_trabajo, (
-        f"M100/2025 {_M100_TRABAJO_CASILLA} must fold the four M111/2025 c28 quarters "
+        f"M100/{_YEAR} {_M100_TRABAJO_CASILLA} must fold the four M111/{_YEAR} c28 quarters "
         f"(sum {expected_trabajo}); got {casilla_0596}"
     )
     assert casilla_0597 == expected_capital_mobiliario, (
-        f"M100/2025 {_M100_CAPITAL_MOBILIARIO_CASILLA} must fold the four M123/2025 c09 quarters "
+        f"M100/{_YEAR} {_M100_CAPITAL_MOBILIARIO_CASILLA} must fold the four M123/{_YEAR} c09 quarters "
         f"(sum {expected_capital_mobiliario}); got {casilla_0597}"
     )
 
@@ -514,7 +518,7 @@ def _calculate_m111_administrador_quarter(
                 scheme=RetencionScheme("rendimientos_trabajo_administrador"),
                 taxable_base=taxable_base,
                 retencion_amount=retencion_amount,
-                accrued_on="2025-03-15",
+                accrued_on=f"{_YEAR}-03-15",
             ),
         ],
         source_kind=AggregationCaptureKind.AGGREGATE_PULL,
@@ -556,10 +560,10 @@ def _calculate_m111_administrador_quarter(
     return Decimal(values["28"])
 
 
-def test_m100_2025_director_administrador_retencion_credits_into_trabajo_casilla(
+def test_m100_newest_edition_director_administrador_retencion_credits_into_trabajo_casilla(
     secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
-    """E2E/2025: a director's suffered administrador retención credits M100 casilla 0596.
+    """E2E: a director's suffered administrador retención credits M100 casilla 0596.
 
     This proves the full cross-modelo director credit chain end to end on the
     LIVE calculate path:
@@ -570,7 +574,7 @@ def test_m100_2025_director_administrador_retencion_credits_into_trabajo_casilla
         -> M100 casilla 0596 (retenciones por rendimientos del trabajo soportadas,
            relation_prefill fold summed over the four quarters).
 
-    Unlike ``test_m100_2025_retenciones_credits_fold_in_periodic_filings_on_live_calculate``
+    Unlike ``test_m100_newest_edition_retenciones_credits_fold_in_periodic_filings_on_live_calculate``
     (which seeds M111 c28 directly), each quarter's c28 here is PRODUCED by a real M111
     aggregation of an administrador retención, so the test exercises the full director
     path rather than the fold alone. Administrador/consejero income is rendimiento del
@@ -582,7 +586,7 @@ def test_m100_2025_director_administrador_retencion_credits_into_trabajo_casilla
     summed credit. No registry IRPF formula is recomputed.
 
     Legal grounding: LIRPF art. 101.2 (administrador fixed rate) + art. 99 / RIRPF art. 108
-    (withholding source filings) + Orden HAC/277/2026 art. 3 (M100/2025 form approval).
+    (withholding source filings) + the edition's form-approval Orden.
     """
     obs_repo = CalculationObservationRepository()
     _seed_taxpayer_unit_profile(secure_objects)
@@ -614,6 +618,6 @@ def test_m100_2025_director_administrador_retencion_credits_into_trabajo_casilla
 
     casilla_0596 = Decimal(result.revision.casilla_values[_M100_TRABAJO_CASILLA])
     assert casilla_0596 == expected_credit, (
-        f"M100/2025 {_M100_TRABAJO_CASILLA} must credit the director's four administrador "
+        f"M100/{_YEAR} {_M100_TRABAJO_CASILLA} must credit the director's four administrador "
         f"retención quarters (sum {expected_credit}); got {casilla_0596}"
     )

@@ -9,7 +9,8 @@ than silently pointing at whatever a hand-written year happens to name.
 from __future__ import annotations
 
 import json
-from collections.abc import Callable
+import re
+from collections.abc import Callable, Mapping
 from functools import cache
 from itertools import pairwise
 
@@ -87,26 +88,42 @@ def source_exercise(source: SourceReference) -> int:
 
 
 @cache
-def manual_editions_printing(manual_id: str, *phrases: str) -> tuple[int, ...]:
-    """Return the exercises of the bundled AEAT manual editions whose text prints every phrase.
-
-    Each edition directory carries a manifest naming the exercise it covers, and the
-    committed corpus-text sidecar holds the edition's normalised text.
-    """
-    wanted = tuple(normalise_corpus_text(phrase) for phrase in phrases)
+def _manual_edition_texts(manual_id: str) -> Mapping[int, str]:
+    # Each edition directory carries a manifest naming the exercise it covers, and the
+    # committed corpus-text sidecar holds the edition's normalised text.
     corpus_root = bundled_path("corpus", "manuals", manual_id)
     text_root = bundled_path("manual_corpus_text", "manuals", manual_id)
-    editions: set[int] = set()
+    texts: dict[int, str] = {}
     for manifest_path in sorted(corpus_root.glob("**/manifest.json")):
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         edition_dir = manifest_path.parent.relative_to(corpus_root)
         sidecar = text_root / edition_dir / f"{manifest['relative_pdf_path']}.corpus_text.json"
-        if not sidecar.is_file():
-            continue
-        text = json.loads(sidecar.read_text(encoding="utf-8"))["normalised_text"]
-        if all(phrase in text for phrase in wanted):
-            editions.add(int(manifest["year"]))
-    return tuple(sorted(editions))
+        if sidecar.is_file():
+            texts[int(manifest["year"])] = json.loads(sidecar.read_text(encoding="utf-8"))["normalised_text"]
+    return texts
+
+
+def manual_editions_printing(manual_id: str, *phrases: str) -> tuple[int, ...]:
+    """Return the exercises of the bundled AEAT manual editions whose text prints every phrase."""
+    wanted = tuple(normalise_corpus_text(phrase) for phrase in phrases)
+    return tuple(
+        sorted(edition for edition, text in _manual_edition_texts(manual_id).items() if all(p in text for p in wanted))
+    )
+
+
+def manual_edition_matches(manual_id: str, pattern: str) -> Mapping[int, re.Match[str]]:
+    """Return, per bundled manual edition, the first match of ``pattern`` in its normalised text.
+
+    The pattern is matched against the normalised corpus text, so it is written in the
+    lower-case, accent-free form that normalisation produces. Editions that do not
+    print it are absent.
+    """
+    compiled = re.compile(pattern)
+    return {
+        edition: match
+        for edition, text in sorted(_manual_edition_texts(manual_id).items())
+        if (match := compiled.search(text)) is not None
+    }
 
 
 def deadline_source_with_sha256(modelo_id: str, sha256: str) -> SourceReference:
