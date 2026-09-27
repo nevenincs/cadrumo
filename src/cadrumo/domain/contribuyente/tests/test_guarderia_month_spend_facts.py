@@ -6,6 +6,7 @@ from datetime import date
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import manual_editions_printing
 from cadrumo.domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 
 from ..descendant import DescendantInfo
@@ -17,16 +18,15 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _SUPPORTED_YEARS = PublishedGovernedFactSource().supported_filing_years().years
 
-# AEAT Manual práctico de Renta 2025, Parte 1, pp. 1391 and 1393, is the source of the
-# official figures below; this is the exercise that manual covers.
-_MANUAL_EXERCISE = 2025
-# Both worked cases in that manual:
-# both worked cases use 500 euros for each complete month and report 2,290
-# euros of effective non-subsidised custody spend.  The manual's 166.67 and
-# 500 euro cap results are deliberately not calculated or asserted here.
-# Keep the child under three for the whole filing period so this source test
-# isolates month aggregation from the separate turning-three eligibility rule.
-_OFFICIAL_CHILD_BIRTH_DATE = date(_MANUAL_EXERCISE - 2, 1, 1)
+# The AEAT Manual practico de Renta editions (Parte 1, capitulo 18) whose two worked
+# guarderia cases print these figures: 500 euros for each complete month and 2.290
+# euros of effective non-subsidised custody spend. The 166,67 and 500 euro cap results
+# are deliberately not calculated or asserted here. Every supported edition that
+# prints the cases is exercised.
+_MANUAL_EXERCISES = tuple(
+    year for year in manual_editions_printing("renta", "2.290 euros", "166,67 euros") if year in _SUPPORTED_YEARS
+)
+assert _MANUAL_EXERCISES, "no supported Renta manual edition prints the guarderia worked cases"
 _OFFICIAL_COMPLETE_MONTH_SPEND_EUROS = 500
 _OFFICIAL_EFFECTIVE_CUSTODY_SPEND_EUROS = 2_290
 
@@ -88,6 +88,7 @@ def test_spend_outside_the_qualifying_period_yields_zero(filing_year: int) -> No
     assert profile.gastos_guarderia_reales(filing_year, context=_fact_context(filing_year)) == 0
 
 
+@pytest.mark.parametrize("manual_exercise", _MANUAL_EXERCISES)
 @pytest.mark.parametrize(
     "qualifying_month_spend",
     [
@@ -110,6 +111,7 @@ def test_spend_outside_the_qualifying_period_yields_zero(filing_year: int) -> No
 )
 def test_manual_examples_retain_raw_months_and_effective_spend_inputs(
     qualifying_month_spend: tuple[tuple[int, int], ...],
+    manual_exercise: int,
 ) -> None:
     """The canonical source retains both accepted spend-input shapes.
 
@@ -118,8 +120,11 @@ def test_manual_examples_retain_raw_months_and_effective_spend_inputs(
     effective annual spend in separate real profiles here; combining them would
     invent a source contract that production does not currently expose.
     """
+    # Keep the child under three for the whole filing period so this source test
+    # isolates month aggregation from the separate turning-three eligibility rule.
+    child_birth_date = date(manual_exercise - 2, 1, 1)
     raw_child = DescendantInfo(
-        birth_date=_OFFICIAL_CHILD_BIRTH_DATE,
+        birth_date=child_birth_date,
         gastos_guarderia_mensuales=tuple(
             GuarderiaMonthSpend(month=month, amount_euros=amount) for month, amount in qualifying_month_spend
         ),
@@ -127,16 +132,16 @@ def test_manual_examples_retain_raw_months_and_effective_spend_inputs(
     raw_profile = RentaFamilyProfile(descendientes=(raw_child,))
 
     effective_child = DescendantInfo(
-        birth_date=_OFFICIAL_CHILD_BIRTH_DATE,
+        birth_date=child_birth_date,
         gastos_guarderia_euros=_OFFICIAL_EFFECTIVE_CUSTODY_SPEND_EUROS,
     )
     effective_profile = RentaFamilyProfile(descendientes=(effective_child,))
 
-    manual_context = _fact_context(_MANUAL_EXERCISE)
-    assert raw_profile.gastos_guarderia_reales(_MANUAL_EXERCISE, context=manual_context) == sum(
+    manual_context = _fact_context(manual_exercise)
+    assert raw_profile.gastos_guarderia_reales(manual_exercise, context=manual_context) == sum(
         amount for _month, amount in qualifying_month_spend
     )
     assert (
-        effective_profile.gastos_guarderia_reales(_MANUAL_EXERCISE, context=manual_context)
+        effective_profile.gastos_guarderia_reales(manual_exercise, context=manual_context)
         == _OFFICIAL_EFFECTIVE_CUSTODY_SPEND_EUROS
     )

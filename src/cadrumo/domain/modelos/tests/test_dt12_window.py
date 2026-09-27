@@ -21,6 +21,7 @@ from datetime import date
 
 import pytest
 
+from ...calculations.registry.tests.legal_text import legal_text_match
 from ...calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ..dt12_reduccion import (
     Dt12WindowBranch,
@@ -35,11 +36,18 @@ _CONTEXT = ModeloFactResolutionContext(
     filing_period=date(2025, 12, 31),
     devengo_date=date(2025, 12, 31),
 )
-# DT 12ª apartado 3 (Ley 26/2014): contingencias in this span keep the eighth-following-
-# ejercicio window, and earlier ones are eligible only through the fixed cliff year.
-_TRANSITIONAL_FIRST_CONTINGENCIA = 2011
-_TRANSITIONAL_LAST_CONTINGENCIA = 2014
-_CLIFF_LAST_ELIGIBLE_YEAR = 2018
+# DT 12ª apartado 4 (added by Ley 26/2014), read from the published provision:
+# contingencias in the span it names keep the eighth-following-ejercicio window, and
+# earlier ones are eligible only through the cliff date it prints.
+_TRANSITIONAL_FIRST_CONTINGENCIA, _TRANSITIONAL_LAST_CONTINGENCIA = (
+    int(year)
+    for year in legal_text_match(
+        "ley-35-2006:dt-12", r"contingencias acaecidas en los ejercicios (\d{4}) a (\d{4})"
+    ).groups()
+)
+_CLIFF_LAST_ELIGIBLE_YEAR = int(
+    legal_text_match("ley-35-2006:dt-12", r"\d{4} o anteriores.*?hasta el 31 de diciembre de (\d{4})").group(1)
+)
 
 
 class TestDt12WindowGeneralBranch:

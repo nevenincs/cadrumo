@@ -34,6 +34,7 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import manual_editions_printing
 from cadrumo.domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 
 from ....core.descendant_relacion import DescendantRelacion
@@ -63,9 +64,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _THRESHOLDS = registry_thresholds(2024)
 _FACT_CONTEXT = FamilyFactResolutionContext(PublishedGovernedFactSource(), date(2024, 12, 31), date(2024, 12, 31))
 _ART_81_1_MATERNITY_RELATIONS = art_81_1_maternity_relations(context=_FACT_CONTEXT)
-#: Ley 31/2022 added the Art. 81.1 post-birth alta increment from the exercise after the
-#: support floor; the floor itself is the last exercise without the route.
-_ALTA_POSTERIOR_FIRST_EXERCISE = PublishedGovernedFactSource().supported_filing_years().floor + 1
+#: Ley 31/2022 added the Art. 81.1 post-birth alta increment; the earliest AEAT Renta
+#: manual edition that documents the route names its first exercise.
+_ALTA_POSTERIOR_FIRST_EXERCISE = min(
+    manual_editions_printing("renta", "alta en la Seguridad Social con posterioridad al nacimiento")
+)
 
 # ---------------------------------------------------------------------------
 # Fixtures

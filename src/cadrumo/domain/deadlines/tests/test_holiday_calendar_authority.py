@@ -22,6 +22,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.calendar_ccaa_catalogue import require_calendar_ccaa
+from cadrumo.domain.calculations.registry.tests.legal_text import legal_effective_to
 
 from ..festivos import (
     CalendarCCAA,
@@ -33,10 +34,10 @@ from ..festivos import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-# Each días inhábiles resolution fixes one exercise's calendar; the dates asserted
-# against it are transcribed from its ANEXO.
-_BOE_A_2024_26935_EXERCISE = 2025
-_BOE_A_2025_23702_EXERCISE = 2026
+# Each días inhábiles resolution fixes the calendar of the year its in-force window
+# closes on; the dates asserted against it are transcribed from its ANEXO.
+_BOE_A_2024_26935_EXERCISE = legal_effective_to("resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo").year
+_BOE_A_2025_23702_EXERCISE = legal_effective_to("resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo").year
 
 _CALENDAR_TERRITORIES = (
     "ES-AN",
@@ -93,9 +94,9 @@ def test_every_calendar_territory_is_verified(year: int) -> None:
 def test_madrid_holds_jueves_santo_and_not_the_municipal_almudena() -> None:
     with bundled_indexed_authority().operation() as operation:
         calendar = load_holiday_calendar(_BOE_A_2024_26935_EXERCISE, operation=operation)
-        madrid = _regional_dates(calendar, _territory(operation, "ES-MD"))
-        valencia = _regional_dates(calendar, _territory(operation, "ES-VC"))
-        catalonia = _regional_dates(calendar, _territory(operation, "ES-CT"))
+        madrid = _regional_dates(calendar, _territory(operation, "ES-MD", _BOE_A_2024_26935_EXERCISE))
+        valencia = _regional_dates(calendar, _territory(operation, "ES-VC", _BOE_A_2024_26935_EXERCISE))
+        catalonia = _regional_dates(calendar, _territory(operation, "ES-CT", _BOE_A_2024_26935_EXERCISE))
 
     assert date(_BOE_A_2024_26935_EXERCISE, 4, 17) in madrid
     assert date(_BOE_A_2024_26935_EXERCISE, 11, 10) not in madrid

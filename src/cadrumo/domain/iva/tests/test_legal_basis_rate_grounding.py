@@ -35,9 +35,9 @@ from typing import cast
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions_where
 from cadrumo.domain.calculations.registry.tests.published_authority import (
     published_legal_references,
-    published_revision,
 )
 from cadrumo.domain.invoices.enums import resolve_iva_rate_token
 from cadrumo.domain.iva.schema import IvaRateKind, require_eu_member_state
@@ -274,19 +274,23 @@ def test_liva_art_103_margin_is_registry_data_not_a_python_constant() -> None:
     assert rule.inclusive is False
 
 
-# Ley 28/2014 art. 1.26 gave LIVA art. 103.Dos.2 its current redaction from this ejercicio.
-_LEY_28_2014_FIRST_EJERCICIO = 2015
-
-
 def test_liva_art_103_ejercicio_before_the_current_redaction_is_refused_rather_than_guessed() -> None:
     """TEETH: the repealed redaction has no citable authority, so it is refused."""
     from ..prorrata_especial_parameters import (
+        PRORRATA_ESPECIAL_MANDATORY_PARAMETER_ID,
         ProrrataEspecialMandatoryParameterError,
         resolve_prorrata_especial_mandatory_parameters,
     )
 
-    repealed_ejercicio = _LEY_28_2014_FIRST_EJERCICIO - 1
-    revision = published_revision("303", "2025")
+    # The newest authored Modelo 303 revision that declares the margin, and the
+    # ejercicio just before the first one its declared windows reach: the Ley 28/2014
+    # redaction starts there, and nothing grounds the repealed one before it.
+    (revision,) = authored_revisions_where(
+        "303",
+        lambda candidate: any(p.id == PRORRATA_ESPECIAL_MANDATORY_PARAMETER_ID for p in candidate.parameters),
+    )[-1:]
+    declared = next(p for p in revision.parameters if p.id == PRORRATA_ESPECIAL_MANDATORY_PARAMETER_ID)
+    repealed_ejercicio = min(value.valid_from for value in declared.values).year - 1
     with pytest.raises(ProrrataEspecialMandatoryParameterError) as excinfo:
         resolve_prorrata_especial_mandatory_parameters(revision, modelo_id="303", ejercicio=repealed_ejercicio)
     assert f"does not resolve for ejercicio {repealed_ejercicio}" in str(excinfo.value)

@@ -29,6 +29,7 @@ from cadrumo.domain.calculations.registry.calendar_ccaa_catalogue import (
     require_calendar_ccaa,
     resolve_calendar_ccaa_catalogue,
 )
+from cadrumo.domain.calculations.registry.tests.legal_text import legal_effective_to
 
 from ....core.directory_scan import scan_directory
 from ..errors import DeadlineValidationError
@@ -54,19 +55,23 @@ def _calendar_ccaa(operation: PinnedAuthorityOperation, code: str) -> CalendarCC
     return require_calendar_ccaa(code, effective_date=date(2025, 7, 1), authority=operation)
 
 
-# BOE-A-2024-26935 fixes the días inhábiles of the AGE for this exercise; the national
-# dates below are transcribed from its ANEXO.
-_BOE_A_2024_26935_EXERCISE = 2025
-_BOE_A_2024_26935_NATIONAL_HOLIDAY_DATES = (
-    date(2025, 1, 1),  # Año Nuevo
-    date(2025, 1, 6),  # Reyes
-    date(2025, 4, 18),  # Viernes Santo
-    date(2025, 5, 1),  # Fiesta del Trabajo
-    date(2025, 8, 15),  # Asunción
-    date(2025, 11, 1),  # Todos los Santos
-    date(2025, 12, 6),  # Constitución
-    date(2025, 12, 8),  # Inmaculada
-    date(2025, 12, 25),  # Navidad
+# BOE-A-2024-26935 fixes the días inhábiles of the AGE for the calendar year its
+# in-force window closes on; the national days below are transcribed from its ANEXO.
+_BOE_A_2024_26935_REF = "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo"
+_BOE_A_2024_26935_EXERCISE = legal_effective_to(_BOE_A_2024_26935_REF).year
+_BOE_A_2024_26935_NATIONAL_HOLIDAY_DATES = tuple(
+    date(_BOE_A_2024_26935_EXERCISE, month, day)
+    for month, day in (
+        (1, 1),  # Año Nuevo
+        (1, 6),  # Reyes
+        (4, 18),  # Viernes Santo
+        (5, 1),  # Fiesta del Trabajo
+        (8, 15),  # Asunción
+        (11, 1),  # Todos los Santos
+        (12, 6),  # Constitución
+        (12, 8),  # Inmaculada
+        (12, 25),  # Navidad
+    )
 )
 
 _BUSINESS_DAY_CASES = (
@@ -143,7 +148,7 @@ def test_load_calendar_returns_boe_anchored_year() -> None:
     with bundled_indexed_authority().operation() as operation:
         calendar = load_holiday_calendar(_BOE_A_2024_26935_EXERCISE, operation=operation)
         assert calendar.year == _BOE_A_2024_26935_EXERCISE
-        assert calendar.boe_ref == "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo"
+        assert calendar.boe_ref == _BOE_A_2024_26935_REF
         assert calendar.boe_url is not None and "BOE-A-2024-26935" in calendar.boe_url
 
 

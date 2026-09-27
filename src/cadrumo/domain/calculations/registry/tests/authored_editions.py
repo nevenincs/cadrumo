@@ -106,3 +106,23 @@ def manual_editions_printing(manual_id: str, *phrases: str) -> tuple[int, ...]:
         if all(phrase in text for phrase in wanted):
             editions.add(int(manifest["year"]))
     return tuple(sorted(editions))
+
+
+def deadline_source_with_sha256(modelo_id: str, sha256: str) -> SourceReference:
+    """Return the one source the authored deadline windows of a modelo cite whose bytes hash to ``sha256``.
+
+    A deadline test whose expected days are the ones a pinned official calendar prints
+    finds that calendar by its content hash, and reads the exercise it covers from the
+    catalogued applicability rather than from its identifier.
+    """
+    cited = {
+        ref
+        for revision in authored_revisions(modelo_id)
+        for window in revision.deadline_windows
+        for ref in window.source_refs
+    }
+    with bundled_indexed_authority().operation() as operation:
+        matches = [source for ref in sorted(cited) if (source := operation.source_reference(ref)).sha256 == sha256]
+    if len(matches) != 1:
+        raise LookupError(f"modelo {modelo_id}: expected one deadline source pinned to {sha256}, found {len(matches)}")
+    return matches[0]

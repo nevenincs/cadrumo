@@ -11,6 +11,8 @@ from ....core.modelo import Modelo
 from ....core.period import Period
 from ...calculations.registry.deadline_coordinate import DeadlineSemanticCoordinate, deadline_semantic_coordinate
 from ...calculations.registry.schedules import applicable_filing_schedules, evaluate_profile_conditions
+from ...calculations.registry.tests.authored_editions import deadline_source_with_sha256, source_exercise
+from ...calculations.registry.tests.legal_text import legal_text_match, spanish_date
 from ...calculations.registry.tests.published_authority import (
     PublishedGovernedFactSource,
     published_supported_filing_years,
@@ -33,31 +35,43 @@ from ..models import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 _SUPPORTED_YEARS = PublishedGovernedFactSource().supported_filing_years().years
-# AEAT Calendario del contribuyente for this exercise: Modelo 130 first quarter
-# April 1-20, direct debit through April 15.
-_M130_Q1_CALENDAR_EXERCISE = 2026
-# AEAT Calendario del contribuyente for this exercise (and the next one's January
-# entries for its fourth quarter) is the grounding of the Modelo 130 carry chain.
-_M130_CARRY_CHAIN_CALENDAR_EXERCISE = 2025
-# Each IRPF campaign's plazo general and domiciliación cutoff, fixed by its Orden:
-# Orden HAC/277/2026 art. 7 for ejercicio 2025, Orden HAC/265/2024 art. 8 for 2023.
+# The AEAT Calendario del contribuyente whose pinned PDF prints the Modelo 130 first
+# quarter as April 1-20 with direct debit through April 15; the exercise is the one
+# the Modelo 130 windows cite it for.
+_M130_Q1_CALENDAR_EXERCISE = source_exercise(
+    deadline_source_with_sha256("130", "8bc91454ece63a0139f1c0948637239a8c7b2b20fe17dd534b266cb46c0e631b")
+)
+# The AEAT Calendario del contribuyente whose pinned PDF (with the next edition's
+# January entries for its fourth quarter) grounds the Modelo 130 carry chain below.
+_M130_CARRY_CHAIN_CALENDAR_EXERCISE = source_exercise(
+    deadline_source_with_sha256("130", "dfdcae8889ab5fecffa368e235d933676c8a479915e09b107734f8339eed0f50")
+)
+
+
+def _renta_campaign(legal_ref: str, cutoff_month: int, cutoff_day: int) -> tuple[int, str, date, date, date]:
+    """Read one IRPF campaign's plazo general from its Orden and the ejercicio it declares.
+
+    The Orden prints the window as "entre los dias <d> de <mes> y <d> de <mes> de <año>";
+    the campaign declares the ejercicio before the year it runs in. The domiciliación
+    cutoff (the Orden's art. 13.3, not in the bundled corpus) is given as a day of that year.
+    """
+    match = legal_text_match(legal_ref, r"entre los dias (\d{1,2}) de (\w+) y (\d{1,2}) de (\w+) de (\d{4})")
+    opens_day, opens_month, closes_day, closes_month, year = match.groups()
+    closes_on = spanish_date(closes_day, closes_month, year)
+    return (
+        closes_on.year - 1,
+        legal_ref,
+        spanish_date(opens_day, opens_month, year),
+        closes_on,
+        date(closes_on.year, cutoff_month, cutoff_day),
+    )
+
+
+# Each IRPF campaign's plazo general, read from its Orden's own article: Orden
+# HAC/277/2026 art. 7 and Orden HAC/265/2024 art. 8.
 _RENTA_CAMPAIGNS = (
-    pytest.param(
-        2025,
-        "orden-hac-277-2026:art-7",
-        date(2026, 4, 8),
-        date(2026, 6, 30),
-        date(2026, 6, 25),
-        id="orden-hac-277-art-7",
-    ),
-    pytest.param(
-        2023,
-        "orden-hac-265-2024:art-8",
-        date(2024, 4, 3),
-        date(2024, 7, 1),
-        date(2024, 6, 26),
-        id="orden-hac-265-art-8",
-    ),
+    pytest.param(*_renta_campaign("orden-hac-277-2026:art-7", 6, 25), id="orden-hac-277-art-7"),
+    pytest.param(*_renta_campaign("orden-hac-265-2024:art-8", 6, 26), id="orden-hac-265-art-8"),
 )
 
 

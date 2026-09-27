@@ -27,6 +27,8 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.tests.legal_text import legal_text_match, spanish_date
+from cadrumo.domain.calculations.registry.tests.published_authority import published_legal_reference
 
 from ..lookup import rate_kinds_for_declared_rate
 from ..schema import EUMemberState, IvaRateKind
@@ -34,12 +36,20 @@ from ..schema import EUMemberState, IvaRateKind
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _FIVE = Decimal("0.05")
-# RDL 20/2022 art. 72, with its three extensions, kept the 5 % food rate over this span.
-_RDL_20_2022_OPENS = date(2023, 1, 1)
-_RDL_20_2022_CLOSES = date(2024, 6, 30)
-# RD-ley 4/2024 kept 5 % over this span, then moved the arm to 7,5 % before withdrawing it.
-_RDL_4_2024_FIVE_PERCENT_OPENS = date(2024, 7, 1)
-_RDL_4_2024_FIVE_PERCENT_CLOSES = date(2024, 9, 30)
+# RDL 20/2022 art. 72, with its three extensions, kept the 5 % food rate over its
+# published in-force window.
+_RDL_20_2022 = published_legal_reference("real-decreto-ley-20-2022:art-72")
+_RDL_20_2022_OPENS = _RDL_20_2022.effective_from
+assert _RDL_20_2022.effective_to is not None
+_RDL_20_2022_CLOSES = _RDL_20_2022.effective_to
+# RD-ley 4/2024 art. 1.Uno kept 5 % over the span its opening clause prints, then moved
+# the arm to 7,5 % before withdrawing it.
+_RDL_4_2024_FIVE_PERCENT_SPAN = legal_text_match(
+    "real-decreto-ley-4-2024:art-1",
+    r"con efectos desde el (\d{1,2}) de (\w+) de (\d{4}) y vigencia hasta el (\d{1,2}) de (\w+) de (\d{4})",
+).groups()
+_RDL_4_2024_FIVE_PERCENT_OPENS = spanish_date(*_RDL_4_2024_FIVE_PERCENT_SPAN[:3])
+_RDL_4_2024_FIVE_PERCENT_CLOSES = spanish_date(*_RDL_4_2024_FIVE_PERCENT_SPAN[3:])
 _DAY = timedelta(days=1)
 
 

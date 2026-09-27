@@ -15,7 +15,9 @@ from itertools import pairwise
 
 import pytest
 
-from ...calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.published_authority import published_legal_reference
+
+from ...calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...calculations.registry.authority_artifact import AuthorityComponentQuery, GovernedFactComponentQuery
 from ...calculations.registry.facts.schema import GovernedFact
 from ...calculations.registry.governed_fact_scope import validating_governed_facts
@@ -33,11 +35,42 @@ _REDUCED = IvaRateKind("reduced")
 _SUPER_REDUCED = IvaRateKind("super_reduced")
 _ZERO = IvaRateKind("zero")
 
-# RDL 20/2012 art. 23.Dos fixed the 21 % general rate from this day.
-_RDL_20_2012_GENERAL_RATE_START = date(2012, 9, 1)
-# The committed rate schedule splits its ordinary ES rows at this day without any rate
-# change; the pinned fixture mirrors that split so lookups straddle a row boundary.
-_ORDINARY_ROW_SPLIT = date(2025, 1, 1)
+# RDL 20/2012 art. 23.Dos fixed the 21 % general rate from the day it entered into force.
+_RDL_20_2012_GENERAL_RATE_START = published_legal_reference("real-decreto-ley-20-2012:art-23-dos").effective_from
+
+
+def _published_variant_windows(fact_id: str, **selectors: str) -> tuple[tuple[date, date | None], ...]:
+    """Return the windows of the published variants of one fact that carry ``selectors``, oldest first."""
+    with bundled_indexed_authority().operation() as operation:
+        fact = operation.governed_fact(fact_id)
+    wanted = set(selectors.items())
+    windows = [
+        (variant.valid_from, variant.valid_to)
+        for variant in fact.variants
+        if variant.valid_from is not None
+        and wanted <= {(selector.name, selector.value) for selector in variant.selectors}
+    ]
+    assert windows, f"{fact_id} publishes no variant for {selectors}"
+    return tuple(sorted(windows, key=lambda window: window[0]))
+
+
+def _published_es_rows(kind: str, role: str) -> tuple[tuple[date, date | None], ...]:
+    return _published_variant_windows("iva-rate-schedule", member_state="es", kind=kind, rate_role=role)
+
+
+# The pinned fixture mirrors the committed rate schedule's own row windows, so every
+# boundary it exercises is the published one. The ordinary ES rows split without any
+# rate change, so lookups straddle a row boundary.
+_ORDINARY_ROW_SPLIT = _published_es_rows("general", "ordinary")[-1][0]
+_GENERAL_ORDINARY_START = _published_es_rows("general", "ordinary")[0][0]
+_REDUCED_ORDINARY_START = _published_es_rows("reduced", "ordinary")[0][0]
+_SUPER_REDUCED_ORDINARY_START = _published_es_rows("super_reduced", "ordinary")[0][0]
+_ZERO_ORDINARY_ROWS = _published_es_rows("zero", "ordinary")
+_COEXISTING_5_ROWS = _published_es_rows("reduced", "coexisting-5")
+_COEXISTING_2_ROWS = _published_es_rows("super_reduced", "coexisting-2")
+_COEXISTING_7_5_ROWS = _published_es_rows("reduced", "coexisting-7.5")
+_ROLE_CATALOGUE_START = _published_variant_windows("iva-rate-schedule", scope="rate_role_catalogue")[0][0]
+_SLOT_CATALOGUE_START = _published_variant_windows("iva-rate-slot-catalogue")[0][0]
 _LAST_DAY_BEFORE_SPLIT = _ORDINARY_ROW_SPLIT - timedelta(days=1)
 
 
@@ -125,8 +158,8 @@ def _pinned_iva_facts(
         ),
         GovernedFactComponentQuery("iva-rate-slot-catalogue"): _mapping_fact(
             "iva-rate-slot-catalogue",
-            "iva-rate-slot-catalogue:1993-01-01",
-            valid_from=date(1993, 1, 1),
+            f"iva-rate-slot-catalogue:{_SLOT_CATALOGUE_START.isoformat()}",
+            valid_from=_SLOT_CATALOGUE_START,
             entries=(
                 {"key": "rate_kind.order", "value": "general,reduced,super_reduced,zero,exempt"},
                 {"key": "rate_kind.positive_order", "value": "general,reduced,super_reduced"},
@@ -175,10 +208,10 @@ def _pinned_iva_facts(
                     *(
                         (
                             _rate_variant(
-                                "iva-rate.es.general.2012-09-01.ordinary",
+                                f"iva-rate.es.general.{_GENERAL_ORDINARY_START.isoformat()}.ordinary",
                                 kind="general",
                                 role="ordinary",
-                                valid_from=_RDL_20_2012_GENERAL_RATE_START,
+                                valid_from=_GENERAL_ORDINARY_START,
                                 valid_to=_LAST_DAY_BEFORE_SPLIT,
                                 pct="21",
                             ),
@@ -187,36 +220,31 @@ def _pinned_iva_facts(
                         else ()
                     ),
                     _rate_variant(
-                        "iva-rate.es.reduced.2012-09-01.ordinary",
+                        f"iva-rate.es.reduced.{_REDUCED_ORDINARY_START.isoformat()}.ordinary",
                         kind="reduced",
                         role="ordinary",
-                        valid_from=_RDL_20_2012_GENERAL_RATE_START,
+                        valid_from=_REDUCED_ORDINARY_START,
                         valid_to=_LAST_DAY_BEFORE_SPLIT,
                         pct="10",
                     ),
                     _rate_variant(
-                        "iva-rate.es.super_reduced.1995-01-01.ordinary",
+                        f"iva-rate.es.super_reduced.{_SUPER_REDUCED_ORDINARY_START.isoformat()}.ordinary",
                         kind="super_reduced",
                         role="ordinary",
-                        valid_from=date(1995, 1, 1),
+                        valid_from=_SUPER_REDUCED_ORDINARY_START,
                         valid_to=_LAST_DAY_BEFORE_SPLIT,
                         pct="4",
                     ),
-                    _rate_variant(
-                        "iva-rate.es.zero.2023-01-01.ordinary",
-                        kind="zero",
-                        role="ordinary",
-                        valid_from=date(2023, 1, 1),
-                        valid_to=date(2024, 6, 30),
-                        pct="0",
-                    ),
-                    _rate_variant(
-                        "iva-rate.es.zero.2024-07-01.ordinary",
-                        kind="zero",
-                        role="ordinary",
-                        valid_from=date(2024, 7, 1),
-                        valid_to=date(2024, 9, 30),
-                        pct="0",
+                    *(
+                        _rate_variant(
+                            f"iva-rate.es.zero.{start.isoformat()}.ordinary",
+                            kind="zero",
+                            role="ordinary",
+                            valid_from=start,
+                            valid_to=end,
+                            pct="0",
+                        )
+                        for start, end in _ZERO_ORDINARY_ROWS
                     ),
                     _rate_variant(
                         f"iva-rate.es.general.{_ORDINARY_ROW_SPLIT.isoformat()}.ordinary",
@@ -239,47 +267,28 @@ def _pinned_iva_facts(
                         valid_from=_ORDINARY_ROW_SPLIT,
                         pct="4",
                     ),
-                    _rate_variant(
-                        "iva-rate.es.reduced.2023-01-01.coexisting-5",
-                        kind="reduced",
-                        role="coexisting-5",
-                        valid_from=date(2023, 1, 1),
-                        valid_to=date(2024, 6, 30),
-                        pct="5",
-                        supersedes_tier_default=True,
-                    ),
-                    _rate_variant(
-                        "iva-rate.es.reduced.2024-07-01.coexisting-5",
-                        kind="reduced",
-                        role="coexisting-5",
-                        valid_from=date(2024, 7, 1),
-                        valid_to=date(2024, 9, 30),
-                        pct="5",
-                        supersedes_tier_default=True,
-                    ),
-                    _rate_variant(
-                        "iva-rate.es.super_reduced.2024-10-01.coexisting-2",
-                        kind="super_reduced",
-                        role="coexisting-2",
-                        valid_from=date(2024, 10, 1),
-                        valid_to=date(2024, 12, 31),
-                        pct="2",
-                        supersedes_tier_default=True,
-                    ),
-                    _rate_variant(
-                        "iva-rate.es.reduced.2024-10-01.coexisting-7.5",
-                        kind="reduced",
-                        role="coexisting-7.5",
-                        valid_from=date(2024, 10, 1),
-                        valid_to=date(2024, 12, 31),
-                        pct="7.5",
-                        supersedes_tier_default=True,
+                    *(
+                        _rate_variant(
+                            f"iva-rate.es.{kind}.{start.isoformat()}.{role}",
+                            kind=kind,
+                            role=role,
+                            valid_from=start,
+                            valid_to=end,
+                            pct=pct,
+                            supersedes_tier_default=True,
+                        )
+                        for kind, role, pct, rows in (
+                            ("reduced", "coexisting-5", "5", _COEXISTING_5_ROWS),
+                            ("super_reduced", "coexisting-2", "2", _COEXISTING_2_ROWS),
+                            ("reduced", "coexisting-7.5", "7.5", _COEXISTING_7_5_ROWS),
+                        )
+                        for start, end in rows
                     ),
                     {
-                        "variant_id": "iva-rate-schedule:rate-role-catalogue:1995-01-01",
+                        "variant_id": f"iva-rate-schedule:rate-role-catalogue:{_ROLE_CATALOGUE_START.isoformat()}",
                         "selectors": ({"name": "scope", "value": "rate_role_catalogue"},),
                         "date_axis": "devengo_date",
-                        "valid_from": date(1995, 1, 1),
+                        "valid_from": _ROLE_CATALOGUE_START,
                         "payload": {
                             "kind": "mapping",
                             "entries": (
