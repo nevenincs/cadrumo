@@ -19,6 +19,7 @@ from ....core.period import Period
 from ....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from ....core.secure_object_write import SecureObjectWrite
 from ....domain.bienes_inversion.register import BienesInversionIvaRegister
+from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.categories.spending_category import SpendingCategory
 from ....domain.invoices.enums import InvoiceOperationDateRole, IvaRate, PaymentStatus
@@ -1040,7 +1041,12 @@ def test_renta_source_mesh_resolver_preserves_purchase_invoice_evidence_provenan
     }
 
 
-def test_renta_source_mesh_refuses_acquisition_cost_competing_with_asset_claim() -> None:
+def test_renta_source_mesh_refuses_a_separate_depreciation_row_for_a_charged_year() -> None:
+    """A depreciation row the register does not own still blocks the annual calculation.
+
+    The register charges 2025 and owns casilla 0208 exclusively, so a second
+    amortization-labelled ledger row would deduct the year's depreciation twice.
+    """
     revision = _revision("100", "2025")
     tx_repo = _InMemoryTransactionCatalogueRepository(bucket_id=_BUCKET_ID)
     acquisition = _renta_transaction(
@@ -1049,7 +1055,13 @@ def test_renta_source_mesh_refuses_acquisition_cost_competing_with_asset_claim()
         amount=Decimal("2000.00"),
         category=SpendingCategory.from_registry("hardware_amortizable"),
     )
-    tx_repo.save(TransactionCatalogue.from_transactions((acquisition,)))
+    separate_depreciation = _renta_transaction(
+        "separate-depreciation-row",
+        purchase_invoice_evidence_id=None,
+        amount=Decimal("400.00"),
+        category=SpendingCategory.from_registry("mobiliario_amortizable"),
+    )
+    tx_repo.save(TransactionCatalogue.from_transactions((acquisition, separate_depreciation)))
     asset = ActivityAssetRevision(
         asset_id="computer",
         revision_number=1,
@@ -1180,6 +1192,217 @@ def test_renta_source_mesh_projects_recorded_asset_claim_without_full_cost() -> 
     assert resolution.binding_values[target_binding.id] == Decimal("500.00")
     assert Decimal("2000.00") not in resolution.binding_values.values()
     assert {item.source_ref for item in resolution.provenance} == {f"activity-asset-claim:{claim.claim_id}"}
+
+
+def _machine_asset(transaction_id: str) -> ActivityAssetRevision:
+    """A 1.000 EUR machine whose acquisition transaction the register names."""
+    return ActivityAssetRevision(
+        asset_id="machine-2025",
+        revision_number=1,
+        acquisition=AcquisitionLineageReference(
+            observed_transaction_id=transaction_id,
+            invoice_evidence_id="invoice-machine-2025",
+            evidence_fingerprint="9" * 64,
+        ),
+        acquisition_shape=AcquisitionShape.PRIMARY_PURCHASE,
+        asset_kind=AssetKind.MATERIAL,
+        basis=ActivityAssetBasis(
+            stage=AssetBasisStage.BUSINESS_ALLOCATED,
+            basis_amount=Decimal("1000.00"),
+            prior_allocation_provenance="ledger-business-allocation",
+        ),
+        in_service_date=date(2025, 1, 1),
+        opening_history=OpeningAmortizationHistory(
+            status=OpeningHistoryStatus.KNOWN,
+            accumulated_amount=Decimal("0"),
+        ),
+        acquired_condition=AcquiredCondition.NEW,
+        amortization=ActivityAssetAmortizationElection(
+            regime=DirectEstimationRegime.NORMAL,
+            method=AmortizationMethod.LINEAR,
+            authority_class_key="maquinaria",
+        ),
+    )
+
+
+def _machine_claim(asset: ActivityAssetRevision) -> AmortizationClaim:
+    """The whole-2025 charge: 1.000 x 12 % maquinaria linear coefficient = 120,00."""
+    return AmortizationClaim(
+        asset_id=asset.asset_id,
+        asset_revision_id=asset.revision_id,
+        asset_kind=asset.asset_kind,
+        tax_year=2025,
+        covered_from=date(2025, 1, 1),
+        covered_until=date(2026, 1, 1),
+        amount=Decimal("120.00"),
+        schedule_fingerprint="8" * 64,
+        authority_generation="published-test-generation",
+        source_reference="modelo-100:2025:parameter:maquinaria",
+        creating_operation="record-amortization",
+    )
+
+
+def _machine_acquisition_transaction(
+    category: str,
+    *,
+    provider_id: str = "machine-acquisition",
+    amount: Decimal = Decimal("1210.00"),
+    taxable_base: Decimal = Decimal("1000.00"),
+    iva_amount: Decimal = Decimal("210.00"),
+) -> Transaction:
+    """The purchase itself: 1.000,00 base plus 210,00 IVA soportado, paid from the bank."""
+    return Transaction.model_validate(
+        {
+            "raw": ledger_raw_transaction(
+                provider_id,
+                booked_date=date(2025, 4, 5),
+                amount=amount,
+            ),
+            "direction": TransactionDirection.OUTGOING,
+            "group_label": None,
+            "business_classification": BusinessClassification.BUSINESS,
+            "source_jurisdiction": "ES",
+            "purchase_invoice_evidence_id": None,
+            "category_id": SpendingCategory.from_registry(category).value,
+            "taxable_base": taxable_base,
+            "iva_rate": Decimal("0.21"),
+            "iva_amount": iva_amount,
+            "classified_at": datetime(2025, 4, 6, 13, 0, tzinfo=UTC),
+            "classified_by": "manual",
+        },
+    )
+
+
+def _renta_expense_binding_id(revision: ModeloRevision, casilla_id: str) -> BindingId:
+    return next(
+        binding.id
+        for binding in revision.bindings
+        if str(binding.source) == "ledger_renta_gastos_estimacion_directa_aggregation"
+        and str(getattr(binding.provider, "target_casilla_id", None)) == casilla_id
+    )
+
+
+def test_renta_source_mesh_declares_only_the_claim_for_a_register_owned_acquisition() -> None:
+    """An in-year purchase recorded in the ledger deducts the charge, not the price.
+
+    The machine costs 1.000,00 and its 2025 charge is 120,00. Casilla 0208 must
+    carry exactly 120,00: under RIS art. 3.2 the 1.000,00 purchase is the
+    amortizable base, so the register's charge is the whole deduction and the
+    purchase row the operator tagged ``hardware_amortizable`` yields to it. The
+    withholding is reported rather than silent.
+    """
+    revision = _revision("100", "2025")
+    acquisition = _machine_acquisition_transaction("hardware_amortizable")
+    tx_repo = _InMemoryTransactionCatalogueRepository(bucket_id=_BUCKET_ID)
+    tx_repo.save(TransactionCatalogue.from_transactions((acquisition,)))
+    asset = _machine_asset(acquisition.transaction_id)
+    claim = _machine_claim(asset)
+
+    resolution = LedgerRentaGastosEstimacionDirectaAggregationSourceResolver(
+        ports=_catalogue_read_ports(
+            invoice_repository=_InMemoryInvoiceCatalogueRepository(),
+            transaction_repository=tx_repo,
+        ),
+        prorrata_register_repository=_empty_prorrata_repository(),
+        usage_ratio_profile_loader=lambda *, bucket_id, operation: UsageRatioProfile(),
+        activity_asset_history_repository=_StaticActivityAssetHistoryRepository(
+            ActivityAssetHistory(revisions=(asset,), claims=(claim,)),
+        ),
+    ).resolve(
+        CalculationSourceContext(
+            bucket_id=_BUCKET_ID,
+            modelo="100",
+            filing_year=2025,
+            period=Period.from_year_and_code(2025, "0A"),
+            revision=revision,
+        ),
+    )
+
+    assert resolution.binding_values[_renta_expense_binding_id(revision, "0208")] == Decimal("120.00")
+    assert Decimal("1000.00") not in resolution.binding_values.values()
+    assert Decimal("1120.00") not in resolution.binding_values.values()
+    assert resolution.source_transaction_ids == ()
+    assert {item.source_ref for item in resolution.provenance} == {f"activity-asset-claim:{claim.claim_id}"}
+    withheld = [
+        diagnostic for diagnostic in resolution.diagnostics if diagnostic.reason == "register_owned_capital_acquisition"
+    ]
+    assert len(withheld) == 1
+    assert withheld[0].source_ref == f"transaction:{acquisition.transaction_id}"
+    assert asset.asset_id in withheld[0].message
+
+
+def test_renta_gasto_source_mesh_declares_only_the_claim_for_a_register_owned_acquisition() -> None:
+    """Modelo 130 casilla 02 carries the same 120,00 charge and not the 1.000,00 purchase."""
+    revision = _revision("130", "2019-y-siguientes")
+    acquisition = _machine_acquisition_transaction("hardware_amortizable")
+    tx_repo = _InMemoryTransactionCatalogueRepository(bucket_id=_BUCKET_ID)
+    tx_repo.save(TransactionCatalogue.from_transactions((acquisition,)))
+    asset = _machine_asset(acquisition.transaction_id)
+    claim = _machine_claim(asset)
+
+    resolution = LedgerRentaGastosPagoFraccionadoAggregationSourceResolver(
+        transaction_repository=tx_repo,
+        prorrata_register_repository=_empty_prorrata_repository(),
+        activity_asset_history_repository=_StaticActivityAssetHistoryRepository(
+            ActivityAssetHistory(revisions=(asset,), claims=(claim,)),
+        ),
+    ).resolve(
+        CalculationSourceContext(
+            bucket_id=_BUCKET_ID,
+            modelo="130",
+            filing_year=2025,
+            period=Period.from_year_and_code(2025, "4T"),
+            revision=revision,
+        ),
+    )
+    target_binding = next(
+        binding
+        for binding in revision.bindings
+        if str(binding.source) == "ledger_renta_gastos_pago_fraccionado_aggregation"
+    )
+
+    assert resolution.binding_values[target_binding.id] == Decimal("120.00")
+    assert resolution.source_transaction_ids == ()
+    assert {item.source_ref for item in resolution.provenance} == {f"activity-asset-claim:{claim.claim_id}"}
+    assert [
+        diagnostic.reason
+        for diagnostic in resolution.diagnostics
+        if diagnostic.reason == "register_owned_capital_acquisition"
+    ] == ["register_owned_capital_acquisition"]
+
+
+def test_renta_gasto_source_mesh_still_refuses_a_separate_depreciation_row() -> None:
+    """A depreciation row outside the register's own acquisition remains a refused collision."""
+    revision = _revision("130", "2019-y-siguientes")
+    acquisition = _machine_acquisition_transaction("hardware_amortizable")
+    separate_depreciation = _machine_acquisition_transaction(
+        "mobiliario_amortizable",
+        provider_id="separate-depreciation-row",
+        amount=Decimal("484.00"),
+        taxable_base=Decimal("400.00"),
+        iva_amount=Decimal("84.00"),
+    )
+    tx_repo = _InMemoryTransactionCatalogueRepository(bucket_id=_BUCKET_ID)
+    tx_repo.save(TransactionCatalogue.from_transactions((acquisition, separate_depreciation)))
+    asset = _machine_asset(acquisition.transaction_id)
+    claim = _machine_claim(asset)
+
+    with pytest.raises(ActividadAssetClaimConflictError, match="retain acquisition evidence"):
+        LedgerRentaGastosPagoFraccionadoAggregationSourceResolver(
+            transaction_repository=tx_repo,
+            prorrata_register_repository=_empty_prorrata_repository(),
+            activity_asset_history_repository=_StaticActivityAssetHistoryRepository(
+                ActivityAssetHistory(revisions=(asset,), claims=(claim,)),
+            ),
+        ).resolve(
+            CalculationSourceContext(
+                bucket_id=_BUCKET_ID,
+                modelo="130",
+                filing_year=2025,
+                period=Period.from_year_and_code(2025, "4T"),
+                revision=revision,
+            ),
+        )
 
 
 def test_m130_source_mesh_adds_recorded_claim_through_existing_expense_owner() -> None:

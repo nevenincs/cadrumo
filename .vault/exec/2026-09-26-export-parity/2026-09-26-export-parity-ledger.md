@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#export-parity'
 date: '2026-09-26'
-modified: '2026-09-26'
+modified: '2026-09-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:944d3343c446cd22ca73633f3226a8592f0bd46d1f159de1b19059fd0fb91630'
+body_hash: 'sha256:492022ce38734e3afb4c32d119152d9e77897391d7ae4c3b67d36dc10d0ef434'
 related:
   - "[[2026-09-26-export-parity-plan]]"
 ---
@@ -102,6 +102,17 @@ related:
 - `S08` `verify:` `just check-symbol-usage / check-export-consumption / check-module-reachability back to baseline counts` -> `pass`
 - `S08` `verify:` `python -m dev.locales status --check baseline-identical` -> `pass`
 - `S08` `verify:` `live: aeat app modelo spreadsheet export 303 2025 1T, refusal on existing file, --replace` -> `pass`
+- `S17` `M` `src/cadrumo/application/aggregation/modelo_bindings.py`
+- `S17` `M` `src/cadrumo/application/aggregation/modelo_bindings_actividad_assets.py`
+- `S17` `M` `src/cadrumo/application/aggregation/modelo_bindings_renta_expenses.py`
+- `S17` `M` `src/cadrumo/application/aggregation/renta_gasto_ledger.py`
+- `S17` `M` `src/cadrumo/application/aggregation/source_mesh.py`
+- `S17` `M` `src/cadrumo/application/aggregation/tests/test_modelo_bindings_actividad_assets.py`
+- `S17` `M` `src/cadrumo/application/aggregation/tests/test_modelo_source_mesh_ledger.py`
+- `S17` `M` `src/cadrumo/domain/renta/actividad_asset/claims.py`
+- `S17` `M` `src/cadrumo/domain/renta/ledger_expenses.py`
+- `S17` `A` `src/cadrumo/entrypoints/cli/tests/test_register_owned_acquisition_cli.py`
+- `S17` `verify:` `ruff check, ruff format --check, ty check on the changed modules` -> `pass`
 
 ## Notes
 
@@ -110,3 +121,5 @@ related:
 - `S08` Committed in 1af2b083. just check-types crashed (ty produced no report under host load), not a type finding; ty run directly on the changed modules is clean.
 - `S08` S07 verification in 6869e1a2 ran only the default unit lane; the integration tests of the same files were re-run here and pass.
 - `S08` TUI offline-workbook export is not yet wired (tracked for S10); S07's typed sink landed here, so S07 closes with it.
+- `S17` Structural gates (symbol usage, export consumption, reachability, import boundaries) and import load-target regeneration were not run for this Step: the session's permission classifier refused them; left for the operator.
+

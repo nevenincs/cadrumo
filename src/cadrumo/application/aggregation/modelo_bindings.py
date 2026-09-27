@@ -28,6 +28,7 @@ source diagnostics rather than silently blanking the filed calculation.
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
+from datetime import date
 from decimal import Decimal
 from typing import ClassVar
 
@@ -82,6 +83,8 @@ from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.iva.schema import IvaCategory
 from ...domain.modelos.row_models import Modelo210AgrupacionRentaRow
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
+from ...domain.renta.actividad_asset.claims import effective_claims
+from ...domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
 from ...domain.renta.retenciones_routing_integrity import resolve_m130_retenciones_route
 from ...domain.transactions.irpf_categories import has_activity_irpf_category, has_employment_irpf_category
 from ...domain.transactions.models import Transaction
@@ -121,11 +124,13 @@ from .iva_ledger import (
     resolve_iva_ledger_binding_values,
 )
 from .modelo_bindings_actividad_assets import (
-    CompetingDepreciationTreatment,
+    LedgerRentaExpenseTreatment,
     activity_asset_expense_observations,
-    refuse_competing_depreciation_treatments,
+    amortization_labelled_expense_categories,
+    classify_ledger_expenses_against_asset_register,
+    register_owned_acquisition_diagnostics,
 )
-from .renta_gasto_ledger import aggregate_renta_gasto_ledger_from_repositories
+from .renta_gasto_ledger import RentaGastoObservation, aggregate_renta_gasto_ledger_from_repositories
 from .renta_income_ledger import (
     aggregate_renta_income_ledger_from_repositories,
     aggregate_renta_m100_income_ledger_from_repositories,
@@ -1209,27 +1214,30 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
                 error=exc,
             )
         asset_history = self._activity_asset_history_repository.load()
-        refuse_competing_depreciation_treatments(
+        register_owned = classify_ledger_expenses_against_asset_register(
             asset_history.revisions,
             asset_history.claims,
-            tuple(
-                CompetingDepreciationTreatment(
-                    asset_id=asset.asset_id,
-                    transaction_id=observation.transaction_id,
-                    category="m130_deductible_expense",
-                    tax_year=observation.filing_date.year,
-                )
-                for observation in aggregation.observations
-                for asset in asset_history.revisions
-                if observation.transaction_id == asset.acquisition.observed_transaction_id
+            _m130_asset_register_treatments(
+                aggregation.observations,
+                assets=asset_history.revisions,
+                charges_the_filing_year=any(
+                    claim.tax_year == aggregation_period.filing_year for claim in effective_claims(asset_history.claims)
+                ),
+                filing_year=aggregation_period.filing_year,
             ),
+        )
+        withheld_transaction_ids = {acquisition.transaction_id for acquisition in register_owned}
+        ledger_observations = tuple(
+            observation
+            for observation in aggregation.observations
+            if observation.transaction_id not in withheld_transaction_ids
         )
         asset_observations = activity_asset_expense_observations(
             asset_history.claims,
             modelo="130",
             period=aggregation_period,
         )
-        all_observations = (*aggregation.observations, *asset_observations)
+        all_observations = (*ledger_observations, *asset_observations)
         # Fail-closed advisory parity with the income screen: a non-zero
         # declarable gasto whose target_casilla_id matches no
         # ledger_renta_gastos_pago_fraccionado_aggregation binding would otherwise be silently
@@ -1243,7 +1251,7 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
                 context.revision,
                 all_observations,
             ),
-            source_transaction_ids=sorted_ids(aggregation.observations, lambda observation: observation.transaction_id),
+            source_transaction_ids=sorted_ids(ledger_observations, lambda observation: observation.transaction_id),
             diagnostics=out_of_window_summary_diagnostics(
                 aggregation.out_of_window_summary,
                 source_kind="ledger_renta_gastos_pago_fraccionado_aggregation",
@@ -1251,6 +1259,11 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
             )
             + source_issue_diagnostics(
                 aggregation.issues,
+                source_kind="ledger_renta_gastos_pago_fraccionado_aggregation",
+                resolver_id=self.resolver_id,
+            )
+            + register_owned_acquisition_diagnostics(
+                register_owned,
                 source_kind="ledger_renta_gastos_pago_fraccionado_aggregation",
                 resolver_id=self.resolver_id,
             )
@@ -1269,7 +1282,7 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
                 for observation in unrouted
             ),
             provenance=_provenance_for(
-                aggregation.observations,
+                ledger_observations,
                 lambda observation: CalculationSourceProvenance(
                     resolver_id=self.resolver_id,
                     resolved_binding_source=BindingSourceKind.LEDGER_RENTA_GASTOS_PAGO_FRACCIONADO_AGGREGATION,
@@ -1295,6 +1308,53 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
                 for observation in asset_observations
             ),
         )
+
+
+def _m130_asset_register_treatments(
+    observations: Sequence[RentaGastoObservation],
+    *,
+    assets: tuple[ActivityAssetRevision, ...],
+    charges_the_filing_year: bool,
+    filing_year: int,
+) -> tuple[LedgerRentaExpenseTreatment, ...]:
+    """Weigh the quarterly gasto rows the activity-asset register has a say over.
+
+    Every quarterly gasto shares one target casilla, so a row's category is the
+    only thing that can label it a depreciation treatment. The governed routing
+    that answers that question is resolved once for the filing year -- the
+    first-slice route is declared per annual Modelo 100 revision, so it does not
+    vary inside a year -- and only when the register charges that year, which is
+    the only circumstance in which a second depreciation treatment can compete.
+    A bucket with no registered asset leaves the quarterly path untouched.
+
+    Returns:
+        One treatment per gasto row the register owns or could collide with.
+    """
+    if not assets:
+        return ()
+    acquisition_ids = {asset.acquisition.observed_transaction_id for asset in assets}
+    candidates = (
+        tuple(observations)
+        if charges_the_filing_year
+        else tuple(observation for observation in observations if observation.transaction_id in acquisition_ids)
+    )
+    if not candidates:
+        return ()
+    labelled = (
+        amortization_labelled_expense_categories(effective_date=date(filing_year, 12, 31))
+        if charges_the_filing_year
+        else frozenset()
+    )
+    return tuple(
+        LedgerRentaExpenseTreatment(
+            transaction_id=observation.transaction_id,
+            category=observation.category_id,
+            tax_year=observation.filing_date.year,
+            deductible_amount=observation.deductible_amount,
+            amortization_labelled=observation.category_id in labelled,
+        )
+        for observation in candidates
+    )
 
 
 def aggregation_period_for_modelo(*, filing_year: int, code: str) -> Period:

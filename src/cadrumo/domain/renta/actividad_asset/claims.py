@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import date, timedelta
 from decimal import Decimal
+from typing import Final
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -16,6 +17,28 @@ from .election import WORKFORCE_CONDITIONED_METHODS, AmortizationMethod
 from .errors import ActividadAssetClaimConflictError, ActividadAssetValidationError
 from .lifecycle import ActivityAssetRevision, AssetKind
 from .schedule import AssetScheduleHistory, ScheduledAmortizationCharge
+
+MATERIAL_M100_CASILLA_ID: Final[str] = "0208"
+"""Modelo 100 destination the activity-asset source exclusively owns for material assets."""
+
+INTANGIBLE_M100_CASILLA_ID: Final[str] = "0227"
+"""Modelo 100 destination the activity-asset source exclusively owns for intangible assets."""
+
+M100_AMORTIZATION_CASILLA_IDS: Final[frozenset[str]] = frozenset(
+    {MATERIAL_M100_CASILLA_ID, INTANGIBLE_M100_CASILLA_ID},
+)
+"""The two Modelo 100 destinations that carry an activity amortization dotación.
+
+A Renta expense observation reaching one of these casillas declares an
+amortization-labelled deductible amount, whichever path produced it. Consumers
+that must recognise such a declaration read this set rather than restating the
+casilla numbers.
+"""
+
+
+def m100_casilla_id(asset_kind: AssetKind) -> str:
+    """Return the Modelo 100 amortization destination for one asset kind."""
+    return MATERIAL_M100_CASILLA_ID if asset_kind is AssetKind.MATERIAL else INTANGIBLE_M100_CASILLA_ID
 
 
 class AmortizationClaim(BaseModel):
@@ -336,8 +359,7 @@ def project_m100(claims: tuple[AmortizationClaim, ...], *, asset_kind: AssetKind
     selected = tuple(
         claim for claim in effective_claims(claims) if claim.tax_year == tax_year and claim.asset_kind is asset_kind
     )
-    target_casilla_id = "0208" if asset_kind is AssetKind.MATERIAL else "0227"
-    return _project(selected, tax_year=tax_year, target_casilla_id=target_casilla_id)
+    return _project(selected, tax_year=tax_year, target_casilla_id=m100_casilla_id(asset_kind))
 
 
 def project_m130(claims: tuple[AmortizationClaim, ...], *, period: Period, asset_kind: AssetKind) -> ClaimProjection:
@@ -369,12 +391,16 @@ def _intervals_overlap(left_start: date, left_end: date, right_start: date, righ
 
 
 __all__ = [
+    "INTANGIBLE_M100_CASILLA_ID",
+    "M100_AMORTIZATION_CASILLA_IDS",
+    "MATERIAL_M100_CASILLA_ID",
     "AmortizationClaim",
     "ClaimProjection",
     "ClaimRecordResult",
     "asset_schedule_history",
     "effective_claims",
     "effective_free_depreciation_claims",
+    "m100_casilla_id",
     "project_m100",
     "project_m130",
     "record_claim",

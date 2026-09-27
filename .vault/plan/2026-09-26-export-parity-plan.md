@@ -14,7 +14,7 @@ related:
   - '[[2026-09-26-export-parity-calculation-summary-pdf-adr]]'
 modified: '2026-09-27'
 body_schema: body-v2
-body_hash: 'sha256:a536cd5f50a52517a2e5d5c89096c432f49fcc52159cc655f192b92d1dbe1505'
+body_hash: 'sha256:c65be92b595a43ad9f8ff21d63e5ddcc1561d22a14adee8fb0950d84e8435b66'
 ---
 
 # `export-parity` plan
@@ -35,7 +35,7 @@ The live working ledger is the gitignored campaign scratch home; durable finding
 - [ ] `S04` - Run the ledger completeness gate over the seeded store and record every unresolved data class as a finding before delegating lanes; `dev/acceptance/export_parity/**`.
 - [ ] `S05` - Research, then source Modelo 100 retenciones soportadas per casilla from their legal sources (payer certificates, the ledger's issued-invoice client withholding, the taxpayer's own pagos fraccionados, AEAT datos fiscales through the product's live pull), covering the employee-plus-autonomo case and removing the declarant-as-payer prefills; implemented only after the operator approves the proposed decision (operator direction 2026-09-27); `.vault/research/**, .vault/adr/**, src/cadrumo/_data/registry/aeat/modelos/100/**, src/cadrumo/application/**`.; `.vault/research/**, .vault/adr/**, src/cadrumo/_data/registry/aeat/modelos/100/**, src/cadrumo/application/**`.
 - [ ] `S06` - Author the activity-asset amortization parameters on a 2022 baseline, keying only the genuine yearly divergences (2023 DA18 accelerated amortization, 2024 free depreciation) through the dev/registry tooling, so every supported year's asset charges resolve (operator direction 2026-09-27); `src/cadrumo/_data/registry/aeat/**`.; `src/cadrumo/_data/registry/aeat/**`.
-- [ ] `S17` - Let an in-year asset purchase recorded in the ledger keep its IVA deduction while its Renta and Modelo 130 expense comes only from the asset register's claim, without a competing depreciation treatment; `src/cadrumo/application/**, src/cadrumo/_data/registry/aeat/**`.; `src/cadrumo/application/**, src/cadrumo/_data/registry/aeat/**`.
+- [x] `S17` - Let an in-year asset purchase recorded in the ledger keep its IVA deduction while its Renta and Modelo 130 expense comes only from the asset register's claim, without a competing depreciation treatment; `src/cadrumo/application/**, src/cadrumo/_data/registry/aeat/**`.; `src/cadrumo/application/**, src/cadrumo/_data/registry/aeat/**`.
 - [ ] `S16` - Give exempt and out-of-scope inputs (exempt premiums, RETA quotas) a grounded IVA treatment that needs no deduction kind, and a supported write path for a bien de inversion's investment asset identity, so 303/390 calculate over a complete autonomo ledger; `src/cadrumo/domain/iva/**, src/cadrumo/application/**, src/cadrumo/_data/registry/aeat/**`.; `src/cadrumo/domain/iva/**, src/cadrumo/application/**, src/cadrumo/_data/registry/aeat/**`.
 - [ ] `S15` - Refuse or block filing grade for an annual withholding summary (190/180/193) with no per-perceptor detail when the ledger holds evidence of practised withholding, grounded in the Modelo 190 order and RIRPF art. 108; `src/cadrumo/application/**, src/cadrumo/domain/modelos/**`.; `src/cadrumo/application/**, src/cadrumo/domain/modelos/**`.
 - [ ] `S14` - Author the withholding recognition rules on a 2022 baseline in place of the hard-coded 2025-only year gate, grounded in RIRPF art. 78 (operator direction 2026-09-27); `src/cadrumo/application/aggregation/**, src/cadrumo/_data/registry/aeat/**`.; `src/cadrumo/application/aggregation/**, src/cadrumo/_data/registry/aeat/**`.
