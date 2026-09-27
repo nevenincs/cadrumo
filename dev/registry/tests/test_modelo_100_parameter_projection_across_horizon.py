@@ -1,4 +1,4 @@
-"""Modelo 100 parameters stay in force across the projected years of the support envelope.
+"""Modelo 100 parameter rows stay in force across projected years and never outlive their edition.
 
 A year the registry authors no edition for is served by the nearest edition
 through temporal projection. That only works when a parameter row the law
@@ -68,6 +68,19 @@ def _years_losing_rows(parameter: ParameterDefinition, *, edition_end: date, yea
     return tuple(year for year in years if not last <= set(_in_force(parameter, date(year, 12, 31))))
 
 
+def _rows_closed_before(parameter: ParameterDefinition, edition_start: date) -> tuple[_Row, ...]:
+    """Rows an edition states whose window ended before the edition begins."""
+    return tuple(
+        row for row in _filing_period_rows(parameter) if row.valid_to is not None and row.valid_to < edition_start
+    )
+
+
+@cache
+def _editions() -> tuple[ModeloRevision, ...]:
+    modelo = load_modelo_directory(bundled_path("registry", "aeat", "modelos", "100"))
+    return tuple(sorted(modelo.revisions.values(), key=lambda revision: (revision.valid_from, str(revision.id))))
+
+
 def test_the_envelope_projects_past_the_newest_edition() -> None:
     assert _projected_years(), "no supported year lies beyond the newest authored Modelo 100 edition"
 
@@ -81,6 +94,22 @@ def test_every_parameter_in_force_at_the_newest_edition_end_reaches_every_projec
         if (years := _years_losing_rows(parameter, edition_end=edition_end, years=_projected_years()))
     }
     assert lost == {}, lost
+
+
+def test_no_edition_states_a_row_that_closed_before_it_begins() -> None:
+    """An edition carries the rows in force for it; a closed row belongs only to the editions it covered.
+
+    Consumers read a table's rows as the table (its brackets, its top rung), so a
+    stale row left in a later edition reads as part of that edition's law even
+    though a dated lookup would skip it.
+    """
+    stale = {
+        (str(revision.id), parameter.id): len(rows)
+        for revision in _editions()
+        for parameter in revision.parameters
+        if (rows := _rows_closed_before(parameter, revision.valid_from))
+    }
+    assert stale == {}, stale
 
 
 def test_a_row_closed_at_its_edition_end_is_detected() -> None:
@@ -108,3 +137,6 @@ def test_a_row_closed_at_its_edition_end_is_detected() -> None:
 
     assert _years_losing_rows(closed, edition_end=edition_end, years=years) == years
     assert _years_losing_rows(opened, edition_end=edition_end, years=years) == ()
+    later_edition_start = date(edition_year + 1, 1, 1)
+    assert _rows_closed_before(closed, later_edition_start) == closed.values
+    assert _rows_closed_before(opened, later_edition_start) == ()

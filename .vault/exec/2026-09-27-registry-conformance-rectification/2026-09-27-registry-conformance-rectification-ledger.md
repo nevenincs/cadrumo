@@ -5,7 +5,7 @@ tags:
 date: '2026-09-27'
 modified: '2026-09-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:a7553b4f378d95140fc29d8ecf5f145d7f338c2d23abc9a095f2e007494870da'
+body_hash: 'sha256:8ccbbefd4a7d336180827f11929e5928d9ab8dcc170516685fe83c4cb9ccc9f8'
 related:
   - "[[2026-09-27-registry-conformance-rectification-plan]]"
 ---
@@ -106,6 +106,8 @@ related:
 - `S07` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/parameters/0001-declarations.toml`
 - `S07` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/revision.toml`
 - `S07` `verify:` `just check-registry-gate` -> `pass`
+- `S07` `M` `dev/registry/tests/test_modelo_100_parameter_projection_across_horizon.py`
+- `S07` `verify:` `pytest dev (no failure beyond main; lane gate green after removing the merged worktree)` -> `pass`
 
 ## Notes
 
@@ -113,4 +115,5 @@ related:
 - `S05` Modelo 100 2022 casilla 0670 stays manual: the official dictionary label signs of 1913 and 1916 contradict the manual; returned to the operator for ruling.
 - `S05` The final-settlement manual-anchor test still names its manual ejercicio as a literal until the evidence-derived manual-edition selector from the test-year scrub is merged.
 - `S07` Two parameters keep their stated windows: the renewables availability flag is keyed on transaction_date, and renta-guarderia-incremento-cap-anual exists only in the 2024 edition.
+- `S07` Correction: editions carried the closed rows of earlier editions, which table readers such as the accumulated-cuota gate read as current law; each edition now states only its in-force rows, with a progressive bracket table kept whole.
 
