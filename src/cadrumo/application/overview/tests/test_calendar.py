@@ -14,7 +14,10 @@ from ....domain.calculations.registry.applicability import ApplicabilityVerdict,
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.calendar_ccaa_catalogue import require_calendar_ccaa
 from ....domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
-from ....domain.calculations.registry.tests.published_authority import published_supported_filing_years
+from ....domain.calculations.registry.tests.published_authority import (
+    PublishedGovernedFactSource,
+    published_supported_filing_years,
+)
 from ....domain.contribuyente.entity_type import EntityType, LegalEntityForm
 from ....domain.deadlines.engine import DeadlineEngine
 from ....domain.deadlines.festivos import DeadlineHolidayCoverage
@@ -66,8 +69,7 @@ from .calendar_test_support import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_SUPPORT = published_supported_filing_years()
-assert _SUPPORT is not None, "the bundled registry declares no supported filing years"
+_SUPPORT = PublishedGovernedFactSource().supported_filing_years()
 
 _M303_CENSO_ENROLMENT_KEYS = frozenset(
     {
