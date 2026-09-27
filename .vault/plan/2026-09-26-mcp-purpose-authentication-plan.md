@@ -1,0 +1,124 @@
+---
+tags:
+  - '#plan'
+  - '#mcp-purpose-authentication'
+date: '2026-09-26'
+tier: L2
+related:
+  - '[[2026-09-26-mcp-purpose-authentication-adr]]'
+  - '[[2026-09-26-mcp-purpose-authentication-profile-access-adr]]'
+  - '[[2026-08-11-tui-architecture-adr]]'
+  - '[[2026-08-13-profile-password-custody-rollup-adr]]'
+  - '[[2026-08-13-profile-session-lifecycle-successor-adr]]'
+  - '[[2026-08-13-cli-action-envelope-successor-adr]]'
+  - '[[2026-09-04-tui-architecture-authenticated-tui-visibility-adr]]'
+  - '[[2026-09-14-registry-authority-artifact-boundary-indexed-storage-adr]]'
+modified: '2026-09-27'
+body_schema: body-v2
+body_hash: 'sha256:6948ced122f1cf43e97a88fe238c11c296852c6a5f0c3b27f6a277b1344d4438'
+---
+
+# `mcp-purpose-authentication` plan
+
+Implement profile-scoped API authentication, shared local runtime ownership and the replacement MCP, with complete CLI/TUI management parity.
+
+## Description
+
+Approved 2026-09-26
+
+Scoped authorization: on 2026-09-27 the operator explicitly instructed this session to execute the plan. This authorizes implementation, verification, review and integration of all remaining Steps from P02.S05 through P05.S20 under the accepted decisions, superseding prior session-specific stop points. P01.S01-P02.S04 remain complete with their recorded limits. Continue until the plan is implemented and its acceptance obligations are met; unavailable native environments remain unproven rather than passing. Preserve concurrent work and coordinate by current source and durable records. No commit, external publication, real taxpayer access or live filing is authorized.
+
+Confirmed scope: local installation with multiple users/profiles, concurrent agents with separately tracked sessions, durable API-key grants enabling autonomous reconnect, and full CLI/TUI parity for authentication, key management and locking. The design supports separate OS accounts and multiple password profiles within one account; the latter is not a hostile-user isolation boundary. Replace the old MCP; do not preserve its implementation or bootstrap interfaces.
+
+Decision coverage:
+
+| Phase | Governing decisions and boundary |
+| --- | --- |
+| P01 | The two 2026-09-26 feature ADRs settle purpose and delegated access; resolve their security details and focused predecessor amendments before dependent product edits |
+| P02 | The profile-access ADR extends 2026-08-13-profile-password-custody-rollup-adr and composes 2026-08-13-profile-session-lifecycle-successor-adr |
+| P03 | The runtime ADR hosts the platform owned by 2026-08-11-tui-architecture-adr; no duplicate supervisor, journal or platform-migration plan |
+| P04 | The profile-access parity matrix, 2026-08-13-cli-action-envelope-successor-adr and 2026-09-04-tui-architecture-authenticated-tui-visibility-adr govern both user interfaces |
+| P05 | Both feature ADRs govern MCP and installed acceptance; 2026-09-14-registry-authority-artifact-boundary-indexed-storage-adr governs published-authority admission throughout |
+
+Reuse is mandatory: OperationSupervisor, OperationRegistry and compose_operation_services for execution; existing operation persistence and JournalRepositoryBase for safe lifecycle facts; application.workflow and application.flows for their existing work/checkpoint semantics; login_session/session_admission for profile lifecycle; application.operator_actions for recovery actions; core.observability for diagnostics; existing storage transactions and provider acquisition locks for their local invariants. P01 records the exact live defining symbols consumed rather than inventing alternatives.
+
+New product modules are expected under the owning application/profile, persistence/custody, local-runtime adapter and entrypoint areas named below. Proposed paths are explicitly creation work. Public definitions live in named modules with inert package initializers. Entrypoints do not import each other; the CLI's opaque TUI launcher remains unchanged in role.
+
+The scope includes all existing private entrypoint paths affected by shared admission and the enrolled operation projections exposed to MCP. A live command/operation census identifies them. Unsupported or unvalidated domain functionality stays explicitly unavailable. This plan does not implement missing tax calculations, make filing-grade claims, enable live filing, build a hosted service, add a calendar scheduler, or redo the existing TUI/operation-platform migration.
+
+Resume requirements: read both feature ADRs and this plan; inspect the current worktree and in-flight custody/TUI plans; use the authorization recorded above. P01.S01 resolves the security-contract prerequisites and predecessor amendments before dependent coding. Preserve other contributors' edits; serialize overlapping work with their owning plan rather than duplicating it.
+
+Execution resume: P03.S08/S09, guarded result/review/response projections, durable publication/input provenance and convergence of the live private CLI/TUI census. Public local transport now routes registered contract discovery, submit, start, fresh continuation and bounded observation through the real profile authority and installed immutable workers. Native worker and final runtime output writes hold distinct current authorization guards. Canonical retries issue no new response capability; reattachment resolves stored operands and uses existing lease reconciliation. Keep backend/calculation/filing refusals. S08/S09, full platform lifecycle, CLI/TUI parity and replacement MCP remain open.
+
+## Steps
+
+### Phase `P01` - Settle contracts and decision coverage
+
+Establish accepted security boundaries, exact reuse seams and typed application contracts before persisting credentials or exposing new entrypoints.
+
+- [x] `P01.S01` - Resolve and record the security contracts before product edits: review the proposed lease/grant defaults, credential delivery, protected control-store/DEK-wrap format, platform secret backends, authenticated IPC and revocation ordering; accept the authorized feature decisions and apply only their focused predecessor amendments. Record current platform/custody-plan dependencies and exact reused symbols; do not treat missing acceptance as permission to code; `.vault/adr/2026-09-26-mcp-purpose-authentication-adr.md, .vault/adr/2026-09-26-mcp-purpose-authentication-profile-access-adr.md and their related evidence/predecessors`.
+- [x] `P01.S02` - Define strict profile/grant/key/session contracts, scope and disclosure evaluation, typed refusal/status outcomes and administration capability requirements; build the live private-entrypoint/operation exposure census and prove exact-target and privilege-intersection policy. Defer operation-registry enrollment until the real administration executors land in P02.S04, rather than registering placeholder executors; `create public automation contract and policy modules under src/cadrumo/application/user_profile/ with owning tests, consume existing application/operations and operator_actions definitions without duplicating their registries`.
+
+### Phase `P02` - Implement API-key custody and session lifecycle
+
+Deliver atomic enrollment, bounded admission and revocation through the existing profile lifecycle, with protected automation unlock.
+
+- [x] `P02.S03` - Implement the protected pre-unlock grant/control store, key verifiers and grant-bound DEK wraps with current-version validation and OS-secret-store ports; prove cross-profile/installation/generation rejection, unavailable-store refusal and absence from portable backups; `create automation custody modules under src/cadrumo/adapters/persistence/storage/custody/, compose src/cadrumo/application/user_profile/login_session.py and owning custody tests`.
+- [x] `P02.S04` - Implement request-bound enrollment, approval/decline, protected key delivery, inventory, rotation and password-authorized grant renewal through registered application operations; prove idempotency and crash/failure recovery across each enrollment and delivery boundary; `new automation services and pure contract tests in src/cadrumo/application/user_profile/, existing custody adapter and its real-profile integration tests, application/operations/secret_submission.py, entrypoints/operation_composition.py, canonical error registry and owned import-load targets`.
+- [x] `P02.S05` - Implement API-key admission and refresh, attended/child sessions, context-specific human binding and non-secret status; preserve independent password authentication and human expiry; prove autonomous fresh-session admission and refusal of target mismatch or token-based administrative elevation; `src/cadrumo/application/user_profile/session_admission.py, src/cadrumo/application/user_profile/login_session.py, new session authority modules and owning tests`.
+- [x] `P02.S06` - Implement key/grant/session revocation, current-session lock and profile-wide suspension/resume; connect password/recovery/reset/delete transitions and serialize generation changes against admission; prove cascade, persistent lock and non-resurrection after restore; `new profile session/automation services, affected lifecycle owners under src/cadrumo/application/user_profile/ and src/cadrumo/adapters/persistence/storage/custody/`.
+
+### Phase `P03` - Host shared application services in the local runtime
+
+Provide authenticated local transport, isolated profile execution and supervised process management without creating a second operation platform.
+
+- [x] `P03.S07` - Create the runtime entrypoint and authenticated local client/server transport, single-owner startup and readiness/version handshake; prove concurrent launch convergence and refusal of foreign, stale or substituted endpoints; `create src/cadrumo/entrypoints/runtime/, complete existing src/cadrumo/adapters/local_runtime/ transport and launch adapters, compose src/cadrumo/application/runtime/ contracts, pyproject.toml installed entrypoint and owned import-load targets`.
+- [ ] `P03.S08` - Host existing application operations behind immutable profile-bound worker custody; route the censused private CLI/TUI entrypoint admission through that authority and prevent ambient active-profile bypass; prove simultaneous A/B use, same-profile revision conflicts and human profile switching without agent retargeting; `runtime composition, src/cadrumo/adapters/persistence/storage/master_key/active_session.py, src/cadrumo/application/user_profile/session_admission.py and the P01 live exposure census`.
+- [ ] `P03.S09` - Integrate access checks with operation submit/start/resume, private observation/result release and domain commit guards; reuse durable operation/workflow stores and authoritative effect receipts; prove revoke-versus-commit ordering, detached resume, idempotent retries and honest unknown effects; `src/cadrumo/application/operations/composition.py, supervisor.py, registered executors, src/cadrumo/application/workflow/ and src/cadrumo/adapters/persistence/operations/ only where authentication integration requires changes`.
+- [ ] `P03.S10` - Implement Windows user-session service management, owned Job Object containment, stop/drain and abrupt-death recovery; expose typed health/background controls and prove originating-login/last-eligible-logout behavior, separate manager/autostart/authorization capabilities, native automation-store replacement/deletion, and containment through launch races, independent descendant groups, guardian failure, inheritance and actual browsers using real Windows processes and isolated synthetic custody; `new Windows modules under local-runtime adapters and runtime entrypoint, reuse relevant primitives from src/cadrumo/adapters/persistence/storage/custody/_kdf_process.py, runtime-owned tests`.
+- [ ] `P03.S11` - Implement equivalent macOS/Linux user-session supervision, private sockets, process-group plus parent-death containment, lifecycle events, explicit non-prompting native automation-secret-store composition and coherent upgrade refusal; prove login eligibility, separate manager/autostart/authorization capabilities, bounded suspend/shutdown preparation, native replacement/deletion and the complete containment matrix with real processes; interim refusal does not complete platform acceptance; `new POSIX/macOS/Linux modules under local-runtime adapters, runtime entrypoint, native custody-port adapters, pyproject.toml installed-entrypoint/package declarations and platform tests`.
+
+### Phase `P04` - Deliver complete CLI and TUI management parity
+
+Make each interface independently operate every key, authentication, lock and runtime-management capability through the same application services.
+
+- [ ] `P04.S12` - Expose the complete CLI key/request/grant lifecycle with existing typed JSON envelopes and secure input/output channels; implement create/list/inspect/approve/decline/rotate/renew/scope-change/revoke actions and prove secret non-disclosure plus live parser/schema parity; `src/cadrumo/entrypoints/cli/config/command_specs.py, _custody_command_specs.py, secure_input.py, create focused command modules/specs and owning CLI tests`.
+- [ ] `P04.S13` - Expose CLI password/key login, session inventory/status, current/selected-session lock, profile-wide lock/password resume and runtime management; bind explicit action scope and remaining unattended-access output; prove timeout and global-lock behavior through installed commands; `CLI config/app command declarations and handlers under src/cadrumo/entrypoints/cli/, shared runtime client and owning CLI tests`.
+- [ ] `P04.S14` - Implement native TUI request/key/grant inventory and management journeys with secure enrollment/rotation and fresh-proof controls, consuming the same registered operations as CLI; prove every key-management parity row and no secret retention in screen/controller state; `create focused views under src/cadrumo/entrypoints/tui/profile/ and secret/, compose through src/cadrumo/entrypoints/tui/app.py, launcher.py and owning TUI tests`.
+- [ ] `P04.S15` - Implement TUI password/key login, scope-aware session inventory, current/profile-wide lock and resume, unattended-access disclosure and runtime management; clear private presentation on expiry/revocation and prove restricted-key login cannot reach human-only administration; `src/cadrumo/entrypoints/tui/installed_session.py, secret/login.py, profile/, operations/controller.py, app.py and owning TUI tests`.
+
+### Phase `P05` - Replace MCP and prove installed behavior
+
+Connect agents to the shared authority, remove the old MCP paths and verify autonomous operation and recovery across all supported platforms.
+
+- [ ] `P05.S16` - Replace MCP bootstrap and dispatch with a client-owned stdio adapter for the shared runtime, protected credential references and exact session binding; expose status, authorization requests and registered discovery/execute/result projections with identical guards on every tool/resource path; `src/cadrumo_harness/mcp/main.py, server.py, runtime client integration and owning MCP protocol tests`.
+- [ ] `P05.S17` - Integrate canonical published-authority queries and pinned operation provenance into MCP; preserve readiness grades and separate AEAT authentication/needs-user outcomes; prove generation consistency, corrupt-publication refusal and that local API keys never reach provider requests; `MCP projections, src/cadrumo/domain/calculations/registry/authority.py consumed through its owning application boundary, src/cadrumo/application/auth/sessions.py and registered domain operation projections`.
+- [ ] `P05.S18` - Delete displaced identity-flag admission, password-file bootstrap/forwarding, wrapper execution and unsafe timeout/process paths after replacement wiring; remove their options/tests and regenerate installed references; document enrollment, unattended access, locks, revocation and platform management without secret-bearing examples; `src/cadrumo_harness/mcp/identity_gate.py, _profile_secret_channel.py, inprocess.py, _transport.py, call_runtime.py, _stdio_lifetime.py and actual consumers identified by the live census, owning documentation generators`.
+- [ ] `P05.S19` - Prove full cross-interface parity and autonomous recovery against real synthetic encrypted profiles: create/rotate/revoke across CLI/TUI, reconnect through MCP after human timeout, race lock/revocation with work, and retain domain/filing refusals; fix integrated defects and complete the rolling review; `existing CLI/TUI/MCP owning integration-test directories and runtime/profile integration tests, application operation and storage implementations under test`.
+- [ ] `P05.S20` - Complete installed Windows/macOS/Linux acceptance, package/import/locale/schema/reference gates and the final integrated review; record actual commands and platform evidence, preserve unrelated baseline failures, and close only when all declared lifecycle and custody obligations pass; `runtime/MCP installed tests, pyproject.toml, repository-owned quality/packaging commands and this plan's execution ledger/audit`.
+
+## Parallelization
+
+Execute P01 through P05 in order. Default to one writer; this plan does not request delegation. P02 owns shared custody and admission before P03 binds service execution. P04 requires that runtime boundary, and P05 integrates the MCP only after CLI/TUI contracts are available.
+
+CLI and TUI presentation Steps may later be assigned independently once their application contracts are stable, with explicit disjoint ownership. Shared application services, composition roots, schemas, packaging, locale generation and vault metadata remain serialized. Any approved parallel work must preserve concurrent edits.
+
+Review integrated behavior at each actual Phase close and at plan close under the normal rolling-audit cadence. A Step closes only after its own verification. The design-only P01.S01 checkpoint is recorded in the execution ledger. No product Step, Phase or implementation completion is claimed by that checkpoint.
+
+## Verification
+
+Every product Step includes focused tests in the narrow owning tests directory. Pure policy tests may isolate logic; custody, runtime, CLI/TUI and MCP integration tests use real installed boundaries and synthetic encrypted profiles. Derive coverage from the live operation/command registry, not a frozen count or Git inventory.
+
+- Authentication: prove first enrollment and protected delivery, decline/expiry/mismatch rollback, autonomous reconnect with no password interaction after human timeout, explicit grant expiry, rotation overlap and stale-key refusal, invalid profile/OS/installation/generation refusal, and no escalation from API-key-authenticated CLI or TUI.
+- Parity: exercise every row of the access ADR's CLI/TUI matrix. Create in one interface, inspect/rotate/revoke in the other, and verify the CLI/TUI/MCP all observe the same outcome. A missing TUI action, CLI-only fallback, copied policy or inconsistent JSON refusal fails acceptance.
+- Locking: distinguish session lock from root-key revocation and profile-wide suspension; test fresh authentication after session lock, blocked API resume after global lock, selected password-authorized reactivation, attended expiry, OS-lock policy and persistent suspension across restart.
+- Custody: exercise missing/locked/unavailable OS secret stores, atomic enrollment failure at each durable boundary, crash during rotation/revocation, password/recovery/reset/delete hooks, and restore without restoring old automation. Scan unique secret sentinels across stdout/stderr, MCP streams, journals, diagnostics, exceptions, argv, environment, temporary files and generated artifacts.
+- Concurrency: use simultaneous agents and human CLI/TUI over profiles A/B with identical labels, switch the human hot profile, narrow child permissions, race revocation against data release and commit, and prove revision conflicts plus idempotent outcome recovery. Operation observation must never reconstruct apply/reject authority.
+- Durability: crash and reconnect through real operation/workflow stores; release keys while waiting; resume only supported definitions; reconcile timeout after commit and uncertain effects without blind replay. Keep financial values in canonical encrypted domain records, not generic journals.
+- Lifecycle clarification: prove originating-login logout invalidates human/attended descendants without revoking independent grants; unknown unattended eligibility refuses; last eligible logout fences and shuts down with custody release; manager availability, autostart and authorization remain separate. P03.S10/S11 and P05.S20 must prove launch/registration races, independent descendant groups, guardian failure, inheritance and actual browsers on all platforms. Suspend/shutdown preparation is bounded best effort; recovery revalidates authority and reconciles possible commits before retry.
+- Runtime: run real Windows, macOS and Linux installed tests for startup races, endpoint impersonation/ownership refusal, host disconnect, concurrent clients, OS lock/sign-out/suspend, background enable/disable, stop/drain, abrupt parent death, descendant cleanup and coherent upgrade/version refusal. Record an unavailable platform as unproven, not passing.
+- Authority and provider: pin generation across a real query/operation, test corrupt/missing publication and no source fallback, detect stale generation/input revisions, preserve domain-readiness refusals, and require separate AEAT authentication without forwarding local keys or submitting live filings.
+
+For product execution, run the current repository-owned style, format, type, import-boundary, locale, command-schema/generated-reference, packaging and relevant unit/integration gates from the worktree's declared environment. Inspect the live justfile first because tooling is being edited concurrently. Select integration markers explicitly so an empty or deselected suite is not counted as proof. Preserve actual commands, exit statuses and unchanged baseline failures in the execution ledger.
+
+Documentation gates are vaultspec-core vault check all and vaultspec-core vault plan check for this plan. At final completion every Step must be checked, the integrated review must pass, and all required platform evidence must exist. Until then capability claims must reflect remaining validation gaps.
