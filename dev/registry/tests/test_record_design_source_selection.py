@@ -104,22 +104,28 @@ def test_rejects_modelo_390_hash_drift() -> None:
         )
 
 
-def test_verifies_both_explicit_modelo_303_2024_epochs_without_date_only_selection() -> None:
+# The exercise the official Modelo 303 design splits into an early and a late
+# edition; the identity of both cited designs.
+_M303_SPLIT_DESIGN_EXERCISE = 2024
+
+
+def test_verifies_both_explicit_modelo_303_split_design_epochs_without_date_only_selection() -> None:
+    year = _M303_SPLIT_DESIGN_EXERCISE
     sources = _catalogues().sources
 
     early = resolve_record_design_binary(
         bundled_path(),
         sources,
-        source_ref="aeat-dr-303-2024-early",
-        filing_year=2024,
-        design_epoch="2024-early",
+        source_ref=f"aeat-dr-303-{year}-early",
+        filing_year=year,
+        design_epoch=f"{year}-early",
     )
     late = resolve_record_design_binary(
         bundled_path(),
         sources,
-        source_ref="aeat-dr-303-2024-late",
-        filing_year=2024,
-        design_epoch="2024-late",
+        source_ref=f"aeat-dr-303-{year}-late",
+        filing_year=year,
+        design_epoch=f"{year}-late",
     )
 
     assert early.source.id != late.source.id
@@ -267,19 +273,24 @@ def test_record_design_selection_cannot_consult_registry_export_layouts() -> Non
     assert not {name for name in reached if "export" in name or "layout" in name}, sorted(reached)
 
 
-def test_resolves_the_hash_pinned_modelo_200_2025_binary() -> None:
+# The exercise of the hash-pinned official Modelo 200 design; the cited design's identity.
+_M200_PINNED_DESIGN_EXERCISE = 2025
+
+
+def test_resolves_the_hash_pinned_modelo_200_binary() -> None:
+    year = _M200_PINNED_DESIGN_EXERCISE
     sources = _catalogues().sources
 
     resolved = resolve_record_design_binary(
         bundled_path(),
         sources,
-        source_ref="aeat-dr-200-2025",
-        filing_year=2025,
-        design_epoch="2025",
+        source_ref=f"aeat-dr-200-{year}",
+        filing_year=year,
+        design_epoch=str(year),
     )
 
-    assert resolved.source.id == "aeat-dr-200-2025"
-    assert resolved.source.record_design_epoch == "2025"
+    assert resolved.source.id == f"aeat-dr-200-{year}"
+    assert resolved.source.record_design_epoch == str(year)
     assert resolved.path.is_file()
 
 

@@ -259,7 +259,7 @@ def test_modelo_303_extraction_profile_legal_refs_match_target_casillas() -> Non
         assert set(profile.legal_refs) == expected_refs
 
 
-def test_modelo_303_hac_819_2024_authority_starts_only_with_late_2024_design() -> None:
+def test_modelo_303_layout_modification_authority_starts_only_with_the_late_split_design() -> None:
     """Reject both the fabricated authority and any backdated layout grounding."""
     modelo, catalogues = load_modelo_303()
 
@@ -308,28 +308,35 @@ def test_modelo_303_quarterly_deadlines_match_orden_eha_3786_2008_art_7() -> Non
         assert current_windows[window_id].closes_on == closes
 
 
-def test_modelo_303_2023_deadlines_exactly_cover_declared_quarterly_and_monthly_schedules() -> None:
-    """The 2023 owner carries one AEAT-grounded row per declared period token."""
+# The exercise whose AEAT calendario del contribuyente grounds the deadline days checked
+# below; the calendar is the cited evidence. Its fourth quarter and December are
+# filed under the following exercise's calendar.
+_CALENDAR_EXERCISE = 2023
+
+
+def test_modelo_303_calendar_exercise_deadlines_exactly_cover_declared_quarterly_and_monthly_schedules() -> None:
+    """The calendar exercise's owner carries one AEAT-grounded row per declared period token."""
+    year = _CALENDAR_EXERCISE
     modelo, _ = load_modelo_303()
-    revision = modelo.revisions["2023"]
+    revision = modelo.revisions[str(year)]
     windows_by_period = {window.period.registry_token: window for window in revision.deadline_windows}
     expected = {
-        "1T": (date(2023, 4, 1), date(2023, 4, 20), date(2023, 4, 15)),
-        "2T": (date(2023, 7, 1), date(2023, 7, 20), date(2023, 7, 15)),
-        "3T": (date(2023, 10, 1), date(2023, 10, 20), date(2023, 10, 15)),
-        "4T": (date(2024, 1, 1), date(2024, 1, 30), date(2024, 1, 25)),
-        "01": (date(2023, 2, 1), date(2023, 2, 28), date(2023, 2, 23)),
-        "02": (date(2023, 3, 1), date(2023, 3, 30), date(2023, 3, 25)),
-        "03": (date(2023, 4, 1), date(2023, 5, 2), date(2023, 4, 25)),
-        "04": (date(2023, 5, 1), date(2023, 5, 30), date(2023, 5, 25)),
-        "05": (date(2023, 6, 1), date(2023, 6, 30), date(2023, 6, 25)),
-        "06": (date(2023, 7, 1), date(2023, 7, 31), date(2023, 7, 26)),
-        "07": (date(2023, 8, 1), date(2023, 8, 30), date(2023, 8, 25)),
-        "08": (date(2023, 9, 1), date(2023, 10, 2), date(2023, 9, 27)),
-        "09": (date(2023, 10, 1), date(2023, 10, 30), date(2023, 10, 25)),
-        "10": (date(2023, 11, 1), date(2023, 11, 30), date(2023, 11, 25)),
-        "11": (date(2023, 12, 1), date(2024, 1, 2), date(2023, 12, 26)),
-        "12": (date(2024, 1, 1), date(2024, 1, 30), date(2024, 1, 25)),
+        "1T": (date(year, 4, 1), date(year, 4, 20), date(year, 4, 15)),
+        "2T": (date(year, 7, 1), date(year, 7, 20), date(year, 7, 15)),
+        "3T": (date(year, 10, 1), date(year, 10, 20), date(year, 10, 15)),
+        "4T": (date(year + 1, 1, 1), date(year + 1, 1, 30), date(year + 1, 1, 25)),
+        "01": (date(year, 2, 1), date(year, 2, 28), date(year, 2, 23)),
+        "02": (date(year, 3, 1), date(year, 3, 30), date(year, 3, 25)),
+        "03": (date(year, 4, 1), date(year, 5, 2), date(year, 4, 25)),
+        "04": (date(year, 5, 1), date(year, 5, 30), date(year, 5, 25)),
+        "05": (date(year, 6, 1), date(year, 6, 30), date(year, 6, 25)),
+        "06": (date(year, 7, 1), date(year, 7, 31), date(year, 7, 26)),
+        "07": (date(year, 8, 1), date(year, 8, 30), date(year, 8, 25)),
+        "08": (date(year, 9, 1), date(year, 10, 2), date(year, 9, 27)),
+        "09": (date(year, 10, 1), date(year, 10, 30), date(year, 10, 25)),
+        "10": (date(year, 11, 1), date(year, 11, 30), date(year, 11, 25)),
+        "11": (date(year, 12, 1), date(year + 1, 1, 2), date(year, 12, 26)),
+        "12": (date(year + 1, 1, 1), date(year + 1, 1, 30), date(year + 1, 1, 25)),
     }
 
     assert len(revision.deadline_windows) == len(expected) == 16
@@ -338,30 +345,33 @@ def test_modelo_303_2023_deadlines_exactly_cover_declared_quarterly_and_monthly_
     for period, dates in expected.items():
         window = windows_by_period[period]
         assert (window.opens_on, window.closes_on, window.payment_cutoff_on) == dates
-        assert window.filing_year == window.period.filing_year == 2023
-        assert window.id == f"modelo-303-2023-{period.lower()}{'-mensual' if period.isdigit() else ''}"
+        assert window.filing_year == window.period.filing_year == year
+        assert window.id == f"modelo-303-{year}-{period.lower()}{'-mensual' if period.isdigit() else ''}"
         calendar_source = (
-            "aeat-calendario-contribuyente-2024" if period in {"4T", "12"} else "aeat-calendario-contribuyente-2023"
+            f"aeat-calendario-contribuyente-{year + 1}"
+            if period in {"4T", "12"}
+            else f"aeat-calendario-contribuyente-{year}"
         )
         assert calendar_source in window.source_refs
 
 
-def test_modelo_303_2023_deadline_coordinates_have_only_the_canonical_2023_owner() -> None:
+def test_modelo_303_calendar_exercise_deadline_coordinates_have_only_the_canonical_owner() -> None:
+    year = _CALENDAR_EXERCISE
     modelo, _ = load_modelo_303()
-    expected_periods = set(modelo.revisions["2023"].period_selector.periods)
+    expected_periods = set(modelo.revisions[str(year)].period_selector.periods)
     owners_by_period = {
         period: [
             revision.id
             for revision in modelo.revisions.values()
             if any(
-                window.filing_year == 2023 and window.period.registry_token == period
+                window.filing_year == year and window.period.registry_token == period
                 for window in revision.deadline_windows
             )
         ]
         for period in expected_periods
     }
 
-    assert owners_by_period == {period: ["2023"] for period in expected_periods}
+    assert owners_by_period == {period: [str(year)] for period in expected_periods}
 
 
 def test_modelo_303_historical_deadline_census_is_exact_and_canonically_owned() -> None:
@@ -436,31 +446,40 @@ def test_modelo_303_historical_deadline_census_is_exact_and_canonically_owned() 
             assert (window.opens_on, window.closes_on, window.payment_cutoff_on) == dates
 
 
-def test_modelo_303_2026_supported_periods_are_fully_materialised() -> None:
+def test_modelo_303_open_ended_revision_supported_periods_are_fully_materialised() -> None:
     modelo, _ = load_modelo_303()
     revision = modelo.revisions["2026-y-siguientes"]
-    authored = {window.period.registry_token for window in revision.deadline_windows if window.filing_year == 2026}
+    opening_year = revision.valid_from.year
+    authored = {
+        window.period.registry_token for window in revision.deadline_windows if window.filing_year == opening_year
+    }
 
     assert authored == set(revision.period_selector.periods)
 
 
-def test_modelo_303_sii_2026_monthly_deadlines_are_exactly_grounded() -> None:
+# The exercise whose AEAT domiciliacion calendar grounds the SII monthly deadline
+# days checked below; the calendar is the cited evidence.
+_SII_CALENDAR_EXERCISE = 2026
+
+
+def test_modelo_303_sii_monthly_deadlines_are_exactly_grounded() -> None:
+    year = _SII_CALENDAR_EXERCISE
     modelo, _ = load_modelo_303()
-    revision = modelo.revisions["2026-y-siguientes"]
+    revision = modelo.revisions[f"{year}-y-siguientes"]
     windows = {w.id: w for w in revision.deadline_windows}
     expected = {
-        "modelo-303-2026-01-mensual": (date(2026, 2, 1), date(2026, 3, 2), date(2026, 2, 25)),
-        "modelo-303-2026-02-mensual": (date(2026, 3, 1), date(2026, 3, 30), date(2026, 3, 25)),
-        "modelo-303-2026-03-mensual": (date(2026, 4, 1), date(2026, 4, 30), date(2026, 4, 27)),
-        "modelo-303-2026-04-mensual": (date(2026, 5, 1), date(2026, 6, 1), date(2026, 5, 27)),
-        "modelo-303-2026-05-mensual": (date(2026, 6, 1), date(2026, 6, 30), date(2026, 6, 25)),
-        "modelo-303-2026-06-mensual": (date(2026, 7, 1), date(2026, 7, 30), date(2026, 7, 27)),
-        "modelo-303-2026-07-mensual": (date(2026, 8, 1), date(2026, 8, 31), date(2026, 8, 26)),
-        "modelo-303-2026-08-mensual": (date(2026, 9, 1), date(2026, 9, 30), date(2026, 9, 25)),
-        "modelo-303-2026-09-mensual": (date(2026, 10, 1), date(2026, 10, 30), date(2026, 10, 27)),
-        "modelo-303-2026-10-mensual": (date(2026, 11, 1), date(2026, 11, 30), date(2026, 11, 25)),
-        "modelo-303-2026-11-mensual": (date(2026, 12, 1), date(2026, 12, 30), date(2026, 12, 24)),
-        "modelo-303-2026-12-mensual": (date(2027, 1, 1), date(2027, 2, 1), date(2027, 1, 27)),
+        f"modelo-303-{year}-01-mensual": (date(year, 2, 1), date(year, 3, 2), date(year, 2, 25)),
+        f"modelo-303-{year}-02-mensual": (date(year, 3, 1), date(year, 3, 30), date(year, 3, 25)),
+        f"modelo-303-{year}-03-mensual": (date(year, 4, 1), date(year, 4, 30), date(year, 4, 27)),
+        f"modelo-303-{year}-04-mensual": (date(year, 5, 1), date(year, 6, 1), date(year, 5, 27)),
+        f"modelo-303-{year}-05-mensual": (date(year, 6, 1), date(year, 6, 30), date(year, 6, 25)),
+        f"modelo-303-{year}-06-mensual": (date(year, 7, 1), date(year, 7, 30), date(year, 7, 27)),
+        f"modelo-303-{year}-07-mensual": (date(year, 8, 1), date(year, 8, 31), date(year, 8, 26)),
+        f"modelo-303-{year}-08-mensual": (date(year, 9, 1), date(year, 9, 30), date(year, 9, 25)),
+        f"modelo-303-{year}-09-mensual": (date(year, 10, 1), date(year, 10, 30), date(year, 10, 27)),
+        f"modelo-303-{year}-10-mensual": (date(year, 11, 1), date(year, 11, 30), date(year, 11, 25)),
+        f"modelo-303-{year}-11-mensual": (date(year, 12, 1), date(year, 12, 30), date(year, 12, 24)),
+        f"modelo-303-{year}-12-mensual": (date(year + 1, 1, 1), date(year + 1, 2, 1), date(year + 1, 1, 27)),
     }
 
     for window_id, (opens_on, closes_on, payment_cutoff_on) in expected.items():
@@ -470,8 +489,8 @@ def test_modelo_303_sii_2026_monthly_deadlines_are_exactly_grounded() -> None:
         assert window.payment_cutoff_on == payment_cutoff_on
         assert (
             "aeat-modelo-303-procedure"
-            if window.id == "modelo-303-2026-12-mensual"
-            else "aeat-calendario-contribuyente-2026-domiciliacion"
+            if window.id == f"modelo-303-{year}-12-mensual"
+            else f"aeat-calendario-contribuyente-{year}-domiciliacion"
         ) in window.source_refs
 
-    assert "aeat-calendario-contribuyente-2026-hasta-2-marzo" in windows["modelo-303-2026-01-mensual"].source_refs
+    assert f"aeat-calendario-contribuyente-{year}-hasta-2-marzo" in windows[f"modelo-303-{year}-01-mensual"].source_refs

@@ -13,6 +13,16 @@ from .profile_schema_support import committed_registry_validator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
+# The Orden HAP/2783/2015 era revision and its record design, and the current-era
+# revision whose design Orden HFP/1338/2023 (disposicion final segunda) applies from
+# its first exercise. Revision ids and design exercises are the cited identities.
+_FIRST_ERA_REVISION = "2015-2022"
+_FIRST_ERA_DESIGN_EXERCISE = 2015
+_CURRENT_ERA_REVISION = "2025-y-siguientes"
+_CURRENT_ERA_DESIGN_EXERCISE = 2023
+_FIRST_ERA_DESIGN = f"aeat-dr-151-{_FIRST_ERA_DESIGN_EXERCISE}"
+_CURRENT_ERA_DESIGN = f"aeat-dr-151-{_CURRENT_ERA_DESIGN_EXERCISE}"
+
 _M151_FORM_ORDER_REF = "orden-hap-2783-2015:art-1"
 
 
@@ -28,17 +38,17 @@ def test_modelo_151_validator_accepts_committed_definition() -> None:
     committed_registry_validator(catalogues).validate_modelo(modelo)
 
 
-def test_modelo_151_revision_2015_declares_constructs() -> None:
+def test_modelo_151_first_era_revision_declares_constructs() -> None:
     modelo, _ = _load_modelo_151()
-    revision = modelo.revisions["2015-2022"]
-    assert revision.constructs, "151 2015-2022 revision must declare constructs"
+    revision = modelo.revisions[_FIRST_ERA_REVISION]
+    assert revision.constructs, f"151 {_FIRST_ERA_REVISION} revision must declare constructs"
     construct_ids = {c.id for c in revision.constructs}
     assert "m151-impatriado-calculation" in construct_ids
 
 
-def test_modelo_151_revision_2015_formula_targets_resolve() -> None:
+def test_modelo_151_first_era_revision_formula_targets_resolve() -> None:
     modelo, _ = _load_modelo_151()
-    revision = modelo.revisions["2015-2022"]
+    revision = modelo.revisions[_FIRST_ERA_REVISION]
     impatriado = next(c for c in revision.constructs if c.id == "m151-impatriado-calculation")
     formula_ids = {f.id for f in revision.formulas}
     for declared_formula in impatriado.formulas:
@@ -76,7 +86,7 @@ def test_modelo_151_form_order_is_boe_corpus_backed() -> None:
     assert reference.article == "1"
 
 
-def test_modelo_151_2015_workbook_parity_uses_era_matching_record_design() -> None:
+def test_modelo_151_first_era_workbook_parity_uses_era_matching_record_design() -> None:
     """The 2015-2022 revision cites its own-era design.
 
     ``boe-modelo-151-layout`` was retiered to ``official_source_guidance`` (a
@@ -86,36 +96,36 @@ def test_modelo_151_2015_workbook_parity_uses_era_matching_record_design() -> No
     this is a genuine acquisition and re-point, not a permanent gap.
     """
     modelo, catalogues = _load_modelo_151()
-    revision = modelo.revisions["2015-2022"]
+    revision = modelo.revisions[_FIRST_ERA_REVISION]
     workbook = revision.workbook_parity_refs[0]
 
     assert "boe-modelo-151-form" not in catalogues.sources
     assert catalogues.sources["aeat-modelo-151-procedure"].evidence_tier == "official_source_guidance"
     assert workbook.id == "modelo-151-cuota-escala"
     assert workbook.formula_coverage == "static_layout"
-    assert workbook.workbook_source == "aeat-dr-151-2015"
-    assert workbook.source_refs == ("aeat-dr-151-2015",)
+    assert workbook.workbook_source == _FIRST_ERA_DESIGN
+    assert workbook.source_refs == (_FIRST_ERA_DESIGN,)
 
     source = catalogues.sources[workbook.workbook_source]
     assert source.evidence_tier == "layout_authority"
     assert source.kind == "record_design"
-    assert source.applies_from is not None and source.applies_from.year == 2015
+    assert source.applies_from is not None and source.applies_from.year == _FIRST_ERA_DESIGN_EXERCISE
 
 
-def test_modelo_151_2025_workbook_parity_uses_era_matching_record_design() -> None:
+def test_modelo_151_current_era_workbook_parity_uses_era_matching_record_design() -> None:
     modelo, catalogues = _load_modelo_151()
-    revision = modelo.revisions["2025-y-siguientes"]
+    revision = modelo.revisions[_CURRENT_ERA_REVISION]
     workbook = revision.workbook_parity_refs[0]
 
     assert workbook.id == "modelo-151-cuota-escala"
     assert workbook.formula_coverage == "static_layout"
-    assert workbook.workbook_source == "aeat-dr-151-2023"
-    assert workbook.source_refs == ("aeat-dr-151-2023",)
+    assert workbook.workbook_source == _CURRENT_ERA_DESIGN
+    assert workbook.source_refs == (_CURRENT_ERA_DESIGN,)
 
     source = catalogues.sources[workbook.workbook_source]
     assert source.evidence_tier == "layout_authority"
     assert source.kind == "record_design"
-    assert source.applies_from is not None and source.applies_from.year == 2023
+    assert source.applies_from is not None and source.applies_from.year == _CURRENT_ERA_DESIGN_EXERCISE
 
 
 def test_modelo_151_carries_base_liquidable_under_declaration_advisory() -> None:
@@ -146,8 +156,8 @@ def test_modelo_151_carries_base_liquidable_under_declaration_advisory() -> None
     assert "ley-35-2006:art-93" in tuple(str(r) for r in guard.legal_refs)
 
 
-def test_modelo_151_2015_2022_cites_no_design_from_a_later_era() -> None:
-    """The 2023-and-later design belongs to no surface of the 2015-2022 revision.
+def test_modelo_151_first_era_cites_no_design_from_a_later_era() -> None:
+    """The current-era design belongs to no surface of the first-era revision.
 
     Orden HFP/1338/2023 Disposicion Final Segunda(a) states the successor model
     applies first for ejercicio 2023, which is outside this span, and AEAT names
@@ -157,14 +167,14 @@ def test_modelo_151_2015_2022_cites_no_design_from_a_later_era() -> None:
     would otherwise reappear silently in one of them.
     """
     modelo, catalogues = _load_modelo_151()
-    revision = modelo.revisions["2015-2022"]
+    revision = modelo.revisions[_FIRST_ERA_REVISION]
 
     designs = {
         ref
         for ref in revision.source_refs
         if (source := catalogues.sources.get(ref)) is not None and source.kind == "record_design"
     }
-    assert designs == {"aeat-dr-151-2015"}, designs
+    assert designs == {_FIRST_ERA_DESIGN}, designs
 
     later = {
         source.id
@@ -172,7 +182,7 @@ def test_modelo_151_2015_2022_cites_no_design_from_a_later_era() -> None:
         if source.kind == "record_design"
         and source.id.startswith("aeat-dr-151-")
         and source.applies_from is not None
-        and source.applies_from.year > 2022
+        and source.applies_from.year >= _CURRENT_ERA_DESIGN_EXERCISE
     }
     assert later, "a later-era 151 design must exist for this test to discriminate"
 

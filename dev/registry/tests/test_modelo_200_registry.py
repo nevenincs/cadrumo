@@ -146,15 +146,20 @@ def test_modelo_200_validates_with_deadline_and_schedule_catalogue_refs() -> Non
     } <= linked_surfaces
 
 
-def test_modelo_200_2025_generated_layout_supports_a_filing_snapshot() -> None:
-    """The published 2025 generated layout makes its earned filing claim live."""
+# The exercise of the official Modelo 200 design whose generated layout is published
+# at filing grade; the design's identity rather than a support coordinate.
+_GENERATED_LAYOUT_EXERCISE = 2025
+
+
+def test_modelo_200_generated_layout_supports_a_filing_snapshot() -> None:
+    """The published generated layout makes its earned filing claim live."""
     modelo, catalogues = _load_modelo_200()
 
     snapshot = build_snapshot(
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2025,
+        filing_year=_GENERATED_LAYOUT_EXERCISE,
         period="0A",
         grade=RegistryAuthorityGrade.FILING,
     )
@@ -164,27 +169,33 @@ def test_modelo_200_2025_generated_layout_supports_a_filing_snapshot() -> None:
     assert snapshot.revision.casillas
 
 
-def test_modelo_200_calendar_year_2024_deadline_matches_boe_order() -> None:
+# The calendar-year exercise whose filing campaign the cited BOE order fixes; the
+# campaign runs in the following year. The order is the identity of the evidence.
+_ORDER_CALENDAR_EXERCISE = 2024
+
+
+def test_modelo_200_calendar_year_deadline_matches_boe_order() -> None:
+    campaign = _ORDER_CALENDAR_EXERCISE + 1
     modelo, catalogues = _load_modelo_200()
     snapshot = build_snapshot(
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2024,
+        filing_year=_ORDER_CALENDAR_EXERCISE,
         period="0A",
         grade=RegistryAuthorityGrade.CALCULATION,
     )
 
     window = snapshot.revision.deadline_windows[0]
-    source = catalogues.sources["boe-modelo-200-2025-form"]
+    source = catalogues.sources[f"boe-modelo-200-{campaign}-form"]
     source_text = _normalized_text((bundled_path() / source.corpus_path).read_text(encoding="utf-8"))
 
     assert "modelo 200 de declaracion del impuesto sobre sociedades" in source_text
     assert "25 dias naturales siguientes a los seis meses posteriores" in source_text
-    assert "desde el dia 1 de julio hasta el 22 de julio de 2025" in source_text
-    assert window.opens_on == date(2025, 7, 1)
-    assert window.closes_on == date(2025, 7, 25)
-    assert window.payment_cutoff_on == date(2025, 7, 22)
+    assert f"desde el dia 1 de julio hasta el 22 de julio de {campaign}" in source_text
+    assert window.opens_on == date(campaign, 7, 1)
+    assert window.closes_on == date(campaign, 7, 25)
+    assert window.payment_cutoff_on == date(campaign, 7, 22)
 
 
 def test_modelo_200_form_order_is_boe_corpus_backed() -> None:

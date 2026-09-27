@@ -22,6 +22,12 @@ from .profile_schema_support import committed_registry_validator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
+# The one exercise the monthly legacy revision still selects; its AEAT calendars are
+# the cited evidence for every deadline day below. December is filed under the
+# following exercise's calendar.
+_CALENDAR_EXERCISE = 2022
+_LEGACY_MONTHLY_REVISION = "2008-2022"
+
 
 def _load_modelo_322() -> tuple[ModeloDefinition, RegistryCatalogues]:
     return _committed_modelo("322")
@@ -47,11 +53,11 @@ def test_modelo_322_metadata_matches_orden_eha_3434_2007() -> None:
     assert catalogues.sources["boe-modelo-322-2007-form"].evidence_tier == "layout_authority"
 
 
-def test_modelo_322_2022_revision_is_monthly() -> None:
+def test_modelo_322_legacy_revision_is_monthly() -> None:
     modelo, _ = _load_modelo_322()
-    revision = modelo.revisions["2008-2022"]
-    assert revision.valid_from == date(2022, 1, 1)
-    assert revision.period_selector.years == (2022,)
+    revision = modelo.revisions[_LEGACY_MONTHLY_REVISION]
+    assert revision.valid_from == date(_CALENDAR_EXERCISE, 1, 1)
+    assert revision.period_selector.years == (_CALENDAR_EXERCISE,)
     assert len(revision.period_selector.periods) == 12
     assert revision.orden_aplicabilidad == ("orden-eha-3434-2007:art-1",)
 
@@ -105,32 +111,34 @@ def test_modelo_322_other_months_close_within_30_days_of_following_month() -> No
     assert dec_2025.closes_on == date(2026, 1, 30)
 
 
-def test_modelo_322_2022_deadlines_exactly_match_official_aeat_calendars() -> None:
-    """Every selected 2022 month is a separately cited presentation fact."""
+def test_modelo_322_calendar_exercise_deadlines_exactly_match_official_aeat_calendars() -> None:
+    """Every selected month is a separately cited presentation fact."""
+    year = _CALENDAR_EXERCISE
+    calendar, next_calendar = f"aeat-calendario-contribuyente-{year}", f"aeat-calendario-contribuyente-{year + 1}"
     modelo, _ = _load_modelo_322()
-    revision = modelo.revisions["2008-2022"]
+    revision = modelo.revisions[_LEGACY_MONTHLY_REVISION]
     windows_by_period = {window.period.registry_token: window for window in revision.deadline_windows}
     expected = {
-        "01": (date(2022, 2, 1), date(2022, 2, 28), "aeat-calendario-contribuyente-2022"),
-        "02": (date(2022, 3, 1), date(2022, 3, 30), "aeat-calendario-contribuyente-2022"),
-        "03": (date(2022, 4, 1), date(2022, 5, 2), "aeat-calendario-contribuyente-2022"),
-        "04": (date(2022, 5, 1), date(2022, 5, 30), "aeat-calendario-contribuyente-2022"),
-        "05": (date(2022, 6, 1), date(2022, 6, 30), "aeat-calendario-contribuyente-2022"),
-        "06": (date(2022, 7, 1), date(2022, 8, 1), "aeat-calendario-contribuyente-2022"),
-        "07": (date(2022, 8, 1), date(2022, 8, 30), "aeat-calendario-contribuyente-2022"),
-        "08": (date(2022, 9, 1), date(2022, 9, 30), "aeat-calendario-contribuyente-2022"),
-        "09": (date(2022, 10, 1), date(2022, 10, 31), "aeat-calendario-contribuyente-2022"),
-        "10": (date(2022, 11, 1), date(2022, 11, 30), "aeat-calendario-contribuyente-2022"),
-        "11": (date(2022, 12, 1), date(2022, 12, 30), "aeat-calendario-contribuyente-2022"),
-        "12": (date(2023, 1, 1), date(2023, 1, 30), "aeat-calendario-contribuyente-2023"),
+        "01": (date(year, 2, 1), date(year, 2, 28), calendar),
+        "02": (date(year, 3, 1), date(year, 3, 30), calendar),
+        "03": (date(year, 4, 1), date(year, 5, 2), calendar),
+        "04": (date(year, 5, 1), date(year, 5, 30), calendar),
+        "05": (date(year, 6, 1), date(year, 6, 30), calendar),
+        "06": (date(year, 7, 1), date(year, 8, 1), calendar),
+        "07": (date(year, 8, 1), date(year, 8, 30), calendar),
+        "08": (date(year, 9, 1), date(year, 9, 30), calendar),
+        "09": (date(year, 10, 1), date(year, 10, 31), calendar),
+        "10": (date(year, 11, 1), date(year, 11, 30), calendar),
+        "11": (date(year, 12, 1), date(year, 12, 30), calendar),
+        "12": (date(year + 1, 1, 1), date(year + 1, 1, 30), next_calendar),
     }
 
     assert len(revision.deadline_windows) == len(expected) == 12
     assert set(windows_by_period) == set(expected) == set(revision.period_selector.periods)
     for period, (opens_on, closes_on, calendar_source) in expected.items():
         window = windows_by_period[period]
-        assert window.id == f"modelo-322-2022-{period}"
-        assert window.filing_year == window.period.filing_year == 2022
+        assert window.id == f"modelo-322-{year}-{period}"
+        assert window.filing_year == window.period.filing_year == year
         assert window.period_kind == "monthly"
         assert (window.opens_on, window.closes_on, window.payment_cutoff_on) == (opens_on, closes_on, None)
         assert set(window.legal_refs) == {"orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"}
@@ -141,27 +149,28 @@ def test_modelo_322_2022_deadlines_exactly_match_official_aeat_calendars() -> No
         }
 
 
-def test_modelo_322_2022_deadlines_have_one_canonical_owner_and_projection() -> None:
+def test_modelo_322_calendar_exercise_deadlines_have_one_canonical_owner_and_projection() -> None:
+    year = _CALENDAR_EXERCISE
     modelo, _ = _load_modelo_322()
     expected_periods = tuple(f"{month:02d}" for month in range(1, 13))
 
     for period in expected_periods:
-        selected = select_revision(modelo, filing_year=2022, period=period)
+        selected = select_revision(modelo, filing_year=year, period=period)
         owners = [
             revision.id
             for revision in modelo.revisions.values()
             if any(
-                window.filing_year == 2022 and window.period.registry_token == period
+                window.filing_year == year and window.period.registry_token == period
                 for window in revision.deadline_windows
             )
         ]
-        assert selected.id == "2008-2022"
+        assert selected.id == _LEGACY_MONTHLY_REVISION
         assert owners == [selected.id]
 
-    projected = compiled_bundled_authority().deadline_windows(2022, modelos=("322",))
+    projected = compiled_bundled_authority().deadline_windows(year, modelos=("322",))
     assert len(projected) == 12
     assert tuple(window.period.registry_token for _, _, window in projected) == expected_periods
-    assert {revision.id for _, revision, _ in projected} == {"2008-2022"}
+    assert {revision.id for _, revision, _ in projected} == {_LEGACY_MONTHLY_REVISION}
 
 
 def test_modelo_322_supported_deadlines_are_exact_complete_and_canonically_owned() -> None:

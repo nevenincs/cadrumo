@@ -151,8 +151,13 @@ def test_modelo_131_registry_bindings_cover_official_structured_records() -> Non
         assert all("rd-439-2007:art-110" in binding.legal_refs for binding, _selector in registry_bindings)
 
 
-def test_modelo_131_2024_dpa_territorial_reduction_fields_carry_specific_legal_basis() -> None:
-    snapshot = _modelo_131_snapshot_for(2024, "4T")
+# The exercise of the official DPA design (``_WORKBOOK_2024``) that carries the Lorca,
+# Palma and DANA territorial reduction fields; the cited workbook's identity.
+_TERRITORIAL_REDUCTION_DESIGN_EXERCISE = 2024
+
+
+def test_modelo_131_dpa_territorial_reduction_fields_carry_specific_legal_basis() -> None:
+    snapshot = _modelo_131_snapshot_for(_TERRITORIAL_REDUCTION_DESIGN_EXERCISE, "4T")
     sheets = _record_design_sheets_by_name(_WORKBOOK_2024)
     bindings = {
         (selector.offset, selector.length): binding

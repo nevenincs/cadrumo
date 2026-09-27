@@ -32,6 +32,15 @@ from .profile_schema_support import committed_registry_validator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
+# The Modelo 210 edition these declarations are reviewed on: its exercise is the
+# revision's identity and the prefix of the predicate ids it declares, so it is bound
+# once rather than derived from the support envelope.
+_REVIEWED_EDITION = 2025
+_REVIEWED_REVISION = str(_REVIEWED_EDITION)
+# Orden HAC/623/2026 updates the deadline and approves the next form layout; its
+# year is the identity of the cited order.
+_DEADLINE_ORDER_YEAR = 2026
+
 _M210_FORM_ORDER_REF = "orden-eha-3316-2010:art-1"
 _M210_AGRUPACION_ORDER_REF = "orden-eha-3316-2010:art-2"
 _ANNUAL_PERIOD = "0A"
@@ -133,17 +142,17 @@ def test_convenio_authority_projects_authored_facts_with_typed_override_kinds() 
     assert convenio.resolve("GB", ma_tipo_renta, 2025) is None
 
 
-def test_modelo_210_revision_2025_declares_constructs() -> None:
+def test_modelo_210_reviewed_revision_declares_constructs() -> None:
     modelo, _ = _load_modelo_210()
-    revision = modelo.revisions["2025"]
-    assert revision.constructs, "210 2025 revision must declare constructs"
+    revision = modelo.revisions[_REVIEWED_REVISION]
+    assert revision.constructs, f"210 {_REVIEWED_REVISION} revision must declare constructs"
     construct_ids = {c.id for c in revision.constructs}
     assert "m210-irnr-calculation" in construct_ids
 
 
-def test_modelo_210_revision_2025_formula_targets_resolve() -> None:
+def test_modelo_210_reviewed_revision_formula_targets_resolve() -> None:
     modelo, _catalogues = _load_modelo_210()
-    revision = modelo.revisions["2025"]
+    revision = modelo.revisions[_REVIEWED_REVISION]
     irnr_calc = next(c for c in revision.constructs if c.id == "m210-irnr-calculation")
     assert irnr_calc.formulas, "m210-irnr-calculation must declare formulas"
     # Verify all formula references in construct exist in the revision
@@ -152,27 +161,28 @@ def test_modelo_210_revision_2025_formula_targets_resolve() -> None:
         assert formula_id in formula_ids, f"formula {formula_id} not found in revision formulas"
 
 
-def test_modelo_210_snapshot_builds_for_2025_event_and_annual_group_periods() -> None:
+def test_modelo_210_snapshot_builds_for_event_and_annual_group_periods() -> None:
+    filing_year = _REVIEWED_EDITION
     modelo, catalogues = _load_modelo_210()
-    assert modelo.revisions["2025"].period_selector.periods == ("EVENT-N", "0A")
+    assert modelo.revisions[_REVIEWED_REVISION].period_selector.periods == ("EVENT-N", "0A")
     event_snapshot = build_snapshot(
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2025,
+        filing_year=filing_year,
         period="EVENT-1",
     )
     annual_snapshot = build_snapshot(
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2025,
+        filing_year=filing_year,
         period="0A",
     )
-    assert event_snapshot.revision.id == "2025"
+    assert event_snapshot.revision.id == _REVIEWED_REVISION
     assert event_snapshot.filing_period is not None
     assert str(event_snapshot.filing_period.code) == "EVENT-1"
-    assert annual_snapshot.revision.id == "2025"
+    assert annual_snapshot.revision.id == _REVIEWED_REVISION
     assert annual_snapshot.filing_period is not None
     assert str(annual_snapshot.filing_period.code) == "0A"
 
@@ -354,38 +364,41 @@ def test_modelo_210_irnr_sources_separate_aeat_guidance_from_boe_layout() -> Non
     assert catalogues.sources["boe-modelo-216-form-layout"].evidence_tier == "layout_authority"
 
 
-def test_modelo_210_2026_order_is_bundled_and_referenced_by_current_surfaces() -> None:
+def test_modelo_210_deadline_update_order_is_bundled_and_referenced_by_current_surfaces() -> None:
+    order_year = _DEADLINE_ORDER_YEAR
+    deadline_ref = f"boe-modelo-210-{order_year}-deadline-update"
+    layout_ref = f"boe-modelo-210-{order_year}-form-layout"
     modelo, catalogues = _load_modelo_210()
-    revision = modelo.revisions["2025"]
+    revision = modelo.revisions[_REVIEWED_REVISION]
 
-    deadline_source = catalogues.sources["boe-modelo-210-2026-deadline-update"]
-    layout_2026_source = catalogues.sources["boe-modelo-210-2026-form-layout"]
-    layout_2024_source = catalogues.sources["boe-modelo-210-2024-form-layout"]
+    deadline_source = catalogues.sources[deadline_ref]
+    next_layout_source = catalogues.sources[layout_ref]
+    prior_layout_source = catalogues.sources["boe-modelo-210-2024-form-layout"]
 
-    assert deadline_source.corpus_path == "corpus/normatives/html/orden-hac-623-2026.html"
+    assert deadline_source.corpus_path == f"corpus/normatives/html/orden-hac-623-{order_year}.html"
     assert deadline_source.sha256 == "b901936072eb6bd8213dd84e9bd493a65d10b652b3b62dbe42228e1094f38074"
     assert deadline_source.bytes == 64566
     assert deadline_source.source_url == "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-13573"
-    assert deadline_source.published_at == date(2026, 6, 23)
-    assert deadline_source.applies_from == date(2026, 1, 1)
+    assert deadline_source.published_at == date(order_year, 6, 23)
+    assert deadline_source.applies_from == date(order_year, 1, 1)
     assert deadline_source.kind == "instructions"
 
-    assert layout_2024_source.applies_to == date(2026, 12, 31)
-    assert layout_2026_source.corpus_path == deadline_source.corpus_path
-    assert layout_2026_source.applies_from == date(2027, 1, 1)
+    assert prior_layout_source.applies_to == date(order_year, 12, 31)
+    assert next_layout_source.corpus_path == deadline_source.corpus_path
+    assert next_layout_source.applies_from == date(order_year + 1, 1, 1)
 
-    assert "boe-modelo-210-2026-deadline-update" in revision.source_refs
-    assert "boe-modelo-210-2026-form-layout" in revision.source_refs
+    assert deadline_ref in revision.source_refs
+    assert layout_ref in revision.source_refs
     filing_link = next(link for link in revision.application_links if link.surface == "filing")
-    assert "boe-modelo-210-2026-deadline-update" in filing_link.source_refs
-    assert any(ref.workbook_source == "boe-modelo-210-2026-form-layout" for ref in revision.workbook_parity_refs)
+    assert deadline_ref in filing_link.source_refs
+    assert any(ref.workbook_source == layout_ref for ref in revision.workbook_parity_refs)
 
     extracted_order = _orden_hac_623_2026_extracted_markdown()
     assert "anexo de “desglose de dividendos”" in extracted_order
     assert "desglose de gastos deducibles de inmuebles arrendados o subarrendados" in extracted_order
     assert "desde el día 1 de abril hasta el 23 de diciembre" in extracted_order
-    assert "autoliquidaciones que se presenten desde el 1 de enero de 2027" in extracted_order
-    assert "devengos correspondientes a 2026" in extracted_order
+    assert f"autoliquidaciones que se presenten desde el 1 de enero de {order_year + 1}" in extracted_order
+    assert f"devengos correspondientes a {order_year}" in extracted_order
 
 
 def test_modelo_210_interest_rate_is_grounded_in_unconditional_art_25_1_f() -> None:
@@ -555,15 +568,15 @@ def test_modelo_210_pension_tariff_and_convenio_row_are_grounded() -> None:
     assert "trlirnr-rdleg-5-2004:art-25.1.b" in casillas["cuota_integra"].legal_refs
 
 
-def test_modelo_210_2025_verification_predicates_guard_representante_fiscal_and_base_imponible() -> None:
-    """The 2025 revision carries both the representante-fiscal gate and the no-silent-
+def test_modelo_210_reviewed_verification_predicates_guard_representante_fiscal_and_base_imponible() -> None:
+    """The reviewed revision carries both the representante-fiscal gate and the no-silent-
 
     under-declaration base-imponible advisory in the same verification_predicates
     array (per aeat-registry-authority-flow, the array is
     declared inline in revision.toml fragments, not in a bindings/ subdirectory).
     """
     modelo, catalogues = _load_modelo_210()
-    revision = modelo.revisions["2025"]
+    revision = modelo.revisions[_REVIEWED_REVISION]
     predicates = {p.predicate_id: p for p in revision.verification_predicates}
 
     representante_fiscal = predicates["m210-representante-fiscal-required"]
@@ -573,7 +586,7 @@ def test_modelo_210_2025_verification_predicates_guard_representante_fiscal_and_
     assert representante_fiscal.finding_kind == "BLOCKING_RULE"
     assert "trlirnr-rdleg-5-2004:art-10" in tuple(str(r) for r in representante_fiscal.legal_refs)
 
-    base_imponible_guard = predicates["modelo-210-2025-rendimientos-integros-implica-base-imponible"]
+    base_imponible_guard = predicates[f"modelo-210-{_REVIEWED_REVISION}-rendimientos-integros-implica-base-imponible"]
     assert base_imponible_guard.expression == 'implies_nonzero(["rendimientos_integros", "base_imponible"])'
     assert base_imponible_guard.finding_kind == "ADVISORY"
     assert "trlirnr-rdleg-5-2004:art-24" in tuple(str(r) for r in base_imponible_guard.legal_refs)
@@ -596,8 +609,8 @@ def test_modelo_210_2025_verification_predicates_guard_representante_fiscal_and_
         assert required_text in corpus_text
 
 
-def test_modelo_210_2025_inmobiliaria_branch_carries_categorical_conditional_advisory() -> None:
-    """The 2025 revision carries the inmobiliaria-branch categorical-conditional advisory.
+def test_modelo_210_reviewed_inmobiliaria_branch_carries_categorical_conditional_advisory() -> None:
+    """The reviewed revision carries the inmobiliaria-branch categorical-conditional advisory.
 
     Per the m210 categorical-conditional predicate decision: the inmobiliaria
     branch's silent-zero risk (tipo_renta == "inmobiliaria" implies a
@@ -609,17 +622,17 @@ def test_modelo_210_2025_inmobiliaria_branch_carries_categorical_conditional_adv
     modified by this addition.
     """
     modelo, catalogues = _load_modelo_210()
-    revision = modelo.revisions["2025"]
+    revision = modelo.revisions[_REVIEWED_REVISION]
     predicates = {p.predicate_id: p for p in revision.verification_predicates}
 
     assert set(predicates) == {
         "m210-representante-fiscal-required",
-        "modelo-210-2025-rendimientos-integros-implica-base-imponible",
-        "modelo-210-2025-inmobiliaria-implica-base-imponible",
-        "modelo-210-2025-ue-residente-requiere-residencia-ue-eee",
+        f"modelo-210-{_REVIEWED_REVISION}-rendimientos-integros-implica-base-imponible",
+        f"modelo-210-{_REVIEWED_REVISION}-inmobiliaria-implica-base-imponible",
+        f"modelo-210-{_REVIEWED_REVISION}-ue-residente-requiere-residencia-ue-eee",
     }
 
-    inmobiliaria_guard = predicates["modelo-210-2025-inmobiliaria-implica-base-imponible"]
+    inmobiliaria_guard = predicates[f"modelo-210-{_REVIEWED_REVISION}-inmobiliaria-implica-base-imponible"]
     assert inmobiliaria_guard.expression == (
         'casilla_equals_implies_nonzero(["tipo_renta", "inmobiliaria", "base_imponible"])'
     )

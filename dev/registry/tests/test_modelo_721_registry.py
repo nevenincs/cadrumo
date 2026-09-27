@@ -148,8 +148,13 @@ def test_modelo_721_selects_only_its_two_hash_pinned_boe_form_spec_eras() -> Non
         assert carried.id == "2024"
 
 
-def test_modelo_721_refuses_a_mutated_2023_selector_past_its_boe_package_window() -> None:
-    """A selector expansion cannot turn the 2023 Annex into 2024 authority.
+# The Modelo 721 package that HAC/1504/2024 closes by substituting its anexo; the
+# package's exercise is the identity of the cited BOE text.
+_SUPERSEDED_PACKAGE_EXERCISE = 2023
+
+
+def test_modelo_721_refuses_a_mutated_superseded_selector_past_its_boe_package_window() -> None:
+    """A selector expansion cannot turn the superseded Annex into its successor's authority.
 
     Re-aimed from the 2024 era, which is no longer a boundary: HAC/1504/2024 SUBSTITUTES
     the anexo of Orden HFP/886/2023 and BOE's Referencias posteriores for BOE-A-2023-17429
@@ -158,22 +163,27 @@ def test_modelo_721_refuses_a_mutated_2023_selector_past_its_boe_package_window(
     substitution is exactly what closes the 2023 package -- so the over-reach this guard
     exists to catch is still provably refused.
     """
-    modelo, revision, catalogues = _revision_721(2023)
+    superseded = _SUPERSEDED_PACKAGE_EXERCISE
+    successor = superseded + 1
+    superseded_id = str(superseded)
+    modelo, revision, catalogues = _revision_721(superseded)
     expanded = revision.model_copy(
         update={
-            "valid_to": date(2024, 12, 31),
-            "period_selector": revision.period_selector.model_copy(update={"years": (2023, 2024)}),
+            "valid_to": date(successor, 12, 31),
+            "period_selector": revision.period_selector.model_copy(update={"years": (superseded, successor)}),
         },
     )
-    mutated_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, "2023": expanded}})
+    mutated_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, superseded_id: expanded}})
 
-    selected = select_revision(mutated_modelo, filing_year=2024, period="0A", on=date(2024, 12, 31), revision_id="2023")
-    assert selected.id == "2023"
+    selected = select_revision(
+        mutated_modelo, filing_year=successor, period="0A", on=date(successor, 12, 31), revision_id=superseded_id
+    )
+    assert selected.id == superseded_id
     (source_ref,) = (ref for ref in selected.source_refs if ref.startswith("boe-modelo-721-"))
     source = catalogues.sources[source_ref]
 
-    assert source.applies_to == date(2023, 12, 31)
-    assert not source.applies_across(date(2024, 1, 1), date(2024, 12, 31))
+    assert source.applies_to == date(superseded, 12, 31)
+    assert not source.applies_across(date(successor, 1, 1), date(successor, 12, 31))
 
 
 def test_modelo_721_refuses_a_mutated_boe_package_hash() -> None:

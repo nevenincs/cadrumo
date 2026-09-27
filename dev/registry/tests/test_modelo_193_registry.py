@@ -30,7 +30,16 @@ from cadrumo.domain.deadlines.errors import DeadlineValidationError
 from cadrumo.domain.deadlines.festivos import shift_deadline
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from .profile_schema_support import committed_supported_filing_years
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_SUPPORT = committed_supported_filing_years()
+# The newest authored edition, one below the horizon, whose declarant totals count
+# and sum the type 2 records; the edition before it aggregates the quarterly
+# Modelo 123 filings instead.
+_RECORD_TOTALS_EDITION = _SUPPORT.horizon - 1
+_QUARTERLY_AGGREGATE_EDITION = _RECORD_TOTALS_EDITION - 1
 
 
 def test_modelo_193_guidance_and_layout_sources_are_separated() -> None:
@@ -280,16 +289,17 @@ def _modelo_123_relation_values(
     )
 
 
-def test_modelo_193_2024_calculation_aggregates_modelo_123_quarterly_observations() -> None:
+def test_modelo_193_quarterly_aggregate_edition_sums_modelo_123_quarterly_observations() -> None:
+    year = _QUARTERLY_AGGREGATE_EDITION
     authority = compiled_bundled_authority()
-    snapshot = authority.snapshot("193", filing_year=2024, period="0A")
-    snapshot_123 = authority.snapshot("123", filing_year=2024, period="1T")
-    relation_values = _modelo_123_relation_values(snapshot, snapshot_123, 2024)
+    snapshot = authority.snapshot("193", filing_year=year, period="0A")
+    snapshot_123 = authority.snapshot("123", filing_year=year, period="1T")
+    relation_values = _modelo_123_relation_values(snapshot, snapshot_123, year)
     binding_values = {"modelo-193-123-perceptores-anual": Decimal("2")}
     result = calculate_registry_snapshot(
         snapshot,
         inputs=resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
-        date_context={"filing_period": date(2024, 12, 31)},
+        date_context={"filing_period": date(year, 12, 31)},
         binding_values=binding_values,
         relation_values=relation_values,
     )
@@ -335,27 +345,28 @@ def _perceptor_observation(
 
 
 @pytest.mark.usefixtures("governed_fact_scope")
-def test_modelo_193_2025_declarant_totals_count_and_sum_the_type_2_records() -> None:
+def test_modelo_193_declarant_totals_count_and_sum_the_type_2_records() -> None:
     """Positions 136-174 count and sum the perceptor records; modelo 123 is only a cross-check."""
+    year = _RECORD_TOTALS_EDITION
     authority = compiled_bundled_authority()
-    snapshot = authority.snapshot("193", filing_year=2025, period="0A")
-    snapshot_123 = authority.snapshot("123", filing_year=2025, period="1T")
-    relation_values = _modelo_123_relation_values(snapshot, snapshot_123, 2025)
-    # One holder on three type-2 records: clave A paid twice in 2025 (one record),
-    # a 2025 settlement of a 2024 accrual, and a clave B payment.
+    snapshot = authority.snapshot("193", filing_year=year, period="0A")
+    snapshot_123 = authority.snapshot("123", filing_year=year, period="1T")
+    relation_values = _modelo_123_relation_values(snapshot, snapshot_123, year)
+    # One holder on three type-2 records: clave A paid twice in the exercise (one
+    # record), a settlement of the previous exercise's accrual, and a clave B payment.
     observations = (
-        _perceptor_observation("a-1", base="100.00", withholding="19.00", transaction_date=date(2025, 2, 1)),
-        _perceptor_observation("a-2", base="40.00", withholding="7.60", transaction_date=date(2025, 8, 1)),
+        _perceptor_observation("a-1", base="100.00", withholding="19.00", transaction_date=date(year, 2, 1)),
+        _perceptor_observation("a-2", base="40.00", withholding="7.60", transaction_date=date(year, 8, 1)),
         _perceptor_observation(
-            "settled", base="300.00", withholding="57.00", transaction_date=date(2025, 3, 10), accrual_year=2024
+            "settled", base="300.00", withholding="57.00", transaction_date=date(year, 3, 10), accrual_year=year - 1
         ),
-        _perceptor_observation("b-1", base="10.00", withholding="1.90", transaction_date=date(2025, 4, 1), clave="B"),
+        _perceptor_observation("b-1", base="10.00", withholding="1.90", transaction_date=date(year, 4, 1), clave="B"),
     )
     binding_values = resolve_withholding_binding_values(snapshot.revision, observations)
     result = calculate_registry_snapshot(
         snapshot,
         inputs=resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
-        date_context={"filing_period": date(2025, 12, 31)},
+        date_context={"filing_period": date(year, 12, 31)},
         binding_values=binding_values,
         relation_values=relation_values,
     )

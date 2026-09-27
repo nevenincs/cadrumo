@@ -23,6 +23,11 @@ from ._gate_support import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
+# The sole current edition this grounding test reviews. Its first exercise is the
+# edition's identity, established by the ordenes asserted below, so it is bound once
+# rather than derived from the support envelope.
+_CURRENT_EDITION = 2025
+
 _M345_LEGAL_REFS = {
     "orden-hfp-823-2022:art-1",
     "orden-hfp-823-2022:art-2",
@@ -50,12 +55,12 @@ _M345_SOURCE_REFS = {
 }
 
 
-def test_modelo_345_current_registry_uses_2025_sources_without_fake_calculation() -> None:
+def test_modelo_345_current_registry_uses_current_edition_sources_without_fake_calculation() -> None:
     authority = compiled_bundled_authority()
     modelo = authority.modelo("345")
-    revision = modelo.revisions["2025"]
+    revision = modelo.revisions[str(_CURRENT_EDITION)]
 
-    assert_sole_current_edition(modelo, "2025")
+    assert_sole_current_edition(modelo, str(_CURRENT_EDITION))
     assert modelo.calculation_class == "informative"
     assert set(modelo.legal_refs) == _M345_LEGAL_REFS
     # The MODELO additionally cites the 2022 Diseno de Registro, which the 2022
@@ -64,8 +69,8 @@ def test_modelo_345_current_registry_uses_2025_sources_without_fake_calculation(
     # unexplained source would still be caught.
     assert set(modelo.source_refs) == _M345_SOURCE_REFS | {"boe-dr-345-2022"}
 
-    assert revision.valid_from == date(2025, 1, 1)
-    assert_edition_opens_at_filing_year(revision, 2025)
+    assert revision.valid_from == date(_CURRENT_EDITION, 1, 1)
+    assert_edition_opens_at_filing_year(revision, _CURRENT_EDITION)
     assert set(revision.period_selector.periods) == {"0A"}
     assert set(revision.orden_aplicabilidad) == {
         "orden-hfp-823-2022:art-1",
@@ -80,7 +85,7 @@ def test_modelo_345_current_registry_uses_2025_sources_without_fake_calculation(
     assert {casilla.input_kind for casilla in revision.casillas} == {"manual"}
     assert not revision.formulas
     assert revision.completeness_manifest is None
-    assert_deadline_window_for_filing_year(revision, 2025, "modelo-345-2025-0a")
+    assert_deadline_window_for_filing_year(revision, _CURRENT_EDITION, f"modelo-345-{_CURRENT_EDITION}-0a")
     # The window stores the NOMINAL statutory close from orden-hfp-823-2022 art. 4
     # ("entre el 1 y el 31 de enero"), not AEAT's published operational date. The
     # 31st falls on a Saturday in 2026, and the shift that derives 2 February is
@@ -88,8 +93,8 @@ def test_modelo_345_current_registry_uses_2025_sources_without_fake_calculation(
     # date also passes a bare "operator sees 2 February" check while reporting
     # shifted=False / business_day -- a false statement that discards the
     # statutory date.
-    window = next(item for item in revision.deadline_windows if item.filing_year == 2025)
-    assert window.closes_on == date(2026, 1, 31)
+    window = next(item for item in revision.deadline_windows if item.filing_year == _CURRENT_EDITION)
+    assert window.closes_on == date(_CURRENT_EDITION + 1, 1, 31)
     # The published 2026 calendar derives the 2 February close on read. For a
     # year with no published calendar the deadline layer refuses in its own
     # words and chains the fact-resolution cause. Both halves are asserted: the
@@ -97,11 +102,20 @@ def test_modelo_345_current_registry_uses_2025_sources_without_fake_calculation(
     # for some other reason still reds.
     with bundled_indexed_authority().operation() as operation:
         shift = shift_deadline(window.closes_on, modelo="345", ccaa_code=None, operation=operation)
-        assert (shift.adjusted_close_date, shift.shifted, shift.shift_reason) == (date(2026, 2, 2), True, "sabado")
-        with pytest.raises(DeadlineValidationError, match="holiday calendar publication for 2027") as refusal:
-            shift_deadline(date(2027, 1, 29), modelo="345", ccaa_code=None, operation=operation)
+        assert (shift.adjusted_close_date, shift.shifted, shift.shift_reason) == (
+            date(_CURRENT_EDITION + 1, 2, 2),
+            True,
+            "sabado",
+        )
+        # The bundled holiday calendars stop at the exercise that closes the current
+        # edition's window; the following year has no publication to shift against.
+        unpublished_year = _CURRENT_EDITION + 2
+        with pytest.raises(
+            DeadlineValidationError, match=f"holiday calendar publication for {unpublished_year}"
+        ) as refusal:
+            shift_deadline(date(unpublished_year, 1, 29), modelo="345", ccaa_code=None, operation=operation)
     assert "no variant for the exact query context" in str(refusal.value.__cause__)
-    assert {ref.workbook_source for ref in revision.workbook_parity_refs} == {"aeat-dr-345-2025"}
+    assert {ref.workbook_source for ref in revision.workbook_parity_refs} == {f"aeat-dr-345-{_CURRENT_EDITION}"}
     # "export" joined the surfaces when the modelo's export layout was authored;
     # the link set is a consequence of that, not a drift.
     assert {link.surface for link in revision.application_links} == {"deadline", "export", "filing"}

@@ -35,6 +35,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures(
 
 _MODELOS = ("187", "188", "194")
 _REVISION_BY_MODELO = {"187": "2022-y-siguientes", "188": "2023-y-siguientes", "194": "2024"}
+# The first exercise each hash-pinned official design evidences, and the Modelo 194
+# edition that Orden HAC/1504/2024 supersedes. Each is the cited design's identity.
+_M187_DESIGN_EXERCISE = 2022
+_M188_DESIGN_EXERCISE = 2023
+_M194_SUPERSEDED_EDITION = 2023
 _SOURCE_CASILLA: CasillaId = validated_casilla_id("04", surface="_SOURCE_CASILLA")
 _TARGET_CASILLA: CasillaId = validated_casilla_id("05", surface="_TARGET_CASILLA")
 
@@ -106,44 +111,47 @@ def test_modelo_187_preserves_both_article_2_filer_population_limbs() -> None:
     assert "Asimismo, se encuentran también obligadas a presentar el modelo 187" in article_2.required_text
 
 
-def test_modelo_187_selects_only_the_2022_design_era() -> None:
+def test_modelo_187_selects_only_its_evidenced_design_era() -> None:
     """The current record design cannot be backdated to the unevidenced years."""
     modelo, catalogues = _committed_modelo("187")
-    revision = modelo.revisions["2022-y-siguientes"]
+    revision = modelo.revisions[_REVISION_BY_MODELO["187"]]
+    first = _M187_DESIGN_EXERCISE
 
     assert revision.authority_grade is not None
     assert revision.authority_grade.value == "applicability"
-    assert revision.valid_from == date(2022, 1, 1)
-    assert revision.period_selector.year_from == 2022
-    assert {ref for ref in revision.source_refs if ref.startswith("aeat-dr-187-")} == {"aeat-dr-187-2022"}
-    design = catalogues.sources["aeat-dr-187-2022"]
-    assert design.applies_from == date(2022, 1, 1)
+    assert revision.valid_from == date(first, 1, 1)
+    assert revision.period_selector.year_from == first
+    assert {ref for ref in revision.source_refs if ref.startswith("aeat-dr-187-")} == {f"aeat-dr-187-{first}"}
+    design = catalogues.sources[f"aeat-dr-187-{first}"]
+    assert design.applies_from == date(first, 1, 1)
     assert design.applies_to is None
 
-    assert select_revision(modelo, filing_year=2022, period="0A", on=date(2022, 12, 31)) == revision
-    for filing_year in range(2019, 2022):
+    assert select_revision(modelo, filing_year=first, period="0A", on=date(first, 12, 31)) == revision
+    # The three exercises before the design, which no official design evidences.
+    for filing_year in range(first - 3, first):
         with pytest.raises(NoRevisionForPeriodError):
             select_revision(modelo, filing_year=filing_year, period="0A", on=date(filing_year, 12, 31))
 
 
-def test_modelo_188_selects_only_the_2023_design_era() -> None:
-    """The sole hash-pinned 2023 design cannot establish earlier years."""
+def test_modelo_188_selects_only_its_evidenced_design_era() -> None:
+    """The sole hash-pinned design cannot establish earlier years."""
     modelo, catalogues = _committed_modelo("188")
-    revision = modelo.revisions["2023-y-siguientes"]
+    revision = modelo.revisions[_REVISION_BY_MODELO["188"]]
+    first = _M188_DESIGN_EXERCISE
 
     assert revision.authority_grade is not None
     assert revision.authority_grade.value == "applicability"
-    assert revision.valid_from == date(2023, 1, 1)
-    assert revision.period_selector.year_from == 2023
-    assert {ref for ref in revision.source_refs if ref.startswith("aeat-dr-188-")} == {"aeat-dr-188-2023"}
-    assert catalogues.sources["aeat-dr-188-2023"].applies_from == date(2023, 1, 1)
-    assert select_revision(modelo, filing_year=2023, period="0A", on=date(2023, 12, 31)) == revision
-    # Earlier ejercicios are served by their own edition, never by the 2023 design.
+    assert revision.valid_from == date(first, 1, 1)
+    assert revision.period_selector.year_from == first
+    assert {ref for ref in revision.source_refs if ref.startswith("aeat-dr-188-")} == {f"aeat-dr-188-{first}"}
+    assert catalogues.sources[f"aeat-dr-188-{first}"].applies_from == date(first, 1, 1)
+    assert select_revision(modelo, filing_year=first, period="0A", on=date(first, 12, 31)) == revision
+    # Earlier ejercicios are served by their own edition, never by this design.
     for earlier_id, earlier in modelo.revisions.items():
         if earlier_id == revision.id:
             continue
         year = earlier.period_selector.year_from
-        assert year is not None and year < 2023
+        assert year is not None and year < first
         assert select_revision(modelo, filing_year=year, period="0A", on=date(year, 12, 31)) == earlier
 
 
@@ -199,8 +207,8 @@ def test_modelo_194_selects_only_its_three_hash_pinned_design_eras() -> None:
         assert carried.id == "2024"
 
 
-def test_modelo_194_refuses_a_mutated_2023_selector_past_its_source_window() -> None:
-    """A selector expansion cannot turn the 2023 source into 2024 authority.
+def test_modelo_194_refuses_a_mutated_superseded_selector_past_its_source_window() -> None:
+    """A selector expansion cannot turn the superseded edition's source into its successor's authority.
 
     This guard used to be aimed at the 2024 edition reaching into 2025. That is no
     longer a boundary: BOE's consolidated amendment list for BOE-A-1999-22309 records
@@ -210,24 +218,28 @@ def test_modelo_194_refuses_a_mutated_2023_selector_past_its_source_window() -> 
     supersedes the 2023 edition, so the same over-reach is still provably refused.
     """
     modelo, catalogues = _committed_modelo("194")
-    revision = modelo.revisions["2023"]
+    superseded_id = str(_M194_SUPERSEDED_EDITION)
+    successor = _M194_SUPERSEDED_EDITION + 1
+    revision = modelo.revisions[superseded_id]
     expanded = revision.model_copy(
         update={
-            "valid_to": date(2024, 12, 31),
-            "period_selector": revision.period_selector.model_copy(update={"year_to": 2024}),
+            "valid_to": date(successor, 12, 31),
+            "period_selector": revision.period_selector.model_copy(update={"year_to": successor}),
         },
     )
-    mutated_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, "2023": expanded}})
-    selected = select_revision(mutated_modelo, filing_year=2024, period="0A", on=date(2024, 12, 31), revision_id="2023")
+    mutated_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, superseded_id: expanded}})
+    selected = select_revision(
+        mutated_modelo, filing_year=successor, period="0A", on=date(successor, 12, 31), revision_id=superseded_id
+    )
     (source_ref,) = (ref for ref in selected.source_refs if ref.startswith("aeat-dr-194-"))
 
-    with pytest.raises(RegistryValidationError, match="does not apply to filing year 2024"):
+    with pytest.raises(RegistryValidationError, match=f"does not apply to filing year {successor}"):
         resolve_record_design_binary(
             bundled_path(),
             catalogues.sources,
             source_ref=source_ref,
-            filing_year=2024,
-            design_epoch="2023",
+            filing_year=successor,
+            design_epoch=superseded_id,
         )
 
 
