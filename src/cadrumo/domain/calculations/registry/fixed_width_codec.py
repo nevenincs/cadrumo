@@ -401,6 +401,8 @@ def parse_fixed_width_export_field(
         # absence. A zero fill is a value only where zero is one the field may
         # carry; otherwise it can mean nothing but the absent slot.
         return None
+    if kind not in {"filler", "literal"} and _fill_reads_as_absent_text(field, raw):
+        return None
     validate_export_wire_value(field.value_policy, raw)
     if kind == "filler":
         if raw != " " * field.length:
@@ -584,6 +586,23 @@ def _is_absent_slot(field: _ExportField, value: object) -> bool:
     declared ``0`` and arrives here as a value, not an absence.
     """
     return value is None or value == ""
+
+
+def _fill_reads_as_absent_text(field: _ExportField, raw: str) -> bool:
+    """Whether an optional non-numeric slot holds exactly its declared absent fill.
+
+    Zero is a numeric state only: a text or date field has no zero, so the fill
+    its declaration writes for an absent value -- spaces, or the zeros some
+    designs ask for in an alphanumeric identifier slot -- can only mean that no
+    value was given. Reading a zero fill back as the text ``"0"`` would invent a
+    value the record never carried. A required field has no absent fill, so its
+    wire always carries a value and is parsed as one.
+    """
+    if field.required or field.value_policy is not None:
+        return False
+    if field.data_type in _NUMERIC_DATA_TYPES or field.data_type == "boolean":
+        return False
+    return raw == _render_absent_slot(field)
 
 
 def _zero_fill_is_only_absence(field: _ExportField) -> bool:

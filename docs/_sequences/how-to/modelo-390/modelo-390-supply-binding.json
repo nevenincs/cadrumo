@@ -16162,10 +16162,9 @@
             "modelo-390-volumen-entregas-intracomunitarias-base": "0",
             "modelo-390-volumen-exportaciones-exentas-base": "0"
           },
-          "calculation_revision_id": "1e3ed16d916733d37a7718c1e22ff99db30be115c88a73be82d43247dfb90a8d",
+          "calculation_revision_id": "ce336e0adc4020ccf43d0f17ee6ee7a0faba1ceef2e463f730ec326c9cd33458",
           "casilla_values": {
             "decl.ejercicio": "2025",
-            "decl.tipo-declaracion": "0",
             "iva.anual.aic.bienes.general.base": "0",
             "iva.anual.aic.bienes.reduced.base": "0",
             "iva.anual.aic.bienes.super_reduced.base": "0",
@@ -16679,24 +16678,6 @@
                 "aeat-modelo-390-procedure"
               ],
               "value": "2025"
-            },
-            {
-              "absent_by_design": false,
-              "casilla_id": "decl.tipo-declaracion",
-              "formula_id": null,
-              "legal_refs": [
-                "rd-1624-1992:art-71",
-                "orden-eha-3111-2009:art-1"
-              ],
-              "op": null,
-              "operand_casilla_refs": [],
-              "operand_refs": [],
-              "operand_values": [],
-              "source_refs": [
-                "boe-modelo-390-2009-form",
-                "aeat-modelo-390-procedure"
-              ],
-              "value": "0"
             },
             {
               "absent_by_design": false,
@@ -25277,7 +25258,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 1e3ed16d916733d37a7718c1e22ff99db30be115c88a73be82d43247dfb90a8d (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision ce336e0adc4020ccf43d0f17ee6ee7a0faba1ceef2e463f730ec326c9cd33458 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_iva_aggregation",

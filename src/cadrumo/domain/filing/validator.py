@@ -48,6 +48,7 @@ from ...core.time.clock import now
 from ..submission.models import ModeloDraftStatus
 from .protocols import (
     CasillaCollection,
+    CasillaSchema,
     CasillaSchemaProvider,
     DeadlineChecker,
 )
@@ -62,6 +63,7 @@ if TYPE_CHECKING:  # pragma: no cover - type-only import
 
 _logger = get_logger(__name__)
 _REQUIRED_MISSING_CODE = "casilla-required-missing"
+_REQUIRED_TEXT_UNSUPPLIED_CODE = "casilla-required-text-unsupplied"
 _M349_OPERADOR_TEMPLATE_BINDINGS_BY_CASILLA: dict[str, tuple[str, ...]] = {
     "op.codigo-pais": ("iva-349-operador-row-codigo-pais",),
     "op.nif-comunitario": ("iva-349-operador-row-nif",),
@@ -184,15 +186,7 @@ class ModeloValidator:
             if value is None or value.kind is ModeloValueKind.EMPTY or value.value is None:
                 if _required_casilla_satisfied_by_row_bindings(draft, str(casilla.casilla_id)):
                     continue
-                out.append(
-                    ModeloValidationFinding(
-                        casilla_id=casilla.casilla_id,
-                        severity=BaseSeverity.ERROR,
-                        code=_REQUIRED_MISSING_CODE,
-                        message=tr("filing.validation.required_missing"),
-                        references_rules=(),
-                    ),
-                )
+                out.append(_required_missing_finding(casilla))
         return out
 
     def _validate_ranges(self, draft: ModeloDraft, collection: CasillaCollection) -> list[ModeloValidationFinding]:
@@ -274,6 +268,35 @@ class ModeloValidator:
                 references_rules=(),
             ),
         ]
+
+
+def _required_missing_finding(casilla: CasillaSchema) -> ModeloValidationFinding:
+    """Report one required casilla the draft carries no value for.
+
+    A missing operator input, or a missing figure the calculation should have
+    produced, blocks the draft. A required text casilla whose declared source is
+    the calculation itself -- an informational or bound declaration fact such as
+    the declaration type -- is reported as an advisory instead: its absence is a
+    gap in that source for review, not an operator omission, and it is never
+    filled with a placeholder to look complete. Whether the filed record can do
+    without it is the record design's decision, which the fixed-width renderer
+    enforces by refusing a required field that has no value.
+    """
+    if casilla.value_type == "str" and not casilla.operator_supplied:
+        return ModeloValidationFinding(
+            casilla_id=casilla.casilla_id,
+            severity=BaseSeverity.INFO,
+            code=_REQUIRED_TEXT_UNSUPPLIED_CODE,
+            message=tr("filing.validation.required_missing"),
+            references_rules=(),
+        )
+    return ModeloValidationFinding(
+        casilla_id=casilla.casilla_id,
+        severity=BaseSeverity.ERROR,
+        code=_REQUIRED_MISSING_CODE,
+        message=tr("filing.validation.required_missing"),
+        references_rules=(),
+    )
 
 
 def _required_casilla_satisfied_by_row_bindings(draft: ModeloDraft, casilla_id: str) -> bool:

@@ -30,7 +30,11 @@ from typing import TYPE_CHECKING
 
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.period import Period
-from ...domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
+from ...domain.calculations.registry.bindings import (
+    resolve_available_bound_inputs_by_casilla_id,
+    resolve_bound_casilla_binding_value,
+)
+from ...domain.calculations.registry.casilla_membership import text_family_casilla_ids
 from ...domain.calculations.registry.ids import (
     BindingId,
     RelationId,
@@ -39,6 +43,7 @@ from ...domain.calculations.registry.schema import (
     ModeloRevision,
     RegistrySnapshot,
 )
+from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.identifiers import canonical_decimal_string as _canonical_decimal_str
 from ...domain.modelos.work_unit import WorkUnit
 from ..aggregation.source_mesh import CalculationSourceResolution
@@ -254,11 +259,36 @@ def resolve_calculation_inputs(
             sorted(
                 {
                     **declaration.text_casilla_inputs,
+                    **_bound_text_casilla_inputs(revision, resolved_bindings),
                     **dict(text_casilla_inputs or {}),
                 }.items(),
             ),
         ),
     )
+
+
+def _bound_text_casilla_inputs(
+    revision: ModeloRevision,
+    resolved_bindings: Mapping[BindingId, Decimal],
+) -> dict[CasillaId, str]:
+    """Project resolved binding values onto the text casillas they are bound to.
+
+    A bound text casilla -- such as a declaration-type code read from the
+    profile -- can arrive on the binding channel as a number. It is still text:
+    it enters the calculation on the text channel, spelled as the canonical
+    decimal token its binding resolved to, which is the same spelling a replay
+    of the persisted inputs reads back. A casilla whose binding resolved to
+    nothing stays absent.
+    """
+    text_casilla_ids = text_family_casilla_ids(revision.casillas)
+    projected: dict[CasillaId, str] = {}
+    for casilla in revision.casillas:
+        if casilla.input_kind != InputKind.BOUND or casilla.id not in text_casilla_ids:
+            continue
+        value, _binding_ids = resolve_bound_casilla_binding_value(casilla, resolved_bindings)
+        if value is not None:
+            projected[casilla.id] = _canonical_decimal_str(value)
+    return projected
 
 
 def build_calculation_replay_payloads(

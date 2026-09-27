@@ -46,6 +46,7 @@ from .binding_provider_registration import registration_for, validator_for
 from .binding_selector_utils import provider_member
 from .binding_targets import bound_casilla_binding_ids as _bound_casilla_binding_ids
 from .bindings_previous_filing import PreviousFilingProvider
+from .casilla_membership import text_family_casilla_ids
 from .errors import RegistryValidationError
 from .ids import BindingId, FormulaId, LegalRefId, ModeloId, SourceRefId
 from .invoice_bindings import (
@@ -331,6 +332,10 @@ def resolve_available_bound_inputs_by_casilla_id(
     rather than treated as registry errors, which lets calculate paths combine
     partial source mesh output with caller overrides before the engine runs.
 
+    This is the numeric input projection: a bound casilla the registry declares
+    as text is not a number, whatever channel carried its binding value, so it
+    is left to the caller's text channel rather than projected here.
+
     Args:
         revision: The :class:`ModeloRevision`
             whose bound casillas are inspected.
@@ -348,8 +353,9 @@ def resolve_available_bound_inputs_by_casilla_id(
             refusal of disagreeing equivalent alternate bindings.
     """
     resolved: dict[CasillaId, Decimal] = {}
+    text_casilla_ids = text_family_casilla_ids(revision.casillas)
     for casilla in revision.casillas:
-        if casilla.input_kind != InputKind.BOUND or casilla.binding is None:
+        if casilla.input_kind != InputKind.BOUND or casilla.binding is None or casilla.id in text_casilla_ids:
             continue
         value, _binding_ids = resolve_bound_casilla_binding_value(casilla, binding_values)
         if value is not None:

@@ -122,6 +122,7 @@ from cadrumo.domain.calculations.registry.bindings import (
     RegistryModeloObservation,
     resolve_available_bound_inputs_by_casilla_id,
 )
+from cadrumo.domain.calculations.registry.casilla_membership import text_family_casilla_ids
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
@@ -537,9 +538,16 @@ def test_pull_path_and_calculate_path_share_resolver_and_produce_equal_casilla_v
     retenciones_resolution = RetencionesAggregationSourceResolver(ports=retencion_ports).resolve(context)
 
     relay_binding_values = {**relay_resolution.binding_values, **retenciones_resolution.binding_values}
+    # The relay seeds the numeric manual lattice only: a text casilla the
+    # operator left empty is absent, and the engine refuses a number for it.
+    text_casilla_ids = text_family_casilla_ids(snap_180.revision.casillas)
     relay_inputs = {
         **resolve_available_bound_inputs_by_casilla_id(snap_180.revision, relay_binding_values),
-        **{c.id: Decimal("0") for c in snap_180.revision.casillas if c.input_kind is InputKind.MANUAL},
+        **{
+            c.id: Decimal("0")
+            for c in snap_180.revision.casillas
+            if c.input_kind is InputKind.MANUAL and c.id not in text_casilla_ids
+        },
     }
     relay_engine_result = calculate_registry_snapshot(
         snap_180,
