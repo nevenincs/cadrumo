@@ -2009,6 +2009,7 @@ tui:
     export:
       artefact:
         calculation_report_csv: Informe de cálculo (CSV), solo registro local
+        calculation_report_pdf: Resumen del cálculo firmado (PDF), solo registro local
         fichero_boe: Fichero BOE para presentar en la AEAT
         label: Artefacto a exportar
       payment_election:
@@ -2038,6 +2039,7 @@ tui:
           local_export_not_official_aeat_filing_evidence: Exportación local; no es
             evidencia oficial de presentación ante la AEAT
         label:
+          artefact: Artefacto exportado
           byte_size: Tamaño (bytes)
           calculation_revision_id: Revisión del cálculo
           completeness: Integridad

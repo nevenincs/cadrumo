@@ -19,6 +19,10 @@ from pydantic import ValidationError
 from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
 from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
+from cadrumo.application.modelo.calculation_summary_pdf_ports import (
+    CalculationSummaryCertifier,
+    CalculationSummaryPdfRequest,
+)
 from cadrumo.application.modelo.operation_definitions import (
     MODELO_WORK_RENAME_OPERATION_DEFINITION_ID,
     MODELO_WORKSPACE_REFRESH_TARGET_SCHEMA_SUFFIX,
@@ -62,6 +66,14 @@ def _unreachable_capability_factory(**_kwargs: object) -> NoReturn:
     raise AssertionError("workspace refresh target resolution must not execute lifecycle capabilities")
 
 
+def _unreachable_summary_pdf_writer(
+    _request: CalculationSummaryPdfRequest, /, *, certify: CalculationSummaryCertifier
+) -> NoReturn:
+    """Fail if this refresh-target test draws a calculation summary."""
+    del certify
+    raise AssertionError("workspace refresh target resolution must not draw a calculation summary")
+
+
 def _unreachable_attachment_store_factory(_bucket_id: str) -> NoReturn:
     """Fail if this refresh-target test opens encrypted attachment custody."""
     raise AssertionError("workspace refresh target resolution must not open attachment custody")
@@ -87,6 +99,7 @@ def _registry() -> OperationRegistry:
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         export_ports_factory=_unreachable_capability_factory,
         signing_keypair_capability_factory=_unreachable_capability_factory,
+        calculation_summary_pdf_writer=_unreachable_summary_pdf_writer,
         calculation_action_ports_factory=_unreachable_capability_factory,
         attachment_store_factory=_unreachable_attachment_store_factory,
         amendment_action_ports_factory=_unreachable_capability_factory,

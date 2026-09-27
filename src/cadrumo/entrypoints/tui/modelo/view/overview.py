@@ -35,8 +35,9 @@ invented on this screen.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable
-from typing import TYPE_CHECKING, ClassVar, cast, override
+from collections.abc import Awaitable, Callable, Mapping
+from types import MappingProxyType
+from typing import TYPE_CHECKING, ClassVar, Final, cast, override
 
 from textual.app import ComposeResult
 from textual.binding import Binding
@@ -53,6 +54,7 @@ from .....core.i18n.render import tr
 from .....core.logging import get_logger
 from .....core.modelo_export_artefact import ModeloExportArtefact
 from .....core.operations import OperationTerminalCondition
+from .....core.optional_extras import PDF_EXTRA, OptionalExtra, optional_extra_available
 from .....core.payment_election import PaymentElection
 from .....core.presentation import NoticePresentation
 from .....core.prior_domiciliation_election import PriorDomiciliationElection
@@ -63,7 +65,7 @@ from ...components.theme import toggle_appearance
 from ...components.widgets import ContentDataTable, ContentScroll, DisclosureGroup, NoticeBand
 from ...operations.controller import OperationController
 from ...operations.refusal_explanation import public_refusal_explanation
-from ..export_result import ModeloExportResultScreen
+from ..export_result import EXPORT_ARTEFACT_LOCALE_KEYS, ModeloExportResultScreen
 from ..m303_evidence import OrdinaryM303FilingEvidenceScreen, OrdinaryM303FilingEvidenceSubmission
 from .controller import ModeloWorkspaceReadSession
 from .models import (
@@ -109,13 +111,26 @@ PRIOR_DOMICILIATION_ELECTION_LOCALE_KEYS: dict[PriorDomiciliationElection, str] 
     PriorDomiciliationElection.CANCEL_OR_MODIFY: "tui.modelo.export.prior_domiciliation_election.cancel_or_modify",
 }
 
-#: The artefacts the export control offers, each in the operator's words. Every
-#: member of the closed axis appears, so an artefact the product can publish is
-#: never silently missing from the choice.
-EXPORT_ARTEFACT_LOCALE_KEYS: dict[ModeloExportArtefact, str] = {
-    ModeloExportArtefact.FICHERO_BOE: "tui.modelo.export.artefact.fichero_boe",
-    ModeloExportArtefact.CALCULATION_REPORT_CSV: "tui.modelo.export.artefact.calculation_report_csv",
-}
+#: The artefacts only an optional extra can publish, with that extra. Where the
+#: extra is not installed the export control does not offer the artefact at all,
+#: so the operator never picks an export the installation would refuse and no
+#: other artefact is ever published in its place.
+_EXPORT_ARTEFACT_EXTRAS: Final[Mapping[ModeloExportArtefact, OptionalExtra]] = MappingProxyType(
+    {ModeloExportArtefact.CALCULATION_REPORT_PDF: PDF_EXTRA},
+)
+
+
+def _offered_export_artefacts() -> tuple[ModeloExportArtefact, ...]:
+    """Return the artefacts this installation can publish, in the order the control lists them.
+
+    Probed each time the control is composed, through the same spec-only probe
+    the export service's own refusal rests on.
+    """
+    return tuple(
+        artefact
+        for artefact in EXPORT_ARTEFACT_LOCALE_KEYS
+        if (extra := _EXPORT_ARTEFACT_EXTRAS.get(artefact)) is None or optional_extra_available(extra)
+    )
 
 
 def edit_control_id(kind: str, key: str) -> str:
@@ -189,7 +204,10 @@ class ModeloWorkspaceOverviewScreen(AccountChromeScreen):
                 )
                 yield Static(tr("tui.modelo.export.artefact.label"), markup=False)
                 yield Select[str](
-                    tuple((tr(key), member.value) for member, key in EXPORT_ARTEFACT_LOCALE_KEYS.items()),
+                    tuple(
+                        (tr(EXPORT_ARTEFACT_LOCALE_KEYS[member]), member.value)
+                        for member in _offered_export_artefacts()
+                    ),
                     value=ModeloExportArtefact.FICHERO_BOE.value,
                     allow_blank=False,
                     id="modelo-lifecycle-export-artefact",

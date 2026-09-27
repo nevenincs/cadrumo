@@ -1979,6 +1979,7 @@ tui:
     export:
       artefact:
         calculation_report_csv: Számítási jelentés (CSV), csak helyi nyilvántartás
+        calculation_report_pdf: Aláírt számítási összesítő (PDF), csak helyi nyilvántartás
         fichero_boe: BOE-fájl az AEAT-nál való benyújtáshoz
         label: Exportálandó dokumentum
       payment_election:
@@ -2008,6 +2009,7 @@ tui:
           local_export_not_official_aeat_filing_evidence: Helyi export; nem az AEAT
             hivatalos benyújtási bizonylata
         label:
+          artefact: Exportált dokumentum
           byte_size: Méret (bájt)
           calculation_revision_id: Számítási változat
           completeness: Teljesség

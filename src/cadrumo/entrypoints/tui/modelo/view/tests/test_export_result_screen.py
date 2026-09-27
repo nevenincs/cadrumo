@@ -17,6 +17,7 @@ from pydantic import ValidationError
 from textual.app import App
 from textual.widgets import Button, Static
 
+from ......adapters.outbound.calculation_summary_pdf.summary_container import write_calculation_summary_pdf
 from ......adapters.persistence.profile.review_package_signing import (
     build_review_package_signing_keypair_capability,
 )
@@ -42,6 +43,7 @@ from ......domain.filing.software_identity import AeatSoftwareIdentityGrade
 from .....adapter_composition import build_modelo_export_ports
 from ....components.widgets import ContentDataTable
 from ...export_result import (
+    EXPORT_ARTEFACT_LOCALE_KEYS,
     EXPORT_COMPLETENESS_LOCALE_KEYS,
     EXPORT_EVIDENCE_STATUS_LOCALE_KEYS,
     EXPORT_RESULT_ROW_LOCALE_KEYS,
@@ -61,6 +63,7 @@ def _publicly_projected(settled: ModeloExportSettledResult) -> ModeloExportPubli
         build_modelo_export_definition(
             export_ports_factory=build_modelo_export_ports,
             signing_keypair_capability_factory=build_review_package_signing_keypair_capability,
+            calculation_summary_pdf_writer=write_calculation_summary_pdf,
         )
     )
     projector = registration.result_projector
@@ -107,7 +110,11 @@ def _filing_file_receipt(
     )
 
 
-def _report_receipt(tmp_path: Path) -> ModeloExportSettledResult:
+def _report_receipt(
+    tmp_path: Path,
+    *,
+    document_format: CalculationReportDocumentFormat = CalculationReportDocumentFormat.CSV,
+) -> ModeloExportSettledResult:
     return ModeloExportSettledResult(
         calculation_report=ModeloCalculationReportResult(
             calculation_revision_id=_REVISION_ID,
@@ -117,9 +124,9 @@ def _report_receipt(tmp_path: Path) -> ModeloExportSettledResult:
             modelo="303",
             filing_year=2026,
             period=Period.from_year_and_code(2026, "2T"),
-            document_format=CalculationReportDocumentFormat.CSV,
+            document_format=document_format,
             report_language=OutputLanguage.ES,
-            output_path=tmp_path / "modelo-303-report.csv",
+            output_path=tmp_path / f"modelo-303-report.{document_format.value}",
             byte_size=2048,
             file_sha256=_FILE_SHA256,
             report_sha256="d" * 64,
@@ -154,6 +161,7 @@ async def test_an_export_whose_completeness_is_unverified_says_so_in_its_facts_a
 
         assert _table_values(app) == {
             "calculation_revision_id": _REVISION_ID,
+            "artefact": tr("tui.modelo.export.artefact.fichero_boe"),
             "export_format": "fichero-boe",
             "software_identity_grade": tr("tui.modelo.export.result.software_identity_grade.none"),
             "evidence_status": tr(
@@ -233,6 +241,41 @@ async def test_a_calculation_report_claims_no_completeness_and_names_the_filing_
 
 
 @pytest.mark.asyncio
+async def test_a_calculation_summary_pdf_is_named_as_that_artefact_and_claims_what_a_report_claims(
+    tmp_path: Path,
+) -> None:
+    """The summary PDF has its own artefact label and format, and the same limits as any calculation report."""
+    result = _publicly_projected(_report_receipt(tmp_path, document_format=CalculationReportDocumentFormat.PDF))
+    app = App[None]()
+
+    assert result.artefact is ModeloExportArtefact.CALCULATION_REPORT_PDF
+
+    async with app.run_test() as pilot:
+        await app.push_screen(ModeloExportResultScreen(result))
+        await pilot.pause()
+
+        assert _table_values(app) == {
+            "calculation_revision_id": _REVISION_ID,
+            "artefact": tr("tui.modelo.export.artefact.calculation_report_pdf"),
+            "export_format": "pdf",
+            "software_identity_grade": tr("tui.modelo.export.result.software_identity_grade.development_mock"),
+            "evidence_status": tr(
+                "tui.modelo.export.result.evidence_status.local_calculation_report_not_official_aeat_filing_evidence"
+            ),
+            "completeness": tr("tui.modelo.export.result.completeness.not_assessed"),
+            "output_path": str(tmp_path / "modelo-303-report.pdf"),
+            "byte_size": "2048",
+            "file_sha256": _FILE_SHA256,
+        }
+        assert tr("tui.modelo.export.artefact.calculation_report_pdf") != tr(
+            "tui.modelo.export.artefact.calculation_report_csv"
+        )
+        warnings = _warnings(app)
+        assert tr("tui.modelo.export.result.warning.not_official") in warnings
+        assert tr("tui.modelo.export.result.warning.development_software_identity_of_filing_file") in warnings
+
+
+@pytest.mark.asyncio
 async def test_an_unreadable_result_is_stated_rather_than_shown_as_an_empty_table() -> None:
     """Without a result the three facts are unknown, and the screen says exactly that."""
     app = App[None]()
@@ -264,6 +307,7 @@ def test_a_settled_export_names_exactly_one_receipt(tmp_path: Path) -> None:
 @pytest.mark.parametrize(
     ("members", "keys"),
     [
+        (set(ModeloExportArtefact), EXPORT_ARTEFACT_LOCALE_KEYS),
         (set(ModeloExportEvidenceStatus), EXPORT_EVIDENCE_STATUS_LOCALE_KEYS),
         (set(ModeloExportCompleteness), EXPORT_COMPLETENESS_LOCALE_KEYS),
         ({*AeatSoftwareIdentityGrade, None}, SOFTWARE_IDENTITY_GRADE_LOCALE_KEYS),
@@ -276,6 +320,6 @@ def test_every_stated_fact_has_a_label(members: set[Enum | None], keys: dict[obj
 
 def test_every_public_result_fact_has_a_row() -> None:
     """Each field the result states about the file is a row; only the version and handoff flag are not."""
-    stated = set(ModeloExportPublicResultV2.model_fields) - {"result_version", "artefact", "handoff_required"}
+    stated = set(ModeloExportPublicResultV2.model_fields) - {"result_version", "handoff_required"}
 
     assert set(EXPORT_RESULT_ROW_LOCALE_KEYS) == stated

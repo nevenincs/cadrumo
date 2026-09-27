@@ -8,6 +8,7 @@ from datetime import timedelta
 from typing import TYPE_CHECKING
 
 from ..adapters.outbound.aeat.browser.factory import default_browser_session_factory
+from ..adapters.outbound.calculation_summary_pdf.summary_container import write_calculation_summary_pdf
 from ..adapters.outbound.google.calc_sheets_apply import apply_export_plan, preview_export_plan
 from ..adapters.outbound.llm.role_fitness import probe_text_extraction_fitness
 from ..adapters.outbound.model_runtime.process_control import run_runtime_installer, spawn_runtime_server
@@ -217,6 +218,10 @@ def build_production_operation_registry(
         # existing review-package signing key, so the export enrolment is bound
         # to the adapter that already owns that key's custody.
         signing_keypair_capability_factory=build_review_package_signing_keypair_capability,
+        # The summary PDF writer is the same adapter the command line hands the
+        # report service, so both surfaces draw one revision's summary with one
+        # writer. It imports ReportLab only when it draws.
+        calculation_summary_pdf_writer=write_calculation_summary_pdf,
         calculation_action_ports_factory=calculation_action_ports_factory,
         attachment_store_factory=attachment_store_factory,
         amendment_action_ports_factory=amendment_action_ports_factory,

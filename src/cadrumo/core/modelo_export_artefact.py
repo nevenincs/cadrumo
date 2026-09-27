@@ -31,10 +31,16 @@ class ModeloExportArtefact(StrEnum):
         CALCULATION_REPORT_CSV: The revision's calculation report as a delimited
             table with fixed columns. A local record of what the calculation
             holds, never presentable at AEAT.
+        CALCULATION_REPORT_PDF: The revision's calculation report as the signed
+            calculation summary: pages a person reads, carrying the report's own
+            data and a signed integrity statement. A local record, never
+            presentable at AEAT, and publishable only where the optional ``pdf``
+            extra is installed.
     """
 
     FICHERO_BOE = "fichero_boe"
     CALCULATION_REPORT_CSV = "calculation_report_csv"
+    CALCULATION_REPORT_PDF = "calculation_report_pdf"
 
 
 __all__ = ["ModeloExportArtefact"]

@@ -7,6 +7,10 @@ and the operation's result -- resolved through the same composed result door
 the terminal interface uses -- must agree with the command line's envelope
 field for field: the revision, the format, the software identity grade, the
 evidence status, the completeness and the fingerprint of the bytes.
+
+The calculation summary PDF is deterministic for one revision, one signing key
+and one export instant, so under one frozen instant the two surfaces must write
+the same bytes, and a different instant must not.
 """
 
 from __future__ import annotations
@@ -14,6 +18,7 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import json
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -35,6 +40,7 @@ from cadrumo.application.operations.frontend_requests import (
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.core.modelo_export_artefact import ModeloExportArtefact
 from cadrumo.core.operations import OperationTerminalCondition
+from cadrumo.core.time.clock import frozen_clock
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.filing.software_identity import AeatSoftwareIdentityGrade
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli
@@ -45,6 +51,10 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _COMPLETENESS_UNVERIFIED_NOTICE = "modelo.export.completeness_unverified"
 _NOT_OFFICIAL_EVIDENCE_NOTICE = "modelo.export.local_export_not_official_evidence"
+_SUMMARY_EXPORTED_AT = datetime(2026, 7, 20, 9, 30, tzinfo=UTC)
+#: A minute later: inside the unlocked session's idle window, which a frozen
+#: clock would otherwise run past.
+_LATER_SUMMARY_EXPORTED_AT = _SUMMARY_EXPORTED_AT + timedelta(minutes=1)
 
 
 def _operation_result(
@@ -200,3 +210,65 @@ def test_the_calculation_report_result_states_what_the_command_line_prints(tmp_p
     assert result.byte_size == operation_out.stat().st_size
     assert result.file_sha256 == hashlib.sha256(operation_out.read_bytes()).hexdigest()
     assert cli_result["file_sha256"] == hashlib.sha256(cli_out.read_bytes()).hexdigest()
+
+
+def test_the_calculation_summary_pdf_is_byte_identical_from_either_surface(tmp_path: Path) -> None:
+    """One revision exported at one instant is one summary, whichever surface wrote it."""
+    with isolated_backend_context(tmp_path), bundled_indexed_authority().operation() as operation:
+        _taxpayer_nif, _bucket_id, verified, *_repositories = build_verified_modelo_303_revision(operation=operation)
+        cli_out = tmp_path / "cli-303-summary.pdf"
+        operation_out = tmp_path / "operation-303-summary.pdf"
+        later_out = tmp_path / "operation-303-summary-later.pdf"
+        with frozen_clock(_SUMMARY_EXPORTED_AT):
+            cli = invoke_cached_cli(
+                [
+                    "--format",
+                    "json",
+                    "app",
+                    "modelo",
+                    "work",
+                    "report",
+                    verified.work_unit_id,
+                    "--document-format",
+                    "pdf",
+                    "--output",
+                    str(cli_out),
+                ]
+            )
+            result = _operation_result(
+                work_unit_id=verified.work_unit_id,
+                calculation_revision_id=verified.calculation_revision_id,
+                output_path=operation_out,
+                operation=operation,
+                artefact=ModeloExportArtefact.CALCULATION_REPORT_PDF,
+            )
+        with frozen_clock(_LATER_SUMMARY_EXPORTED_AT):
+            later = _operation_result(
+                work_unit_id=verified.work_unit_id,
+                calculation_revision_id=verified.calculation_revision_id,
+                output_path=later_out,
+                operation=operation,
+                artefact=ModeloExportArtefact.CALCULATION_REPORT_PDF,
+            )
+
+    assert cli.exit_code == 0, cli.output
+    cli_result = json.loads(cli.output)["result"]
+    cli_bytes = cli_out.read_bytes()
+    operation_bytes = operation_out.read_bytes()
+
+    assert cli_bytes.startswith(b"%PDF-")
+    assert operation_bytes == cli_bytes
+    assert result.artefact is ModeloExportArtefact.CALCULATION_REPORT_PDF
+    assert result.calculation_revision_id == cli_result["calculation_revision_id"] == verified.calculation_revision_id
+    assert result.export_format == cli_result["document_format"] == "pdf"
+    assert result.software_identity_grade == cli_result["software_identity_grade"]
+    assert result.evidence_status is (
+        ModeloExportEvidenceStatus.LOCAL_CALCULATION_REPORT_NOT_OFFICIAL_AEAT_FILING_EVIDENCE
+    )
+    assert result.completeness is ModeloExportCompleteness.NOT_ASSESSED
+    assert result.byte_size == cli_result["byte_size"] == len(cli_bytes)
+    assert result.file_sha256 == cli_result["file_sha256"] == hashlib.sha256(cli_bytes).hexdigest()
+    # The equality above is a statement about the inputs, not an artefact of
+    # comparing two copies of one thing: the export instant is one of those
+    # inputs, and moving it changes the bytes.
+    assert later.file_sha256 == hashlib.sha256(later_out.read_bytes()).hexdigest() != result.file_sha256

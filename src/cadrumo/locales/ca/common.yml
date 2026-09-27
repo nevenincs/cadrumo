@@ -1997,6 +1997,7 @@ tui:
     export:
       artefact:
         calculation_report_csv: Informe de càlcul (CSV), només registre local
+        calculation_report_pdf: Resum del càlcul signat (PDF), només registre local
         fichero_boe: Fitxer BOE per presentar a l'AEAT
         label: Artefacte a exportar
       payment_election:
@@ -2026,6 +2027,7 @@ tui:
           local_export_not_official_aeat_filing_evidence: Exportació local; no és
             evidència oficial de presentació davant l'AEAT
         label:
+          artefact: Artefacte exportat
           byte_size: Mida (bytes)
           calculation_revision_id: Revisió del càlcul
           completeness: Integritat

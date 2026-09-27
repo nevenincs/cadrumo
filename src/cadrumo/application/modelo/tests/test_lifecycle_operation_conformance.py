@@ -51,6 +51,7 @@ _FACTORY_ARGUMENTS: dict[str, Any] = {
     "attachment_store_factory": lambda _bucket_id: None,
     "receipt_repository_factory": lambda **_: None,
     "signing_keypair_capability_factory": lambda **_: None,
+    "calculation_summary_pdf_writer": lambda _request, /, **_: b"",
 }
 
 #: The application authority each enrolment is allowed to supervise, by factory.

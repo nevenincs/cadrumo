@@ -12,6 +12,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from ...adapters.outbound.calculation_summary_pdf.summary_container import write_calculation_summary_pdf
 from ...adapters.persistence.profile.review_package_signing import (
     build_review_package_signing_keypair_capability,
 )
@@ -380,6 +381,7 @@ def _export_definition():
     return build_modelo_export_definition(
         export_ports_factory=build_modelo_export_ports,
         signing_keypair_capability_factory=build_review_package_signing_keypair_capability,
+        calculation_summary_pdf_writer=write_calculation_summary_pdf,
         profile_resolver=_test_profile_resolver,
     )
 

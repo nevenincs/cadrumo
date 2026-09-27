@@ -9,14 +9,9 @@ from __future__ import annotations
 
 import hashlib
 import json
-import sys
 from collections.abc import Iterator, Sequence
 from datetime import UTC, datetime
-from importlib.abc import MetaPathFinder
-from importlib.machinery import ModuleSpec
 from pathlib import Path
-from types import ModuleType
-from typing import override
 
 import pikepdf
 import pytest
@@ -31,6 +26,7 @@ from ....domain.modelos.repository import upsert_work_unit
 from ....tests.cli_envelope import require_error_document
 from ....tests.cli_envelope import unwrap_envelope_notices as _notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
+from ....tests.optional_extra_absence import optional_extra_absent
 from ._modelo_review_package_support import seed_exportable_modelo_revision
 from ._strict_cli_fixture_support import binding_isolated_backend
 from .cli_runner import invoke_cached_cli
@@ -201,39 +197,11 @@ def test_a_malformed_trusted_key_and_a_missing_file_are_refused(summary_path: Pa
     assert "absent.pdf" in missing.output
 
 
-class _AbsentPdfExtra(MetaPathFinder):
-    """A real import-system finder that makes the ``pdf`` extra's package unimportable.
-
-    Installed at the head of ``sys.meta_path`` so the production spec probe runs
-    the real ``importlib.util.find_spec`` and observes exactly the absence a core
-    install without the extra produces.
-    """
-
-    @override
-    def find_spec(
-        self,
-        fullname: str,
-        path: Sequence[str] | None = None,
-        target: ModuleType | None = None,
-    ) -> ModuleSpec | None:
-        if fullname.split(".")[0] == PDF_EXTRA.import_name:
-            raise ModuleNotFoundError(f"No module named {fullname!r}", name=fullname)
-        return None
-
-
 @pytest.fixture
 def pdf_extra_absent() -> Iterator[None]:
-    hidden = PDF_EXTRA.import_name
-    removed = {name: module for name, module in sys.modules.items() if name.split(".")[0] == hidden}
-    for name in removed:
-        del sys.modules[name]
-    original = sys.meta_path
-    sys.meta_path = [_AbsentPdfExtra(), *original]
-    try:
+    """Run the production spec probe against a real absence of the ``pdf`` extra."""
+    with optional_extra_absent(PDF_EXTRA):
         yield
-    finally:
-        sys.meta_path = original
-        sys.modules.update(removed)
 
 
 @pytest.mark.usefixtures("pdf_extra_absent")

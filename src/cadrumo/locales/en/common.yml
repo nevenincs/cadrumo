@@ -1953,6 +1953,7 @@ tui:
     export:
       artefact:
         calculation_report_csv: Calculation report (CSV), a local record only
+        calculation_report_pdf: Signed calculation summary (PDF), a local record only
         fichero_boe: Fichero BOE for presentation at AEAT
         label: Artefact to export
       payment_election:
@@ -1982,6 +1983,7 @@ tui:
           local_export_not_official_aeat_filing_evidence: Local export; not official
             AEAT filing evidence
         label:
+          artefact: Exported artefact
           byte_size: Size (bytes)
           calculation_revision_id: Calculation revision
           completeness: Completeness

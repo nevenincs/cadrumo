@@ -158,6 +158,7 @@ if TYPE_CHECKING:
     from ..auth.operator_scope_ports import OperatorScopePorts
     from ..operations.models import OperationRequest
     from ..operations.owner import OperationExecutorContext
+    from .calculation_summary_pdf_ports import CalculationSummaryPdfWriter
     from .verification_repository_ports import VerificationRepositoryBundleFactory
 
 MODELO_WORK_RENAME_OPERATION_DEFINITION_ID = "modelo.work.rename"
@@ -1051,7 +1052,10 @@ def build_modelo_work_file_registration(
 #: this table is not a report artefact, which is what keeps the fichero-BOE member
 #: out of the report branch by construction rather than by a name comparison.
 _REPORT_DOCUMENT_FORMATS: Mapping[ModeloExportArtefact, CalculationReportDocumentFormat] = MappingProxyType(
-    {ModeloExportArtefact.CALCULATION_REPORT_CSV: CalculationReportDocumentFormat.CSV},
+    {
+        ModeloExportArtefact.CALCULATION_REPORT_CSV: CalculationReportDocumentFormat.CSV,
+        ModeloExportArtefact.CALCULATION_REPORT_PDF: CalculationReportDocumentFormat.PDF,
+    },
 )
 #: The same table read back, so a report receipt names the artefact that was asked for.
 _REPORT_ARTEFACTS: Mapping[CalculationReportDocumentFormat, ModeloExportArtefact] = MappingProxyType(
@@ -1243,11 +1247,18 @@ class ModeloExportExecutor:
         profile_resolver: ModeloWorkVerifyProfileResolver,
         export_ports_factory: ModeloExportPortsFactory,
         signing_keypair_capability_factory: ReviewPackageSigningKeypairCapabilityFactory,
+        calculation_summary_pdf_writer: CalculationSummaryPdfWriter,
     ) -> None:
-        """Bind the live profile the export gates are judged against."""
+        """Bind the live profile the export gates are judged against, and the summary PDF writer.
+
+        The writer is the outbound adapter the composition root supplies,
+        because this layer cannot import it. It is handed to the report
+        service on every report export and used only for the summary PDF.
+        """
         self._profile_resolver = profile_resolver
         self._export_ports_factory = export_ports_factory
         self._signing_keypair_capability_factory = signing_keypair_capability_factory
+        self._calculation_summary_pdf_writer = calculation_summary_pdf_writer
 
     async def execute(
         self,
@@ -1343,6 +1354,11 @@ class ModeloExportExecutor:
         The report language is this invocation's own render language, so a
         full-screen session set to Catalan produces a Catalan report exactly as
         the command line does under ``--output-language ca``.
+
+        The summary PDF is drawn by the writer this enrolment was composed with,
+        the one the command line hands the same service. Where the optional
+        ``pdf`` extra is absent the service refuses the PDF with its own typed
+        error; nothing here substitutes another artefact.
         """
         return export_modelo_calculation_report(
             ModeloCalculationReportCommand(
@@ -1355,6 +1371,7 @@ class ModeloExportExecutor:
             export_ports=export_ports,
             signing_keypair=self._signing_keypair_capability_factory(bucket_id=active_bucket_id),
             operation=operation,
+            pdf_writer=self._calculation_summary_pdf_writer,
         )
 
 
@@ -1363,6 +1380,7 @@ def build_modelo_export_definition(
     profile_resolver: ModeloWorkVerifyProfileResolver = resolve_active_workflow_profile,
     export_ports_factory: ModeloExportPortsFactory,
     signing_keypair_capability_factory: ReviewPackageSigningKeypairCapabilityFactory,
+    calculation_summary_pdf_writer: CalculationSummaryPdfWriter,
 ) -> OperationDefinition:
     """Bind the export authority to its registered operation contract."""
 
@@ -1371,6 +1389,7 @@ def build_modelo_export_definition(
             profile_resolver=profile_resolver,
             export_ports_factory=export_ports_factory,
             signing_keypair_capability_factory=signing_keypair_capability_factory,
+            calculation_summary_pdf_writer=calculation_summary_pdf_writer,
         )
 
     return OperationDefinition(
@@ -2567,6 +2586,7 @@ def build_modelo_lifecycle_operation_definitions(
     operator_scope_ports: OperatorScopePorts,
     export_ports_factory: ModeloExportPortsFactory,
     signing_keypair_capability_factory: ReviewPackageSigningKeypairCapabilityFactory,
+    calculation_summary_pdf_writer: CalculationSummaryPdfWriter,
     calculation_action_ports_factory: CalculationActionPortsFactory,
     attachment_store_factory: Callable[[str], AttachmentStoreProtocol],
     amendment_action_ports_factory: AmendmentActionPortsFactory,
@@ -2593,6 +2613,7 @@ def build_modelo_lifecycle_operation_definitions(
         build_modelo_export_definition(
             export_ports_factory=export_ports_factory,
             signing_keypair_capability_factory=signing_keypair_capability_factory,
+            calculation_summary_pdf_writer=calculation_summary_pdf_writer,
         ),
         build_modelo_work_amend_definition(amendment_action_ports_factory=amendment_action_ports_factory),
         build_modelo_work_discard_definition(work_lifecycle_ports_factory=work_lifecycle_ports_factory),

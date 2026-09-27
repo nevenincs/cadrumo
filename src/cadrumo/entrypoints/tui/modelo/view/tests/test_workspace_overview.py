@@ -12,7 +12,9 @@ from enum import Enum
 from types import SimpleNamespace
 
 import pytest
+from textual.app import App
 from textual.widgets import Button, Checkbox, Input, Select, Static
+from textual.widgets._select import SelectOverlay
 from textual.widgets.select import InvalidSelectValueError
 
 from ......adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -32,9 +34,11 @@ from ......application.modelo.workspace_models import (
 from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import tr
 from ......core.modelo_export_artefact import ModeloExportArtefact
+from ......core.optional_extras import PDF_EXTRA
 from ......core.payment_election import PaymentElection
 from ......core.prior_domiciliation_election import PriorDomiciliationElection
 from ......core.refund_election import RefundElection
+from ......tests.optional_extra_absence import optional_extra_absent
 from ....components.dialogs import ConfirmScreen
 from ....components.host import ScreenHostApp
 from ....components.widgets import ContentDataTable, NoticeBand
@@ -47,7 +51,6 @@ from ..models import (
     workspace_refusal_reason_label,
 )
 from ..overview import (
-    EXPORT_ARTEFACT_LOCALE_KEYS,
     PAYMENT_ELECTION_LOCALE_KEYS,
     PRIOR_DOMICILIATION_ELECTION_LOCALE_KEYS,
     REFUND_ELECTION_LOCALE_KEYS,
@@ -577,13 +580,82 @@ async def test_choosing_the_calculation_report_submits_that_artefact_not_the_fil
     ]
 
 
+def _offered_artefact_rows(app: App[object]) -> list[str]:
+    """The artefact control's rows, read off the overlay it opens, as the operator sees them."""
+    overlay = app.screen.query_one("#modelo-lifecycle-export-artefact", Select).query_one(SelectOverlay)
+    return [str(overlay.get_option_at_index(index).prompt) for index in range(overlay.option_count)]
+
+
+@pytest.mark.asyncio
+async def test_the_calculation_summary_pdf_is_offered_under_its_own_label_and_submitted_when_chosen(
+    bucket_and_repository: tuple[str, WorkUnitCatalogueRepository],
+) -> None:
+    """Where the pdf extra is installed the summary is a third choice, and choosing it asks for the PDF."""
+    bucket_id, repository = bucket_and_repository
+    actions = _ExportRecordingActions()
+    app = ScreenHostApp(
+        ModeloWorkspaceOverviewScreen(_export_session(bucket_id, repository, modelo="130", actions=actions))
+    )
+
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        assert _offered_artefact_rows(app) == [
+            tr("tui.modelo.export.artefact.fichero_boe"),
+            tr("tui.modelo.export.artefact.calculation_report_csv"),
+            tr("tui.modelo.export.artefact.calculation_report_pdf"),
+        ]
+        artefact = app.screen.query_one("#modelo-lifecycle-export-artefact", Select)
+        artefact.value = ModeloExportArtefact.CALCULATION_REPORT_PDF.value
+        app.screen.query_one("#modelo-lifecycle-export-path", Input).value = "modelo-130-summary.pdf"
+        app.screen.query_one("#modelo-lifecycle-export-replace", Checkbox).value = True
+        app.screen.query_one("#modelo-lifecycle-export", Button).press()
+        await pilot.pause()
+        await app.workers.wait_for_complete()
+
+    assert actions.exported == [
+        {
+            "refund_election": RefundElection.COMPENSAR,
+            "payment_election": PaymentElection.INGRESO,
+            "prior_domiciliation_election": PriorDomiciliationElection.KEEP,
+            "replace_existing": True,
+            "artefact": ModeloExportArtefact.CALCULATION_REPORT_PDF,
+            "output_path": "modelo-130-summary.pdf",
+        }
+    ]
+
+
+@pytest.mark.asyncio
+async def test_without_the_pdf_extra_the_summary_is_not_offered_and_cannot_be_chosen(
+    bucket_and_repository: tuple[str, WorkUnitCatalogueRepository],
+) -> None:
+    """An installation that cannot write the summary does not offer it, and offers nothing in its place."""
+    bucket_id, repository = bucket_and_repository
+    actions = _ExportRecordingActions()
+
+    with optional_extra_absent(PDF_EXTRA):
+        app = ScreenHostApp(
+            ModeloWorkspaceOverviewScreen(_export_session(bucket_id, repository, modelo="130", actions=actions))
+        )
+        async with app.run_test() as pilot:
+            await pilot.pause()
+            assert _offered_artefact_rows(app) == [
+                tr("tui.modelo.export.artefact.fichero_boe"),
+                tr("tui.modelo.export.artefact.calculation_report_csv"),
+            ]
+            artefact = app.screen.query_one("#modelo-lifecycle-export-artefact", Select)
+            with pytest.raises(InvalidSelectValueError):
+                artefact.value = ModeloExportArtefact.CALCULATION_REPORT_PDF.value
+            assert artefact.value == ModeloExportArtefact.FICHERO_BOE.value
+
+    assert actions.exported == []
+
+
 @pytest.mark.parametrize(
     ("election", "keys"),
     [
         (RefundElection, REFUND_ELECTION_LOCALE_KEYS),
         (PaymentElection, PAYMENT_ELECTION_LOCALE_KEYS),
         (PriorDomiciliationElection, PRIOR_DOMICILIATION_ELECTION_LOCALE_KEYS),
-        (ModeloExportArtefact, EXPORT_ARTEFACT_LOCALE_KEYS),
     ],
 )
 def test_every_election_member_has_a_label(election: type[Enum], keys: dict[object, str]) -> None:

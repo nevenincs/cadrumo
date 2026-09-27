@@ -29,6 +29,7 @@ _FACTORY_ARGUMENTS: dict[str, Any] = {
     "verification_repository_bundle_factory": lambda *args, **kwargs: None,
     "certificate_secret_backend_factory": lambda *args, **kwargs: None,
     "signing_keypair_capability_factory": lambda *args, **kwargs: None,
+    "calculation_summary_pdf_writer": lambda *args, **kwargs: b"",
     "operator_scope_ports": object(),
 }
 

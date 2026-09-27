@@ -48,6 +48,15 @@ ModeloExportResultScreen { align: center middle; }
 #modelo-export-result-actions { height: auto; align-horizontal: right; margin-top: $cadrumo-stack; }
 """)
 
+#: The artefacts an export can publish, each in the operator's words. Every
+#: member of the closed axis appears, so an artefact the product can publish is
+#: never offered or stated as a bare token. The export control offers these and
+#: the statement names the one that was published with the same words.
+EXPORT_ARTEFACT_LOCALE_KEYS: Final[dict[ModeloExportArtefact, str]] = {
+    ModeloExportArtefact.FICHERO_BOE: "tui.modelo.export.artefact.fichero_boe",
+    ModeloExportArtefact.CALCULATION_REPORT_CSV: "tui.modelo.export.artefact.calculation_report_csv",
+    ModeloExportArtefact.CALCULATION_REPORT_PDF: "tui.modelo.export.artefact.calculation_report_pdf",
+}
 #: Each evidence status in the operator's words. Every member appears, so a
 #: status the export can state is never shown as a bare token.
 EXPORT_EVIDENCE_STATUS_LOCALE_KEYS: Final[dict[ModeloExportEvidenceStatus, str]] = {
@@ -74,6 +83,7 @@ SOFTWARE_IDENTITY_GRADE_LOCALE_KEYS: Final[dict[AeatSoftwareIdentityGrade | None
 #: it is worth, where it is.
 EXPORT_RESULT_ROW_LOCALE_KEYS: Final[dict[str, str]] = {
     "calculation_revision_id": "tui.modelo.export.result.label.calculation_revision_id",
+    "artefact": "tui.modelo.export.result.label.artefact",
     "export_format": "tui.modelo.export.result.label.export_format",
     "software_identity_grade": "tui.modelo.export.result.label.software_identity_grade",
     "evidence_status": "tui.modelo.export.result.label.evidence_status",
@@ -88,6 +98,7 @@ def export_result_values(result: ModeloExportPublicResultV2) -> dict[str, str]:
     """Return each row's displayed value, copied from the result and named in the operator's words."""
     return {
         "calculation_revision_id": result.calculation_revision_id,
+        "artefact": tr(EXPORT_ARTEFACT_LOCALE_KEYS[result.artefact]),
         "export_format": result.export_format,
         "software_identity_grade": tr(SOFTWARE_IDENTITY_GRADE_LOCALE_KEYS[result.software_identity_grade]),
         "evidence_status": tr(EXPORT_EVIDENCE_STATUS_LOCALE_KEYS[result.evidence_status]),
@@ -173,6 +184,7 @@ class ModeloExportResultScreen(ModalScreen[None]):
 
 
 __all__ = [
+    "EXPORT_ARTEFACT_LOCALE_KEYS",
     "EXPORT_COMPLETENESS_LOCALE_KEYS",
     "EXPORT_EVIDENCE_STATUS_LOCALE_KEYS",
     "EXPORT_RESULT_ROW_LOCALE_KEYS",
