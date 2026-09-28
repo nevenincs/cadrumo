@@ -46,6 +46,13 @@ source_refs = ["aeat-dr-390-2022", "aeat-modelo-390-procedure"]
 # owed will read as legitimately absent rather than under-declared. That is the
 # silent direction, and whoever adds the extraction coverage owns the question.
 #
+# Apartado 7 ([84] and [86]) takes this class for the first reason's cousin:
+# the Manual practico de IVA, capitulo 9, says only a declarant taxed
+# exclusively in territorio comun fills it, so a legitimate filing can leave it
+# out. The apartado 9 identity they are held to is not a filed box at all; it
+# is enrolled so the gate sees every computed casilla assessed, and no filing
+# ever carries it.
+#
 # Grounded on the revision's own AEAT DR and framework-law refs, reused from
 # modelo-390-iva-annual-chain-verification. No externally_grounded_casilla_ids:
 # no bundled oracle prints this total as its own figure, and declaring one
@@ -55,6 +62,9 @@ id = "modelo-390-reconcile-when-present"
 computed_casilla_ids = []
 reconcile_when_present_casilla_ids = [
     "iva.anual.total-bases-cuotas-iva",
+    "iva.anual.suma-resultados",
+    "iva.anual.resultado-liquidacion",
+    "iva.anual.reconciliacion.resultados-liquidaciones",
 ]
 tolerance = "0.01"
 rounding = "money-2"

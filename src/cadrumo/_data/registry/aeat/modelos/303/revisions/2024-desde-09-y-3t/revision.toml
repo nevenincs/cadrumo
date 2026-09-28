@@ -1827,7 +1827,7 @@ selector = {revision = "2024-hasta-08-y-2t", id = "modelo-303-reconcile-when-pre
 removed_fields = ["externally_grounded_casilla_ids"]
 sequence_additions = {reconcile_when_present_casilla_ids = ["166", "167"], source_refs = ["aeat-dr-303-2024-late"]}
 sequence_removals = {source_refs = [0]}
-sequence_order = {reconcile_when_present_casilla_ids = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 13, 14, 11, 12], source_refs = [2, 0, 1]}
+sequence_order = {reconcile_when_present_casilla_ids = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 18, 19, 16, 17], source_refs = [2, 0, 1]}
 
 [[revisions.2024-desde-09-y-3t.family_overrides]]
 family = "verification_expectations"

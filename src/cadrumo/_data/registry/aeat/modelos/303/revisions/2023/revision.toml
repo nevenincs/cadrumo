@@ -1489,9 +1489,9 @@ sequence_order = {computed_casilla_ids = [0, 1, 2, 8, 9, 3, 4, 5, 10, 6, 7, 11, 
 [[revisions.2023.family_overrides]]
 family = "verification_expectations"
 selector = {revision = "2022", id = "modelo-303-reconcile-when-present"}
-sequence_additions = {legal_refs = ["ley-37-1992:art-104"], reconcile_when_present_casilla_ids = ["03", "06", "09", "11", "13", "29", "33", "37", "10", "154", "155", "iva.autoconsumo.promotor.cuota"], source_refs = ["aeat-dr-303-2023"]}
-sequence_removals = {source_refs = [0]}
-sequence_order = {legal_refs = [0, 1, 2, 3, 6, 4, 5], reconcile_when_present_casilla_ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0], source_refs = [2, 0, 1]}
+sequence_additions = {legal_refs = ["ley-37-1992:art-104"], reconcile_when_present_casilla_ids = ["03", "06", "09", "11", "13", "10", "154", "155", "iva.autoconsumo.promotor.cuota"], source_refs = ["aeat-dr-303-2023"]}
+sequence_removals = {reconcile_when_present_casilla_ids = [9, 10], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 2, 3, 6, 4, 5], reconcile_when_present_casilla_ids = [9, 10, 11, 12, 13, 1, 2, 3, 4, 5, 6, 7, 8, 14, 15, 16, 17, 0], source_refs = [2, 0, 1]}
 
 [[revisions.2023.family_overrides]]
 family = "completeness_manifest"
