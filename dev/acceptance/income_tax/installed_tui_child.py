@@ -243,24 +243,63 @@ async def _register_via_production_screen(*, profile_label: str, passphrase: str
 register_profile_through_installed_tui = _register_via_production_screen
 
 
+INSTALLED_LOGIN_FIELD = "#field-passphrase"
+"""The Login screen's passphrase field."""
+
+INSTALLED_HOME_SURFACE = "#home-agenda"
+"""A control the admitted Home always mounts."""
+
+INSTALLED_SETUP_WALK_CONTROL = "#onboarding-continue"
+"""The setup walk's own Continue control; a settled profile's page has none."""
+
+
+async def leave_installed_setup_walk(*, pilot: Any, polls: int = 180) -> bool:
+    """Leave the setup walk an admitted session opens, and report whether it was open.
+
+    A profile that has not declared its setup complete is handed from the
+    session's first Home straight on to the guided setup walk, so a journey
+    that is not about setup leaves it the way an operator does.  The hand-off
+    is requested on the same turn that mounts that first Home, so a Home seen
+    first may still be replaced by the walk; waiting here is what tells a
+    pending hand-off apart from a profile that is never offered one.  Escape is
+    the walk's own leave control, and a session offers the walk once, so the
+    Home it returns to is the one the journey keeps.
+    """
+    from textual.css.query import NoMatches
+
+    for _ in range(polls):
+        try:
+            query_public_selector(pilot, INSTALLED_SETUP_WALK_CONTROL)
+        except NoMatches:
+            await pilot.pause()
+        else:
+            await pilot.press("escape")
+            return True
+    return False
+
+
 async def admit_installed_session(*, pilot: Any, passphrase: str, polls: int = 180) -> None:
     """Unlock an installed session through its visible admission surface.
 
-    A newly registered profile can reach either the Login screen or an already
-    admitted Home screen depending on the surrounding production composition.
-    Both branches remain ordinary public TUI interactions.
+    A newly registered profile can reach the Login screen, an already admitted
+    Home, or the setup walk that Home hands an unfinished profile on to,
+    depending on the surrounding production composition.  Every branch remains
+    an ordinary public TUI interaction.
     """
     from textual.widgets import Input
 
+    admitted_surfaces = (INSTALLED_HOME_SURFACE, INSTALLED_SETUP_WALK_CONTROL)
     initial_surface = await wait_for_any_public_selector(
         pilot,
-        ("#field-passphrase", "#home-agenda"),
+        (INSTALLED_LOGIN_FIELD, *admitted_surfaces),
         polls=polls,
     )
-    if initial_surface == "#field-passphrase":
-        query_public_selector(pilot, "#field-passphrase", Input).value = passphrase
+    if initial_surface == INSTALLED_LOGIN_FIELD:
+        query_public_selector(pilot, INSTALLED_LOGIN_FIELD, Input).value = passphrase
         await pilot.click("#btn-unlock")
-    await wait_for_public_selector(pilot, "#home-agenda", polls=polls)
+        await wait_for_any_public_selector(pilot, admitted_surfaces, polls=polls)
+    await leave_installed_setup_walk(pilot=pilot, polls=polls)
+    await wait_for_public_selector(pilot, INSTALLED_HOME_SURFACE, polls=polls)
 
 
 def admitted_session_autopilot(
@@ -529,6 +568,29 @@ def write_installed_tui_failure_receipt(
     path.write_text(json.dumps(failure, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
+#: The leading words of every reason a child is known to write into its failure
+#: receipt. Only a reason with one of these prefixes is repeated to the driver,
+#: so a child that ever wrote something else cannot leak it through the report.
+_REPORTABLE_FAILURE_PREFIXES = ("modelo.", "unexpected ", "installed ")
+
+
+def reportable_child_failure_reason(receipt: Path) -> str | None:
+    """Return the reason a failed child recorded, when it is one a driver may repeat.
+
+    The child already persists a sanitized failure receipt; without this the
+    driver's own error said only that the child failed, and the recorded cause
+    sat unread in a scratch directory.
+    """
+    try:
+        failure = json.loads(receipt.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    reason = failure.get("error") if isinstance(failure, dict) else None
+    if isinstance(reason, str) and reason.startswith(_REPORTABLE_FAILURE_PREFIXES):
+        return reason
+    return None
+
+
 def _sanitized_public_diagnostic(diagnostic: dict[str, object]) -> dict[str, object]:
     """Keep a durable failure diagnostic to public screen identity only."""
     sanitized: dict[str, object] = {}
@@ -562,8 +624,18 @@ def run_installed_tui_child_process(
     importable.  The child itself asserts that ``cadrumo`` came from
     site-packages.  Product environment variables are rebuilt from scratch,
     and the credential crosses the process boundary only through stdin.
+
+    The interpreter is started exactly as its launcher named it.  A POSIX
+    environment's ``bin/python`` is an absolute symlink to the base
+    installation it was built from, and that link is the environment: the
+    interpreter behind it has no adjacent ``pyvenv.cfg``, so following the link
+    swaps the installed product for the bare interpreter that seeded it and the
+    child imports no ``cadrumo`` at all.  Windows copies the executable into the
+    environment, which is why only POSIX children saw an empty environment.
     """
-    executable = python_executable.resolve(strict=True)
+    executable = python_executable
+    if not executable.is_absolute() or not executable.is_file():
+        raise InstalledTuiChildError("installed TUI child interpreter must be an existing absolute path")
     workspace = workspace_root.resolve(strict=True)
     receipt = receipt_path.resolve()
     store = storage_root.resolve()
@@ -655,6 +727,9 @@ if __name__ == "__main__":  # pragma: no cover - module entry point
 
 
 __all__ = [
+    "INSTALLED_HOME_SURFACE",
+    "INSTALLED_LOGIN_FIELD",
+    "INSTALLED_SETUP_WALK_CONTROL",
     "InstalledProductEvidence",
     "InstalledTuiBootstrapEvidence",
     "InstalledTuiChildError",
@@ -664,12 +739,14 @@ __all__ = [
     "assert_installed_product_origin",
     "installed_product_evidence",
     "is_installed_product_origin",
+    "leave_installed_setup_walk",
     "main",
     "open_profile_manager_field",
     "public_surface_diagnostic",
     "query_public_selector",
     "read_passphrase_from_stdin",
     "register_profile_through_installed_tui",
+    "reportable_child_failure_reason",
     "run_bootstrap",
     "run_installed_tui_child_process",
     "select_public_data_table_row",

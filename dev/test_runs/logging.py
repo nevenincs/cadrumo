@@ -14,7 +14,7 @@ from uuid import uuid4
 
 import pytest
 
-from .paths import allocate_scratch_directory, scratch_environment
+from .paths import allocate_scratch_directory, cache_environment, scratch_environment
 
 _STATE_KEY = pytest.StashKey["RunLog"]()
 _SILENT_COLLECTION_KEY = pytest.StashKey[bool]()
@@ -108,7 +108,7 @@ def _apply_run_environment(root: Path, scratch: Path) -> None:
     os.environ[_RUN_SCRATCH_ENV] = str(scratch)
     os.environ["COVERAGE_FILE"] = str(artifacts / ".coverage")
     os.environ["PYTEST_DEBUG_TEMPROOT"] = str(scratch)
-    os.environ["XDG_CACHE_HOME"] = str(cache)
+    os.environ.update(cache_environment(cache, os.environ))
     os.environ.update(scratch_environment(scratch))
     tempfile.tempdir = str(scratch)
 
@@ -214,11 +214,18 @@ def log_start(nodeid: str) -> None:
 
 
 def log_report(report: pytest.TestReport) -> None:
-    """Record every terminal phase and flush failure detail immediately."""
+    """Record every terminal phase and flush failure detail immediately.
+
+    A test skipped at setup gets no call report, so its setup skip is its only
+    verdict. Without it the transcript shows a ``RUN`` line that never ends,
+    which reads exactly like a hung test.
+    """
     if _ACTIVE is None:
         return
-    if report.when == "call" or report.failed:
+    if report.when == "call" or report.failed or report.skipped:
         _ACTIVE.write(f"{report.outcome.upper()} {report.nodeid} phase={report.when} duration={report.duration:.6f}s")
+    if report.skipped and isinstance(report.longrepr, tuple):
+        _ACTIVE.write(str(report.longrepr[2]))
     if report.failed:
         _ACTIVE.write(str(report.longrepr))
         if report.capstdout:

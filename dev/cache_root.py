@@ -28,7 +28,7 @@ its inputs' only reader is not a cache, it is litter.
 from __future__ import annotations
 
 import os
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 from typing import Final
 
 from ._paths import REPO_ROOT
@@ -70,11 +70,16 @@ def dev_cache_dir(name: str) -> Path:
         ``<development cache root>/<name>``.
 
     Raises:
-        ValueError: When ``name`` is blank or is not a single path segment.
+        ValueError: When ``name`` is blank or is not a single path segment on
+            every supported platform.
     """
     if not name.strip() or name != name.strip():
         raise ValueError(f"cache name must be a non-blank, unpadded segment, got {name!r}")
-    if len(Path(name).parts) != 1 or name in {".", ".."}:
+    # Judged by Windows path rules on every host: they read both separators and
+    # a drive, so a name that is two segments, or a drive, on any supported
+    # platform is refused on all of them rather than only where it would escape.
+    segment = PureWindowsPath(name)
+    if segment.anchor or segment.parts != (name,) or name in {".", ".."}:
         raise ValueError(f"cache name must be a single path segment, got {name!r}")
     return dev_cache_root() / name
 

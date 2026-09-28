@@ -55,6 +55,7 @@ def _tabular_entries() -> list[dict[str, Any]]:
     return [row for row in payload["documents"] if row["axes"]["file_format"] == _CSV_FORMAT]
 
 
+@pytest.mark.external_tool
 def test_truth_covers_every_tabular_export_and_nothing_else() -> None:
     """The authored set is exactly the corpus's tabular set.
 
@@ -65,6 +66,7 @@ def test_truth_covers_every_tabular_export_and_nothing_else() -> None:
     assert set(TABULAR_COLUMN_ROLE_TRUTH) == corpus_ids
 
 
+@pytest.mark.external_tool
 def test_authored_headers_equal_the_files_own_headers() -> None:
     """Every expectation names the header the file actually prints, in order.
 
@@ -126,6 +128,7 @@ AUTHORED_SPLIT: dict[str, tuple[int, int]] = {
 }
 
 
+@pytest.mark.external_tool
 def test_projection_splits_slots_into_the_declared_scorable_and_trap_counts() -> None:
     """The projection matches the declared split, and closes on the FILE's width.
 
@@ -153,6 +156,7 @@ def test_projection_splits_slots_into_the_declared_scorable_and_trap_counts() ->
     assert total_scorable + total_traps == sum(file_widths.values()) == 71
 
 
+@pytest.mark.external_tool
 def test_a_perfect_emission_scores_every_slot_correctly() -> None:
     """The wiring control: the authored answer must score as a clean sweep.
 
@@ -181,6 +185,7 @@ def test_a_perfect_emission_scores_every_slot_correctly() -> None:
         assert scoring.correctly_abstained == expected_traps, doc_id
 
 
+@pytest.mark.external_tool
 def test_a_claim_on_an_expected_unmapped_column_scores_fabricated() -> None:
     """The trap must bite: inventing a meaning is a hard error, not a miss."""
     key = _corpus_key()
@@ -198,6 +203,7 @@ def test_a_claim_on_an_expected_unmapped_column_scores_fabricated() -> None:
     assert slot_name(expectations[disponible]) in scoring.fabricated_fields()
 
 
+@pytest.mark.external_tool
 def test_a_wrong_role_on_a_scorable_column_scores_wrong_not_fabricated() -> None:
     """Wrong and fabricated must stay distinct, or the severity signal is lost."""
     key = _corpus_key()
@@ -213,6 +219,7 @@ def test_a_wrong_role_on_a_scorable_column_scores_wrong_not_fabricated() -> None
     assert scoring.fabricated == 0
 
 
+@pytest.mark.external_tool
 def test_declining_a_scorable_column_scores_missed_not_fabricated() -> None:
     """Abstention on a real column is a miss; the UNMAPPED translation proves out."""
     key = _corpus_key()
@@ -227,6 +234,7 @@ def test_declining_a_scorable_column_scores_missed_not_fabricated() -> None:
     assert scoring.fabricated == 0
 
 
+@pytest.mark.external_tool
 def test_a_defensible_alternate_is_reported_and_never_scored_as_matched() -> None:
     """The decomposition must surface the alternate AND leave the score strict."""
     key = _corpus_key()

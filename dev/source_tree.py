@@ -10,7 +10,9 @@ mid-refresh leaves that lock behind and blocks every contributor's next commit.
 Membership is the working tree minus what the repository's ``.gitignore`` files
 exclude. That is the union of committed files and new files nobody has ignored,
 so a checker built on it sees a change consisting entirely of new files rather
-than passing it unread. Ignore rules come from ``.gitignore`` files only: a
+than passing it unread. A directory holding its own ``.git`` entry is another
+repository -- a nested clone, or a linked worktree an agent checked out inside
+this one -- and, as in git, none of it is this tree's content. Ignore rules come from ``.gitignore`` files only: a
 machine's ``info/exclude`` or global excludes are one person's preferences, and
 honouring them would enumerate a different tree on every machine.
 
@@ -50,6 +52,12 @@ _ATTRIBUTES_FILE: Final[str] = ".gitattributes"
 #: The version-control entry: a directory in a clone, a pointer file in a linked
 #: worktree. Neither is repository content, and neither is ever descended into.
 _VCS_ENTRY: Final[str] = ".git"
+
+
+def is_nested_repository(directory: Path) -> bool:
+    """Whether ``directory`` is the root of a repository other than the one walked."""
+    return os.path.lexists(directory / _VCS_ENTRY)
+
 
 #: How much of a file is inspected when ``text=auto`` must decide text from
 #: binary. A NUL byte within it marks the file binary, as git decides it.
@@ -129,7 +137,9 @@ def repository_files(root: Path = REPO_ROOT, *, under: Iterable[str] = ()) -> tu
                 continue
             relative = f"{base}/{entry.name}" if base else entry.name
             if entry.is_dir(follow_symlinks=False):
-                if not _is_ignored(relative, is_directory=True, rules=scoped):
+                if not _is_ignored(relative, is_directory=True, rules=scoped) and not is_nested_repository(
+                    Path(entry.path)
+                ):
                     visit(Path(entry.path), relative, scoped)
             elif not _is_ignored(relative, is_directory=False, rules=scoped):
                 found.append(relative)
@@ -146,7 +156,7 @@ def repository_files(root: Path = REPO_ROOT, *, under: Iterable[str] = ()) -> tu
         excluded = False
         for depth, name in enumerate(parts):
             base = "/".join(parts[:depth])
-            if name == _VCS_ENTRY:
+            if name == _VCS_ENTRY or (base and is_nested_repository(root / base)):
                 excluded = True
                 break
             own = _ignore_rules(root / base if base else root, base)

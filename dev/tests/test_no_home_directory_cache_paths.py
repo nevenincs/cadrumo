@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import ast
 import re
+import unicodedata
 from functools import cache
 from pathlib import Path
 from typing import Final
@@ -51,6 +52,12 @@ _QUOTES_THE_RETIRED_NAME: Final[dict[str, str]] = {
 
 #: The retired cache name, spelled as a quoted path segment.
 _RETIRED_SEGMENT: Final[re.Pattern[str]] = re.compile(r"""["']\.cadrumo["']|~/\.cadrumo""")
+#: The literal both spellings above contain.
+_RETIRED_NAME: Final[str] = ".cadrumo"
+
+#: The two identifiers a ``Path.home()`` call is made of.
+_PATH_NAME: Final[str] = "Path"
+_HOME_ATTRIBUTE: Final[str] = "home"
 
 #: Modules that may build a path from the home directory, and why. Each names
 #: state owned by something OUTSIDE this project, which is the only reason the
@@ -67,6 +74,10 @@ _HOME_IS_CORRECT: Final[dict[str, str]] = {
         "captures the user's home as one typed input to platform state-root resolution, not as a cache location"
     ),
     "dev/env/temp_reaper.py": "Claude Code's session transcript root, written by the tool this module observes",
+    "dev/test_runs/paths.py": (
+        "Playwright's own default Linux browser cache, which a run's cache redirect must keep naming; "
+        "Playwright defines it and this project only reads it"
+    ),
 }
 
 #: Modules that name the home directory in order to REMOVE it from output, and
@@ -92,8 +103,13 @@ def _home_call_lines(source: str) -> tuple[int, ...]:
     """Return the line of every ``Path.home()`` call in ``source``.
 
     Parsed rather than matched, so prose in a docstring that merely NAMES the
-    call is not mistaken for a module that makes it.
+    call is not mistaken for a module that makes it. Python folds identifiers to
+    NFKC, so a source whose folded text spells neither identifier cannot contain
+    the call and is not parsed at all.
     """
+    folded = source if source.isascii() else unicodedata.normalize("NFKC", source)
+    if _PATH_NAME not in folded or _HOME_ATTRIBUTE not in folded:
+        return ()
     try:
         tree = ast.parse(source)
     except SyntaxError:
@@ -103,9 +119,9 @@ def _home_call_lines(source: str) -> tuple[int, ...]:
         if not isinstance(node, ast.Call):
             continue
         func = node.func
-        if not isinstance(func, ast.Attribute) or func.attr != "home":
+        if not isinstance(func, ast.Attribute) or func.attr != _HOME_ATTRIBUTE:
             continue
-        if isinstance(func.value, ast.Name) and func.value.id == "Path":
+        if isinstance(func.value, ast.Name) and func.value.id == _PATH_NAME:
             lines.append(node.lineno)
     return tuple(lines)
 
@@ -121,7 +137,7 @@ def _scan(paths: tuple[str, ...], root: Path = REPO_ROOT) -> tuple[list[str], li
         except (OSError, UnicodeDecodeError):
             continue
         examined += 1
-        if relative not in _QUOTES_THE_RETIRED_NAME:
+        if relative not in _QUOTES_THE_RETIRED_NAME and _RETIRED_NAME in source:
             retired.extend(
                 f"{relative}:{index}"
                 for index, line in enumerate(source.splitlines(), 1)
@@ -133,12 +149,19 @@ def _scan(paths: tuple[str, ...], root: Path = REPO_ROOT) -> tuple[list[str], li
     return retired, homed, examined
 
 
+@cache
+def _live_scan() -> tuple[tuple[str, ...], tuple[str, ...], int]:
+    """Scan the live tree once for both live assertions, which read one pass's two halves."""
+    retired, homed, examined = _scan(_python_sources())
+    return tuple(retired), tuple(homed), examined
+
+
 def test_no_module_spells_the_retired_home_cache_name() -> None:
     """The name is retired, so a new spelling of it is a cache resurrected, not relocated."""
-    retired, _, examined = _scan(_python_sources())
+    retired, _, examined = _live_scan()
 
     assert examined > 100, "no Python source was discovered; this gate is asserting nothing"
-    assert retired == [], (
+    assert retired == (), (
         "these lines spell the retired home-directory cache name; development caches "
         "resolve through dev.cache_root.dev_cache_dir instead:\n  " + "\n  ".join(retired)
     )
@@ -146,10 +169,10 @@ def test_no_module_spells_the_retired_home_cache_name() -> None:
 
 def test_no_unlisted_module_builds_a_path_from_the_home_directory() -> None:
     """A home-directory path is an external tool's location or it is a mistake."""
-    _, homed, examined = _scan(_python_sources())
+    _, homed, examined = _live_scan()
 
     assert examined > 100, "no Python source was discovered; this gate is asserting nothing"
-    assert homed == [], (
+    assert homed == (), (
         "these call sites build a path from the user's home directory without being "
         "listed as external-tool state in this gate:\n  " + "\n  ".join(homed)
     )

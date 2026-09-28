@@ -5,7 +5,7 @@ from __future__ import annotations
 import ast
 import tokenize
 from collections import Counter
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable
 from io import StringIO
 from pathlib import Path
 from typing import NamedTuple
@@ -17,6 +17,7 @@ from cadrumo.tests.inventory import (
     qualified_name,
     repo_relative,
 )
+from dev.quality.cyclic_gc import cyclic_gc_paused
 from dev.quality.unread_inputs import report_unread
 
 from ._project_inventory import all_test_control_modules
@@ -274,6 +275,10 @@ def _b017_suppression_lines(path: Path) -> list[int]:
             [f"{path} ({refusal})"],
         )
         return []
+    # A comment token is a slice of the source, so a module that spells neither
+    # half of the suppression cannot carry one and needs no tokenizer pass.
+    if _NOQA_TOKEN not in source or _BROAD_RAISES_RULE not in source:
+        return []
     return [
         token.start[0]
         for token in tokenize.generate_tokens(StringIO(source).readline)
@@ -321,19 +326,27 @@ def _violation_marker_counts(source: str, violations: Iterable[str]) -> Counter[
 
 
 @pytest.fixture(scope="module")
-def broad_exception_inventory(source_tree_ast: Mapping[Path, ast.AST]) -> _BroadExceptionInventory:
-    """Return all broad exception policy violations from one test-control inventory pass."""
+def broad_exception_inventory() -> _BroadExceptionInventory:
+    """Return all broad exception policy violations from one test-control inventory pass.
+
+    Only test-control modules are read, so the parses come from the shared
+    per-path cache rather than the whole-package session parse, most of which
+    is production code this policy never inspects. The cyclic collector is
+    paused while those thousands of trees accumulate, since a collection would
+    only re-traverse them.
+    """
     module_trees: list[tuple[str, ast.AST]] = []
     broad_raise_suppressions: list[str] = []
 
-    for module_path in all_test_control_modules():
-        relative = repo_relative(module_path)
-        tree = ast_for_path(module_path, source_tree_ast)
-        if tree is not None:
-            module_trees.append((relative, tree))
-        for lineno in _b017_suppression_lines(module_path):
-            broad_raise_suppressions.append(f"{relative}:{lineno}: {_NOQA_TOKEN} {_BROAD_RAISES_RULE}")
-    inventory = _broad_exception_inventory_for_module_trees(module_trees)
+    with cyclic_gc_paused():
+        for module_path in all_test_control_modules():
+            relative = repo_relative(module_path)
+            tree = ast_for_path(module_path)
+            if tree is not None:
+                module_trees.append((relative, tree))
+            for lineno in _b017_suppression_lines(module_path):
+                broad_raise_suppressions.append(f"{relative}:{lineno}: {_NOQA_TOKEN} {_BROAD_RAISES_RULE}")
+        inventory = _broad_exception_inventory_for_module_trees(module_trees)
 
     return _BroadExceptionInventory(
         pytest_raises=inventory.pytest_raises,
@@ -526,6 +539,25 @@ def test_broad_exception_policy_rejects_permissive_exception_shapes(
 
     assert _violation_marker_counts(source, inventory.pytest_raises) == expected_pytest_markers
     assert _violation_marker_counts(source, inventory.contextlib_suppressions) == expected_suppress_markers
+
+
+def test_broad_raise_suppression_scan_reports_only_comment_markers(tmp_path: Path) -> None:
+    """The suppression scan names a commented marker's line; the same text in a string is not one."""
+    marker = f"{_NOQA_TOKEN}: {_BROAD_RAISES_RULE}"
+    planted = tmp_path / "test_planted.py"
+    planted.write_text(
+        "import pytest\n\n\n"
+        "def test_planted() -> None:\n"
+        f"    with pytest.raises(Exception):  # {marker}\n"
+        "        pass\n"
+        f"    assert '{marker}'\n",
+        encoding="utf-8",
+    )
+    clean = tmp_path / "test_clean.py"
+    clean.write_text("def test_clean() -> None:\n    assert True\n", encoding="utf-8")
+
+    assert _b017_suppression_lines(planted) == [5]
+    assert _b017_suppression_lines(clean) == []
 
 
 def test_discovery_found_modules() -> None:
