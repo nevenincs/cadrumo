@@ -59,9 +59,15 @@ EXPECTED_NOTICE_CODES = {"modelo.work.calculate.plazo_vencido_unassessed_preview
 #: a real one. That posture cannot persist a login session, so every command
 #: authenticating over the bounded stdin channel truthfully reports that it
 #: authenticated only its own process. The notice describes the oracle's own
-#: isolation, not the installed build's tax behaviour, and it is the only code
-#: excused anywhere here; every other diagnostic still fails the oracle.
+#: isolation, not the installed build's tax behaviour; beside the creation
+#: notice below it is the only code excused, and every other diagnostic still
+#: fails the oracle.
 ISOLATION_NOTICE_CODES: Final[frozenset[str]] = frozenset({"config.login.session_not_persisted"})
+#: The warning profile creation always ends with. Creation closes the session it
+#: opened, so the next process starts signed out and the product says so; the
+#: oracle authenticates every later command over the stdin channel, which is the
+#: state the notice describes. It is excused on the creation command alone.
+PROFILE_CREATION_NOTICE_CODES: Final[frozenset[str]] = frozenset({"PROFILE_LOGIN_REQUIRED"})
 _REVISION_ID = re.compile(r"^[0-9a-f]{64}$")
 
 CASILLAS = (
@@ -496,7 +502,12 @@ def run_installed_tax_oracle(
     )
     commands.append(profile)
     profile_document = _json_envelope(profile, expected_command="config.profile.create")
-    _assert_no_diagnostic_notices(profile_document, command="config.profile.create")
+    assert_no_diagnostic_notices(
+        profile_document,
+        command="config.profile.create",
+        error=InstalledTaxOracleError,
+        excused_codes=PROFILE_CREATION_NOTICE_CODES,
+    )
 
     # A profile is born incomplete on purpose, and modelo work refuses one that
     # has never been declared ready to file. The declaration is its own verb, so
