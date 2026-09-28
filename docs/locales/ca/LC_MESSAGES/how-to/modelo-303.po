@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-25 11:19+0200\n"
+"POT-Creation-Date: 2026-09-28 08:27+0000\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo translation team\n"
 "Language: ca\n"
@@ -44,24 +44,26 @@ msgstr ""
 #: ../../how-to/modelo-303.md:10
 msgid ""
 "Cadrumo does not submit Modelo 303 to the Agencia Estatal de "
-"Administración Tributaria (AEAT). Its registry carries the filing layout,"
-" but `export` currently refuses because the product has no reviewed AEAT "
-"product/software identity authority with which to stamp the envelope. "
-"Read the calculated box values back and enter them through the official "
-"AEAT channel yourself."
+"Administración Tributaria (AEAT). `export` writes the filing layout, but "
+"its envelope header carries Cadrumo's all-zero development software "
+"identity because the product holds no AEAT software-developer "
+"registration, so AEAT will not accept the file. Read the calculated box "
+"values back and enter them through the official AEAT channel yourself."
 msgstr ""
 "Cadrumo no presenta el Model 303 davant de l'Agència Estatal "
-"d'Administració Tributària (AEAT). El seu registre conté el disseny de "
-"presentació, però `export` es nega actualment perquè el producte no té "
-"una autoritat revisada sobre la identitat de producte/programari de "
-"l'AEAT per segellar el sobre. Torna a llegir els valors calculats de les "
-"caselles i introdueix-los tu mateix pel canal oficial de l'AEAT."
+"d'Administració Tributària (AEAT). `export` escriu el disseny de "
+"presentació, però la capçalera del seu sobre porta la identitat de "
+"programari de desenvolupament de Cadrumo, formada només per zeros, perquè"
+" el producte no té registre com a desenvolupador de programari davant "
+"l'AEAT, de manera que l'AEAT no acceptarà el fitxer. Torna a llegir els "
+"valors calculats de les caselles i introdueix-los tu mateix pel canal "
+"oficial de l'AEAT."
 
-#: ../../how-to/modelo-303.md:16
+#: ../../how-to/modelo-303.md:17
 msgid "The tool needs a master-key passphrase and prompts for it."
 msgstr "L'eina necessita una contrasenya de clau mestra i la demana."
 
-#: ../../how-to/modelo-303.md:18
+#: ../../how-to/modelo-303.md:19
 msgid ""
 "**Requirement:** a valid taxpayer profile. Create one with `aeat config "
 "profile create <name>` before you start. [Set up your profile](profile-"
@@ -71,11 +73,11 @@ msgstr ""
 "profile create <name>` abans de començar. [Configura el teu perfil"
 "](profile-setup.md) t'hi guia pas a pas."
 
-#: ../../how-to/modelo-303.md:22
+#: ../../how-to/modelo-303.md:23
 msgid "The complete first-quarter chain"
 msgstr "La cadena completa del primer trimestre"
 
-#: ../../how-to/modelo-303.md:24
+#: ../../how-to/modelo-303.md:25
 msgid ""
 "This is the full path from a classified, evidenced ledger to a filed "
 "quarter for a first-period filer. The preparation below sets up a self-"
@@ -94,23 +96,24 @@ msgstr ""
 "local i exporta el fichero-BOE. Cada detall determinant s'explica sota la"
 " seqüència."
 
-#: ../../how-to/modelo-303.md:31
+#: ../../how-to/modelo-303.md:32
 msgid ""
-"The Modelo 303 export step refuses until reviewed product/software "
-"identity authority is available. Enter the calculated box values at the "
-"AEAT portal, as [File your modelo at the AEAT portal](file-at-aeat.md) "
-"describes."
+"The Modelo 303 export writes a review file whose envelope carries the "
+"all-zero development software identity. Enter the calculated box values "
+"at the AEAT portal, as [File your modelo at the AEAT portal](file-at-"
+"aeat.md) describes."
 msgstr ""
-"El pas d'exportació del Model 303 es nega fins que hi hagi una autoritat "
-"revisada d'identitat de producte/programari. Introdueix els valors "
-"calculats de les caselles al portal de l'AEAT, com descriu [Presenta el "
-"teu model al portal de l'AEAT](file-at-aeat.md)."
+"L'exportació del Model 303 escriu un fitxer de revisió el sobre del qual "
+"porta la identitat de programari de desenvolupament formada només per "
+"zeros. Introdueix els valors calculats de les caselles al portal de "
+"l'AEAT, com descriu [Presenta el teu model al portal de l'AEAT](file-at-"
+"aeat.md)."
 
-#: ../../how-to/modelo-303.md:39
+#: ../../how-to/modelo-303.md:40
 msgid "Load-bearing details:"
 msgstr "Detalls determinants:"
 
-#: ../../how-to/modelo-303.md:41
+#: ../../how-to/modelo-303.md:42
 msgid ""
 "Create the profile with `--quiet` for the non-interactive form. A bare "
 "`aeat config profile create me` opens an interactive wizard. The profile "
@@ -122,7 +125,7 @@ msgstr ""
 "de portar `--name` i `--surnames`, o l'exportació més tard es negarà amb "
 "«requires the operator name»."
 
-#: ../../how-to/modelo-303.md:45
+#: ../../how-to/modelo-303.md:46
 msgid ""
 "`--activity-start-date 2026-01-01` scopes the prior-period dependency out"
 " for a first period. Without it, verify blocks on the previous quarter."
@@ -131,7 +134,7 @@ msgstr ""
 "període anterior per a un primer període. Sense això, la verificació es "
 "bloqueja pel trimestre anterior."
 
-#: ../../how-to/modelo-303.md:47
+#: ../../how-to/modelo-303.md:48
 msgid ""
 "`ledger add --amount` is the GROSS amount (`--taxable-base` + `--iva-"
 "amount`). Here `1000 + 210 = 1210` and `500 + 105 = 605`. The tool "
@@ -141,7 +144,7 @@ msgstr ""
 "amount`). Aquí `1000 + 210 = 1210` i `500 + 105 = 605`. L'eina fa complir"
 " que la base imposable més l'IVA siguin iguals al brut fins al cèntim."
 
-#: ../../how-to/modelo-303.md:50
+#: ../../how-to/modelo-303.md:51
 msgid ""
 "A deductible-expense row needs `--category-id`. List the valid ids with "
 "`aeat app ledger categories`. The example uses `material_oficina`."
@@ -150,7 +153,7 @@ msgstr ""
 "vàlids amb `aeat app ledger categories`. L'exemple utilitza "
 "`material_oficina`."
 
-#: ../../how-to/modelo-303.md:52
+#: ../../how-to/modelo-303.md:53
 msgid ""
 "Calculation charges 210.00 of IVA on the sale (`IVA repercutido`) and "
 "deducts 105.00 on the purchase (`IVA soportado`), so casilla 71 "
@@ -164,7 +167,7 @@ msgstr ""
 "L'IVA deduïble compta en el moment del càlcul; l'evidència de factura "
 "adjunta és el que permet *presentar* la fila, no el que canvia la xifra."
 
-#: ../../how-to/modelo-303.md:57
+#: ../../how-to/modelo-303.md:58
 msgid ""
 "Attach the purchase invoice as evidence *before* you verify. Verification"
 " finalizes the revision and captures a snapshot over the contributing "
@@ -176,19 +179,18 @@ msgstr ""
 "files contribuents, de manera que l'evidència ja ha d'estar a la fila de "
 "despesa. Una fila blocada no pot admetre un adjunt tardà."
 
-#: ../../how-to/modelo-303.md:61
+#: ../../how-to/modelo-303.md:62
 msgid ""
 "`verify` reports `completeness complete` and `granted true`, and `work "
-"file` writes the local filed marker. `export` refuses because its "
-"envelope cannot be stamped without reviewed product/software identity "
-"authority."
+"file` writes the local filed marker. `export` writes the file with the "
+"all-zero development software identity and says so in a warning notice."
 msgstr ""
 "`verify` informa de `completeness complete` i `granted true`, i `work "
-"file` escriu el marcador local de presentat. `export` es nega perquè el "
-"seu sobre no es pot segellar sense una autoritat revisada d'identitat de "
-"producte/programari."
+"file` escriu el marcador local de presentat. `export` escriu el fitxer "
+"amb la identitat de programari de desenvolupament formada només per zeros"
+" i ho indica en un avís."
 
-#: ../../how-to/modelo-303.md:64
+#: ../../how-to/modelo-303.md:65
 msgid ""
 "Casilla 65 (\"% atribuible a la Administración del Estado\") resolves to "
 "100 automatically for a común-territory profile, so casilla 66 and the "
@@ -203,17 +205,17 @@ msgstr ""
 " territori común; els règims forals es rebutgen en el moment de crear el "
 "perfil."
 
-#: ../../how-to/modelo-303.md:70
+#: ../../how-to/modelo-303.md:71
 msgid "The rest of this guide explains each step and the checks around it."
 msgstr ""
 "La resta d'aquesta guia explica cada pas i les comprovacions que "
 "l'envolten."
 
-#: ../../how-to/modelo-303.md:72
+#: ../../how-to/modelo-303.md:73
 msgid "Before you create the draft"
 msgstr "Abans de crear l'esborrany"
 
-#: ../../how-to/modelo-303.md:74
+#: ../../how-to/modelo-303.md:75
 msgid ""
 "Start with the pieces that decide whether Modelo 303 applies and which "
 "data can be calculated:"
@@ -221,7 +223,7 @@ msgstr ""
 "Comença per les peces que decideixen si el Modelo 303 s'aplica i quines "
 "dades es poden calcular:"
 
-#: ../../how-to/modelo-303.md:77
+#: ../../how-to/modelo-303.md:78
 msgid ""
 "[Set up your taxpayer profile](profile-setup.md) and check the active "
 "profile. Modelo 303 depends on IVA facts such as `--iva-regime`, `--iva-"
@@ -233,7 +235,7 @@ msgstr ""
 "`--iva-sii-enrolled`, `--iva-redeme-enrolled`, l'alta al ROI/OSS, les "
 "dades d'activitat i de residència, i el perfil actiu."
 
-#: ../../how-to/modelo-303.md:81
+#: ../../how-to/modelo-303.md:82
 msgid ""
 "Check your census facts before calculating - see [Maintain Modelo 036 "
 "census facts in your profile](censo-update.md). Censo facts can affect "
@@ -244,7 +246,7 @@ msgstr ""
 "del censo poden afectar la disponibilitat del perfil i les "
 "classificacions locals."
 
-#: ../../how-to/modelo-303.md:84
+#: ../../how-to/modelo-303.md:85
 msgid ""
 "[Plan your filing calendar](filing-calendar.md) and confirm the period "
 "token with [Period tokens and dates](filing-calendar.md#period-tokens-"
@@ -259,7 +261,7 @@ msgstr ""
 "mensual d'IVA com ara REDEME o els contribuents de gran empresa utilitzen"
 " períodes mensuals com ara `01`."
 
-#: ../../how-to/modelo-303.md:89
+#: ../../how-to/modelo-303.md:90
 msgid ""
 "[Import or add your transactions](import-bank-statements.md), then "
 "[classify them](classify-transactions.md). Modelo 303 needs enough IVA "
@@ -270,7 +272,7 @@ msgstr ""
 "necessita prou detall d'IVA a les files de negoci per encaminar els "
 "imports del ledger a les casilles d'IVA correctes."
 
-#: ../../how-to/modelo-303.md:92
+#: ../../how-to/modelo-303.md:93
 msgid ""
 "If calculation reports missing inputs, use [Review and supply calculation"
 " inputs](review-calculation-values.md) before forcing manual values into "
@@ -280,11 +282,11 @@ msgstr ""
 "entrades de càlcul](review-calculation-values.md) abans de forçar valors "
 "manuals a la presentació."
 
-#: ../../how-to/modelo-303.md:96
+#: ../../how-to/modelo-303.md:97
 msgid "What Modelo 303 calculates"
 msgstr "Què calcula el Modelo 303"
 
-#: ../../how-to/modelo-303.md:98
+#: ../../how-to/modelo-303.md:99
 msgid ""
 "Modelo 303 calculates a period IVA self-assessment: IVA charged to "
 "customers minus deductible IVA paid, plus declared adjustments and prior-"
@@ -296,11 +298,11 @@ msgstr ""
 "declarats i la compensació de període anterior, per produir les casilles "
 "de resultat, d'ingrés, de devolució i d'arrossegament del període."
 
-#: ../../how-to/modelo-303.md:103
+#: ../../how-to/modelo-303.md:104
 msgid "In ordinary ledger-backed cases, calculation can combine:"
 msgstr "En els casos ordinaris basats en el ledger, el càlcul pot combinar:"
 
-#: ../../how-to/modelo-303.md:105
+#: ../../how-to/modelo-303.md:106
 msgid ""
 "IVA charged to customers (`IVA repercutido`) from classified income and "
 "sales rows."
@@ -308,7 +310,7 @@ msgstr ""
 "L'IVA repercutit als clients (`IVA repercutido`) a partir de les files "
 "d'ingressos i de vendes classificades."
 
-#: ../../how-to/modelo-303.md:107
+#: ../../how-to/modelo-303.md:108
 msgid ""
 "Deductible IVA paid on purchases and expenses (`IVA soportado`) from "
 "classified supplier rows."
@@ -316,7 +318,7 @@ msgstr ""
 "L'IVA deduïble suportat en compres i despeses (`IVA soportado`) a partir "
 "de les files de proveïdor classificades."
 
-#: ../../how-to/modelo-303.md:109
+#: ../../how-to/modelo-303.md:110
 msgid ""
 "IVA categories, rates, directions, taxable bases, IVA amounts, business "
 "percentage, currency/FX support, and intracommunity/reverse-charge "
@@ -327,7 +329,7 @@ msgstr ""
 "tractament intracomunitari/d'inversió del subjecte passiu registrats a "
 "les files del ledger."
 
-#: ../../how-to/modelo-303.md:112
+#: ../../how-to/modelo-303.md:113
 msgid ""
 "Profile facts, including IVA regime and profile-derived values that the "
 "registry binds into the form."
@@ -335,7 +337,7 @@ msgstr ""
 "Les dades del perfil, inclosos el règim d'IVA i els valors derivats del "
 "perfil que el registre vincula al formulari."
 
-#: ../../how-to/modelo-303.md:114
+#: ../../how-to/modelo-303.md:115
 msgid ""
 "Prior Modelo 303 IVA compensation state, when the target period needs "
 "pending compensation from the previous period."
@@ -343,7 +345,7 @@ msgstr ""
 "L'estat de compensació d'IVA del Modelo 303 anterior, quan el període de "
 "destinació necessita compensació pendent del període anterior."
 
-#: ../../how-to/modelo-303.md:116
+#: ../../how-to/modelo-303.md:117
 msgid ""
 "Explicit operator inputs, only where the registry or command help says a "
 "value cannot be derived from the profile, ledger, constants, or saved "
@@ -353,7 +355,7 @@ msgstr ""
 "l'ajuda de l'ordre indiquen que un valor no es pot derivar del perfil, "
 "del ledger, de les constants o de l'historial desat."
 
-#: ../../how-to/modelo-303.md:119
+#: ../../how-to/modelo-303.md:120
 msgid ""
 "Do not read that list as \"every Modelo 303 box comes from the ledger.\" "
 "Many casillas remain manual, profile-derived, registry-derived, or "
@@ -364,7 +366,7 @@ msgstr ""
 "perfil, derivades del registre o obtingudes de l'historial de "
 "presentacions anterior, i no pas de les files de transaccions."
 
-#: ../../how-to/modelo-303.md:123
+#: ../../how-to/modelo-303.md:124
 msgid ""
 "Classification matters because the calculation does not guess whether a "
 "row is business, personal, mixed-use, deductible, domestic, exempt, "
@@ -378,7 +380,7 @@ msgstr ""
 "classificades o a què falten camps d'IVA obligatoris poden bloquejar el "
 "càlcul o generar guiatge de bindings que falten."
 
-#: ../../how-to/modelo-303.md:128
+#: ../../how-to/modelo-303.md:129
 msgid ""
 "When you add a row by hand, pass the GROSS amount on `--amount` and the "
 "IVA detail explicitly with `aeat app ledger add`. The complete-chain "
@@ -388,7 +390,7 @@ msgstr ""
 "detall d'IVA explícitament amb `aeat app ledger add`. La seqüència de "
 "cadena completa de més amunt executa això des del ledger inicial."
 
-#: ../../how-to/modelo-303.md:132
+#: ../../how-to/modelo-303.md:133
 msgid ""
 "`--amount` is `--taxable-base` plus `--iva-amount`, and the tool refuses "
 "the row if they do not match to the cent. A deductible-expense row also "
@@ -400,11 +402,11 @@ msgstr ""
 "també necessita un `--category-id`; llista els ids vàlids amb `aeat app "
 "ledger categories`."
 
-#: ../../how-to/modelo-303.md:136
+#: ../../how-to/modelo-303.md:137
 msgid "Create the work unit"
 msgstr "Crea la unitat de treball"
 
-#: ../../how-to/modelo-303.md:138
+#: ../../how-to/modelo-303.md:139
 msgid ""
 "Create or reuse the saved workspace for the active profile, modelo, "
 "filing year, period, and registry revision. This needs an active profile;"
@@ -419,7 +421,7 @@ msgstr ""
 " app modelo work create`. Tots dos s'executen a la seqüència de cadena "
 "completa de més amunt."
 
-#: ../../how-to/modelo-303.md:143
+#: ../../how-to/modelo-303.md:144
 msgid ""
 "The command is idempotent for the same visible target. If a work unit "
 "already exists for the active profile, Modelo 303, year, period, and "
@@ -431,7 +433,7 @@ msgstr ""
 " la revisió del registre resolta, Cadrumo la retorna en lloc de crear-ne "
 "una de duplicada."
 
-#: ../../how-to/modelo-303.md:147
+#: ../../how-to/modelo-303.md:148
 msgid ""
 "Use the same visible target on the later commands, for example `aeat app "
 "modelo work status`."
@@ -439,7 +441,7 @@ msgstr ""
 "Fes servir el mateix objectiu visible a les ordres posteriors, per "
 "exemple `aeat app modelo work status`."
 
-#: ../../how-to/modelo-303.md:150
+#: ../../how-to/modelo-303.md:151
 msgid ""
 "For routine work, the visible target (`--modelo`, `--year`, `--period`) "
 "is all you need. Reference-number workflows are covered in [The filing "
@@ -450,11 +452,11 @@ msgstr ""
 " referència es tracten a [El flux de treball de presentació](filing-"
 "spine.md)."
 
-#: ../../how-to/modelo-303.md:154
+#: ../../how-to/modelo-303.md:155
 msgid "Check the ledger period"
 msgstr "Comprova el període del ledger"
 
-#: ../../how-to/modelo-303.md:156
+#: ../../how-to/modelo-303.md:157
 msgid ""
 "The period you pass to the work unit controls the ledger window used by "
 "calculation. Calculation selects ledger rows for the requested modelo, "
@@ -471,11 +473,11 @@ msgstr ""
 "`--year`. Per exemple, `--year 2026 --period 1T` és el primer trimestre; "
 "el token mensual `01` amb `--year 2026` és el gener."
 
-#: ../../how-to/modelo-303.md:163
+#: ../../how-to/modelo-303.md:164
 msgid "Check that period before calculating:"
 msgstr "Comprova aquest període abans de calcular:"
 
-#: ../../how-to/modelo-303.md:169
+#: ../../how-to/modelo-303.md:170
 msgid ""
 "The row window uses the transaction operation date: `raw.value_date` when"
 " available, otherwise `raw.booked_date`. The ledger row must also be in "
@@ -490,7 +492,7 @@ msgstr ""
 " categoria/tipus/import d'IVA i divisa/FX per al binding del registre que"
 " la necessiti."
 
-#: ../../how-to/modelo-303.md:175
+#: ../../how-to/modelo-303.md:176
 msgid ""
 "The calculation path also runs ledger tax-readiness checks for registry "
 "revisions that use ledger IVA aggregation. Preflight can catch missing "
@@ -509,7 +511,7 @@ msgstr ""
 "aporten les casilles del simplificado manualment en lloc de satisfer la "
 "comprovació prèvia d'agregació d'IVA del ledger ordinària."
 
-#: ../../how-to/modelo-303.md:182
+#: ../../how-to/modelo-303.md:183
 msgid ""
 "Cadrumo does not silently choose a quarter from today's date. The work "
 "unit's `--year` and `--period` are the target."
@@ -517,11 +519,11 @@ msgstr ""
 "Cadrumo no tria silenciosament un trimestre a partir de la data d'avui. "
 "L'`--year` i el `--period` de la unitat de treball són l'objectiu."
 
-#: ../../how-to/modelo-303.md:185
+#: ../../how-to/modelo-303.md:186
 msgid "Calculate the draft"
 msgstr "Calcula l'esborrany"
 
-#: ../../how-to/modelo-303.md:187
+#: ../../how-to/modelo-303.md:188
 msgid ""
 "Run calculation for the same target with `aeat app modelo work "
 "calculate`. The complete-chain sequence above runs this."
@@ -529,7 +531,7 @@ msgstr ""
 "Executa el càlcul per al mateix objectiu amb `aeat app modelo work "
 "calculate`. La seqüència de cadena completa de més amunt ho executa."
 
-#: ../../how-to/modelo-303.md:190
+#: ../../how-to/modelo-303.md:191
 msgid ""
 "Calculation resolves the registry revision for that work unit, reads the "
 "active profile's ledger for the target period, resolves profile and "
@@ -547,7 +549,7 @@ msgstr ""
 " calculats, les observacions/procedència tipades, les instantànies de "
 "bindings i d'entrades, i els `source_transaction_ids` contribuents."
 
-#: ../../how-to/modelo-303.md:197
+#: ../../how-to/modelo-303.md:198
 msgid ""
 "Re-running calculation does not edit the previous revision; it saves or "
 "reuses a content-equivalent revision and moves the work unit's current "
@@ -557,7 +559,7 @@ msgstr ""
 "reutilitza una revisió equivalent en contingut i mou el punter de càlcul "
 "actual de la unitat de treball."
 
-#: ../../how-to/modelo-303.md:201
+#: ../../how-to/modelo-303.md:202
 msgid ""
 "If the command reports missing bindings or missing casillas, inspect them"
 " before adding values:"
@@ -565,7 +567,7 @@ msgstr ""
 "Si l'ordre informa de bindings o casilles que falten, inspecciona'ls "
 "abans d'afegir valors:"
 
-#: ../../how-to/modelo-303.md:208
+#: ../../how-to/modelo-303.md:209
 msgid ""
 "Only provide `--binding`, `--casilla`, `--relation`, or Modelo "
 "303-specific flags when the registry/help output identifies the value you"
@@ -577,7 +579,7 @@ msgstr ""
 "valor que estàs aportant. Per exemple, inspecciona la cartera de "
 "compensació d'IVA abans de refiar-te d'un import de compensació anterior:"
 
-#: ../../how-to/modelo-303.md:217
+#: ../../how-to/modelo-303.md:218
 msgid ""
 "Use `--amount 0` only for a true first Modelo 303 period with no previous"
 " pending IVA compensation."
@@ -585,11 +587,11 @@ msgstr ""
 "Fes servir `--amount 0` només per a un veritable primer període del "
 "Modelo 303 sense cap compensació d'IVA pendent anterior."
 
-#: ../../how-to/modelo-303.md:220
+#: ../../how-to/modelo-303.md:221
 msgid "Review the calculated values"
 msgstr "Revisa els valors calculats"
 
-#: ../../how-to/modelo-303.md:222
+#: ../../how-to/modelo-303.md:223
 msgid ""
 "List the saved revisions, then show the current revision's persisted "
 "values:"
@@ -597,7 +599,7 @@ msgstr ""
 "Llista les revisions desades i, tot seguit, mostra els valors persistits "
 "de la revisió actual:"
 
-#: ../../how-to/modelo-303.md:228
+#: ../../how-to/modelo-303.md:229
 msgid ""
 "The revision view exposes the revision id and state, persisted casilla "
 "values, typed observations where available, formula ids, operands, "
@@ -610,7 +612,7 @@ msgstr ""
 "de transacció d'origen i, després de la verificació, els camps "
 "d'instantània del ledger i d'evidència."
 
-#: ../../how-to/modelo-303.md:233
+#: ../../how-to/modelo-303.md:234
 msgid ""
 "For a spreadsheet review loop, see [Review calculations with Google "
 "Sheets](review-with-google-sheets.md). For manual inputs, bindings, "
@@ -623,11 +625,11 @@ msgstr ""
 "consulta [Revisa i aporta entrades de càlcul](review-calculation-"
 "values.md)."
 
-#: ../../how-to/modelo-303.md:238
+#: ../../how-to/modelo-303.md:239
 msgid "Verify and file"
 msgstr "Verifica i exporta"
 
-#: ../../how-to/modelo-303.md:240
+#: ../../how-to/modelo-303.md:241
 msgid ""
 "Verify the selected calculation with `aeat app modelo work verify`. The "
 "complete-chain sequence above runs verify and file end to end."
@@ -636,7 +638,7 @@ msgstr ""
 "seqüència de cadena completa de més amunt executa verify, file i export "
 "de punta a punta."
 
-#: ../../how-to/modelo-303.md:243
+#: ../../how-to/modelo-303.md:244
 msgid ""
 "Verification checks the selected draft against the verified-complete "
 "contract. The report exposes the calculation revision id, completeness "
@@ -650,7 +652,7 @@ msgstr ""
 "resoltes i les que falten, les troballes amb referències legals/d'origen "
 "quan estan disponibles, i l'acció següent."
 
-#: ../../how-to/modelo-303.md:248
+#: ../../how-to/modelo-303.md:249
 msgid ""
 "On successful verification, Cadrumo captures ledger filing snapshot and "
 "evidence over the draft's `source_transaction_ids` and stores it on the "
@@ -666,22 +668,26 @@ msgstr ""
 "blocatge general de tot el ledger, i no congela les files no "
 "relacionades."
 
-#: ../../how-to/modelo-303.md:254
+#: ../../how-to/modelo-303.md:255
 msgid ""
-"`aeat app modelo export` refuses for Modelo 303 while Cadrumo has no "
-"reviewed AEAT product/software identity authority. That identity is a "
-"product-release fact, not taxpayer or presenter data, so the command "
-"never guesses it from the active profile. No upload file is produced "
-"without that authority."
+"`aeat app modelo export` stamps Modelo 303's envelope with Cadrumo's all-"
+"zero development software identity (program `0000`, developer NIF "
+"`00000000T`), reports `software_identity_grade` as `development_mock`, "
+"and warns with `modelo.export.development_software_identity`. That "
+"identity is a product-release fact, not taxpayer or presenter data, so "
+"the command never takes it from the active profile. AEAT does not accept "
+"a file carrying it."
 msgstr ""
-"`aeat app modelo export` es nega per al Model 303 mentre Cadrumo no "
-"tingui una autoritat revisada sobre la identitat de producte/programari "
-"de l'AEAT. Aquesta identitat és un fet de la versió del producte, no "
-"dades del contribuent ni del presentador, de manera que l'ordre mai no la"
-" dedueix del perfil actiu. No es produeix cap fitxer de pujada sense "
-"aquesta autoritat."
+"`aeat app modelo export` segella el sobre del Model 303 amb la identitat "
+"de programari de desenvolupament de Cadrumo, formada només per zeros "
+"(programa `0000`, NIF del desenvolupador `00000000T`), informa de "
+"`software_identity_grade` com a `development_mock` i avisa amb "
+"`modelo.export.development_software_identity`. Aquesta identitat és un "
+"fet de la versió del producte, no dades del contribuent ni del "
+"presentador, de manera que l'ordre mai no la pren del perfil actiu. "
+"L'AEAT no accepta un fitxer que la porti."
 
-#: ../../how-to/modelo-303.md:259
+#: ../../how-to/modelo-303.md:262
 msgid ""
 "Read the verified figures back with `aeat app modelo work revision` and "
 "enter them at the AEAT portal. Verification, the local filed marker, and "
@@ -692,7 +698,7 @@ msgstr ""
 "presentació i la captura d'evidència descrites més amunt continuen "
 "aplicant-se."
 
-#: ../../how-to/modelo-303.md:263
+#: ../../how-to/modelo-303.md:266
 msgid ""
 "If you need to mark the verified revision as filed in local history after"
 " you submit through AEAT, record the local marker with `aeat app modelo "
@@ -704,11 +710,11 @@ msgstr ""
 "local amb `aeat app modelo work file`. `work file` és un marcador local "
 "intern, no una presentació a l'AEAT."
 
-#: ../../how-to/modelo-303.md:267
+#: ../../how-to/modelo-303.md:270
 msgid "Periods, carry-forward, and special cases"
 msgstr "Períodes, arrossegament i casos especials"
 
-#: ../../how-to/modelo-303.md:269
+#: ../../how-to/modelo-303.md:272
 msgid ""
 "Modelo 303 supports quarterly and monthly period tokens in the registry. "
 "The profile determines which cadence appears in the filing calendar: "
@@ -724,11 +730,11 @@ msgstr ""
 "contribuents de gran empresa són mensuals. L'alta voluntària al SII per "
 "si sola no fa passar el Modelo 303 de trimestral a mensual."
 
-#: ../../how-to/modelo-303.md:275
+#: ../../how-to/modelo-303.md:278
 msgid "The source-backed behavior is:"
 msgstr "El comportament fonamentat en el codi és:"
 
-#: ../../how-to/modelo-303.md:277
+#: ../../how-to/modelo-303.md:280
 msgid ""
 "A visible target is always profile + modelo + year + period, with the "
 "registry revision resolved from that target unless you pass an exact "
@@ -738,7 +744,7 @@ msgstr ""
 "revisió del registre resolta a partir d'aquell objectiu tret que passis "
 "una revisió exacta."
 
-#: ../../how-to/modelo-303.md:279
+#: ../../how-to/modelo-303.md:282
 msgid ""
 "Ledger aggregation is bounded by the work unit period, not by a rolling "
 "automatic slice."
@@ -746,7 +752,7 @@ msgstr ""
 "L'agregació del ledger queda limitada pel període de la unitat de "
 "treball, no per un tram automàtic mòbil."
 
-#: ../../how-to/modelo-303.md:281
+#: ../../how-to/modelo-303.md:284
 msgid ""
 "Prior IVA compensation is sourced from Modelo 303 previous-filing state "
 "or seeded wallet history, not guessed from the current ledger."
@@ -755,7 +761,7 @@ msgstr ""
 "del Modelo 303 o de l'historial inicial de la cartera, no s'endevina a "
 "partir del ledger actual."
 
-#: ../../how-to/modelo-303.md:283
+#: ../../how-to/modelo-303.md:286
 msgid ""
 "Verification/file can carry ledger snapshot and evidence for contributing"
 " rows; verification output does not print the full ledger contents, but "
@@ -768,7 +774,7 @@ msgstr ""
 "per a l'evidència es conserva mitjançant els registres "
 "d'instantània/evidència."
 
-#: ../../how-to/modelo-303.md:287
+#: ../../how-to/modelo-303.md:290
 msgid ""
 "Invalid or unsupported period tokens are rejected, and `4T` is distinct "
 "from annual periods such as `0A`. What was not found in the current "
@@ -785,7 +791,7 @@ msgstr ""
 "els diagnòstics de duplicats a la importació i les proteccions "
 "d'obsolescència/edició de revisions finalitzades."
 
-#: ../../how-to/modelo-303.md:293
+#: ../../how-to/modelo-303.md:296
 msgid ""
 "If you are trying to handle an ambiguous period, a rollover between "
 "periods, or possible double accounting, do not invent a workaround in the"
@@ -803,27 +809,27 @@ msgstr ""
 "comprovació que necessites, informa de la mancança en lloc de canviar les"
 " dades del ledger perquè la presentació passi."
 
-#: ../../how-to/modelo-303.md:300
+#: ../../how-to/modelo-303.md:303
 msgid "Next steps"
 msgstr "Passos següents"
 
-#: ../../how-to/modelo-303.md:302
+#: ../../how-to/modelo-303.md:305
 msgid "[The filing workflow](filing-spine.md)"
 msgstr "[El flux de treball de presentació](filing-spine.md)"
 
-#: ../../how-to/modelo-303.md:303
+#: ../../how-to/modelo-303.md:306
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
 msgstr "[Revisa i aporta entrades de càlcul](review-calculation-values.md)"
 
-#: ../../how-to/modelo-303.md:304
+#: ../../how-to/modelo-303.md:307
 msgid "[Plan your filing calendar](filing-calendar.md)"
 msgstr "[Planifica el teu calendari de presentacions](filing-calendar.md)"
 
-#: ../../how-to/modelo-303.md:305
+#: ../../how-to/modelo-303.md:308
 msgid "[Reconcile a filing](reconcile.md)"
 msgstr "[Concilia una presentació](reconcile.md)"
 
-#: ../../how-to/modelo-303.md:306
+#: ../../how-to/modelo-303.md:309
 msgid "[Diagnose and repair your local setup](troubleshooting.md)"
 msgstr "[Diagnostica i repara la teva configuració local](troubleshooting.md)"
 

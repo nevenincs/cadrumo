@@ -73,7 +73,7 @@ detail (the sequence seeds them). Create, calculate, verify and file Modelo
 development software identity:
 
 ```{cli-sequence} iva-lifecycle-q1
-:verify: Confirm the first quarter's IVA return verifies, files, and the export refuses.
+:verify: Confirm the first quarter's IVA return verifies, files, and exports with the development identity.
 ```
 
 Calculation routes the classified rows into the IVA boxes: the sale's 210 of

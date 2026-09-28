@@ -184,7 +184,7 @@ accept for presentation. Check where the filing stands, then read the verified
 figures back and enter them at the AEAT portal:
 
 ```{cli-sequence} verification-reports-export-check
-:verify: Confirm the export refuses even once the saved calculation is verified.
+:verify: Confirm the verified calculation exports with the development identity.
 ```
 
 ## More than one filing matches

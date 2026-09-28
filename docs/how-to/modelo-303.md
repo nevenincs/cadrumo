@@ -34,7 +34,7 @@ development software identity. Enter the calculated box values at the AEAT
 portal, as [File your modelo at the AEAT portal](file-at-aeat.md) describes.
 
 ```{cli-sequence} modelo-303-first-quarter
-:verify: Confirm the draft verifies, files locally, and the export refuses.
+:verify: Confirm the draft verifies, files locally, and exports with the development identity.
 ```
 
 Load-bearing details:

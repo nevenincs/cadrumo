@@ -41,14 +41,15 @@ If you're new to the workflow as a whole, start with the
 
 The sequence below runs the machine half of the filing end to end: it prepares a
 classified, evidenced Modelo 303 for the first quarter of 2026, verifies it,
-confirms the verified revision, shows Modelo 303 `export` refusing, and records the local
-filed marker. Between the refusal and the marker, you present the figures at the
-AEAT portal yourself (steps 2 to 4 below). The final frame is the reconcile
+confirms the verified revision, exports a Modelo 303 file that AEAT will not
+accept because it carries the development identity, and records the local filed
+marker. Between the export and the marker, you present the figures at the AEAT
+portal yourself (steps 2 to 4 below). The final frame is the reconcile
 command you run once you have AEAT's justificante on disk; it is shown but not
 run here, because it needs your real receipt:
 
 ```{cli-sequence} file-at-aeat-chain
-:verify: Confirm the verified draft refuses export and records the local marker.
+:verify: Confirm the verified draft exports with the development identity and records the local marker.
 ```
 
 The rest of this page walks each step of that chain in order.
