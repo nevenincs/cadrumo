@@ -280,22 +280,8 @@ def resolve_calendar_ccaa_catalogue(
     return _catalogue(_selected_entries(effective_date=coordinate, authority=authority))
 
 
-def require_calendar_ccaa(
-    value: object,
-    *,
-    effective_date: date | None = None,
-    authority: GovernedFactSource | None = None,
-) -> CalendarCCAA:
-    """Project one ISO 3166-2:ES deadline-calendar code through fact 0143."""
-    return resolve_calendar_ccaa_catalogue(
-        effective_date=effective_date,
-        authority=authority,
-    ).require(value)
-
-
 __all__ = [
     "CalendarCcaaCatalogue",
     "CalendarCcaaDefinition",
-    "require_calendar_ccaa",
     "resolve_calendar_ccaa_catalogue",
 ]

@@ -26,8 +26,9 @@ from ....core.casilla_id import validated_casilla_id
 from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from ....core.i18n.render import tr
 from ....core.resources.bundled_data import bundled_path
+from ....domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from ....tests.cli_envelope import unwrap_cli_result as _json
-from ....tests.fixtures.borrador.generate import render_borrador_pdf
+from ....tests.fixtures.borrador.generate import corpus_casilla_values, corpus_years, render_borrador_pdf
 from ._cli_surface_support import (
     _active_bucket_id,
     _invoke,
@@ -37,10 +38,20 @@ from ._cli_surface_support import (
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_FIXTURE_YEAR = 2023
-_FIXTURE_PDF = bundled_path().resolve().parents[0] / "tests" / "fixtures" / "borrador" / "modelo_100_2023.pdf"
 
-# The 2023 borrador extraction profile declares these five target casillas at
+def _fixture_year() -> int:
+    """The latest committed borrador fixture year the published authority supports."""
+    support = published_supported_filing_years()
+    assert support is not None, "the published authority declares no support envelope"
+    return max(year for year in corpus_years() if year in support.years)
+
+
+_FIXTURE_YEAR = _fixture_year()
+_FIXTURE_PDF = (
+    bundled_path().resolve().parents[0] / "tests" / "fixtures" / "borrador" / f"modelo_100_{_FIXTURE_YEAR}.pdf"
+)
+
+# The borrador extraction profile declares these five target casillas at
 # min_coverage = 1, so every one of them must be read for the import to stand.
 _PROFILE_TARGET_CASILLAS = ("0505", "0545", "0546", "0585", "0586")
 
@@ -104,8 +115,11 @@ def test_import_persists_a_snapshot_the_read_verbs_retrieve(tmp_path: Path) -> N
         binding_values = _json(viewed)["binding_values"]
         assert sorted(binding_values) == [f"casilla.{casilla}" for casilla in _PROFILE_TARGET_CASILLAS]
         # Values survive as the amounts printed on the PDF, not as zeros.
-        assert Decimal(binding_values["casilla.0505"]) == Decimal("30000.00")
-        assert Decimal(binding_values["casilla.0545"]) == Decimal("3582.75")
+        printed = corpus_casilla_values(_FIXTURE_YEAR)
+        assert {casilla: Decimal(binding_values[f"casilla.{casilla}"]) for casilla in _PROFILE_TARGET_CASILLAS} == {
+            casilla: printed[validated_casilla_id(casilla, surface="test.printed")]
+            for casilla in _PROFILE_TARGET_CASILLAS
+        }
 
 
 def test_import_stores_a_digest_reference_and_never_the_operator_path(tmp_path: Path) -> None:
@@ -136,20 +150,16 @@ def test_import_stores_a_digest_reference_and_never_the_operator_path(tmp_path: 
 def test_import_refuses_a_pdf_below_the_profile_coverage_minimum(tmp_path: Path) -> None:
     """DETECTOR TEETH: a PDF missing target casillas refuses and persists nothing.
 
-    The 2023 borrador profile declares ``min_coverage = 1`` over five target
+    The borrador profile declares ``min_coverage = 1`` over five target
     casillas. This renders a real borrador PDF carrying only two of them, so
     coverage is 0.4. The import must refuse; the three missing casillas are
     absent, not zero, and no partial snapshot may reach the store.
     """
+    printed = corpus_casilla_values(_FIXTURE_YEAR)
+    kept = tuple(validated_casilla_id(casilla, surface="test.below_minimum") for casilla in ("0505", "0545"))
     partial_pdf = tmp_path / "below-minimum.pdf"
     partial_pdf.write_bytes(
-        render_borrador_pdf(
-            year=_FIXTURE_YEAR,
-            casilla_values={
-                validated_casilla_id("0505", surface="test.below_minimum"): Decimal("30000.00"),
-                validated_casilla_id("0545", surface="test.below_minimum"): Decimal("3582.75"),
-            },
-        )
+        render_borrador_pdf(year=_FIXTURE_YEAR, casilla_values={casilla: printed[casilla] for casilla in kept})
     )
 
     with isolated_cli_surface_backend(tmp_path):

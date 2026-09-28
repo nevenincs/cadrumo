@@ -828,7 +828,7 @@ def _ledger_generation_factory(
     """
     if current[0].ledger.projection is None:
         return None
-    from .ledger.routes import ledger_screen_factory
+    from .ledger.routes import actividad_asset_tui_actions, ledger_screen_factory
     from .ledger_doors import LedgerRecordDoors
 
     def create(context: TuiScreenContextV1) -> Screen[None]:
@@ -840,7 +840,6 @@ def _ledger_generation_factory(
         from ...domain.renta.actividad_asset.election import DirectEstimationRegime
         from ...domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
         from ...domain.renta.actividad_asset.schedule import AssetScheduleHistory, ScheduledAmortizationCharge
-        from .ledger.actividad_asset import ActivityAssetTuiActionsV1
         from .ledger_doors import (
             LedgerEvidenceDoor,
             LedgerImportDoor,
@@ -867,7 +866,7 @@ def _ledger_generation_factory(
         ) -> ScheduledAmortizationCharge:
             return forecast_activity_asset_charge(
                 revision,
-                modelo_100_revision=operation.revision("100", str(covered_from.year)),
+                modelo_100_revision=operation.revision_for_context("100", filing_year=covered_from.year, period="0A"),
                 authority_generation=operation.pin().logical_generation,
                 covered_from=covered_from,
                 covered_until=covered_until,
@@ -884,7 +883,7 @@ def _ledger_generation_factory(
             token = None if values is None else values.get("irpf.estimation_regime")
             return direct_estimation_modality(token, authority=operation)
 
-        activity_asset_actions = ActivityAssetTuiActionsV1(
+        activity_asset_actions = actividad_asset_tui_actions(
             operations=ActivityAssetOperations(
                 repository=ActividadAssetHistoryRepository(bucket_id=profile_id),
                 forecast_operation=forecast_asset,

@@ -28,6 +28,14 @@ def test_absent_file_observes_as_initial_absent_coordinate(tmp_path) -> None:
     assert read_pointer(tmp_path) == BucketPointer.absent(transition_revision=0)
 
 
+def test_a_root_below_a_file_observes_as_initial_absent_coordinate(tmp_path) -> None:
+    """No record can exist under a file, which every platform must read as the cold start."""
+    blocker = tmp_path / "not-a-directory"
+    blocker.write_text("x", encoding="utf-8")
+
+    assert read_pointer(blocker / "storage") == BucketPointer.absent(transition_revision=0)
+
+
 def test_record_requires_current_schema_selection_and_transition_revision() -> None:
     current_schema = get_args(BucketPointer.model_fields["schema_version"].annotation)
     assert current_schema == (POINTER_SCHEMA_VERSION,)

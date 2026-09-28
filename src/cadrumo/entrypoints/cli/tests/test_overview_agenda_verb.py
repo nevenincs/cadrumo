@@ -6,11 +6,14 @@ import json
 
 import pytest
 
+from ....domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ._isolated_profile_storage_fixtures import active_profile_isolated_backend
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 __all__ = ["active_profile_isolated_backend"]
+
+_SUPPORTED_YEARS = PublishedGovernedFactSource().supported_filing_years().years
 
 
 def test_agenda_renders_envelope_with_explicit_date() -> None:
@@ -29,7 +32,8 @@ def test_agenda_renders_envelope_with_explicit_date() -> None:
     assert "overdue\t" in result.output
 
 
-def test_agenda_json_preserves_exact_modelo_303_2025_quarterly_coordinates() -> None:
+@pytest.mark.parametrize("year", _SUPPORTED_YEARS)
+def test_agenda_json_preserves_exact_modelo_303_quarterly_coordinates(year: int) -> None:
     result = invoke_cached_cli(
         [
             "--format",
@@ -38,7 +42,7 @@ def test_agenda_json_preserves_exact_modelo_303_2025_quarterly_coordinates() -> 
             "overview",
             "agenda",
             "--date",
-            "2025-02-01",
+            f"{year}-02-01",
             "--horizon",
             "365",
             "--allow-incomplete",
@@ -51,15 +55,10 @@ def test_agenda_json_preserves_exact_modelo_303_2025_quarterly_coordinates() -> 
     coordinates = tuple(
         (entry["modelo"], entry["period"])
         for entry in entries
-        if entry["modelo"] == "303" and entry["period"].startswith("2025 ")
+        if entry["modelo"] == "303" and entry["period"].startswith(f"{year} ")
     )
 
-    assert coordinates == (
-        ("303", "2025 1T"),
-        ("303", "2025 2T"),
-        ("303", "2025 3T"),
-        ("303", "2025 4T"),
-    )
+    assert coordinates == tuple(("303", f"{year} {quarter}") for quarter in ("1T", "2T", "3T", "4T"))
 
 
 def test_agenda_rejects_zero_horizon() -> None:

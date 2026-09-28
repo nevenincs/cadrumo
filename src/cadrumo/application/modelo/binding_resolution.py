@@ -243,7 +243,7 @@ def resolve_declaration_period_inputs(
     informational casillas eligible for metadata projection. Only casillas with
     unique ``filing_year`` or ``filing_period`` semantic roles are populated. The
     ``filing_year`` role lands as a :class:`~decimal.Decimal` and the
-    ``filing_period`` role as the canonical :class:`~cadrumo.core.Period`
+    ``filing_period`` role as the canonical :class:`~cadrumo.core.period.Period`
     registry token (``"1T"``, ``"EXT-1T"``), which is the form AEAT accepts and
     the only representation total over every declared period. A
     non-informational role target raises

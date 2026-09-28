@@ -3,16 +3,21 @@
 from __future__ import annotations
 
 import shutil
+from collections.abc import Mapping
 from dataclasses import replace
 from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.casilla_lineage import CasillaLineageOrigin
+from cadrumo.domain.calculations.registry.facts.schema import EntitySetFactPayload
 from cadrumo.domain.calculations.registry.lineage_attestation import LineageAttestation
 from cadrumo.domain.calculations.registry.schema import SupportedFilingYearsCatalogue
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+from dev._paths import REPO_ROOT
+from dev.packaging import authority_staging
 from dev.registry.edition_delta_migration import MigrationAssessment, assess_migration_state
 from dev.registry.tests.test_restated_family_merge import _build_modelo
 
@@ -209,6 +214,21 @@ def test_typed_comparison_preserves_absence_false_zero_empty_and_order(tmp_path:
 
     assert result.status is verification.CheckStatus.FAILED
     assert result.differences[0]["reason"] == "value_changed"
+
+
+def test_typed_comparison_reads_an_entity_set_as_a_set() -> None:
+    """Equal entity sets compare equal however their members were inserted; a changed member still differs."""
+    members = ("subvencion_corriente", "subvencion_capital", "indemnizacion")
+    forward = EntitySetFactPayload(entities=frozenset(members))
+    backward = EntitySetFactPayload(entities=frozenset(reversed(members)))
+    changed = EntitySetFactPayload(entities=frozenset((*members[:2], "subvencion_explotacion")))
+
+    projected = verification._typed_projection(forward)
+
+    assert isinstance(projected, Mapping)
+    assert projected["entities"] == sorted(members)
+    assert verification._first_difference(projected, verification._typed_projection(backward)) is None
+    assert verification._first_difference(projected, verification._typed_projection(changed)) is not None
 
 
 def test_typed_comparison_normalizes_valid_lineage_sidecar_without_hiding_provenance(tmp_path: Path) -> None:
@@ -432,3 +452,200 @@ def test_assessment_fixture_contains_complete_member_and_nested_override_finding
     formula_findings = [item for item in assessment.unresolved_duplication if item.get("family") == "formulas"]
     assert any(len(_finding_fields(item)) > 1 for item in formula_findings)
     assert any("expression.literal" in _finding_fields(item) for item in formula_findings)
+
+
+def test_published_authority_root_defaults_to_the_working_tree_publication(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv(authority_staging.AUTHORITY_ROOT_ENV, raising=False)
+
+    resolved = verification.published_authority_root()
+
+    assert resolved == (REPO_ROOT / authority_staging.AUTHORING_AUTHORITY_DIRECTORY).resolve()
+    assert resolved != (REPO_ROOT / "src" / "cadrumo" / "_data" / "registry" / "authority").resolve()
+
+
+def test_published_authority_root_honours_the_environment_and_an_explicit_root(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    configured = tmp_path / "configured-authority"
+    explicit = tmp_path / "explicit-authority"
+    monkeypatch.setenv(authority_staging.AUTHORITY_ROOT_ENV, str(configured))
+
+    assert verification.published_authority_root() == configured.resolve()
+    assert verification.published_authority_root(explicit) == explicit.resolve()
+
+
+def test_optional_tree_fingerprint_detects_a_publication_appearing(tmp_path: Path) -> None:
+    authority = tmp_path / "authority"
+    before = verification.fingerprint_optional_tree(authority)
+    authority.mkdir()
+    (authority / "authority.current.json").write_text("{}\n", encoding="utf-8", newline="\n")
+
+    after = verification.fingerprint_optional_tree(authority)
+
+    assert before == ()
+    assert before != after
+
+
+def test_scoped_verification_refuses_an_unknown_modelo(tmp_path: Path) -> None:
+    registry_root = tmp_path / "registry" / "aeat"
+    _build_modelo(registry_root / "modelos")
+    source_root = tmp_path / "data"
+    source_root.mkdir()
+
+    with pytest.raises(ValueError, match="unknown modelo identities requested: 000"):
+        verification.run_registry_verification(
+            registry_root=registry_root,
+            source_root=source_root,
+            work_dir=tmp_path / "work",
+            authority_root=tmp_path / "authority",
+            modelos=("000",),
+        )
+
+
+def test_first_difference_ignores_mapping_key_order_only() -> None:
+    before = {"family_dispositions": {"projection_endpoints": {"cause": "a"}, "extraction_profiles": {"cause": "b"}}}
+    after = {"family_dispositions": {"extraction_profiles": {"cause": "b"}, "projection_endpoints": {"cause": "a"}}}
+
+    assert verification._first_difference(before, after) is None
+
+
+def test_first_difference_detects_a_changed_mapping_key_set() -> None:
+    before = {"family_dispositions": {"projection_endpoints": {}, "extraction_profiles": {}}}
+    after = {"family_dispositions": {"projection_endpoints": {}}}
+
+    difference = verification._first_difference(before, after)
+
+    assert difference is not None
+    assert difference["location"] == "$.family_dispositions"
+    assert difference["reason"] == "mapping_keys_changed"
+
+
+def test_first_difference_detects_a_value_change_under_reordered_keys() -> None:
+    before = {"family_dispositions": {"projection_endpoints": {"cause": "a"}, "extraction_profiles": {"cause": "b"}}}
+    after = {"family_dispositions": {"extraction_profiles": {"cause": "c"}, "projection_endpoints": {"cause": "a"}}}
+
+    difference = verification._first_difference(before, after)
+
+    assert difference is not None
+    assert difference["location"] == "$.family_dispositions.extraction_profiles.cause"
+    assert difference["reason"] == "value_changed"
+
+
+def test_first_difference_still_detects_a_reordered_sequence() -> None:
+    before = {"formulas": [{"id": "a"}, {"id": "b"}]}
+    after = {"formulas": [{"id": "b"}, {"id": "a"}]}
+
+    difference = verification._first_difference(before, after)
+
+    assert difference is not None
+    assert difference["location"] == "$.formulas[0].id"
+
+
+def test_indexed_temporal_selection_composes_the_export_layouts_the_source_revision_carries() -> None:
+    """Selection loads the base revision, so the verifier must compose its layouts before comparing.
+
+    The source side's selected revision carries its export layouts; comparing
+    it with the layout-free base revision reported every layout-bearing
+    coordinate as a changed revision.
+    """
+    from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+
+    with bundled_indexed_authority().operation() as operation:
+        support = operation.supported_filing_years()
+        bearing = next(
+            (modelo_id, revision_id)
+            for modelo_id, revision_id in sorted(operation.revision_ids())
+            if operation.revision_with_export_layouts(modelo_id, revision_id).export_layouts
+            and support.admits_filing_year(operation.revision(modelo_id, revision_id).valid_from.year)
+            and operation.revision(modelo_id, revision_id).period_selector.declared_periods
+        )
+        modelo_id, revision_id = bearing
+        base = operation.revision(modelo_id, revision_id)
+        coordinate = verification.RequestCoordinate(
+            filing_year=base.valid_from.year,
+            period=str(base.period_selector.declared_periods[0]),
+            on=None,
+            revision_id=revision_id,
+            case="layout-bearing",
+        )
+
+        result = verification._indexed_selection_result(operation, modelo_id, coordinate)
+
+        assert result["outcome"] == "selected", result
+        assert result["value"] == verification._typed_projection(
+            operation.revision_with_export_layouts(modelo_id, revision_id)
+        )
+        assert result["value"] != verification._typed_projection(base)
+
+
+def test_snapshot_comparison_ignores_unselected_editions_but_not_the_selected_one() -> None:
+    """The indexed runtime scopes a snapshot's modelo to the edition it selected.
+
+    An in-memory authority keeps every edition there. Editions the snapshot did
+    not select carry none of its meaning, so they must not register as a
+    difference, while any change to the selected edition still must.
+    """
+    from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+
+    with bundled_indexed_authority().operation() as operation:
+        support = operation.supported_filing_years()
+        directory = operation.modelo_directory("100")
+        editions = sorted(str(revision.id) for revision in directory.revisions)
+        snapshot = operation.snapshot("100", filing_year=support.floor, period="0A")
+        other_id = next(revision_id for revision_id in editions if revision_id != str(snapshot.revision.id))
+        other = operation.revision("100", other_id)
+    widened = snapshot.model_copy(
+        update={
+            "modelo": snapshot.modelo.model_copy(
+                update={"revisions": {**snapshot.modelo.revisions, other.id: other}},
+            )
+        }
+    )
+    changed = snapshot.model_copy(update={"revision": snapshot.revision.model_copy(update={"parameters": ()})})
+    coordinate = verification.RequestCoordinate(
+        filing_year=support.floor, period="0A", on=None, revision_id=None, case="floor"
+    )
+
+    def result(value: object) -> object:
+        return verification._snapshot_result(lambda *_args, **_kwargs: value, "100", coordinate)
+
+    assert verification._first_difference(result(snapshot), result(widened), "$") is None
+    assert verification._first_difference(result(snapshot), result(changed), "$") is not None
+
+
+def _unresolved_rows(modelo_dir: Path) -> list[Mapping[str, object]]:
+    return [
+        row
+        for row in verification.root_eligibility(modelo_dir)
+        if row["status"] is verification.RootEligibility.UNRESOLVED
+    ]
+
+
+def _schedule_defaulted_modelo(tmp_path: Path) -> Path:
+    """A copied modelo whose filing schedules take their source refs from the edition default."""
+    modelos = bundled_path("registry", "aeat", "modelos")
+    for modelo_dir in sorted(modelos.iterdir()):
+        manifests = sorted((modelo_dir / "revisions").glob("*/revision.toml"))
+        if any("\nfiling_schedule_source_refs = " in manifest.read_text(encoding="utf-8") for manifest in manifests):
+            target = tmp_path / modelo_dir.name
+            shutil.copytree(modelo_dir, target)
+            return target
+    raise LookupError("no modelo grounds its filing schedules through the edition default")
+
+
+def test_root_eligibility_binds_the_filing_schedule_source_default(tmp_path: Path) -> None:
+    """A schedule relying on its edition's source default is resolved, as the loader resolves it."""
+    assert _unresolved_rows(_schedule_defaulted_modelo(tmp_path)) == []
+
+
+def test_root_eligibility_still_refuses_a_schedule_left_without_any_source(tmp_path: Path) -> None:
+    modelo_dir = _schedule_defaulted_modelo(tmp_path)
+    for manifest in sorted((modelo_dir / "revisions").glob("*/revision.toml")):
+        text = manifest.read_text(encoding="utf-8")
+        manifest.write_text(
+            "\n".join(line for line in text.splitlines() if not line.startswith("filing_schedule_source_refs = "))
+            + "\n",
+            encoding="utf-8",
+        )
+
+    assert _unresolved_rows(modelo_dir)

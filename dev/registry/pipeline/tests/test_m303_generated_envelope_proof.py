@@ -1,6 +1,6 @@
 """End-to-end publication and filing-boundary proof for the committed M303 tree.
 
-This deliberately uses the real 2026 generated target and the generator's
+This deliberately uses the real generated target of one official record design and the generator's
 ordinary target-only isolation.  It does not make a test layout or a copied
 export tree into a positive authority.
 """
@@ -73,6 +73,7 @@ from ...compiler.authority import compiled_bundled_authority
 from ...compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from ...compiler.loader import load_modelo_directory, load_registry_tree
 from ...compiler.supplementary_orden import compile_supplementary_ordenes
+from ...tests.authored_edition_support import authored_revisions_where
 from .._export_tree import render_complete_export_tree
 from .._tree_check import GeneratedExportTreeCheckContext, check_generated_export_tree
 from .._tree_validation import GeneratedExportTreeValidationContext
@@ -99,12 +100,16 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 #: with, and a bundle pinned to one date cannot serve a per-year filing.
 
 
-def _m303_2026_tree():
+def _m303_generated_tree():
+    """Return the committed generated target of the open-ended Modelo 303 revision."""
+    (open_ended,) = authored_revisions_where("303", lambda revision: revision.valid_to is None)
     return next(
-        tree
-        for tree in generated_export_trees()
-        if tree.modelo == "303" and tree.source_ref == "aeat-dr-303-2026" and tree.epoch == "2026"
+        tree for tree in generated_export_trees() if tree.modelo == "303" and tree.revision == str(open_ended.id)
     )
+
+
+# The exercise of the official record design that target is generated from.
+_DESIGN_EXERCISE = _m303_generated_tree().filing_year
 
 
 def _tree_bytes(export_root: Path) -> dict[str, bytes]:
@@ -151,7 +156,7 @@ def _committed_tree_hashes(tree) -> tuple[tuple[str, str], ...]:
     return tuple((item.relative_path, item.sha256) for item in collect_export_fragment_output_digests(tree.committed))
 
 
-def _m303_2026_prorrata_and_differentiated_producer(*, snapshot, catalogues, operation: PinnedAuthorityOperation):
+def _m303_prorrata_and_differentiated_producer(*, snapshot, catalogues, operation: PinnedAuthorityOperation):
     """Return one source-owned live DP30305 value arrival, without a test layout."""
     filing_year = snapshot.filing_year
     authority = compiled_bundled_authority()
@@ -212,7 +217,7 @@ def _m303_2026_prorrata_and_differentiated_producer(*, snapshot, catalogues, ope
         for sector_id in ("a", "b")
         for index, kind in enumerate(contribution_kinds, start=1)
     )
-    regimen_evidence = _m303_2026_6919_regimen_evidence(snapshot, operation=operation)
+    regimen_evidence = _m303_6919_regimen_evidence(snapshot, operation=operation)
     # From the module that owns the bundle rather than rebuilt here; the
     # projection refuses one resolved for another filing year, so it is asked
     # for THIS year, and the regularisation result below reuses its provenance.
@@ -271,7 +276,7 @@ def _m303_2026_prorrata_and_differentiated_producer(*, snapshot, catalogues, ope
     return snapshot, producer
 
 
-def _m303_2026_6919_regimen_evidence(snapshot, *, operation: PinnedAuthorityOperation):
+def _m303_6919_regimen_evidence(snapshot, *, operation: PinnedAuthorityOperation):
     """Build two official 691.9 rows so the real f022 field carries their wire identity."""
     period = Period.from_year_and_code(snapshot.filing_year, "1T")
     scope = M303RegimenSimplificadoScopeDecision(
@@ -285,7 +290,7 @@ def _m303_2026_6919_regimen_evidence(snapshot, *, operation: PinnedAuthorityOper
         activity for activity in regimen_snapshot.orden.activities if activity.iae_epigrafe == "691.9"
     )
     assert tuple(activity.auxiliary_activity_indicator for activity in annual_activities) == ("1", "2")
-    evidence = FilingEvidenceReference(reference="test:s16:m303-2026:691.9")
+    evidence = FilingEvidenceReference(reference=f"test:s16:m303-{_DESIGN_EXERCISE}:691.9")
     rows = RegimenSimplificadoFilingRows(
         ejercicio=period.filing_year,
         activities=tuple(
@@ -333,9 +338,9 @@ def _m303_2026_6919_regimen_evidence(snapshot, *, operation: PinnedAuthorityOper
     )
 
 
-def _m303_2026_committed_snapshot(tmp_path: Path):
+def _m303_committed_snapshot(tmp_path: Path):
     """Build a filing snapshot from the committed M303 target, not the mutable whole tree."""
-    tree = _m303_2026_tree()
+    tree = _m303_generated_tree()
     registry_root = isolated_authority(tree, tmp_path / "m303-authority")
     isolated_modelo = load_modelo_directory(registry_root / "modelos" / tree.modelo)
     (isolated_modelo_revision,) = isolated_modelo.revisions.values()
@@ -377,11 +382,11 @@ def _m303_authority_operation() -> Iterator[PinnedAuthorityOperation]:
 
 
 @pytest.fixture(scope="module")
-def _m303_2026_real_envelope(_m303_authority_operation: PinnedAuthorityOperation):
+def _m303_real_envelope(_m303_authority_operation: PinnedAuthorityOperation):
     """Render one isolated, source-owned M303 filing instance for envelope assertions."""
     with TemporaryDirectory(prefix="s16-m303-envelope-", dir=Path.cwd()) as temporary:
-        snapshot, catalogues = _m303_2026_committed_snapshot(Path(temporary))
-        snapshot, producer = _m303_2026_prorrata_and_differentiated_producer(
+        snapshot, catalogues = _m303_committed_snapshot(Path(temporary))
+        snapshot, producer = _m303_prorrata_and_differentiated_producer(
             snapshot=snapshot,
             catalogues=catalogues,
             operation=_m303_authority_operation,
@@ -432,9 +437,9 @@ def _occurrence_payload_bytes(item: dict[str, object]) -> bytes:
     return payload
 
 
-def test_m303_2026_publication_is_twice_reproducible_and_check_mode_is_non_mutating() -> None:
+def test_m303_generated_publication_is_twice_reproducible_and_check_mode_is_non_mutating() -> None:
     """The real target is reproducible in two disjoint Y: roots and check-mode only observes it."""
-    tree = _m303_2026_tree()
+    tree = _m303_generated_tree()
     with TemporaryDirectory(prefix="s16-m303-", dir=Path.cwd()) as temporary:
         temp_path = Path(temporary)
         assert temp_path.drive == tree.committed.drive == bundled_path().drive
@@ -586,8 +591,8 @@ def test_m303_dp30305_composes_its_two_declared_projection_families_once(
     facts.  The layout, rather than this proof, owns the complete reference
     order.  A third real M303 family remains closed out at the dispatcher.
     """
-    snapshot, catalogues = _m303_2026_committed_snapshot(tmp_path)
-    snapshot, producer = _m303_2026_prorrata_and_differentiated_producer(
+    snapshot, catalogues = _m303_committed_snapshot(tmp_path)
+    snapshot, producer = _m303_prorrata_and_differentiated_producer(
         snapshot=snapshot,
         catalogues=catalogues,
         operation=_m303_authority_operation,
@@ -630,11 +635,11 @@ def test_m303_dp30305_composes_its_two_declared_projection_families_once(
         )
 
 
-def test_m303_2026_untouched_generated_layout_renders_official_6919_f022(
-    _m303_2026_real_envelope,
+def test_m303_untouched_generated_layout_renders_official_6919_f022(
+    _m303_real_envelope,
 ) -> None:
     """The committed layout emits every reviewed kind through one coherent envelope."""
-    request, rendered = _m303_2026_real_envelope
+    request, rendered = _m303_real_envelope
     layout = request.layout
     regimen_record = next(record for record in layout.records if record.id == "m303-regimen-simplificado")
     f022 = next(field for field in regimen_record.fields if field.id.endswith(".f022"))
@@ -649,9 +654,15 @@ def test_m303_2026_untouched_generated_layout_renders_official_6919_f022(
         ("m303-domiciliacion", 1),
     )
     assert rendered.prefix == (
-        b"<T303020261T0000><AUX>" + (b" " * 70) + b"C303" + (b" " * 4) + b"Y0000001S" + (b" " * 213) + b"</AUX>"
+        f"<T3030{_DESIGN_EXERCISE}1T0000><AUX>".encode()
+        + (b" " * 70)
+        + b"C303"
+        + (b" " * 4)
+        + b"Y0000001S"
+        + (b" " * 213)
+        + b"</AUX>"
     )
-    assert rendered.closer == b"</T303020261T0000>"
+    assert rendered.closer == f"</T3030{_DESIGN_EXERCISE}1T0000>".encode()
     assert len(rendered.prefix) == layout.filing_envelope.prefix_extent
     assert tuple(item.occurrence for item in regimen_occurrences) == (1,)
     assert all(item.payload[f022.offset - 1 : f022.offset - 1 + f022.length] == b"6919" for item in regimen_occurrences)
@@ -686,7 +697,9 @@ def test_m303_2026_untouched_generated_layout_renders_official_6919_f022(
         (
             "cross-period",
             lambda request: {
-                "draft": request.draft.model_copy(update={"period": Period.from_year_and_code(2026, "2T")}),
+                "draft": request.draft.model_copy(
+                    update={"period": Period.from_year_and_code(request.draft.period.filing_year, "2T")}
+                ),
             },
             "draft period token '2T' does not match its snapshot_ref period '1T'",
         ),
@@ -699,14 +712,14 @@ def test_m303_2026_untouched_generated_layout_renders_official_6919_f022(
         ("legacy", lambda _request: {"legacy_input": {}}, "Extra inputs are not permitted"),
     ),
 )
-def test_m303_2026_envelope_request_rejects_cross_authority_and_forbidden_spellings(
-    _m303_2026_real_envelope,
+def test_m303_generated_envelope_request_rejects_cross_authority_and_forbidden_spellings(
+    _m303_real_envelope,
     _case: str,
     mutation,
     refusal: str,
 ) -> None:
     """The closed public request carries one selected authority, never caller-owned export material."""
-    request, _rendered = _m303_2026_real_envelope
+    request, _rendered = _m303_real_envelope
     payload = _request_model_payload(request)
     payload.update(mutation(request))
 
@@ -763,14 +776,14 @@ def _extra_occurrence(rendered: FilingEnvelopeRenderResult) -> dict[str, object]
         ("extra", _extra_occurrence, "filing envelope emitted an undeclared record family"),
     ),
 )
-def test_m303_2026_envelope_result_rejects_tampered_occurrence_evidence(
-    _m303_2026_real_envelope,
+def test_m303_generated_envelope_result_rejects_tampered_occurrence_evidence(
+    _m303_real_envelope,
     _case: str,
     mutation,
     refusal: str,
 ) -> None:
     """Result evidence cannot lose, reorder, duplicate, or add an emitted record occurrence."""
-    _request, rendered = _m303_2026_real_envelope
+    _request, rendered = _m303_real_envelope
 
     with pytest.raises(ValidationError, match=refusal):
         FilingEnvelopeRenderResult.model_validate(mutation(rendered))

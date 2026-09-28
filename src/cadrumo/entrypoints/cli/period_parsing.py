@@ -1,12 +1,12 @@
 """Strict AEAT ``--period`` token normalisation at the CLI boundary.
 
 Resolves the canonical AEAT modelo tokens plus ``--year`` into the
-:class:`~cadrumo.core.Period` date span the ledger filters by, and refuses every
+:class:`~cadrumo.core.period.Period` date span the ledger filters by, and refuses every
 calendar shape with an instructive message carrying the accepted token set as
 structured data.
 
 See Also:
-    :class:`~cadrumo.core.Period`
+    :class:`~cadrumo.core.period.Period`
         The canonical period boundary authority this module resolves into.
 """
 

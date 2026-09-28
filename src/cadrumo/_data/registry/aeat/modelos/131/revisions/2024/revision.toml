@@ -238,18 +238,6 @@ sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [1, 0]}
 
 [[revisions."2024".family_overrides]]
-family = "parameters"
-selector = {revision = "2019-2023", id = "irpf.objective_agriculture_fractional_payment_rate"}
-sequence_additions = {values = [{value = "2", date_axis = "filing_period", valid_from = 2024-01-01, valid_to = 2024-12-31}]}
-sequence_removals = {values = [0]}
-
-[[revisions."2024".family_overrides]]
-family = "parameters"
-selector = {revision = "2019-2023", id = "irpf.objective_no_base_fractional_payment_rate"}
-sequence_additions = {values = [{value = "2", date_axis = "filing_period", valid_from = 2024-01-01, valid_to = 2024-12-31}]}
-sequence_removals = {values = [0]}
-
-[[revisions."2024".family_overrides]]
 family = "verification_predicates"
 selector = {revision = "2019-2023", id = "cap-le-when-positive:c11-cap-by-c10"}
 fields = {predicate_id = "modelo-131-2024-c11-cap-by-c10"}

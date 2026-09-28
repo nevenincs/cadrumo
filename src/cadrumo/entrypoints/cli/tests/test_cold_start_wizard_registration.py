@@ -47,9 +47,13 @@ import pytest
 from ....core.config import Settings
 from ....core.storage_taxonomy import StorageCategory
 from ....core.storage_taxonomy_locations import storage_location
+from ....domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from ....tests.inventory import REPO_ROOT
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+# The newest Modelo 100 edition the registry authors.
+_M100_REVIEWED_EDITION = newest_authored_edition("100")
 
 
 # The internal registration-guard messages that must never reach the operator
@@ -213,8 +217,8 @@ def test_cold_process_work_create_registers_wizard_catalogue(tmp_path: Path) -> 
     assert created.returncode == 0, f"work create failed in a cold process: {created.stdout}\n{created.stderr}"
 
 
-def test_cold_process_m100_2025_work_create_keeps_intracom_type_import_boundary(tmp_path: Path) -> None:
-    """M100/2025 work-create must not crash importing invoice intracom types.
+def test_cold_process_m100_work_create_keeps_intracom_type_import_boundary(tmp_path: Path) -> None:
+    """M100 work-create must not crash importing invoice intracom types.
 
     The work-create path imports the CLI composition root in a cold process and
     then resolves the modelo source mesh. That transitively imports the invoice
@@ -223,9 +227,10 @@ def test_cold_process_m100_2025_work_create_keeps_intracom_type_import_boundary(
     user-facing refusal could be rendered.
     """
 
+    edition = str(_M100_REVIEWED_EDITION)
     _register_profile_for_cold_run(
         tmp_path,
-        "empleada-arrendadora-2025",
+        f"empleada-arrendadora-{edition}",
         **{
             "taxpayer_type.entity_type": "natural_person",
             "identity.tax_id": "12345678Z",
@@ -247,13 +252,13 @@ def test_cold_process_m100_2025_work_create_keeps_intracom_type_import_boundary(
             "--modelo",
             "100",
             "--year",
-            "2025",
+            edition,
             "--period",
             "0A",
             "--revision",
-            "2025",
+            edition,
             "--name",
-            "empleada-arrendadora-2025",
+            f"empleada-arrendadora-{edition}",
             "--by",
             "Ana",
         ],

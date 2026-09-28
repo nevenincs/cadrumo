@@ -113,6 +113,12 @@ _POINTER_WRITE_RETRY_SECONDS = 1.0
 _POINTER_MAXIMUM_BYTES = 1024
 
 
+#: A missing record, or a path whose ancestor is a file so no record can be
+#: there. Windows reports both as a missing file and POSIX reports the second
+#: as ``ENOTDIR``; either way nothing was ever written, so it is the cold start.
+_NO_RECORD_AT_PATH = (FileNotFoundError, NotADirectoryError)
+
+
 def _pointer_entry_signature(target: Path) -> tuple[str, int, int] | None:
     from .paths import path_stat_fingerprint
 
@@ -151,7 +157,7 @@ def _read_pointer_once(target: Path) -> bytes:
 def _read_pointer_bytes_without_contention(target: Path) -> bytes | None:
     try:
         return _read_pointer_once(target)
-    except FileNotFoundError:
+    except _NO_RECORD_AT_PATH:
         return None
 
 
@@ -165,7 +171,7 @@ def _read_pointer_bytes_with_windows_contention(target: Path) -> bytes | None:
     while True:
         try:
             return _read_pointer_once(target)
-        except FileNotFoundError:
+        except _NO_RECORD_AT_PATH:
             return None
         except PermissionError as exc:
             now = time.monotonic()

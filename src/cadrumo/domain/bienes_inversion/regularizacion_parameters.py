@@ -178,6 +178,15 @@ def resolve_bienes_inversion_regularizacion_parameters(
             "arithmetic has no grounded source for this filing context",
         )
 
+    # A row in force across several editions carries the whole run's window, so
+    # the revision's own window, not the row's, bounds what this revision grounds.
+    if filing_period_date < revision.valid_from or (
+        revision.valid_to is not None and filing_period_date > revision.valid_to
+    ):
+        raise BienesInversionParameterResolutionError(
+            f"modelo {modelo_id} revision {revision.id} does not resolve for filing-period date "
+            f"{filing_period_date.isoformat()}: the date lies outside the revision's window",
+        )
     date_context: Mapping[str, date] = {"filing_period": filing_period_date}
     resolved: dict[str, DatedValue] = {}
     for slug in _REQUIRED_SLUGS:

@@ -5,7 +5,7 @@ materialisation, and lifecycle-guarded reclaim. There is no relocation
 operation, and the package initializer exports no symbols.
 
 See Also:
-    :data:`~cadrumo.core.STORAGE_TAXONOMY`
+    :data:`~cadrumo.core.storage_taxonomy_locations.STORAGE_TAXONOMY`
         The declaration every operation here reads.
 """
 

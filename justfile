@@ -1391,6 +1391,14 @@ docs-langs:
 docs-site-preview:
     uv run --no-sync python -m dev.deploy.docs_static_site dry-run
 
+# Probe both public documentation mounts over HTTPS with the monitoring
+# identity. It needs neither the project environment nor any credential, so it
+# runs on the pinned interpreter alone; the availability workflow calls it.
+[doc('Probe both public documentation mounts over HTTPS; read-only, network required.')]
+[group('docs')]
+docs-availability-check:
+    uv run --no-project --python 3.13.11 dev/deploy/docs_health.py
+
 # Run blocking, read-only docstring structure and Sphinx checks with live
 # per-test verdicts.
 # `workers` bounds the pytest-xdist lane: CI passes 8 (machine-aware sizing,
@@ -1511,6 +1519,7 @@ gate-local:
     @just check-registry
     @just check-repository
     @just check-dependency-vulnerabilities
+    @just docs-build
     @just docs-check
     @just test-product
     @just test-registry

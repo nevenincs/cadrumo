@@ -18,7 +18,12 @@ from ..export_parse import parse_export_payload
 from ..formula_runtime import calculate_registry_snapshot
 from ..relations import resolve_relation_values
 from ..schema import RegistrySnapshot
-from .published_authority import published_authored_revision, published_supported_filing_years
+from .authored_editions import authored_revisions
+from .published_authority import (
+    PublishedGovernedFactSource,
+    published_authored_revision,
+    published_supported_filing_years,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
@@ -167,10 +172,27 @@ def test_committed_modelo_123_registry_snapshot_calculates_current_totals(
     assert entries["14"].operand_refs == ("12", "13")
 
 
-def test_committed_modelo_123_registry_snapshot_uses_2019_2023_shape(
+def test_committed_modelo_123_registry_snapshot_uses_the_retenciones_sum_shape(
     registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
 ) -> None:
-    snapshot = registry_snapshot("123", 2023, "4T")
+    # The retenciones-sum shape is the original Modelo 123 design: the oldest revision
+    # the registry authors. Every supported exercise it covers keeps that shape.
+    revision_window = authored_revisions("123")[0]
+    covered_years = tuple(
+        year
+        for year in PublishedGovernedFactSource().supported_filing_years().years
+        if revision_window.valid_from.year <= year
+        and (revision_window.valid_to is None or year <= revision_window.valid_to.year)
+    )
+    assert covered_years
+    for filing_year in covered_years:
+        _assert_retenciones_sum_shape(registry_snapshot, filing_year, str(revision_window.id))
+
+
+def _assert_retenciones_sum_shape(
+    registry_snapshot: Callable[[str, int, str], RegistrySnapshot], filing_year: int, revision_id: str
+) -> None:
+    snapshot = registry_snapshot("123", filing_year, "4T")
     result = calculate_registry_snapshot(
         snapshot,
         inputs=_inputs(
@@ -183,10 +205,10 @@ def test_committed_modelo_123_registry_snapshot_uses_2019_2023_shape(
                 "07": Decimal("12.25"),
             },
         ),
-        date_context={"filing_period": date(2023, 12, 31)},
+        date_context={"filing_period": date(filing_year, 12, 31)},
     )
 
-    assert snapshot.revision.id == "2019-2023"
+    assert snapshot.revision.id == revision_id
     assert tuple(casilla.id for casilla in snapshot.revision.casillas) == (
         "01",
         "02",

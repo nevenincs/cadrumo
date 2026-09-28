@@ -356,7 +356,7 @@ class JustificanteCaptureSnapshotRepository:
     The namespace, sensitivity, schema version, and key grammar come from
     :data:`cadrumo.adapters.persistence.storage.secure_object_namespaces.LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE`.
     Each :class:`JustificanteCaptureSnapshot` is written through an
-    :class:`~cadrumo.adapters.persistence.storage.Envelope` so the captured PDF,
+    :class:`~cadrumo.adapters.persistence.storage.envelope.contract.Envelope` so the captured PDF,
     CSV, and expediente metadata stay inside the encrypted
     :class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`
     bucket store.

@@ -646,12 +646,6 @@ sequence_removals = {source_refs = [0]}
 sequence_order = {source_refs = [1, 0]}
 
 [[revisions."2025-y-siguientes".family_overrides]]
-family = "parameters"
-selector = {revision = "2011-2024", id = "modelo-347-tercero-anual-threshold-eur"}
-sequence_additions = {values = [{value = "3005.06", date_axis = "filing_period", valid_from = 2025-01-01}]}
-sequence_removals = {values = [0]}
-
-[[revisions."2025-y-siguientes".family_overrides]]
 family = "bindings"
 selector = {revision = "2011-2024", id = "modelo-347-contraparte-row-clave"}
 sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-1"], source_refs = ["aeat-dr-347-2025"]}

@@ -93,9 +93,11 @@ def test_real_child_pytest_persists_internal_error_traceback() -> None:
 
 def test_real_child_pytest_confines_cache_and_basetemp_to_its_run(tmp_path: Path) -> None:
     report = tmp_path / "pytest-paths.json"
+    ambient_cache = tmp_path / "ambient-cache"
     environment = os.environ.copy()
     environment.pop("CADRUMO_TEST_RUN_ROOT", None)
     environment["CADRUMO_PYTEST_PATH_PROBE"] = str(report)
+    environment["XDG_CACHE_HOME"] = str(ambient_cache)
     result = subprocess.run(
         [
             sys.executable,
@@ -119,6 +121,9 @@ def test_real_child_pytest_confines_cache_and_basetemp_to_its_run(tmp_path: Path
     run_root = Path(paths["run_root"]).resolve()
     scratch = Path(paths["scratch"]).resolve()
     assert Path(paths["cache"]).resolve() == run_root / "cache" / "pytest"
+    # Tool caches such as uv's keep their own home; moved into the run, each run
+    # that builds a distribution rebuilds one cold and leaves it behind.
+    assert paths["tool_cache_home"] == str(ambient_cache)
     assert Path(paths["basetemp"]).resolve() == scratch / "pytest"
     assert Path(paths["stdlib_temp"]).resolve() == scratch
     assert Path(paths["storage_root"]).resolve().parent == scratch

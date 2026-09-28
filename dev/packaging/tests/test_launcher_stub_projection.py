@@ -87,6 +87,7 @@ def test_two_genuine_launchers_project_equal(launchers: tuple[bytes, bytes]) -> 
     assert _launcher_stub_projection(first) == _launcher_stub_projection(second)
 
 
+@pytest.mark.windows_only
 def test_a_byte_changed_outside_the_elision_still_breaks_the_projection(
     launchers: tuple[bytes, bytes],
 ) -> None:

@@ -14,32 +14,43 @@ from cadrumo.domain.calculations.registry.errors import (
 
 from ..compiler.authority import compiled_bundled_authority
 from ._gate_support import assert_deadline_window_for_filing_year, assert_edition_opens_at_filing_year
+from .authored_edition_support import source_first_exercise, source_with_sha256
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+# The one edition the Orden HAC/1430/2025 design evidences, found by the design's
+# pinned bytes; its applicability names the edition's first exercise.
+_EVIDENCED_EDITION = source_first_exercise(
+    source_with_sha256("90eac5615609f6bec7bf5c9fa9386253e80bd0e26997747fbb1160c3da180831")
+)
 
 #: Wide enough to cross the support floor in both directions, and to reach past
 #: the last filing year any edition declares a window for.
 _SCANNED_FILING_YEARS = range(2018, 2028)
 
 
-def test_modelo_182_deadline_is_owned_only_by_the_evidenced_2025_revision() -> None:
+def test_modelo_182_deadline_is_owned_only_by_the_evidenced_revision() -> None:
     authority = compiled_bundled_authority()
     modelo = authority.modelo("182")
-    revision = modelo.revisions["2025"]
+    revision = modelo.revisions[str(_EVIDENCED_EDITION)]
 
-    assert revision.valid_from == date(2025, 1, 1)
+    assert revision.valid_from == date(_EVIDENCED_EDITION, 1, 1)
     # Open-ended by its own grounding: Orden HAC/1430/2025 disposicion final
     # unica leaves the design in force until a later orden replaces it, so the
     # edition carries no valid_to and its selector no upper year.
     assert revision.valid_to is None
-    assert_edition_opens_at_filing_year(revision, 2025)
-    assert_deadline_window_for_filing_year(revision, 2025, "modelo-182-2025-0a")
+    assert_edition_opens_at_filing_year(revision, _EVIDENCED_EDITION)
+    assert_deadline_window_for_filing_year(revision, _EVIDENCED_EDITION, f"modelo-182-{_EVIDENCED_EDITION}-0a")
 
-    window = next(item for item in revision.deadline_windows if item.filing_year == 2025)
-    assert (window.filing_year, window.period.registry_token) == (2025, "0A")
-    snapshot = authority.snapshot("182", filing_year=2025, period="0A", grade=revision.effective_authority_grade)
-    assert snapshot.revision.id == "2025"
-    assert tuple(item[2].id for item in authority.deadline_windows(2025, modelos=("182",))) == (window.id,)
+    window = next(item for item in revision.deadline_windows if item.filing_year == _EVIDENCED_EDITION)
+    assert (window.filing_year, window.period.registry_token) == (_EVIDENCED_EDITION, "0A")
+    snapshot = authority.snapshot(
+        "182", filing_year=_EVIDENCED_EDITION, period="0A", grade=revision.effective_authority_grade
+    )
+    assert snapshot.revision.id == str(_EVIDENCED_EDITION)
+    assert tuple(item[2].id for item in authority.deadline_windows(_EVIDENCED_EDITION, modelos=("182",))) == (
+        window.id,
+    )
 
 
 def test_modelo_182_refuses_a_filing_grade_snapshot_and_projects_no_unauthored_deadline() -> None:

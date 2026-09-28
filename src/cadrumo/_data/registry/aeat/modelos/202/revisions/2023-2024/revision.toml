@@ -545,9 +545,8 @@ sequence_removals = {source_refs = [0, 1]}
 [[revisions."2023-2024".family_overrides]]
 family = "parameters"
 selector = {revision = "2019-2022", id = "is.modalidad_cuota.percentage"}
-sequence_additions = {source_citations = [{source_ref = "aeat-modelo-202-instructions-2023-2024", required_text = ["porcentaje del 18%", "base del pago fraccionado"]}], source_refs = ["aeat-dr-202-2023", "aeat-modelo-202-instructions-2023-2024"], values = [{value = "18", date_axis = "filing_period", valid_from = 2023-01-01, valid_to = 2024-12-31}]}
-sequence_removals = {source_citations = [0], source_refs = [0, 1], values = [0]}
-
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-202-instructions-2023-2024", required_text = ["porcentaje del 18%", "base del pago fraccionado"]}], source_refs = ["aeat-dr-202-2023", "aeat-modelo-202-instructions-2023-2024"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1]}
 [[revisions."2023-2024".family_overrides]]
 family = "bindings"
 selector = {revision = "2019-2022", id = "modelo-202-pagos-fraccionados-anteriores"}

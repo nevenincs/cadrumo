@@ -40,7 +40,7 @@ from __future__ import annotations
 import json
 import re
 from collections.abc import Iterable, Mapping
-from pathlib import Path
+from pathlib import Path, PurePath, PurePosixPath, PureWindowsPath
 from typing import Annotated, Final, Literal, cast
 
 from pydantic import BaseModel, Field, JsonValue, StringConstraints, ValidationError, model_validator
@@ -149,12 +149,15 @@ def _path_replacements(*, storage_root: str, workdir: str) -> list[tuple[str, st
     extra pair is inert off Windows rather than conditional on it.
     """
     replacements: list[tuple[str, str]] = []
-    for raw, token in (
+    anchored = [
         (workdir, SANDBOX_WORKDIR_PLACEHOLDER),
         (storage_root, SANDBOX_STORAGE_ROOT_PLACEHOLDER),
-        (str(Path(storage_root).parent), SANDBOX_ROOT_PLACEHOLDER),
         (str(_repo_root()), REPO_ROOT_PLACEHOLDER),
-    ):
+    ]
+    sandbox_root = _writer_path(storage_root).parent
+    if sandbox_root.is_absolute():
+        anchored.append((str(sandbox_root), SANDBOX_ROOT_PLACEHOLDER))
+    for raw, token in anchored:
         native = str(raw)
         posix = native.replace("\\", "/")
         json_escaped = native.replace("\\", "\\\\")
@@ -164,6 +167,18 @@ def _path_replacements(*, storage_root: str, workdir: str) -> list[tuple[str, st
         if json_escaped != native:
             replacements.append((json_escaped, token))
     return sorted(replacements, key=lambda pair: len(pair[0]), reverse=True)
+
+
+def _writer_path(root: str) -> PurePath:
+    """Parse a captured root in the path flavour of the host that wrote it.
+
+    A golden recorded on Windows carries ``C:\\...`` roots that a POSIX checker
+    must still decompose: parsed as a host path there, the whole string is one
+    relative component whose parent is ``.``, and masking ``.`` rewrites every
+    dot in the frame.
+    """
+    windows = PureWindowsPath(root)
+    return windows if windows.drive or "\\" in root else PurePosixPath(root)
 
 
 def _normalise_token_path_separators(text: str) -> str:
