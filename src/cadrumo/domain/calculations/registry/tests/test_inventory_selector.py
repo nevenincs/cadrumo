@@ -63,7 +63,7 @@ def _constructed_provider(operation: str, target_casilla_id: str) -> InventoryPr
 
 
 @pytest.mark.parametrize(("operation", "destination"), tuple(_OPERATION_DESTINATIONS.items()))
-def test_inventory_selector_accepts_each_exact_2025_operation_destination(
+def test_inventory_selector_accepts_each_exact_operation_destination(
     operation: str,
     destination: str,
 ) -> None:

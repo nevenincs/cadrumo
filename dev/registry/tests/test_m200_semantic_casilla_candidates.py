@@ -229,7 +229,7 @@ def test_current_printed_identity_beats_sibling_casilla_identity() -> None:
     assert proposed_id == "02971"
 
 
-def test_current_2024_casilla_identity_beats_later_sibling_filler() -> None:
+def test_current_casilla_identity_beats_later_sibling_filler() -> None:
     target_field = _record_design_field(normalized_description="Importe [01683]")
 
     disposition, reason, proposed_id, _kind = subject._classify_sibling(

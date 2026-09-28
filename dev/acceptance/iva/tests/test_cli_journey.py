@@ -1,4 +1,4 @@
-"""Public installed-CLI acceptance for the ordinary 2025/1T IVA path."""
+"""Public installed-CLI acceptance for the ordinary first-quarter IVA path."""
 
 from __future__ import annotations
 
@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 
 from ..cli_journey import run_iva_m303_cli_journey
+from .journey_year_support import newest_fully_authored_journey_year
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -15,24 +16,27 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 # Measured on a quiet host on 2026-09-23: 195 s wheel build and install, then 402 s of fresh-process
 # authenticated CLI calls. The budget is about twice that; revisit it when CLI start-up gets faster.
 @pytest.mark.timeout(900)
-def test_installed_cli_exports_the_verified_ordinary_2025_m303_with_the_development_identity(
+def test_installed_cli_exports_the_verified_ordinary_m303_with_the_development_identity(
     tmp_path: Path, installed_wheel_aeat: Path
 ) -> None:
     """The public path exports the verified quarter, stamps the mock developer header and parses back its result."""
     repository_root = Path(__file__).resolve().parents[4]
     authority_root = repository_root / ".authority"
     assert (authority_root / "authority.current.json").is_file(), authority_root
+    # The journey also refuses a year whose Modelo 303 design it holds no official
+    # DP30300 developer-header positions for; it checks that before any side effect.
+    year = newest_fully_authored_journey_year(authority_root)
 
     receipt = run_iva_m303_cli_journey(
         executable=installed_wheel_aeat,
         authority_root=authority_root,
         storage_root=tmp_path / "secure-store",
         artifact_root=tmp_path / "private-source-artifacts",
-        year=2025,
+        year=year,
     )
 
     assert Decimal(receipt.iva_resultado) == Decimal("21.00") - Decimal("10.50")
-    assert receipt.filing_year == 2025
+    assert receipt.filing_year == year
     assert len(receipt.transaction_ids) == 2
     assert len(receipt.invoice_ids) == 2
     assert not any("attest-m303-exonerado-390" in command.argv for command in receipt.commands)
@@ -57,7 +61,7 @@ def test_installed_cli_exports_the_verified_ordinary_2025_m303_with_the_developm
     assert receipt.purchase_artifact == "<synthetic-purchase-artifact>"
     rendered = str(receipt.to_dict())
     assert "synthetic-purchase.pdf" not in rendered
-    assert "m303-2025-1t.fichero-boe" not in rendered
+    assert f"m303-{year}-1t.fichero-boe" not in rendered
     assert "profile_passphrase" not in rendered
     assert "attachment:" not in rendered
     assert all(command.returncode == 0 for command in receipt.commands)

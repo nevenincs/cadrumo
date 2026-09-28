@@ -8,6 +8,7 @@ from decimal import Decimal
 import pytest
 
 from .....core.period import Period
+from ....calculations.registry.tests.published_authority import published_supported_filing_years
 from ..claims import AmortizationClaim, effective_claims, project_m100, project_m130, record_claim
 from ..errors import ActividadAssetClaimConflictError
 from ..lifecycle import AssetKind
@@ -15,18 +16,27 @@ from ..lifecycle import AssetKind
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def _claim(**overrides: object) -> AmortizationClaim:
+def _supported_years() -> tuple[int, ...]:
+    support = published_supported_filing_years()
+    assert support is not None, "the published authority declares no support envelope"
+    return support.years
+
+
+_YEAR = _supported_years()[0]
+
+
+def _claim(year: int = _YEAR, **overrides: object) -> AmortizationClaim:
     payload: dict[str, object] = {
         "asset_id": "office-computer",
         "asset_revision_id": "a" * 64,
         "asset_kind": AssetKind.MATERIAL,
-        "tax_year": 2025,
-        "covered_from": date(2025, 1, 1),
-        "covered_until": date(2025, 4, 1),
+        "tax_year": year,
+        "covered_from": date(year, 1, 1),
+        "covered_until": date(year, 4, 1),
         "amount": Decimal("200.00"),
         "schedule_fingerprint": "b" * 64,
-        "authority_generation": "2025.1",
-        "source_reference": "tabla-material-2025",
+        "authority_generation": "published-generation",
+        "source_reference": "tabla-material",
         "creating_operation": "record-amortization",
     }
     payload.update(overrides)
@@ -50,7 +60,7 @@ def test_overlaps_refuse_but_supersession_allows_a_new_revision_of_same_asset() 
     with pytest.raises(ActividadAssetClaimConflictError, match="overlapping"):
         record_claim(
             claims,
-            _claim(covered_from=date(2025, 3, 1), covered_until=date(2025, 5, 1)),
+            _claim(covered_from=date(_YEAR, 3, 1), covered_until=date(_YEAR, 5, 1)),
         )
 
     correction = _claim(
@@ -65,22 +75,24 @@ def test_overlaps_refuse_but_supersession_allows_a_new_revision_of_same_asset() 
     assert correction.asset_revision_id != original.asset_revision_id
 
 
-def test_m100_and_m130_reference_same_effective_claim_without_duplicate_basis_use() -> None:
-    material = _claim()
+@pytest.mark.parametrize("year", _supported_years())
+def test_m100_and_m130_reference_same_effective_claim_without_duplicate_basis_use(year: int) -> None:
+    material = _claim(year)
     intangible = _claim(
+        year,
         asset_revision_id="c" * 64,
         asset_kind=AssetKind.INTANGIBLE,
-        covered_from=date(2025, 4, 1),
-        covered_until=date(2025, 7, 1),
+        covered_from=date(year, 4, 1),
+        covered_until=date(year, 7, 1),
         amount=Decimal("300.00"),
     )
     claims = (material, intangible)
 
-    material_m100 = project_m100(claims, asset_kind=AssetKind.MATERIAL, tax_year=2025)
-    intangible_m100 = project_m100(claims, asset_kind=AssetKind.INTANGIBLE, tax_year=2025)
+    material_m100 = project_m100(claims, asset_kind=AssetKind.MATERIAL, tax_year=year)
+    intangible_m100 = project_m100(claims, asset_kind=AssetKind.INTANGIBLE, tax_year=year)
     material_m130 = project_m130(
         claims,
-        period=Period.from_year_and_code(2025, "1T"),
+        period=Period.from_year_and_code(year, "1T"),
         asset_kind=AssetKind.MATERIAL,
     )
 

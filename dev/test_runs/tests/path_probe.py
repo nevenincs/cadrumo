@@ -26,6 +26,7 @@ def test_write_resolved_pytest_paths(tmp_path_factory: pytest.TempPathFactory, p
                 "scratch": os.environ["CADRUMO_TEST_RUN_SCRATCH"],
                 "stdlib_temp": tempfile.gettempdir(),
                 "storage_root": str(collection_storage_root()),
+                "tool_cache_home": os.environ.get("XDG_CACHE_HOME"),
             }
         ),
         encoding="utf-8",

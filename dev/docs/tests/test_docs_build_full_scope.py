@@ -4,8 +4,9 @@ One real ``-b dummy -n -W`` Sphinx build over the full documentation set — the
 ~1,200 ``automodule`` stubs that import the entire application plus every
 narrative page. This is the single most expensive build in the docs lane, so it
 lives alone in this module: pytest-xdist distributes by file, and the sibling
-scope/language builds (``test_docs_build_user_scope``,
-``test_docs_build_localized``) run concurrently instead of queueing behind it.
+scope/language builds (``test_docs_build_user_scope`` and one
+``test_docs_build_localized_<lang>`` per translation target) run concurrently
+instead of queueing behind it.
 Shared machinery and the hook-dedupe rationale live in
 :mod:`dev.docs.tests._sphinx_build_harness`.
 

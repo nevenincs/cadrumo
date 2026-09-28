@@ -32,17 +32,18 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _CONTEXT = FamilyFactResolutionContext(PublishedGovernedFactSource(), date(2025, 12, 31), date(2025, 12, 31))
 
 
-def test_applicability_window_three_period_span_for_filing_year_2025() -> None:
+@pytest.mark.parametrize("filing_year", PublishedGovernedFactSource().supported_filing_years().years)
+def test_applicability_window_spans_three_periods_ending_at_the_filing_year(filing_year: int) -> None:
     """The window is the closed interval [entry_year, entry_year + 2]."""
     cases = (
-        ("entry-year", 2023, True),
-        ("first-following-period", 2024, True),
-        ("second-following-period", 2025, True),
-        ("before-window", 2022, False),
-        ("future-entry", 2026, False),
+        ("entry-year", filing_year - 2, True),
+        ("first-following-period", filing_year - 1, True),
+        ("second-following-period", filing_year, True),
+        ("before-window", filing_year - 3, False),
+        ("future-entry", filing_year + 1, False),
     )
     for case_id, entry_year, expected in cases:
-        assert within_multi_year_applicability_window(entry_year, 2025, following_periods=2) is expected, case_id
+        assert within_multi_year_applicability_window(entry_year, filing_year, following_periods=2) is expected, case_id
 
 
 def test_applicability_window_single_year_when_no_following_periods() -> None:

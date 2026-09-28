@@ -679,10 +679,10 @@ cli:
         modelo_help: Supported modelo code for the backend aggregation service (111,
           115, 123, 180, 190, 193, 347, 349, or 720).
         period_help: 'Aggregation period token: 0A annual, 1T-4T quarters, 01-12 months.'
-        received_invoice_retencion_help: JSON InvoiceRetencionRouteRequest object
-          routing one received invoice's declared retención into the per-perceptor
-          store (invoice_id, scheme). The scheme is a legal fact about the perceptor's
-          activity and is never inferred from the invoice. Repeat for multiple invoices.
+        received_invoice_retencion_help: 'JSON InvoiceWithholdingEvidenceRequest:
+          one withholding allocation from a received invoice, with its payment or
+          exigibility evidence. One allocation per command; the scheme is a legal
+          fact about the perceptor''s activity and is never inferred from the invoice.'
         retencion_observation_help: 'JSON RetencionObservation object. The source_kind
           value must be ledger_transaction, purchase_invoice_evidence, payable_invoice,
           or collectible_invoice. For Modelo 111 trabajo, scheme rendimientos_trabajo

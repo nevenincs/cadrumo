@@ -78,6 +78,12 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 #: and the run is then re-scheduled or wedged rather than reported.
 _SUBPROCESS_POOL_TIMEOUT = 1800
 
+#: Ceiling for the clean child run that sizes the bounded-check gate's
+#: deadline. Kept under the repository's 300s per-test default so a wedged
+#: child is reported by its own supervisor rather than by the test timeout,
+#: which cannot interrupt a test parked in ``subprocess.wait()``.
+_CLEAN_CHILD_CEILING_SECONDS = 240
+
 _PAGE = "tutorials/anti-tautology-gate"
 _PROFILE_DELETE_SEQUENCE_ID = "profile-setup-delete"
 _PROFILE_DELETE_DIGEST_PATH = "result.fingerprint.digest"
@@ -397,6 +403,116 @@ class TestProfileDeletePathMaskHonesty:
             assert f"result.fingerprint.{leaf}" in problems[0]
 
 
+_EXPORT_PAGE = "how-to/modelo-100"
+_EXPORT_SEQUENCE_ID = "modelo-100-export-file"
+_EXPORT_COMMAND = "modelo.export"
+_EXPORT_FILE = "modelo-100.boe"
+#: The two export leaves the central policy masks because the file names the release.
+_RELEASE_BOUND_EXPORT_PATHS = frozenset({"result.file_sha256", "result.bucket_event_id"})
+
+
+def _another_release_of_the_same_width(version: str) -> str:
+    """Return a different release whose AEAT ``Aux/VERSION`` token is as wide as ``version``'s."""
+    parts = []
+    for part in version.split("."):
+        bumped = str(int(part) + 1)
+        parts.append(bumped if len(bumped) == len(part) else str(int(part) - 1))
+    return ".".join(parts)
+
+
+def _export_frame(transcript: SequenceTranscript) -> int:
+    return next(
+        index
+        for index, frame in enumerate(transcript.frames)
+        if frame.envelope is not None and frame.envelope.get("command") == _EXPORT_COMMAND
+    )
+
+
+def _export_result(transcript: SequenceTranscript, index: int) -> Mapping[str, object]:
+    envelope = transcript.frames[index].envelope
+    assert envelope is not None
+    result = envelope["result"]
+    assert isinstance(result, dict)
+    return result
+
+
+@pytest.fixture(scope="module")
+def export_release_double_run(
+    tmp_path_factory: pytest.TempPathFactory,
+) -> tuple[tuple[str, SequenceTranscript, bytes], tuple[str, SequenceTranscript, bytes]]:
+    """Run the real Modelo 100 export sequence at this release and at another one.
+
+    Only the version the export writes differs between the two runs: the other
+    release goes in through the software-identity seam the Aux tests use, so the
+    sandbox, clock, profile and inputs are the same.
+    """
+    from cadrumo.domain.filing import software_identity
+
+    discovered, problems = discover_sequences(page=_EXPORT_PAGE, sequence_id=_EXPORT_SEQUENCE_ID)
+    assert not problems, problems
+    (item,) = discovered
+    runs: list[tuple[str, SequenceTranscript, bytes]] = []
+    current = software_identity.PACKAGE_VERSION
+    for label, version in (("current", current), ("next", _another_release_of_the_same_width(current))):
+        root = tmp_path_factory.mktemp(f"export-{label}")
+        with pytest.MonkeyPatch.context() as patch:
+            patch.setattr(software_identity, "PACKAGE_VERSION", version)
+            aux = software_identity.aeat_aux_version()
+            transcript = execute_sequence(item.sequence, sandbox_root=root)
+        runs.append((aux, transcript, (root / "workdir" / _EXPORT_FILE).read_bytes()))
+    return runs[0], runs[1]
+
+
+class TestModeloExportReleaseMaskHonesty:
+    def test_another_release_changes_only_the_enrolled_export_paths(
+        self,
+        export_release_double_run: tuple[tuple[str, SequenceTranscript, bytes], tuple[str, SequenceTranscript, bytes]],
+    ) -> None:
+        """The mask covers exactly what a release changes, so it cannot widen unnoticed."""
+        (first_aux, first, _), (second_aux, second, _) = export_release_double_run
+        assert first_aux != second_aux
+        residual: dict[int, frozenset[str]] = {}
+        for index, (left, right) in enumerate(zip(first.frames, second.frames, strict=True)):
+            if (
+                left.envelope is not None
+                and right.envelope is not None
+                and (paths := differing_paths(left.envelope, right.envelope))
+            ):
+                residual[index] = paths
+        export = _export_frame(first)
+        assert residual == {export: _RELEASE_BOUND_EXPORT_PATHS}
+        assert _export_result(first, export)["byte_size"] == _export_result(second, export)["byte_size"]
+
+    def test_the_exported_bytes_differ_only_in_the_version_field(
+        self,
+        export_release_double_run: tuple[tuple[str, SequenceTranscript, bytes], tuple[str, SequenceTranscript, bytes]],
+    ) -> None:
+        """The file is otherwise byte-identical, which is what makes masking its digest safe."""
+        (first_aux, _, first_bytes), (second_aux, _, second_bytes) = export_release_double_run
+        first_field = f"<VERSION>{first_aux}</VERSION>".encode()
+        second_field = f"<VERSION>{second_aux}</VERSION>".encode()
+        assert first_bytes.count(first_field) == 1
+        assert second_bytes.count(second_field) == 1
+        assert first_bytes.replace(first_field, second_field) == second_bytes
+
+    def test_the_release_residual_compares_clean_and_the_byte_size_still_bites(
+        self,
+        export_release_double_run: tuple[tuple[str, SequenceTranscript, bytes], tuple[str, SequenceTranscript, bytes]],
+    ) -> None:
+        """Through the real compare path the release difference is hidden and nothing else is."""
+        (_, first, _), (_, second, _) = export_release_double_run
+        golden = build_golden(first)
+        assert compare_transcript_to_golden(second, golden, page=_EXPORT_PAGE) == ()
+
+        export = _export_frame(second)
+        document = second.model_dump(mode="json")
+        document["frames"][export]["envelope"]["result"]["byte_size"] += 1
+        resized = SequenceTranscript.model_validate_json(json.dumps(document))
+        problems = compare_transcript_to_golden(resized, golden, page=_EXPORT_PAGE)
+        assert len(problems) == 1
+        assert "result.byte_size" in problems[0]
+
+
 class TestExecutorMaskHonesty:
     def test_pre_mask_residual_equals_the_declared_nondeterministic_set(
         self,
@@ -711,6 +827,12 @@ class TestBothSurfacesRedOnDivergence:
         test reported a clean check as a failure. Half a measured duration
         tracks the machine instead: it is always well inside the page and well
         past the child's first journalled frame.
+
+        The clean run is timed through the same bounded child path, not
+        in-process. An in-process check inherits this worker's already-imported
+        command tree, so its duration omits the child's interpreter start and
+        CLI import; on a slow or loaded host that start alone outlasted half the
+        in-process figure and the bound fired before any frame was journalled.
         """
         seed_sequence_id = "irpf-lifecycle-position"
         seed, discovery_problems = discover_sequences(sequence_id=seed_sequence_id)
@@ -721,7 +843,7 @@ class TestBothSurfacesRedOnDivergence:
         assert discovery_problems == ()
 
         started = time.monotonic()
-        clean_exit = sequences_cli_main(["check", "--page", page])
+        clean_exit = sequences_cli_main(["check", "--page", page, "--timeout", str(_CLEAN_CHILD_CEILING_SECONDS)])
         clean_duration = time.monotonic() - started
         capsys.readouterr()
         assert clean_exit == 0, "the bound is measured against a CLEAN run of this page"

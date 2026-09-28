@@ -34,8 +34,14 @@ from .ledger_iva_aggregation_support import (
     _calculate_303_from_observations,
     _observation,
 )
+from .profile_schema_support import committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
+
+_SUPPORT = committed_supported_filing_years()
+# The revision family that follows the floor exercise's older design; that design's
+# back-filled base bindings are pinned separately below against its own snapshot.
+_POST_FLOOR_DESIGN_YEARS = tuple(year for year in _SUPPORT.years if year > _SUPPORT.floor)
 
 
 def _m303_revision(revision_id: str) -> ModeloRevision:
@@ -121,7 +127,8 @@ def test_box_60_binding_selects_export_and_assimilated_export_categories() -> No
         assert "ley-37-1992:art-22" in binding.legal_refs, f"{revision_id}: binding must cite art-22"
 
 
-def test_modelo_303_2024_domestic_base_aggregates_from_ledger() -> None:
+@pytest.mark.parametrize("filing_year", _POST_FLOOR_DESIGN_YEARS)
+def test_modelo_303_domestic_base_aggregates_from_ledger(filing_year: int) -> None:
     """Regression: casillas 07/28 (base imponible) aggregate the ledger base.
 
     Before the domestic base bindings landed, casillas 01/04/07/28 were
@@ -135,11 +142,11 @@ def test_modelo_303_2024_domestic_base_aggregates_from_ledger() -> None:
     inputs, not a re-run of the registry formula), so a regression to the manual
     no-binding state (base -> 0) fails this test loudly.
     """
-    # The transaction dates sit inside the declared 2024 2T filing period, so the
+    # The transaction dates sit inside the declared 2T filing period, so the
     # date-axis parameter lookup resolves against the same revision the snapshot does.
     repercutido = _observation(
         applied_rate=Decimal("0.21"),
-        txn_date=date(2024, 5, 15),
+        txn_date=date(filing_year, 5, 15),
         category=IvaCategory("domestic_general"),
         rate_kind=IvaRateKind("general"),
         flow=IvaFlowDirection.from_registry("repercutido"),
@@ -148,7 +155,7 @@ def test_modelo_303_2024_domestic_base_aggregates_from_ledger() -> None:
     )
     soportado = _observation(
         applied_rate=Decimal("0.21"),
-        txn_date=date(2024, 5, 15),
+        txn_date=date(filing_year, 5, 15),
         category=IvaCategory("domestic_general"),
         rate_kind=IvaRateKind("general"),
         flow=IvaFlowDirection.from_registry("soportado"),
@@ -158,7 +165,7 @@ def test_modelo_303_2024_domestic_base_aggregates_from_ledger() -> None:
         deduction_authority=IvaDeductionEvidenceAuthority.from_registry("invoice_evidence"),
     )
     result = _calculate_303_from_observations(
-        filing_year=2024,
+        filing_year=filing_year,
         period="2T",
         observations=(repercutido, soportado),
     )

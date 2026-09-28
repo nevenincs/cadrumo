@@ -150,9 +150,6 @@ aggregation:
     errors:
       filing_year_out_of_range: A(z) %{filing_year} bevallási év a támogatott %{min_year}-%{max_year}
         tartományon kívül van.
-      invoice_retencion_collision: A(z) %{source_object_ids} számlá(k)hoz tartozó
-        levonás-megfigyelés(eke)t kézzel is megadták és a --received-invoice-retencion
-        is irányította; az összesítés előtt szüntesse meg a duplikációt.
       m111_no_retenciones_attestation_missing: 'A 111-es modellhez nincs perceptoronkénti
         levonási megfigyelés a következőre: %{filing_year} %{period}. Ne nyújts be
         teljesen üres 111-es modellt: nyilatkozz a negyedévről mint levonásmentes

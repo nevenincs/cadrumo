@@ -20,10 +20,22 @@ from ..windows_contention import WINDOWS_CONTENDED_ACCESS_ERRORS, is_windows_con
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
+class _WindowsRefusalError(PermissionError):
+    """A refusal carrying ``winerror`` as Windows raises it, on any host.
+
+    The four-argument constructor sets ``winerror`` only on Windows and drops it
+    elsewhere, so building the error that way would test nothing off Windows.
+    """
+
+    def __init__(self, winerror: int) -> None:
+        super().__init__(13, "refused")
+        self.winerror = winerror
+
+
 @pytest.mark.parametrize("winerror", [5, 32])
 def test_a_peers_open_handle_is_contention(winerror: int) -> None:
     """ERROR_ACCESS_DENIED and ERROR_SHARING_VIOLATION are what a handle causes."""
-    assert is_windows_contention(PermissionError(13, "refused", None, winerror)) is True
+    assert is_windows_contention(_WindowsRefusalError(winerror)) is True
 
 
 def test_a_posix_refusal_is_never_contention() -> None:
@@ -42,7 +54,7 @@ def test_an_unrelated_windows_error_is_not_contention() -> None:
     Guards the frozenset against being widened into "any Windows refusal",
     which would absorb a read-only attribute or a denying ACL.
     """
-    assert is_windows_contention(PermissionError(13, "refused", None, 1)) is False
+    assert is_windows_contention(_WindowsRefusalError(1)) is False
     assert is_windows_contention(OSError(2, "missing")) is False
 
 

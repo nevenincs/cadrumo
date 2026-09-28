@@ -17,22 +17,10 @@ from ...domain.renta.actividad_asset.claims import (
     m100_casilla_id,
 )
 from ...domain.renta.actividad_asset.errors import ActividadAssetClaimConflictError
-from ...domain.renta.actividad_asset.lifecycle import ActivityAssetRevision, AssetKind
+from ...domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
 from ...domain.renta.ledger_expenses import renta_first_slice_expense_routing
-from ._models import CasillaAggregation
 from .source_mesh import CalculationSourceDiagnostic
 from .source_resolution_operations import source_diagnostics_for
-
-
-class ActivityAssetFilingProjection(BaseModel):
-    """A non-consuming filing projection retaining effective claim identity."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    modelo: str
-    period: Period
-    casilla_values: dict[CasillaId, Decimal]
-    claim_ids: tuple[str, ...]
 
 
 class LedgerRentaExpenseTreatment(BaseModel):
@@ -122,55 +110,6 @@ def activity_asset_expense_observations(
             for claim in effective
         )
     raise ValueError("activity-asset expense observations support only Modelos 100 and 130")
-
-
-def project_activity_assets_to_m100(
-    claims: tuple[AmortizationClaim, ...],
-    *,
-    period: Period,
-) -> ActivityAssetFilingProjection:
-    """Project each effective annual claim once to material/intangible destinations."""
-    selected = tuple(claim for claim in effective_claims(claims) if claim.tax_year == period.filing_year)
-    values = {
-        validated_casilla_id(
-            m100_casilla_id(AssetKind.MATERIAL),
-            surface="activity asset material projection",
-        ): _sum_kind(selected, AssetKind.MATERIAL),
-        validated_casilla_id(
-            m100_casilla_id(AssetKind.INTANGIBLE),
-            surface="activity asset intangible projection",
-        ): _sum_kind(selected, AssetKind.INTANGIBLE),
-    }
-    return ActivityAssetFilingProjection(
-        modelo="100",
-        period=period,
-        casilla_values=values,
-        claim_ids=tuple(claim.claim_id for claim in selected),
-    )
-
-
-def add_activity_assets_to_m130_expenses(
-    ordinary: CasillaAggregation,
-    claims: tuple[AmortizationClaim, ...],
-) -> ActivityAssetFilingProjection:
-    """Add effective YTD claims to the existing sole casilla-02 expense result."""
-    if ordinary.modelo != "130":
-        raise ValueError("activity-asset M130 composition requires a Modelo 130 ordinary-expense aggregation")
-    end_date = ordinary.period.end_date
-    selected = tuple(
-        claim
-        for claim in effective_claims(claims)
-        if claim.tax_year == ordinary.period.filing_year and claim.covered_until <= end_date + timedelta(days=1)
-    )
-    target = validated_casilla_id("02", surface="activity asset M130 expense projection")
-    values = dict(ordinary.casilla_values)
-    values[target] = values.get(target, Decimal("0")) + sum((claim.amount for claim in selected), Decimal("0"))
-    return ActivityAssetFilingProjection(
-        modelo="130",
-        period=ordinary.period,
-        casilla_values=values,
-        claim_ids=tuple(claim.claim_id for claim in selected),
-    )
 
 
 def amortization_labelled_expense_categories(*, effective_date: date) -> frozenset[str]:
@@ -327,19 +266,12 @@ def _current_acquisition_owners(
     return tuple((asset_id, current[asset_id].acquisition.observed_transaction_id) for asset_id in sorted(current))
 
 
-def _sum_kind(claims: tuple[AmortizationClaim, ...], kind: AssetKind) -> Decimal:
-    return sum((claim.amount for claim in claims if claim.asset_kind is kind), Decimal("0"))
-
-
 __all__ = [
     "ActivityAssetExpenseObservation",
-    "ActivityAssetFilingProjection",
     "LedgerRentaExpenseTreatment",
     "RegisterOwnedAcquisition",
     "activity_asset_expense_observations",
-    "add_activity_assets_to_m130_expenses",
     "amortization_labelled_expense_categories",
     "classify_ledger_expenses_against_asset_register",
-    "project_activity_assets_to_m100",
     "register_owned_acquisition_diagnostics",
 ]

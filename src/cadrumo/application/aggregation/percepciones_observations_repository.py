@@ -146,30 +146,10 @@ class PercepcionObservationPortsFactory(Protocol):
         ...
 
 
-def persist_percepcion_observations(
-    *,
-    ports: PercepcionObservationPorts,
-    modelo: str,
-    filing_year: int,
-    period: Period,
-    observations: Sequence[WithholdingObservation],
-    source_kind: AggregationCaptureKind = AggregationCaptureKind.AGGREGATE_PULL,
-) -> None:
-    """Persist the complete per-perceptor-clave window through the required port."""
-    ports.repository.replace_observations(
-        modelo=modelo,
-        filing_year=filing_year,
-        period=period,
-        observations=observations,
-        source_kind=source_kind,
-    )
-
-
 __all__ = [
     "PercepcionObservationPersistenceError",
     "PercepcionObservationPorts",
     "PercepcionObservationPortsFactory",
     "PercepcionObservationRepository",
     "percepcion_observation_key",
-    "persist_percepcion_observations",
 ]

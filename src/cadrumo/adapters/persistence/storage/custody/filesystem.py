@@ -17,7 +17,7 @@ from uuid import uuid4
 from ._capsule_filesystem import (
     windows_mark_handle_for_deletion as _windows_mark_handle_for_deletion,
 )
-from .errors import ProfileCustodyRecordError
+from .errors import ProfileCustodyPathAbsentError, ProfileCustodyRecordError
 from .filesystem_primitives import ProfileCustodyPasswordReadOperation, ensure_profile_custody_local_directory
 from .filesystem_primitives import anchor_directory as _anchor_directory
 from .filesystem_primitives import posix_directory_fd as _posix_directory_fd
@@ -287,6 +287,11 @@ def _write_posix_profile_custody_local_record(path: Path, payload: bytes, *, pub
             else:
                 os.replace(temporary_name, path.name, src_dir_fd=parent_fd, dst_dir_fd=parent_fd)
             os.fsync(parent_fd)
+        except FileExistsError as exc:
+            # Only the write-once link can collide: a second publisher found the first.
+            with suppress(FileNotFoundError):
+                os.unlink(temporary_name, dir_fd=parent_fd)
+            raise ProfileCustodyRecordError("local custody record destination already exists") from exc
         except OSError as exc:
             with suppress(FileNotFoundError):
                 os.unlink(temporary_name, dir_fd=parent_fd)
@@ -687,7 +692,7 @@ def _lexists(path: Path, *, trace: list[ProfileCustodyPasswordReadOperation] | N
     try:
         with _posix_directory_fd(path.parent) as parent_fd:
             os.stat(path.name, dir_fd=parent_fd, follow_symlinks=False)
-    except FileNotFoundError:
+    except (FileNotFoundError, ProfileCustodyPathAbsentError):
         return False
     except OSError as exc:
         raise ProfileCustodyRecordError("profile capsule path cannot be no-follow inspected") from exc

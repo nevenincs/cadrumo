@@ -93,10 +93,3 @@ def m100_2024_snapshot(
     legal-review attestation gates.
     """
     return registry_snapshot("100", 2024, "0A", grade=RegistryAuthorityGrade.CALCULATION)
-
-
-@pytest.fixture
-def m100_2025_snapshot(
-    registry_snapshot: Callable[..., RegistrySnapshot],
-) -> RegistrySnapshot:
-    return registry_snapshot("100", 2025, "0A", grade=RegistryAuthorityGrade.CALCULATION)

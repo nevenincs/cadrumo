@@ -248,9 +248,9 @@ def resolve_declaration_period_inputs(
     unique ``filing_year``, ``filing_period`` or ``tipo_declaracion`` semantic
     roles are populated. The ``filing_year`` role lands as a
     :class:`~decimal.Decimal` and the ``filing_period`` role as the canonical
-    :class:`~cadrumo.core.Period` registry token (``"1T"``, ``"EXT-1T"``), which
-    is the form AEAT accepts and the only representation total over every
-    declared period. The ``tipo_declaracion`` role takes the
+    :class:`~cadrumo.core.period.Period` registry token (``"1T"``,
+    ``"EXT-1T"``), which is the form AEAT accepts and the only representation
+    total over every declared period. The ``tipo_declaracion`` role takes the
     :class:`~cadrumo.domain.modelos.filing_record.FilingDeclarationKind` token
     of the declaration being prepared -- ``original``, ``complementaria``,
     ``sustitutiva`` or ``rectificativa`` -- the same kind its filing record

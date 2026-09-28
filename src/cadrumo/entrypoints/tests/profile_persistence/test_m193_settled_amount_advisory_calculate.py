@@ -1,7 +1,8 @@
 """A settled prior-accrual Modelo 193 row's unresolved amount authority reaches the calculate result.
 
-A key B coupon exigible in 2025 and collected in January 2026 is captured from
-its ledger payment into the Modelo 123 window. The live Modelo 193 2026
+A key B coupon exigible in the last closed exercise and collected the next January
+is captured from its ledger payment into the Modelo 123 window. The live
+collection-year Modelo 193
 calculate reads it through the withholding source as a settled prior-accrual
 row, and the advisory that its base and withholding amounts rest on no settled
 authority must arrive in the result's source diagnostics beside the values.
@@ -23,6 +24,7 @@ from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueReposi
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.tests.ledger_capital_support import (
+    CAPITAL_YEAR,
     capital_payment,
     capital_pending_payment,
     capital_request,
@@ -51,9 +53,9 @@ from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _BUCKET_ID = "19319319-3193-4193-8193-193193193193"
-_T0 = datetime(2026, 9, 24, 10, 0, tzinfo=UTC)
-_T1 = datetime(2026, 9, 24, 11, 0, tzinfo=UTC)
-_FILING_YEAR = 2026
+_T0 = datetime(CAPITAL_YEAR + 1, 9, 24, 10, 0, tzinfo=UTC)
+_T1 = datetime(CAPITAL_YEAR + 1, 9, 24, 11, 0, tzinfo=UTC)
+_FILING_YEAR = CAPITAL_YEAR + 1
 _UNRESOLVED_AMOUNTS = "m193_settled_row_amounts_unresolved_authority"
 
 
@@ -68,24 +70,24 @@ def _caller_zero_bindings(operation: PinnedAuthorityOperation) -> dict[BindingId
     return {binding.id: Decimal("0") for binding in snapshot.revision.bindings if binding.source not in resolved}
 
 
-def test_the_settled_row_advisory_reaches_the_modelo_193_2026_calculate_result(
+def test_the_settled_row_advisory_reaches_the_collection_year_modelo_193_calculate_result(
     tmp_path: Path,
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """The calculate result carries exactly one unresolved-amount advisory, naming the row's years and fields."""
-    paid_on = date(2026, 1, 20)
-    transaction = capital_payment(provider_id="coupon-2025-12", booked_date=paid_on)
+    paid_on = date(CAPITAL_YEAR + 1, 1, 20)
+    transaction = capital_payment(provider_id=f"coupon-{CAPITAL_YEAR}-12", booked_date=paid_on)
     capture = build_ledger_payment_withholding_capture(
         transaction,
         catalogue_revision_id="c" * 64,
         request=capital_request(
             transaction,
-            payment_event_id="coupon-payment-2026-01",
-            exigibility_occurred_on=date(2025, 12, 15),
+            payment_event_id=f"coupon-payment-{CAPITAL_YEAR + 1}-01",
+            exigibility_occurred_on=date(CAPITAL_YEAR, 12, 15),
             modelo_193_pending_payment=capital_pending_payment(transaction, transaction_date=paid_on),
         ),
-        applicable_year=2025,
-        cadence=quarterly_filer_cadence(2025),
+        applicable_year=CAPITAL_YEAR,
+        cadence=quarterly_filer_cadence(CAPITAL_YEAR),
     )
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
@@ -127,8 +129,8 @@ def test_the_settled_row_advisory_reaches_the_modelo_193_2026_calculate_result(
     assert len(advisories) == 1
     (advisory,) = advisories
     assert advisory.binding_source is BindingSourceKind.WITHHOLDING
-    assert "Modelo 193 2026" in advisory.message
-    assert "accrued in 2025" in advisory.message
+    assert f"Modelo 193 {CAPITAL_YEAR + 1}" in advisory.message
+    assert f"accrued in {CAPITAL_YEAR}" in advisory.message
     assert "(base_retenciones)" in advisory.message
     assert "(retencion_practicada)" in advisory.message
     assert advisory.source_ref is not None

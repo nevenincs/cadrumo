@@ -13,7 +13,7 @@ from functools import cache
 from pathlib import Path
 from typing import Any, Final, Literal
 
-from .errors import ProfileCustodyRecordError
+from .errors import ProfileCustodyPathAbsentError, ProfileCustodyRecordError
 
 PROFILE_CUSTODY_COMMIT_FILENAME: Final = "profile.commit.v1.json"
 
@@ -347,6 +347,8 @@ def posix_directory_fd(path: Path) -> Generator[int]:
         for component in components:
             try:
                 next_descriptor = os.open(component, flags, dir_fd=descriptor)
+            except FileNotFoundError as exc:
+                raise ProfileCustodyPathAbsentError("profile capsule directory component is absent") from exc
             except OSError as exc:
                 raise ProfileCustodyRecordError("profile capsule directory component is unsafe") from exc
             os.close(descriptor)

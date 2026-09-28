@@ -8,6 +8,8 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.published_authority import published_legal_reference
+
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.errors import RegistryValidationError
@@ -32,6 +34,10 @@ from ..m303_regimen_simplificado import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _DANA_FACT_ID = "rdl-7-2024-art-11-2:iva-simplificado-reduccion-cuota-devengada"
+# RDL 7/2024 art. 11.2 reduces the annual simplified cuota of the exercise it enters
+# into force in; the published provision names that exercise.
+_DANA_RELIEF_EXERCISE = published_legal_reference("real-decreto-ley-7-2024:art-11.2").effective_from.year
+_SUPPORT = PublishedGovernedFactSource().supported_filing_years()
 
 
 @pytest.fixture
@@ -50,16 +56,20 @@ def _simplified_scope() -> M303RegimenSimplificadoScopeDecision:
     )
 
 
-def test_published_reduction_is_authored_for_2024(authority_operation: PinnedAuthorityOperation) -> None:
-    resolved = authority_operation.resolve_governed_fact(_dana_query(date(2024, 12, 31)))
+def test_published_reduction_is_authored_for_the_relief_exercise(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    resolved = authority_operation.resolve_governed_fact(_dana_query(date(_DANA_RELIEF_EXERCISE, 12, 31)))
 
     assert isinstance(resolved, ResolvedScalarFact)
     assert resolved.projection_direction is TemporalProjectionDirection.AUTHORED
     assert resolved.payload.value == Decimal("0.25")
 
 
-@pytest.mark.parametrize("effective_date", (date(2025, 12, 31), date(2026, 12, 31)))
-def test_published_reduction_is_refused_after_2024(
+@pytest.mark.parametrize(
+    "effective_date", tuple(date(year, 12, 31) for year in _SUPPORT.years if year > _DANA_RELIEF_EXERCISE)
+)
+def test_published_reduction_is_refused_after_the_relief_exercise(
     authority_operation: PinnedAuthorityOperation,
     effective_date: date,
 ) -> None:
@@ -67,13 +77,13 @@ def test_published_reduction_is_refused_after_2024(
         authority_operation.resolve_governed_fact(_dana_query(effective_date))
 
 
-def test_2024_terminal_simplified_result_requires_dana_eligibility_evidence(
+def test_relief_exercise_terminal_simplified_result_requires_dana_eligibility_evidence(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    period = Period.from_year_and_code(2024, "4T")
+    period = Period.from_year_and_code(_DANA_RELIEF_EXERCISE, "4T")
     scope_decision = _simplified_scope()
     regimen_snapshot = resolve_m303_regimen_simplificado_snapshot(
-        registry_snapshot=published_snapshot("303", filing_year=2024, period="4T"),
+        registry_snapshot=published_snapshot("303", filing_year=_DANA_RELIEF_EXERCISE, period="4T"),
         scope_decision=scope_decision,
     )
 
@@ -81,25 +91,27 @@ def test_2024_terminal_simplified_result_requires_dana_eligibility_evidence(
         calculate_m303_regimen_simplificado_result(
             period=period,
             scope_decision=scope_decision,
-            rows=RegimenSimplificadoFilingRows(ejercicio=2024, activities=()),
+            rows=RegimenSimplificadoFilingRows(ejercicio=_DANA_RELIEF_EXERCISE, activities=()),
             regimen_snapshot=regimen_snapshot,
             dana_eligibility=None,
             operation=authority_operation,
         )
 
 
-def test_2026_terminal_simplified_result_calculates_without_dana_evidence(
+def test_post_relief_terminal_simplified_result_calculates_without_dana_evidence(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    period = Period.from_year_and_code(2026, "4T")
+    # The horizon exercise lies outside the relief window.
+    year = _SUPPORT.horizon
+    period = Period.from_year_and_code(year, "4T")
     scope_decision = _simplified_scope()
     regimen_snapshot = resolve_m303_regimen_simplificado_snapshot(
-        registry_snapshot=published_snapshot("303", filing_year=2026, period="4T"),
+        registry_snapshot=published_snapshot("303", filing_year=year, period="4T"),
         scope_decision=scope_decision,
     )
     annual_activity = next(activity for activity in regimen_snapshot.orden.activities if activity.kind == "no_agricola")
     assert annual_activity.iae_epigrafe is not None
-    evidence = FilingEvidenceReference(reference="test:dana-window:2026-terminal-quarter")
+    evidence = FilingEvidenceReference(reference=f"test:dana-window:{year}-terminal-quarter")
     activity = ActividadNoAgricolaSimplificado(
         orden_id=annual_activity.orden_id,
         ejercicio=annual_activity.ejercicio,
@@ -121,7 +133,7 @@ def test_2026_terminal_simplified_result_calculates_without_dana_evidence(
     result = calculate_m303_regimen_simplificado_result(
         period=period,
         scope_decision=scope_decision,
-        rows=RegimenSimplificadoFilingRows(ejercicio=2026, activities=(activity,)),
+        rows=RegimenSimplificadoFilingRows(ejercicio=year, activities=(activity,)),
         regimen_snapshot=regimen_snapshot,
         dana_eligibility=None,
         operation=authority_operation,

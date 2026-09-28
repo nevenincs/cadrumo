@@ -137,6 +137,8 @@ def _calculate_engine_values_from_inputs(
     binding_values: Mapping[BindingId, Decimal] | None = None,
     enum_binding_values: Mapping[BindingId, str] | None = None,
     relation_values: Mapping[RelationId, Decimal] | None = None,
+    date_binding_values: Mapping[BindingId, date] | None = None,
+    boolean_binding_values: Mapping[BindingId, bool] | None = None,
 ) -> dict[CasillaId, object]:
     snapshot = _registry_snapshot(modelo, year, period)
     try:
@@ -147,6 +149,8 @@ def _calculate_engine_values_from_inputs(
             binding_values=binding_values,
             enum_binding_values=enum_binding_values,
             relation_values=relation_values,
+            date_binding_values=date_binding_values,
+            boolean_binding_values=boolean_binding_values,
         )
     except RegistryValidationError as exc:
         detail = f"\n  binding_values: {sorted(binding_values)}" if binding_values is not None else ""

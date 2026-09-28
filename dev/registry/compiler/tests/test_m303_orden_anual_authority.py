@@ -30,12 +30,25 @@ from cadrumo.domain.iva.regimen_simplificado_rows import (
 )
 
 from ...maintenance_support import check_m303_annual_orden_manifest
+from ...tests.authored_edition_support import source_first_exercise, source_reference
+from ...tests.profile_schema_support import committed_supported_filing_years
 from .._m303_orden_source import extract_m303_annual_orden_source
 from ..authority import compiled_bundled_authority
 from ..loader import load_registry_tree
 from ..m303_orden_manifest import load_m303_annual_orden_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
+
+_SUPPORT = committed_supported_filing_years()
+
+# Orden HFP/1335/2021, disposicion adicional cuarta, grants the Lorca reduction for
+# the one exercise it develops; the catalogued Orden applies to exactly that
+# exercise. The successor exercise is the next annual Orden's.
+_LORCA_ORDEN_SOURCE_REF = "boe-orden-hfp-1335-2021-iva-authority"
+_LORCA_REDUCTION_EXERCISE = source_first_exercise(source_reference(_LORCA_ORDEN_SOURCE_REF))
+_LORCA_SUCCESSOR_EXERCISE = _LORCA_REDUCTION_EXERCISE + 1
+_LORCA_REDUCTION_ID = f"lorca-{_LORCA_REDUCTION_EXERCISE}-reduction"
+_LORCA_RECORD_DESIGN = f"aeat-dr-303-{_LORCA_REDUCTION_EXERCISE}"
 
 
 def _not_claimed_scope() -> M303RegimenSimplificadoScope:
@@ -464,9 +477,9 @@ def test_annual_orden_projection_refuses_missing_or_duplicate_iae_discriminators
         type(projection).model_validate(payload)
 
 
-def test_2022_snapshot_carries_lorca_authority_and_crosswalk_refusal_with_exact_sources() -> None:
-    """The 2022 snapshot keeps the available reduction separate from the unavailable crosswalk."""
-    registry_snapshot = compiled_bundled_authority().snapshot("303", filing_year=2022, period="4T")
+def test_lorca_reduction_snapshot_carries_lorca_authority_and_crosswalk_refusal_with_exact_sources() -> None:
+    """The Lorca-reduction snapshot keeps the available reduction separate from the unavailable crosswalk."""
+    registry_snapshot = compiled_bundled_authority().snapshot("303", filing_year=_LORCA_REDUCTION_EXERCISE, period="4T")
     resolved = resolve_m303_regimen_simplificado_snapshot(
         registry_snapshot=registry_snapshot,
         scope_decision=M303RegimenSimplificadoScopeDecision(
@@ -474,31 +487,31 @@ def test_2022_snapshot_carries_lorca_authority_and_crosswalk_refusal_with_exact_
         ),
     )
 
-    assert resolved.record_design.id == "aeat-dr-303-2022"
+    assert resolved.record_design.id == _LORCA_RECORD_DESIGN
     reduction = resolved.orden.lorca_reduction
     assert reduction is not None
     assert reduction.percentage == Decimal("20")
     assert reduction.annex_scope == "ANEXO II"
     assert reduction.calculation_periods == ("trimestral", "anual")
-    assert reduction.legal_refs == ("orden-hfp-1335-2021:da-4-lorca-2022-reduction:lorca-2022-reduction",)
-    assert reduction.source_refs == ("boe-orden-hfp-1335-2021-iva-authority",)
+    assert reduction.legal_refs == (f"orden-hfp-1335-2021:da-4-{_LORCA_REDUCTION_ID}:{_LORCA_REDUCTION_ID}",)
+    assert reduction.source_refs == (_LORCA_ORDEN_SOURCE_REF,)
     assert reduction.source_content_digest == "3fda96dcf2dcb3b3f0863bc07b0eabd45e21c6850d4b611e635627befb450c46"
 
     agricultural = resolved.orden.agricultural_authority
     assert agricultural.status == "official_code_crosswalk_unavailable"
     assert agricultural.filing_record == "DP30302"
     assert agricultural.filing_code_digits == 2
-    assert agricultural.annual_orden_source_ref == "boe-orden-hfp-1335-2021-iva-authority"
-    assert agricultural.record_design_source_ref == "aeat-dr-303-2022"
+    assert agricultural.annual_orden_source_ref == _LORCA_ORDEN_SOURCE_REF
+    assert agricultural.record_design_source_ref == _LORCA_RECORD_DESIGN
     assert agricultural.record_design_source_content_digest == (
         "6648f6b319579e49cd5bfdaae69e7451db75767e7f19da0b90383b25b79b3f60"
     )
     assert agricultural.refusal_reason == "annual_orden_does_not_publish_dp30302_two_digit_agricultural_crosswalk"
 
 
-def test_2022_snapshot_refuses_lorca_authority_with_a_drifted_source_reference() -> None:
+def test_lorca_reduction_snapshot_refuses_lorca_authority_with_a_drifted_source_reference() -> None:
     """The available Lorca rate cannot survive without its exact BOE source identity."""
-    registry_snapshot = compiled_bundled_authority().snapshot("303", filing_year=2022, period="4T")
+    registry_snapshot = compiled_bundled_authority().snapshot("303", filing_year=_LORCA_REDUCTION_EXERCISE, period="4T")
     resolved = resolve_m303_regimen_simplificado_snapshot(
         registry_snapshot=registry_snapshot,
         scope_decision=M303RegimenSimplificadoScopeDecision(
@@ -513,9 +526,9 @@ def test_2022_snapshot_refuses_lorca_authority_with_a_drifted_source_reference()
         type(resolved.orden).model_validate(payload)
 
 
-def test_2022_snapshot_refuses_a_stripped_lorca_authority_from_the_real_envelope() -> None:
-    """The exact 2022 public snapshot is incomplete when its available reduction is removed."""
-    registry_snapshot = compiled_bundled_authority().snapshot("303", filing_year=2022, period="4T")
+def test_lorca_reduction_snapshot_refuses_a_stripped_lorca_authority_from_the_real_envelope() -> None:
+    """The exact Lorca-reduction public snapshot is incomplete when its available reduction is removed."""
+    registry_snapshot = compiled_bundled_authority().snapshot("303", filing_year=_LORCA_REDUCTION_EXERCISE, period="4T")
     resolved = resolve_m303_regimen_simplificado_snapshot(
         registry_snapshot=registry_snapshot,
         scope_decision=M303RegimenSimplificadoScopeDecision(
@@ -525,35 +538,40 @@ def test_2022_snapshot_refuses_a_stripped_lorca_authority_from_the_real_envelope
     payload = resolved.orden.model_dump(mode="python")
     payload["lorca_reduction"] = None
 
-    with pytest.raises(ValidationError, match="2022 snapshot lacks its Lorca reduction authority"):
+    with pytest.raises(
+        ValidationError, match=f"{_LORCA_REDUCTION_EXERCISE} snapshot lacks its Lorca reduction authority"
+    ):
         type(resolved.orden).model_validate(payload)
 
 
-def test_2025_snapshot_refuses_an_injected_lorca_authority_from_the_real_2022_envelope() -> None:
-    """The one-year Lorca authority cannot be copied into another annual snapshot."""
+@pytest.mark.parametrize("filing_year", tuple(year for year in _SUPPORT.years if year != _LORCA_REDUCTION_EXERCISE))
+def test_snapshot_outside_the_lorca_exercise_refuses_an_injected_lorca_authority(filing_year: int) -> None:
+    """The one-year Lorca authority cannot be copied into any other supported annual snapshot."""
     scope_decision = M303RegimenSimplificadoScopeDecision(
         scope=_not_claimed_scope(),
     )
-    resolved_2022 = resolve_m303_regimen_simplificado_snapshot(
-        registry_snapshot=compiled_bundled_authority().snapshot("303", filing_year=2022, period="4T"),
+    resolved_lorca = resolve_m303_regimen_simplificado_snapshot(
+        registry_snapshot=compiled_bundled_authority().snapshot(
+            "303", filing_year=_LORCA_REDUCTION_EXERCISE, period="4T"
+        ),
         scope_decision=scope_decision,
     )
-    resolved_2025 = resolve_m303_regimen_simplificado_snapshot(
-        registry_snapshot=compiled_bundled_authority().snapshot("303", filing_year=2025, period="4T"),
+    resolved_other = resolve_m303_regimen_simplificado_snapshot(
+        registry_snapshot=compiled_bundled_authority().snapshot("303", filing_year=filing_year, period="4T"),
         scope_decision=scope_decision,
     )
-    payload = resolved_2025.orden.model_dump(mode="python")
-    reduction = resolved_2022.orden.lorca_reduction
+    payload = resolved_other.orden.model_dump(mode="python")
+    reduction = resolved_lorca.orden.lorca_reduction
     assert reduction is not None
     payload["lorca_reduction"] = reduction.model_dump(mode="python")
 
     with pytest.raises(ValidationError, match="exact year and source reference"):
-        type(resolved_2025.orden).model_validate(payload)
+        type(resolved_other.orden).model_validate(payload)
 
 
-def test_2022_snapshot_refuses_coordinated_lorca_parent_and_child_source_drift() -> None:
+def test_lorca_reduction_snapshot_refuses_coordinated_lorca_parent_and_child_source_drift() -> None:
     """A coordinated parent/child rewrite cannot replace the HFP/1335 Lorca authority."""
-    registry_snapshot = compiled_bundled_authority().snapshot("303", filing_year=2022, period="4T")
+    registry_snapshot = compiled_bundled_authority().snapshot("303", filing_year=_LORCA_REDUCTION_EXERCISE, period="4T")
     resolved = resolve_m303_regimen_simplificado_snapshot(
         registry_snapshot=registry_snapshot,
         scope_decision=M303RegimenSimplificadoScopeDecision(
@@ -561,13 +579,16 @@ def test_2022_snapshot_refuses_coordinated_lorca_parent_and_child_source_drift()
         ),
     )
     payload = resolved.model_dump(mode="python")
-    payload["orden"]["source_ref"] = "boe-orden-hfp-1172-2022-iva-authority"
+    # Orden HFP/1172/2022 develops the successor exercise; its source is a real
+    # BOE identity a coordinated rewrite could try to substitute.
+    successor_source_ref = "boe-orden-hfp-1172-2022-iva-authority"
+    payload["orden"]["source_ref"] = successor_source_ref
     payload["orden"]["source_content_digest"] = "3ba48312e1ae6b939de017dbcf9a34d25559594ccbc14a6da14492af87755abb"
     assert payload["orden"]["lorca_reduction"] is not None
     payload["orden"]["lorca_reduction"]["legal_refs"] = (
-        "orden-hfp-1172-2022:da-4-lorca-2022-reduction:lorca-2022-reduction",
+        f"orden-hfp-1172-2022:da-4-{_LORCA_REDUCTION_ID}:{_LORCA_REDUCTION_ID}",
     )
-    payload["orden"]["lorca_reduction"]["source_refs"] = ("boe-orden-hfp-1172-2022-iva-authority",)
+    payload["orden"]["lorca_reduction"]["source_refs"] = (successor_source_ref,)
     payload["orden"]["lorca_reduction"]["source_content_digest"] = (
         "3ba48312e1ae6b939de017dbcf9a34d25559594ccbc14a6da14492af87755abb"
     )
@@ -576,16 +597,16 @@ def test_2022_snapshot_refuses_coordinated_lorca_parent_and_child_source_drift()
         type(resolved).model_validate(payload)
 
 
-def test_2022_snapshot_refuses_coordinated_record_design_parent_and_child_drift() -> None:
+def test_lorca_reduction_snapshot_refuses_coordinated_record_design_parent_and_child_drift() -> None:
     """The crosswalk refusal cannot move with a substituted record-design envelope."""
-    registry_snapshot = compiled_bundled_authority().snapshot("303", filing_year=2022, period="4T")
+    registry_snapshot = compiled_bundled_authority().snapshot("303", filing_year=_LORCA_REDUCTION_EXERCISE, period="4T")
     resolved = resolve_m303_regimen_simplificado_snapshot(
         registry_snapshot=registry_snapshot,
         scope_decision=M303RegimenSimplificadoScopeDecision(
             scope=_not_claimed_scope(),
         ),
     )
-    other_snapshot = compiled_bundled_authority().snapshot("303", filing_year=2023, period="4T")
+    other_snapshot = compiled_bundled_authority().snapshot("303", filing_year=_LORCA_SUCCESSOR_EXERCISE, period="4T")
     other_resolved = resolve_m303_regimen_simplificado_snapshot(
         registry_snapshot=other_snapshot,
         scope_decision=M303RegimenSimplificadoScopeDecision(

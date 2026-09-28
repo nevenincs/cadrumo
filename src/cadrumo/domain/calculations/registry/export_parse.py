@@ -268,7 +268,7 @@ def xml_dictionary_entries(
     # verify as drift against itself.
     overrides = {override.field_id: override.path for override in layout.dictionary_path_overrides}
     entries: list[XmlDictionaryEntry] = []
-    for line in _read_dictionary_text(dictionary_payload).splitlines():
+    for line in decode_dictionary_text(dictionary_payload).splitlines():
         entry = _parse_xml_dictionary_line(line, source=source, overrides=overrides)
         if entry is not None:
             entries.append(entry)
@@ -301,7 +301,7 @@ def _assert_every_override_was_applied(
         )
 
 
-def _read_dictionary_text(body: bytes) -> str:
+def decode_dictionary_text(body: bytes) -> str:
     """Decode publisher-projected dictionary bytes without a filesystem read."""
     try:
         return body.decode("utf-8")
@@ -584,6 +584,7 @@ __all__ = [
     "ParsedExportFieldValue",
     "ParsedExportPayload",
     "XmlDictionaryEntry",
+    "decode_dictionary_text",
     "parse_export_payload",
     "xml_dictionary_entries",
 ]

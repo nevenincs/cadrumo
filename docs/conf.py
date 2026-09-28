@@ -1029,17 +1029,42 @@ def _specific_build_sources() -> list[Path] | None:
     return None
 
 
+def _build_reads(relative_target: str) -> bool:
+    """Return whether this invocation's read set covers ``relative_target``.
+
+    ``relative_target`` is a generated page or page tree, relative to the docs
+    root. ``True`` on a normal full or update build, which reads everything the
+    source tree offers.
+
+    A specific-source build reads ONLY the filenames named on the command line,
+    so a generated tree none of them lives in cannot change what that build
+    produces: its pages are never parsed, and a reference into them resolves no
+    better for existing -- an unread page contributes nothing to the environment
+    the references resolve against. Generating it anyway is pure cost, and for a
+    one-page build it is nearly the whole cost, because these producers compile
+    the registry authority and the Handbook before writing a line.
+
+    Args:
+        relative_target: The generated page or directory, relative to the docs
+            root, that the producer writes.
+
+    Returns:
+        Whether the producer's output can influence this build.
+    """
+    specific_sources = _specific_build_sources()
+    if specific_sources is None:
+        return True
+    target = (Path(__file__).resolve().parent / relative_target).resolve()
+    return any(source == target or target in source.parents for source in specific_sources)
+
+
 def _should_generate_cli_reference() -> bool:
     """Return whether this Sphinx invocation needs generated ``docs/cli`` pages."""
     if os.environ.get("CADRUMO_DOCS_FORCE_CLI_REFERENCE"):
         return True
     if os.environ.get("CADRUMO_DOCS_SKIP_CLI_REFERENCE"):
         return False
-    specific_sources = _specific_build_sources()
-    if specific_sources is None:
-        return True
-    cli_root = (Path(__file__).resolve().parent / "cli").resolve()
-    return any(source == cli_root or cli_root in source.parents for source in specific_sources)
+    return _build_reads("cli")
 
 
 def _should_resolve_deferred_models() -> bool:
@@ -1506,15 +1531,19 @@ def setup(app):
         approved concepts render; drafts are search-only. Generating in
         ``builder-inited`` writes the page before Sphinx reads the source tree,
         so its ``:term:`` anchors resolve and the nitpicky ``-n -W`` gate
-        enforces enrolment and single declaration.
+        enforces enrolment and single declaration. Guarded like the sibling
+        CLI-reference hook: a specific-source build that does not read the page
+        skips the projection (:func:`_build_reads`).
 
         Args:
             app: The Sphinx application instance (unused).
         """
         if _skip_generated_output_for_i18n("glossary_reference"):
             return
-        from dev.docs.glossary_reference import generate_glossary_reference
+        from dev.docs.glossary_reference import GLOSSARY_REFERENCE_RELPATH, generate_glossary_reference
 
+        if not _build_reads(GLOSSARY_REFERENCE_RELPATH):
+            return
         generate_glossary_reference(Path(__file__).resolve().parent, repo_root=_PROJECT_ROOT)
 
     def _generate_casilla_reference(app):
@@ -1527,12 +1556,19 @@ def setup(app):
         ``builder-inited`` writes the pages before Sphinx reads the source tree,
         so their anchors resolve and the nitpicky ``-n -W`` gate holds. These
         pages are the destination the search palette's casilla results deep-link
-        to (they carry each casilla's full legal/source grounding).
+        to (they carry each casilla's full legal/source grounding). Guarded like
+        the sibling CLI-reference hook: a specific-source build that does not read
+        the tree skips the projection (:func:`_build_reads`), which is what makes
+        a one-page build a one-page build rather than a registry compile.
 
         Args:
             app: The Sphinx application instance (unused).
         """
         if _skip_generated_output_for_i18n("casilla_reference"):
+            return
+        from dev.docs.terminology.casilla_anchor import CASILLA_REFERENCE_DIR
+
+        if not _build_reads(CASILLA_REFERENCE_DIR):
             return
         from dev.docs.casilla_reference import generate_casilla_reference
 
@@ -1545,15 +1581,19 @@ def setup(app):
         the authored registry legal tables.  They are regenerated before
         Sphinx reads the source tree and are never committed.  The generator
         also owns the page/anchor target inventory consumed by the later legal
-        search-record projection.
+        search-record projection. Guarded like the sibling CLI-reference hook: a
+        specific-source build that does not read the tree skips the projection
+        (:func:`_build_reads`).
 
         Args:
             app: The Sphinx application instance (unused).
         """
         if _skip_generated_output_for_i18n("legal_reference"):
             return
-        from dev.docs.legal_reference import generate_legal_reference
+        from dev.docs.legal_reference import LEGAL_REFERENCE_DIR, generate_legal_reference
 
+        if not _build_reads(LEGAL_REFERENCE_DIR):
+            return
         generate_legal_reference(Path(__file__).resolve().parent, repo_root=_PROJECT_ROOT)
 
     def _emit_cli_tree(app):

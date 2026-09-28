@@ -232,6 +232,63 @@ required_text = [
     "No obstante, existirá obligación de practicar retención o ingreso a cuenta sobre los rendimientos del capital mobiliario",
 ]
 
+[legal."rd-439-2007:art-78"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-439-2007.html#a78"
+document_id = "BOE-A-2007-6820"
+article = "78"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a78"
+published_at = 2007-03-31
+effective_from = 2007-04-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-27
+reviewed_by = "agent-authored from bundled rd-439-2007.html#a78; apartados 1 and 2 carry their original redaction (only apartado 3 was added, by RD 1074/2017); operator to re-stamp"
+notes = "RIRPF art 78: nacimiento de la obligación de retener o de ingresar a cuenta. The general trigger is the payment or crediting of the income (apartado 1); movable-capital income and IIC transfers follow arts 94 and 98 (apartado 2). Grounds the paid-or-satisfied withholding recognition rule for work, professional and urban-rent income."
+required_text = [
+    "Nacimiento de la obligación de retener o de ingresar a cuenta",
+    "la obligación de retener nacerá en el momento en que se satisfagan o abonen las rentas correspondientes",
+]
+
+[legal."rd-439-2007:art-94"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-439-2007.html#a94"
+document_id = "BOE-A-2007-6820"
+article = "94"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a94"
+published_at = 2007-03-31
+effective_from = 2007-04-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-27
+reviewed_by = "agent-authored from bundled rd-439-2007.html#a94; apartados 1 and 2 carry their original redaction (only apartado 3 was added, by RD 1003/2014); operator to re-stamp"
+notes = "RIRPF art 94: nacimiento de la obligación de retener sobre los rendimientos del capital mobiliario. The obligation arises at exigibility, or at earlier payment or delivery (apartado 1); for the transfer, amortization or reimbursement of financial assets it arises at the transaction and the withholding is made when it is formalised (apartado 2). Grounds the exigibility-or-earlier-payment and formalization recognition rules."
+required_text = [
+    "Nacimiento de la obligación de retener y de ingresar a cuenta sobre los rendimientos del capital mobiliario",
+    "nacerán en el momento de la exigibilidad de los rendimientos del capital mobiliario",
+    "La retención se practicará en la fecha en que se formalice la transmisión",
+]
+
+[legal."rd-439-2007:art-98"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-439-2007.html#a98"
+document_id = "BOE-A-2007-6820"
+article = "98"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a98"
+published_at = 2007-03-31
+effective_from = 2007-04-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-27
+reviewed_by = "agent-authored from bundled rd-439-2007.html#a98; the article carries its original redaction; operator to re-stamp"
+notes = "RIRPF art 98: the obligation to withhold on the transfer or reimbursement of IIC shares or units arises when the operation is formalised, whatever the agreed collection terms. Grounds the formalization recognition rule for investment-fund income."
+required_text = [
+    "La obligación de retener nacerá en el momento en que se formalice la transmisión o reembolso de las acciones o participaciones de instituciones de inversión colectiva",
+]
+
 [legal."rd-439-2007:art-76"]
 evidence_tier = "legal_authority"
 authority = "boe"

@@ -22,6 +22,11 @@ from ..session import session_scope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
+#: The timestamp rendered the way sqlite3's default datetime adapter renders it.
+#: That adapter is deprecated since Python 3.12, and these raw inserts bypass the
+#: ORM that would otherwise serialise the value, so the text is passed directly.
+_WRITTEN_AT = datetime(2026, 6, 4, tzinfo=UTC).isoformat(" ")
+
 
 @contextmanager
 def _schema_engine(tmp_path: Path, name: str = "constraints.db") -> Generator[Engine]:
@@ -47,7 +52,7 @@ def test_secure_object_schema_version_check_constraint(tmp_path: Path) -> None:
             ),
             {
                 "object_key": b"raw-key",
-                "written_at": datetime(2026, 6, 4, tzinfo=UTC),
+                "written_at": _WRITTEN_AT,
                 "payload": b"ciphertext",
             },
         )
@@ -68,7 +73,7 @@ def test_secure_object_revision_hash_check_constraints(tmp_path: Path) -> None:
             ),
             {
                 "object_key": b"raw-key",
-                "written_at": datetime(2026, 6, 4, tzinfo=UTC),
+                "written_at": _WRITTEN_AT,
                 "payload": b"ciphertext",
             },
         )

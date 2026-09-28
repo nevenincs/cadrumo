@@ -41,6 +41,8 @@ from .schema import ConceptRecord
 __all__ = [
     "HandbookValidator",
     "TerminologyHandbook",
+    "concepts_tree_fingerprint",
+    "load_bundled_terminology_handbook",
     "load_terminology_handbook",
     "terminology_concepts_dir",
 ]
@@ -228,11 +230,19 @@ def load_bundled_terminology_handbook() -> TerminologyHandbook:
     custom directory bypass the cache via
     :func:`load_terminology_handbook` directly.
     """
-    fingerprint = _concepts_tree_fingerprint(terminology_concepts_dir())
+    fingerprint = concepts_tree_fingerprint(terminology_concepts_dir())
     return _bundled_handbook_cached(fingerprint)
 
 
-def _concepts_tree_fingerprint(concepts_dir: Path) -> str:
+def concepts_tree_fingerprint(concepts_dir: Path) -> str:
+    """Return the complete fragment-tree fingerprint of a concepts directory.
+
+    Every fragment's name, size, and mtime, so an edit to any one of them yields
+    a different value. Public because it is the cache key for everything derived
+    from the Handbook, not only the handbook itself: a projection over the
+    bundled tree keys its own memo on this so the memo invalidates exactly when
+    the authoring tree does.
+    """
     parts: list[str] = []
     for fragment in scan_directory(concepts_dir, pattern="*.toml"):
         stat = fragment.stat()

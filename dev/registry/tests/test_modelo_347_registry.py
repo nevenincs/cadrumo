@@ -13,6 +13,7 @@ from cadrumo.domain.calculations.registry.tests.snapshot_support import build_sn
 from cadrumo.tests.aeat_literal_fixtures import aeat_host
 
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from .authored_edition_support import oldest_authored_edition
 from .profile_schema_support import committed_registry_validator, committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
@@ -76,9 +77,15 @@ def test_committed_modelo_347_resolves_revision_by_filing_year(filing_year: int)
     )
 
 
-@pytest.mark.parametrize("filing_year", [2008, 2009, 2010])
-def test_the_pre_2011_ejercicios_resolve_to_no_revision(filing_year: int) -> None:
-    """2008-2010 are deliberately unserved, and must REFUSE rather than resolve.
+# The first ejercicio of the oldest Modelo 347 revision the registry authors, whose
+# official design (``aeat-dr-347-<ejercicio>``) it serves; the three ejercicios
+# before it are deliberately unserved.
+_FIRST_DESIGN_EJERCICIO = oldest_authored_edition("347")
+
+
+@pytest.mark.parametrize("filing_year", range(_FIRST_DESIGN_EJERCICIO - 3, _FIRST_DESIGN_EJERCICIO))
+def test_the_ejercicios_before_the_first_design_resolve_to_no_revision(filing_year: int) -> None:
+    """The ejercicios before the first design are deliberately unserved, and must REFUSE rather than resolve.
 
     The revision covering them cited ``aeat-dr-347-2011`` -- a design AEAT
     published for ejercicio 2011 onward -- so those years were being written at

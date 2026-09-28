@@ -655,15 +655,25 @@ def _ensure_adapter_composition() -> None:
     context that created it -- an exit-time unbind would run in a different
     one and raise. The stack is held at module level so no binding can be
     collected while a server built under it is alive.
+
+    The exchange-rate source is the host's to choose, so one already bound is
+    kept: a server built in-process under a test host converts against that
+    host's recorded rates, and only a server process with no such choice binds
+    the ECB reference rates. Since the binding is never unwound, replacing the
+    host's choice would outlive the server and reach every later conversion.
     """
     if _ADAPTER_COMPOSITION_BOUND.get():
         return
     from cadrumo.adapters.outbound.fx.ecb_provider import default_ecb_rate_provider
-    from cadrumo.application.exchange_rate_provider import bind_exchange_rate_provider_factory
+    from cadrumo.application.exchange_rate_provider import (
+        bind_exchange_rate_provider_factory,
+        exchange_rate_provider_is_composed,
+    )
 
     from ._composition import profile_adapter_composition
 
-    _ADAPTER_COMPOSITION.enter_context(bind_exchange_rate_provider_factory(default_ecb_rate_provider))
+    if not exchange_rate_provider_is_composed():
+        _ADAPTER_COMPOSITION.enter_context(bind_exchange_rate_provider_factory(default_ecb_rate_provider))
     _ADAPTER_COMPOSITION.enter_context(profile_adapter_composition())
     _ADAPTER_COMPOSITION_BOUND.set(True)
 

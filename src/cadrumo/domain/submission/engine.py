@@ -9,7 +9,7 @@ AEAT remote writes and write-shaped portal walks are permanently
 forbidden; the engine intentionally exposes no transport method.
 
 See Also:
-    :class:`~cadrumo.domain.submission.Preflight`
+    :class:`~cadrumo.domain.submission.preflight.Preflight`
         Ordered draft, finding, deadline-window, and auth-provider gate runner
         delegated to by :meth:`SubmissionEngine.preflight`.
     :class:`~cadrumo.domain.submission.protocols.DeadlineWindowChecker`

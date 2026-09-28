@@ -37,7 +37,7 @@
 # still refuses the write outright.
 
 [run]
-judged_at = "2026-09-18T09:01:43Z"
+judged_at = "2026-09-27T09:45:00Z"
 
 [[excluded]]
 modelo = "100"
@@ -62,7 +62,7 @@ contradictions = 0
 contradictions = 0
 
 [summary."100"]
-"refused:not_examined" = 2327
+"refused:not_examined" = 2387
 contradictions = 0
 
 [summary."123"]
@@ -7386,6 +7386,216 @@ reason = "not examined; its lineage is its own campaign: no in-registry oracle: 
 
 [[refusal]]
 modelo = "100"
+revision = "2022"
+casilla = "ANOASDLG"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2022"
+casilla = "APENOMDLG"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2022"
+casilla = "APENOMDLG_ASC"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2022"
+casilla = "CONVASDLG"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2022"
+casilla = "DECFAL"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2022"
+casilla = "DNIASDLG"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2022"
+casilla = "DPFNAC_C"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2022"
+casilla = "DPFNAC_D"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2022"
+casilla = "DPGMIN_C"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2022"
+casilla = "DPGMIN_D"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2022"
+casilla = "DPNIF_C"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2022"
+casilla = "DPNIF_D"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2022"
+casilla = "DP_APENOM_C"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2022"
+casilla = "DP_APENOM_D"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2022"
+casilla = "ECIVIL"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2022"
+casilla = "FALLASDLG"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2022"
+casilla = "FALLDLG"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2022"
+casilla = "FNACDLG"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2022"
+casilla = "HIJOSUE"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2022"
+casilla = "MINUSDLG"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2022"
+casilla = "NIFDLG"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2022"
+casilla = "NORESIDENTE"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2022"
+casilla = "PCTMINASDLG"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2022"
+casilla = "PH18"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2022"
+casilla = "RESIDENTEUE"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2022"
+casilla = "SEXO_C"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2022"
+casilla = "SEXO_D"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2022"
+casilla = "TIPOTRIBUTACION"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2022"
+casilla = "ZCCAD"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2022"
+casilla = "ZRUE2"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
 revision = "2023"
 casilla = "0057"
 category = "not_examined"
@@ -9658,6 +9868,216 @@ revision = "2023"
 casilla = "1915"
 category = "not_examined"
 reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; continuidad_id 'irpf-ganancia-inmueble-amortizaciones' starts its chain in this edition"
+
+[[refusal]]
+modelo = "100"
+revision = "2023"
+casilla = "ANOASDLG"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2023"
+casilla = "APENOMDLG"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2023"
+casilla = "APENOMDLG_ASC"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2023"
+casilla = "CONVASDLG"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2023"
+casilla = "DECFAL"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2023"
+casilla = "DNIASDLG"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2023"
+casilla = "DPFNAC_C"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2023"
+casilla = "DPFNAC_D"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2023"
+casilla = "DPGMIN_C"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2023"
+casilla = "DPGMIN_D"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2023"
+casilla = "DPNIF_C"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2023"
+casilla = "DPNIF_D"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2023"
+casilla = "DP_APENOM_C"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2023"
+casilla = "DP_APENOM_D"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2023"
+casilla = "ECIVIL"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2023"
+casilla = "FALLASDLG"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2023"
+casilla = "FALLDLG"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2023"
+casilla = "FNACDLG"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2023"
+casilla = "HIJOSUE"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2023"
+casilla = "MINUSDLG"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2023"
+casilla = "NIFDLG"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2023"
+casilla = "NORESIDENTE"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2023"
+casilla = "PCTMINASDLG"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2023"
+casilla = "PH18"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2023"
+casilla = "RESIDENTEUE"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2023"
+casilla = "SEXO_C"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2023"
+casilla = "SEXO_D"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2023"
+casilla = "TIPOTRIBUTACION"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2023"
+casilla = "ZCCAD"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
+
+[[refusal]]
+modelo = "100"
+revision = "2023"
+casilla = "ZRUE2"
+category = "not_examined"
+reason = "not examined; its lineage is its own campaign: no in-registry oracle: no export surface, byte span or form_number, and semantic_role labels a grid column; box reassignment under stable identifiers is proven at scale, so nothing is seeded mechanically; no continuidad_id"
 
 [[refusal]]
 modelo = "100"

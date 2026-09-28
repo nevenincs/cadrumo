@@ -25,10 +25,8 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from cadrumo.domain.calculations.registry.calendar_ccaa_catalogue import (
-    require_calendar_ccaa,
-    resolve_calendar_ccaa_catalogue,
-)
+from cadrumo.domain.calculations.registry.calendar_ccaa_catalogue import resolve_calendar_ccaa_catalogue
+from cadrumo.domain.calculations.registry.tests.legal_text import legal_effective_to
 
 from ....core.directory_scan import scan_directory
 from ..errors import DeadlineValidationError
@@ -51,19 +49,26 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 def _calendar_ccaa(operation: PinnedAuthorityOperation, code: str) -> CalendarCCAA:
     """Project a test territory through the pinned calendar-territory fact."""
-    return require_calendar_ccaa(code, effective_date=date(2025, 7, 1), authority=operation)
+    return resolve_calendar_ccaa_catalogue(effective_date=date(2025, 7, 1), authority=operation).require(code)
 
 
-_NATIONAL_HOLIDAY_DATES_2025 = (
-    date(2025, 1, 1),  # Año Nuevo
-    date(2025, 1, 6),  # Reyes
-    date(2025, 4, 18),  # Viernes Santo
-    date(2025, 5, 1),  # Fiesta del Trabajo
-    date(2025, 8, 15),  # Asunción
-    date(2025, 11, 1),  # Todos los Santos
-    date(2025, 12, 6),  # Constitución
-    date(2025, 12, 8),  # Inmaculada
-    date(2025, 12, 25),  # Navidad
+# BOE-A-2024-26935 fixes the días inhábiles of the AGE for the calendar year its
+# in-force window closes on; the national days below are transcribed from its ANEXO.
+_BOE_A_2024_26935_REF = "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo"
+_BOE_A_2024_26935_EXERCISE = legal_effective_to(_BOE_A_2024_26935_REF).year
+_BOE_A_2024_26935_NATIONAL_HOLIDAY_DATES = tuple(
+    date(_BOE_A_2024_26935_EXERCISE, month, day)
+    for month, day in (
+        (1, 1),  # Año Nuevo
+        (1, 6),  # Reyes
+        (4, 18),  # Viernes Santo
+        (5, 1),  # Fiesta del Trabajo
+        (8, 15),  # Asunción
+        (11, 1),  # Todos los Santos
+        (12, 6),  # Constitución
+        (12, 8),  # Inmaculada
+        (12, 25),  # Navidad
+    )
 )
 
 _BUSINESS_DAY_CASES = (
@@ -135,31 +140,31 @@ _SHIFT_DEADLINE_CASES = (
 # ---------------------------------------------------------------------------
 
 
-def test_load_calendar_2025_returns_boe_anchored_year() -> None:
-    """The 2025 governed calendar facts cite the AGE días inhábiles resolution BOE-A-2024-26935."""
+def test_load_calendar_returns_boe_anchored_year() -> None:
+    """The governed calendar facts cite the AGE días inhábiles resolution BOE-A-2024-26935."""
     with bundled_indexed_authority().operation() as operation:
-        calendar = load_holiday_calendar(2025, operation=operation)
-        assert calendar.year == 2025
-        assert calendar.boe_ref == "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo"
+        calendar = load_holiday_calendar(_BOE_A_2024_26935_EXERCISE, operation=operation)
+        assert calendar.year == _BOE_A_2024_26935_EXERCISE
+        assert calendar.boe_ref == _BOE_A_2024_26935_REF
         assert calendar.boe_url is not None and "BOE-A-2024-26935" in calendar.boe_url
 
 
-def test_load_calendar_2025_contains_boe_anchored_national_holidays() -> None:
-    """The published 2025 national list per BOE-A-2024-26935 includes
+def test_load_calendar_contains_boe_anchored_national_holidays() -> None:
+    """The published national list per BOE-A-2024-26935 includes
     these fixed dates. The test asserts membership, not the total
     count, so future BOE corrections that add a single holiday do not
     fail the test for the wrong reason."""
     with bundled_indexed_authority().operation() as operation:
-        calendar = load_holiday_calendar(2025, operation=operation)
+        calendar = load_holiday_calendar(_BOE_A_2024_26935_EXERCISE, operation=operation)
         national_dates = {h.holiday_date for h in calendar.national}
-        for holiday_date in _NATIONAL_HOLIDAY_DATES_2025:
+        for holiday_date in _BOE_A_2024_26935_NATIONAL_HOLIDAY_DATES:
             assert holiday_date in national_dates
 
 
-def test_load_calendar_2025_separates_national_from_ccaa() -> None:
+def test_load_calendar_separates_national_from_ccaa() -> None:
     """The two holiday tuples never overlap by jurisdiction."""
     with bundled_indexed_authority().operation() as operation:
-        calendar = load_holiday_calendar(2025, operation=operation)
+        calendar = load_holiday_calendar(_BOE_A_2024_26935_EXERCISE, operation=operation)
         assert all(h.jurisdiction is HolidayJurisdiction.NATIONAL for h in calendar.national)
         assert all(h.jurisdiction is HolidayJurisdiction.CCAA for h in calendar.ccaa)
         assert all(h.ccaa_code is None for h in calendar.national)

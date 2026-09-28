@@ -64,6 +64,7 @@ from .m193_phase_materialization import (
     Modelo193PhaseAmountField,
     Modelo193PhaseRow,
     materialize_modelo_193_disclosure_phases,
+    modelo_193_pending_disclosure_years,
 )
 from .percepciones_observations_repository import (
     PercepcionObservationPersistenceError,
@@ -361,7 +362,13 @@ class WithholdingSourceResolver:
             composition.capital_disclosure_retenciones.value,
             context.filing_year,
         )
-        return materialize_modelo_193_disclosure_phases(allocations, filing_year=context.filing_year)
+        with bundled_indexed_authority().operation() as operation:
+            pending_disclosure_years = modelo_193_pending_disclosure_years(operation)
+        return materialize_modelo_193_disclosure_phases(
+            allocations,
+            filing_year=context.filing_year,
+            pending_disclosure_years=pending_disclosure_years,
+        )
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
         """Resolve withholding totals from the bucket-scoped observation store."""
