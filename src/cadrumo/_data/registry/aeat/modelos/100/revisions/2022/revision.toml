@@ -7122,9 +7122,9 @@ restate_identity = true
 [[revisions."2022".family_overrides]]
 family = "formulas"
 selector = {revision = "2021", id = "renta-deduccion-incentivos-inversion-empresarial-total"}
-sequence_additions = {"expression.args" = [{casilla_id = "0706"}, {casilla_id = "0707"}, {casilla_id = "0760"}, {casilla_id = "0761"}, {casilla_id = "0762"}, {casilla_id = "0768"}, {casilla_id = "0769"}, {casilla_id = "0779"}, {casilla_id = "0781"}, {casilla_id = "0782"}, {casilla_id = "0785"}, {casilla_id = "0786"}, {casilla_id = "0787"}, {casilla_id = "1623"}]}
+sequence_additions = {"expression.args" = [{casilla_id = "0706"}, {casilla_id = "0707"}, {casilla_id = "0760"}, {casilla_id = "0761"}, {casilla_id = "0762"}, {casilla_id = "0768"}, {casilla_id = "0769"}, {casilla_id = "0779"}, {casilla_id = "0781"}, {casilla_id = "0782"}, {casilla_id = "0785"}, {casilla_id = "0786"}, {casilla_id = "0787"}, {casilla_id = "1623"}, {casilla_id = "1627"}, {casilla_id = "1629"}]}
 sequence_removals = {"expression.args" = [18]}
-sequence_order = {"expression.args" = [43, 44, 0, 1, 2, 3, 4, 5, 6, 7, 45, 46, 47, 8, 9, 10, 11, 48, 49, 50, 12, 51, 52, 13, 14, 53, 54, 55, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 56, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42]}
+sequence_order = {"expression.args" = [41, 42, 0, 1, 2, 3, 4, 5, 6, 7, 43, 44, 45, 8, 9, 10, 11, 46, 47, 48, 12, 49, 50, 13, 14, 51, 52, 53, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 54, 55, 56, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40]}
 
 [[revisions."2022".family_overrides]]
 family = "formulas"
