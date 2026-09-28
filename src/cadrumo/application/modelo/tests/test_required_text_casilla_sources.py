@@ -59,6 +59,7 @@ _T0 = datetime(2026, 1, 1, tzinfo=UTC)
 _DECLARANTE_NIF: CasillaId = validated_casilla_id("DPNIF_D", surface="_DECLARANTE_NIF")
 _DECLARANTE_NAME: CasillaId = validated_casilla_id("DP_APENOM_D", surface="_DECLARANTE_NAME")
 _SPOUSE_NIF: CasillaId = validated_casilla_id("DPNIF_C", surface="_SPOUSE_NIF")
+_TIPO_TRIBUTACION: CasillaId = validated_casilla_id("TIPOTRIBUTACION", surface="_TIPO_TRIBUTACION")
 _DECLARANTE = (
     UserProfileFact(path="identity.tax_id", value="12345678Z"),
     UserProfileFact(path="identity.surnames", value="GARCIA LOPEZ"),
@@ -142,6 +143,20 @@ def test_a_gated_spouse_slot_is_neither_filled_nor_reported_for_an_individual_fi
 
     assert _SPOUSE_NIF not in resolved.values
     assert _SPOUSE_NIF not in {gap.casilla_id for gap in resolved.gaps}
+
+
+@pytest.mark.parametrize("filing_year", [2024, 2025])
+def test_a_declaration_type_stored_as_a_number_still_fills_its_text_casilla(filing_year: int) -> None:
+    """The individual declaration type ``"1"`` is restored as a number yet still fills TIPOTRIBUTACION."""
+    revision = published_snapshot("100", filing_year=filing_year, period="0A").revision
+    declaration_type = UserProfileFact(path="renta_filing.declaration_type", value="1")
+    # The premise the resolver must survive: the record hands the text back as a Decimal.
+    assert isinstance(declaration_type.value, Decimal)
+
+    resolved = resolve_profile_text_casilla_inputs(revision, _fact_index(*_DECLARANTE, declaration_type))
+
+    assert resolved.values[_TIPO_TRIBUTACION] == "1"
+    assert _TIPO_TRIBUTACION not in {gap.casilla_id for gap in resolved.gaps}
 
 
 def test_an_absent_profile_name_stays_absent_and_names_the_fields_to_declare() -> None:

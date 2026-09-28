@@ -223,7 +223,7 @@
             "renta-profile-taxpayer-birth-date": "1985-06-15",
             "renta-profile-unidad-familiar-otros-miembros-base": "0"
           },
-          "calculation_revision_id": "016f9a0fdaadb4d3ce2f6d98b3b0ebf719e31317278ed85216ec701efd381a3d",
+          "calculation_revision_id": "922cdf4493d07cf9f046de1fa56e7c21e863db78f6d60ec81c5dad72fbc9536f",
           "casilla_values": {
             "0002": "0",
             "0003": "24000",
@@ -2067,6 +2067,10 @@
             "0217": "0",
             "0596": "2400",
             "1388": "0",
+            "DPNIF_D": "sha256:1c9f9632",
+            "DP_APENOM_D": "Sandbox Docs",
+            "ECIVIL": "1",
+            "SEXO_D": "H",
             "TIPOTRIBUTACION": "1"
           },
           "modality": null,
@@ -46894,6 +46898,42 @@
             },
             {
               "absent_by_design": false,
+              "casilla_id": "DPNIF_D",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hac-277-2026:art-3"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "boe-modelo-100-2025-form"
+              ],
+              "value": "sha256:1c9f9632"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "DP_APENOM_D",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hac-277-2026:art-3"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "boe-modelo-100-2025-form"
+              ],
+              "value": "Sandbox Docs"
+            },
+            {
+              "absent_by_design": false,
               "casilla_id": "E",
               "formula_id": null,
               "legal_refs": [
@@ -46912,6 +46952,24 @@
                 "aeat-modelo-100-procedure"
               ],
               "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "ECIVIL",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hac-277-2026:art-3"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "boe-modelo-100-2025-form"
+              ],
+              "value": "1"
             },
             {
               "absent_by_design": false,
@@ -47110,6 +47168,24 @@
                 "boe-modelo-100-2025-form"
               ],
               "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "SEXO_D",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hac-277-2026:art-3"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "boe-modelo-100-2025-form"
+              ],
+              "value": "H"
             },
             {
               "absent_by_design": false,
@@ -47321,7 +47397,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 016f9a0fdaadb4d3ce2f6d98b3b0ebf719e31317278ed85216ec701efd381a3d (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 922cdf4493d07cf9f046de1fa56e7c21e863db78f6d60ec81c5dad72fbc9536f (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "relation_prefill",

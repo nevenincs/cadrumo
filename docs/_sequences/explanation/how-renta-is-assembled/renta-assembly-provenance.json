@@ -221,7 +221,7 @@
             "renta-profile-taxpayer-birth-date": "1985-06-15",
             "renta-profile-unidad-familiar-otros-miembros-base": "0"
           },
-          "calculation_revision_id": "9c33aadda4a4f7b4af6f271a0478ce6fc4c7e7f9e866e3c98b3dd1210968973e",
+          "calculation_revision_id": "8e5b7e8082734e452e76076252a876ae56fdf3cea59f0a93ae2756ef3b7f32e8",
           "casilla_values": {
             "0002": "0",
             "0003": "24000",
@@ -2065,6 +2065,10 @@
             "0217": "0",
             "0596": "2400",
             "1388": "0",
+            "DPNIF_D": "sha256:1c9f9632",
+            "DP_APENOM_D": "Sandbox Docs",
+            "ECIVIL": "1",
+            "SEXO_D": "H",
             "TIPOTRIBUTACION": "1"
           },
           "modality": null,
@@ -46892,6 +46896,42 @@
             },
             {
               "absent_by_design": false,
+              "casilla_id": "DPNIF_D",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hac-277-2026:art-3"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "boe-modelo-100-2025-form"
+              ],
+              "value": "sha256:1c9f9632"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "DP_APENOM_D",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hac-277-2026:art-3"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "boe-modelo-100-2025-form"
+              ],
+              "value": "Sandbox Docs"
+            },
+            {
+              "absent_by_design": false,
               "casilla_id": "E",
               "formula_id": null,
               "legal_refs": [
@@ -46910,6 +46950,24 @@
                 "aeat-modelo-100-procedure"
               ],
               "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "ECIVIL",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hac-277-2026:art-3"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "boe-modelo-100-2025-form"
+              ],
+              "value": "1"
             },
             {
               "absent_by_design": false,
@@ -47108,6 +47166,24 @@
                 "boe-modelo-100-2025-form"
               ],
               "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "SEXO_D",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hac-277-2026:art-3"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "boe-modelo-100-2025-form"
+              ],
+              "value": "H"
             },
             {
               "absent_by_design": false,
@@ -47317,7 +47393,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 9c33aadda4a4f7b4af6f271a0478ce6fc4c7e7f9e866e3c98b3dd1210968973e (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 8e5b7e8082734e452e76076252a876ae56fdf3cea59f0a93ae2756ef3b7f32e8 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "relation_prefill",
@@ -47380,8 +47456,8 @@
         "command": "modelo.work.observations",
         "notices": [],
         "result": {
-          "calculation_revision_id": "9c33aadda4a4f7b4af6f271a0478ce6fc4c7e7f9e866e3c98b3dd1210968973e",
-          "observation_count": 1813,
+          "calculation_revision_id": "8e5b7e8082734e452e76076252a876ae56fdf3cea59f0a93ae2756ef3b7f32e8",
+          "observation_count": 1817,
           "observations": [
             {
               "absent_by_design": false,
@@ -92205,6 +92281,42 @@
             },
             {
               "absent_by_design": false,
+              "casilla_id": "DPNIF_D",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hac-277-2026:art-3"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "boe-modelo-100-2025-form"
+              ],
+              "value": "sha256:1c9f9632"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "DP_APENOM_D",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hac-277-2026:art-3"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "boe-modelo-100-2025-form"
+              ],
+              "value": "Sandbox Docs"
+            },
+            {
+              "absent_by_design": false,
               "casilla_id": "E",
               "formula_id": null,
               "legal_refs": [
@@ -92223,6 +92335,24 @@
                 "aeat-modelo-100-procedure"
               ],
               "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "ECIVIL",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hac-277-2026:art-3"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "boe-modelo-100-2025-form"
+              ],
+              "value": "1"
             },
             {
               "absent_by_design": false,
@@ -92424,6 +92554,24 @@
             },
             {
               "absent_by_design": false,
+              "casilla_id": "SEXO_D",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hac-277-2026:art-3"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "boe-modelo-100-2025-form"
+              ],
+              "value": "H"
+            },
+            {
+              "absent_by_design": false,
               "casilla_id": "TIPOTRIBUTACION",
               "formula_id": null,
               "legal_refs": [
@@ -92577,7 +92725,7 @@
             "renta-profile-taxpayer-birth-date": "1985-06-15",
             "renta-profile-unidad-familiar-otros-miembros-base": "0"
           },
-          "calculation_revision_id": "9c33aadda4a4f7b4af6f271a0478ce6fc4c7e7f9e866e3c98b3dd1210968973e",
+          "calculation_revision_id": "8e5b7e8082734e452e76076252a876ae56fdf3cea59f0a93ae2756ef3b7f32e8",
           "casilla_values": {
             "0002": "0",
             "0003": "24000",
@@ -94415,6 +94563,10 @@
             "0217": "0",
             "0596": "2400",
             "1388": "0",
+            "DPNIF_D": "sha256:1c9f9632",
+            "DP_APENOM_D": "Sandbox Docs",
+            "ECIVIL": "1",
+            "SEXO_D": "H",
             "TIPOTRIBUTACION": "1"
           },
           "modality": null,
@@ -139242,6 +139394,42 @@
             },
             {
               "absent_by_design": false,
+              "casilla_id": "DPNIF_D",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hac-277-2026:art-3"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "boe-modelo-100-2025-form"
+              ],
+              "value": "sha256:1c9f9632"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "DP_APENOM_D",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hac-277-2026:art-3"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "boe-modelo-100-2025-form"
+              ],
+              "value": "Sandbox Docs"
+            },
+            {
+              "absent_by_design": false,
               "casilla_id": "E",
               "formula_id": null,
               "legal_refs": [
@@ -139260,6 +139448,24 @@
                 "aeat-modelo-100-procedure"
               ],
               "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "ECIVIL",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hac-277-2026:art-3"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "boe-modelo-100-2025-form"
+              ],
+              "value": "1"
             },
             {
               "absent_by_design": false,
@@ -139458,6 +139664,24 @@
                 "boe-modelo-100-2025-form"
               ],
               "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "SEXO_D",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hac-277-2026:art-3"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "boe-modelo-100-2025-form"
+              ],
+              "value": "H"
             },
             {
               "absent_by_design": false,

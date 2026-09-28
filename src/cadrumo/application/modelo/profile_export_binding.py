@@ -23,6 +23,7 @@ from __future__ import annotations
 
 from collections.abc import Collection, Mapping, Sequence
 from dataclasses import dataclass
+from decimal import Decimal
 
 from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
@@ -105,7 +106,7 @@ def resolve_profile_text_casilla_inputs(
     nothing and is not a gap, because the slot does not exist for this filer.
 
     Args:
-        revision: The revision whose bound casillas are resolved.
+        revision: The :class:`ModeloRevision` whose bound casillas are resolved.
         fact_index: The declarant's profile fact index.
 
     Returns:
@@ -150,10 +151,20 @@ def _profile_text_value(
     binding: BindingDefinition,
     fact_index: Mapping[str, UserProfileFactValue],
 ) -> str | None:
-    """Return one text-channel binding's value as text, or ``None`` when the profile has none."""
+    """Return one text-channel binding's value as text, or ``None`` when the profile has none.
+
+    A text fact whose characters form a plain decimal, such as the ``"1"`` of an
+    individual ``renta_filing.declaration_type``, comes back from the stored
+    record as a :class:`~decimal.Decimal`: the record restores JSON-serialised
+    numbers without consulting the field's declared type. ``str`` gives back
+    exactly the characters that restore accepted, so the casilla holds what the
+    operator declared instead of being reported as unsupplied.
+    """
     value = _profile_export_value(binding, fact_index)
     if isinstance(value, str):
         return value.strip() or None
+    if isinstance(value, Decimal) or (isinstance(value, int) and not isinstance(value, bool)):
+        return str(value)
     return None
 
 
@@ -178,7 +189,7 @@ def profile_text_casilla_gap_diagnostics(
     calculation holds for it.
 
     Args:
-        revision: The calculated revision.
+        revision: The calculated :class:`ModeloRevision`.
         fact_index: The declarant's profile fact index.
         supplied_casilla_ids: Casillas the operator supplied directly.
 
