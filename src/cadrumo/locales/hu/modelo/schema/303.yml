@@ -251,6 +251,18 @@ modelo:
               adóalapot.
             label: Önszámlázott, Közösségen belüli beszerzéseknél keletkezett adóalap
               (LIVA 13. cikk + 15. cikk + 84. cikk Uno.2; hivatalos 10/11. mező)
+          iva-base-imponible-autorepercutida-interior-deducible:
+            label: Belföldi folyó ügyletek levonható fordított adózású adóalapja (LIVA
+              84. cikk Uno.2.; a hivatalos 28. rovat része)
+          iva-base-imponible-autorepercutida-interior-deducible-bienes-inversion:
+            label: Belföldi tárgyi eszközök levonható fordított adózású adóalapja
+              (LIVA 84. cikk Uno.2.; a hivatalos 30. rovat része)
+          iva-base-imponible-soportada-interiores:
+            label: Belföldi folyó ügyletek előzetesen felszámított ÁFA-jának adóalapja
+              (a hivatalos 28. rovat része)
+          iva-base-imponible-soportada-interiores-bienes-inversion:
+            label: Belföldi tárgyi eszköz ügyletek előzetesen felszámított ÁFA-jának
+              adóalapja (a hivatalos 30. rovat része)
           iva-compensacion-aplicada-periodo:
             label: Korábbi időszakokból fennmaradó ÁFA-összegek, amelyeket ebben az
               időszakban alkalmaznak
@@ -264,8 +276,11 @@ modelo:
             label: Korábbi időszaki ÁFA-beszámítások, amelyek későbbi időszakokra
               fennmaradnak
           iva-cuota-autorepercutida-interior-deducible:
-            label: Levonható fordított adózású ÁFA belföldi ügyleteknél (LIVA 84.
-              cikk Uno.2. és 92. cikk; hivatalos 37. rovat)
+            label: Belföldi folyó ügyletek levonható fordított adózású ÁFA-ja (LIVA
+              84. cikk Uno.2. és 92. cikk; a hivatalos 29. rovat része)
+          iva-cuota-autorepercutida-interior-deducible-bienes-inversion:
+            label: Belföldi tárgyi eszközök levonható fordított adózású ÁFA-ja (LIVA
+              84. cikk Uno.2. és 92. cikk; a hivatalos 31. rovat része)
           iva-cuota-autorepercutida-interior-devengado:
             label: Keletkezett fordított adózású ÁFA belföldi ügyleteknél (LIVA 84.
               cikk Uno.2.; hivatalos 13. rovat)
@@ -305,6 +320,9 @@ modelo:
               17. és 92. cikk; hivatalos 33. rovat)
           iva-cuota-soportada-interiores:
             label: Levonható ÁFA összeg belföldi folyó ügyletek után
+          iva-cuota-soportada-interiores-bienes-inversion:
+            label: Belföldi tárgyi eszköz ügyletek előzetesen felszámított ÁFA-ja
+              (a hivatalos 31. rovat része)
           iva-prorrata-porcentaje:
             label: Általános levonási hányad százaléka (levonásra jogosító volumen
               / teljes volumen × 100)

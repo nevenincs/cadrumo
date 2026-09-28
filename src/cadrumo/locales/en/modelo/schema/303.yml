@@ -241,6 +241,18 @@ modelo:
               acquisitions.
             label: Taxable base of accrued reverse-charge VAT on intra-Community acquisitions
               (LIVA art. 13 + art. 15 + art. 84.Uno.2; official boxes 10/11)
+          iva-base-imponible-autorepercutida-interior-deducible:
+            label: Deductible reverse-charge taxable base on current domestic transactions
+              (LIVA art. 84.Uno.2; part of official box 28)
+          iva-base-imponible-autorepercutida-interior-deducible-bienes-inversion:
+            label: Deductible reverse-charge taxable base on domestic capital goods
+              (LIVA art. 84.Uno.2; part of official box 30)
+          iva-base-imponible-soportada-interiores:
+            label: Taxable base of input VAT on current domestic transactions (part
+              of official box 28)
+          iva-base-imponible-soportada-interiores-bienes-inversion:
+            label: Taxable base of input VAT on domestic capital-goods transactions
+              (part of official box 30)
           iva-compensacion-aplicada-periodo:
             label: VAT credit from previous periods applied in this period
           iva-compensacion-disponible-fin-periodo:
@@ -252,8 +264,11 @@ modelo:
           iva-compensacion-pendiente-posteriores:
             label: VAT credit from previous periods carried forward to later periods
           iva-cuota-autorepercutida-interior-deducible:
-            label: Deductible reverse-charge VAT on domestic transactions (LIVA art.
-              84.Uno.2 + art. 92; official box 37)
+            label: Deductible reverse-charge VAT on current domestic transactions
+              (LIVA art. 84.Uno.2 + art. 92; part of official box 29)
+          iva-cuota-autorepercutida-interior-deducible-bienes-inversion:
+            label: Deductible reverse-charge VAT on domestic capital goods (LIVA art.
+              84.Uno.2 + art. 92; part of official box 31)
           iva-cuota-autorepercutida-interior-devengado:
             label: Accrued reverse-charge VAT on domestic transactions (LIVA art.
               84.Uno.2; official box 13)
@@ -290,6 +305,9 @@ modelo:
               + art. 92; official box 33)
           iva-cuota-soportada-interiores:
             label: Deductible input VAT on domestic current transactions
+          iva-cuota-soportada-interiores-bienes-inversion:
+            label: Input VAT on domestic capital-goods transactions (part of official
+              box 31)
           iva-prorrata-porcentaje:
             label: General pro rata percentage (eligible turnover / total turnover
               × 100)
@@ -297,6 +315,9 @@ modelo:
             label: Annual turnover giving deduction rights
           iva-prorrata-volumen-total:
             label: Total annual turnover
+          iva-rectificacion-deducciones-interiores-base:
+            label: Correction of deductions on domestic transactions - Base (part
+              of official box 40)
           iva-regularizacion-inversiones:
             label: Capital goods adjustment (LIVA arts. 107-110)
           iva-resultado-autoliquidacion:

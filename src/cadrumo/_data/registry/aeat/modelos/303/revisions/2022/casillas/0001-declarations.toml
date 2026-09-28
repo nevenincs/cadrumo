@@ -47,8 +47,8 @@ number = "28"
 section = ["iva", "regimen_general", "deducible"]
 semantic_role = "dr303_28"
 continuidad_id = "dr303-28"
-input_kind = "bound"
-binding = "modelo-303-iva-soportado-interiores-base"
+input_kind = "computed"
+formula = "modelo-303-iva-deducible-interiores-corrientes-base"
 legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
@@ -57,6 +57,8 @@ number = "29"
 section = ["iva", "regimen_general", "deducible"]
 semantic_role = "dr303_29"
 continuidad_id = "dr303-29"
+input_kind = "computed"
+formula = "modelo-303-dr303-29-projection"
 legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
@@ -65,8 +67,8 @@ number = "30"
 section = ["iva", "regimen_general", "deducible"]
 semantic_role = "dr303_30"
 continuidad_id = "dr303-30"
-input_kind = "bound"
-binding = "modelo-303-iva-soportado-interiores-bienes-inversion-base"
+input_kind = "computed"
+formula = "modelo-303-iva-deducible-interiores-bienes-inversion-base"
 legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-108", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
@@ -75,8 +77,8 @@ number = "31"
 section = ["iva", "regimen_general", "deducible"]
 semantic_role = "dr303_31"
 continuidad_id = "dr303-31"
-input_kind = "bound"
-binding = "modelo-303-iva-soportado-interiores-bienes-inversion-cuota"
+input_kind = "computed"
+formula = "modelo-303-iva-deducible-interiores-bienes-inversion-cuota"
 legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-108", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
@@ -85,7 +87,9 @@ number = "32"
 section = ["iva", "regimen_general", "deducible"]
 semantic_role = "dr303_32"
 continuidad_id = "dr303-32"
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+input_kind = "bound"
+binding = "modelo-303-iva-soportado-importaciones-base"
+legal_refs = ["ley-37-1992:art-17", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "33"
@@ -93,6 +97,8 @@ number = "33"
 section = ["iva", "regimen_general", "deducible"]
 semantic_role = "dr303_33"
 continuidad_id = "dr303-33"
+input_kind = "computed"
+formula = "modelo-303-dr303-33-projection"
 legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
@@ -121,7 +127,9 @@ number = "36"
 section = ["iva", "regimen_general", "deducible"]
 semantic_role = "dr303_36"
 continuidad_id = "dr303-36"
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+input_kind = "bound"
+binding = "modelo-303-iva-autorepercutido-intracomunitaria-deducible-base"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "37"
@@ -129,6 +137,8 @@ number = "37"
 section = ["iva", "regimen_general", "deducible"]
 semantic_role = "dr303_37"
 continuidad_id = "dr303-37"
+input_kind = "computed"
+formula = "modelo-303-dr303-37-projection"
 legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
@@ -157,7 +167,9 @@ number = "40"
 section = ["iva", "regimen_general", "deducible"]
 semantic_role = "dr303_40"
 continuidad_id = "dr303-40"
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+input_kind = "computed"
+formula = "modelo-303-iva-rectificacion-deducciones-base"
+legal_refs = ["ley-37-1992:art-80", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-99", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "41"
@@ -165,7 +177,9 @@ number = "41"
 section = ["iva", "regimen_general", "deducible"]
 semantic_role = "dr303_41"
 continuidad_id = "dr303-41"
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+input_kind = "computed"
+formula = "modelo-303-iva-rectificacion-deducciones-cuota"
+legal_refs = ["ley-37-1992:art-80", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-99", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "42"
@@ -234,6 +248,8 @@ number = "45"
 section = ["iva", "regimen_general", "deducible"]
 semantic_role = "dr303_45"
 continuidad_id = "dr303-45"
+input_kind = "computed"
+formula = "modelo-303-dr303-45-projection"
 legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
@@ -1656,12 +1672,11 @@ input_kind = "bound"
 binding = "modelo-303-iva-autorepercutido-interior-deducible-cuota"
 legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
-# Intra-community-acquisition official-box parity casillas. They expose the
-# self-assessed AIC cuota in its official devengado (boxes 10/11) and deducible
-# (boxes 36/37) positions for the export/workbook parity surface. They are NOT
-# added to the resultado formula — the iva.autorepercutido.intracomunitaria
-# semantic casilla already books that cuota into the resultado, and adding these
-# would double-count. The devengado/deducible pair nets to zero (LIVA art. 84
+# Intra-community-acquisition official-box casillas. The devengado one feeds
+# boxes 10/11 while iva.autorepercutido.intracomunitaria books the same cuota
+# into the devengado total. The deducible one is box [37] and enters the
+# deducible total through it, beside [39] and the reverse-charge part of [41];
+# for a fully deductible acquisition the two halves net to zero (LIVA art. 84
 # inversión + art. 92 deduction).
 [[revisions.2022.casillas]]
 id = "iva.autorepercutido.intracomunitaria.devengado"
@@ -1697,6 +1712,129 @@ continuidad_id = "iva-cuota-soportada-importaciones"
 input_kind = "bound"
 binding = "modelo-303-iva-soportado-importaciones-cuota"
 legal_refs = ["ley-37-1992:art-17", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+# Components of the interior, rectification and reverse-charge deducible
+# boxes. Each is one ledger selection; boxes [28]-[31], [40] and [41] add them.
+
+[[revisions.2022.casillas]]
+id = "iva.soportado.interiores.base"
+number = "iva.soportado.interiores.base"
+section = ["iva", "regimen_general", "deducible"]
+semantic_role = "iva_base_imponible_soportada_interiores"
+continuidad_id = "iva-base-imponible-soportada-interiores"
+input_kind = "bound"
+binding = "modelo-303-iva-soportado-interiores-base"
+legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.casillas]]
+id = "iva.autorepercutido.interior.deducible.base"
+number = "iva.autorepercutido.interior.deducible.base"
+section = ["iva", "regimen_general", "deducible"]
+semantic_role = "iva_base_imponible_autorepercutida_interior_deducible"
+continuidad_id = "iva-base-imponible-autorepercutida-interior-deducible"
+input_kind = "bound"
+binding = "modelo-303-iva-autorepercutido-interior-deducible-base"
+legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.casillas]]
+id = "iva.soportado.interiores.bienes-inversion.base"
+number = "iva.soportado.interiores.bienes-inversion.base"
+section = ["iva", "regimen_general", "deducible"]
+semantic_role = "iva_base_imponible_soportada_interiores_bienes_inversion"
+continuidad_id = "iva-base-imponible-soportada-interiores-bienes-inversion"
+input_kind = "bound"
+binding = "modelo-303-iva-soportado-interiores-bienes-inversion-base"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-108", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.casillas]]
+id = "iva.soportado.interiores.bienes-inversion"
+number = "iva.soportado.interiores.bienes-inversion"
+section = ["iva", "regimen_general", "deducible"]
+semantic_role = "iva_cuota_soportada_interiores_bienes_inversion"
+continuidad_id = "iva-cuota-soportada-interiores-bienes-inversion"
+input_kind = "bound"
+binding = "modelo-303-iva-soportado-interiores-bienes-inversion-cuota"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-108", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.casillas]]
+id = "iva.autorepercutido.interior.deducible.bienes-inversion.base"
+number = "iva.autorepercutido.interior.deducible.bienes-inversion.base"
+section = ["iva", "regimen_general", "deducible"]
+semantic_role = "iva_base_imponible_autorepercutida_interior_deducible_bienes_inversion"
+continuidad_id = "iva-base-imponible-autorepercutida-interior-deducible-bienes-inversion"
+input_kind = "bound"
+binding = "modelo-303-iva-autorepercutido-interior-deducible-bienes-inversion-base"
+legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "ley-37-1992:art-108", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.casillas]]
+id = "iva.autorepercutido.interior.deducible.bienes-inversion"
+number = "iva.autorepercutido.interior.deducible.bienes-inversion"
+section = ["iva", "regimen_general", "deducible"]
+semantic_role = "iva_cuota_autorepercutida_interior_deducible_bienes_inversion"
+continuidad_id = "iva-cuota-autorepercutida-interior-deducible-bienes-inversion"
+input_kind = "bound"
+binding = "modelo-303-iva-autorepercutido-interior-deducible-bienes-inversion-cuota"
+legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "ley-37-1992:art-108", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.casillas]]
+id = "iva.rectificacion-deducciones.interiores.base"
+number = "iva.rectificacion-deducciones.interiores.base"
+section = ["iva", "regimen_general", "deducible"]
+semantic_role = "iva_rectificacion_deducciones_interiores_base"
+continuidad_id = "iva-rectificacion-deducciones-interiores-base"
+input_kind = "bound"
+binding = "modelo-303-iva-rectificacion-deducciones-interiores-base"
+legal_refs = ["ley-37-1992:art-80", "ley-37-1992:art-92", "ley-37-1992:art-99", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.casillas]]
+id = "iva.rectificacion-deducciones.interiores"
+number = "iva.rectificacion-deducciones.interiores"
+section = ["iva", "regimen_general", "deducible"]
+semantic_role = "iva_rectificacion_deducciones_interiores_cuota"
+continuidad_id = "iva-rectificacion-deducciones-interiores-cuota"
+input_kind = "bound"
+binding = "modelo-303-iva-rectificacion-deducciones-interiores-cuota"
+legal_refs = ["ley-37-1992:art-80", "ley-37-1992:art-92", "ley-37-1992:art-99", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.casillas]]
+id = "iva.rectificacion-deducciones.importaciones.base"
+number = "iva.rectificacion-deducciones.importaciones.base"
+section = ["iva", "regimen_general", "deducible"]
+semantic_role = "iva_rectificacion_deducciones_importaciones_base"
+continuidad_id = "iva-rectificacion-deducciones-importaciones-base"
+input_kind = "bound"
+binding = "modelo-303-iva-rectificacion-deducciones-importaciones-base"
+legal_refs = ["ley-37-1992:art-80", "ley-37-1992:art-92", "ley-37-1992:art-99", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.casillas]]
+id = "iva.rectificacion-deducciones.importaciones"
+number = "iva.rectificacion-deducciones.importaciones"
+section = ["iva", "regimen_general", "deducible"]
+semantic_role = "iva_rectificacion_deducciones_importaciones_cuota"
+continuidad_id = "iva-rectificacion-deducciones-importaciones-cuota"
+input_kind = "bound"
+binding = "modelo-303-iva-rectificacion-deducciones-importaciones-cuota"
+legal_refs = ["ley-37-1992:art-80", "ley-37-1992:art-92", "ley-37-1992:art-99", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.casillas]]
+id = "iva.rectificacion-deducciones.inversion-sujeto-pasivo.base"
+number = "iva.rectificacion-deducciones.inversion-sujeto-pasivo.base"
+section = ["iva", "regimen_general", "deducible"]
+semantic_role = "iva_rectificacion_deducciones_inversion_sujeto_pasivo_base"
+continuidad_id = "iva-rectificacion-deducciones-inversion-sujeto-pasivo-base"
+input_kind = "bound"
+binding = "modelo-303-iva-rectificacion-deducciones-inversion-sujeto-pasivo-base"
+legal_refs = ["ley-37-1992:art-80", "ley-37-1992:art-92", "ley-37-1992:art-99", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.casillas]]
+id = "iva.rectificacion-deducciones.inversion-sujeto-pasivo"
+number = "iva.rectificacion-deducciones.inversion-sujeto-pasivo"
+section = ["iva", "regimen_general", "deducible"]
+semantic_role = "iva_rectificacion_deducciones_inversion_sujeto_pasivo_cuota"
+continuidad_id = "iva-rectificacion-deducciones-inversion-sujeto-pasivo-cuota"
+input_kind = "bound"
+binding = "modelo-303-iva-rectificacion-deducciones-inversion-sujeto-pasivo-cuota"
+legal_refs = ["ley-37-1992:art-80", "ley-37-1992:art-92", "ley-37-1992:art-99", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "iva.cuota-devengada-total"

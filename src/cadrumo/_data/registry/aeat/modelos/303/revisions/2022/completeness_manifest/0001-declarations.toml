@@ -237,3 +237,83 @@ number = "70"
 [[revisions.2022.completeness_manifest.casillas]]
 casilla_id = "71"
 number = "71"
+
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "29"
+number = "29"
+
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "32"
+number = "32"
+
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "33"
+number = "33"
+
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "36"
+number = "36"
+
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "37"
+number = "37"
+
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "40"
+number = "40"
+
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "41"
+number = "41"
+
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "45"
+number = "45"
+
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "iva.soportado.interiores.base"
+number = "iva.soportado.interiores.base"
+
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "iva.autorepercutido.interior.deducible.base"
+number = "iva.autorepercutido.interior.deducible.base"
+
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "iva.soportado.interiores.bienes-inversion.base"
+number = "iva.soportado.interiores.bienes-inversion.base"
+
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "iva.soportado.interiores.bienes-inversion"
+number = "iva.soportado.interiores.bienes-inversion"
+
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "iva.autorepercutido.interior.deducible.bienes-inversion.base"
+number = "iva.autorepercutido.interior.deducible.bienes-inversion.base"
+
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "iva.autorepercutido.interior.deducible.bienes-inversion"
+number = "iva.autorepercutido.interior.deducible.bienes-inversion"
+
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "iva.rectificacion-deducciones.interiores.base"
+number = "iva.rectificacion-deducciones.interiores.base"
+
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "iva.rectificacion-deducciones.interiores"
+number = "iva.rectificacion-deducciones.interiores"
+
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "iva.rectificacion-deducciones.importaciones.base"
+number = "iva.rectificacion-deducciones.importaciones.base"
+
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "iva.rectificacion-deducciones.importaciones"
+number = "iva.rectificacion-deducciones.importaciones"
+
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "iva.rectificacion-deducciones.inversion-sujeto-pasivo.base"
+number = "iva.rectificacion-deducciones.inversion-sujeto-pasivo.base"
+
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "iva.rectificacion-deducciones.inversion-sujeto-pasivo"
+number = "iva.rectificacion-deducciones.inversion-sujeto-pasivo"
