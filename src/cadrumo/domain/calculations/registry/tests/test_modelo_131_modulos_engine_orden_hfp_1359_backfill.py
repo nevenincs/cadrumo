@@ -306,7 +306,12 @@ class TestHfp1359OrdenDateAxisBoundaries:
         following = select_revision(modelo_131, filing_year=successor, period="1T", on=date(successor, 1, 1))
         assert following.id == str(successor)
 
-    def test_hfp_1359_orden_coefficient_parameters_are_scoped_to_its_calendar_year(self) -> None:
+    def test_hfp_1359_orden_coefficient_parameters_begin_with_its_calendar_year(self) -> None:
+        """Orden HFP/1359/2023's figures start on its exercise's first day and cover the whole exercise.
+
+        A figure the next Orden restates unchanged runs open rather than closing
+        at year end, so the end of the row is not this Orden's to fix.
+        """
         exercise = _ORDEN_HFP_1359_2023_EXERCISE
         snapshot = published_snapshot(
             "131", filing_year=_ORDEN_HFP_1359_2023_EXERCISE, period="1T", grade=RegistryAuthorityGrade.CALCULATION
@@ -314,20 +319,17 @@ class TestHfp1359OrdenDateAxisBoundaries:
         coeficientes = next(
             parameter for parameter in snapshot.revision.parameters if parameter.id == "m131-modulos-coeficientes"
         )
-        for row in coeficientes.keyed_brackets:
-            assert row.valid_from == date(exercise, 1, 1)
-            assert row.valid_to == date(exercise, 12, 31)
-
         reduccion_general = next(
             parameter for parameter in snapshot.revision.parameters if parameter.id == "m131-modulos-reduccion-general"
         )
-        for value in reduccion_general.values:
-            assert value.valid_from == date(exercise, 1, 1)
-            assert value.valid_to == date(exercise, 12, 31)
+        for row in (*coeficientes.keyed_brackets, *reduccion_general.values):
+            assert row.valid_from == date(exercise, 1, 1)
+            assert row.valid_to is None or row.valid_to >= date(exercise, 12, 31)
 
-    def test_hfp_1359_and_hac_1347_orden_coefficient_tables_are_year_scoped(self) -> None:
-        """The two Ordenes' revisions share the coefficient parameter's identity;
-        neither revision's snapshot carries a row dated in the other year."""
+    def test_hfp_1359_and_hac_1347_orden_coefficient_tables_are_in_force_across_each_year(self) -> None:
+        """The two Ordenes' revisions share the coefficient parameter's identity,
+        and each revision's snapshot carries only rows in force on every day of
+        its own exercise -- none that ended before it or starts within it."""
         for year in (_ORDEN_HFP_1359_2023_EXERCISE, _ORDEN_HAC_1347_2024_EXERCISE):
             snapshot = published_snapshot(
                 "131", filing_year=year, period="1T", grade=RegistryAuthorityGrade.CALCULATION
@@ -338,5 +340,5 @@ class TestHfp1359OrdenDateAxisBoundaries:
             assert coeficientes.keyed_brackets, year
             for row in coeficientes.keyed_brackets:
                 assert row.valid_from is not None
-                assert row.valid_from.year == year
-                assert row.valid_to is None or row.valid_to.year == year
+                assert row.valid_from <= date(year, 1, 1)
+                assert row.valid_to is None or row.valid_to >= date(year, 12, 31)
