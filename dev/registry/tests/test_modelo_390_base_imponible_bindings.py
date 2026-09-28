@@ -196,9 +196,16 @@ def test_annual_base_bindings_resolve_non_zero() -> None:
     # blind-base layer and the domestic-reverse-charge (ISP interior) base --
     # this fixture carries no adquisiciones intracomunitarias or ISP interior
     # rows at all, so every tier of those families is legitimately absent here.
-    # Nor does it carry a bien de inversión, so the [50]/[54] investment bases
-    # are absent for the same reason.
-    _new_family_markers = ("-aic-", "-autorepercutido-interior-", "-bienes-inversion-")
+    # Nor does it carry a bien de inversión, an import or a rectification, so
+    # the [50]/[54] investment bases, the [52] import base and the [639]
+    # rectification bases are absent for the same reason.
+    _new_family_markers = (
+        "-aic-",
+        "-autorepercutido-interior-",
+        "-bienes-inversion-",
+        "-importaciones-",
+        "-rectificacion-",
+    )
     base_bindings = {
         key: value
         for key, value in resolved.items()
@@ -250,7 +257,21 @@ def test_every_declared_base_casilla_is_bound_to_a_base_fact() -> None:
     bindings = {binding.id: binding for binding in revision.bindings}
     base_casillas = [casilla for casilla in revision.casillas if casilla.id.endswith(".base")]
     assert base_casillas, "the annual revision declares no base imponible casilla"
+    formulas = {formula.target_casilla_id: formula for formula in revision.formulas}
     for casilla in base_casillas:
+        if casilla.input_kind is InputKind.COMPUTED:
+            # A base total that adds base components -- box [48] is the
+            # soportado base plus the domestic inversión del sujeto pasivo base
+            # -- is held to the same rule through its operands: each must itself
+            # be a base casilla, which this loop checks in turn.
+            operands = [arg.casilla_id for arg in formulas[casilla.id].expression.args if arg.casilla_id is not None]
+            if not operands and formulas[casilla.id].expression.casilla_id is not None:
+                operands = [formulas[casilla.id].expression.casilla_id]
+            assert operands, f"base casilla {casilla.id} is computed from nothing"
+            assert all(str(operand).endswith(".base") for operand in operands), (
+                f"base casilla {casilla.id} is computed from non-base operands {operands}"
+            )
+            continue
         if casilla.binding is None:
             # An OPERATOR-MANUAL base has no fact, so it cannot be wired to the
             # wrong one -- which is the defect this test exists to catch. It is
@@ -276,13 +297,17 @@ def test_no_base_casilla_enters_an_annual_total_formula() -> None:
 
     This pins the safety property of the base-imponible addition. The tier cuota
     casillas feed ``iva.anual.cuota-devengada-total``; the base casillas
-    deliberately feed nothing. If a later change narrows a feeding cuota binding
-    and wires a base casilla into the total instead, this fails.
+    deliberately feed no cuota total. If a later change narrows a feeding cuota
+    binding and wires a base casilla into the total instead, this fails. A base
+    total adding base components (box [48], [50], [639]) or projecting a base
+    layer ([56], [58], [597]) is a base figure itself and is not such a total.
     """
     revision = _m390_revision()
     base_casilla_ids = {casilla.id for casilla in revision.casillas if casilla.id.endswith(".base")}
     assert base_casilla_ids, "the annual revision declares no base imponible casilla"
     for formula in revision.formulas:
+        if formula.target_casilla_id in base_casilla_ids:
+            continue
         referenced = {arg.casilla_id for arg in formula.expression.args if arg.casilla_id is not None}
         leaked = referenced & base_casilla_ids
         assert not leaked, f"formula {formula.id} sums base imponible casillas {sorted(leaked)}"

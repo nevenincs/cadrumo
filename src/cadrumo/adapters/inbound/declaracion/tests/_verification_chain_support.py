@@ -558,6 +558,7 @@ def _assert_m303_printed_resultado_regimen_general_arithmetic(
 _COMPUTED_CASILLAS_M390: frozenset[CasillaId] = frozenset(
     validated_casilla_id(_v)
     for _v in (
+        "iva.anual.soportado.interiores",
         "iva.anual.cuota-devengada-total",
         "iva.anual.cuota-deducible-total",
         "iva.anual.resultado-regimen-general",

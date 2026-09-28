@@ -554,6 +554,8 @@ continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:270 (sha256 0164fbea6f50) prints box [630] (59 914 17 N 5. Operaciones Reg. Gral. - IVA deducible - Adqui. intr...); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+input_kind = "bound"
+binding = "modelo-390-iva-deducible-aic-corrientes-tipo-21-cuota"
 legal_refs = ["ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
 # Box [56] - "5. Operaciones Reg. Gral. - IVA deducible - Total adqui. intra. bienes corrientes - Base imponible [56]" (offset 1169, length 17).
@@ -567,6 +569,8 @@ continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:271 (sha256 0164fbea6f50) prints box [56] (60 931 17 N 5. Operaciones Reg. Gral. - IVA deducible - Total adqui...); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+input_kind = "computed"
+formula = "modelo-390-iva-anual-deducible-aic-corrientes-base"
 legal_refs = ["ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
 # Box [57] - "5. Operaciones Reg. Gral. - IVA deducible - Total adqui. intra. bienes corrientes - Cuota [57]" (offset 1186, length 17).
@@ -580,6 +584,8 @@ continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:272 (sha256 0164fbea6f50) prints box [57] (61 948 17 N 5. Operaciones Reg. Gral. - IVA deducible - Total adqui...); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+input_kind = "computed"
+formula = "modelo-390-iva-anual-deducible-aic-corrientes-cuota"
 legal_refs = ["ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
 # Box [220] - "5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. bienes inversion - Tipo 4% - Base imponible [220]" (offset 1203, length 17).
@@ -593,6 +599,8 @@ continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:273 (sha256 0164fbea6f50) prints box [220] (62 965 17 N 5. Operaciones Reg. Gral. - IVA deducible - Adqui. intr...); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+input_kind = "bound"
+binding = "modelo-390-iva-deducible-aic-inversion-tipo-4-base"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
 # Box [221] - "5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. bienes inversion - Tipo 4% - Cuota [221]" (offset 1220, length 17).
@@ -606,6 +614,8 @@ continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:274 (sha256 0164fbea6f50) prints box [221] (63 982 17 N 5. Operaciones Reg. Gral. - IVA deducible - Adqui. intr...); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+input_kind = "bound"
+binding = "modelo-390-iva-deducible-aic-inversion-tipo-4-cuota"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
 # Box [738] - "5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. bienes inversion - Tipo 5% - Base imponible [738]" (offset 1237, length 17).
@@ -619,6 +629,8 @@ continuidad_origin = "new_on_form"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/14-390-ejercicio-2022-actualizado-04-01-23-491-kb-xlsx.xlsx.extracted.md:313 (sha256 7c6554f3182d) prints box [738]; corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md (sha256 0164fbea6f50) prints no box [738] and retires none"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+input_kind = "bound"
+binding = "modelo-390-iva-deducible-aic-inversion-tipo-5-base"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
 # Box [739] - "5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. bienes inversion - Tipo 5% - Cuota [739]" (offset 1254, length 17).
@@ -632,6 +644,8 @@ continuidad_origin = "new_on_form"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/14-390-ejercicio-2022-actualizado-04-01-23-491-kb-xlsx.xlsx.extracted.md:314 (sha256 7c6554f3182d) prints box [739]; corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md (sha256 0164fbea6f50) prints no box [739] and retires none"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+input_kind = "bound"
+binding = "modelo-390-iva-deducible-aic-inversion-tipo-5-cuota"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
 # Box [631] - "5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. bienes inversion - Tipo 10% - Base imponible [631]" (offset 1271, length 17).
@@ -645,6 +659,8 @@ continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:275 (sha256 0164fbea6f50) prints box [631] (64 999 17 N 5. Operaciones Reg. Gral. - IVA deducible - Adqui. intr...); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+input_kind = "bound"
+binding = "modelo-390-iva-deducible-aic-inversion-tipo-10-base"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
 # Box [632] - "5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. bienes inversion - Tipo 10% - Cuota [632]" (offset 1288, length 17).
@@ -658,6 +674,8 @@ continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:276 (sha256 0164fbea6f50) prints box [632] (65 1016 17 N 5. Operaciones Reg. Gral. - IVA deducible - Adqui. int...); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+input_kind = "bound"
+binding = "modelo-390-iva-deducible-aic-inversion-tipo-10-cuota"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
 # Box [633] - "5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. bienes inversion - Tipo 21% - Base imponible [633]" (offset 1305, length 17).
@@ -671,6 +689,8 @@ continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:277 (sha256 0164fbea6f50) prints box [633] (66 1033 17 N 5. Operaciones Reg. Gral. - IVA deducible - Adqui. int...); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+input_kind = "bound"
+binding = "modelo-390-iva-deducible-aic-inversion-tipo-21-base"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
 # Box [634] - "5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. bienes inversion - Tipo 21% - Cuota [634]" (offset 1322, length 17).
@@ -684,6 +704,8 @@ continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:278 (sha256 0164fbea6f50) prints box [634] (67 1050 17 N 5. Operaciones Reg. Gral. - IVA deducible - Adqui. int...); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+input_kind = "bound"
+binding = "modelo-390-iva-deducible-aic-inversion-tipo-21-cuota"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
 # Box [58] - "5. Operaciones Reg. Gral. - IVA deducible - Total adqui. intra. bienes inversion - Base imponible [58]" (offset 1339, length 17).
@@ -697,6 +719,8 @@ continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:279 (sha256 0164fbea6f50) prints box [58] (68 1067 17 N 5. Operaciones Reg. Gral. - IVA deducible - Total adqu...); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+input_kind = "computed"
+formula = "modelo-390-iva-anual-deducible-aic-inversion-base"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
 # Box [59] - "5. Operaciones Reg. Gral. - IVA deducible - Total adqui. intra. bienes inversion - Cuota [59]" (offset 1356, length 17).
@@ -710,6 +734,8 @@ continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:280 (sha256 0164fbea6f50) prints box [59] (69 1084 17 N 5. Operaciones Reg. Gral. - IVA deducible - Total adqu...); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+input_kind = "computed"
+formula = "modelo-390-iva-anual-deducible-aic-inversion-cuota"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
 # Box [587] - "5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. servicios - Tipo 4% - Base imponible [587]" (offset 1373, length 17).
@@ -723,6 +749,8 @@ continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:281 (sha256 0164fbea6f50) prints box [587] (70 1101 17 N 5. Operaciones Reg. Gral. - IVA deducible - Adqui. int...); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+input_kind = "bound"
+binding = "modelo-390-iva-deducible-aic-servicios-tipo-4-base"
 legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
 # Box [588] - "5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. servicios - Tipo 4% - Cuota [588]" (offset 1390, length 17).
@@ -736,6 +764,8 @@ continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:282 (sha256 0164fbea6f50) prints box [588] (71 1118 17 N 5. Operaciones Reg. Gral. - IVA deducible - Adqui. int...); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+input_kind = "bound"
+binding = "modelo-390-iva-deducible-aic-servicios-tipo-4-cuota"
 legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
 # Box [740] - "5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. servicios - Tipo 5% - Base imponible [740]" (offset 1407, length 17).
@@ -749,6 +779,8 @@ continuidad_origin = "new_on_form"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/14-390-ejercicio-2022-actualizado-04-01-23-491-kb-xlsx.xlsx.extracted.md:323 (sha256 7c6554f3182d) prints box [740]; corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md (sha256 0164fbea6f50) prints no box [740] and retires none"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+input_kind = "bound"
+binding = "modelo-390-iva-deducible-aic-servicios-tipo-5-base"
 legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
 # Box [741] - "5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. servicios - Tipo 5% - Cuota [741]" (offset 1424, length 17).
@@ -762,6 +794,8 @@ continuidad_origin = "new_on_form"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/14-390-ejercicio-2022-actualizado-04-01-23-491-kb-xlsx.xlsx.extracted.md:324 (sha256 7c6554f3182d) prints box [741]; corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md (sha256 0164fbea6f50) prints no box [741] and retires none"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+input_kind = "bound"
+binding = "modelo-390-iva-deducible-aic-servicios-tipo-5-cuota"
 legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
 # Box [635] - "5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. servicios - Tipo 10% - Base imponible [635]" (offset 1441, length 17).
@@ -775,6 +809,8 @@ continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:283 (sha256 0164fbea6f50) prints box [635] (72 1135 17 N 5. Operaciones Reg. Gral. - IVA deducible - Adqui. int...); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+input_kind = "bound"
+binding = "modelo-390-iva-deducible-aic-servicios-tipo-10-base"
 legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
 # Box [636] - "5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. servicios - Tipo 10% - Cuota [636]" (offset 1458, length 17).
@@ -788,6 +824,8 @@ continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:284 (sha256 0164fbea6f50) prints box [636] (73 1152 17 N 5. Operaciones Reg. Gral. - IVA deducible - Adqui. int...); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+input_kind = "bound"
+binding = "modelo-390-iva-deducible-aic-servicios-tipo-10-cuota"
 legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
 # Box [637] - "5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. servicios - Tipo 21% - Base imponible [637]" (offset 1475, length 17).
@@ -801,6 +839,8 @@ continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:285 (sha256 0164fbea6f50) prints box [637] (74 1169 17 N 5. Operaciones Reg. Gral. - IVA deducible - Adqui. int...); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+input_kind = "bound"
+binding = "modelo-390-iva-deducible-aic-servicios-tipo-21-base"
 legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
 # Box [638] - "5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. servicios - Tipo 21% - Cuota [638]" (offset 1492, length 17).
@@ -814,6 +854,8 @@ continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:286 (sha256 0164fbea6f50) prints box [638] (75 1186 17 N 5. Operaciones Reg. Gral. - IVA deducible - Adqui. int...); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+input_kind = "bound"
+binding = "modelo-390-iva-deducible-aic-servicios-tipo-21-cuota"
 legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
 # Box [597] - "5. Operaciones Reg. Gral. - IVA deducible - Total adqui. intra. servicios - Base imponible [597]" (offset 1509, length 17).
@@ -827,6 +869,8 @@ continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:287 (sha256 0164fbea6f50) prints box [597] (76 1203 17 N 5. Operaciones Reg. Gral. - IVA deducible - Total adqu...); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+input_kind = "computed"
+formula = "modelo-390-iva-anual-deducible-aic-servicios-base"
 legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
 # Box [598] - "5. Operaciones Reg. Gral. - IVA deducible - Total adqui. intra. servicios - Cuota [598]" (offset 1526, length 17).
@@ -840,6 +884,8 @@ continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:288 (sha256 0164fbea6f50) prints box [598] (77 1220 17 N 5. Operaciones Reg. Gral. - IVA deducible - Total adqu...); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+input_kind = "computed"
+formula = "modelo-390-iva-anual-deducible-aic-servicios-cuota"
 legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
 # Box [60] - "5. Operaciones Reg. Gral. - IVA deducible - Compensac. reg. especial agric./ganad./pesca - Base impon. [60]" (offset 13, length 17).
@@ -866,6 +912,8 @@ continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:311 (sha256 0164fbea6f50) prints box [61] (7 30 17 N 5. Operaciones Reg. Gral. - IVA deducible - Compensac. ré...); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+input_kind = "bound"
+binding = "modelo-390-prev-303-compensaciones-reagp"
 legal_refs = ["ley-37-1992:art-130", "ley-37-1992:art-131", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
 # Box [660] - "5. Operaciones Reg. Gral. - IVA deducible - Cuotas deducibles en virtud de resolucion administrativa o sentencia firmes con tipos no vigentes - Base impon.  [660]" (offset 47, length 17).
@@ -905,6 +953,8 @@ continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:314 (sha256 0164fbea6f50) prints box [639] (10 81 17 N 5. Operaciones Reg. Gral. - IVA deducible - Rectificació...); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+input_kind = "computed"
+formula = "modelo-390-iva-anual-rectificacion-deducciones-base"
 legal_refs = ["ley-37-1992:art-89", "ley-37-1992:art-92", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
 # Box [62] - "5. Operaciones Reg. Gral. - IVA deducible - Rectificacion de deducciones - Cuota [62]" (offset 98, length 17).
@@ -918,6 +968,8 @@ continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:315 (sha256 0164fbea6f50) prints box [62] (11 98 17 N 5. Operaciones Reg. Gral. - IVA deducible - Rectificació...); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+input_kind = "computed"
+formula = "modelo-390-iva-anual-rectificacion-deducciones-cuota"
 legal_refs = ["ley-37-1992:art-89", "ley-37-1992:art-92", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
 # Box [651] - "5. Operaciones Reg. Gral. - IVA deducible - Rectificacion de deducciones intragrupo - Base impon. [651]" (offset 115, length 17).
@@ -965,8 +1017,12 @@ legal_refs = ["ley-37-1992:art-163-nonies", "ley-37-1992:art-163-sexies", "ley-3
 # intracomunitaria one: the design pairs it with "Total oper. intragrupo
 # corrientes" and spells every intracomunitaria rung "Adqui. intra.".
 #
-# All are optional operator inputs: a filer without operations of a given
-# origin leaves the rung blank, and a blank slot is a valid zero.
+# The origin totals, the adquisiciones intracomunitarias block with its rate
+# boxes, [61] and [639]/[62] are bound or computed as the sum of the year's
+# Modelo 303 boxes (see the bindings file). The other rungs -- the per-rate
+# boxes of the interiores and importaciones blocks, the intragrupo rungs, [60]
+# and [660]/[661] -- are optional operator inputs: a filer without operations of
+# a given origin leaves the rung blank, and a blank slot is a valid zero.
 
 # Box [190] - "5. Operaciones Reg. Gral. - IVA deducible - Oper. inter. corrientes bienes y servic. - Tipo 4% - Base imponible [190]" (offset 13, length 17).
 [[revisions."2022".casillas]]
@@ -1317,8 +1373,8 @@ continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:239 (sha256 0164fbea6f50) prints box [50] (28 387 17 N 5. Operaciones Reg. Gral. - IVA deducible - Total oper....); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
-input_kind = "bound"
-binding = "modelo-390-iva-soportado-interiores-bienes-inversion-base"
+input_kind = "computed"
+formula = "modelo-390-iva-anual-deducible-interiores-inversion-base"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
 # Box [51] - "5. Operaciones Reg. Gral. - IVA deducible - Total oper. inter. bienes de inversion - Cuota [51]" (offset 506, length 17).
@@ -1332,8 +1388,8 @@ continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:240 (sha256 0164fbea6f50) prints box [51] (29 404 17 N 5. Operaciones Reg. Gral. - IVA deducible - Total oper....); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
-input_kind = "bound"
-binding = "modelo-390-iva-soportado-interiores-bienes-inversion-cuota"
+input_kind = "computed"
+formula = "modelo-390-iva-anual-deducible-interiores-inversion-cuota"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
 # Box [514] - "5. Operaciones Reg. Gral. - IVA deducible - Oper. intra. bienes de inversion - Tipo 4% - Base imponible [514]" (offset 523, length 17).
@@ -1582,6 +1638,8 @@ continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:255 (sha256 0164fbea6f50) prints box [52] (44 659 17 N 5. Operaciones Reg. Gral. - IVA deducible - Total impor...); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+input_kind = "bound"
+binding = "modelo-390-iva-soportado-importaciones-base"
 legal_refs = ["ley-37-1992:art-86", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
 # Box [208] - "5. Operaciones Reg. Gral. - IVA deducible - Importacion bienes inversion - Tipo 4% - Base imponible [208]" (offset 863, length 17).
@@ -1729,6 +1787,8 @@ continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:265 (sha256 0164fbea6f50) prints box [214] (54 829 17 N 5. Operaciones Reg. Gral. - IVA deducible - Adqui. intr...); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+input_kind = "bound"
+binding = "modelo-390-iva-deducible-aic-corrientes-tipo-4-base"
 legal_refs = ["ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
 # Box [215] - "5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. bienes corrientes - Tipo 4% - Cuota [215]" (offset 1050, length 17).
@@ -1742,6 +1802,8 @@ continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:266 (sha256 0164fbea6f50) prints box [215] (55 846 17 N 5. Operaciones Reg. Gral. - IVA deducible - Adqui. intr...); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+input_kind = "bound"
+binding = "modelo-390-iva-deducible-aic-corrientes-tipo-4-cuota"
 legal_refs = ["ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
 # Box [736] - "5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. bienes corrientes - Tipo 5% - Base imponible [736]" (offset 1067, length 17).
@@ -1755,6 +1817,8 @@ continuidad_origin = "new_on_form"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/14-390-ejercicio-2022-actualizado-04-01-23-491-kb-xlsx.xlsx.extracted.md:303 (sha256 7c6554f3182d) prints box [736]; corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md (sha256 0164fbea6f50) prints no box [736] and retires none"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+input_kind = "bound"
+binding = "modelo-390-iva-deducible-aic-corrientes-tipo-5-base"
 legal_refs = ["ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
 # Box [737] - "5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. bienes corrientes - Tipo 5% - Cuota [737]" (offset 1084, length 17).
@@ -1768,6 +1832,8 @@ continuidad_origin = "new_on_form"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/14-390-ejercicio-2022-actualizado-04-01-23-491-kb-xlsx.xlsx.extracted.md:304 (sha256 7c6554f3182d) prints box [737]; corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md (sha256 0164fbea6f50) prints no box [737] and retires none"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+input_kind = "bound"
+binding = "modelo-390-iva-deducible-aic-corrientes-tipo-5-cuota"
 legal_refs = ["ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
 # Box [627] - "5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. bienes corrientes - Tipo 10% - Base imponible [627]" (offset 1101, length 17).
@@ -1781,6 +1847,8 @@ continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:267 (sha256 0164fbea6f50) prints box [627] (56 863 17 N 5. Operaciones Reg. Gral. - IVA deducible - Adqui. intr...); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+input_kind = "bound"
+binding = "modelo-390-iva-deducible-aic-corrientes-tipo-10-base"
 legal_refs = ["ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
 # Box [628] - "5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. bienes corrientes - Tipo 10% - Cuota [628]" (offset 1118, length 17).
@@ -1794,6 +1862,8 @@ continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:268 (sha256 0164fbea6f50) prints box [628] (57 880 17 N 5. Operaciones Reg. Gral. - IVA deducible - Adqui. intr...); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+input_kind = "bound"
+binding = "modelo-390-iva-deducible-aic-corrientes-tipo-10-cuota"
 legal_refs = ["ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 
 # Box [629] - "5. Operaciones Reg. Gral. - IVA deducible - Adqui. intra. bienes corrientes - Tipo 21% - Base imponible [629]" (offset 1135, length 17).
@@ -1807,6 +1877,8 @@ continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:269 (sha256 0164fbea6f50) prints box [629] (58 897 17 N 5. Operaciones Reg. Gral. - IVA deducible - Adqui. intr...); edition 2021 declares no row for it"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Distinct official AEAT box of the apartado 5 IVA deducible block on the bundled Diseno de Registros."
+input_kind = "bound"
+binding = "modelo-390-iva-deducible-aic-corrientes-tipo-21-base"
 legal_refs = ["ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 # Modelo 390 apartado 11, "Operaciones especificas" (pagina 7 of the
 # Diseno de Registros). Eleven boxes, each occupying exactly one position.
@@ -2720,8 +2792,8 @@ semantic_role = "iva_base_imponible_soportada_interiores"
 continuidad_id = "iva-base-imponible-soportada-interiores"
 continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:223 (sha256 0164fbea6f50) prints box [48] (12 115 17 N 5. Operaciones Reg. Gral. - IVA deducible - Total oper....); edition 2021 declares no row for it"
-input_kind = "bound"
-binding = "modelo-390-iva-soportado-interiores-base"
+input_kind = "computed"
+formula = "modelo-390-iva-anual-deducible-interiores-corrientes-base"
 legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 [[revisions."2022".casillas]]
 id = "iva.anual.repercutido.general"
@@ -4523,3 +4595,269 @@ input_kind = "computed"
 formula = "modelo-390-iva-anual-reconciliacion-resultados-liquidaciones"
 internal_only = true
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+
+# Components of the apartado 5 deducible totals. None is a box of the diseno de
+# registro: each is one ledger selection that a total box adds or projects,
+# mirroring the component casillas Modelo 303 reads its boxes [28]-[31] and
+# [40]/[41] through, plus the rate-blind layer of each adquisiciones
+# intracomunitarias block.
+
+[[revisions."2022".casillas]]
+id = "iva.anual.deducible.interiores-corrientes.soportado.base"
+number = "iva.anual.deducible.interiores-corrientes.soportado.base"
+section = ["iva", "anual", "deducible"]
+semantic_role = "iva_anual_deducible_interiores_corrientes_soportado_base"
+continuidad_id = "iva-anual-deducible-interiores-corrientes-soportado-base"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/14-390-ejercicio-2022-actualizado-04-01-23-491-kb-xlsx.xlsx.extracted.md (sha256 7c6554f3182d) numbers no box for this row and it states none; it is the soportado part of box [48], which also adds the deducible half of the domestic inversion del sujeto pasivo."
+input_kind = "bound"
+binding = "modelo-390-iva-soportado-interiores-base"
+legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".casillas]]
+id = "iva.anual.deducible.interiores-corrientes.soportado.cuota"
+number = "iva.anual.deducible.interiores-corrientes.soportado.cuota"
+section = ["iva", "anual", "deducible"]
+semantic_role = "iva_anual_deducible_interiores_corrientes_soportado_cuota"
+continuidad_id = "iva-anual-deducible-interiores-corrientes-soportado-cuota"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/14-390-ejercicio-2022-actualizado-04-01-23-491-kb-xlsx.xlsx.extracted.md (sha256 7c6554f3182d) numbers no box for this row and it states none; it is the soportado part of box [49], which also adds the deducible half of the domestic inversion del sujeto pasivo."
+input_kind = "bound"
+binding = "modelo-390-iva-soportado-interiores-cuota"
+legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".casillas]]
+id = "iva.anual.autorepercutido.interior.deducible.base"
+number = "iva.anual.autorepercutido.interior.deducible.base"
+section = ["iva", "anual", "deducible"]
+semantic_role = "iva_anual_autorepercutido_interior_deducible_base"
+continuidad_id = "iva-anual-autorepercutido-interior-deducible-base"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/14-390-ejercicio-2022-actualizado-04-01-23-491-kb-xlsx.xlsx.extracted.md (sha256 7c6554f3182d) numbers no box for this row and it states none; it is the domestic inversion del sujeto pasivo part of box [48] (LIVA art. 84.Uno.2)."
+input_kind = "bound"
+binding = "modelo-390-iva-autorepercutido-interior-deducible-base"
+legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".casillas]]
+id = "iva.anual.autorepercutido.interior.deducible.cuota"
+number = "iva.anual.autorepercutido.interior.deducible.cuota"
+section = ["iva", "anual", "deducible"]
+semantic_role = "iva_anual_autorepercutido_interior_deducible_cuota"
+continuidad_id = "iva-anual-autorepercutido-interior-deducible-cuota"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/14-390-ejercicio-2022-actualizado-04-01-23-491-kb-xlsx.xlsx.extracted.md (sha256 7c6554f3182d) numbers no box for this row and it states none; it is the domestic inversion del sujeto pasivo part of box [49] (LIVA art. 84.Uno.2)."
+input_kind = "bound"
+binding = "modelo-390-iva-autorepercutido-interior-deducible-cuota"
+legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".casillas]]
+id = "iva.anual.deducible.interiores-inversion.soportado.base"
+number = "iva.anual.deducible.interiores-inversion.soportado.base"
+section = ["iva", "anual", "deducible"]
+semantic_role = "iva_anual_deducible_interiores_inversion_soportado_base"
+continuidad_id = "iva-anual-deducible-interiores-inversion-soportado-base"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/14-390-ejercicio-2022-actualizado-04-01-23-491-kb-xlsx.xlsx.extracted.md (sha256 7c6554f3182d) numbers no box for this row and it states none; it is the soportado part of box [50], which also adds the deducible half of the domestic inversion del sujeto pasivo."
+input_kind = "bound"
+binding = "modelo-390-iva-soportado-interiores-bienes-inversion-base"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-108", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".casillas]]
+id = "iva.anual.deducible.interiores-inversion.soportado.cuota"
+number = "iva.anual.deducible.interiores-inversion.soportado.cuota"
+section = ["iva", "anual", "deducible"]
+semantic_role = "iva_anual_deducible_interiores_inversion_soportado_cuota"
+continuidad_id = "iva-anual-deducible-interiores-inversion-soportado-cuota"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/14-390-ejercicio-2022-actualizado-04-01-23-491-kb-xlsx.xlsx.extracted.md (sha256 7c6554f3182d) numbers no box for this row and it states none; it is the soportado part of box [51], which also adds the deducible half of the domestic inversion del sujeto pasivo."
+input_kind = "bound"
+binding = "modelo-390-iva-soportado-interiores-bienes-inversion-cuota"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-108", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".casillas]]
+id = "iva.anual.autorepercutido.interior.deducible.inversion.base"
+number = "iva.anual.autorepercutido.interior.deducible.inversion.base"
+section = ["iva", "anual", "deducible"]
+semantic_role = "iva_anual_autorepercutido_interior_deducible_inversion_base"
+continuidad_id = "iva-anual-autorepercutido-interior-deducible-inversion-base"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/14-390-ejercicio-2022-actualizado-04-01-23-491-kb-xlsx.xlsx.extracted.md (sha256 7c6554f3182d) numbers no box for this row and it states none; it is the domestic inversion del sujeto pasivo part of box [50] (LIVA art. 84.Uno.2)."
+input_kind = "bound"
+binding = "modelo-390-iva-autorepercutido-interior-deducible-bienes-inversion-base"
+legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "ley-37-1992:art-108", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".casillas]]
+id = "iva.anual.autorepercutido.interior.deducible.inversion.cuota"
+number = "iva.anual.autorepercutido.interior.deducible.inversion.cuota"
+section = ["iva", "anual", "deducible"]
+semantic_role = "iva_anual_autorepercutido_interior_deducible_inversion_cuota"
+continuidad_id = "iva-anual-autorepercutido-interior-deducible-inversion-cuota"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/14-390-ejercicio-2022-actualizado-04-01-23-491-kb-xlsx.xlsx.extracted.md (sha256 7c6554f3182d) numbers no box for this row and it states none; it is the domestic inversion del sujeto pasivo part of box [51] (LIVA art. 84.Uno.2)."
+input_kind = "bound"
+binding = "modelo-390-iva-autorepercutido-interior-deducible-bienes-inversion-cuota"
+legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "ley-37-1992:art-108", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".casillas]]
+id = "iva.anual.deducible.rectificacion.interiores.base"
+number = "iva.anual.deducible.rectificacion.interiores.base"
+section = ["iva", "anual", "deducible"]
+semantic_role = "iva_anual_deducible_rectificacion_interiores_base"
+continuidad_id = "iva-anual-deducible-rectificacion-interiores-base"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/14-390-ejercicio-2022-actualizado-04-01-23-491-kb-xlsx.xlsx.extracted.md (sha256 7c6554f3182d) numbers no box for this row and it states none; it is the interior soportado part of box [639]."
+input_kind = "bound"
+binding = "modelo-390-iva-rectificacion-deducciones-interiores-base"
+legal_refs = ["ley-37-1992:art-80", "ley-37-1992:art-92", "ley-37-1992:art-99", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".casillas]]
+id = "iva.anual.deducible.rectificacion.interiores.cuota"
+number = "iva.anual.deducible.rectificacion.interiores.cuota"
+section = ["iva", "anual", "deducible"]
+semantic_role = "iva_anual_deducible_rectificacion_interiores_cuota"
+continuidad_id = "iva-anual-deducible-rectificacion-interiores-cuota"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/14-390-ejercicio-2022-actualizado-04-01-23-491-kb-xlsx.xlsx.extracted.md (sha256 7c6554f3182d) numbers no box for this row and it states none; it is the interior soportado part of box [62]."
+input_kind = "bound"
+binding = "modelo-390-iva-rectificacion-deducciones-interiores-cuota"
+legal_refs = ["ley-37-1992:art-80", "ley-37-1992:art-92", "ley-37-1992:art-99", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".casillas]]
+id = "iva.anual.deducible.rectificacion.importaciones.base"
+number = "iva.anual.deducible.rectificacion.importaciones.base"
+section = ["iva", "anual", "deducible"]
+semantic_role = "iva_anual_deducible_rectificacion_importaciones_base"
+continuidad_id = "iva-anual-deducible-rectificacion-importaciones-base"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/14-390-ejercicio-2022-actualizado-04-01-23-491-kb-xlsx.xlsx.extracted.md (sha256 7c6554f3182d) numbers no box for this row and it states none; it is the importaciones part of box [639]."
+input_kind = "bound"
+binding = "modelo-390-iva-rectificacion-deducciones-importaciones-base"
+legal_refs = ["ley-37-1992:art-80", "ley-37-1992:art-92", "ley-37-1992:art-99", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".casillas]]
+id = "iva.anual.deducible.rectificacion.importaciones.cuota"
+number = "iva.anual.deducible.rectificacion.importaciones.cuota"
+section = ["iva", "anual", "deducible"]
+semantic_role = "iva_anual_deducible_rectificacion_importaciones_cuota"
+continuidad_id = "iva-anual-deducible-rectificacion-importaciones-cuota"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/14-390-ejercicio-2022-actualizado-04-01-23-491-kb-xlsx.xlsx.extracted.md (sha256 7c6554f3182d) numbers no box for this row and it states none; it is the importaciones part of box [62]."
+input_kind = "bound"
+binding = "modelo-390-iva-rectificacion-deducciones-importaciones-cuota"
+legal_refs = ["ley-37-1992:art-80", "ley-37-1992:art-92", "ley-37-1992:art-99", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".casillas]]
+id = "iva.anual.deducible.rectificacion.inversion-sujeto-pasivo.base"
+number = "iva.anual.deducible.rectificacion.inversion-sujeto-pasivo.base"
+section = ["iva", "anual", "deducible"]
+semantic_role = "iva_anual_deducible_rectificacion_inversion_sujeto_pasivo_base"
+continuidad_id = "iva-anual-deducible-rectificacion-inversion-sujeto-pasivo-base"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/14-390-ejercicio-2022-actualizado-04-01-23-491-kb-xlsx.xlsx.extracted.md (sha256 7c6554f3182d) numbers no box for this row and it states none; it is the inversion del sujeto pasivo part (domestic and intra-community) of box [639]."
+input_kind = "bound"
+binding = "modelo-390-iva-rectificacion-deducciones-inversion-sujeto-pasivo-base"
+legal_refs = ["ley-37-1992:art-80", "ley-37-1992:art-92", "ley-37-1992:art-99", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".casillas]]
+id = "iva.anual.deducible.rectificacion.inversion-sujeto-pasivo.cuota"
+number = "iva.anual.deducible.rectificacion.inversion-sujeto-pasivo.cuota"
+section = ["iva", "anual", "deducible"]
+semantic_role = "iva_anual_deducible_rectificacion_inversion_sujeto_pasivo_cuota"
+continuidad_id = "iva-anual-deducible-rectificacion-inversion-sujeto-pasivo-cuota"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/14-390-ejercicio-2022-actualizado-04-01-23-491-kb-xlsx.xlsx.extracted.md (sha256 7c6554f3182d) numbers no box for this row and it states none; it is the inversion del sujeto pasivo part (domestic and intra-community) of box [62]."
+input_kind = "bound"
+binding = "modelo-390-iva-rectificacion-deducciones-inversion-sujeto-pasivo-cuota"
+legal_refs = ["ley-37-1992:art-80", "ley-37-1992:art-92", "ley-37-1992:art-99", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".casillas]]
+id = "iva.anual.deducible.aic-corrientes.todos-tipos.base"
+number = "iva.anual.deducible.aic-corrientes.todos-tipos.base"
+section = ["iva", "anual", "deducible"]
+semantic_role = "iva_anual_deducible_aic_corrientes_todos_tipos_base"
+continuidad_id = "iva-anual-deducible-aic-corrientes-todos-tipos-base"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/14-390-ejercicio-2022-actualizado-04-01-23-491-kb-xlsx.xlsx.extracted.md (sha256 7c6554f3182d) numbers no box for this row and it states none; it is the rate-blind layer box [56] projects, so a row whose rate was never recorded still reaches the total."
+input_kind = "bound"
+binding = "modelo-390-iva-deducible-aic-corrientes-base"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-84", "ley-37-1992:art-85", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".casillas]]
+id = "iva.anual.deducible.aic-corrientes.todos-tipos.cuota"
+number = "iva.anual.deducible.aic-corrientes.todos-tipos.cuota"
+section = ["iva", "anual", "deducible"]
+semantic_role = "iva_anual_deducible_aic_corrientes_todos_tipos_cuota"
+continuidad_id = "iva-anual-deducible-aic-corrientes-todos-tipos-cuota"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/14-390-ejercicio-2022-actualizado-04-01-23-491-kb-xlsx.xlsx.extracted.md (sha256 7c6554f3182d) numbers no box for this row and it states none; it is the rate-blind layer box [57] projects, so a row whose rate was never recorded still reaches the total."
+input_kind = "bound"
+binding = "modelo-390-iva-deducible-aic-corrientes-cuota"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-84", "ley-37-1992:art-85", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".casillas]]
+id = "iva.anual.deducible.aic-inversion.todos-tipos.base"
+number = "iva.anual.deducible.aic-inversion.todos-tipos.base"
+section = ["iva", "anual", "deducible"]
+semantic_role = "iva_anual_deducible_aic_inversion_todos_tipos_base"
+continuidad_id = "iva-anual-deducible-aic-inversion-todos-tipos-base"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/14-390-ejercicio-2022-actualizado-04-01-23-491-kb-xlsx.xlsx.extracted.md (sha256 7c6554f3182d) numbers no box for this row and it states none; it is the rate-blind layer box [58] projects, so a row whose rate was never recorded still reaches the total."
+input_kind = "bound"
+binding = "modelo-390-iva-deducible-aic-inversion-base"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-108", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".casillas]]
+id = "iva.anual.deducible.aic-inversion.todos-tipos.cuota"
+number = "iva.anual.deducible.aic-inversion.todos-tipos.cuota"
+section = ["iva", "anual", "deducible"]
+semantic_role = "iva_anual_deducible_aic_inversion_todos_tipos_cuota"
+continuidad_id = "iva-anual-deducible-aic-inversion-todos-tipos-cuota"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/14-390-ejercicio-2022-actualizado-04-01-23-491-kb-xlsx.xlsx.extracted.md (sha256 7c6554f3182d) numbers no box for this row and it states none; it is the rate-blind layer box [59] projects, so a row whose rate was never recorded still reaches the total."
+input_kind = "bound"
+binding = "modelo-390-iva-deducible-aic-inversion-cuota"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-108", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".casillas]]
+id = "iva.anual.deducible.aic-servicios.todos-tipos.base"
+number = "iva.anual.deducible.aic-servicios.todos-tipos.base"
+section = ["iva", "anual", "deducible"]
+semantic_role = "iva_anual_deducible_aic_servicios_todos_tipos_base"
+continuidad_id = "iva-anual-deducible-aic-servicios-todos-tipos-base"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/14-390-ejercicio-2022-actualizado-04-01-23-491-kb-xlsx.xlsx.extracted.md (sha256 7c6554f3182d) numbers no box for this row and it states none; it is the rate-blind layer box [597] projects, so a row whose rate was never recorded still reaches the total."
+input_kind = "bound"
+binding = "modelo-390-iva-deducible-aic-servicios-base"
+legal_refs = ["ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".casillas]]
+id = "iva.anual.deducible.aic-servicios.todos-tipos.cuota"
+number = "iva.anual.deducible.aic-servicios.todos-tipos.cuota"
+section = ["iva", "anual", "deducible"]
+semantic_role = "iva_anual_deducible_aic_servicios_todos_tipos_cuota"
+continuidad_id = "iva-anual-deducible-aic-servicios-todos-tipos-cuota"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/14-390-ejercicio-2022-actualizado-04-01-23-491-kb-xlsx.xlsx.extracted.md (sha256 7c6554f3182d) numbers no box for this row and it states none; it is the rate-blind layer box [598] projects, so a row whose rate was never recorded still reaches the total."
+input_kind = "bound"
+binding = "modelo-390-iva-deducible-aic-servicios-cuota"
+legal_refs = ["ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]

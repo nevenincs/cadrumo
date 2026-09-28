@@ -332,6 +332,37 @@ def test_modelo_390_construct_requires_recargo_grounding(revision_id: str) -> No
         committed_registry_validator(catalogues).validate_modelo(mutated_modelo)
 
 
+#: The apartado 5 deducible block read as the sum of the year's 303 boxes: the
+#: import corrientes base [52], the deducible half of the domestic inversión del
+#: sujeto pasivo inside [48]-[51], the three parts of [639]/[62], and each
+#: intra-community block's rate-blind layer and rate boxes.
+_M390_DEDUCIBLE_BLOCK_BINDING_IDS: tuple[str, ...] = (
+    "modelo-390-iva-soportado-importaciones-base",
+    "modelo-390-iva-autorepercutido-interior-deducible-base",
+    "modelo-390-iva-autorepercutido-interior-deducible-cuota",
+    "modelo-390-iva-autorepercutido-interior-deducible-bienes-inversion-base",
+    "modelo-390-iva-autorepercutido-interior-deducible-bienes-inversion-cuota",
+    *(
+        f"modelo-390-iva-rectificacion-deducciones-{part}-{fact}"
+        for part in ("interiores", "importaciones", "inversion-sujeto-pasivo")
+        for fact in ("base", "cuota")
+    ),
+    *(
+        f"modelo-390-iva-deducible-{block}{rate}-{fact}"
+        for block in ("aic-corrientes", "aic-inversion", "aic-servicios")
+        for rate in ("", "-tipo-4", "-tipo-5", "-tipo-10", "-tipo-21")
+        for fact in ("base", "cuota")
+    ),
+)
+#: The 2 % and 7,5 % intra-community deducible rate boxes the 2024 design adds.
+_M390_DEDUCIBLE_AIC_2024_RATE_BINDING_IDS: tuple[str, ...] = tuple(
+    f"modelo-390-iva-deducible-{block}-tipo-{rate}-{fact}"
+    for block in ("aic-corrientes", "aic-inversion", "aic-servicios")
+    for rate in ("2", "7-5")
+    for fact in ("base", "cuota")
+)
+
+
 @pytest.mark.parametrize("revision_id", _M390_REVISION_IDS)
 def test_modelo_390_declares_iva_aggregation_bindings_for_annual_resumen(revision_id: str) -> None:
     """Modelo 390 declares the same IVA flow-direction binding pattern as
@@ -442,6 +473,8 @@ def test_modelo_390_declares_iva_aggregation_bindings_for_annual_resumen(revisio
         # [27]/[28], previously fed in error by the AIC blind binding above.
         "modelo-390-iva-autorepercutido-interior-base",
         "modelo-390-iva-autorepercutido-interior-cuota",
+        *_M390_DEDUCIBLE_BLOCK_BINDING_IDS,
+        *(_M390_DEDUCIBLE_AIC_2024_RATE_BINDING_IDS if revision_id >= "2024" else ()),
     }
 
 

@@ -24,6 +24,7 @@ binding_refs = [
     "modelo-390-prev-303-compensacion-ejercicio-anterior",
     "modelo-390-prev-303-regularizacion-cuotas-art-80-cinco-5",
     "modelo-390-prev-303-iva-importacion-aduana",
+    "modelo-390-prev-303-compensaciones-reagp",
 ]
 legal_refs = [
     "ley-37-1992:art-80",
@@ -46,6 +47,8 @@ legal_refs = [
     "ley-37-1992:art-108",
     "ley-37-1992:art-109",
     "ley-37-1992:art-110",
+    "ley-37-1992:art-130",
+    "ley-37-1992:art-131",
 ]
 source_refs = [
     "aeat-dr-390-2022",

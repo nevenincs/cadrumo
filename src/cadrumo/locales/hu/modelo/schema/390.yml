@@ -89,6 +89,18 @@ modelo:
           iva-aic-servicios-tipo-7-5-cuota:
             label: Közösségen belüli szolgáltatásbeszerzések után keletkezett ÁFA
               7.5% kulccsal - adóösszeg
+          iva-anual-autorepercutido-interior-deducible-base:
+            label: Belföldi folyó ügyletek levonható fordított adózású ÁFA-ja - adóalap
+              (LIVA 84. cikk Uno.2.; a hivatalos 48. rovat része)
+          iva-anual-autorepercutido-interior-deducible-cuota:
+            label: Belföldi folyó ügyletek levonható fordított adózású ÁFA-ja - levonható
+              adóösszeg (LIVA 84. cikk Uno.2.; a hivatalos 49. rovat része)
+          iva-anual-autorepercutido-interior-deducible-inversion-base:
+            label: Belföldi tárgyi eszközök levonható fordított adózású ÁFA-ja - adóalap
+              (LIVA 84. cikk Uno.2.; a hivatalos 50. rovat része)
+          iva-anual-autorepercutido-interior-deducible-inversion-cuota:
+            label: Belföldi tárgyi eszközök levonható fordított adózású ÁFA-ja - levonható
+              adóösszeg (LIVA 84. cikk Uno.2.; a hivatalos 51. rovat része)
           iva-anual-compensacion-generada-ejercicio:
             label: Az évben keletkezett beszámítási egyenleg
           iva-anual-compensacion-ultimo-periodo:
@@ -97,6 +109,57 @@ modelo:
             label: Az év összes levonható ÁFA összege
           iva-anual-cuota-devengada-total:
             label: Az év összes keletkezett ÁFA összege
+          iva-anual-deducible-aic-corrientes-todos-tipos-base:
+            label: Közösségen belüli folyó termékbeszerzések után levonható előzetesen
+              felszámított ÁFA, minden kulcs - adóalap (hivatalos 56. rovat)
+          iva-anual-deducible-aic-corrientes-todos-tipos-cuota:
+            label: Közösségen belüli folyó termékbeszerzések után levonható előzetesen
+              felszámított ÁFA, minden kulcs - levonható adóösszeg (hivatalos 57.
+              rovat)
+          iva-anual-deducible-aic-inversion-todos-tipos-base:
+            label: Közösségen belüli tárgyieszköz-beszerzések után levonható előzetesen
+              felszámított ÁFA, minden kulcs - adóalap (hivatalos 58. rovat)
+          iva-anual-deducible-aic-inversion-todos-tipos-cuota:
+            label: Közösségen belüli tárgyieszköz-beszerzések után levonható előzetesen
+              felszámított ÁFA, minden kulcs - levonható adóösszeg (hivatalos 59.
+              rovat)
+          iva-anual-deducible-aic-servicios-todos-tipos-base:
+            label: Közösségen belüli szolgáltatásbeszerzések után levonható előzetesen
+              felszámított ÁFA, minden kulcs - adóalap (hivatalos 597. rovat)
+          iva-anual-deducible-aic-servicios-todos-tipos-cuota:
+            label: Közösségen belüli szolgáltatásbeszerzések után levonható előzetesen
+              felszámított ÁFA, minden kulcs - levonható adóösszeg (hivatalos 598.
+              rovat)
+          iva-anual-deducible-interiores-corrientes-soportado-base:
+            label: Belföldi folyó ügyletek levonható előzetesen felszámított ÁFA-ja
+              - adóalap (a hivatalos 48. rovat része)
+          iva-anual-deducible-interiores-corrientes-soportado-cuota:
+            label: Belföldi folyó ügyletek levonható előzetesen felszámított ÁFA-ja
+              - levonható adóösszeg (a hivatalos 49. rovat része)
+          iva-anual-deducible-interiores-inversion-soportado-base:
+            label: Belföldi tárgyieszköz-ügyletek levonható előzetesen felszámított
+              ÁFA-ja - adóalap (a hivatalos 50. rovat része)
+          iva-anual-deducible-interiores-inversion-soportado-cuota:
+            label: Belföldi tárgyieszköz-ügyletek levonható előzetesen felszámított
+              ÁFA-ja - levonható adóösszeg (a hivatalos 51. rovat része)
+          iva-anual-deducible-rectificacion-importaciones-base:
+            label: Importok levonásainak helyesbítése - adóalap (a hivatalos 639.
+              rovat része)
+          iva-anual-deducible-rectificacion-importaciones-cuota:
+            label: Importok levonásainak helyesbítése - levonható adóösszeg (a hivatalos
+              62. rovat része)
+          iva-anual-deducible-rectificacion-interiores-base:
+            label: Belföldi ügyletek levonásainak helyesbítése - adóalap (a hivatalos
+              639. rovat része)
+          iva-anual-deducible-rectificacion-interiores-cuota:
+            label: Belföldi ügyletek levonásainak helyesbítése - levonható adóösszeg
+              (a hivatalos 62. rovat része)
+          iva-anual-deducible-rectificacion-inversion-sujeto-pasivo-base:
+            label: Fordított adózású belföldi és Közösségen belüli ügyletek levonásainak
+              helyesbítése - adóalap (a hivatalos 639. rovat része)
+          iva-anual-deducible-rectificacion-inversion-sujeto-pasivo-cuota:
+            label: Fordított adózású belföldi és Közösségen belüli ügyletek levonásainak
+              helyesbítése - levonható adóösszeg (a hivatalos 62. rovat része)
           iva-anual-reconciliacion-deducible-303:
             label: Éves egyeztetés - a 303-as bevallásokban bevallott levonható ÁFA
           iva-anual-reconciliacion-devengada-303:
