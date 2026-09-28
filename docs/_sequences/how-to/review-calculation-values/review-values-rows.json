@@ -125,7 +125,7 @@
         "result": {
           "authorization_state": null,
           "binding_overrides": {},
-          "calculation_revision_id": "b60828e8d0f9e794b49aa7c165f5283bb38377c1ba4d6b706b67693ee84170ea",
+          "calculation_revision_id": "85f8dda3a63b6cca4c987051fa7b5d6a9ceaf6e960811926aa94c450e07ffa53",
           "casilla_values": {
             "decl.ejercicio": "2024",
             "decl.entidad-extranjera.porcentaje-renta-residentes": "0",
@@ -238,7 +238,8 @@
           "filed_at": null,
           "filed_by": null,
           "input_values_by_casilla_id": {
-            "decl.ejercicio": "2024"
+            "decl.ejercicio": "2024",
+            "decl.tipo-declaracion": "original"
           },
           "modality": null,
           "modality_reason": null,
@@ -295,6 +296,23 @@
                 "aeat-dr-184-2023-2024"
               ],
               "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "decl.tipo-declaracion",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-1",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024"
+              ],
+              "value": "original"
             },
             {
               "absent_by_design": false,
@@ -1006,7 +1024,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision b60828e8d0f9e794b49aa7c165f5283bb38377c1ba4d6b706b67693ee84170ea (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 85f8dda3a63b6cca4c987051fa7b5d6a9ceaf6e960811926aa94c450e07ffa53 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [],
           "state": "borrador",
           "superseded_at": null,
