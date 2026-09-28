@@ -44,6 +44,7 @@ from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.optional_extras import PDF_EXTRA, MissingOptionalExtraError, require_optional_extra
 from ...core.product_identity import PRODUCT_IDENTITY
+from ...core.type_guards import is_str_keyed_dict
 from ...domain.modelos.errors import ModeloExportError
 from ..export.errors import ExportFormatError
 from ..export.tabular import ExportSerializationFormat, serialize_tabular_rows
@@ -252,7 +253,7 @@ def _preamble_value(value: object) -> str:
     """Render one header fact for a single-field preamble line."""
     if value is None:
         return ""
-    if isinstance(value, Mapping):
+    if is_str_keyed_dict(value):
         return _REFERENCE_SEPARATOR.join(f"{key}={value[key]}" for key in sorted(value))
     return str(value)
 

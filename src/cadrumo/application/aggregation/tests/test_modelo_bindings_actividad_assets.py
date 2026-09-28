@@ -11,6 +11,7 @@ import pytest
 from ....core.casilla_id import validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.calculations.registry.tests.authored_editions import newest_authored_editions
 from ....domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from ....domain.renta.actividad_asset.claims import AmortizationClaim
 from ....domain.renta.actividad_asset.election import (
@@ -367,7 +368,12 @@ def test_withheld_acquisition_advisory_names_the_asset_and_the_amount(year: int)
     assert diagnostics[0].remedy is not None
 
 
-@pytest.mark.parametrize("year", _supported_years())
+# The two newest Modelo 100 editions the registry authors; the first-slice
+# expense routing is declared for each of them.
+_ROUTING_EDITIONS = newest_authored_editions("100", 2)
+
+
+@pytest.mark.parametrize("year", _ROUTING_EDITIONS)
 def test_amortization_labelled_categories_come_from_the_governed_routing(year: int) -> None:
     """The label is a registry fact: the routed casilla decides, not a category name list."""
     with bundled_indexed_authority().operation():

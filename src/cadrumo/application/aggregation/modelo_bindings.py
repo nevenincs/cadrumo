@@ -1343,7 +1343,7 @@ def _m130_asset_register_treatments(
     labelled = (
         amortization_labelled_expense_categories(effective_date=date(filing_year, 12, 31))
         if charges_the_filing_year
-        else frozenset()
+        else frozenset[str]()
     )
     return tuple(
         LedgerRentaExpenseTreatment(

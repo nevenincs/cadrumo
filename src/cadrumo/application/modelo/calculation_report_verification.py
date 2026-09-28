@@ -45,6 +45,7 @@ from ...core.identity.digest import ContentDigest
 from ...core.identity.hex_ids import CalculationRevisionId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.product_identity import PRODUCT_IDENTITY
+from ...core.type_guards import is_str_keyed_dict
 from ...domain.modelos.calculation_revision import CalculationRevision
 from .action_errors import CalculationRevisionNotFoundError, CalculationRevisionStateError
 from .calculation_report import CALCULATION_REPORT_CONTENT_VERSION, ModeloCalculationReport
@@ -295,7 +296,7 @@ def _parse_report(report_bytes: bytes) -> ModeloCalculationReport | None:
         decoded = _strict_json(report_bytes)
     except (UnicodeDecodeError, ValueError):
         return None
-    if not isinstance(decoded, dict) or set(decoded) != _REPORT_PAYLOAD_KEYS:
+    if not is_str_keyed_dict(decoded) or frozenset(decoded) != _REPORT_PAYLOAD_KEYS:
         return None
     if decoded["content_version"] != CALCULATION_REPORT_CONTENT_VERSION:
         return None
@@ -399,7 +400,7 @@ def _check_statement(
     except (UnicodeDecodeError, ValueError):
         checks.failed(CalculationSummaryCheckName.STATEMENT, CalculationSummaryVerificationReason.STATEMENT_UNREADABLE)
         return None
-    if not isinstance(decoded, dict):
+    if not is_str_keyed_dict(decoded):
         checks.failed(CalculationSummaryCheckName.STATEMENT, CalculationSummaryVerificationReason.STATEMENT_UNREADABLE)
         return None
     if decoded.get("statement_schema") != CALCULATION_REPORT_CERTIFICATION_SCHEMA:
