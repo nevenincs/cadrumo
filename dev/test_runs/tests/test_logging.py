@@ -16,6 +16,7 @@ import pytest
 from dev._paths import REPO_ROOT
 from dev.test_runs.logging import RunLog, _redirect_collection_output
 from dev.test_runs.paths import SCRATCH_PATH_BUDGET, SCRATCH_PREFIX, SCRATCH_SEPARATOR
+from dev.test_runs.tests.setup_skip_probe import SKIP_REASON
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.serial]
 
@@ -89,6 +90,32 @@ def test_real_child_pytest_persists_internal_error_traceback() -> None:
     transcript = Path(match.group("path")).read_text(encoding="utf-8")
     assert "INTERNALERROR" in transcript
     assert "RuntimeError: internal error persistence probe" in transcript
+
+
+def test_real_child_pytest_records_a_setup_skip_as_the_tests_verdict() -> None:
+    """A test skipped before its body still ends its ``RUN`` line with a verdict."""
+    environment = os.environ.copy()
+    environment.pop("CADRUMO_TEST_RUN_ROOT", None)
+    result = subprocess.run(
+        [sys.executable, "-m", "pytest", "-q", "-n0", "dev/test_runs/tests/setup_skip_probe.py"],
+        cwd=REPO_ROOT,
+        env=environment,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        check=False,
+    )
+
+    assert result.returncode == pytest.ExitCode.OK, result.stdout + result.stderr
+    match = re.search(r"test run log: (?P<path>.+?run\.log)", result.stdout)
+    assert match is not None, result.stdout
+    transcript = Path(match.group("path")).read_text(encoding="utf-8").splitlines()
+    nodeid = "dev/test_runs/tests/setup_skip_probe.py::test_skipped_before_its_body"
+    started = transcript.index(f"RUN {nodeid}")
+    verdicts = [line for line in transcript[started + 1 :] if line.startswith(f"SKIPPED {nodeid} phase=setup ")]
+    assert len(verdicts) == 1, transcript
+    assert f"Skipped: {SKIP_REASON}" in transcript
 
 
 def test_real_child_pytest_confines_cache_and_basetemp_to_its_run(tmp_path: Path) -> None:

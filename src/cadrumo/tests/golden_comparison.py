@@ -35,6 +35,13 @@ material is freshly minted for every hermetic profile.  Only
 ``config.profile.delete``'s ``result.fingerprint.digest`` is masked.  A generic
 ``digest`` leaf, the rest of that fingerprint, and the same path on any other
 command remain assertable.
+
+The modelo export has a release-bound residual instead: the file it writes
+names the product version in AEAT's ``<Aux><VERSION>`` field, so the file
+digest and the export event id derived from it change at every release while
+nothing else in the envelope does.  Only ``modelo.export``'s
+``result.file_sha256`` and ``result.bucket_event_id`` are masked; the byte
+size and every other leaf remain assertable.
 """
 
 from __future__ import annotations
@@ -62,10 +69,17 @@ MASK_SENTINEL = "<masked>"
 #: proven minimal by the anti-tautology gate.
 GOLDEN_MASK_FIELDS: frozenset[str] = frozenset({"snapshot_id", "run_id"})
 
-#: Exact ``(command, dotted result path)`` leaves whose values are irreducibly
-#: nondeterministic.  This is central policy, not a caller/sequence extension.
+#: Exact ``(command, dotted result path)`` leaves a golden cannot pin.  This is
+#: central policy, not a caller/sequence extension.
 GOLDEN_MASK_PATHS: frozenset[tuple[str, str]] = frozenset(
-    {("config.profile.delete", "result.fingerprint.digest")},
+    {
+        ("config.profile.delete", "result.fingerprint.digest"),
+        # The exported file carries the product version in AEAT's <Aux><VERSION>
+        # field, so its digest, and the export event id derived from it, change
+        # with every release while the rest of the envelope does not.
+        ("modelo.export", "result.file_sha256"),
+        ("modelo.export", "result.bucket_event_id"),
+    },
 )
 
 

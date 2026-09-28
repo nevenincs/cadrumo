@@ -308,11 +308,17 @@ def test_full_projection_completes_within_a_bounded_time() -> None:
     the full ~15k-row registry projects in about a second. A generous ceiling
     guards against a regression to a per-casilla snapshot reload (the O(n^2)
     hazard) without being flaky on a slow CI box.
+
+    The authority is passed EXPLICITLY, which is the uncached path by contract:
+    the defaulted call memoises the bundled walk per registry identity, and a
+    warm memo would time a dictionary lookup and call any complexity regression
+    fast.
     """
     from ..casilla_projection import project_casilla_search_records
 
+    authority = compiled_bundled_authority()
     start = time.perf_counter()
-    records, stats = project_casilla_search_records()
+    records, stats = project_casilla_search_records(authority)
     elapsed = time.perf_counter() - start
 
     assert records, "projection produced no records"

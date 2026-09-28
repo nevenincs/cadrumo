@@ -458,12 +458,22 @@ async def open_real_browser_session(
     The boundary is also the browser's proxy, through the production proxy
     settings, so a redirect hop the route never sees is still served locally;
     the route's own loopback fetches bypass it.
+
+    The browser always launches headless. The routed pages are read by the
+    test, never by a person, and a provider that asks for a visible window (a
+    fresh Cl@ve Movil login, so the operator can scan its QR) would otherwise
+    need a display server that a headless host does not have. That request is
+    the provider's own contract and is pinned by the provider's unit tests.
     """
     playwright = await async_playwright().start()
     session = _BoundaryTrustingBrowserSession(
         playwright=playwright,
         settings=settings.model_copy(
-            update={"cadrumo_proxy_url": boundary.proxy_url, "cadrumo_proxy_bypass": boundary.loopback_host}
+            update={
+                "cadrumo_browser_headless": True,
+                "cadrumo_proxy_url": boundary.proxy_url,
+                "cadrumo_proxy_bypass": boundary.loopback_host,
+            }
         ),
         profile=Profile(name=profile_name),
         evasion_strategy=RoutedStealthEvasion(boundary),

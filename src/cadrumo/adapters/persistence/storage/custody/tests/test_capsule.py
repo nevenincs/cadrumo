@@ -649,6 +649,38 @@ def test_uncommitted_or_identity_mixed_capsules_are_not_usable(tmp_path: Path) -
         load_committed_profile_password_material(_PROFILE_ID, settings=settings)
 
 
+def test_absent_capsule_ancestry_is_not_committed_but_linked_ancestry_is_refused(tmp_path: Path) -> None:
+    """Nothing can exist below an absent directory; a linked one is never walked through."""
+    settings = _settings(tmp_path)
+    capsules_root = profile_custody_path(
+        _PROFILE_ID, StorageCategory.PROFILE_CAPSULE_COMMIT, settings=settings
+    ).parent.parent
+    assert not os.path.lexists(capsules_root)
+
+    assert recognize_current_profile_capsule(_PROFILE_ID, settings=settings) is None
+    with pytest.raises(ProfileCustodyRecordError, match="not committed"):
+        load_committed_profile_password_material(_PROFILE_ID, settings=settings)
+
+    envelope = _password_envelope()
+    published = publish_profile_custody_capsule(
+        profile_id=_PROFILE_ID,
+        transaction_id=uuid4(),
+        publication_kind=ProfilePublicationKind.ENROLL,
+        password_envelope=envelope,
+        sentinel=create_profile_custody_sentinel(envelope=envelope, dek=_DEK),
+        data_files={},
+        settings=settings,
+    )
+    moved_capsules = tmp_path / "moved-capsules"
+    published.parent.rename(moved_capsules)
+    os.symlink(moved_capsules, capsules_root, target_is_directory=True)
+
+    with pytest.raises(ProfileCustodyRecordError, match=r"unsafe|reparse"):
+        recognize_current_profile_capsule(_PROFILE_ID, settings=settings)
+    with pytest.raises(ProfileCustodyRecordError, match=r"unsafe|reparse"):
+        load_committed_profile_password_material(_PROFILE_ID, settings=settings)
+
+
 def test_discovery_refuses_a_retired_manifest_by_stat_only_without_opening_its_bytes(tmp_path: Path) -> None:
     """Retired custody is a typed refusal; its untrusted contents are never read."""
     settings = _settings(tmp_path)

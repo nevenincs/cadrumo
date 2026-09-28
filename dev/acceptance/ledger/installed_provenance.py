@@ -27,9 +27,11 @@ from pathlib import Path
 from typing import Any, Literal, Protocol
 
 from dev.acceptance.income_tax.installed_tui_child import (
+    SETUP_WALK_SURFACE,
     InstalledTuiChildError,
     assert_installed_product_origin,
     installed_product_evidence,
+    leave_the_setup_walk_if_handed_off,
     query_public_selector,
     read_passphrase_from_stdin,
     run_installed_tui_child_process,
@@ -385,13 +387,15 @@ async def _wait_with_deadline(
 
 
 async def _admit_installed_session(pilot: Any, *, passphrase: str) -> None:
-    """Unlock through the visible Login screen, or accept an already admitted Home."""
+    """Unlock through the visible Login screen, or accept an already admitted session."""
     from textual.widgets import Input
 
-    if await _wait_with_deadline(pilot, ("#field-passphrase", "#home-agenda")) == "#field-passphrase":
+    admitted_surfaces = ("#home-agenda", SETUP_WALK_SURFACE)
+    if await _wait_with_deadline(pilot, ("#field-passphrase", *admitted_surfaces)) == "#field-passphrase":
         query_public_selector(pilot, "#field-passphrase", Input).value = passphrase
         await pilot.click("#btn-unlock")
-    await _wait_with_deadline(pilot, ("#home-agenda",))
+        await _wait_with_deadline(pilot, admitted_surfaces)
+    await leave_the_setup_walk_if_handed_off(pilot=pilot)
 
 
 def _run_installed_launcher(*, passphrase: str, drive_after_home: Any) -> None:

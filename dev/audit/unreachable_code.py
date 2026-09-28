@@ -80,6 +80,7 @@ import re
 import sys
 from collections import deque
 from collections.abc import Iterable, Iterator, Mapping
+from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass, field
 from enum import StrEnum
@@ -88,6 +89,7 @@ from typing import Final, cast
 
 from cadrumo.core.toml import TomlDecodeError, parse_toml
 from dev._paths import REPO_ROOT, UTF_8
+from dev.quality.cyclic_gc import cyclic_gc_paused
 from dev.quality.source_import_analysis import (
     is_shipped_module,
     module_name_for,
@@ -659,7 +661,7 @@ class _ScanMemo:
 
     The passes read the same few thousand trees independently, and each used to
     re-parse and re-walk them, which made one scan minutes of repeated work. The
-    memo lives only for one :func:`scan_unreachable_code` call, so a file edited
+    memo lives only for one :func:`shared_scan_memo` block, so a file edited
     between scans is read afresh. Trees are never mutated, so sharing is safe.
     """
 
@@ -668,6 +670,24 @@ class _ScanMemo:
 
 
 _SCAN_MEMO: ContextVar[_ScanMemo | None] = ContextVar("unreachable_code_scan_memo", default=None)
+
+
+@contextmanager
+def shared_scan_memo() -> Iterator[None]:
+    """Share parses and node walks among every pass run inside the block.
+
+    A scan that composes several of this module's passes over the same trees
+    opens one block around them; each tree is then parsed and walked once. The
+    memo is discarded on exit, so a later scan reads edited files afresh. The
+    cyclic collector is paused for the block, because the memo keeps every tree
+    and walk alive at once and each full collection would only re-traverse them.
+    """
+    token = _SCAN_MEMO.set(_ScanMemo())
+    try:
+        with cyclic_gc_paused():
+            yield
+    finally:
+        _SCAN_MEMO.reset(token)
 
 
 def _walked(tree: ast.AST) -> Iterable[ast.AST]:
@@ -1784,11 +1804,8 @@ def _test_findings(
 
 def scan_unreachable_code(spec: ShippedTreeSpec) -> UnreachableCodeResult:
     """Run the two-layer reachability scan over the tree ``spec`` describes."""
-    token = _SCAN_MEMO.set(_ScanMemo())
-    try:
+    with shared_scan_memo():
         return _scan_with_memo(spec)
-    finally:
-        _SCAN_MEMO.reset(token)
 
 
 def _scan_with_memo(spec: ShippedTreeSpec) -> UnreachableCodeResult:

@@ -7,8 +7,11 @@ can be compared against the registry declarations.
 
 from __future__ import annotations
 
+import multiprocessing
+import os
 import warnings
-from collections.abc import Generator
+from collections.abc import Generator, Iterable
+from concurrent.futures import ProcessPoolExecutor
 from contextlib import contextmanager
 from functools import lru_cache
 from pathlib import Path
@@ -27,6 +30,8 @@ from cadrumo.core.external_constants import PDF_EXTENSION as _PDF_EXTENSION
 from cadrumo.core.external_constants import XLS_EXTENSION as _XLS_EXTENSION
 from cadrumo.core.external_constants import XLSM_EXTENSION as _XLSM_EXTENSION
 from cadrumo.core.external_constants import XLSX_EXTENSION as _XLSX_EXTENSION
+from cadrumo.core.locks import exclusive_file_lock
+from cadrumo.core.locks_errors import LockAcquisitionError
 from cadrumo.core.paths import path_stat_fingerprint
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from dev.registry.compiler.record_design_schema import (
@@ -38,7 +43,9 @@ from dev.registry.compiler.record_design_schema import (
 from .record_design_cache import (
     load_cached_record_design,
     load_cached_record_design_refusal,
+    record_design_cache_dir,
     record_design_cache_key,
+    record_design_outcome_is_cached,
     store_cached_record_design,
     store_cached_record_design_refusal,
 )
@@ -51,6 +58,7 @@ from .record_design_workbook import extract_sheet, extract_xls_sheet
 
 _OPENPYXL_HEADER_FOOTER_WARNING = "Cannot parse header or footer so it will be ignored"
 _OPENPYXL_PRINT_AREA_WARNING = r"Print area cannot be set to Defined name: .*"
+_EXTRACTABLE_SUFFIXES = frozenset({_PDF_EXTENSION, _XLSX_EXTENSION, _XLSM_EXTENSION, _XLS_EXTENSION})
 
 
 def extract_record_design(path: Path) -> RecordDesignExtraction:
@@ -64,6 +72,70 @@ def extract_record_design(path: Path) -> RecordDesignExtraction:
     if not resolved.is_file():
         raise FileNotFoundError(f"record-design source not found: {path}")
     return _extract_record_design_cached(*path_stat_fingerprint(resolved))
+
+
+#: Upper bound on the processes one warm-up starts; a cold corpus has far more
+#: sources than this, and each worker holds a whole parsed document.
+_MAX_WARM_WORKERS = 8
+#: How long a second warm-up waits for the first before reading serially.
+_WARM_LOCK_TIMEOUT_S = 1800.0
+
+
+def warm_record_design_cache(paths: Iterable[Path], *, max_workers: int | None = None) -> int:
+    """Extract, in parallel, every source the cross-process cache does not yet hold.
+
+    Sources are independent and each is persisted under its own content key, so
+    a cold corpus is read at the speed of the machine's cores rather than one
+    source at a time. Every source goes through :func:`extract_record_design`,
+    the same call a serial reader makes, so the cached readings and refusals are
+    exactly what that reader would have written. A worker that fails for any
+    other reason leaves its source uncached, and the next serial read of it
+    then behaves as it always did.
+
+    Concurrent warm-ups, such as several test workers reaching their first
+    design read together, take turns through one lock beside the cache: the
+    later one then finds the sources the earlier one extracted already cached
+    instead of extracting them again. One that cannot get the lock in time
+    extracts nothing and leaves every source to the serial reader.
+
+    Returns:
+        The number of sources that were not cached when this warm-up got its turn.
+    """
+    cache_dir = record_design_cache_dir()
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    try:
+        with exclusive_file_lock(cache_dir / "warm-up", timeout=_WARM_LOCK_TIMEOUT_S):
+            return _warm_uncached(paths, max_workers=max_workers)
+    except LockAcquisitionError:
+        return 0
+
+
+def _warm_uncached(paths: Iterable[Path], *, max_workers: int | None) -> int:
+    pending: list[str] = []
+    for path in dict.fromkeys(path.resolve() for path in paths):
+        if not path.is_file() or path.suffix.lower() not in _EXTRACTABLE_SUFFIXES:
+            continue
+        fingerprint = path_stat_fingerprint(path)
+        if not record_design_outcome_is_cached(record_design_cache_key(Path(fingerprint[0]), fingerprint)):
+            pending.append(str(path))
+    workers = min(len(pending), max_workers or min(_MAX_WARM_WORKERS, os.process_cpu_count() or 1))
+    if workers < 2:
+        return len(pending)
+    # Spawned, never forked: a test worker is multi-threaded, and a forked child
+    # can inherit a lock another thread held at the moment of the fork.
+    with ProcessPoolExecutor(max_workers=workers, mp_context=multiprocessing.get_context("spawn")) as pool:
+        for _ in pool.map(_extract_into_cache, pending):
+            pass
+    return len(pending)
+
+
+def _extract_into_cache(path: str) -> None:
+    """Worker entry: extract one source so its outcome lands in the cache."""
+    try:
+        extract_record_design(Path(path))
+    except Exception:
+        # The serial read of this source meets and reports the same failure.
+        return
 
 
 @lru_cache(maxsize=256)
@@ -255,4 +327,5 @@ __all__ = [
     "extract_record_design",
     "extract_record_design_pdf",
     "extract_record_design_workbook",
+    "warm_record_design_cache",
 ]

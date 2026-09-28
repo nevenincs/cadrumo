@@ -23,7 +23,12 @@ from cadrumo.core.external_constants import OutputLanguage
 
 from ..enums import ConceptDomain, TermStatus
 from ..errors import TerminologyLoadError, TerminologyValidationError
-from ..loader import TerminologyHandbook, load_bundled_terminology_handbook, load_terminology_handbook
+from ..loader import (
+    TerminologyHandbook,
+    concepts_tree_fingerprint,
+    load_bundled_terminology_handbook,
+    load_terminology_handbook,
+)
 from ..schema import GrammaticalGender, PartOfSpeech
 from ._support import write_concept_fragment
 
@@ -303,3 +308,35 @@ def test_bundled_handbook_compiles_and_derives_narrower() -> None:
     }
     es = prorrata.section(OutputLanguage.ES)
     assert any(term.term_status is TermStatus.PREFERRED for term in es.terms)
+
+
+def test_the_concepts_fingerprint_changes_with_the_tree_it_fingerprints(tmp_path: Path) -> None:
+    """The fingerprint tracks fragment content, membership, and nothing weaker.
+
+    Everything derived from the bundled Handbook -- the handbook load itself and
+    the concept-card projection above it -- caches on this value, so a
+    fingerprint that ignored an edit would serve a stale corpus for the rest of
+    the process while every read looked fresh. A count, a directory mtime, or a
+    name listing would all satisfy "it returns a string"; only content and
+    membership sensitivity distinguishes them, so both are asserted, together
+    with stability when nothing changed (otherwise the cache never hits).
+
+    An isolated copy is fingerprinted, never the bundled tree: proving detection
+    requires an edit, and the bundled tree is read-only authored data.
+    """
+    concepts = write_concept_fragment(tmp_path, "iva.toml", _BROADER_PARENT)
+    original = concepts_tree_fingerprint(concepts)
+
+    assert concepts_tree_fingerprint(concepts) == original, "an unchanged tree must fingerprint identically"
+
+    edited = _BROADER_PARENT.replace(
+        "Impuesto sobre el valor anadido.",
+        "Impuesto sobre el valor anadido, redefinido.",
+    )
+    assert edited != _BROADER_PARENT
+    write_concept_fragment(tmp_path, "iva.toml", edited)
+    after_edit = concepts_tree_fingerprint(concepts)
+    assert after_edit != original, "an edited fragment must change the fingerprint"
+
+    write_concept_fragment(tmp_path, "recargo-equivalencia.toml", _FULL_FRAGMENT)
+    assert concepts_tree_fingerprint(concepts) != after_edit, "a new fragment must change the fingerprint"

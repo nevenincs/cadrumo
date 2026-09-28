@@ -37,6 +37,7 @@ from .installed_tui_child import (
     query_public_selector,
     read_passphrase_from_stdin,
     register_profile_through_installed_tui,
+    reportable_child_failure_reason,
     run_installed_tui_child_process,
     select_public_data_table_row,
     wait_for_public_selector,
@@ -588,9 +589,8 @@ def _run_child(
         timeout_seconds=2400,
     )
     if evidence.returncode != 0 or evidence.receipt_status != "proven":
-        failure = json.loads(receipt.read_text(encoding="utf-8")) if receipt.is_file() else {}
-        reason = failure.get("error") if isinstance(failure, dict) else None
-        if isinstance(reason, str) and reason.startswith(("modelo.", "unexpected ", "installed ")):
+        reason = reportable_child_failure_reason(receipt)
+        if reason is not None:
             raise InstalledContinuationError(f"installed TUI {direction} child: {reason}")
         raise InstalledContinuationError(f"installed TUI {direction} child did not prove its public workflow")
     document = json.loads(receipt.read_text(encoding="utf-8"))

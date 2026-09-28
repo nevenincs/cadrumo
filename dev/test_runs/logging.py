@@ -216,11 +216,18 @@ def log_start(nodeid: str) -> None:
 
 
 def log_report(report: pytest.TestReport) -> None:
-    """Record every terminal phase and flush failure detail immediately."""
+    """Record every terminal phase and flush failure detail immediately.
+
+    A test skipped at setup gets no call report, so its setup skip is its only
+    verdict. Without it the transcript shows a ``RUN`` line that never ends,
+    which reads exactly like a hung test.
+    """
     if _ACTIVE is None:
         return
-    if report.when == "call" or report.failed:
+    if report.when == "call" or report.failed or report.skipped:
         _ACTIVE.write(f"{report.outcome.upper()} {report.nodeid} phase={report.when} duration={report.duration:.6f}s")
+    if report.skipped and isinstance(report.longrepr, tuple):
+        _ACTIVE.write(str(report.longrepr[2]))
     if report.failed:
         _ACTIVE.write(str(report.longrepr))
         if report.capstdout:

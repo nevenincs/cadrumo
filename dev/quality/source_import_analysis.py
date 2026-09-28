@@ -106,6 +106,10 @@ class ImportSite:
     in_type_checking: bool
 
 
+#: The identifier an ``if`` test names to guard type-only code, bare or as an attribute.
+TYPE_CHECKING_GUARD_NAME: Final[str] = "TYPE_CHECKING"
+
+
 def type_checking_guarded_nodes(tree: ast.Module) -> set[int]:
     """Return the ``id()`` of every node under an ``if TYPE_CHECKING:`` guard.
 
@@ -118,8 +122,8 @@ def type_checking_guarded_nodes(tree: ast.Module) -> set[int]:
         if not isinstance(node, ast.If):
             continue
         test = node.test
-        is_guard = (isinstance(test, ast.Name) and test.id == "TYPE_CHECKING") or (
-            isinstance(test, ast.Attribute) and test.attr == "TYPE_CHECKING"
+        is_guard = (isinstance(test, ast.Name) and test.id == TYPE_CHECKING_GUARD_NAME) or (
+            isinstance(test, ast.Attribute) and test.attr == TYPE_CHECKING_GUARD_NAME
         )
         if is_guard:
             guarded.update(id(child) for child in ast.walk(node))
@@ -235,7 +239,12 @@ def _docstring_constant_ids(tree: ast.Module) -> set[int]:
     read as a dependency.
     """
     ids: set[int] = set()
-    for node in ast.walk(tree):
+    # A docstring owner is a statement, and no statement ever sits inside an
+    # expression, so expression subtrees -- most of any module -- are not entered.
+    pending: list[ast.AST] = [tree]
+    while pending:
+        node = pending.pop()
+        pending.extend(child for child in ast.iter_child_nodes(node) if not isinstance(child, ast.expr))
         if not isinstance(node, ast.Module | ast.ClassDef | ast.FunctionDef | ast.AsyncFunctionDef):
             continue
         if not node.body:

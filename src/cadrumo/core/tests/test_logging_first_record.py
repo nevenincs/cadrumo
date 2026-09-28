@@ -25,6 +25,20 @@ _PROBE = """
 import json, logging, sys
 from pathlib import Path
 
+removal = sys.argv[3]
+if removal != "native":
+    def remove_in_place(self, hdlr):
+        with logging._lock:
+            if hdlr in self.handlers:
+                self.handlers.remove(hdlr)
+
+    def remove_by_replacing(self, hdlr):
+        with logging._lock:
+            if hdlr in self.handlers:
+                self.handlers = [handler for handler in self.handlers if handler is not hdlr]
+
+    logging.Logger.removeHandler = remove_in_place if removal == "in-place" else remove_by_replacing
+
 from cadrumo.core import logging as project_logging
 
 mode = sys.argv[2]
@@ -54,7 +68,7 @@ _INFO_LINE = rf"{_STAMP} \[INFO\] cadrumo\.tests\.first_record: info record befo
 _WARNING_LINE = rf"{_STAMP} \[WARNING\] cadrumo\.tests\.first_record: first record probe\n"
 
 
-def _run_probe(tmp_path: Path, mode: str) -> tuple[dict[str, object], str, Path]:
+def _run_probe(tmp_path: Path, mode: str, *, removal: str = "native") -> tuple[dict[str, object], str, Path]:
     log_dir = tmp_path / "logs"
     env = {
         **os.environ,
@@ -62,7 +76,7 @@ def _run_probe(tmp_path: Path, mode: str) -> tuple[dict[str, object], str, Path]
         "CADRUMO_LOG_DIR": str(log_dir),
     }
     completed = run_audited_process(
-        [sys.executable, "-c", _PROBE, str(log_dir), mode],
+        [sys.executable, "-c", _PROBE, str(log_dir), mode, removal],
         env=env,
         capture_output=True,
         text=True,
@@ -81,6 +95,24 @@ def test_a_warning_configures_logging_and_replays_the_records_held_before_it(tmp
     assert report["before"] == {"exists": False, "configured": False}
     assert report["after_info"] == {"exists": False, "configured": False}
     assert report["configured"] is True
+    assert re.fullmatch(_INFO_LINE + _WARNING_LINE, log_file.read_text(encoding="utf-8"))
+
+
+@pytest.mark.parametrize("removal", ["in-place", "replacing"])
+def test_the_record_that_configures_logging_is_written_once_under_either_handler_removal(
+    tmp_path: Path, removal: str
+) -> None:
+    """The configuring record reaches the file exactly once, however the handlers are removed.
+
+    ``Logger.removeHandler`` mutated the handler list in place until CPython
+    3.13.15 and 3.14.7, which replace the list instead (gh-79366); the
+    interpreter under test has only one of the two, so the probe installs each
+    in turn. Under replacement the record was lost from the file, which is how
+    a crash's traceback went missing; handing it to every handler under
+    in-place removal would write it twice.
+    """
+    _, _, log_file = _run_probe(tmp_path, "normal", removal=removal)
+
     assert re.fullmatch(_INFO_LINE + _WARNING_LINE, log_file.read_text(encoding="utf-8"))
 
 

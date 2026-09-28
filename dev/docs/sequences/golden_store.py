@@ -155,7 +155,9 @@ def _path_replacements(*, storage_root: str, workdir: str) -> list[tuple[str, st
         (str(_repo_root()), REPO_ROOT_PLACEHOLDER),
     ]
     sandbox_root = _writer_path(storage_root).parent
-    if sandbox_root.is_absolute():
+    # A parent that is only a filesystem root (``/``, ``C:\``) would mask every
+    # separator in the frame, so a storage root directly under one adds none.
+    if sandbox_root.is_absolute() and sandbox_root.parent != sandbox_root:
         anchored.append((str(sandbox_root), SANDBOX_ROOT_PLACEHOLDER))
     for raw, token in anchored:
         native = str(raw)

@@ -110,7 +110,9 @@ def test_workflow_lint_is_a_standalone_blocking_verdict_over_every_workflow() ->
     job = yaml.safe_load(_MERGE_GATE.read_text(encoding="utf-8"))["jobs"]["lint"]
     assert "needs" not in job, "an independent verdict must not be gated behind another job"
     assert job.get("continue-on-error") is not True
-    assert job["timeout-minutes"] <= 30
+    # The fleet stops the steps at the execution budget; timeout-minutes also
+    # covers the wait for a runner slot, so the short bound is the budget.
+    assert int(job["env"]["CI_EXEC_BUDGET_MINUTES"]) <= 30
 
     executed = executed_text(step.get("run") for step in job["steps"])
     assert "just check-workflows" in executed, (
@@ -387,8 +389,7 @@ def test_the_test_unit_recipe_carries_the_substance_the_workflow_delegates() -> 
     )
     assert body is not None, "no justfile line carries the test-unit body; the delegated lane has no home"
     assert (
-        "-m 'unit and not perf and not external_tool and not os_keychain "
-        "and not windows_only and not tui_render and not resident_service'"
+        "-m 'unit and not perf and not external_tool and not os_keychain and not windows_only and not resident_service'"
     ) in body
     assert "--durations=" in body, "the durations override the CI step passes must reach the underlying pytest call"
 

@@ -1,7 +1,7 @@
 """A real profile the repository TUI harness owns, created once and reused.
 
-Three of the seven surfaces — login, manager, status — render nothing
-meaningful without a real profile behind them, and registration needs a
+The login and manager surfaces render nothing meaningful without a real
+profile behind them, and registration needs a
 storage root it is allowed to write into. So the harness keeps its own
 root and creates a real profile in it through the real registration door:
 real Argon2id derivation, real AEAD, real manifest. Nothing here is a
@@ -160,14 +160,19 @@ def ensure_session() -> str:
     through the real login door — real derivation, real unwrap — because
     a surface rendered over a stand-in session would be a reading about
     the stand-in.
+
+    The session is pinned to the real published authority, the one the
+    surfaces themselves open. Outside a lease the context helper answers a
+    fixture pin instead, and every surface reading the profile record then
+    refuses on the generation mismatch.
     """
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     from ....application.user_profile.login_session import login_profile
+    from ....domain.calculations.registry.authority import bundled_indexed_authority
 
     bucket_id = ensure_profile()
-    login_profile(
-        name=bucket_id, passphrase_callback=passphrase, profile_decode_context=_profile_decode_context_for_test
-    )
+    with bundled_indexed_authority().operation():
+        _profile_create_context, profile_decode_context = _profile_contexts_for_test()
+        login_profile(name=bucket_id, passphrase_callback=passphrase, profile_decode_context=profile_decode_context)
     return bucket_id
 
 

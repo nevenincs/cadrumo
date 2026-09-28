@@ -75,9 +75,13 @@ def dev_cache_dir(name: str) -> Path:
     """
     if not name.strip() or name != name.strip():
         raise ValueError(f"cache name must be a non-blank, unpadded segment, got {name!r}")
-    # Judged under both path flavours: a backslash or drive qualifier is one
-    # segment on POSIX but splits the name on Windows.
-    if name in {".", ".."} or any(len(flavour(name).parts) != 1 for flavour in (PurePosixPath, PureWindowsPath)):
+    # Judged under both path flavours, and the one segment must BE the name: a
+    # backslash is one segment on POSIX but splits the name on Windows, a
+    # trailing separator is dropped by both, and ``c:`` is a drive -- joined onto
+    # the cache root it resolves drive-relative, outside the root, on Windows.
+    if name in {".", ".."} or any(
+        flavour(name).parts != (name,) or flavour(name).anchor for flavour in (PurePosixPath, PureWindowsPath)
+    ):
         raise ValueError(f"cache name must be a single path segment, got {name!r}")
     return dev_cache_root() / name
 
