@@ -395,18 +395,18 @@ def _lay_section(
         value_lines = wrap_text(row.value_text, value_face, 9, _VALUE_COLUMN_WIDTH)
         height = 5 + _LINE * max(len(number_lines), len(label_lines), len(value_lines))
         layout.ensure(height + 2)
-        tr: StructNode = ("TR", f"section-{index}-r{row_index}", ())
+        row_node: StructNode = ("TR", f"section-{index}-r{row_index}", ())
         if row.row_role is CalculationReportRowRole.RESULT:
             layout.rect(_MARGIN_X, layout.y - height + 7, _CONTENT_WIDTH, height + 2, SUCCESS_WASH)
-        number_tag = (_DOCUMENT, table, tr, ("TD", f"section-{index}-r{row_index}-number", ()))
+        number_tag = (_DOCUMENT, table, row_node, ("TD", f"section-{index}-r{row_index}-number", ()))
         for line_index, line in enumerate(number_lines):
             layout.text(
                 _COLUMN_NUMBER_X, layout.y - _LINE * line_index, line, SummaryFace.FIGURE, 9, INK, tag=number_tag
             )
-        label_tag = (_DOCUMENT, table, tr, ("TD", f"section-{index}-r{row_index}-concept", ()))
+        label_tag = (_DOCUMENT, table, row_node, ("TD", f"section-{index}-r{row_index}-concept", ()))
         for line_index, line in enumerate(label_lines):
             layout.text(_COLUMN_LABEL_X, layout.y - _LINE * line_index, line, label_face, 9, INK, tag=label_tag)
-        value_tag = (_DOCUMENT, table, tr, ("TD", f"section-{index}-r{row_index}-amount", ()))
+        value_tag = (_DOCUMENT, table, row_node, ("TD", f"section-{index}-r{row_index}-amount", ()))
         for line_index, line in enumerate(value_lines):
             layout.text(
                 _COLUMN_VALUE_RIGHT,

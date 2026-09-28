@@ -238,8 +238,8 @@ def build_modelo_work_review_casillas(
     registry's section order and casilla numbering.
 
     Args:
-        snapshot: The registry snapshot the revision was calculated against.
-        revision: The revision whose persisted observations realise each row, or
+        snapshot: The :class:`RegistrySnapshot` the revision was calculated against.
+        revision: The :class:`CalculationRevision` whose persisted observations realise each row, or
             ``None`` to project the snapshot's declared schema with every row
             unrealised.
         operation: The pinned authority operation the snapshot came from; source

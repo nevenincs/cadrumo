@@ -13,6 +13,7 @@ from cadrumo.application.operator_surface.command_ports import (
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 from .command_spec import (
     FLAG_VALUE,
+    PATH_VALUE,
     TEXT_VALUE,
     WHOLE_NUMBER_VALUE,
     ArgumentSpec,
@@ -52,7 +53,6 @@ _DOMICILIATION = ValueContract(
 _REPORT_DOCUMENT_FORMAT = ValueContract(
     DeferredTarget("...core.calculation_report_format", "CalculationReportDocumentFormat", __package__)
 )
-_PATH = ValueContract(DeferredTarget("pathlib", "Path"))
 
 
 def _boolean_choice(name: str, declaration: str, *, help_name: str) -> OptionSpec:
@@ -394,7 +394,7 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _o(
                 "output",
                 "--output",
-                _PATH,
+                PATH_VALUE,
                 required=True,
                 transport_locus=TransportLocus.LOCAL_OUT,
                 transport_shape=TransportShape.FILE,
@@ -424,7 +424,7 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         (
             ArgumentSpec(
                 "path",
-                _PATH,
+                PATH_VALUE,
                 ParameterDefault.required(),
                 _key("cli.app.modelo.work.report_verify_path_help"),
                 transport_locus=TransportLocus.LOCAL_IN,

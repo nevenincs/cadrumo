@@ -516,7 +516,7 @@ def _raise_if_ledger_export_evidence_missing(revision: CalculationRevision) -> N
 def require_exportable_revision_state(revision: CalculationRevision) -> None:
     """Refuse a revision no export artefact may be produced from.
 
-    Only a sealed revision -- verificado-completo, presentado, or a superseded
+    Only a sealed :class:`CalculationRevision` -- verificado-completo, presentado, or a superseded
     presentado -- describes a settled calculation. A draft is still being
     edited, so any artefact rendered from it would claim a state the revision
     does not hold. Every modelo export destination applies this one rule rather

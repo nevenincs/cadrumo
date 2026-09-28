@@ -1,6 +1,7 @@
 """Publish one sealed revision's calculation report to an operator-chosen file.
 
-The service every surface reaches for a calculation report: resolve the revision
+The service every surface reaches for a calculation report: resolve the
+:class:`CalculationRevision`, and the :class:`ModeloRecord` that filed it if any,
 through the same lookup and state rule the fichero-BOE export applies, assemble
 the typed report, serialise it into the requested document format, and publish
 the bytes through the one local-file export sink. No second file writer, no

@@ -290,7 +290,8 @@ def resolve_withholding_detail_absence(
 
     ``None`` when the calculate path recorded no empty-detail condition, which
     covers every revision whose store held observations and every revision whose
-    modelo declares no withholding binding at all.
+    modelo declares no withholding binding at all. ``target`` is the calculated
+    :class:`CalculationRevision`.
     """
     if not _revision_declares_withholding_detail_absence(target):
         return None
@@ -354,7 +355,8 @@ def withholding_detail_absence_finding(
     BLOCKING unless the absence is proven and nothing in the ledger contradicts
     it; the proven case stays a WARNING so the disclosure survives into the
     report without refusing a declaration the taxpayer attested has nothing to
-    declare. Grounding is read off the revision's own withholding bindings.
+    declare. Grounding is read off the withholding bindings of the :class:`RegistrySnapshot`'s
+    revision.
 
     The three outcomes are three constructions rather than one call with computed
     arguments. Both the finding kind and the locale key are read statically from
@@ -403,7 +405,11 @@ def append_withholding_detail_findings(
     findings: list[ModeloVerificationFinding],
     failures_by_finding_id: dict[int, ModeloPreconditionFailure],
 ) -> None:
-    """Append the empty-detail finding and its typed precondition, when one applies."""
+    """Append the empty-detail finding and its typed precondition, when one applies.
+
+    ``target`` is the :class:`CalculationRevision` under verification and ``snapshot`` the
+    :class:`RegistrySnapshot` it was calculated against.
+    """
     absence = resolve_withholding_detail_absence(
         work_unit=work_unit,
         target=target,

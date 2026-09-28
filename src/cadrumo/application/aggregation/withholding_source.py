@@ -129,7 +129,8 @@ def withholding_binding_grounding(revision: ModeloRevision) -> tuple[tuple[Legal
 
     Read off the compiled declarations rather than restated here, so a diagnostic
     or finding about the withholding detail carries the provisions the registry
-    itself attaches to that detail.
+    itself attaches to that detail. ``revision`` is the compiled :class:`ModeloRevision` whose
+    bindings are read.
     """
     bindings = tuple(binding for binding in revision.bindings if binding.source == BindingSourceKind.WITHHOLDING)
     legal_refs = tuple(sorted({ref for binding in bindings for ref in binding.legal_refs}))

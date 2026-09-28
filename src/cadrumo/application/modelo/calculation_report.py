@@ -488,7 +488,7 @@ def build_modelo_calculation_report(
     """Assemble the calculation report for one sealed revision.
 
     Args:
-        revision: The sealed revision being reported. Its persisted source
+        revision: The sealed :class:`CalculationRevision` being reported. Its persisted source
             traces ground each row.
         work_unit: The revision's parent work unit, which owns the filing
             coordinates the operator addressed.

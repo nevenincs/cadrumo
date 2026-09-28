@@ -27,7 +27,7 @@ from ....application.ledger.llm_classification import ResolvedEvidence, classify
 from ....application.ledger.llm_classification_ports import EvidenceImage
 from ....application.ledger.preconditions import LedgerPreconditionCondition
 from ....application.provisioning_contracts import ProvisioningPreconditionCondition
-from ....core.config import Settings
+from ....core.config import Settings, override_settings
 from ....core.image_media_type import ImageMediaType
 from ....domain.calculations.registry.tests.published_authority import leased_profile_create_context
 from ....domain.transactions.llm import prompt_spec_with_saturation_fields
@@ -193,7 +193,14 @@ def test_unreachable_reader_preserves_the_provisioning_refusal(
             )
         )
 
-        with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
+        # The local adapter reads its endpoint from the process settings when it
+        # sends, not from the settings a client was built with, so the refused
+        # port must be set there too or a runtime serving the default port
+        # answers and the connection failure under test never happens.
+        with (
+            override_settings(cadrumo_llm_ollama_chat_url="http://127.0.0.1:1/api/chat"),
+            pytest.raises(PurchaseInvoiceEvidenceInputError) as raised,
+        ):
             classify_with_evidence(
                 vision_transaction("reader-unavailable"),
                 evidence,

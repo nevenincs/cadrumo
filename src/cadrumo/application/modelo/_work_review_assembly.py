@@ -467,7 +467,10 @@ def assemble_modelo_work_review_casillas(
     blocking_findings: tuple[ModeloVerificationFinding, ...],
     operation: PinnedAuthorityOperation,
 ) -> tuple[ModeloWorkReviewCasilla, ...]:
-    """Project every casilla the snapshot declares onto its review row."""
+    """Project every casilla the :class:`RegistrySnapshot` declares onto its review row.
+
+    Each row is realised from the :class:`CalculationRevision` when one is given.
+    """
     context = _review_row_context(
         snapshot=snapshot,
         revision=revision,

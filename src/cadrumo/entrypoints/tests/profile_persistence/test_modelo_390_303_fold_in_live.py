@@ -130,6 +130,11 @@ _M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA: CasillaId = validated_casil
 # reads [85] from the credit the first period opened with ([87] + [78]).
 _REGULARIZACION_ART_80: CasillaId = validated_casilla_id("76")
 _IVA_IMPORTACION_ADUANA: CasillaId = validated_casilla_id("77")
+# Box [61] restates the year's 303 box [42], the REAGP compensaciones the filer
+# paid. This filer paid none, so each quarter filed a [42] of zero; the annual box
+# carries that proven zero rather than a missing source.
+_COMPENSACIONES_REAGP: CasillaId = validated_casilla_id("42")
+_M390_COMPENSACIONES_REAGP_CASILLA: CasillaId = validated_casilla_id("iva.anual.deducible.compensaciones-reagp.cuota")
 _COMPENSACION_APLICADA: CasillaId = validated_casilla_id("iva.compensacion-aplicada-periodo")
 _COMPENSACION_POSTERIOR: CasillaId = validated_casilla_id("iva.compensacion-pendiente-periodos-posteriores")
 _M390_REGULARIZACION_ART_80_CASILLA: CasillaId = validated_casilla_id("iva.anual.regularizacion-cuotas-art-80-cinco-5")
@@ -154,6 +159,7 @@ _M303_BY_PERIOD: dict[str, dict[CasillaId, Decimal]] = {
         _COMPENSACION_POSTERIOR: Decimal("0.00"),
         _REGULARIZACION_ART_80: Decimal("0.00"),
         _IVA_IMPORTACION_ADUANA: Decimal("2.00"),
+        _COMPENSACIONES_REAGP: Decimal("0.00"),
     },
     "2T": {
         _DEVENGADA: Decimal("250.00"),
@@ -163,6 +169,7 @@ _M303_BY_PERIOD: dict[str, dict[CasillaId, Decimal]] = {
         M303_COMPENSATION_RESULTADO_CASILLA: Decimal("-20.00"),
         _REGULARIZACION_ART_80: Decimal("5.00"),
         _IVA_IMPORTACION_ADUANA: Decimal("0.00"),
+        _COMPENSACIONES_REAGP: Decimal("0.00"),
     },
     "3T": {
         _DEVENGADA: Decimal("180.00"),
@@ -172,6 +179,7 @@ _M303_BY_PERIOD: dict[str, dict[CasillaId, Decimal]] = {
         M303_COMPENSATION_RESULTADO_CASILLA: Decimal("-15.00"),
         _REGULARIZACION_ART_80: Decimal("0.00"),
         _IVA_IMPORTACION_ADUANA: Decimal("7.00"),
+        _COMPENSACIONES_REAGP: Decimal("0.00"),
     },
     "4T": {
         _DEVENGADA: Decimal("90.00"),
@@ -182,6 +190,7 @@ _M303_BY_PERIOD: dict[str, dict[CasillaId, Decimal]] = {
         _SIMPLIFICADO_DEVENGADA: Decimal("45.00"),  # RS casilla 54, 4T only
         _REGULARIZACION_ART_80: Decimal("1.50"),
         _IVA_IMPORTACION_ADUANA: Decimal("0.00"),
+        _COMPENSACIONES_REAGP: Decimal("0.00"),
     },
 }
 
@@ -386,6 +395,7 @@ def test_m390_folds_m303_relations_and_compensation_partition_on_live_calculate(
     # [86] = 6.50 + 9.00 - 0; the 1T opening credit is a filed zero, so [85] = 0.
     assert Decimal(casilla_values[_M390_REGULARIZACION_ART_80_CASILLA]) == _EXPECTED_REGULARIZACION_ART_80
     assert Decimal(casilla_values[_M390_IVA_IMPORTACION_ADUANA_CASILLA]) == _EXPECTED_IVA_IMPORTACION_ADUANA
+    assert Decimal(casilla_values[_M390_COMPENSACIONES_REAGP_CASILLA]) == Decimal("0.00")
     assert Decimal(casilla_values[_M390_COMPENSACION_EJERCICIO_ANTERIOR_CASILLA]) == Decimal("0.00")
     assert Decimal(casilla_values[_M390_SUMA_RESULTADOS_CASILLA]) == Decimal("6.50")
     assert Decimal(casilla_values[_M390_RESULTADO_LIQUIDACION_CASILLA]) == Decimal("15.50")

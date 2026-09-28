@@ -17,7 +17,7 @@ also achieve. So without a trusted key or the store the verdict is
 fingerprint, or this profile's own key, turns consistency into provenance.
 
 The STORE layer runs when the active profile is available. It pins the key to
-this profile's own, finds the calculation revision the statement names, compares
+this profile's own, finds the :class:`CalculationRevision` the statement names, compares
 the identifiers the store can re-derive, and rebuilds the report from the store
 with the recorded language and export instant under the same authority
 generation, comparing digests. A later lifecycle step the export could not have
