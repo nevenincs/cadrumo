@@ -21,8 +21,12 @@ binding_refs = [
     "modelo-390-m303-simplificado-81-regularizacion-inversion",
     "modelo-390-m303-simplificado-82-suma-deducciones",
     "modelo-390-m303-simplificado-83-resultado",
+    "modelo-390-prev-303-compensacion-ejercicio-anterior",
+    "modelo-390-prev-303-regularizacion-cuotas-art-80-cinco-5",
+    "modelo-390-prev-303-iva-importacion-aduana",
 ]
 legal_refs = [
+    "ley-37-1992:art-80",
     "ley-37-1992:art-88",
     "ley-37-1992:art-92",
     "ley-37-1992:art-99",

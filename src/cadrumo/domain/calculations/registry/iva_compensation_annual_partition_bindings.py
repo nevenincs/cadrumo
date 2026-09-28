@@ -3,7 +3,8 @@
 Modelo 390's boxes 97 and 662 are two halves of ONE FIFO partition of the
 compensation the taxpayer carried through the year, which is why both read the
 same four Modelo 303 state casillas over the same four quarters and differ only
-in which half of the partition they take.
+in which half of the partition they take. Box 85 reads the same FIFO from its
+other end: the credit of earlier ejercicios the year's autoliquidaciones applied.
 """
 
 from __future__ import annotations
@@ -40,11 +41,13 @@ class IvaCompensationAnnualPartition(StrEnum):
 
     LAST_PERIOD_AMOUNT = "last_period_amount"
     GENERATED_NOT_IN_LAST_AMOUNT = "generated_not_in_last_amount"
+    PRIOR_YEAR_APPLIED_AMOUNT = "prior_year_applied_amount"
 
 
 IvaCompensationAnnualPartitionValue = Literal[
     IvaCompensationAnnualPartition.LAST_PERIOD_AMOUNT,
     IvaCompensationAnnualPartition.GENERATED_NOT_IN_LAST_AMOUNT,
+    IvaCompensationAnnualPartition.PRIOR_YEAR_APPLIED_AMOUNT,
 ]
 """The same vocabulary for a strict model field."""
 
@@ -100,7 +103,7 @@ _IVA_COMPENSATION_ANNUAL_PARTITION_PERIODS: tuple[str, ...] = ("1T", "2T", "3T",
 
 
 class IvaCompensationAnnualPartitionProvider(BaseModel):
-    """Selector for Modelo 390 AEAT boxes 97 / 662 as one FIFO partition."""
+    """Selector for Modelo 390 AEAT boxes 85 / 97 / 662 as one FIFO partition."""
 
     model_config = STRICT_FROZEN_CONFIG
 

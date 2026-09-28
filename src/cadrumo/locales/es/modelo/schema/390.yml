@@ -108,6 +108,9 @@ modelo:
               declarada en los modelos 303
           iva-anual-reconciliacion-resultado-303:
             label: Reconciliación anual - resultado declarado en los modelos 303
+          iva-anual-reconciliacion-resultados-liquidaciones:
+            label: Reconciliación anual - resultados de las liquidaciones del ejercicio
+              ([95] - [97] - [98] - [662])
           iva-anual-regimen-simplificado-aic-bienes-cuota-devengada:
             label: IVA devengado en adquisiciones intracomunitarias
           iva-anual-regimen-simplificado-cuota-resultante-agricola:

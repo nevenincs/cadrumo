@@ -39,7 +39,7 @@ op = "sum"
 
 [[revisions.2022.bindings]]
 id = "modelo-303-iva-soportado-interiores-cuota"
-provider = { kind = "ledger_iva_aggregation", categories = ["domestic_general", "domestic_reduced", "domestic_super_reduced"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "soportado", fact = "iva_amount_sum", deduction_fact_kinds = ["domestic_current", "rectification"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+provider = { kind = "ledger_iva_aggregation", categories = ["domestic_general", "domestic_reduced", "domestic_super_reduced"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "soportado", fact = "iva_amount_sum", deduction_fact_kinds = ["domestic_current"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
@@ -101,7 +101,7 @@ op = "sum"
 
 [[revisions.2022.bindings]]
 id = "modelo-303-iva-soportado-interiores-base"
-provider = { kind = "ledger_iva_aggregation", categories = ["domestic_general", "domestic_reduced", "domestic_super_reduced"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "soportado", fact = "base_amount_sum", deduction_fact_kinds = ["domestic_current", "rectification"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+provider = { kind = "ledger_iva_aggregation", categories = ["domestic_general", "domestic_reduced", "domestic_super_reduced"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "soportado", fact = "base_amount_sum", deduction_fact_kinds = ["domestic_current"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
@@ -237,7 +237,7 @@ op = "sum"
 
 [[revisions.2022.bindings]]
 id = "modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota"
-provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_acquisition_reverse_charge", "intra_community_service_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "inversion_sujeto_pasivo", fact = "iva_amount_sum", deduction_fact_kinds = ["intra_eu_current", "rectification"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_acquisition_reverse_charge", "intra_community_service_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "inversion_sujeto_pasivo", fact = "iva_amount_sum", deduction_fact_kinds = ["intra_eu_current"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
@@ -257,7 +257,7 @@ op = "sum"
 # observation this binding consumes, so the #64 advisory no longer flags it.
 [[revisions.2022.bindings]]
 id = "modelo-303-iva-soportado-importaciones-cuota"
-provider = { kind = "ledger_iva_aggregation", categories = ["import_third_country"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "soportado", fact = "iva_amount_sum", deduction_fact_kinds = ["import_current", "rectification"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+provider = { kind = "ledger_iva_aggregation", categories = ["import_third_country"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "soportado", fact = "iva_amount_sum", deduction_fact_kinds = ["import_current"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-17", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
@@ -279,9 +279,8 @@ op = "sum"
 # row's fact-0085 deduction kind, the reciprocal identity a bien de inversión
 # (LIVA art. 108) carries to its bienes-inversion register record. The
 # corrientes bindings above name the complementary kinds, so every deducible row
-# still reaches exactly one box of each pair. Rectifications stay with the
-# corrientes pair, where they landed before the split; their own boxes [40]/[41]
-# are not bound yet.
+# still reaches exactly one box of each pair. Rectifications reach neither pair:
+# they have their own boxes [40]/[41], bound further down.
 [[revisions.2022.bindings]]
 id = "modelo-303-iva-soportado-interiores-bienes-inversion-cuota"
 provider = { kind = "ledger_iva_aggregation", categories = ["domestic_general", "domestic_reduced", "domestic_super_reduced"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "soportado", fact = "iva_amount_sum", deduction_fact_kinds = ["domestic_investment"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
@@ -469,9 +468,172 @@ op = "sum"
 
 [[revisions.2022.bindings]]
 id = "modelo-303-iva-autorepercutido-interior-deducible-cuota"
-provider = { kind = "ledger_iva_aggregation", categories = ["domestic_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "inversion_sujeto_pasivo", fact = "iva_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+provider = { kind = "ledger_iva_aggregation", categories = ["domestic_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "inversion_sujeto_pasivo", fact = "iva_amount_sum", deduction_fact_kinds = ["domestic_current"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.bindings.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2022.bindings.aggregation]
+op = "sum"
+
+# Deducible half of the domestic inversión del sujeto pasivo (LIVA art.
+# 84.Uno.2º). No box of the diseño de registro is reserved for it: the design's
+# deducible rows are split by where the operation took place and by what was
+# acquired, and fact 0085 classes a recipient reverse-charge deduction as a
+# domestic one (kinds domestic_current and domestic_investment). Its base and
+# cuota therefore join the operaciones interiores rows, [28]/[29] for corrientes
+# and [30]/[31] for a bien de inversión, while the devengado half stays in [12]/[13].
+
+[[revisions.2022.bindings]]
+id = "modelo-303-iva-autorepercutido-interior-deducible-base"
+provider = { kind = "ledger_iva_aggregation", categories = ["domestic_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "inversion_sujeto_pasivo", fact = "base_amount_sum", deduction_fact_kinds = ["domestic_current"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.bindings.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2022.bindings.aggregation]
+op = "sum"
+
+[[revisions.2022.bindings]]
+id = "modelo-303-iva-autorepercutido-interior-deducible-bienes-inversion-base"
+provider = { kind = "ledger_iva_aggregation", categories = ["domestic_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "inversion_sujeto_pasivo", fact = "base_amount_sum", deduction_fact_kinds = ["domestic_investment"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "ley-37-1992:art-108", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.bindings.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2022.bindings.aggregation]
+op = "sum"
+
+[[revisions.2022.bindings]]
+id = "modelo-303-iva-autorepercutido-interior-deducible-bienes-inversion-cuota"
+provider = { kind = "ledger_iva_aggregation", categories = ["domestic_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "inversion_sujeto_pasivo", fact = "iva_amount_sum", deduction_fact_kinds = ["domestic_investment"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "ley-37-1992:art-108", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.bindings.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2022.bindings.aggregation]
+op = "sum"
+
+# Bases of the import and intra-community corrientes rows, [32] and [36],
+# selected exactly as their cuotas [33] and [37] are.
+
+[[revisions.2022.bindings]]
+id = "modelo-303-iva-soportado-importaciones-base"
+provider = { kind = "ledger_iva_aggregation", categories = ["import_third_country"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "soportado", fact = "base_amount_sum", deduction_fact_kinds = ["import_current"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+legal_refs = ["ley-37-1992:art-17", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.bindings.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2022.bindings.aggregation]
+op = "sum"
+
+[[revisions.2022.bindings]]
+id = "modelo-303-iva-autorepercutido-intracomunitaria-deducible-base"
+provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_acquisition_reverse_charge", "intra_community_service_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "inversion_sujeto_pasivo", fact = "base_amount_sum", deduction_fact_kinds = ["intra_eu_current"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.bindings.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2022.bindings.aggregation]
+op = "sum"
+
+# Rectificación de deducciones, boxes [40]/[41]. The Manual práctico de IVA
+# (capítulo 9, worked example, 2T and 4T liquidations) books the correction of
+# an earlier deduction on its own "Rectificación de deducciones" line rather
+# than inside the corrientes rows. Fact 0085 admits the rectification kind on
+# domestic and import rows as soportado and on reverse-charge rows as
+# inversión del sujeto pasivo, so the box is read in three parts. The domestic
+# part keeps the shape of the invoice screen's received slot, so an invoice
+# rectificativa is still screened against the ledger.
+
+[[revisions.2022.bindings]]
+id = "modelo-303-iva-rectificacion-deducciones-interiores-base"
+provider = { kind = "ledger_iva_aggregation", categories = ["domestic_general", "domestic_reduced", "domestic_super_reduced"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "soportado", fact = "base_amount_sum", deduction_fact_kinds = ["rectification"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+legal_refs = ["ley-37-1992:art-80", "ley-37-1992:art-92", "ley-37-1992:art-99", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.bindings.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2022.bindings.aggregation]
+op = "sum"
+
+[[revisions.2022.bindings]]
+id = "modelo-303-iva-rectificacion-deducciones-interiores-cuota"
+provider = { kind = "ledger_iva_aggregation", categories = ["domestic_general", "domestic_reduced", "domestic_super_reduced"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "soportado", fact = "iva_amount_sum", deduction_fact_kinds = ["rectification"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+legal_refs = ["ley-37-1992:art-80", "ley-37-1992:art-92", "ley-37-1992:art-99", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.bindings.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2022.bindings.aggregation]
+op = "sum"
+
+[[revisions.2022.bindings]]
+id = "modelo-303-iva-rectificacion-deducciones-importaciones-base"
+provider = { kind = "ledger_iva_aggregation", categories = ["import_third_country"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "soportado", fact = "base_amount_sum", deduction_fact_kinds = ["rectification"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+legal_refs = ["ley-37-1992:art-80", "ley-37-1992:art-92", "ley-37-1992:art-99", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.bindings.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2022.bindings.aggregation]
+op = "sum"
+
+[[revisions.2022.bindings]]
+id = "modelo-303-iva-rectificacion-deducciones-importaciones-cuota"
+provider = { kind = "ledger_iva_aggregation", categories = ["import_third_country"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "soportado", fact = "iva_amount_sum", deduction_fact_kinds = ["rectification"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+legal_refs = ["ley-37-1992:art-80", "ley-37-1992:art-92", "ley-37-1992:art-99", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.bindings.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2022.bindings.aggregation]
+op = "sum"
+
+[[revisions.2022.bindings]]
+id = "modelo-303-iva-rectificacion-deducciones-inversion-sujeto-pasivo-base"
+provider = { kind = "ledger_iva_aggregation", categories = ["domestic_reverse_charge", "intra_community_acquisition_reverse_charge", "intra_community_service_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "inversion_sujeto_pasivo", fact = "base_amount_sum", deduction_fact_kinds = ["rectification"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+legal_refs = ["ley-37-1992:art-80", "ley-37-1992:art-92", "ley-37-1992:art-99", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.bindings.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2022.bindings.aggregation]
+op = "sum"
+
+[[revisions.2022.bindings]]
+id = "modelo-303-iva-rectificacion-deducciones-inversion-sujeto-pasivo-cuota"
+provider = { kind = "ledger_iva_aggregation", categories = ["domestic_reverse_charge", "intra_community_acquisition_reverse_charge", "intra_community_service_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "inversion_sujeto_pasivo", fact = "iva_amount_sum", deduction_fact_kinds = ["rectification"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+legal_refs = ["ley-37-1992:art-80", "ley-37-1992:art-92", "ley-37-1992:art-99", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.bindings.source_citations]]
 source_ref = "aeat-modelo-303-procedure"

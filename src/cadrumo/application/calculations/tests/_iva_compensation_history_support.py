@@ -56,6 +56,8 @@ def _state(
     generated: Decimal = Decimal("0.00"),
     applied: Decimal = Decimal("0.00"),
     available: Decimal | None = None,
+    prior_pending: Decimal | None = None,
+    pending_for_later: Decimal | None = None,
 ) -> IvaCompensationPeriodState:
     return IvaCompensationPeriodState(
         provenance=IvaCompensationStateProvenance.APP_FILING,
@@ -64,9 +66,9 @@ def _state(
         period=Period.from_year_and_code(filing_year, period),
         registry_snapshot_ref=m303_registry_snapshot_ref(filing_year, period),
         presented_at=datetime(filing_year + 1, 1, 20, 12, 0, tzinfo=UTC),
-        prior_pending_amount=None,
+        prior_pending_amount=prior_pending,
         applied_amount=applied,
-        pending_for_later_amount=None,
+        pending_for_later_amount=pending_for_later,
         period_result_amount=None,
         final_result_amount=None,
         generated_amount=generated,

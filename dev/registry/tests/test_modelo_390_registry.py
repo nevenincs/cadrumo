@@ -84,6 +84,9 @@ _M390_RECONCILIACION_DEVENGADA_303_CASILLA: CasillaId = validated_casilla_id("iv
 _M390_RECONCILIACION_DEDUCIBLE_303_CASILLA: CasillaId = validated_casilla_id("iva.anual.reconciliacion.deducible-303")
 _M390_RECONCILIACION_RESULTADO_303_CASILLA: CasillaId = validated_casilla_id("iva.anual.reconciliacion.resultado-303")
 _M390_COMPENSACION_ULTIMO_PERIODO_CASILLA: CasillaId = validated_casilla_id("iva.anual.compensacion-ultimo-periodo-97")
+_M390_COMPENSACION_EJERCICIO_ANTERIOR_CASILLA: CasillaId = validated_casilla_id(
+    "iva.anual.compensacion-cuotas-ejercicio-anterior"
+)
 _M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA: CasillaId = validated_casilla_id(
     "iva.anual.compensacion-generada-ejercicio-no-97"
 )
@@ -476,6 +479,14 @@ def test_modelo_390_declares_annual_compensation_result_fields(revision_id: str)
     assert casillas[_M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA].number == "662"
     box_97_binding = bindings["modelo-390-prev-303-compensacion-ultimo-periodo"]
     box_662_binding = bindings["modelo-390-prev-303-compensacion-generada-ejercicio-no-97"]
+    box_85_binding = bindings["modelo-390-prev-303-compensacion-ejercicio-anterior"]
+    assert casillas[_M390_COMPENSACION_EJERCICIO_ANTERIOR_CASILLA].number == "85"
+    assert casillas[_M390_COMPENSACION_EJERCICIO_ANTERIOR_CASILLA].binding == box_85_binding.id
+    assert box_85_binding.source == "iva_compensation_annual_partition"
+    box_85_selector: Any = box_85_binding.provider
+    assert box_85_selector.source_modelo == "303"
+    assert binding_source_casilla_ids(box_85_binding) == compensation_source_ids
+    assert box_85_selector.partition_output == "prior_year_applied_amount"
     assert box_97_binding.source == "iva_compensation_annual_partition"
     box_97_selector: Any = box_97_binding.provider
     assert box_97_selector.source_modelo == "303"
@@ -496,9 +507,10 @@ def test_modelo_390_declares_annual_compensation_result_fields(revision_id: str)
 
     requirement = iva_compensation_annual_partition_requirement(revision)
     assert requirement is not None
-    assert requirement.binding_ids == tuple(sorted((box_97_binding.id, box_662_binding.id)))
+    assert requirement.binding_ids == tuple(sorted((box_85_binding.id, box_97_binding.id, box_662_binding.id)))
     assert requirement.last_period_amount_binding_id == box_97_binding.id
     assert requirement.generated_not_in_last_amount_binding_id == box_662_binding.id
+    assert requirement.prior_year_applied_amount_binding_id == box_85_binding.id
     assert requirement.dependency_treatment == "direct_annual_settlement"
 
 

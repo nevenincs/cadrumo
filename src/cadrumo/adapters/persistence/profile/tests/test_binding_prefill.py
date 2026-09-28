@@ -272,7 +272,14 @@ def test_modelo_390_prefill_compares_annual_totals_to_persisted_periodic_observa
             "modelo-390-prev-303-cuota-devengada-total",
             "modelo-390-prev-303-cuota-deducible-total",
             "modelo-390-prev-303-resultado-regimen-general",
+            "modelo-390-prev-303-regularizacion-cuotas-art-80-cinco-5",
+            "modelo-390-prev-303-iva-importacion-aduana",
         }
+        # Every quarter was filed with boxes 76 and 77 blank, so apartado 7's
+        # [658] and [659] fold to a filed zero rather than an absent one.
+        folded = {rv.relation: rv.value for rv in relation_vals.values if rv.value is not None}
+        assert folded["modelo-390-prev-303-regularizacion-cuotas-art-80-cinco-5"] == Decimal("0")
+        assert folded["modelo-390-prev-303-iva-importacion-aduana"] == Decimal("0")
         # Provenance: resolved entries carry local_filing provenance.
         assert all(rv.provenance == "local_filing" for rv in relation_vals.values if rv.value is not None)
         relation_values_map = {rv.relation: rv.value for rv in relation_vals.values if rv.value is not None}

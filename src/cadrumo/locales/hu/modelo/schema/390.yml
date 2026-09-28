@@ -107,6 +107,9 @@ modelo:
               a 303-as bevallásokban
           iva-anual-reconciliacion-resultado-303:
             label: Éves egyeztetés - a 303-as bevallásokban bevallott eredmény
+          iva-anual-reconciliacion-resultados-liquidaciones:
+            label: Éves egyeztetés - az év bevallásainak eredménye ([95] - [97] -
+              [98] - [662])
           iva-anual-regimen-simplificado-aic-bienes-cuota-devengada:
             label: Felszámított áfa en Közösségen belüli beszerzések
           iva-anual-regimen-simplificado-cuota-resultante-agricola:

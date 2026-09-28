@@ -208,6 +208,13 @@ class IvaCompensationCarryForwardReport(BaseModel):
     as_of_year: FilingYear
     lots: tuple[IvaCompensationCarryForwardLot, ...]
     unallocated_applied_amount: Decimal = Field(ge=ZERO)
+    opening_applied_amount: Decimal = Field(default=ZERO, ge=ZERO)
+    """How much of the opening balance handed to the builder the states applied.
+
+    The opening balance is credit generated before the first state, so FIFO
+    consumes it before any lot the states generate. Zero when no opening balance
+    was declared, which leaves every other figure exactly as without one.
+    """
 
 
 @dataclass(slots=True)
@@ -253,6 +260,7 @@ def build_iva_compensation_carry_forward_report(
     states: tuple[IvaCompensationPeriodState, ...],
     *,
     as_of_year: int,
+    opening_balance: Decimal | None = None,
 ) -> IvaCompensationCarryForwardReport:
     """Project filed-period compensation states into source-period lots.
 
@@ -261,21 +269,68 @@ def build_iva_compensation_carry_forward_report(
     application recorded for that same period, matching Modelo 303's
     prior-balance-before-new-generation shape.
 
+    ``opening_balance`` is credit already pending before the first state, such
+    as the earlier ejercicios' credit a single year's states open with. Being
+    the oldest credit it is consumed first, and the amount consumed is reported
+    as ``opening_applied_amount``. Without it, an application in a year that
+    also generated credit would be charged to that year's lot and the older
+    credit would look unapplied. A negative balance is refused by the report's
+    own non-negative ``opening_applied_amount``.
+
     Returns an :class:`IvaCompensationCarryForwardReport`.
     """
     _validate_carry_forward_as_of_year(as_of_year)
     ordered = tuple(sorted(states, key=lambda item: (item.filing_year, iva_compensation_period_sort_key(item.period))))
     working: list[_WorkingCarryForwardLot] = []
     unallocated_applied = ZERO
+    opening_remaining = opening_balance if opening_balance is not None else ZERO
+    opening_applied = ZERO
     for state in ordered:
-        unallocated_applied += _allocate_state_application(state, working)
+        applied = state.applied_amount or ZERO
+        from_opening = min(opening_remaining, applied)
+        opening_remaining -= from_opening
+        opening_applied += from_opening
+        unallocated_applied += _allocate_state_application(applied - from_opening, working)
         _append_state_carry_forward_lot(state, working)
     lots = _materialize_carry_forward_lots(working, as_of_year=as_of_year)
     return IvaCompensationCarryForwardReport(
         as_of_year=as_of_year,
         lots=lots,
         unallocated_applied_amount=unallocated_applied,
+        opening_applied_amount=opening_applied,
     )
+
+
+def iva_compensation_year_opening_balance(
+    period_states: tuple[IvaCompensationPeriodState, ...],
+    *,
+    filing_year: int,
+) -> Decimal | None:
+    """Return the credit pending from earlier ejercicios when ``filing_year`` opened.
+
+    Modelo 303 box [110] of the ejercicio's first autoliquidación holds only
+    credit generated in earlier ejercicios, and box [87] is [110] - [78], so the
+    opening balance is that state's pending-for-later amount plus its applied
+    amount when the prior pending amount itself was not captured.
+
+    ``None`` when the year's first filed state is not its first period, or when
+    that state carries neither a non-negative prior pending amount nor box
+    [87]: the opening balance is then unknown, which is not the same as zero.
+    """
+    year_states = sorted(
+        (state for state in period_states if state.filing_year == filing_year),
+        key=lambda state: iva_compensation_period_sort_key(state.period),
+    )
+    if not year_states:
+        return None
+    first = year_states[0]
+    if iva_compensation_period_sort_key(first.period)[0] != 1:
+        return None
+    if first.prior_pending_amount is not None:
+        return first.prior_pending_amount if first.prior_pending_amount >= ZERO else None
+    if first.pending_for_later_amount is None:
+        return None
+    return first.pending_for_later_amount + (first.applied_amount or ZERO)
 
 
 def _validate_carry_forward_as_of_year(as_of_year: int) -> None:
@@ -287,10 +342,10 @@ def _validate_carry_forward_as_of_year(as_of_year: int) -> None:
 
 
 def _allocate_state_application(
-    state: IvaCompensationPeriodState,
+    applied_amount: Decimal,
     working: list[_WorkingCarryForwardLot],
 ) -> Decimal:
-    remaining_to_allocate = state.applied_amount or ZERO
+    remaining_to_allocate = applied_amount
     for lot in working:
         if remaining_to_allocate <= ZERO:
             break
@@ -515,4 +570,5 @@ __all__ = [
     "build_iva_compensation_carry_forward_report",
     "derive_303_compensation_available",
     "derive_iva_compensation_year_end_carry_partition",
+    "iva_compensation_year_opening_balance",
 ]
