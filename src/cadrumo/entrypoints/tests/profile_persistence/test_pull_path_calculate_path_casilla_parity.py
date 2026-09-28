@@ -128,6 +128,7 @@ from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
+from cadrumo.domain.modelos.filing_record import FilingDeclarationKind
 from cadrumo.domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
@@ -705,6 +706,7 @@ def test_prorrata_apportioned_deducible_casilla_matches_calculate_and_pull_paths
             snapshot.revision,
             filing_year=_PRORRATA_YEAR,
             period=_PRORRATA_PERIOD,
+            declaration_kind=FilingDeclarationKind.ORIGINAL,
         ).casilla_inputs,
         **resolve_available_bound_inputs_by_casilla_id(snapshot.revision, pull_binding_values),
     }

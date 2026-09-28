@@ -387,6 +387,7 @@ def compare_taxation_for_work_unit(
     from ...domain.calculations.registry.authority import bundled_indexed_authority
     from ...domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
     from ...domain.calculations.registry.errors import RegistrySnapshotError
+    from ...domain.modelos.filing_record import FilingDeclarationKind
     from ..aggregation.source_mesh import CalculationSourceContext
     from ..aggregation.source_profile import ProfileSourceResolver
     from .action_errors import WorkUnitNotFoundError
@@ -457,6 +458,7 @@ def compare_taxation_for_work_unit(
         snapshot.revision,
         filing_year=work_unit.filing_year,
         period=work_unit.period,
+        declaration_kind=FilingDeclarationKind.ORIGINAL,
     ).casilla_inputs
     bound_inputs = resolve_available_bound_inputs_by_casilla_id(
         snapshot.revision,
