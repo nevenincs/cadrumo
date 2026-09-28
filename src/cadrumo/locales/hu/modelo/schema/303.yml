@@ -330,6 +330,24 @@ modelo:
             label: Levonási jogot keletkeztető éves ügyletvolumen
           iva-prorrata-volumen-total:
             label: Az ügyletek éves teljes volumene
+          iva-rectificacion-deducciones-importaciones-base:
+            label: Importok levonásainak helyesbítése - Adóalap (a hivatalos 40. rovat
+              része)
+          iva-rectificacion-deducciones-importaciones-cuota:
+            label: Importok levonásainak helyesbítése - ÁFA összege (a hivatalos 41.
+              rovat része)
+          iva-rectificacion-deducciones-interiores-base:
+            label: Belföldi ügyletek levonásainak helyesbítése - Adóalap (a hivatalos
+              40. rovat része)
+          iva-rectificacion-deducciones-interiores-cuota:
+            label: Belföldi ügyletek levonásainak helyesbítése - ÁFA összege (a hivatalos
+              41. rovat része)
+          iva-rectificacion-deducciones-inversion-sujeto-pasivo-base:
+            label: Fordított adózású belföldi és Közösségen belüli ügyletek levonásainak
+              helyesbítése - Adóalap (a hivatalos 40. rovat része)
+          iva-rectificacion-deducciones-inversion-sujeto-pasivo-cuota:
+            label: Fordított adózású belföldi és Közösségen belüli ügyletek levonásainak
+              helyesbítése - ÁFA összege (a hivatalos 41. rovat része)
           iva-regularizacion-inversiones:
             label: Beruházási javak korrekciója (LIVA 107-110. cikk)
           iva-resultado-autoliquidacion:

@@ -315,9 +315,24 @@ modelo:
             label: Annual turnover giving deduction rights
           iva-prorrata-volumen-total:
             label: Total annual turnover
+          iva-rectificacion-deducciones-importaciones-base:
+            label: Correction of deductions on imports - Base (part of official box
+              40)
+          iva-rectificacion-deducciones-importaciones-cuota:
+            label: Correction of deductions on imports - Tax amount (part of official
+              box 41)
           iva-rectificacion-deducciones-interiores-base:
             label: Correction of deductions on domestic transactions - Base (part
               of official box 40)
+          iva-rectificacion-deducciones-interiores-cuota:
+            label: Correction of deductions on domestic transactions - Tax amount
+              (part of official box 41)
+          iva-rectificacion-deducciones-inversion-sujeto-pasivo-base:
+            label: Correction of deductions on reverse-charge transactions, domestic
+              and intra-Community - Base (part of official box 40)
+          iva-rectificacion-deducciones-inversion-sujeto-pasivo-cuota:
+            label: Correction of deductions on reverse-charge transactions, domestic
+              and intra-Community - Tax amount (part of official box 41)
           iva-regularizacion-inversiones:
             label: Capital goods adjustment (LIVA arts. 107-110)
           iva-resultado-autoliquidacion:

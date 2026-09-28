@@ -307,9 +307,26 @@ modelo:
             label: Volumen anual de operaciones que originan derecho a deducción
           iva-prorrata-volumen-total:
             label: Volumen anual total de operaciones
+          iva-rectificacion-deducciones-importaciones-base:
+            label: Rectificación de deducciones en importaciones - Base (parte de
+              la casilla oficial 40)
+          iva-rectificacion-deducciones-importaciones-cuota:
+            label: Rectificación de deducciones en importaciones - Cuota (parte de
+              la casilla oficial 41)
           iva-rectificacion-deducciones-interiores-base:
             label: Rectificación de deducciones en operaciones interiores - Base (parte
               de la casilla oficial 40)
+          iva-rectificacion-deducciones-interiores-cuota:
+            label: Rectificación de deducciones en operaciones interiores - Cuota
+              (parte de la casilla oficial 41)
+          iva-rectificacion-deducciones-inversion-sujeto-pasivo-base:
+            label: Rectificación de deducciones en operaciones con inversión del sujeto
+              pasivo, interiores e intracomunitarias - Base (parte de la casilla oficial
+              40)
+          iva-rectificacion-deducciones-inversion-sujeto-pasivo-cuota:
+            label: Rectificación de deducciones en operaciones con inversión del sujeto
+              pasivo, interiores e intracomunitarias - Cuota (parte de la casilla
+              oficial 41)
           iva-regularizacion-inversiones:
             label: Regularización por bienes de inversión (LIVA arts. 107-110)
           iva-resultado-autoliquidacion:
