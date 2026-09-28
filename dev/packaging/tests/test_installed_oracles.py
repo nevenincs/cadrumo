@@ -37,7 +37,11 @@ from .._distribution_names import normalise_distribution_name
 from ..authority_staging import AUTHORITY_ROOT_ENV, authoring_authority_root
 from ..hashing import sha256_path
 from ..installed_mcp_oracle import InstalledMcpOracleError, run_installed_mcp_oracle
-from ..installed_tax_oracle import InstalledTaxOracleError, run_installed_tax_oracle
+from ..installed_tax_oracle import (
+    InstalledTaxOracleError,
+    path_without_product_executables,
+    run_installed_tax_oracle,
+)
 from ..lane_verification_core import (
     create_pip_venv,
     installed_product_env,
@@ -959,15 +963,24 @@ def test_owned_server_launch_capture_is_a_clean_real_subprocess(installed_cohort
     assert transcript.completed_at >= transcript.started_at
 
 
-def _retired_state_environment(base: Path) -> dict[str, str]:
+def _retired_state_environment(base: Path, venv: Path) -> dict[str, str]:
     """A per-OS platform-data root whose retired ``aeat`` state triggers the refusal.
 
     Mirrors the ``smoke_mcpb`` hostile-platform fixture: the resolver refuses on
     the retired directory's existence alone, and refusal fires only in INSTALLED
     run mode - which this file's wheel-installed cohort guarantees, unlike an
     editable checkout whose resolver never inspects the platform data dir.
+
+    The search path is the one a client of this installation has: the cohort's
+    own scripts directory first, then the inherited entries with every other
+    product executable removed. The development environment running the test
+    carries its own ``aeat``, and a server that reached it would serve another
+    installation's command surface.
     """
     environment = {key: value for key, value in os.environ.items() if not key.startswith("CADRUMO_")}
+    environment["PATH"] = os.pathsep.join(
+        (str(venv_bin_dir(venv)), path_without_product_executables(environment.get("PATH", "")))
+    )
     hostile_root = base / "platform-data-with-retired-state"
     if sys.platform == "win32":
         former_product_root = hostile_root / "aeat"
@@ -1059,7 +1072,7 @@ def test_installed_mcp_server_serves_when_storage_root_refuses(installed_cohort:
     constants, and the eager telemetry-directory resolution.
     """
     cohort = installed_cohort
-    environment = _retired_state_environment(cohort.work_dir / "storage-root-refusal")
+    environment = _retired_state_environment(cohort.work_dir / "storage-root-refusal", cohort.venv)
     initialize, tools, stderr_text = asyncio.run(_drive_mcp_server(cohort.mcp_server, environment=environment))
     assert initialize["result"]["serverInfo"]["name"] == "cadrumo"
     assert len(tools["result"]["tools"]) > 0
