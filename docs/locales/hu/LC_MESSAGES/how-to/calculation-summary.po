@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.5.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-27 12:44+0000\n"
+"POT-Creation-Date: 2026-09-27 16:02+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: hu\n"
@@ -145,10 +145,10 @@ msgid "a figure, including a zero, is a calculated value;"
 msgstr "egy szám, a nullát is beleértve, számított érték;"
 
 #: ../../how-to/calculation-summary.md:56
-msgid "`— sin dato` (`— no data`) means the calculation recorded no value;"
+msgid "`sin dato` (`no data`) means the calculation recorded no value;"
 msgstr ""
-"a `— sin dato` (angolul `— no data`, magyar összesítőben „nincs adat”) "
-"azt jelenti, hogy a számítás nem rögzített értéket;"
+"a `sin dato` (angolul `no data`, magyar összesítőben „nincs adat”) azt "
+"jelenti, hogy a számítás nem rögzített értéket;"
 
 #: ../../how-to/calculation-summary.md:57
 msgid ""

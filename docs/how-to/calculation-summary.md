@@ -53,7 +53,7 @@ Each registry section follows as a table of casilla, concept and amount. Three
 states read differently:
 
 - a figure, including a zero, is a calculated value;
-- `— sin dato` (`— no data`) means the calculation recorded no value;
+- `sin dato` (`no data`) means the calculation recorded no value;
 - `n/a · no aplicable` (`n/a · not applicable`) means the registry proves the
   casilla does not apply to the period.
 

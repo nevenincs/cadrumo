@@ -32,6 +32,7 @@ from ....domain.modelos.calculation_revision import (
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
+from ....domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
@@ -46,9 +47,14 @@ def seed_exportable_modelo_revision(
     modelo: str = "111",
     filing_year: int = 2026,
     period: str = "1T",
+    filing_instance_evidence: FilingInstanceEvidence | None = None,
     operation: PinnedAuthorityOperation,
 ) -> tuple[str, str]:
-    """Persist a real verified-complete revision ready for export or packaging."""
+    """Persist a real verified-complete revision ready for export or packaging.
+
+    ``filing_instance_evidence`` carries the filing-instance facts a modelo
+    whose export gate requires them (Modelo 303) must hold.
+    """
     state = workflow_state_repository().load()
     bucket_id = state.active_profile_bucket_id()
     assert bucket_id is not None
@@ -88,7 +94,7 @@ def seed_exportable_modelo_revision(
         input_values_by_casilla_id=inputs,
         binding_overrides={},
         casilla_values={},
-        filing_instance_evidence=None,
+        filing_instance_evidence=filing_instance_evidence,
         source_provenance=(),
     )
     revision = CalculationRevision(
@@ -106,7 +112,7 @@ def seed_exportable_modelo_revision(
         updated_at=now,
         verified_at=now,
         verified_by="operator",
-        filing_instance_evidence=None,
+        filing_instance_evidence=filing_instance_evidence,
         source_provenance=(),
     )
     revisions = CalculationRevisionCatalogueRepository()

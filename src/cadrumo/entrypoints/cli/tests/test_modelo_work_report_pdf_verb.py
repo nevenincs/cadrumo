@@ -17,11 +17,19 @@ import pikepdf
 import pytest
 from click.testing import Result
 
+from ....adapters.outbound.calculation_summary_pdf.summary_reading import read_calculation_summary_pdf
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....application.modelo.calculation_summary_pdf_ports import SIGNATURE_ATTACHMENT_NAME, STATEMENT_ATTACHMENT_NAME
+from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
+from ....application.modelo.calculation_summary_pdf_ports import (
+    REPORT_ATTACHMENT_NAME,
+    SIGNATURE_ATTACHMENT_NAME,
+    STATEMENT_ATTACHMENT_NAME,
+)
 from ....core.calculation_report_format import CalculationReportDocumentFormat
 from ....core.optional_extras import PDF_EXTRA
+from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
 from ....domain.modelos.repository import upsert_work_unit
 from ....tests.cli_envelope import require_error_document
 from ....tests.cli_envelope import unwrap_envelope_notices as _notices
@@ -40,10 +48,17 @@ def _invoke(args: Sequence[str]) -> Result:
     return invoke_cached_cli(args)
 
 
-def _seed_current_sealed_revision(*, operation: PinnedAuthorityOperation) -> str:
-    """Seed a sealed Modelo 111 revision as its work unit's current one; return the work unit id."""
+def _seed_current_sealed_revision(
+    *,
+    operation: PinnedAuthorityOperation,
+    modelo: str = "111",
+    filing_instance_evidence: FilingInstanceEvidence | None = None,
+) -> str:
+    """Seed a sealed revision of ``modelo`` as its work unit's current one; return the work unit id."""
     work_unit_id, calculation_revision_id = seed_exportable_modelo_revision(
         input_values_by_casilla_id={},
+        modelo=modelo,
+        filing_instance_evidence=filing_instance_evidence,
         operation=operation,
     )
     repository = WorkUnitCatalogueRepository()
@@ -150,6 +165,39 @@ def test_a_summary_verifies_against_the_store_and_exits_zero(summary_path: Path)
     assert payload["reasons"] == []
     assert {check["layer"] for check in payload["checks"]} == {"document", "store"}
     assert all(check["reason"] is None for check in payload["checks"])
+
+
+def test_a_modelo_303_summary_verifies_with_every_check_ok(
+    tmp_path: Path,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Modelo 303 declares casilla identifiers that break across the casilla column at a hyphen."""
+    evidence = general_m303_filing_evidence(
+        Period.from_year_and_code(2026, "1T"),
+        reference="test:calculation-summary-303",
+        operation=operation,
+    )
+    work_unit_id = _seed_current_sealed_revision(operation=operation, modelo="303", filing_instance_evidence=evidence)
+    output = tmp_path / "modelo-303-summary.pdf"
+
+    written = _summary(work_unit_id, output)
+    verified = _verify(output)
+
+    assert written.exit_code == 0, written.output
+    assert verified.exit_code == 0, verified.output
+    payload = _payload(verified.output)
+    assert payload["outcome"] == "verified"
+    assert payload["store_checked"] is True
+    assert payload["reasons"] == []
+    assert "text_layer" in {check["check"] for check in payload["checks"]}
+    assert all(check["reason"] is None for check in payload["checks"])
+    contents = read_calculation_summary_pdf(output.read_bytes())
+    report = json.loads(contents.attachments[REPORT_ATTACHMENT_NAME])
+    hyphenated = [row["number"] for row in report["rows"] if "-" in row["number"]]
+    page = "".join(contents.page_text.split())
+    assert hyphenated
+    assert [number for number in hyphenated if number not in page] == []
 
 
 def test_a_document_only_check_is_unpinned_until_a_key_is_trusted(summary_path: Path) -> None:

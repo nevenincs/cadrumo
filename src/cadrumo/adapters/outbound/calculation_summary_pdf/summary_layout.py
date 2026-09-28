@@ -75,6 +75,8 @@ _VALUE_COLUMN_WIDTH: Final[float] = 132.0
 _LABEL_WIDTH: Final[float] = _COLUMN_VALUE_RIGHT - _VALUE_COLUMN_WIDTH - 10 - _COLUMN_LABEL_X
 _FACT_VALUE_X: Final[float] = _MARGIN_X + 150
 _LINE: Final[float] = 11.0
+_HYPHENS: Final[frozenset[str]] = frozenset("-\u00ad\u2010\u2011")
+"""Characters a text extractor may take for a hyphen the layout added at a line break."""
 
 _DOCUMENT: Final[StructNode] = ("Document", "document", ())
 _ROW_SCOPE: Final[tuple[tuple[str, str], ...]] = (("Scope", "Row"),)
@@ -135,30 +137,63 @@ class DrawnSummary(NamedTuple):
     plans: tuple[tuple[StructPath | None, ...], ...]
 
 
+def _may_end_line(line: str) -> bool:
+    """Say whether ``line`` may be followed by a line break."""
+    visible = line.rstrip(" ")
+    return bool(visible) and visible[-1] not in _HYPHENS
+
+
+def _break_at(rest: str, end: int) -> tuple[int, int]:
+    """Choose where the first line of ``rest`` ends and where the next one starts.
+
+    ``rest[:end]`` is the longest prefix that fits. The last space in it wins,
+    and the space is dropped; failing that, the last position between two
+    characters. A position leaving a hyphen at the end of the line is skipped
+    in both searches, so the hyphen starts the next line instead.
+    """
+    for index in range(end, 0, -1):
+        if rest[index] == " " and _may_end_line(rest[:index]):
+            return index, index + 1
+    for index in range(end, 0, -1):
+        if _may_end_line(rest[:index]):
+            return index, index
+    return end, end
+
+
 def wrap_text(text: str, face: SummaryFace, size: float, width: float) -> tuple[str, ...]:
     """Break ``text`` into lines no wider than ``width``, on spaces where possible.
 
     A single word wider than the line -- a long identifier, a token without
     spaces -- is broken between characters rather than allowed to run into the
     next column.
+
+    No line ends in a hyphen while text follows it. Text extraction reads a
+    hyphen at the end of a line as one the layout added to split a word: pdfium
+    joins the two lines and returns U+FFFE where the hyphen was, and other
+    extractors drop it. The hyphen in a casilla identifier such as
+    ``prorrata-volumen-con-derecho``, or in a label's spaced separator, is part
+    of the text, so the break moves before it and the hyphen starts the next
+    line, the way long identifiers are conventionally broken.
     """
+
+    def fits(candidate: str) -> bool:
+        return pdfmetrics.stringWidth(candidate, face.value, size) <= width
+
     lines: list[str] = []
-    current = ""
-    for word in text.split(" "):
-        candidate = word if not current else f"{current} {word}"
-        if pdfmetrics.stringWidth(candidate, face.value, size) <= width:
-            current = candidate
-            continue
-        if current:
-            lines.append(current)
-        current = ""
-        for character in word:
-            if current and pdfmetrics.stringWidth(current + character, face.value, size) > width:
-                lines.append(current)
-                current = ""
-            current += character
-    if current or not lines:
-        lines.append(current)
+    rest = text
+    while len(rest) > 1 and not fits(rest):
+        low, high = 1, len(rest) - 1
+        while low < high:
+            middle = (low + high + 1) // 2
+            if fits(rest[:middle]):
+                low = middle
+            else:
+                high = middle - 1
+        line_end, next_start = _break_at(rest, low)
+        lines.append(rest[:line_end])
+        rest = rest[next_start:]
+    if rest or not lines:
+        lines.append(rest)
     return tuple(lines)
 
 

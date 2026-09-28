@@ -40,7 +40,13 @@ from .....core.external_constants import OutputLanguage
 from .....core.hashing import sha256_hex
 from .....tests.audited_process import run_audited_process
 from ..summary_reading import read_calculation_summary_pdf
-from .summary_report_support import MEASURED_VALUE, render_summary, synthetic_keypair, synthetic_report
+from .summary_report_support import (
+    LONG_CASILLA_NUMBER,
+    MEASURED_VALUE,
+    render_summary,
+    synthetic_keypair,
+    synthetic_report,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -178,6 +184,31 @@ def test_an_annotation_laid_over_a_figure_is_refused(genuine: bytes) -> None:
     verification = _verify(_mutated(genuine, overlay))
 
     assert verification.reasons == (Reason.VISIBLE_LAYER_OVERLAY,)
+
+
+def test_a_text_layer_that_reads_another_character_for_the_hyphen_is_refused(genuine: bytes) -> None:
+    """The glyphs, and so the page's look and its digest, stay; only the extracted text changes.
+
+    Every font's character map is edited to read the hyphen glyph as U+2010, a
+    hyphen that looks the same. A verifier that accepted a look-alike, or that
+    read around a hyphen the extractor could not place, would pass this file.
+    """
+
+    def remap(pdf: pikepdf.Pdf) -> None:
+        remapped = 0
+        for page in pdf.pages:
+            for _name, font in page.obj.Resources.Font.items():
+                cmap = font.ToUnicode.read_bytes()
+                if b"<2D> <002D>" in cmap:
+                    font.ToUnicode.write(cmap.replace(b"<2D> <002D>", b"<2D> <2010>"))
+                    remapped += 1
+        assert remapped
+
+    verification = _verify(_mutated(genuine, remap))
+
+    assert verification.outcome is Outcome.REFUSED
+    assert set(verification.reasons) == {Reason.TEXT_LAYER_MISMATCH}
+    assert f"casilla {LONG_CASILLA_NUMBER}" in [check.detail for check in verification.checks if check.reason]
 
 
 def test_a_flipped_signature_byte_is_refused(genuine: bytes) -> None:
