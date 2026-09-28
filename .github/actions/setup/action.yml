@@ -72,8 +72,13 @@ runs:
       # identifiers and stored data are untranslated either way. Same posture
       # as `dev/packaging/installed_tax_oracle.py:186`, which pins it because
       # the packaging oracles read product output as data.
+      #
+      # A job that asked for no authority tells the editable build not to
+      # resolve one; otherwise that build compiles the whole registry (about
+      # four minutes) for a lint job that never reads it.
       env:
         CADRUMO_OUTPUT_LANGUAGE: en
+        CADRUMO_EDITABLE_AUTHORITY: ${{ inputs.authority == 'true' && 'resolve' || 'skip' }}
       run: |
         unset CADRUMO_AUTHORITY_ROOT
         just setup
