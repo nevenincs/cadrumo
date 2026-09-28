@@ -89,6 +89,22 @@ modelo:
           iva-aic-servicios-tipo-7-5-cuota:
             label: IVA devengado adquisiciones intracomunitarias de servicios al tipo
               7,5% - Cuota
+          iva-anual-autorepercutido-interior-deducible-base:
+            label: IVA deducible por inversión del sujeto pasivo en operaciones interiores
+              corrientes - Base imponible (LIVA art. 84.Uno.2; parte de la casilla
+              oficial 48)
+          iva-anual-autorepercutido-interior-deducible-cuota:
+            label: IVA deducible por inversión del sujeto pasivo en operaciones interiores
+              corrientes - Cuota deducible (LIVA art. 84.Uno.2; parte de la casilla
+              oficial 49)
+          iva-anual-autorepercutido-interior-deducible-inversion-base:
+            label: IVA deducible por inversión del sujeto pasivo en bienes de inversión
+              interiores - Base imponible (LIVA art. 84.Uno.2; parte de la casilla
+              oficial 50)
+          iva-anual-autorepercutido-interior-deducible-inversion-cuota:
+            label: IVA deducible por inversión del sujeto pasivo en bienes de inversión
+              interiores - Cuota deducible (LIVA art. 84.Uno.2; parte de la casilla
+              oficial 51)
           iva-anual-compensacion-generada-ejercicio:
             label: Saldo a compensar generado en el ejercicio
           iva-anual-compensacion-ultimo-periodo:
@@ -97,6 +113,56 @@ modelo:
             label: Total cuota IVA deducible del ejercicio
           iva-anual-cuota-devengada-total:
             label: Total cuota IVA devengada del ejercicio
+          iva-anual-deducible-aic-corrientes-todos-tipos-base:
+            label: IVA soportado deducible en adquisiciones intracomunitarias de bienes
+              corrientes, todos los tipos - Base imponible (casilla oficial 56)
+          iva-anual-deducible-aic-corrientes-todos-tipos-cuota:
+            label: IVA soportado deducible en adquisiciones intracomunitarias de bienes
+              corrientes, todos los tipos - Cuota deducible (casilla oficial 57)
+          iva-anual-deducible-aic-inversion-todos-tipos-base:
+            label: IVA soportado deducible en adquisiciones intracomunitarias de bienes
+              de inversión, todos los tipos - Base imponible (casilla oficial 58)
+          iva-anual-deducible-aic-inversion-todos-tipos-cuota:
+            label: IVA soportado deducible en adquisiciones intracomunitarias de bienes
+              de inversión, todos los tipos - Cuota deducible (casilla oficial 59)
+          iva-anual-deducible-aic-servicios-todos-tipos-base:
+            label: IVA soportado deducible en adquisiciones intracomunitarias de servicios,
+              todos los tipos - Base imponible (casilla oficial 597)
+          iva-anual-deducible-aic-servicios-todos-tipos-cuota:
+            label: IVA soportado deducible en adquisiciones intracomunitarias de servicios,
+              todos los tipos - Cuota deducible (casilla oficial 598)
+          iva-anual-deducible-interiores-corrientes-soportado-base:
+            label: IVA soportado deducible en operaciones interiores corrientes -
+              Base imponible (parte de la casilla oficial 48)
+          iva-anual-deducible-interiores-corrientes-soportado-cuota:
+            label: IVA soportado deducible en operaciones interiores corrientes -
+              Cuota deducible (parte de la casilla oficial 49)
+          iva-anual-deducible-interiores-inversion-soportado-base:
+            label: IVA soportado deducible en operaciones interiores con bienes de
+              inversión - Base imponible (parte de la casilla oficial 50)
+          iva-anual-deducible-interiores-inversion-soportado-cuota:
+            label: IVA soportado deducible en operaciones interiores con bienes de
+              inversión - Cuota deducible (parte de la casilla oficial 51)
+          iva-anual-deducible-rectificacion-importaciones-base:
+            label: Rectificación de deducciones en importaciones - Base imponible
+              (parte de la casilla oficial 639)
+          iva-anual-deducible-rectificacion-importaciones-cuota:
+            label: Rectificación de deducciones en importaciones - Cuota deducible
+              (parte de la casilla oficial 62)
+          iva-anual-deducible-rectificacion-interiores-base:
+            label: Rectificación de deducciones en operaciones interiores - Base imponible
+              (parte de la casilla oficial 639)
+          iva-anual-deducible-rectificacion-interiores-cuota:
+            label: Rectificación de deducciones en operaciones interiores - Cuota
+              deducible (parte de la casilla oficial 62)
+          iva-anual-deducible-rectificacion-inversion-sujeto-pasivo-base:
+            label: Rectificación de deducciones en operaciones con inversión del sujeto
+              pasivo, interiores e intracomunitarias - Base imponible (parte de la
+              casilla oficial 639)
+          iva-anual-deducible-rectificacion-inversion-sujeto-pasivo-cuota:
+            label: Rectificación de deducciones en operaciones con inversión del sujeto
+              pasivo, interiores e intracomunitarias - Cuota deducible (parte de la
+              casilla oficial 62)
           iva-anual-reconciliacion-deducible-303:
             label: Reconciliación anual - cuota deducible declarada en los modelos
               303

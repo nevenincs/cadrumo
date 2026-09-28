@@ -397,3 +397,219 @@ number = "95"
 [[revisions."2022".completeness_manifest.casillas]]
 casilla_id = "iva.anual.liquidaciones.ultimo-periodo-a-devolver"
 number = "98"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.interiores-corrientes.soportado.base"
+number = "iva.anual.deducible.interiores-corrientes.soportado.base"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.interiores-corrientes.soportado.cuota"
+number = "iva.anual.deducible.interiores-corrientes.soportado.cuota"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.autorepercutido.interior.deducible.base"
+number = "iva.anual.autorepercutido.interior.deducible.base"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.autorepercutido.interior.deducible.cuota"
+number = "iva.anual.autorepercutido.interior.deducible.cuota"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.interiores-inversion.soportado.base"
+number = "iva.anual.deducible.interiores-inversion.soportado.base"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.interiores-inversion.soportado.cuota"
+number = "iva.anual.deducible.interiores-inversion.soportado.cuota"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.autorepercutido.interior.deducible.inversion.base"
+number = "iva.anual.autorepercutido.interior.deducible.inversion.base"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.autorepercutido.interior.deducible.inversion.cuota"
+number = "iva.anual.autorepercutido.interior.deducible.inversion.cuota"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.importaciones-corrientes.total.base"
+number = "52"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-corrientes.tipo-4.base"
+number = "214"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-corrientes.tipo-4.cuota"
+number = "215"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-corrientes.tipo-5.base"
+number = "736"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-corrientes.tipo-5.cuota"
+number = "737"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-corrientes.tipo-10.base"
+number = "627"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-corrientes.tipo-10.cuota"
+number = "628"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-corrientes.tipo-21.base"
+number = "629"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-corrientes.tipo-21.cuota"
+number = "630"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-corrientes.todos-tipos.base"
+number = "iva.anual.deducible.aic-corrientes.todos-tipos.base"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-corrientes.todos-tipos.cuota"
+number = "iva.anual.deducible.aic-corrientes.todos-tipos.cuota"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-corrientes.total.base"
+number = "56"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-corrientes.total.cuota"
+number = "57"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-inversion.tipo-4.base"
+number = "220"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-inversion.tipo-4.cuota"
+number = "221"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-inversion.tipo-5.base"
+number = "738"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-inversion.tipo-5.cuota"
+number = "739"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-inversion.tipo-10.base"
+number = "631"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-inversion.tipo-10.cuota"
+number = "632"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-inversion.tipo-21.base"
+number = "633"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-inversion.tipo-21.cuota"
+number = "634"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-inversion.todos-tipos.base"
+number = "iva.anual.deducible.aic-inversion.todos-tipos.base"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-inversion.todos-tipos.cuota"
+number = "iva.anual.deducible.aic-inversion.todos-tipos.cuota"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-inversion.total.base"
+number = "58"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-inversion.total.cuota"
+number = "59"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-servicios.tipo-4.base"
+number = "587"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-servicios.tipo-4.cuota"
+number = "588"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-servicios.tipo-5.base"
+number = "740"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-servicios.tipo-5.cuota"
+number = "741"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-servicios.tipo-10.base"
+number = "635"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-servicios.tipo-10.cuota"
+number = "636"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-servicios.tipo-21.base"
+number = "637"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-servicios.tipo-21.cuota"
+number = "638"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-servicios.todos-tipos.base"
+number = "iva.anual.deducible.aic-servicios.todos-tipos.base"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-servicios.todos-tipos.cuota"
+number = "iva.anual.deducible.aic-servicios.todos-tipos.cuota"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-servicios.total.base"
+number = "597"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-servicios.total.cuota"
+number = "598"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.compensaciones-reagp.cuota"
+number = "61"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.rectificacion.base"
+number = "639"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.rectificacion.cuota"
+number = "62"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.rectificacion.interiores.base"
+number = "iva.anual.deducible.rectificacion.interiores.base"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.rectificacion.interiores.cuota"
+number = "iva.anual.deducible.rectificacion.interiores.cuota"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.rectificacion.importaciones.base"
+number = "iva.anual.deducible.rectificacion.importaciones.base"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.rectificacion.importaciones.cuota"
+number = "iva.anual.deducible.rectificacion.importaciones.cuota"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.rectificacion.inversion-sujeto-pasivo.base"
+number = "iva.anual.deducible.rectificacion.inversion-sujeto-pasivo.base"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.rectificacion.inversion-sujeto-pasivo.cuota"
+number = "iva.anual.deducible.rectificacion.inversion-sujeto-pasivo.cuota"

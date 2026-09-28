@@ -36,7 +36,7 @@ required_text = ["modelo 390"]
 
 [[revisions."2022".bindings]]
 id = "modelo-390-iva-soportado-interiores-cuota"
-provider = { kind = "ledger_iva_aggregation", categories = ["domestic_general", "domestic_reduced", "domestic_super_reduced"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "soportado", fact = "iva_amount_sum", deduction_fact_kinds = ["domestic_current", "rectification"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+provider = { kind = "ledger_iva_aggregation", categories = ["domestic_general", "domestic_reduced", "domestic_super_reduced"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "soportado", fact = "iva_amount_sum", deduction_fact_kinds = ["domestic_current"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
@@ -51,7 +51,7 @@ required_text = ["modelo 390"]
 # imports. Selects import_third_country soportado lines across the rate tiers.
 [[revisions."2022".bindings]]
 id = "modelo-390-iva-soportado-importaciones-cuota"
-provider = { kind = "ledger_iva_aggregation", categories = ["import_third_country"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "soportado", fact = "iva_amount_sum", deduction_fact_kinds = ["import_current", "rectification"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+provider = { kind = "ledger_iva_aggregation", categories = ["import_third_country"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "soportado", fact = "iva_amount_sum", deduction_fact_kinds = ["import_current"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-17", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
@@ -375,7 +375,7 @@ required_text = ["modelo 390"]
 
 [[revisions."2022".bindings]]
 id = "modelo-390-iva-soportado-interiores-base"
-provider = { kind = "ledger_iva_aggregation", categories = ["domestic_general", "domestic_reduced", "domestic_super_reduced"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "soportado", fact = "base_amount_sum", deduction_fact_kinds = ["domestic_current", "rectification"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+provider = { kind = "ledger_iva_aggregation", categories = ["domestic_general", "domestic_reduced", "domestic_super_reduced"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "soportado", fact = "base_amount_sum", deduction_fact_kinds = ["domestic_current"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
@@ -2417,6 +2417,556 @@ applicability = { kind = "target_periods", periods = ["0A"] }
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+# Modelo 390 apartado 5, IVA deducible, read as the sum of the year's Modelo 303
+# deducible boxes. Every supported diseno de registro of the 390 (2022, 2023 and
+# 2024-2025) lays the block out the same way: per origin (operaciones
+# interiores, importaciones, adquisiciones intracomunitarias de bienes and of
+# servicios) a corrientes and a bienes de inversion total, then [60]/[61]
+# compensaciones REAGP, [639]/[62] rectificacion de deducciones, [63], [522] and
+# [64] suma de deducciones. The Modelo 303 box each total restates is selected on
+# the same ledger axes the quarterly binding uses, so every annual box equals the
+# sum of the year's 303 boxes: [48]/[49] = [28]/[29], [50]/[51] = [30]/[31],
+# [52]/[53] = [32]/[33], [54]/[55] = [34]/[35], [56]/[57] + [597]/[598] =
+# [36]/[37], [58]/[59] = [38]/[39], [639]/[62] = [40]/[41] and [61] = [42].
+
+# [52] Total importaciones de bienes corrientes, base: the base of the rows [53]
+# already reads, as Modelo 303 box [32] reads the rows of [33].
+
+[[revisions."2022".bindings]]
+id = "modelo-390-iva-soportado-importaciones-base"
+provider = { kind = "ledger_iva_aggregation", categories = ["import_third_country"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "soportado", fact = "base_amount_sum", deduction_fact_kinds = ["import_current"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-17", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+# Deducible half of the domestic inversion del sujeto pasivo (LIVA art.
+# 84.Uno.2). Fact 0085 classes it as a domestic deduction, so Modelo 303 adds it
+# to its operaciones interiores boxes [28]-[31]; the annual totals [48]-[51] add
+# it the same way.
+
+[[revisions."2022".bindings]]
+id = "modelo-390-iva-autorepercutido-interior-deducible-base"
+provider = { kind = "ledger_iva_aggregation", categories = ["domestic_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "inversion_sujeto_pasivo", fact = "base_amount_sum", deduction_fact_kinds = ["domestic_current"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-iva-autorepercutido-interior-deducible-cuota"
+provider = { kind = "ledger_iva_aggregation", categories = ["domestic_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "inversion_sujeto_pasivo", fact = "iva_amount_sum", deduction_fact_kinds = ["domestic_current"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-iva-autorepercutido-interior-deducible-bienes-inversion-base"
+provider = { kind = "ledger_iva_aggregation", categories = ["domestic_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "inversion_sujeto_pasivo", fact = "base_amount_sum", deduction_fact_kinds = ["domestic_investment"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "ley-37-1992:art-108", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-iva-autorepercutido-interior-deducible-bienes-inversion-cuota"
+provider = { kind = "ledger_iva_aggregation", categories = ["domestic_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "inversion_sujeto_pasivo", fact = "iva_amount_sum", deduction_fact_kinds = ["domestic_investment"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "ley-37-1992:art-108", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+# [639]/[62] Rectificacion de deducciones, read in the three parts Modelo 303
+# reads its boxes [40]/[41] in: interior soportado, importaciones and the
+# inversion del sujeto pasivo rows (domestic and intra-community). The Manual
+# practico de IVA, capitulo 9, books the correction of an earlier deduction on
+# this line of the resumen anual, not inside the corrientes totals. The interior
+# cuota keeps the shape of the invoice screen's received slot.
+
+[[revisions."2022".bindings]]
+id = "modelo-390-iva-rectificacion-deducciones-interiores-base"
+provider = { kind = "ledger_iva_aggregation", categories = ["domestic_general", "domestic_reduced", "domestic_super_reduced"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "soportado", fact = "base_amount_sum", deduction_fact_kinds = ["rectification"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-80", "ley-37-1992:art-92", "ley-37-1992:art-99", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-iva-rectificacion-deducciones-interiores-cuota"
+provider = { kind = "ledger_iva_aggregation", categories = ["domestic_general", "domestic_reduced", "domestic_super_reduced"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "soportado", fact = "iva_amount_sum", deduction_fact_kinds = ["rectification"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-80", "ley-37-1992:art-92", "ley-37-1992:art-99", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-iva-rectificacion-deducciones-importaciones-base"
+provider = { kind = "ledger_iva_aggregation", categories = ["import_third_country"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "soportado", fact = "base_amount_sum", deduction_fact_kinds = ["rectification"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-80", "ley-37-1992:art-92", "ley-37-1992:art-99", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-iva-rectificacion-deducciones-importaciones-cuota"
+provider = { kind = "ledger_iva_aggregation", categories = ["import_third_country"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "soportado", fact = "iva_amount_sum", deduction_fact_kinds = ["rectification"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-80", "ley-37-1992:art-92", "ley-37-1992:art-99", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-iva-rectificacion-deducciones-inversion-sujeto-pasivo-base"
+provider = { kind = "ledger_iva_aggregation", categories = ["domestic_reverse_charge", "intra_community_acquisition_reverse_charge", "intra_community_service_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "inversion_sujeto_pasivo", fact = "base_amount_sum", deduction_fact_kinds = ["rectification"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-80", "ley-37-1992:art-92", "ley-37-1992:art-99", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-iva-rectificacion-deducciones-inversion-sujeto-pasivo-cuota"
+provider = { kind = "ledger_iva_aggregation", categories = ["domestic_reverse_charge", "intra_community_acquisition_reverse_charge", "intra_community_service_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "inversion_sujeto_pasivo", fact = "iva_amount_sum", deduction_fact_kinds = ["rectification"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-80", "ley-37-1992:art-92", "ley-37-1992:art-99", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+# Adquisiciones intracomunitarias deducibles, [56]-[59] and [597]/[598]. The
+# 390 splits what Modelo 303 box [37] carries in one line into bienes corrientes
+# [56]/[57] and servicios [597]/[598]; box [39] (bienes de inversion) is [59].
+# The bienes de inversion block selects both categories exactly as 303 box [39]
+# does, so a row reaches the same annual box whichever quarter filed it.
+#
+# Each block is two layers over one selector (see rate_box_partition): a
+# rate-blind binding feeding an unexported casilla that the official total box
+# projects, so a row whose rate the ledger never recorded still reaches the
+# total, and one binding per official rate box, each admitting only its own
+# applied rate. The 2 % and 7,5 % boxes exist from the 2024 design on, so their
+# bindings and casillas are authored on the 2024 edition.
+
+[[revisions."2022".bindings]]
+id = "modelo-390-iva-deducible-aic-corrientes-base"
+provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "inversion_sujeto_pasivo", fact = "base_amount_sum", deduction_fact_kinds = ["intra_eu_current"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-84", "ley-37-1992:art-85", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-iva-deducible-aic-corrientes-cuota"
+provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "inversion_sujeto_pasivo", fact = "iva_amount_sum", deduction_fact_kinds = ["intra_eu_current"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-84", "ley-37-1992:art-85", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-iva-deducible-aic-corrientes-tipo-4-base"
+provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], applied_rates = ["0.04"], flow_direction = "inversion_sujeto_pasivo", fact = "base_amount_sum", deduction_fact_kinds = ["intra_eu_current"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-84", "ley-37-1992:art-85", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-iva-deducible-aic-corrientes-tipo-4-cuota"
+provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], applied_rates = ["0.04"], flow_direction = "inversion_sujeto_pasivo", fact = "iva_amount_sum", deduction_fact_kinds = ["intra_eu_current"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-84", "ley-37-1992:art-85", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-iva-deducible-aic-corrientes-tipo-5-base"
+provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], applied_rates = ["0.05"], flow_direction = "inversion_sujeto_pasivo", fact = "base_amount_sum", deduction_fact_kinds = ["intra_eu_current"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-84", "ley-37-1992:art-85", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-iva-deducible-aic-corrientes-tipo-5-cuota"
+provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], applied_rates = ["0.05"], flow_direction = "inversion_sujeto_pasivo", fact = "iva_amount_sum", deduction_fact_kinds = ["intra_eu_current"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-84", "ley-37-1992:art-85", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-iva-deducible-aic-corrientes-tipo-10-base"
+provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], applied_rates = ["0.10"], flow_direction = "inversion_sujeto_pasivo", fact = "base_amount_sum", deduction_fact_kinds = ["intra_eu_current"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-84", "ley-37-1992:art-85", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-iva-deducible-aic-corrientes-tipo-10-cuota"
+provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], applied_rates = ["0.10"], flow_direction = "inversion_sujeto_pasivo", fact = "iva_amount_sum", deduction_fact_kinds = ["intra_eu_current"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-84", "ley-37-1992:art-85", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-iva-deducible-aic-corrientes-tipo-21-base"
+provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], applied_rates = ["0.21"], flow_direction = "inversion_sujeto_pasivo", fact = "base_amount_sum", deduction_fact_kinds = ["intra_eu_current"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-84", "ley-37-1992:art-85", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-iva-deducible-aic-corrientes-tipo-21-cuota"
+provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], applied_rates = ["0.21"], flow_direction = "inversion_sujeto_pasivo", fact = "iva_amount_sum", deduction_fact_kinds = ["intra_eu_current"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-84", "ley-37-1992:art-85", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-iva-deducible-aic-inversion-base"
+provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_acquisition_reverse_charge", "intra_community_service_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "inversion_sujeto_pasivo", fact = "base_amount_sum", deduction_fact_kinds = ["intra_eu_investment"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-108", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-iva-deducible-aic-inversion-cuota"
+provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_acquisition_reverse_charge", "intra_community_service_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "inversion_sujeto_pasivo", fact = "iva_amount_sum", deduction_fact_kinds = ["intra_eu_investment"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-108", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-iva-deducible-aic-inversion-tipo-4-base"
+provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_acquisition_reverse_charge", "intra_community_service_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], applied_rates = ["0.04"], flow_direction = "inversion_sujeto_pasivo", fact = "base_amount_sum", deduction_fact_kinds = ["intra_eu_investment"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-108", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-iva-deducible-aic-inversion-tipo-4-cuota"
+provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_acquisition_reverse_charge", "intra_community_service_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], applied_rates = ["0.04"], flow_direction = "inversion_sujeto_pasivo", fact = "iva_amount_sum", deduction_fact_kinds = ["intra_eu_investment"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-108", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-iva-deducible-aic-inversion-tipo-5-base"
+provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_acquisition_reverse_charge", "intra_community_service_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], applied_rates = ["0.05"], flow_direction = "inversion_sujeto_pasivo", fact = "base_amount_sum", deduction_fact_kinds = ["intra_eu_investment"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-108", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-iva-deducible-aic-inversion-tipo-5-cuota"
+provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_acquisition_reverse_charge", "intra_community_service_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], applied_rates = ["0.05"], flow_direction = "inversion_sujeto_pasivo", fact = "iva_amount_sum", deduction_fact_kinds = ["intra_eu_investment"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-108", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-iva-deducible-aic-inversion-tipo-10-base"
+provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_acquisition_reverse_charge", "intra_community_service_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], applied_rates = ["0.10"], flow_direction = "inversion_sujeto_pasivo", fact = "base_amount_sum", deduction_fact_kinds = ["intra_eu_investment"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-108", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-iva-deducible-aic-inversion-tipo-10-cuota"
+provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_acquisition_reverse_charge", "intra_community_service_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], applied_rates = ["0.10"], flow_direction = "inversion_sujeto_pasivo", fact = "iva_amount_sum", deduction_fact_kinds = ["intra_eu_investment"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-108", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-iva-deducible-aic-inversion-tipo-21-base"
+provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_acquisition_reverse_charge", "intra_community_service_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], applied_rates = ["0.21"], flow_direction = "inversion_sujeto_pasivo", fact = "base_amount_sum", deduction_fact_kinds = ["intra_eu_investment"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-108", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-iva-deducible-aic-inversion-tipo-21-cuota"
+provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_acquisition_reverse_charge", "intra_community_service_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], applied_rates = ["0.21"], flow_direction = "inversion_sujeto_pasivo", fact = "iva_amount_sum", deduction_fact_kinds = ["intra_eu_investment"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "ley-37-1992:art-85", "ley-37-1992:art-92", "ley-37-1992:art-108", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-iva-deducible-aic-servicios-base"
+provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_service_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "inversion_sujeto_pasivo", fact = "base_amount_sum", deduction_fact_kinds = ["intra_eu_current"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-iva-deducible-aic-servicios-cuota"
+provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_service_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "inversion_sujeto_pasivo", fact = "iva_amount_sum", deduction_fact_kinds = ["intra_eu_current"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-iva-deducible-aic-servicios-tipo-4-base"
+provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_service_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], applied_rates = ["0.04"], flow_direction = "inversion_sujeto_pasivo", fact = "base_amount_sum", deduction_fact_kinds = ["intra_eu_current"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-iva-deducible-aic-servicios-tipo-4-cuota"
+provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_service_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], applied_rates = ["0.04"], flow_direction = "inversion_sujeto_pasivo", fact = "iva_amount_sum", deduction_fact_kinds = ["intra_eu_current"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-iva-deducible-aic-servicios-tipo-5-base"
+provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_service_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], applied_rates = ["0.05"], flow_direction = "inversion_sujeto_pasivo", fact = "base_amount_sum", deduction_fact_kinds = ["intra_eu_current"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-iva-deducible-aic-servicios-tipo-5-cuota"
+provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_service_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], applied_rates = ["0.05"], flow_direction = "inversion_sujeto_pasivo", fact = "iva_amount_sum", deduction_fact_kinds = ["intra_eu_current"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-iva-deducible-aic-servicios-tipo-10-base"
+provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_service_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], applied_rates = ["0.10"], flow_direction = "inversion_sujeto_pasivo", fact = "base_amount_sum", deduction_fact_kinds = ["intra_eu_current"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-iva-deducible-aic-servicios-tipo-10-cuota"
+provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_service_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], applied_rates = ["0.10"], flow_direction = "inversion_sujeto_pasivo", fact = "iva_amount_sum", deduction_fact_kinds = ["intra_eu_current"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-iva-deducible-aic-servicios-tipo-21-base"
+provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_service_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], applied_rates = ["0.21"], flow_direction = "inversion_sujeto_pasivo", fact = "base_amount_sum", deduction_fact_kinds = ["intra_eu_current"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+[[revisions."2022".bindings]]
+id = "modelo-390-iva-deducible-aic-servicios-tipo-21-cuota"
+provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_service_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], applied_rates = ["0.21"], flow_direction = "inversion_sujeto_pasivo", fact = "iva_amount_sum", deduction_fact_kinds = ["intra_eu_current"], observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
+# [61] Compensaciones del regimen especial de agricultura, ganaderia y pesca,
+# cuota deducible: the year's Modelo 303 box [42]. The ledger does not carry the
+# compensacion a tanto alzado, so [42] is operator input on each quarter and the
+# annual box restates what those quarters filed, through the annual-summary
+# relation that folds the four quarters.
+[[revisions."2022".bindings]]
+id = "modelo-390-prev-303-compensaciones-reagp"
+provider = { kind = "relation_prefill", relation_kind = "annual_summary", dependency_role = "periodic_to_annual_summary", source_modelo = "303", source_casilla_id = "42", temporal = { kind = "same_filing_year_periods", source_periods = ["1T", "2T", "3T", "4T"] } }
+applicability = { kind = "target_periods", periods = ["0A"] }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-130", "ley-37-1992:art-131", "ley-37-1992:art-99", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2022".bindings.source_citations]]

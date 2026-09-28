@@ -1158,28 +1158,22 @@ def unrouted_ledger_iva_quantities(
     quantities, so a row selected for its cuota reads as consumed while its
     base imponible reaches nothing at all.
 
-    The gap is live, not hypothetical, and it survives a revision declaring the
-    fact. Both Modelo 303 and Modelo 390 declare ``base_amount_sum`` bindings
-    covering the domestic tiers, so "is base imponible drawn" answers yes on
-    each. Their base bindings nonetheless reach no import or reverse-charge row:
-    ``import_third_country``,
-    ``intra_community_acquisition_reverse_charge`` and
-    ``intra_community_service_acquisition_reverse_charge`` have their CUOTA
-    drawn and their base drawn by nothing, on both modelos. The rows are
-    consumed for that cuota, so the row screen is silent by construction, and a
-    coverage test keyed on the fact alone would be silent too.
+    The gap survives a revision declaring the fact. A revision whose
+    ``base_amount_sum`` bindings cover the domestic tiers answers yes to "is
+    base imponible drawn", yet a category whose CUOTA some binding draws and
+    whose base no binding reaches -- as the import and intra-community
+    reverse-charge rows were on Modelo 303 and Modelo 390 before their base
+    boxes were bound -- is consumed for that cuota, so the row screen is silent
+    by construction, and a coverage test keyed on the fact alone would be
+    silent too.
 
-    That is why coverage is asked per row and per fact. The earlier worked
-    example here — Modelo 390 declaring no base binding at all — was closed by
-    the annual-form campaign, and closing it is precisely what would have
-    blinded a fact-keyed screen to the three categories above. A screen's value
-    is the mechanism, never the instance: this one keeps reporting whatever the
-    declared bindings fail to reach, and correctly falls silent on the four
-    domestic categories both modelos now cover.
+    That is why coverage is asked per row and per fact. A screen's value is the
+    mechanism, never the instance: this one keeps reporting whatever the
+    declared bindings fail to reach, and correctly falls silent on every
+    category the committed modelos now cover.
 
-    This function reports; it does not close. Routing an import or
-    reverse-charge base imponible is registry work with its own casillas and
-    grounding.
+    This function reports; it does not close. Routing a base imponible is
+    registry work with its own casillas and grounding.
 
     Args:
         revision: The :class:`ModeloRevision` whose IVA bindings decide which

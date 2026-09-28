@@ -1,10 +1,15 @@
 """Detector teeth for the deduction-kind partition refusal.
 
-Modelo 303 declares the corrientes box pair [28]/[29] and the bienes de
-inversión pair [30]/[31] over the same category, rate and flow; the only thing
-keeping a bien de inversión out of [28] is the corrientes bindings naming the
-complementary deduction kinds. Losing that filter declares the investment twice
-and nothing downstream notices, so the registry validation refuses it.
+Modelo 303 reads its interior soportado rows into three boxes over the same
+category, rate and flow: the corrientes pair [28]/[29], the bienes de inversión
+pair [30]/[31] and the rectificación de deducciones pair [40]/[41]. The only
+thing keeping a bien de inversión or a rectification out of [28] is the
+corrientes bindings naming the complementary deduction kind. Losing that filter
+declares the row twice and nothing downstream notices, so the registry
+validation refuses it.
+
+Each binding feeds the soportado component casilla of its box; the box itself
+adds the deducible half of the domestic inversión del sujeto pasivo to it.
 
 Each defect is planted in a COPY of the live modelo in a temporary tree, the
 bundled corpus is never written and no production module is patched, and the
@@ -41,11 +46,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures(
 _MODELOS_ROOT = Path(__file__).resolve().parents[3] / "src" / "cadrumo" / "_data" / "registry" / "aeat" / "modelos"
 _FRAGMENT = Path("revisions") / "2022" / "bindings" / "0001-declarations.toml"
 _REVISION = "2025"
-_CORRIENTES_KINDS = 'deduction_fact_kinds = ["domestic_current", "rectification"], '
+_CORRIENTES_KINDS = 'deduction_fact_kinds = ["domestic_current"], '
 _CORRIENTES_BASE = "modelo-303-iva-soportado-interiores-base"
 _INVESTMENT_BASE = "modelo-303-iva-soportado-interiores-bienes-inversion-base"
 _CORRIENTES_CUOTA = "modelo-303-iva-soportado-interiores-cuota"
 _INVESTMENT_CUOTA = "modelo-303-iva-soportado-interiores-bienes-inversion-cuota"
+_RECTIFICATION_BASE = "modelo-303-iva-rectificacion-deducciones-interiores-base"
 
 
 def _copy_303(tmp_path: Path) -> Path:
@@ -66,6 +72,12 @@ def _replace_on_provider(tree: Path, *, fact: str, old: str, new: str) -> None:
 
 def _revision(tree: Path) -> ModeloRevision:
     return load_modelo_directory(tree).revisions[_REVISION]
+
+
+def _box_arguments(revision: ModeloRevision, box: str) -> tuple[str, ...]:
+    """Return the casillas a box's formula adds, in declaration order."""
+    formula = next(formula for formula in revision.formulas if formula.target_casilla_id == box)
+    return tuple(str(arg.casilla_id) for arg in formula.expression.args)
 
 
 def _failures(tree: Path) -> list[str]:
@@ -105,14 +117,23 @@ def test_the_live_split_is_accepted_and_routes_the_investment_to_its_own_box(tmp
     values = resolve_ledger_iva_aggregation_binding_values(revision, (_investment_row(),))
 
     assert _failures(tree) == []
-    assert casillas_by_binding(revision)[_CORRIENTES_BASE] == ("28",)
-    assert casillas_by_binding(revision)[_INVESTMENT_BASE] == ("30",)
+    assert casillas_by_binding(revision)[_CORRIENTES_BASE] == ("iva.soportado.interiores.base",)
+    assert casillas_by_binding(revision)[_INVESTMENT_BASE] == ("iva.soportado.interiores.bienes-inversion.base",)
+    assert casillas_by_binding(revision)[_RECTIFICATION_BASE] == ("iva.rectificacion-deducciones.interiores.base",)
+    assert _box_arguments(revision, "28")[0] == "iva.soportado.interiores.base"
+    assert _box_arguments(revision, "30")[0] == "iva.soportado.interiores.bienes-inversion.base"
+    assert _box_arguments(revision, "40")[0] == "iva.rectificacion-deducciones.interiores.base"
     assert values[_CORRIENTES_BASE] == Decimal("0")
     assert values[_INVESTMENT_BASE] == Decimal("4000.00")
 
 
 def test_an_investment_row_routed_to_box_28_is_refused(tmp_path: Path) -> None:
-    """Dropping the corrientes base filter puts the ordenador in [28] as well as [30]."""
+    """Dropping the corrientes base filter puts the ordenador in [28] as well as [30].
+
+    A corrientes selector with no kind claims every row its category, rate and
+    flow reach, so it overlaps both kind-specific siblings: the bien de
+    inversión box [30] and the rectificación box [40]. Each overlap is refused.
+    """
     tree = _copy_303(tmp_path)
     _replace_on_provider(tree, fact="base_amount_sum", old=_CORRIENTES_KINDS, new="")
 
@@ -122,10 +143,11 @@ def test_an_investment_row_routed_to_box_28_is_refused(tmp_path: Path) -> None:
     # The defect is real, not only structural: one row, both boxes.
     assert values[_CORRIENTES_BASE] == Decimal("4000.00")
     assert values[_INVESTMENT_BASE] == Decimal("4000.00")
-    assert len(failures) == 1, failures
-    assert _CORRIENTES_BASE in failures[0]
-    assert _INVESTMENT_BASE in failures[0]
-    assert "every kind" in failures[0]
+    assert len(failures) == 2, failures
+    assert all(_CORRIENTES_BASE in failure and "every kind" in failure for failure in failures)
+    assert sorted(
+        sibling for failure in failures for sibling in (_INVESTMENT_BASE, _RECTIFICATION_BASE) if sibling in failure
+    ) == sorted((_INVESTMENT_BASE, _RECTIFICATION_BASE))
 
 
 def test_a_corrientes_cuota_that_also_names_the_investment_kind_is_refused(tmp_path: Path) -> None:
@@ -135,7 +157,7 @@ def test_a_corrientes_cuota_that_also_names_the_investment_kind_is_refused(tmp_p
         tree,
         fact="iva_amount_sum",
         old=_CORRIENTES_KINDS,
-        new='deduction_fact_kinds = ["domestic_current", "domestic_investment", "rectification"], ',
+        new='deduction_fact_kinds = ["domestic_current", "domestic_investment"], ',
     )
     revision = _revision(tree)
 
