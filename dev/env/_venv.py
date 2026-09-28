@@ -7,6 +7,7 @@ import os
 import subprocess
 import sys
 import tempfile
+import time
 from contextlib import contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -37,14 +38,85 @@ def _lock_name(venv: Path) -> str:
     return f"cadrumo-install-{hashlib.sha256(resolved).hexdigest()[:32]}.lock"
 
 
+#: How long an empty lock may exist before its writer is presumed dead. The
+#: owner writes its PID immediately after the exclusive create, so a live
+#: install leaves it empty for microseconds, never seconds.
+_EMPTY_LOCK_GRACE_SECONDS = 10.0
+
+
+def _pid_is_alive(pid: int) -> bool:
+    """Whether ``pid`` may still be running; only a proven exit counts as dead.
+
+    Standard library only: this runs before the environment that would provide
+    anything else exists. A probe that cannot decide answers alive, so a lock is
+    never taken from an owner this process merely could not inspect.
+    """
+    if pid <= 0:
+        return False
+    if sys.platform == "win32":
+        import ctypes
+
+        process_query_limited_information = 0x1000
+        still_active = 259
+        error_invalid_parameter = 87
+        kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        handle = kernel32.OpenProcess(process_query_limited_information, False, pid)
+        if not handle:
+            return ctypes.get_last_error() != error_invalid_parameter
+        try:
+            exit_code = ctypes.c_ulong()
+            if not kernel32.GetExitCodeProcess(handle, ctypes.byref(exit_code)):
+                return True
+            return exit_code.value == still_active
+        finally:
+            kernel32.CloseHandle(handle)
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+    return True
+
+
+def _held_by_a_live_install(lock: Path) -> bool:
+    """Whether the process recorded in ``lock`` may still be installing."""
+    try:
+        recorded = lock.read_text(encoding="ascii").strip()
+        age = time.time() - lock.stat().st_mtime
+    except FileNotFoundError:
+        return False
+    except (OSError, UnicodeDecodeError):
+        return True
+    if not recorded:
+        return age < _EMPTY_LOCK_GRACE_SECONDS
+    try:
+        pid = int(recorded)
+    except ValueError:
+        return True
+    return _pid_is_alive(pid)
+
+
+def _reclaim(lock: Path) -> int | None:
+    """Replace a dead owner's lock, or return ``None`` when a peer won the race."""
+    lock.unlink(missing_ok=True)
+    try:
+        return os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+    except FileExistsError:
+        return None
+
+
 @contextmanager
 def _exclusive(venv: Path) -> Iterator[None]:
     """Hold an exclusive, venv-scoped lock, or refuse.
 
     Uses an atomic ``O_CREAT | O_EXCL`` create rather than a Windows named
-    mutex so one implementation serves every platform. The semantics the mutex
-    provided are preserved: a second installer targeting the same environment
-    is refused immediately rather than queued.
+    mutex so one implementation serves every platform. A second installer
+    targeting the same environment is refused immediately rather than queued.
+    A mutex is also released when its owner dies, and a lock file is not: an
+    install killed mid-sync (a cancelled CI job, a closed terminal) left its
+    file behind and refused every later install on that machine. A lock whose
+    recorded owner has exited is therefore reclaimed, once.
 
     Args:
         venv: The virtualenv root being protected.
@@ -57,13 +129,15 @@ def _exclusive(venv: Path) -> Iterator[None]:
     """
     lock = Path(tempfile.gettempdir()) / _lock_name(venv)
     try:
-        handle = os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+        handle: int | None = os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
     except FileExistsError:
+        handle = None if _held_by_a_live_install(lock) else _reclaim(lock)
+    if handle is None:
         message = (
             f"Another dependency install already owns {venv}.\n"
             f"  If no install is running, delete the stale lock at {lock}."
         )
-        raise RuntimeError(message) from None
+        raise RuntimeError(message)
     try:
         os.write(handle, str(os.getpid()).encode("ascii"))
         os.close(handle)
