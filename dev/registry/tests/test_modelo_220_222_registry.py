@@ -30,6 +30,7 @@ from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from ..compiler.validator import RegistryValidator
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from .authored_edition_support import authored_revisions_where
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -125,19 +126,31 @@ def test_modelo_220_annual_window_opens_july_and_closes_after_25_natural_days() 
     assert window.closes_on == date(2025, 7, 25)
 
 
-def test_modelo_220_2025_sources_match_the_revision_window() -> None:
-    """The 2025 revision cites its own design and period-scoped approving order."""
-    modelo, catalogues = _committed_modelo("220")
-    revision = modelo.revisions["2025"]
+# The one Modelo 220 revision that cites a bundled approving form order beside its
+# design; no successor order is bundled.
+(_M220_EVIDENCED_EXERCISE,) = (
+    revision.valid_from.year
+    for revision in authored_revisions_where(
+        "220",
+        lambda revision: any(
+            ref.startswith("boe-modelo-220-") and ref.endswith("-form") for ref in revision.source_refs
+        ),
+    )
+)
 
-    assert (revision.valid_from, revision.valid_to) == (date(2025, 1, 1), date(2025, 12, 31))
+
+def test_modelo_220_evidenced_revision_sources_match_the_revision_window() -> None:
+    """The evidenced revision cites its own design and period-scoped approving order."""
+    modelo, catalogues = _committed_modelo("220")
+    exercise = _M220_EVIDENCED_EXERCISE
+    revision = modelo.revisions[str(exercise)]
+    design, order = f"aeat-dr-220-{exercise}", f"boe-modelo-220-{exercise}-form"
+
+    assert (revision.valid_from, revision.valid_to) == (date(exercise, 1, 1), date(exercise, 12, 31))
     assert revision.authority_grade is RegistryAuthorityGrade.APPLICABILITY
-    assert "boe-modelo-220-2026-form" not in catalogues.sources
-    assert set(revision.source_refs) >= {
-        "aeat-dr-220-2025",
-        "boe-modelo-220-2025-form",
-    }
-    for source_id in ("aeat-dr-220-2025", "boe-modelo-220-2025-form"):
+    assert f"boe-modelo-220-{exercise + 1}-form" not in catalogues.sources
+    assert set(revision.source_refs) >= {design, order}
+    for source_id in (design, order):
         source = catalogues.sources[source_id]
         assert (source.applies_from, source.applies_to) == (
             revision.valid_from,
@@ -146,7 +159,7 @@ def test_modelo_220_2025_sources_match_the_revision_window() -> None:
 
     snapshot = compiled_bundled_authority().snapshot(
         "220",
-        filing_year=2025,
+        filing_year=exercise,
         period="0A",
         revision_id=revision.id,
         grade=RegistryAuthorityGrade.APPLICABILITY,

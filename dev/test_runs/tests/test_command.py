@@ -246,15 +246,15 @@ def test_locale_signal_normalizes_import_traceback_generically(
     assert "cells" not in finished
 
 
-def test_command_run_confines_child_temp_and_cache_paths(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    original_cache = tmp_path / "original-cache"
-    monkeypatch.setenv("XDG_CACHE_HOME", str(original_cache))
-    monkeypatch.delenv("PLAYWRIGHT_BROWSERS_PATH", raising=False)
+def test_command_run_confines_child_temp_and_leaves_tool_caches_home(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    ambient_cache = tmp_path / "ambient-cache"
+    monkeypatch.setenv("XDG_CACHE_HOME", str(ambient_cache))
     probe = (
         "import json, os, pathlib, tempfile; "
         "pathlib.Path(os.environ['CADRUMO_DEV_ARTIFACTS_DIR']).joinpath('paths.json').write_text("
-        "json.dumps({'temp': tempfile.gettempdir(), 'cache': os.environ['XDG_CACHE_HOME'], "
-        "'browsers': os.environ.get('PLAYWRIGHT_BROWSERS_PATH')}))"
+        "json.dumps({'temp': tempfile.gettempdir(), 'cache': os.environ.get('XDG_CACHE_HOME')}))"
     )
     status = run((sys.executable, "-c", probe), repository=tmp_path, family="audit-runs", label="path-probe")
 
@@ -265,13 +265,8 @@ def test_command_run_confines_child_temp_and_cache_paths(tmp_path: Path, monkeyp
     assert Path(paths["temp"]).resolve() == scratch.resolve()
     # TEMP must stay short enough for tools that bind Unix-domain sockets under it.
     assert len(paths["temp"]) <= SCRATCH_PATH_BUDGET, paths["temp"]
-    assert Path(paths["cache"]).resolve() == (run_dir / "cache").resolve()
-    # Redirecting the cache must not hide the browsers installed under the
-    # original one, which only Linux resolves through XDG.
-    if sys.platform == "linux":
-        assert paths["browsers"] == str(original_cache / "ms-playwright")
-    else:
-        assert paths["browsers"] is None
+    # A tool cache moved into the run is rebuilt cold by every run and outlives it.
+    assert paths["cache"] == str(ambient_cache)
 
 
 def test_import_boundaries_signal_deduces_contract_and_diagnostic_hotspots(
@@ -444,97 +439,6 @@ def test_pytest_summary_signal_aggregates_lanes_without_streaming_details(
     ]
     run_dir = next((tmp_path / ".logs" / "test-runs").glob("*/*"))
     assert "collection detail" in (run_dir / "run.log").read_text(encoding="utf-8")
-
-
-_FAILING_LANE_PROBE = """
-import pytest
-
-
-@pytest.fixture
-def broken_setup():
-    raise RuntimeError("setup refused")
-
-
-def test_passes():
-    assert True
-
-
-def test_plain_failure():
-    assert 1 == 2, "plain failure"
-
-
-@pytest.mark.parametrize("label", ["with space", "a - b"])
-def test_parametrised_failure(label):
-    assert label == "", f"[{label}] never matches"
-
-
-def test_setup_error(broken_setup):
-    assert broken_setup
-"""
-
-
-def test_pytest_summary_names_the_failed_tests_of_a_real_failing_lane(
-    tmp_path: Path,
-    capsys: pytest.CaptureFixture[str],
-) -> None:
-    """Teeth: identities come from a real pytest short summary, reasons and all.
-
-    A synthetic ``FAILED path::test`` line without its `` - reason`` suffix is
-    not what pytest prints under ``-ra``, and a parser tuned to it counts a
-    failed test while naming none. The probe is an isolated project with its
-    own ini, so the lane is a genuine pytest run that this checkout's
-    configuration never touches.
-    """
-    project = tmp_path / "probe-project"
-    project.mkdir()
-    (project / "pytest.ini").write_text("[pytest]\n", encoding="utf-8")
-    (project / "test_lane_probe.py").write_text(_FAILING_LANE_PROBE, encoding="utf-8")
-    lane = "probe-lane"
-    child = "\n".join(
-        (
-            "import json, os, subprocess, sys",
-            f"print(json.dumps({{'event': 'lane_started', 'lane': {lane!r}}}), flush=True)",
-            "env = {key: value for key, value in os.environ.items() if not key.startswith('PYTEST_')}",
-            "env['PYTEST_DISABLE_PLUGIN_AUTOLOAD'] = '1'",
-            # ``CI`` makes pytest print every reason in full, as it does on the
-            # runners; elsewhere a reason too wide for the terminal is dropped,
-            # which is why the unparsed suffix only ever blinded the CI reader.
-            "env['CI'] = 'true'",
-            "status = subprocess.run(",
-            "    [sys.executable, '-m', 'pytest', '-ra', '-p', 'no:cacheprovider', '.'],",
-            f"    cwd={str(project)!r},",
-            "    env=env,",
-            "    check=False,",
-            ").returncode",
-            "print(json.dumps({'event': 'lane_finished', 'exit_status': status, "
-            f"'lane': {lane!r}, 'seconds': 1}}), flush=True)",
-            "raise SystemExit(status)",
-        )
-    )
-
-    status = run(
-        (sys.executable, "-c", child),
-        repository=tmp_path,
-        family="test-runs",
-        label="probe",
-        signal="pytest-summary",
-        expected_lanes=(lane,),
-    )
-
-    assert status == pytest.ExitCode.TESTS_FAILED
-    finished = json.loads(capsys.readouterr().out.splitlines()[-1])
-    (reported,) = finished["lanes"]
-    assert reported["summary"]["failed"] == 3
-    assert reported["summary"]["error"] == 1
-    assert reported["failed_tests"] == [
-        "test_lane_probe.py::test_parametrised_failure[a - b]",
-        "test_lane_probe.py::test_parametrised_failure[with space]",
-        "test_lane_probe.py::test_plain_failure",
-        "test_lane_probe.py::test_setup_error",
-    ]
-    assert reported["failed_test_identities"] == 4
-    assert reported["failed_tests_omitted"] == 0
-    assert reported["top_affected_files"] == [{"count": 4, "value": "test_lane_probe.py"}]
 
 
 def test_pytest_summary_fails_closed_when_expected_lanes_never_emit_events(

@@ -17,7 +17,7 @@ from typing import Any, Final, TypeGuard
 
 from dev._paths import REPO_ROOT, UTF_8
 
-from .paths import allocate_run_directory, allocate_scratch_directory, cache_environment, scratch_environment
+from .paths import allocate_run_directory, allocate_scratch_directory, scratch_environment
 
 _UTF_8: Final[str] = UTF_8
 _IMPORT_BOUNDARIES_SIGNAL: Final[str] = "import-boundaries"
@@ -48,16 +48,9 @@ _PYTEST_COUNT_RE: Final[re.Pattern[str]] = re.compile(
     r"(?P<count>\d+)\s+(?:tests?\s+)?(?P<outcome>collected|passed|failed|errors?|skipped|deselected|"
     r"xfailed|xpassed|warnings?)\b"
 )
-# A short-summary line is ``FAILED <nodeid>`` optionally followed by
-# `` - <reason>``, and ``-ra`` always prints the reason when there is one. A
-# parametrised id may carry spaces, or the separator itself, inside its
-# brackets, so the id is read up to its lazily closed bracket before the
-# optional reason rather than up to the first space.
 _TEST_IDENTITY_RE: Final[re.Pattern[str]] = re.compile(
-    r"^(?:FAILED|ERROR) (?P<node>(?P<file>[^\s:]+\.py)(?:::[^\s:\[]+)*(?:\[.*?\])?)(?: - .*)?$"
+    r"^(?:FAILED|ERROR) (?P<node>(?P<file>[^\s:]+\.py)(?:::[^\s]+)?)"
 )
-#: Failed node ids named per lane on the console; the run log keeps the rest.
-_FAILED_TEST_LIMIT: Final[int] = 50
 _ROOT_CAUSE_RE: Final[re.Pattern[str]] = re.compile(
     r"^(?:E\s+)?(?P<type>[A-Za-z_][A-Za-z0-9_.]*(?:Error|Exception)):\s*(?P<message>.+)$"
 )
@@ -366,7 +359,6 @@ class _PytestSummaryProcessor:
             assert isinstance(failed_nodes, set)
             assert isinstance(root_causes, Counter)
             files = Counter(file for _, file in failed_nodes)
-            failed_tests = sorted(node for node, _ in failed_nodes)
             internal_error = bool(data["internal_error"])
             kind = str(data["kind"])
             summaryless_failure = data["status"] not in (None, 0) and not counts
@@ -406,8 +398,6 @@ class _PytestSummaryProcessor:
                     "role": data["role"],
                     "summary": dict(sorted(counts.items())),
                     "failed_test_identities": len(failed_nodes),
-                    "failed_tests": failed_tests[:_FAILED_TEST_LIMIT],
-                    "failed_tests_omitted": max(0, len(failed_tests) - _FAILED_TEST_LIMIT),
                     "top_affected_files": _top(files),
                     "root_causes": [
                         {"count": count, "exception": cause[0], "message": cause[1], "phase": phase}
@@ -1440,7 +1430,7 @@ def run(
     environment["CADRUMO_DEV_ARTIFACTS_DIR"] = str(artifacts)
     environment["CADRUMO_DEV_CACHE_DIR"] = str(cache)
     environment["CADRUMO_DEV_SCRATCH_DIR"] = str(scratch)
-    environment.update(cache_environment(cache, environment))
+    # Tool caches such as uv's keep their own homes; only temporary files move.
     environment.update(scratch_environment(scratch))
     with log_path.open("x", encoding=_UTF_8, newline="\n") as transcript:
         transcript.write(f"START {started.isoformat()} pid={os.getpid()}\n")

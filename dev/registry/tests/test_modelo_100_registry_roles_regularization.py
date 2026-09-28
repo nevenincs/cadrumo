@@ -5,8 +5,13 @@ from __future__ import annotations
 import pytest
 
 from ._modelo_100_registry_support import _modelo_100_revision
+from .authored_edition_support import oldest_authored_edition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+# The oldest authored Modelo 100 revision, a storage root below the support floor,
+# whose rectification IBAN is still the root regularization account.
+_ROOT_EDITION = oldest_authored_edition("100")
 
 _REGULARIZATION_ART_97_REF = "ley-35-2006:art-97"
 _RECTIFICATION_IBAN_ROLE = "irpf_rectificacion_iban"
@@ -15,8 +20,8 @@ _RECTIFICATION_SEPA_SWIFT_ROLE = "irpf_rectsepa_swift_bic"
 _LEGACY_RECTIFICATION_SEPA_IBAN_ROLE = "irpf_rectsepa_cuenta_iban"
 
 
-def test_modelo_100_2020_rectification_iban_uses_root_regularization_account() -> None:
-    revision = _modelo_100_revision(2020)
+def test_modelo_100_root_revision_rectification_iban_uses_root_regularization_account() -> None:
+    revision = _modelo_100_revision(_ROOT_EDITION)
     casilla = next(casilla for casilla in revision.casillas if casilla.id == "0687")
 
     assert casilla.label == "IBAN rectificación"

@@ -10,7 +10,10 @@ import pytest
 from pydantic import TypeAdapter, ValidationError
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
-from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
+from cadrumo.domain.calculations.registry.tests.published_authority import (
+    PublishedGovernedFactSource,
+    published_snapshot,
+)
 
 from ....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind, ForeignAssetClass
 from ....core.foreign_asset_obligation import ForeignAssetObligationGroup
@@ -33,6 +36,8 @@ from ..foreign_assets import (
 from ..source_mesh import CalculationSourceContext
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
+
+_SUPPORT = PublishedGovernedFactSource().supported_filing_years()
 
 _P_2025_ANNUAL = Period.from_year_and_code(2025, "0A")
 _M720_LEGAL_REFS = (
@@ -256,10 +261,11 @@ class TestAggregateBasic:
 
 
 class TestThreshold720:
-    def test_threshold_is_resolved_from_the_2025_registry_revision(self) -> None:
+    @pytest.mark.parametrize("filing_year", _SUPPORT.years)
+    def test_threshold_is_resolved_from_the_registry_revision(self, filing_year: int) -> None:
         with _indexed_authority_for_test().operation() as _authority_operation_for_test:
             thresholds = foreign_asset_declaration_thresholds(
-                modelo="720", filing_year=2025, operation=_authority_operation_for_test
+                modelo="720", filing_year=filing_year, operation=_authority_operation_for_test
             )
             assert thresholds[
                 ForeignAssetObligationGroup.from_registry("cuentas")

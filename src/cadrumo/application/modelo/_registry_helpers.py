@@ -193,7 +193,7 @@ def reject_incomplete_amendment_casillas(
 ) -> None:
     """Mirror the verify-modelo-revision required-manual gate on amend.
 
-    The supplied :class:`~cadrumo.core.Period` selects the
+    The supplied :class:`~cadrumo.core.period.Period` selects the
     :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot` used to read
     required manual casillas. Missing required manual casillas raise
     :class:`~cadrumo.application.modelo.action_errors.AmendmentVerificationRefusedError` before
@@ -406,7 +406,7 @@ def reject_unknown_override_casillas[CasillaKey](
     Keys are canonicalised as
     :class:`~cadrumo.core.casilla_id.CasillaId` values and checked
     against the :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`
-    selected by ``modelo``, ``filing_year``, and :class:`~cadrumo.core.Period`.
+    selected by ``modelo``, ``filing_year``, and :class:`~cadrumo.core.period.Period`.
     Printed-number aliases and ambiguous reused numbers raise
     :class:`~cadrumo.application.modelo.action_errors.AmendmentOverrideCasillaError` instead of
     being projected to a declared casilla.

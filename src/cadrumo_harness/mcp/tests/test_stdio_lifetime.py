@@ -222,14 +222,12 @@ def test_disarm_is_idempotent_without_an_active_generation() -> None:
 
 
 def test_armed_worker_exits_when_dead_client_pid_signals() -> None:
-    """Arming against an already-exited client exits the worker promptly.
+    """Arming against an already-exited client exits the worker immediately.
 
-    On Windows the test holds the victim's ``Popen`` handle so the kernel keeps
-    the process object alive after exit: ``OpenProcess`` then succeeds and the
-    wait fires at once. On POSIX the named client is polled, and the reaped
-    victim's PID no longer resolves; ``rearm_seconds`` compresses that poll
-    through the real arming knob, and on Windows it only paces the
-    re-acquisition poll this anchored worker never enters.
+    The test holds the victim's ``Popen`` handle so the kernel keeps the process
+    object alive after exit: ``OpenProcess`` then succeeds and the wait fires at
+    once. POSIX has no client-PID primary, so the watchdog arms its reparent poll
+    instead; the living test process keeps it anchored and the worker stays up.
     """
     victim = subprocess.Popen([sys.executable, "-c", "pass"], stdout=subprocess.DEVNULL)
     victim.wait(timeout=60)
@@ -238,7 +236,7 @@ def test_armed_worker_exits_when_dead_client_pid_signals() -> None:
         f"""
         import time
         from {_MODULE} import arm_stdio_lifetime_watchdog
-        armed = arm_stdio_lifetime_watchdog(client_pid={victim.pid}, rearm_seconds=0.5)
+        armed = arm_stdio_lifetime_watchdog(client_pid={victim.pid})
         print(f"armed={{armed}}", flush=True)
         time.sleep(20)
         print("still-alive", flush=True)
@@ -253,15 +251,24 @@ def test_armed_worker_exits_when_dead_client_pid_signals() -> None:
         check=False,
     )
     elapsed = time.monotonic() - started
-    # On Windows the wait fires the instant it arms, so os._exit races (and
-    # usually beats) the worker's own print: assert on the exit, not the output.
-    assert proc.returncode == 0, proc.stderr
-    assert "still-alive" not in proc.stdout
-    assert elapsed < 15, f"worker outlived a dead client by {elapsed:.1f}s"
+    if sys.platform == "win32":
+        # The wait fires the instant it arms, so os._exit races (and usually
+        # beats) the worker's own print: assert on the exit, not the output.
+        assert proc.returncode == 0
+        assert "still-alive" not in proc.stdout
+        assert elapsed < 15, f"worker outlived a dead client by {elapsed:.1f}s"
+    else:
+        assert "armed=True" in proc.stdout
+        assert "still-alive" in proc.stdout
 
 
 def test_dead_client_exit_emits_the_structured_event() -> None:
-    """The reap is observable on stderr in the shared sibling event shape."""
+    """The reap is observable on stderr in the shared sibling event shape.
+
+    An explicit parent is watched ahead of discovery on both platforms, so a dead
+    one reaps the worker everywhere. ``rearm_seconds`` compresses the POSIX poll
+    through the real parameter; Windows fires on the handle at once.
+    """
     victim = subprocess.Popen([sys.executable, "-c", "pass"], stdout=subprocess.DEVNULL)
     victim.wait(timeout=60)
 
@@ -269,7 +276,7 @@ def test_dead_client_exit_emits_the_structured_event() -> None:
         f"""
         import time
         from {_MODULE} import arm_stdio_lifetime_watchdog
-        arm_stdio_lifetime_watchdog(client_pid={victim.pid}, parent_pid={victim.pid}, rearm_seconds=0.5)
+        arm_stdio_lifetime_watchdog(client_pid={victim.pid}, parent_pid={victim.pid}, rearm_seconds=1)
         time.sleep(20)
         print("still-alive", flush=True)
         """
@@ -297,6 +304,7 @@ def test_parent_pid_env_override_is_honoured() -> None:
 
     The bundle and any wrapper launcher configure the override through the
     environment, so the env path - not just the keyword argument - must anchor.
+    It anchors on both platforms; ``rearm_seconds`` only compresses the POSIX poll.
     """
     victim = subprocess.Popen([sys.executable, "-c", "pass"], stdout=subprocess.DEVNULL)
     victim.wait(timeout=60)
@@ -305,7 +313,7 @@ def test_parent_pid_env_override_is_honoured() -> None:
         f"""
         import time
         from {_MODULE} import arm_stdio_lifetime_watchdog
-        arm_stdio_lifetime_watchdog(rearm_seconds=0.5)
+        arm_stdio_lifetime_watchdog(rearm_seconds=1)
         time.sleep(20)
         print("still-alive", flush=True)
         """

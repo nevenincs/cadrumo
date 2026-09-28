@@ -462,7 +462,7 @@ def filing_evidence_from_justificante_capture_snapshot(
     """Project one verified live justificante capture into AEAT-side evidence.
 
     The persisted snapshot is accepted only when it is active, carries a typed
-    :class:`~cadrumo.core.Period`, and resolves to loaded
+    :class:`~cadrumo.core.period.Period`, and resolves to loaded
     :class:`~cadrumo.domain.justificante.schema.Justificante` metadata for the same filing
     target.
     """

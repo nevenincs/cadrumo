@@ -348,7 +348,7 @@ and previous release identities are recorded in `delivery/active.json`.
 Keep archived releases and completed manifests until a retention review confirms
 they are neither active nor needed for recovery. Publishing performs no automatic
 deletion; never apply an age-only lifecycle rule to these buckets. Run the public
-checks locally with `just check-docs-availability`.
+checks locally with `just docs-availability-check`.
 
 ## Authorities
 

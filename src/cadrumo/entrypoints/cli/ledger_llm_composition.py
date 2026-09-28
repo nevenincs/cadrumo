@@ -87,7 +87,7 @@ class VisionReader:
         )
 
 
-class _TextReader:
+class TextReader:
     """Adapt the local text reader to the application classifier protocol."""
 
     def __init__(self, reader: LocalTextLLMClassifier) -> None:
@@ -192,7 +192,7 @@ def compose_ledger_llm(*, bucket_id: str, settings: Settings) -> LedgerLlmCompos
         return result
 
     def make_text_classifier(spec: PromptSpec, /) -> LLMClassifier:
-        return _TextReader(LocalTextLLMClassifier(spec=spec, settings=settings))
+        return TextReader(LocalTextLLMClassifier(spec=spec, settings=settings))
 
     ports = LLMClassificationPorts(
         resolve_evidence_input=resolve_evidence_input,

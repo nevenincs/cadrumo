@@ -20,29 +20,22 @@ from ..windows_contention import WINDOWS_CONTENDED_ACCESS_ERRORS, is_windows_con
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-class _WindowsContentionError(PermissionError):
-    """The refusal Windows raises, carrying ``winerror`` on every platform.
+class _WindowsRefusalError(PermissionError):
+    """A refusal carrying ``winerror`` as Windows raises it, on any host.
 
-    The constructor's ``winerror`` argument is honoured only on Windows and
-    silently dropped elsewhere, so an error built through it would carry no
-    code on a POSIX runner and every assertion below would test nothing there.
+    The four-argument constructor sets ``winerror`` only on Windows and drops it
+    elsewhere, so building the error that way would test nothing off Windows.
     """
-
-    winerror: int
 
     def __init__(self, winerror: int) -> None:
         super().__init__(13, "refused")
         self.winerror = winerror
 
 
-def _windows_refusal(winerror: int) -> PermissionError:
-    return _WindowsContentionError(winerror)
-
-
 @pytest.mark.parametrize("winerror", [5, 32])
 def test_a_peers_open_handle_is_contention(winerror: int) -> None:
     """ERROR_ACCESS_DENIED and ERROR_SHARING_VIOLATION are what a handle causes."""
-    assert is_windows_contention(_windows_refusal(winerror)) is True
+    assert is_windows_contention(_WindowsRefusalError(winerror)) is True
 
 
 def test_a_posix_refusal_is_never_contention() -> None:
@@ -61,7 +54,7 @@ def test_an_unrelated_windows_error_is_not_contention() -> None:
     Guards the frozenset against being widened into "any Windows refusal",
     which would absorb a read-only attribute or a denying ACL.
     """
-    assert is_windows_contention(_windows_refusal(1)) is False
+    assert is_windows_contention(_WindowsRefusalError(1)) is False
     assert is_windows_contention(OSError(2, "missing")) is False
 
 

@@ -42,10 +42,10 @@ from ....tests.loopback_llm import (
     serving_loopback,
     write_json_response,
 )
-from .ledger_ux_support import _add_evidence, _invoke, _open_bucket_session
+from .ledger_ux_support import _add_evidence, _invoke, _open_bucket_session, admit_an_unmeasurable_host
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-__all__ = ["_open_bucket_session"]
+__all__ = ["_open_bucket_session", "admit_an_unmeasurable_host"]
 
 _SUPPLIER_CIF = "B12345674"
 _FILER_CIF = "B17283946"

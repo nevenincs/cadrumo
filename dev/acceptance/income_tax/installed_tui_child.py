@@ -22,7 +22,9 @@ import sys
 from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any, cast, overload
+from typing import Any, Final, cast, overload
+
+from dev.packaging.installed_wheel_binding import environment_interpreter
 
 
 class InstalledTuiChildError(RuntimeError):
@@ -114,6 +116,11 @@ def installed_product_evidence(*, workspace_root: Path) -> InstalledProductEvide
         product_origin="site-packages",
         product_init_sha256=hashlib.sha256(product_init.read_bytes()).hexdigest(),
     )
+
+
+#: A control only the Profile setup walk composes, which the first Home of a
+#: session hands on to while the profile is not set up yet.
+SETUP_WALK_SURFACE: Final = "#manager-banner"
 
 
 async def _wait_for_selector(pilot: Any, selector: str, *, polls: int = 80) -> None:
@@ -243,63 +250,47 @@ async def _register_via_production_screen(*, profile_label: str, passphrase: str
 register_profile_through_installed_tui = _register_via_production_screen
 
 
-INSTALLED_LOGIN_FIELD = "#field-passphrase"
-"""The Login screen's passphrase field."""
-
-INSTALLED_HOME_SURFACE = "#home-agenda"
-"""A control the admitted Home always mounts."""
-
-INSTALLED_SETUP_WALK_CONTROL = "#onboarding-continue"
-"""The setup walk's own Continue control; a settled profile's page has none."""
-
-
-async def leave_installed_setup_walk(*, pilot: Any, polls: int = 180) -> bool:
-    """Leave the setup walk an admitted session opens, and report whether it was open.
-
-    A profile that has not declared its setup complete is handed from the
-    session's first Home straight on to the guided setup walk, so a journey
-    that is not about setup leaves it the way an operator does.  The hand-off
-    is requested on the same turn that mounts that first Home, so a Home seen
-    first may still be replaced by the walk; waiting here is what tells a
-    pending hand-off apart from a profile that is never offered one.  Escape is
-    the walk's own leave control, and a session offers the walk once, so the
-    Home it returns to is the one the journey keeps.
-    """
-    from textual.css.query import NoMatches
-
-    for _ in range(polls):
-        try:
-            query_public_selector(pilot, INSTALLED_SETUP_WALK_CONTROL)
-        except NoMatches:
-            await pilot.pause()
-        else:
-            await pilot.press("escape")
-            return True
-    return False
-
-
 async def admit_installed_session(*, pilot: Any, passphrase: str, polls: int = 180) -> None:
     """Unlock an installed session through its visible admission surface.
 
-    A newly registered profile can reach the Login screen, an already admitted
-    Home, or the setup walk that Home hands an unfinished profile on to,
-    depending on the surrounding production composition.  Every branch remains
-    an ordinary public TUI interaction.
+    A newly registered profile can reach either the Login screen or an already
+    admitted Home screen depending on the surrounding production composition.
+    Both branches remain ordinary public TUI interactions.
+
+    While a profile is not set up yet, the session's first Home hands straight
+    on to the Profile setup walk, once. The journeys start from Home, so the
+    walk is left the way an operator leaves it, through its Escape binding,
+    which returns to Home.
     """
     from textual.widgets import Input
 
-    admitted_surfaces = (INSTALLED_HOME_SURFACE, INSTALLED_SETUP_WALK_CONTROL)
     initial_surface = await wait_for_any_public_selector(
         pilot,
-        (INSTALLED_LOGIN_FIELD, *admitted_surfaces),
+        ("#field-passphrase", "#home-agenda", SETUP_WALK_SURFACE),
         polls=polls,
     )
-    if initial_surface == INSTALLED_LOGIN_FIELD:
-        query_public_selector(pilot, INSTALLED_LOGIN_FIELD, Input).value = passphrase
+    if initial_surface == "#field-passphrase":
+        query_public_selector(pilot, "#field-passphrase", Input).value = passphrase
         await pilot.click("#btn-unlock")
-        await wait_for_any_public_selector(pilot, admitted_surfaces, polls=polls)
-    await leave_installed_setup_walk(pilot=pilot, polls=polls)
-    await wait_for_public_selector(pilot, INSTALLED_HOME_SURFACE, polls=polls)
+    await wait_for_any_public_selector(pilot, ("#home-agenda", SETUP_WALK_SURFACE), polls=polls)
+    await leave_the_setup_walk_if_handed_off(pilot=pilot, polls=polls)
+
+
+async def leave_the_setup_walk_if_handed_off(*, pilot: Any, polls: int = 180) -> None:
+    """Return an admitted session to Home when its first Home handed it to the setup walk.
+
+    Shared by every admission path, including drivers that wait for the first
+    admitted surface on their own terms, so the walk is left one way everywhere.
+    """
+    # The hand-off is scheduled once Home is up; let it land before reading
+    # which screen the session is on.
+    await pilot.app.workers.wait_for_complete()
+    await pilot.pause()
+    await pilot.pause()
+    surface = await wait_for_any_public_selector(pilot, (SETUP_WALK_SURFACE, "#home-agenda"), polls=polls)
+    if surface == SETUP_WALK_SURFACE:
+        await pilot.press("escape")
+    await wait_for_public_selector(pilot, "#home-agenda", polls=polls)
 
 
 def admitted_session_autopilot(
@@ -624,18 +615,8 @@ def run_installed_tui_child_process(
     importable.  The child itself asserts that ``cadrumo`` came from
     site-packages.  Product environment variables are rebuilt from scratch,
     and the credential crosses the process boundary only through stdin.
-
-    The interpreter is started exactly as its launcher named it.  A POSIX
-    environment's ``bin/python`` is an absolute symlink to the base
-    installation it was built from, and that link is the environment: the
-    interpreter behind it has no adjacent ``pyvenv.cfg``, so following the link
-    swaps the installed product for the bare interpreter that seeded it and the
-    child imports no ``cadrumo`` at all.  Windows copies the executable into the
-    environment, which is why only POSIX children saw an empty environment.
     """
-    executable = python_executable
-    if not executable.is_absolute() or not executable.is_file():
-        raise InstalledTuiChildError("installed TUI child interpreter must be an existing absolute path")
+    executable = environment_interpreter(python_executable)
     workspace = workspace_root.resolve(strict=True)
     receipt = receipt_path.resolve()
     store = storage_root.resolve()
@@ -727,9 +708,7 @@ if __name__ == "__main__":  # pragma: no cover - module entry point
 
 
 __all__ = [
-    "INSTALLED_HOME_SURFACE",
-    "INSTALLED_LOGIN_FIELD",
-    "INSTALLED_SETUP_WALK_CONTROL",
+    "SETUP_WALK_SURFACE",
     "InstalledProductEvidence",
     "InstalledTuiBootstrapEvidence",
     "InstalledTuiChildError",
@@ -739,7 +718,7 @@ __all__ = [
     "assert_installed_product_origin",
     "installed_product_evidence",
     "is_installed_product_origin",
-    "leave_installed_setup_walk",
+    "leave_the_setup_walk_if_handed_off",
     "main",
     "open_profile_manager_field",
     "public_surface_diagnostic",

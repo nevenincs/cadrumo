@@ -68,6 +68,15 @@ _DURABLE_SNAPSHOT_SOURCE = dedent(
             and "log" not in path.name.lower()
             and not path.name.endswith("-shm")
         }
+
+    def descriptor_identity(descriptor):
+        # A closed number is reused by the next open in the same process, so
+        # "still open" means the number still names the file it named before.
+        try:
+            opened = os.fstat(descriptor)
+        except OSError:
+            return None
+        return (opened.st_dev, opened.st_ino, opened.st_mode & 0o170000)
     """
 )
 
@@ -84,16 +93,12 @@ _HARNESS = (
     from cadrumo.core import config as config_module
     from cadrumo.core.config import Settings
     from cadrumo.core.logging import defer_logging_configuration, resume_logging_configuration
-    from cadrumo.tests.descriptor_identity import descriptor_identity, descriptor_was_closed
     """
     )
     + _DURABLE_SNAPSHOT_SOURCE
     + dedent(
         """
     payload = json.loads(sys.argv[1])
-    closed_channels = {
-        descriptor: descriptor_identity(descriptor) for descriptor in payload.get("assert_closed_descriptors", [])
-    }
     settings = Settings(_env_file=None, **payload["settings"])
     composition = ExitStack()
     composition.enter_context(composed_profile_persistence_ports())
@@ -110,6 +115,9 @@ _HARNESS = (
                     profile_decode_context=operation.profile_decode_context(),
                 )
         before_dispatch = durable_snapshot(settings.cadrumo_local_storage_root)
+        asserted_closed = {
+            descriptor: descriptor_identity(descriptor) for descriptor in payload.get("assert_closed_descriptors", [])
+        }
         sys.argv = ["cadrumo", *sys.argv[2:]]
         defer_logging_configuration()
         try:
@@ -135,8 +143,8 @@ _HARNESS = (
                 print("S14_DESCRIPTOR_CONSUMED", file=sys.stderr)
                 exit_code = exit_code or 96
             os.close(descriptor)
-        for descriptor, channel in closed_channels.items():
-            if descriptor_was_closed(descriptor, channel):
+        for descriptor, identity in asserted_closed.items():
+            if descriptor_identity(descriptor) != identity:
                 print("S13_DESCRIPTOR_CLOSED", file=sys.stderr)
             else:
                 print("S13_DESCRIPTOR_OPEN", file=sys.stderr)
@@ -176,7 +184,6 @@ _WINDOWS_HANDLE_HARNESS = (
     from cadrumo.core.config import Settings
     from cadrumo.core.logging import defer_logging_configuration, resume_logging_configuration
     from cadrumo.entrypoints.cli._windows_profile_secret_bootstrap import bootstrap_argv
-    from cadrumo.tests.descriptor_identity import descriptor_identity, descriptor_was_closed
     """
     )
     + _DURABLE_SNAPSHOT_SOURCE
@@ -199,13 +206,6 @@ _WINDOWS_HANDLE_HARNESS = (
             descriptor = int(argv[argv.index(option) + 1])
             if descriptor not in descriptors:
                 descriptors.append(descriptor)
-    channels = {}
-    for descriptor in descriptors:
-        try:
-            channels[descriptor] = descriptor_identity(descriptor)
-        except OSError:
-            # A refusal case may name a number that was never open.
-            channels[descriptor] = None
     token = config_module.settings_override.set(settings)
     exit_code = 0
     try:
@@ -219,6 +219,7 @@ _WINDOWS_HANDLE_HARNESS = (
                     profile_decode_context=operation.profile_decode_context(),
                 )
         before_dispatch = durable_snapshot(settings.cadrumo_local_storage_root)
+        identities = {descriptor: descriptor_identity(descriptor) for descriptor in descriptors}
         sys.argv[:] = argv
         defer_logging_configuration()
         try:
@@ -247,8 +248,7 @@ _WINDOWS_HANDLE_HARNESS = (
                 os.close(descriptor)
             descriptors.clear()
         for descriptor in descriptors:
-            channel = channels[descriptor]
-            if channel is None or descriptor_was_closed(descriptor, channel):
+            if descriptor_identity(descriptor) != identities[descriptor]:
                 print("S13_DESCRIPTOR_CLOSED", file=sys.stderr)
             else:
                 print("S13_DESCRIPTOR_OPEN", file=sys.stderr)

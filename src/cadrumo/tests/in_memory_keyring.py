@@ -16,18 +16,15 @@ from typing import override
 from keyring.backend import KeyringBackend
 from keyring.errors import PasswordDeleteError
 
+from .explicit_keyring_selection import explicit_selection_priority
+
 IN_MEMORY_KEYRING = f"{__name__}.InMemoryKeyring"
 
 
 class InMemoryKeyring(KeyringBackend):
     """A usable, process-local credential store that begins empty."""
 
-    priority = 1
-    # keyring offers every imported backend class to its automatic selection,
-    # and a test process imports this module. Viable, it outranked the headless
-    # Linux fallback, so the importing process silently gained a working keychain
-    # no child could read. Non-viable, only an explicit selection loads it.
-    viable = False
+    priority = explicit_selection_priority(IN_MEMORY_KEYRING)
 
     def __init__(self) -> None:
         super().__init__()

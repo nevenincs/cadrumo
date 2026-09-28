@@ -26,6 +26,9 @@ from .profile_schema_support import committed_registry_validator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
+# The only revision that carries the B2 casos especificos tipo-3/tipo-4 tramos.
+_B2_BANDS_REVISION = "2025-y-siguientes"
+
 _M202_BASE_ORDER_REF = "orden-hfp-227-2017:art-1"
 _M202_2018_ORDER_REF = "orden-hac-941-2018:art-primero-5-anexo-i"
 _M202_2023_ORDER_REF = "orden-hfp-312-2023:art-unico-1-anexo-i"
@@ -188,16 +191,16 @@ def test_committed_modelo_202_closed_revisions_use_period_matching_instruction_s
             assert f'"{source_ref}"' not in revision_payload, revision_id
 
 
-def test_committed_modelo_202_marks_2025_only_b2_rate_bands_as_intentional_singletons() -> None:
+def test_committed_modelo_202_marks_single_revision_b2_rate_bands_as_intentional_singletons() -> None:
     modelo, _catalogues = _load_modelo_202()
-    revision = modelo.revisions["2025-y-siguientes"]
+    revision = modelo.revisions[_B2_BANDS_REVISION]
     casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
 
     for casilla_id in ("61", "62", "64", "65"):
         casilla = casillas_by_id[casilla_id]
         assert casilla.semantic_role_cardinality == "intentional_singleton"
         assert casilla.semantic_role_cardinality_reason is not None
-        assert "2025-only" in casilla.semantic_role_cardinality_reason
+        assert f"{revision.valid_from.year}-only" in casilla.semantic_role_cardinality_reason
 
 
 def test_committed_modelo_202_static_cross_reference_and_construct_are_declared() -> None:
@@ -289,17 +292,17 @@ _M202_B2_RESULTADO_PREVIO_ADVISORY_PREDICATE_ID = "modelo-202-b2-resultado-previ
 _M202_B1_B2_RESULTADO_PREVIO_XOR_PREDICATE_ID = "modelo-202-b1-b2-resultado-previo-at-most-one-positive"
 
 
-def test_committed_modelo_202_2025_guards_b2_tipo_3_and_tipo_4_under_declaration() -> None:
-    """The 2025-only B2 casos especificos tipo-3/tipo-4 tramos guard their own base-to-importe formula.
+def test_committed_modelo_202_guards_b2_tipo_3_and_tipo_4_under_declaration() -> None:
+    """The single-revision B2 casos especificos tipo-3/tipo-4 tramos guard their own base-to-importe formula.
 
     Claves 63 and 66 are formula-derived (``percent``) from claves 61/62 and
     64/65 respectively; both tramos exist only in the 2025-y-siguientes
-    revision (`test_committed_modelo_202_marks_2025_only_b2_rate_bands_as_intentional_singletons`).
+    revision (`test_committed_modelo_202_marks_single_revision_b2_rate_bands_as_intentional_singletons`).
     See the `modelo-verify-nonzero-guards` m202-deferred-items audit
     (2026-07-01) for the full B2-lane investigation.
     """
     modelo, _catalogues = _load_modelo_202()
-    revision = modelo.revisions["2025-y-siguientes"]
+    revision = modelo.revisions[_B2_BANDS_REVISION]
     predicates = {p.predicate_id: p for p in revision.verification_predicates}
 
     tipo_3 = predicates[_M202_B2_TIPO_3_ADVISORY_PREDICATE_ID]

@@ -139,7 +139,7 @@ def _forestal_predicate_for(other_letra_casilla: CasillaId) -> VerificationPredi
     return _predicate(predicate_id)
 
 
-def test_incompatibility_predicates_ship_on_2025_revision() -> None:
+def test_incompatibility_predicates_ship_on_the_modulos_orden_revision() -> None:
     """Every declared incompatibility predicate exists, is ADVISORY, and cites the Anexo I instrucción."""
     revision = _m100_2025_revision()
     predicates_by_id = {p.predicate_id: p for p in revision.verification_predicates}

@@ -393,7 +393,7 @@ class ModeloExportResult(BaseModel):
             the active profile bucket at export time).
         modelo: AEAT modelo identifier.
         filing_year: AEAT filing year.
-        period: Filing period as a typed :class:`~cadrumo.core.Period` value.
+        period: Filing period as a typed :class:`~cadrumo.core.period.Period` value.
         output_path: Absolute path the file was written to.
         byte_size: Size of the written file in bytes.
         file_sha256: Hex-encoded SHA-256 of the written bytes.
@@ -571,7 +571,7 @@ def _compose_export_dictionary_values(
 
 
 def _resolve_work_unit_period(work_unit: WorkUnit) -> Period:
-    """Return the typed :class:`~cadrumo.core.Period` carried by the work unit."""
+    """Return the typed :class:`~cadrumo.core.period.Period` carried by the work unit."""
     if work_unit.period.filing_year != work_unit.filing_year:
         raise ModeloExportError(
             translated_message="application.modelo.errors.export_period_unmappable",
@@ -647,7 +647,7 @@ def _approve_export_draft(
     The :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile` is forwarded to
     :func:`~cadrumo.application.modelo.revision_replay_inputs.revision_filing_replay_inputs`
     so export uses the same profile-applicability relation inputs as the filing
-    workflow gate. Returns the resolved :class:`~cadrumo.core.Period` and approved
+    workflow gate. Returns the resolved :class:`~cadrumo.core.period.Period` and approved
     :class:`~domain.filing.schema.ModeloDraft`.
     """
     inputs: ModeloInputs = revision_filing_replay_inputs(

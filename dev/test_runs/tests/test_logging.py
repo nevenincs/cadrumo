@@ -120,12 +120,11 @@ def test_real_child_pytest_records_a_setup_skip_as_the_tests_verdict() -> None:
 
 def test_real_child_pytest_confines_cache_and_basetemp_to_its_run(tmp_path: Path) -> None:
     report = tmp_path / "pytest-paths.json"
-    original_cache = tmp_path / "original-cache"
+    ambient_cache = tmp_path / "ambient-cache"
     environment = os.environ.copy()
     environment.pop("CADRUMO_TEST_RUN_ROOT", None)
-    environment.pop("PLAYWRIGHT_BROWSERS_PATH", None)
-    environment["XDG_CACHE_HOME"] = str(original_cache)
     environment["CADRUMO_PYTEST_PATH_PROBE"] = str(report)
+    environment["XDG_CACHE_HOME"] = str(ambient_cache)
     result = subprocess.run(
         [
             sys.executable,
@@ -149,13 +148,9 @@ def test_real_child_pytest_confines_cache_and_basetemp_to_its_run(tmp_path: Path
     run_root = Path(paths["run_root"]).resolve()
     scratch = Path(paths["scratch"]).resolve()
     assert Path(paths["cache"]).resolve() == run_root / "cache" / "pytest"
-    assert Path(paths["xdg_cache_home"]).resolve() == run_root / "cache"
-    # The redirect must not hide the browsers installed under the original cache,
-    # which only Linux resolves through XDG.
-    if sys.platform == "linux":
-        assert paths["playwright_browsers_path"] == str(original_cache / "ms-playwright")
-    else:
-        assert paths["playwright_browsers_path"] is None
+    # Tool caches such as uv's keep their own home; moved into the run, each run
+    # that builds a distribution rebuilds one cold and leaves it behind.
+    assert paths["tool_cache_home"] == str(ambient_cache)
     assert Path(paths["basetemp"]).resolve() == scratch / "pytest"
     assert Path(paths["stdlib_temp"]).resolve() == scratch
     assert Path(paths["storage_root"]).resolve().parent == scratch

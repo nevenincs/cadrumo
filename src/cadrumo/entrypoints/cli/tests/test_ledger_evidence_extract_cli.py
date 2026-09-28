@@ -36,13 +36,10 @@ from pathlib import Path
 import pytest
 
 from ....core.directory_scan import scan_directory
-from ._rule_reading_runtime_fixtures import _rule_reading_runtime
-from .ledger_ux_support import _add_evidence, _invoke, _open_bucket_session
+from .ledger_ux_support import _add_evidence, _invoke, _open_bucket_session, admit_an_unmeasurable_host
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-# Every figure asserted here is printed under a label the rule reader
-# recognises, so the served reader proposes nothing and the rule reading stands.
-__all__ = ["_open_bucket_session", "_rule_reading_runtime"]
+__all__ = ["_open_bucket_session", "admit_an_unmeasurable_host"]
 
 _SUPPLIER_CIF = "B12345674"
 

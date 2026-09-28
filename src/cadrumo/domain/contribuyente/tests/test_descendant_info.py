@@ -217,18 +217,23 @@ class TestDescendantInfoValidation:
 # ---------------------------------------------------------------------------
 
 
+_SUPPORTED_YEARS = PublishedGovernedFactSource().supported_filing_years().years
+
+
 class TestDescendantInfoAgeCalculation:
-    def test_age_at_year_end_2024_for_2023_january_birth(self) -> None:
-        d = DescendantInfo(birth_date=date(2023, 1, 15))
-        assert d.age_at_year_end(2024) == 1
+    @pytest.mark.parametrize("filing_year", _SUPPORTED_YEARS)
+    def test_age_at_year_end_is_1_for_a_january_birth_the_year_before(self, filing_year: int) -> None:
+        d = DescendantInfo(birth_date=date(filing_year - 1, 1, 15))
+        assert d.age_at_year_end(filing_year) == 1
 
     def test_age_at_year_end_birthday_on_dec_31(self) -> None:
         d = DescendantInfo(birth_date=date(2022, 12, 31))
         assert d.age_at_year_end(2024) == 2
 
-    def test_age_at_year_end_birthday_in_2024_is_0(self) -> None:
-        d = DescendantInfo(birth_date=date(2024, 6, 15))
-        assert d.age_at_year_end(2024) == 0
+    @pytest.mark.parametrize("filing_year", _SUPPORTED_YEARS)
+    def test_age_at_year_end_is_0_for_a_birth_during_the_year(self, filing_year: int) -> None:
+        d = DescendantInfo(birth_date=date(filing_year, 6, 15))
+        assert d.age_at_year_end(filing_year) == 0
 
     def test_is_eligible_ordinary_age_boundary(self) -> None:
         cases = ((date(2000, 1, 1), True), (date(1999, 1, 1), False))

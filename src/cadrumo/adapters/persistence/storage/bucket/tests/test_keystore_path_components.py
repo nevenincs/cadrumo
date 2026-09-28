@@ -77,8 +77,6 @@ def test_a_drive_qualified_id_would_have_renamed_the_bucket(tmp_path: Path) -> N
     as well as containment -- a future simplification to "does it stay under
     the root" would pass every other test in this module.
     """
-    # Windows path semantics on every runner: the hazard is what a Windows host
-    # does with the id, and a POSIX path keeps "C:x" as an ordinary name.
     same_drive = PureWindowsPath("C:/storage-root/buckets") / "C:x"
 
     assert same_drive.name == "x", "premise: pathlib drops the same-drive qualifier"

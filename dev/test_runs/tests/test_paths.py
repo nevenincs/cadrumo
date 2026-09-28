@@ -10,13 +10,11 @@ import pytest
 from dev._paths import REPO_ROOT
 
 from ..paths import (
-    PLAYWRIGHT_BROWSERS_ENV,
     SCRATCH_BASE_ENV,
     SCRATCH_PATH_BUDGET,
     SCRATCH_SEPARATOR,
     allocate_run_directory,
     allocate_scratch_directory,
-    cache_environment,
     run_log_bases,
     run_log_families,
     run_log_roots,
@@ -122,46 +120,3 @@ def test_a_base_too_deep_for_the_temp_budget_is_refused(tmp_path: Path, monkeypa
         allocate_scratch_directory()
 
     assert not deep.exists()
-
-
-def test_a_linux_cache_redirect_pins_the_browsers_installed_under_the_original_cache(tmp_path: Path) -> None:
-    original = tmp_path / "original-cache"
-    run_cache = tmp_path / "run" / "cache"
-
-    environment = cache_environment(run_cache, {"XDG_CACHE_HOME": str(original)}, platform="linux")
-
-    assert environment == {
-        "XDG_CACHE_HOME": str(run_cache),
-        PLAYWRIGHT_BROWSERS_ENV: str(original / "ms-playwright"),
-    }
-
-
-def test_an_unset_linux_cache_pins_the_home_cache(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    home = tmp_path / "home"
-    # The home directory is read from the environment on every platform.
-    monkeypatch.setenv("HOME", str(home))
-    monkeypatch.setenv("USERPROFILE", str(home))
-
-    environment = cache_environment(tmp_path / "cache", {"XDG_CACHE_HOME": "  "}, platform="linux")
-
-    assert environment[PLAYWRIGHT_BROWSERS_ENV] == str(home / ".cache" / "ms-playwright")
-
-
-@pytest.mark.parametrize("inherited", ["/opt/browsers", "0"])
-def test_an_explicit_browsers_path_is_the_callers_own(tmp_path: Path, inherited: str) -> None:
-    environment = cache_environment(
-        tmp_path / "cache",
-        {PLAYWRIGHT_BROWSERS_ENV: inherited, "XDG_CACHE_HOME": str(tmp_path / "original")},
-        platform="linux",
-    )
-
-    assert environment == {"XDG_CACHE_HOME": str(tmp_path / "cache")}
-
-
-@pytest.mark.parametrize("platform", ["win32", "darwin"])
-def test_platforms_that_resolve_browsers_outside_xdg_pin_nothing(tmp_path: Path, platform: str) -> None:
-    environment = cache_environment(
-        tmp_path / "cache", {"XDG_CACHE_HOME": str(tmp_path / "original")}, platform=platform
-    )
-
-    assert environment == {"XDG_CACHE_HOME": str(tmp_path / "cache")}

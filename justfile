@@ -1398,11 +1398,12 @@ docs-langs:
 docs-site-preview:
     uv run --no-sync python -m dev.deploy.docs_static_site dry-run
 
-# Standard library only and run without the project environment, so the
-# availability monitor needs neither a synced checkout nor deployment credentials.
-[doc('Check that both public documentation mounts serve one release with usable search; read-only, network required.')]
+# Probe both public documentation mounts over HTTPS with the monitoring
+# identity. It needs neither the project environment nor any credential, so it
+# runs on the pinned interpreter alone; the availability workflow calls it.
+[doc('Probe both public documentation mounts over HTTPS; read-only, network required.')]
 [group('docs')]
-check-docs-availability:
+docs-availability-check:
     uv run --no-project --python 3.13.11 dev/deploy/docs_health.py
 
 # Run blocking, read-only docstring structure and Sphinx checks with live
@@ -1525,6 +1526,7 @@ gate-local:
     @just check-registry
     @just check-repository
     @just check-dependency-vulnerabilities
+    @just docs-build
     @just docs-check
     @just test-product
     @just test-registry

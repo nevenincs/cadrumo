@@ -26,7 +26,7 @@ _TEST_ROOTS = (
 #: The two spellings a model-specific test file uses for the modelo it covers.
 #: Both are live in this directory, and a census reading only one reports a
 #: covered modelo as covered by nothing -- which is how Modelo 353 came to be
-#: listed as untested beside ``test_m353_2024_grupo_entidades_manual_worked_example.py``.
+#: listed as untested beside ``test_m353_grupo_entidades_manual_worked_example.py``.
 _MODELO_TEST_PREFIXES = ("test_modelo_", "test_m")
 
 

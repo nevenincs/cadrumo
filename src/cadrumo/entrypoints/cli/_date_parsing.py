@@ -5,7 +5,7 @@ parses, so the DD/MM-versus-MM/DD ambiguity never arises, and a blank value
 refuses with the same localised message as a malformed one.
 
 See Also:
-    :class:`~cadrumo.core.Period`
+    :class:`~cadrumo.core.period.Period`
         The period boundary these dates are compared against downstream.
 """
 

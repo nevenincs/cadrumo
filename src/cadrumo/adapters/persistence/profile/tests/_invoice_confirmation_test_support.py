@@ -51,8 +51,7 @@ from .....application.ledger.invoice_draft_extraction_ports import (
 from .....application.ledger.invoice_draft_records import InvoiceDraft
 from .....application.ledger.invoice_extraction_authority import InvoiceExtractionAuthorityValues
 from .....application.ledger.preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
-from .....application.provisioning import HardwareProfile
-from .....core.config import Settings, load_settings, override_settings
+from .....core.config import Settings, override_settings
 from .....core.config_support import LLMProvider
 from .....core.operator_action_enums import ActionEvidenceProvenance
 from .....core.optional_extras import MissingOptionalExtraError
@@ -73,7 +72,6 @@ from ....inbound.einvoice.parsers import parse_einvoice_document
 from ....inbound.einvoice.shape import probe_document_shape
 from ....inbound.einvoice.xml import EInvoiceXmlParseError
 from ....inbound.pdf.page_text_extraction import extract_pages_text_from_bytes
-from ....outbound.llm.client import LLMClient
 from ....outbound.llm.consent import EvidenceConsentToken
 from ....outbound.llm.errors import LLMConsentError, LLMPdfRasterisationError, LLMProviderError
 from ....outbound.llm.evidence_draft_text import TextInvoiceFieldExtractor
@@ -81,8 +79,11 @@ from ....outbound.llm.evidence_draft_vision import LocalVisionDocumentTranscribe
 from ....outbound.llm.models import MultimodalImageInput
 from ....outbound.llm.preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
 from ....outbound.llm.providers.local import rasterise_pdf_pages_to_base64_png
-from ....outbound.llm.supply_nature_proposal import SupplyNatureProposer
-from ....outbound.llm.tests.host_headroom_support import loopback_host_headroom
+from ....outbound.llm.tests.load_headroom_support import (
+    extract_invoice_text_under_admitted_load,
+    propose_supply_nature_under_admitted_load,
+    transcribe_document_images_under_admitted_load,
+)
 from ...storage.attachment import AttachmentStore
 from ...storage.runtime_repository import secure_object_repository_for_bucket
 from ...storage.sql.secure_objects import SecureObjectRepository
@@ -166,21 +167,9 @@ def _validated_llm_facts(facts: Mapping[str, object]) -> dict[str, str | int | b
 
 
 def _invoice_draft_extraction_ports(
-    *,
-    evidence_ports: LedgerEvidencePorts,
-    operation: PinnedAuthorityOperation,
-    hardware_profile: HardwareProfile | None = None,
+    *, evidence_ports: LedgerEvidencePorts, operation: PinnedAuthorityOperation
 ) -> InvoiceDraftExtractionPorts:
-    """Compose reader adapters locally for the profile persistence tests.
-
-    Every on-host client composed here is admitted against ``hardware_profile``
-    rather than a probe of this machine, because the served reader is a
-    loopback runtime and its admission would otherwise follow the host's
-    devices. A caller that measures the same run elsewhere -- the batch lane's
-    own admission -- passes that measurement, so the lane and the dispatch
-    judge one reading.
-    """
-    measured = hardware_profile if hardware_profile is not None else loopback_host_headroom()
+    """Compose reader adapters locally for the profile persistence tests."""
     evidence_input_ports = EvidenceInputPorts(document_shape_probe=probe_document_shape)
     text_layer_ports = evidence_text_layer_ports_for_test()
 
@@ -221,12 +210,12 @@ def _invoice_draft_extraction_ports(
             if not isinstance(authority_values, InvoiceExtractionAuthorityValues):
                 raise TypeError("invoice text extraction requires resolved authority values")
             if provider is None:
-                return TextInvoiceFieldExtractor(
-                    provider=LLMProvider.LOCAL,
-                    operation=operation,
+                return extract_invoice_text_under_admitted_load(
+                    transcription,
+                    settings=settings,
                     authority_values=authority_values,
-                    client=LLMClient(settings=load_settings(), hardware_profile=measured),
-                ).extract(transcription=transcription)
+                    operation=operation,
+                )
             return TextInvoiceFieldExtractor(
                 provider=provider,
                 model=settings.cadrumo_llm_cloud_text_model,
@@ -240,14 +229,7 @@ def _invoice_draft_extraction_ports(
 
     def propose_supply_nature(transcription: DocumentTranscription, settings: Settings) -> SupplyNature | None:
         try:
-            return (
-                SupplyNatureProposer(
-                    settings=settings,
-                    client=LLMClient(settings=settings, hardware_profile=measured),
-                )
-                .propose(transcription.text.splitlines())
-                .nature
-            )
+            return propose_supply_nature_under_admitted_load(transcription.text.splitlines(), settings=settings)
         except Exception:
             return None
 
@@ -267,10 +249,9 @@ def _invoice_draft_extraction_ports(
         try:
             inputs = tuple(MultimodalImageInput.from_base64(image.base64_data, image.media_type) for image in images)
             if provider is None:
-                return LocalVisionDocumentTranscriber(
-                    settings=settings,
-                    client=LLMClient(settings=settings, hardware_profile=measured),
-                ).transcribe(evidence_images=inputs, source_content_sha256=source_content_sha256)
+                return transcribe_document_images_under_admitted_load(
+                    inputs, source_content_sha256=source_content_sha256, settings=settings
+                )
             return LocalVisionDocumentTranscriber(
                 provider=provider,
                 model=settings.cadrumo_llm_cloud_vision_model,

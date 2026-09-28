@@ -6,7 +6,7 @@ and loads :class:`VerificationReport` entries in a
 :class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository` at
 ``FINANCIAL`` :class:`~cadrumo.core.classification.policies.SensitivityClass`.
 The catalogue is stored as a single encrypted BLOB per profile bucket and
-wrapped in :class:`~cadrumo.adapters.persistence.storage.Envelope` before
+wrapped in :class:`~cadrumo.adapters.persistence.storage.envelope.contract.Envelope` before
 serialisation.
 The storage contract is declared by
 :data:`cadrumo.adapters.persistence.storage.secure_object_namespaces.MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE`;

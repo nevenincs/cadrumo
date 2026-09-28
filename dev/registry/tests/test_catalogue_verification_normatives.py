@@ -82,11 +82,13 @@ def test_lirpf_art_91_transparencia_fiscal_links_to_full_boe_corpus() -> None:
     verify_legal_catalogue({reference.id: reference}, source_root=bundled_path())
 
 
-def test_ley_31_2022_da_70_rib_reference_links_to_bundled_boe_corpus() -> None:
+def test_balearic_investment_reserve_reference_links_to_bundled_boe_corpus() -> None:
+    # Ley 31/2022, disposicion adicional septuagesima: the cited norm's identity.
+    law = "ley-31-2022"
     catalogues = _catalogues()
-    reference = catalogues.legal["ley-31-2022:da-70"]
+    reference = catalogues.legal[f"{law}:da-70"]
 
-    assert reference.corpus_ref == "corpus/normatives/html/ley-31-2022-da-70.html#da-70"
+    assert reference.corpus_ref == f"corpus/normatives/html/{law}-da-70.html#da-70"
     assert reference.permalink.endswith("#da-70")
     assert reference.required_text == (
         "Reserva para inversiones en las Illes Balears",
@@ -246,19 +248,21 @@ def test_lgt_art_26_interes_demora_links_to_bundled_corpus() -> None:
     verify_legal_catalogue({reference.id: reference}, source_root=bundled_path())
 
 
-def test_orden_hac_242_2025_art_8_deadline_links_to_full_boe_corpus() -> None:
+def test_renta_campaign_orden_borrador_deadline_links_to_full_boe_corpus() -> None:
+    # Orden HAC/242/2025 approves the Modelo 100 campaign form; the cited norm's identity.
+    orden = "orden-hac-242-2025"
     catalogues = _catalogues()
-    reference = catalogues.legal["orden-hac-242-2025:art-8"]
+    reference = catalogues.legal[f"{orden}:art-8"]
     source = catalogues.sources["boe-modelo-100-2024-form"]
 
-    assert reference.corpus_ref == "corpus/normatives/html/orden-hac-242-2025.html#a8"
+    assert reference.corpus_ref == f"corpus/normatives/html/{orden}.html#a8"
     assert reference.permalink.endswith("#a8")
     assert reference.required_text == (
         "Plazo de presentación del borrador de declaración",
         "2 de abril y 30 de junio de 2025",
         "plazo específicamente establecido en el artículo 13.3",
     )
-    assert source.corpus_path == "corpus/normatives/html/orden-hac-242-2025.html"
+    assert source.corpus_path == f"corpus/normatives/html/{orden}.html"
     verify_legal_catalogue({reference.id: reference}, source_root=bundled_path())
     verify_source_file(REPO_ROOT, source)
 

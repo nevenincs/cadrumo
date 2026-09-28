@@ -31,6 +31,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     set_active_test_profile_facts,
 )
 
+from ....adapters.outbound.llm.tests.load_headroom_support import extraction_ports_under_admitted_load
 from ....adapters.persistence.profile.catalogue_creation import build_catalogue_creation_ports
 from ....adapters.persistence.profile.counterparty_establishment import CounterpartyEstablishmentRepository
 from ....adapters.persistence.profile.invoice_confirmation import build_invoice_confirmation_ports
@@ -192,7 +193,7 @@ class _LiveDocument:
             evidence_id=self.evidence_id,
             bucket_id=_PROFILE_ID,
             settings=load_settings(),
-            ports=invoice_draft_extraction_ports(evidence_ports=evidence_ports),
+            ports=extraction_ports_under_admitted_load(invoice_draft_extraction_ports(evidence_ports=evidence_ports)),
             operation=self.operation,
             legends=self.legends,
         )
@@ -209,7 +210,9 @@ class _LiveDocument:
             invoice_confirmation_ports=build_invoice_confirmation_ports(bucket_id=_PROFILE_ID),
             counterparty_establishment_repository=CounterpartyEstablishmentRepository(bucket_id=_PROFILE_ID),
             evidence_ports=evidence_ports,
-            extraction_ports=invoice_draft_extraction_ports(evidence_ports=evidence_ports),
+            extraction_ports=extraction_ports_under_admitted_load(
+                invoice_draft_extraction_ports(evidence_ports=evidence_ports)
+            ),
             operation=self.operation,
             legends=self.legends,
         )

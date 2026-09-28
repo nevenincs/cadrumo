@@ -10,6 +10,7 @@
 # Reads and writes GitHub state through `gh`, `git` or the release automation,
 # or reports a job verdict, and has no local meaning; `gh` is already permitted
 # and these differ only in reaching it through a shell conditional.
+docs-health.yml:Report an availability failure
 merge-gate.yml:Require every gate job to succeed
 merge-gate.yml:Refuse fork pull requests
 release-please.yml:Regenerate uv.lock on the release branch

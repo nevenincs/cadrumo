@@ -101,23 +101,14 @@ def _batch_ports(
     profile: TestRuntimeProfile,
     *,
     operation: PinnedAuthorityOperation,
-    hardware_profile: HardwareProfile | None = None,
 ) -> tuple[LedgerEvidencePorts, InvoiceDraftExtractionPorts]:
-    """Compose the required application ports from this test's outer adapters.
-
-    ``hardware_profile`` is the run's measurement, so each document's dispatch is
-    admitted against the same headroom the batch lane was.
-    """
+    """Compose the required application ports from this test's outer adapters."""
     evidence_ports = LedgerEvidencePorts(
         evidence_repository=LedgerEvidenceRepositoryAdapter(objects=profile.repository),
         attachment_ingestor=LedgerEvidenceAttachmentIngestor(store=AttachmentStore(objects=profile.repository)),
         bucket_event_repository=BucketEventHistoryRepository(objects=profile.repository),
     )
-    return evidence_ports, _invoice_draft_extraction_ports(
-        evidence_ports=evidence_ports,
-        operation=operation,
-        hardware_profile=hardware_profile,
-    )
+    return evidence_ports, _invoice_draft_extraction_ports(evidence_ports=evidence_ports, operation=operation)
 
 
 def _service(profile: TestRuntimeProfile, *, operation: PinnedAuthorityOperation) -> PurchaseInvoiceEvidenceService:
@@ -192,11 +183,7 @@ def _run_batch_with(
 ) -> BatchRunResult:
     period = default_invoice_extraction_period()
     with bundled_indexed_authority().operation() as operation:
-        evidence_ports, extraction_ports = _batch_ports(
-            runtime,
-            operation=operation,
-            hardware_profile=hardware_profile,
-        )
+        evidence_ports, extraction_ports = _batch_ports(runtime, operation=operation)
         legends = resolve_regime_legends(operation=operation, effective_date=period.end_date)
         return run_evidence_batch(
             bucket_id=_BUCKET_ID,

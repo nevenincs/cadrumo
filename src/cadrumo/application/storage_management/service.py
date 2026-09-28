@@ -2,7 +2,7 @@
 
 Answers "where is my data", "does the tree on disk match its declaration", and
 "what may safely be deleted" from the one typed declaration in
-:data:`~cadrumo.core.STORAGE_TAXONOMY`, so no answer here can drift from the
+:data:`~cadrumo.core.storage_taxonomy_locations.STORAGE_TAXONOMY`, so no answer here can drift from the
 resolver every writer already uses.
 
 Nothing in this module moves data or relocates the root. Reporting where the

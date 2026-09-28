@@ -9,9 +9,7 @@ outlive its run belongs in durable evidence, not in a path under ``.logs``.
 from __future__ import annotations
 
 import os
-import sys
 import tempfile
-from collections.abc import Mapping
 from datetime import UTC, datetime
 from pathlib import Path
 from uuid import uuid4
@@ -158,35 +156,6 @@ def scratch_environment(scratch: Path) -> dict[str, str]:
         "TMP": str(scratch),
         "TMPDIR": str(scratch),
     }
-
-
-PLAYWRIGHT_BROWSERS_ENV = "PLAYWRIGHT_BROWSERS_PATH"
-"""Names the directory Playwright resolves its installed browsers in."""
-
-
-def cache_environment(
-    cache: Path,
-    inherited: Mapping[str, str],
-    *,
-    platform: str = sys.platform,
-) -> dict[str, str]:
-    """Return the variables that make ``cache`` a process's cache directory.
-
-    On Linux, Playwright looks for its installed browsers under
-    ``$XDG_CACHE_HOME/ms-playwright`` (``~/.cache`` when unset), so redirecting the
-    cache alone would hide the browsers ``just setup-browser`` installed and every
-    browser launch would fail on a missing executable. The location they were
-    installed in is therefore pinned from ``inherited`` before the redirect.
-    Windows and macOS resolve browsers outside the XDG cache, and an explicit
-    ``PLAYWRIGHT_BROWSERS_PATH`` is the caller's own, so neither is touched.
-    """
-    environment = {"XDG_CACHE_HOME": str(cache)}
-    if platform != "linux" or inherited.get(PLAYWRIGHT_BROWSERS_ENV, "").strip():
-        return environment
-    original = inherited.get("XDG_CACHE_HOME", "").strip()
-    installed_cache = Path(original) if original else Path.home() / ".cache"
-    environment[PLAYWRIGHT_BROWSERS_ENV] = str(installed_cache / "ms-playwright")
-    return environment
 
 
 def allocate_run_directory(

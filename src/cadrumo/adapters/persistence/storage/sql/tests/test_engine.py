@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import logging
 import os
-import sys
 import threading
 from collections.abc import Generator
 from contextlib import contextmanager
@@ -21,7 +20,7 @@ import pytest
 from sqlalchemy import text
 
 from ......core.config import Settings
-from ......core.product_identity import PRODUCT_IDENTITY
+from ......core.config_state_root import live_state_root_inputs, platform_user_data_root
 from ......tests.env_scope import scoped_env_var
 from ...errors import StorageError
 from ..engine import create_engine_from_settings, dispose_engine
@@ -220,20 +219,12 @@ def test_engine_anchors_relative_sqlite_urls_to_the_application_data_root(
     source-checkout arm: a relative override always resolves under the
     platform user-data root, never a repo-root walk and never the process
     cwd, even from inside a checkout (the corpus-root decision pinned by
-    ``test_justificante_corpus_derivation.py`` is the same shape). The one
-    variable each platform's user-data root reads is pinned to an isolated
-    tmp_path subtree so the test never touches the real machine's
-    application-data directory.
+    ``test_justificante_corpus_derivation.py`` is the same shape). Every
+    platform's user-data input is pinned to an isolated tmp_path subtree so the
+    test never touches the real machine's application-data directory.
     """
     isolated_app_data = tmp_path / "app-data"
-    if sys.platform == "win32":
-        pinned_variable, platform_base = "LOCALAPPDATA", isolated_app_data
-    elif sys.platform == "darwin":
-        pinned_variable, platform_base = "HOME", isolated_app_data / "Library" / "Application Support"
-    else:
-        pinned_variable, platform_base = "XDG_DATA_HOME", isolated_app_data
     relative_db = Path("var") / "pytest-relative-sqlite" / "engine.db"
-    anchored_db = platform_base / PRODUCT_IDENTITY.python_package / relative_db
     settings = _settings_for(f"sqlite:///{relative_db.as_posix()}")
 
     cwd_marker = tmp_path / "cwd"
@@ -241,11 +232,18 @@ def test_engine_anchors_relative_sqlite_urls_to_the_application_data_root(
     original_cwd = Path.cwd()
     os.chdir(cwd_marker)
     try:
-        with scoped_env_var(pinned_variable, str(isolated_app_data)), _engine_for(settings) as engine:
-            with engine.connect() as conn:
-                conn.execute(text("select 1"))
-            assert Path(engine.url.database or "") == anchored_db
-            assert anchored_db.exists()
-            assert not (cwd_marker / relative_db).exists()
+        with (
+            scoped_env_var("LOCALAPPDATA", str(isolated_app_data)),
+            scoped_env_var("XDG_DATA_HOME", str(isolated_app_data)),
+            scoped_env_var("HOME", str(isolated_app_data)),
+        ):
+            anchored_db = platform_user_data_root(live_state_root_inputs()) / relative_db
+            assert anchored_db.is_relative_to(isolated_app_data), "the anchor escaped the isolated tree"
+            with _engine_for(settings) as engine:
+                with engine.connect() as conn:
+                    conn.execute(text("select 1"))
+                assert Path(engine.url.database or "") == anchored_db
+                assert anchored_db.exists()
+                assert not (cwd_marker / relative_db).exists()
     finally:
         os.chdir(original_cwd)

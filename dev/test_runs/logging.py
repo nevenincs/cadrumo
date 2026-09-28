@@ -14,7 +14,7 @@ from uuid import uuid4
 
 import pytest
 
-from .paths import allocate_scratch_directory, cache_environment, scratch_environment
+from .paths import allocate_scratch_directory, scratch_environment
 
 _STATE_KEY = pytest.StashKey["RunLog"]()
 _SILENT_COLLECTION_KEY = pytest.StashKey[bool]()
@@ -95,10 +95,13 @@ def prepare_environment(repository: Path) -> None:
 
 
 def _apply_run_environment(root: Path, scratch: Path) -> None:
-    """Confine generic temporary, cache, coverage, and pytest scratch paths.
+    """Confine generic temporary, coverage, and pytest scratch paths.
 
-    Logs, artifacts and caches live in the run directory; temporary files live in
-    the run's short scratch, which the run directory is too deep to host.
+    Logs, artifacts and pytest's own cache live in the run directory; temporary
+    files live in the run's short scratch, which the run directory is too deep
+    to host. Tool caches such as uv's keep their own homes: pointing
+    ``XDG_CACHE_HOME`` at the run gave every run that builds or installs a
+    distribution a cold, gigabyte-sized uv cache that outlived it with the logs.
     """
     artifacts = root / "artifacts"
     cache = root / "cache"
@@ -108,7 +111,6 @@ def _apply_run_environment(root: Path, scratch: Path) -> None:
     os.environ[_RUN_SCRATCH_ENV] = str(scratch)
     os.environ["COVERAGE_FILE"] = str(artifacts / ".coverage")
     os.environ["PYTEST_DEBUG_TEMPROOT"] = str(scratch)
-    os.environ.update(cache_environment(cache, os.environ))
     os.environ.update(scratch_environment(scratch))
     tempfile.tempdir = str(scratch)
 

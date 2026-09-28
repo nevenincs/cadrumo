@@ -74,10 +74,6 @@ _HOME_IS_CORRECT: Final[dict[str, str]] = {
         "captures the user's home as one typed input to platform state-root resolution, not as a cache location"
     ),
     "dev/env/temp_reaper.py": "Claude Code's session transcript root, written by the tool this module observes",
-    "dev/test_runs/paths.py": (
-        "Playwright's own default Linux browser cache, which a run's cache redirect must keep naming; "
-        "Playwright defines it and this project only reads it"
-    ),
 }
 
 #: Modules that name the home directory in order to REMOVE it from output, and

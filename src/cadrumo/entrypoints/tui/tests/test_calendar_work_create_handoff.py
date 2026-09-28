@@ -100,9 +100,11 @@ def test_the_calendar_handoff_creates_the_declaration_decrypting_the_profile_onc
     assert len(created) == 1, "the handoff must actually create the declaration, or the count proves nothing"
 
 
-def test_declarations_handoff_creates_and_reuses_2025_selected_work(
+def test_declarations_handoff_creates_and_reuses_selected_work(
     bucket_id: str, operation: PinnedAuthorityOperation
 ) -> None:
+    # The last closed exercise of the support envelope.
+    year = operation.supported_filing_years().horizon - 1
     refreshes: list[str] = []
     handoff = _declarations_work_create_handoff(
         bucket_id=bucket_id,
@@ -110,10 +112,10 @@ def test_declarations_handoff_creates_and_reuses_2025_selected_work(
         operation=operation,
         refresh_after_success=lambda: refreshes.append("refreshed"),
     )
-    selected_period = Period.from_year_and_code(2025, "2T")
+    selected_period = Period.from_year_and_code(year, "2T")
 
-    created = handoff("111", 2025, selected_period)
-    reused = handoff("111", 2025, selected_period)
+    created = handoff("111", year, selected_period)
+    reused = handoff("111", year, selected_period)
 
     assert created.reused is False
     assert reused.reused is True
@@ -121,7 +123,7 @@ def test_declarations_handoff_creates_and_reuses_2025_selected_work(
     units = [
         unit
         for unit in build_work_lifecycle_ports(bucket_id=bucket_id).work_unit_repository.load().work_units.values()
-        if (str(unit.modelo), unit.filing_year, unit.period) == ("111", 2025, selected_period)
+        if (str(unit.modelo), unit.filing_year, unit.period) == ("111", year, selected_period)
     ]
     assert len(units) == 1
 

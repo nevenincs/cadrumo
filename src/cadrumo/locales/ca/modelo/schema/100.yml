@@ -3629,6 +3629,9 @@ modelo:
         renta-economic-activities:
           field:
             title: Model 100 evidència de dependència de l'activitat econòmica
+        renta-final-settlement:
+          field:
+            title: Model 100 resultat final de la liquidació
         renta-mini-model-deduccion-madrid-nacimiento-adopcion:
           field:
             title: 'Model 100 2025: deducció de la Comunitat de Madrid per naixement/adopció
@@ -3642,6 +3645,9 @@ modelo:
         renta-payments-retentions:
           field:
             title: Model 100 retencions i pagaments a compte
+        renta-personal-family:
+          field:
+            title: 'Model 100: dades del perfil personal i familiar'
         renta-real-estate-capital:
           field:
             title: Model 100 evidència de dependència del capital immobiliari
@@ -8141,6 +8147,67 @@ modelo:
             '1916':
               label: Increment per despeses en guarderies o centres d'educació infantil
                 autoritzats (quantitats no aplicades en l'exercici 2021)
+            ANOASDLG:
+              label: Ascendent data de naixement
+            APENOMDLG:
+              label: Fill o descendent cognoms i nom
+            APENOMDLG_ASC:
+              label: Ascendent cognoms i nom
+            CONVASDLG:
+              label: Ascendent convivència amb diversos descendents
+            DECFAL:
+              label: Primer declarant data de defunció
+            DNIASDLG:
+              label: Ascendent NIF
+            DPFNAC_C:
+              label: Cònjuge data de naixement
+            DPFNAC_D:
+              help: Introduïu la data de naixement del primer declarant.
+              label: Primer declarant data de naixement
+            DPGMIN_C:
+              label: Cònjuge grau de discapacitat
+            DPGMIN_D:
+              label: Primer declarant grau de discapacitat
+            DPNIF_C:
+              label: Cònjuge NIF
+            DPNIF_D:
+              label: Primer declarant NIF
+            DP_APENOM_C:
+              label: Cònjuge cognoms i nom
+            DP_APENOM_D:
+              label: Primer declarant cognoms i nom
+            ECIVIL:
+              label: Primer declarant estat civil
+            FALLASDLG:
+              label: Ascendent data de defunció
+            FALLDLG:
+              label: Fill o descendent data de defunció
+            FNACDLG:
+              label: Fill o descendent data de naixement
+            HIJOSUE:
+              label: Fills o descendents UE o EEE
+            MINUSDLG:
+              label: Fill o descendent clau discapacitat
+            NIFDLG:
+              label: Fill o descendent NIF
+            NORESIDENTE:
+              label: Cònjuge no resident no contribuent IRPF
+            PCTMINASDLG:
+              label: Ascendent clau de discapacitat
+            PH18:
+              label: Fills menors de 18 anys a la unitat familiar
+            RESIDENTEUE:
+              label: Cònjuge resident UE o EEE
+            SEXO_C:
+              label: Cònjuge sexe
+            SEXO_D:
+              label: Primer declarant sexe
+            TIPOTRIBUTACION:
+              label: Tipus de tributació
+            ZCCAD:
+              label: Comunitat Autònoma de residència
+            ZRUE2:
+              label: País UE o EEE del cònjuge
           construct:
             renta-dependent-modelos:
               field:
@@ -15637,59 +15704,20 @@ modelo:
             A:
               label: 'Inversió amb dret a deducció: adquisició i/o construcció de
                 l''habitatge habitual'
-            ANOASDLG:
-              label: Ascendent data de naixement
-            APENOMDLG:
-              label: Fill o descendent cognoms i nom
-            APENOMDLG_ASC:
-              label: Ascendent cognoms i nom
             C:
               label: 'Inversió amb dret a deducció: rehabilitació o ampliació de l''habitatge
                 habitual'
-            CONVASDLG:
-              label: Ascendent convivència amb diversos descendents
             D:
               label: 'Base de la deducció (límit màxim: 100.000 euros): import total
                 de la deducció per inversions en empreses de nova o recent creació'
-            DECFAL:
-              label: Primer declarant data de defunció
-            DNIASDLG:
-              label: Ascendent NIF
-            DPFNAC_C:
-              label: Cònjuge data de naixement
-            DPFNAC_D:
-              help: Introduïu la data de naixement del primer declarant.
-              label: Primer declarant data de naixement
-            DPGMIN_C:
-              label: Cònjuge grau de discapacitat
-            DPGMIN_D:
-              label: Primer declarant grau de discapacitat
-            DPNIF_C:
-              label: Cònjuge NIF
-            DPNIF_D:
-              label: Primer declarant NIF
-            DP_APENOM_C:
-              label: Cònjuge cognoms i nom
-            DP_APENOM_D:
-              label: Primer declarant cognoms i nom
             E:
               label: Quantitats satisfetes amb dret a deducció
-            ECIVIL:
-              label: Primer declarant estat civil
-            FALLASDLG:
-              label: Ascendent data de defunció
-            FALLDLG:
-              label: Fill o descendent data de defunció
-            FNACDLG:
-              label: Fill o descendent data de naixement
             G:
               label: 'Import amb dret a deducció (*): aportacions a activitats prioritàries
                 de mecenatge amb el límit del 15% de la base liquidable'
             H:
               label: 'Import amb dret a deducció (**): donatius a entitats regulades
                 per la Llei 49/2002, de 23 de desembre'
-            HIJOSUE:
-              label: Fills o descendents UE o EEE
             I:
               label: 'Imports amb dret a deducció (*): inversions i despeses per a
                 la protecció i difusió del Patrimoni Històric Espanyol i de les ciutats,
@@ -15698,28 +15726,6 @@ modelo:
             J:
               label: 'Import amb dret a deducció (**): donatius a fundacions i associacions
                 d''utilitat pública no compreses en la Llei 49/2002, de 23 de desembre'
-            MINUSDLG:
-              label: Fill o descendent clau discapacitat
-            NIFDLG:
-              label: Fill o descendent NIF
-            NORESIDENTE:
-              label: Cònjuge no resident no contribuent IRPF
-            PCTMINASDLG:
-              label: Ascendent clau de discapacitat
-            PH18:
-              label: Fills menors de 18 anys a la unitat familiar
-            RESIDENTEUE:
-              label: Cònjuge resident UE o EEE
-            SEXO_C:
-              label: Cònjuge sexe
-            SEXO_D:
-              label: Primer declarant sexe
-            TIPOTRIBUTACION:
-              label: Tipus de tributació
-            ZCCAD:
-              label: Comunitat Autònoma de residència
-            ZRUE2:
-              label: País UE o EEE del cònjuge
             prestacion-inss-maternidad-paternidad-exenta:
               label: Prestacions públiques per maternitat i paternitat exemptes percebudes
                 de l'INSS
@@ -17991,9 +17997,6 @@ modelo:
             renta-dependent-modelos:
               field:
                 title: 'Model 100: dades procedents de models dependents'
-            renta-final-settlement:
-              field:
-                title: Model 100 resultat final de la liquidació
             renta-mini-model-actividades-economicas-objetiva:
               field:
                 title: Modelo 100 2025 estimació objectiva aggregators
@@ -18012,8 +18015,5 @@ modelo:
             renta-mini-model-regimenes-especiales:
               field:
                 title: 'Model 100 2025: agregadors d''atribució/imputació de rendes'
-            renta-personal-family:
-              field:
-                title: 'Model 100: dades del perfil personal i familiar'
           field:
             label: Exercici 2025

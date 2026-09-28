@@ -57,7 +57,7 @@ class LedgerImportDiagnostic(BaseModel):
         kind: Closed
             :class:`~cadrumo.application.transactions.diagnostics.LedgerImportDiagnosticKind`.
         severity: :class:`~cadrumo.core.errors.severity.BaseSeverity`.
-        message: A strictly-typed :class:`~cadrumo.core.i18n.Translatable` key.
+        message: A strictly-typed :class:`~cadrumo.core.i18n.translatable.Translatable` key.
         source_path: Optional pointer at the source artefact the
             diagnostic refers to (input file, provider name, etc.).
         source_locator: Optional sub-path inside ``source_path``

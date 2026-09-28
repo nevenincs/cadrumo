@@ -27,13 +27,10 @@ import pytest
 from ....application.wizard.status import load_active_taxpayer_profile
 from ....application.workflow.persistence import workflow_state_repository
 from ....domain.calculations.registry.authority import bundled_indexed_authority
-from ._rule_reading_runtime_fixtures import _rule_reading_runtime
-from .ledger_ux_support import _add_evidence, _invoke, _open_bucket_session
+from .ledger_ux_support import _add_evidence, _invoke, _open_bucket_session, admit_an_unmeasurable_host
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-# The identities these guards judge are the ones the rule reader scans off the
-# page, so the served reader proposes nothing and the rule reading stands.
-__all__ = ["_open_bucket_session", "_rule_reading_runtime"]
+__all__ = ["_open_bucket_session", "admit_an_unmeasurable_host"]
 
 # A real Spanish CIF distinct from any profile identifier: the legitimate
 # counterparty on a received invoice.

@@ -61,9 +61,9 @@ _MARKER = "SURFACE_OUTCOMES:"
 _GUARDED_SURFACES: tuple[tuple[str, str], ...] = (
     ("rasterise_pdf_pages_to_base64_png", "rasterise_pdf_pages_to_base64_png(b'%PDF-1.4\\n')"),
     ("transcribe_document_images", "transcribe_document_images(_PAGES, source_content_sha256='0' * 64)"),
-    ("extract_invoice_fields_from_text", "extract_invoice_fields_from_text(_TRANSCRIPTION)"),
+    ("extract_invoice_fields_from_text", "extract_invoice_fields_from_text(_TRANSCRIPTION, operation=_OPERATION)"),
     ("LocalVisionDocumentTranscriber", "LocalVisionDocumentTranscriber()"),
-    ("TextInvoiceFieldExtractor", "TextInvoiceFieldExtractor()"),
+    ("TextInvoiceFieldExtractor", "TextInvoiceFieldExtractor(operation=_OPERATION)"),
     ("LocalTextLLMClassifier", "LocalTextLLMClassifier(spec=None)"),
     ("LocalVisionLLMClassifier", "LocalVisionLLMClassifier(spec=None)"),
     ("SemanticColumnRoleMapper", "SemanticColumnRoleMapper()"),
@@ -159,6 +159,7 @@ def _drive_surfaces(work_dir: Path, python: Path) -> dict[str, object]:
     code = textwrap.dedent(
         f"""
         import json
+        from contextlib import ExitStack
         from pathlib import Path
 
         import cadrumo
@@ -171,8 +172,13 @@ def _drive_surfaces(work_dir: Path, python: Path) -> dict[str, object]:
             optional_extra_available,
         )
         from cadrumo.core.provenance_stamp import LOCAL_TRANSPORT_LABEL
+        from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 {llm_imports}
 
+        # The text extraction surfaces take a pinned authority operation; the
+        # installed cohort's own bundled authority supplies it.
+        _AUTHORITY_LEASE = ExitStack()
+        _OPERATION = _AUTHORITY_LEASE.enter_context(bundled_indexed_authority().operation())
         _PAGES = (MultimodalImageInput.from_base64("aGk=", ImageMediaType.PNG),)
         _TRANSCRIPTION = DocumentTranscription(
             text="factura",
@@ -204,6 +210,7 @@ def _drive_surfaces(work_dir: Path, python: Path) -> dict[str, object]:
                 outcomes.append({{"name": surface["name"], "outcome": "other", "type": type(exc).__name__}})
             else:
                 outcomes.append({{"name": surface["name"], "outcome": "succeeded"}})
+        _AUTHORITY_LEASE.close()
 
         print(
             {_MARKER!r}

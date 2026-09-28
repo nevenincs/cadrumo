@@ -16,15 +16,21 @@ case, per no-silent-under-declaration.
 
 from __future__ import annotations
 
+from datetime import date, timedelta
 from decimal import Decimal
 
 import pytest
 
 from cadrumo.application.modelo.tests.verification_substance_fixtures import workflow_profile
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
+from cadrumo.domain.calculations.registry.tests.published_authority import published_legal_reference
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
-from ....domain.calculations.registry.tests.published_authority import published_revision
+from ....domain.calculations.registry.tests.published_authority import (
+    PublishedGovernedFactSource,
+    published_revision,
+)
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ..verification_predicates import evaluate_verification_predicates
 
@@ -42,11 +48,16 @@ _FECHA_CONSTRUCCION: CasillaId = validated_casilla_id(
     "0690",
     surface="test_verification_m100_vivienda_advisory",
 )
-_YEARS = ("2024", "2025")
+_SUPPORT = PublishedGovernedFactSource().supported_filing_years()
+# The two newest Modelo 100 revisions the registry authors ship the advisory.
+_YEARS = tuple(str(revision.id) for revision in authored_revisions("100")[-2:])
+# LIRPF DT 18: only acquisitions before the day it enters into force keep the
+# transitional deduction.
+_TRANSITIONAL_CUTOFF = published_legal_reference("ley-35-2006:dt-18").effective_from
 
 
 def _predicate_id(year: str) -> str:
-    return f"modelo-100-{year}-deduccion-vivienda-habitual-requiere-adquisicion-anterior-2013"
+    return f"modelo-100-{year}-deduccion-vivienda-habitual-requiere-adquisicion-anterior-{_TRANSITIONAL_CUTOFF.year}"
 
 
 def _vivienda_advisory_predicate(year: str) -> VerificationPredicateDefinition:
@@ -54,7 +65,9 @@ def _vivienda_advisory_predicate(year: str) -> VerificationPredicateDefinition:
     revision = published_revision("100", year)
     predicate = next(p for p in revision.verification_predicates if p.predicate_id == _predicate_id(year))
     assert predicate.finding_kind == "ADVISORY"
-    assert predicate.expression == 'deduccion_requires_adquisicion_before(["0547", "0708", "0690", "2013-01-01"])'
+    assert predicate.expression == (
+        f'deduccion_requires_adquisicion_before(["0547", "0708", "0690", "{_TRANSITIONAL_CUTOFF.isoformat()}"])'
+    )
     return predicate
 
 
@@ -81,12 +94,13 @@ def test_vivienda_advisory_fires_when_claimed_without_any_eligibility_signal() -
         assert dict(findings[0].message_facts) == {"predicate_id": _predicate_id(year)}, year
 
 
-def test_vivienda_advisory_fires_when_acquisition_date_is_post_2012() -> None:
+def test_vivienda_advisory_fires_when_acquisition_date_is_after_the_transitional_cutoff() -> None:
     """A claimed deducción with an acquisition date on/after 01-01-2013 fires the advisory."""
     for year in _YEARS:
         predicate = _vivienda_advisory_predicate(year)
         casilla_values: dict[CasillaId, Decimal] = {_DEDUCCION_ESTATAL: Decimal("678.00")}
-        text_values: dict[CasillaId, str] = {_FECHA_ADQUISICION: "15/06/2015"}
+        after_cutoff = date(_TRANSITIONAL_CUTOFF.year + 2, 6, 15)
+        text_values: dict[CasillaId, str] = {_FECHA_ADQUISICION: after_cutoff.strftime("%d/%m/%Y")}
 
         findings = evaluate_verification_predicates((predicate,), casilla_values, workflow_profile(), text_values)
 
@@ -100,22 +114,28 @@ def test_vivienda_advisory_fires_when_acquisition_date_on_cutoff() -> None:
     for year in _YEARS:
         predicate = _vivienda_advisory_predicate(year)
         casilla_values: dict[CasillaId, Decimal] = {_DEDUCCION_ESTATAL: Decimal("678.00")}
-        text_values: dict[CasillaId, str] = {_FECHA_ADQUISICION: "2013-01-01"}
+        text_values: dict[CasillaId, str] = {_FECHA_ADQUISICION: _TRANSITIONAL_CUTOFF.isoformat()}
 
         findings = evaluate_verification_predicates((predicate,), casilla_values, workflow_profile(), text_values)
         assert len(findings) == 1, year
 
 
-def test_vivienda_advisory_silent_for_grounded_pre_2013_acquisition() -> None:
+def test_vivienda_advisory_silent_for_grounded_acquisition_before_the_transitional_cutoff() -> None:
     """A claimed deducción with a pre-01-01-2013 acquisition date holds — no advisory."""
     for year in _YEARS:
         predicate = _vivienda_advisory_predicate(year)
         casilla_values: dict[CasillaId, Decimal] = {_DEDUCCION_ESTATAL: Decimal("678.00")}
 
-        for pre_2013 in ("10/03/2010", "2010-03-10", "31/12/2012"):
-            text_values: dict[CasillaId, str] = {_FECHA_ADQUISICION: pre_2013}
+        earlier = date(_TRANSITIONAL_CUTOFF.year - 3, 3, 10)
+        last_eligible_day = _TRANSITIONAL_CUTOFF - timedelta(days=1)
+        for before_cutoff in (
+            earlier.strftime("%d/%m/%Y"),
+            earlier.isoformat(),
+            last_eligible_day.strftime("%d/%m/%Y"),
+        ):
+            text_values: dict[CasillaId, str] = {_FECHA_ADQUISICION: before_cutoff}
             findings = evaluate_verification_predicates((predicate,), casilla_values, workflow_profile(), text_values)
-            assert findings == [], f"{year}: pre-2013 acquisition {pre_2013!r} must not fire the advisory"
+            assert findings == [], f"{year}: acquisition {before_cutoff!r} before the cutoff must not fire the advisory"
 
 
 def test_vivienda_advisory_silent_for_construction_transitional_case() -> None:

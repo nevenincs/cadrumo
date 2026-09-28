@@ -27,13 +27,11 @@ from pathlib import Path
 from typing import Any, Literal, Protocol
 
 from dev.acceptance.income_tax.installed_tui_child import (
-    INSTALLED_HOME_SURFACE,
-    INSTALLED_LOGIN_FIELD,
-    INSTALLED_SETUP_WALK_CONTROL,
+    SETUP_WALK_SURFACE,
     InstalledTuiChildError,
     assert_installed_product_origin,
     installed_product_evidence,
-    leave_installed_setup_walk,
+    leave_the_setup_walk_if_handed_off,
     query_public_selector,
     read_passphrase_from_stdin,
     run_installed_tui_child_process,
@@ -48,6 +46,7 @@ from dev.acceptance.installed_cli import (
     authority_generation,
     build_installed_cli_environment,
 )
+from dev.packaging.installed_wheel_binding import environment_interpreter
 
 from .installed_tui_journey import (
     LedgerInstalledTuiError,
@@ -391,13 +390,12 @@ async def _admit_installed_session(pilot: Any, *, passphrase: str) -> None:
     """Unlock through the visible Login screen, or accept an already admitted session."""
     from textual.widgets import Input
 
-    admitted_surfaces = (INSTALLED_HOME_SURFACE, INSTALLED_SETUP_WALK_CONTROL)
-    if await _wait_with_deadline(pilot, (INSTALLED_LOGIN_FIELD, *admitted_surfaces)) == INSTALLED_LOGIN_FIELD:
-        query_public_selector(pilot, INSTALLED_LOGIN_FIELD, Input).value = passphrase
+    admitted_surfaces = ("#home-agenda", SETUP_WALK_SURFACE)
+    if await _wait_with_deadline(pilot, ("#field-passphrase", *admitted_surfaces)) == "#field-passphrase":
+        query_public_selector(pilot, "#field-passphrase", Input).value = passphrase
         await pilot.click("#btn-unlock")
         await _wait_with_deadline(pilot, admitted_surfaces)
-    await leave_installed_setup_walk(pilot=pilot)
-    await _wait_with_deadline(pilot, (INSTALLED_HOME_SURFACE,))
+    await leave_the_setup_walk_if_handed_off(pilot=pilot)
 
 
 def _run_installed_launcher(*, passphrase: str, drive_after_home: Any) -> None:
@@ -537,7 +535,7 @@ def _run_tui_child(
 def _run_outer(args: argparse.Namespace) -> dict[str, object]:
     """Import every case into a fresh synthetic store and read each back through both frontends."""
     cli_executable = args.cli.resolve(strict=True)
-    python_executable = args.python.resolve(strict=True)
+    python_executable = environment_interpreter(args.python)
     if cli_executable.parent != python_executable.parent:
         raise LedgerInstalledTuiError("installed CLI and TUI child Python do not belong to one environment")
     wheel_sha256 = hashlib.sha256(args.wheel.read_bytes()).hexdigest()

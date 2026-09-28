@@ -20,7 +20,6 @@ import pytest
 from .....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from .....core.config import override_settings
 from .....core.i18n.render import I18N_STRICT_MISSING_KEYS, override_locales_root, tr
-from .....tests.descriptor_identity import descriptor_identity, descriptor_was_closed
 from ...tests.cli_performance import profile_cli_path
 from ...tests.cli_runner import invoke_cached_cli
 from ...tests.password_only_profile import register_password_only_profile
@@ -274,11 +273,24 @@ def test_scripted_create_ignores_configured_passphrase_without_an_explicit_chann
     assert json.loads(listed.stdout)["result"]["profiles"] == []
 
 
+def _descriptor_refers_to(descriptor: int, opened: os.stat_result) -> bool:
+    """Whether ``descriptor`` is still the file ``opened`` was taken from.
+
+    A closed number is reused by the next open in the same process, so a
+    successful ``fstat`` alone does not mean the channel stayed open.
+    """
+    try:
+        current = os.fstat(descriptor)
+    except OSError:
+        return False
+    return (current.st_dev, current.st_ino) == (opened.st_dev, opened.st_ino)
+
+
 def test_lazy_scripted_create_accepts_and_closes_the_canonical_descriptor_channel(tmp_path: Path) -> None:
     reader, writer = os.pipe()
     os.write(writer, _creation_payload().encode())
     os.close(writer)
-    channel = descriptor_identity(reader)
+    pipe = os.fstat(reader)
 
     with override_settings(**_storage_overrides(tmp_path, passphrase=None)):
         created = invoke_cached_cli(
@@ -298,7 +310,7 @@ def test_lazy_scripted_create_accepts_and_closes_the_canonical_descriptor_channe
 
     assert created.exit_code == 0, created.output
     assert json.loads(created.stdout)["result"]["profile_name"] == "Descriptor Operator"
-    assert descriptor_was_closed(reader, channel)
+    assert not _descriptor_refers_to(reader, pipe)
     assert [profile["name"] for profile in json.loads(listed.stdout)["result"]["profiles"]] == ["Descriptor Operator"]
 
 
