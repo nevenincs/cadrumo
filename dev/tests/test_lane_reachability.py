@@ -133,8 +133,9 @@ _CANONICAL_POPULATION_RECIPES: frozenset[str] = frozenset(
         "test-test-policy",
         "test-repository-contracts",
         # `test-ci-contracts` itself holds no pytest invocation: it is the
-        # release proof's aggregate over these two, which own the population
-        # between them because the merge gate runs only the first.
+        # local aggregate over these two, which own the population between
+        # them. The release proof runs each as its own step and the merge gate
+        # runs only the first.
         "test-ci-contracts-gate",
         "test-ci-perf",
         "test-packaging-contracts",
@@ -143,12 +144,13 @@ _CANONICAL_POPULATION_RECIPES: frozenset[str] = frozenset(
         "test-channel-artifacts",
         "test-packaging-ci",
         "test-windows",
-        "test-tui-render",
         "test-os-keychain",
         "test-resident-service",
         "test-registry-live",
         "test-workbook-parity",
         "test-locale-spelling",
+        "test-ingest-corpus",
+        "test-powershell-literal",
     },
 )
 _FOCUSED_SELECTORS: frozenset[str] = frozenset({"test-cli", "test-tui", "test-smoke"})
@@ -321,11 +323,14 @@ def test_the_ci_invoked_model_is_strictly_stronger_than_the_declared_one() -> No
     # per pass, because the parallel pass is deterministic while the serial pass
     # includes wall-clock budgets that flake on a shared machine. `test-integration`
     # therefore stays declared-but-not-CI-invoked, which is correct rather than a
-    # hole -- the union of the two passes covers exactly what it selects.
+    # hole -- the union of the two passes covers exactly what it selects. The CI
+    # contracts are split the same way: `test-ci-contracts` is the local
+    # convenience over its deterministic and CPU-budget legs.
     expected_invoked = {
         "test-gate",
         "test-unit",
-        "test-ci-contracts",
+        "test-ci-contracts-gate",
+        "test-ci-perf",
         "test-integration-parallel",
         "test-integration-serial",
         "test-pytest-harness",

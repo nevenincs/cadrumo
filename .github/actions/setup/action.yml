@@ -1,11 +1,26 @@
 name: Setup
-description: Provision uv, just, and the repository worktree; optionally provision the browser toolchain.
+description: Provision uv, just, and the repository worktree; optionally provision the registry authority and the browser toolchain.
 
 inputs:
   python-version:
-    description: Python version to provision via astral-sh/setup-uv.
+    description: >-
+      Interpreter a compatibility job targets. Empty defers to the checked-in
+      `.python-version` pin, which every job that is not a runtime
+      compatibility row must use.
     required: false
-    default: "3.13"
+    default: ""
+  authority:
+    description: >-
+      When true, the job reads the checkout's published registry authority, so
+      it is republished when stale. False for jobs that never load it.
+    required: false
+    default: "true"
+  authority-artifact:
+    description: >-
+      Name of this run's published-authority artifact to restore before the
+      currency check. Empty publishes locally.
+    required: false
+    default: ""
   browser:
     description: When true, also provision the Playwright browser channels.
     required: false
@@ -14,6 +29,16 @@ inputs:
 runs:
   using: composite
   steps:
+    # Restored before `just setup`: the editable build compiles the authority
+    # as a side effect unless a current one is already published, so a restore
+    # after it would arrive too late to save that compilation.
+    - name: Restore the published registry authority
+      if: inputs.authority == 'true' && inputs.authority-artifact != ''
+      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      with:
+        name: ${{ inputs.authority-artifact }}
+        path: .authority
+
     - name: Set up just
       uses: taiki-e/install-action@6012bba2f8e3e666a2b212f8823c06831704ce92 # just
       with:
@@ -57,8 +82,11 @@ runs:
     # editable build, and a runner whose uv cache is shared across checkouts
     # reuses that build instead of running it, so a fresh checkout reaches the
     # registry gate with no descriptor. Publishing explicitly, and only when
-    # stale, makes the gate test the tree rather than the cache's history.
+    # stale, makes the gate test the tree rather than the cache's history. A
+    # restored artifact is not trusted either: this currency check reads it
+    # against the checked-out sources and republishes when it does not match.
     - name: Publish the registry authority
+      if: inputs.authority == 'true'
       shell: bash
       run: just registry-publish-authority-if-authority-stale
 

@@ -4,7 +4,15 @@ on:
   pull_request:
     branches: [main]
     types: [opened, reopened, synchronize]
+  # A calling run that already published the registry authority names its
+  # artifact here, so the scoped gate restores it instead of compiling another.
   workflow_call:
+    inputs:
+      authority-artifact:
+        description: This run's published-authority artifact; empty publishes locally.
+        type: string
+        required: false
+        default: ""
   # release-please opens the release pull request with the default token, whose
   # pushes and pull requests start no workflow runs, so that pull request would
   # never report this gate. A dispatch is exempt from that rule and its check
@@ -41,9 +49,13 @@ jobs:
         with:
           persist-credentials: false
 
+      # Every lint gate is static, so none of them loads the registry authority
+      # and publishing one here only spent minutes compiling it.
       - name: Set up toolchain
         id: setup
         uses: ./.github/actions/setup
+        with:
+          authority: "false"
 
       # `!cancelled()` keeps every independent gate reporting its own verdict
       # instead of stopping at the first red one. The setup guard is the other
@@ -69,6 +81,10 @@ jobs:
       - name: Workflow security
         if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
         run: just check-workflow-security
+
+      - name: Workflow contracts
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: just check-gate-contracts
 
   gate:
     name: "Check: Scoped gate (Linux)"
@@ -105,6 +121,8 @@ jobs:
         id: setup
         if: ${{ !cancelled() }}
         uses: ./.github/actions/setup
+        with:
+          authority-artifact: ${{ inputs.authority-artifact }}
 
       - name: Registry gate
         if: ${{ !cancelled() && steps.setup.outcome == 'success' }}

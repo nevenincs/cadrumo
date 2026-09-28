@@ -39,7 +39,6 @@ from cadrumo.entrypoints.cli import conftest as cli_conftest
 
 compose_runtime_ports = runtime_conftest.compose_runtime_ports
 operation = runtime_conftest.operation
-source_tree_ast = runtime_conftest.source_tree_ast
 overview_cli_backend = cli_conftest.overview_cli_backend
 
 

@@ -11,7 +11,7 @@ the quantity a wall gate would bind, and a 1.4x spread in the quantity a CPU
 gate binds.
 
 This module is the single home for that measurement so no benchmark grows its
-own copy. Two shapes are covered:
+own copy. Three shapes are covered:
 
 * **In-process** work is measured with :func:`time.process_time` directly at
   the call site -- it is a stdlib one-liner and needs no wrapper.
@@ -20,6 +20,9 @@ own copy. Two shapes are covered:
   delta around the reaped child, while Windows needs a Job Object to aggregate
   a process TREE (a console-script shim spawns the real interpreter as a
   grandchild that per-process times would miss entirely).
+* **A call that spawns its own children**, such as a transport that runs a
+  command process per call, needs :func:`process_tree_cpu`: its own
+  ``process_time`` reads near zero while the child does the work.
 
 Caveat stated honestly: CPU-time excludes wait-time, but SMT and cache
 contention still inflate it. The measured inflation on the workstation is
@@ -45,8 +48,10 @@ import subprocess
 import sys
 import time
 import warnings
-from collections.abc import Mapping, Sequence
+from collections.abc import Generator, Mapping, Sequence
+from contextlib import contextmanager
 from dataclasses import dataclass
+from functools import cache
 from pathlib import Path
 from typing import Any, Final
 
@@ -219,9 +224,96 @@ class WindowsJobCpuAccounting:
             return total_100ns / 10_000_000
         raise ProcessCpuMeasurementError(_JOB_ACCOUNTING_UNAVAILABLE)
 
+    def assign_current_process(self) -> None:
+        """Enrol this process, so every child it spawns afterwards joins the job.
+
+        The job carries no limits, so membership changes nothing but the
+        accounting; a child that opens a job of its own nests inside this one.
+        """
+        if sys.platform == "win32":
+            current = self._kernel32.GetCurrentProcess
+            current.restype = ctypes.c_void_p
+            if not self._kernel32.AssignProcessToJobObject(self._job, ctypes.c_void_p(current())):
+                raise ProcessCpuMeasurementError(
+                    f"AssignProcessToJobObject failed for this process (error {ctypes.get_last_error()})",
+                )
+            return
+        raise ProcessCpuMeasurementError(_JOB_ACCOUNTING_UNAVAILABLE)
+
     def close(self) -> None:
         """Release the job handle."""
         self._kernel32.CloseHandle(self._job)
+
+
+@dataclass
+class ProcessTreeCpu:
+    """CPU spent by this process and by the children it reaped during one call.
+
+    Filled in when the :func:`process_tree_cpu` block exits.
+    """
+
+    wall_seconds: float = 0.0
+    own_cpu_seconds: float = 0.0
+    child_cpu_seconds: float = 0.0
+
+    @property
+    def cpu_seconds(self) -> float:
+        """Return the whole tree's CPU, the figure a gate binds."""
+        return self.own_cpu_seconds + self.child_cpu_seconds
+
+
+@cache
+def _current_process_job() -> WindowsJobCpuAccounting:
+    """Return the job this process joined for tree accounting, joining it on first use.
+
+    A process can join a job but never leave it, so it is joined once.
+    """
+    job = WindowsJobCpuAccounting()
+    job.assign_current_process()
+    return job
+
+
+def _reaped_child_cpu_seconds() -> float:
+    """Return the cumulative CPU of every child this process has reaped (POSIX)."""
+    if sys.platform != "win32":
+        import resource
+
+        usage = resource.getrusage(resource.RUSAGE_CHILDREN)
+        return usage.ru_utime + usage.ru_stime
+    raise ProcessCpuMeasurementError("reaped-child CPU accounting is only available on POSIX")
+
+
+@contextmanager
+def process_tree_cpu() -> Generator[ProcessTreeCpu]:
+    """Measure a block's own CPU plus the CPU of every child it runs to completion.
+
+    ``time.process_time`` alone reads only this process, so a call that hands
+    its work to a child process measures near zero however expensive the child
+    is. POSIX adds the ``RUSAGE_CHILDREN`` delta, which covers every child the
+    block waited for; Windows reads the delta of a Job Object this process has
+    joined, whose members include every child spawned since. A child still
+    running when the block exits is not counted on POSIX, so the measured call
+    must wait for its children, as a command runner does.
+    """
+    measured = ProcessTreeCpu()
+    if sys.platform == "win32":
+        job = _current_process_job()
+        tree_started = job.cpu_seconds()
+    else:
+        tree_started = _reaped_child_cpu_seconds()
+    own_started = time.process_time()
+    started = time.monotonic()
+    try:
+        yield measured
+    finally:
+        measured.wall_seconds = time.monotonic() - started
+        measured.own_cpu_seconds = time.process_time() - own_started
+        if sys.platform == "win32":
+            # The job total includes this process, so its own share comes off.
+            tree = job.cpu_seconds() - tree_started
+            measured.child_cpu_seconds = max(0.0, tree - measured.own_cpu_seconds)
+        else:
+            measured.child_cpu_seconds = _reaped_child_cpu_seconds() - tree_started
 
 
 @dataclass(frozen=True)
@@ -241,13 +333,19 @@ async def _communicate_child(
     env: Mapping[str, str] | None,
     cwd: str | None,
     timeout_s: float,
+    input_text: str | None = None,
     accounting: WindowsJobCpuAccounting | None = None,
 ) -> tuple[str, str, int]:
-    """Spawn an explicit child, optionally enrolling it in Windows accounting."""
+    """Spawn an explicit child, optionally enrolling it in Windows accounting.
+
+    Without ``input_text`` the child inherits this process's stdin, exactly as
+    before the channel existed; with it, the text is the child's whole stdin.
+    """
     process = await asyncio.create_subprocess_exec(
         *argv,
         cwd=cwd,
         env=env,
+        stdin=None if input_text is None else asyncio.subprocess.PIPE,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
     )
@@ -264,8 +362,9 @@ async def _communicate_child(
             await process.communicate()
             raise ProcessCpuMeasurementError("asyncio did not expose the Windows child handle")
         accounting.assign(raw_process)
+    stdin_bytes = None if input_text is None else input_text.encode(_UTF_8)
     try:
-        stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=timeout_s)
+        stdout, stderr = await asyncio.wait_for(process.communicate(stdin_bytes), timeout=timeout_s)
     except TimeoutError as error:
         process.kill()
         await process.communicate()
@@ -286,6 +385,7 @@ def timed_subprocess(
     env: Mapping[str, str] | None = None,
     cwd: Path | None = None,
     timeout_s: float,
+    input_text: str | None = None,
 ) -> SubprocessTiming:
     """Run one child and return its wall time, TREE CPU time, and captured output.
 
@@ -293,6 +393,10 @@ def timed_subprocess(
     ``RUSAGE_CHILDREN`` delta around the reaped child; Windows aggregates the
     child and every descendant through a :class:`WindowsJobCpuAccounting` job,
     which stays queryable after the members exit.
+
+    ``input_text`` is written to the child's stdin and then closed, which is
+    how a product command receives a machine secret; omitted, the child
+    inherits this process's stdin.
 
     The return code is REPORTED, never raised on: a benchmark and a structural
     gate want different failure vocabulary for a non-zero child, so that choice
@@ -312,6 +416,7 @@ def timed_subprocess(
                     env=run_env,
                     cwd=run_cwd,
                     timeout_s=timeout_s,
+                    input_text=input_text,
                     accounting=accounting,
                 )
             )
@@ -330,6 +435,7 @@ def timed_subprocess(
                 env=run_env,
                 cwd=run_cwd,
                 timeout_s=timeout_s,
+                input_text=input_text,
             )
         )
         elapsed = time.monotonic() - started

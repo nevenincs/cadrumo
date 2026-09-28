@@ -123,7 +123,9 @@ def _without_test_run_wrapper(tokens: list[str]) -> list[str]:
 def _significant(tokens: list[str]) -> list[str]:
     """Strip launcher tokens, leaving the arguments that decide what is checked."""
     unwrapped = _without_test_run_wrapper(tokens)
-    kept = [token for token in unwrapped if token not in _RUNNER_TOKENS and not token.endswith("python.exe")]
+    # The suite launches its Python gates through ``sys.executable``: a
+    # ``python.exe`` path on Windows and a ``.../bin/python`` path elsewhere.
+    kept = [token for token in unwrapped if token not in _RUNNER_TOKENS and token != sys.executable]
     # The justfile carries shell quoting the argv list does not; a quoted regex
     # and its bare twin are the same argument.
     return [token.strip('"').strip("'") for token in kept]
