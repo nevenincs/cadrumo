@@ -185,7 +185,7 @@ def synthetic_report(
             filing_record_id=None,
             registry_snapshot_ref=RegistrySnapshotRef(
                 modelo="303",
-                revision_id="2023-y-siguientes",
+                revision_id="2026-y-siguientes",
                 modelo_year=2026,
                 period="2T",
             ),
