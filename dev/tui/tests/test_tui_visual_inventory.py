@@ -3,6 +3,11 @@
 Nothing here mocks the harness or fakes an SVG. The rasteriser is proved
 against a document the real Textual exporter produced, the inventory against
 the real source tree, and the boundary rule against the real package source.
+
+The export is captured here, through the harness's own replay, rather than read
+from a rendered review run: the review inventory is an artefact for a person to
+look at, and a test that waits for one either needs the whole matrix rendered
+first or reads whatever run happens to be on disk.
 """
 
 from __future__ import annotations
@@ -13,7 +18,7 @@ import pytest
 from PIL import Image
 from pydantic import ValidationError
 
-from dev._paths import REPO_ROOT, UTF_8
+from dev._paths import UTF_8
 
 from .. import _coverage, _diff, _inventory, _raster
 from .._artifacts import (
@@ -267,23 +272,34 @@ def test_the_absence_detector_bites_on_a_frame_that_simply_vanished() -> None:
     assert missing == ("ledger-overview--ready/medium/dark",)
 
 
-def _sample_svg() -> Path:
-    """A real Textual export committed nowhere; produced by the harness run."""
-    candidates = sorted((REPO_ROOT / ".tmp-tui-visual-inventory").rglob("svg/*.svg"))
-    if not candidates:
-        pytest.fail("the rendered inventory is missing; `just test-tui-render` renders it before running these")
-    return candidates[0]
+_EXPORTED_SURFACE = "home--ready"
+"""A workbench fixture: built in memory, so capturing it provisions no profile."""
 
 
-@pytest.mark.tui_render
-def test_rasterising_a_real_export_produces_the_declared_cell_grid(tmp_path: Path) -> None:
+@pytest.fixture(scope="module")
+def real_export(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    """One real Textual export, captured through the harness's own replay."""
+    from ..harness.journal import Session
+    from ..harness.replay import screenshot
+
+    viewport = resolve("medium")
+    destination = tmp_path_factory.mktemp("export") / f"{_EXPORTED_SURFACE}__{viewport.name}__dark.svg"
+    screenshot(
+        Session(surface=_EXPORTED_SURFACE, width=viewport.columns, height=viewport.rows, theme="dark"),
+        str(destination),
+    )
+    assert destination.is_file() and destination.stat().st_size > 0
+    return destination
+
+
+def test_rasterising_a_real_export_produces_the_declared_cell_grid(real_export: Path, tmp_path: Path) -> None:
     """The PNG's pixel size is the terminal grid times the cell size.
 
     This is the property that makes the artefact reviewable at a stated
     resolution: an image whose height is not a whole number of rows means the
     row mapping drifted, and glyphs are landing between cells.
     """
-    svg = _sample_svg()
+    svg = real_export
     destination = tmp_path / "frame.png"
     result = _raster.rasterise(svg, destination, cell_height=20)
 
@@ -303,10 +319,9 @@ def test_rasterising_a_real_export_produces_the_declared_cell_grid(tmp_path: Pat
     assert width == expected_columns * (width // expected_columns)
 
 
-@pytest.mark.tui_render
-def test_raising_the_cell_height_raises_the_resolution_proportionally(tmp_path: Path) -> None:
+def test_raising_the_cell_height_raises_the_resolution_proportionally(real_export: Path, tmp_path: Path) -> None:
     """The same frame at a larger cell is the same grid, more pixels."""
-    svg = _sample_svg()
+    svg = real_export
     small = Image.open(_raster.rasterise(svg, tmp_path / "small.png", cell_height=14).path).size
     large = Image.open(_raster.rasterise(svg, tmp_path / "large.png", cell_height=28).path).size
     assert large[1] == small[1] * 2
@@ -583,25 +598,28 @@ def test_a_glyph_the_pinned_font_lacks_is_detected_as_missing() -> None:
     assert not _raster._is_missing(font, pixels, "ñ"), "accented Spanish text must not read as missing"
 
 
-@pytest.mark.tui_render
-def test_rasterising_the_status_page_reports_its_untranslatable_glyph(tmp_path: Path) -> None:
-    """End to end: a frame containing the tofu names it in the result."""
-    candidates = sorted((REPO_ROOT / ".tmp-tui-visual-inventory").rglob("svg/status__*.svg"))
-    if not candidates:
-        pytest.fail("the rendered status export is missing; `just test-tui-render` renders it before running these")
-    for svg in candidates:
-        if "\u24d8" in svg.read_text(encoding=UTF_8):
-            result = _raster.rasterise(svg, tmp_path / "status.png")
-            assert "\u24d8" in result.missing_glyphs
-            return
-    # Frames WERE rendered, so this is not a missing precondition like the
-    # skip above: the status page has stopped carrying the glyph this proof is
-    # about, and skipping would retire the end-to-end coverage silently while
-    # the run still reads green. Live: 2 status frames, both carrying it.
-    pytest.fail(
-        f"{len(candidates)} status frame(s) rendered but none carried the notice glyph, "
-        "so the untranslatable-glyph proof no longer runs"
+def test_rasterising_a_real_export_reports_a_glyph_the_font_lacks(real_export: Path, tmp_path: Path) -> None:
+    """End to end: the tofu is named in the result, and only when it is there.
+
+    No drivable surface paints a character the pinned font lacks at its opening
+    frame, so the tofu is put into a real export's own text run: the markup the
+    rasteriser parses is still the exporter's, and the unaltered frame is the
+    control that proves the report is not always non-empty.
+    """
+    markup = real_export.read_text(encoding=UTF_8)
+    run = next(
+        (match for match in _raster._TEXT_RUN.finditer(markup) if match["content"].strip()),
+        None,
     )
+    assert run is not None, "the export carries no visible text run"
+    content = run["content"]
+    first = len(content) - len(content.lstrip())
+    altered = content[:first] + "\u24d8" + content[first + 1 :]
+    doctored = tmp_path / "tofu.svg"
+    doctored.write_text(markup[: run.start("content")] + altered + markup[run.end("content") :], encoding=UTF_8)
+
+    assert "\u24d8" in _raster.rasterise(doctored, tmp_path / "tofu.png").missing_glyphs
+    assert _raster.rasterise(real_export, tmp_path / "control.png").missing_glyphs == ()
 
 
 def test_a_harness_refusal_is_told_apart_from_a_harness_crash() -> None:
@@ -784,15 +802,14 @@ def test_a_manifest_with_no_schema_version_is_refused(tmp_path: Path) -> None:
         read_manifest(tmp_path)
 
 
-@pytest.mark.tui_render
-def test_repainting_a_run_rewrites_only_the_raster_derived_fields(tmp_path: Path) -> None:
+def test_repainting_a_run_rewrites_only_the_raster_derived_fields(real_export: Path, tmp_path: Path) -> None:
     """A repaint must not invent capture data it did not observe.
 
     The PNG digest and the missing-glyph set belong to the rasteriser and are
     rewritten; the captured text, the timing and the geometry readings belong
     to the harness run that produced them and must survive untouched.
     """
-    svg = _sample_svg()
+    svg = real_export
     run = tmp_path / "run"
     (run / "svg").mkdir(parents=True)
     (run / "text").mkdir(parents=True)
@@ -947,8 +964,7 @@ def test_snapshot_overwrite_is_not_the_default() -> None:
     assert parameters["replace"].default is False
 
 
-@pytest.mark.tui_render
-def test_every_declared_background_band_is_actually_painted(tmp_path: Path) -> None:
+def test_every_declared_background_band_is_actually_painted(real_export: Path, tmp_path: Path) -> None:
     """No cell a band covers may fall through to the page colour.
 
     This is the bug the whole review instrument turned on. Columns were mapped
@@ -964,7 +980,7 @@ def test_every_declared_background_band_is_actually_painted(tmp_path: Path) -> N
     """
     import html
 
-    svg = _sample_svg()
+    svg = real_export
     destination = tmp_path / "frame.png"
     cell_height = 20
     _raster.rasterise(svg, destination, cell_height=cell_height)
@@ -990,22 +1006,53 @@ def test_every_declared_background_band_is_actually_painted(tmp_path: Path) -> N
             if character.strip():
                 inked.add((row, start + index))
 
-    holes: list[str] = []
+    # Bands paint in document order and a later one covers an earlier one, as
+    # in any SVG renderer; a zero-width band covers no cell at all.
+    painted: dict[tuple[int, int], str] = {}
     for band in _raster._CELL_RECT.finditer(markup):
+        if float(band["width"]) <= 0 or float(band["height"]) <= 0:
+            continue
         row = int(float(band["y"]) // cell_height_units)
         start = round(float(band["x"]) / cell_width_units)
         span = max(round(float(band["width"]) / cell_width_units), 1)
         for column in range(start, start + span):
-            if (row, column) in inked:
-                continue
-            x = column * cell_width + cell_width // 2
-            y = row * cell_height + cell_height // 2
-            if not (0 <= x < image.width and 0 <= y < image.height):
-                continue
-            if image.getpixel((x, y)) != expected(band["colour"]):
-                holes.append(f"row {row} col {column}: expected {band['colour']}, got {image.getpixel((x, y))}")
+            painted[(row, column)] = band["colour"]
 
+    holes: list[str] = []
+    checked = 0
+    for (row, column), colour in painted.items():
+        if (row, column) in inked:
+            continue
+        x = column * cell_width + cell_width // 2
+        y = row * cell_height + cell_height // 2
+        if not (0 <= x < image.width and 0 <= y < image.height):
+            continue
+        checked += 1
+        if image.getpixel((x, y)) != expected(colour):
+            holes.append(f"row {row} col {column}: expected {colour}, got {image.getpixel((x, y))}")
+
+    assert checked > 0, "the export declares no background band, so this proves nothing"
     assert holes == [], "background bands not painted (stray blocks):\n" + "\n".join(holes[:12])
+
+
+def test_a_zero_width_band_paints_no_cell(real_export: Path, tmp_path: Path) -> None:
+    """The exporter emits zero-width rects, and they must paint nothing.
+
+    Counted as one cell, each one used to paint a phantom column in its own
+    colour wherever no later band covered it. A zero-width band in a colour the
+    frame never uses, placed last so nothing paints over it, is the proof.
+    """
+    markup = real_export.read_text(encoding=UTF_8)
+    last = list(_raster._CELL_RECT.finditer(markup))[-1]
+    phantom = (
+        f'<rect fill="#ff00ff" x="{last["x"]}" y="{last["y"]}" width="0" '
+        f'height="{last["height"]}" shape-rendering="crispEdges"/>'
+    )
+    doctored = tmp_path / "phantom.svg"
+    doctored.write_text(markup[: last.end()] + phantom + markup[last.end() :], encoding=UTF_8)
+
+    image = Image.open(_raster.rasterise(doctored, tmp_path / "phantom.png").path).convert("RGB")
+    assert (255, 0, 255) not in {colour for _count, colour in image.getcolors(maxcolors=1 << 20) or ()}
 
 
 def test_column_mapping_survives_floating_point_cell_origins() -> None:

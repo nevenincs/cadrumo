@@ -302,6 +302,9 @@ def rasterise(svg_path: Path, destination: Path, *, cell_height: int = DEFAULT_C
     rows = max(round(float(terminal["height"]) / cell_height_units), 1)
     cell_width = max(round(cell_height * cell_width_units / cell_height_units), 1)
 
+    # A zero-extent rect paints nothing in any SVG renderer, and the exporter
+    # emits them: counted as one cell, each painted a phantom column in its own
+    # colour wherever no later band happened to cover it.
     bands = [
         _Band(
             column=_column(rect["x"]),
@@ -311,6 +314,7 @@ def rasterise(svg_path: Path, destination: Path, *, cell_height: int = DEFAULT_C
             colour=rect["colour"],
         )
         for rect in _CELL_RECT.finditer(markup)
+        if float(rect["width"]) > 0 and float(rect["height"]) > 0
     ]
     runs = [
         _Run(

@@ -358,6 +358,11 @@ def _real_runtime(tmp_path: Path, *, installed: set[str]) -> Generator[Path]:
             cadrumo_llm_ollama_chat_url=chat_url,
             cadrumo_llm_ollama_text_model=_TEXT,
             cadrumo_llm_ollama_vision_model=_VISION,
+            # Loads and pulls are admitted against measured headroom first. The
+            # operator override admits a machine whose accelerator this build
+            # cannot measure, and the margin is zero because this runtime loads
+            # no weights. A measured shortfall still refuses.
+            cadrumo_llm_contention_check_override=True,
             cadrumo_llm_contention_safety_margin_bytes=0,
             cadrumo_output_language="en",
         ),
