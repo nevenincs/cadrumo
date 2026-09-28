@@ -4,16 +4,22 @@ The candidate compiles in one canonical child interpreter, so modules a heavier
 launcher has already imported cannot enter the recorded compiler closure. Both
 publications compile and validate the bundled registry for real, which is why
 this is an integration test.
+
+The light launcher is a fresh interpreter rather than this test process. A test
+process has already imported whatever the tests before it in the same worker
+imported, so a comparison anchored to its ``sys.modules`` held only when this
+test happened to run early, and refused otherwise.
 """
 
 from __future__ import annotations
 
 import importlib
-import importlib.util
+import json
+import os
+import subprocess
 import sys
 import time
 from pathlib import Path
-from types import ModuleType
 
 import pytest
 from typer.testing import CliRunner
@@ -33,13 +39,43 @@ _LAUNCHER_ONLY_MODULES = (
 )
 
 
-def _hook_module() -> ModuleType:
-    path = REPO_ROOT / "packaging" / "authority" / "hatch_build.py"
-    spec = importlib.util.spec_from_file_location("cadrumo_authority_hatch_build_launcher_test", path)
-    assert spec is not None and spec.loader is not None
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
+def _publish_from_a_light_launcher(destination: Path) -> list[str]:
+    """Publish through the build hook in a clean interpreter; return the watched modules it loaded."""
+    environment = {
+        **os.environ,
+        "LAUNCHER_TEST_REPOSITORY": str(REPO_ROOT),
+        "LAUNCHER_TEST_DESTINATION": str(destination),
+        "LAUNCHER_TEST_WATCHED": json.dumps(_LAUNCHER_ONLY_MODULES),
+    }
+    completed = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            "import importlib.util, json, os, sys\n"
+            "from pathlib import Path\n"
+            "repository = Path(os.environ['LAUNCHER_TEST_REPOSITORY'])\n"
+            "spec = importlib.util.spec_from_file_location(\n"
+            "    'cadrumo_authority_hatch_build_launcher_test',\n"
+            "    repository / 'packaging' / 'authority' / 'hatch_build.py',\n"
+            ")\n"
+            "module = importlib.util.module_from_spec(spec)\n"
+            "spec.loader.exec_module(module)\n"
+            "module._publish_source_tree_authority(repository, Path(os.environ['LAUNCHER_TEST_DESTINATION']))\n"
+            "watched = json.loads(os.environ['LAUNCHER_TEST_WATCHED'])\n"
+            "print(json.dumps(sorted(name for name in watched if name in sys.modules)))\n",
+        ],
+        cwd=REPO_ROOT,
+        env=environment,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stdout + completed.stderr
+    loaded = json.loads(completed.stdout.strip().splitlines()[-1])
+    assert isinstance(loaded, list) and all(isinstance(name, str) for name in loaded), loaded
+    return [str(name) for name in loaded]
 
 
 def _published(destination: Path) -> tuple[AuthorityDescriptor, AuthorityCompilerClosure]:
@@ -66,16 +102,13 @@ def test_the_cli_and_the_build_hook_publish_one_generation_whatever_the_launcher
     cli_destination = tmp_path / "cli"
 
     started = time.monotonic()
-    _hook_module()._publish_source_tree_authority(REPO_ROOT, hook_destination)
+    light_loaded = _publish_from_a_light_launcher(hook_destination)
     hook_seconds = time.monotonic() - started
+    assert light_loaded == [], f"the light launcher must not hold the heavier launcher's modules: {light_loaded}"
 
-    loaded_before = set(sys.modules)
     for module_name in _LAUNCHER_ONLY_MODULES:
         importlib.import_module(module_name)
-    launcher_only = {
-        name for name in set(sys.modules) - loaded_before if name.startswith(("cadrumo.", "dev.registry."))
-    }
-    assert launcher_only, "the heavier launcher must have loaded compiler-root modules the first one had not"
+    assert all(name in sys.modules for name in _LAUNCHER_ONLY_MODULES)
 
     started = time.monotonic()
     result = CliRunner().invoke(pipeline_app, ["publish-authority", "--destination", str(cli_destination)])
