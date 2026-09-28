@@ -22,7 +22,9 @@ import sys
 from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any, cast, overload
+from typing import Any, Final, cast, overload
+
+from dev.packaging.installed_wheel_binding import environment_interpreter
 
 
 class InstalledTuiChildError(RuntimeError):
@@ -114,6 +116,11 @@ def installed_product_evidence(*, workspace_root: Path) -> InstalledProductEvide
         product_origin="site-packages",
         product_init_sha256=hashlib.sha256(product_init.read_bytes()).hexdigest(),
     )
+
+
+#: A control only the Profile setup walk composes, which the first Home of a
+#: session hands on to while the profile is not set up yet.
+_SETUP_WALK_SURFACE: Final = "#manager-banner"
 
 
 async def _wait_for_selector(pilot: Any, selector: str, *, polls: int = 80) -> None:
@@ -249,17 +256,31 @@ async def admit_installed_session(*, pilot: Any, passphrase: str, polls: int = 1
     A newly registered profile can reach either the Login screen or an already
     admitted Home screen depending on the surrounding production composition.
     Both branches remain ordinary public TUI interactions.
+
+    While a profile is not set up yet, the session's first Home hands straight
+    on to the Profile setup walk, once. The journeys start from Home, so the
+    walk is left the way an operator leaves it, through its Escape binding,
+    which returns to Home.
     """
     from textual.widgets import Input
 
     initial_surface = await wait_for_any_public_selector(
         pilot,
-        ("#field-passphrase", "#home-agenda"),
+        ("#field-passphrase", "#home-agenda", _SETUP_WALK_SURFACE),
         polls=polls,
     )
     if initial_surface == "#field-passphrase":
         query_public_selector(pilot, "#field-passphrase", Input).value = passphrase
         await pilot.click("#btn-unlock")
+    await wait_for_any_public_selector(pilot, ("#home-agenda", _SETUP_WALK_SURFACE), polls=polls)
+    # The hand-off is scheduled once Home is up; let it land before reading
+    # which screen the session is on.
+    await pilot.app.workers.wait_for_complete()
+    await pilot.pause()
+    await pilot.pause()
+    surface = await wait_for_any_public_selector(pilot, (_SETUP_WALK_SURFACE, "#home-agenda"), polls=polls)
+    if surface == _SETUP_WALK_SURFACE:
+        await pilot.press("escape")
     await wait_for_public_selector(pilot, "#home-agenda", polls=polls)
 
 
@@ -563,7 +584,7 @@ def run_installed_tui_child_process(
     site-packages.  Product environment variables are rebuilt from scratch,
     and the credential crosses the process boundary only through stdin.
     """
-    executable = python_executable.resolve(strict=True)
+    executable = environment_interpreter(python_executable)
     workspace = workspace_root.resolve(strict=True)
     receipt = receipt_path.resolve()
     store = storage_root.resolve()
