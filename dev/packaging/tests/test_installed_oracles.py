@@ -34,6 +34,7 @@ from dev._paths import REPO_ROOT
 from dev.source_tree import repository_files, snapshot
 
 from .._distribution_names import normalise_distribution_name
+from ..authority_staging import AUTHORITY_ROOT_ENV, authoring_authority_root
 from ..hashing import sha256_path
 from ..installed_mcp_oracle import InstalledMcpOracleError, run_installed_mcp_oracle
 from ..installed_tax_oracle import InstalledTaxOracleError, run_installed_tax_oracle
@@ -512,8 +513,20 @@ def _stage_authority_candidate(clean_repo: Path) -> None:
     from cadrumo.domain.calculations.registry.authority_store import AuthorityDescriptor
 
     raw_candidate = os.environ.get(_AUTHORITY_CANDIDATE_ENV)
-    assert raw_candidate, f"{_AUTHORITY_CANDIDATE_ENV} must name the validated candidate directory"
-    candidate = Path(raw_candidate).resolve(strict=True)
+    if raw_candidate:
+        candidate = Path(raw_candidate).resolve(strict=True)
+    else:
+        # Once accepted bytes are promoted, the cohort builds from the promoted
+        # pair, resolved through the helper the build hook uses. An unpromoted
+        # candidate is only ever named above: the runtime must not resolve it,
+        # so nothing falls back to one.
+        candidate = authoring_authority_root(REPO_ROOT).resolve()
+        if not (candidate / "authority.current.json").is_file():
+            raise AssertionError(
+                f"no published authority to build the cohort from at {candidate}. Publish the authority, "
+                f"point ${AUTHORITY_ROOT_ENV} at the directory holding it, or set ${_AUTHORITY_CANDIDATE_ENV} "
+                "to an isolated validated candidate directory."
+            )
     descriptor = candidate / "authority.current.json"
     selected = AuthorityDescriptor.read(descriptor.resolve(strict=True))
     database_name = selected.database
