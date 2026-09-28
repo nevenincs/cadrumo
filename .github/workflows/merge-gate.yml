@@ -99,10 +99,14 @@ jobs:
       CADRUMO_PYTEST_WORKERS: "8"
       GATE_BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || 'origin/main' }}
     steps:
+      # The scope is `GATE_BASE...HEAD`. A pull request checks out the merge of
+      # its head into the base, whose first parent IS the base, so two commits
+      # already hold the merge base; the full history cost about a minute per
+      # run. Every other event compares against origin/main and needs it.
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          fetch-depth: 0
+          fetch-depth: ${{ github.event_name == 'pull_request' && 2 || 0 }}
           persist-credentials: false
 
       - name: Set up just
