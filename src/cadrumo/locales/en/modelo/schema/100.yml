@@ -3628,6 +3628,9 @@ modelo:
         renta-economic-activities:
           field:
             title: Model 100 evidence of economic-activity dependencies
+        renta-final-settlement:
+          field:
+            title: Modelo 100 end settlement result
         renta-mini-model-deduccion-madrid-nacimiento-adopcion:
           field:
             title: Modelo 100 2025 Community of Madrid birth/adoption deduction (box
@@ -3641,6 +3644,9 @@ modelo:
         renta-payments-retentions:
           field:
             title: Model 100 withholdings and payments on account
+        renta-personal-family:
+          field:
+            title: 'Modelo 100: personal and family profile data'
         renta-real-estate-capital:
           field:
             title: Model 100 evidence of real-estate-capital dependencies
@@ -8029,6 +8035,67 @@ modelo:
             '1916':
               label: Increase for expenses in authorised nurseries or early years
                 education centres (amounts not applied in tax year 2021)
+            ANOASDLG:
+              label: Ascendant's date of birth
+            APENOMDLG:
+              label: Child or descendant's surname and first name
+            APENOMDLG_ASC:
+              label: Ascendant's surname and first name
+            CONVASDLG:
+              label: Ascendant living with several descendants
+            DECFAL:
+              label: First filer's date of death
+            DNIASDLG:
+              label: Ascendant's Tax ID (NIF)
+            DPFNAC_C:
+              label: Spouse's date of birth
+            DPFNAC_D:
+              help: Enter the first declarant date of birth.
+              label: First filer's date of birth
+            DPGMIN_C:
+              label: Spouse's degree of disability
+            DPGMIN_D:
+              label: First filer's degree of disability
+            DPNIF_C:
+              label: Spouse's Tax ID (NIF)
+            DPNIF_D:
+              label: First filer's Tax ID (NIF)
+            DP_APENOM_C:
+              label: Spouse's surname and first name
+            DP_APENOM_D:
+              label: First filer's surname and first name
+            ECIVIL:
+              label: First declarant marital status
+            FALLASDLG:
+              label: Ascendant's date of death
+            FALLDLG:
+              label: Child or descendant's date of death
+            FNACDLG:
+              label: Child or descendant's date of birth
+            HIJOSUE:
+              label: Children or descendants, EU or EEA
+            MINUSDLG:
+              label: Child or descendant's disability code
+            NIFDLG:
+              label: Child or descendant's Tax ID (NIF)
+            NORESIDENTE:
+              label: Non-resident non-IRPF taxpayer spouse
+            PCTMINASDLG:
+              label: Disability Key Ascendancy
+            PH18:
+              label: Children under 18 years of age in the family unit
+            RESIDENTEUE:
+              label: Spouse resident in the EU or EEA
+            SEXO_C:
+              label: Spouse's sex
+            SEXO_D:
+              label: First filer's sex
+            TIPOTRIBUTACION:
+              label: Type of taxation
+            ZCCAD:
+              label: Autonomous Community of residence
+            ZRUE2:
+              label: EU or EEA country of the spouse
           construct:
             renta-dependent-modelos:
               field:
@@ -15282,59 +15349,20 @@ modelo:
             A:
               label: 'Investment qualifying for the deduction: acquisition and/or
                 construction of the habitual residence'
-            ANOASDLG:
-              label: Ascendant's date of birth
-            APENOMDLG:
-              label: Child or descendant's surname and first name
-            APENOMDLG_ASC:
-              label: Ascendant's surname and first name
             C:
               label: 'Investment qualifying for the deduction: refurbishment or extension
                 of the habitual residence'
-            CONVASDLG:
-              label: Ascendant living with several descendants
             D:
               label: 'Deduction base (maximum limit: EUR 100,000): total amount of
                 the deduction for investments in new or recently created companies'
-            DECFAL:
-              label: First filer's date of death
-            DNIASDLG:
-              label: Ascendant's Tax ID (NIF)
-            DPFNAC_C:
-              label: Spouse's date of birth
-            DPFNAC_D:
-              help: Enter the first declarant date of birth.
-              label: First filer's date of birth
-            DPGMIN_C:
-              label: Spouse's degree of disability
-            DPGMIN_D:
-              label: First filer's degree of disability
-            DPNIF_C:
-              label: Spouse's Tax ID (NIF)
-            DPNIF_D:
-              label: First filer's Tax ID (NIF)
-            DP_APENOM_C:
-              label: Spouse's surname and first name
-            DP_APENOM_D:
-              label: First filer's surname and first name
             E:
               label: Amounts paid qualifying for the deduction
-            ECIVIL:
-              label: First declarant marital status
-            FALLASDLG:
-              label: Ascendant's date of death
-            FALLDLG:
-              label: Child or descendant's date of death
-            FNACDLG:
-              label: Child or descendant's date of birth
             G:
               label: 'Amount qualifying for the deduction (*): contributions to priority
                 patronage activities, capped at 15% of the taxable base'
             H:
               label: 'Amount qualifying for the deduction (**): donations to entities
                 governed by Law 49/2002 of 23 December'
-            HIJOSUE:
-              label: Children or descendants, EU or EEA
             I:
               label: 'Amounts qualifying for the deduction (*): investments and expenses
                 for the protection and dissemination of the Spanish Historical Heritage
@@ -15343,28 +15371,6 @@ modelo:
             J:
               label: 'Amount qualifying for the deduction (**): donations to foundations
                 and public-benefit associations not covered by Law 49/2002 of 23 December'
-            MINUSDLG:
-              label: Child or descendant's disability code
-            NIFDLG:
-              label: Child or descendant's Tax ID (NIF)
-            NORESIDENTE:
-              label: Non-resident non-IRPF taxpayer spouse
-            PCTMINASDLG:
-              label: Disability Key Ascendancy
-            PH18:
-              label: Children under 18 years of age in the family unit
-            RESIDENTEUE:
-              label: Spouse resident in the EU or EEA
-            SEXO_C:
-              label: Spouse's sex
-            SEXO_D:
-              label: First filer's sex
-            TIPOTRIBUTACION:
-              label: Type of taxation
-            ZCCAD:
-              label: Autonomous Community of residence
-            ZRUE2:
-              label: EU or EEA country of the spouse
             prestacion-inss-maternidad-paternidad-exenta:
               label: Tax-exempt INSS public maternity and paternity benefits
           construct:
@@ -17616,9 +17622,6 @@ modelo:
             renta-dependent-modelos:
               field:
                 title: 'Modelo 100: data from dependent modelos'
-            renta-final-settlement:
-              field:
-                title: Modelo 100 end settlement result
             renta-mini-model-actividades-economicas-objetiva:
               field:
                 title: Model 100 2025 objective-assessment summary fields
@@ -17638,8 +17641,5 @@ modelo:
             renta-mini-model-regimenes-especiales:
               field:
                 title: Modelo 100 2025 atribucion / imputacion of income aggregators
-            renta-personal-family:
-              field:
-                title: 'Modelo 100: personal and family profile data'
           field:
             label: Tax year 2025

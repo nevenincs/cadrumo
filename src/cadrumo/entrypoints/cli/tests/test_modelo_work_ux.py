@@ -32,6 +32,7 @@ from ....adapters.persistence.storage.tests.secure_sql import (
 )
 from ....core.i18n.render import tr
 from ....domain.calculations.registry.temporal import select_revision
+from ....domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from ....tests.cli_envelope import unwrap_envelope_notices as _notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
@@ -766,7 +767,8 @@ def test_work_create_without_revision_uses_registry_revision_for_supplied_year(s
     assert payload["revision_id"] == expected_revision
 
 
-def test_modelo_303_workflow_json_resolves_each_2025_quarter_once(seed_profile: ProfileSeeder) -> None:
+@pytest.mark.parametrize("year", PublishedGovernedFactSource().supported_filing_years().years)
+def test_modelo_303_workflow_json_resolves_each_quarter_once(seed_profile: ProfileSeeder, year: int) -> None:
     """The real workflow boundary binds all four M303 targets through registry authority."""
     seed_profile(label="operator", facts=operator_profile_facts())
     modelos, _catalogues = bundled_registry_tree()
@@ -785,7 +787,7 @@ def test_modelo_303_workflow_json_resolves_each_2025_quarter_once(seed_profile: 
                 "--modelo",
                 "303",
                 "--year",
-                "2025",
+                str(year),
                 "--period",
                 period,
             ],
@@ -796,18 +798,15 @@ def test_modelo_303_workflow_json_resolves_each_2025_quarter_once(seed_profile: 
             payload["revision_id"]
             == select_revision(
                 modelo_303,
-                filing_year=2025,
+                filing_year=year,
                 period=period,
             ).id
         )
         payloads.append(payload)
 
     coordinates = tuple((payload["modelo"], payload["filing_year"], payload["period"]) for payload in payloads)
-    assert coordinates == (
-        ("303", 2025, {"filing_year": 2025, "code": "1T"}),
-        ("303", 2025, {"filing_year": 2025, "code": "2T"}),
-        ("303", 2025, {"filing_year": 2025, "code": "3T"}),
-        ("303", 2025, {"filing_year": 2025, "code": "4T"}),
+    assert coordinates == tuple(
+        ("303", year, {"filing_year": year, "code": quarter}) for quarter in ("1T", "2T", "3T", "4T")
     )
 
 

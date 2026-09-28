@@ -1,51 +1,4 @@
 [[revisions."2024".parameters]]
-id = "renta-imputacion-inmobiliaria-rate-recent-revision"
-data_type = "ratio"
-unit = "fraction"
-legal_refs = ["ley-35-2006:art-85"]
-
-[[revisions."2024".parameters.source_citations]]
-source_ref = "aeat-renta-2024-manual-parte1"
-required_text = ["1,1 por 100", "valor catastral", "2024"]
-
-[[revisions."2024".parameters.values]]
-value = "0.011"
-date_axis = "filing_period"
-valid_from = 2024-01-01
-valid_to = 2024-12-31
-
-[[revisions."2024".parameters]]
-id = "renta-imputacion-inmobiliaria-rate-old-or-no-revision"
-data_type = "ratio"
-unit = "fraction"
-legal_refs = ["ley-35-2006:art-85"]
-
-[[revisions."2024".parameters.source_citations]]
-source_ref = "aeat-renta-2024-manual-parte1"
-required_text = ["2 por 100", "valor catastral"]
-
-[[revisions."2024".parameters.values]]
-value = "0.02"
-date_axis = "filing_period"
-valid_from = 2024-01-01
-valid_to = 2024-12-31
-
-[[revisions."2024".parameters]]
-id = "renta-imputacion-inmobiliaria-year-days"
-data_type = "integer"
-unit = "days"
-legal_refs = ["ley-35-2006:art-85"]
-
-[[revisions."2024".parameters.source_citations]]
-source_ref = "aeat-renta-2024-manual-parte1"
-required_text = ["62 ÷ 365", "valor catastral"]
-
-[[revisions."2024".parameters.values]]
-value = "365"
-date_axis = "filing_period"
-valid_from = 2024-01-01
-valid_to = 2024-12-31
-[[revisions."2024".parameters]]
 id = "renta-guarderia-incremento-cap-anual"
 data_type = "money"
 unit = "EUR"
@@ -78,3 +31,59 @@ valid_to = 2024-12-31
 # cap and the increment, and storing a derived total as an independent value is
 # how the two inputs drift apart from it.
 
+[[revisions."2024".parameters]]
+id = "renta-actividad-inmovilizado-amortizacion-infraestructura-recarga-primer-ejercicio"
+data_type = "integer"
+unit = "year"
+legal_refs = ["ley-27-2014:da-18"]
+
+[[revisions."2024".parameters.values]]
+value = "2024"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+
+[[revisions."2024".parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Con efectos desde el 1 de enero de 2024, se permite amortizar libremente en dos supuestos:", "Que entren en funcionamiento en los períodos impositivos que se inicien en los años 2024 y 2025."]
+[[revisions."2024".parameters]]
+id = "renta-actividad-inmovilizado-amortizacion-infraestructura-recarga-ultimo-ejercicio"
+data_type = "integer"
+unit = "year"
+legal_refs = ["ley-27-2014:da-18"]
+
+[[revisions."2024".parameters.values]]
+value = "2025"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+
+[[revisions."2024".parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Con efectos desde el 1 de enero de 2024, se permite amortizar libremente en dos supuestos:", "Que entren en funcionamiento en los períodos impositivos que se inicien en los años 2024 y 2025."]
+[[revisions."2024".parameters]]
+id = "renta-actividad-inmovilizado-amortizacion-vehiculo-electrico-primer-ejercicio"
+data_type = "integer"
+unit = "year"
+legal_refs = ["ley-27-2014:da-18"]
+
+[[revisions."2024".parameters.values]]
+value = "2024"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+
+[[revisions."2024".parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Inversiones en vehículos nuevos FCV, FCHV, BEV, REEV o PHEV", "Con efectos desde el 1 de enero de 2024, se permite amortizar libremente en dos supuestos:", "Que entren en funcionamiento en los períodos impositivos que se inicien en 2024 y 2025."]
+[[revisions."2024".parameters]]
+id = "renta-actividad-inmovilizado-amortizacion-vehiculo-electrico-ultimo-ejercicio"
+data_type = "integer"
+unit = "year"
+legal_refs = ["ley-27-2014:da-18"]
+
+[[revisions."2024".parameters.values]]
+value = "2025"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+
+[[revisions."2024".parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Inversiones en vehículos nuevos FCV, FCHV, BEV, REEV o PHEV", "Con efectos desde el 1 de enero de 2024, se permite amortizar libremente en dos supuestos:", "Que entren en funcionamiento en los períodos impositivos que se inicien en 2024 y 2025."]

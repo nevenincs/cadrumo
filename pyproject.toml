@@ -467,6 +467,15 @@ registry = [
   "tomlkit>=0.15,<1",
   # The indexed-authority benchmark measures process RSS directly.
   "psutil>=5.9",
+  # libxml2 binding. Registry tooling imports `lxml.etree` directly to compile
+  # the bundled AEAT record-design XSDs as validation oracles; declaring it makes
+  # that reliance explicit rather than leaning on the transitive supply.
+  #
+  # This entry covers the XSD-compilation use ONLY. Nothing in src/cadrumo/
+  # compiles a schema -- but that does not put lxml outside the runtime set:
+  # production needs lxml as BeautifulSoup's parser BACKEND, declared as the
+  # `beautifulsoup4[lxml]` extra. Two independent reliances, two declarations.
+  "lxml>=6.0",
 ]
 dev = [
   { include-group = "registry" },
@@ -523,20 +532,10 @@ dev = [
   "pillow==12.3.0",
   # Used only to generate synthetic fixture PDFs in tests.
   "reportlab>=4.4.10",
-  # libxml2 binding. Test support imports `lxml.etree` directly to compile the
-  # bundled AEAT record-design XSDs as validation oracles; declaring it makes
-  # that reliance explicit rather than leaning on the transitive supply.
-  #
-  # This entry covers the XSD-compilation use ONLY. Nothing in src/cadrumo/
-  # compiles a schema -- but that does not put lxml outside the runtime set,
-  # which an earlier version of this comment concluded: production needs lxml
-  # as BeautifulSoup's parser BACKEND, declared as the `beautifulsoup4[lxml]`
-  # extra above. Two independent reliances, two declarations.
-  "lxml>=6.0",
-  # Stubs for the above. `lxml.etree` is a C extension shipping no inline
-  # types, so it is the tree's only unresolved-import under `ty`; the stubs
-  # are dev-only because production never imports lxml, it names the backend
-  # as a string.
+  # Stubs for the registry group's `lxml`. `lxml.etree` is a C extension
+  # shipping no inline types, so it is the tree's only unresolved-import under
+  # `ty`; the stubs are dev-only because production never imports lxml, it
+  # names the backend as a string.
   "types-lxml>=2025.3.30",
   "ruff>=0.16.7",
   # Repository-wide YAML syntax/style linting; TOML parsing goes through the rtoml-backed `cadrumo.core.toml` boundary.
@@ -1280,6 +1279,8 @@ ignore-path = [
   "docs/_inventories",
   "docs/api",
   "docs/cli",
+  # Vendored font and its licence, reproduced verbatim rather than authored.
+  "docs/_static/readme/fonts",
 ]
 max-line-length = 100
 

@@ -1,7 +1,7 @@
 """Typed report models for live AEAT filed-data and IVA remote-state services.
 
 These frozen records are renderer-facing summaries, not raw evidence stores.
-They carry typed :class:`~cadrumo.core.Period` values, secure-storage references,
+They carry typed :class:`~cadrumo.core.period.Period` values, secure-storage references,
 redacted diagnostic fields, and counts/ids needed by CLI and workflow surfaces
 after live capture has persisted the underlying observations.
 

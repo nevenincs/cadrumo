@@ -246,11 +246,15 @@ def test_locale_signal_normalizes_import_traceback_generically(
     assert "cells" not in finished
 
 
-def test_command_run_confines_child_temp_and_cache_paths(tmp_path: Path) -> None:
+def test_command_run_confines_child_temp_and_leaves_tool_caches_home(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    ambient_cache = tmp_path / "ambient-cache"
+    monkeypatch.setenv("XDG_CACHE_HOME", str(ambient_cache))
     probe = (
         "import json, os, pathlib, tempfile; "
         "pathlib.Path(os.environ['CADRUMO_DEV_ARTIFACTS_DIR']).joinpath('paths.json').write_text("
-        "json.dumps({'temp': tempfile.gettempdir(), 'cache': os.environ['XDG_CACHE_HOME']}))"
+        "json.dumps({'temp': tempfile.gettempdir(), 'cache': os.environ.get('XDG_CACHE_HOME')}))"
     )
     status = run((sys.executable, "-c", probe), repository=tmp_path, family="audit-runs", label="path-probe")
 
@@ -261,7 +265,8 @@ def test_command_run_confines_child_temp_and_cache_paths(tmp_path: Path) -> None
     assert Path(paths["temp"]).resolve() == scratch.resolve()
     # TEMP must stay short enough for tools that bind Unix-domain sockets under it.
     assert len(paths["temp"]) <= SCRATCH_PATH_BUDGET, paths["temp"]
-    assert Path(paths["cache"]).resolve() == (run_dir / "cache").resolve()
+    # A tool cache moved into the run is rebuilt cold by every run and outlives it.
+    assert paths["cache"] == str(ambient_cache)
 
 
 def test_import_boundaries_signal_deduces_contract_and_diagnostic_hotspots(

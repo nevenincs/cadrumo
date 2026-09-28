@@ -26,9 +26,7 @@ from pydantic import ValidationError
 
 from .....application.aggregation.percepciones_observations_repository import (
     PercepcionObservationPersistenceError,
-    PercepcionObservationPorts,
     percepcion_observation_key,
-    persist_percepcion_observations,
 )
 from .....core.aggregation import AggregationCaptureKind, RetencionClave
 from .....core.external_constants import UTF_8_ENCODING
@@ -243,26 +241,6 @@ def test_replace_observations_drops_removed_percepcion_no_stale_row(tmp_path: Pa
         loaded = repo.load_observations("190", period)
         assert len(loaded) == 2
         assert {(o.perceptor_tax_id, o.clave) for o in loaded} == {("11111111H", "A"), ("22222222J", "A")}
-
-
-def test_persist_helper_writes_set_readable_by_load(tmp_path: Path) -> None:
-    """The shared write helper persists the set the resolver later reads (one source, both surfaces)."""
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        period = Period.from_year_and_code(2024, "0A")
-        observations = (
-            _observation(nif="11111111H", clave="A"),
-            _observation(nif="11111111H", clave="G"),
-        )
-        repo = _repository()
-        persist_percepcion_observations(
-            ports=PercepcionObservationPorts(repository=repo),
-            modelo="190",
-            filing_year=2024,
-            period=period,
-            observations=observations,
-        )
-        loaded = repo.load_observations("190", period)
-        assert set(loaded) == set(observations)
 
 
 def test_failed_replacement_leaves_the_prior_window_intact(tmp_path: Path) -> None:

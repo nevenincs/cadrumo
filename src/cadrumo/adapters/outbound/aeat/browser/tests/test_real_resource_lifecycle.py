@@ -301,8 +301,9 @@ def test_a_real_sensitive_redirect_never_reaches_any_persisted_byte(tmp_path: Pa
         async def navigate_a_sensitive_redirect() -> None:
             async with opened_http_boundary() as boundary:
                 # This scenario redirects the production target through a real
-                # redirect whose query carries a sensitive value.
-                boundary.configure("sensitive-error")
+                # redirect whose query carries a sensitive value, and the page it
+                # lands on answers, so the executor really holds that value.
+                boundary.configure("sensitive-redirect")
                 executor = BrowserOwningExecutor(boundary=boundary)
                 supervisor = _supervisor(
                     journal=journal,

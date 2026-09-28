@@ -39,6 +39,7 @@ from cadrumo.core.config import override_settings
 from cadrumo.core.errors.error_codes import resolve_error_message
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 from cadrumo.domain.modelos.work_unit import derive_work_unit_id
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
@@ -145,18 +146,20 @@ class TestS01CreationGate:
         # Should direct operator to re-create without --revision
         assert "re-create" in msg.lower() or "--revision" in msg.lower() or "without" in msg.lower()
 
-    def test_returns_correct_law_determined_revision_for_m303_2026(
+    def test_returns_correct_law_determined_revision_for_the_open_ended_m303_design(
         self, *, operation: PinnedAuthorityOperation
     ) -> None:
-        """Smoke test: M303 2026 1T resolves to the 2026-y-siguientes revision."""
+        """Smoke test: the open-ended design's first 1T resolves to its own revision."""
+        # The first exercise of the open-ended Modelo 303 revision the registry authors.
+        design_exercise = open_ended_revision("303").valid_from.year
         result = law_selected_revision_for_work_target(
             modelo="303",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1T"),
+            filing_year=design_exercise,
+            period=Period.from_year_and_code(design_exercise, "1T"),
             requested_revision_id=None,
             operation=operation,
         )
-        assert result == "2026-y-siguientes"
+        assert result == f"{design_exercise}-y-siguientes"
 
     def test_refuses_revision_that_covers_year_but_not_period(self, *, operation: PinnedAuthorityOperation) -> None:
         """The PRECISE D1 hole: a revision that COVERS the filing year but NOT the period.

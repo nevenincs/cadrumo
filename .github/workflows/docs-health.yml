@@ -22,13 +22,17 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Install just
+        uses: taiki-e/install-action@6012bba2f8e3e666a2b212f8823c06831704ce92 # just
+        with:
+          tool: just@1.38.0
       - name: Provision the monitoring runtime
         uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
         with:
           version: "0.11.29"
           enable-cache: false
       - name: Check both documentation mounts
-        run: uv run --no-project --python "$(cat .python-version)" dev/deploy/docs_health.py
+        run: just docs-availability-check
       - name: Report an availability failure
         if: failure()
         env:

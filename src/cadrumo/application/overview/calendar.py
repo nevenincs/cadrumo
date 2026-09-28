@@ -203,7 +203,6 @@ class _RemoteNotification(Protocol):
 
 
 _log = _get_logger(__name__)
-_DEFAULT_LOCAL_WORK_UNIT_DUE_SOON_DAYS = 14
 _LOCAL_WORK_UNIT_APPLIES_BECAUSE = (
     "Local modelo work unit created by the operator; registry deadline window unavailable or not surfaced."
 )

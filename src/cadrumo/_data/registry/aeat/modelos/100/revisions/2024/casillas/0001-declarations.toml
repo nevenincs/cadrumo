@@ -1231,36 +1231,6 @@ section = ["anexo_a", "deducciones"]
 semantic_role = "irpf_deduccion_vivienda_habitual_adquisicion"
 legal_refs = ["ley-35-2006:dt-18"]
 additional_source_refs = ["aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd"]
-[[revisions."2024".casillas]]
-id = "ANOASDLG"
-number = "*92"
-section = ["datos_identificativos", "ascendientes", "ascendiente"]
-data_type = "text"
-semantic_role = "irpf_ascendiente_fecha_nacimiento"
-input_kind = "bound"
-binding = "renta-family-ascendant-birth-date"
-legal_refs = ["ley-35-2006:art-59", "orden-hac-242-2025:art-3"]
-additional_source_refs = ["aeat-dr-100-2024-xsd", "boe-modelo-100-2024-form"]
-[[revisions."2024".casillas]]
-id = "APENOMDLG"
-number = "*76"
-section = ["datos_identificativos", "hijos", "hijo"]
-data_type = "text"
-semantic_role = "irpf_descendiente_apellidos_nombre"
-input_kind = "bound"
-binding = "renta-family-descendant-display-name"
-legal_refs = ["ley-35-2006:art-58", "orden-hac-242-2025:art-3"]
-additional_source_refs = ["aeat-dr-100-2024-xsd", "boe-modelo-100-2024-form"]
-[[revisions."2024".casillas]]
-id = "APENOMDLG_ASC"
-number = "*91"
-section = ["datos_identificativos", "ascendientes", "ascendiente"]
-data_type = "text"
-semantic_role = "irpf_ascendiente_apellidos_nombre"
-input_kind = "bound"
-binding = "renta-family-ascendant-display-name"
-legal_refs = ["ley-35-2006:art-59", "orden-hac-242-2025:art-3"]
-additional_source_refs = ["aeat-dr-100-2024-xsd", "boe-modelo-100-2024-form"]
 # Anexo A deduction column "C", which AEAT identifies by LETTER rather
 # than by number. Its identity and concept are the bundled dictionary"s own:
 # entry VHREHB carries casilla_id "C" and the label this casilla
@@ -1274,16 +1244,6 @@ section = ["anexo_a", "deducciones"]
 semantic_role = "irpf_deduccion_vivienda_habitual_rehabilitacion"
 legal_refs = ["ley-35-2006:dt-18"]
 additional_source_refs = ["aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd"]
-[[revisions."2024".casillas]]
-id = "CONVASDLG"
-number = "*94"
-section = ["datos_identificativos", "ascendientes", "ascendiente"]
-data_type = "integer"
-semantic_role = "irpf_ascendiente_convivencia_descendientes"
-input_kind = "bound"
-binding = "renta-family-ascendant-cohabiting-descendant-count"
-legal_refs = ["ley-35-2006:art-59", "orden-hac-242-2025:art-3"]
-additional_source_refs = ["aeat-dr-100-2024-xsd", "boe-modelo-100-2024-form"]
 # Anexo A deduction column "D", which AEAT identifies by LETTER rather
 # than by number. Its identity and concept are the bundled dictionary"s own:
 # entry BASEDEDU carries casilla_id "D" and the label this casilla
@@ -1297,104 +1257,6 @@ section = ["anexo_a", "deducciones"]
 semantic_role = "irpf_deduccion_empresas_nueva_creacion_base"
 legal_refs = ["ley-35-2006:art-68"]
 additional_source_refs = ["aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd"]
-[[revisions."2024".casillas]]
-id = "DECFAL"
-number = "*21"
-section = ["datos_identificativos", "declarante"]
-data_type = "text"
-semantic_role = "irpf_declarante_fecha_fallecimiento"
-input_kind = "bound"
-binding = "renta-profile-taxpayer-death-date"
-additional_source_refs = ["aeat-dr-100-2024-xsd", "boe-modelo-100-2024-form"]
-[[revisions."2024".casillas]]
-id = "DNIASDLG"
-number = "*90"
-section = ["datos_identificativos", "ascendientes", "ascendiente"]
-data_type = "nif"
-semantic_role = "irpf_ascendiente_nif"
-input_kind = "bound"
-binding = "renta-family-ascendant-tax-id"
-legal_refs = ["ley-35-2006:art-81-bis", "orden-hac-242-2025:art-3"]
-additional_source_refs = ["aeat-dr-100-2024-xsd", "boe-modelo-100-2024-form"]
-[[revisions."2024".casillas]]
-id = "DPFNAC_C"
-number = "*15"
-section = ["datos_identificativos", "conyuge"]
-data_type = "text"
-semantic_role = "spouse_birth_date"
-input_kind = "bound"
-binding = "renta-profile-spouse-birth-date"
-legal_refs = ["ley-35-2006:art-57", "orden-hac-242-2025:art-3"]
-additional_source_refs = ["aeat-dr-100-2024-xsd", "boe-modelo-100-2024-form"]
-[[revisions."2024".casillas]]
-id = "DPFNAC_D"
-number = "*10"
-section = ["datos_identificativos", "declarante"]
-data_type = "text"
-semantic_role = "irpf_declarante_fecha_nacimiento"
-required = true
-input_kind = "bound"
-binding = "renta-profile-taxpayer-birth-date"
-legal_refs = ["ley-35-2006:art-57", "orden-hac-242-2025:art-3"]
-additional_source_refs = ["aeat-dr-100-2024-xsd", "boe-modelo-100-2024-form"]
-[[revisions."2024".casillas]]
-id = "DPGMIN_C"
-number = "*22"
-section = ["datos_identificativos", "conyuge"]
-data_type = "text"
-semantic_role = "spouse_disability_grade"
-input_kind = "bound"
-binding = "renta-profile-spouse-disability-grade"
-legal_refs = ["ley-35-2006:art-57", "orden-hac-242-2025:art-3"]
-additional_source_refs = ["aeat-dr-100-2024-xsd", "boe-modelo-100-2024-form"]
-[[revisions."2024".casillas]]
-id = "DPGMIN_D"
-number = "*20"
-section = ["datos_identificativos", "declarante"]
-data_type = "text"
-semantic_role = "irpf_declarante_discapacidad_grado"
-input_kind = "bound"
-binding = "renta-profile-taxpayer-disability-grade"
-legal_refs = ["ley-35-2006:art-57", "orden-hac-242-2025:art-3"]
-additional_source_refs = ["aeat-dr-100-2024-xsd", "boe-modelo-100-2024-form"]
-[[revisions."2024".casillas]]
-id = "DPNIF_C"
-number = "*13"
-section = ["datos_identificativos", "conyuge"]
-data_type = "nif"
-semantic_role = "spouse_nif"
-input_kind = "bound"
-binding = "renta-profile-spouse-tax-id"
-additional_source_refs = ["aeat-dr-100-2024-xsd", "boe-modelo-100-2024-form"]
-[[revisions."2024".casillas]]
-id = "DPNIF_D"
-number = "*01"
-section = ["datos_identificativos", "declarante"]
-data_type = "nif"
-semantic_role = "irpf_declarante_nif"
-required = true
-input_kind = "bound"
-binding = "renta-profile-tax-id"
-additional_source_refs = ["aeat-dr-100-2024-xsd", "boe-modelo-100-2024-form"]
-[[revisions."2024".casillas]]
-id = "DP_APENOM_C"
-number = "*14"
-section = ["datos_identificativos", "conyuge"]
-data_type = "text"
-semantic_role = "spouse_name"
-input_kind = "bound"
-binding = "renta-profile-spouse-display-name"
-additional_source_refs = ["aeat-dr-100-2024-xsd", "boe-modelo-100-2024-form"]
-[[revisions."2024".casillas]]
-id = "DP_APENOM_D"
-number = "*02"
-section = ["datos_identificativos", "declarante"]
-data_type = "text"
-semantic_role = "irpf_declarante_nombre"
-required = true
-input_kind = "bound"
-binding = "renta-profile-display-name"
-additional_source_refs = ["aeat-dr-100-2024-xsd", "boe-modelo-100-2024-form"]
 # Anexo A deduction column "E", which AEAT identifies by LETTER rather
 # than by number. Its identity and concept are the bundled dictionary"s own:
 # entry VHDIS carries casilla_id "E" and the label this casilla
@@ -1408,15 +1270,6 @@ section = ["anexo_a", "deducciones"]
 semantic_role = "irpf_deduccion_vivienda_obras_discapacidad"
 legal_refs = ["ley-35-2006:dt-18"]
 additional_source_refs = ["aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd"]
-[[revisions."2024".casillas]]
-id = "ECIVIL"
-number = "*09"
-section = ["datos_identificativos", "declarante"]
-data_type = "text"
-semantic_role = "irpf_declarante_estado_civil"
-input_kind = "bound"
-binding = "renta-profile-marital-status"
-additional_source_refs = ["aeat-dr-100-2024-xsd", "boe-modelo-100-2024-form"]
 # Anexo A deduction column "F", which AEAT identifies by LETTER rather
 # than by number. Its identity and concept are the bundled dictionary"s own:
 # entry IMPAL carries casilla_id "F" and the label this casilla
@@ -1433,36 +1286,6 @@ section = ["anexo_a", "deducciones"]
 semantic_role = "irpf_deduccion_alquiler_vivienda_habitual"
 legal_refs = ["ley-35-2006:dt-15"]
 additional_source_refs = ["aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd"]
-[[revisions."2024".casillas]]
-id = "FALLASDLG"
-number = "*95"
-section = ["datos_identificativos", "ascendientes", "ascendiente"]
-data_type = "text"
-semantic_role = "irpf_ascendiente_fecha_fallecimiento"
-input_kind = "bound"
-binding = "renta-family-ascendant-death-date"
-legal_refs = ["ley-35-2006:art-59", "orden-hac-242-2025:art-3"]
-additional_source_refs = ["aeat-dr-100-2024-xsd", "boe-modelo-100-2024-form"]
-[[revisions."2024".casillas]]
-id = "FALLDLG"
-number = "*79"
-section = ["datos_identificativos", "hijos", "hijo"]
-data_type = "text"
-semantic_role = "irpf_descendiente_fecha_fallecimiento"
-input_kind = "bound"
-binding = "renta-family-descendant-death-date"
-legal_refs = ["ley-35-2006:art-58", "orden-hac-242-2025:art-3"]
-additional_source_refs = ["aeat-dr-100-2024-xsd", "boe-modelo-100-2024-form"]
-[[revisions."2024".casillas]]
-id = "FNACDLG"
-number = "*77"
-section = ["datos_identificativos", "hijos", "hijo"]
-data_type = "text"
-semantic_role = "irpf_descendiente_fecha_nacimiento"
-input_kind = "bound"
-binding = "renta-family-descendant-birth-date"
-legal_refs = ["ley-35-2006:art-58", "orden-hac-242-2025:art-3"]
-additional_source_refs = ["aeat-dr-100-2024-xsd", "boe-modelo-100-2024-form"]
 # Anexo A deduction column "G", which AEAT identifies by LETTER rather
 # than by number. Its identity and concept are the bundled dictionary"s own:
 # entry APM carries casilla_id "G" and the label this casilla
@@ -1489,15 +1312,6 @@ section = ["anexo_a", "deducciones"]
 semantic_role = "irpf_deduccion_donativos_ley_49_2002"
 legal_refs = ["ley-49-2002:art-19"]
 additional_source_refs = ["aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd"]
-[[revisions."2024".casillas]]
-id = "HIJOSUE"
-number = "*88"
-section = ["datos_identificativos", "hijos"]
-data_type = "boolean"
-semantic_role = "irpf_hijos_residentes_ue_eee_flag"
-input_kind = "bound"
-binding = "renta-profile-family-descendants-eu-eea-deduction"
-additional_source_refs = ["aeat-dr-100-2024-xsd", "boe-modelo-100-2024-form"]
 # Anexo A deduction column "I", which AEAT identifies by LETTER rather
 # than by number. Its identity and concept are the bundled dictionary"s own:
 # entry MDIC carries casilla_id "I" and the label this casilla
@@ -1540,113 +1354,6 @@ section = ["anexo_a", "deducciones"]
 semantic_role = "irpf_deduccion_cuotas_afiliacion_partidos"
 legal_refs = ["ley-35-2006:art-68"]
 additional_source_refs = ["aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd"]
-[[revisions."2024".casillas]]
-id = "MINUSDLG"
-number = "*78"
-section = ["datos_identificativos", "hijos", "hijo"]
-data_type = "text"
-semantic_role = "irpf_descendiente_clave_discapacidad"
-input_kind = "bound"
-binding = "renta-family-descendant-disability-grade"
-legal_refs = ["ley-35-2006:art-58", "ley-35-2006:art-60", "orden-hac-242-2025:art-3"]
-additional_source_refs = ["aeat-dr-100-2024-xsd", "boe-modelo-100-2024-form"]
-[[revisions."2024".casillas]]
-id = "NIFDLG"
-number = "*75"
-section = ["datos_identificativos", "hijos", "hijo"]
-data_type = "nif"
-semantic_role = "irpf_descendiente_nif"
-input_kind = "bound"
-binding = "renta-family-descendant-tax-id"
-legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75-2015", "ley-35-2006:art-81-bis", "orden-hac-242-2025:art-3"]
-additional_source_refs = ["aeat-dr-100-2024-xsd", "boe-modelo-100-2024-form"]
-[[revisions."2024".casillas]]
-id = "NORESIDENTE"
-number = "*25"
-section = ["datos_identificativos", "conyuge"]
-data_type = "boolean"
-semantic_role = "spouse_non_resident_irpf"
-input_kind = "bound"
-binding = "renta-profile-spouse-non-resident-irpf"
-additional_source_refs = ["aeat-dr-100-2024-xsd", "boe-modelo-100-2024-form"]
-[[revisions."2024".casillas]]
-id = "PCTMINASDLG"
-number = "*93"
-section = ["datos_identificativos", "ascendientes", "ascendiente"]
-data_type = "text"
-semantic_role = "irpf_ascendiente_clave_discapacidad"
-input_kind = "bound"
-binding = "renta-family-ascendant-disability-grade"
-legal_refs = ["ley-35-2006:art-59", "ley-35-2006:art-60", "orden-hac-242-2025:art-3"]
-additional_source_refs = ["aeat-dr-100-2024-xsd", "boe-modelo-100-2024-form"]
-[[revisions."2024".casillas]]
-id = "PH18"
-number = "*74"
-section = ["datos_identificativos", "hijos"]
-data_type = "boolean"
-semantic_role = "irpf_hijos_menores_unidad_familiar_flag"
-input_kind = "bound"
-binding = "renta-profile-family-minor-children-in-unit"
-legal_refs = ["ley-35-2006:art-82", "ley-35-2006:art-83", "orden-hac-242-2025:art-3"]
-additional_source_refs = ["aeat-dr-100-2024-xsd", "boe-modelo-100-2024-form"]
-[[revisions."2024".casillas]]
-id = "RESIDENTEUE"
-number = "*26"
-section = ["datos_identificativos", "conyuge"]
-data_type = "boolean"
-semantic_role = "spouse_resident_ue_eee"
-input_kind = "bound"
-binding = "renta-profile-spouse-eu-eea-resident"
-additional_source_refs = ["aeat-dr-100-2024-xsd", "boe-modelo-100-2024-form"]
-[[revisions."2024".casillas]]
-id = "SEXO_C"
-number = "*16"
-section = ["datos_identificativos", "conyuge"]
-data_type = "text"
-semantic_role = "spouse_sex"
-input_kind = "bound"
-binding = "renta-profile-spouse-sex"
-additional_source_refs = ["aeat-dr-100-2024-xsd", "boe-modelo-100-2024-form"]
-[[revisions."2024".casillas]]
-id = "SEXO_D"
-number = "*07"
-section = ["datos_identificativos", "declarante"]
-data_type = "text"
-semantic_role = "irpf_declarante_sexo"
-input_kind = "bound"
-binding = "renta-profile-taxpayer-sex"
-additional_source_refs = ["aeat-dr-100-2024-xsd", "boe-modelo-100-2024-form"]
-[[revisions."2024".casillas]]
-id = "TIPOTRIBUTACION"
-number = "*04"
-section = ["datos_identificativos", "declarante"]
-data_type = "text"
-semantic_role = "irpf_tipo_tributacion"
-required = true
-input_kind = "bound"
-binding = "renta-profile-declaration-type"
-legal_refs = ["ley-35-2006:art-82", "ley-35-2006:art-83", "orden-hac-242-2025:art-3"]
-additional_source_refs = ["aeat-dr-100-2024-xsd", "boe-modelo-100-2024-form"]
-[[revisions."2024".casillas]]
-id = "ZCCAD"
-number = "*03"
-section = ["datos_identificativos", "declarante"]
-data_type = "text"
-semantic_role = "irpf_comunidad_autonoma_residencia"
-required = true
-input_kind = "bound"
-binding = "renta-profile-tax-residence-ccaa"
-legal_refs = ["ley-35-2006:art-74", "orden-hac-242-2025:art-3"]
-additional_source_refs = ["aeat-dr-100-2024-xsd", "boe-modelo-100-2024-form"]
-[[revisions."2024".casillas]]
-id = "ZRUE2"
-number = "*27"
-section = ["datos_identificativos", "conyuge"]
-data_type = "text"
-semantic_role = "spouse_resident_ue_eee_country"
-input_kind = "bound"
-binding = "renta-profile-spouse-eu-eea-country"
-additional_source_refs = ["aeat-dr-100-2024-xsd", "boe-modelo-100-2024-form"]
 # AEAT publishes no casilla number for this box: the exempt INSS
 # maternidad/paternidad benefit (LIRPF art. 7.h) is subtracted from computable
 # work income but appears in no dictionary, XSD or manual under any number.

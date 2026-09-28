@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from dataclasses import dataclass
+from datetime import timedelta
 from enum import StrEnum
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
@@ -16,6 +17,7 @@ from cadrumo.domain.calculations.registry.facts.schema import (
     ScalarFactPayload,
 )
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_base import DateAxis
 from cadrumo.domain.calculations.registry.schema_formula import DatedValue, ParameterDefinition
 
 __all__ = [
@@ -117,44 +119,72 @@ def compile_modelo_parameter_projection_facts(
 
 
 def _target_variants(modelo: ModeloDefinition, target: _ProjectionTarget) -> tuple[GovernedFactVariant, ...]:
-    variants: list[GovernedFactVariant] = []
-    index_by_identity: dict[tuple[object, ...], int] = {}
-    for revision in modelo.revisions.values():
+    rows: dict[tuple[object, ...], list[tuple[ModeloRevision, ParameterDefinition, DatedValue]]] = {}
+    for revision in sorted(modelo.revisions.values(), key=lambda item: (item.valid_from, str(item.id))):
         for parameter in revision.parameters:
             if parameter.id != target.parameter_id:
                 continue
             _require_scalar_parameter(parameter, modelo_id=modelo.id, revision_id=revision.id)
             for value in parameter.values:
-                identity = (
-                    value.date_axis,
-                    value.valid_from,
-                    value.valid_to,
-                    value.value,
-                    parameter.unit,
-                    parameter.legal_refs,
-                    parameter.source_refs,
-                    parameter.source_citations,
-                )
-                existing_index = index_by_identity.get(identity)
-                if existing_index is not None:
-                    existing = variants[existing_index]
-                    if existing.review_status is not revision.review_status:
-                        raise RegistryValidationError(
-                            f"modelo {modelo.id} parameter {parameter.id!r} revisions contributing one "
-                            "projected fact disagree on review status"
-                        )
-                    source_revision_ids = existing.source_revision_ids
-                    if revision.id not in source_revision_ids:
-                        variants[existing_index] = existing.model_copy(
-                            update={"source_revision_ids": (*source_revision_ids, revision.id)},
-                        )
-                    continue
-                index_by_identity[identity] = len(variants)
-                variants.append(_project_variant(modelo.id, revision, parameter, value))
+                row = (value.date_axis, value.valid_from, value.valid_to, value.value, parameter.unit)
+                rows.setdefault(row, []).append((revision, parameter, value))
+    variants = [
+        variant
+        for statements in rows.values()
+        for variant in _row_variants(modelo.id, parameter_id=target.parameter_id, statements=statements)
+    ]
     return _open_newest_edition(
         modelo,
         tuple(sorted(variants, key=lambda variant: (variant.valid_from, variant.variant_id))),
     )
+
+
+def _row_variants(
+    modelo_id: str,
+    *,
+    parameter_id: str,
+    statements: list[tuple[ModeloRevision, ParameterDefinition, DatedValue]],
+) -> tuple[GovernedFactVariant, ...]:
+    """Project one dated row that one or more editions state.
+
+    Consecutive editions stating the row with the same provenance share one
+    variant. An unchanged value can stay open across editions that each carry
+    their own review evidence; the row is then split at the first filing year
+    of each edition whose provenance differs, so every slice keeps the evidence
+    of the edition that states it and the slices together cover exactly the
+    row's own window.
+    """
+    runs: list[tuple[list[ModeloRevision], ParameterDefinition, DatedValue]] = []
+    for revision, parameter, value in statements:
+        if runs and _provenance(runs[-1][1]) == _provenance(parameter):
+            run_revisions = runs[-1][0]
+            if run_revisions[0].review_status is not revision.review_status:
+                raise RegistryValidationError(
+                    f"modelo {modelo_id} parameter {parameter_id!r} revisions contributing one "
+                    "projected fact disagree on review status"
+                )
+            run_revisions.append(revision)
+            continue
+        runs.append(([revision], parameter, value))
+    if len(runs) > 1 and runs[0][2].date_axis is not DateAxis.FILING_PERIOD:
+        raise RegistryValidationError(
+            f"modelo {modelo_id} parameter {parameter_id!r} restates one {runs[0][2].date_axis} row with "
+            "different provenance; only a filing-period row can be split at edition boundaries"
+        )
+    variants: list[GovernedFactVariant] = []
+    for index, (run_revisions, parameter, value) in enumerate(runs):
+        valid_from = value.valid_from if index == 0 else max(value.valid_from, run_revisions[0].valid_from)
+        valid_to = value.valid_to if index == len(runs) - 1 else runs[index + 1][0][0].valid_from - timedelta(days=1)
+        sliced = value.model_copy(update={"valid_from": valid_from, "valid_to": valid_to})
+        variant = _project_variant(modelo_id, run_revisions[0], parameter, sliced)
+        variants.append(
+            variant.model_copy(update={"source_revision_ids": tuple(revision.id for revision in run_revisions)})
+        )
+    return tuple(variants)
+
+
+def _provenance(parameter: ParameterDefinition) -> tuple[object, ...]:
+    return (parameter.legal_refs, parameter.source_refs, parameter.source_citations)
 
 
 def _open_newest_edition(

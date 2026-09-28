@@ -6,7 +6,7 @@
 through
 :class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`. The
 catalogue is serialised as a single
-:class:`~cadrumo.adapters.persistence.storage.Envelope`-wrapped JSON payload keyed
+:class:`~cadrumo.adapters.persistence.storage.envelope.contract.Envelope`-wrapped JSON payload keyed
 by a stable namespace and object key; the underlying column is encrypted so no
 plaintext work-unit metadata lands on disk.
 The storage contract is declared by

@@ -157,9 +157,6 @@ aggregation:
     errors:
       filing_year_out_of_range: El ejercicio %{filing_year} esta fuera del rango admitido
         %{min_year}-%{max_year}.
-      invoice_retencion_collision: La(s) observación(es) de retención de la(s) factura(s)
-        %{source_object_ids} se declararon manualmente y también mediante --received-invoice-retención;
-        elimine el duplicado antes de agregar.
       m111_no_retenciones_attestation_missing: 'No existen observaciones de retención
         por perceptor para el modelo 111 %{filing_year} %{period}. No presentes un
         Modelo 111 en blanco: declara el trimestre como periodo sin retenciones con

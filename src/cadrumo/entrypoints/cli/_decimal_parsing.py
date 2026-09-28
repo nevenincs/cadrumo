@@ -16,7 +16,7 @@ thing that is genuinely CLI-owned: the localised, instructive refusal. One
 grammar, one refusal per boundary.
 
 See Also:
-    :class:`~cadrumo.core.Period`
+    :class:`~cadrumo.core.period.Period`
         The sibling operator-input boundary; both refuse in one place per axis.
 """
 

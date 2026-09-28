@@ -9,6 +9,7 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ._modelo_303_registry_support import (
@@ -178,10 +179,21 @@ def test_modelo_303_workbook_parity_ref_anchors_record_design_layout() -> None:
     assert parity.fixture_id == "modelo-303-2022-record-design-layout"
 
 
-def test_modelo_303_2026_cnae_width_has_a_distinct_authority_role() -> None:
+def _prorrata_cnae_width(revision: ModeloRevision, casilla_id: str = "500") -> int | None:
+    casilla = next((c for c in revision.casillas if c.id == casilla_id), None)
+    return None if casilla is None or casilla.constraints is None else casilla.constraints.max_length
+
+
+def test_modelo_303_four_digit_cnae_width_has_a_distinct_authority_role() -> None:
     modelo, _ = load_modelo_303()
-    historical = modelo.revisions["2025"]
-    current = modelo.revisions["2026-y-siguientes"]
+    # The first design the registry authors with four-digit prorrata CNAE rows, compared
+    # with the design authored immediately before it.
+    ordered = sorted(modelo.revisions.values(), key=lambda revision: revision.valid_from)
+    widened_index = next(index for index, revision in enumerate(ordered) if _prorrata_cnae_width(revision) == 4)
+    assert widened_index > 0, "the four-digit CNAE design must have a three-digit predecessor"
+    historical, current = ordered[widened_index - 1], ordered[widened_index]
+    widened_year = current.valid_from.year
+    prior_year = historical.valid_from.year
 
     for row, casilla_id in enumerate(("500", "505", "510", "515", "520"), start=1):
         prior = next(c for c in historical.casillas if c.id == casilla_id)
@@ -189,9 +201,9 @@ def test_modelo_303_2026_cnae_width_has_a_distinct_authority_role() -> None:
         assert prior.constraints is not None and prior.constraints.min_length == prior.constraints.max_length == 3
         assert widened.constraints is not None and widened.constraints.min_length == widened.constraints.max_length == 4
         assert prior.semantic_role == f"m303_prorrata_actividad_fila_{row}_cnae"
-        assert widened.semantic_role == f"m303_prorrata_actividad_fila_{row}_cnae_2026_four_digit"
-        assert "aeat-dr-303-2025" in prior.source_refs
-        assert "aeat-dr-303-2026" in widened.source_refs
+        assert widened.semantic_role == f"m303_prorrata_actividad_fila_{row}_cnae_{widened_year}_four_digit"
+        assert f"aeat-dr-303-{prior_year}" in prior.source_refs
+        assert f"aeat-dr-303-{widened_year}" in widened.source_refs
 
 
 # The defect-C2 regression that pinned the no-volume prorrata default used one

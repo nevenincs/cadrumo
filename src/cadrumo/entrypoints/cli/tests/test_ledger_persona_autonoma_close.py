@@ -1,4 +1,4 @@
-"""Persona testimonial: an autónoma closes their 1T-2025 quarter.
+"""Persona testimonial: an autónoma closes their first quarter.
 
 This testimonial follows a freelance software consultant (an autónoma) on
 estimación directa simplificada filing IVA on the general regime. This suite
@@ -55,14 +55,20 @@ def _import_corpus() -> None:
         assert result.exit_code == 0, f"{name}: {result.output}"
 
 
-def _is_q1_2025(row: dict[str, object]) -> bool:
-    """Only the January-March 2025 rows are wanted for the 1T close."""
+def _row_year(row: dict[str, object]) -> int:
+    date_val = row.get("date")
+    assert isinstance(date_val, str), row
+    return int(date_val[:4])
+
+
+def _is_first_quarter(row: dict[str, object], exercise: int) -> bool:
+    """Only the exercise's January-March rows are wanted for the 1T close."""
     date_val = row.get("date")
     date = str(date_val) if date_val is not None else ""
-    return date.startswith("2025-01") or date.startswith("2025-02") or date.startswith("2025-03")
+    return any(date.startswith(f"{exercise}-{month:02d}") for month in (1, 2, 3))
 
 
-def test_autonoma_closes_1t_2025_end_to_end(tmp_path: Path) -> None:
+def test_autonoma_closes_the_first_quarter_end_to_end(tmp_path: Path) -> None:
     """The full first quarterly close as an operator would run it."""
     rules = _oracle_rules()
 
@@ -73,16 +79,18 @@ def test_autonoma_closes_1t_2025_end_to_end(tmp_path: Path) -> None:
     _import_corpus()
     all_rows = _list_rows()
     assert len(all_rows) >= 500, f"expected full corpus imported, got {len(all_rows)}"
+    # The corpus opens on the exercise whose first quarter the autonoma closes.
+    exercise = min(_row_year(row) for row in all_rows)
 
     # --- Narrow to the quarter --------------------------------------------
     # The documented filter is tried first: review --filter period=1T --filter year=2025.
-    by_period = _invoke(["app", "ledger", "review", "--filter", "period=1T", "--filter", "year=2025"])
+    by_period = _invoke(["app", "ledger", "review", "--filter", "period=1T", "--filter", f"year={exercise}"])
     assert by_period.exit_code == 0, by_period.output
     # TESTIMONIAL: `review` renders a human table but does not emit a JSON row
     # list the operator can drive programmatically; to actually *act* on the
     # quarter the fallback is `list` + a client-side date filter on the `date` field.
-    q1_rows = [r for r in all_rows if _is_q1_2025(r)]
-    assert q1_rows, "corpus must carry 1T-2025 activity for the close"
+    q1_rows = [r for r in all_rows if _is_first_quarter(r, exercise)]
+    assert q1_rows, f"corpus must carry 1T-{exercise} activity for the close"
 
     # Every freshly-imported row is unprocessed; there is real work to do.
     assert all(r.get("business_classification") == "NOT_YET_PROCESSED" for r in q1_rows)
@@ -161,7 +169,7 @@ def test_autonoma_closes_1t_2025_end_to_end(tmp_path: Path) -> None:
     # --- Readiness gates --------------------------------------------------
     # Preflight runs for the quarter to see what's still missing.
     preflight = _invoke(
-        ["--format", "json", "app", "ledger", "preflight", "--period", "1T", "--year", "2025"],
+        ["--format", "json", "app", "ledger", "preflight", "--period", "1T", "--year", str(exercise)],
     )
     assert preflight.exit_code == 0, preflight.output
     pf = json.loads(preflight.output)["result"]
@@ -178,14 +186,14 @@ def test_autonoma_closes_1t_2025_end_to_end(tmp_path: Path) -> None:
     assert "issues" in chk, chk
 
     # `status` is the at-a-glance summary for the quarter.
-    status = _invoke(["app", "ledger", "status", "--period", "1T", "--year", "2025"])
+    status = _invoke(["app", "ledger", "status", "--period", "1T", "--year", str(exercise)])
     assert status.exit_code == 0, status.output
 
     # --- Export the quarter -----------------------------------------------
     # The whole ledger exports for the gestor. TESTIMONIAL: `export` has
     # no --period flag, so the operator cannot hand their gestor *just* the
     # quarter; the export is the entire bucket and the gestor must filter downstream.
-    out_csv = tmp_path / "autonoma-1t-2025.csv"
+    out_csv = tmp_path / f"autonoma-1t-{exercise}.csv"
     exported = _invoke(
         ["--format", "json", "app", "ledger", "export", "--output", str(out_csv), "--export-format", "csv"],
     )

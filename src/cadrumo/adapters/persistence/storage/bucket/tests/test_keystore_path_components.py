@@ -26,7 +26,7 @@ fails here.
 
 from __future__ import annotations
 
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 
 import pytest
 
@@ -77,7 +77,7 @@ def test_a_drive_qualified_id_would_have_renamed_the_bucket(tmp_path: Path) -> N
     as well as containment -- a future simplification to "does it stay under
     the root" would pass every other test in this module.
     """
-    same_drive = Path("C:/storage-root/buckets") / "C:x"
+    same_drive = PureWindowsPath("C:/storage-root/buckets") / "C:x"
 
     assert same_drive.name == "x", "premise: pathlib drops the same-drive qualifier"
     assert same_drive.name != "C:x"

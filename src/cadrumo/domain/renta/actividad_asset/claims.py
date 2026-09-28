@@ -332,7 +332,7 @@ def _same_incentive_investment_of_other_assets(
 
 
 def project_m100(claims: tuple[AmortizationClaim, ...], *, asset_kind: AssetKind, tax_year: int) -> ClaimProjection:
-    """Project one effective claim set to its exclusive 2025 Modelo 100 destination."""
+    """Project one effective claim set to its exclusive Modelo 100 destination."""
     selected = tuple(
         claim for claim in effective_claims(claims) if claim.tax_year == tax_year and claim.asset_kind is asset_kind
     )
@@ -342,8 +342,8 @@ def project_m100(claims: tuple[AmortizationClaim, ...], *, asset_kind: AssetKind
 
 def project_m130(claims: tuple[AmortizationClaim, ...], *, period: Period, asset_kind: AssetKind) -> ClaimProjection:
     """Project the same effective claims cumulatively through a dated M130 period."""
-    if period.filing_year != 2025 or not period.has_date_span():
-        raise ActividadAssetValidationError("M130 asset projection requires a dated 2025 filing period")
+    if not period.has_date_span():
+        raise ActividadAssetValidationError("M130 asset projection requires a dated filing period")
     cutoff = period.end_date
     selected = tuple(
         claim

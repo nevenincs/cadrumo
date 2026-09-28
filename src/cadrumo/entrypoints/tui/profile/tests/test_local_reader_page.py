@@ -359,6 +359,10 @@ def _real_runtime(tmp_path: Path, *, installed: set[str]) -> Generator[Path]:
             cadrumo_llm_ollama_text_model=_TEXT,
             cadrumo_llm_ollama_vision_model=_VISION,
             cadrumo_llm_contention_safety_margin_bytes=0,
+            # The documented operator setting for a host whose accelerator cannot
+            # be read; without it the load fails closed on this machine's hardware
+            # before the loopback runtime is asked. A measured shortfall still refuses.
+            cadrumo_llm_contention_check_override=True,
             cadrumo_output_language="en",
         ),
     ):

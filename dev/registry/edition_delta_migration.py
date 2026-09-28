@@ -3295,6 +3295,21 @@ def _declared_predecessor(manifest: Mapping[str, object]) -> str | None:
     return declared if isinstance(declared, str) else None
 
 
+def _family_storage_baseline(manifest: Mapping[str, object], section: str) -> str | None:
+    """The edition a family's stated members inherit from, or ``None`` when the family inherits nothing.
+
+    A storage baseline names the payload ancestry a family is stored against,
+    independently of the edition's legal ``predecessor``; an explicit
+    no-predecessor root can still store a family against an earlier edition's
+    payload. Without a baseline the family inherits from the named predecessor.
+    """
+    key = "casilla_storage_baseline" if section == CASILLAS_FAMILY else "family_storage_baseline"
+    baseline = manifest.get(key)
+    if isinstance(baseline, str):
+        return baseline
+    return _declared_predecessor(manifest)
+
+
 def _lineage_attestation(
     *,
     member: Mapping[str, object],
@@ -3444,28 +3459,34 @@ def _plan_edition_drop(
     edition_dir = modelo_dir / "revisions" / revision_id
     source = _read_edition(modelo_dir, revision_id)
     predecessor = _declared_predecessor(source.manifest)
-    if predecessor is None:
+    baselines = {family.section: _family_storage_baseline(source.manifest, family.section) for family in families}
+    if not any(baselines.values()):
         return EditionDrop(
             revision_id=revision_id,
             predecessor=None,
             skipped="root edition: inherits nothing, so it states no restatement",
             families=(),
         )
-    inherited_table = _read_edition(modelo_dir, predecessor).table
+    inherited_tables: dict[str, Mapping[str, object]] = {}
     drops: list[FamilyDrop] = []
     for family in families:
+        baseline = baselines[family.section]
+        if baseline is None:
+            continue
         stated = [
             block for fragment in _read_family_fragments(edition_dir, family.section) for block in fragment.blocks
         ]
         if not stated:
             continue
+        if baseline not in inherited_tables:
+            inherited_tables[baseline] = _read_edition(modelo_dir, baseline).table
         drop = _plan_family_drop(
             family=family,
             revision_id=revision_id,
-            predecessor_revision_id=predecessor,
+            predecessor_revision_id=baseline,
             manifest=source.manifest,
             stated=stated,
-            inherited=_materialised_members(inherited_table, family.section),
+            inherited=_materialised_members(inherited_tables[baseline], family.section),
         )
         if drop.stated:
             drops.append(drop)

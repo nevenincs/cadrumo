@@ -3,15 +3,16 @@ tags:
   - '#adr'
   - '#assets-core'
 date: '2026-09-21'
-modified: '2026-09-23'
+modified: '2026-09-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:50e34a8963c58909a0b67d856a44dac625aa7c002b493f106ff8e74ee3a0a5a6'
+body_hash: 'sha256:e643c12a23fde546c793e3b5b08db7d38d518473a2a93f6718dae46c209f7894'
 related:
   - "[[2026-09-21-assets-core-ownership-contracts-reference]]"
   - "[[2026-09-21-assets-core-lifecycle-and-integration-research]]"
   - "[[2026-08-23-amortization-casilla-mapping-adr]]"
   - "[[2026-07-01-iva-bienes-inversion-regularizacion-adr]]"
   - '[[2026-09-23-assets-core-proration-and-incentive-scope-research]]'
+  - '[[2026-09-27-registry-conformance-rectification-research]]'
 ---
 
 # `assets-core` adr: `IRPF asset identity, claim history, allocation, and filing projections` | (**status:** `accepted`)
@@ -180,3 +181,10 @@ and typed home components preserve the allocation facts required by
   therefore must not land before this proposal is accepted.
 - Disposal gain or loss, vehicles, foral regimes, inherited property, rental
   income, and ungrounded incentives remain outside this decision.
+
+## Amendment 2026-09-27
+
+Authorized by the operator's registry conformance rectification brief of 2026-09-27, recorded as the approval basis of `2026-09-27-registry-conformance-rectification-plan`, on the evidence in `2026-09-27-registry-conformance-rectification-research`. The accepted body above is preserved; where it differs, this section governs.
+
+- Initial filing-grade support extends from tax year 2025 to every year of the registry support envelope, floor 2022, for the same regimes and asset kinds. The Modelo 100 and Modelo 130 projections of the same effective claims target casillas 0208, 0227 and 02 in every supported year, where their meaning is unchanged.
+- Asset forecasts select the Modelo 100 edition canonically in every frontend; a year beyond the newest authored edition is served by projection and keeps that edition's capability limits.

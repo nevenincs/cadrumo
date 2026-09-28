@@ -4,7 +4,7 @@ See Also:
     :mod:`~adapters.inbound.declaracion.tests.test_parser_boundary_m303`
         Single-fixture parser boundary check for the current Modelo 303
         declaration profile.
-    :mod:`~adapters.inbound.declaracion.tests.test_parser_boundary_m303_2023_2024`
+    :mod:`~adapters.inbound.declaracion.tests.test_parser_boundary_m303_corpus_printed_template`
         Current-template corpus sweep that consumes the 2023-2024 parameters
         and expected profile casilla set.
     :mod:`~adapters.inbound.declaracion.tests.test_parser_boundary_m303_historical`

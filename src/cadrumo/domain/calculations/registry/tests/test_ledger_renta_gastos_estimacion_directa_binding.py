@@ -31,10 +31,15 @@ from ..ledger_renta_gastos_estimacion_directa_bindings import (
 )
 from ..relations import relation_prefill_bindings_for_period
 from ..schema import BindingDefinition, ModeloRevision, RegistrySnapshot
+from .authored_editions import newest_authored_edition
 from .registry_tree import bundled_modelo_components
 from .snapshot_support import build_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+# The newest Modelo 100 edition the registry authors; its ledger expense bindings
+# are the ones resolved here.
+_REVIEWED_EDITION = newest_authored_edition("100")
 
 _M100_GASTO_SS_CASILLA: CasillaId = validated_casilla_id(
     "0186",
@@ -69,8 +74,8 @@ def _modelo_100_snapshot(filing_year: int):
     )
 
 
-def _modelo_100_2025_snapshot():
-    return _modelo_100_snapshot(2025)
+def _reviewed_edition_snapshot():
+    return _modelo_100_snapshot(_REVIEWED_EDITION)
 
 
 def _readable_transaction_id(label: str) -> str:
@@ -98,26 +103,26 @@ def _expense_observation(
     fact = RentaDeductibleExpenseFact(
         transaction_id=_readable_transaction_id(transaction_id),
         catalogue_id="ledger",
-        operation_date=date(2025, 4, 5),
+        operation_date=date(_REVIEWED_EDITION, 4, 5),
         gross_amount=gross_amount,
         taxable_base=taxable_base,
         iva_amount=iva_amount,
         direction=RentaExpenseDirection.OUTGOING_EXPENSE,
         category=category,
     )
-    profile = resolve_category_profiles(2025, operation=operation)[category]
+    profile = resolve_category_profiles(_REVIEWED_EDITION, operation=operation)[category]
     result = evaluate_renta_deductibility(
         fact,
         profile,
-        RentaDeductibilityContext(profile_year=2025),
+        RentaDeductibilityContext(profile_year=_REVIEWED_EDITION),
     )
-    return build_renta_deductible_expense_observation(fact, result, tax_year=2025)
+    return build_renta_deductible_expense_observation(fact, result, tax_year=_REVIEWED_EDITION)
 
 
-def test_modelo_100_2025_renta_ledger_expense_bindings_resolve_to_bound_casillas(
+def test_modelo_100_renta_ledger_expense_bindings_resolve_to_bound_casillas(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    snapshot = _modelo_100_2025_snapshot()
+    snapshot = _reviewed_edition_snapshot()
     revision = snapshot.revision
     casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
 
@@ -252,8 +257,8 @@ def test_modelo_100_2025_renta_ledger_expense_bindings_resolve_to_bound_casillas
             binding.id: Decimal("0")
             for binding, _provider in relation_prefill_bindings_for_period(revision, period=snapshot.period)
         },
-        date_binding_values={"renta-profile-taxpayer-birth-date": date(1980, 1, 1)},
-        date_context={"filing_period": date(2025, 12, 31)},
+        date_binding_values={"renta-profile-taxpayer-birth-date": date(_REVIEWED_EDITION - 45, 1, 1)},
+        date_context={"filing_period": date(_REVIEWED_EDITION, 12, 31)},
     )
 
     # Calculation threading: the snapshot calculator must thread
@@ -393,7 +398,7 @@ def test_unsupported_renta_expense_flags_observation_routed_to_no_binding(
     observation reaches no binding and would silently vanish from the filing,
     so the fail-closed screen MUST report it (no-silent-under-declaration).
     """
-    snapshot = _modelo_100_2025_snapshot()
+    snapshot = _reviewed_edition_snapshot()
     revision = _single_expense_binding_revision(snapshot, "0186")
 
     routed = _expense_observation(
@@ -425,7 +430,7 @@ def test_unsupported_renta_expense_does_not_flag_zero_deductible(
     false-fire guard (the ledger-iva-advisory cuota-bearing precedent) excludes
     it even when its target_casilla_id matches no binding on the revision.
     """
-    snapshot = _modelo_100_2025_snapshot()
+    snapshot = _reviewed_edition_snapshot()
     revision = _single_expense_binding_revision(snapshot, "0186")
 
     zero_unrouted = _expense_observation(

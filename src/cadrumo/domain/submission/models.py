@@ -204,7 +204,7 @@ class ModeloPresentado(BaseModel):
             the :data:`SubmissionId` digest form.
         draft_id: The upstream draft identifier.
         modelo: The AEAT modelo identifier.
-        period: The :class:`~cadrumo.core.Period` covered, serialised as
+        period: The :class:`~cadrumo.core.period.Period` covered, serialised as
             ``{"filing_year": int, "code": str}`` across the persistence
             boundary.
         profile_tax_id: The validated taxpayer identity value carried

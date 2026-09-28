@@ -26,7 +26,9 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 #: One of the two entries the S2 baseline requires to surface findings. It is a
 #: real corpus document with both a substantial scorable set and a substantial
 #: trap set, which is exactly what a scorer needs to be exercised on.
-_ANCHOR_DOC_ID = "OP-PUR-COM-2026-0005_layout-minimal"
+#: The synthetic purchase series the scoring baseline names; its entries share this identity.
+_BASELINE_SERIES = "COM-2026-0005"
+_ANCHOR_DOC_ID = f"OP-PUR-{_BASELINE_SERIES}_layout-minimal"
 
 
 @pytest.fixture
@@ -60,9 +62,9 @@ def test_the_anchor_document_still_carries_both_slot_kinds(anchor: IngestCorpusD
     assert len(anchor.fabrication_trap_fields) == 10
 
 
-def test_both_com_2026_0005_entries_can_surface_a_finding(key: CorpusKey) -> None:
+def test_both_baseline_series_entries_can_surface_a_finding(key: CorpusKey) -> None:
     """The S2 baseline names two entries; neither may be trap-less."""
-    entries = tuple(document for document in key.documents if "COM-2026-0005" in document.doc_id)
+    entries = tuple(document for document in key.documents if _BASELINE_SERIES in document.doc_id)
     assert len(entries) == 2
     for document in entries:
         assert document.fabrication_trap_fields, f"{document.doc_id} has no trap to fabricate into"

@@ -50,6 +50,8 @@ from ..conformance.registry_schema_support import (
 from ..conformance.registry_schema_support import (
     committed_snapshot as _committed_snapshot,
 )
+from .authored_edition_support import newest_authored_edition
+from .profile_schema_support import committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -373,19 +375,22 @@ def test_no_revision_raises_typed_subclass_with_structured_natural_key() -> None
     assert err.revision_id == "r9"
 
 
-def test_modelo_390_2026_projects_the_nearest_authored_revision() -> None:
-    """An absent edition projects from 2025 instead of becoming a support gap."""
-    revision = select_revision(_committed_modelo_390(), filing_year=2026, period="0A", support=_support())
+def test_modelo_390_horizon_projects_the_nearest_authored_revision() -> None:
+    """The absent horizon edition projects from the newest authored one instead of becoming a support gap."""
+    support = committed_supported_filing_years()
+    newest_authored = newest_authored_edition("390")
+    assert newest_authored < support.horizon
+    revision = select_revision(_committed_modelo_390(), filing_year=support.horizon, period="0A", support=support)
     resolution = revision_temporal_resolution(
         revision,
-        filing_year=2026,
+        filing_year=support.horizon,
         period="0A",
-        support=_support(),
+        support=support,
     )
 
-    assert resolution.revision.id == "2025"
-    assert resolution.requested_filing_year == 2026
-    assert resolution.authored_filing_year == 2025
+    assert resolution.revision.id == str(newest_authored)
+    assert resolution.requested_filing_year == support.horizon
+    assert resolution.authored_filing_year == newest_authored
     assert resolution.projection_direction is TemporalProjectionDirection.FORWARD
 
 

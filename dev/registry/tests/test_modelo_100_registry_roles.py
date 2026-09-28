@@ -50,8 +50,19 @@ from ._modelo_100_registry_support import (
     _modelo_100_revision,
     _modelo_100_snapshot,
 )
+from .authored_edition_support import newest_authored_edition, oldest_authored_edition
+from .profile_schema_support import committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_SUPPORT = committed_supported_filing_years()
+# The newest Modelo 100 edition the registry authors; edition-specific declarations below are asserted against it.
+_REVIEWED_EDITION = newest_authored_edition("100")
+# The floor edition carries the two ampliacion rows of the maternity deduction.
+_MATERNITY_EXTENSION_EDITION = _SUPPORT.floor
+# The oldest authored Modelo 100 revision, a storage root below the support floor;
+# its dictionary and XSD are the cited evidence for the ordinal slot.
+_ORDINAL_SLOT_ROOT_EDITION = oldest_authored_edition("100")
 
 
 def test_modelo_100_trabajo_otros_gastos_role_is_decimal_across_revisions() -> None:
@@ -188,8 +199,9 @@ def test_modelo_100_annual_order_refs_are_declared_and_cited() -> None:
             assert tfi_order_ref in casilla.legal_refs, (filing_year, casilla.id)
 
 
-def test_modelo_100_2025_zec_reduced_rate_parameter_cites_special_rate_article() -> None:
-    revision = _modelo_100_snapshot(2025).revision
+@pytest.mark.parametrize("filing_year", tuple(year for year in _SUPPORT.years if year >= _REVIEWED_EDITION))
+def test_modelo_100_zec_reduced_rate_parameter_cites_special_rate_article(filing_year: int) -> None:
+    revision = _modelo_100_snapshot(filing_year).revision
     parameters_by_id = {parameter.id: parameter for parameter in revision.parameters}
     parameter = parameters_by_id["renta-zec-tipo-gravamen-reducido"]
 
@@ -689,13 +701,13 @@ def test_modelo_100_premios_0303_splits_historical_emancipation_grant_from_renta
     )
 
 
-def test_modelo_100_2020_0356_is_gp_otros_ordinal_element_number() -> None:
+def test_modelo_100_root_revision_0356_is_gp_otros_ordinal_element_number() -> None:
     modelos_by_id, _ = _loaded_registry()
     modelo = modelos_by_id["100"]
-    revision_2020 = modelo.revisions["2020"]
+    root_revision = modelo.revisions[str(_ORDINAL_SLOT_ROOT_EDITION)]
     casilla = next(
         casilla
-        for casilla in revision_2020.casillas
+        for casilla in root_revision.casillas
         if casilla.id == validated_casilla_id("0356", surface="test_modelo_100_registry.casilla")
     )
 
@@ -704,7 +716,10 @@ def test_modelo_100_2020_0356_is_gp_otros_ordinal_element_number() -> None:
     assert casilla.data_type == "integer"
     assert casilla.semantic_role == "irpf_gp_elemento_numero_orden"
     assert tuple(casilla.legal_refs) == ("ley-35-2006:art-33", "ley-35-2006:art-34")
-    assert {"aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-xsd"}.issubset(casilla.source_refs)
+    assert {
+        f"aeat-dr-100-{_ORDINAL_SLOT_ROOT_EDITION}-dictionary",
+        f"aeat-dr-100-{_ORDINAL_SLOT_ROOT_EDITION}-xsd",
+    }.issubset(casilla.source_refs)
 
     later_revision_roles = {
         filing_year: next(
@@ -712,9 +727,11 @@ def test_modelo_100_2020_0356_is_gp_otros_ordinal_element_number() -> None:
             for casilla in modelo.revisions[str(filing_year)].casillas
             if casilla.id == validated_casilla_id("0356", surface="test_modelo_100_registry.casilla")
         )
-        for filing_year in range(2022, 2026)
+        for filing_year in _SUPPORT.years
+        if str(filing_year) in modelo.revisions
     }
 
+    assert later_revision_roles
     assert set(later_revision_roles.values()) == {"irpf_ganancia_premios_ayuda_200_euros"}
 
 
@@ -758,10 +775,10 @@ def test_modelo_100_tfi_operation_counts_are_integer_until_restructure() -> None
     assert tuple(casilla_0414_2025.section) == ("resultado_declaracion",)
 
 
-def test_modelo_100_2025_coti_fund_loss_role_matches_loss_label() -> None:
+def test_modelo_100_coti_fund_loss_role_matches_loss_label() -> None:
     modelos_by_id, _ = _loaded_registry()
     modelo = modelos_by_id["100"]
-    revision = modelo.revisions["2025"]
+    revision = modelo.revisions[str(_REVIEWED_EDITION)]
     coti_loss = next(
         casilla
         for casilla in revision.casillas
@@ -780,7 +797,10 @@ def test_modelo_100_2025_coti_fund_loss_role_matches_loss_label() -> None:
     assert coti_loss.semantic_role_cardinality_reason
     assert "quoted-fund coti capital-loss slot" in coti_loss.semantic_role_cardinality_reason
     assert {"ley-35-2006:art-33", "ley-35-2006:art-34"}.issubset(coti_loss.legal_refs)
-    assert {"aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd"}.issubset(coti_loss.source_refs)
+    assert {
+        f"aeat-dr-100-{_REVIEWED_EDITION}-dictionary",
+        f"aeat-dr-100-{_REVIEWED_EDITION}-xsd",
+    }.issubset(coti_loss.source_refs)
 
     assert general_loss.label == coti_loss.label
     assert general_loss.semantic_role == "irpf_perdida_fondos_importe"
@@ -1113,8 +1133,8 @@ def test_modelo_100_re_attribution_inmueble_days_are_integer() -> None:
         )
 
 
-def test_modelo_100_2022_maternity_child_counts_are_integer() -> None:
-    revision = _modelo_100_snapshot(2022).revision
+def test_modelo_100_maternity_extension_child_counts_are_integer() -> None:
+    revision = _modelo_100_snapshot(_MATERNITY_EXTENSION_EDITION).revision
     expected_roles = {
         validated_casilla_id("1911", surface="test_modelo_100_registry.casilla"): "irpf_num_hijos_maternidad_2020",
         validated_casilla_id("1914", surface="test_modelo_100_registry.casilla"): "irpf_num_hijos_maternidad_2021",
@@ -1132,7 +1152,10 @@ def test_modelo_100_2022_maternity_child_counts_are_integer() -> None:
         assert casilla.semantic_role_cardinality == "intentional_singleton"
         assert casilla.semantic_role_cardinality_reason
         assert "ley-35-2006:art-81" in casilla.legal_refs
-        assert {"aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-xsd"}.issubset(casilla.source_refs)
+        assert {
+            f"aeat-dr-100-{_MATERNITY_EXTENSION_EDITION}-dictionary",
+            f"aeat-dr-100-{_MATERNITY_EXTENSION_EDITION}-xsd",
+        }.issubset(casilla.source_refs)
 
 
 def test_modelo_100_la_rioja_municipality_codes_are_integer() -> None:

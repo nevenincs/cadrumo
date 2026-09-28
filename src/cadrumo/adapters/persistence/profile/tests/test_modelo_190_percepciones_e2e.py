@@ -16,15 +16,12 @@ from pathlib import Path
 
 import pytest
 
-from .....application.aggregation.percepciones_observations_repository import (
-    PercepcionObservationPorts,
-    persist_percepcion_observations,
-)
+from .....application.aggregation.percepciones_observations_repository import PercepcionObservationPorts
 from .....application.aggregation.retencion_observations_repository import RetencionObservationPorts
 from .....application.aggregation.source_mesh import CalculationSourceContext
 from .....application.aggregation.tests.withholding_filer_profile_support import withholding_work_profile
 from .....application.aggregation.withholding_source import WithholdingSourceResolver
-from .....core.aggregation import RetencionClave
+from .....core.aggregation import AggregationCaptureKind, RetencionClave
 from .....core.casilla_id import validated_casilla_id
 from .....core.period import Period
 from .....domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
@@ -69,11 +66,11 @@ def test_m190_percepciones_count_resolves_distinct_from_store_to_bound_casilla(t
         source_period = Period.from_year_and_code(2024, "2T")
         repository = PercepcionObservationRepositoryAdapter(objects=profile.repository)
         ports = PercepcionObservationPorts(repository=repository)
-        persist_percepcion_observations(
-            ports=ports,
+        repository.replace_observations(
             modelo="111",
             filing_year=2024,
             period=source_period,
+            source_kind=AggregationCaptureKind.AGGREGATE_PULL,
             observations=[
                 _obs("11111111H", RetencionClave.from_registry("A")),
                 _obs("11111111H", RetencionClave.from_registry("G")),

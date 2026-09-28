@@ -68,6 +68,7 @@ from dev.acceptance.income_tax.tui_journey import (
     installed_lifecycle_contract,
 )
 from dev.acceptance.installed_cli import InstalledCli, InstalledCliError
+from dev.packaging.installed_wheel_binding import environment_interpreter
 
 from .filing_year import IvaJourneyYear, require_journey_year, require_m303_developer_header_positions
 
@@ -1443,7 +1444,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         if getattr(args, name) is None:
             raise SystemExit(f"--{name.replace('_', '-')} is required for the outer journey")
     args.cli = args.cli.resolve(strict=True)
-    args.python = args.python.resolve(strict=True)
+    args.python = environment_interpreter(args.python)
     args.wheel = args.wheel.resolve(strict=True)
     args.authority_root = args.authority_root.resolve(strict=True)
     args.output_root = args.output_root.resolve()
