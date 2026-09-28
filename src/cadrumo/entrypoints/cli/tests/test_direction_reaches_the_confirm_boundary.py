@@ -232,6 +232,13 @@ def live_document(tmp_path: Path, reader_url: str):
             cadrumo_local_storage_root=tmp_path,
             cadrumo_output_language="en",
             cadrumo_llm_ollama_chat_url=reader_url,
+            # The reader is on-host, so its load is admitted against measured
+            # headroom before the request is sent. The operator override admits
+            # a machine whose accelerator this build cannot measure, and the
+            # margin is zero because this runtime loads no weights. A measured
+            # shortfall still refuses.
+            cadrumo_llm_contention_check_override=True,
+            cadrumo_llm_contention_safety_margin_bytes=0,
         ),
         isolated_profile_storage_root(tmp_path=tmp_path),
         open_test_profile_session(_PROFILE_ID),

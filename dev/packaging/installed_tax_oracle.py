@@ -240,6 +240,27 @@ def profile_create_arguments() -> tuple[str, ...]:
     )
 
 
+#: Profile-creation option that reads the new profile's passphrase from stdin.
+PROFILE_CREATION_SECRETS_OPTION: Final[str] = "--secrets-stdin"
+#: Global option that reads the active profile's passphrase from stdin.
+PROFILE_AUTHENTICATION_SECRETS_OPTION: Final[str] = "--profile-secrets-stdin"
+
+
+def profile_creation_secrets(passphrase: str) -> str:
+    """Return the stdin payload that creates a passphrase-only profile."""
+    return json.dumps({"passphrase": passphrase, "passphrase_confirmation": passphrase}, separators=(",", ":"))
+
+
+def profile_authentication_secrets(passphrase: str) -> str:
+    """Return the stdin payload that authenticates one profile-scoped command."""
+    return json.dumps({"profile_passphrase": passphrase}, separators=(",", ":"))
+
+
+def complete_setup_arguments() -> tuple[str, ...]:
+    """Return the verb that declares a created profile ready for modelo work."""
+    return ("config", "profile", "complete-setup")
+
+
 def work_create_arguments() -> tuple[str, ...]:
     """Return the public work-unit creation argument sequence."""
     return (
@@ -400,14 +421,11 @@ def create_installed_profile(
     raised, never carried forward.
     """
     return _run(
-        (str(cli), *_JSON_FORMAT, *profile_create_arguments(), "--secrets-stdin"),
+        (str(cli), *_JSON_FORMAT, *profile_create_arguments(), PROFILE_CREATION_SECRETS_OPTION),
         cwd=cwd,
         env=environment,
         timeout_seconds=timeout_seconds,
-        input_text=json.dumps(
-            {"passphrase": passphrase, "passphrase_confirmation": passphrase},
-            separators=(",", ":"),
-        ),
+        input_text=profile_creation_secrets(passphrase),
     )
 
 
@@ -480,9 +498,9 @@ def run_installed_tax_oracle(
     resolved_work_dir.mkdir(parents=True, exist_ok=True)
     environment = isolated_product_environment(storage_root)
     base = (str(resolved_cli), *_JSON_FORMAT)
-    authenticated_base = (*base, "--profile-secrets-stdin")
+    authenticated_base = (*base, PROFILE_AUTHENTICATION_SECRETS_OPTION)
     passphrase = secrets.token_urlsafe(32)
-    profile_authentication = json.dumps({"profile_passphrase": passphrase}, separators=(",", ":"))
+    profile_authentication = profile_authentication_secrets(passphrase)
     commands: list[CommandResult] = []
 
     version = _run(
@@ -513,7 +531,7 @@ def run_installed_tax_oracle(
     # has never been declared ready to file. The declaration is its own verb, so
     # the oracle makes it rather than assuming creation implied it.
     complete_setup = _run(
-        (*authenticated_base, "config", "profile", "complete-setup"),
+        (*authenticated_base, *complete_setup_arguments()),
         cwd=resolved_work_dir,
         env=environment,
         timeout_seconds=timeout_seconds,

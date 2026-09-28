@@ -27,6 +27,7 @@ from __future__ import annotations
 from collections.abc import Iterator
 from dataclasses import dataclass
 from datetime import date
+from functools import lru_cache
 
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import lookup_translation_entry
@@ -35,6 +36,7 @@ from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuth
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.compiler.authority_state import compiler_generation
 
 from .search_record import CasillaSearchRecord, SearchRecordKind
 
@@ -82,6 +84,10 @@ def project_casilla_search_records(
 ) -> tuple[tuple[CasillaSearchRecord, ...], CasillaProjectionStats]:
     """Project and deduplicate every casilla of every modelo.
 
+    Against the bundled authority this is a pure function of one read-only
+    registry tree, so the result is memoised per compiler generation (see
+    :func:`_bundled_projection`); an injected authority is walked afresh.
+
     Args:
         authority: The validated registry authority to read snapshots
             through; defaults to the bundled authority. Injectable so a
@@ -91,7 +97,40 @@ def project_casilla_search_records(
         A ``(records, stats)`` pair: the deduplicated records sorted by
         ``(modelo, casilla_id)`` and the raw-vs-deduplicated counts.
     """
-    resolved = authority if authority is not None else compiled_bundled_authority()
+    if authority is not None:
+        return _project(authority)
+    # Compile first, then read the generation: compiling is what advances it, so
+    # reading it first would file this projection under the previous generation
+    # and rewalk the whole registry once for nothing.
+    compiled_bundled_authority()
+    return _bundled_projection(compiler_generation())
+
+
+@lru_cache(maxsize=2)
+def _bundled_projection(
+    registry_generation: int,
+) -> tuple[tuple[CasillaSearchRecord, ...], CasillaProjectionStats]:
+    """Walk the bundled registry once per compiler generation in this process.
+
+    The development compiler's generation counter is the key because it is what
+    already means "the compiled authority changed": it advances on every fresh
+    compilation and on an explicit compiler reset, so an edit to any registry
+    source rewalks and a reset is not served stale. The walk touches every
+    revision of every modelo, so a lane that projects several times per process
+    otherwise pays for the whole corpus each time.
+
+    Args:
+        registry_generation: :func:`~dev.registry.compiler.authority_state.compiler_generation`
+            observed after the bundled authority was compiled.
+    """
+    del registry_generation
+    return _project(compiled_bundled_authority())
+
+
+def _project(
+    resolved: ValidatedRegistryAuthority,
+) -> tuple[tuple[CasillaSearchRecord, ...], CasillaProjectionStats]:
+    """Deduplicate and record every casilla reachable from ``resolved``."""
     raw_rows = 0
     by_key: dict[tuple[str, str], _RevisionCasilla] = {}
     sources: dict[tuple[str, str], list[_RevisionCasilla]] = {}

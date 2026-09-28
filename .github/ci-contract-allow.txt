@@ -34,6 +34,7 @@ release.yml:Push the manifest to the bucket
 release.yml:Require the deploy role before anything else
 release.yml:Alert on failure without touching the release
 release.yml:Report an already published version
+docs-health.yml:Report an availability failure
 
 # --- pending - a gate with no recipe -------------------------------------------
 # Each is a real gate that a contributor cannot run before pushing.

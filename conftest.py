@@ -55,6 +55,7 @@ See ``src/cadrumo/tests/README.md`` and charter ``#116`` for the full taxonomy.
 
 from __future__ import annotations
 
+import gc
 import os
 import tempfile
 from collections.abc import Iterator
@@ -275,6 +276,22 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
     # banner can name the markers these tests actually carry instead of
     # guessing a lane that may be just as empty.
     deselection_hook.record_collected_markers(config, items)
+
+
+def pytest_collection_finish(session: pytest.Session) -> None:
+    """Take everything collection built out of the cyclic collector's reach.
+
+    By the end of collection a process holds every imported module, class,
+    fixture definition and collected item, and almost all of it lives for the
+    rest of the session. Every full collection during the run re-traversed that
+    whole population and freed nothing from it. Frozen, it is skipped; objects
+    the tests create afterwards are collected exactly as before. Measured on
+    the registry and calculation suites (2398 tests, four workers): 13 to 18
+    percent of wall time.
+    """
+    del session
+    gc.collect()
+    gc.freeze()
 
 
 def pytest_xdist_auto_num_workers(config: pytest.Config) -> int | None:

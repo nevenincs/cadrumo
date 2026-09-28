@@ -61,11 +61,32 @@ def test_a_nested_ignore_file_applies_below_its_own_directory_and_overrides_its_
 
 
 def test_the_version_control_entry_is_never_content_whether_directory_or_worktree_pointer(tmp_path: Path) -> None:
-    _write(tmp_path, ".git/HEAD", "ref: refs/heads/main\n")
-    _write(tmp_path, "linked/.git", "gitdir: elsewhere\n")
-    _write(tmp_path, "linked/module.py", "x")
+    clone, linked = tmp_path / "clone", tmp_path / "linked"
+    _write(clone, ".git/HEAD", "ref: refs/heads/main\n")
+    _write(clone, "module.py", "x")
+    _write(linked, ".git", "gitdir: elsewhere\n")
+    _write(linked, "module.py", "x")
 
-    assert repository_files(tmp_path) == ("linked/module.py",)
+    assert repository_files(clone) == ("module.py",)
+    assert repository_files(linked) == ("module.py",)
+
+
+def test_a_repository_nested_inside_the_tree_is_not_its_content(tmp_path: Path) -> None:
+    """A linked worktree or clone checked out below the root is another tree, as in git.
+
+    An agent's isolated worktree under ``.claude/worktrees`` is a full second copy
+    of the repository; walked as content, every gate built on this enumeration
+    reported that copy's tests and modules as this tree's own.
+    """
+    _write(tmp_path, "src/module.py", "x")
+    _write(tmp_path, "tools/worktrees/agent/.git", "gitdir: elsewhere\n")
+    _write(tmp_path, "tools/worktrees/agent/src/module.py", "x")
+    _write(tmp_path, "vendor/clone/.git/HEAD", "ref: refs/heads/main\n")
+    _write(tmp_path, "vendor/clone/lib.py", "x")
+    _write(tmp_path, "vendor/own.py", "x")
+
+    assert repository_files(tmp_path) == ("src/module.py", "vendor/own.py")
+    assert repository_files(tmp_path, under=("tools/worktrees/agent/src", "vendor")) == ("vendor/own.py",)
 
 
 def test_under_narrows_to_the_named_paths_without_matching_a_mere_name_prefix(tmp_path: Path) -> None:

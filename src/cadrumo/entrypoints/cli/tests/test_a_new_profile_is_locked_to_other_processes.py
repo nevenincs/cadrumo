@@ -25,6 +25,7 @@ from cadrumo.adapters.persistence.profile.tests.profile_registration import regi
 
 from ....core.config import load_settings, override_settings
 from ....core.i18n.render import tr
+from ....core.profile_session import ProfileSessionRefusalReason
 from ....tests.call_time_refusing_keyring import CALL_TIME_REFUSING_KEYRING
 from ....tests.in_memory_keyring import IN_MEMORY_KEYRING
 from .subprocess_cli import run_cadrumo_subprocess
@@ -62,8 +63,23 @@ def _english(key: str) -> str:
         return tr(key)
 
 
+_UNAUTHENTICATED_REFUSALS = frozenset(
+    {
+        # The creating process minted no receipt: its own keychain refused.
+        ProfileSessionRefusalReason.ABSENT.value,
+        # The creating process's keychain holds the receipt's key; the reader's does not.
+        ProfileSessionRefusalReason.KEYCHAIN_ENTRY_MISSING.value,
+    }
+)
+
+
 def _refused_as_unauthenticated(listed: subprocess.CompletedProcess[str]) -> bool:
-    """Whether a fresh process was refused for holding no credential, and read nothing."""
+    """Whether a fresh process was refused for holding no credential, and read nothing.
+
+    Which of the two reasons it gives depends on the creating host: its login
+    mints an acceleration receipt wherever its own keychain works. Either way the
+    reader holds no key and must be sent to log in.
+    """
     if listed.returncode != 2 or listed.stdout != "":
         return False
     envelope: object = json.loads(listed.stderr)
@@ -73,7 +89,7 @@ def _refused_as_unauthenticated(listed: subprocess.CompletedProcess[str]) -> boo
     if not isinstance(error, dict) or error.get("code") != "REFUSED_CLI_BOUNDARY":
         return False
     context: object = error.get("context")
-    return isinstance(context, dict) and bool(context.get("reason") == "absent")
+    return isinstance(context, dict) and context.get("reason") in _UNAUTHENTICATED_REFUSALS
 
 
 def test_another_process_with_a_working_keychain_and_no_credential_is_refused_as_unauthenticated(

@@ -62,6 +62,14 @@ from hatchling.plugin.manager import PluginManager
 #: Unset, the pair is read from ``.authority/`` at the build root.
 _AUTHORITY_ROOT_ENV = "CADRUMO_AUTHORITY_ROOT"
 
+#: ``skip`` stops an EDITABLE build from resolving the authority at all. An
+#: editable install never packages it, so the resolution there exists only to
+#: publish one for a checkout's first ``uv sync``; a job that never reads the
+#: authority (lint) otherwise compiles the whole registry for nothing. Every
+#: real distribution build ignores it and always resolves and embeds the pair,
+#: and a runtime with no published authority refuses rather than guessing.
+_EDITABLE_AUTHORITY_ENV = "CADRUMO_EDITABLE_AUTHORITY"
+
 #: The gitignored authoring location, relative to the repository root.
 _SOURCE_TREE_DIRECTORY = ".authority"
 
@@ -283,7 +291,8 @@ class CustomBuildHook(_CustomBuildHookBase):
 
         Resolution runs for every target, including an editable one, because it
         is what publishes a missing or superseded authority and a checkout's
-        first ``uv sync`` depends on that.
+        first ``uv sync`` depends on that -- unless ``CADRUMO_EDITABLE_AUTHORITY``
+        is ``skip``, which only an editable build honours.
 
         The PAYLOAD is admitted only to a real distribution. An editable
         install injects the source directory onto the path, so ``cadrumo``
@@ -293,6 +302,8 @@ class CustomBuildHook(_CustomBuildHookBase):
         developer and CI environment. A distribution has no ``src`` tree, so
         there the same copy is the only authority there is.
         """
+        if version == "editable" and os.environ.get(_EDITABLE_AUTHORITY_ENV) == "skip":
+            return
         build_root = Path(self.root)
         root = _authority_root(build_root)
         descriptor, database = _selected_pair(root)

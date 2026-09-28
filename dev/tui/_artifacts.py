@@ -260,8 +260,8 @@ class Manifest(BaseModel):
     source_revision: str
     """Fingerprint of the rendered source, taken when the run STARTED.
 
-    A full matrix takes about twenty-five minutes and renders each surface in
-    its own subprocess, so code landing mid-run splits the output: early frames
+    A full matrix takes tens of minutes and renders each frame in its own
+    subprocess, so code landing mid-run splits the output: early frames
     show the old behaviour, late frames the new, and a manifest that records
     only `generated_at` claims all of them equally. That is worse than stale
     frames from an earlier run -- those at least announce themselves as another
@@ -559,7 +559,7 @@ class StaleArtifactPurgeRefusedError(RuntimeError):
     right question for a frame a re-render replaced and the wrong one for a
     frame it never asked for. A run narrowed with ``--surface`` names a
     fraction of the matrix, so every other surface's frames are unclaimed by
-    construction, and a directory that cost about twenty-five minutes to fill
+    construction, and a directory that cost tens of minutes to fill
     empties down to the one surface that was re-rendered. Nothing warns: the
     files are gitignored, so there is no diff and no git recovery.
 

@@ -81,11 +81,12 @@ def _run(tmp_path: Path, chat_url: str, *args: str) -> subprocess.CompletedProce
             "cadrumo_llm_ollama_text_model": _TEXT,
             "cadrumo_llm_ollama_vision_model": _VISION,
             "cadrumo_llm_ollama_mapping_model": _MAPPING,
-            "cadrumo_llm_contention_safety_margin_bytes": 0,
-            # The documented operator setting for a host whose accelerator cannot
-            # be read; without it the load fails closed on this machine's hardware
-            # before the loopback runtime is asked. A measured shortfall still refuses.
+            # Loads and pulls are admitted against measured headroom first. The
+            # operator override admits a machine whose accelerator this build
+            # cannot measure, and the margin is zero because this runtime loads
+            # no weights. A measured shortfall still refuses.
             "cadrumo_llm_contention_check_override": True,
+            "cadrumo_llm_contention_safety_margin_bytes": 0,
         },
         extra_env=_NO_KEYCHAIN,
     )

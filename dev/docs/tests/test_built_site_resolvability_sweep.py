@@ -47,8 +47,6 @@ generated legal-reference pages, and CLI destinations in full.
 from __future__ import annotations
 
 import os
-import shutil
-import subprocess
 import sys
 from pathlib import Path
 
@@ -56,25 +54,26 @@ import pytest
 from bs4 import BeautifulSoup
 
 from dev._paths import REPO_ROOT
+from dev.packaging.command_execution import run_command
 
 from ..pagefind_inject import _materialise_records
+from ._sphinx_build_harness import SUBPROCESS_TIMEOUT_S, copy_docs_source
 
 pytestmark = [
     pytest.mark.integration,
     pytest.mark.hex_core,
     pytest.mark.docs,
-    # The sweep shells a full single-worker user-scope Sphinx HTML build and
-    # then reads every rendered page; the whole test measures ~840s on the
-    # reference workstation now that the casilla reference and sequence corpora
-    # are enrolled — far over the global 300s ceiling. The budget must exceed
-    # the sweep's real cost so a timeout can only mean a genuine hang, never a
-    # merely-slow legitimate build.
+    # The sweep shells a full user-scope Sphinx HTML build and then reads every
+    # rendered page, so it runs far over the global 300s ceiling. The budget
+    # must exceed the sweep's real cost so a timeout can only mean a genuine
+    # hang, never a merely-slow legitimate build; the build subprocess carries
+    # its own shorter ceiling (``SUBPROCESS_TIMEOUT_S``), which therefore wins
+    # the race and names the hung command instead of leaving a bare stack.
     pytest.mark.timeout(1800),
 ]
 
 # dev/docs/tests/test_built_site_resolvability_sweep.py -> parents[3] is the repo root.
 _REPO_ROOT = REPO_ROOT
-_DOCS = _REPO_ROOT / "docs"
 
 
 def _build_user_scope_html(tmp_path: Path) -> Path:
@@ -88,12 +87,18 @@ def _build_user_scope_html(tmp_path: Path) -> Path:
     written into the tmp source copy by their generation hooks. Warnings are not
     fatal here (no ``-W``): the sweep asserts against the rendered tree, so an
     unrelated nitpick warning must not mask a real dead-link finding -- that
-    check belongs to the ``-n -W`` gate, this one reads the HTML. The subprocess
-    uses one Sphinx worker because pytest already owns the outer parallelism;
-    nested ``-j auto`` pools are not deterministic across platforms.
+    check belongs to the ``-n -W`` gate, this one reads the HTML.
+
+    One Sphinx worker, unlike the sibling ``dummy`` gate builds, which take the
+    harness's bounded width. Those builds are parse-only, so the parallel read is
+    their whole cost; this one renders HTML and then this gate reads every page
+    back, and widening it was measured to buy nothing: on Linux the same run took
+    1079.63s with one worker and 1124.13s with the harness's four. Widening it
+    also multiplies the build's CPU demand against the other gate builds xdist
+    runs beside it, so the width stays at one until a measurement on a native CI
+    filesystem shows a gain.
     """
-    docs_source = tmp_path / "docs-source"
-    shutil.copytree(_DOCS, docs_source, ignore=shutil.ignore_patterns("_build", "cli"))
+    docs_source = copy_docs_source(tmp_path)
     out = tmp_path / "html"
     env = {
         **os.environ,
@@ -107,7 +112,7 @@ def _build_user_scope_html(tmp_path: Path) -> Path:
         # dev/docs/tests/_sphinx_build_harness.py for the dedupe rationale).
         "CADRUMO_DOCS_SKIP_SEQUENCE_CHECK": "1",
     }
-    result = subprocess.run(
+    result = run_command(
         [
             sys.executable,
             "-m",
@@ -120,10 +125,8 @@ def _build_user_scope_html(tmp_path: Path) -> Path:
             str(out),
         ],
         cwd=_REPO_ROOT,
-        capture_output=True,
-        text=True,
-        env=env,
-        check=False,
+        environment=env,
+        timeout_seconds=SUBPROCESS_TIMEOUT_S,
     )
     assert result.returncode == 0, (
         "user-scope html docs build failed (the sweep needs the built tree):\n"
