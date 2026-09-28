@@ -346,7 +346,7 @@ def _root_page_corpus(root: Path, language: str) -> Path:
     index the records land in relative to the pages, and the language attribute
     alone decides that. Building a real localized Sphinx root per language here
     would cost minutes each, and the localized builds themselves are already
-    covered by ``test_docs_build_localized``.
+    covered by the ``test_docs_build_localized_<lang>`` gates.
     """
     site = root / f"site-{language}"
     site.mkdir(parents=True)

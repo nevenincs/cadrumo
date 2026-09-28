@@ -40,7 +40,7 @@ from __future__ import annotations
 import json
 import re
 from collections.abc import Iterable, Mapping
-from pathlib import Path
+from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Annotated, Final, Literal, cast
 
 from pydantic import BaseModel, Field, JsonValue, StringConstraints, ValidationError, model_validator
@@ -148,13 +148,16 @@ def _path_replacements(*, storage_root: str, workdir: str) -> list[tuple[str, st
     layer up. A POSIX path is unaffected (it has no backslash to double), so the
     extra pair is inert off Windows rather than conditional on it.
     """
-    replacements: list[tuple[str, str]] = []
-    for raw, token in (
+    roots: list[tuple[str, str]] = [
         (workdir, SANDBOX_WORKDIR_PLACEHOLDER),
         (storage_root, SANDBOX_STORAGE_ROOT_PLACEHOLDER),
-        (str(Path(storage_root).parent), SANDBOX_ROOT_PLACEHOLDER),
-        (str(_repo_root()), REPO_ROOT_PLACEHOLDER),
-    ):
+    ]
+    sandbox_root = _sandbox_root(storage_root)
+    if sandbox_root is not None:
+        roots.append((sandbox_root, SANDBOX_ROOT_PLACEHOLDER))
+    roots.append((str(_repo_root()), REPO_ROOT_PLACEHOLDER))
+    replacements: list[tuple[str, str]] = []
+    for raw, token in roots:
         native = str(raw)
         posix = native.replace("\\", "/")
         json_escaped = native.replace("\\", "\\\\")
@@ -164,6 +167,23 @@ def _path_replacements(*, storage_root: str, workdir: str) -> list[tuple[str, st
         if json_escaped != native:
             replacements.append((json_escaped, token))
     return sorted(replacements, key=lambda pair: len(pair[0]), reverse=True)
+
+
+def _sandbox_root(storage_root: str) -> str | None:
+    """Return the storage root's parent in the root's own path flavour, or ``None``.
+
+    The root is a string recorded by whichever host wrote the transcript, so the
+    running host's :class:`~pathlib.Path` cannot parse it: on POSIX a
+    backslash-separated Windows root is a single relative component whose parent
+    is ``.``, and a ``.`` needle tokenises every full stop in the frame. A parent
+    that is empty or only a filesystem anchor (``/``, ``C:\\``) would over-mask
+    the same way, so neither ever becomes a needle.
+    """
+    windows_form = "\\" in storage_root or bool(PureWindowsPath(storage_root).drive)
+    parent = (PureWindowsPath if windows_form else PurePosixPath)(storage_root).parent
+    if not parent.parts or str(parent) == parent.anchor:
+        return None
+    return str(parent)
 
 
 def _normalise_token_path_separators(text: str) -> str:

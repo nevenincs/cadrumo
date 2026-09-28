@@ -4,9 +4,9 @@ Asserts the docs build machinery's hygiene contracts and the focused rendered
 surfaces (identity page, sequence widget), each in a ``tmp_path`` with
 ``CADRUMO_DOCS_OFFLINE`` set so intersphinx inventories are not fetched. The
 heavy whole-tree ``-n -W`` builds live one-per-module beside this file
-(``test_docs_build_full_scope``, ``test_docs_build_user_scope``,
-``test_docs_build_localized``) so pytest-xdist's per-file distribution runs
-them concurrently; their shared machinery is
+(``test_docs_build_full_scope``, ``test_docs_build_user_scope``, and one
+``test_docs_build_localized_<lang>`` per translation target) so pytest-xdist's
+per-file distribution runs them concurrently; their shared machinery is
 :mod:`dev.docs.tests._sphinx_build_harness`.
 """
 
@@ -431,6 +431,85 @@ def test_docs_scope_config_switches_autodoc_and_api_exclusion(tmp_path: Path) ->
     assert full["has_typehints"] is True
     assert full["excludes_api"] is False
     assert full["resolves_deferred"] is True
+
+
+def _generation_read_set(tmp_path: Path, *source_tails: str) -> dict[str, bool]:
+    """Evaluate ``docs/conf.py``'s generated-output read-set guard for one argv shape.
+
+    Runs the module-level ``conf.py`` code (never ``setup()``) in a subprocess
+    with ``sys.argv`` shaped like the Sphinx invocation under test, then asks the
+    guard whether each generated surface can influence that build.
+
+    Args:
+        tmp_path: Isolated storage root for the evaluation.
+        source_tails: Docs-root-relative source filenames the invocation names
+            after ``sourcedir`` and ``outputdir``. Empty means a normal build,
+            which names no filenames at all.
+
+    Returns:
+        A ``surface -> reads it`` mapping, one entry per generated surface.
+    """
+    conf = _DOCS / "conf.py"
+    argv = ["sphinx-build", "-b", "dummy", str(_DOCS), str(tmp_path / "out")]
+    argv += [str(_DOCS / tail) for tail in source_tails]
+    script = (
+        "import json, runpy, sys;"
+        f"sys.argv = {argv!r};"
+        f"ns = runpy.run_path(r'{conf}');"
+        "print('READ_SET=' + json.dumps({"
+        "'cli': ns['_should_generate_cli_reference'](),"
+        "'glossary': ns['_build_reads']('_generated/glossary.rst'),"
+        "'casillas': ns['_build_reads']('_generated/casillas'),"
+        "'legal': ns['_build_reads']('_generated/legal')}))"
+    )
+    env = {
+        **os.environ,
+        "CADRUMO_DOCS_PROJECT_ROOT": str(_REPO_ROOT),
+        "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "cadrumo-read-set-store"),
+    }
+    result = subprocess.run(
+        [sys.executable, "-c", script],
+        cwd=_REPO_ROOT,
+        capture_output=True,
+        text=True,
+        env=env,
+        check=False,
+        timeout=_SUBPROCESS_TIMEOUT_S,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    line = next(row for row in result.stdout.splitlines() if row.startswith("READ_SET="))
+    payload = json.loads(line[len("READ_SET=") :])
+    if not isinstance(payload, dict):
+        raise AssertionError("read-set probe must emit a JSON object")
+    return {str(key): bool(value) for key, value in payload.items()}
+
+
+def test_generated_surfaces_are_produced_exactly_when_the_build_reads_them(tmp_path: Path) -> None:
+    """The generated-output guard skips an unread surface and keeps a read one.
+
+    Every generated surface (CLI reference, glossary, casilla pages, legal pages)
+    compiles a registry authority or the Handbook before writing a line, which on
+    a one-page build is nearly the whole build. The guard drops that work for a
+    surface the invocation cannot read -- a specific-source build parses only the
+    filenames it names -- and that is precisely the kind of narrowing that
+    silently turns into "generates nothing", so both directions are asserted:
+
+    * a normal build (no filenames) produces every surface;
+    * a one-page build produces none of them;
+    * a build that DOES name a generated page produces that surface and still
+      skips its siblings.
+    """
+    full_build = _generation_read_set(tmp_path)
+    assert full_build == {"cli": True, "glossary": True, "casillas": True, "legal": True}, full_build
+
+    one_page = _generation_read_set(tmp_path, "index.md")
+    assert one_page == {"cli": False, "glossary": False, "casillas": False, "legal": False}, one_page
+
+    casilla_page = _generation_read_set(tmp_path, "_generated/casillas/303.rst")
+    assert casilla_page == {"cli": False, "glossary": False, "casillas": True, "legal": False}, casilla_page
+
+    cli_page = _generation_read_set(tmp_path, "cli/index.rst")
+    assert cli_page == {"cli": True, "glossary": False, "casillas": False, "legal": False}, cli_page
 
 
 def test_rendered_site_identity_and_static_marks_are_canonical(tmp_path: Path) -> None:
