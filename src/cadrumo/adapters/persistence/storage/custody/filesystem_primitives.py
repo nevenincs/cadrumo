@@ -334,26 +334,61 @@ def windows_component_paths(path: Path) -> tuple[str, ...]:
     return tuple(paths)
 
 
-@contextmanager
-def posix_directory_fd(path: Path) -> Generator[int]:
-    """Walk an absolute directory a component at a time without following links."""
+def _open_posix_directory_walk(path: Path, *, absent_is_none: bool) -> int | None:
+    """Open an absolute directory a component at a time without following links.
+
+    With ``absent_is_none`` a missing component returns ``None``: nothing can
+    exist below it, so the walk observed absence rather than an unsafe entry.
+    A link, a non-directory or a refused open at any component still raises.
+    """
     flags = os.O_RDONLY | getattr(os, "O_DIRECTORY", 0) | getattr(os, "O_NOFOLLOW", 0)
     try:
         descriptor = os.open(path.anchor or "/", flags)
     except OSError as exc:
         raise ProfileCustodyRecordError("profile capsule root cannot be no-follow opened") from exc
-    try:
-        components = path.parts[1:] if path.anchor else path.parts
-        for component in components:
-            try:
-                next_descriptor = os.open(component, flags, dir_fd=descriptor)
-            except OSError as exc:
-                raise ProfileCustodyRecordError("profile capsule directory component is unsafe") from exc
+    components = path.parts[1:] if path.anchor else path.parts
+    for component in components:
+        try:
+            next_descriptor = os.open(component, flags, dir_fd=descriptor)
+        except FileNotFoundError as exc:
             os.close(descriptor)
-            descriptor = next_descriptor
+            if absent_is_none:
+                return None
+            raise ProfileCustodyRecordError("profile capsule directory component is unsafe") from exc
+        except OSError as exc:
+            os.close(descriptor)
+            raise ProfileCustodyRecordError("profile capsule directory component is unsafe") from exc
+        os.close(descriptor)
+        descriptor = next_descriptor
+    return descriptor
+
+
+@contextmanager
+def posix_directory_fd(path: Path) -> Generator[int]:
+    """Walk an absolute directory a component at a time without following links."""
+    descriptor = _open_posix_directory_walk(path, absent_is_none=False)
+    if descriptor is None:
+        raise ProfileCustodyRecordError("profile capsule directory component is unsafe")
+    try:
         yield descriptor
     finally:
         os.close(descriptor)
+
+
+@contextmanager
+def posix_directory_fd_if_present(path: Path) -> Generator[int | None]:
+    """Walk like :func:`posix_directory_fd`, yielding ``None`` when a component is absent.
+
+    For existence questions only: an absent ancestor means the path does not
+    exist, which is what ``os.path.lexists`` answers on Windows. Every other
+    walk failure is refused exactly as :func:`posix_directory_fd` refuses it.
+    """
+    descriptor = _open_posix_directory_walk(path, absent_is_none=True)
+    try:
+        yield descriptor
+    finally:
+        if descriptor is not None:
+            os.close(descriptor)
 
 
 def posix_open_child_directory(parent_fd: int, name: str) -> int:
@@ -440,6 +475,7 @@ __all__ = [
     "is_real_directory",
     "is_reparse_metadata",
     "posix_directory_fd",
+    "posix_directory_fd_if_present",
     "posix_mkdir_child_directory",
     "posix_open_child_directory",
     "shared_directory_anchors",

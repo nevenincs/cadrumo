@@ -31,6 +31,15 @@ def test_round_trip_preserves_selection_and_coordinate(tmp_path: Path) -> None:
     assert read_pointer(tmp_path) == pointer
 
 
+def test_a_root_below_a_regular_file_reads_as_the_absent_record(tmp_path: Path) -> None:
+    """No record can exist under a non-directory; that is absence on every platform, not corruption."""
+    blocker = tmp_path / "not-a-directory"
+    blocker.write_bytes(b"x")
+
+    assert read_pointer(blocker) == BucketPointer.absent(transition_revision=0)
+    assert read_pointer(blocker / "nested-root") == BucketPointer.absent(transition_revision=0)
+
+
 def test_pointer_path_resolves_to_the_canonical_literal_shape(tmp_path: Path) -> None:
     assert pointer_path(tmp_path) == tmp_path / "active-profile"
     assert pointer_path(tmp_path / "nested" / "root") == tmp_path / "nested" / "root" / "active-profile"

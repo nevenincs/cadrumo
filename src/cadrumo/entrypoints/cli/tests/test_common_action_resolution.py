@@ -40,7 +40,32 @@ from ..operator_surface_reconciliation import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_POWERSHELL_LITERAL_SCRIPT = "& { param([string]$Value) [Console]::Out.Write($Value) }"
+#: Echoes its one argument back as UTF-8. Windows consoles otherwise write in
+#: the OEM code page, which would mangle a typographic quote on the way out.
+_POWERSHELL_LITERAL_SCRIPT = (
+    "& { param([string]$Value) "
+    "[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); "
+    "[Console]::Out.Write($Value) }"
+)
+
+#: Each value beside the single-quoted PowerShell literal that reads back as it.
+#: Single-quoted strings expand nothing; a quote inside one is doubled, and
+#: PowerShell reads the typographic quotes U+2018 to U+201B as quotes too. A
+#: bare ``@`` token would splat rather than pass through.
+_POWERSHELL_LITERAL_CASES = (
+    ("safe-token_1", "safe-token_1"),
+    (r"C:\tmp\bundle.aeat", r"'C:\tmp\bundle.aeat'"),
+    (r"C:\tmp folder\bundle.aeat", r"'C:\tmp folder\bundle.aeat'"),
+    (r"C:\tmp\$(Write-Output PWN)\bundle.aeat", r"'C:\tmp\$(Write-Output PWN)\bundle.aeat'"),
+    (r"C:\$env:TEMP\bundle.aeat", r"'C:\$env:TEMP\bundle.aeat'"),
+    (r"C:\tmp\`quoted\bundle.aeat", r"'C:\tmp\`quoted\bundle.aeat'"),
+    (r"""C:\tmp\"quoted"\bundle.aeat""", r"""'C:\tmp\"quoted"\bundle.aeat'"""),
+    (r"C:\O'Brien\bundle.aeat", r"'C:\O''Brien\bundle.aeat'"),
+    ("O\u2019Brien", "'O\u2019\u2019Brien'"),
+    ("\u2018quoted\u2019 \u201alow\u201b", "'\u2018\u2018quoted\u2019\u2019 \u201a\u201alow\u201b\u201b'"),
+    ("O'\u2019Brien", "'O''\u2019\u2019Brien'"),
+    ("@splat", "'@splat'"),
+)
 
 
 async def _run_powershell_literal(resolved_powershell: str, rendered: str) -> str:
@@ -233,24 +258,21 @@ def test_common_action_resolver_accepts_modelo_calculate_verdict_context_binding
     }
 
 
-@pytest.mark.parametrize(
-    ("value", "rendered"),
-    (
-        ("safe-token_1", "safe-token_1"),
-        (r"C:\tmp\bundle.aeat", r"'C:\tmp\bundle.aeat'"),
-        (r"C:\tmp folder\bundle.aeat", r"'C:\tmp folder\bundle.aeat'"),
-        (r"C:\tmp\$(Write-Output PWN)\bundle.aeat", r"'C:\tmp\$(Write-Output PWN)\bundle.aeat'"),
-        (r"C:\$env:TEMP\bundle.aeat", r"'C:\$env:TEMP\bundle.aeat'"),
-        (r"C:\tmp\`quoted\bundle.aeat", r"'C:\tmp\`quoted\bundle.aeat'"),
-        (r"""C:\tmp\"quoted"\bundle.aeat""", r"""'C:\tmp\"quoted"\bundle.aeat'"""),
-        (r"C:\O'Brien\bundle.aeat", r"'C:\O''Brien\bundle.aeat'"),
-    ),
-)
-def test_powershell_action_token_is_literal_under_the_real_shell(value: str, rendered: str) -> None:
+@pytest.mark.parametrize(("value", "rendered"), _POWERSHELL_LITERAL_CASES)
+def test_powershell_action_token_renders_the_single_quoted_literal(value: str, rendered: str) -> None:
     assert _powershell_action_token(value) == rendered
 
+
+@pytest.mark.external_tool
+@pytest.mark.parametrize(("value", "rendered"), _POWERSHELL_LITERAL_CASES)
+def test_powershell_action_token_is_literal_under_the_real_shell(value: str, rendered: str) -> None:
+    """The rendered literal reads back as the value under a real PowerShell.
+
+    PowerShell sits outside the Python dependency set: Windows ships it, a
+    Linux host has it only when someone installed ``pwsh``.
+    """
     powershell = shutil.which("pwsh") or shutil.which("powershell")
-    assert powershell is not None
+    assert powershell is not None, "no PowerShell (pwsh or powershell) is on PATH for this external_tool test"
     assert anyio.run(_run_powershell_literal, powershell, rendered) == value
 
 

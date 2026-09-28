@@ -263,20 +263,18 @@ def provider_for_modelo(
 
     Returns a :class:`PerModeloAggregationContributor` member identifying
     the aggregation family that owns the given modelo number.
+
+    Classified from the requested modelo's own revisions: a modelo's family
+    depends on nothing else, and projecting the whole registry to answer for
+    one modelo decoded every revision in it on each call. The full inventory
+    is built only to name the supported set in a refusal.
     """
-    supported = _supported_per_modelo_modelos(operation=operation)
-    if modelo != modelo.strip():
-        raise AggregationUnsupportedModeloError(
-            tr("aggregation.per_modelo.errors.unsupported_modelo"),
-            context={"modelo": modelo},
-            precondition_verdict=aggregation_no_recovery_verdict(
-                AggregationPreconditionCondition.PER_MODELO_MODELO_SUPPORTED,
-                facts={"modelo": modelo, "supported_modelos": "|".join(supported)},
-            ),
-        )
-    for provider, modelos in _registered_per_modelo_provider_modelos(operation=operation).items():
-        if modelo in modelos:
+    if modelo == modelo.strip() and modelo in operation.modelo_ids():
+        directory = operation.modelo_directory(modelo)
+        revisions = tuple(operation.revision(modelo, str(metadata.id)) for metadata in directory.revisions)
+        if provider := _provider_for_modelo_revisions(modelo, revisions):
             return provider
+    supported = _supported_per_modelo_modelos(operation=operation)
     raise AggregationUnsupportedModeloError(
         tr("aggregation.per_modelo.errors.unsupported_modelo"),
         context={"modelo": modelo},

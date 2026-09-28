@@ -67,7 +67,10 @@ def _require_directory(target: Path, *, explicit_override: bool) -> bool:
     """Return whether ``target`` is a directory, refusing invalid dependencies."""
     try:
         mode = target.stat().st_mode
-    except FileNotFoundError:
+    # A regular file where an ancestor directory belongs means nothing exists
+    # at the target. POSIX reports that as ENOTDIR where Windows reports
+    # ENOENT; both are an absent target, so both hosts reach the same refusal.
+    except (FileNotFoundError, NotADirectoryError):
         if explicit_override:
             raise CoreValidationError(
                 translated_message="errors.integrity.integrity_cadrumo_core_validation",

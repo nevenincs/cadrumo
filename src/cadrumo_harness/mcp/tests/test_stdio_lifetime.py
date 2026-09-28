@@ -222,12 +222,14 @@ def test_disarm_is_idempotent_without_an_active_generation() -> None:
 
 
 def test_armed_worker_exits_when_dead_client_pid_signals() -> None:
-    """Arming against an already-exited client exits the worker immediately.
+    """Arming against an already-exited client exits the worker promptly.
 
-    The test holds the victim's ``Popen`` handle so the kernel keeps the process
-    object alive after exit: ``OpenProcess`` then succeeds and the wait fires at
-    once. On POSIX the override path declines and the worker reports it stayed
-    up.
+    On Windows the test holds the victim's ``Popen`` handle so the kernel keeps
+    the process object alive after exit: ``OpenProcess`` then succeeds and the
+    wait fires at once. On POSIX the named client is polled, and the reaped
+    victim's PID no longer resolves; ``rearm_seconds`` compresses that poll
+    through the real arming knob, and on Windows it only paces the
+    re-acquisition poll this anchored worker never enters.
     """
     victim = subprocess.Popen([sys.executable, "-c", "pass"], stdout=subprocess.DEVNULL)
     victim.wait(timeout=60)
@@ -236,7 +238,7 @@ def test_armed_worker_exits_when_dead_client_pid_signals() -> None:
         f"""
         import time
         from {_MODULE} import arm_stdio_lifetime_watchdog
-        armed = arm_stdio_lifetime_watchdog(client_pid={victim.pid})
+        armed = arm_stdio_lifetime_watchdog(client_pid={victim.pid}, rearm_seconds=0.5)
         print(f"armed={{armed}}", flush=True)
         time.sleep(20)
         print("still-alive", flush=True)
@@ -251,15 +253,11 @@ def test_armed_worker_exits_when_dead_client_pid_signals() -> None:
         check=False,
     )
     elapsed = time.monotonic() - started
-    if sys.platform == "win32":
-        # The wait fires the instant it arms, so os._exit races (and usually
-        # beats) the worker's own print: assert on the exit, not the output.
-        assert proc.returncode == 0
-        assert "still-alive" not in proc.stdout
-        assert elapsed < 15, f"worker outlived a dead client by {elapsed:.1f}s"
-    else:
-        assert "armed=False" in proc.stdout
-        assert "still-alive" in proc.stdout
+    # On Windows the wait fires the instant it arms, so os._exit races (and
+    # usually beats) the worker's own print: assert on the exit, not the output.
+    assert proc.returncode == 0, proc.stderr
+    assert "still-alive" not in proc.stdout
+    assert elapsed < 15, f"worker outlived a dead client by {elapsed:.1f}s"
 
 
 def test_dead_client_exit_emits_the_structured_event() -> None:
@@ -271,7 +269,7 @@ def test_dead_client_exit_emits_the_structured_event() -> None:
         f"""
         import time
         from {_MODULE} import arm_stdio_lifetime_watchdog
-        arm_stdio_lifetime_watchdog(client_pid={victim.pid}, parent_pid={victim.pid})
+        arm_stdio_lifetime_watchdog(client_pid={victim.pid}, parent_pid={victim.pid}, rearm_seconds=0.5)
         time.sleep(20)
         print("still-alive", flush=True)
         """
@@ -283,9 +281,6 @@ def test_dead_client_exit_emits_the_structured_event() -> None:
         timeout=90,
         check=False,
     )
-    if sys.platform != "win32":
-        assert "still-alive" in proc.stdout
-        return
     assert proc.returncode == 0
     assert "still-alive" not in proc.stdout
     events = [json.loads(line) for line in proc.stderr.splitlines() if line.startswith("{")]
@@ -310,7 +305,7 @@ def test_parent_pid_env_override_is_honoured() -> None:
         f"""
         import time
         from {_MODULE} import arm_stdio_lifetime_watchdog
-        arm_stdio_lifetime_watchdog()
+        arm_stdio_lifetime_watchdog(rearm_seconds=0.5)
         time.sleep(20)
         print("still-alive", flush=True)
         """
@@ -324,9 +319,6 @@ def test_parent_pid_env_override_is_honoured() -> None:
         timeout=90,
         check=False,
     )
-    if sys.platform != "win32":
-        assert "still-alive" in proc.stdout
-        return
     assert "still-alive" not in proc.stdout, "the env override never anchored the watchdog"
     events = [json.loads(line) for line in proc.stderr.splitlines() if line.startswith("{")]
     assert events and events[-1]["dead_ancestor_pid"] == victim.pid, proc.stderr

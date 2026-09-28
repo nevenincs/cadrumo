@@ -23,7 +23,6 @@ __all__ = [
     "COMBINING_MARK_RANGES",
     "COMBINING_MARK_UNIDATA_VERSION",
     "ascii_slug",
-    "combining_mark_ranges_from_unicodedata",
     "fold_diacritics",
     "fold_for_matching",
     "fold_printed_phrase",
@@ -36,15 +35,19 @@ __all__ = [
 #: caller in the PDF label reader names its pattern for what it does.
 _WHITESPACE_RUN_RE = re.compile(r"\s+")
 
-#: Unicode database version :data:`COMBINING_MARK_RANGES` was derived from.
+#: Unicode database version :data:`COMBINING_MARK_RANGES` was derived from: the
+#: one the oldest supported interpreter ships (CPython 3.13).
 COMBINING_MARK_UNIDATA_VERSION = "15.1.0"
 
 #: Inclusive codepoint ranges of Unicode category ``Mn`` (Mark, nonspacing) as
-#: of :data:`COMBINING_MARK_UNIDATA_VERSION`. Checked in because deriving them
-#: at import scans all 0x110000 codepoints through ``unicodedata.category``,
-#: which dominated the import of every process that folds text. The text-fold
-#: tests re-derive the ranges from the live database and print the literal to
-#: paste when it moves.
+#: of :data:`COMBINING_MARK_UNIDATA_VERSION`, and the exact set the fold strips
+#: on EVERY interpreter. A later database moves marks between categories (Ahom
+#: U+1171E is ``Mn`` in 15.1 and ``Mc`` in 16.0), so a set taken from whichever
+#: interpreter runs would make the same text fold differently under 3.13 and
+#: 3.14. Checked in rather than derived at import, which would also scan all
+#: 0x110000 codepoints through ``unicodedata.category`` on every process that
+#: folds text. The text-fold tests regenerate the literal from the pinned
+#: database and print it to paste when it moves.
 COMBINING_MARK_RANGES: tuple[tuple[int, int], ...] = (
     (0x0300, 0x036F),
     (0x0483, 0x0487),
@@ -395,31 +398,11 @@ COMBINING_MARK_RANGES: tuple[tuple[int, int], ...] = (
 )
 
 
-def combining_mark_ranges_from_unicodedata() -> tuple[tuple[int, int], ...]:
-    """Derive the inclusive ``Mn`` codepoint ranges from the running interpreter."""
-    ranges: list[tuple[int, int]] = []
-    for codepoint in range(0x110000):
-        if unicodedata.category(chr(codepoint)) != "Mn":
-            continue
-        if ranges and ranges[-1][1] == codepoint - 1:
-            ranges[-1] = (ranges[-1][0], codepoint)
-        else:
-            ranges.append((codepoint, codepoint))
-    return tuple(ranges)
-
-
-#: Every ``Mn`` codepoint mapped to ``None`` for :meth:`str.translate`, so
-#: folding costs one C-level lookup per character instead of one
-#: ``unicodedata.category`` call. An interpreter shipping a different Unicode
-#: database derives the table live rather than folding with a stale mark set.
+#: Every pinned mark mapped to ``None`` for :meth:`str.translate`, so folding
+#: costs one C-level lookup per character instead of one
+#: ``unicodedata.category`` call.
 _COMBINING_MARK_STRIP_TABLE: dict[int, None] = {
-    codepoint: None
-    for first, last in (
-        COMBINING_MARK_RANGES
-        if unicodedata.unidata_version == COMBINING_MARK_UNIDATA_VERSION
-        else combining_mark_ranges_from_unicodedata()
-    )
-    for codepoint in range(first, last + 1)
+    codepoint: None for first, last in COMBINING_MARK_RANGES for codepoint in range(first, last + 1)
 }
 
 
@@ -427,9 +410,14 @@ def fold_diacritics(text: str) -> str:
     """Return *text* with combining diacritical marks removed.
 
     NFKD-decomposes *text*, then drops every character in Unicode category
-    ``Mn`` (Mark, nonspacing) — the combining accents NFKD decomposition
-    exposes (``"ó"`` -> ``"o"`` + U+0301 COMBINING ACUTE ACCENT, which this
-    function then drops). Every other codepoint passes through unchanged,
+    ``Mn`` (Mark, nonspacing) as of :data:`COMBINING_MARK_UNIDATA_VERSION` —
+    the combining accents NFKD decomposition exposes (``"ó"`` -> ``"o"`` +
+    U+0301 COMBINING ACUTE ACCENT, which this function then drops). The mark
+    set is pinned rather than read from the running interpreter, and Unicode
+    never changes an assigned character's decomposition, so every codepoint
+    that database assigns folds identically on every supported interpreter; a
+    codepoint assigned later is outside that guarantee, because NFKD itself
+    comes from the interpreter. Every other codepoint passes through unchanged,
     including one with no ASCII-compatible decomposition (an em dash, the
     euro sign, ``"ø"``): this function folds ACCENTS, it does not
     transliterate to ASCII. A caller that also needs to discard such

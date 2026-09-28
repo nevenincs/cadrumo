@@ -27,9 +27,6 @@ from types import SimpleNamespace
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.application.aggregation.service import provider_for_modelo
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
-
 from ....core.aggregation import (
     BindingSourceKind,
     CounterpartSourceKind,
@@ -39,6 +36,7 @@ from ....core.aggregation import (
 from ....core.errors.error_codes import get_registered_error_code
 from ....core.operator_action_enums import NoRecoveryOutcome
 from ....core.period import Period
+from ....domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from ....domain.calculations.registry.detail_record_bindings import resolve_foreign_asset_binding_row_values
 from ....domain.calculations.registry.temporal import select_revision
 from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
@@ -77,7 +75,9 @@ from ..service import (
     PerModeloAggregationContributor,
     PerModeloAggregationLogFields,
     PerModeloAggregationResult,
+    _registered_per_modelo_provider_modelos,
     aggregate_per_modelo,
+    provider_for_modelo,
 )
 from ..source_mesh import CalculationSourceContext
 
@@ -186,6 +186,32 @@ def test_command_contract_is_strict_and_immutable() -> None:
         )
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
         command.period = Period.from_year_and_code(2025, "2T")
+
+
+def test_routing_one_modelo_agrees_with_the_registry_wide_inventory() -> None:
+    """Every modelo routes to exactly the family the full inventory assigns it.
+
+    Routing classifies the requested modelo from its own revisions rather than
+    projecting the whole registry, so the two must be proven to agree over the
+    live registry -- including that a modelo outside every family still refuses.
+    Building the inventory also runs its one-family-per-modelo check.
+    """
+    with _indexed_authority_for_test().operation() as operation:
+        assigned = {
+            modelo: contributor
+            for contributor, modelos in _registered_per_modelo_provider_modelos(operation=operation).items()
+            for modelo in modelos
+        }
+        unassigned = [modelo for modelo in operation.modelo_ids() if modelo not in assigned]
+        routed = {modelo: provider_for_modelo(modelo, operation=operation) for modelo in assigned}
+        assert unassigned, "every registry modelo has a family, so the refusal branch is unproven"
+        with pytest.raises(AggregationUnsupportedModeloError):
+            provider_for_modelo(unassigned[0], operation=operation)
+
+    assert set(assigned.values()) == set(PerModeloAggregationContributor), (
+        "a provider family owns no registry modelo, so its routing is compared over nothing"
+    )
+    assert routed == assigned
 
 
 def test_period_boundary_accepts_period_dict_for_roundtrip() -> None:
