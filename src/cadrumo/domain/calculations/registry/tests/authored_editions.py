@@ -13,10 +13,13 @@ import re
 from collections.abc import Callable, Mapping
 from functools import cache
 from itertools import pairwise
+from pathlib import PurePosixPath
 
 from .....core.corpus_text import normalise_corpus_text
 from .....core.resources.bundled_data import bundled_path
-from ..authority import bundled_indexed_authority
+from ..authority import bundled_authority_descriptor_path, bundled_indexed_authority
+from ..authority_artifact import AuthorityComponentKind, ReferenceComponentQuery
+from ..authority_store import SQLiteAuthorityReader
 from ..schema import ModeloRevision
 from ..schema_references import SourceReference
 from ..temporal import RevisionSelectionMetadata
@@ -87,19 +90,44 @@ def source_exercise(source: SourceReference) -> int:
     return source.applies_from.year
 
 
+def _published_source_references() -> tuple[SourceReference, ...]:
+    """Return every public-source declaration the published authority carries."""
+    reader = SQLiteAuthorityReader(bundled_authority_descriptor_path())
+    try:
+        source_ids = tuple(
+            query.reference_id
+            for query in reader.component_queries()
+            if isinstance(query, ReferenceComponentQuery) and query.kind is AuthorityComponentKind.SOURCE_REFERENCE
+        )
+    finally:
+        reader.close()
+    with bundled_indexed_authority().operation() as operation:
+        return tuple(operation.source_reference(source_id) for source_id in source_ids)
+
+
 @cache
 def _manual_edition_texts(manual_id: str) -> tuple[tuple[int, str], ...]:
-    # Each manual part directory carries a manifest naming the exercise its edition
-    # covers, and the committed corpus-text sidecar holds that part's normalised text.
-    corpus_root = bundled_path("corpus", "manuals", manual_id)
-    text_root = bundled_path("manual_corpus_text", "manuals", manual_id)
+    # The registry declares each manual part as a public source whose applicability
+    # window is the exercise its edition covers, and the committed corpus-text
+    # sidecar holds that part's normalised text, pinned to the same source bytes.
+    parts = sorted(
+        (
+            source
+            for source in _published_source_references()
+            if source.corpus_path.startswith(f"corpus/manuals/{manual_id}/")
+        ),
+        key=lambda source: source.corpus_path,
+    )
+    if not parts:
+        raise LookupError(f"the published authority declares no {manual_id} manual part")
     texts: list[tuple[int, str]] = []
-    for manifest_path in sorted(corpus_root.glob("**/manifest.json")):
-        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-        edition_dir = manifest_path.parent.relative_to(corpus_root)
-        sidecar = text_root / edition_dir / f"{manifest['relative_pdf_path']}.corpus_text.json"
-        if sidecar.is_file():
-            texts.append((int(manifest["year"]), json.loads(sidecar.read_text(encoding="utf-8"))["normalised_text"]))
+    for source in parts:
+        relative = PurePosixPath(source.corpus_path).relative_to("corpus")
+        sidecar = bundled_path("manual_corpus_text", *relative.parent.parts, f"{relative.name}.corpus_text.json")
+        payload = json.loads(sidecar.read_text(encoding="utf-8"))
+        if payload["source_sha256"] != source.sha256:
+            raise LookupError(f"the corpus-text sidecar of source {source.id} was extracted from other bytes")
+        texts.append((source_exercise(source), payload["normalised_text"]))
     return tuple(texts)
 
 
