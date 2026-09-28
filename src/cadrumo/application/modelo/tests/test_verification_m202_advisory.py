@@ -109,7 +109,7 @@ def _m202_2025_predicate(predicate_id: str) -> VerificationPredicateDefinition:
     return next(p for p in revision.verification_predicates if p.predicate_id == predicate_id)
 
 
-def test_m202_2025_b2_tramo_advisory_ships_and_is_grounded() -> None:
+def test_m202_b2_tramo_advisory_ships_and_is_grounded() -> None:
     for predicate_id, antecedent, consequent in _M202_B2_TRAMO_CASES:
         predicate = _m202_2025_predicate(predicate_id)
         assert predicate.finding_kind == "ADVISORY", predicate_id
@@ -119,7 +119,7 @@ def test_m202_2025_b2_tramo_advisory_ships_and_is_grounded() -> None:
         assert "ley-27-2014:art-29" in legal_refs, predicate_id
 
 
-def test_m202_2025_b2_tramo_advisory_fires_when_base_positive_but_importe_zero() -> None:
+def test_m202_b2_tramo_advisory_fires_when_base_positive_but_importe_zero() -> None:
     """Positive tramo base with a zero computed importe surfaces a warning advisory."""
     for predicate_id, antecedent, consequent in _M202_B2_TRAMO_CASES:
         predicate = _m202_2025_predicate(predicate_id)
@@ -133,7 +133,7 @@ def test_m202_2025_b2_tramo_advisory_fires_when_base_positive_but_importe_zero()
         assert "ley-27-2014:art-40-3" in findings[0].legal_refs, predicate_id
 
 
-def test_m202_2025_b2_tramo_advisory_holds_when_importe_present() -> None:
+def test_m202_b2_tramo_advisory_holds_when_importe_present() -> None:
     """Positive tramo base and positive computed importe satisfy the implication."""
     for predicate_id, antecedent, consequent in _M202_B2_TRAMO_CASES:
         predicate = _m202_2025_predicate(predicate_id)
@@ -143,7 +143,7 @@ def test_m202_2025_b2_tramo_advisory_holds_when_importe_present() -> None:
         assert findings == [], predicate_id
 
 
-def test_m202_2025_b2_tramo_advisory_holds_trivially_when_base_not_used() -> None:
+def test_m202_b2_tramo_advisory_holds_trivially_when_base_not_used() -> None:
     """No declared tramo base holds trivially (the filer does not use this B2 tramo)."""
     for predicate_id, antecedent, consequent in _M202_B2_TRAMO_CASES:
         predicate = _m202_2025_predicate(predicate_id)

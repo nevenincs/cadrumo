@@ -90,16 +90,22 @@ def test_each_figure_carries_exactly_one_filing_period_value(
 
 
 @pytest.mark.parametrize("revision_id", _REVISION_IDS)
-def test_each_value_is_bounded_by_its_revision_window(
+def test_each_value_covers_its_whole_revision_window(
     registry_authority: PinnedAuthorityOperation,
     revision_id: str,
 ) -> None:
-    """An unbounded value would outlive the revision that grounds it."""
+    """A value that stopped short of its revision would leave filing periods with no figure.
+
+    An unchanged figure runs open from the first edition that states it, so its
+    window may begin before this revision and outlast it. That no revision
+    grounds a filing date outside its own window is the resolver's refusal,
+    which ``test_a_filing_date_outside_the_revision_window_is_refused`` pins.
+    """
     revision = registry_authority.revision("303", revision_id)
     for parameter in _family(registry_authority, revision_id):
         value = parameter.values[0]
-        assert value.valid_from == revision.valid_from
-        assert value.valid_to == revision.valid_to
+        assert value.valid_from <= revision.valid_from
+        assert value.valid_to is None or (revision.valid_to is not None and value.valid_to >= revision.valid_to)
 
 
 def test_the_figures_are_identical_across_every_revision(

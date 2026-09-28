@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#assets-core'
 date: '2026-09-23'
-modified: '2026-09-24'
+modified: '2026-09-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:53afdcbd57f06d0c7e9bf6d03de746e2dea7ada31b51c7cbf702de82d7225d47'
+body_hash: 'sha256:1efc88da85bfec8c541d5b20cb2e59cd2a80d1725b9796c71edd5cfb0b1afa64'
 related:
   - "[[2026-09-23-assets-core-amortization-method-set-research]]"
   - "[[2026-09-21-assets-core-lifecycle-contract-adr]]"
@@ -13,6 +13,7 @@ related:
   - '[[2026-09-23-assets-core-vehicle-affectation-research]]'
   - '[[2026-09-23-assets-core-proration-and-incentive-scope-research]]'
   - '[[2026-09-24-assets-core-amortization-domain-grounding-research]]'
+  - '[[2026-09-27-registry-conformance-rectification-research]]'
 ---
 
 # `assets-core` adr: `IRPF activity amortization method set and election contract` | (**status:** `accepted`)
@@ -180,3 +181,11 @@ is preserved; where it differs, this section governs.
   self-consumption free depreciation (LIS DA 17a, 2025 entries only for the
   2025 IRPF period) remain refused until the average-workforce profile fact
   lands; that fact is scheduled in the taxpayer profile schema version 7.
+
+## Amendment 2026-09-27
+
+Authorized by the operator's registry conformance rectification brief of 2026-09-27, recorded as the approval basis of `2026-09-27-registry-conformance-rectification-plan`, on the evidence in `2026-09-27-registry-conformance-rectification-research`. The accepted body above is preserved; where it differs, this section governs.
+
+- Filing-grade support extends from tax year 2025 to every year of the registry support envelope, floor 2022. The amortization parameters are authored once at the first edition the law admits them and later editions key only their own manual evidence or a genuine change; the tables, thresholds and general methods are the same in every supported year.
+- Renewable self-consumption free depreciation (LIS DA 17a) is admitted from 2023, with entry into service in the tax year; 2022 admits it for no installation. Electric-vehicle and charging-point free depreciation (LIS DA 18) is admitted from 2024; the 2023 DA 18 regime is accelerated depreciation, which stays outside the method set. A year no authored edition covers admits no incentive whose enactment is annual.
+- The resolver serves a year through the canonically selected Modelo 100 edition, projected where no edition is authored, and refuses only an edition that begins after the tax year.

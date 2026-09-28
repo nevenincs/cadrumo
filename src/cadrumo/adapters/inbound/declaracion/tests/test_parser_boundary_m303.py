@@ -5,7 +5,7 @@ See Also:
         Public declaration-copy parser boundary exercised by this fixture.
     :mod:`~adapters.inbound.declaracion.tests._parser_boundary_m303_support`
         Shared current and historical Modelo 303 profile casilla expectations.
-    :mod:`~adapters.inbound.declaracion.tests.test_parser_boundary_m303_2023_2024`
+    :mod:`~adapters.inbound.declaracion.tests.test_parser_boundary_m303_corpus_printed_template`
         Parametrized current-template corpus sweep for the same profile family.
     :class:`~adapters.inbound.declaracion.InboundDeclaracionObservation`
         Observation aggregate returned by the parser and asserted here.

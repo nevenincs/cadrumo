@@ -54,6 +54,7 @@ from ..installed_tax_oracle import (
 )
 from ..installed_wheel_binding import (
     assert_installed_console_entry_point,
+    environment_interpreter,
     installed_distribution_payload_sha256,
 )
 from ..release_cohort_support import client_venv_template, release_cohort
@@ -273,7 +274,9 @@ def test_exact_path_foreign_launcher_is_refused(tmp_path: Path) -> None:
         original_interpreter = original_interpreter_path.resolve(strict=True)
         source_python = (server.parent / "python").resolve(strict=True)
         assert original_interpreter == source_python, "the peer launcher must belong to the source environment"
-        copied_python = (scripts / "python").resolve(strict=True)
+        # The copied environment's own interpreter link: resolving it in full
+        # would name the base installation, whose directory has no launcher.
+        copied_python = environment_interpreter(scripts / "python")
         copied_server.write_bytes(f"#!{copied_python}\n".encode() + script_body)
         shutil.copymode(peer_cli, copied_server)
     with pytest.raises(RuntimeError, match="launcher semantics drifted"):

@@ -16,7 +16,9 @@ from typing import Final, TypedDict, cast
 from uuid import uuid4
 
 import tomlkit
+from pydantic_core import to_jsonable_python
 
+from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo.domain.calculations.registry.authority import (
     IndexedRegistryAuthority,
     PinnedAuthorityOperation,
@@ -33,12 +35,13 @@ from cadrumo.domain.calculations.registry.facts.resolution import (
     ScalarFactQuery,
 )
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFactFamily
-from cadrumo.domain.calculations.registry.keyed_families import CANONICAL_FAMILY_SPECS
+from cadrumo.domain.calculations.registry.keyed_families import CANONICAL_FAMILY_SPECS, inline_family_source_default
 from cadrumo.domain.calculations.registry.revision_order import revisions_coexist
 from cadrumo.domain.calculations.registry.schema import (
     REVISION_SCHEMA_FAMILY_FIELDS,
     ModeloDefinition,
     ModeloRevision,
+    RegistrySnapshot,
     SupportedFilingYearsCatalogue,
 )
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
@@ -48,6 +51,7 @@ from cadrumo.domain.calculations.registry.temporal import (
     select_revision,
 )
 from dev._paths import REPO_ROOT
+from dev.packaging.authority_staging import authoring_authority_root
 from dev.registry.compiler.authority import compile_validated_authority
 from dev.registry.compiler.loader import clear_registry_tree_cache, load_modelo_declarations, load_modelo_directory
 from dev.registry.compiler.loader_cache import discover_modelo_sources
@@ -193,6 +197,25 @@ def fingerprint_tree(root: Path) -> tuple[FingerprintEntry, ...]:
     )
 
 
+def fingerprint_optional_tree(root: Path) -> tuple[FingerprintEntry, ...]:
+    """Fingerprint ``root`` when it exists; an unpublished checkout has no tree.
+
+    A missing directory is a legitimate state for source repair, and it still
+    detects mutation: a verifier run that creates the tree changes the result.
+    """
+    return fingerprint_tree(root) if root.exists() else ()
+
+
+def published_authority_root(authority_root: Path | None = None) -> Path:
+    """Return the published authority a verification run must leave untouched.
+
+    The authority is generated output kept outside the packaged source tree, so
+    the default is the working tree's own publication rather than any path
+    under the registry source root.
+    """
+    return (authority_root if authority_root is not None else authoring_authority_root(REPO_ROOT)).resolve()
+
+
 def fingerprint_paths(paths: Iterable[Path], *, relative_to: Path) -> tuple[FingerprintEntry, ...]:
     """Fingerprint explicit files, retaining a stable repository-relative identity."""
     root = relative_to.resolve(strict=True)
@@ -216,30 +239,42 @@ def fingerprint_digest(entries: Iterable[FingerprintEntry]) -> str:
 
 
 def _typed_projection(value: object) -> object:
+    """Project a typed value to comparable JSON, members of an unordered set in canonical order.
+
+    A set's iteration order follows its insertion history, so two equal sets can
+    list their members differently; dumping straight to JSON would compare them
+    as sequences. The model is dumped in Python mode so a set stays a set, and
+    each leaf takes the JSON form Pydantic gives it.
+    """
     dump = getattr(value, "model_dump", None)
     if callable(dump):
-        return _typed_projection(dump(mode="json"))
+        return _typed_projection(dump(mode="python"))
     if isinstance(value, Mapping):
         return {
             str(key): _typed_projection(child) for key, child in value.items() if str(key) not in _REPRESENTATION_ONLY
         }
+    if isinstance(value, set | frozenset):
+        return sorted((_typed_projection(child) for child in value), key=canonical_json_bytes)
     if isinstance(value, list | tuple):
         return [_typed_projection(child) for child in value]
-    return value
+    return to_jsonable_python(value)
 
 
 def _first_difference(left: object, right: object, path: str = "$") -> Mapping[str, object] | None:
     if type(left) is not type(right):
         return {"location": path, "before": left, "after": right, "reason": "type_changed"}
     if isinstance(left, Mapping) and isinstance(right, Mapping):
-        if tuple(left) != tuple(right):
+        # A projected mapping is a model dump, whose field order is fixed, or a
+        # typed Mapping field, whose key order is serialization rather than
+        # meaning. Sequences below keep their order.
+        if set(left) != set(right):
             return {
                 "location": path,
-                "before": list(left),
-                "after": list(right),
-                "reason": "mapping_keys_or_order_changed",
+                "before": sorted(left, key=str),
+                "after": sorted(right, key=str),
+                "reason": "mapping_keys_changed",
             }
-        for key in left:
+        for key in sorted(left, key=str):
             difference = _first_difference(left[key], right[key], f"{path}.{key}")
             if difference is not None:
                 return difference
@@ -511,6 +546,26 @@ def assessment_coverage_gaps(
     )
 
 
+def _with_family_source_default(raw_revision: Mapping[str, object], section: str) -> object:
+    """Return one family's raw members with the edition's ``source_refs`` default bound as the loader binds it.
+
+    Selection metadata validates each member's grounding, so a member relying on
+    its edition's family default must carry that default before validation, or
+    the revision is reported unresolved for a reference the loader supplies. A
+    malformed family is passed through for validation to refuse.
+    """
+    members = raw_revision.get(section, ())
+    if not isinstance(members, list | tuple):
+        return members
+    spec = next(spec for spec in CANONICAL_FAMILY_SPECS if spec.section == section)
+    return tuple(
+        inline_family_source_default(member, raw_revision, spec.source_default_key)
+        if isinstance(member, Mapping)
+        else member
+        for member in members
+    )
+
+
 def root_eligibility(modelo_dir: Path) -> tuple[Mapping[str, object], ...]:
     """Classify every revision/family edge without treating an explicit root as invisible."""
     try:
@@ -540,8 +595,8 @@ def root_eligibility(modelo_dir: Path) -> tuple[Mapping[str, object], ...]:
                         "valid_from": raw_revision.get("valid_from"),
                         "valid_to": raw_revision.get("valid_to"),
                         "period_selector": raw_revision.get("period_selector"),
-                        "deadline_windows": raw_revision.get("deadline_windows", ()),
-                        "filing_schedules": raw_revision.get("filing_schedules", ()),
+                        "deadline_windows": _with_family_source_default(raw_revision, "deadline_windows"),
+                        "filing_schedules": _with_family_source_default(raw_revision, "filing_schedules"),
                     }
                 )
             )
@@ -855,9 +910,25 @@ def _snapshot_result(
             on=None if coordinate.on is None else date.fromisoformat(coordinate.on),
             revision_id=coordinate.revision_id,
         )
-        return {"outcome": "admitted", "value": _typed_projection(value)}
+        return {"outcome": "admitted", "value": _typed_projection(_scoped_to_selected_edition(value))}
     except Exception as exc:
         return {"outcome": "refused", "error_type": type(exc).__name__, "detail": str(exc)}
+
+
+def _scoped_to_selected_edition(snapshot: object) -> object:
+    """Keep only the selected edition in the snapshot's modelo.
+
+    The indexed runtime composes a snapshot's modelo from the one revision it
+    selected, while an in-memory authority keeps every edition there; the
+    editions the snapshot did not select are not part of its meaning.
+    """
+    if not isinstance(snapshot, RegistrySnapshot):
+        return snapshot
+    selected = snapshot.revision.id
+    revisions = {
+        revision_id: revision for revision_id, revision in snapshot.modelo.revisions.items() if revision_id == selected
+    }
+    return snapshot.model_copy(update={"modelo": snapshot.modelo.model_copy(update={"revisions": revisions})})
 
 
 def _indexed_selection_result(
@@ -886,7 +957,9 @@ def _indexed_selection_result(
             "requested_filing_year": resolution.requested_filing_year,
             "authored_filing_year": resolution.authored_filing_year,
             "projection_direction": str(resolution.projection_direction),
-            "value": _typed_projection(selected),
+            # Selection loads the base revision; the source side's revision carries its
+            # export layouts, so the indexed value is composed the same way.
+            "value": _typed_projection(operation.revision_with_export_layouts(modelo_id, str(selected.id))),
         }
     except Exception as exc:
         return {"outcome": "refused", "error_type": type(exc).__name__, "detail": str(exc)}
@@ -1391,8 +1464,17 @@ def run_registry_verification(
     source_root: Path,
     work_dir: Path,
     converter: Callable[[Path, Path], Mapping[str, object]] = canonical_converter,
+    authority_root: Path | None = None,
+    modelos: Sequence[str] = (),
 ) -> Mapping[str, object]:
-    """Exercise every discovered modelo once and persist detailed JSON artifacts."""
+    """Exercise every discovered modelo once and persist detailed JSON artifacts.
+
+    ``authority_root`` is the published authority whose immutability the run
+    proves; it defaults to the working tree's own publication. ``modelos``
+    narrows the per-modelo pass to the named identities, so a memory-limited
+    host can verify one modelo per process against the same registry-wide
+    authority checks.
+    """
     registry_root = registry_root.resolve(strict=True)
     source_root = source_root.resolve(strict=True)
     work_dir = work_dir.resolve()
@@ -1414,14 +1496,20 @@ def run_registry_verification(
     sources = discover_modelo_sources(snapshot_registry / _MODELOS)
     if len({source.modelo_id for source in sources}) != len(sources):
         raise RuntimeError("modelo discovery returned duplicate identities")
+    discovered = len(sources)
+    if modelos:
+        unknown = sorted(set(modelos) - {source.modelo_id for source in sources})
+        if unknown:
+            raise ValueError(f"unknown modelo identities requested: {', '.join(unknown)}")
+        sources = tuple(source for source in sources if source.modelo_id in set(modelos))
     tool_paths = tuple(REPO_ROOT / relative for relative in _TOOL_INPUTS)
     live_registry_before = fingerprint_tree(registry_root)
     tools_before = fingerprint_paths(tool_paths, relative_to=REPO_ROOT)
     source_dependencies = _source_dependency_paths(source_root)
     source_dependencies_before = fingerprint_paths(source_dependencies, relative_to=source_root)
     _copy_source_dependencies(source_dependencies, source_root=source_root, destination=snapshot_source_root)
-    published_root = source_root / "registry" / "authority"
-    published_before = fingerprint_tree(published_root)
+    published_root = published_authority_root(authority_root)
+    published_before = fingerprint_optional_tree(published_root)
     from dev.registry.compiler.loader import load_shared_catalogues
 
     support = load_shared_catalogues(snapshot_registry).supported_filing_years
@@ -1488,7 +1576,7 @@ def run_registry_verification(
     live_registry_after = fingerprint_tree(registry_root)
     tools_after = fingerprint_paths(tool_paths, relative_to=REPO_ROOT)
     source_dependencies_after = fingerprint_paths(source_dependencies, relative_to=source_root)
-    published_after = fingerprint_tree(published_root)
+    published_after = fingerprint_optional_tree(published_root)
     inputs_stable = (
         live_registry_before == live_registry_after
         and tools_before == tools_after
@@ -1518,10 +1606,16 @@ def run_registry_verification(
     summary = {
         "schema": "cadrumo-registry-collapse-readiness/v1",
         "complete": complete,
-        "registry_rollout": "complete" if complete else "incomplete",
+        # A scoped run proves its own modelos, never the registry-wide rollout.
+        "registry_rollout": "complete" if complete and not modelos else "incomplete",
         "no_live_mutation": no_live_mutation,
         "inputs_stable": inputs_stable,
-        "inventory": {"discovered": len(sources), "reported": len(results), "duplicates": 0},
+        "inventory": {
+            "discovered": discovered,
+            "requested": sorted(source.modelo_id for source in sources) if modelos else "all",
+            "reported": len(results),
+            "duplicates": 0,
+        },
         "global_supported_range": {
             "floor": support.floor,
             "horizon": support.horizon,
@@ -1573,12 +1667,26 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--registry-root", required=True, type=Path)
     parser.add_argument("--source-root", required=True, type=Path)
     parser.add_argument("--work-dir", required=True, type=Path)
+    parser.add_argument(
+        "--authority-root",
+        type=Path,
+        default=None,
+        help="published authority to prove unmutated (default: the working tree's publication)",
+    )
+    parser.add_argument(
+        "--modelo",
+        action="append",
+        default=[],
+        help="verify only this modelo identity; repeatable (default: every discovered modelo)",
+    )
     arguments = parser.parse_args(argv)
     try:
         summary = run_registry_verification(
             registry_root=arguments.registry_root,
             source_root=arguments.source_root,
             work_dir=arguments.work_dir,
+            authority_root=arguments.authority_root,
+            modelos=tuple(arguments.modelo),
         )
     except Exception as exc:
         sys.stderr.write(f"registry collapse verification refused: {type(exc).__name__}: {exc}\n")

@@ -33,6 +33,9 @@ here, so a rename cannot leave this gate asserting a path nothing produces.
 
 from __future__ import annotations
 
+import hashlib
+import json
+import os
 import shutil
 import tarfile
 import zipfile
@@ -56,10 +59,13 @@ _REGISTRY_DATA_ROOT: Final = "src/cadrumo/_data/registry"
 #: its archive member from the public registry location helper.
 _BUNDLED_VERDICT_MEMBER: Final = shipped_verdict_location(Path(_REGISTRY_DATA_ROOT) / "aeat").as_posix()
 
-#: A registry declaration beside the cache. It has to reach both archives:
-#: without it, "the cache is absent" would also be true of a build that shipped
-#: no registry data at all, or of a subject the backend never populated.
-_CONTROL_MEMBER: Final = f"{_REGISTRY_DATA_ROOT}/aeat/control-declaration.toml"
+#: The registry payload a distribution carries beside the cache: the published
+#: authority's descriptor, which the build hook admits. It has to reach both
+#: archives: without it, "the cache is absent" would also be true of a build
+#: that shipped no registry data at all, or of a subject the backend never
+#: populated. The authored registry tree cannot serve, because both targets
+#: exclude it whole.
+_CONTROL_MEMBER: Final = f"{_REGISTRY_DATA_ROOT}/authority/authority.current.json"
 
 #: The two files a validating load persists, as source-tree relative paths.
 _CACHE_MEMBERS: Final = (
@@ -86,6 +92,31 @@ _SCAFFOLD: Final[dict[str, str]] = {
     "src/cadrumo_harness/_data/placeholder.json": "{}\n",
 }
 
+#: The build hook both targets declare. The subject carries the repository's own
+#: copy, so its build runs the hook a release build runs.
+_AUTHORITY_BUILD_HOOK: Final = "packaging/authority/hatch_build.py"
+
+#: A stand-in published authority pair for that hook to admit, outside the
+#: subject's ``.authority``: the hook reads a directory named that way as it
+#: stands, so the subject needs neither a registry to compile nor a real
+#: publication. The pair is content-addressed like a real one.
+_PLANTED_AUTHORITY: Final = "planted-authority"
+_PLANTED_DATABASE_BYTES: Final = b"stand-in authority database for a packaging subject\n"
+
+
+def _plant_authority(root: Path) -> None:
+    """Plant the build hook and a verifiable stand-in authority pair."""
+    hook = root / _AUTHORITY_BUILD_HOOK
+    hook.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(REPO_ROOT / _AUTHORITY_BUILD_HOOK, hook)
+    authority = root / _PLANTED_AUTHORITY
+    authority.mkdir()
+    digest = hashlib.sha256(_PLANTED_DATABASE_BYTES).hexdigest()
+    database = f"authority-{digest}.sqlite3"
+    (authority / database).write_bytes(_PLANTED_DATABASE_BYTES)
+    descriptor = {"database": database, "database_sha256": digest, "database_size": len(_PLANTED_DATABASE_BYTES)}
+    (authority / "authority.current.json").write_text(json.dumps(descriptor), encoding=UTF_8)
+
 
 def _wheel_member(source_relative: str) -> str:
     """Project a source-tree path onto its position inside the built wheel."""
@@ -95,7 +126,6 @@ def _wheel_member(source_relative: str) -> str:
 def _plant(root: Path, extra_pyproject: str = "") -> None:
     """Assemble a build subject that carries the cache a release must shed."""
     bodies = dict(_SCAFFOLD)
-    bodies[_CONTROL_MEMBER] = 'name = "control"\n'
     for member in _CACHE_MEMBERS:
         bodies[member] = '{"written_by": "a validating load"}\n'
     for relative, body in bodies.items():
@@ -104,7 +134,8 @@ def _plant(root: Path, extra_pyproject: str = "") -> None:
         path.write_text(body, encoding=UTF_8)
     declarations = (REPO_ROOT / "pyproject.toml").read_text(encoding=UTF_8) + extra_pyproject
     (root / "pyproject.toml").write_text(declarations, encoding=UTF_8)
-    for member in (*_CACHE_MEMBERS, _CONTROL_MEMBER):
+    _plant_authority(root)
+    for member in _CACHE_MEMBERS:
         if not (root / member).is_file():
             raise AssertionError(f"the build subject was assembled without {member}")
 
@@ -118,6 +149,7 @@ def _build(root: Path) -> tuple[frozenset[str], frozenset[str]]:
     completed = run_command(
         [uv, "build", "--sdist", "--wheel", "--out-dir", str(out_dir)],
         cwd=root,
+        environment={**os.environ, "CADRUMO_AUTHORITY_ROOT": str(root / _PLANTED_AUTHORITY)},
     )
     if completed.returncode != 0:
         raise RuntimeError(f"uv build failed: {completed.stderr}")
@@ -148,7 +180,7 @@ def built_members(tmp_path_factory: pytest.TempPathFactory) -> tuple[frozenset[s
 def test_the_control_declaration_proves_the_archives_were_measured(
     built_members: tuple[frozenset[str], frozenset[str]],
 ) -> None:
-    """A registry file beside the cache reaches both archives.
+    """The registry payload beside the cache reaches both archives.
 
     Absence of the cache is evidence only when something adjacent is present.
     An archive carrying no registry data at all would otherwise satisfy the

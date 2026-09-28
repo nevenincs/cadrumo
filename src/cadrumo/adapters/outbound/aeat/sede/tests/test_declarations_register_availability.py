@@ -97,7 +97,8 @@ def test_the_two_option_shapes_stay_disjoint_on_real_markup() -> None:
 def test_real_markup_classifies_every_option_but_the_placeholder() -> None:
     html = _real_html()
     texts = _combobox_option_texts(html)
-    modelo_shaped = sum(1 for text in texts if text.split("\xa0")[0] in filed_register_modelo_options(html))
+    modelo_codes = filed_register_modelo_options(html)
+    modelo_shaped = sum(1 for text in texts if text.split("\xa0")[0] in modelo_codes)
     year_shaped = sum(1 for text in texts if text.strip().isdigit() and len(text.strip()) == 4)
     unclassified = len(texts) - modelo_shaped - year_shaped
     # Exactly the "-- Seleccione --" placeholder, once per rendered popup. Gated
@@ -106,8 +107,7 @@ def test_real_markup_classifies_every_option_but_the_placeholder() -> None:
     residual = [
         text
         for text in texts
-        if text.split("\xa0")[0] not in filed_register_modelo_options(html)
-        and not (text.strip().isdigit() and len(text.strip()) == 4)
+        if text.split("\xa0")[0] not in modelo_codes and not (text.strip().isdigit() and len(text.strip()) == 4)
     ]
     assert unclassified == len(residual)
     assert all("Seleccione" in text for text in residual)

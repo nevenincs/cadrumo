@@ -118,6 +118,15 @@ _TOOLING_PATH_TOKEN_RE: Final[re.Pattern[str]] = re.compile(
     r"(?<![A-Za-z0-9_.\-/\\])(?:\.{1,2}[/\\])*" + re.escape(DEV_TOOLING_ROOT) + r"[/\\]"
 )
 
+#: Substrings one of the two data-scan patterns needs spelled literally: a
+#: governance root, or the tooling root followed by either separator. A data
+#: file containing none of them cannot match either pattern on any line.
+_SCAFFOLDING_MARKERS: Final[tuple[str, ...]] = (
+    *GOVERNANCE_TREE_ROOTS,
+    f"{DEV_TOOLING_ROOT}/",
+    f"{DEV_TOOLING_ROOT}\\",
+)
+
 
 def names_governance_directory(value: str) -> str | None:
     """Return the governance root ``value`` names as a path, else ``None``.
@@ -148,6 +157,15 @@ def prose_token_names_governance_tree(token: str) -> str | None:
     or quotes is read as the reference it is.
     """
     return _matched_governance_root(token.strip("()[]{}`'\"<>,:;"))
+
+
+def _spells_governance_root(text: str) -> bool:
+    """Whether ``text`` contains a governance root at all, standalone or not.
+
+    Every token rule above matches a root spelled literally, so text without
+    one cannot match and the costlier token and regex passes can skip it.
+    """
+    return any(root in text for root in GOVERNANCE_TREE_ROOTS)
 
 
 def _matched_governance_root(text: str) -> str | None:
@@ -275,13 +293,12 @@ def governance_path_hits(tree: ast.Module) -> list[tuple[int, GovernanceRefForm,
     reported by two families.
     """
     skip = _docstring_constant_ids(tree)
+    hits: list[tuple[int, GovernanceRefForm, str, str]] = []
+    # One walk suffices: it visits a parent before its children, so an
+    # f-string's literal parts are marked skipped before they are reached.
     for node in ast.walk(tree):
         if isinstance(node, ast.JoinedStr):
             skip.update(id(part) for part in node.values if isinstance(part, ast.Constant))
-
-    hits: list[tuple[int, GovernanceRefForm, str, str]] = []
-    for node in ast.walk(tree):
-        if isinstance(node, ast.JoinedStr):
             for part in node.values:
                 if not (isinstance(part, ast.Constant) and isinstance(part.value, str)):
                     continue
@@ -363,8 +380,13 @@ def find_governance_prose_violations(
         except (OSError, SyntaxError, UnicodeDecodeError):
             unread.append(rel)
             continue
-        for kind, lines in (("string", _prose_string_lines(tree)), ("comment", _comment_lines(source))):
+        # A comment is a literal slice of the source, so a module that never
+        # spells a governance root cannot hold a comment naming one.
+        comments = _comment_lines(source) if _spells_governance_root(source) else []
+        for kind, lines in (("string", _prose_string_lines(tree)), ("comment", comments)):
             for lineno, text in lines:
+                if not _spells_governance_root(text):
+                    continue
                 for token in text.split():
                     root = prose_token_names_governance_tree(token)
                     if root is not None:
@@ -447,6 +469,8 @@ def find_scaffolding_data_references(
             continue
         except OSError as refusal:
             unread.append(f"{path} ({refusal})")
+            continue
+        if not any(marker in text for marker in _SCAFFOLDING_MARKERS):
             continue
         rel = path.relative_to(src_root).as_posix()
         for lineno, line in enumerate(text.splitlines(), start=1):

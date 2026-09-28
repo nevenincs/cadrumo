@@ -36,7 +36,9 @@ jobs:
     name: "Check: Prove ref commit (Linux)"
     if: inputs.phase == 'prove'
     runs-on: [self-hosted, Linux, X64]
-    timeout-minutes: 5
+    timeout-minutes: 125
+    env:
+      CI_EXEC_BUDGET_MINUTES: 5
     steps:
       - name: Require the prove ref to be the dispatched commit
         env:
@@ -50,16 +52,53 @@ jobs:
 
   merge-gate:
     name: "Check: Merge gate (Linux)"
-    needs: check-prove-ref
+    needs: [check-prove-ref, publish-authority]
     if: inputs.phase == 'prove'
     uses: ./.github/workflows/merge-gate.yml
+    with:
+      authority-artifact: cadrumo-registry-authority
+
+  # Compiling the authority costs minutes and every prove job below reads the
+  # same one, so it is compiled once here and restored everywhere else. Each
+  # consumer still runs the currency check against its own checkout, which
+  # republishes rather than trusting an artifact that does not match.
+  publish-authority:
+    name: "Build: Registry authority (Linux)"
+    needs: check-prove-ref
+    if: inputs.phase == 'prove'
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 150
+    env:
+      CI_EXEC_BUDGET_MINUTES: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Set up toolchain
+        uses: ./.github/actions/setup
+
+      - name: Upload the published registry authority
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: cadrumo-registry-authority
+          path: |
+            .authority/authority.current.json
+            .authority/authority-*.sqlite3
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 1
 
   runtime-inventory:
     name: "Check: Runtime inventory (Linux)"
     needs: check-prove-ref
     if: inputs.phase == 'prove'
     runs-on: [self-hosted, Linux, X64]
-    timeout-minutes: 20
+    timeout-minutes: 140
+    env:
+      CI_EXEC_BUDGET_MINUTES: 20
     outputs:
       next-python: ${{ steps.next.outputs.python }}
       smoke-matrix: ${{ steps.smoke.outputs.matrix }}
@@ -70,8 +109,12 @@ jobs:
           ref: ${{ github.sha }}
           persist-credentials: false
 
+      # The inventory is read from checked-in metadata; nothing here loads the
+      # registry authority.
       - name: Set up toolchain
         uses: ./.github/actions/setup
+        with:
+          authority: "false"
 
       - name: Emit the prerelease runtime row
         id: next
@@ -101,15 +144,16 @@ jobs:
 
   test-full:
     name: "Test: Full suites (Linux, ${{ matrix.python }})"
-    needs: check-prove-ref
+    needs: [check-prove-ref, publish-authority]
     if: inputs.phase == 'prove'
     runs-on: [self-hosted, Linux, X64]
-    timeout-minutes: 240
+    timeout-minutes: 360
     strategy:
       fail-fast: false
       matrix:
         python: ["3.13", "3.14"]
     env:
+      CI_EXEC_BUDGET_MINUTES: 240
       CADRUMO_PYTEST_WORKERS: "8"
     steps:
       - name: Checkout repository
@@ -119,43 +163,58 @@ jobs:
           persist-credentials: false
 
       - name: Set up toolchain
+        id: setup
         uses: ./.github/actions/setup
         with:
           python-version: ${{ matrix.python }}
+          authority-artifact: cadrumo-registry-authority
           browser: "true"
 
       - name: Unit suite
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
         run: just test-unit 100
 
       - name: Integration suite (parallel)
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
         run: just test-integration-parallel
 
       - name: Integration suite (serial)
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
         run: just test-integration-serial
 
       - name: Registry calculations and conformance
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
         run: just test-registry
 
+      # The deterministic and CPU-budget legs as separate steps: inside one
+      # recipe a red deterministic leg stopped the budget leg from running.
       - name: CI contracts
-        if: ${{ !cancelled() }}
-        run: just test-ci-contracts
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: just test-ci-contracts-gate
 
-      - name: Tooling contracts
-        if: ${{ !cancelled() }}
-        run: just test-test-policy test-repository-contracts
+      - name: CI performance contracts
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: just test-ci-perf
+
+      # Two steps, not one `just a b`: just stops at the first failing recipe,
+      # so a red test-policy run left every repository contract unrun.
+      - name: Test-policy contracts
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: just test-test-policy
+
+      - name: Repository contracts
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: just test-repository-contracts
 
   test-full-next:
     name: "Test: Full suites (Linux, ${{ needs.runtime-inventory.outputs.next-python }})"
-    needs: runtime-inventory
+    needs: [runtime-inventory, publish-authority]
     if: inputs.phase == 'prove'
     runs-on: [self-hosted, Linux, X64]
-    timeout-minutes: 240
+    timeout-minutes: 360
     continue-on-error: true
     env:
+      CI_EXEC_BUDGET_MINUTES: 240
       CADRUMO_PYTEST_WORKERS: "8"
     steps:
       - name: Checkout repository
@@ -165,41 +224,57 @@ jobs:
           persist-credentials: false
 
       - name: Set up toolchain
+        id: setup
         uses: ./.github/actions/setup
         with:
           python-version: ${{ needs.runtime-inventory.outputs.next-python }}
+          authority-artifact: cadrumo-registry-authority
           browser: "true"
 
       - name: Unit suite
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
         run: just test-unit 100
 
       - name: Integration suite (parallel)
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
         run: just test-integration-parallel
 
       - name: Integration suite (serial)
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
         run: just test-integration-serial
 
       - name: Registry calculations and conformance
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
         run: just test-registry
 
+      # The deterministic and CPU-budget legs as separate steps: inside one
+      # recipe a red deterministic leg stopped the budget leg from running.
       - name: CI contracts
-        if: ${{ !cancelled() }}
-        run: just test-ci-contracts
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: just test-ci-contracts-gate
 
-      - name: Tooling contracts
-        if: ${{ !cancelled() }}
-        run: just test-test-policy test-repository-contracts
+      - name: CI performance contracts
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: just test-ci-perf
+
+      # Two steps, not one `just a b`: just stops at the first failing recipe,
+      # so a red test-policy run left every repository contract unrun.
+      - name: Test-policy contracts
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: just test-test-policy
+
+      - name: Repository contracts
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: just test-repository-contracts
 
   check-conformance:
     name: "Check: Release conformance (Linux)"
-    needs: check-prove-ref
+    needs: [check-prove-ref, publish-authority]
     if: inputs.phase == 'prove'
     runs-on: [self-hosted, Linux, X64]
-    timeout-minutes: 120
+    timeout-minutes: 180
+    env:
+      CI_EXEC_BUDGET_MINUTES: 60
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -207,31 +282,29 @@ jobs:
           ref: ${{ github.sha }}
           persist-credentials: false
 
+      # The documentation build renders its CLI and casilla references through
+      # the registry authority this restores and brings current.
       - name: Set up toolchain
+        id: setup
         uses: ./.github/actions/setup
+        with:
+          authority-artifact: cadrumo-registry-authority
 
       - name: Data file format
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
         run: just check-data-format
 
       - name: Module reachability
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
         run: just check-module-reachability
 
       - name: Docstring references
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
         run: just check-docstring-references
-
-      # `just setup` provisions no registry authority, and the documentation
-      # build renders its CLI and casilla references through it.
-      - name: Publish the registry authority
-        id: authority
-        if: ${{ !cancelled() }}
-        run: just registry-publish-authority
 
       - name: Build the documentation site
         id: docs-build
-        if: ${{ !cancelled() && steps.authority.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
         run: just docs-build
 
       - name: Documentation conformance
@@ -239,29 +312,25 @@ jobs:
         run: just docs-check 8
 
       - name: Audit dependencies for known CVEs
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
         run: just check-dependency-vulnerabilities
 
       - name: Release tooling contracts
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
         env:
           CADRUMO_PYTEST_WORKERS: "8"
         run: just test-release-tooling
 
       - name: Channel artifact contracts
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
         run: just test-channel-artifacts
 
-      - name: TUI rendered inventory
-        if: ${{ !cancelled() }}
-        run: just test-tui-render
-
       - name: Packaging performance contracts
-        if: ${{ !cancelled() }}
-        run: uv run --no-sync pytest -v -n0 -m "perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service" dev/packaging/tests
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: uv run --no-sync pytest -v -n0 -m "perf and not external_tool and not os_keychain and not windows_only and not resident_service" dev/packaging/tests
 
       - name: Future-directive policy
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -274,7 +343,9 @@ jobs:
     needs: [merge-gate, test-full, check-conformance]
     if: inputs.phase == 'prove'
     runs-on: [self-hosted, Linux, X64]
-    timeout-minutes: 60
+    timeout-minutes: 180
+    env:
+      CI_EXEC_BUDGET_MINUTES: 60
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -291,6 +362,7 @@ jobs:
         uses: ./.github/actions/setup
         with:
           python-version: ${{ steps.pin.outputs.python }}
+          authority-artifact: cadrumo-registry-authority
 
       - name: Refuse a burned or mismatched version
         shell: bash
@@ -350,7 +422,9 @@ jobs:
     needs: build-cohort
     if: inputs.phase == 'prove'
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: 90
+    timeout-minutes: 210
+    env:
+      CI_EXEC_BUDGET_MINUTES: 90
     strategy:
       fail-fast: false
       matrix:
@@ -373,6 +447,8 @@ jobs:
 
       - name: Set up toolchain
         uses: ./.github/actions/setup
+        with:
+          authority-artifact: cadrumo-registry-authority
 
       - name: Download the sealed release cohort
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
@@ -411,7 +487,9 @@ jobs:
     needs: build-cohort
     if: inputs.phase == 'prove'
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: 120
+    timeout-minutes: 240
+    env:
+      CI_EXEC_BUDGET_MINUTES: 120
     strategy:
       fail-fast: false
       matrix:
@@ -439,7 +517,10 @@ jobs:
           persist-credentials: false
 
       - name: Set up toolchain
+        id: setup
         uses: ./.github/actions/setup
+        with:
+          authority-artifact: cadrumo-registry-authority
 
       - name: Download the sealed release cohort
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
@@ -467,7 +548,7 @@ jobs:
             --cohort-dir var/release-cohort/python
 
       - name: Checkpoint packaging evidence
-        if: always()
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
         run: uv run --no-sync python -m dev.packaging.evidence
 
   test-homebrew:
@@ -475,7 +556,9 @@ jobs:
     needs: build-cohort
     if: inputs.phase == 'prove'
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: 90
+    timeout-minutes: 210
+    env:
+      CI_EXEC_BUDGET_MINUTES: 90
     strategy:
       fail-fast: false
       max-parallel: 2
@@ -536,6 +619,8 @@ jobs:
 
       - name: Set up toolchain
         uses: ./.github/actions/setup
+        with:
+          authority-artifact: cadrumo-registry-authority
 
       - name: Download the sealed release cohort
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
@@ -685,6 +770,8 @@ jobs:
 
       - name: Set up toolchain
         uses: ./.github/actions/setup
+        with:
+          authority-artifact: cadrumo-registry-authority
 
       - name: Download the sealed release cohort
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
@@ -790,8 +877,10 @@ jobs:
     name: "${{ matrix.check-name }}"
     needs: [build-cohort, runtime-inventory]
     if: inputs.phase == 'prove'
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 120
+    runs-on: ${{ startsWith(toJSON(matrix.os), '[') && contains(matrix.os, 'self-hosted') && matrix.os || fromJSON('["self-hosted","unmapped-fleet-runner"]') }}
+    timeout-minutes: 240
+    env:
+      CI_EXEC_BUDGET_MINUTES: 120
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.runtime-inventory.outputs.smoke-matrix) }}
@@ -806,6 +895,7 @@ jobs:
         uses: ./.github/actions/setup
         with:
           python-version: ${{ matrix.python-version }}
+          authority-artifact: cadrumo-registry-authority
 
       - name: Download the sealed release cohort
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
@@ -834,7 +924,7 @@ jobs:
 
   test-windows-only:
     name: "Test: Windows-only contracts (Windows)"
-    needs: check-prove-ref
+    needs: [check-prove-ref, publish-authority]
     if: inputs.phase == 'prove'
     runs-on: [self-hosted, Windows, X64]
     timeout-minutes: 30
@@ -847,15 +937,22 @@ jobs:
 
       - name: Set up toolchain
         uses: ./.github/actions/setup
+        with:
+          authority-artifact: cadrumo-registry-authority
 
       - name: Windows-only contracts
         run: just test-windows
+
+      - name: PowerShell action literals
+        if: ${{ !cancelled() }}
+        run: just test-powershell-literal
 
   check-proven:
     name: "Check: Release proven (Linux)"
     needs:
       - check-prove-ref
       - merge-gate
+      - publish-authority
       - runtime-inventory
       - test-full
       - check-conformance
@@ -869,6 +966,8 @@ jobs:
     if: ${{ !cancelled() && inputs.phase == 'prove' }}
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 5
+    env:
+      CI_RESOURCE_CLASS: verdict
     steps:
       - name: Require every prove job to succeed
         env:
@@ -888,7 +987,9 @@ jobs:
     name: "Check: Proven release cohort (Linux)"
     if: inputs.phase == 'publish'
     runs-on: [self-hosted, Linux, X64]
-    timeout-minutes: 30
+    timeout-minutes: 150
+    env:
+      CI_EXEC_BUDGET_MINUTES: 30
     permissions:
       actions: read
       contents: read
@@ -992,7 +1093,9 @@ jobs:
     needs: locate-cohort
     if: inputs.phase == 'publish'
     runs-on: [self-hosted, Linux, X64]
-    timeout-minutes: 30
+    timeout-minutes: 150
+    env:
+      CI_EXEC_BUDGET_MINUTES: 30
     environment:
       name: pypi
     permissions:
@@ -1079,11 +1182,12 @@ jobs:
     needs: [locate-cohort, publish-pypi]
     if: inputs.phase == 'publish'
     runs-on: [self-hosted, Linux, X64]
-    timeout-minutes: 20
+    timeout-minutes: 140
     permissions:
       actions: read
       contents: read
     env:
+      CI_EXEC_BUDGET_MINUTES: 20
       TAP_REPOSITORY: ${{ vars.HOMEBREW_TAP_REPOSITORY || 'nevenincs/homebrew-tap' }}
     steps:
       - name: Require the tap token
@@ -1179,11 +1283,12 @@ jobs:
     needs: [locate-cohort, publish-pypi]
     if: inputs.phase == 'publish'
     runs-on: [self-hosted, Linux, X64]
-    timeout-minutes: 20
+    timeout-minutes: 140
     permissions:
       actions: read
       contents: read
     env:
+      CI_EXEC_BUDGET_MINUTES: 20
       BUCKET_REPOSITORY: ${{ vars.SCOOP_BUCKET_REPOSITORY }}
     steps:
       - name: Require the bucket repository and token
@@ -1279,7 +1384,9 @@ jobs:
     needs: [locate-cohort, publish-pypi]
     if: inputs.phase == 'publish'
     runs-on: [self-hosted, Linux, X64]
-    timeout-minutes: 30
+    timeout-minutes: 150
+    env:
+      CI_EXEC_BUDGET_MINUTES: 30
     permissions:
       actions: read
       contents: read
@@ -1323,7 +1430,9 @@ jobs:
     needs: [locate-cohort, publish-homebrew]
     if: inputs.phase == 'publish'
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: 60
+    timeout-minutes: 180
+    env:
+      CI_EXEC_BUDGET_MINUTES: 60
     permissions:
       actions: read
       contents: read
@@ -1433,7 +1542,9 @@ jobs:
     runs-on: [self-hosted, Linux, X64]
     # Five strict site roots built serially, each running the full reference
     # and search-index passes, then an upload of every object.
-    timeout-minutes: 300
+    timeout-minutes: 420
+    env:
+      CI_EXEC_BUDGET_MINUTES: 300
     environment: docs
     permissions:
       contents: read
@@ -1472,13 +1583,11 @@ jobs:
           ref: ${{ steps.documented.outputs.commit }}
           persist-credentials: false
 
+      # The documentation build renders its CLI and casilla references through
+      # the registry authority the setup brings current.
       - name: Set up toolchain
+        id: setup
         uses: ./.github/actions/setup
-
-      # `just setup` provisions no registry authority, and the documentation
-      # build renders its CLI and casilla references through it.
-      - name: Publish the registry authority
-        run: just registry-publish-authority
 
       # The release id is the ref plus the publish instant, so a republished
       # version never overwrites the bytes an earlier deploy served.
@@ -1496,7 +1605,9 @@ jobs:
             --release-label "${INPUT_REF//\//-}"
 
       - name: Alert on failure without touching the release
-        if: ${{ failure() || cancelled() }}
+        # The alert runs checked-out code: without this job's own setup, the
+        # workspace still holds a previous job's tree.
+        if: ${{ (failure() || cancelled()) && steps.setup.outcome == 'success' }}
         env:
           GH_TOKEN: ${{ github.token }}
           CADRUMO_ALERT_WEBHOOK: ${{ vars.CADRUMO_ALERT_WEBHOOK }}

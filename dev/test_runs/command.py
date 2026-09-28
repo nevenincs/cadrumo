@@ -1430,7 +1430,7 @@ def run(
     environment["CADRUMO_DEV_ARTIFACTS_DIR"] = str(artifacts)
     environment["CADRUMO_DEV_CACHE_DIR"] = str(cache)
     environment["CADRUMO_DEV_SCRATCH_DIR"] = str(scratch)
-    environment["XDG_CACHE_HOME"] = str(cache)
+    # Tool caches such as uv's keep their own homes; only temporary files move.
     environment.update(scratch_environment(scratch))
     with log_path.open("x", encoding=_UTF_8, newline="\n") as transcript:
         transcript.write(f"START {started.isoformat()} pid={os.getpid()}\n")

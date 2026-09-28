@@ -16,7 +16,8 @@ from cadrumo.domain.calculations.registry.tests.snapshot_support import build_sn
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
-from .profile_schema_support import committed_registry_validator
+from .authored_edition_support import source_first_exercise, source_with_sha256
+from .profile_schema_support import committed_registry_validator, committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
@@ -84,40 +85,51 @@ def modelo_131_registry():
     return _committed_modelo("131")
 
 
-def test_modelo_131_supported_year_2022_deadline_census_dates_sources_and_ownership(
+# The AEAT calendario del contribuyente that fixes the deadline days checked below,
+# found by its pinned bytes; its applicability names the exercise. Its fourth
+# quarter is filed under the following exercise's calendar.
+_CALENDAR = source_with_sha256("8d84b3067cce798dd6bfb2c83de3cf68bcd6e199ad584802ab9ee09fb9e53a09")
+_CALENDAR_EXERCISE = source_first_exercise(_CALENDAR)
+_CALENDAR_REF = _CALENDAR.id
+_NEXT_CALENDAR_REF = f"aeat-calendario-contribuyente-{_CALENDAR_EXERCISE + 1}"
+
+
+def test_modelo_131_calendar_exercise_deadline_census_dates_sources_and_ownership(
     modelo_131_registry: tuple[ModeloDefinition, RegistryCatalogues],
 ) -> None:
+    assert committed_supported_filing_years().admits_coordinate(_CALENDAR_EXERCISE)
     modelo, catalogues = modelo_131_registry
     revision = modelo.revisions["2019-2023"]
     windows = {(window.filing_year, window.period.registry_token): window for window in revision.deadline_windows}
-    expected_2022 = {
-        "1T": (date(2022, 4, 1), date(2022, 4, 20), date(2022, 4, 15), "aeat-calendario-contribuyente-2022"),
-        "2T": (date(2022, 7, 1), date(2022, 7, 20), date(2022, 7, 15), "aeat-calendario-contribuyente-2022"),
-        "3T": (date(2022, 10, 1), date(2022, 10, 20), date(2022, 10, 15), "aeat-calendario-contribuyente-2022"),
-        "4T": (date(2023, 1, 1), date(2023, 1, 30), date(2023, 1, 25), "aeat-calendario-contribuyente-2023"),
+    year = _CALENDAR_EXERCISE
+    expected = {
+        "1T": (date(year, 4, 1), date(year, 4, 20), date(year, 4, 15), _CALENDAR_REF),
+        "2T": (date(year, 7, 1), date(year, 7, 20), date(year, 7, 15), _CALENDAR_REF),
+        "3T": (date(year, 10, 1), date(year, 10, 20), date(year, 10, 15), _CALENDAR_REF),
+        "4T": (date(year + 1, 1, 1), date(year + 1, 1, 30), date(year + 1, 1, 25), _NEXT_CALENDAR_REF),
     }
 
     assert len(revision.deadline_windows) == len(windows) == 8
     assert set(revision.constructs[0].deadline_windows) == {window.id for window in revision.deadline_windows}
-    assert {period for year, period in windows if year == 2022} == set(expected_2022)
+    assert {period for window_year, period in windows if window_year == year} == set(expected)
     committed_registry_validator(catalogues).validate_modelo(modelo)
 
-    for source_ref in {"aeat-calendario-contribuyente-2022", "aeat-calendario-contribuyente-2023"}:
+    for source_ref in {_CALENDAR_REF, _NEXT_CALENDAR_REF}:
         source = catalogues.sources[source_ref]
         assert (source.authority, source.evidence_tier) == ("aeat", "official_source_guidance")
         assert source_ref in revision.source_refs
         assert source_ref in revision.constructs[0].source_refs
         assert (bundled_path() / source.corpus_path).is_file()
 
-    projected = compiled_bundled_authority().deadline_windows(2022, modelos=("131",))
+    projected = compiled_bundled_authority().deadline_windows(year, modelos=("131",))
     assert len(projected) == 4
-    assert {window.period.registry_token for _, _, window in projected} == set(expected_2022)
+    assert {window.period.registry_token for _, _, window in projected} == set(expected)
 
-    for period, (opens_on, closes_on, payment_cutoff_on, calendar_ref) in expected_2022.items():
-        window = windows[(2022, period)]
-        assert select_revision(modelo, filing_year=2022, period=period) is revision
-        assert window.id == f"modelo-131-2022-{period.lower()}"
-        assert window.filing_year == window.period.filing_year == 2022
+    for period, (opens_on, closes_on, payment_cutoff_on, calendar_ref) in expected.items():
+        window = windows[(year, period)]
+        assert select_revision(modelo, filing_year=year, period=period) is revision
+        assert window.id == f"modelo-131-{year}-{period.lower()}"
+        assert window.filing_year == window.period.filing_year == year
         assert (window.opens_on, window.closes_on, window.payment_cutoff_on) == (
             opens_on,
             closes_on,

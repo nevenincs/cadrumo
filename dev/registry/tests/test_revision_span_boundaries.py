@@ -73,6 +73,17 @@ the largest designs belong to modelos that do export. The cost buys the offsets
 and the field occupancy the derivatives do not carry, which is what the box and
 retirement signals are made of.
 
+"Once per corpus" still means once per cold cache, and a CI checkout always
+starts cold. Read one source at a time, the cold corpus cost about 215s of the
+first test's 370s on a workstation, which the 300s per-test ceiling every lane
+applies cut off before a verdict; profiled, nearly all of it is pdfplumber
+building per-character objects for the PDF designs. The sources are independent
+and each is cached under its own key, so the first read now warms every missing
+one in parallel through the same extraction (byte-identical entries, measured
+across all 219 sources): about 36s for the corpus, about 115s for the whole cold
+test, which the lane ceiling covers more than twice over. Re-measure it cold (an
+empty ``CADRUMO_DEV_CACHE_ROOT``) when the corpus grows.
+
 SIX INDEPENDENT SIGNALS, ONE VERDICT -- and the occupancy one reports two directions.
 This heading has now been wrong three times in the same direction: TWO for as long as
 the occupancy signal existed, THREE for as long as the box-SET signal has, and FOUR

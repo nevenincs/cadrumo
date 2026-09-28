@@ -44,6 +44,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.ids import BindingId
+from ....domain.calculations.registry.tests.authored_editions import newest_authored_editions
 from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
     revision_id_for_observation,
@@ -66,7 +67,12 @@ def bucket_id() -> str:
 
 
 _PERIOD = "0A"
-_CLOCK = datetime(2026, 7, 1, 10, 0, tzinfo=UTC)
+# The two newest Modelo 100 editions the registry authors; each carries the prior
+# exercise's Art. 50.3 pending negative base into its own casilla 1388.
+_CARRY_EDITIONS = newest_authored_editions("100", 2)
+_NEWEST_EDITION = _CARRY_EDITIONS[-1]
+# Calculations run in the Renta campaign after the newest edition's exercise.
+_CLOCK = datetime(_NEWEST_EDITION + 1, 7, 1, 10, 0, tzinfo=UTC)
 _QUARTERS = ("1T", "2T", "3T", "4T")
 
 _OPENING_PENDING: CasillaId = validated_casilla_id("1388", surface="_OPENING_PENDING")
@@ -98,8 +104,8 @@ def _seed_taxpayer_unit_profile(secure_objects: SecureObjectRepository) -> None:
             UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
             UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
             UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-            UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
-            UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
+            UserProfileFact(path="censo.activity_start_date", value=date(_NEWEST_EDITION - 5, 1, 1)),
+            UserProfileFact(path="renta_taxpayer.birth_date", value=date(_NEWEST_EDITION - 45, 3, 15)),
             UserProfileFact(path="renta_taxpayer.sex", value="H"),
             UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
             UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),
@@ -226,23 +232,19 @@ def _calculate_m100(
 
 
 @pytest.mark.parametrize(
-    ("filing_year", "source_year", "binding_id", "prior_pending"),
-    (
-        (2024, 2023, "renta-base-liquidable-negativa-general-anterior", Decimal("3210.00")),
-        (2025, 2024, "renta-base-liquidable-negativa-general-anterior", Decimal("4321.00")),
-    ),
+    ("filing_year", "prior_pending"),
+    tuple(zip(_CARRY_EDITIONS, (Decimal("3210.00"), Decimal("4321.00")), strict=True)),
 )
 def test_m100_prior_negative_general_base_carries_without_manual_0501_input(
     secure_objects: SecureObjectRepository,
     filing_year: int,
-    source_year: int,
-    binding_id: BindingId,
     prior_pending: Decimal,
 ) -> None:
     """Prior M100 Art. 50.3 1391 auto-fills current 1388 without transcribing 0501."""
     obs_repo = CalculationObservationRepository(objects=secure_objects)
     _seed_taxpayer_unit_profile(secure_objects)
-    _seed_prior_m100_generated_pending(obs_repo, source_year=source_year, value=prior_pending)
+    binding_id: BindingId = "renta-base-liquidable-negativa-general-anterior"
+    _seed_prior_m100_generated_pending(obs_repo, source_year=filing_year - 1, value=prior_pending)
     _seed_zero_pagos_quarters(obs_repo, filing_year=filing_year)
 
     result = _calculate_m100(secure_objects, filing_year=filing_year)
@@ -256,23 +258,23 @@ def test_m100_prior_negative_general_base_carries_without_manual_0501_input(
     assert not any(diagnostic.binding_id == binding_id for diagnostic in result.source_diagnostics)
 
 
-def test_m100_2025_anexo_c_applied_amount_reduces_base_liquidable_not_base_imponible(
+def test_m100_anexo_c_applied_amount_reduces_base_liquidable_not_base_imponible(
     secure_objects: SecureObjectRepository,
 ) -> None:
     """A real 1389 amount becomes 0501 and reduces 0500 by the same amount."""
     obs_repo = CalculationObservationRepository(objects=secure_objects)
     _seed_taxpayer_unit_profile(secure_objects)
-    _seed_prior_m100_generated_pending(obs_repo, source_year=2024, value=Decimal("4321.00"))
-    _seed_zero_pagos_quarters(obs_repo, filing_year=2025)
+    _seed_prior_m100_generated_pending(obs_repo, source_year=_NEWEST_EDITION - 1, value=Decimal("4321.00"))
+    _seed_zero_pagos_quarters(obs_repo, filing_year=_NEWEST_EDITION)
 
     baseline = _calculate_m100(
         secure_objects,
-        filing_year=2025,
+        filing_year=_NEWEST_EDITION,
         casilla_inputs={_TRABAJO_INGRESOS: Decimal("10000.00")},
     ).revision
     applied = _calculate_m100(
         secure_objects,
-        filing_year=2025,
+        filing_year=_NEWEST_EDITION,
         casilla_inputs={
             _TRABAJO_INGRESOS: Decimal("10000.00"),
             _APPLIED_PENDING: Decimal("2000.00"),
@@ -289,9 +291,9 @@ def test_m100_2025_anexo_c_applied_amount_reduces_base_liquidable_not_base_impon
     )
 
 
-def test_m100_2025_base_liquidable_carry_is_grounded_in_art_50_not_art_48() -> None:
-    """The live 2025 registry keeps Art. 48 only on the distinct base-imponible step."""
-    snapshot = published_authority_operation().snapshot("100", filing_year=2025, period=_PERIOD)
+def test_m100_base_liquidable_carry_is_grounded_in_art_50_not_art_48() -> None:
+    """The newest authored edition keeps Art. 48 only on the distinct base-imponible step."""
+    snapshot = published_authority_operation().snapshot("100", filing_year=_NEWEST_EDITION, period=_PERIOD)
     revision = snapshot.revision
     casillas = {casilla.id: casilla for casilla in revision.casillas}
     formulas = {formula.id: formula for formula in revision.formulas}
@@ -304,11 +306,12 @@ def test_m100_2025_base_liquidable_carry_is_grounded_in_art_50_not_art_48() -> N
     for casilla_id in ("1388", "1391", "0501"):
         assert casillas[casilla_id].legal_refs[0] == art_50
         assert art_48 not in casillas[casilla_id].legal_refs
-    assert formulas["renta-base-liquidable-negativa-general-2024-aplicada-maxima"].legal_refs == (art_50,)
+    prior_aplicada_maxima = f"renta-base-liquidable-negativa-general-{_NEWEST_EDITION - 1}-aplicada-maxima"
+    assert formulas[prior_aplicada_maxima].legal_refs == (art_50,)
     assert formulas["renta-base-liquidable-negativa-general-compensacion-total"].legal_refs == (art_50,)
     assert formulas["renta-base-imponible-general"].legal_refs[0] == art_48
     assert art_50 not in formulas["renta-base-imponible-general"].legal_refs
-    prior_snapshot = published_authority_operation().snapshot("100", filing_year=2024, period=_PERIOD)
+    prior_snapshot = published_authority_operation().snapshot("100", filing_year=_NEWEST_EDITION - 1, period=_PERIOD)
     prior_binding = next(
         item
         for item in prior_snapshot.revision.bindings

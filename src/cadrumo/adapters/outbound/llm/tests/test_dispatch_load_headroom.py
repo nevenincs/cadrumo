@@ -27,13 +27,7 @@ from typing import override
 
 import pytest
 
-from .....application.provisioning import (
-    AcceleratorDevice,
-    AcceleratorReading,
-    HardwareProfile,
-    SystemMemoryReading,
-    probe_hardware_profile,
-)
+from .....application.provisioning import HardwareProfile, probe_hardware_profile
 from .....application.provisioning_runtime import (
     ContentionSnapshot,
     RuntimeResident,
@@ -42,7 +36,7 @@ from .....application.provisioning_runtime import (
 )
 from .....core.config import override_settings
 from .....core.config_support import LLMProvider
-from .....core.hardware import AcceleratorKind, ContentionCause
+from .....core.hardware import ContentionCause
 from .....core.model_catalogue import model_candidate
 from .....tests.fixtures.settings import EnvFileFreeSettings
 from .....tests.loopback_llm import (
@@ -59,6 +53,7 @@ from ..client import LLMClient, LLMRetryPolicy, transport_retry_permitted
 from ..errors import LLMContentionError
 from ..models import LLMRequest
 from ._arena_fixtures import _fresh_arena
+from .load_headroom_support import measured_hardware_profile
 
 __all__ = ["_fresh_arena"]
 
@@ -109,19 +104,11 @@ def _declared_requirement_bytes() -> int:
 
 def _profile(*, free_vram_bytes: int | None, free_ram_bytes: int) -> HardwareProfile:
     """Build a measured hardware reading with the given free figures."""
-    return HardwareProfile(
-        memory=SystemMemoryReading(total_bytes=64 * _GIB, free_bytes=free_ram_bytes),
-        accelerator=AcceleratorReading(
-            kind=AcceleratorKind.NVIDIA_CUDA,
-            devices=(
-                AcceleratorDevice(
-                    index=0,
-                    name="probe device",
-                    total_vram_bytes=8 * _GIB,
-                    free_vram_bytes=free_vram_bytes,
-                ),
-            ),
-        ),
+    return measured_hardware_profile(
+        free_vram_bytes=free_vram_bytes,
+        free_ram_bytes=free_ram_bytes,
+        total_vram_bytes=8 * _GIB,
+        total_ram_bytes=64 * _GIB,
     )
 
 

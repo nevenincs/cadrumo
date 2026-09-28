@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import ast
 import re
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable
 from pathlib import Path
 from urllib.parse import urlsplit
 
@@ -46,10 +46,11 @@ from cadrumo.tests.aeat_literal_fixtures import (
 from cadrumo.tests.inventory import (
     ast_for_path,
     discover_test_control_modules,
-    package_ast_items,
+    package_python_files,
     repo_path,
     repo_relative,
 )
+from dev.quality.cyclic_gc import cyclic_gc_paused
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -85,8 +86,13 @@ def _is_docstring_node(node: ast.Module | ast.ClassDef | ast.AsyncFunctionDef | 
     )
 
 
-def _tree_for_path(path: Path, source_tree_ast: Mapping[Path, ast.AST]) -> ast.AST:
-    tree = ast_for_path(path, source_tree_ast)
+def _tree_for_path(path: Path) -> ast.AST:
+    """Parse ``path`` through the shared per-path cache.
+
+    Each check here reads a named file set or one package subtree, never the
+    whole package, so none needs the session-wide parse of every module.
+    """
+    tree = ast_for_path(path)
     if tree is None:
         raise AssertionError(f"unable to parse {repo_relative(path)}")
     return tree
@@ -407,7 +413,7 @@ def test_sede_parser_route_shapes_are_centralized() -> None:
     assert paths.cotejo_document == registry_paths["cotejo_document"]
 
 
-def test_live_sede_executable_route_literals_stay_centralized(source_tree_ast: Mapping[Path, ast.AST]) -> None:
+def test_live_sede_executable_route_literals_stay_centralized() -> None:
     """Live AEAT executable code must read volatile routes from the registry."""
 
     checked_paths = (
@@ -423,7 +429,7 @@ def test_live_sede_executable_route_literals_stay_centralized(source_tree_ast: M
     )
 
     offenders = _token_literal_offenders(
-        files=((path, _tree_for_path(path, source_tree_ast)) for path in checked_paths),
+        files=((path, _tree_for_path(path)) for path in checked_paths),
         volatile_tokens=AEAT_LITERAL_SCAN_TOKENS,
     )
 
@@ -477,20 +483,21 @@ def test_portal_paths_registry_covers_literal_free_portal_entries() -> None:
         assert str(PORTAL_REGISTRY[Portal(portal_id)].url.path) == path
 
 
-def test_portal_registry_modules_do_not_reintroduce_route_or_host_literals(
-    source_tree_ast: Mapping[Path, ast.AST],
-) -> None:
+def test_portal_registry_modules_do_not_reintroduce_route_or_host_literals() -> None:
     """Portal catalogue modules must resolve AEAT hosts and paths through central constants."""
 
     volatile_tokens = PORTAL_LITERAL_SCAN_TOKENS
     allowed_files = {"src/cadrumo/domain/portals/hosts.py"}
 
     offenders: list[str] = []
-    for path, tree in package_ast_items(source_tree_ast):
+    for path in package_python_files():
         relative_path = repo_relative(path)
         if not relative_path.startswith("src/cadrumo/domain/portals/"):
             continue
         if "/tests/" in relative_path or relative_path in allowed_files:
+            continue
+        tree = ast_for_path(path)
+        if tree is None:
             continue
         docstring_ids = _docstring_constant_ids(tree)
         for node in ast.walk(tree):
@@ -506,9 +513,7 @@ def test_portal_registry_modules_do_not_reintroduce_route_or_host_literals(
     assert offenders == []
 
 
-def test_remote_guard_parity_and_oracle_tests_use_declared_aeat_literal_fixtures(
-    source_tree_ast: Mapping[Path, ast.AST],
-) -> None:
+def test_remote_guard_parity_and_oracle_tests_use_declared_aeat_literal_fixtures() -> None:
     """Remote guard/parity/oracle tests must import configured URLs or declared canaries."""
 
     checked_paths = (
@@ -518,14 +523,14 @@ def test_remote_guard_parity_and_oracle_tests_use_declared_aeat_literal_fixtures
         repo_path("dev/registry/tests/test_aeat_nif_iva_oracle.py"),
     )
     offenders = _token_literal_offenders(
-        files=((path, _tree_for_path(path, source_tree_ast)) for path in checked_paths),
+        files=((path, _tree_for_path(path)) for path in checked_paths),
         volatile_tokens=REMOTE_GUARD_LITERAL_SCAN_TOKENS,
     )
 
     assert offenders == []
 
 
-def test_test_suite_aeat_route_literals_are_centralized_or_declared(source_tree_ast: Mapping[Path, ast.AST]) -> None:
+def test_test_suite_aeat_route_literals_are_centralized_or_declared() -> None:
     """Test modules must not own executable AEAT/Sede host or route literals."""
 
     allowed_files = {
@@ -549,11 +554,13 @@ def test_test_suite_aeat_route_literals_are_centralized_or_declared(source_tree_
     )
 
     checked_files = (
-        (path, _tree_for_path(path, source_tree_ast))
+        (path, _tree_for_path(path))
         for path in discover_test_control_modules()
         if repo_relative(path) not in allowed_files
     )
-    offenders = _token_literal_offenders(files=checked_files, volatile_tokens=volatile_tokens)
+    # Thousands of test modules are parsed and kept; a collection would only re-traverse them.
+    with cyclic_gc_paused():
+        offenders = _token_literal_offenders(files=checked_files, volatile_tokens=volatile_tokens)
 
     assert offenders == []
 

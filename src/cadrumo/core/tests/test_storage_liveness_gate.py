@@ -64,11 +64,15 @@ discrimination tests below for the proof.
 from __future__ import annotations
 
 import ast
+import unicodedata
+from collections.abc import Mapping
 from functools import cache
 from pathlib import Path
+from types import MappingProxyType
 
 import pytest
 
+from ...tests.inventory import releases_parsed_sources
 from ..directory_scan import scan_directory
 from ..storage_taxonomy import StorageLocation
 from ..storage_taxonomy_locations import STORAGE_TAXONOMY
@@ -253,6 +257,7 @@ def _claim_names(location: StorageLocation) -> frozenset[str]:
 _CONSUMER_ROOTS = (SRC_CADRUMO,)
 
 
+@releases_parsed_sources
 @cache
 def _tree_for(module: str) -> ast.AST | None:
     for root in _CONSUMER_ROOTS:
@@ -347,15 +352,20 @@ def test_every_dormant_member_states_a_reason_and_really_is_dormant() -> None:
             continue
         assert location.dormant_reason.strip(), f"{location.category.value} declares an empty dormant reason"
         names = {location.category.name} | ({location.settings_field} if location.settings_field else set())
-        for module, tree, source in _production_trees():
+        for module in _production_sources():
             # A module that never spells either name cannot reference the
             # member, and the two walks below would both come back empty. The
             # loop is one pass over every production module PER dormant member,
             # so this substring test replaces the great majority of those walks
             # without changing which modules can contribute evidence: both
             # `declares_field` and `consumption_evidence` key on these very
-            # names appearing in the tree.
-            if not any(name in source for name in names):
+            # names appearing in the tree. It also decides which modules are
+            # parsed at all, so a module no dormant member names is never read
+            # into a syntax tree.
+            if not any(name in _searchable_source(module) for name in names):
+                continue
+            tree = _production_tree(module)
+            if tree is None:
                 continue
             if location.settings_field is not None and declares_field(tree, location.settings_field):
                 continue
@@ -378,20 +388,23 @@ _TAXONOMY_DECLARATION_MODULES = frozenset(
 )
 
 
+@releases_parsed_sources
 @cache
-def _production_trees() -> tuple[tuple[str, ast.AST, str], ...]:
-    """Every production module as ``(relative path, parsed tree, source text)``, read once.
+def _production_sources() -> Mapping[str, str]:
+    """Every production module's source text, read once, by relative path.
 
-    The source text rides along because the dormancy sweep is quadratic -- every
-    production module, once per dormant member -- and a substring test on the
-    text retires most of those iterations before either tree walk starts.
+    Only the text is held. The dormancy sweep is quadratic -- every production
+    module, once per dormant member -- and the substring test below retires the
+    great majority of those iterations before any tree is needed, so parsing
+    every module up front bought nothing but time and a syntax tree per module
+    that stayed resident for the rest of the process.
 
     Test modules are excluded deliberately: a fixture that sets a field proves
     only that the field can be set, not that anything reads it back. Three of
     the four dormant members are set by test fixtures and consumed by nothing,
     which is precisely the shape a test-inclusive sweep would have missed.
     """
-    trees: list[tuple[str, ast.AST, str]] = []
+    sources: dict[str, str] = {}
     for path in scan_directory(SRC_CADRUMO, pattern="*.py", recursive=True):
         relative = path.relative_to(SRC_CADRUMO).as_posix()
         # Both declaration modules are excluded: a member's own declaration
@@ -400,12 +413,33 @@ def _production_trees() -> tuple[tuple[str, ast.AST, str], ...]:
         # split out of the taxonomy module and inherited that requirement.
         if "/tests/" in f"/{relative}" or relative.startswith("tests/") or relative in _TAXONOMY_DECLARATION_MODULES:
             continue
-        source = path.read_text(encoding="utf-8")
-        try:
-            trees.append((relative, ast.parse(source), source))
-        except SyntaxError:  # pragma: no cover - a syntactically broken module fails elsewhere
-            continue
-    return tuple(trees)
+        sources[relative] = path.read_text(encoding="utf-8")
+    return MappingProxyType(sources)
+
+
+@releases_parsed_sources
+@cache
+def _searchable_source(module: str) -> str:
+    """Return the text a bare-name substring test may be run against.
+
+    Python resolves an identifier through NFKC, so a module can spell a name in
+    characters a literal substring test would not find, and the prefilter would
+    then hide a real reference from the walks that decide the claim. Normalising
+    is skipped for a pure-ASCII module, which is nearly all of them, so the
+    prefilter stays one substring test per module and member.
+    """
+    source = _production_sources()[module]
+    return source if source.isascii() else unicodedata.normalize("NFKC", source)
+
+
+@releases_parsed_sources
+@cache
+def _production_tree(module: str) -> ast.AST | None:
+    """Parse one production module, for the few the prefilter did not retire."""
+    try:
+        return ast.parse(_production_sources()[module])
+    except SyntaxError:  # pragma: no cover - a syntactically broken module fails elsewhere
+        return None
 
 
 # --------------------------------------------------------------------- #

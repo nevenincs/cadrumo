@@ -154,9 +154,6 @@ aggregation:
     errors:
       filing_year_out_of_range: El exercici %{filing_year} queda fora del rang admès
         %{min_year}-%{max_year}.
-      invoice_retencion_collision: La(es) observació(ons) de retenció de la(es) factura(es)
-        %{source_object_ids} es van declarar manualment i també mitjançant --received-invoice-retencion;
-        elimineu el duplicat abans d'agregar.
       m111_no_retenciones_attestation_missing: 'No hi ha observacions de retenció
         per perceptor per al model 111 %{filing_year} %{period}. No presentis un Model
         111 en blanc: declara el trimestre com a període sense retencions amb `aeat

@@ -226,8 +226,8 @@ def test_armed_worker_exits_when_dead_client_pid_signals() -> None:
 
     The test holds the victim's ``Popen`` handle so the kernel keeps the process
     object alive after exit: ``OpenProcess`` then succeeds and the wait fires at
-    once. On POSIX the override path declines and the worker reports it stayed
-    up.
+    once. POSIX has no client-PID primary, so the watchdog arms its reparent poll
+    instead; the living test process keeps it anchored and the worker stays up.
     """
     victim = subprocess.Popen([sys.executable, "-c", "pass"], stdout=subprocess.DEVNULL)
     victim.wait(timeout=60)
@@ -258,12 +258,17 @@ def test_armed_worker_exits_when_dead_client_pid_signals() -> None:
         assert "still-alive" not in proc.stdout
         assert elapsed < 15, f"worker outlived a dead client by {elapsed:.1f}s"
     else:
-        assert "armed=False" in proc.stdout
+        assert "armed=True" in proc.stdout
         assert "still-alive" in proc.stdout
 
 
 def test_dead_client_exit_emits_the_structured_event() -> None:
-    """The reap is observable on stderr in the shared sibling event shape."""
+    """The reap is observable on stderr in the shared sibling event shape.
+
+    An explicit parent is watched ahead of discovery on both platforms, so a dead
+    one reaps the worker everywhere. ``rearm_seconds`` compresses the POSIX poll
+    through the real parameter; Windows fires on the handle at once.
+    """
     victim = subprocess.Popen([sys.executable, "-c", "pass"], stdout=subprocess.DEVNULL)
     victim.wait(timeout=60)
 
@@ -271,7 +276,7 @@ def test_dead_client_exit_emits_the_structured_event() -> None:
         f"""
         import time
         from {_MODULE} import arm_stdio_lifetime_watchdog
-        arm_stdio_lifetime_watchdog(client_pid={victim.pid}, parent_pid={victim.pid})
+        arm_stdio_lifetime_watchdog(client_pid={victim.pid}, parent_pid={victim.pid}, rearm_seconds=1)
         time.sleep(20)
         print("still-alive", flush=True)
         """
@@ -283,9 +288,6 @@ def test_dead_client_exit_emits_the_structured_event() -> None:
         timeout=90,
         check=False,
     )
-    if sys.platform != "win32":
-        assert "still-alive" in proc.stdout
-        return
     assert proc.returncode == 0
     assert "still-alive" not in proc.stdout
     events = [json.loads(line) for line in proc.stderr.splitlines() if line.startswith("{")]
@@ -302,6 +304,7 @@ def test_parent_pid_env_override_is_honoured() -> None:
 
     The bundle and any wrapper launcher configure the override through the
     environment, so the env path - not just the keyword argument - must anchor.
+    It anchors on both platforms; ``rearm_seconds`` only compresses the POSIX poll.
     """
     victim = subprocess.Popen([sys.executable, "-c", "pass"], stdout=subprocess.DEVNULL)
     victim.wait(timeout=60)
@@ -310,7 +313,7 @@ def test_parent_pid_env_override_is_honoured() -> None:
         f"""
         import time
         from {_MODULE} import arm_stdio_lifetime_watchdog
-        arm_stdio_lifetime_watchdog()
+        arm_stdio_lifetime_watchdog(rearm_seconds=1)
         time.sleep(20)
         print("still-alive", flush=True)
         """
@@ -324,9 +327,6 @@ def test_parent_pid_env_override_is_honoured() -> None:
         timeout=90,
         check=False,
     )
-    if sys.platform != "win32":
-        assert "still-alive" in proc.stdout
-        return
     assert "still-alive" not in proc.stdout, "the env override never anchored the watchdog"
     events = [json.loads(line) for line in proc.stderr.splitlines() if line.startswith("{")]
     assert events and events[-1]["dead_ancestor_pid"] == victim.pid, proc.stderr

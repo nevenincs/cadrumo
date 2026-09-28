@@ -63,7 +63,7 @@ def _nested_legal_refs(value: object) -> set[str]:
     return refs
 
 
-def test_modelo_180_2023_amendment_is_scoped_to_2023_revision() -> None:
+def test_modelo_180_amendment_is_scoped_to_the_amended_revision() -> None:
     authority = compiled_bundled_authority()
     modelo = authority.modelo("180")
     historical_refs = _nested_legal_refs(modelo.revisions["2019-2022"].model_dump(mode="python"))

@@ -30,13 +30,13 @@ uv run --no-sync python -m dev.tui diff baseline --against latest
 without driving the harness at all. Those SVGs are the harness's own output
 and stay valid however this tool's rasteriser changes, so fixing a rendering
 defect -- or just wanting the frames at a different resolution -- costs
-seconds instead of another full matrix at minutes per frame.
+seconds instead of another full matrix at seconds per frame.
 
 `render` always targets the canonical review at `runs/current`. `snapshot`
 copies that review aside under a name of your choosing, and is the only way a
 second run directory comes to exist -- so it is what makes the `diff` above
 possible. A name already taken is refused rather than overwritten: a full
-matrix costs about twenty-five minutes and runs are gitignored, so the
+matrix costs tens of minutes and runs are gitignored, so the
 snapshot is the only copy of the review it holds. `--replace` is how an
 operator says the older review is finished with.
 

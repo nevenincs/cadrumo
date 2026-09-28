@@ -10,6 +10,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Final
 
+from cadrumo.application.aggregation.m193_phase_materialization import modelo_193_pending_disclosure_years
 from cadrumo.application.aggregation.withholding_filing_cadence import (
     WithholdingFilerCadence,
     resolve_withholding_filer_cadence,
@@ -90,6 +91,12 @@ def quarterly_filer_cadence(filing_year: int) -> WithholdingFilerCadence:
     return published_filer_cadence(filing_year)
 
 
+def published_pending_disclosure_years() -> frozenset[int]:
+    """Return the accrual years whose published Modelo 193 edition grounds the pending disclosure."""
+    with bundled_indexed_authority().operation() as operation:
+        return modelo_193_pending_disclosure_years(operation)
+
+
 def quarterly_filer_cadence_for(command: WithholdingEvidenceCaptureCommand | None) -> WithholdingFilerCadence:
     """Return the ordinary filer's cadence for the year a capture command applies to."""
     if command is None:
@@ -103,6 +110,7 @@ __all__ = [
     "REDEME_FACTS",
     "WITHHOLDING_FILER_PROFILE_ID",
     "published_filer_cadence",
+    "published_pending_disclosure_years",
     "quarterly_filer_cadence",
     "quarterly_filer_cadence_for",
     "withholding_filer_cadence",

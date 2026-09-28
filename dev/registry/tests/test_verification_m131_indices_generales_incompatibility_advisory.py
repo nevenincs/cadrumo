@@ -97,7 +97,7 @@ def _predicate(predicate_id: str) -> VerificationPredicateDefinition:
     return next(p for p in revision.verification_predicates if p.predicate_id == predicate_id)
 
 
-def test_incompatibility_predicates_ship_on_2025_revision() -> None:
+def test_incompatibility_predicates_ship_on_the_modulos_orden_revision() -> None:
     """Both incompatibility predicates exist, are ADVISORY, and cite the Anexo II grounding."""
     revision = _m131_2025_revision()
     predicates_by_id = {p.predicate_id: p for p in revision.verification_predicates}

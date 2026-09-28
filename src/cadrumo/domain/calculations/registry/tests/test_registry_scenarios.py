@@ -8,6 +8,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from .....core.casilla_id import validated_casilla_id
 from ..errors import RegistrySnapshotError, RegistryValidationError
 from ._registry_scenarios_support import (
     _estimacion_objetiva_modulos_archetype_scenario,
@@ -23,6 +24,7 @@ from ._registry_scenarios_support import (
     _simplified_direct_estimation_cap_scenario,
     _tributacion_conjunta_family_joint_archetype_scenario,
 )
+from .published_authority import published_legal_reference
 from .scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
@@ -139,24 +141,39 @@ def test_registry_scenario_reports_trace_contract_mismatches() -> None:
         assert_registry_scenario_matches(report)
 
 
-def test_modelo_100_2023_simplified_expenses_use_temporary_da56_rate() -> None:
-    """The 2023 EDS difficult-justification rate is 7%, not the current 5%."""
+# Ley 35/2006 DA 56 raised the simplified-direct-estimation rate for the one tax
+# period its in-force window covers; the published provision names that exercise.
+_DA56_TEMPORARY_RATE_EXERCISE = published_legal_reference("ley-35-2006:da-56").effective_from.year
+
+
+def test_modelo_100_simplified_expenses_use_temporary_da56_rate() -> None:
+    """The DA 56 exercise's EDS difficult-justification rate is 7%, not the current 5%."""
+    exercise = _DA56_TEMPORARY_RATE_EXERCISE
     scenario = RegistryCalculationScenario(
-        id="modelo-100-2023-estimacion-directa-simplificada-da56-rate",
+        id=f"modelo-100-{exercise}-estimacion-directa-simplificada-da56-rate",
         modelo="100",
-        revision="2023",
-        filing_year=2023,
+        revision=str(exercise),
+        filing_year=exercise,
         period="0A",
         inputs=_inputs({"0171": Decimal("10000.00")}),
+        hand_typed_bound_casillas={
+            validated_casilla_id("0171"): (
+                "isolates the difficult-justification rate applied to 0180; the ledger-income aggregation "
+                "feeding this casilla is out of its scope and is covered separately"
+            ),
+        },
         binding_values={
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("0"),
+            "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
+            "renta-profile-declaration-type": Decimal("1"),
         },
         relation_values={
             "renta-modelo-130-pagos-fraccionados": Decimal("0"),
             "renta-modelo-131-pagos-fraccionados": Decimal("0"),
         },
+        date_binding_values={"renta-profile-taxpayer-birth-date": date(1975, 6, 15)},
         enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
-        date_context={"filing_period": date(2023, 12, 31)},
+        date_context={"filing_period": date(exercise, 12, 31)},
         expected_outputs=(
             _expected(
                 "0222",
@@ -169,7 +186,7 @@ def test_modelo_100_2023_simplified_expenses_use_temporary_da56_rate() -> None:
                 ),
                 operand_casilla_refs=_operand_casilla_refs("0180", "0218"),
                 legal_refs=("ley-35-2006:art-30", "ley-35-2006:da-56", "rd-439-2007:art-30"),
-                source_refs=("aeat-renta-2023-manual-parte1", "lirpf-cuota-chain-authority"),
+                source_refs=(f"aeat-renta-{exercise}-manual-parte1", "lirpf-cuota-chain-authority"),
             ),
         ),
     )

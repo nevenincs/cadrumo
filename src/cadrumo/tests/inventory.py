@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import ast
+import gc
 import re
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Iterator, Mapping
 from functools import cache
 from pathlib import Path
-from typing import Final
+from typing import Final, Protocol, override, runtime_checkable
 
 from ..core.directory_scan import DirectoryEntryKind, scan_directory
 
@@ -280,7 +281,7 @@ def ast_for_path(path: Path, cache: Mapping[Path, ast.AST] | None = None) -> ast
     ``source_tree_ast`` fixture avoids repeated parse work while preserving a
     single-file fallback for callers that inspect documented inventory entries.
     Callers that do not thread the fixture through still benefit: the fallback
-    reads from the shared process-level cache primed by :func:`prime_ast_cache`.
+    reads from the same shared process-level cache the fixture reads through.
     """
     if cache is not None and path in cache:
         return cache[path]
@@ -289,23 +290,117 @@ def ast_for_path(path: Path, cache: Mapping[Path, ast.AST] | None = None) -> ast
 
 _AST_CACHE: dict[Path, ast.AST | None] = {}
 """Process-level AST parse cache shared by every :func:`ast_for_path` caller
-that does not supply its own cache mapping. Primed once per pytest session by
-:func:`prime_ast_cache` (called from the ``source_tree_ast`` fixture in
-``conftest.py``) so a ratchet that calls ``ast_for_path(path)`` without
-threading the session fixture through still reuses the one full-tree parse
-instead of independently re-parsing the same file from disk."""
+that does not supply its own cache mapping, so a ratchet that calls
+``ast_for_path(path)`` without threading the ``source_tree_ast`` fixture through
+still reuses one parse per file instead of re-parsing it from disk. Its lifetime
+is one test module: :func:`release_parsed_sources` empties it at the boundary."""
 
 
-def prime_ast_cache(entries: Mapping[Path, ast.AST]) -> None:
-    """Seed the shared process-level AST cache from an externally-parsed mapping.
+class _ClearableCache(Protocol):
+    """Any memoised callable that can drop the results it has stored."""
 
-    Called once per pytest session by the ``source_tree_ast`` fixture so every
-    :func:`ast_for_path` call made without an explicit cache argument (the
-    common bypass pattern across structural ratchets that only import
-    ``ast_for_path`` and never thread the session fixture through their own
-    helpers) reuses the shared parse instead of re-parsing the file.
+    def cache_clear(self) -> None:
+        """Drop every stored result."""
+
+
+@runtime_checkable
+class _NamesItsCandidates(Protocol):
+    """A tree mapping that can name its candidate files without parsing them."""
+
+    def candidate_paths(self) -> tuple[Path, ...]:
+        """Return the files the mapping may hold, none of them parsed."""
+
+
+_PARSED_SOURCE_CACHES: list[_ClearableCache] = []
+"""The gate-owned parse caches enrolled through :func:`releases_parsed_sources`."""
+
+
+def releases_parsed_sources[CacheT: _ClearableCache](cached: CacheT) -> CacheT:
+    """Enrol a gate's own cache of parsed or read source in the shared release.
+
+    A gate that keeps its own ``@cache`` of syntax trees or source text holds it
+    for the rest of the process, and a tree-wide gate's cache is measured in
+    hundreds of megabytes. Enrolled, the cache stays hot for every test in the
+    module that owns it and is dropped once that module's last test has run.
+
+    Args:
+        cached: The memoised callable to enrol, returned unchanged.
+
+    Returns:
+        The same callable, so this reads as a decorator above ``@cache``.
     """
-    _AST_CACHE.update(entries)
+    _PARSED_SOURCE_CACHES.append(cached)
+    return cached
+
+
+def release_parsed_sources() -> None:
+    """Empty every process-level cache that holds parsed or read source text.
+
+    The structural ratchets share one parse per file, which is what makes a gate
+    that walks the whole package fast across its own tests. Kept for the whole
+    session that sharing never shrank: a worker that ran one tree-wide gate
+    stayed over a gigabyte larger for every module scheduled after it, and eight
+    such workers on one host summed to more than twenty gigabytes of resident
+    memory that nothing reclaimed. Called at each test module's boundary, the
+    caches keep their purpose within the module that fills them, and the next
+    gate re-reads only the files it actually reads.
+    """
+    _AST_CACHE.clear()
+    read_source.cache_clear()
+    for cached in _PARSED_SOURCE_CACHES:
+        cached.cache_clear()
+
+
+class LazySourceTreeAst(Mapping[Path, ast.AST]):
+    """The parsed modules of a source tree, each parsed on first access.
+
+    Holds exactly what parsing every file up front would -- the same keys in the
+    same order, the same trees -- read through the shared process-level cache,
+    so :func:`ast_for_path` with or without this mapping sees one parse per file.
+    A file that cannot be read or parsed is not a member. A gate that reads one
+    package no longer waits for the rest of the tree to be parsed first; a gate
+    that iterates every member still parses every file, once.
+    """
+
+    def __init__(self, paths: Iterable[Path]) -> None:
+        """Take the candidate files, parsing none of them yet."""
+        self._paths = tuple(paths)
+        self._candidates = frozenset(self._paths)
+
+    def candidate_paths(self) -> tuple[Path, ...]:
+        """Return the files this mapping may hold, parsing none of them.
+
+        Membership is decidable only by parsing, so a consumer that wants a
+        SUBSET -- the production files, one package -- must not reach that subset
+        through iteration: deciding membership for every candidate parses the
+        whole tree to discard most of it. Filtering these paths first and taking
+        only the survivors through :func:`ast_for_path` parses what the caller
+        actually asked for.
+        """
+        return self._paths
+
+    @override
+    def __getitem__(self, path: Path) -> ast.AST:
+        """Return the tree for a member, parsing it now if it was not yet."""
+        tree = _parsed_ast_for_path(path) if path in self._candidates else None
+        if tree is None:
+            raise KeyError(path)
+        return tree
+
+    @override
+    def __contains__(self, path: object) -> bool:
+        """Whether ``path`` is a candidate that parses."""
+        return isinstance(path, Path) and path in self._candidates and _parsed_ast_for_path(path) is not None
+
+    @override
+    def __iter__(self) -> Iterator[Path]:
+        """Yield every member in candidate order, parsing as it goes."""
+        return (path for path in self._paths if _parsed_ast_for_path(path) is not None)
+
+    @override
+    def __len__(self) -> int:
+        """Count the members, which parses every candidate."""
+        return sum(1 for _path in self)
 
 
 def _parsed_ast_for_path(path: Path) -> ast.AST | None:
@@ -317,18 +412,35 @@ def _parsed_ast_for_path(path: Path) -> ast.AST | None:
     except (OSError, UnicodeDecodeError):
         _AST_CACHE[path] = None
         return None
+    # A syntax tree holds no reference cycle, so a cyclic collection its
+    # allocations trigger re-traverses every tree already cached and frees
+    # nothing; over the whole package that was about two thirds of parse time.
+    collecting = gc.isenabled()
+    gc.disable()
     try:
         tree = ast.parse(source, filename=str(path))
     except SyntaxError:
         tree = None
+    finally:
+        if collecting:
+            gc.enable()
     _AST_CACHE[path] = tree
     return tree
+
+
+def _selectable_paths(cache: Mapping[Path, ast.AST]) -> Iterable[Path]:
+    """Return the paths to select a subset from, without parsing to find them.
+
+    A lazily parsed mapping names its candidates directly; anything else is a
+    plain mapping whose keys are already known, and iterating it costs nothing.
+    """
+    return cache.candidate_paths() if isinstance(cache, _NamesItsCandidates) else cache
 
 
 def production_ast_items(cache: Mapping[Path, ast.AST] | None = None) -> tuple[tuple[Path, ast.AST], ...]:
     """Return ``(path, AST)`` pairs for the shared production source surface."""
     paths = (
-        sorted(path for path in cache if _is_production_python_file(path))
+        sorted(path for path in _selectable_paths(cache) if _is_production_python_file(path))
         if cache is not None
         else production_python_files()
     )
@@ -349,7 +461,7 @@ def package_ast_items(
     paths = (
         sorted(
             path
-            for path in cache
+            for path in _selectable_paths(cache)
             if _is_relative_to(path, SRC_CADRUMO)
             and path.suffix == ".py"
             and "__pycache__" not in path.parts

@@ -30,6 +30,7 @@ from dev.acceptance.income_tax.installed_tui_child import (
     query_public_selector,
     read_passphrase_from_stdin,
     register_profile_through_installed_tui,
+    reportable_child_failure_reason,
     run_installed_tui_child_process,
     select_public_data_table_row,
     wait_for_public_selector,
@@ -867,6 +868,12 @@ def _readback_canonical_fields(
     return fingerprint, tuple("app.ledger.view" for _ in cli.commands)
 
 
+def _reported_reason(receipt: Path, *, returncode: int) -> str:
+    """The child's recorded cause and exit status, for the driver's refusal."""
+    reason = reportable_child_failure_reason(receipt)
+    return f" (exit {returncode}): {reason}" if reason is not None else f" (exit {returncode})"
+
+
 def _child_document(path: Path, *, mode: str) -> dict[str, object]:
     """Load a child receipt only after the shared runner has verified its presence."""
     try:
@@ -1008,7 +1015,10 @@ def run_installed_tui_capture_reopen(
         timeout_seconds=900,
     )
     if capture_process.returncode != 0 or capture_process.receipt_status != "proven":
-        raise IvaInstalledTuiError("installed IVA TUI capture child did not prove its bounded journey")
+        raise IvaInstalledTuiError(
+            "installed IVA TUI capture child did not prove its bounded journey"
+            + _reported_reason(capture_path, returncode=capture_process.returncode)
+        )
     capture = _child_document(capture_path, mode="capture")
     product_origin, product_init_sha256, package_version = _assert_child_identity(
         capture,
@@ -1054,7 +1064,10 @@ def run_installed_tui_capture_reopen(
         timeout_seconds=900,
     )
     if reopen_process.returncode != 0 or reopen_process.receipt_status != "proven":
-        raise IvaInstalledTuiError("fresh installed IVA TUI reopen child did not prove its bounded journey")
+        raise IvaInstalledTuiError(
+            "fresh installed IVA TUI reopen child did not prove its bounded journey"
+            + _reported_reason(reopen_path, returncode=reopen_process.returncode)
+        )
     reopen = _child_document(reopen_path, mode="reopen")
     _assert_child_identity(
         reopen,

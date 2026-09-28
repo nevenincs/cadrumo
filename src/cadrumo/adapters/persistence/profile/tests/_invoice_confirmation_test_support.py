@@ -74,18 +74,16 @@ from ....inbound.einvoice.xml import EInvoiceXmlParseError
 from ....inbound.pdf.page_text_extraction import extract_pages_text_from_bytes
 from ....outbound.llm.consent import EvidenceConsentToken
 from ....outbound.llm.errors import LLMConsentError, LLMPdfRasterisationError, LLMProviderError
-from ....outbound.llm.evidence_draft_text import (
-    TextInvoiceFieldExtractor,
-    extract_invoice_fields_from_text,
-)
-from ....outbound.llm.evidence_draft_vision import (
-    LocalVisionDocumentTranscriber,
-    transcribe_document_images,
-)
+from ....outbound.llm.evidence_draft_text import TextInvoiceFieldExtractor
+from ....outbound.llm.evidence_draft_vision import LocalVisionDocumentTranscriber
 from ....outbound.llm.models import MultimodalImageInput
 from ....outbound.llm.preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
 from ....outbound.llm.providers.local import rasterise_pdf_pages_to_base64_png
-from ....outbound.llm.supply_nature_proposal import SupplyNatureProposer
+from ....outbound.llm.tests.load_headroom_support import (
+    extract_invoice_text_under_admitted_load,
+    propose_supply_nature_under_admitted_load,
+    transcribe_document_images_under_admitted_load,
+)
 from ...storage.attachment import AttachmentStore
 from ...storage.runtime_repository import secure_object_repository_for_bucket
 from ...storage.sql.secure_objects import SecureObjectRepository
@@ -212,8 +210,9 @@ def _invoice_draft_extraction_ports(
             if not isinstance(authority_values, InvoiceExtractionAuthorityValues):
                 raise TypeError("invoice text extraction requires resolved authority values")
             if provider is None:
-                return extract_invoice_fields_from_text(
+                return extract_invoice_text_under_admitted_load(
                     transcription,
+                    settings=settings,
                     authority_values=authority_values,
                     operation=operation,
                 )
@@ -230,7 +229,7 @@ def _invoice_draft_extraction_ports(
 
     def propose_supply_nature(transcription: DocumentTranscription, settings: Settings) -> SupplyNature | None:
         try:
-            return SupplyNatureProposer(settings=settings).propose(transcription.text.splitlines()).nature
+            return propose_supply_nature_under_admitted_load(transcription.text.splitlines(), settings=settings)
         except Exception:
             return None
 
@@ -250,7 +249,7 @@ def _invoice_draft_extraction_ports(
         try:
             inputs = tuple(MultimodalImageInput.from_base64(image.base64_data, image.media_type) for image in images)
             if provider is None:
-                return transcribe_document_images(
+                return transcribe_document_images_under_admitted_load(
                     inputs, source_content_sha256=source_content_sha256, settings=settings
                 )
             return LocalVisionDocumentTranscriber(

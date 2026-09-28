@@ -31,6 +31,7 @@ from .....application.operator_actions.catalogue import lookup_action
 from .....application.operator_actions.models import ActionReference
 from .....core.casilla_id import validated_casilla_id
 from .....core.external_constants import OutputLanguage
+from .....core.filing_year import FILING_YEAR_MIN
 from .....core.period import Period
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from .....domain.modelos.calculation_revision import (
@@ -314,9 +315,12 @@ def _controller(
 
 
 @pytest.mark.asyncio
-async def test_declarations_create_selects_2025_work_and_refuses_invalid_input_before_handoff(
+async def test_declarations_create_selects_supported_work_and_refuses_invalid_input_before_handoff(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
+    # Any exercise of the support envelope is a valid selection; the refused one sits
+    # just below the application's accepted filing-year range.
+    year = authority_operation.supported_filing_years().floor
     calls: list[tuple[str, int, Period]] = []
 
     def create(modelo: str, year: int, period: Period) -> ModeloWorkCreateResultV1:
@@ -327,22 +331,22 @@ async def test_declarations_create_selects_2025_work_and_refuses_invalid_input_b
     async with ScreenHostApp(screen).run_test(size=(100, 42)) as pilot:
         await pilot.pause()
         screen.query_one("#declarations-work-modelo", Input).value = "111"
-        screen.query_one("#declarations-work-year", Input).value = "2025"
+        screen.query_one("#declarations-work-year", Input).value = str(year)
         screen.query_one("#declarations-work-period", Input).value = "2T"
         screen.query_one("#declarations-work-create", Button).press()
         await pilot.pause()
         await pilot.app.workers.wait_for_complete()
-        assert calls == [("111", 2025, Period.from_year_and_code(2025, "2T"))]
+        assert calls == [("111", year, Period.from_year_and_code(year, "2T"))]
         assert "111" in str(screen.query_one("#declarations-work-create-notice", Static).render())
         screen.query_one("#declarations-work-create", Button).press()
         await pilot.pause()
         await pilot.app.workers.wait_for_complete()
         assert len(calls) == 2
-        screen.query_one("#declarations-work-year", Input).value = "1999"
+        screen.query_one("#declarations-work-year", Input).value = str(FILING_YEAR_MIN - 1)
         screen.query_one("#declarations-work-create", Button).press()
         await pilot.pause()
         assert len(calls) == 2
-        screen.query_one("#declarations-work-year", Input).value = "2025"
+        screen.query_one("#declarations-work-year", Input).value = str(year)
         screen.query_one("#declarations-work-period", Input).value = "not-a-period"
         screen.query_one("#declarations-work-create", Button).press()
         await pilot.pause()

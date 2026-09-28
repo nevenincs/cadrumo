@@ -10,6 +10,7 @@ from contextlib import suppress
 from datetime import UTC
 from pathlib import Path
 
+import psutil
 import pytest
 
 from ..command_execution import run_command
@@ -85,10 +86,12 @@ time.sleep(120)
 """
 
 
-@pytest.mark.skipif(sys.platform != "win32", reason="the process-tree kill is the Windows timeout path")
 def test_run_command_timeout_kills_the_grandchild_holding_the_captured_stream(tmp_path: Path) -> None:
-    """A timeout ends the whole tree, so neither a pipe nor a process outlives it."""
-    psutil = pytest.importorskip("psutil")
+    """A timeout ends the whole tree, so neither a pipe nor a process outlives it.
+
+    Every platform, not only Windows: a POSIX launcher such as ``uvx`` left its
+    scanner running for the rest of the lane after its own timeout fired.
+    """
     pid_file = tmp_path / "grandchild.pid"
     started = time.monotonic()
     with pytest.raises(subprocess.TimeoutExpired):
