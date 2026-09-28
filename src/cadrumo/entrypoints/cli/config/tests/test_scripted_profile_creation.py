@@ -20,6 +20,7 @@ import pytest
 from .....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from .....core.config import override_settings
 from .....core.i18n.render import I18N_STRICT_MISSING_KEYS, override_locales_root, tr
+from .....tests.descriptor_identity import descriptor_identity, descriptor_was_closed
 from ...tests.cli_performance import profile_cli_path
 from ...tests.cli_runner import invoke_cached_cli
 from ...tests.password_only_profile import register_password_only_profile
@@ -277,6 +278,7 @@ def test_lazy_scripted_create_accepts_and_closes_the_canonical_descriptor_channe
     reader, writer = os.pipe()
     os.write(writer, _creation_payload().encode())
     os.close(writer)
+    channel = descriptor_identity(reader)
 
     with override_settings(**_storage_overrides(tmp_path, passphrase=None)):
         created = invoke_cached_cli(
@@ -296,8 +298,7 @@ def test_lazy_scripted_create_accepts_and_closes_the_canonical_descriptor_channe
 
     assert created.exit_code == 0, created.output
     assert json.loads(created.stdout)["result"]["profile_name"] == "Descriptor Operator"
-    with pytest.raises(OSError):
-        os.fstat(reader)
+    assert descriptor_was_closed(reader, channel)
     assert [profile["name"] for profile in json.loads(listed.stdout)["result"]["profiles"]] == ["Descriptor Operator"]
 
 

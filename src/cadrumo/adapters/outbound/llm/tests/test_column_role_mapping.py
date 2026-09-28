@@ -49,6 +49,7 @@ from ..column_role_mapping import (
     permitted_column_roles,
 )
 from ..errors import LLMConfigError, LLMValidationError
+from .host_headroom_support import loopback_host_headroom
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -377,6 +378,10 @@ def _mapper(tmp_path: Path, endpoint: str) -> Generator[SemanticColumnRoleMapper
     settings: the local adapter resolves its chat URL from the process-wide
     settings rather than from the client's injected ones, so injection alone
     would send the request to a real Ollama host that is not running here.
+
+    The client is admitted against a stated measurement rather than a probe of
+    this machine, because the role's model is catalogued and a host whose
+    accelerator cannot be read would refuse before the transport is reached.
     """
     settings = EnvFileFreeSettings(
         cadrumo_llm_provider=LLMProvider.LOCAL,
@@ -387,7 +392,8 @@ def _mapper(tmp_path: Path, endpoint: str) -> Generator[SemanticColumnRoleMapper
         cadrumo_llm_run_telemetry_dir=tmp_path / "run-telemetry",
     )
     with override_settings(cadrumo_llm_ollama_chat_url=endpoint):
-        yield SemanticColumnRoleMapper(client=LLMClient(settings=settings), settings=settings)
+        client = LLMClient(settings=settings, hardware_profile=loopback_host_headroom())
+        yield SemanticColumnRoleMapper(client=client, settings=settings)
 
 
 def test_the_role_decides_the_model_not_the_general_default(tmp_path: Path) -> None:

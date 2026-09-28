@@ -28,6 +28,9 @@ class CallTimeRefusingKeyring(KeyringBackend):
     """Passes the usability probe, then refuses each credential call with error 1312."""
 
     priority = 1
+    # Selectable only by name, never by keyring's automatic selection in the
+    # process that imports it; see ``InMemoryKeyring.viable``.
+    viable = False
 
     @override
     def get_password(self, service: str, username: str) -> str | None:

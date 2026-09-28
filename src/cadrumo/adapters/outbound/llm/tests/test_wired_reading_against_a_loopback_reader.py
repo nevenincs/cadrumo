@@ -34,7 +34,6 @@ from typing import ClassVar, override
 import pytest
 
 from cadrumo.adapters.inbound.pdf.page_text_extraction import extract_pages_text_from_bytes
-from cadrumo.adapters.outbound.llm.evidence_draft_text import extract_invoice_fields_from_text
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from cadrumo.application.ledger import invoice_draft_extraction as invoice_draft_extraction_module
 from cadrumo.application.ledger.document_transcription import DocumentTranscription
@@ -68,6 +67,10 @@ from cadrumo.tests.loopback_llm import (
     write_json_response,
 )
 
+from ..client import LLMClient
+from ..evidence_draft_text import TextInvoiceFieldExtractor
+from .host_headroom_support import loopback_host_headroom
+
 READING_RUNTIME_MODEL = "qwen2.5:7b"
 
 
@@ -86,7 +89,13 @@ _CONTROL_TEXT_LAYER_PORTS = EvidenceTextLayerPorts(extract_pages_text=_extract_c
 
 
 def _reader_ports(*, operation: PinnedAuthorityOperation) -> InvoiceDraftExtractionPorts:
-    """Bind the application reader contract to the real outbound text adapter."""
+    """Bind the application reader contract to the real outbound text adapter.
+
+    The text reader's client is admitted against a stated measurement rather
+    than a probe of this machine: the configured text model is catalogued, and
+    a host whose accelerator cannot be read would refuse before the wired path
+    under test is reached.
+    """
 
     def parse_structured_invoice(data: bytes) -> StructuredInvoiceRecord:
         del data
@@ -102,9 +111,13 @@ def _reader_ports(*, operation: PinnedAuthorityOperation) -> InvoiceDraftExtract
     ) -> InvoiceDraft:
         if not isinstance(authority_values, InvoiceExtractionAuthorityValues):
             raise TypeError("text reader requires resolved invoice extraction authority values")
-        return extract_invoice_fields_from_text(
-            transcription, settings=settings, authority_values=authority_values, operation=operation
-        )
+        return TextInvoiceFieldExtractor(
+            provider=LLMProvider.LOCAL,
+            settings=settings,
+            authority_values=authority_values,
+            operation=operation,
+            client=LLMClient(settings=settings, hardware_profile=loopback_host_headroom()),
+        ).extract(transcription=transcription)
 
     def vision_not_expected(*_args: object, **_kwargs: object) -> DocumentTranscription:
         raise AssertionError("the text-layer reader must not invoke the vision path")

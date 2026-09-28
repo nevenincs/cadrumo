@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import logging
 import os
+import sys
 import threading
 from collections.abc import Generator
 from contextlib import contextmanager
@@ -219,13 +220,20 @@ def test_engine_anchors_relative_sqlite_urls_to_the_application_data_root(
     source-checkout arm: a relative override always resolves under the
     platform user-data root, never a repo-root walk and never the process
     cwd, even from inside a checkout (the corpus-root decision pinned by
-    ``test_justificante_corpus_derivation.py`` is the same shape). LOCALAPPDATA
-    is pinned to an isolated tmp_path subtree so the test never touches the
-    real machine's application-data directory.
+    ``test_justificante_corpus_derivation.py`` is the same shape). The one
+    variable each platform's user-data root reads is pinned to an isolated
+    tmp_path subtree so the test never touches the real machine's
+    application-data directory.
     """
     isolated_app_data = tmp_path / "app-data"
+    if sys.platform == "win32":
+        pinned_variable, platform_base = "LOCALAPPDATA", isolated_app_data
+    elif sys.platform == "darwin":
+        pinned_variable, platform_base = "HOME", isolated_app_data / "Library" / "Application Support"
+    else:
+        pinned_variable, platform_base = "XDG_DATA_HOME", isolated_app_data
     relative_db = Path("var") / "pytest-relative-sqlite" / "engine.db"
-    anchored_db = isolated_app_data / PRODUCT_IDENTITY.python_package / relative_db
+    anchored_db = platform_base / PRODUCT_IDENTITY.python_package / relative_db
     settings = _settings_for(f"sqlite:///{relative_db.as_posix()}")
 
     cwd_marker = tmp_path / "cwd"
@@ -233,7 +241,7 @@ def test_engine_anchors_relative_sqlite_urls_to_the_application_data_root(
     original_cwd = Path.cwd()
     os.chdir(cwd_marker)
     try:
-        with scoped_env_var("LOCALAPPDATA", str(isolated_app_data)), _engine_for(settings) as engine:
+        with scoped_env_var(pinned_variable, str(isolated_app_data)), _engine_for(settings) as engine:
             with engine.connect() as conn:
                 conn.execute(text("select 1"))
             assert Path(engine.url.database or "") == anchored_db

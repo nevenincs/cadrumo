@@ -156,6 +156,9 @@ def _run(
         bucket_event_repository=BucketEventHistoryRepository(objects=profile.repository),
     )
     period = default_invoice_extraction_period()
+    # One measurement for the run: the lane's admission and each document's
+    # dispatch judge the same headroom, as they would on a real machine.
+    measured = _headroom(free_vram_bytes=free_vram_bytes)
     with bundled_indexed_authority().operation() as operation:
         legends = resolve_regime_legends(operation=operation, effective_date=period.end_date)
         return run_evidence_batch(
@@ -164,10 +167,14 @@ def _run(
             direction=InvoiceKind.RECEIVED,
             settings=settings,
             evidence_ports=evidence_ports,
-            extraction_ports=_invoice_draft_extraction_ports(evidence_ports=evidence_ports, operation=operation),
+            extraction_ports=_invoice_draft_extraction_ports(
+                evidence_ports=evidence_ports,
+                operation=operation,
+                hardware_profile=measured,
+            ),
             operation=operation,
             legends=legends,
-            profile=_headroom(free_vram_bytes=free_vram_bytes),
+            profile=measured,
         )
 
 

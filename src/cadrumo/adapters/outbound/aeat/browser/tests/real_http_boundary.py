@@ -320,11 +320,18 @@ async def open_real_browser_session(
     settings: Settings,
     profile_name: str,
 ) -> tuple[Playwright, BrowserSession]:
-    """Open the canonical production session over the routed real boundary."""
+    """Open the canonical production session over the routed real boundary.
+
+    The browser always launches headless. The routed pages are read by the
+    test, never by a person, and a provider that asks for a visible window (a
+    fresh Cl@ve Movil login, so the operator can scan its QR) would otherwise
+    need a display server that a headless host does not have. That request is
+    the provider's own contract and is pinned by the provider's unit tests.
+    """
     playwright = await async_playwright().start()
     session = BrowserSession(
         playwright=playwright,
-        settings=settings,
+        settings=settings.model_copy(update={"cadrumo_browser_headless": True}),
         profile=Profile(name=profile_name),
         evasion_strategy=RoutedStealthEvasion(boundary),
     )
