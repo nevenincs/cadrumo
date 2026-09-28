@@ -198,18 +198,33 @@ def test_modelo_303_iva_bindings_resolve_end_to_end_with_substrate_observations(
         # to the later explicit record-design revisions. Listing it here would
         # assert a resolution this revision cannot produce.
         # No third-country import rows in this observation set, so the import
-        # deducible binding resolves to zero.
+        # deducible bindings, base [32] and cuota [33], resolve to zero.
+        "modelo-303-iva-soportado-importaciones-base": Decimal("0"),
         "modelo-303-iva-soportado-importaciones-cuota": Decimal("0"),
         "modelo-303-iva-autorepercutido-intracomunitaria-cuota": Decimal("84"),
         # The AIC official-box parity bindings select the same AIC inversión row
         # as the semantic intracomunitaria binding, so they resolve to the same
-        # self-assessed cuota (net-zero across the devengado/deducible pair).
+        # self-assessed cuota (net-zero across the devengado/deducible pair),
+        # and the deducible base [36] to that row's base.
         "modelo-303-iva-autorepercutido-intracomunitaria-devengado-cuota": Decimal("84"),
         "modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota": Decimal("84"),
+        "modelo-303-iva-autorepercutido-intracomunitaria-deducible-base": Decimal("400"),
         # No domestic inversión del sujeto pasivo rows in this observation
-        # set, so both interior reverse-charge bindings resolve to zero.
+        # set, so every interior reverse-charge binding, devengado and the
+        # deducible half feeding [28]-[31], resolves to zero.
         "modelo-303-iva-autorepercutido-interior-devengado-cuota": Decimal("0"),
         "modelo-303-iva-autorepercutido-interior-deducible-cuota": Decimal("0"),
+        "modelo-303-iva-autorepercutido-interior-deducible-base": Decimal("0"),
+        "modelo-303-iva-autorepercutido-interior-deducible-bienes-inversion-base": Decimal("0"),
+        "modelo-303-iva-autorepercutido-interior-deducible-bienes-inversion-cuota": Decimal("0"),
+        # No row carries the rectification deduction kind, so the three parts
+        # of Rectificación de deducciones [40]/[41] resolve to zero.
+        "modelo-303-iva-rectificacion-deducciones-interiores-base": Decimal("0"),
+        "modelo-303-iva-rectificacion-deducciones-interiores-cuota": Decimal("0"),
+        "modelo-303-iva-rectificacion-deducciones-importaciones-base": Decimal("0"),
+        "modelo-303-iva-rectificacion-deducciones-importaciones-cuota": Decimal("0"),
+        "modelo-303-iva-rectificacion-deducciones-inversion-sujeto-pasivo-base": Decimal("0"),
+        "modelo-303-iva-rectificacion-deducciones-inversion-sujeto-pasivo-cuota": Decimal("0"),
         # No criterio-de-caja rows in this observation set (every observation
         # carries the default NONE treatment), so the art. 163 decies
         # informational bindings for casillas 62/63/74/75 resolve to zero.

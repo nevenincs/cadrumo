@@ -267,6 +267,10 @@ casilla_id = "41"
 number = "41"
 
 [[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "42"
+number = "42"
+
+[[revisions.2022.completeness_manifest.casillas]]
 casilla_id = "45"
 number = "45"
 
