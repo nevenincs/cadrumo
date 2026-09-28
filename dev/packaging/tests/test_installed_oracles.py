@@ -797,8 +797,11 @@ def test_installed_cli_and_mcp_refuse_an_unusable_authority_before_durable_work(
 
     # The store may report an unavailable descriptor/database or an integrity
     # refusal at admission.  Both are fail-closed and neither may expose the
-    # old JSON-era error vocabulary as a compatibility path.
-    refusal_pattern = r"(?is)(authority|sqlite).*(unavailable|malformed|digest|disagree|corrupt|changed)"
+    # old JSON-era error vocabulary as a compatibility path.  The integrity
+    # refusal is matched by its stable error code; its message is presentation.
+    refusal_pattern = (
+        r"(?is)INTEGRITY_AUTHORITY_STORE|(authority|sqlite).*(unavailable|malformed|digest|disagree|corrupt|changed)"
+    )
 
     cli_storage = installation.root / "cli-refusal-state"
     with pytest.raises(
