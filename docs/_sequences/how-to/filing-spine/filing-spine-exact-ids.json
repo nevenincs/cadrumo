@@ -4498,7 +4498,7 @@
         "--revision",
         "f745147308c71bc1531c6f0d5068c0d4f87db41006686e1552c8a63d1adb0218",
         "--output",
-        "./modelo-303.boe"
+        "./modelo-303-revision.boe"
       ],
       "captures": [],
       "envelope": {
@@ -4531,7 +4531,7 @@
           }
         ],
         "result": {
-          "bucket_event_id": "4d37cf8de629e06518017b36bb269bb6155bca5710c4880b972240ac1b2c33b9",
+          "bucket_event_id": "c4d2e58821c044e704ae66f528bfbf287a8643e3b585eb705bbe61d09103ee16",
           "bucket_id": "<bucket-id>",
           "byte_size": 2948,
           "calculation_revision_id": "f745147308c71bc1531c6f0d5068c0d4f87db41006686e1552c8a63d1adb0218",
@@ -4540,7 +4540,7 @@
           "format": "fichero-boe",
           "modelo": "303",
           "operation": "modelo.export",
-          "output_path": "modelo-303.boe",
+          "output_path": "modelo-303-revision.boe",
           "payment_election": "ingreso",
           "period": {
             "code": "1T",
