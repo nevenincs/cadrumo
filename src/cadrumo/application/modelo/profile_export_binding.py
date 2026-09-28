@@ -12,19 +12,34 @@ Split out when ``profile_binding`` crossed its module size budget. The
 calculation and export halves genuinely are two cohesive concerns over one
 shared substrate, which is the split the budget forced and the shape the
 per-family binding modules elsewhere in the tree already use.
+
+The same export shaping also answers the calculation for a bound TEXT casilla:
+a declarant-identity casilla reads its profile fact through
+:func:`resolve_profile_text_casilla_inputs`, so the value the calculation holds
+for it is the value the filed record addresses.
 """
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Collection, Mapping, Sequence
+from dataclasses import dataclass
 
+from ...core.aggregation import BindingSourceKind
+from ...core.casilla_id import CasillaId
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids
+from ...domain.calculations.registry.binding_value_contract import BindingValueChannel
+from ...domain.calculations.registry.casilla_membership import text_family_casilla_ids
+from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.profile_bindings import ProfileProvider
-from ...domain.calculations.registry.schema import BindingDefinition
+from ...domain.calculations.registry.schema import BindingDefinition, ModeloRevision
+from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.contribuyente.entity_type import entity_type_natural_person_token
 from ...domain.user_profile.errors import ProfileNotFoundError
+from ...domain.user_profile.registry_contract import profile_binding_selectors
 from ...domain.user_profile.schema import ProfileSchemaDefinition
 from ...domain.user_profile.values import UserProfileFactValue
+from ..aggregation.source_mesh import CalculationSourceDiagnostic
 from ..filing.producer_snapshot import DeclarationContactFacts, PresenterIdentity, TaxpayerIdentityFacts
 
 # Reuse the public defining module's canonical fact-index and scalar resolver;
@@ -43,6 +58,160 @@ _IDENTITY_LEGAL_NAME_KEY = "identity.legal_name"
 _ENTITY_TYPE_KEY = "taxpayer_type.entity_type"
 _CONTACT_PERSON_PHONE_KEY = "contact.contact_person_phone"
 _CONTACT_PERSON_NAME_KEY = "contact.contact_person_name"
+
+
+@dataclass(frozen=True, slots=True)
+class ProfileTextCasillaGap:
+    """A required profile-bound text casilla the declarant's profile leaves empty.
+
+    ``profile_fields`` are the profile paths the binding reads, so the operator
+    is told which fact to declare rather than which casilla came out blank.
+    """
+
+    casilla_id: CasillaId
+    binding_id: BindingId
+    profile_fields: tuple[str, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class ProfileTextCasillaInputs:
+    """Text inputs a revision's profile-bound text casillas take from the profile.
+
+    ``values`` feeds the calculation's text channel. ``gaps`` names every
+    REQUIRED such casilla whose profile facts are absent; it stays absent in the
+    calculation and is reported, never filled with a placeholder.
+    """
+
+    values: dict[CasillaId, str]
+    gaps: tuple[ProfileTextCasillaGap, ...]
+
+
+def resolve_profile_text_casilla_inputs(
+    revision: ModeloRevision,
+    fact_index: Mapping[str, UserProfileFactValue],
+) -> ProfileTextCasillaInputs:
+    """Resolve each bound text casilla whose binding reads a text fact of the profile.
+
+    The calculation half of the export resolution above: the same applicability
+    gate and the same format-aware value, keyed by casilla instead of by
+    dictionary field. A declarant-identity casilla -- a NIF, an "apellidos y
+    nombre o razón social" -- therefore holds exactly what the filed record
+    states for it, and the calculation stops reporting it as unsupplied.
+
+    Only a binding whose value contract declares the text channel is read: an
+    enum, date or numeric profile fact has its own channel and its own spelling,
+    and rendering it as text here would give it a second one. A binding gated by
+    ``required_when_profile_key`` whose precondition does not hold contributes
+    nothing and is not a gap, because the slot does not exist for this filer.
+
+    Args:
+        revision: The revision whose bound casillas are resolved.
+        fact_index: The declarant's profile fact index.
+
+    Returns:
+        The resolved text values and the required casillas left empty.
+    """
+    bindings = {binding.id: binding for binding in revision.bindings}
+    text_casilla_ids = text_family_casilla_ids(revision.casillas)
+    values: dict[CasillaId, str] = {}
+    gaps: list[ProfileTextCasillaGap] = []
+    for casilla in revision.casillas:
+        if casilla.input_kind != InputKind.BOUND or casilla.id not in text_casilla_ids:
+            continue
+        profile_bindings = tuple(
+            binding
+            for binding_id in bound_casilla_binding_ids(casilla)
+            if (binding := bindings.get(binding_id)) is not None
+            and isinstance(binding.provider, ProfileProvider)
+            and binding.value.channel is BindingValueChannel.TEXT
+            and _profile_export_binding_applies(binding, fact_index)
+        )
+        if not profile_bindings:
+            continue
+        value = next(
+            (text for binding in profile_bindings if (text := _profile_text_value(binding, fact_index)) is not None),
+            None,
+        )
+        if value is not None:
+            values[casilla.id] = value
+        elif casilla.required:
+            primary = profile_bindings[0]
+            gaps.append(
+                ProfileTextCasillaGap(
+                    casilla_id=casilla.id,
+                    binding_id=primary.id,
+                    profile_fields=_profile_value_fields(primary),
+                ),
+            )
+    return ProfileTextCasillaInputs(values=values, gaps=tuple(gaps))
+
+
+def _profile_text_value(
+    binding: BindingDefinition,
+    fact_index: Mapping[str, UserProfileFactValue],
+) -> str | None:
+    """Return one text-channel binding's value as text, or ``None`` when the profile has none."""
+    value = _profile_export_value(binding, fact_index)
+    if isinstance(value, str):
+        return value.strip() or None
+    return None
+
+
+def _profile_value_fields(binding: BindingDefinition) -> tuple[str, ...]:
+    """Return the profile paths a binding's value is read from, without its gate."""
+    provider = binding.provider
+    gate = provider.required_when_profile_key if isinstance(provider, ProfileProvider) else None
+    return tuple(selector for selector in profile_binding_selectors(provider) if selector != gate)
+
+
+def profile_text_casilla_gap_diagnostics(
+    revision: ModeloRevision,
+    fact_index: Mapping[str, UserProfileFactValue],
+    *,
+    supplied_casilla_ids: Collection[CasillaId],
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Advise on each required profile-bound text casilla the profile leaves empty.
+
+    The casilla stays absent in the calculation; this is what tells the operator
+    which profile fact would fill it. A casilla the operator supplied as text in
+    this calculation is not a gap, because the operator's value is what the
+    calculation holds for it.
+
+    Args:
+        revision: The calculated revision.
+        fact_index: The declarant's profile fact index.
+        supplied_casilla_ids: Casillas the operator supplied directly.
+
+    Returns:
+        One ``unresolved_binding`` advisory per empty required casilla, carrying
+        the casilla's and the binding's own grounding.
+    """
+    casillas = {casilla.id: casilla for casilla in revision.casillas}
+    bindings = {binding.id: binding for binding in revision.bindings}
+    diagnostics: list[CalculationSourceDiagnostic] = []
+    for gap in resolve_profile_text_casilla_inputs(revision, fact_index).gaps:
+        if gap.casilla_id in supplied_casilla_ids:
+            continue
+        casilla = casillas[gap.casilla_id]
+        binding = bindings[gap.binding_id]
+        fields = ", ".join(gap.profile_fields)
+        diagnostics.append(
+            CalculationSourceDiagnostic(
+                reason="unresolved_binding",
+                source_kind=BindingSourceKind.PROFILE.value,
+                binding_id=gap.binding_id,
+                casilla_id=gap.casilla_id,
+                message=(
+                    f"casilla {gap.casilla_id!r} takes its value from the profile through binding "
+                    f"{gap.binding_id!r}, and the active profile declares none of {fields}; the casilla "
+                    "stays empty rather than holding a placeholder"
+                ),
+                remedy=f"Declare {fields} on the profile with `aeat config profile edit`.",
+                legal_refs=tuple(dict.fromkeys((*casilla.legal_refs, *binding.legal_refs))),
+                source_refs=tuple(dict.fromkeys((*casilla.source_refs, *binding.source_refs))),
+            ),
+        )
+    return tuple(diagnostics)
 
 
 def compose_legal_full_name(*, surnames: str, name: str) -> str:

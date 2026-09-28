@@ -351,7 +351,7 @@ modelo:
             help: Casilla 39 de la liquidación del pago fraccionado del grupo fiscal
               (Mod. 40.3 LIS).
             label: Mod. 40.3 LIS - TOTAL - Disminuciones
-          tipo-declaracion:
+          tipo-declaracion-resultado:
             label: Modalidad del pago fraccionado (art. 40.2 cuota íntegra / art.
               40.3 base imponible)
       construct:

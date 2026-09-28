@@ -45,6 +45,7 @@ from ...domain.calculations.registry.schema import (
 )
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.identifiers import canonical_decimal_string as _canonical_decimal_str
+from ...domain.modelos.filing_record import FilingDeclarationKind
 from ...domain.modelos.work_unit import WorkUnit
 from ..aggregation.source_mesh import CalculationSourceResolution
 from ..aggregation.source_resolution_operations import merge_source_resolutions_by_precedence
@@ -219,6 +220,7 @@ def resolve_calculation_inputs(
     resolved_bindings: Mapping[BindingId, Decimal],
     casilla_inputs: Mapping[CasillaId, Decimal],
     text_casilla_inputs: Mapping[CasillaId, str] | None = None,
+    profile_text_casilla_inputs: Mapping[CasillaId, str] | None = None,
 ) -> ResolvedCalculationInputs:
     """Build the canonical casilla input maps for engine execution.
 
@@ -232,6 +234,16 @@ def resolve_calculation_inputs(
     caller's explicit casilla overrides. Both returned maps are sorted for stable
     replay payloads and revision identity.
 
+    A work-unit calculation prepares the period's original declaration -- the
+    kind the local filing record carries -- so the ``tipo_declaracion`` role
+    receives :attr:`~cadrumo.domain.modelos.filing_record.FilingDeclarationKind.ORIGINAL`;
+    an amendment is built by the amendment service with its own kind.
+    ``profile_text_casilla_inputs`` are the bound text casillas the declarant's
+    profile answers, resolved by
+    :func:`~application.modelo.profile_export_binding.resolve_profile_text_casilla_inputs`;
+    they rank below a bound value on the binding channel and below the caller's
+    own text.
+
     The two channels are returned together, and never merged, because the
     registry assigns each casilla to exactly one of them by declared
     ``data_type`` family: the ``filing_period`` role is ``period_code`` (a
@@ -243,6 +255,7 @@ def resolve_calculation_inputs(
         revision,
         filing_year=filing_year,
         period=period,
+        declaration_kind=FilingDeclarationKind.ORIGINAL,
     )
     return ResolvedCalculationInputs(
         casilla_inputs=dict(
@@ -259,6 +272,7 @@ def resolve_calculation_inputs(
             sorted(
                 {
                     **declaration.text_casilla_inputs,
+                    **dict(profile_text_casilla_inputs or {}),
                     **_bound_text_casilla_inputs(revision, resolved_bindings),
                     **dict(text_casilla_inputs or {}),
                 }.items(),
