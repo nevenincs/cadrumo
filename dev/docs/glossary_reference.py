@@ -44,7 +44,7 @@ import os
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import cast
+from typing import Final, cast
 
 from cadrumo.core.concept_lifecycle import ConceptLifecycle
 from cadrumo.core.directory_scan import scan_directory
@@ -56,15 +56,22 @@ from ._locale_chrome import docs_chrome
 from .build import docs_build_language
 from .legal_reference import LEGAL_CATALOGUE_RELPATH, legal_citation
 from .terminology_handbook.enums import TermStatus
-from .terminology_handbook.loader import TerminologyHandbook, load_terminology_handbook
+from .terminology_handbook.loader import TerminologyHandbook, load_bundled_terminology_handbook
 from .terminology_handbook.schema import ConceptRecord, LanguageSection
 
 _UTF_8 = UTF_8
 
-#: Generated glossary path, relative to the docs root. Uncommitted and
-#: regenerated every build, like ``docs/cli/`` - the hand-written
+#: Generated glossary page, relative to the docs root, in POSIX form. Uncommitted
+#: and regenerated every build, like ``docs/cli/`` - the hand-written
 #: ``docs/glossary.md`` stays in place until the cutover step swaps to this.
-_GENERATED_RELPATH = Path("_generated") / "glossary.rst"
+#:
+#: Public because the build reads it too: ``docs/conf.py`` asks whether this page
+#: is in the read set before paying for the projection, and a second literal copy
+#: of the path there could drift from this one silently. The sibling generated
+#: surfaces publish theirs for the same reason
+#: (:data:`~dev.docs.legal_reference.LEGAL_REFERENCE_DIR`,
+#: :data:`~dev.docs.terminology.casilla_anchor.CASILLA_REFERENCE_DIR`).
+GLOSSARY_REFERENCE_RELPATH: Final[str] = "_generated/glossary.rst"
 
 
 @dataclass(frozen=True)
@@ -374,7 +381,7 @@ def render_glossary(
         rendered += 1
     rst = header + "\n\n".join(entries) + "\n"
     result = GlossaryResult(
-        output_relpath=str(_GENERATED_RELPATH).replace("\\", "/"),
+        output_relpath=GLOSSARY_REFERENCE_RELPATH,
         approved_rendered=rendered,
         drafts_excluded=drafts,
         legal_links=legal_links,
@@ -409,9 +416,12 @@ def generate_glossary_reference(
         A :class:`GlossaryResult` summarising the render.
     """
     source_root = (repo_root if repo_root is not None else docs_root.parent).resolve()
-    handbook = load_terminology_handbook()
+    # The bundled entry point, not the raw loader: it caches by the complete
+    # fragment-tree fingerprint, so an edit to any concept still recompiles while
+    # a lane that generates the page several times in one process compiles once.
+    handbook = load_bundled_terminology_handbook()
     rst, result = render_glossary(source_root, handbook, language)
-    output_path = docs_root / _GENERATED_RELPATH
+    output_path = docs_root / GLOSSARY_REFERENCE_RELPATH
     output_path.parent.mkdir(parents=True, exist_ok=True)
     if not (output_path.is_file() and output_path.read_bytes() == rst.encode(_UTF_8)):
         # Force LF so the generated page is byte-identical across platforms; the

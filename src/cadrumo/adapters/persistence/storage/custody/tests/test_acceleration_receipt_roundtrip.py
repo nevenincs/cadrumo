@@ -269,7 +269,7 @@ outcome, dek = resume_profile_session(
     now=datetime(2026, 8, 14, 12, 0, 0, tzinfo=UTC),
 )
 try:
-    finished.write_text("resumed" if outcome.resumed else "refused", encoding="utf-8")
+    finished.write_text("resumed" if outcome.resumed else f"refused:{outcome.refusal}", encoding="utf-8")
 finally:
     if dek is not None:
         dek.clear()
@@ -329,9 +329,14 @@ finally:
                     "independent production resume failed: "
                     f"{stdout.decode(errors='replace')}\n{stderr.decode(errors='replace')}"
                 )
-        assert finished.read_text(encoding="utf-8") == ("resumed" if minted else "refused")
-        if minted:
-            delete_profile_session(storage_root=tmp_path, profile_id=profile_id)
+        # The child records its refusal reason, so a refusal after a successful
+        # mint says whether it saw no receipt or could not read its keychain half.
+        observed = finished.read_text(encoding="utf-8")
+        if not minted:
+            assert observed.startswith("refused:")
+            return
+        assert observed == "resumed"
+        delete_profile_session(storage_root=tmp_path, profile_id=profile_id)
 
     def test_oversize_leaf_is_refused_before_any_keychain_operation(self, tmp_path: Path) -> None:
         profile_id = _profile_id()

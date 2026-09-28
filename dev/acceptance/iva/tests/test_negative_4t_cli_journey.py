@@ -1,4 +1,4 @@
-"""Public installed-CLI acceptance for the negative 2025/4T IVA journey."""
+"""Public installed-CLI acceptance for the negative fourth-quarter IVA journey."""
 
 from __future__ import annotations
 
@@ -8,28 +8,30 @@ from pathlib import Path
 import pytest
 
 from ..negative_4t_cli_journey import run_iva_negative_4t_cli_journey
+from .journey_year_support import newest_fully_authored_journey_year
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
-def test_installed_cli_negative_2025_4t_compensar_generates_wallet_history(
+def test_installed_cli_negative_fourth_quarter_compensar_generates_wallet_history(
     tmp_path: Path, installed_wheel_aeat: Path
 ) -> None:
     """One deductible purchase becomes a local pending filing and available IVA credit."""
     repository_root = Path(__file__).resolve().parents[4]
     authority_root = repository_root / ".authority"
     assert (authority_root / "authority.current.json").is_file(), authority_root
+    year = newest_fully_authored_journey_year(authority_root)
 
     receipt = run_iva_negative_4t_cli_journey(
         executable=installed_wheel_aeat,
         authority_root=authority_root,
         storage_root=tmp_path / "secure-store",
         artifact_root=tmp_path / "private-source-artifacts",
-        year=2025,
+        year=year,
     )
 
-    assert receipt.acceptance_ids == ("IVA-01-NEGATIVE-2025-4T-COMPENSAR",)
-    assert receipt.filing_year == 2025
+    assert receipt.acceptance_ids == (f"IVA-01-NEGATIVE-{year}-4T-COMPENSAR",)
+    assert receipt.filing_year == year
     assert Decimal(receipt.iva_resultado) == Decimal("-10.50")
     assert receipt.filing_origin == "local"
     assert receipt.filing_confirmation == "pendiente"
@@ -52,7 +54,8 @@ def test_installed_cli_negative_2025_4t_compensar_generates_wallet_history(
         for command in receipt.commands
     )
     assert any(
-        command.argv[2:6] == ("app", "live", "iva-wallet", "history") and command.argv[-2:] == ("--as-of-year", "2025")
+        command.argv[2:6] == ("app", "live", "iva-wallet", "history")
+        and command.argv[-2:] == ("--as-of-year", str(year))
         for command in receipt.commands
     )
     assert not any(command.argv[2:5] == ("app", "modelo", "export") for command in receipt.commands)
@@ -63,25 +66,26 @@ def test_installed_cli_negative_2025_4t_compensar_generates_wallet_history(
     assert all(command.returncode == 0 for command in receipt.commands)
 
 
-def test_installed_cli_negative_2025_4t_devolver_leaves_no_wallet_carry(
+def test_installed_cli_negative_fourth_quarter_devolver_leaves_no_wallet_carry(
     tmp_path: Path, installed_wheel_aeat: Path
 ) -> None:
     """A local devolver election is pending only and creates no IVA carry-forward lot."""
     repository_root = Path(__file__).resolve().parents[4]
     authority_root = repository_root / ".authority"
     assert (authority_root / "authority.current.json").is_file(), authority_root
+    year = newest_fully_authored_journey_year(authority_root)
 
     receipt = run_iva_negative_4t_cli_journey(
         executable=installed_wheel_aeat,
         authority_root=authority_root,
         storage_root=tmp_path / "secure-store",
         artifact_root=tmp_path / "private-source-artifacts",
-        year=2025,
+        year=year,
         refund_election="devolver",
     )
 
-    assert receipt.acceptance_ids == ("IVA-01-NEGATIVE-2025-4T-DEVOLVER",)
-    assert receipt.filing_year == 2025
+    assert receipt.acceptance_ids == (f"IVA-01-NEGATIVE-{year}-4T-DEVOLVER",)
+    assert receipt.filing_year == year
     assert Decimal(receipt.iva_resultado) == Decimal("-10.50")
     assert receipt.local_refund_election == "devolver"
     assert receipt.filing_origin == "local"
@@ -104,7 +108,8 @@ def test_installed_cli_negative_2025_4t_devolver_leaves_no_wallet_carry(
         for command in receipt.commands
     )
     assert any(
-        command.argv[2:6] == ("app", "live", "iva-wallet", "history") and command.argv[-2:] == ("--as-of-year", "2025")
+        command.argv[2:6] == ("app", "live", "iva-wallet", "history")
+        and command.argv[-2:] == ("--as-of-year", str(year))
         for command in receipt.commands
     )
     assert not any(command.argv[2:5] == ("app", "modelo", "export") for command in receipt.commands)

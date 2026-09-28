@@ -11,9 +11,15 @@ from cadrumo.domain.calculations.registry.schema import ModeloDefinition, Regist
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
-from .profile_schema_support import committed_registry_validator
+from .authored_edition_support import legal_reference
+from .profile_schema_support import committed_registry_validator, committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
+
+_SUPPORT = committed_supported_filing_years()
+# The day Orden EHA/789/2010 makes the Modelo 360 form applicable, as the catalogued
+# approving article is in force from.
+_APPROVING_ORDEN_APPLIES_FROM = legal_reference("orden-eha-789-2010:art-1").effective_from
 
 
 def _load_modelo_360() -> tuple[ModeloDefinition, RegistryCatalogues]:
@@ -28,7 +34,7 @@ def test_modelo_360_validator_accepts_committed_definition() -> None:
     committed_registry_validator(catalogues).validate_modelo(modelo)
 
 
-def test_modelo_360_metadata_matches_orden_eha_789_2010() -> None:
+def test_modelo_360_metadata_matches_its_approving_orden() -> None:
     modelo, catalogues = _load_modelo_360()
     assert modelo.tax_domain == "iva"
     assert modelo.cadence == "ad_hoc"
@@ -39,27 +45,24 @@ def test_modelo_360_metadata_matches_orden_eha_789_2010() -> None:
     assert catalogues.sources["boe-modelo-360-2010-form"].evidence_tier == "layout_authority"
 
 
-def test_modelo_360_revision_starts_at_2010() -> None:
+def test_modelo_360_revision_starts_when_its_approving_orden_applies() -> None:
     modelo, _ = _load_modelo_360()
-    revision = modelo.revisions["2010-y-siguientes"]
-    assert revision.valid_from == date(2010, 4, 1)
-    assert revision.period_selector.year_from == 2010
+    revision = modelo.revisions[f"{_APPROVING_ORDEN_APPLIES_FROM.year}-y-siguientes"]
+    assert revision.valid_from == _APPROVING_ORDEN_APPLIES_FROM
+    assert revision.period_selector.year_from == _APPROVING_ORDEN_APPLIES_FROM.year
     assert revision.orden_aplicabilidad == ("orden-eha-789-2010:art-1",)
 
 
-def test_modelo_360_september_30_deadline_matches_orden_eha_789_2010_art_4() -> None:
+@pytest.mark.parametrize("ejercicio", _SUPPORT.years)
+def test_modelo_360_september_30_deadline_matches_its_approving_orden_art_4(ejercicio: int) -> None:
     """Art 4: plazo concludes on 30 September of the year following the ejercicio."""
     modelo, _ = _load_modelo_360()
-    revision = modelo.revisions["2010-y-siguientes"]
+    revision = modelo.revisions[f"{_APPROVING_ORDEN_APPLIES_FROM.year}-y-siguientes"]
     windows = {w.id: w for w in revision.deadline_windows}
 
-    win_2024 = windows["modelo-360-2024-ad-hoc"]
-    assert win_2024.opens_on == date(2025, 1, 1)
-    assert win_2024.closes_on == date(2025, 9, 30)
-
-    win_2025 = windows["modelo-360-2025-ad-hoc"]
-    assert win_2025.opens_on == date(2026, 1, 1)
-    assert win_2025.closes_on == date(2026, 9, 30)
+    window = windows[f"modelo-360-{ejercicio}-ad-hoc"]
+    assert window.opens_on == date(ejercicio + 1, 1, 1)
+    assert window.closes_on == date(ejercicio + 1, 9, 30)
 
 
 def test_modelo_360_snapshot_builds_for_ad_hoc_period() -> None:

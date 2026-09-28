@@ -1,6 +1,6 @@
-"""Regression tests for Modelo 100 2024 settlement-chain tail (contract).
+"""Settlement-chain tail of Modelo 100, checked against a worked Renta 2024 oracle.
 
-Covers the six casillas added by the renta-2024-final-settlement construct:
+Covers the casillas of the renta-final-settlement construct:
   0587 — cuota líquida incrementada total (0585 + 0586)
   0595 — cuota resultante de la autoliquidación (0587 - deducciones)
   0598 — suma retenciones arrendamientos urbanos (copy of 0153)
@@ -8,11 +8,10 @@ Covers the six casillas added by the renta-2024-final-settlement construct:
   0610 — cuota diferencial (0595 - 0609)
   0670 — resultado de la declaración (0610 ± ajustes)
 
-Before contract, all six casillas had ``input_kind = "manual"`` and no formula
-in the 2024 revision, so they stayed at 0.  After contract they are
-``input_kind = "computed"`` with matching formula TOMLs in
-``revisions/2024/formulas/0169-0174-*.toml`` and the
-``renta-2024-final-settlement`` construct.
+The chain is authored at the earliest edition whose record design carries it
+and inherited forward; its identities in every supported year are covered by
+``test_modelo_100_filing_surface_across_supported_years``. This module keeps a
+figure-level oracle for the 2024 edition, where one exists.
 
 Oracle authority
 ----------------

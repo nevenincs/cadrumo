@@ -734,10 +734,10 @@ cli:
           720)
         period_help: 'Token de període d''agregació: 0A anual, 1T-4T trimestres, 01-12
           mesos.'
-        received_invoice_retencion_help: Objecte JSON InvoiceRetencionRouteRequest
-          que encamina la retenció declarada d'una factura rebuda cap a l'emmagatzematge
-          per perceptor (invoice_id, scheme). L'scheme és un fet legal sobre l'activitat
-          del perceptor i mai s'infereix de la factura. Repetible per a diverses factures.
+        received_invoice_retencion_help: 'JSON InvoiceWithholdingEvidenceRequest:
+          una assignació de retenció d''una factura rebuda, amb la seva prova de pagament
+          o d''exigibilitat. Una assignació per ordre; l''scheme és un fet legal sobre
+          l''activitat del perceptor i mai s''infereix de la factura.'
         retencion_observation_help: Objecte JSON RetencionObservation; repeteix l'opció
           per a diverses observacions
         withholding_observation_help: Observació de retenció per perceptor i clau

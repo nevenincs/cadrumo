@@ -11,6 +11,7 @@ from ..annual_cli_journey import (
     run_iva_annual_foundation_cli_journey,
     run_iva_annual_m390_cli_journey,
 )
+from .journey_year_support import newest_fully_authored_journey_year
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -18,24 +19,25 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 # Measured on a quiet host on 2026-09-23: 96 s wheel build and install, then 337 s of fresh-process
 # authenticated CLI calls. The budget is about twice that; revisit it when CLI start-up gets faster.
 @pytest.mark.timeout(800)
-def test_installed_cli_2025_1t_local_filing_establishes_annual_foundation(
+def test_installed_cli_first_quarter_local_filing_establishes_annual_foundation(
     tmp_path: Path, installed_wheel_aeat: Path
 ) -> None:
     """A verified ordinary 303 persists its local filing identity for later annual work."""
     repository_root = Path(__file__).resolve().parents[4]
     authority_root = repository_root / ".authority"
     assert (authority_root / "authority.current.json").is_file(), authority_root
+    year = newest_fully_authored_journey_year(authority_root)
 
     receipt = run_iva_annual_foundation_cli_journey(
         executable=installed_wheel_aeat,
         authority_root=authority_root,
         storage_root=tmp_path / "secure-store",
         artifact_root=tmp_path / "private-source-artifacts",
-        year=2025,
+        year=year,
     )
 
-    assert receipt.acceptance_ids == ("IVA-01-ANNUAL-FOUNDATION-2025-1T",)
-    assert receipt.filing_year == 2025
+    assert receipt.acceptance_ids == (f"IVA-01-ANNUAL-FOUNDATION-{year}-1T",)
+    assert receipt.filing_year == year
     assert Decimal(receipt.iva_resultado) == Decimal("21.00") - Decimal("10.50")
     assert receipt.calculation_revision_id
     assert receipt.verification_report_id
@@ -65,22 +67,25 @@ def test_installed_cli_2025_1t_local_filing_establishes_annual_foundation(
 # Measured on a quiet host on 2026-09-23: 713 s of fresh-process authenticated CLI calls across four
 # quarters and the annual summary. The budget is about twice that; revisit it when CLI start-up gets faster.
 @pytest.mark.timeout(1500)
-def test_installed_cli_four_local_303_quarters_verify_2025_m390(tmp_path: Path, installed_wheel_aeat: Path) -> None:
-    """Four local-pending 303 records reconcile to a verified annual 2025/0A 390."""
+def test_installed_cli_four_local_303_quarters_verify_the_annual_m390(
+    tmp_path: Path, installed_wheel_aeat: Path
+) -> None:
+    """Four local-pending 303 records reconcile to a verified annual 0A 390."""
     repository_root = Path(__file__).resolve().parents[4]
     authority_root = repository_root / ".authority"
     assert (authority_root / "authority.current.json").is_file(), authority_root
+    year = newest_fully_authored_journey_year(authority_root)
 
     receipt = run_iva_annual_m390_cli_journey(
         executable=installed_wheel_aeat,
         authority_root=authority_root,
         storage_root=tmp_path / "secure-store",
         artifact_root=tmp_path / "private-source-artifacts",
-        year=2025,
+        year=year,
     )
 
-    assert receipt.acceptance_ids == ("IVA-01-ANNUAL-M390-2025-0A",)
-    assert receipt.filing_year == 2025
+    assert receipt.acceptance_ids == (f"IVA-01-ANNUAL-M390-{year}-0A",)
+    assert receipt.filing_year == year
     assert tuple(item.period for item in receipt.quarterly_filings) == ("1T", "2T", "3T", "4T")
     assert tuple(Decimal(item.iva_resultado) for item in receipt.quarterly_filings) == (
         Decimal("315.00"),

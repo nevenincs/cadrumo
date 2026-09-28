@@ -1,9 +1,8 @@
 """Build, publish and roll back the Cadrumo documentation site on Cloudflare.
 
-The site is served by one Worker from a private R2 bucket. Every publish uploads
-a complete, immutable release under ``releases/<release id>/`` and then deploys
-the Worker with that id, which is the moment the live site changes; a rollback
-redeploys the Worker with an earlier id and uploads nothing. Both public
+The site uses native static assets and versioned public search fragments. Every
+publish seals a complete private release before activating its static assets;
+a rollback verifies the complete archived release before restoring it. Both public
 mounts, ``cadrumo.neve.md/docs/`` and ``neve.md/cadrumo/docs/``, are served
 from the same bytes and are verified live after every deploy.
 """
@@ -22,12 +21,12 @@ import tempfile
 import time
 from collections.abc import Callable, Mapping, Sequence
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 from http.client import HTTPConnection, HTTPException, HTTPSConnection
 from pathlib import Path
-from typing import Final
-from urllib.parse import urlsplit
+from typing import Any, Final
+from urllib.parse import urljoin, urlsplit
 
 from defusedxml import ElementTree
 
@@ -36,13 +35,32 @@ from dev._paths import REPO_ROOT, UTF_8
 from dev.deploy.cloudflare_api import (
     CloudflareAccount,
     WorkerRoute,
-    deploy_worker,
     disable_redirect_rules,
     ensure_proxied,
     ensure_routes,
     zone_id,
 )
-from dev.deploy.r2_objects import R2Bucket, list_keys, upload_tree
+from dev.deploy.cloudflare_api import _call as cloudflare_call
+from dev.deploy.docs_asset_delivery import (
+    CANDIDATE_SCRIPT,
+    active_version,
+    deploy_assets,
+    load_release,
+    restore_version,
+    save_active_release,
+    seal_release,
+    verify_inventory,
+)
+from dev.deploy.docs_asset_manifest import (
+    MANIFEST_NAME,
+    PUBLIC_BUCKET,
+    STATIC_SCRIPT,
+    search_payload,
+    validate_manifest,
+    verify_bytes,
+)
+from dev.deploy.docs_delivery_settings import configure_delivery, prepare_storage
+from dev.deploy.r2_objects import R2Bucket, deployment_lock, list_keys, object_inventory, read_object, upload_tree
 from dev.docs import i18n as _docs_i18n
 from dev.docs.sequence_build_gate import SEQUENCE_CHECK_SKIP_ENV
 from dev.packaging.command_execution import CommandResult, run_command
@@ -54,14 +72,14 @@ MIRROR_DOCS_BASE_URL = "https://neve.md/cadrumo/docs"
 MIRROR_SITE_DOMAIN = "neve.md"
 DOCS_ZONE = "neve.md"
 WORKER_SCRIPT = "cadrumo-docs"
-WORKER_MODULE = REPO_ROOT / "worker" / "docs-site.mjs"
-WORKER_COMPATIBILITY_DATE = "2026-09-01"
 #: Every Worker response carries the release id it served under this header.
 RELEASE_HEADER = "x-cadrumo-docs-release"
 RELEASE_PREFIX = "releases/"
 DELIVERY_ROUTES: Final[tuple[WorkerRoute, ...]] = (
-    WorkerRoute(pattern=f"{CANONICAL_SITE_DOMAIN}/docs*", script=WORKER_SCRIPT),
-    WorkerRoute(pattern=f"{MIRROR_SITE_DOMAIN}/cadrumo/docs*", script=WORKER_SCRIPT),
+    WorkerRoute(pattern=f"{CANONICAL_SITE_DOMAIN}/docs", script=STATIC_SCRIPT),
+    WorkerRoute(pattern=f"{CANONICAL_SITE_DOMAIN}/docs/*", script=STATIC_SCRIPT),
+    WorkerRoute(pattern=f"{MIRROR_SITE_DOMAIN}/cadrumo/docs", script=STATIC_SCRIPT),
+    WorkerRoute(pattern=f"{MIRROR_SITE_DOMAIN}/cadrumo/docs/*", script=STATIC_SCRIPT),
 )
 _CACHE_CONTROL = "public, max-age=300, must-revalidate"
 _UTF_8: Final[str] = UTF_8
@@ -721,20 +739,6 @@ def _local_release_label(repo_root: Path) -> str:
     return f"local-{head.stdout.strip()}"
 
 
-def worker_bindings(credentials: DeliveryCredentials, release: str) -> tuple[dict[str, str], ...]:
-    """Return the Worker bindings for serving ``release`` from the delivery bucket."""
-    return (
-        {"type": "r2_bucket", "name": "SITE", "bucket_name": credentials.bucket.name},
-        {"type": "plain_text", "name": "RELEASE_ID", "text": release},
-        {"type": "plain_text", "name": "CANONICAL_HOST", "text": CANONICAL_SITE_DOMAIN},
-        {"type": "plain_text", "name": "CANONICAL_MOUNT", "text": urlsplit(CANONICAL_DOCS_BASE_URL).path},
-        {"type": "plain_text", "name": "MIRROR_HOST", "text": MIRROR_SITE_DOMAIN},
-        {"type": "plain_text", "name": "MIRROR_MOUNT", "text": urlsplit(MIRROR_DOCS_BASE_URL).path},
-        {"type": "plain_text", "name": "LANGUAGE_ROOTS", "text": ",".join(localized_languages())},
-        {"type": "plain_text", "name": "SOURCE_ROOT", "text": _docs_i18n.DEFAULT_SOURCE_LANGUAGE},
-    )
-
-
 def _upload_release(credentials: DeliveryCredentials, html_root: Path, release: str) -> None:
     """Upload the built site as one release prefix and prove every object landed."""
     prefix = f"{RELEASE_PREFIX}{release}/"
@@ -759,18 +763,6 @@ def _upload_release(credentials: DeliveryCredentials, html_root: Path, release: 
             f"Release {release} is incomplete in R2: wrote {len(written)} objects, listed {len(landed)}; "
             "the Worker was not moved to it.",
         )
-
-
-def _deploy_release(credentials: DeliveryCredentials, release: str) -> None:
-    """Point the Worker at ``release``; this is the moment the live site changes."""
-    deploy_worker(
-        credentials.account,
-        script=WORKER_SCRIPT,
-        module=WORKER_MODULE,
-        compatibility_date=WORKER_COMPATIBILITY_DATE,
-        bindings=worker_bindings(credentials, release),
-    )
-    print(f"Deployed Worker {WORKER_SCRIPT} serving release {release}", flush=True)
 
 
 def _endpoint_response(url: str) -> tuple[int, dict[str, str]]:
@@ -808,6 +800,7 @@ def public_delivery_checks() -> tuple[tuple[str, int], ...]:
         checks.extend((f"{base_url}/{language}/", 200) for language in localized_languages())
         checks.append((f"{base_url}/{_MISSING_DOCS_PATH}", 404))
         checks.append((base_url, 301))
+        checks.append((f"{base_url}?cadrumo_delivery_check=1", 301))
         checks.append((f"{base_url}/{_APEX_DEEP_LINK}", 301))
     return tuple(checks)
 
@@ -818,11 +811,13 @@ def expected_redirect(url: str) -> str:
     The bare mount redirects to its directory; an apex page redirects to the same
     page under the source-language root.
     """
-    path = urlsplit(url).path
+    parsed = urlsplit(url)
+    path = parsed.path
+    query = f"?{parsed.query}" if parsed.query else ""
     if path.endswith(f"/{_APEX_DEEP_LINK}"):
         mount = path[: -len(_APEX_DEEP_LINK) - 1]
-        return f"{mount}/{_docs_i18n.DEFAULT_SOURCE_LANGUAGE}/{_APEX_DEEP_LINK}"
-    return f"{path}/"
+        return f"{mount}/{_docs_i18n.DEFAULT_SOURCE_LANGUAGE}/{_APEX_DEEP_LINK}{query}"
+    return f"{path}/{query}"
 
 
 def _published_body(url: str) -> bytes:
@@ -939,9 +934,9 @@ def _delivery_mismatch(url: str, expected_status: int, release: str) -> str | No
     actual_status, headers = _endpoint_response(url)
     if actual_status != expected_status:
         return f"expected HTTP {expected_status}, received HTTP {actual_status}"
-    if headers.get(RELEASE_HEADER) != release:
+    if expected_status != 301 and headers.get(RELEASE_HEADER) != release:
         return f"answered from release {headers.get(RELEASE_HEADER)!r}, not {release!r}"
-    if expected_status == 301 and headers.get("location") != expected_redirect(url):
+    if expected_status == 301 and urljoin(url, headers.get("location", "")) != urljoin(url, expected_redirect(url)):
         return f"redirected to {headers.get('location')!r}, not to {expected_redirect(url)!r}"
     return None
 
@@ -1089,6 +1084,98 @@ def _dry_run(repo_root: Path, *, build: Callable[[Path], Path] = _build_site_roo
     return 0
 
 
+def _verify_candidate(account: CloudflareAccount, release: str) -> None:
+    """Exercise both mount layouts on the unpublished candidate service."""
+    subdomain = cloudflare_call(account, "GET", f"/accounts/{account.account_id}/workers/subdomain")["subdomain"]
+    host = f"https://{CANDIDATE_SCRIPT}.{subdomain}.workers.dev"
+    deadline = time.monotonic() + _RELEASE_WAIT_SECONDS
+    for url, expected in public_delivery_checks():
+        parsed = urlsplit(url)
+        candidate = host + parsed.path + (f"?{parsed.query}" if parsed.query else "")
+        while (mismatch := _delivery_mismatch(candidate, expected, release)) is not None:
+            if time.monotonic() > deadline:
+                raise ValueError(f"Candidate verification failed for {candidate}: {mismatch}")
+            time.sleep(_RELEASE_POLL_SECONDS)
+
+
+def _restore_routes(account: CloudflareAccount, zone: str, before: list[dict[str, Any]]) -> None:
+    """Restore only the documentation route set after an unsuccessful activation."""
+    base = f"/zones/{zone}/workers/routes"
+    patterns = {route.pattern for route in DELIVERY_ROUTES}
+    patterns.update({f"{CANONICAL_SITE_DOMAIN}/docs*", f"{MIRROR_SITE_DOMAIN}/cadrumo/docs*"})
+    current = {row["pattern"]: row for row in cloudflare_call(account, "GET", base) if row["pattern"] in patterns}
+    original = {row["pattern"]: row for row in before}
+    for pattern, row in current.items():
+        if pattern not in original:
+            cloudflare_call(account, "DELETE", f"{base}/{row['id']}")
+    for pattern, row in original.items():
+        body = {name: row[name] for name in ("pattern", "script", "request_limit_fail_open") if name in row}
+        if pattern in current:
+            cloudflare_call(account, "PUT", f"{base}/{current[pattern]['id']}", json=body)
+        else:
+            cloudflare_call(account, "POST", base, json=body)
+
+
+def _await_static_delivery(release: str) -> None:
+    """Distinguish a static cutover from the same release on the preceding proxy."""
+    deadline = time.monotonic() + _RELEASE_WAIT_SECONDS
+    for base in (CANONICAL_DOCS_BASE_URL, MIRROR_DOCS_BASE_URL):
+        while True:
+            status, headers = _endpoint_response(base + "/")
+            if (
+                status == 200
+                and headers.get(RELEASE_HEADER) == release
+                and headers.get("x-cadrumo-docs-delivery") == "static"
+            ):
+                break
+            if time.monotonic() > deadline:
+                raise ValueError(f"Native static delivery did not become active at {base}")
+            time.sleep(_RELEASE_POLL_SECONDS)
+
+
+def _activate_static_release(
+    credentials: DeliveryCredentials,
+    document: dict[str, Any],
+    root: Path,
+    zone: str,
+) -> None:
+    """Stage first, then switch both mounts and restore the previous version on failure."""
+    account = credentials.account
+    release = document["release"]
+    deploy_assets(account, document, root, script=CANDIDATE_SCRIPT)
+    _verify_candidate(account, release)
+    patterns = {route.pattern for route in DELIVERY_ROUTES}
+    legacy = {f"{CANONICAL_SITE_DOMAIN}/docs*", f"{MIRROR_SITE_DOMAIN}/cadrumo/docs*"}
+    route_base = f"/zones/{zone}/workers/routes"
+    before = [row for row in cloudflare_call(account, "GET", route_base) if row["pattern"] in patterns | legacy]
+    if any(row.get("script") not in {WORKER_SCRIPT, STATIC_SCRIPT} for row in before):
+        raise ValueError("Documentation route has an unexpected owner")
+    previous = None
+    if "delivery/active.json" in list_keys(credentials.bucket, "delivery/active.json"):
+        previous = json.loads(read_object(credentials.bucket, "delivery/active.json"))
+    previous_version = active_version(account) if previous else None
+    try:
+        version = deploy_assets(account, document, root, script=STATIC_SCRIPT)
+        ensure_routes(account, zone, DELIVERY_ROUTES)
+        _await_release_served(release)
+        _await_static_delivery(release)
+        _verify_public_delivery(release)
+        for base_url in (CANONICAL_DOCS_BASE_URL, MIRROR_DOCS_BASE_URL):
+            _verify_published_search_index(root, base_url=base_url)
+        for row in before:
+            if row["pattern"] in legacy:
+                cloudflare_call(account, "DELETE", f"{route_base}/{row['id']}")
+        save_active_release(credentials.bucket, release, previous["release"] if previous else None, version)
+    except BaseException:
+        if previous_version:
+            restore_version(account, previous_version)
+        _restore_routes(account, zone, before)
+        if previous:
+            _await_release_served(previous["release"])
+            _verify_public_delivery(previous["release"])
+        raise
+
+
 def _publish(
     repo_root: Path,
     *,
@@ -1119,33 +1206,50 @@ def _publish(
     _refresh_download_latest(repo_root)
     html_root = _build_site_roots(repo_root)
     _validate_built_site(html_root)
-    _upload_release(credentials, html_root, release)
-    _deploy_release(credentials, release)
-    ensure_routes(credentials.account, zone, DELIVERY_ROUTES)
-    if cutover:
-        _wire_zone(credentials, zone)
-    _await_release_served(release)
-    _verify_public_delivery(release)
-    for base_url in (CANONICAL_DOCS_BASE_URL, MIRROR_DOCS_BASE_URL):
-        _verify_published_search_index(html_root, base_url=base_url)
+    with deployment_lock(credentials.bucket):
+        _upload_release(credentials, html_root, release)
+        document = seal_release(credentials.bucket, html_root, release)
+        if cutover:
+            _wire_zone(credentials, zone)
+        _activate_static_release(credentials, document, html_root, zone)
     print(f"Published release {release} at {CANONICAL_DOCS_BASE_URL}/ and {MIRROR_DOCS_BASE_URL}/", flush=True)
     return 0
 
 
 def _rollback(release: str, *, environment: Mapping[str, str] | None = None) -> int:
-    """Serve an earlier, already uploaded release again. Uploads nothing."""
+    """Verify and restore an earlier completed release, preserving the current one on failure."""
     env = environment if environment is not None else os.environ
     _require_authorized_publish_environment(environment=env)
     if _RELEASE_ID_RE.fullmatch(release) is None:
         raise SystemExit(f"{release!r} is not a release id.")
     credentials = _delivery_credentials(env)
-    prefix = f"{RELEASE_PREFIX}{release}/"
-    if f"{prefix}index.html" not in list_keys(credentials.bucket, prefix):
-        raise SystemExit(f"Release {release} is not in the bucket; nothing to roll back to.")
-    _deploy_release(credentials, release)
-    _await_release_served(release)
-    _verify_public_delivery(release)
+    with deployment_lock(credentials.bucket), tempfile.TemporaryDirectory(prefix="cadrumo-docs-rollback-") as directory:
+        root = Path(directory)
+        document = load_release(credentials.bucket, release, root)
+        _activate_static_release(credentials, document, root, zone_id(credentials.account, DOCS_ZONE))
     print(f"Rolled back to release {release}", flush=True)
+    return 0
+
+
+def _activate_existing(release: str, root: Path) -> int:
+    """Activate an already sealed release from locally verified static bytes."""
+    _require_local_session("activate", environment=os.environ)
+    if _RELEASE_ID_RE.fullmatch(release) is None:
+        raise ValueError("Invalid release identity")
+    credentials = _delivery_credentials(os.environ)
+    with deployment_lock(credentials.bucket):
+        document = validate_manifest(json.loads(read_object(credentials.bucket, f"delivery/{release}/{MANIFEST_NAME}")))
+        if document["release"] != release:
+            raise ValueError("Release manifest identity mismatch")
+        prefix = f"releases/{release}/"
+        verify_inventory(document, object_inventory(credentials.bucket, prefix))
+        verify_inventory(
+            document, object_inventory(replace(credentials.bucket, name=PUBLIC_BUCKET), prefix), public=True
+        )
+        for key, row in document["objects"].items():
+            if not search_payload(key):
+                verify_bytes((root / key).read_bytes(), row, key)
+        _activate_static_release(credentials, document, root, zone_id(credentials.account, DOCS_ZONE))
     return 0
 
 
@@ -1153,6 +1257,11 @@ def main(argv: list[str] | None = None) -> int:
     """Publish, roll back or wire up the Cadrumo documentation site."""
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
+    settings = commands.add_parser(
+        "configure", help="Reconcile documentation-owned storage, cache and transport settings."
+    )
+    settings.add_argument("--confirm", choices=("configure-cadrumo-docs",), required=True)
+    settings.add_argument("--snapshot", type=Path, required=True, help="New directory for the previous configuration.")
     provision = commands.add_parser("provision", help="Route both docs mounts to the Worker (one-time zone wiring).")
     provision.add_argument(
         "--confirm",
@@ -1181,16 +1290,28 @@ def main(argv: list[str] | None = None) -> int:
         help="Required literal acknowledgement for the rollback.",
     )
     rollback.add_argument("--release", required=True, help="The release id to serve.")
+    activate = commands.add_parser("activate", help="Activate a completed release from verified local bytes.")
+    activate.add_argument("--confirm", choices=("activate-cadrumo-docs",), required=True)
+    activate.add_argument("--release", required=True)
+    activate.add_argument("--directory", type=Path, required=True)
     commands.add_parser("dry-run", help="Build and validate every site root without uploading.")
     args = parser.parse_args(argv)
 
     repo_root = _repo_root()
     if args.command == "dry-run":
         return _dry_run(repo_root)
+    if args.command == "configure":
+        _require_local_session("configure", environment=os.environ)
+        credentials = _delivery_credentials(os.environ)
+        prepare_storage(credentials.account)
+        configure_delivery(credentials.account, zone_id(credentials.account, DOCS_ZONE), args.snapshot)
+        return 0
     if args.command == "provision":
         return _provision()
     if args.command == "rollback":
         return _rollback(args.release)
+    if args.command == "activate":
+        return _activate_existing(args.release, args.directory)
     return _publish(repo_root, release_label=args.release_label, cutover=args.cutover)
 
 

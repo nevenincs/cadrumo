@@ -29,6 +29,7 @@ from pydantic import ValidationError
 from ....core.directory_scan import scan_directory
 from ...calculations.registry.authority import bundled_indexed_authority
 from ...calculations.registry.schema_base import ThresholdComparison
+from ...calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ..errors import ProrrataInputError
 from ..prorrata import (
     InputClassification,
@@ -295,7 +296,8 @@ def test_especial_mandatory_cases() -> None:
         ), (comparison, general_deduction, especial_deduction)
 
 
-def test_especial_mandatory_ten_percent_margin_is_inclusive_from_2015() -> None:
+@pytest.mark.parametrize("year", PublishedGovernedFactSource().supported_filing_years().years)
+def test_especial_mandatory_ten_percent_margin_is_inclusive_under_the_current_redaction(year: int) -> None:
     """Ley 28/2014 art. 1.26 reads "exceda en un 10 por ciento o más", so the margin is reached, not passed.
 
     A general-regime deduction of exactly 110 against an especial-regime
@@ -305,11 +307,11 @@ def test_especial_mandatory_ten_percent_margin_is_inclusive_from_2015() -> None:
     cannot be satisfied by a predicate that simply answers ``True``.
     """
     assert (
-        is_especial_mandatory(Decimal("110.00"), Decimal("100.00"), year=2026, parameters=_params("inclusive", 2026))
+        is_especial_mandatory(Decimal("110.00"), Decimal("100.00"), year=year, parameters=_params("inclusive", year))
         is True
     )
     assert (
-        is_especial_mandatory(Decimal("109.99"), Decimal("100.00"), year=2026, parameters=_params("inclusive", 2026))
+        is_especial_mandatory(Decimal("109.99"), Decimal("100.00"), year=year, parameters=_params("inclusive", year))
         is False
     )
 

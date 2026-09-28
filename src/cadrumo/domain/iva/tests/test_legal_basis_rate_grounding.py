@@ -35,9 +35,9 @@ from typing import cast
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions_where
 from cadrumo.domain.calculations.registry.tests.published_authority import (
     published_legal_references,
-    published_revision,
 )
 from cadrumo.domain.invoices.enums import resolve_iva_rate_token
 from cadrumo.domain.iva.schema import IvaRateKind, require_eu_member_state
@@ -230,7 +230,7 @@ def test_liva_art_103_legal_entry_quotes_the_current_ten_per_cent_inclusive_marg
     assert any("exceda en un 10 por ciento o más" in t for t in required_text)
 
 
-def test_liva_art_103_corpus_records_the_ley_28_2014_amendment_of_apartado_dos() -> None:
+def test_liva_art_103_corpus_records_the_amendment_of_apartado_dos() -> None:
     """The bundled consolidated text dates the current redaction, so the year split is grounded, not assumed.
 
     The amendment note names Ley 28/2014 art. 1.26 as the modifier of apartado
@@ -274,17 +274,35 @@ def test_liva_art_103_margin_is_registry_data_not_a_python_constant() -> None:
     assert rule.inclusive is False
 
 
-def test_liva_art_103_pre_2015_ejercicio_is_refused_rather_than_guessed() -> None:
+def test_liva_art_103_ejercicio_before_the_current_redaction_is_refused_rather_than_guessed() -> None:
     """TEETH: the repealed redaction has no citable authority, so it is refused."""
     from ..prorrata_especial_parameters import (
+        PRORRATA_ESPECIAL_MANDATORY_PARAMETER_ID,
         ProrrataEspecialMandatoryParameterError,
         resolve_prorrata_especial_mandatory_parameters,
     )
 
-    revision = published_revision("303", "2025")
+    # Only the current Ley 28/2014 redaction is declared, from the first authored revision
+    # that carries the margin; the ejercicio before it has no citable margin. The newest
+    # declaring revision is asked for it.
+    declaring = authored_revisions_where(
+        "303",
+        lambda candidate: any(p.id == PRORRATA_ESPECIAL_MANDATORY_PARAMETER_ID for p in candidate.parameters),
+    )
+    repealed_ejercicio = (
+        min(
+            value.valid_from.year
+            for candidate in declaring
+            for parameter in candidate.parameters
+            if parameter.id == PRORRATA_ESPECIAL_MANDATORY_PARAMETER_ID
+            for value in parameter.values
+        )
+        - 1
+    )
+    revision = declaring[-1]
     with pytest.raises(ProrrataEspecialMandatoryParameterError) as excinfo:
-        resolve_prorrata_especial_mandatory_parameters(revision, modelo_id="303", ejercicio=2014)
-    assert "does not resolve for ejercicio 2014" in str(excinfo.value)
+        resolve_prorrata_especial_mandatory_parameters(revision, modelo_id="303", ejercicio=repealed_ejercicio)
+    assert f"does not resolve for ejercicio {repealed_ejercicio}" in str(excinfo.value)
 
 
 # ---------------------------------------------------------------------------

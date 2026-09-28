@@ -26,11 +26,12 @@ from __future__ import annotations
 
 import ast
 import sys
+import unicodedata
 from dataclasses import dataclass
 from pathlib import Path
 from typing import override
 
-from .source_import_analysis import type_checking_guarded_nodes
+from .source_import_analysis import TYPE_CHECKING_GUARD_NAME, type_checking_guarded_nodes
 
 __all__ = ["TypeOnlyRuntimeUse", "scan_paths_for_type_only_runtime_uses", "scan_type_only_runtime_uses"]
 
@@ -165,6 +166,11 @@ def scan_type_only_runtime_uses(path: Path, *, source: str | None = None) -> lis
         )
         return []
 
+    # The guard is an identifier, and Python folds identifiers to NFKC, so a
+    # module whose folded text never spells it holds no guarded node to walk for.
+    folded = text if text.isascii() else unicodedata.normalize("NFKC", text)
+    if TYPE_CHECKING_GUARD_NAME not in folded:
+        return []
     guarded = type_checking_guarded_nodes(tree)
     if not guarded:
         return []
@@ -180,7 +186,8 @@ def scan_type_only_runtime_uses(path: Path, *, source: str | None = None) -> lis
             for alias in node.names:
                 type_only.setdefault(alias.asname or alias.name.split(".", 1)[0], node.lineno)
 
-    candidates = {name: lineno for name, lineno in type_only.items() if name not in _runtime_bound_names(tree, guarded)}
+    runtime_bound = _runtime_bound_names(tree, guarded)
+    candidates = {name: lineno for name, lineno in type_only.items() if name not in runtime_bound}
     if not candidates:
         return []
 

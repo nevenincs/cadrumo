@@ -18,6 +18,7 @@ from cadrumo.adapters.persistence.profile.modelos_verification_reports import Ve
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.retencion_observations import RetencionObservationRepositoryAdapter
 from cadrumo.adapters.persistence.profile.tests.ledger_capital_support import (
+    CAPITAL_YEAR,
     capital_payment,
     capital_request,
     withholding_producer,
@@ -62,8 +63,8 @@ from cadrumo.entrypoints.tests.profile_persistence.verification_repository_suppo
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _BUCKET_ID = "00000000-0000-4000-8000-000000000123"
-_T0 = datetime(2026, 2, 1, 9, 0, tzinfo=UTC)
-_Q2_2025 = Period.from_year_and_code(2025, "2T")
+_T0 = datetime(CAPITAL_YEAR + 1, 2, 1, 9, 0, tzinfo=UTC)
+_ACCRUAL_Q2 = Period.from_year_and_code(CAPITAL_YEAR, "2T")
 
 
 @dataclass(frozen=True, slots=True)
@@ -108,12 +109,12 @@ def _m123_bucket(tmp_path: Path, *, operation: PinnedAuthorityOperation) -> Iter
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label="M123 count authority") as profile:
         objects: SecureObjectRepository = profile.repository
         _seed_ready_profile(objects)
-        snapshot = published_authority_operation().snapshot("123", filing_year=2025, period="2T")
+        snapshot = published_authority_operation().snapshot("123", filing_year=CAPITAL_YEAR, period="2T")
         work_unit = create_work_unit(
             bucket_id=_BUCKET_ID,
             modelo="123",
-            filing_year=2025,
-            period=_Q2_2025,
+            filing_year=CAPITAL_YEAR,
+            period=_ACCRUAL_Q2,
             revision_id=snapshot.revision.id,
             ports=WorkLifecyclePorts(
                 work_unit_repository=WorkUnitCatalogueRepository(objects=objects),
@@ -191,11 +192,11 @@ def _capture_capital_coupon(objects: SecureObjectRepository) -> None:
         transaction,
         catalogue_revision_id="d" * 64,
         request=capital_request(transaction),
-        applicable_year=2025,
-        cadence=quarterly_filer_cadence(2025),
+        applicable_year=CAPITAL_YEAR,
+        cadence=quarterly_filer_cadence(CAPITAL_YEAR),
     )
     assert capture.scope.modelo == "123"
-    assert capture.scope.period == _Q2_2025
+    assert capture.scope.period == _ACCRUAL_Q2
     assert (
         withholding_producer(objects).capture(capture.command, cadence=quarterly_filer_cadence_for(capture.command))
         is not None
@@ -215,7 +216,7 @@ def test_captured_capital_evidence_refuses_the_123_calculation_and_persists_noth
         revisions = CalculationRevisionCatalogueRepository(objects=bucket.objects).load().revisions
         reports = VerificationReportCatalogueRepository(objects=bucket.objects).load().reports
         work_unit = WorkUnitCatalogueRepository(objects=bucket.objects).load().get(bucket.work_unit.work_unit_id)
-        evidence = RetencionObservationRepositoryAdapter(objects=bucket.objects).load_observations("123", _Q2_2025)
+        evidence = RetencionObservationRepositoryAdapter(objects=bucket.objects).load_observations("123", _ACCRUAL_Q2)
 
     error = exc_info.value
     verdict = error.terminal_precondition_verdict
@@ -291,7 +292,7 @@ def test_evidence_captured_after_verification_refuses_filing_and_export(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     """A revision verified before capture is neither filed nor written out as a fichero."""
-    export_path = tmp_path / "modelo-123-2025-2T.txt"
+    export_path = tmp_path / f"modelo-123-{CAPITAL_YEAR}-2T.txt"
     with _m123_bucket(tmp_path, operation=operation) as bucket:
         revision_id = _calculate(bucket)
         granted = _verify(revision_id, operation=operation)

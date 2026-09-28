@@ -4,7 +4,15 @@ on:
   pull_request:
     branches: [main]
     types: [opened, reopened, synchronize]
+  # A calling run that already published the registry authority names its
+  # artifact here, so the scoped gate restores it instead of compiling another.
   workflow_call:
+    inputs:
+      authority-artifact:
+        description: This run's published-authority artifact; empty publishes locally.
+        type: string
+        required: false
+        default: ""
   # release-please opens the release pull request with the default token, whose
   # pushes and pull requests start no workflow runs, so that pull request would
   # never report this gate. A dispatch is exempt from that rule and its check
@@ -43,9 +51,13 @@ jobs:
         with:
           persist-credentials: false
 
+      # Every lint gate is static, so none of them loads the registry authority
+      # and publishing one here only spent minutes compiling it.
       - name: Set up toolchain
         id: setup
         uses: ./.github/actions/setup
+        with:
+          authority: "false"
 
       # `!cancelled()` keeps every independent gate reporting its own verdict
       # instead of stopping at the first red one. The setup guard is the other
@@ -72,6 +84,10 @@ jobs:
         if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
         run: just check-workflow-security
 
+      - name: Workflow contracts
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: just check-gate-contracts
+
   gate:
     name: "Check: Scoped gate (Linux)"
     needs: lint
@@ -83,10 +99,14 @@ jobs:
       CADRUMO_PYTEST_WORKERS: "8"
       GATE_BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || 'origin/main' }}
     steps:
+      # The scope is `GATE_BASE...HEAD`. A pull request checks out the merge of
+      # its head into the base, whose first parent IS the base, so two commits
+      # already hold the merge base; the full history cost about a minute per
+      # run. Every other event compares against origin/main and needs it.
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          fetch-depth: 0
+          fetch-depth: ${{ github.event_name == 'pull_request' && 2 || 0 }}
           persist-credentials: false
 
       - name: Set up just
@@ -108,6 +128,8 @@ jobs:
         id: setup
         if: ${{ !cancelled() }}
         uses: ./.github/actions/setup
+        with:
+          authority-artifact: ${{ inputs.authority-artifact }}
 
       - name: Registry gate
         if: ${{ !cancelled() && steps.setup.outcome == 'success' }}

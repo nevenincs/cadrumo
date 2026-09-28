@@ -33,6 +33,7 @@ from ....core.period import Period
 from ....core.time.clock import frozen_clock, now, today_madrid
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.tests.published_authority import (
+    PublishedGovernedFactSource,
     leased_profile_create_context,
     published_supported_filing_years,
 )
@@ -196,8 +197,9 @@ def test_calendar_accepts_censo_stamped_enrolment() -> None:
     assert "recovery_action" in modelo_303
 
 
-def test_calendar_json_preserves_exact_modelo_303_2025_quarterly_coordinates() -> None:
-    """The real CLI must expose four, and only four, M303 quarterly rows for 2025."""
+@pytest.mark.parametrize("year", PublishedGovernedFactSource().supported_filing_years().years)
+def test_calendar_json_preserves_exact_modelo_303_quarterly_coordinates(year: int) -> None:
+    """The real CLI must expose four, and only four, M303 quarterly rows for the year."""
     result = _invoke(
         [
             "--format",
@@ -206,9 +208,9 @@ def test_calendar_json_preserves_exact_modelo_303_2025_quarterly_coordinates() -
             "overview",
             "calendar",
             "--from",
-            "2025-01-01",
+            f"{year}-01-01",
             "--to",
-            "2026-02-28",
+            f"{year + 1}-02-28",
             "--allow-incomplete",
         ],
     )
@@ -218,15 +220,10 @@ def test_calendar_json_preserves_exact_modelo_303_2025_quarterly_coordinates() -
     coordinates = tuple(
         (entry["modelo"], entry["period"])
         for entry in entries
-        if entry["modelo"] == "303" and entry["period"].startswith("2025 ")
+        if entry["modelo"] == "303" and entry["period"].startswith(f"{year} ")
     )
 
-    assert coordinates == (
-        ("303", "2025 1T"),
-        ("303", "2025 2T"),
-        ("303", "2025 3T"),
-        ("303", "2025 4T"),
-    )
+    assert coordinates == tuple(("303", f"{year} {quarter}") for quarter in ("1T", "2T", "3T", "4T"))
 
 
 def test_calendar_states_that_no_aeat_history_was_ever_captured() -> None:

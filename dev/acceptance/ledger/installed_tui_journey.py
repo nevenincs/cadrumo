@@ -30,6 +30,7 @@ from dev.acceptance.income_tax.installed_tui_child import (
     wait_for_public_selector,
 )
 from dev.acceptance.installed_cli import InstalledCli, InstalledCliError
+from dev.packaging.installed_wheel_binding import environment_interpreter
 
 from .frontend_contract import (
     InvoiceObservation,
@@ -1480,7 +1481,7 @@ def run_installed_ledger_tui_journey(
     workspace = workspace_root.resolve(strict=True)
     authority = authority_root.resolve(strict=True)
     cli = cli_executable.resolve(strict=True)
-    python = python_executable.resolve(strict=True)
+    python = environment_interpreter(python_executable)
     if cli.parent != python.parent:
         raise LedgerInstalledTuiError("installed CLI and TUI child Python do not belong to one environment")
     if not package_identity.startswith("wheel_sha256:") or len(package_identity.removeprefix("wheel_sha256:")) != 64:
@@ -1543,7 +1544,7 @@ def run_installed_tui_only_cli_oracle(
     workspace = workspace_root.resolve(strict=True)
     authority = authority_root.resolve(strict=True)
     cli = cli_executable.resolve(strict=True)
-    python = python_executable.resolve(strict=True)
+    python = environment_interpreter(python_executable)
     if cli.parent != python.parent:
         raise LedgerInstalledTuiError("installed CLI and TUI child Python do not belong to one environment")
     if not package_identity.startswith("wheel_sha256:") or len(package_identity.removeprefix("wheel_sha256:")) != 64:

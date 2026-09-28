@@ -48,6 +48,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import single_exercise_editions
+
 from .....application.calculations.binding_prefill import resolve_bindings_from_local_store
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -56,6 +58,7 @@ from .....domain.calculations.registry.bindings import (
     resolve_available_bound_inputs_by_casilla_id,
 )
 from .....domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
+from .....domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from .....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
     revision_id_for_observation,
@@ -68,14 +71,18 @@ from .published_authority_support import published_authority_operation
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _MODELO = "131"
-_YEAR_N = 2024
-_YEAR_N_PLUS_1 = 2025
+_SUPPORT = PublishedGovernedFactSource().supported_filing_years()
+# The two newest Modelo 131 editions the registry authors for a single exercise, each
+# under its own orden de modulos; the carry chain is exercised across them.
+_YEAR_N, _YEAR_N_PLUS_1 = single_exercise_editions("131")[-2:]
+assert _YEAR_N_PLUS_1 == _YEAR_N + 1, "the carry chain needs consecutive Modelo 131 editions"
 
-_CLOCK = datetime(2026, 2, 1, 9, 0, 0, tzinfo=UTC)
+# A capture instant after both ejercicios have closed.
+_CLOCK = datetime(_YEAR_N + 2, 2, 1, 9, 0, 0, tzinfo=UTC)
 
 # Carry-forward binding id (same pattern as M130).
 _CARRY_BINDING = "modelo-131-resultados-negativos-anteriores"
-_CARRY_BINDING_2025 = "modelo-131-resultados-negativos-anteriores"
+_NEXT_EJERCICIO_CARRY_BINDING = "modelo-131-resultados-negativos-anteriores"
 
 
 _M131_RENDIMIENTO_MODULOS_CASILLA: CasillaId = validated_casilla_id("01")
@@ -102,7 +109,7 @@ _M131_SALDO_NEGATIVO_CASILLA: CasillaId = validated_casilla_id("saldo-negativo-f
 # the formula under test. The wiring assertion is: the saldo equals 200 from
 # the engine's own evaluation of max(0, -casilla10).
 # ---------------------------------------------------------------------------
-_Q1_2024_INPUTS: dict[CasillaId, Decimal] = {
+_LOSS_Q1_INPUTS: dict[CasillaId, Decimal] = {
     _M131_RENDIMIENTO_MODULOS_CASILLA: Decimal("0"),  # rendimiento neto módulos con datos base
     _M131_PAGO_PREVIO_CASILLA: Decimal("0"),  # pago fraccionado previo con datos base
     _M131_VOLUME_SIN_DATOS_BASE_CASILLA: Decimal("20000.00"),  # volumen actividades sin datos base (manual)
@@ -112,12 +119,12 @@ _Q1_2024_INPUTS: dict[CasillaId, Decimal] = {
     _M131_DEDUCCION_CASILLA: Decimal("0"),  # deducción por discapacidad / familia numerosa
     _M131_RESULTADO_EJERCICIOS_ANTERIORES_CASILLA: Decimal("0"),  # resultado ejercicios anteriores
 }
-_Q1_2024_CARRY_BINDING = {
+_LOSS_Q1_CARRY_BINDING = {
     _CARRY_BINDING: Decimal("0"),  # Q1 has no prior quarter
     "modelo-131-volumen-ingresos-agrario": Decimal("0"),
 }
 
-_EXPECTED_Q1_2024_SALDO = Decimal("200.00")
+_EXPECTED_LOSS_Q1_SALDO = Decimal("200.00")
 
 # ---------------------------------------------------------------------------
 # Profitable 1T/2025 scenario (same activity, better year):
@@ -127,7 +134,7 @@ _EXPECTED_Q1_2024_SALDO = Decimal("200.00")
 #   casilla 10 = 600 - 100 - 0 = 500
 #   saldo = max(0, -500) = 0 (no carry needed)
 # ---------------------------------------------------------------------------
-_Q1_2025_INPUTS: dict[CasillaId, Decimal] = {
+_PROFIT_Q1_INPUTS: dict[CasillaId, Decimal] = {
     _M131_RENDIMIENTO_MODULOS_CASILLA: Decimal("0"),
     _M131_PAGO_PREVIO_CASILLA: Decimal("0"),
     _M131_VOLUME_SIN_DATOS_BASE_CASILLA: Decimal("30000.00"),
@@ -137,8 +144,8 @@ _Q1_2025_INPUTS: dict[CasillaId, Decimal] = {
     _M131_DEDUCCION_CASILLA: Decimal("0"),
     _M131_RESULTADO_EJERCICIOS_ANTERIORES_CASILLA: Decimal("0"),
 }
-_Q1_2025_CARRY_BINDING = {
-    _CARRY_BINDING_2025: Decimal("0"),  # Q1 has no prior quarter
+_PROFIT_Q1_CARRY_BINDING = {
+    _NEXT_EJERCICIO_CARRY_BINDING: Decimal("0"),  # Q1 has no prior quarter
     "modelo-131-volumen-ingresos-agrario": Decimal("0"),
 }
 
@@ -172,8 +179,8 @@ def _131_observation(*, filing_year: int, period: str, result: RegistryCalculati
     )
 
 
-def test_q1_2024_loss_produces_carry_forward_saldo(tmp_path: Path) -> None:
-    """A loss-making Q1/2024 produces a positive saldo-negativo-fin-periodo.
+def test_first_quarter_loss_produces_carry_forward_saldo(tmp_path: Path) -> None:
+    """A loss-making Q1 of ejercicio N produces a positive saldo-negativo-fin-periodo.
 
     retenciones (600) exceed the 2% fractional payment on 20,000 (400),
     so casilla 10 = -200 and saldo = max(0, 200) = 200. The value is
@@ -183,15 +190,15 @@ def test_q1_2024_loss_produces_carry_forward_saldo(tmp_path: Path) -> None:
         result, _ = _calculate_131(
             filing_year=_YEAR_N,
             period="1T",
-            casilla_inputs=_Q1_2024_INPUTS,
-            carry_binding=_Q1_2024_CARRY_BINDING,
+            casilla_inputs=_LOSS_Q1_INPUTS,
+            carry_binding=_LOSS_Q1_CARRY_BINDING,
         )
     assert result.values[_M131_RESULTADO_CASILLA] == Decimal("-200.00")
-    assert result.values[_M131_SALDO_NEGATIVO_CASILLA] == _EXPECTED_Q1_2024_SALDO
+    assert result.values[_M131_SALDO_NEGATIVO_CASILLA] == _EXPECTED_LOSS_Q1_SALDO
 
 
-def test_q1_2025_profitable_produces_zero_saldo(tmp_path: Path) -> None:
-    """A profitable Q1/2025 produces a zero saldo (no carry needed).
+def test_next_ejercicio_profitable_first_quarter_produces_zero_saldo(tmp_path: Path) -> None:
+    """A profitable Q1 of ejercicio N+1 produces a zero saldo (no carry needed).
 
     The 2% payment (600) exceeds retenciones (100), giving casilla 10 = 500.
     saldo = max(0, -500) = 0. Each año's engine runs independently.
@@ -200,17 +207,17 @@ def test_q1_2025_profitable_produces_zero_saldo(tmp_path: Path) -> None:
         result, _ = _calculate_131(
             filing_year=_YEAR_N_PLUS_1,
             period="1T",
-            casilla_inputs=_Q1_2025_INPUTS,
-            carry_binding=_Q1_2025_CARRY_BINDING,
+            casilla_inputs=_PROFIT_Q1_INPUTS,
+            carry_binding=_PROFIT_Q1_CARRY_BINDING,
         )
     assert result.values[_M131_RESULTADO_CASILLA] == Decimal("500.00")
     assert result.values[_M131_SALDO_NEGATIVO_CASILLA] == Decimal("0.00")
 
 
-def test_q2_2024_carry_forward_resolves_from_q1_2024_saldo(
+def test_second_quarter_carry_forward_resolves_from_first_quarter_saldo(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
-    """Q2/2024's casilla 11 auto-resolves to Q1/2024's persisted saldo.
+    """Q2's casilla 11 auto-resolves to the same ejercicio's Q1 persisted saldo.
 
     The within-ejercicio carry-forward contract (max_year_delta=0, offset=-1):
     once Q1/2024 is recorded as a prior-period observation, the
@@ -222,8 +229,8 @@ def test_q2_2024_carry_forward_resolves_from_q1_2024_saldo(
         q1, _ = _calculate_131(
             filing_year=_YEAR_N,
             period="1T",
-            casilla_inputs=_Q1_2024_INPUTS,
-            carry_binding=_Q1_2024_CARRY_BINDING,
+            casilla_inputs=_LOSS_Q1_INPUTS,
+            carry_binding=_LOSS_Q1_CARRY_BINDING,
         )
         obs_repo.save(
             obs_repo.prepare_observation_envelope(
@@ -243,7 +250,7 @@ def test_q2_2024_carry_forward_resolves_from_q1_2024_saldo(
             operation=operation,
         )
 
-    assert report.binding_values.get(_CARRY_BINDING) == _EXPECTED_Q1_2024_SALDO
+    assert report.binding_values.get(_CARRY_BINDING) == _EXPECTED_LOSS_Q1_SALDO
 
 
 def test_modelo_131_modules_continuity_enrolls_two_renta_years(tmp_path: Path) -> None:
@@ -272,22 +279,22 @@ def test_modelo_131_modules_continuity_enrolls_two_renta_years(tmp_path: Path) -
         result_n, _produced_n = _calculate_131(
             filing_year=_YEAR_N,
             period="1T",
-            casilla_inputs=_Q1_2024_INPUTS,
-            carry_binding=_Q1_2024_CARRY_BINDING,
+            casilla_inputs=_LOSS_Q1_INPUTS,
+            carry_binding=_LOSS_Q1_CARRY_BINDING,
         )
 
         # Year N+1 (2025): profitable Q1, zero saldo.
         result_n1, _produced_n1 = _calculate_131(
             filing_year=_YEAR_N_PLUS_1,
             period="1T",
-            casilla_inputs=_Q1_2025_INPUTS,
-            carry_binding=_Q1_2025_CARRY_BINDING,
+            casilla_inputs=_PROFIT_Q1_INPUTS,
+            carry_binding=_PROFIT_Q1_CARRY_BINDING,
         )
 
     # Year N wiring: 2% rate from registry parameter applied to 20,000.
     assert result_n.values[_M131_PAYMENT_SIN_DATOS_BASE_CASILLA] == Decimal("400.00")  # 2% x 20000
     assert result_n.values[_M131_RESULTADO_CASILLA] == Decimal("-200.00")
-    assert result_n.values[_M131_SALDO_NEGATIVO_CASILLA] == _EXPECTED_Q1_2024_SALDO
+    assert result_n.values[_M131_SALDO_NEGATIVO_CASILLA] == _EXPECTED_LOSS_Q1_SALDO
 
     # Year N+1 wiring: 2% rate from 2025 registry parameter applied to 30,000.
     assert result_n1.values[_M131_PAYMENT_SIN_DATOS_BASE_CASILLA] == Decimal("600.00")  # 2% x 30000

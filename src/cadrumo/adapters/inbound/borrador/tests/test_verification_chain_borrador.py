@@ -48,17 +48,11 @@ Corpus fixtures use:
     Retenciones:     0 (simplest verifiable scenario; no prior-period bindings)
     Pagos fracc.:    0 (no prior M130/M131 quarterly filings in fixture)
 
-Comprehensive M100 borrador verdict:
-
-| Year | 0545 (cuota integra estatal) | 0546 (cuota integra autonomica) | Verdict  |
-|------|-----------------------------|---------------------------------|----------|
-| 2021 | 3 582,75 EUR                | 3 845,85 EUR                    | VERIFIED |
-| 2022 | 3 582,75 EUR                | 3 749,10 EUR                    | VERIFIED |
-| 2023 | 3 582,75 EUR                | 3 749,10 EUR                    | VERIFIED |
-
-The autonomic bracket for 2021 differs from 2022/2023 because Cataluña
-published updated tariffs for IRPF 2022 (Llei 5/2020 CG reform effective
-from FY2022 declarations).
+The fixture years are the borrador PDFs present on disk; each is checked
+against the published support envelope, so a year below the floor must refuse
+filing selection and every admitted year must recompute its closure casillas.
+Editions that apply the mínimo personal (Ley 35/2006 art.63.1.2º and
+art.74.1.2º) subtract the escala applied to the mínimo from each cuota íntegra.
 """
 
 from __future__ import annotations
@@ -87,8 +81,8 @@ pytestmark = [
 
 _BORRADOR_FIXTURES_DIR = FIXTURES_DIR / "borrador"
 
-# Casilla 0505 (base liquidable general sometida a gravamen) is computed from
-# the 2020-2023 revisions onward (max(0, 0500)), so it can no
+# Casilla 0505 (base liquidable general sometida a gravamen) is computed in
+# every fixture edition (max(0, 0500)), so it can no
 # longer be supplied as a leaf input. The verification chain feeds the trabajo
 # leaf 0003 (ingresos íntegros) instead and lets the engine derive 0500 -> 0505.
 # In the fixture scenario the only work-income adjustment is the art. 19.2.f
@@ -121,6 +115,10 @@ _COMPUTED_CASILLAS_M100: frozenset[CasillaId] = frozenset(
 )
 
 
+# An adult filer below every age-dependent mínimo threshold.
+_TAXPAYER_BIRTH_DATE = date(1975, 6, 15)
+
+
 def _registry_snapshot_m100(year: int):
     """Resolve the M100 validated registry snapshot for the given filing year."""
     return published_snapshot("100", filing_year=year, period="0A")
@@ -149,6 +147,11 @@ def _binding_values_for_year(year: int) -> dict[str, Decimal]:
         "renta-profile-minimo-descendientes-estatal": Decimal("0"),
         # Parte autonómica: non-Madrid corpus fixture mirrors the estatal zero.
         "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
+        # Individual declaration by a filer with no minor children and no
+        # negative general base carried in from earlier ejercicios.
+        "renta-profile-declaration-type": Decimal("1"),
+        "renta-profile-family-minor-children-in-unit": Decimal("0"),
+        "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
     }
 
 
@@ -169,13 +172,18 @@ def _relation_values_for_year(year: int) -> dict[str, Decimal]:
     }
 
 
-_BORRADOR_FIXTURE_YEARS: tuple[int, ...] = (2021, 2022, 2023)
+def _borrador_fixture_years() -> tuple[int, ...]:
+    """The ejercicio of every borrador fixture on disk, read from its file name."""
+    return tuple(
+        sorted(int(path.stem.removeprefix("modelo_100_")) for path in _BORRADOR_FIXTURES_DIR.glob("modelo_100_*.pdf"))
+    )
 
 
 def _split_fixture_years() -> tuple[tuple[int, ...], tuple[int, ...]]:
+    fixture_years = _borrador_fixture_years()
     support = published_supported_filing_years()
-    admitted = tuple(year for year in _BORRADOR_FIXTURE_YEARS if support is None or support.admits_filing_year(year))
-    return admitted, tuple(year for year in _BORRADOR_FIXTURE_YEARS if year not in admitted)
+    admitted = tuple(year for year in fixture_years if support is None or support.admits_filing_year(year))
+    return admitted, tuple(year for year in fixture_years if year not in admitted)
 
 
 _SUPPORTED_FIXTURE_YEARS, _UNSUPPORTED_FIXTURE_YEARS = _split_fixture_years()
@@ -218,9 +226,8 @@ def test_verification_chain_m100_borrador_engine_recomputes_cuota_integra(year: 
       cuota líquida = cuota íntegra  (no deducciones, no incrementos)
       → 0585 == 0545, 0586 == 0546
 
-    Verdict: VERIFIED — engine recomputes all four closure casillas for all
-    three annual revisions (2021, 2022, 2023).  M100 x3 revisions transition
-    EXTRACTION-ONLY (CORPUS-LIMITED) → VERIFIED via the borrador surface.
+    Verdict: VERIFIED — engine recomputes all four closure casillas for every
+    fixture year admitted by the support envelope.
     """
     pdf_path = _BORRADOR_FIXTURES_DIR / f"modelo_100_{year}.pdf"
     snapshot = _registry_snapshot_m100(year)
@@ -270,6 +277,7 @@ def test_verification_chain_m100_borrador_engine_recomputes_cuota_integra(year: 
             binding_values=_binding_values_for_year(year),
             enum_binding_values=_enum_binding_values_for_year(year),
             relation_values=_relation_values_for_year(year),
+            date_binding_values={"renta-profile-taxpayer-birth-date": _TAXPAYER_BIRTH_DATE},
         )
     except RegistryValidationError as exc:
         pytest.fail(

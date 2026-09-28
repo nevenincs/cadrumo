@@ -103,6 +103,81 @@ def test_setup_uv_consumers_follow_the_repository_python_pin() -> None:
     _assert_setup_uv_consumers_follow_pin(_workflow_documents(), pin=_python_pin())
 
 
+_ACTIONS_DIR: Final = REPO_ROOT / ".github" / "actions"
+_INPUT_EXPRESSION: Final = re.compile(r"\$\{\{\s*inputs\.([A-Za-z][\w-]*)\s*\}\}")
+
+
+def _action_documents() -> list[tuple[Path, dict[str, Any]]]:
+    paths = sorted((*_ACTIONS_DIR.glob("*/action.yml"), *_ACTIONS_DIR.glob("*/action.yaml")))
+    return [(path, yaml.safe_load(path.read_text(encoding="utf-8"))) for path in paths]
+
+
+def _assert_setup_actions_defer_to_pin(actions: list[tuple[Path, dict[str, Any]]]) -> None:
+    """Refuse a local action whose own setup-uv step selects an interpreter by default.
+
+    Every job calling the action inherits its default, so a default of ``3.13``
+    moves the whole fleet of callers to the newest 3.13 patch while each job
+    reads as declaring nothing. Stops at the action's own declaration: an
+    interpreter a CALLER passes through the input is that caller's selection,
+    and the release runtime rows pass one on purpose.
+    """
+    consumer_found = False
+    violations: list[str] = []
+    for path, action in actions:
+        inputs = action.get("inputs") or {}
+        for step in (action.get("runs") or {}).get("steps") or []:
+            if not isinstance(step, dict) or not str(step.get("uses", "")).startswith("astral-sh/setup-uv@"):
+                continue
+            consumer_found = True
+            if (step.get("env") or {}).get("UV_PYTHON"):
+                violations.append(f"{path.parent.name}: UV_PYTHON {step['env']['UV_PYTHON']!r}")
+            selection = (step.get("with") or {}).get("python-version")
+            if selection is None or not str(selection).strip():
+                continue
+            match = _INPUT_EXPRESSION.fullmatch(str(selection).strip())
+            if match is None:
+                violations.append(f"{path.parent.name}: literal {selection!r}")
+                continue
+            default = str((inputs.get(match.group(1)) or {}).get("default") or "").strip()
+            if default:
+                violations.append(f"{path.parent.name}: input {match.group(1)!r} defaults to {default!r}")
+
+    assert consumer_found, "no local action provisions uv; the action pin contract has no live surface"
+    assert violations == [], (
+        f"local actions select an interpreter instead of deferring to .python-version: {violations}"
+    )
+
+
+def test_local_setup_actions_defer_to_the_repository_python_pin() -> None:
+    """The shared setup action names no interpreter unless its caller does."""
+    _assert_setup_actions_defer_to_pin(_action_documents())
+
+
+@pytest.mark.parametrize(
+    "with_block",
+    [{"python-version": "${{ inputs.python-version }}"}, {"python-version": "3.13"}],
+    ids=("floating-input-default", "literal-selection"),
+)
+def test_an_action_that_selects_an_interpreter_is_refused(with_block: dict[str, str]) -> None:
+    """Both shapes that silently moved every caller off the pin are detected."""
+    action = {
+        "inputs": {"python-version": {"default": "3.13"}},
+        "runs": {"using": "composite", "steps": [_uv_step(**{"with": with_block})]},
+    }
+    with pytest.raises(AssertionError, match="instead of deferring"):
+        _assert_setup_actions_defer_to_pin([(Path("setup/action.yml"), action)])
+
+
+def test_an_action_whose_input_defaults_to_empty_defers() -> None:
+    """An empty default is the pin-deferring shape; the gate accepts it."""
+    deferring = _uv_step(**{"with": {"python-version": "${{ inputs.python-version }}"}})
+    action = {
+        "inputs": {"python-version": {"default": ""}},
+        "runs": {"using": "composite", "steps": [deferring]},
+    }
+    _assert_setup_actions_defer_to_pin([(Path("setup/action.yml"), action)])
+
+
 def test_empty_setup_uv_surface_is_rejected() -> None:
     """Deleting every consumer cannot make the repository-wide gate pass vacuously."""
     with pytest.raises(AssertionError, match="no setup-uv consumer was found"):

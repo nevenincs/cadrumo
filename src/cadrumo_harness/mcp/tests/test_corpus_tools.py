@@ -2,20 +2,14 @@
 
 from __future__ import annotations
 
-import shutil
 from pathlib import Path
 from typing import Any, cast
 
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.application.corpus_search.lexical_index import (
-    build_lexical_index,
-    bundled_corpus_html_root,
-    iter_corpus_chunks,
-)
 from cadrumo.application.corpus_search.models import CitationResolution, RetrievalHit, RetrievalMode, RetrievalResponse
-from cadrumo.application.corpus_search.runtime import corpus_index_path
+from cadrumo.application.corpus_search.runtime import ensure_corpus_index
 from cadrumo.core.config import override_settings
 
 from .._corpus_tools import (
@@ -134,28 +128,24 @@ def test_tool_descriptor_is_read_only_with_query_input() -> None:
     assert tool.input_schema["additionalProperties"] is False
 
 
-def _seed_small_index(source_stem: str) -> None:
-    # Pre-seed the runtime cache index with a small real subset so the tool test
-    # does not pay the full-corpus first-build cost (that build is a first-run
-    # concern, not under test here); the bundled citation lookup resolves the
-    # citation query regardless of index contents.
-    database_path = corpus_index_path()
-    database_path.parent.mkdir(parents=True, exist_ok=True)
-    corpus_dir = database_path.parent / "src"
-    corpus_dir.mkdir(parents=True, exist_ok=True)
-    source = bundled_corpus_html_root()
-    for suffix in (".html.extracted.json", ".html.extracted.md"):
-        origin = source / f"{source_stem}{suffix}"
-        if origin.is_file():
-            shutil.copy2(origin, corpus_dir / origin.name)
-    build_lexical_index(database_path, iter_corpus_chunks(corpus_dir))
+@pytest.fixture(scope="module")
+def corpus_storage_root(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    """A storage root holding the real bundled-corpus index, built once for the module.
+
+    A hand-seeded subset index is never current -- the runtime checks the stored
+    source identity against the whole bundled corpus -- so seeding one only
+    added a discarded build before the full one ran anyway.
+    """
+    root = tmp_path_factory.mktemp("corpus-index")
+    with override_settings(cadrumo_local_storage_root=root):
+        ensure_corpus_index()
+    return root
 
 
-def test_build_payload_runs_real_retrieval_citation(tmp_path: Path) -> None:
-    # End-to-end through the runtime service and a real (pre-seeded) index; the
-    # citation query short-circuits to the bundled verbatim text.
-    with override_settings(cadrumo_local_storage_root=tmp_path):
-        _seed_small_index("ley-58-2003-art-27")
+def test_build_payload_runs_real_retrieval_citation(corpus_storage_root: Path) -> None:
+    # End-to-end through the runtime service and the real index; the citation
+    # query short-circuits to the bundled verbatim text.
+    with override_settings(cadrumo_local_storage_root=corpus_storage_root):
         payload = build_corpus_search_payload("ley-58-2003:art-27.2", limit=5)
     assert payload.mode is RetrievalMode.CITATION
     assert payload.citation is not None
@@ -186,13 +176,12 @@ def test_citation_uri_round_trips_from_search_payload_to_resource_resolver() -> 
     assert "extempor" in resource.text.lower()
 
 
-def test_build_payload_runs_real_lexical_retrieval(tmp_path: Path) -> None:
-    # A free-text query over the pre-seeded index returns ranked hits with
-    # corpus URIs. The shipped surface has one retrieval shape on every host —
-    # no extra to probe, no model to resolve — so this needs no environment
-    # seam to stay deterministic.
-    with override_settings(cadrumo_local_storage_root=tmp_path):
-        _seed_small_index("ley-58-2003-art-27")
+def test_build_payload_runs_real_lexical_retrieval(corpus_storage_root: Path) -> None:
+    # A free-text query over the real index returns ranked hits with corpus
+    # URIs. The shipped surface has one retrieval shape on every host — no
+    # extra to probe, no model to resolve — so this needs no environment seam
+    # to stay deterministic.
+    with override_settings(cadrumo_local_storage_root=corpus_storage_root):
         payload = build_corpus_search_payload("recargo declaración extemporánea", limit=5)
     assert payload.mode is RetrievalMode.LEXICAL_ONLY
     assert payload.results

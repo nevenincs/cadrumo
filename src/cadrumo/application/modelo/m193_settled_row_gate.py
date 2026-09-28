@@ -29,6 +29,7 @@ from enum import StrEnum
 from ...core.aggregation import CalculationSourceLineageRole
 from ...core.modelo import Modelo
 from ...core.operator_action_enums import ActionEvidenceProvenance
+from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.modelos.calculation_revision import CalculationRevision, CalculationSourceRef
 from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.verification_report import (
@@ -37,7 +38,10 @@ from ...domain.modelos.verification_report import (
     ModeloVerificationFindingSeverity,
 )
 from ...domain.modelos.work_unit import WorkUnit
-from ..aggregation.m193_phase_materialization import modelo_193_phase_rows_may_settle_prior_accruals
+from ..aggregation.m193_phase_materialization import (
+    modelo_193_pending_disclosure_years,
+    modelo_193_phase_rows_may_settle_prior_accruals,
+)
 from ..aggregation.withholding_source import WithholdingSourceResolver
 from .action_errors import ModeloPreconditionErrorMixin
 from .preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure_for_scenario
@@ -68,7 +72,11 @@ class Modelo193SettledRowAmountAuthorityUnresolvedError(ModeloPreconditionErrorM
 def _phase_row_is_settled_prior_accrual(ref: CalculationSourceRef, *, filing_year: int) -> bool:
     if ref.source_filing_year is not None:
         return ref.source_filing_year < filing_year
-    return modelo_193_phase_rows_may_settle_prior_accruals(filing_year)
+    with bundled_indexed_authority().operation() as operation:
+        pending_disclosure_years = modelo_193_pending_disclosure_years(operation)
+    return modelo_193_phase_rows_may_settle_prior_accruals(
+        filing_year, pending_disclosure_years=pending_disclosure_years
+    )
 
 
 def modelo_193_settled_prior_accrual_contributors(

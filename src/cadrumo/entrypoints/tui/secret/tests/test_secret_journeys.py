@@ -24,7 +24,7 @@ from .....adapters.persistence.storage.tests.profile_capsule_runtime import (
 )
 from .....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from .....application.user_profile.authentication import ProfileAuthenticationRefusedError
-from .....application.user_profile.login_session import login_profile
+from .....application.user_profile.login_session import login_profile, logout_active_profile
 from .....application.user_profile.passphrase_rotation import (
     ProfilePassphraseRotationError,
     rotate_profile_passphrase,
@@ -244,6 +244,10 @@ async def test_a_completed_rotation_opens_under_the_new_passphrase_only(tmp_path
             passphrase_callback=lambda: _NEW_CREDENTIAL_INPUT,
             profile_decode_context=profile_decode_context,
         )
+        # Where this process has a working keychain that login persisted its
+        # session, and a repeated login would resume it without asking for any
+        # passphrase. Logging out makes the next login authenticate afresh.
+        logout_active_profile()
         with pytest.raises(ProfileAuthenticationRefusedError):
             login_profile(
                 name=str(profile_id),

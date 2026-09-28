@@ -42,10 +42,10 @@ from ....tests.loopback_llm import (
     serving_loopback,
     write_json_response,
 )
-from .ledger_ux_support import _add_evidence, _invoke, _open_bucket_session
+from .ledger_ux_support import _add_evidence, _invoke, _open_bucket_session, admit_an_unmeasurable_host
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-__all__ = ["_open_bucket_session"]
+__all__ = ["_open_bucket_session", "admit_an_unmeasurable_host"]
 
 _SUPPLIER_CIF = "B12345674"
 _FILER_CIF = "B17283946"
@@ -168,7 +168,16 @@ def _loopback_reader(request: pytest.FixtureRequest) -> Iterator[None]:
     fields = _READER_FIELDS_BY_TEST[request.node.originalname or request.node.name]
     with (
         serving_loopback(_loopback_handler(fields), path="/api/chat") as chat_url,
-        override_settings(cadrumo_llm_ollama_chat_url=chat_url),
+        override_settings(
+            cadrumo_llm_ollama_chat_url=chat_url,
+            # The reader is on-host, so its load is admitted against measured
+            # headroom before the request is sent. The operator override admits
+            # a machine whose accelerator this build cannot measure, and the
+            # margin is zero because this runtime loads no weights. A measured
+            # shortfall still refuses.
+            cadrumo_llm_contention_check_override=True,
+            cadrumo_llm_contention_safety_margin_bytes=0,
+        ),
     ):
         yield
 

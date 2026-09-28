@@ -451,17 +451,19 @@ def test_quickfile_runs_full_chain_to_exported_fichero(
     assert out.stat().st_size > 0, "the exported fichero is empty"
 
 
-def test_quickfile_m303_2026_refuses_an_attestation_pair_the_period_does_not_ask(tmp_path: Path) -> None:
+def test_quickfile_m303_refuses_an_attestation_pair_the_period_does_not_ask(tmp_path: Path) -> None:
     """1T does not ask the Modelo 390 exemption, so a supplied attestation pair stops quickfile at calculate."""
 
+    # The projecting horizon exercise lies on or after the default profile's alta.
+    year = str(PublishedGovernedFactSource().supported_filing_years().horizon)
     _create_profile()
-    out = tmp_path / "modelo-303-2026-1T.boe"
+    out = tmp_path / f"modelo-303-{year}-1T.boe"
 
     result = _invoke(
         [
             "--format", "json",
             "app", "quickfile",
-            "--modelo", "303", "--year", "2026", "--period", "1T",
+            "--modelo", "303", "--year", year, "--period", "1T",
             "--joint-return-elected",
             "--m303-exonerado-390-attachment-id", "a" * 64,
             "--m303-exonerado-390-sha256", "a" * 64,

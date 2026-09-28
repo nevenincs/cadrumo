@@ -11,10 +11,14 @@ from __future__ import annotations
 
 import hashlib
 import hmac
+import json
 import mimetypes
 import threading
-from collections.abc import Callable, Iterable, Mapping
+import time
+import uuid
+from collections.abc import Callable, Iterable, Iterator, Mapping
 from concurrent.futures import ThreadPoolExecutor
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from fnmatch import fnmatch
@@ -180,8 +184,9 @@ def _request(
             active.request(method, target, body=body, headers=headers)
             response = active.getresponse()
             payload = response.read()
-            if response.status >= 500:
+            if response.status >= 500 or response.status == 429:
                 last_error = OSError(f"R2 answered HTTP {response.status}")
+                time.sleep(1)
                 continue
             return response.status, payload
         except (HTTPException, TimeoutError, OSError) as exc:
@@ -293,3 +298,88 @@ def upload_tree(
         for _ in pool.map(upload, sorted(files.items())):
             pass
     return set(written)
+
+
+def read_object(bucket: R2Bucket, key: str) -> bytes:
+    """Read a required private release object, refusing missing data."""
+    status, body = _request(bucket, method="GET", path=_object_path(bucket, key))
+    if status != 200:
+        raise ValueError(f"Cannot read release object {key}: HTTP {status}")
+    return body
+
+
+def object_inventory(bucket: R2Bucket, prefix: str) -> dict[str, tuple[int, str]]:
+    """List exact sizes and object hashes, refusing incomplete pagination."""
+    found: dict[str, tuple[int, str]] = {}
+    token = ""
+    seen: set[str] = set()
+    while True:
+        query = {"list-type": "2", "prefix": prefix, "max-keys": "1000"}
+        if token:
+            query["continuation-token"] = token
+        status, body = _request(bucket, method="GET", path=f"/{quote(bucket.name, safe='')}", query=query)
+        if status != 200:
+            raise ValueError(f"Cannot inventory release: HTTP {status}")
+        document = ElementTree.fromstring(body)
+        for item in document.findall(f"{_S3_NAMESPACE}Contents"):
+            key = item.findtext(f"{_S3_NAMESPACE}Key") or ""
+            size = int(item.findtext(f"{_S3_NAMESPACE}Size") or "-1")
+            etag = (item.findtext(f"{_S3_NAMESPACE}ETag") or "").strip('"')
+            if not key or key in found:
+                raise ValueError("Invalid or duplicate inventory key")
+            found[key] = (size, etag)
+        if document.findtext(f"{_S3_NAMESPACE}IsTruncated") != "true":
+            return found
+        token = document.findtext(f"{_S3_NAMESPACE}NextContinuationToken") or ""
+        if not token or token in seen:
+            raise ValueError("Incomplete R2 inventory pagination")
+        seen.add(token)
+
+
+def copy_public_object(source: R2Bucket, destination: R2Bucket, key: str, etag: str) -> None:
+    """Copy verified search bytes server-side with immutable public metadata."""
+    status, body = _request(
+        destination,
+        method="PUT",
+        path=_object_path(destination, key),
+        extra_headers={
+            "x-amz-copy-source": _object_path(source, key),
+            "x-amz-copy-source-if-match": f'"{etag}"',
+            "x-amz-metadata-directive": "REPLACE",
+            "content-type": "application/octet-stream",
+            "cache-control": "public, max-age=31536000, immutable, no-transform",
+        },
+    )
+    if status != 200 or ElementTree.fromstring(body).tag.endswith("Error"):
+        raise ValueError(f"Public search copy failed: {key}, HTTP {status}")
+
+
+@contextmanager
+def deployment_lock(bucket: R2Bucket) -> Iterator[None]:
+    """Serialize local and CI publishers with an atomic, non-expiring lease.
+
+    A crashed publisher leaves the lock in place; an operator must inspect the
+    recorded owner before removing it. Automatic expiry could let a slow upload
+    race a second publisher and is intentionally not used.
+    """
+    key = "delivery/deployment-lock.json"
+    owner = uuid.uuid4().hex
+    body = json.dumps({"owner": owner, "created_at": datetime.now(UTC).isoformat()}).encode()
+    status, _ = _request(
+        bucket,
+        method="PUT",
+        path=_object_path(bucket, key),
+        body=body,
+        extra_headers={"if-none-match": "*", "content-type": "application/json"},
+    )
+    if status != 200:
+        raise ValueError(f"Documentation deployment is locked or unavailable (HTTP {status}); inspect {key}")
+    try:
+        yield
+    finally:
+        current = json.loads(read_object(bucket, key))
+        if current.get("owner") != owner:
+            raise ValueError("Deployment lock owner changed; refusing to remove it")
+        status, _ = _request(bucket, method="DELETE", path=_object_path(bucket, key))
+        if status != 204:
+            raise ValueError(f"Could not release deployment lock: HTTP {status}")

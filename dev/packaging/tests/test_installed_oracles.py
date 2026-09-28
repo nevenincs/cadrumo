@@ -34,9 +34,14 @@ from dev._paths import REPO_ROOT
 from dev.source_tree import repository_files, snapshot
 
 from .._distribution_names import normalise_distribution_name
+from ..authority_staging import AUTHORITY_ROOT_ENV, authoring_authority_root
 from ..hashing import sha256_path
 from ..installed_mcp_oracle import InstalledMcpOracleError, run_installed_mcp_oracle
-from ..installed_tax_oracle import InstalledTaxOracleError, run_installed_tax_oracle
+from ..installed_tax_oracle import (
+    InstalledTaxOracleError,
+    path_without_product_executables,
+    run_installed_tax_oracle,
+)
 from ..lane_verification_core import (
     create_pip_venv,
     installed_product_env,
@@ -512,8 +517,20 @@ def _stage_authority_candidate(clean_repo: Path) -> None:
     from cadrumo.domain.calculations.registry.authority_store import AuthorityDescriptor
 
     raw_candidate = os.environ.get(_AUTHORITY_CANDIDATE_ENV)
-    assert raw_candidate, f"{_AUTHORITY_CANDIDATE_ENV} must name the validated candidate directory"
-    candidate = Path(raw_candidate).resolve(strict=True)
+    if raw_candidate:
+        candidate = Path(raw_candidate).resolve(strict=True)
+    else:
+        # Once accepted bytes are promoted, the cohort builds from the promoted
+        # pair, resolved through the helper the build hook uses. An unpromoted
+        # candidate is only ever named above: the runtime must not resolve it,
+        # so nothing falls back to one.
+        candidate = authoring_authority_root(REPO_ROOT).resolve()
+        if not (candidate / "authority.current.json").is_file():
+            raise AssertionError(
+                f"no published authority to build the cohort from at {candidate}. Publish the authority, "
+                f"point ${AUTHORITY_ROOT_ENV} at the directory holding it, or set ${_AUTHORITY_CANDIDATE_ENV} "
+                "to an isolated validated candidate directory."
+            )
     descriptor = candidate / "authority.current.json"
     selected = AuthorityDescriptor.read(descriptor.resolve(strict=True))
     database_name = selected.database
@@ -784,8 +801,11 @@ def test_installed_cli_and_mcp_refuse_an_unusable_authority_before_durable_work(
 
     # The store may report an unavailable descriptor/database or an integrity
     # refusal at admission.  Both are fail-closed and neither may expose the
-    # old JSON-era error vocabulary as a compatibility path.
-    refusal_pattern = r"(?is)(authority|sqlite).*(unavailable|malformed|digest|disagree|corrupt|changed)"
+    # old JSON-era error vocabulary as a compatibility path.  The integrity
+    # refusal is matched by its stable error code; its message is presentation.
+    refusal_pattern = (
+        r"(?is)INTEGRITY_AUTHORITY_STORE|(authority|sqlite).*(unavailable|malformed|digest|disagree|corrupt|changed)"
+    )
 
     cli_storage = installation.root / "cli-refusal-state"
     with pytest.raises(
@@ -845,9 +865,12 @@ def test_post_build_source_mutation_cannot_change_an_existing_installation(
 
     cohort = installed_cohort
     clean_repo = cohort.work_dir / "clean-repository"
-    registry_root = clean_repo / "src" / "cadrumo" / "_data" / "registry" / "aeat"
+    # A publication's source root is the data root the registry and its
+    # evidence share, not the repository root.
+    source_root = clean_repo / "src" / "cadrumo" / "_data"
+    registry_root = source_root / "registry" / "aeat"
     authored = registry_root / "modelos" / "200" / "manifest.toml"
-    before_candidate = authority_source_identity(registry_root=registry_root, source_root=clean_repo)
+    before_candidate = authority_source_identity(registry_root=registry_root, source_root=source_root)
     installed_descriptor, installed_descriptor_digest, installed_database, installed_database_digest = (
         _installed_authority_resource(
             cohort.venv,
@@ -880,7 +903,7 @@ def test_post_build_source_mutation_cannot_change_an_existing_installation(
     original = authored.read_bytes()
     try:
         authored.write_bytes(original + b"\n# post-build isolation probe\n")
-        after_candidate = authority_source_identity(registry_root=registry_root, source_root=clean_repo)
+        after_candidate = authority_source_identity(registry_root=registry_root, source_root=source_root)
         assert after_candidate != before_candidate
         assert sha256_path(installed_descriptor) == installed_descriptor_digest
         assert sha256_path(installed_database) == installed_database_digest
@@ -940,15 +963,24 @@ def test_owned_server_launch_capture_is_a_clean_real_subprocess(installed_cohort
     assert transcript.completed_at >= transcript.started_at
 
 
-def _retired_state_environment(base: Path) -> dict[str, str]:
+def _retired_state_environment(base: Path, venv: Path) -> dict[str, str]:
     """A per-OS platform-data root whose retired ``aeat`` state triggers the refusal.
 
     Mirrors the ``smoke_mcpb`` hostile-platform fixture: the resolver refuses on
     the retired directory's existence alone, and refusal fires only in INSTALLED
     run mode - which this file's wheel-installed cohort guarantees, unlike an
     editable checkout whose resolver never inspects the platform data dir.
+
+    The search path is the one a client of this installation has: the cohort's
+    own scripts directory first, then the inherited entries with every other
+    product executable removed. The development environment running the test
+    carries its own ``aeat``, and a server that reached it would serve another
+    installation's command surface.
     """
     environment = {key: value for key, value in os.environ.items() if not key.startswith("CADRUMO_")}
+    environment["PATH"] = os.pathsep.join(
+        (str(venv_bin_dir(venv)), path_without_product_executables(environment.get("PATH", "")))
+    )
     hostile_root = base / "platform-data-with-retired-state"
     if sys.platform == "win32":
         former_product_root = hostile_root / "aeat"
@@ -1040,7 +1072,7 @@ def test_installed_mcp_server_serves_when_storage_root_refuses(installed_cohort:
     constants, and the eager telemetry-directory resolution.
     """
     cohort = installed_cohort
-    environment = _retired_state_environment(cohort.work_dir / "storage-root-refusal")
+    environment = _retired_state_environment(cohort.work_dir / "storage-root-refusal", cohort.venv)
     initialize, tools, stderr_text = asyncio.run(_drive_mcp_server(cohort.mcp_server, environment=environment))
     assert initialize["result"]["serverInfo"]["name"] == "cadrumo"
     assert len(tools["result"]["tools"]) > 0

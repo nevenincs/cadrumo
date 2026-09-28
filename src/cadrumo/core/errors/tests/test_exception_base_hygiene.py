@@ -222,9 +222,10 @@ def _production_exception_classes() -> tuple[_SourceExceptionClass, ...]:
     declarations: list[tuple[str, str, ast.ClassDef, dict[str, str]]] = []
     for path, tree in production_ast_items():
         bindings = import_binding_map(tree)
+        qualnames = _source_class_qualnames(tree)
         for node in ast.walk(tree):
             if isinstance(node, ast.ClassDef):
-                declarations.append((module_name(path), _source_class_qualnames(tree)[id(node)], node, bindings))
+                declarations.append((module_name(path), qualnames[id(node)], node, bindings))
 
     by_qualified_name: dict[str, tuple[str, str, ast.ClassDef, dict[str, str]]] = {
         f"{module}.{qualname}": (module, qualname, node, bindings) for module, qualname, node, bindings in declarations
@@ -252,14 +253,20 @@ def _production_exception_classes() -> tuple[_SourceExceptionClass, ...]:
         key for key in by_qualified_name if key.rsplit(".", 1)[-1] in {base.__name__ for base in _BARE_EXCEPTION_BASES}
     )
     builtin_exception_names = {base.__name__ for base in _BARE_EXCEPTION_BASES} | {"BaseException"}
+    # Resolved once: the fixed point below revisits every declaration on each
+    # pass, and a base's origin does not change between passes.
+    base_origins = {
+        id(node): [base_origin(module, base, bindings) for base in node.bases]
+        for module, _qualname, node, bindings in declarations
+    }
     changed = True
     while changed:
         changed = False
-        for module, qualname, node, bindings in declarations:
+        for module, qualname, node, _bindings in declarations:
             key = f"{module}.{qualname}"
             if key in exception_keys:
                 continue
-            origins = [base_origin(module, base, bindings) for base in node.bases]
+            origins = base_origins[id(node)]
             if any(
                 origin.rsplit(".", 1)[-1] in builtin_exception_names
                 or resolve_reference(module, origin) in exception_keys
@@ -269,10 +276,10 @@ def _production_exception_classes() -> tuple[_SourceExceptionClass, ...]:
                 changed = True
 
     result: list[_SourceExceptionClass] = []
-    for module, qualname, node, bindings in declarations:
+    for module, qualname, node, _bindings in declarations:
         if f"{module}.{qualname}" not in exception_keys:
             continue
-        bases = tuple(_SourceBase(base_origin(module, base, bindings)) for base in node.bases)
+        bases = tuple(_SourceBase(origin) for origin in base_origins[id(node)])
         rationale: str | None = None
         for statement in node.body:
             if isinstance(statement, ast.Assign):

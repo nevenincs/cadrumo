@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 from .....core.directory_scan import scan_directory
-from .....tests.inventory import SRC_CADRUMO, package_python_files, repo_relative
+from .....tests.inventory import SRC_CADRUMO, ast_for_path, package_python_files, repo_relative
 from .registry_tree import bundled_modelo_components
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -58,12 +58,16 @@ def _static_string(node: ast.AST) -> str | None:
     return None
 
 
+def _is_this_module(path: Path) -> bool:
+    """Whether ``path`` is this test module, resolving only a same-named candidate."""
+    return path.name == Path(__file__).name and path.resolve() == Path(__file__).resolve()
+
+
 def _retired_identifier_locations(paths: Iterable[Path], *, retired_identifier: str) -> tuple[str, ...]:
     """Find retired identifiers only where their enclosing subject is Modelo 303."""
-    self_path = Path(__file__).resolve()
     locations: list[str] = []
     for path in paths:
-        if path.resolve() == self_path:
+        if _is_this_module(path):
             continue
         source = path.read_text(encoding="utf-8", errors="replace")
         if path.suffix == ".yml":
@@ -146,11 +150,12 @@ def _m303_selector_redeclaration_locations(paths: Iterable[Path], *, revision_id
     """
     locations: list[str] = []
     for path in paths:
-        if path.suffix != ".py" or path.resolve() == Path(__file__).resolve():
+        if path.suffix != ".py" or _is_this_module(path):
             continue
-        try:
-            tree = ast.parse(path.read_text(encoding="utf-8", errors="replace"), filename=str(path))
-        except SyntaxError:
+        # The shared per-process tree: every package module is parsed once for
+        # all the structural gates in a worker rather than again here.
+        tree = ast_for_path(path)
+        if tree is None:
             continue
         for node in ast.walk(tree):
             if isinstance(node, ast.Dict):

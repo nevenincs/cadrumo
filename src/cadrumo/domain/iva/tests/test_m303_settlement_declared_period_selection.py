@@ -9,6 +9,7 @@ import pytest
 from ....core.period import Period
 from ...calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...calculations.registry.errors import RegistryValidationError
+from ...calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ..m303_settlement import is_m303_annual_settlement_period, m303_annual_settlement_period_order
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -20,15 +21,16 @@ def authority_operation() -> Iterator[PinnedAuthorityOperation]:
         yield operation
 
 
+@pytest.mark.parametrize("filing_year", PublishedGovernedFactSource().supported_filing_years().years)
 @pytest.mark.parametrize(
-    ("filing_year", "token", "is_settlement"),
+    ("token", "is_settlement"),
     (
-        pytest.param(2026, "4T", True, id="2026-terminal-quarter"),
-        pytest.param(2026, "1T", False, id="2026-first-quarter"),
-        pytest.param(2026, "3T", False, id="2026-midyear-quarter"),
-        pytest.param(2025, "4T", True, id="2025-terminal-quarter"),
-        pytest.param(2024, "2T", False, id="2024-split-design-early-revision-last-quarter"),
-        pytest.param(2024, "4T", True, id="2024-split-design-terminal-quarter"),
+        pytest.param("4T", True, id="terminal-quarter"),
+        pytest.param("1T", False, id="first-quarter"),
+        # In an exercise whose design changes mid-year, 2T closes the early revision;
+        # it must not be mistaken for the year's terminal quarter.
+        pytest.param("2T", False, id="second-quarter"),
+        pytest.param("3T", False, id="midyear-quarter"),
     ),
 )
 def test_quarterly_settlement_is_the_terminal_quarter_the_year_declares(

@@ -194,4 +194,30 @@ def screenshot(session: Session, path: str) -> str:
     return path
 
 
-__all__ = ["replay", "screenshot"]
+def replay_with_screenshot(session: Session, path: str) -> Frame:
+    """Read the settled frame and write its SVG from one build and walk.
+
+    The same settled app answers both, so the text reading and the image can
+    never describe two different walks, and a caller that wants both pays for
+    one cold build rather than two.
+    """
+    width, height = session.size
+
+    def read(app: App[object], elapsed_ms: float) -> Frame:
+        frame = capture(
+            app,
+            index=len(session.gestures),
+            surface=session.surface,
+            width=width,
+            height=height,
+            theme=session.theme,
+            locale=session.locale or "auto",
+            elapsed_ms=elapsed_ms,
+        )
+        app.save_screenshot(path)
+        return frame
+
+    return _run(session, read)
+
+
+__all__ = ["replay", "replay_with_screenshot", "screenshot"]

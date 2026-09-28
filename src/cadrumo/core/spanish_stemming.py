@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Callable, Iterable
+from functools import lru_cache
 
 __all__ = [
     "SpanishStemmer",
@@ -27,11 +28,30 @@ SpanishStemmer = Callable[[list[str]], list[str]]
 """The narrow Snowball contract the application's lexical indexes consume."""
 
 
+_STEM_CACHE_SIZE = 1 << 17
+"""Distinct words remembered per stemmer; the whole bundled corpus fits many times over."""
+
+
 def spanish_stemmer() -> SpanishStemmer:
-    """Build the Spanish Snowball stemmer used by every shipped lexical index."""
+    """Build the Spanish Snowball stemmer used by every shipped lexical index.
+
+    A stem depends on the word alone, and the corpus repeats a small
+    vocabulary millions of times: stemming every occurrence made the pure
+    Python Snowball implementation most of a full index build. Each distinct
+    word is therefore stemmed once and remembered, within a bound.
+    """
     import snowballstemmer
 
-    return snowballstemmer.stemmer("spanish").stemWords
+    stem_uncached = snowballstemmer.stemmer("spanish").stemWords
+
+    @lru_cache(maxsize=_STEM_CACHE_SIZE)
+    def stem_word(word: str) -> str:
+        return stem_uncached([word])[0]
+
+    def stem_words(words: list[str]) -> list[str]:
+        return [stem_word(word) for word in words]
+
+    return stem_words
 
 
 def spanish_word_tokens(text: str) -> tuple[str, ...]:

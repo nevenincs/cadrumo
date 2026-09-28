@@ -1385,6 +1385,9 @@ def _registered_handover_profiles(
             "the handover template must materialise the durable pointer; "
             "registration through the production door did not complete"
         )
+        # Registration left B unlocked in this process. Every consumer works in
+        # spawned children, and a module-scoped session would outlive the module.
+        _close_live_login()
         return storage_root, profile_a, profile_b
 
 
