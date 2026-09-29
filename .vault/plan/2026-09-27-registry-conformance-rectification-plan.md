@@ -8,9 +8,9 @@ related:
   - '[[2026-09-23-assets-core-amortization-method-set-adr]]'
   - '[[2026-09-21-assets-core-lifecycle-contract-adr]]'
   - '[[2026-09-21-retenciones-workflow-observation-payment-contract-adr]]'
-modified: '2026-09-27'
+modified: '2026-09-29'
 body_schema: body-v2
-body_hash: 'sha256:aa97bed08e04269ab7a7a839d9ef111dc4d35c497f4781b5af56a128d6ec965d'
+body_hash: 'sha256:93037a04a44843b17f95302c56f6b70b5da36d688001d050f483aa525d679715'
 ---
 
 # `registry-conformance-rectification` plan
@@ -24,6 +24,26 @@ Approved 2026-09-27. Basis: the operator's registry conformance rectification br
 Decision coverage. Three accepted decisions bound tax year 2025 as the only filing-grade year and need amendment for the 2022 baseline: the amortization method set, the activity-asset lifecycle contract, and the withholding observation and payment contract. Each amendment extends the supported years and names the yearly divergences it keys; the accepted bodies are preserved and the amendment is appended once its grounded source and tests land. The tool fixes and the Modelo 100 relocation are routine execution within the registry authority flow, authoring and binding rules, and need no new decision. The export-parity withholding re-sourcing of Modelo 100 casillas 0596, 0597 and 0599 is owned by another branch and is out of scope; its bindings and the declarant-as-payer prefills stay unchanged.
 
 The brief's audit is orientation only. Every finding is re-measured against the live tree and the dev tooling before any change, and each registry change cites its official AEAT or BOE evidence per year and is tested through the real compiled registry. Completion is reported separately for candidate validation, installed source, published authority and runtime adoption.
+
+Rulings, 2026-09-29. Basis: the operator delegated the returned rulings to this session on 2026-09-29, on condition that each respects the existing checks. Every registry ruling below is a decision procedure, not a verdict on tax facts: a member moves only where per-year official evidence grounds it, and where the evidence is missing or contradictory the current fail-closed or advisory state stands. None needs a new decision record; the ones touching the amortization method set stay inside its accepted amendment.
+
+- D1, approved: the authority root is resolved without the profile pointer and storage root; the retired-state refusal keeps guarding every storage and profile access (P05.S14).
+- D2, keep the fallback, provided each installed oracle reports the generation identity it read (P05.S15).
+- D3, a passing run's scratch folder is removed at finish, a failing run's is kept as evidence, and the reaper still reclaims it (P05.S16).
+- 1, upheld: Modelo 100 2022 casilla 0670 stays manual while the official dictionary contradicts the manual.
+- 2, 3, 4, 7, 8 and 10: grounded per year under the late-authoring standard of P04.S11; dropped legal refs return by override where the provision still governs; the amending-law refs are enrolled from their BOE text; the 2024 electric-vehicle free depreciation refuses a tax period ending before 2024-06-28 if the product can represent one (P05.S17).
+- 9, yes: the 2023 accelerated DA 18 regime gets its own refusal token; it stays outside the method set as the accepted amendment says (P05.S18).
+- 6: each support-range cell is resolved by evidence as projection, a grounded delta edition, or the modelo's own later start; an unpublished release is reported as such and never authored ahead of AEAT (P05.S19).
+- 11, upheld: 2026 refuses renewable free depreciation, as the accepted amendment requires for a year no authored edition covers.
+- 12, upheld: the settled-row gate over-refuses rather than admitting a settled row.
+- 13: Modelo 200's 2024 rows move to the edition 2024 resolves to; the 2025 root reuses storage and keys only its differences (P05.S20).
+- 14: the option is removed, not kept as a refusal, because no compatibility floor is released (P05.S21).
+- 15: every defect is reported, through the one projection path (P05.S22).
+- 16: already resolved on `main`, which deleted the unwired linkage.
+- 17, yes: a headroom refusal is respected by not loading the model, and the label reading stands with a visible notice, as for an unreachable runtime (P05.S23).
+- 18: a capability marker excluded from every lane, a configured corpus root with no machine default, and a dedicated recipe that fails rather than skips (P05.S24).
+- 5 (F2 and P1) is not ruled: its content is not in any persisted record.
+- Found in P04.S11: Modelo 190 and 193 extraction profiles stay undeclared for 2022 and 2023 until a printed specimen is captured, since the record design describes the file, not the PDF; the 2024 Modelo 193 perceptor count follows its design and counts records, and the 2024 Modelo 190 relation to Modelo 111 is grounded in 2024 instructions or loses filing grade (P05.S25).
 
 ## Steps
 
@@ -60,9 +80,26 @@ Rectify verified late authoring and closed windows in other modelos, and return 
 - [ ] `P04.S11` - Rectify verified late authoring and closed windows per modelo, one writer each; `src/cadrumo/_data/registry/aeat/modelos/`.
 - [x] `P04.S12` - Amend the three governing decisions for the 2022 baseline and return the ruling list; `.vault/adr/`.
 
+### Phase `P05` - operator rulings
+
+Implement the rulings the operator delegated on 2026-09-29, each within the existing gates: registry rulings grounded per year in official evidence and fail-closed where the evidence is ambiguous, code rulings through the owning boundary with focused tests.
+
+- [ ] `P05.S14` - Resolve the authority root without the profile and storage-root settings, so the MCP server and CLI boot beside retired aeat data (D1); `src/cadrumo/domain/calculations/registry/authority.py`.
+- [ ] `P05.S15` - Keep the installed-oracle authority fallback and prove each oracle names the generation it consumed (D2); `dev/packaging/tests/test_installed_oracles.py`.
+- [ ] `P05.S16` - Remove a passing run's scratch folder when the run finishes and keep a failing run's (D3); `dev/test_runs/`.
+- [ ] `P05.S17` - Ground the Modelo 100 late-authoring rulings per year: the 193 relation and renta-dep-193, the B4 and B5 items, the 0604 legal refs, the amending-law catalogue entries and the 2024 DA 18 period-end condition (rulings 2, 3, 4, 7, 8, 10); `src/cadrumo/_data/registry/aeat/modelos/100/`.
+- [ ] `P05.S18` - Give the accelerated DA 18 regime its own refusal token (ruling 9); `src/cadrumo/domain/renta/actividad_asset/`.
+- [ ] `P05.S19` - Resolve each support-range cell by evidence: projection, a grounded delta edition, or the modelo's own later start (ruling 6); `src/cadrumo/_data/registry/aeat/modelos/`.
+- [ ] `P05.S20` - Relocate Modelo 200's 2024 rows to the edition 2024 resolves to and store the 2025 edition as a delta (ruling 13); `src/cadrumo/_data/registry/aeat/modelos/200/`.
+- [ ] `P05.S21` - Remove the unpersisted --retencion-observation option (ruling 14); `src/cadrumo/entrypoints/cli/_modelo_aggregate_cli.py`.
+- [ ] `P05.S22` - Report every invoice withholding defect through the one projection path (ruling 15); `src/cadrumo/application/aggregation/invoice_retencion.py`.
+- [ ] `P05.S23` - Let the label reading stand with a visible notice when the optional model fill is refused for headroom (ruling 17); `src/cadrumo/adapters/outbound/llm/`.
+- [ ] `P05.S24` - Move the private ingest corpus behind a capability marker, a configured root and its own recipe (ruling 18); `dev/ingest_harness/`.
+- [ ] `P05.S25` - Correct the 2024 Modelo 193 perceptor count to count records, and ground or downgrade the 2024 Modelo 190 relation to Modelo 111; `src/cadrumo/_data/registry/aeat/modelos/193/`.
+
 ## Parallelization
 
-Phase P01 (tool defects) and Phase P02 (Modelo 100) may proceed together; P02 Steps are ordered and share one writer. Phase P03 (consumer year bounds) follows the amortization Step of P02. Phase P04 (other modelos) runs after P02, with one writer per modelo. The year-named test scrub runs in an isolated worktree on test files only and merges before plan close; it excludes the test files P02 and P03 own.
+Phase P01 (tool defects) and Phase P02 (Modelo 100) may proceed together; P02 Steps are ordered and share one writer. Phase P03 (consumer year bounds) follows the amortization Step of P02. Phase P04 (other modelos) runs after P02, with one writer per modelo. The year-named test scrub runs in an isolated worktree on test files only and merges before plan close; it excludes the test files P02 and P03 own. Phase P05 runs beside P04 within four concurrent lanes and one serialized test lock. The code Steps (S14, S15, S16, S18, S21 to S24) each own disjoint files and may run in parallel. S17 is the single writer of Modelo 100 and of the legal catalogues. S19, S20 and S25 start only after the P04.S11 lane owning the same modelo has finished.
 
 ## Verification
 
