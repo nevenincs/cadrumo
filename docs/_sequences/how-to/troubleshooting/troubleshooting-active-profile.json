@@ -8,12 +8,11 @@
         "status"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": "profile\tdocs-sequence-sandbox\nprofile_id\t<profile-id>\nidentity.tax_id\tsha256:1c9f9632\nactivities.description\tdocumentation examples\niva.regime\tGENERAL\ntax_residence.ccaa\t<unset>\nNext step: `aeat app overview status`\n"
+      "output_bytes": 216,
+      "output_sha256": "b2ed484c08a26dcdf9508ae778e747c98526cf3fa4b4e2b2fccaf30d10b5a44d"
     },
     {
       "argv": [
@@ -25,47 +24,13 @@
         "profile"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "config.repair.profile",
-        "notices": [],
-        "result": {
-          "after": null,
-          "before": {
-            "active_profile": "docs-sequence-sandbox",
-            "missing_required": [],
-            "precondition_action": null,
-            "profile_present_keys": 12,
-            "profile_record_error": "",
-            "profile_record_present": true,
-            "profile_total_keys": 84,
-            "registered_bucket": true,
-            "repairable_by_clearing_pointer": false,
-            "source": "env_override",
-            "status": "ready"
-          },
-          "bucket_id": null,
-          "cleared_pointer": false,
-          "display_name": null,
-          "dry_run": true,
-          "error": null,
-          "precondition_action": null,
-          "profile_id": null,
-          "profile_record_present": null,
-          "registered_bucket": null,
-          "setup_state": null,
-          "status": null
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 886,
+      "output_sha256": "1b30c36799469007a4f7eeace0d472e7978cfa2b6111b3be90170f02d16157fc"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "troubleshooting-active-profile"
 }

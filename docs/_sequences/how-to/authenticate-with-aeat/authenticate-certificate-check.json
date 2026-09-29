@@ -11,24 +11,13 @@
         "check"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "config.auth.certificate.check",
-        "notices": [],
-        "result": {
-          "entries": [],
-          "has_warnings": false
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 222,
+      "output_sha256": "eed87485c9d8e621497ac51622424a87b5af0d450b221c2c4407f4d8407ecd32"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "authenticate-certificate-check"
 }

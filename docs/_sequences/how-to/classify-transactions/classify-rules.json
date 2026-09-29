@@ -15,12 +15,11 @@
         "material_oficina"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": "rule_id\t16719284a6b5e971...\npattern\tmaterial\nclassification\tBUSINESS\npriority\t100\n"
+      "output_bytes": 82,
+      "output_sha256": "473bb919c1254a66b859588e98074ef3cb926366418280c5be39730fb4a8106a"
     },
     {
       "argv": [
@@ -31,12 +30,11 @@
         "list"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": "priority\tclassification\tpattern\trule_id\n100\tBUSINESS\tmaterial\t16719284a6b5e971...\n"
+      "output_bytes": 82,
+      "output_sha256": "7480303aeff57450f1e8fb0c61c653ce31bf8b60fcd05cff5954b98f7aa0c713"
     },
     {
       "argv": [
@@ -48,12 +46,11 @@
         "--dry-run"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": "dry-run: 0 transaction(s) would be classified\n"
+      "output_bytes": 46,
+      "output_sha256": "23c80e290979aed5e24dfef3e88fdcd7404f63fc1755341c7ab3409c74d27c64"
     },
     {
       "argv": [
@@ -66,31 +63,13 @@
         "apply"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "ledger.rule.apply",
-        "notices": [],
-        "result": {
-          "applied": [],
-          "count": null,
-          "dry_run": null,
-          "matched": 0,
-          "no_match": 0,
-          "rules_evaluated": 1,
-          "skipped_already_classified": 0,
-          "transactions_scanned": 0,
-          "would_match": null
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 379,
+      "output_sha256": "d87a9ddb4673c933e5144e2af9bb2e5fb5ad2d0f29f667331bf6315551c3f73c"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "classify-rules"
 }

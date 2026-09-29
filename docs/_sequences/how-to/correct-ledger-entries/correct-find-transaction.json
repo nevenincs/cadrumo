@@ -26,64 +26,11 @@
           "value": "f83add280832e5cbcbfc1da6432f5e6a7e02eb78ba74fc265eb483b805ee7afb"
         }
       ],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "ledger.add",
-        "notices": [],
-        "result": {
-          "bucket_event_ids": [
-            "a9ef0aa32d83010e35c72d35d6cc793ade13766f38979a9ae358646f1064352f"
-          ],
-          "bucket_id": "<bucket-id>",
-          "review_status": "pending",
-          "transaction": {
-            "amount": "210",
-            "attachment_ids": [],
-            "booked_date": "2026-03-15",
-            "business_classification": "NOT_YET_PROCESSED",
-            "business_pct": null,
-            "category_id": null,
-            "classification_confidence": null,
-            "classification_reason": "",
-            "classified_at": null,
-            "classified_by": "auto",
-            "counterparty": "",
-            "counterparty_country": null,
-            "counterparty_identification_state": null,
-            "created_at": "2026-04-01T09:00:00+00:00",
-            "currency": "EUR",
-            "date": "2026-03-15",
-            "description": "Silla de oficina",
-            "direction": "OUTGOING",
-            "fx_rate": null,
-            "invoice_id": null,
-            "irpf_category": null,
-            "iva_amount": null,
-            "iva_category": null,
-            "iva_rate": null,
-            "lifecycle_state": "ACTIVE",
-            "m210_income_classification": null,
-            "modified_at": "2026-04-01T09:00:00+00:00",
-            "notes": "",
-            "prorrata_reference": null,
-            "purchase_invoice_evidence_id": null,
-            "source_jurisdiction": "ES",
-            "taxable_base": null,
-            "transaction_id": "f83add280832e5cbcbfc1da6432f5e6a7e02eb78ba74fc265eb483b805ee7afb",
-            "usage_ratio_id": null,
-            "value_date": null,
-            "value_in_eur": null
-          },
-          "transaction_id": "f83add280832e5cbcbfc1da6432f5e6a7e02eb78ba74fc265eb483b805ee7afb"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 1679,
+      "output_sha256": "bacb0dfe5ff18d3e4b577399d885f2e7b0d36bca0383dbb8b80a54d766f12f0e"
     },
     {
       "argv": [
@@ -93,12 +40,11 @@
         "list"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": "ACCOUNTING LEDGER TRANSACTIONS\nid\tfull_id\tdate\tamount\tdescription\tIVA category\treview_status\nf83add28\tf83add280832e5cbcbfc1da6432f5e6a7e02eb78ba74fc265eb483b805ee7afb\t2026-03-15\t210\tSilla de oficina\t\tpending\n"
+      "output_bytes": 208,
+      "output_sha256": "0c6a1bb676a9681c2aa7bb713f14979262614fde37b115a397462ca07cff9e62"
     },
     {
       "argv": [
@@ -111,63 +57,13 @@
         "f83add280832e5cbcbfc1da6432f5e6a7e02eb78ba74fc265eb483b805ee7afb"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "ledger.view",
-        "notices": [],
-        "result": {
-          "bucket_id": "<bucket-id>",
-          "review_status": "pending",
-          "transaction": {
-            "amount": "210",
-            "attachment_ids": [],
-            "booked_date": "2026-03-15",
-            "business_classification": "NOT_YET_PROCESSED",
-            "business_pct": null,
-            "category_id": null,
-            "classification_confidence": null,
-            "classification_reason": "",
-            "classified_at": null,
-            "classified_by": "auto",
-            "counterparty": "",
-            "counterparty_country": null,
-            "counterparty_identification_state": null,
-            "created_at": "2026-04-01T09:00:00+00:00",
-            "currency": "EUR",
-            "date": "2026-03-15",
-            "description": "Silla de oficina",
-            "direction": "OUTGOING",
-            "fx_rate": null,
-            "invoice_id": null,
-            "irpf_category": null,
-            "iva_amount": null,
-            "iva_category": null,
-            "iva_rate": null,
-            "lifecycle_state": "ACTIVE",
-            "m210_income_classification": null,
-            "modified_at": "2026-04-01T09:00:00+00:00",
-            "notes": "",
-            "prorrata_reference": null,
-            "purchase_invoice_evidence_id": null,
-            "source_jurisdiction": "ES",
-            "taxable_base": null,
-            "transaction_id": "f83add280832e5cbcbfc1da6432f5e6a7e02eb78ba74fc265eb483b805ee7afb",
-            "usage_ratio_id": null,
-            "value_date": null,
-            "value_in_eur": null
-          },
-          "transaction_id": "f83add280832e5cbcbfc1da6432f5e6a7e02eb78ba74fc265eb483b805ee7afb"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 1574,
+      "output_sha256": "e8b1bb43bfb14c1fb5570be403c84965dce6f47f8d8aba5f3aece7f24f16c2ec"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "correct-find-transaction"
 }

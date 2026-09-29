@@ -20,12 +20,11 @@
         "correct-reset"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -38,12 +37,11 @@
         "--dry-run"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": "Bucket\t<profile-id>\nRows\t1\nReset\tFalse\nDRY RUN MODE\tTrue\n"
+      "output_bytes": 57,
+      "output_sha256": "f3e16f6fae85f8637120703d2133aba5f269cb6ff887dcd686bf7f92cdbfe6d6"
     },
     {
       "argv": [
@@ -56,12 +54,11 @@
         "--yes"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": "Bucket\t<profile-id>\nRows\t1\nReset\tTrue\nDRY RUN MODE\tFalse\n"
+      "output_bytes": 57,
+      "output_sha256": "16dede90b0fce328a961dcdc952686715b5cfd0a1d2e837339bebc81ab740882"
     },
     {
       "argv": [
@@ -73,29 +70,13 @@
         "list"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "ledger.list",
-        "notices": [],
-        "result": {
-          "bucket_id": "<bucket-id>",
-          "limit": null,
-          "offset": 0,
-          "rows": [],
-          "shown": 0,
-          "total": 0,
-          "truncated": false
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 298,
+      "output_sha256": "f6ce0943b970deb90f58c3a381d91b1d8d9aefe2b45ab08ac14140a3ff6f1f91"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "correct-reset-ledger"
 }

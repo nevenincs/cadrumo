@@ -11,12 +11,11 @@
         "0.5"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": "bucket\t<profile-id>\ntelefonia_movil\t0.5\n"
+      "output_bytes": 40,
+      "output_sha256": "22dc7afc9651d1de2f9f4607cb88e965b4e31ac110b054c6674045a50ef55748"
     },
     {
       "argv": [
@@ -27,12 +26,11 @@
         "list"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": "bucket\t<profile-id>\ncount\t1\ntelefonia_movil\t0.5\n"
+      "output_bytes": 48,
+      "output_sha256": "e327bc3843dadc6bf139ac0027fd03ab20984aac8206c5e0c6bab8650ee4e20d"
     },
     {
       "argv": [
@@ -45,28 +43,13 @@
         "validate"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "ledger.ratios.validate",
-        "notices": [],
-        "result": {
-          "bucket_id": "<bucket-id>",
-          "eligible_count": 15,
-          "findings": [],
-          "missing_overrides": [],
-          "overrides_count": 1,
-          "profile_present": true
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 331,
+      "output_sha256": "9ed29fd71418bef6340d2cc1b4b36cd0a251cfc40a31714185fc31fc6c79ea21"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "classify-ratios-manage"
 }

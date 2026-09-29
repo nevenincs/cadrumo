@@ -11,28 +11,13 @@
         "list"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "modelo.filing_record.list",
-        "notices": [],
-        "result": {
-          "bucket_id_filter": null,
-          "include_superseded": false,
-          "modelo_filter": null,
-          "operation": "modelo.filing_record.list",
-          "record_count": 0,
-          "records": []
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 350,
+      "output_sha256": "d0036853c2edc53eae1e9c181897500669dbf85ad2c8b2b29c9fe43a4cedd7a0"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "modelo-390-records-audit"
 }

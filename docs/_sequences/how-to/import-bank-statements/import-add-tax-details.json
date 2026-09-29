@@ -38,64 +38,11 @@
           "value": "aebcbdf126dab613bfff9204b98d9bdce07dd43b900d9b0e1c00e24c709a2618"
         }
       ],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "ledger.add",
-        "notices": [],
-        "result": {
-          "bucket_event_ids": [
-            "2db62f858773cb6a333db409b8321094557fa580bd514110e48d1214f0f437b5"
-          ],
-          "bucket_id": "<bucket-id>",
-          "review_status": "pending",
-          "transaction": {
-            "amount": "121",
-            "attachment_ids": [],
-            "booked_date": "2026-03-21",
-            "business_classification": "NOT_YET_PROCESSED",
-            "business_pct": null,
-            "category_id": "material_oficina",
-            "classification_confidence": null,
-            "classification_reason": "",
-            "classified_at": null,
-            "classified_by": "auto",
-            "counterparty": "Papeleria SL",
-            "counterparty_country": null,
-            "counterparty_identification_state": null,
-            "created_at": "2026-04-01T09:00:00+00:00",
-            "currency": "EUR",
-            "date": "2026-03-21",
-            "description": "Office supplies",
-            "direction": "OUTGOING",
-            "fx_rate": null,
-            "invoice_id": null,
-            "irpf_category": null,
-            "iva_amount": "21",
-            "iva_category": null,
-            "iva_rate": "0.21",
-            "lifecycle_state": "ACTIVE",
-            "m210_income_classification": null,
-            "modified_at": "2026-04-01T09:00:00+00:00",
-            "notes": "Receipt filed",
-            "prorrata_reference": null,
-            "purchase_invoice_evidence_id": null,
-            "source_jurisdiction": "ES",
-            "taxable_base": "100",
-            "transaction_id": "aebcbdf126dab613bfff9204b98d9bdce07dd43b900d9b0e1c00e24c709a2618",
-            "usage_ratio_id": null,
-            "value_date": null,
-            "value_in_eur": null
-          },
-          "transaction_id": "aebcbdf126dab613bfff9204b98d9bdce07dd43b900d9b0e1c00e24c709a2618"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 1720,
+      "output_sha256": "093a955b75fc182cb7603db8e8c0c3c0544fa3fc1eeb132601bf8623c131d6d5"
     },
     {
       "argv": [
@@ -108,63 +55,13 @@
         "aebcbdf126dab613bfff9204b98d9bdce07dd43b900d9b0e1c00e24c709a2618"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "ledger.view",
-        "notices": [],
-        "result": {
-          "bucket_id": "<bucket-id>",
-          "review_status": "pending",
-          "transaction": {
-            "amount": "121",
-            "attachment_ids": [],
-            "booked_date": "2026-03-21",
-            "business_classification": "NOT_YET_PROCESSED",
-            "business_pct": null,
-            "category_id": "material_oficina",
-            "classification_confidence": null,
-            "classification_reason": "",
-            "classified_at": null,
-            "classified_by": "auto",
-            "counterparty": "Papeleria SL",
-            "counterparty_country": null,
-            "counterparty_identification_state": null,
-            "created_at": "2026-04-01T09:00:00+00:00",
-            "currency": "EUR",
-            "date": "2026-03-21",
-            "description": "Office supplies",
-            "direction": "OUTGOING",
-            "fx_rate": null,
-            "invoice_id": null,
-            "irpf_category": null,
-            "iva_amount": "21",
-            "iva_category": null,
-            "iva_rate": "0.21",
-            "lifecycle_state": "ACTIVE",
-            "m210_income_classification": null,
-            "modified_at": "2026-04-01T09:00:00+00:00",
-            "notes": "Receipt filed",
-            "prorrata_reference": null,
-            "purchase_invoice_evidence_id": null,
-            "source_jurisdiction": "ES",
-            "taxable_base": "100",
-            "transaction_id": "aebcbdf126dab613bfff9204b98d9bdce07dd43b900d9b0e1c00e24c709a2618",
-            "usage_ratio_id": null,
-            "value_date": null,
-            "value_in_eur": null
-          },
-          "transaction_id": "aebcbdf126dab613bfff9204b98d9bdce07dd43b900d9b0e1c00e24c709a2618"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 1615,
+      "output_sha256": "f3b042eb1b60fdb04a563b2d759ae11f8a247f231bde95d3654ab8b45492debb"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "import-add-tax-details"
 }

@@ -26,64 +26,11 @@
           "value": "1a9106f8f6783eaf5ba09478eeb3bcec6188caf02d136a7cdd9770bcd6e7830d"
         }
       ],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "ledger.add",
-        "notices": [],
-        "result": {
-          "bucket_event_ids": [
-            "47c494e7c2a1631efad4835b3c50110ccfda63015482d65fef4f0b83f8dd1c61"
-          ],
-          "bucket_id": "<bucket-id>",
-          "review_status": "pending",
-          "transaction": {
-            "amount": "100",
-            "attachment_ids": [],
-            "booked_date": "2026-03-15",
-            "business_classification": "NOT_YET_PROCESSED",
-            "business_pct": null,
-            "category_id": null,
-            "classification_confidence": null,
-            "classification_reason": "",
-            "classified_at": null,
-            "classified_by": "auto",
-            "counterparty": "",
-            "counterparty_country": null,
-            "counterparty_identification_state": null,
-            "created_at": "2026-04-01T09:00:00+00:00",
-            "currency": "EUR",
-            "date": "2026-03-15",
-            "description": "Office chair",
-            "direction": "OUTGOING",
-            "fx_rate": null,
-            "invoice_id": null,
-            "irpf_category": null,
-            "iva_amount": null,
-            "iva_category": null,
-            "iva_rate": null,
-            "lifecycle_state": "ACTIVE",
-            "m210_income_classification": null,
-            "modified_at": "2026-04-01T09:00:00+00:00",
-            "notes": "",
-            "prorrata_reference": null,
-            "purchase_invoice_evidence_id": null,
-            "source_jurisdiction": "ES",
-            "taxable_base": null,
-            "transaction_id": "1a9106f8f6783eaf5ba09478eeb3bcec6188caf02d136a7cdd9770bcd6e7830d",
-            "usage_ratio_id": null,
-            "value_date": null,
-            "value_in_eur": null
-          },
-          "transaction_id": "1a9106f8f6783eaf5ba09478eeb3bcec6188caf02d136a7cdd9770bcd6e7830d"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 1675,
+      "output_sha256": "42c255d6d2d94294c3dc4ac6056c404e0ba843f36fa6c8d16e27cd394dd4d392"
     },
     {
       "argv": [
@@ -98,12 +45,11 @@
         "Office chair, corrected price"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": "ID\t59316515102ea30c11d09b68fccd42fd4ed6b385f8fe1324412724fb1827dfe5\nDate\t2026-03-15\nAmount\t121\nDescription\tOffice chair, corrected price\nReview status\tpending\n"
+      "output_bytes": 159,
+      "output_sha256": "8dda2e6430d6806c0d8c70bcc170fdebfb63d024be004997fb9f8226182d003a"
     },
     {
       "argv": [
@@ -116,63 +62,13 @@
         "1a9106f8f6783eaf5ba09478eeb3bcec6188caf02d136a7cdd9770bcd6e7830d"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "ledger.view",
-        "notices": [],
-        "result": {
-          "bucket_id": "<bucket-id>",
-          "review_status": "pending",
-          "transaction": {
-            "amount": "121",
-            "attachment_ids": [],
-            "booked_date": "2026-03-15",
-            "business_classification": "NOT_YET_PROCESSED",
-            "business_pct": null,
-            "category_id": null,
-            "classification_confidence": null,
-            "classification_reason": "",
-            "classified_at": null,
-            "classified_by": "auto",
-            "counterparty": "",
-            "counterparty_country": null,
-            "counterparty_identification_state": null,
-            "created_at": "2026-04-01T09:00:00+00:00",
-            "currency": "EUR",
-            "date": "2026-03-15",
-            "description": "Office chair, corrected price",
-            "direction": "OUTGOING",
-            "fx_rate": null,
-            "invoice_id": null,
-            "irpf_category": null,
-            "iva_amount": null,
-            "iva_category": null,
-            "iva_rate": null,
-            "lifecycle_state": "ACTIVE",
-            "m210_income_classification": null,
-            "modified_at": "2026-04-01T09:00:00+00:00",
-            "notes": "",
-            "prorrata_reference": null,
-            "purchase_invoice_evidence_id": null,
-            "source_jurisdiction": "ES",
-            "taxable_base": null,
-            "transaction_id": "59316515102ea30c11d09b68fccd42fd4ed6b385f8fe1324412724fb1827dfe5",
-            "usage_ratio_id": null,
-            "value_date": null,
-            "value_in_eur": null
-          },
-          "transaction_id": "59316515102ea30c11d09b68fccd42fd4ed6b385f8fe1324412724fb1827dfe5"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 1587,
+      "output_sha256": "f806d70bb4797add023092fba2c81a8b92966fd55822823d6d5d3047bf4b8269"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "correct-update-fields"
 }

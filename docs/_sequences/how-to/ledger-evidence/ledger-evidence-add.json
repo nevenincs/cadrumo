@@ -32,38 +32,11 @@
           "value": "ee678fa9b328d79d"
         }
       ],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "ledger.evidence.add",
-        "notices": [],
-        "result": {
-          "attachment_id": "725afbe3c64d4e96faaed8b63b83ed2e7df161334681d98d8b877bd7cddbfc16",
-          "bucket_event_ids": [
-            "55fe6f63d8763568849f8ca8f05b45fc7a714987593755df7695f448a4b48b92"
-          ],
-          "bucket_id": "<bucket-id>",
-          "created_at": "2026-04-01T09:00:00Z",
-          "evidence_id": "ee678fa9b328d79d",
-          "invoice_date": "2026-03-10",
-          "invoice_number": "2026-0142",
-          "iva_amount": "21.00",
-          "iva_rate": "21",
-          "media_kind": "pdf",
-          "notes": "Office supplies, March",
-          "source_path": "fixtures/factura-material-oficina.pdf",
-          "source_sha256": "725afbe3c64d4e96faaed8b63b83ed2e7df161334681d98d8b877bd7cddbfc16",
-          "supplier": "Papelería Sol SL",
-          "taxable_base": "100.00",
-          "updated_at": "2026-04-01T09:00:00Z"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 914,
+      "output_sha256": "d6a7029de2f9813de124721d5414b196ddfa2026b9a5e85cc2abe18c77b39fba"
     },
     {
       "argv": [
@@ -77,38 +50,13 @@
         "ee678fa9b328d79d"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "ledger.evidence.view",
-        "notices": [],
-        "result": {
-          "attachment_id": "725afbe3c64d4e96faaed8b63b83ed2e7df161334681d98d8b877bd7cddbfc16",
-          "bucket_event_ids": [],
-          "bucket_id": "<bucket-id>",
-          "created_at": "2026-04-01T09:00:00Z",
-          "evidence_id": "ee678fa9b328d79d",
-          "invoice_date": "2026-03-10",
-          "invoice_number": "2026-0142",
-          "iva_amount": "21.00",
-          "iva_rate": "21",
-          "media_kind": "pdf",
-          "notes": "Office supplies, March",
-          "source_path": "fixtures/factura-material-oficina.pdf",
-          "source_sha256": "725afbe3c64d4e96faaed8b63b83ed2e7df161334681d98d8b877bd7cddbfc16",
-          "supplier": "Papelería Sol SL",
-          "taxable_base": "100.00",
-          "updated_at": "2026-04-01T09:00:00Z"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 837,
+      "output_sha256": "a0afd7c97f98895d5873b0079562271498f626e7961bddf39813ad1865cbfb95"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "ledger-evidence-add"
 }

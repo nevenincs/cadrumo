@@ -12,12 +12,11 @@
         "csv"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -32,66 +31,13 @@
         "BUSINESS"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "ledger.classify",
-        "notices": [],
-        "result": {
-          "bucket_event_ids": [
-            "59813ece53d01035dac79cf9a8fc8cf9cd8928359b15b5d910766dbbc15948f8"
-          ],
-          "bucket_id": "<bucket-id>",
-          "review_status": "reviewed",
-          "transaction": {
-            "amount": "1210",
-            "attachment_ids": [],
-            "booked_date": "2026-02-10",
-            "business_classification": "BUSINESS",
-            "business_pct": null,
-            "category_id": null,
-            "classification_confidence": "1",
-            "classification_reason": "aeat app ledger classify",
-            "classified_at": "2026-04-01T09:00:00+00:00",
-            "classified_by": "manual",
-            "counterparty": "",
-            "counterparty_country": null,
-            "counterparty_identification_state": null,
-            "created_at": "2026-04-01T09:00:00+00:00",
-            "currency": "EUR",
-            "date": "2026-02-10",
-            "description": "Cobro factura F-2026-001 servicios de consultoria",
-            "direction": "INCOMING",
-            "fx_rate": null,
-            "invoice_id": null,
-            "irpf_category": null,
-            "iva_amount": null,
-            "iva_category": null,
-            "iva_rate": null,
-            "lifecycle_state": "ACTIVE",
-            "m210_income_classification": null,
-            "modified_at": "2026-04-01T09:00:00+00:00",
-            "notes": "",
-            "prorrata_reference": null,
-            "purchase_invoice_evidence_id": null,
-            "source_jurisdiction": null,
-            "taxable_base": null,
-            "transaction_id": "71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518",
-            "usage_ratio_id": null,
-            "value_date": "2026-02-10",
-            "value_in_eur": null
-          },
-          "transaction_id": "71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 1766,
+      "output_sha256": "1929715f46eff4623590da12792a1c8c6ed4ca8336e62e5bfbb4a6aba9afa203"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "first-quarter-classify-income"
 }

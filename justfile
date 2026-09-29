@@ -1295,8 +1295,8 @@ report-registry-aeip:
 docs-generate-api-stubs:
     uv run --no-sync python -m dev.docs.apidocs scaffold
 
-# Regenerate committed CLI-sequence goldens through their owning runner.
-[doc('Generate committed CLI-sequence goldens through the owning sequence generator; review the resulting diff.')]
+# Regenerate committed CLI-sequence golden fingerprints and their cached records through their owning runner.
+[doc('Generate committed CLI-sequence golden fingerprints and cache their rendered records through the owning sequence generator; review the changed frames.')]
 [group('docs')]
 docs-generate-sequences:
     uv run --no-sync python -m dev.docs.sequences refresh
@@ -1351,8 +1351,8 @@ docs-page PAGE:
 docs-serve PORT="":
     uv run --no-sync python -m dev.docs.serve {{ if PORT == "" { "" } else { "--port " + PORT } }} --open-browser
 
-# Re-execute committed CLI sequences and report divergence without rewriting.
-[doc('Run the blocking read-only documentation sequence check; never rewrite goldens.')]
+# Re-execute committed CLI sequences and report divergence without rewriting goldens; a clean run caches the records pages render.
+[doc('Run the blocking documentation sequence check; never rewrites goldens, and caches verified records on a clean run.')]
 [group('docs')]
 docs-sequences-check *ARGS:
     uv run --no-sync python -m dev.docs.sequences check {{ARGS}}

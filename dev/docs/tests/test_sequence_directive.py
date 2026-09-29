@@ -429,57 +429,24 @@ def test_directive_build_renders_frames_and_payload(tmp_path: Path, _isolated_se
     assert "verified_complete" in html.partition('class="cadrumo-sequence-payload"')[0]
 
 
-_REVERIFY_ID = "reverify-demo"
-_REVERIFY_INDEX = (
-    "# Profiles\n\nCreate a profile first with `aeat config profile create`.\n\n"
-    f"```{{cli-sequence}} {_REVERIFY_ID}\n:verify: Verify the profile listing succeeds.\n```\n"
-)
-_REVERIFY_CONTRACT = "@result aeat --format json config profile list\n@expect result.profiles[0].active == true"
+def test_directive_refuses_a_record_that_does_not_match_its_golden(
+    tmp_path: Path,
+    _isolated_sequence_storage: None,
+) -> None:
+    """A cached record whose fingerprint is not the committed golden never renders.
 
-
-def test_a_stale_record_is_reverified_before_it_renders(tmp_path: Path, _isolated_sequence_storage: None) -> None:
-    """A cached record that no longer fingerprints to the golden never reaches the page.
-
-    The golden comes from a real refresh; the cached record is then tampered
-    with, as a stale cache from an earlier golden would be. The build re-runs the
-    page's check, which replaces the record with verified output, and renders
-    that instead.
+    The golden was refreshed from different output than the cached record holds,
+    so the record is output nobody checked; the build names the check that
+    replaces it instead of publishing it.
     """
-    from ..sequences.checks import refresh_sequences
-
-    site = tmp_path / "site"
-    site.mkdir()
-    goldens_root = tmp_path / "goldens"
-    records_root = tmp_path / "records"
-    _write_site(
-        site,
-        index_body=_REVERIFY_INDEX,
-        goldens_root=goldens_root,
-        sequence_id=_REVERIFY_ID,
-        contract_body=_REVERIFY_CONTRACT,
-    )
-    written, problems, _ = refresh_sequences(docs_root=site, goldens_root=goldens_root, records_root=records_root)
-    assert problems == () and len(written) == 1
-    target = record_path(_PAGE, _REVERIFY_ID, records_root=records_root)
-    verified = SequenceRecord.model_validate_json(target.read_text(encoding="utf-8"))
-    envelope = dict(verified.frames[0].envelope or {})
-    envelope["status"] = "stale-output-marker"
-    stale_frame = verified.frames[0].model_copy(update={"envelope": envelope})
-    write_record(verified.model_copy(update={"frames": (stale_frame,)}), target=target)
-
-    html, warnings = _build(site, warningiserror=False)
-
-    assert "cadrumo-sequence" in html, warnings
-    assert "stale-output-marker" not in html
-    assert SequenceRecord.model_validate_json(target.read_text(encoding="utf-8")) == verified
-
-
-def test_a_record_that_cannot_be_reverified_fails_the_build(tmp_path: Path, _isolated_sequence_storage: None) -> None:
-    """When re-running the page's check cannot reproduce the golden, the build fails and renders nothing."""
     site = tmp_path / "site"
     site.mkdir()
     goldens_root = tmp_path / "goldens"
     write_golden(golden_from_record(_record()), page=_PAGE, goldens_root=goldens_root)
+    frames = list(_record().frames)
+    frames[3] = frames[3].model_copy(update={"envelope": {"status": "ok", "result": {"status": "draft"}}})
+    stale = SequenceRecord(sequence_id=_SEQUENCE_ID, frames=tuple(frames))
+    write_record(stale, target=record_path(_PAGE, _SEQUENCE_ID, records_root=tmp_path / "records"))
     _write_site(
         site,
         index_body=_INDEX_WITH_DIRECTIVE,
@@ -490,7 +457,8 @@ def test_a_record_that_cannot_be_reverified_fails_the_build(tmp_path: Path, _iso
 
     html, warnings = _build(site, warningiserror=False)
 
-    assert f"cli-sequence {_SEQUENCE_ID!r} on page {_PAGE!r}" in warnings
+    assert "no verified record" in warnings
+    assert f"python -m dev.docs.sequences check --page {_PAGE}" in warnings
     assert "cadrumo-sequence" not in html
 
 

@@ -14,28 +14,13 @@
         "2026"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "modelo.history",
-        "notices": [],
-        "result": {
-          "count": 0,
-          "events": [],
-          "modelo": "303",
-          "operation": "modelo.history",
-          "period": null,
-          "year": 2026
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 289,
+      "output_sha256": "abe7fb562fde14ede996c36bf0d08235dab534e8d8200a07834e8ed75ec57574"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "filing-readiness-history"
 }

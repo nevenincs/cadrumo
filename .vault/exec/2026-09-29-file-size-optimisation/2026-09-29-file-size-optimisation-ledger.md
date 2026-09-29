@@ -5,40 +5,14 @@ tags:
 date: '2026-09-29'
 modified: '2026-09-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:e70d7741e3998161b66c5d076a22cabc585f409801ca06548692b0cb2253d9ca'
+body_hash: 'sha256:59194097bebb378483c6a547670e3b5b74f4d6d517a5c6534230a41792aed707'
 related:
   - "[[2026-09-29-file-size-optimisation-plan]]"
 ---
 
-<!-- Machine-owned, whole file: `vaultspec-core vault exec log` creates it
-     on first use and appends every row; never hand-edit it. Add no
-     frontmatter fields. Wiki-links belong in `related:` only.
-
-     ONE ledger per plan, the only execution artifact. Each row's first
-     column names its Step. -->
-
 # `file-size-optimisation` ledger
 
 ## Changes
-
-<!-- MECHANICAL LOG, append-only, one row per path touched per Step, written
-     by `--row`:
-       - `S##` `A` `path`   added
-       - `S##` `M` `path`   modified
-       - `S##` `D` `path`   deleted
-       - `S##` `R` `old` -> `new`   renamed
-     Paths are repo-relative, in backticks. No prose: the Step row states the
-     intent and the commit carries the diff.
-
-     Optional per-Step rows, written by `--verify` and `--by`:
-       - `S##` `verify:` `<command>` -> `pass` | `fail`
-       - `S##` `by:` `<persona>`
-
-     Rows are appended in Step order and never rewritten. Only rows in this
-     section register a Step as covered. `--note` adds a `## Notes` section
-     ONLY on exception (data loss, skipped work, a scaffold left in code, a
-     persistent failure), one `S##`-prefixed line each; it is otherwise
-     omitted. -->
 
 - `S01` `A` `dev/docs/sequences/record_store.py`
 - `S01` `M` `dev/docs/sequences/golden_store.py`
@@ -71,9 +45,230 @@ related:
 - `S02` `verify:` `ruff check + format` -> `pass`
 - `S02` `verify:` `ty check on changed files` -> `pass`
 - `S02` `verify:` `basedpyright on changed files (no new diagnostics vs baseline)` -> `pass`
+- `S03` `M` `docs/_sequences/explanation/how-renta-is-assembled/renta-assembly-bindings.json`
+- `S03` `M` `docs/_sequences/explanation/how-renta-is-assembled/renta-assembly-dependencies.json`
+- `S03` `M` `docs/_sequences/explanation/how-renta-is-assembled/renta-assembly-provenance.json`
+- `S03` `M` `docs/_sequences/explanation/how-renta-is-assembled/renta-assembly-requires.json`
+- `S03` `M` `docs/_sequences/how-to/authenticate-with-aeat/authenticate-apoderado-clear.json`
+- `S03` `M` `docs/_sequences/how-to/authenticate-with-aeat/authenticate-apoderado-configure.json`
+- `S03` `M` `docs/_sequences/how-to/authenticate-with-aeat/authenticate-apoderado-scopes.json`
+- `S03` `M` `docs/_sequences/how-to/authenticate-with-aeat/authenticate-apoderado-status.json`
+- `S03` `M` `docs/_sequences/how-to/authenticate-with-aeat/authenticate-certificate-check.json`
+- `S03` `M` `docs/_sequences/how-to/authenticate-with-aeat/authenticate-certificate-list.json`
+- `S03` `M` `docs/_sequences/how-to/authenticate-with-aeat/authenticate-certificate-remove.json`
+- `S03` `M` `docs/_sequences/how-to/authenticate-with-aeat/authenticate-check-validity.json`
+- `S03` `M` `docs/_sequences/how-to/authenticate-with-aeat/authenticate-confirm-expiry.json`
+- `S03` `M` `docs/_sequences/how-to/authenticate-with-aeat/authenticate-logout-provider.json`
+- `S03` `M` `docs/_sequences/how-to/authenticate-with-aeat/authenticate-profile.json`
+- `S03` `M` `docs/_sequences/how-to/authenticate-with-aeat/authenticate-providers.json`
+- `S03` `M` `docs/_sequences/how-to/authenticate-with-aeat/authenticate-readiness.json`
+- `S03` `M` `docs/_sequences/how-to/authenticate-with-aeat/authenticate-reset-all.json`
+- `S03` `M` `docs/_sequences/how-to/authenticate-with-aeat/authenticate-reset-provider.json`
+- `S03` `M` `docs/_sequences/how-to/censo-update/censo-update-check-profile.json`
+- `S03` `M` `docs/_sequences/how-to/censo-update/censo-update-preflight.json`
+- `S03` `M` `docs/_sequences/how-to/censo-update/censo-update-record-facts.json`
+- `S03` `M` `docs/_sequences/how-to/censo-update/censo-update-validate.json`
+- `S03` `M` `docs/_sequences/how-to/check-aeat-notifications/check-notifications-profile.json`
+- `S03` `M` `docs/_sequences/how-to/choose-modelo/choose-modelo-applicability.json`
+- `S03` `M` `docs/_sequences/how-to/choose-modelo/choose-modelo-catalogue.json`
+- `S03` `M` `docs/_sequences/how-to/classify-transactions/classify-confirm-readiness.json`
+- `S03` `M` `docs/_sequences/how-to/classify-transactions/classify-correct.json`
+- `S03` `M` `docs/_sequences/how-to/classify-transactions/classify-expense-category.json`
+- `S03` `M` `docs/_sequences/how-to/classify-transactions/classify-from-csv.json`
+- `S03` `M` `docs/_sequences/how-to/classify-transactions/classify-mixed-use.json`
+- `S03` `M` `docs/_sequences/how-to/classify-transactions/classify-ratios-manage.json`
+- `S03` `M` `docs/_sequences/how-to/classify-transactions/classify-review-queue-filter.json`
+- `S03` `M` `docs/_sequences/how-to/classify-transactions/classify-review-queue.json`
+- `S03` `M` `docs/_sequences/how-to/classify-transactions/classify-review-row.json`
+- `S03` `M` `docs/_sequences/how-to/classify-transactions/classify-rules.json`
+- `S03` `M` `docs/_sequences/how-to/classify-transactions/classify-tax-fields.json`
+- `S03` `M` `docs/_sequences/how-to/classify-with-llm/llm-derive-iva.json`
+- `S03` `M` `docs/_sequences/how-to/classify-with-llm/llm-inspect-history.json`
+- `S03` `M` `docs/_sequences/how-to/classify-with-llm/llm-manual-figures.json`
+- `S03` `M` `docs/_sequences/how-to/classify-with-llm/llm-override.json`
+- `S03` `M` `docs/_sequences/how-to/classify-with-llm/llm-preflight.json`
+- `S03` `M` `docs/_sequences/how-to/classify-with-llm/llm-suggest.json`
+- `S03` `M` `docs/_sequences/how-to/correct-ledger-entries/correct-archive-transaction.json`
+- `S03` `M` `docs/_sequences/how-to/correct-ledger-entries/correct-find-transaction.json`
+- `S03` `M` `docs/_sequences/how-to/correct-ledger-entries/correct-merge-parts.json`
+- `S03` `M` `docs/_sequences/how-to/correct-ledger-entries/correct-remove-transaction.json`
+- `S03` `M` `docs/_sequences/how-to/correct-ledger-entries/correct-reset-ledger.json`
+- `S03` `M` `docs/_sequences/how-to/correct-ledger-entries/correct-restore-transaction.json`
+- `S03` `M` `docs/_sequences/how-to/correct-ledger-entries/correct-review-history.json`
+- `S03` `M` `docs/_sequences/how-to/correct-ledger-entries/correct-split-transaction.json`
+- `S03` `M` `docs/_sequences/how-to/correct-ledger-entries/correct-stash-transaction.json`
+- `S03` `M` `docs/_sequences/how-to/correct-ledger-entries/correct-update-fields.json`
+- `S03` `M` `docs/_sequences/how-to/file-at-aeat/file-at-aeat-chain.json`
+- `S03` `M` `docs/_sequences/how-to/filing-calendar/filing-calendar-agenda.json`
+- `S03` `M` `docs/_sequences/how-to/filing-calendar/filing-calendar-backlog.json`
+- `S03` `M` `docs/_sequences/how-to/filing-calendar/filing-calendar-calendar.json`
+- `S03` `M` `docs/_sequences/how-to/filing-calendar/filing-calendar-catalogue.json`
+- `S03` `M` `docs/_sequences/how-to/filing-calendar/filing-calendar-explain.json`
+- `S03` `M` `docs/_sequences/how-to/filing-calendar/filing-calendar-ledger-filter.json`
+- `S03` `M` `docs/_sequences/how-to/filing-calendar/filing-calendar-work-status.json`
+- `S03` `M` `docs/_sequences/how-to/filing-readiness/filing-readiness-dependencies.json`
+- `S03` `M` `docs/_sequences/how-to/filing-readiness/filing-readiness-formulas.json`
+- `S03` `M` `docs/_sequences/how-to/filing-readiness/filing-readiness-history.json`
+- `S03` `M` `docs/_sequences/how-to/filing-readiness/filing-readiness-report.json`
+- `S03` `M` `docs/_sequences/how-to/filing-spine/filing-spine-address-by-id.json`
+- `S03` `M` `docs/_sequences/how-to/filing-spine/filing-spine-chain.json`
+- `S03` `M` `docs/_sequences/how-to/filing-spine/filing-spine-discard.json`
+- `S03` `M` `docs/_sequences/how-to/filing-spine/filing-spine-exact-ids.json`
+- `S03` `M` `docs/_sequences/how-to/filing-spine/filing-spine-file.json`
+- `S03` `M` `docs/_sequences/how-to/filing-spine/filing-spine-history.json`
+- `S03` `M` `docs/_sequences/how-to/filing-spine/filing-spine-other-target.json`
+- `S03` `M` `docs/_sequences/how-to/filing-spine/filing-spine-rename.json`
+- `S03` `M` `docs/_sequences/how-to/filing-spine/filing-spine-revision-by-id.json`
+- `S03` `M` `docs/_sequences/how-to/filing-spine/filing-spine-runs.json`
+- `S03` `M` `docs/_sequences/how-to/filing-spine/filing-spine-select.json`
+- `S03` `M` `docs/_sequences/how-to/filing-spine/filing-spine-visible-target.json`
+- `S03` `M` `docs/_sequences/how-to/filing-spine/filing-spine-work-list.json`
+- `S03` `M` `docs/_sequences/how-to/first-quarterly-filing/first-quarter-classify-income.json`
+- `S03` `M` `docs/_sequences/how-to/first-quarterly-filing/first-quarter-export-file.json`
+- `S03` `M` `docs/_sequences/how-to/first-quarterly-filing/import-provider-list.json`
+- `S03` `M` `docs/_sequences/how-to/first-quarterly-filing/import-quarter-transactions.json`
+- `S03` `M` `docs/_sequences/how-to/first-quarterly-filing/ledger-category-list.json`
+- `S03` `M` `docs/_sequences/how-to/first-quarterly-filing/modelo-130-first-quarter.json`
+- `S03` `M` `docs/_sequences/how-to/import-bank-statements/import-add-manual.json`
+- `S03` `M` `docs/_sequences/how-to/import-bank-statements/import-add-tax-details.json`
+- `S03` `M` `docs/_sequences/how-to/import-bank-statements/import-attach-evidence.json`
+- `S03` `M` `docs/_sequences/how-to/import-bank-statements/import-check-readiness.json`
+- `S03` `M` `docs/_sequences/how-to/import-bank-statements/import-classify-rows.json`
+- `S03` `M` `docs/_sequences/how-to/import-bank-statements/import-confirm-profile.json`
+- `S03` `M` `docs/_sequences/how-to/import-bank-statements/import-diagnostics.json`
+- `S03` `M` `docs/_sequences/how-to/import-bank-statements/import-export-rows.json`
+- `S03` `M` `docs/_sequences/how-to/import-bank-statements/import-invoice-records.json`
+- `S03` `M` `docs/_sequences/how-to/import-bank-statements/import-preview-save.json`
+- `S03` `M` `docs/_sequences/how-to/import-bank-statements/import-review-check.json`
+- `S03` `M` `docs/_sequences/how-to/import-bank-statements/import-review-rows.json`
+- `S03` `M` `docs/_sequences/how-to/import-bank-statements/import-update-row.json`
+- `S03` `M` `docs/_sequences/how-to/irpf-lifecycle/irpf-lifecycle-agenda.json`
+- `S03` `M` `docs/_sequences/how-to/irpf-lifecycle/irpf-lifecycle-annual-preflight.json`
+- `S03` `M` `docs/_sequences/how-to/irpf-lifecycle/irpf-lifecycle-position.json`
+- `S03` `M` `docs/_sequences/how-to/irpf-lifecycle/irpf-lifecycle-q1.json`
+- `S03` `M` `docs/_sequences/how-to/irpf-lifecycle/irpf-lifecycle-q2.json`
+- `S03` `M` `docs/_sequences/how-to/iva-lifecycle/iva-lifecycle-annual.json`
+- `S03` `M` `docs/_sequences/how-to/iva-lifecycle/iva-lifecycle-applicability.json`
+- `S03` `M` `docs/_sequences/how-to/iva-lifecycle/iva-lifecycle-q1.json`
+- `S03` `M` `docs/_sequences/how-to/iva-lifecycle/iva-lifecycle-q2.json`
+- `S03` `M` `docs/_sequences/how-to/iva-lifecycle/iva-lifecycle-wallet.json`
+- `S03` `M` `docs/_sequences/how-to/ledger-evidence/ledger-evidence-add.json`
+- `S03` `M` `docs/_sequences/how-to/ledger-evidence/ledger-evidence-attach.json`
+- `S03` `M` `docs/_sequences/how-to/ledger-evidence/ledger-evidence-manage.json`
+- `S03` `M` `docs/_sequences/how-to/ledger-evidence/ledger-evidence-remove.json`
+- `S03` `M` `docs/_sequences/how-to/manage-invoices/invoices-catalogue-and-349.json`
+- `S03` `M` `docs/_sequences/how-to/manage-invoices/invoices-catalogue-remove.json`
+- `S03` `M` `docs/_sequences/how-to/manage-invoices/invoices-link-catalogue.json`
+- `S03` `M` `docs/_sequences/how-to/manage-invoices/invoices-list-update-remove.json`
+- `S03` `M` `docs/_sequences/how-to/manage-invoices/invoices-record-intracommunity.json`
+- `S03` `M` `docs/_sequences/how-to/manage-invoices/invoices-record-issued.json`
+- `S03` `M` `docs/_sequences/how-to/manage-invoices/invoices-record-received.json`
+- `S03` `M` `docs/_sequences/how-to/modelo-036/modelo-036-list-view.json`
+- `S03` `M` `docs/_sequences/how-to/modelo-036/modelo-036-record-alta.json`
+- `S03` `M` `docs/_sequences/how-to/modelo-100/modelo-100-dependencies.json`
+- `S03` `M` `docs/_sequences/how-to/modelo-100/modelo-100-export-file.json`
+- `S03` `M` `docs/_sequences/how-to/modelo-100/modelo-100-inspect-inputs.json`
+- `S03` `M` `docs/_sequences/how-to/modelo-100/modelo-100-preflight.json`
+- `S03` `M` `docs/_sequences/how-to/modelo-100/modelo-100-renta-2025.json`
+- `S03` `M` `docs/_sequences/how-to/modelo-130/modelo-130-export-file.json`
+- `S03` `M` `docs/_sequences/how-to/modelo-130/modelo-130-inspect-boxes.json`
+- `S03` `M` `docs/_sequences/how-to/modelo-130/modelo-130-manual-casilla.json`
+- `S03` `M` `docs/_sequences/how-to/modelo-130/modelo-130-quarterly.json`
+- `S03` `M` `docs/_sequences/how-to/modelo-130/modelo-130-review-chain.json`
+- `S03` `M` `docs/_sequences/how-to/modelo-303/modelo-303-first-quarter.json`
+- `S03` `M` `docs/_sequences/how-to/modelo-303/modelo-303-inspect-boxes.json`
+- `S03` `M` `docs/_sequences/how-to/modelo-303/modelo-303-ledger-period.json`
+- `S03` `M` `docs/_sequences/how-to/modelo-303/modelo-303-revision.json`
+- `S03` `M` `docs/_sequences/how-to/modelo-303/modelo-303-wallet.json`
+- `S03` `M` `docs/_sequences/how-to/modelo-349/modelo-349-applicability.json`
+- `S03` `M` `docs/_sequences/how-to/modelo-349/modelo-349-export.json`
+- `S03` `M` `docs/_sequences/how-to/modelo-349/modelo-349-file.json`
+- `S03` `M` `docs/_sequences/how-to/modelo-349/modelo-349-first-quarter.json`
+- `S03` `M` `docs/_sequences/how-to/modelo-349/modelo-349-inspect.json`
+- `S03` `M` `docs/_sequences/how-to/modelo-390/modelo-390-annual-2025.json`
+- `S03` `M` `docs/_sequences/how-to/modelo-390/modelo-390-inspect.json`
+- `S03` `M` `docs/_sequences/how-to/modelo-390/modelo-390-records-audit.json`
+- `S03` `M` `docs/_sequences/how-to/modelo-390/modelo-390-supply-binding.json`
+- `S03` `M` `docs/_sequences/how-to/modelo-390/modelo-390-wallet.json`
+- `S03` `M` `docs/_sequences/how-to/profile-setup/profile-setup-capabilities.json`
+- `S03` `M` `docs/_sequences/how-to/profile-setup/profile-setup-delete.json`
+- `S03` `M` `docs/_sequences/how-to/profile-setup/profile-setup-descendiente-verbs.json`
+- `S03` `M` `docs/_sequences/how-to/profile-setup/profile-setup-flag-help.json`
+- `S03` `M` `docs/_sequences/how-to/profile-setup/profile-setup-history.json`
+- `S03` `M` `docs/_sequences/how-to/profile-setup/profile-setup-inspect.json`
+- `S03` `M` `docs/_sequences/how-to/profile-setup/profile-setup-logout.json`
+- `S03` `M` `docs/_sequences/how-to/profile-setup/profile-setup-maintain.json`
+- `S03` `M` `docs/_sequences/how-to/profile-setup/profile-setup-multiple.json`
+- `S03` `M` `docs/_sequences/how-to/profile-setup/profile-setup-worked-example.json`
+- `S03` `M` `docs/_sequences/how-to/prorrata/prorrata-classify-input.json`
+- `S03` `M` `docs/_sequences/how-to/prorrata/prorrata-declare-sector.json`
+- `S03` `M` `docs/_sequences/how-to/prorrata/prorrata-elect-especial.json`
+- `S03` `M` `docs/_sequences/how-to/prorrata/prorrata-elect-general.json`
+- `S03` `M` `docs/_sequences/how-to/prorrata/prorrata-list.json`
+- `S03` `M` `docs/_sequences/how-to/prorrata/prorrata-sector-scoped.json`
+- `S03` `M` `docs/_sequences/how-to/protect-data-access/protect-data-access-logout.json`
+- `S03` `M` `docs/_sequences/how-to/protect-data-access/protect-data-access-machine-secret-help.json`
+- `S03` `M` `docs/_sequences/how-to/quickstart/quickstart-agenda.json`
+- `S03` `M` `docs/_sequences/how-to/quickstart/quickstart-categories.json`
+- `S03` `M` `docs/_sequences/how-to/quickstart/quickstart-classify.json`
+- `S03` `M` `docs/_sequences/how-to/quickstart/quickstart-create-profile.json`
+- `S03` `M` `docs/_sequences/how-to/quickstart/quickstart-export.json`
+- `S03` `M` `docs/_sequences/how-to/quickstart/quickstart-file.json`
+- `S03` `M` `docs/_sequences/how-to/quickstart/quickstart-modelo-130.json`
+- `S03` `M` `docs/_sequences/how-to/quickstart/quickstart-profile.json`
+- `S03` `M` `docs/_sequences/how-to/quickstart/quickstart-revision.json`
+- `S03` `M` `docs/_sequences/how-to/quickstart/quickstart-transactions.json`
+- `S03` `M` `docs/_sequences/how-to/quickstart/quickstart-version.json`
+- `S03` `M` `docs/_sequences/how-to/reconcile/reconcile-list.json`
+- `S03` `M` `docs/_sequences/how-to/review-calculation-values/review-values-bindings.json`
+- `S03` `M` `docs/_sequences/how-to/review-calculation-values/review-values-inspect.json`
+- `S03` `M` `docs/_sequences/how-to/review-calculation-values/review-values-iva-wallet.json`
+- `S03` `M` `docs/_sequences/how-to/review-calculation-values/review-values-m100-create.json`
+- `S03` `M` `docs/_sequences/how-to/review-calculation-values/review-values-manual-casilla.json`
+- `S03` `M` `docs/_sequences/how-to/review-calculation-values/review-values-maritime.json`
+- `S03` `M` `docs/_sequences/how-to/review-calculation-values/review-values-relation.json`
+- `S03` `M` `docs/_sequences/how-to/review-calculation-values/review-values-review-saved.json`
+- `S03` `M` `docs/_sequences/how-to/review-calculation-values/review-values-rows.json`
+- `S03` `M` `docs/_sequences/how-to/review-with-google-sheets/sheets-folder.json`
+- `S03` `M` `docs/_sequences/how-to/review-with-google-sheets/sheets-logout.json`
+- `S03` `M` `docs/_sequences/how-to/review-with-google-sheets/sheets-readiness.json`
+- `S03` `M` `docs/_sequences/how-to/troubleshooting/troubleshooting-active-profile.json`
+- `S03` `M` `docs/_sequences/how-to/troubleshooting/troubleshooting-auth-check.json`
+- `S03` `M` `docs/_sequences/how-to/troubleshooting/troubleshooting-auth-diagnostics.json`
+- `S03` `M` `docs/_sequences/how-to/troubleshooting/troubleshooting-clear-active.json`
+- `S03` `M` `docs/_sequences/how-to/troubleshooting/troubleshooting-language.json`
+- `S03` `M` `docs/_sequences/how-to/troubleshooting/troubleshooting-ledger-ready.json`
+- `S03` `M` `docs/_sequences/how-to/troubleshooting/troubleshooting-missing-values.json`
+- `S03` `M` `docs/_sequences/how-to/troubleshooting/troubleshooting-participation.json`
+- `S03` `M` `docs/_sequences/how-to/troubleshooting/troubleshooting-period-grammar.json`
+- `S03` `M` `docs/_sequences/how-to/troubleshooting/troubleshooting-quarantine.json`
+- `S03` `M` `docs/_sequences/how-to/troubleshooting/troubleshooting-reset-progress.json`
+- `S03` `M` `docs/_sequences/how-to/troubleshooting/troubleshooting-toolbox.json`
+- `S03` `M` `docs/_sequences/how-to/troubleshooting/troubleshooting-wrong-profile.json`
+- `S03` `M` `docs/_sequences/how-to/verification-reports/verification-reports-export-check.json`
+- `S03` `M` `docs/_sequences/how-to/verification-reports/verification-reports-incomplete.json`
+- `S03` `M` `docs/_sequences/how-to/verification-reports/verification-reports-modelo-303.json`
+- `S03` `M` `docs/_sequences/how-to/verification-reports/verification-reports-scope-dependency.json`
+- `S03` `M` `docs/_sequences/how-to/verification-reports/verification-reports-work-history.json`
+- `S03` `M` `dev/docs/sequence_build_gate.py`
+- `S03` `M` `dev/docs/sequence_directive.py`
+- `S03` `M` `dev/docs/tests/test_sequence_build_gate.py`
+- `S03` `M` `dev/docs/tests/test_sequence_directive.py`
+- `S03` `M` `dev/docs/tests/test_sequence_goldens.py`
+- `S03` `M` `dev/docs/tests/test_deployment_search_parity.py`
+- `S03` `M` `dev/deploy/tests/test_docs_static_site.py`
+- `S03` `A` `dev/deploy/tests/test_docs_deploy_sequence_check.py`
+- `S03` `M` `justfile`
+- `S03` `verify:` `python -m dev.docs.sequences refresh (205 goldens, 4m03s, exit 0)` -> `pass`
+- `S03` `verify:` `python -m dev.docs.sequences check (clean, 4m05s)` -> `pass`
+- `S03` `verify:` `second refresh into a scratch root is byte-identical for 205/205 goldens` -> `pass`
+- `S03` `verify:` `pytest dev/docs/tests dev/docs/sequences/tests dev/deploy/tests -m 'docs or unit or (integration and not serial)' (764 passed; failures identical to the baseline set)` -> `pass`
 
 ## Notes
 
 - `S01` The cli-sequence renderer still reads output from goldens until S02 lands; the docs build is not expected to pass between S01 and S02.
 - `S02` The crash-marker and version-literal corpus scans over committed golden bodies became engine rules applied to every record at refresh and check, since goldens no longer hold output.
 - `S02` The committed goldens are regenerated in S03; until then the committed-corpus check fails on the schema-2 goldens.
+- `S03` Verification found three S02 defects, fixed here: a deploy test carried both unit and integration markers and did not run; a search-parity test still passed the removed `check_sequences` argument; skipped HTML builds re-checked one page at a time from the directive, which made the serial resolvability sweep 9 minutes slower. The hook now runs one check before reading any page and the directive only renders verified records.
+- `S03` Committed goldens: 12.0 MB and 313,912 lines before, 0.46 MB and 21,651 lines after; the largest file fell from 47,614 to 913 lines.
+- `S03` The 34 failures and 21 errors in the docs and deploy lanes (Pagefind, browser, just binary, full nitpicky build) are pre-existing and identical at the baseline commit.

@@ -11,27 +11,13 @@
         "list"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "modelo.reconcile.list",
-        "notices": [],
-        "result": {
-          "bucket_id": "<bucket-id>",
-          "operation": "modelo.reconcile.list",
-          "reconciliation_count": 0,
-          "reconciliations": [],
-          "work_unit_id": null
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 326,
+      "output_sha256": "254594386d6db4417717e8ccaa525687cb73f4e3a645d7cc12c143b97df86157"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "reconcile-list"
 }

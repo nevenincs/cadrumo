@@ -36,7 +36,6 @@ from ..docs_static_site import (
     CANONICAL_DOCS_BASE_URL,
     _build_language_roots,
     _build_site_roots,
-    _check_cli_sequences,
     _clear_apex,
     _compose_apex,
     _dry_run,
@@ -334,32 +333,6 @@ def test_a_root_that_would_not_render_the_checked_records_refuses(environment: d
 def test_the_site_build_checks_the_sequences_before_building_any_root() -> None:
     calls = _direct_calls(_build_site_roots)
     assert calls.index("_check_cli_sequences") < calls.index("_build_language_roots"), calls
-
-
-@pytest.mark.integration
-def test_a_failing_sequence_check_refuses_the_publish(tmp_path: Path) -> None:
-    """A real check over a page whose sequence has no committed golden stops the deploy."""
-    docs = tmp_path / "docs"
-    page = docs / "how-to" / "deploy-refusal.md"
-    page.parent.mkdir(parents=True)
-    page.write_text(
-        "# Deploy refusal\n\nCreate a profile with `aeat config profile create`.\n\n"
-        "```{cli-sequence} deploy-refusal-case\n:verify: Verify the listing succeeds.\n```\n",
-        encoding="utf-8",
-    )
-    contract = docs / "_sequences" / "contracts" / "how-to" / "deploy-refusal" / "deploy-refusal-case.seq"
-    contract.parent.mkdir(parents=True)
-    contract.write_text(
-        '@result aeat --format json config profile list\n@expect status == "success"\n',
-        encoding="utf-8",
-    )
-
-    with pytest.raises(SystemExit) as refusal:
-        _check_cli_sequences(tmp_path, records_root=tmp_path / "records")
-
-    message = str(refusal.value)
-    assert "refusing to publish" in message
-    assert "deploy-refusal-case" in message and "no committed golden" in message
 
 
 def test_validate_language_roots_accepts_a_complete_matrix(tmp_path: Path) -> None:

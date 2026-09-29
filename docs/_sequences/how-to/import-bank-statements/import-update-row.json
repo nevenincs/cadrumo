@@ -26,12 +26,11 @@
           "value": "37e46cb93b11cfa556996041758cbf80b97ec6b23b4338e89b61dd3d3e332102"
         }
       ],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -52,64 +51,11 @@
           "value": "86f4d44865f693e51c368c3e8f25a5b9bf7e1acf6089298e885854d661254629"
         }
       ],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "ledger.update",
-        "notices": [],
-        "result": {
-          "bucket_event_ids": [
-            "51bb581f6eb1806a49fcd5105e639fc5aa44520bae30174e14209ac995f7d355"
-          ],
-          "bucket_id": "<bucket-id>",
-          "review_status": "pending",
-          "transaction": {
-            "amount": "121",
-            "attachment_ids": [],
-            "booked_date": "2026-03-21",
-            "business_classification": "NOT_YET_PROCESSED",
-            "business_pct": null,
-            "category_id": null,
-            "classification_confidence": null,
-            "classification_reason": "",
-            "classified_at": null,
-            "classified_by": "auto",
-            "counterparty": "",
-            "counterparty_country": null,
-            "counterparty_identification_state": null,
-            "created_at": "2026-04-01T09:00:00+00:00",
-            "currency": "EUR",
-            "date": "2026-03-21",
-            "description": "Corrected description",
-            "direction": "OUTGOING",
-            "fx_rate": null,
-            "invoice_id": null,
-            "irpf_category": null,
-            "iva_amount": null,
-            "iva_category": null,
-            "iva_rate": null,
-            "lifecycle_state": "ACTIVE",
-            "m210_income_classification": null,
-            "modified_at": "2026-04-01T09:00:00+00:00",
-            "notes": "",
-            "prorrata_reference": null,
-            "purchase_invoice_evidence_id": null,
-            "source_jurisdiction": "ES",
-            "taxable_base": null,
-            "transaction_id": "86f4d44865f693e51c368c3e8f25a5b9bf7e1acf6089298e885854d661254629",
-            "usage_ratio_id": null,
-            "value_date": null,
-            "value_in_eur": null
-          },
-          "transaction_id": "86f4d44865f693e51c368c3e8f25a5b9bf7e1acf6089298e885854d661254629"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 1687,
+      "output_sha256": "4c8aaee078e0f985cc29b8f026636884b0af7761bf99e4c850b16e09faa92cf0"
     },
     {
       "argv": [
@@ -134,64 +80,11 @@
           "value": "86f4d44865f693e51c368c3e8f25a5b9bf7e1acf6089298e885854d661254629"
         }
       ],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "ledger.update",
-        "notices": [],
-        "result": {
-          "bucket_event_ids": [
-            "6082dd1e06c1a8299d25b7bfa3ac07495b32841016b4dc538a50ccfc9a81744d"
-          ],
-          "bucket_id": "<bucket-id>",
-          "review_status": "pending",
-          "transaction": {
-            "amount": "121",
-            "attachment_ids": [],
-            "booked_date": "2026-03-21",
-            "business_classification": "NOT_YET_PROCESSED",
-            "business_pct": null,
-            "category_id": null,
-            "classification_confidence": null,
-            "classification_reason": "",
-            "classified_at": null,
-            "classified_by": "auto",
-            "counterparty": "",
-            "counterparty_country": null,
-            "counterparty_identification_state": null,
-            "created_at": "2026-04-01T09:00:00+00:00",
-            "currency": "EUR",
-            "date": "2026-03-21",
-            "description": "Corrected description",
-            "direction": "OUTGOING",
-            "fx_rate": null,
-            "invoice_id": null,
-            "irpf_category": null,
-            "iva_amount": "21",
-            "iva_category": null,
-            "iva_rate": "0.21",
-            "lifecycle_state": "ACTIVE",
-            "m210_income_classification": null,
-            "modified_at": "2026-04-01T09:00:00+00:00",
-            "notes": "",
-            "prorrata_reference": null,
-            "purchase_invoice_evidence_id": null,
-            "source_jurisdiction": "ES",
-            "taxable_base": "100",
-            "transaction_id": "86f4d44865f693e51c368c3e8f25a5b9bf7e1acf6089298e885854d661254629",
-            "usage_ratio_id": null,
-            "value_date": null,
-            "value_in_eur": null
-          },
-          "transaction_id": "86f4d44865f693e51c368c3e8f25a5b9bf7e1acf6089298e885854d661254629"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 1690,
+      "output_sha256": "8074b99a7a0dae16002d202a9a91487be2fa4f9bc176e57843878c9745ff1e6a"
     },
     {
       "argv": [
@@ -204,12 +97,11 @@
         "Receipt checked against supplier PDF"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": "ID\t86f4d44865f693e51c368c3e8f25a5b9bf7e1acf6089298e885854d661254629\nDate\t2026-03-21\nAmount\t121\nDescription\tCorrected description\nReview status\tpending\n"
+      "output_bytes": 151,
+      "output_sha256": "7089e931e2ab1edebff01249d7edb7bd9015c9866670d85cdd5ced4d56913c3e"
     },
     {
       "argv": [
@@ -222,63 +114,13 @@
         "37e46cb93b11cfa556996041758cbf80b97ec6b23b4338e89b61dd3d3e332102"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "ledger.view",
-        "notices": [],
-        "result": {
-          "bucket_id": "<bucket-id>",
-          "review_status": "pending",
-          "transaction": {
-            "amount": "121",
-            "attachment_ids": [],
-            "booked_date": "2026-03-21",
-            "business_classification": "NOT_YET_PROCESSED",
-            "business_pct": null,
-            "category_id": null,
-            "classification_confidence": null,
-            "classification_reason": "",
-            "classified_at": null,
-            "classified_by": "auto",
-            "counterparty": "",
-            "counterparty_country": null,
-            "counterparty_identification_state": null,
-            "created_at": "2026-04-01T09:00:00+00:00",
-            "currency": "EUR",
-            "date": "2026-03-21",
-            "description": "Corrected description",
-            "direction": "OUTGOING",
-            "fx_rate": null,
-            "invoice_id": null,
-            "irpf_category": null,
-            "iva_amount": "21",
-            "iva_category": null,
-            "iva_rate": "0.21",
-            "lifecycle_state": "ACTIVE",
-            "m210_income_classification": null,
-            "modified_at": "2026-04-01T09:00:00+00:00",
-            "notes": "Receipt checked against supplier PDF",
-            "prorrata_reference": null,
-            "purchase_invoice_evidence_id": null,
-            "source_jurisdiction": "ES",
-            "taxable_base": "100",
-            "transaction_id": "86f4d44865f693e51c368c3e8f25a5b9bf7e1acf6089298e885854d661254629",
-            "usage_ratio_id": null,
-            "value_date": null,
-            "value_in_eur": null
-          },
-          "transaction_id": "86f4d44865f693e51c368c3e8f25a5b9bf7e1acf6089298e885854d661254629"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 1618,
+      "output_sha256": "dc8f19ee689bbabaf621d7089e74af2d0edb922250a4a51033a29b3b70f3f9ff"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "import-update-row"
 }

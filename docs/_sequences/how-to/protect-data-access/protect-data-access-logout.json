@@ -8,12 +8,11 @@
         "status"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": "profile\tdocs-sequence-sandbox\nprofile_id\t<profile-id>\nidentity.tax_id\tsha256:1c9f9632\nactivities.description\tdocumentation examples\niva.regime\tGENERAL\ntax_residence.ccaa\t<unset>\nNext step: `aeat app overview status`\n"
+      "output_bytes": 216,
+      "output_sha256": "b2ed484c08a26dcdf9508ae778e747c98526cf3fa4b4e2b2fccaf30d10b5a44d"
     },
     {
       "argv": [
@@ -22,12 +21,11 @@
         "logout"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": "logged_out_profile\tdocs-sequence-sandbox\n"
+      "output_bytes": 41,
+      "output_sha256": "68805343281b6e8a4491821c9df39d00bb6b8e99e3da64d80cf6cc27a2e75af6"
     },
     {
       "argv": [
@@ -39,30 +37,13 @@
         "list"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "config.profile.list",
-        "notices": [],
-        "result": {
-          "active_profile": "docs-sequence-sandbox",
-          "profiles": [
-            {
-              "active": true,
-              "bucket_id": "<bucket-id>",
-              "name": "docs-sequence-sandbox"
-            }
-          ]
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 354,
+      "output_sha256": "6a17cfc49eb183b9c3b6ab4b0b895c3268e1f30a19210d6688f5db48f41be5f1"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "protect-data-access-logout"
 }

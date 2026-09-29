@@ -16,12 +16,11 @@
         "--confirm"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": "operation\tmodelo.iva-wallet.seed\nfiling_year\t2024\nperiod\t4T\ntaxpayer_nif\tsha256:1c9f9632\namount\t0\nprovenance\toperator_seed\nregister_status\t\n"
+      "output_bytes": 140,
+      "output_sha256": "ca0f5abfbe4bf8d4a1329f05865363221d6cd2895e6cdbebf18e05a02b025221"
     },
     {
       "argv": [
@@ -36,30 +35,13 @@
         "2026"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "modelo.iva_wallet.balance",
-        "notices": [],
-        "result": {
-          "active_balance": "0",
-          "as_of_year": 2026,
-          "expired_balance": "0",
-          "lot_count": 0,
-          "next_expiry_year": null,
-          "operation": "modelo.iva_wallet.balance",
-          "total_balance": "0",
-          "unallocated_applied_amount": "0"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 412,
+      "output_sha256": "1956ee78ad987fe9e1121a447d49ac002c4a2cc78222a933ffc5ae0ae7fe75d9"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "modelo-303-wallet"
 }

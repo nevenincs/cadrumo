@@ -12,12 +12,11 @@
         "csv"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -29,12 +28,11 @@
         "classification=NOT_YET_PROCESSED"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": "ACCOUNTING LEDGER TRANSACTIONS\nid\tfull_id\tdate\tamount\tdescription\tIVA category\treview_status\n71a5db2b\t71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518\t2026-02-10\t1210\tCobro factura F-2026-001 servicios de consultoria\t\tpending\ne3eeac5e\te3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d\t2026-02-11\t605\tCompra de material de oficina proveedor local\t\tpending\n"
+      "output_bytes": 386,
+      "output_sha256": "225e6af83b55af5d7b5c63ee1a00f5028c3b668a55dc7354f8f84b428ae28d87"
     },
     {
       "argv": [
@@ -47,63 +45,13 @@
         "e3eeac5e"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "ledger.view",
-        "notices": [],
-        "result": {
-          "bucket_id": "<bucket-id>",
-          "review_status": "pending",
-          "transaction": {
-            "amount": "605",
-            "attachment_ids": [],
-            "booked_date": "2026-02-11",
-            "business_classification": "NOT_YET_PROCESSED",
-            "business_pct": null,
-            "category_id": null,
-            "classification_confidence": null,
-            "classification_reason": "",
-            "classified_at": null,
-            "classified_by": "auto",
-            "counterparty": "",
-            "counterparty_country": null,
-            "counterparty_identification_state": null,
-            "created_at": "2026-04-01T09:00:00+00:00",
-            "currency": "EUR",
-            "date": "2026-02-11",
-            "description": "Compra de material de oficina proveedor local",
-            "direction": "OUTGOING",
-            "fx_rate": null,
-            "invoice_id": null,
-            "irpf_category": null,
-            "iva_amount": null,
-            "iva_category": null,
-            "iva_rate": null,
-            "lifecycle_state": "ACTIVE",
-            "m210_income_classification": null,
-            "modified_at": "2026-04-01T09:00:00+00:00",
-            "notes": "",
-            "prorrata_reference": null,
-            "purchase_invoice_evidence_id": null,
-            "source_jurisdiction": null,
-            "taxable_base": null,
-            "transaction_id": "e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d",
-            "usage_ratio_id": null,
-            "value_date": "2026-02-11",
-            "value_in_eur": null
-          },
-          "transaction_id": "e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 1611,
+      "output_sha256": "4fe2470991b9c03e5ccaed9013e5af8747fe4daa4f95617f8c5039e9cfc2993a"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "classify-review-row"
 }

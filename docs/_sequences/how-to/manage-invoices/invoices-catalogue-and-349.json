@@ -35,66 +35,11 @@
           "value": "5f6226984e838fa553b9647364c5e3199cb833d79c8932072b9a67bc39eabc17"
         }
       ],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "ledger.invoice.add",
-        "notices": [],
-        "result": {
-          "base_total": "2000.00",
-          "base_total_eur": "2000.00",
-          "bucket_id": "<bucket-id>",
-          "counterparty_country": "DE",
-          "counterparty_name": "Kunde GmbH",
-          "counterparty_tax_id": "sha256:a9224776",
-          "currency": "EUR",
-          "fx_rate": null,
-          "fx_rate_date": null,
-          "fx_rate_source": null,
-          "grand_total": "2000.00",
-          "grand_total_eur": "2000.00",
-          "invoice_class": "ORDINARIA",
-          "invoice_id": "5f6226984e838fa553b9647364c5e3199cb833d79c8932072b9a67bc39eabc17",
-          "invoice_number": "EU-CAT-001",
-          "issued_at": "2026-02-10",
-          "iva_category": "intra_community_supply",
-          "iva_total": "0.00",
-          "iva_total_eur": "0.00",
-          "kind": "issued",
-          "lines": [
-            {
-              "description": "EU-CAT-001",
-              "iva_amount": "0.00",
-              "iva_rate": "RATE_0",
-              "oss_rate_kind": null,
-              "quantity": "1",
-              "spending_category_id": null,
-              "subtotal": "2000.00",
-              "unit_price": "2000.00"
-            }
-          ],
-          "linked_transaction_ids": [],
-          "notes": "",
-          "operation_date": null,
-          "operation_date_role": null,
-          "operation_type": "E",
-          "payment_status": "PENDING",
-          "recargo_amount": null,
-          "rectifies_invoice_number": null,
-          "retention_amount": null,
-          "retention_rate": null,
-          "series": null,
-          "source_filename": null,
-          "source_row_index": null,
-          "source_sha256": null
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 1543,
+      "output_sha256": "c2bb1c6f1f616093b5e635e0379dd7c4b8708d873f33f3c8d2c9ee6baa09368e"
     },
     {
       "argv": [
@@ -105,12 +50,11 @@
         "list"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": "bucket\t<profile-id>\ncount\t1\n5f6226984e838fa553b9647364c5e3199cb833d79c8932072b9a67bc39eabc17\tissued\tsha256:a9224776\tEU-CAT-001\t2026-02-10\t2000.00\n"
+      "output_bytes": 146,
+      "output_sha256": "6c9d69bc721d164c757a85a17d145381e233d9988103fef539c2d14a6a3d6d8f"
     },
     {
       "argv": [
@@ -124,66 +68,11 @@
         "5f6226984e838fa553b9647364c5e3199cb833d79c8932072b9a67bc39eabc17"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "ledger.invoice.view",
-        "notices": [],
-        "result": {
-          "base_total": "2000.00",
-          "base_total_eur": "2000.00",
-          "bucket_id": "<bucket-id>",
-          "counterparty_country": "DE",
-          "counterparty_name": "Kunde GmbH",
-          "counterparty_tax_id": "sha256:a9224776",
-          "currency": "EUR",
-          "fx_rate": null,
-          "fx_rate_date": null,
-          "fx_rate_source": null,
-          "grand_total": "2000.00",
-          "grand_total_eur": "2000.00",
-          "invoice_class": "ORDINARIA",
-          "invoice_id": "5f6226984e838fa553b9647364c5e3199cb833d79c8932072b9a67bc39eabc17",
-          "invoice_number": "EU-CAT-001",
-          "issued_at": "2026-02-10",
-          "iva_category": "intra_community_supply",
-          "iva_total": "0.00",
-          "iva_total_eur": "0.00",
-          "kind": "issued",
-          "lines": [
-            {
-              "description": "EU-CAT-001",
-              "iva_amount": "0.00",
-              "iva_rate": "RATE_0",
-              "oss_rate_kind": null,
-              "quantity": "1",
-              "spending_category_id": null,
-              "subtotal": "2000.00",
-              "unit_price": "2000.00"
-            }
-          ],
-          "linked_transaction_ids": [],
-          "notes": "",
-          "operation_date": null,
-          "operation_date_role": null,
-          "operation_type": "E",
-          "payment_status": "PENDING",
-          "recargo_amount": null,
-          "rectifies_invoice_number": null,
-          "retention_amount": null,
-          "retention_rate": null,
-          "series": null,
-          "source_filename": null,
-          "source_row_index": null,
-          "source_sha256": null
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 1544,
+      "output_sha256": "17cb0c33adcf48d95e75d1941442bae60d0c2445058f4862b25ebbda3b5c4370"
     },
     {
       "argv": [
@@ -208,48 +97,11 @@
           "value": "1609deb31dbe07e1b21281e26d114d5a4ef4230a5e9d2f387e8c253f06e07c9f"
         }
       ],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "modelo.work.create",
-        "notices": [],
-        "result": {
-          "applicability_guard_bypassed": false,
-          "bucket_id": "<bucket-id>",
-          "causante_ccaa": null,
-          "created_at": "2026-04-01T09:00:00+00:00",
-          "current_calculation_revision_id": null,
-          "current_filing_record_id": null,
-          "discard_reason": null,
-          "discarded_at": null,
-          "discarded_by": null,
-          "filed_calculation_revision_id": null,
-          "filing_year": 2026,
-          "modelo": "349",
-          "name": "349-2026-02",
-          "name_applied": null,
-          "operation": "modelo.work.create",
-          "period": {
-            "code": "02",
-            "filing_year": 2026
-          },
-          "revision_id": "2020-y-siguientes",
-          "short_current_calculation_revision_id": null,
-          "short_filed_calculation_revision_id": null,
-          "short_work_unit_id": "253f06e07c9f",
-          "state": "borrador",
-          "status": "created",
-          "status_message": "New work unit created.",
-          "updated_at": "2026-04-01T09:00:00+00:00",
-          "work_unit_id": "1609deb31dbe07e1b21281e26d114d5a4ef4230a5e9d2f387e8c253f06e07c9f"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 1142,
+      "output_sha256": "d768fabf575e4cdcf02e4032f41845728596e45ed3c788c4833a17b0af12c8d8"
     },
     {
       "argv": [
@@ -263,216 +115,13 @@
         "1609deb31dbe07e1b21281e26d114d5a4ef4230a5e9d2f387e8c253f06e07c9f"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "modelo.work.calculate",
-        "notices": [
-          {
-            "action": null,
-            "code": "modelo.work.calculate.plazo_vencido_unassessed_preview",
-            "context": {
-              "article_27_assessment_status": "unassessed",
-              "closes_on": "2026-03-20",
-              "conditional_recargo_preview_band": "completed_months_0",
-              "conditional_recargo_preview_interest_applies": "False",
-              "conditional_recargo_preview_pct": "1.00",
-              "conditional_recargo_preview_reference_on": "2026-04-01",
-              "days_overdue": "12",
-              "legal_refs": "ley-58-2003:art-27.2"
-            },
-            "message": "WARNING: voluntary filing period expired (Art. 27 LGT). The displayed rate is an unassessed preview; this application does not determine surcharge or interest liability.",
-            "severity": "warning"
-          }
-        ],
-        "result": {
-          "authorization_state": null,
-          "binding_overrides": {
-            "iva-349-declarante-importe-operaciones": "2000",
-            "iva-349-declarante-importe-operaciones-adquisicion": "0",
-            "iva-349-declarante-importe-rectificaciones": "0",
-            "iva-349-declarante-importe-rectificaciones-adquisicion": "0",
-            "iva-349-declarante-numero-operadores": "1",
-            "iva-349-declarante-numero-operadores-adquisicion": "0",
-            "iva-349-declarante-numero-rectificaciones": "0",
-            "iva-349-declarante-numero-rectificaciones-adquisicion": "0",
-            "modelo-349-ledger-intracommunity-guard": "0"
-          },
-          "calculation_revision_id": "a38757e48ef79f0d0973db8886eee059b82cf1ab9617993925184e784519e589",
-          "casilla_values": {
-            "decl.importe-operaciones": "2000.00",
-            "decl.importe-rectificaciones": "0",
-            "decl.numero-operadores": "1",
-            "decl.numero-rectificaciones": "0"
-          },
-          "created_at": "2026-04-01T09:00:00+00:00",
-          "deadline": {
-            "closes_on": "2026-03-20",
-            "conditional_recargo_preview": {
-              "assessment_status": "unassessed",
-              "band_id": "completed_months_0",
-              "interest_applies": false,
-              "legal_ref": "ley-58-2003:art-27.2",
-              "rate_reference_on": "2026-04-01",
-              "surcharge_pct": "1.00"
-            },
-            "days_overdue": 12,
-            "days_remaining": null
-          },
-          "detail_rows": [
-            {
-              "fields": {
-                "clave_operacion": "E",
-                "codigo_pais": "DE",
-                "importe": "2000.00",
-                "nif_comunitario": "sha256:a9224776",
-                "razon_social": "Kunde GmbH"
-              },
-              "index": 1,
-              "row_type": "operador"
-            }
-          ],
-          "filed_at": null,
-          "filed_by": null,
-          "input_values_by_casilla_id": {
-            "decl.importe-operaciones": "2000",
-            "decl.importe-rectificaciones": "0",
-            "decl.numero-operadores": "1",
-            "decl.numero-rectificaciones": "0"
-          },
-          "modality": null,
-          "modality_reason": null,
-          "observations": [
-            {
-              "absent_by_design": false,
-              "casilla_id": "decl.importe-operaciones",
-              "formula_id": null,
-              "legal_refs": [
-                "orden-eha-769-2010:art-1",
-                "orden-hac-174-2020:art-1",
-                "ley-58-2003:art-93"
-              ],
-              "op": null,
-              "operand_casilla_refs": [],
-              "operand_refs": [],
-              "operand_values": [],
-              "source_refs": [
-                "aeat-dr-349-2020-current",
-                "aeat-modelo-349-procedure"
-              ],
-              "value": "2000.00"
-            },
-            {
-              "absent_by_design": false,
-              "casilla_id": "decl.importe-rectificaciones",
-              "formula_id": null,
-              "legal_refs": [
-                "orden-eha-769-2010:art-1",
-                "orden-hac-174-2020:art-1",
-                "ley-58-2003:art-93"
-              ],
-              "op": null,
-              "operand_casilla_refs": [],
-              "operand_refs": [],
-              "operand_values": [],
-              "source_refs": [
-                "aeat-dr-349-2020-current",
-                "aeat-modelo-349-procedure"
-              ],
-              "value": "0"
-            },
-            {
-              "absent_by_design": false,
-              "casilla_id": "decl.numero-operadores",
-              "formula_id": null,
-              "legal_refs": [
-                "orden-eha-769-2010:art-1",
-                "orden-hac-174-2020:art-1",
-                "ley-58-2003:art-93"
-              ],
-              "op": null,
-              "operand_casilla_refs": [],
-              "operand_refs": [],
-              "operand_values": [],
-              "source_refs": [
-                "aeat-dr-349-2020-current",
-                "aeat-modelo-349-procedure"
-              ],
-              "value": "1"
-            },
-            {
-              "absent_by_design": false,
-              "casilla_id": "decl.numero-rectificaciones",
-              "formula_id": null,
-              "legal_refs": [
-                "orden-eha-769-2010:art-1",
-                "orden-hac-174-2020:art-1",
-                "ley-58-2003:art-93"
-              ],
-              "op": null,
-              "operand_casilla_refs": [],
-              "operand_refs": [],
-              "operand_values": [],
-              "source_refs": [
-                "aeat-dr-349-2020-current",
-                "aeat-modelo-349-procedure"
-              ],
-              "value": "0"
-            }
-          ],
-          "operation": "modelo.work.calculate",
-          "registry_snapshot_ref": {
-            "modelo": "349",
-            "modelo_year": 2026,
-            "period": "02",
-            "revision_id": "2020-y-siguientes"
-          },
-          "relation_overrides": {},
-          "result_summary": [
-            {
-              "casilla_id": "decl.numero-operadores",
-              "label": "Total number of intra-Community operators",
-              "role": "key_figure",
-              "value": "1"
-            },
-            {
-              "casilla_id": "decl.importe-operaciones",
-              "label": "Amount of intra-Community transactions",
-              "role": "key_figure",
-              "value": "2000.00"
-            }
-          ],
-          "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision a38757e48ef79f0d0973db8886eee059b82cf1ab9617993925184e784519e589 (state: draft). It is persisted and can be resumed later.",
-          "source_provenance": [
-            {
-              "contributor_binding_source": "collectible_invoice",
-              "contributor_source_kind": "collectible_invoice",
-              "dependency_treatment": "",
-              "fingerprint": "sha256:72748ea0133a321a0f267c1a26c97cb74e46e173732201ddd72a3c2edfd3c890",
-              "lineage_role": "primary",
-              "parent_source_ref": null,
-              "resolved_binding_source": "collectible_invoice",
-              "resolver_id": "invoice_catalogue",
-              "source_ref": "collectible_invoice:5f6226984e838fa553b9647364c5e3199cb833d79c8932072b9a67bc39eabc17"
-            }
-          ],
-          "state": "borrador",
-          "superseded_at": null,
-          "updated_at": "2026-04-01T09:00:00+00:00",
-          "verified_at": null,
-          "verified_by": null,
-          "work_unit_id": "1609deb31dbe07e1b21281e26d114d5a4ef4230a5e9d2f387e8c253f06e07c9f"
-        },
-        "schema_version": "2",
-        "status": "warning"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 6650,
+      "output_sha256": "54c54baab7e899981fc2782935d9320511291c43e37aa148766e4a86cdb71fc3"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "invoices-catalogue-and-349"
 }

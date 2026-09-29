@@ -11,26 +11,13 @@
         "rebuild"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "ledger.participation.rebuild",
-        "notices": [],
-        "result": {
-          "participation_count": 0,
-          "revision_count": 0,
-          "stale_removed_count": 0,
-          "transaction_count": 0
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 288,
+      "output_sha256": "b98dcd96171160e9312f0c277c4d4246f375ef7c8745b7d06be222b65c8a8340"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "troubleshooting-participation"
 }

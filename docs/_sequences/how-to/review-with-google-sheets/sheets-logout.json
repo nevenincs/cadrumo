@@ -10,27 +10,13 @@
         "logout"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "config.google.logout",
-        "notices": [],
-        "result": {
-          "client_preserved": true,
-          "metadata_removed": false,
-          "operation": "config.google.logout",
-          "profile": "<profile-id>",
-          "token_removed": false
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 328,
+      "output_sha256": "138857723503e18a7268f3cc7c3bb7a66cf1f26c9838cd737b071d16f5f88c17"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "sheets-logout"
 }

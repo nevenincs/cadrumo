@@ -12,12 +12,11 @@
         "natural_person"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -36,50 +35,13 @@
         "0A"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "modelo.work.create",
-        "notices": [],
-        "result": {
-          "applicability_guard_bypassed": false,
-          "bucket_id": "<bucket-id>",
-          "causante_ccaa": null,
-          "created_at": "2026-04-01T09:00:00+00:00",
-          "current_calculation_revision_id": null,
-          "current_filing_record_id": null,
-          "discard_reason": null,
-          "discarded_at": null,
-          "discarded_by": null,
-          "filed_calculation_revision_id": null,
-          "filing_year": 2025,
-          "modelo": "100",
-          "name": "100-2025-0A",
-          "name_applied": null,
-          "operation": "modelo.work.create",
-          "period": {
-            "code": "0A",
-            "filing_year": 2025
-          },
-          "revision_id": "2025",
-          "short_current_calculation_revision_id": null,
-          "short_filed_calculation_revision_id": null,
-          "short_work_unit_id": "cdafd119d9fd",
-          "state": "borrador",
-          "status": "created",
-          "status_message": "New work unit created.",
-          "updated_at": "2026-04-01T09:00:00+00:00",
-          "work_unit_id": "d36dd9ebe261dac47a36150e43ff53fdb815d4d1a45c0adbd4b8cdafd119d9fd"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 1129,
+      "output_sha256": "a8d61da9cb3abde42fc0068c0d2729d5c16ebcbed2e6a334ae2ae871e7b3ded2"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "review-values-m100-create"
 }

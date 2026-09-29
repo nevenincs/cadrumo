@@ -21,12 +21,11 @@
           "value": "6404ccf339e0bcea77eb0212f286d77d3b2d3f7ce6969118850266649125e7c7"
         }
       ],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -39,35 +38,11 @@
         "list"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "modelo.m036.list",
-        "notices": [],
-        "result": {
-          "bucket_id": "<bucket-id>",
-          "declaration_count": 1,
-          "declarations": [
-            {
-              "bucket_id": "<bucket-id>",
-              "declaration_id": "6404ccf339e0bcea77eb0212f286d77d3b2d3f7ce6969118850266649125e7c7",
-              "declared_on": "2026-01-10",
-              "event_kind": "alta",
-              "note": null,
-              "profile_id": "<profile-id>",
-              "recorded_at": "2026-04-01T09:00:00+00:00",
-              "sede_justificante": "ACUSE-036-2026"
-            }
-          ],
-          "operation": "modelo.m036.list"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 660,
+      "output_sha256": "36fa89ea8bd000c34f8cb974c04e6a0ce4ed1cd0e0bef68e667c8d7971239520"
     },
     {
       "argv": [
@@ -81,31 +56,13 @@
         "6404ccf339e0bcea77eb0212f286d77d3b2d3f7ce6969118850266649125e7c7"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "modelo.m036.view",
-        "notices": [],
-        "result": {
-          "bucket_id": "<bucket-id>",
-          "declaration_id": "6404ccf339e0bcea77eb0212f286d77d3b2d3f7ce6969118850266649125e7c7",
-          "declared_on": "2026-01-10",
-          "event_kind": "alta",
-          "note": null,
-          "operation": "modelo.m036.view",
-          "profile_id": "<profile-id>",
-          "recorded_at": "2026-04-01T09:00:00+00:00",
-          "sede_justificante": "ACUSE-036-2026"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 524,
+      "output_sha256": "1001a14eebd8ea2093d4f6561c1f880b1049361d2736f56ee04da8c670927ea6"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "modelo-036-list-view"
 }

@@ -13,12 +13,11 @@
         "2026-01-01"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -32,12 +31,11 @@
         "csv"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -56,12 +54,11 @@
         "210"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -84,12 +81,11 @@
         "domestic_current"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -121,12 +117,11 @@
           "value": "9a075f52dad08e80"
         }
       ],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -139,12 +134,11 @@
         "9a075f52dad08e80"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -161,12 +155,11 @@
         "1T"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -177,12 +170,11 @@
         "list"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": "active_profile\tdocs-sequence-sandbox\noperation\tmodelo.work.list\ninclude_discarded\tFalse\nwork_unit_count\t1\nshort_work_unit_id\twork_unit_id\tmodelo\tyear\tperiod\trevision_id\tstate\tcurrent_revision\tfiled_revision\tname\naf6b2264dd9d\tfa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d\t303\t2026\t1T\t2026-y-siguientes\tdraft\t\t\t303-2026-1T\nnotice\tmodelo.work.list.next_action\tOne work unit is available for inspection.\nnext_action\taeat app modelo work status fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d\n"
+      "output_bytes": 524,
+      "output_sha256": "5ee31c6c96c8e838a541298a154a678963aff0b925eb6bc9fcb555313bbb5bf7"
     },
     {
       "argv": [
@@ -201,79 +193,13 @@
         "1T"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "modelo.work.status",
-        "notices": [
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.modelo.work.calculate",
-                "cli_path": [
-                  "app",
-                  "modelo",
-                  "work",
-                  "calculate"
-                ],
-                "target_command_key": "modelo.work.calculate"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "work_unit_id",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "work_unit_id",
-                  "status": "resolved",
-                  "value": "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d"
-                }
-              ]
-            },
-            "code": "modelo.work.status.next_action",
-            "context": {
-              "continuation_outcome": "action_available",
-              "work_unit_id": "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d",
-              "work_unit_state": "borrador"
-            },
-            "message": "This active work unit can be calculated.",
-            "severity": "info"
-          }
-        ],
-        "result": {
-          "bucket_id": "<bucket-id>",
-          "causante_ccaa": null,
-          "created_at": "2026-04-01T09:00:00+00:00",
-          "current_calculation_revision_id": null,
-          "current_filing_record_id": null,
-          "discard_reason": null,
-          "discarded_at": null,
-          "discarded_by": null,
-          "filed_calculation_revision_id": null,
-          "filing_year": 2026,
-          "modelo": "303",
-          "name": "303-2026-1T",
-          "operation": "modelo.work.status",
-          "period": {
-            "code": "1T",
-            "filing_year": 2026
-          },
-          "revision_id": "2026-y-siguientes",
-          "short_current_calculation_revision_id": null,
-          "short_filed_calculation_revision_id": null,
-          "short_work_unit_id": "af6b2264dd9d",
-          "state": "borrador",
-          "updated_at": "2026-04-01T09:00:00+00:00",
-          "work_unit_id": "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 2023,
+      "output_sha256": "cd4c4f517b9ee68b8461ef50779c891e19f604ef85e8fed82a2cb580c3fada69"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "filing-spine-work-list"
 }

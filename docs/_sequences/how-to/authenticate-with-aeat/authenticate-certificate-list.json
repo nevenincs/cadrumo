@@ -11,24 +11,13 @@
         "list"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "config.auth.certificate.list",
-        "notices": [],
-        "result": {
-          "active_source": "",
-          "sources": []
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 219,
+      "output_sha256": "8d95baa9aab4f6f3cd05c1cabebd109a307a9b9b167fba13bc2dc9c0239d4bdd"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "authenticate-certificate-list"
 }

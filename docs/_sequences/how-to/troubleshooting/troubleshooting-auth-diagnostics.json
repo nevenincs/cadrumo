@@ -11,24 +11,13 @@
         "list"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "config.auth.diagnostics.list",
-        "notices": [],
-        "result": {
-          "row_count": 0,
-          "rows": []
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 211,
+      "output_sha256": "58cdd1e1b612fc65782d929a5fa6bf271351d8752fe7c69d52af91c7019b51d3"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "troubleshooting-auth-diagnostics"
 }

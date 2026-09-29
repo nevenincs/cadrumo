@@ -67,6 +67,7 @@ from dev.deploy.docs_static_site import (
 from ..build import docs_build_language, resolve_record_injector
 from ..pagefind_index import DECIDED_INJECTED_RECORD_KINDS, build_search_index
 from ..pagefind_inject import InjectionStats
+from ..sequences.record_store import default_records_root
 from ._http_serve_support import serve_directory
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
@@ -181,10 +182,9 @@ def test_deploy_environment_resolves_the_record_injector() -> None:
     """
     assert resolve_record_injector(_REPO_ROOT, site_build_environment(base_environment={})) is not None
     for language in localized_languages():
-        # The cli-sequence goldens gate is irrelevant to the injector decision
-        # and its verdict cannot vary by root, so these probes take the
-        # documented opt-out rather than paying for it once per language.
-        environment = language_build_environment(language, check_sequences=False)
+        # Every deploy root skips the cli-sequence check and renders the
+        # records the deploy checked; the records root is irrelevant here.
+        environment = language_build_environment(language, records_root=default_records_root())
         assert resolve_record_injector(_REPO_ROOT, environment) is not None, (
             f"localized root {language!r} would deploy without injected search records"
         )
@@ -325,11 +325,10 @@ def _root_build_environment(language: str) -> Mapping[str, str]:
     """
     if language == OutputLanguage.EN.value:
         return site_build_environment(base_environment={})
-    # These probes assert search recall, not the cli-sequence goldens, whose
-    # verdict cannot vary by root; they take the documented opt-out so a recall
-    # probe does not re-run that gate once per language.
+    # These probes assert search recall, not the cli-sequence goldens; every
+    # deploy root skips that check and renders the records the deploy checked.
     return {
-        **language_build_environment(language, check_sequences=False),
+        **language_build_environment(language, records_root=default_records_root()),
         "CADRUMO_DOCS_LANGUAGE": language,
     }
 

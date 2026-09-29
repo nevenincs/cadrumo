@@ -13,12 +13,11 @@
         "2026-01-01"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -32,12 +31,11 @@
         "csv"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -56,12 +54,11 @@
         "210"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -84,12 +81,11 @@
         "domestic_current"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -121,12 +117,11 @@
           "value": "9a075f52dad08e80"
         }
       ],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -139,12 +134,11 @@
         "9a075f52dad08e80"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -158,12 +152,11 @@
         "1T"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": "bucket\t<profile-id>\nperiod\t2026 1T\nchecked\t2\nissues\t0\nready\ttrue\n"
+      "output_bytes": 65,
+      "output_sha256": "de3b618adfbef93ce6bdc4c707154fc26338e9b405a36f7572405739782f988b"
     },
     {
       "argv": [
@@ -179,44 +172,13 @@
         "1T"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "ledger.status",
-        "notices": [],
-        "result": {
-          "active_count": 2,
-          "archived_count": 0,
-          "bucket_id": "<bucket-id>",
-          "business_expense_total": "605",
-          "business_income_total": "1210",
-          "business_net_total": "605",
-          "checked_transaction_count": 2,
-          "pending_review_count": 0,
-          "period": {
-            "code": "1T",
-            "filing_year": 2026
-          },
-          "readiness_issue_count": 0,
-          "readiness_issues": [],
-          "ready": true,
-          "reviewed_count": 2,
-          "skipped_count": 0,
-          "split_count": 0,
-          "stale_filings": [],
-          "stashed_count": 0,
-          "total_count": 2,
-          "unconverted_currency_count": 0
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 741,
+      "output_sha256": "b64ffb7a1881824c2878bb1c350030e0337b146020cd7de9c2cbdfd7f8b6c294"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "modelo-303-ledger-period"
 }

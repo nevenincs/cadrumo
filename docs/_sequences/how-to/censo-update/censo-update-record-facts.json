@@ -20,22 +20,11 @@
           "value": "docs-sequence-sandbox"
         }
       ],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "config.profile.edit",
-        "notices": [],
-        "result": {
-          "profile_name": "docs-sequence-sandbox",
-          "status": "updated"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 236,
+      "output_sha256": "c83da38ceb727d32dc28738a4556f5cfefb583401a8829d61f003011a78a1231"
     },
     {
       "argv": [
@@ -48,28 +37,13 @@
         "docs-sequence-sandbox"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "config.profile.validate",
-        "notices": [],
-        "result": {
-          "display_name": "docs-sequence-sandbox",
-          "issues": [],
-          "profile_id": "<profile-id>",
-          "schema_version": 7,
-          "setup_state": "complete",
-          "valid": true
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 342,
+      "output_sha256": "c3aca9e1084446fa12c79afbb0c5bd119fb332974bdfa3613acff80b3ee4580d"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "censo-update-record-facts"
 }

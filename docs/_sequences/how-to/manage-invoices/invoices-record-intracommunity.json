@@ -35,66 +35,11 @@
           "value": "6d5fa3b4e91913a5e2f8245f40061fe824ecb7894c88b418d6e8c0fb1be79ca7"
         }
       ],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "ledger.invoice.add",
-        "notices": [],
-        "result": {
-          "base_total": "2000.00",
-          "base_total_eur": "2000.00",
-          "bucket_id": "<bucket-id>",
-          "counterparty_country": "DE",
-          "counterparty_name": "Kunde GmbH",
-          "counterparty_tax_id": "sha256:a9224776",
-          "currency": "EUR",
-          "fx_rate": null,
-          "fx_rate_date": null,
-          "fx_rate_source": null,
-          "grand_total": "2000.00",
-          "grand_total_eur": "2000.00",
-          "invoice_class": "ORDINARIA",
-          "invoice_id": "6d5fa3b4e91913a5e2f8245f40061fe824ecb7894c88b418d6e8c0fb1be79ca7",
-          "invoice_number": "EU-001",
-          "issued_at": "2026-02-10",
-          "iva_category": "intra_community_supply",
-          "iva_total": "0.00",
-          "iva_total_eur": "0.00",
-          "kind": "issued",
-          "lines": [
-            {
-              "description": "EU-001",
-              "iva_amount": "0.00",
-              "iva_rate": "RATE_0",
-              "oss_rate_kind": null,
-              "quantity": "1",
-              "spending_category_id": null,
-              "subtotal": "2000.00",
-              "unit_price": "2000.00"
-            }
-          ],
-          "linked_transaction_ids": [],
-          "notes": "",
-          "operation_date": null,
-          "operation_date_role": null,
-          "operation_type": "E",
-          "payment_status": "PENDING",
-          "recargo_amount": null,
-          "rectifies_invoice_number": null,
-          "retention_amount": null,
-          "retention_rate": null,
-          "series": null,
-          "source_filename": null,
-          "source_row_index": null,
-          "source_sha256": null
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 1535,
+      "output_sha256": "f666d1541b332c6ac78f9f347458257f94c1e60dc0f46f43d1122d1deeb854a1"
     },
     {
       "argv": [
@@ -108,68 +53,13 @@
         "6d5fa3b4e91913a5e2f8245f40061fe824ecb7894c88b418d6e8c0fb1be79ca7"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "ledger.invoice.view",
-        "notices": [],
-        "result": {
-          "base_total": "2000.00",
-          "base_total_eur": "2000.00",
-          "bucket_id": "<bucket-id>",
-          "counterparty_country": "DE",
-          "counterparty_name": "Kunde GmbH",
-          "counterparty_tax_id": "sha256:a9224776",
-          "currency": "EUR",
-          "fx_rate": null,
-          "fx_rate_date": null,
-          "fx_rate_source": null,
-          "grand_total": "2000.00",
-          "grand_total_eur": "2000.00",
-          "invoice_class": "ORDINARIA",
-          "invoice_id": "6d5fa3b4e91913a5e2f8245f40061fe824ecb7894c88b418d6e8c0fb1be79ca7",
-          "invoice_number": "EU-001",
-          "issued_at": "2026-02-10",
-          "iva_category": "intra_community_supply",
-          "iva_total": "0.00",
-          "iva_total_eur": "0.00",
-          "kind": "issued",
-          "lines": [
-            {
-              "description": "EU-001",
-              "iva_amount": "0.00",
-              "iva_rate": "RATE_0",
-              "oss_rate_kind": null,
-              "quantity": "1",
-              "spending_category_id": null,
-              "subtotal": "2000.00",
-              "unit_price": "2000.00"
-            }
-          ],
-          "linked_transaction_ids": [],
-          "notes": "",
-          "operation_date": null,
-          "operation_date_role": null,
-          "operation_type": "E",
-          "payment_status": "PENDING",
-          "recargo_amount": null,
-          "rectifies_invoice_number": null,
-          "retention_amount": null,
-          "retention_rate": null,
-          "series": null,
-          "source_filename": null,
-          "source_row_index": null,
-          "source_sha256": null
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 1536,
+      "output_sha256": "03fae8a0f1d4bfd46523c11749705c954eb855cac1f66b9fc132dc2c10a303c4"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "invoices-record-intracommunity"
 }

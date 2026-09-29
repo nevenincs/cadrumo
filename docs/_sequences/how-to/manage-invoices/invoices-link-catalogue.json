@@ -26,12 +26,11 @@
           "value": "4ea9963064d9ee8b2b6b69349aa94dfeb5298f118bc99cdce546c040ed01d522"
         }
       ],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -68,12 +67,11 @@
           "value": "74dbc61158fa07888e5c677cd0d01745883b4184f7c5caf7e1e0b9ac1b5f74ca"
         }
       ],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -86,12 +84,11 @@
         "74dbc61158fa07888e5c677cd0d01745883b4184f7c5caf7e1e0b9ac1b5f74ca"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": "operation\tledger.link\nbucket\t<profile-id>\ntransaction_id\t4ea9963064d9ee8b2b6b69349aa94dfeb5298f118bc99cdce546c040ed01d522\nactor\toperator\ninvoice_id\t74dbc61158fa07888e5c677cd0d01745883b4184f7c5caf7e1e0b9ac1b5f74ca\n"
+      "output_bytes": 213,
+      "output_sha256": "d0b2febc5de66c45d205b29b46e1a2dd56603d950e458a03394df8097202bd4f"
     },
     {
       "argv": [
@@ -105,70 +102,13 @@
         "74dbc61158fa07888e5c677cd0d01745883b4184f7c5caf7e1e0b9ac1b5f74ca"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "ledger.invoice.view",
-        "notices": [],
-        "result": {
-          "base_total": "2000.00",
-          "base_total_eur": "2000.00",
-          "bucket_id": "<bucket-id>",
-          "counterparty_country": "DE",
-          "counterparty_name": "Kunde GmbH",
-          "counterparty_tax_id": "sha256:a9224776",
-          "currency": "EUR",
-          "fx_rate": null,
-          "fx_rate_date": null,
-          "fx_rate_source": null,
-          "grand_total": "2000.00",
-          "grand_total_eur": "2000.00",
-          "invoice_class": "ORDINARIA",
-          "invoice_id": "74dbc61158fa07888e5c677cd0d01745883b4184f7c5caf7e1e0b9ac1b5f74ca",
-          "invoice_number": "EU-CAT-050",
-          "issued_at": "2026-02-10",
-          "iva_category": "intra_community_supply",
-          "iva_total": "0.00",
-          "iva_total_eur": "0.00",
-          "kind": "issued",
-          "lines": [
-            {
-              "description": "EU-CAT-050",
-              "iva_amount": "0.00",
-              "iva_rate": "RATE_0",
-              "oss_rate_kind": null,
-              "quantity": "1",
-              "spending_category_id": null,
-              "subtotal": "2000.00",
-              "unit_price": "2000.00"
-            }
-          ],
-          "linked_transaction_ids": [
-            "4ea9963064d9ee8b2b6b69349aa94dfeb5298f118bc99cdce546c040ed01d522"
-          ],
-          "notes": "",
-          "operation_date": null,
-          "operation_date_role": null,
-          "operation_type": "E",
-          "payment_status": "PENDING",
-          "recargo_amount": null,
-          "rectifies_invoice_number": null,
-          "retention_amount": null,
-          "retention_rate": null,
-          "series": null,
-          "source_filename": null,
-          "source_row_index": null,
-          "source_sha256": null
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 1622,
+      "output_sha256": "0a67ce05d0d22d847cad6d12bb523caf28def427f8492b445b8d476780ee372f"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "invoices-link-catalogue"
 }

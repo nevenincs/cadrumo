@@ -10,30 +10,13 @@
         "list"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "config.profile.list",
-        "notices": [],
-        "result": {
-          "active_profile": "docs-sequence-sandbox",
-          "profiles": [
-            {
-              "active": true,
-              "bucket_id": "<bucket-id>",
-              "name": "docs-sequence-sandbox"
-            }
-          ]
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 354,
+      "output_sha256": "6a17cfc49eb183b9c3b6ab4b0b895c3268e1f30a19210d6688f5db48f41be5f1"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "quickstart-create-profile"
 }

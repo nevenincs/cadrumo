@@ -10,39 +10,13 @@
         "providers"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "config.auth.providers",
-        "notices": [],
-        "result": {
-          "providers": [
-            {
-              "description": "auth.catalogue.certificate_description",
-              "id": "certificate",
-              "label": "auth.catalogue.certificate_label"
-            },
-            {
-              "description": "auth.catalogue.clave_movil_description",
-              "id": "clave_movil",
-              "label": "auth.catalogue.clave_movil_label"
-            },
-            {
-              "description": "auth.catalogue.clave_permanente_description",
-              "id": "clave_permanente",
-              "label": "auth.catalogue.clave_permanente_label"
-            }
-          ]
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 697,
+      "output_sha256": "85a08c6d4686a0ec27b796c584dad07de53b05855dfa41982ae80605ef00322e"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "authenticate-providers"
 }

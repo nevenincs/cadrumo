@@ -9,12 +9,11 @@
         "--dry-run"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": "dry_run\ttrue\nwould_quarantine\t0\nwould_retain\t2\n"
+      "output_bytes": 47,
+      "output_sha256": "e16fea283ef381372319579b2b6ec647833ebadac75bcb1194f93b4b6d72d35a"
     },
     {
       "argv": [
@@ -27,40 +26,13 @@
         "--yes"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "config.repair.quarantine",
-        "notices": [],
-        "result": {
-          "dry_run": false,
-          "namespaces": [
-            {
-              "namespace": "cadrumo.application.user_profile.value",
-              "readable": 1,
-              "unreadable": 0
-            },
-            {
-              "namespace": "cadrumo.domain.buckets.event_history",
-              "readable": 1,
-              "unreadable": 0
-            }
-          ],
-          "quarantined": null,
-          "readable_total": 2,
-          "reason": null,
-          "retained": null,
-          "unreadable_total": 0
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 590,
+      "output_sha256": "e1d330edb2e3ab3232d0993dbc0f3f3e1bcc90fbfa306b64f6fb06d3c51eaf61"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "troubleshooting-quarantine"
 }

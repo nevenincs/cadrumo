@@ -9,12 +9,11 @@
         "view"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": "llm_vision\tenabled\tdefault\tllm_vision is on by default (no profile opt-in)\ngoogle_export\tenabled\tdefault\tgoogle_export is on by default (no profile opt-in)\ncloud_evidence_upload\tdisabled\tdefault\tcloud_evidence_upload is off by default (no profile opt-in)\n"
+      "output_bytes": 255,
+      "output_sha256": "8f2e33d5443f0ad370045882cfa3f6b98f1fe2e5c5acdb628b3c08bd44d4596c"
     },
     {
       "argv": [
@@ -27,12 +26,11 @@
         "off"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": "capability\tllm_vision\nstate\toff\n"
+      "output_bytes": 32,
+      "output_sha256": "706f55d0f100714167f17fdff5800498f942236ab71b12101b64f95cd6a71173"
     },
     {
       "argv": [
@@ -45,43 +43,13 @@
         "view"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "config.profile.capabilities.show",
-        "notices": [],
-        "result": {
-          "capabilities": [
-            {
-              "capability": "llm_vision",
-              "enabled": false,
-              "reason": "profile opted out of llm_vision",
-              "source": "profile"
-            },
-            {
-              "capability": "google_export",
-              "enabled": true,
-              "reason": "google_export is on by default (no profile opt-in)",
-              "source": "default"
-            },
-            {
-              "capability": "cloud_evidence_upload",
-              "enabled": false,
-              "reason": "cloud_evidence_upload is off by default (no profile opt-in)",
-              "source": "default"
-            }
-          ],
-          "profile_id": "<profile-id>"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 781,
+      "output_sha256": "b79d517c0023b57eded14cb20492fe616d2eb23088f8f8fc8baf5a9478ae2c6b"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "profile-setup-capabilities"
 }

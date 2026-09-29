@@ -30,12 +30,11 @@
           "value": "6509f06abb0c5756"
         }
       ],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -71,12 +70,11 @@
           "value": "9ad5e90279a049021db72b53806469870d4739a6d557a47006099b5ce5c9573b"
         }
       ],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -89,12 +87,11 @@
         "6509f06abb0c5756"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": "ID\t9ad5e90279a049021db72b53806469870d4739a6d557a47006099b5ce5c9573b\nDate\t2026-03-21\nAmount\t121\nDescription\tOffice supplies\nReview status\tpending\n"
+      "output_bytes": 145,
+      "output_sha256": "53184943abb472418097d125de77d31b677375e7d768e21ad0ded0c239fa7e96"
     },
     {
       "argv": [
@@ -107,63 +104,13 @@
         "9ad5e90279a049021db72b53806469870d4739a6d557a47006099b5ce5c9573b"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "ledger.view",
-        "notices": [],
-        "result": {
-          "bucket_id": "<bucket-id>",
-          "review_status": "pending",
-          "transaction": {
-            "amount": "121",
-            "attachment_ids": [],
-            "booked_date": "2026-03-21",
-            "business_classification": "NOT_YET_PROCESSED",
-            "business_pct": null,
-            "category_id": "material_oficina",
-            "classification_confidence": null,
-            "classification_reason": "",
-            "classified_at": null,
-            "classified_by": "auto",
-            "counterparty": "",
-            "counterparty_country": null,
-            "counterparty_identification_state": null,
-            "created_at": "2026-04-01T09:00:00+00:00",
-            "currency": "EUR",
-            "date": "2026-03-21",
-            "description": "Office supplies",
-            "direction": "OUTGOING",
-            "fx_rate": null,
-            "invoice_id": null,
-            "irpf_category": null,
-            "iva_amount": "21",
-            "iva_category": null,
-            "iva_rate": "0.21",
-            "lifecycle_state": "ACTIVE",
-            "m210_income_classification": null,
-            "modified_at": "2026-04-01T09:00:00+00:00",
-            "notes": "",
-            "prorrata_reference": null,
-            "purchase_invoice_evidence_id": "6509f06abb0c5756",
-            "source_jurisdiction": "ES",
-            "taxable_base": "100",
-            "transaction_id": "9ad5e90279a049021db72b53806469870d4739a6d557a47006099b5ce5c9573b",
-            "usage_ratio_id": null,
-            "value_date": null,
-            "value_in_eur": null
-          },
-          "transaction_id": "9ad5e90279a049021db72b53806469870d4739a6d557a47006099b5ce5c9573b"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 1604,
+      "output_sha256": "b2f56596c5d592f8eb24f7a631a13ded7fd11811c7681e0ad120d8fb22eec824"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "import-attach-evidence"
 }

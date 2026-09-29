@@ -23,12 +23,11 @@
         "1"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -47,12 +46,11 @@
         "0A"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -77,12 +75,11 @@
         "renta-base-liquidable-negativa-general-anterior=0"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -101,12 +98,11 @@
         "0A"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -126,61 +122,13 @@
         "./modelo-100.boe"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "modelo.export",
-        "notices": [
-          {
-            "action": null,
-            "code": "modelo.export.local_export_not_official_evidence",
-            "context": {
-              "evidence_status": "local_export_not_official_aeat_filing_evidence",
-              "filing_year": "2025",
-              "modelo": "100",
-              "period": "0A"
-            },
-            "message": "The local export is not official filing evidence.",
-            "severity": "warning"
-          }
-        ],
-        "result": {
-          "bucket_event_id": "67ccce050825ef63e68757af12790eecfd18cf70335c82aaceca25d77e0a2f24",
-          "bucket_id": "<bucket-id>",
-          "byte_size": 2282,
-          "calculation_revision_id": "8e5b7e8082734e452e76076252a876ae56fdf3cea59f0a93ae2756ef3b7f32e8",
-          "file_sha256": "c1d2af49eae2e7ff87f92a407ccdc00093fa3e5ca6ce080cf2399d3698e13e70",
-          "filing_year": 2025,
-          "format": "xml-dictionary",
-          "modelo": "100",
-          "operation": "modelo.export",
-          "output_path": "modelo-100.boe",
-          "payment_election": "ingreso",
-          "period": {
-            "code": "0A",
-            "filing_year": 2025
-          },
-          "prior_domiciliation_election": {
-            "baseline_evidence_reference_id": null,
-            "baseline_filing_record_id": null,
-            "baseline_result_disposition": null,
-            "baseline_source_header_locator": null,
-            "election": "keep"
-          },
-          "refund_election": null,
-          "resolved_result_disposition": "I",
-          "software_identity_grade": null,
-          "work_unit_id": "d36dd9ebe261dac47a36150e43ff53fdb815d4d1a45c0adbd4b8cdafd119d9fd"
-        },
-        "schema_version": "2",
-        "status": "warning"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 1458,
+      "output_sha256": "3b6cdd9d8305679c6ea40331ebdd5022c45d42e2eac5485f5b598ecfb518dceb"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "modelo-100-export-file"
 }

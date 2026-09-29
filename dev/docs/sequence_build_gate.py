@@ -53,10 +53,11 @@ _SKIP_EMIT_ENV = "CADRUMO_DOCS_SKIP_CLI_TREE"
 #: elsewhere in the same lane: the pytest goldens gate
 #: (``dev/docs/tests/test_sequence_goldens.py``) for the test harness and the
 #: POT extraction, and the deploy's own check before it starts any site root.
-#: A skipped HTML build renders the verified records that check cached; a page
-#: whose record is missing runs its own check once rather than render
-#: unverified output (non-HTML builders render no sequence output at all). A
-#: lone build never sets it; the hook stays connected and red-on-divergence.
+#: A skipped HTML build renders the verified records that check cached; one
+#: that finds any missing runs the check once, before reading, rather than
+#: render unverified output (non-HTML builders render no sequence output at
+#: all). A lone build never sets it; the hook stays connected and
+#: red-on-divergence.
 #:
 #: Public because the deploy composes its per-root environments from it: a
 #: second literal copy of the key could drift from this one silently, which is
@@ -224,14 +225,30 @@ def check_sequence_goldens(app: Sphinx, *, pages: list[str] | None = None) -> No
             (the incremental changed-page set); ``None`` checks every enrolled
             page (a full build).
     """
+    from .sequences.checks import unverified_records
     from .sequences.golden_store import refresh_invocation
 
+    docs_root = Path(app.srcdir)
+    goldens_root = _config_root(app, "cadrumo_sequences_goldens_root")
+    records_root = _config_root(app, "cadrumo_sequences_records_root")
     if not should_check_sequences():
-        return
+        # The skip owes the check elsewhere, and pages render the records it
+        # cached. Only an HTML build renders them, so only an HTML build that
+        # finds one missing runs the check itself, once, before any page is read.
+        if app.builder.format != "html":
+            return
+        missing = unverified_records(docs_root=docs_root, goldens_root=goldens_root, records_root=records_root)
+        if not missing:
+            return
+        print(
+            f"cli-sequence check skipped, but {len(missing)} sequence(s) have no verified record; checking now",
+            flush=True,
+        )
+        pages = None
     problems = run_sequence_check(
-        docs_root=Path(app.srcdir),
-        goldens_root=_config_root(app, "cadrumo_sequences_goldens_root"),
-        records_root=_config_root(app, "cadrumo_sequences_records_root"),
+        docs_root=docs_root,
+        goldens_root=goldens_root,
+        records_root=records_root,
         pages=pages,
     )
     if problems:

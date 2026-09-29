@@ -15,12 +15,11 @@
         "PAGOSF"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -33,31 +32,13 @@
         "status"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "config.auth.apoderado.status",
-        "notices": [],
-        "result": {
-          "bucket_id": "<bucket-id>",
-          "catalogue_version": "2026.05.bootstrap",
-          "configured": true,
-          "configured_at": "2026-04-01T09:00:00+00:00",
-          "granted_scopes": [
-            "IVA",
-            "PAGOSF"
-          ],
-          "represented_nif": "sha256:33982da1"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 428,
+      "output_sha256": "8ce1fc0fb3fd6d33a4895751257ff406bdaa861fc497ddce0081081981c87b3a"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "authenticate-apoderado-status"
 }

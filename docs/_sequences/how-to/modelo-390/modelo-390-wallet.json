@@ -18,32 +18,13 @@
         "--confirm"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "modelo.iva_wallet.seed",
-        "notices": [],
-        "result": {
-          "amount": "0",
-          "filing_year": 2024,
-          "operation": "modelo.iva_wallet.seed",
-          "period": {
-            "code": "4T",
-            "filing_year": 2024
-          },
-          "provenance": "operator_seed",
-          "register_status": null,
-          "taxpayer_nif": "sha256:1c9f9632"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 428,
+      "output_sha256": "16112c7fd2e98403f59bb6973173d2f4af1b41b76928defb698748ec4509707c"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "modelo-390-wallet"
 }

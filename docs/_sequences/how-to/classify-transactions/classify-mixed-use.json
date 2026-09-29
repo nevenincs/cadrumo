@@ -26,12 +26,11 @@
           "value": "80f1bbebb9176b41674513c8a1c593f2ba8e6304d6fa0a9bfe104dd2f081a73e"
         }
       ],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -42,12 +41,11 @@
         "eligible"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": "bucket\t<profile-id>\ncount\t15\namortizacion_vivienda_afecto\tusage_ratio_home_area\tdefault=-\toverride=.\narrendamiento_vivienda_afecto\tusage_ratio_home_area\tdefault=-\toverride=.\ncomunidad_vivienda_afecto\tusage_ratio_home_area\tdefault=-\toverride=.\nibi_vivienda_afecto\tusage_ratio_home_area\tdefault=-\toverride=.\nsuministros_home_office_agua\tusage_ratio_home_area\tdefault=-\toverride=.\nsuministros_home_office_gas\tusage_ratio_home_area\tdefault=-\toverride=.\nsuministros_home_office_internet\tusage_ratio_home_area\tdefault=-\toverride=.\nsuministros_home_office_luz\tusage_ratio_home_area\tdefault=-\toverride=.\ntelefonia_fija\tusage_ratio_home_area\tdefault=-\toverride=.\ntelefonia_movil\tusage_ratio_personal\tdefault=-\toverride=.\nvehiculo_combustible\tusage_ratio_personal\tdefault=-\toverride=.\nvehiculo_mantenimiento\tusage_ratio_personal\tdefault=-\toverride=.\nvehiculo_parking\tusage_ratio_personal\tdefault=-\toverride=.\nvehiculo_peaje\tusage_ratio_personal\tdefault=-\toverride=.\nvehiculo_seguro\tusage_ratio_personal\tdefault=-\toverride=.\n"
+      "output_bytes": 1014,
+      "output_sha256": "4c60a25866eeca8958660bbcbcf345aee259378b157db519c7b338b60b7a29ad"
     },
     {
       "argv": [
@@ -60,12 +58,11 @@
         "0.5"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": "bucket\t<profile-id>\ntelefonia_movil\t0.5\n"
+      "output_bytes": 40,
+      "output_sha256": "22dc7afc9651d1de2f9f4607cb88e965b4e31ac110b054c6674045a50ef55748"
     },
     {
       "argv": [
@@ -82,12 +79,11 @@
         "telefonia_movil"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": "ID\t80f1bbebb9176b41674513c8a1c593f2ba8e6304d6fa0a9bfe104dd2f081a73e\nDate\t2026-03-15\nAmount\t60.5\nDescription\tFactura movil\nReview status\treviewed\n"
+      "output_bytes": 145,
+      "output_sha256": "dd3c4b2128da8fac6ed58db1a21e30d672de8947872c2155cbf04e0fa9f8ebd9"
     },
     {
       "argv": [
@@ -100,63 +96,13 @@
         "80f1bbebb9176b41674513c8a1c593f2ba8e6304d6fa0a9bfe104dd2f081a73e"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "ledger.view",
-        "notices": [],
-        "result": {
-          "bucket_id": "<bucket-id>",
-          "review_status": "reviewed",
-          "transaction": {
-            "amount": "60.5",
-            "attachment_ids": [],
-            "booked_date": "2026-03-15",
-            "business_classification": "MIXED",
-            "business_pct": "0.5",
-            "category_id": "telefonia_movil",
-            "classification_confidence": "1",
-            "classification_reason": "aeat app ledger allocate",
-            "classified_at": "2026-04-01T09:00:00+00:00",
-            "classified_by": "manual",
-            "counterparty": "",
-            "counterparty_country": null,
-            "counterparty_identification_state": null,
-            "created_at": "2026-04-01T09:00:00+00:00",
-            "currency": "EUR",
-            "date": "2026-03-15",
-            "description": "Factura movil",
-            "direction": "OUTGOING",
-            "fx_rate": null,
-            "invoice_id": null,
-            "irpf_category": null,
-            "iva_amount": null,
-            "iva_category": null,
-            "iva_rate": null,
-            "lifecycle_state": "ACTIVE",
-            "m210_income_classification": null,
-            "modified_at": "2026-04-01T09:00:00+00:00",
-            "notes": "",
-            "prorrata_reference": null,
-            "purchase_invoice_evidence_id": null,
-            "source_jurisdiction": "ES",
-            "taxable_base": null,
-            "transaction_id": "80f1bbebb9176b41674513c8a1c593f2ba8e6304d6fa0a9bfe104dd2f081a73e",
-            "usage_ratio_id": "telefonia_movil",
-            "value_date": null,
-            "value_in_eur": null
-          },
-          "transaction_id": "80f1bbebb9176b41674513c8a1c593f2ba8e6304d6fa0a9bfe104dd2f081a73e"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 1636,
+      "output_sha256": "51e253add7443fb0a8ab4d93cb6f4bd81c8be0111ad2b0a06668e79f6675deb1"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "classify-mixed-use"
 }

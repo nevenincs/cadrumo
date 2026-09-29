@@ -11,12 +11,11 @@
         "2026"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": "operation\tmodelo.iva-wallet.balance\nas_of_year\t2026\ntotal_balance\t0\nactive_balance\t0\nexpired_balance\t0\nlot_count\t0\nnext_expiry_year\tNone\nunallocated_applied_amount\t0\n"
+      "output_bytes": 166,
+      "output_sha256": "cbb39412499f557ba1ccbe85159b401308dd58430c10dda57f60e75ed3afc407"
     },
     {
       "argv": [
@@ -34,12 +33,11 @@
         "--confirm"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": "operation\tmodelo.iva-wallet.seed\nfiling_year\t2024\nperiod\t4T\ntaxpayer_nif\tsha256:1c9f9632\namount\t0\nprovenance\toperator_seed\nregister_status\t\n"
+      "output_bytes": 140,
+      "output_sha256": "ca0f5abfbe4bf8d4a1329f05865363221d6cd2895e6cdbebf18e05a02b025221"
     },
     {
       "argv": [
@@ -61,34 +59,13 @@
         "--confirm"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "modelo.iva_wallet.correct",
-        "notices": [],
-        "result": {
-          "amount": "1200.50",
-          "filing_year": 2024,
-          "operation": "modelo.iva_wallet.correct",
-          "period": {
-            "code": "4T",
-            "filing_year": 2024
-          },
-          "previous_amount": "0",
-          "provenance": "operator_correction",
-          "reason": "typo in opening balance",
-          "register_status": null,
-          "taxpayer_nif": "sha256:1c9f9632"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 515,
+      "output_sha256": "9fd780d8bc66b43b89177d245649db43fbe3ce385e58d393eae5037b580cf973"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "review-values-iva-wallet"
 }

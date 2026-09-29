@@ -12,12 +12,11 @@
         "csv"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -27,12 +26,11 @@
         "list"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": "ACCOUNTING LEDGER TRANSACTIONS\nid\tfull_id\tdate\tamount\tdescription\tIVA category\treview_status\n71a5db2b\t71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518\t2026-02-10\t1210\tCobro factura F-2026-001 servicios de consultoria\t\tpending\ne3eeac5e\te3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d\t2026-02-11\t605\tCompra de material de oficina proveedor local\t\tpending\n"
+      "output_bytes": 386,
+      "output_sha256": "225e6af83b55af5d7b5c63ee1a00f5028c3b668a55dc7354f8f84b428ae28d87"
     },
     {
       "argv": [
@@ -46,12 +44,11 @@
         "year=2026"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": "ACCOUNTING LEDGER TRANSACTIONS\nid\tfull_id\tdate\tamount\tdescription\tIVA category\treview_status\n71a5db2b\t71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518\t2026-02-10\t1210\tCobro factura F-2026-001 servicios de consultoria\t\tpending\ne3eeac5e\te3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d\t2026-02-11\t605\tCompra de material de oficina proveedor local\t\tpending\n"
+      "output_bytes": 386,
+      "output_sha256": "225e6af83b55af5d7b5c63ee1a00f5028c3b668a55dc7354f8f84b428ae28d87"
     },
     {
       "argv": [
@@ -63,12 +60,11 @@
         "classification=NOT_YET_PROCESSED"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": "ACCOUNTING LEDGER TRANSACTIONS\nid\tfull_id\tdate\tamount\tdescription\tIVA category\treview_status\n71a5db2b\t71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518\t2026-02-10\t1210\tCobro factura F-2026-001 servicios de consultoria\t\tpending\ne3eeac5e\te3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d\t2026-02-11\t605\tCompra de material de oficina proveedor local\t\tpending\n"
+      "output_bytes": 386,
+      "output_sha256": "225e6af83b55af5d7b5c63ee1a00f5028c3b668a55dc7354f8f84b428ae28d87"
     },
     {
       "argv": [
@@ -79,12 +75,11 @@
         "71a5db2b"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": "ID\t71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518\nDate\t2026-02-10\nValue date\t2026-02-10\nAmount\t1210\nCurrency\tEUR\nDirection\tINCOMING\nDescription\tCobro factura F-2026-001 servicios de consultoria\nCounterparty\t-\nClassification\tNOT_YET_PROCESSED\nBusiness %\t-\nCategory\t-\nUsage ratio id\t-\nTaxable base\t-\nIVA rate\t-\nIVA amount\t-\nIVA category\t-\nEstablished in\t-\nVAT identified in\t-\nIRPF category\t-\nNotes\t-\nPurchase invoice evidence\t-\nAttachments\t-\nLifecycle state\tACTIVE\nClassified by\tauto\nClassified at\t-\nClassification confidence\t-\nClassification reason\t-\nReview status\tpending\n"
+      "output_bytes": 590,
+      "output_sha256": "5dfa0881f68beadfe05ff3914723098e716af05fd952088e2b370c212b7022b5"
     },
     {
       "argv": [
@@ -95,12 +90,11 @@
         "71a5db2b"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": "Bucket\t<profile-id>\nID\t71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518\nEvent count\t1\n2026-04-01T09:00:00+00:00\tledger.transaction.imported\t1a59b4ec789420d5ec241c40cf90be91ca7a1d4ca191ceb478a141a48bfa14c3\n"
+      "output_bytes": 221,
+      "output_sha256": "6af8d3d754dab1c1514d668066ae8fe883cc58afb6fdec16e90353bfe4431767"
     },
     {
       "argv": [
@@ -111,12 +105,11 @@
         "71a5db2b"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": "ID\t71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518\nLifecycle state\tACTIVE\nCreated bucket event\t-\nimport_provider\tCSV provider\nimport_source\tmovimientos-2026-1t.csv\nimport_source_row\t2\nimport_ingested_at\t2026-04-01T09:00:00+00:00\nimport_fingerprint\t924aad06902b61c5d2c34863ac5d8c8768039a38540cd0235e0308d6be767898\n"
+      "output_bytes": 330,
+      "output_sha256": "6b50f861ad974b78e81507c2a8c21ab5a133455775779ffc2ac1397ee2ff139e"
     },
     {
       "argv": [
@@ -129,63 +122,13 @@
         "71a5db2b"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "ledger.view",
-        "notices": [],
-        "result": {
-          "bucket_id": "<bucket-id>",
-          "review_status": "pending",
-          "transaction": {
-            "amount": "1210",
-            "attachment_ids": [],
-            "booked_date": "2026-02-10",
-            "business_classification": "NOT_YET_PROCESSED",
-            "business_pct": null,
-            "category_id": null,
-            "classification_confidence": null,
-            "classification_reason": "",
-            "classified_at": null,
-            "classified_by": "auto",
-            "counterparty": "",
-            "counterparty_country": null,
-            "counterparty_identification_state": null,
-            "created_at": "2026-04-01T09:00:00+00:00",
-            "currency": "EUR",
-            "date": "2026-02-10",
-            "description": "Cobro factura F-2026-001 servicios de consultoria",
-            "direction": "INCOMING",
-            "fx_rate": null,
-            "invoice_id": null,
-            "irpf_category": null,
-            "iva_amount": null,
-            "iva_category": null,
-            "iva_rate": null,
-            "lifecycle_state": "ACTIVE",
-            "m210_income_classification": null,
-            "modified_at": "2026-04-01T09:00:00+00:00",
-            "notes": "",
-            "prorrata_reference": null,
-            "purchase_invoice_evidence_id": null,
-            "source_jurisdiction": null,
-            "taxable_base": null,
-            "transaction_id": "71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518",
-            "usage_ratio_id": null,
-            "value_date": "2026-02-10",
-            "value_in_eur": null
-          },
-          "transaction_id": "71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 1616,
+      "output_sha256": "8d09b5d6fc44dc262bdb4840d35feb70fa47a4c25ec25fa760a3ab6c7d86749e"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "import-review-rows"
 }

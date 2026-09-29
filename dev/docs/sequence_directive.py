@@ -453,45 +453,6 @@ def render_sequence_html(payload: dict[str, Any]) -> str:
     )
 
 
-def _verified_record(
-    page: str,
-    sequence_id: str,
-    *,
-    docs_root: Path,
-    goldens_root: Path | None,
-    records_root: Path | None,
-) -> SequenceRecord:
-    """Return the page's verified record, running the page's check once if none is cached.
-
-    A build normally finds the record its own ``builder-inited`` check, or the
-    lane's earlier check, cached. A build that skipped the check and finds none
-    runs the same check for this page in a child interpreter rather than render
-    output nobody verified; a golden that is missing or stale still fails.
-
-    Raises:
-        SequenceEngineError: When the golden is missing or malformed, or the
-            page's check does not pass.
-    """
-    from .sequences.checks import check_sequences_in_subprocess
-    from .sequences.errors import SequenceEngineError, SequenceGoldenError
-    from .sequences.golden_store import read_golden
-    from .sequences.record_store import read_verified_record
-
-    read_golden(page, sequence_id, goldens_root=goldens_root)
-    try:
-        return read_verified_record(page, sequence_id, goldens_root=goldens_root, records_root=records_root)
-    except SequenceGoldenError:
-        problems = check_sequences_in_subprocess(
-            docs_root=docs_root,
-            goldens_root=goldens_root,
-            records_root=records_root,
-            page=page,
-        )
-        if problems:
-            raise SequenceEngineError("\n".join(problems)) from None
-    return read_verified_record(page, sequence_id, goldens_root=goldens_root, records_root=records_root)
-
-
 class CliSequenceDirective(Directive):
     """The backtick-fenced ``{cli-sequence}`` MyST directive.
 
@@ -519,6 +480,7 @@ class CliSequenceDirective(Directive):
         from .sequences.contracts import read_sequence_contract
         from .sequences.errors import SequenceEngineError
         from .sequences.parser import parse_sequence, refuse_payload_less_result_frame
+        from .sequences.record_store import read_verified_record
         from .sequences.runner import refuse_live_frames
 
         sequence_id = self.arguments[0].strip()
@@ -585,13 +547,7 @@ class CliSequenceDirective(Directive):
             # executed frames renders the record whose fingerprint is its
             # committed golden (executed frames only).
             record = (
-                _verified_record(
-                    page,
-                    sequence_id,
-                    docs_root=Path(env.srcdir),
-                    goldens_root=goldens_root,
-                    records_root=records_root,
-                )
+                read_verified_record(page, sequence_id, goldens_root=goldens_root, records_root=records_root)
                 if sequence.executed_frames
                 else None
             )

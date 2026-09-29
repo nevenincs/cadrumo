@@ -12,12 +12,11 @@
         "1T"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": "bucket\t<profile-id>\nperiod\t2026 1T\nchecked\t0\nissues\t0\nready\ttrue\nadvisory\tempty_ledger\tNo active ledger transactions were checked for this period.\nnotice\tledger.preflight.empty_period\tNo active ledger transactions were checked for this period.\n"
+      "output_bytes": 244,
+      "output_sha256": "76975204343f7cdd3a2afdd25776a10b2f78b24861bc256959fae7da42c696e6"
     },
     {
       "argv": [
@@ -29,41 +28,13 @@
         "status"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "ledger.status",
-        "notices": [],
-        "result": {
-          "active_count": 0,
-          "archived_count": 0,
-          "bucket_id": "<bucket-id>",
-          "business_expense_total": "0",
-          "business_income_total": "0",
-          "business_net_total": "0",
-          "checked_transaction_count": 0,
-          "pending_review_count": 0,
-          "period": null,
-          "readiness_issue_count": 0,
-          "readiness_issues": [],
-          "ready": null,
-          "reviewed_count": 0,
-          "skipped_count": 0,
-          "split_count": 0,
-          "stale_filings": [],
-          "stashed_count": 0,
-          "total_count": 0,
-          "unconverted_currency_count": 0
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 685,
+      "output_sha256": "d41ba19f957f6962586d26377bb3eda72ae01ad8e35cd81c4b40e0f3428e721f"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "troubleshooting-ledger-ready"
 }

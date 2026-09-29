@@ -10,30 +10,11 @@
         "status"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "config.google.status",
-        "notices": [],
-        "result": {
-          "account_email": null,
-          "client_id": null,
-          "client_registered": false,
-          "granted_scopes": [],
-          "issued_at": null,
-          "last_refresh_at": null,
-          "operation": "config.google.status",
-          "profile": "<profile-id>",
-          "reauth_required": null,
-          "session_present": false
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 458,
+      "output_sha256": "0a26bfba63d00464ce15942889835250e3879fbc6db91a727dadf916102de0c2"
     },
     {
       "argv": [
@@ -45,12 +26,11 @@
         "docs-folder-123"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": "operation\tconfig.google.folder.set\nprofile\t<profile-id>\nroot_folder_id\tdocs-folder-123\n"
+      "output_bytes": 87,
+      "output_sha256": "02b5d01e9eb1793d7a5adaf8781309a35f1e0a694d8a863c4b9c8e624af205ab"
     },
     {
       "argv": [
@@ -63,26 +43,13 @@
         "view"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "config.google.folder.view",
-        "notices": [],
-        "result": {
-          "configured": true,
-          "operation": "config.google.folder.view",
-          "profile": "<profile-id>",
-          "root_folder_id": "docs-folder-123"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 314,
+      "output_sha256": "f9595a4cfcb73e2716a043ab81029f2c80c3eebeb79fd95249e9567ee1df8c71"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "sheets-folder"
 }

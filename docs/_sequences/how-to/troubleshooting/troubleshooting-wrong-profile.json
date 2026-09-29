@@ -10,33 +10,13 @@
         "status"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "config.profile.status",
-        "notices": [],
-        "result": {
-          "active_profile": "docs-sequence-sandbox",
-          "activity_present": true,
-          "configured": true,
-          "iva_regime": "GENERAL",
-          "precondition_action": null,
-          "profile_id": "<profile-id>",
-          "profile_record_error": null,
-          "profile_record_present": null,
-          "registered_profile": null,
-          "tax_id_present": true,
-          "tax_residence_ccaa": ""
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 525,
+      "output_sha256": "f85c5f478f8a5b298d24ae4fbd08d2bf4cd0e7f394a4824fad94ced72db35857"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "troubleshooting-wrong-profile"
 }

@@ -7,12 +7,11 @@
         "logout"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": "logged_out_profile\tdocs-sequence-sandbox\n"
+      "output_bytes": 41,
+      "output_sha256": "68805343281b6e8a4491821c9df39d00bb6b8e99e3da64d80cf6cc27a2e75af6"
     },
     {
       "argv": [
@@ -24,67 +23,13 @@
         "status"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "config.profile.status",
-        "error": {
-          "action": {
-            "action": {
-              "action_id": "operator.profile.login",
-              "cli_path": [
-                "config",
-                "login"
-              ],
-              "target_command_key": "config.login"
-            },
-            "argument_bindings": [
-              {
-                "argument_name": "name",
-                "source": "operator_action.verdict_context",
-                "source_evidence_id": null,
-                "source_key": "name",
-                "status": "resolved",
-                "value": "docs-sequence-sandbox"
-              }
-            ],
-            "conditionality": "immediate",
-            "evidence": [
-              {
-                "condition_id": "profile.session.logged_in",
-                "evidence_id": "profile.session.resume",
-                "provenance": "persisted_state",
-                "values": {
-                  "profile_name": "docs-sequence-sandbox",
-                  "session_refusal_reason": "absent",
-                  "session_resumed": false
-                }
-              }
-            ],
-            "failed_condition_id": "profile.session.logged_in",
-            "missing_argument_names": [],
-            "no_recovery_outcome": null
-          },
-          "category": "REFUSED",
-          "code": "REFUSED_CLI_BOUNDARY",
-          "context": {
-            "reason": "absent"
-          },
-          "message": "You are not logged in. Run `aeat config login` to unlock your profile.",
-          "retryable": false,
-          "runbook_id": null,
-          "trace_id": null
-        },
-        "notices": [],
-        "schema_version": "2",
-        "status": "error"
-      },
       "envelope_source": "stderr",
       "exit_code": 2,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 1477,
+      "output_sha256": "bf49936a2d08a0f344897ec88c364cb4bbd143924424d554cd20ea2e7365ce51"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "profile-setup-logout"
 }

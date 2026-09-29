@@ -12,12 +12,11 @@
         "28013"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": "Profile\tdocs-sequence-sandbox\nStatus\tupdated\nNext\taeat app modelo work create\n"
+      "output_bytes": 78,
+      "output_sha256": "8aeb9e333729b28d1997f1a0c0c51e385df3e5f2570a14899c9d983ad9f09144"
     },
     {
       "argv": [
@@ -33,26 +32,13 @@
         "docs-sequence-sandbox.cadrumo-bucket.tar.gz"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "config.profile.archive.export",
-        "notices": [],
-        "result": {
-          "archive_schema_version": 4,
-          "bucket_id": "<bucket-id>",
-          "recovery_enrolled": false,
-          "target": "docs-sequence-sandbox.cadrumo-bucket.tar.gz"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 334,
+      "output_sha256": "8e9520030d03e645ef2d449946a06cba50e212b1479edcf985819dc3e0938b04"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "profile-setup-maintain"
 }

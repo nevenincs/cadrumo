@@ -13,12 +13,11 @@
         "--dry-run"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": "Rows\t2\nEntries imported\t2\nSkipped\t0\nDRY RUN MODE\tYes\nNotice\tDry run: no rows were saved. The counts above are a preview of what a real import would add and skip.\nnotice\tledger.import.dry_run_preview\tDry run: no rows were saved. The counts above are a preview of what a real import would add and skip.\n"
+      "output_bytes": 301,
+      "output_sha256": "44b2d34a110aaa1d90587d9e267d5040a708d31945357ff5193829d5ab72a783"
     },
     {
       "argv": [
@@ -32,12 +31,11 @@
         "csv"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": "Rows\t2\nEntries imported\t2\nSkipped\t0\n"
+      "output_bytes": 36,
+      "output_sha256": "6a0bf5da9554f967fcf0eb77056ed7e6c429b5c709da8652b2654a0c78ac19a1"
     },
     {
       "argv": [
@@ -50,63 +48,13 @@
         "71a5db2b"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "ledger.view",
-        "notices": [],
-        "result": {
-          "bucket_id": "<bucket-id>",
-          "review_status": "pending",
-          "transaction": {
-            "amount": "1210",
-            "attachment_ids": [],
-            "booked_date": "2026-02-10",
-            "business_classification": "NOT_YET_PROCESSED",
-            "business_pct": null,
-            "category_id": null,
-            "classification_confidence": null,
-            "classification_reason": "",
-            "classified_at": null,
-            "classified_by": "auto",
-            "counterparty": "",
-            "counterparty_country": null,
-            "counterparty_identification_state": null,
-            "created_at": "2026-04-01T09:00:00+00:00",
-            "currency": "EUR",
-            "date": "2026-02-10",
-            "description": "Cobro factura F-2026-001 servicios de consultoria",
-            "direction": "INCOMING",
-            "fx_rate": null,
-            "invoice_id": null,
-            "irpf_category": null,
-            "iva_amount": null,
-            "iva_category": null,
-            "iva_rate": null,
-            "lifecycle_state": "ACTIVE",
-            "m210_income_classification": null,
-            "modified_at": "2026-04-01T09:00:00+00:00",
-            "notes": "",
-            "prorrata_reference": null,
-            "purchase_invoice_evidence_id": null,
-            "source_jurisdiction": null,
-            "taxable_base": null,
-            "transaction_id": "71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518",
-            "usage_ratio_id": null,
-            "value_date": "2026-02-10",
-            "value_in_eur": null
-          },
-          "transaction_id": "71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 1616,
+      "output_sha256": "8d09b5d6fc44dc262bdb4840d35feb70fa47a4c25ec25fa760a3ab6c7d86749e"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "import-preview-save"
 }

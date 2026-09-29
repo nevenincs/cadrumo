@@ -26,12 +26,11 @@
           "value": "3cda9f1229ee04269a70bb6705dafeff1de2f9b14f1bfcefacba4ae277b20a9d"
         }
       ],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -66,12 +65,11 @@
           "value": "63c3f9245937ab54232f067804fc12248abcbb1a5f9d93e9433313f8bf74b23d"
         }
       ],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -96,29 +94,11 @@
           "value": "afc12ac601d050659efe0abace313167f275923e77ba6b0a4ead868f32d7cdd9"
         }
       ],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "ledger.merge",
-        "notices": [],
-        "result": {
-          "bucket_event_id": "24fa3aac51e5315bbb008dcbc57b80fdc41b292a4d2e504303e54e6c21354591",
-          "bucket_id": "<bucket-id>",
-          "merged_transaction_id": "afc12ac601d050659efe0abace313167f275923e77ba6b0a4ead868f32d7cdd9",
-          "parent_transaction_id": "3cda9f1229ee04269a70bb6705dafeff1de2f9b14f1bfcefacba4ae277b20a9d",
-          "source_child_ids": [
-            "63c3f9245937ab54232f067804fc12248abcbb1a5f9d93e9433313f8bf74b23d",
-            "e0504b924f0b4500f0be1c70fe2958279ff9d9d0e5f61c4c66615fe9ed65ae84"
-          ],
-          "split_group_id": "ea58900b8c1962062494a7fb1c80418936a96ae53f2e402af33f8b212fb055c0"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 746,
+      "output_sha256": "ab3c648aa715a1cc5d18efd775bf8fc9c6e083364957829c79d32cb5e31ba5e4"
     },
     {
       "argv": [
@@ -131,63 +111,13 @@
         "afc12ac601d050659efe0abace313167f275923e77ba6b0a4ead868f32d7cdd9"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "ledger.view",
-        "notices": [],
-        "result": {
-          "bucket_id": "<bucket-id>",
-          "review_status": "pending",
-          "transaction": {
-            "amount": "121",
-            "attachment_ids": [],
-            "booked_date": "2026-03-15",
-            "business_classification": "NOT_YET_PROCESSED",
-            "business_pct": null,
-            "category_id": null,
-            "classification_confidence": null,
-            "classification_reason": "",
-            "classified_at": null,
-            "classified_by": "auto",
-            "counterparty": "",
-            "counterparty_country": null,
-            "counterparty_identification_state": null,
-            "created_at": "2026-04-01T09:00:00+00:00",
-            "currency": "EUR",
-            "date": "2026-03-15",
-            "description": "Split to undo",
-            "direction": "OUTGOING",
-            "fx_rate": null,
-            "invoice_id": null,
-            "irpf_category": null,
-            "iva_amount": null,
-            "iva_category": null,
-            "iva_rate": null,
-            "lifecycle_state": "ACTIVE",
-            "m210_income_classification": null,
-            "modified_at": "2026-04-01T09:00:00+00:00",
-            "notes": "",
-            "prorrata_reference": null,
-            "purchase_invoice_evidence_id": null,
-            "source_jurisdiction": "ES",
-            "taxable_base": null,
-            "transaction_id": "afc12ac601d050659efe0abace313167f275923e77ba6b0a4ead868f32d7cdd9",
-            "usage_ratio_id": null,
-            "value_date": null,
-            "value_in_eur": null
-          },
-          "transaction_id": "afc12ac601d050659efe0abace313167f275923e77ba6b0a4ead868f32d7cdd9"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 1571,
+      "output_sha256": "161f8d45efd4e429e0c359494c34d66aac8143201af184af839867345ccd9311"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "correct-merge-parts"
 }

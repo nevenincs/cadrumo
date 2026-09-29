@@ -60,7 +60,7 @@ from ..sequences.cli import main as sequences_cli_main
 from ..sequences.compare import compare_transcript_to_golden
 from ..sequences.golden_store import SequenceGolden
 from ..sequences.parser import parse_sequence
-from ..sequences.record_store import SequenceRecord, build_record, golden_from_record
+from ..sequences.record_store import SequenceRecord, build_record, golden_from_record, write_record
 from ..sequences.runner import SequenceTranscript, execute_sequence
 from ..sequences.schema import ParsedSequence
 
@@ -903,6 +903,44 @@ class TestBothSurfacesRedOnDivergence:
         rendered = (tmp_path / "_out" / "index.html").read_text(encoding="utf-8")
         assert "cadrumo-sequence" in rendered, warnings
         assert f'data-sequence-id="{_FIXTURE_SEQUENCE_ID}"' in rendered
+
+
+def _records_root() -> Path:
+    from ..sequences.record_store import default_records_root
+
+    return default_records_root()
+
+
+class TestSkippedHtmlBuildRendersOnlyVerifiedRecords:
+    def test_a_stale_record_is_rechecked_before_the_page_is_read(
+        self,
+        tmp_path: Path,
+        _hermetic_env: None,
+    ) -> None:
+        """A build that skipped the check still never renders output nobody verified.
+
+        The golden comes from a real refresh; its cached record is then made
+        stale, as an earlier golden's record would be. The skipped HTML build
+        finds it unverified, runs the check once before reading, and renders the
+        verified output instead.
+        """
+        docs_root, goldens_root = _write_fixture_docs(tmp_path)
+        _refresh_fixture_golden(docs_root, goldens_root)
+        target = _records_root() / "index" / f"{_FIXTURE_SEQUENCE_ID}.json"
+        verified = SequenceRecord.model_validate_json(target.read_text(encoding="utf-8"))
+        stale_frames = list(verified.frames)
+        envelope = dict(stale_frames[-1].envelope or {})
+        envelope["status"] = "stale-output-marker"
+        stale_frames[-1] = stale_frames[-1].model_copy(update={"envelope": envelope})
+        write_record(verified.model_copy(update={"frames": tuple(stale_frames)}), target=target)
+
+        with scoped_env_var("CADRUMO_DOCS_SKIP_SEQUENCE_CHECK", "1"):
+            _build_fixture_site(tmp_path, docs_root, goldens_root)
+
+        rendered = (tmp_path / "_out" / "index.html").read_text(encoding="utf-8")
+        assert f'data-sequence-id="{_FIXTURE_SEQUENCE_ID}"' in rendered
+        assert "stale-output-marker" not in rendered
+        assert SequenceRecord.model_validate_json(target.read_text(encoding="utf-8")) == verified
 
 
 class TestPageCoherenceGate:

@@ -13,12 +13,11 @@
         "2026-01-01"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -46,12 +45,11 @@
         "qs-venta"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -89,12 +87,11 @@
           "value": "e28390f0817dac6833a309cae6ddca6eeba53fd963c2ceb65168a5ee123341d6"
         }
       ],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -126,12 +123,11 @@
           "value": "9a075f52dad08e80"
         }
       ],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -144,12 +140,11 @@
         "9a075f52dad08e80"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -166,12 +161,11 @@
         "1T"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -194,12 +188,11 @@
         "irpf.previous_year_economic_activity_net_income=0"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -216,12 +209,11 @@
         "1T"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -241,61 +233,13 @@
         "./modelo-130-2026-1T.boe"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "modelo.export",
-        "notices": [
-          {
-            "action": null,
-            "code": "modelo.export.local_export_not_official_evidence",
-            "context": {
-              "evidence_status": "local_export_not_official_aeat_filing_evidence",
-              "filing_year": "2026",
-              "modelo": "130",
-              "period": "1T"
-            },
-            "message": "The local export is not official filing evidence.",
-            "severity": "warning"
-          }
-        ],
-        "result": {
-          "bucket_event_id": "618c31bdd82c0985edc5db5209faa7c90d9d8a78f62d3087c42e85ed9c3c0411",
-          "bucket_id": "<bucket-id>",
-          "byte_size": 946,
-          "calculation_revision_id": "3a61188424119a738f36405a23757e455ca1f9aeeb4f6ee401f92bffd3fbe8ba",
-          "file_sha256": "eaf7e73156441acfec60519635ebea91a6a221f32b23b85a638b5219b8536c7d",
-          "filing_year": 2026,
-          "format": "fichero-boe",
-          "modelo": "130",
-          "operation": "modelo.export",
-          "output_path": "modelo-130-2026-1T.boe",
-          "payment_election": null,
-          "period": {
-            "code": "1T",
-            "filing_year": 2026
-          },
-          "prior_domiciliation_election": {
-            "baseline_evidence_reference_id": null,
-            "baseline_filing_record_id": null,
-            "baseline_result_disposition": null,
-            "baseline_source_header_locator": null,
-            "election": "keep"
-          },
-          "refund_election": null,
-          "resolved_result_disposition": "N",
-          "software_identity_grade": null,
-          "work_unit_id": "ca5815c72d1ed564e582924ad157fd1c3349eba45264da2a7b843d88172f4204"
-        },
-        "schema_version": "2",
-        "status": "warning"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 1457,
+      "output_sha256": "baad5ebedab5d43f64e4b9e4b85cba6fd5d589e7fe93439afad3ec771de53dbb"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "quickstart-export"
 }

@@ -11,32 +11,13 @@
         "--yes"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "config.repair.reset_progress",
-        "notices": [],
-        "result": {
-          "dry_run": false,
-          "fingerprint": {
-            "byte_length": null,
-            "reason_class": "absent",
-            "recovered_bucket_id": "<profile-id>",
-            "schema_version": null,
-            "written_at": null
-          },
-          "reason": null,
-          "reset": null
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 423,
+      "output_sha256": "22a0bf98aaa598cc658c5022e2843914161ba4624b5b0b23d2c6d7b7d596147e"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "troubleshooting-reset-progress"
 }

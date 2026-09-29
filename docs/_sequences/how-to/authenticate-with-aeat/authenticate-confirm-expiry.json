@@ -10,41 +10,13 @@
         "test"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "config.auth.test",
-        "notices": [],
-        "result": {
-          "active_profile": "docs-sequence-sandbox",
-          "active_profile_precondition_action": null,
-          "active_profile_record_present": true,
-          "active_profile_registered": true,
-          "active_profile_status": "ready",
-          "authenticated": false,
-          "available": false,
-          "backend_available": false,
-          "backend_configured": false,
-          "certificate_path": "",
-          "configured": false,
-          "health_severity": "",
-          "health_summary": "",
-          "persisted_session_expired": null,
-          "persisted_session_present": false,
-          "persisted_session_state": "no_provider",
-          "probe_result": "no_provider",
-          "probe_summary": "No auth provider is configured; nothing to probe locally.",
-          "provider": ""
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 863,
+      "output_sha256": "652fb55814428036f816c189bcd7e6d8fb263e2d11fb06e086a3e1f4bc4d77ef"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "authenticate-confirm-expiry"
 }

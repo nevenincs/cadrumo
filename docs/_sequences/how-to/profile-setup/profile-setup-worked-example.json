@@ -9,12 +9,11 @@
         "docs-sequence-sandbox"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": "Profile record is valid.\nrecord_validity\tvalid\tissues=0\nprofile_id\t<profile-id>\ndisplay_name\tdocs-sequence-sandbox\nsetup_state\tcomplete\nactivities.description\tdocumentation examples\nidentity.name\tDocs\nidentity.surnames\tSandbox\nidentity.tax_id\tsha256:1c9f9632\niva.cash_accounting_regime_enrolled\tfalse\niva.hydrocarbon_deposit_advance_payment_deduction_entitled\tfalse\niva.m303_regime_composition\tgeneral\niva.redeme_enrolled\tfalse\niva.regime\tGENERAL\niva.voluntary_sii_enrolled\tfalse\ntax_residence.jurisdiction_scope\tcommon_regime\ntaxpayer_type.entity_type\tnatural_person\n"
+      "output_bytes": 568,
+      "output_sha256": "07618d26403e04f3c210b1516323e05c0a0f125da28ea187c88e830826b829a6"
     },
     {
       "argv": [
@@ -27,28 +26,13 @@
         "docs-sequence-sandbox"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "config.profile.validate",
-        "notices": [],
-        "result": {
-          "display_name": "docs-sequence-sandbox",
-          "issues": [],
-          "profile_id": "<profile-id>",
-          "schema_version": 7,
-          "setup_state": "complete",
-          "valid": true
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 342,
+      "output_sha256": "c3aca9e1084446fa12c79afbb0c5bd119fb332974bdfa3613acff80b3ee4580d"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "profile-setup-worked-example"
 }

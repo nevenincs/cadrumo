@@ -11,23 +11,11 @@
         "list"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "config.profile.descendiente.list",
-        "notices": [],
-        "result": {
-          "descendientes": [],
-          "profile": "docs-sequence-sandbox",
-          "total": 0
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 260,
+      "output_sha256": "501dbf45e1cf8b1763db1e32dff24faeca1dd9138d37ea0fb2719b421cf78a35"
     },
     {
       "argv": [
@@ -42,23 +30,11 @@
         "NACIMIENTO=2018-04-01,DISCAPACIDAD=0,CONVIVENCIA=true"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "config.profile.descendiente.add",
-        "notices": [],
-        "result": {
-          "added": 1,
-          "profile": "docs-sequence-sandbox",
-          "total": 1
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 250,
+      "output_sha256": "3096d10d011ee141b6db97d2da9139599456fffdd5b2f730a6fc41cbffc94315"
     },
     {
       "argv": [
@@ -72,25 +48,13 @@
         "0"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "config.profile.descendiente.remove",
-        "notices": [],
-        "result": {
-          "profile": "docs-sequence-sandbox",
-          "removed_index": 0,
-          "total": 0
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 261,
+      "output_sha256": "57f9fba8c825b38229f82ad85d5c036ff30451ba56424ca7eefb0fb5692c8222"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "profile-setup-descendiente-verbs"
 }

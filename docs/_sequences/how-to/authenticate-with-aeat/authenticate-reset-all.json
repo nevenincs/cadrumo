@@ -10,12 +10,11 @@
         "certificate"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -29,33 +28,13 @@
         "--yes"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "config.auth.reset",
-        "notices": [],
-        "result": {
-          "bucket_id": "<bucket-id>",
-          "cleared_locks": 0,
-          "cleared_provider_configuration": true,
-          "providers": [
-            "certificate",
-            "clave_movil",
-            "clave_permanente"
-          ],
-          "removed_certificate_secrets": 0,
-          "removed_certificate_sources": 0,
-          "removed_sessions": 0
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 460,
+      "output_sha256": "93fe964f2922d86ab0fdcf0e8b8895dc4e0f732cb53bc68d536567201e60b8f9"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "authenticate-reset-all"
 }

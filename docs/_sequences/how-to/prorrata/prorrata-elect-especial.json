@@ -19,40 +19,13 @@
         "propuesta-inicio-2026"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "ledger.prorrata.elect_especial",
-        "notices": [],
-        "result": {
-          "bucket_id": "<bucket-id>",
-          "count": 1,
-          "entry": {
-            "authorisation_reference": "propuesta-inicio-2026",
-            "definitive_percentage": null,
-            "definitive_volume_con_derecho": null,
-            "definitive_volume_sin_derecho": null,
-            "ejercicio": 2026,
-            "especial_transition": null,
-            "interrupted": false,
-            "provisional_percentage": "80",
-            "provisional_provenance": "inicio_actividad",
-            "regime": "especial",
-            "schema_version": "2",
-            "sector_id": null,
-            "source_observation_ref": null,
-            "source_registry_snapshot_refs": []
-          }
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 772,
+      "output_sha256": "ca2ab149375077bc09e6cf8a1ef4b34313431d3747d74978a49e64fab6eb857e"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "prorrata-elect-especial"
 }

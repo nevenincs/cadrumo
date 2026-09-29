@@ -14,41 +14,13 @@
         "0A"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "ledger.preflight",
-        "notices": [
-          {
-            "action": null,
-            "code": "ledger.preflight.empty_period",
-            "context": {
-              "period": "0A",
-              "year": "2025"
-            },
-            "message": "No active ledger transactions were checked for this period.",
-            "severity": "warning"
-          }
-        ],
-        "result": {
-          "bucket_id": "<bucket-id>",
-          "checked_transaction_count": 0,
-          "issues": [],
-          "period": {
-            "code": "0A",
-            "filing_year": 2025
-          },
-          "ready": true
-        },
-        "schema_version": "2",
-        "status": "warning"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 604,
+      "output_sha256": "b99e80515518c8617c33212e01d4807cc2f0b0c9d754b83ab22359b213e5587d"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "modelo-100-preflight"
 }

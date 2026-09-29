@@ -13,26 +13,13 @@
         "personal"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "config.auth.certificate.remove",
-        "notices": [],
-        "result": {
-          "active": false,
-          "certificate_path": "",
-          "name": "personal",
-          "removed": false
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 272,
+      "output_sha256": "ab30e645a77e49d10ced22fce238f5efd86a94f4a70a2ddae5019a13f9691500"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "authenticate-certificate-remove"
 }

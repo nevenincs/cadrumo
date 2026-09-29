@@ -26,12 +26,11 @@
           "value": "d74c37a7d906824ef0171222e6c84b31dbcbcf5ed11806ce7864ff3db1267332"
         }
       ],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -45,12 +44,11 @@
         "--yes"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -64,12 +62,11 @@
         "--yes"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": "ID\td74c37a7d906824ef0171222e6c84b31dbcbcf5ed11806ce7864ff3db1267332\nDate\t2026-03-15\nAmount\t80\nDescription\tStashed by mistake\nReview status\tpending\n"
+      "output_bytes": 147,
+      "output_sha256": "8c15786bbd0b17c299f6849e624e0873198a99333769276d790ea4525cbde80b"
     },
     {
       "argv": [
@@ -82,63 +79,13 @@
         "d74c37a7d906824ef0171222e6c84b31dbcbcf5ed11806ce7864ff3db1267332"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "ledger.view",
-        "notices": [],
-        "result": {
-          "bucket_id": "<bucket-id>",
-          "review_status": "pending",
-          "transaction": {
-            "amount": "80",
-            "attachment_ids": [],
-            "booked_date": "2026-03-15",
-            "business_classification": "NOT_YET_PROCESSED",
-            "business_pct": null,
-            "category_id": null,
-            "classification_confidence": null,
-            "classification_reason": "",
-            "classified_at": null,
-            "classified_by": "auto",
-            "counterparty": "",
-            "counterparty_country": null,
-            "counterparty_identification_state": null,
-            "created_at": "2026-04-01T09:00:00+00:00",
-            "currency": "EUR",
-            "date": "2026-03-15",
-            "description": "Stashed by mistake",
-            "direction": "OUTGOING",
-            "fx_rate": null,
-            "invoice_id": null,
-            "irpf_category": null,
-            "iva_amount": null,
-            "iva_category": null,
-            "iva_rate": null,
-            "lifecycle_state": "ACTIVE",
-            "m210_income_classification": null,
-            "modified_at": "2026-04-01T09:00:00+00:00",
-            "notes": "",
-            "prorrata_reference": null,
-            "purchase_invoice_evidence_id": null,
-            "source_jurisdiction": "ES",
-            "taxable_base": null,
-            "transaction_id": "d74c37a7d906824ef0171222e6c84b31dbcbcf5ed11806ce7864ff3db1267332",
-            "usage_ratio_id": null,
-            "value_date": null,
-            "value_in_eur": null
-          },
-          "transaction_id": "d74c37a7d906824ef0171222e6c84b31dbcbcf5ed11806ce7864ff3db1267332"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 1575,
+      "output_sha256": "9c162d708af3bb3d309657208226eaddd1dafb9152c2a11b843de86502414b4e"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "correct-restore-transaction"
 }

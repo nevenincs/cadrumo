@@ -13,12 +13,11 @@
         "2026-01-01"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -32,12 +31,11 @@
         "csv"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -56,12 +54,11 @@
         "210"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -84,12 +81,11 @@
         "domestic_current"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -121,12 +117,11 @@
           "value": "9a075f52dad08e80"
         }
       ],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -139,12 +134,11 @@
         "9a075f52dad08e80"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -163,12 +157,11 @@
         "1T"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -188,12 +181,11 @@
         "--no-joint-return-elected"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -212,12 +204,11 @@
         "1T"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -236,77 +227,11 @@
         "1T"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "modelo.work.status",
-        "notices": [
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.modelo.work.calculate",
-                "cli_path": [
-                  "app",
-                  "modelo",
-                  "work",
-                  "calculate"
-                ],
-                "target_command_key": "modelo.work.calculate"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "work_unit_id",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "work_unit_id",
-                  "status": "resolved",
-                  "value": "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d"
-                }
-              ]
-            },
-            "code": "modelo.work.status.next_action",
-            "context": {
-              "continuation_outcome": "action_available",
-              "work_unit_id": "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d",
-              "work_unit_state": "borrador"
-            },
-            "message": "This active work unit can be calculated.",
-            "severity": "info"
-          }
-        ],
-        "result": {
-          "bucket_id": "<bucket-id>",
-          "causante_ccaa": null,
-          "created_at": "2026-04-01T09:00:00+00:00",
-          "current_calculation_revision_id": "c1e3697db4017328ef05d475d02984145de49859b7b5ed9391d9b8e783624197",
-          "current_filing_record_id": null,
-          "discard_reason": null,
-          "discarded_at": null,
-          "discarded_by": null,
-          "filed_calculation_revision_id": null,
-          "filing_year": 2026,
-          "modelo": "303",
-          "name": "303-2026-1T",
-          "operation": "modelo.work.status",
-          "period": {
-            "code": "1T",
-            "filing_year": 2026
-          },
-          "revision_id": "2026-y-siguientes",
-          "short_current_calculation_revision_id": "b8e783624197",
-          "short_filed_calculation_revision_id": null,
-          "short_work_unit_id": "af6b2264dd9d",
-          "state": "borrador",
-          "updated_at": "2026-04-01T09:00:00+00:00",
-          "work_unit_id": "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 2095,
+      "output_sha256": "1a4d4c3a94a535dcd558cf2d6e1e73c11a451709df50092dd94af8d1e3f8c5e9"
     },
     {
       "argv": [
@@ -326,73 +251,13 @@
         "./modelo-303.boe"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "modelo.export",
-        "notices": [
-          {
-            "action": null,
-            "code": "modelo.export.local_export_not_official_evidence",
-            "context": {
-              "evidence_status": "local_export_not_official_aeat_filing_evidence",
-              "filing_year": "2026",
-              "modelo": "303",
-              "period": "1T"
-            },
-            "message": "The local export is not official filing evidence.",
-            "severity": "warning"
-          },
-          {
-            "action": null,
-            "code": "modelo.export.development_software_identity",
-            "context": {
-              "filing_year": "2026",
-              "modelo": "303",
-              "period": "1T",
-              "software_identity_grade": "development_mock"
-            },
-            "message": "The file header carries Cadrumo's all-zero development software identity; AEAT will not accept this file for presentation.",
-            "severity": "warning"
-          }
-        ],
-        "result": {
-          "bucket_event_id": "c3cd0a5c7077dd01acdb67f6e404b5312a0e7d533766105db9929b35e3a839b9",
-          "bucket_id": "<bucket-id>",
-          "byte_size": 2948,
-          "calculation_revision_id": "c1e3697db4017328ef05d475d02984145de49859b7b5ed9391d9b8e783624197",
-          "file_sha256": "77eba478ce87019b64cda1c7f3fe7d267a4c3ca80121481bdab96b886ec4c37e",
-          "filing_year": 2026,
-          "format": "fichero-boe",
-          "modelo": "303",
-          "operation": "modelo.export",
-          "output_path": "modelo-303.boe",
-          "payment_election": "ingreso",
-          "period": {
-            "code": "1T",
-            "filing_year": 2026
-          },
-          "prior_domiciliation_election": {
-            "baseline_evidence_reference_id": null,
-            "baseline_filing_record_id": null,
-            "baseline_result_disposition": null,
-            "baseline_source_header_locator": null,
-            "election": "keep"
-          },
-          "refund_election": null,
-          "resolved_result_disposition": "I",
-          "software_identity_grade": "development_mock",
-          "work_unit_id": "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d"
-        },
-        "schema_version": "2",
-        "status": "warning"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 1898,
+      "output_sha256": "3c51148de5d5b20839c23cb5a59343d3baee2f07fa8c4a051c982c3f3a810fce"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "verification-reports-export-check"
 }

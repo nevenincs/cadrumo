@@ -13,12 +13,11 @@
         "2026-01-01"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -32,12 +31,11 @@
         "csv"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -56,12 +54,11 @@
         "210"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -84,12 +81,11 @@
         "domestic_current"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -121,12 +117,11 @@
           "value": "9a075f52dad08e80"
         }
       ],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -139,12 +134,11 @@
         "9a075f52dad08e80"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -169,12 +163,11 @@
           "value": "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d"
         }
       ],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -194,12 +187,11 @@
         "--no-joint-return-elected"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -213,103 +205,13 @@
         "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "modelo.work.history",
-        "notices": [
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.modelo.work.status",
-                "cli_path": [
-                  "app",
-                  "modelo",
-                  "work",
-                  "status"
-                ],
-                "target_command_key": "modelo.work.status"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "work_unit_id",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "work_unit_id",
-                  "status": "resolved",
-                  "value": "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d"
-                }
-              ]
-            },
-            "code": "modelo.work.history.next_action",
-            "context": {
-              "continuation_outcome": "action_available",
-              "work_unit_id": "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d"
-            },
-            "message": "Review this work unit's current state.",
-            "severity": "info"
-          }
-        ],
-        "result": {
-          "bucket_id": "<bucket-id>",
-          "event_count": 2,
-          "events": [
-            {
-              "actor": "docs-sequence-sandbox",
-              "event_id": "4756356f3409e5c92c58beab15127a6ac141fe955f21e8867e0ef0221cb92a29",
-              "event_type": "modelo.work_unit.created",
-              "object_id": "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d",
-              "object_type": "work_unit",
-              "occurred_at": "2026-04-01T09:00:00+00:00",
-              "payload": {
-                "filing_year": "2026",
-                "modelo": "303",
-                "name": "303-2026-1T",
-                "period": "1T",
-                "revision_id": "2026-y-siguientes"
-              }
-            },
-            {
-              "actor": "docs-sequence-sandbox",
-              "event_id": "e655707500ba919fd0a3342e86fafd86a7e5923ca4318c25f36cf4eb5847dcfa",
-              "event_type": "modelo.calculation.created",
-              "object_id": "c1e3697db4017328ef05d475d02984145de49859b7b5ed9391d9b8e783624197",
-              "object_type": "calculation_revision",
-              "occurred_at": "2026-04-01T09:00:00+00:00",
-              "payload": {
-                "borrador_binding_count": "0",
-                "borrador_bindings_trace_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-                "borrador_participated": "false",
-                "borrador_snapshot_id": "",
-                "calculation_revision_id": "c1e3697db4017328ef05d475d02984145de49859b7b5ed9391d9b8e783624197",
-                "casilla_count": "158",
-                "filing_year": "2026",
-                "formula_count": "33",
-                "has_provenance": "true",
-                "input_casilla_count": "53",
-                "modelo": "303",
-                "period": "1T",
-                "row_binding_count": "0",
-                "row_casilla_count": "0",
-                "source_provenance_count": "3",
-                "source_provenance_trace_sha256": "9cf169d9ce731bb7a2ff8e305f6ef7acf1482ebab0997e41c54760a7b95acc3b",
-                "source_transaction_count": "2",
-                "work_unit_id": "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d"
-              }
-            }
-          ],
-          "operation": "modelo.work.history",
-          "work_unit_id": "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 3261,
+      "output_sha256": "1b393a502d612d007a017524440461c5f5062feadc05bbe096c4e02f97c06c2a"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "filing-spine-history"
 }

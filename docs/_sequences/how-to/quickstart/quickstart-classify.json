@@ -13,12 +13,11 @@
         "2026-01-01"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -56,64 +55,11 @@
           "value": "e28390f0817dac6833a309cae6ddca6eeba53fd963c2ceb65168a5ee123341d6"
         }
       ],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "ledger.add",
-        "notices": [],
-        "result": {
-          "bucket_event_ids": [
-            "3d0f474c1c95199ecf9c2c1e3603cb3a97a0772619446976bd732107d84a7c83"
-          ],
-          "bucket_id": "<bucket-id>",
-          "review_status": "reviewed",
-          "transaction": {
-            "amount": "605",
-            "attachment_ids": [],
-            "booked_date": "2026-02-11",
-            "business_classification": "BUSINESS",
-            "business_pct": null,
-            "category_id": "material_oficina",
-            "classification_confidence": "1",
-            "classification_reason": "aeat app ledger add",
-            "classified_at": "2026-04-01T09:00:00+00:00",
-            "classified_by": "manual",
-            "counterparty": "",
-            "counterparty_country": null,
-            "counterparty_identification_state": null,
-            "created_at": "2026-04-01T09:00:00+00:00",
-            "currency": "EUR",
-            "date": "2026-02-11",
-            "description": "compra",
-            "direction": "OUTGOING",
-            "fx_rate": null,
-            "invoice_id": null,
-            "irpf_category": null,
-            "iva_amount": "105",
-            "iva_category": null,
-            "iva_rate": "0.21",
-            "lifecycle_state": "ACTIVE",
-            "m210_income_classification": null,
-            "modified_at": "2026-04-01T09:00:00+00:00",
-            "notes": "",
-            "prorrata_reference": null,
-            "purchase_invoice_evidence_id": null,
-            "source_jurisdiction": "ES",
-            "taxable_base": "500",
-            "transaction_id": "e28390f0817dac6833a309cae6ddca6eeba53fd963c2ceb65168a5ee123341d6",
-            "usage_ratio_id": null,
-            "value_date": null,
-            "value_in_eur": null
-          },
-          "transaction_id": "e28390f0817dac6833a309cae6ddca6eeba53fd963c2ceb65168a5ee123341d6"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 1722,
+      "output_sha256": "f2d2cbc93599d70fae47d592677aaf64152e45c9c8d7f1c3f4613d746cf678fd"
     },
     {
       "argv": [
@@ -128,12 +74,11 @@
         "material_oficina"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "command",
-      "stderr_text": null,
-      "text": "ID\te28390f0817dac6833a309cae6ddca6eeba53fd963c2ceb65168a5ee123341d6\nDate\t2026-02-11\nAmount\t605\nDescription\tcompra\nReview status\treviewed\n"
+      "output_bytes": 137,
+      "output_sha256": "77b8f49bcbce3d5cf23be5b418470d76b5bd06acd5baf2e92e0067bb2cc2550c"
     },
     {
       "argv": [
@@ -149,30 +94,13 @@
         "1T"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "ledger.preflight",
-        "notices": [],
-        "result": {
-          "bucket_id": "<bucket-id>",
-          "checked_transaction_count": 1,
-          "issues": [],
-          "period": {
-            "code": "1T",
-            "filing_year": 2026
-          },
-          "ready": true
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 337,
+      "output_sha256": "74f2c953168b03e4a86794a701f8ecac04ff339a57fb2209c72be3dfacd3aaab"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "quickstart-classify"
 }

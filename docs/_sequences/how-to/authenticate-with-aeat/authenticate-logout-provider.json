@@ -10,12 +10,11 @@
         "certificate"
       ],
       "captures": [],
-      "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": null,
+      "output_sha256": null
     },
     {
       "argv": [
@@ -29,28 +28,13 @@
         "certificate"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "config.auth.logout",
-        "notices": [],
-        "result": {
-          "bucket_id": "<bucket-id>",
-          "cleared_session_state": false,
-          "providers": [
-            "certificate"
-          ],
-          "removed_sessions": 0
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 306,
+      "output_sha256": "adb76d665aa2a1528892843e7b5769f9576c86a72caf01cffcb7e1e2636f9227"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "authenticate-logout-provider"
 }

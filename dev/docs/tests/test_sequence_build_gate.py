@@ -100,17 +100,33 @@ def test_sequence_check_runs_by_default() -> None:
     assert should_check_sequences() is True
 
 
-def test_sequence_check_skip_env_suppresses_the_check(tmp_path: Path) -> None:
-    """``CADRUMO_DOCS_SKIP_SEQUENCE_CHECK`` short-circuits before any execution.
+def test_sequence_check_skip_env_suppresses_the_check_for_a_non_html_build(tmp_path: Path) -> None:
+    """``CADRUMO_DOCS_SKIP_SEQUENCE_CHECK`` short-circuits a non-HTML build before any execution.
 
-    The stand-in app's ``srcdir`` points at an EMPTY directory: an unskipped
-    check would spawn the engine subprocess against it and, at minimum, pay
-    seconds of interpreter/app import — while the skip path must return before
-    reading ``srcdir`` at all. The guard decision is pinned here; the
-    divergence-reds proof for the UNSKIPPED hook lives in
-    ``test_sequence_goldens.TestBothSurfacesRedOnDivergence``.
+    The stand-in app's ``srcdir`` points at a directory that does not exist: a
+    non-HTML builder renders no sequence output, so the skip path must return
+    before reading ``srcdir`` at all. The divergence-reds proof for the
+    UNSKIPPED hook, and the skipped HTML build that re-checks missing records,
+    live in ``test_sequence_goldens``.
     """
     with scoped_env_var("CADRUMO_DOCS_SKIP_SEQUENCE_CHECK", "1"):
         assert should_check_sequences() is False
-        app = cast(Sphinx, SimpleNamespace(srcdir=str(tmp_path / "never-read"), config=SimpleNamespace()))
+        app = cast(
+            Sphinx,
+            SimpleNamespace(
+                srcdir=str(tmp_path / "never-read"),
+                config=SimpleNamespace(),
+                builder=SimpleNamespace(format=""),
+            ),
+        )
+        check_sequence_goldens(app, pages=None)
+
+
+def test_a_skipped_html_build_with_every_record_verified_runs_nothing(tmp_path: Path) -> None:
+    """With nothing unverified to render, a skipped HTML build returns without a check."""
+    with scoped_env_var("CADRUMO_DOCS_SKIP_SEQUENCE_CHECK", "1"):
+        app = cast(
+            Sphinx,
+            SimpleNamespace(srcdir=str(tmp_path), config=SimpleNamespace(), builder=SimpleNamespace(format="html")),
+        )
         check_sequence_goldens(app, pages=None)

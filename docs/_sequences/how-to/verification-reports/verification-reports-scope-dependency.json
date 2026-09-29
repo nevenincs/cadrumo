@@ -14,24 +14,13 @@
         "2026-01-01"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "config.profile.edit",
-        "notices": [],
-        "result": {
-          "profile_name": "docs-sequence-sandbox",
-          "status": "updated"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
       "envelope_source": "stdout",
       "exit_code": 0,
       "kind": "result",
-      "stderr_text": null,
-      "text": null
+      "output_bytes": 236,
+      "output_sha256": "c83da38ceb727d32dc28738a4556f5cfefb583401a8829d61f003011a78a1231"
     }
   ],
-  "golden_schema_version": 2,
+  "golden_schema_version": 3,
   "sequence_id": "verification-reports-scope-dependency"
 }
