@@ -461,7 +461,7 @@ def test_an_investment_asset_id_without_its_register_record_is_refused(
     _seed_zero_compensation_wallet_decision(bucket_id)
 
     _add_sale()
-    _add_investment_purchase(tmp_path)
+    investment_transaction_id = _add_investment_purchase(tmp_path)
 
     refused = _calculate_1t()
 
@@ -470,6 +470,10 @@ def test_an_investment_asset_id_without_its_register_record_is_refused(
     assert isinstance(error, dict)
     assert error["code"] == "REFUSED_PROFILE_BIENES_INVERSION_VALIDATION"
     assert error["message"] == "investment observation has no reciprocal bienes-inversion record"
+    context = error["context"]
+    assert isinstance(context, dict)
+    assert context["ledger_transaction_id"] == investment_transaction_id
+    assert context["investment_asset_id"] == _INVESTMENT_ASSET_ID
 
 
 def test_a_reta_quota_without_its_iva_substrate_still_blocks_the_quarter(
