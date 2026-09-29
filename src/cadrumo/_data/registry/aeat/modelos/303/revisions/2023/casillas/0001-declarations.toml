@@ -27,49 +27,6 @@ input_kind = "bound"
 binding = "modelo-303-iva-repercutido-reducido-transitorio-cuota"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
-# Base-imponible parity casilla for official box 10, mirroring the cuota
-# parity casilla above (box 11). Feeds box 10 via a projection formula only --
-# never the resultado, which is cuota-denominated and already carries this
-# quantity's tax through iva.autorepercutido.intracomunitaria.
-[[revisions.2023.casillas]]
-id = "iva.autorepercutido.intracomunitaria.devengado.base"
-continuidad_origin = "not_on_form"
-continuidad_evidence = "aeat-dr-303-2023, campos 40 y 41, distingue base [10] y cuota [11] de adquisiciones intracomunitarias. Esta fila es la entrada de agregacion que la formula proyecta en [10]; no constituye una segunda casilla impresa."
-number = "iva.autorepercutido.intracomunitaria.devengado.base"
-section = ["iva", "regimen_general", "inversion_sujeto_pasivo"]
-semantic_role = "iva_base_autorepercutida_intracomunitaria_devengado"
-semantic_role_cardinality = "intentional_singleton"
-semantic_role_cardinality_reason = "Sole base-imponible parity casilla for the AIC devengado box pair (10/11); no sibling rate or category split exists on this casilla."
-continuidad_id = "iva-base-autorepercutida-intracomunitaria-devengado"
-input_kind = "bound"
-binding = "modelo-303-iva-autorepercutido-intracomunitaria-devengado-base"
-legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-
-[[revisions.2023.casillas]]
-id = "iva.autoconsumo.promotor.base"
-continuidad_origin = "not_on_form"
-continuidad_evidence = "aeat-dr-303-2023 declara las bases y cuotas del regimen general por tipo, sin casilla separada para autoconsumo del promotor. Esta fila es una base auxiliar para calcular la cuota de autoconsumo conforme a Ley 37/1992 articulos 9 y 79; alimenta el calculo y no representa una casilla impresa nueva."
-continuidad_id = "iva-autoconsumo-promotor-base"
-number = "iva.autoconsumo.promotor.base"
-section = ["iva", "regimen_general", "devengado"]
-semantic_role = "iva_autoconsumo_promotor_base"
-input_kind = "bound"
-binding = "modelo-303-autoconsumo-promotor-base"
-legal_refs = ["ley-37-1992:art-9", "ley-37-1992:art-79", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-
-[[revisions.2023.casillas]]
-id = "iva.autoconsumo.promotor.cuota"
-continuidad_origin = "not_on_form"
-continuidad_evidence = "aeat-dr-303-2023 declara el total devengado [27] como suma de cuotas numeradas, sin casilla separada para autoconsumo del promotor. Esta fila computa la cuota auxiliar desde la base de autoconsumo y alimenta las casillas dirigidas; Ley 37/1992 articulos 9,79 y90 fundamenta su funcion, no una introduccion de casilla en 2023."
-continuidad_id = "iva-autoconsumo-promotor-cuota"
-number = "iva.autoconsumo.promotor.cuota"
-section = ["iva", "regimen_general", "devengado"]
-semantic_role = "iva_autoconsumo_promotor_cuota"
-input_kind = "computed"
-formula = "modelo-303-autoconsumo-promotor-cuota"
-legal_refs = ["ley-37-1992:art-9", "ley-37-1992:art-79", "ley-37-1992:art-90", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-export_exemption_reason = "feeds_addressed_casilla"
-
 [[revisions.2023.casillas]]
 id = "150"
 number = "150"

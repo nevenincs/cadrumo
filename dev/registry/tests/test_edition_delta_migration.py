@@ -715,12 +715,14 @@ def test_the_default_is_the_leading_run_most_rows_open_with_and_a_tie_withholds_
 
     # Half the rows opening with one reference and half with another is a tie:
     # no run opens more rows than the other, so no default is declared at all.
-    assert len(rows) % 2 == 0
+    # An odd row count leaves one row over; a third opener on it keeps the tie.
+    paired = len(rows) - len(rows) % 2
+    tie = [[top] if index % 2 == 0 else [runner_up] for index in range(paired)]
+    if paired < len(rows):
+        cited = {ref for refs in rows for ref in refs} | set(pilot_before.revisions[first.revision_id].source_refs)
+        tie.append([sorted(cited - {top, runner_up})[0]])
     planted = shutil.copytree(pilot_input, tmp_path / "registry" / "aeat")
-    _rewrite_row_sources(
-        _edition_dir(planted, _PILOT, first.revision_id),
-        [[top] if index % 2 == 0 else [runner_up] for index in range(len(rows))],
-    )
+    _rewrite_row_sources(_edition_dir(planted, _PILOT, first.revision_id), tie)
 
     plan = plan_migration(planted / "modelos" / _PILOT, _load(planted, _PILOT))
 

@@ -39,6 +39,8 @@ number = "27"
 section = ["iva", "regimen_general", "devengado"]
 semantic_role = "dr303_27"
 continuidad_id = "dr303-27"
+input_kind = "computed"
+formula = "modelo-303-dr303-27-projection"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
@@ -391,7 +393,9 @@ number = "120"
 section = ["iva", "resultado"]
 semantic_role = "dr303_120"
 continuidad_id = "dr303-120"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+input_kind = "bound"
+binding = "modelo-303-casilla-120-no-sujetas-localizacion-base"
+legal_refs = ["ley-37-1992:art-69", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "122"
@@ -399,7 +403,9 @@ number = "122"
 section = ["iva", "resultado"]
 semantic_role = "dr303_122"
 continuidad_id = "dr303-122"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+input_kind = "bound"
+binding = "modelo-303-casilla-122-inversion-sujeto-pasivo-base"
+legal_refs = ["ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "123"
@@ -471,7 +477,10 @@ continuidad_id = "dr303-64"
 number = "64"
 section = ["iva", "resultado"]
 semantic_role = "dr303_64"
-legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+input_kind = "computed"
+formula = "modelo-303-iva-suma-resultados"
+additional_source_refs = ["aeat-modelo-303-procedure"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71"]
 
 [[revisions.2022.casillas]]
 id = "65"
@@ -480,6 +489,8 @@ section = ["iva", "resultado"]
 data_type = "ratio"
 semantic_role = "dr303_65"
 continuidad_id = "dr303-65"
+input_kind = "bound"
+binding = "modelo-303-profile-state-attribution-ratio"
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
@@ -488,7 +499,10 @@ continuidad_id = "dr303-66"
 number = "66"
 section = ["iva", "resultado"]
 semantic_role = "dr303_66"
-legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+input_kind = "computed"
+formula = "modelo-303-iva-atribuible-estado"
+additional_source_refs = ["aeat-modelo-303-procedure"]
+legal_refs = ["rd-1624-1992:art-71"]
 
 [[revisions.2022.casillas]]
 id = "77"
@@ -2063,6 +2077,8 @@ number = "03"
 section = ["iva", "regimen_general", "devengado"]
 semantic_role = "dr303_03"
 continuidad_id = "dr303-03"
+input_kind = "computed"
+formula = "modelo-303-dr303-03-projection"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
@@ -2090,6 +2106,8 @@ number = "06"
 section = ["iva", "regimen_general", "devengado"]
 semantic_role = "dr303_06"
 continuidad_id = "dr303-06"
+input_kind = "computed"
+formula = "modelo-303-dr303-06-projection"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
@@ -2117,6 +2135,8 @@ number = "09"
 section = ["iva", "regimen_general", "devengado"]
 semantic_role = "dr303_09"
 continuidad_id = "dr303-09"
+input_kind = "computed"
+formula = "modelo-303-dr303-09-projection"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
@@ -2125,7 +2145,9 @@ number = "10"
 section = ["iva", "regimen_general", "devengado"]
 semantic_role = "dr303_10"
 continuidad_id = "dr303-10"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+input_kind = "computed"
+formula = "modelo-303-dr303-10-projection"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "11"
@@ -2133,6 +2155,8 @@ number = "11"
 section = ["iva", "regimen_general", "devengado"]
 semantic_role = "dr303_11"
 continuidad_id = "dr303-11"
+input_kind = "computed"
+formula = "modelo-303-dr303-11-projection"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
@@ -2149,6 +2173,8 @@ number = "13"
 section = ["iva", "regimen_general", "devengado"]
 semantic_role = "dr303_13"
 continuidad_id = "dr303-13"
+input_kind = "computed"
+formula = "modelo-303-dr303-13-projection"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
@@ -2226,3 +2252,47 @@ section = ["iva", "regimen_general", "devengado"]
 semantic_role = "dr303_22"
 continuidad_id = "dr303-22"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+# Base-imponible parity casilla for official box 10, mirroring the cuota
+# parity casilla iva.autorepercutido.intracomunitaria.devengado (box 11).
+# Feeds box 10 via a projection formula only -- never the resultado, which is
+# cuota-denominated and already carries this quantity's tax through
+# iva.autorepercutido.intracomunitaria.
+[[revisions.2022.casillas]]
+id = "iva.autorepercutido.intracomunitaria.devengado.base"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "aeat-dr-303-2022, campos 34 y 35, distingue base [10] y cuota [11] de adquisiciones intracomunitarias. Esta fila es la entrada de agregacion que la formula proyecta en [10]; no constituye una segunda casilla impresa."
+number = "iva.autorepercutido.intracomunitaria.devengado.base"
+section = ["iva", "regimen_general", "inversion_sujeto_pasivo"]
+semantic_role = "iva_base_autorepercutida_intracomunitaria_devengado"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Sole base-imponible parity casilla for the AIC devengado box pair (10/11); no sibling rate or category split exists on this casilla."
+continuidad_id = "iva-base-autorepercutida-intracomunitaria-devengado"
+input_kind = "bound"
+binding = "modelo-303-iva-autorepercutido-intracomunitaria-devengado-base"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.casillas]]
+id = "iva.autoconsumo.promotor.base"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "aeat-dr-303-2022 declara las bases y cuotas del regimen general por tipo, sin casilla separada para autoconsumo del promotor. Esta fila es una base auxiliar para calcular la cuota de autoconsumo conforme a Ley 37/1992 articulos 9 y 79; alimenta el calculo y no representa una casilla impresa."
+continuidad_id = "iva-autoconsumo-promotor-base"
+number = "iva.autoconsumo.promotor.base"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "iva_autoconsumo_promotor_base"
+input_kind = "bound"
+binding = "modelo-303-autoconsumo-promotor-base"
+legal_refs = ["ley-37-1992:art-9", "ley-37-1992:art-79", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+
+[[revisions.2022.casillas]]
+id = "iva.autoconsumo.promotor.cuota"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "aeat-dr-303-2022 declara el total devengado [27] como suma de cuotas numeradas, sin casilla separada para autoconsumo del promotor. Esta fila computa la cuota auxiliar desde la base de autoconsumo y alimenta las casillas dirigidas; Ley 37/1992 articulos 9, 79 y 90 fundamenta su funcion, no una casilla impresa."
+continuidad_id = "iva-autoconsumo-promotor-cuota"
+number = "iva.autoconsumo.promotor.cuota"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "iva_autoconsumo_promotor_cuota"
+input_kind = "computed"
+formula = "modelo-303-autoconsumo-promotor-cuota"
+legal_refs = ["ley-37-1992:art-9", "ley-37-1992:art-79", "ley-37-1992:art-90", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+export_exemption_reason = "feeds_addressed_casilla"

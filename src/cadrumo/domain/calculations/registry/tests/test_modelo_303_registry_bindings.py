@@ -193,10 +193,11 @@ def test_modelo_303_iva_bindings_resolve_end_to_end_with_substrate_observations(
         # fixture has no export rows, so casillas 59/60 resolve to zero.
         "modelo-303-casilla-59-entregas-intracomunitarias-base": Decimal("0"),
         "modelo-303-casilla-60-exportaciones-base": Decimal("0"),
-        # Casilla 122 is deliberately ABSENT here. This test resolves against
-        # 2022, while the supplier-side inversión binding belongs
-        # to the later explicit record-design revisions. Listing it here would
-        # assert a resolution this revision cannot produce.
+        # No supplier-side domestic reverse charge and no service located in
+        # another Member State, so the informativa bases [122] and [120]
+        # resolve to zero.
+        "modelo-303-casilla-122-inversion-sujeto-pasivo-base": Decimal("0"),
+        "modelo-303-casilla-120-no-sujetas-localizacion-base": Decimal("0"),
         # No third-country import rows in this observation set, so the import
         # deducible bindings, base [32] and cuota [33], resolve to zero.
         "modelo-303-iva-soportado-importaciones-base": Decimal("0"),
@@ -205,7 +206,8 @@ def test_modelo_303_iva_bindings_resolve_end_to_end_with_substrate_observations(
         # The AIC official-box parity bindings select the same AIC inversión row
         # as the semantic intracomunitaria binding, so they resolve to the same
         # self-assessed cuota (net-zero across the devengado/deducible pair),
-        # and the deducible base [36] to that row's base.
+        # and the devengado base [10] and deducible base [36] to that row's base.
+        "modelo-303-iva-autorepercutido-intracomunitaria-devengado-base": Decimal("400"),
         "modelo-303-iva-autorepercutido-intracomunitaria-devengado-cuota": Decimal("84"),
         "modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota": Decimal("84"),
         "modelo-303-iva-autorepercutido-intracomunitaria-deducible-base": Decimal("400"),
