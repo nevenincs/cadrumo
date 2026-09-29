@@ -6,10 +6,11 @@ tags:
 date: '2026-09-29'
 modified: '2026-09-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:7c038d55ed27a214ae3c4236e8c43569efeda5ced46cd5a5a525b1f6608eaa95'
+body_hash: 'sha256:d08979442fc6c7496092238ab03dcafe18d7ea1095d33eb3dbbedfb258538625'
 related:
   - '[[2026-09-29-docs-build-workflow-adr]]'
   - '[[2026-09-29-docs-build-workflow-audit]]'
+  - '[[2026-09-29-docs-build-workflow-ledger]]'
   - '[[2026-09-29-docs-build-workflow-plan]]'
 ---
 
@@ -26,6 +27,10 @@ Auto-generated index of all documents tagged with `#docs-build-workflow`.
 ### audit
 
 - `2026-09-29-docs-build-workflow-audit` - `docs-build-workflow` audit: `Docs build and preview workflow review`
+
+### exec
+
+- `2026-09-29-docs-build-workflow-ledger` - `docs-build-workflow` ledger
 
 ### plan
 

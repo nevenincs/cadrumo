@@ -9,7 +9,7 @@ related:
   - '[[2026-07-13-docs-cli-sequences-adr]]'
 modified: '2026-09-29'
 body_schema: body-v2
-body_hash: 'sha256:9d16188411586c003602b955f7b3da19adc7c7b9224926535fb16025d4b72b7b'
+body_hash: 'sha256:cbafee83585028599ad48429af80fda8bfd34cc93ff7d9963a79dcce555bd029'
 ---
 
 # `docs-build-workflow` plan
@@ -22,7 +22,7 @@ The decisions are D1 to D4 of the docs build workflow ADR; the goldens stay gove
 
 ## Steps
 
-- [ ] `S01` - Refuse sequence refresh, check and coherence on a stale local authority, naming the republish command; `dev/docs/sequences/`.
+- [x] `S01` - Refuse sequence refresh, check and coherence on a stale local authority, naming the republish command; `dev/docs/sequences/`.
 - [ ] `S02` - Select the committed-goldens gate in the merge gate for docs, dev/docs and source changes, with a runner-persistent verdict cache; `dev/ci/change_scope.py, .github/workflows/`.
 - [ ] `S03` - Preview a page or a directory from committed goldens with a persistent doctree cache, and stop classifying docs-serve as a partial build; `dev/docs/build.py, dev/docs/serve.py, docs/conf.py, justfile`.
 - [ ] `S04` - Generate API stubs at build time, remove them from git, and guard the admitted module set with an independent derivation; `docs/conf.py, dev/docs/apidocs/, docs/api/, .gitignore, justfile`.
