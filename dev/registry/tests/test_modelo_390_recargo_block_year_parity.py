@@ -34,6 +34,7 @@ import pytest
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.revision_order import ordered_revisions
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
 from ..compiler.authority import compiled_bundled_authority
 from ..compiler.loader import load_registry_tree
@@ -66,7 +67,7 @@ def _bundled_definition() -> ModeloDefinition:
     return compiled_bundled_authority().modelo("390")
 
 
-def _rate_rows(revision: ModeloRevision) -> dict[str, object]:
+def _rate_rows(revision: ModeloRevision) -> dict[str, CasillaDefinition]:
     """The block's rate rows in one edition, keyed by lineage."""
     return {
         str(row.continuidad_id): row
@@ -100,10 +101,8 @@ def _sections(revision: ModeloRevision) -> set[tuple[str, ...]]:
     return {tuple(row.section) for row in _rate_rows(revision).values()}
 
 
-def _stable_refs(row: object) -> frozenset[str]:
-    return frozenset(
-        str(ref) for ref in row.legal_refs if not str(ref).startswith(_TEMPORARY_RATE_PREFIX)
-    )
+def _stable_refs(row: CasillaDefinition) -> frozenset[str]:
+    return frozenset(str(ref) for ref in row.legal_refs if not str(ref).startswith(_TEMPORARY_RATE_PREFIX))
 
 
 def _m390_from(root: Path) -> ModeloDefinition:
@@ -128,9 +127,7 @@ def test_the_recargo_rate_block_shares_one_section_in_every_edition() -> None:
         assert len(sections) == 1, (
             f"edition {revision.id} splits the recargo rate block across sections {sorted(sections)}"
         )
-        tier_sections = {
-            tuple(row.section) for row in revision.casillas if str(row.id) in _TIER_CASILLAS
-        }
+        tier_sections = {tuple(row.section) for row in revision.casillas if str(row.id) in _TIER_CASILLAS}
         assert tier_sections == sections, (
             f"edition {revision.id} sections the rate rows {sorted(sections)} "
             f"but their own total layer {sorted(tier_sections)}"
@@ -157,9 +154,8 @@ def test_a_recargo_rate_rows_stable_grounding_does_not_drift_across_editions() -
         if len(seen) < 2:
             continue
         cores = set(seen.values())
-        assert len(cores) == 1, (
-            f"{lineage} drops or gains a non-temporary legal reference across editions: "
-            + str({edition: sorted(core) for edition, core in sorted(seen.items())})
+        assert len(cores) == 1, f"{lineage} drops or gains a non-temporary legal reference across editions: " + str(
+            {edition: sorted(core) for edition, core in sorted(seen.items())}
         )
 
 
