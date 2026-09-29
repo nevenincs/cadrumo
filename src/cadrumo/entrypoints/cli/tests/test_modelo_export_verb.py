@@ -17,6 +17,7 @@ from cadrumo.domain.calculations.registry.tests.authored_editions import revisio
 
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....application.filing.producer_snapshot import M202_UNSUPPORTED_PRODUCER_IDS
 from ....application.modelo.operation_definitions import MODELO_EXPORT_OPERATION_DEFINITION_ID, ModeloExportRequest
 from ....application.modelo.tests.registry_revision import active_registry_revision_id
 from ....application.operations.frontend_requests import OperationObservationRequestV1, OperationObservationSuccessV1
@@ -542,6 +543,8 @@ def test_export_modelo_202_emilio_passes_the_identity_gate_and_stops_at_incomple
     error = json.loads(result.output)["error"]
     assert error["context"]["calculation_revision_id"] == calculation_revision_id
     assert error["context"]["cause_type"] == "FilingProducerSnapshotError"
+    assert error["context"]["reason"] == "m202_producer_facts_unsupported"
+    assert error["context"]["missing_fact_ids"] == ", ".join(item.value for item in M202_UNSUPPORTED_PRODUCER_IDS)
     assert not out.exists()
 
 

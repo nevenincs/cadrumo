@@ -1148,10 +1148,13 @@ def _validate_modelo_111_snapshot(snapshot: FilingProducerSnapshot) -> None:
 
 
 def _validate_modelo_202_snapshot(snapshot: FilingProducerSnapshot) -> None:
+    # The producer-facts completeness gap itself is refused ahead of
+    # construction by :func:`_require_modelo_202_producer_facts_complete`, so
+    # that structured context reaches the caller instead of being laundered
+    # through the pydantic validation boundary's stringified ValueError. Only
+    # the profile-type shape invariant remains here.
     if not isinstance(snapshot.model_profile, Modelo202ProducerProfile):
         raise ValueError("modelo 202 requires Modelo202ProducerProfile")
-    unsupported = ", ".join(item.value for item in snapshot.model_profile.unsupported_producer_ids)
-    raise ValueError(f"Modelo 202 producer snapshot is incomplete: {unsupported}")
 
 
 def _validate_modelo_303_snapshot(snapshot: FilingProducerSnapshot) -> None:
@@ -1220,6 +1223,30 @@ def _profile_iva(model_profile: FilingModelProfileFacts) -> ModeloIVAProfile | N
     return None
 
 
+def _require_modelo_202_producer_facts_complete(model_profile: FilingModelProfileFacts) -> None:
+    """Refuse an M202 producer snapshot the registry cannot yet resolve, before any construction.
+
+    Every principal-CNAE and official-offset ``m202.*`` key is declared in the
+    export vocabulary but resolved by nothing yet (see
+    :class:`M202UnsupportedProducerId`), so a Modelo 202 producer snapshot is
+    currently always incomplete. Raised here -- ahead of
+    :class:`FilingProducerSnapshot` construction -- rather than from its
+    pydantic ``model_validator``, so the missing fact identifiers reach the
+    caller as structured ``context`` instead of being laundered through a
+    stringified validation error the pydantic boundary cannot preserve.
+    """
+    if not isinstance(model_profile, Modelo202ProducerProfile):
+        return
+    missing = model_profile.unsupported_producer_ids
+    if not missing:
+        return
+    missing_ids = tuple(item.value for item in missing)
+    raise FilingProducerSnapshotError(
+        f"Modelo 202 producer snapshot is incomplete: {', '.join(missing_ids)}",
+        context={"missing_fact_ids": missing_ids, "reason": "m202_producer_facts_unsupported"},
+    )
+
+
 def build_filing_producer_snapshot(
     *,
     modelo: Modelo,
@@ -1241,6 +1268,7 @@ def build_filing_producer_snapshot(
     informativa contact fact keeps working unchanged; an absent contact renders
     as blancos, which is what AEAT's own header rule prescribes.
     """
+    _require_modelo_202_producer_facts_complete(model_profile)
     safe_model_profile = _without_embedded_accounts(model_profile)
     selected_account: SelectedFilingAccount | None
     if elections.result_disposition is ResultDisposition.DOMICILIACION:
