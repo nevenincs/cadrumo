@@ -10,7 +10,7 @@ related:
   - '[[2026-09-21-retenciones-workflow-observation-payment-contract-adr]]'
 modified: '2026-09-29'
 body_schema: body-v2
-body_hash: 'sha256:d83810f236dd254225fc2065b7f796b0c6454b3f8c9b4c90634d633bc05e6a4f'
+body_hash: 'sha256:e3a574fe4dee226c8179a72160c68ea6b3dba60446d381cb2abdc0c82964d813'
 ---
 
 # `registry-conformance-rectification` plan
@@ -85,8 +85,8 @@ Rectify verified late authoring and closed windows in other modelos, and return 
 
 Implement the rulings the operator delegated on 2026-09-29, each within the existing gates: registry rulings grounded per year in official evidence and fail-closed where the evidence is ambiguous, code rulings through the owning boundary with focused tests.
 
-- [ ] `P05.S14` - Resolve the authority root without the profile and storage-root settings, so the MCP server and CLI boot beside retired aeat data (D1); `src/cadrumo/domain/calculations/registry/authority.py`.
-- [ ] `P05.S15` - Keep the installed-oracle authority fallback and prove each oracle names the generation it consumed (D2); `dev/packaging/tests/test_installed_oracles.py`.
+- [x] `P05.S14` - Resolve the authority root without the profile and storage-root settings, so the MCP server and CLI boot beside retired aeat data (D1); `src/cadrumo/domain/calculations/registry/authority.py`.
+- [x] `P05.S15` - Keep the installed-oracle authority fallback and prove each oracle names the generation it consumed (D2); `dev/packaging/tests/test_installed_oracles.py`.
 - [ ] `P05.S16` - Remove a passing run's scratch folder when the run finishes and keep a failing run's (D3); `dev/test_runs/`.
 - [ ] `P05.S17` - Ground the Modelo 100 late-authoring rulings per year: the 193 relation and renta-dep-193, the B4 and B5 items, the 0604 legal refs, the amending-law catalogue entries and the 2024 DA 18 period-end condition (rulings 2, 3, 4, 7, 8, 10); `src/cadrumo/_data/registry/aeat/modelos/100/`.
 - [ ] `P05.S18` - Give the accelerated DA 18 regime its own refusal token (ruling 9); `src/cadrumo/domain/renta/actividad_asset/`.
