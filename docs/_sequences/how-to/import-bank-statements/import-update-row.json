@@ -26,60 +26,8 @@
           "value": "37e46cb93b11cfa556996041758cbf80b97ec6b23b4338e89b61dd3d3e332102"
         }
       ],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "ledger.add",
-        "notices": [],
-        "result": {
-          "bucket_event_ids": [
-            "0aa7457ce2fea8e0010621438cd7118508aca9a129a36f9b5b0719999637d0d3"
-          ],
-          "bucket_id": "<bucket-id>",
-          "review_status": "pending",
-          "transaction": {
-            "amount": "121",
-            "attachment_ids": [],
-            "booked_date": "2026-03-21",
-            "business_classification": "NOT_YET_PROCESSED",
-            "business_pct": null,
-            "category_id": null,
-            "classification_confidence": null,
-            "classification_reason": "",
-            "classified_at": null,
-            "classified_by": "auto",
-            "counterparty": "",
-            "counterparty_country": null,
-            "counterparty_identification_state": null,
-            "created_at": "2026-04-01T09:00:00+00:00",
-            "currency": "EUR",
-            "date": "2026-03-21",
-            "description": "Office supplies",
-            "direction": "OUTGOING",
-            "fx_rate": null,
-            "invoice_id": null,
-            "irpf_category": null,
-            "iva_amount": null,
-            "iva_category": null,
-            "iva_rate": null,
-            "lifecycle_state": "ACTIVE",
-            "m210_income_classification": null,
-            "modified_at": "2026-04-01T09:00:00+00:00",
-            "notes": "",
-            "prorrata_reference": null,
-            "purchase_invoice_evidence_id": null,
-            "source_jurisdiction": "ES",
-            "taxable_base": null,
-            "transaction_id": "37e46cb93b11cfa556996041758cbf80b97ec6b23b4338e89b61dd3d3e332102",
-            "usage_ratio_id": null,
-            "value_date": null,
-            "value_in_eur": null
-          },
-          "transaction_id": "37e46cb93b11cfa556996041758cbf80b97ec6b23b4338e89b61dd3d3e332102"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
-      "envelope_source": "stdout",
+      "envelope": null,
+      "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
       "stderr_text": null,
@@ -331,6 +279,6 @@
       "text": null
     }
   ],
-  "golden_schema_version": 1,
+  "golden_schema_version": 2,
   "sequence_id": "import-update-row"
 }

@@ -18,7 +18,7 @@
       "exit_code": 0,
       "kind": "setup",
       "stderr_text": null,
-      "text": "Profile\tdocs-sequence-sandbox\nStatus\tupdated\nNext\taeat app modelo work create\n"
+      "text": null
     },
     {
       "argv": [
@@ -51,7 +51,7 @@
       "exit_code": 0,
       "kind": "setup",
       "stderr_text": null,
-      "text": "ID\t5e530ccb8059c3819f61c3257961f6cb67c1d8654830c318d303d4bc53149303\nDate\t2026-02-10\nAmount\t1210\nDescription\tventa\nReview status\treviewed\n"
+      "text": null
     },
     {
       "argv": [
@@ -89,60 +89,8 @@
           "value": "e28390f0817dac6833a309cae6ddca6eeba53fd963c2ceb65168a5ee123341d6"
         }
       ],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "ledger.add",
-        "notices": [],
-        "result": {
-          "bucket_event_ids": [
-            "3d0f474c1c95199ecf9c2c1e3603cb3a97a0772619446976bd732107d84a7c83"
-          ],
-          "bucket_id": "<bucket-id>",
-          "review_status": "reviewed",
-          "transaction": {
-            "amount": "605",
-            "attachment_ids": [],
-            "booked_date": "2026-02-11",
-            "business_classification": "BUSINESS",
-            "business_pct": null,
-            "category_id": "material_oficina",
-            "classification_confidence": "1",
-            "classification_reason": "aeat app ledger add",
-            "classified_at": "2026-04-01T09:00:00+00:00",
-            "classified_by": "manual",
-            "counterparty": "",
-            "counterparty_country": null,
-            "counterparty_identification_state": null,
-            "created_at": "2026-04-01T09:00:00+00:00",
-            "currency": "EUR",
-            "date": "2026-02-11",
-            "description": "compra",
-            "direction": "OUTGOING",
-            "fx_rate": null,
-            "invoice_id": null,
-            "irpf_category": null,
-            "iva_amount": "105",
-            "iva_category": null,
-            "iva_rate": "0.21",
-            "lifecycle_state": "ACTIVE",
-            "m210_income_classification": null,
-            "modified_at": "2026-04-01T09:00:00+00:00",
-            "notes": "",
-            "prorrata_reference": null,
-            "purchase_invoice_evidence_id": null,
-            "source_jurisdiction": "ES",
-            "taxable_base": "500",
-            "transaction_id": "e28390f0817dac6833a309cae6ddca6eeba53fd963c2ceb65168a5ee123341d6",
-            "usage_ratio_id": null,
-            "value_date": null,
-            "value_in_eur": null
-          },
-          "transaction_id": "e28390f0817dac6833a309cae6ddca6eeba53fd963c2ceb65168a5ee123341d6"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
-      "envelope_source": "stdout",
+      "envelope": null,
+      "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
       "stderr_text": null,
@@ -178,34 +126,8 @@
           "value": "9a075f52dad08e80"
         }
       ],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "ledger.evidence.add",
-        "notices": [],
-        "result": {
-          "attachment_id": "725afbe3c64d4e96faaed8b63b83ed2e7df161334681d98d8b877bd7cddbfc16",
-          "bucket_event_ids": [
-            "23242b36321dbc14fbff281ac7478eee69f63066c137152966db7975d0856c0d"
-          ],
-          "bucket_id": "<bucket-id>",
-          "created_at": "2026-04-01T09:00:00Z",
-          "evidence_id": "9a075f52dad08e80",
-          "invoice_date": "2026-02-11",
-          "invoice_number": "C-2026-0087",
-          "iva_amount": "105",
-          "iva_rate": "0.21",
-          "media_kind": "pdf",
-          "notes": "",
-          "source_path": "fixtures/factura-material-oficina.pdf",
-          "source_sha256": "725afbe3c64d4e96faaed8b63b83ed2e7df161334681d98d8b877bd7cddbfc16",
-          "supplier": "Papeleria Central SL",
-          "taxable_base": "500",
-          "updated_at": "2026-04-01T09:00:00Z"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
-      "envelope_source": "stdout",
+      "envelope": null,
+      "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
       "stderr_text": null,
@@ -227,7 +149,7 @@
       "exit_code": 0,
       "kind": "setup",
       "stderr_text": null,
-      "text": "ID\te28390f0817dac6833a309cae6ddca6eeba53fd963c2ceb65168a5ee123341d6\nDate\t2026-02-11\nAmount\t605\nDescription\tcompra\nReview status\treviewed\n"
+      "text": null
     },
     {
       "argv": [
@@ -630,6 +552,6 @@
       "text": null
     }
   ],
-  "golden_schema_version": 1,
+  "golden_schema_version": 2,
   "sequence_id": "quickstart-modelo-130"
 }

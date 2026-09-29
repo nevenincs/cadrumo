@@ -21,24 +21,8 @@
           "value": "6404ccf339e0bcea77eb0212f286d77d3b2d3f7ce6969118850266649125e7c7"
         }
       ],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "modelo.m036.alta",
-        "notices": [],
-        "result": {
-          "bucket_id": "<bucket-id>",
-          "declaration_id": "6404ccf339e0bcea77eb0212f286d77d3b2d3f7ce6969118850266649125e7c7",
-          "declared_on": "2026-01-10",
-          "event_kind": "alta",
-          "note": null,
-          "profile_id": "<profile-id>",
-          "recorded_at": "2026-04-01T09:00:00+00:00",
-          "sede_justificante": "ACUSE-036-2026"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
-      "envelope_source": "stdout",
+      "envelope": null,
+      "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
       "stderr_text": null,
@@ -122,6 +106,6 @@
       "text": null
     }
   ],
-  "golden_schema_version": 1,
+  "golden_schema_version": 2,
   "sequence_id": "modelo-036-list-view"
 }

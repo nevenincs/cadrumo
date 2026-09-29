@@ -18,7 +18,7 @@
       "exit_code": 0,
       "kind": "setup",
       "stderr_text": null,
-      "text": "Profile\tdocs-sequence-sandbox\nStatus\tupdated\nNext\taeat app modelo work create\n"
+      "text": null
     },
     {
       "argv": [
@@ -37,7 +37,7 @@
       "exit_code": 0,
       "kind": "setup",
       "stderr_text": null,
-      "text": "Rows\t2\nEntries imported\t2\nSkipped\t0\n"
+      "text": null
     },
     {
       "argv": [
@@ -61,7 +61,7 @@
       "exit_code": 0,
       "kind": "setup",
       "stderr_text": null,
-      "text": "ID\t71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518\nDate\t2026-02-10\nAmount\t1210\nDescription\tCobro factura F-2026-001 servicios de consultoria\nReview status\treviewed\n"
+      "text": null
     },
     {
       "argv": [
@@ -89,7 +89,7 @@
       "exit_code": 0,
       "kind": "setup",
       "stderr_text": null,
-      "text": "ID\te3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d\nDate\t2026-02-11\nAmount\t605\nDescription\tCompra de material de oficina proveedor local\nReview status\treviewed\n"
+      "text": null
     },
     {
       "argv": [
@@ -121,34 +121,8 @@
           "value": "9a075f52dad08e80"
         }
       ],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "ledger.evidence.add",
-        "notices": [],
-        "result": {
-          "attachment_id": "725afbe3c64d4e96faaed8b63b83ed2e7df161334681d98d8b877bd7cddbfc16",
-          "bucket_event_ids": [
-            "23242b36321dbc14fbff281ac7478eee69f63066c137152966db7975d0856c0d"
-          ],
-          "bucket_id": "<bucket-id>",
-          "created_at": "2026-04-01T09:00:00Z",
-          "evidence_id": "9a075f52dad08e80",
-          "invoice_date": "2026-02-11",
-          "invoice_number": "C-2026-0087",
-          "iva_amount": "105",
-          "iva_rate": "0.21",
-          "media_kind": "pdf",
-          "notes": "",
-          "source_path": "fixtures/factura-material-oficina.pdf",
-          "source_sha256": "725afbe3c64d4e96faaed8b63b83ed2e7df161334681d98d8b877bd7cddbfc16",
-          "supplier": "Papeleria Central SL",
-          "taxable_base": "500",
-          "updated_at": "2026-04-01T09:00:00Z"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
-      "envelope_source": "stdout",
+      "envelope": null,
+      "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
       "stderr_text": null,
@@ -170,13 +144,11 @@
       "exit_code": 0,
       "kind": "setup",
       "stderr_text": null,
-      "text": "ID\te3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d\nDate\t2026-02-11\nAmount\t605\nDescription\tCompra de material de oficina proveedor local\nReview status\treviewed\n"
+      "text": null
     },
     {
       "argv": [
         "aeat",
-        "--format",
-        "json",
         "app",
         "modelo",
         "work",
@@ -189,48 +161,12 @@
         "1T"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "modelo.work.create",
-        "notices": [],
-        "result": {
-          "applicability_guard_bypassed": false,
-          "bucket_id": "<bucket-id>",
-          "causante_ccaa": null,
-          "created_at": "2026-04-01T09:00:00+00:00",
-          "current_calculation_revision_id": null,
-          "current_filing_record_id": null,
-          "discard_reason": null,
-          "discarded_at": null,
-          "discarded_by": null,
-          "filed_calculation_revision_id": null,
-          "filing_year": 2026,
-          "modelo": "303",
-          "name": "303-2026-1T",
-          "name_applied": null,
-          "operation": "modelo.work.create",
-          "period": {
-            "code": "1T",
-            "filing_year": 2026
-          },
-          "revision_id": "2026-y-siguientes",
-          "short_current_calculation_revision_id": null,
-          "short_filed_calculation_revision_id": null,
-          "short_work_unit_id": "af6b2264dd9d",
-          "state": "borrador",
-          "status": "created",
-          "status_message": "New work unit created.",
-          "updated_at": "2026-04-01T09:00:00+00:00",
-          "work_unit_id": "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
-      "envelope_source": "stdout",
+      "envelope": null,
+      "envelope_source": null,
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": null
+      "text": "operation\tmodelo.work.create\nstatus\tcreated\nwork_unit_id\tfa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d\nshort_work_unit_id\taf6b2264dd9d\nbucket_id\t<bucket-id>\nmodelo\t303\nfiling_year\t2026\nperiod\t1T\nrevision_id\t2026-y-siguientes\nname\t303-2026-1T\nstate\tdraft\ncurrent_calculation_revision_id\t\nshort_current_calculation_revision_id\t\nfiled_calculation_revision_id\t\nshort_filed_calculation_revision_id\t\ncurrent_filing_record_id\t\ncreated_at\t2026-04-01T09:00:00+00:00\nupdated_at\t2026-04-01T09:00:00+00:00\nplazo_closes_on\t2026-04-20\ndays_remaining\t19\nNew work unit created.\n"
     },
     {
       "argv": [
@@ -1032,8 +968,6 @@
     {
       "argv": [
         "aeat",
-        "--format",
-        "json",
         "app",
         "modelo",
         "work",
@@ -1046,47 +980,12 @@
         "1T"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "modelo.work.file",
-        "notices": [],
-        "result": {
-          "aeat_accepted": false,
-          "aeat_register": null,
-          "amends_filing_record_id": null,
-          "bucket_id": "<bucket-id>",
-          "calculation_revision_id": "c1e3697db4017328ef05d475d02984145de49859b7b5ed9391d9b8e783624197",
-          "confirmation": "pendiente",
-          "declaration_kind": "original",
-          "external_evidence": null,
-          "filed_at": "2026-04-01T09:00:00+00:00",
-          "filed_by": "docs-sequence-sandbox",
-          "filing_record_id": "395a8fce0fb689dd58387291b2ea85b0c23530d8cac82fd3e2e5e4b492c9f2e1",
-          "filing_year": 2026,
-          "kind": "internal_filing",
-          "live_submission": false,
-          "member_nif": null,
-          "modelo": "303",
-          "notes": null,
-          "operation": "modelo.work.file",
-          "origin": "local",
-          "period": {
-            "code": "1T",
-            "filing_year": 2026
-          },
-          "status": "vigente",
-          "superseded_at": null,
-          "superseded_by_filing_record_id": null,
-          "work_unit_id": "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
-      "envelope_source": "stdout",
+      "envelope": null,
+      "envelope_source": null,
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": null
+      "text": "operation\tmodelo.work.file\nfiling_record_id\t395a8fce0fb689dd58387291b2ea85b0c23530d8cac82fd3e2e5e4b492c9f2e1\nwork_unit_id\tfa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d\ncalculation_revision_id\tc1e3697db4017328ef05d475d02984145de49859b7b5ed9391d9b8e783624197\nbucket_id\t<bucket-id>\nmodelo\t303\nfiling_year\t2026\nperiod\t1T\nfiled_at\t2026-04-01T09:00:00+00:00\nfiled_by\tdocs-sequence-sandbox\nstatus\tvigente\norigin\tlocal\nconfirmation\tpendiente\ndeclaration_kind\toriginal\naeat_accepted\tfalse\nkind\tinternal_filing\nlive_submission\tfalse\nfiling_disambiguation\tThis filing is internal only and is not submitted to the AEAT.\n"
     },
     {
       "argv": [
@@ -1173,6 +1072,6 @@
       "text": null
     }
   ],
-  "golden_schema_version": 1,
+  "golden_schema_version": 2,
   "sequence_id": "iva-lifecycle-q1"
 }

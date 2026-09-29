@@ -3,8 +3,6 @@
     {
       "argv": [
         "aeat",
-        "--format",
-        "json",
         "app",
         "modelo",
         "iva-wallet",
@@ -13,34 +11,16 @@
         "2026"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "modelo.iva_wallet.balance",
-        "notices": [],
-        "result": {
-          "active_balance": "0",
-          "as_of_year": 2026,
-          "expired_balance": "0",
-          "lot_count": 0,
-          "next_expiry_year": null,
-          "operation": "modelo.iva_wallet.balance",
-          "total_balance": "0",
-          "unallocated_applied_amount": "0"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
-      "envelope_source": "stdout",
+      "envelope": null,
+      "envelope_source": null,
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": null
+      "text": "operation\tmodelo.iva-wallet.balance\nas_of_year\t2026\ntotal_balance\t0\nactive_balance\t0\nexpired_balance\t0\nlot_count\t0\nnext_expiry_year\tNone\nunallocated_applied_amount\t0\n"
     },
     {
       "argv": [
         "aeat",
-        "--format",
-        "json",
         "app",
         "modelo",
         "iva-wallet",
@@ -54,30 +34,12 @@
         "--confirm"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "modelo.iva_wallet.seed",
-        "notices": [],
-        "result": {
-          "amount": "0",
-          "filing_year": 2024,
-          "operation": "modelo.iva_wallet.seed",
-          "period": {
-            "code": "4T",
-            "filing_year": 2024
-          },
-          "provenance": "operator_seed",
-          "register_status": null,
-          "taxpayer_nif": "sha256:1c9f9632"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
-      "envelope_source": "stdout",
+      "envelope": null,
+      "envelope_source": null,
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": null
+      "text": "operation\tmodelo.iva-wallet.seed\nfiling_year\t2024\nperiod\t4T\ntaxpayer_nif\tsha256:1c9f9632\namount\t0\nprovenance\toperator_seed\nregister_status\t\n"
     },
     {
       "argv": [
@@ -127,6 +89,6 @@
       "text": null
     }
   ],
-  "golden_schema_version": 1,
+  "golden_schema_version": 2,
   "sequence_id": "review-values-iva-wallet"
 }

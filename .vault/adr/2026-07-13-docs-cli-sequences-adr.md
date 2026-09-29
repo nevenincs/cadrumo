@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#docs-cli-sequences'
 date: '2026-07-13'
-modified: '2026-07-16'
-body_hash: 'sha256:fac4d2c267b3844040f59187cde21aa2fb3b706665c9a5b36c2f403e5ba91ccf'
+modified: '2026-09-29'
+body_hash: 'sha256:f3eae64a255379e03b3a64498c4b9cb85315965117fc24f88ce3ed0b98d5cf77'
 related:
   - "[[2026-07-13-docs-cli-sequences-research]]"
 ---
@@ -27,6 +27,52 @@ its output remains in the committed golden, and every expectation still runs
 against live output during check and refresh. A hermetically executable command
 must remain an executed frame. Authors may not convert it to `@static` merely
 to avoid refreshing a changed golden.
+
+## Output weight amendment (2026-09-29)
+
+Operator direction 2026-09-29: compress the recorded outputs and remove
+repeated data. All modifications for this work were authorized in advance by the
+operator. Measured on the 2026-09-29 tree: 205 goldens hold 26 to 28 MB. Setup
+frames hold about 9 MB of output that no reader sees and no later frame reads,
+because captures are stored separately. About 11 MB are byte-identical copies of
+another frame. The Modelo 100 and Renta-assembly pages each render about 20 MB of
+sequence HTML, and the inline payload repeats the visible output.
+
+- A1, amending D2, D6 and the reader-surface amendment: a setup frame's golden
+  records its argv, exit code and captures only. Setup frames still execute.
+  Check still asserts their exit code, captures and any `@expect` against live
+  output, but their envelope and text are no longer stored or compared. The
+  golden schema version becomes 2. A golden that stores setup output is refused
+  and the error names the refresh invocation. This replaces the reader-surface
+  amendment's "its output remains in the committed golden". Setup output is
+  never rendered and never read by a later frame. The product's own tests own
+  the behaviour of those commands, and so does any sequence that shows the
+  command to a reader.
+- A2, amending the D5 payload shape: the inline payload carries each frame's
+  output format, not its body. The body exists once, in the static HTML. The
+  widget drives its playhead from the DOM and never read the body.
+- A3, an authoring rule under D1: a reader-facing frame prints the human-readable
+  text output. It uses `--format json` only when a later frame captures from it,
+  when an `@expect` needs its JSON, or when the page teaches the JSON form. A
+  result frame proves its claim with the narrowest command whose payload carries
+  it.
+- A4: check and refresh report a named advisory, never a failure, for any
+  reader-facing frame whose recorded output exceeds 64 KiB.
+- A5, amending D2's storage layout: a golden, and the JSON shown to readers,
+  keeps each record of an array of 16 or more objects on one line when the record
+  fits in 1,024 characters. Every other value keeps the two-space layout. Only
+  whitespace changes: keys, values, types and order are identical. A change to
+  one observation then moves one line instead of a dozen.
+- A6, amending D5's highlighting: JSON output larger than 16 KiB renders as
+  escaped plain text without syntax highlighting. It shows the complete output;
+  only the per-token markup, which multiplied large outputs several times over,
+  is dropped.
+
+Rejected: content-addressed deduplication of identical outputs across goldens.
+It keeps every byte on the pages, adds an indirection to every review diff, and
+git packs already delta-compress identical content. Also rejected: truncating
+displayed output in the renderer, which would show readers something other than
+what the command prints.
 
 ## Problem Statement
 

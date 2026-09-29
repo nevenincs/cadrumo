@@ -9,12 +9,15 @@ emits, in document order:
 - each reader-facing frame as static HTML — setup scaffolding and expectation
   assertions remain build-only;
 - exactly one inline ``script[type="application/json"]`` payload per sequence,
-  carrying those same reader-facing frames and per-token command-path keys.
+  carrying those same reader-facing frames and per-token command-path keys, with
+  each output reduced to its format.
 
 Both surfaces are rendered from ONE computed payload, so the JSON a widget reads
-cannot drift from the visible frames. The browser widget (not yet built) only
-toggles visibility and adds controls; it never injects content. A missing or
-stale golden is an instructive build error naming the exact ``refresh`` command.
+cannot drift from the visible frames. Output and stderr bodies live only in the
+static HTML: the widget never reads them, and repeating them in the inline JSON
+would ship every output twice. The widget only toggles visibility and adds
+controls; it never injects content. A missing or stale golden is an instructive
+build error naming the exact ``refresh`` command.
 
 This module lives outside the ``dev/docs/sequences`` engine package; ``docs/conf.py``
 registers the directive by calling :func:`register`.
@@ -41,6 +44,7 @@ if TYPE_CHECKING:
 __all__ = [
     "CliSequenceDirective",
     "build_sequence_payload",
+    "inline_sequence_payload",
     "parse_shells",
     "register",
     "render_sequence_html",
@@ -265,7 +269,11 @@ def build_sequence_payload(
     *,
     shells: list[str] | None = None,
 ) -> dict[str, Any]:
-    """Assemble the one inline payload for a sequence from its parse and golden.
+    """Assemble the one computed payload for a sequence from its parse and golden.
+
+    The computed payload carries every output and stderr body, because the static
+    HTML renders from it; :func:`inline_sequence_payload` projects it to the
+    body-free form serialised into the page.
 
     ``shells`` is the ordered reader-facing shell set (default ``bash pwsh``);
     the first entry is the default variant. ``@static`` frames render from the
@@ -308,6 +316,25 @@ def build_sequence_payload(
         "shells": resolved_shells,
         "frames": frames,
     }
+
+
+def _format_only(view: dict[str, str] | None) -> dict[str, str] | None:
+    """Reduce a ``{format, body}`` output view to ``{format}``, keeping ``None``."""
+    return None if view is None else {"format": view["format"]}
+
+
+def inline_sequence_payload(payload: dict[str, Any]) -> dict[str, Any]:
+    """Project the computed payload to the form serialised inline in the page.
+
+    Every field is kept except the output and stderr bodies, which are reduced
+    to their format: the body exists once, in the static HTML rendered from the
+    same computed payload.
+    """
+    frames = [
+        {**frame, "output": _format_only(frame["output"]), "stderr": _format_only(frame["stderr"])}
+        for frame in payload["frames"]
+    ]
+    return {**payload, "frames": frames}
 
 
 def _render_token_span(token: dict[str, Any]) -> str:
@@ -402,13 +429,15 @@ def render_sequence_html(payload: dict[str, Any]) -> str:
 
     The static frames and the inline ``application/json`` payload are both
     produced from ``payload``, so the two content sources cannot drift; a widget
-    only enhances the already-complete transcript.
+    only enhances the already-complete transcript. The static frames carry the
+    full output and stderr bodies; the inline payload carries only their formats
+    (see :func:`inline_sequence_payload`).
     """
     sequence_id = html.escape(payload["sequence_id"])
     shells = payload["shells"]
     default_shell = html.escape(shells[0])
     frames_html = "".join(_render_frame_html(frame, payload["verify"], shells) for frame in payload["frames"])
-    payload_json = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
+    payload_json = json.dumps(inline_sequence_payload(payload), ensure_ascii=False, separators=(",", ":"))
     # </script> in JSON content is escaped so the inline payload cannot break out
     # of its own script element.
     payload_json = payload_json.replace("</", "<\\/")

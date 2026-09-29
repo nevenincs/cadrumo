@@ -22,7 +22,7 @@
       "exit_code": 0,
       "kind": "setup",
       "stderr_text": null,
-      "text": "bucket\t<profile-id>\nejercicio\t2026\nregime\tgeneral\nsector_id\t\nprovisional_percentage\t80\nprovisional_provenance\tinicio_actividad\nespecial_transition\t\nevidence_reference\t\ncount\t1\n"
+      "text": null
     },
     {
       "argv": [
@@ -44,7 +44,7 @@
       "exit_code": 0,
       "kind": "setup",
       "stderr_text": null,
-      "text": "bucket\t<profile-id>\nsector_id\tarrendamiento\nletra\tc\nmember_activity_codes\t6820\ncount\t1\n"
+      "text": null
     },
     {
       "argv": [
@@ -102,6 +102,6 @@
       "text": null
     }
   ],
-  "golden_schema_version": 1,
+  "golden_schema_version": 2,
   "sequence_id": "prorrata-list"
 }
