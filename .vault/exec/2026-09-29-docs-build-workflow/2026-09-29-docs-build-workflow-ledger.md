@@ -5,7 +5,7 @@ tags:
 date: '2026-09-29'
 modified: '2026-09-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:bc2df8cf6d0ad0c24d04098c45e4fa15c244904fab627711cd818d082c118efb'
+body_hash: 'sha256:22b8aa792714f88f2a209a2e12e1fcd73e90e2ed1f1cb5198ff84fa0096ab9b3'
 related:
   - "[[2026-09-29-docs-build-workflow-plan]]"
 ---
@@ -64,6 +64,13 @@ related:
 - `S02` `verify:` `python -m dev.ci_contract .` -> `pass`
 - `S02` `verify:` `python -m dev.actionlint` -> `pass`
 - `S02` `by:` `opus-high`
+- `S04` `M` `docs/authoring-guide.md`
+- `S04` `M` `docs/reference/commands-and-configuration.md`
+- `S04` `M` `docs/reference/registry-legal-api.md`
+- `S04` `M` `docs/conf.py`
+- `S04` `M` `docs/locales/{es,ca,hu}/LC_MESSAGES (9 catalogues)`
+- `S04` `verify:` `pytest i18n, localization, user-scope and localized build tests -m '' (44 passed)` -> `pass`
+- `S04` `by:` `opus-medium`
 
 ## Notes
 

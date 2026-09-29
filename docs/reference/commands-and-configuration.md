@@ -38,8 +38,8 @@ operator secret-input fallback. Use the explicit leaf `--secrets-stdin` /
 Live
 `aeat config --help` and its leaf help define operator-facing configuration.
 The [configuration map](../cli/config.rst) groups those commands. Python fields
-are listed in the generated Cadrumo application programming interface
-([API](../api/cadrumo.rst)).
+are listed in the Cadrumo application programming interface
+([API](../api/index.md)) reference of the full documentation build.
 
 Former product-owned `AEAT_*` state controls are not aliases for `CADRUMO_*`.
 Authority-owned `AEAT_*` integration controls remain valid only when they name

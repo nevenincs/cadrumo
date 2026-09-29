@@ -178,7 +178,7 @@ the {doc}`glossary </_generated/glossary>` for taxpayer-facing definitions.
 
 ## Python public API lookup
 
-The generated [Cadrumo package API](../api/cadrumo.rst) is the entry point for
+The [Cadrumo Python API overview](../api/index.md) is the entry point for
 Python lookup. Public consumers import from `cadrumo` and its documented public
 facades. The generated package tree lists the supported adapters, application,
 core, domain, entrypoint, and locale surfaces.

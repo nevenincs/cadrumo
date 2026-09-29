@@ -1006,10 +1006,10 @@ if _USER_SCOPE:
     # MyST reports them itself, bypassing the ``missing-reference`` event that
     # ``_suppress_api_scope_reference`` answers, and consults this list before it
     # logs: a logging filter cannot stand in, because a parallel build's workers
-    # hand their warnings to the main process without passing through it. The
-    # stubs exist only once a full-scope build generates them, so a path-form
-    # link is reported by the path its page wrote (``../api/cadrumo.rst``).
-    nitpick_ignore_regex.append(("myst", r"(\.\./)*api/.*"))
+    # hand their warnings to the main process without passing through it. Only
+    # the committed ``api/index.md`` is a valid link target from a narrative
+    # page; the generated stubs do not exist until a full-scope build writes them.
+    nitpick_ignore_regex.append(("myst", r"api/.*"))
 
 # ── Linkcheck (advisory, never a blocking local gate) ─────────────────────────
 # `sphinx-build -b linkcheck` is CI-scheduled and advisory: several AEAT/BOE
