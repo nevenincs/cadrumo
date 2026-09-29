@@ -5,7 +5,7 @@ tags:
 date: '2026-09-27'
 modified: '2026-09-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:41b418118cf20388d187aff4049ed6c069a4f7c89c27c4acb7e43b4d59e65e58'
+body_hash: 'sha256:6f6506aa1ef83104b6c0f467dc5a4eb1cc83dcaa6f04ca0b749498d3e36cf52e'
 related:
   - "[[2026-09-27-registry-conformance-rectification-plan]]"
 ---
@@ -193,6 +193,25 @@ related:
 - `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2023-2024/live_cross_references/0001-declarations.toml`
 - `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2023-2024/revision.toml`
 - `S11` `verify:` `edition_delta_migration 184/182 proof and drop-restatement no-op; inspect_authoring_candidate publication_valid; pytest 184/182 set 925 passed, 4 failed on host keyring (WinVaultKeyring 1312), identical on untouched 349` -> `pass`
+- `S11` `M` `dev/registry/tests/test_edition_delta_migration.py`
+- `S11` `M` `dev/registry/tests/test_ledger_iva_aggregation_binding_exports_recargo.py`
+- `S11` `M` `dev/registry/tests/test_modelo_303_aic_box_10_base_projection.py`
+- `S11` `A` `dev/registry/tests/test_modelo_303_boxes_from_support_floor.py`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/bindings/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/casillas/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/completeness_manifest/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/constructs/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/formulas/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/verification_expectations/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/verification_predicates/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023/bindings/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023/casillas/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023/formulas/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023/verification_predicates/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_303_registry_bindings.py`
+- `S11` `verify:` `303 converter proof twice no-op; inspect_authoring_candidate publication_valid 0 findings; dev/registry 1764 passed with failures classified; delta migration tests 19 passed after pilot fix` -> `pass`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/180/revisions/2019-2022/bindings/0002-type2-row-bindings.toml`
+- `S11` `verify:` `180 converter fingerprint unchanged; test_committed_authored_sections_are_consolidated` -> `pass`
 
 ## Notes
 
@@ -207,3 +226,4 @@ related:
 - `S11` Partial: closed-window re-keying only. Late authoring in 180, 303, 131, 193, 190, 184, 123, 202, 222, 151, 182, 210, 390 and the low items, and the whole-family restatements under explicit roots, remain open; Modelo 200's 2024 rows in its 2025-y-siguientes edition are returned for ruling.
 - `S11` 180 type-2 surface authored at 2019-2022 (2014 design governs 2022); 2022 perceptor count now counts type-2 records per that design; 123, 190 and 193 candidates all genuinely new on later designs, no change
 - `S11` 184 filing surface authored at 2022 (2023 design differs only by two HFP/1284/2023 fields); 182 donor bindings and construct at 2024; modelo-184-member-row-reduccion held on 2023-2024 until the legal catalogue carries 2022 redactions of ley-35-2006 arts 23 and 32; 184/2022 and 182/2024 review text awaits re-review
+- `S11` 303 2022 carries printed-box projections, results, bindings and predicates; 2023 transitional rates, simplified-regime endpoints and later boxes kept as genuinely new; box 69 omits 108 from 2024 (separate grounding needed); m349 reconciliation years, gated total-cuota at 2022 and casilla 18 rate for 2022 left for ruling
