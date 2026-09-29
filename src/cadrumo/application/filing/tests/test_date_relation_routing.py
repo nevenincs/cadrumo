@@ -96,7 +96,6 @@ def test_date_inputs_for_ids_parses_iso_date_strings() -> None:
     """ISO date strings persisted on the revision snapshot parse back to ``date``."""
     inputs = {
         _M100_BIRTH_DATE_BINDING: "1985-05-15",
-        "renta-modelo-111-retenciones-periodicas": Decimal("0"),
     }
     result = _date_inputs_for_ids(inputs, {_M100_BIRTH_DATE_BINDING})
     assert result == {_M100_BIRTH_DATE_BINDING: date(1985, 5, 15)}
@@ -164,9 +163,6 @@ def test_build_draft_replay_routes_m100_tax_residence_ccaa_string_enum() -> None
             _M100_TAX_RESIDENCE_CCAA_BINDING: "madrid",
             _M100_BIRTH_DATE_BINDING: "1975-06-15",
             _M100_ESTIMACION_DIRECTA_NORMAL_BINDING: "1",
-            "renta-modelo-111-retenciones-periodicas": Decimal("0"),
-            "renta-modelo-123-retenciones-periodicas": Decimal("0"),
-            "renta-modelo-193-retenciones-anuales": Decimal("0"),
             "renta-profile-declaration-type": Decimal("1"),
             "renta-profile-family-minor-children-in-unit": False,
             "renta-profile-guarderia-gastos-reales": Decimal("0"),

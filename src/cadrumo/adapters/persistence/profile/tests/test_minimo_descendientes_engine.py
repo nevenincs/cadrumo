@@ -188,9 +188,6 @@ def test_profile_descendant_facts_feed_the_worked_example_minimo_and_downstream_
         binding_values={
             **resolution.binding_values,
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
-            "renta-modelo-111-retenciones-periodicas": Decimal("0"),
-            "renta-modelo-123-retenciones-periodicas": Decimal("0"),
-            "renta-modelo-193-retenciones-anuales": Decimal("0"),
             "renta-profile-guarderia-gastos-reales": Decimal("0"),
             "renta-profile-incremento-guarderia": Decimal("0"),
             "renta-profile-cotizaciones-ss-madre": Decimal("0"),
@@ -201,9 +198,6 @@ def test_profile_descendant_facts_feed_the_worked_example_minimo_and_downstream_
         date_binding_values=resolution.date_binding_values,
         boolean_binding_values=resolution.boolean_binding_values,
         relation_values={
-            "renta-modelo-111-retenciones-periodicas": Decimal("0"),
-            "renta-modelo-123-retenciones-periodicas": Decimal("0"),
-            "renta-modelo-193-retenciones-anuales": Decimal("0"),
             "renta-modelo-130-pagos-fraccionados": Decimal("0"),
             "renta-modelo-131-pagos-fraccionados": Decimal("0"),
         },

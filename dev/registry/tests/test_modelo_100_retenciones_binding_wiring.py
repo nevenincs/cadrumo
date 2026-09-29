@@ -1,24 +1,23 @@
-"""Regression guard: M111 → casilla 0596 and M123 → casilla 0597 binding wiring.
+"""Wiring contract for the Modelo 100 withholding credit casillas 0596 and 0597.
 
-Before this fix, casillas 0596 and 0597 in the 2024 revision had no
-``input_kind = "bound"`` and no ``binding`` field, so
-``resolve_available_bound_inputs_by_casilla_id`` silently skipped them.
-The binding value was accepted without error but never reached the formula engine,
-so 0609 (total pagos a cuenta) and 0610 (cuota diferencial) were computed wrong.
+The credit belongs to the perceptor. Casilla 0596 (retenciones del trabajo) is
+therefore bound to the payee's own salary-certificate figure, and casilla 0597
+(retenciones de capital mobiliario) is keyed by the declarant until a typed
+per-payer evidence family carries it. Neither is fed by a withholding-agent
+return the declarant files for other people.
 
 Binding-to-casilla plumbing contract (not a formula derivation):
-  - binding ``renta-modelo-111-retenciones-periodicas`` → casilla 0596
-  - binding ``renta-modelo-123-retenciones-periodicas`` → casilla 0597
+  - binding ``renta-certificado-trabajo-retenciones`` -> casilla 0596
+  - casilla 0597 takes a keyed manual amount
 
-The expected value for 0596 / 0597 IS the binding value by definition — the
-binding declares ``aggregation.op = "sum"`` over the previous-filing source and
-the casilla inherits that sum directly.  Asserting 0597 == binding value is
-therefore NOT tautological: it tests whether the registry plumbing connects
-(previously broken: 0597 == 0 regardless of binding); the formula 0609 = Σ
-operands provides independent confirmation that the wired value propagates.
-
-Oracle for anti-tautology test: without custodia changes, 0597 MUST equal the
-supplied binding value and MUST NOT stay at zero.
+The certificate binding is an operator-keyed source, so its value reaches the
+engine the way every calculate path sends it: through
+``resolve_available_bound_inputs_by_casilla_id``, which projects a binding value
+onto the casilla the registry binds it to. Asserting 0596 == the certificate
+amount is therefore not tautological: a casilla that lost its
+``input_kind``/``binding`` pair would earn no projection and silently stay at
+zero. The formula 0609 = sum of the credit operands gives the independent
+confirmation that the wired value propagates, and 0610 gives the sign.
 """
 
 from __future__ import annotations
@@ -31,6 +30,7 @@ import pytest
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.ids import BindingId, RelationId
@@ -43,9 +43,8 @@ from .authored_edition_support import newest_authored_edition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-# The newest Modelo 100 edition the registry authors; the edition before it carries
-# its own retenciones binding set. Both are exercised because each wires casillas
-# 0596/0597 from different sources.
+# The newest Modelo 100 edition the registry authors, and the edition before it.
+# Both are exercised because each carries its own credit-casilla declarations.
 _REVIEWED_EDITION = newest_authored_edition("100")
 _PRIOR_EDITION = _REVIEWED_EDITION - 1
 
@@ -63,8 +62,14 @@ def reviewed_edition_snapshot(registry_snapshot: Callable[..., RegistrySnapshot]
 
 
 _M100_MINIMO_PERSONAL_CASILLA: CasillaId = validated_casilla_id("0003", surface="_M100_MINIMO_PERSONAL_CASILLA")
-_M100_RETENCIONES_M111_CASILLA: CasillaId = validated_casilla_id("0596", surface="_M100_RETENCIONES_M111_CASILLA")
-_M100_RETENCIONES_M123_CASILLA: CasillaId = validated_casilla_id("0597", surface="_M100_RETENCIONES_M123_CASILLA")
+_M100_RETENCIONES_TRABAJO_CASILLA: CasillaId = validated_casilla_id(
+    "0596",
+    surface="_M100_RETENCIONES_TRABAJO_CASILLA",
+)
+_M100_RETENCIONES_CAPITAL_MOBILIARIO_CASILLA: CasillaId = validated_casilla_id(
+    "0597",
+    surface="_M100_RETENCIONES_CAPITAL_MOBILIARIO_CASILLA",
+)
 _M100_TOTAL_PAGOS_A_CUENTA_CASILLA: CasillaId = validated_casilla_id(
     "0609",
     surface="_M100_TOTAL_PAGOS_A_CUENTA_CASILLA",
@@ -80,8 +85,6 @@ _REVIEWED_DATE_BINDINGS: dict[BindingId, date] = {
 # The scenarios model no maritime worker under the art. 75 Ley 19/1994 path.
 _REVIEWED_BOOLEAN_BINDINGS: dict[BindingId, bool] = {"renta-maritime-path-rebeca": False}
 
-# A relation id is its binding id, so the retenciones sources each scenario
-# supplies as bindings are not restated here as relation zeros.
 _PRIOR_RELATION_VALUES: dict[RelationId, Decimal] = {
     "renta-modelo-130-pagos-fraccionados": Decimal("0"),
     "renta-modelo-131-pagos-fraccionados": Decimal("0"),
@@ -92,13 +95,7 @@ _REVIEWED_RELATION_VALUES: dict[RelationId, Decimal] = {
 }
 
 
-def _prior_base_binding_values(
-    *,
-    m111: Decimal | None = None,
-    certificado_trabajo: Decimal | None = None,
-    m123: Decimal | None = None,
-    m193: Decimal | None = None,
-) -> dict[BindingId, Decimal]:
+def _prior_base_binding_values(*, certificado_trabajo: Decimal | None = None) -> dict[BindingId, Decimal]:
     values: dict[BindingId, Decimal] = {
         "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
         "renta-profile-declaration-type": Decimal("1"),
@@ -106,7 +103,7 @@ def _prior_base_binding_values(
         # Art. 81.1 LIRPF maternity deduction: zero in these retenciones scenarios,
         # which declare no qualifying descendant.
         **_m100_2024_deduccion_maternidad_bindings(),
-        # Art. 81.2 LIRPF guarderia bindings (b7ad3a993): zero in non-guarderia scenarios.
+        # Art. 81.2 LIRPF guarderia bindings: zero in non-guarderia scenarios.
         "renta-profile-guarderia-gastos-reales": Decimal("0"),
         "renta-profile-incremento-guarderia": Decimal("0"),
         "renta-profile-cotizaciones-ss-madre": Decimal("0"),
@@ -119,25 +116,12 @@ def _prior_base_binding_values(
         # BIN-pendiente fresh-filer baseline.
         "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
     }
-    if m111 is not None:
-        values["renta-modelo-111-retenciones-periodicas"] = m111
     if certificado_trabajo is not None:
         values["renta-certificado-trabajo-retenciones"] = certificado_trabajo
-    if m123 is not None:
-        values["renta-modelo-123-retenciones-periodicas"] = m123
-    if m193 is not None:
-        values["renta-modelo-193-retenciones-anuales"] = m193
     return values
 
 
-def _reviewed_base_binding_values(
-    *,
-    m111: Decimal | None = None,
-    m190: Decimal | None = None,
-    certificado_trabajo: Decimal | None = None,
-    m123: Decimal | None = None,
-    m193: Decimal | None = None,
-) -> dict[BindingId, Decimal]:
+def _reviewed_base_binding_values(*, certificado_trabajo: Decimal | None = None) -> dict[BindingId, Decimal]:
     values: dict[BindingId, Decimal] = {
         # The production profile resolver supplies this predicate as 1/0 from
         # taxpayer_type.irpf_income_categories; the scenario models a directa filer.
@@ -157,94 +141,46 @@ def _reviewed_base_binding_values(
         "renta-maritime-annual-salary": Decimal("0"),
         "renta-maritime-qualifying-days": Decimal("0"),
     }
-    if m111 is not None:
-        values["renta-modelo-111-retenciones-periodicas"] = m111
-    if m190 is not None:
-        values["renta-modelo-190-retenciones-anuales"] = m190
     if certificado_trabajo is not None:
         values["renta-certificado-trabajo-retenciones"] = certificado_trabajo
-    if m123 is not None:
-        values["renta-modelo-123-retenciones-periodicas"] = m123
-    if m193 is not None:
-        values["renta-modelo-193-retenciones-anuales"] = m193
     return values
 
 
-def test_m190_annual_retenciones_binding_populates_casilla_0596(
-    reviewed_edition_snapshot: RegistrySnapshot,
-) -> None:
-    """M190 annual retenciones are a reviewed equivalent source for the reviewed edition's 0596.
-
-    Regression guard: a previously reported defect had the binding accepted but left 0596 at zero.
-    This exercises binding projection and formula propagation, not a duplicated
-    rental or salary arithmetic oracle.
-    """
-    annual_retenciones = Decimal("4200.00")
-
-    result = calculate_registry_snapshot(
-        reviewed_edition_snapshot,
-        inputs={"0003": Decimal("32000"), "0102": Decimal("9600")},
-        date_context=_REVIEWED_DATE_CONTEXT,
-        enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
-        binding_values=_reviewed_base_binding_values(m190=annual_retenciones),
-        relation_values=_REVIEWED_RELATION_VALUES,
-        date_binding_values=_REVIEWED_DATE_BINDINGS,
-        boolean_binding_values=_REVIEWED_BOOLEAN_BINDINGS,
-    )
-
-    assert result.values[_M100_RETENCIONES_M111_CASILLA] == annual_retenciones, (
-        f"casilla 0596 = {result.values[_M100_RETENCIONES_M111_CASILLA]!r}; expected {annual_retenciones!r} "
-        "from equivalent binding renta-modelo-190-retenciones-anuales."
-    )
-    assert result.values[_M100_TOTAL_PAGOS_A_CUENTA_CASILLA] == annual_retenciones, (
-        "0609 must include the M190-sourced work-retention credit instead of "
-        f"silently treating 0596 as zero; got {result.values[_M100_TOTAL_PAGOS_A_CUENTA_CASILLA]!r}."
-    )
-    observation = next(obs for obs in result.observations if obs.casilla_id == _M100_RETENCIONES_M111_CASILLA)
-    assert not observation.absent_by_design
-    assert f"boe-modelo-190-{_REVIEWED_EDITION}-form" in observation.source_refs
+def _with_bound_projection(
+    snapshot: RegistrySnapshot,
+    inputs: dict[CasillaId, Decimal],
+    binding_values: dict[BindingId, Decimal],
+) -> dict[CasillaId, Decimal]:
+    """Mirror the calculate paths: project bound binding values onto their casillas."""
+    return {**inputs, **resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)}
 
 
 def test_salary_certificate_retenciones_binding_populates_prior_edition_casilla_0596(
     prior_edition_snapshot: RegistrySnapshot,
 ) -> None:
-    """Payee salary-certificate withholding is a public prior-edition source for 0596."""
+    """Payee salary-certificate withholding is the prior edition's source for 0596."""
     suffered_retenciones = Decimal("4500.00")
+    binding_values = _prior_base_binding_values(certificado_trabajo=suffered_retenciones)
 
     result = calculate_registry_snapshot(
         prior_edition_snapshot,
-        inputs={_M100_MINIMO_PERSONAL_CASILLA: Decimal("30000.00")},
+        inputs=_with_bound_projection(
+            prior_edition_snapshot,
+            {_M100_MINIMO_PERSONAL_CASILLA: Decimal("30000.00")},
+            binding_values,
+        ),
         date_context=_PRIOR_DATE_CONTEXT,
         enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
-        binding_values=_prior_base_binding_values(certificado_trabajo=suffered_retenciones),
+        binding_values=binding_values,
         relation_values=_PRIOR_RELATION_VALUES,
         date_binding_values=_PRIOR_DATE_BINDINGS,
     )
 
-    assert result.values[_M100_RETENCIONES_M111_CASILLA] == suffered_retenciones
+    assert result.values[_M100_RETENCIONES_TRABAJO_CASILLA] == suffered_retenciones
     assert result.values[_M100_TOTAL_PAGOS_A_CUENTA_CASILLA] == suffered_retenciones
-    observation = next(obs for obs in result.observations if obs.casilla_id == _M100_RETENCIONES_M111_CASILLA)
+    observation = next(obs for obs in result.observations if obs.casilla_id == _M100_RETENCIONES_TRABAJO_CASILLA)
     assert not observation.absent_by_design
     assert f"aeat-renta-{_PRIOR_EDITION}-manual-parte1" in observation.source_refs
-
-
-def test_conflicting_m111_and_salary_certificate_retenciones_refuse_before_calculation(
-    prior_edition_snapshot: RegistrySnapshot,
-) -> None:
-    """Filed/payer relation evidence and payee certificate input must agree exactly."""
-    with pytest.raises(RegistryValidationError, match="conflicting equivalent binding values"):
-        calculate_registry_snapshot(
-            prior_edition_snapshot,
-            inputs={_M100_MINIMO_PERSONAL_CASILLA: Decimal("30000.00")},
-            date_context=_PRIOR_DATE_CONTEXT,
-            enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
-            binding_values=_prior_base_binding_values(
-                m111=Decimal("4500.00"),
-                certificado_trabajo=Decimal("4499.99"),
-            ),
-            relation_values=_PRIOR_RELATION_VALUES,
-            date_binding_values=_PRIOR_DATE_BINDINGS,
-        )
 
 
 def test_salary_certificate_retenciones_binding_populates_reviewed_edition_casilla_0596(
@@ -252,254 +188,118 @@ def test_salary_certificate_retenciones_binding_populates_reviewed_edition_casil
 ) -> None:
     """The reviewed edition keeps parity for the payee salary-certificate withholding input."""
     suffered_retenciones = Decimal("4500.00")
+    binding_values = _reviewed_base_binding_values(certificado_trabajo=suffered_retenciones)
 
     result = calculate_registry_snapshot(
         reviewed_edition_snapshot,
-        inputs={"0003": Decimal("30000.00"), "0102": Decimal("9600")},
+        inputs=_with_bound_projection(
+            reviewed_edition_snapshot,
+            {"0003": Decimal("30000.00"), "0102": Decimal("9600")},
+            binding_values,
+        ),
         date_context=_REVIEWED_DATE_CONTEXT,
         enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
-        binding_values=_reviewed_base_binding_values(certificado_trabajo=suffered_retenciones),
+        binding_values=binding_values,
         relation_values=_REVIEWED_RELATION_VALUES,
         date_binding_values=_REVIEWED_DATE_BINDINGS,
         boolean_binding_values=_REVIEWED_BOOLEAN_BINDINGS,
     )
 
-    assert result.values[_M100_RETENCIONES_M111_CASILLA] == suffered_retenciones
+    assert result.values[_M100_RETENCIONES_TRABAJO_CASILLA] == suffered_retenciones
     assert result.values[_M100_TOTAL_PAGOS_A_CUENTA_CASILLA] == suffered_retenciones
+    observation = next(obs for obs in result.observations if obs.casilla_id == _M100_RETENCIONES_TRABAJO_CASILLA)
+    assert not observation.absent_by_design
+    assert f"aeat-renta-{_REVIEWED_EDITION}-manual-parte1" in observation.source_refs
 
 
-def test_conflicting_m111_and_m190_retenciones_refuse_before_calculation(
-    reviewed_edition_snapshot: RegistrySnapshot,
-) -> None:
-    """Equivalent M111/M190 sources must agree exactly or calculation refuses."""
-    with pytest.raises(RegistryValidationError, match="conflicting equivalent binding values"):
-        calculate_registry_snapshot(
-            reviewed_edition_snapshot,
-            inputs={"0003": Decimal("32000"), "0102": Decimal("9600")},
-            date_context=_REVIEWED_DATE_CONTEXT,
-            enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
-            binding_values=_reviewed_base_binding_values(m111=Decimal("4200.00"), m190=Decimal("4100.00")),
-            relation_values=_REVIEWED_RELATION_VALUES,
-            date_binding_values=_REVIEWED_DATE_BINDINGS,
-            boolean_binding_values=_REVIEWED_BOOLEAN_BINDINGS,
-        )
+def test_zero_salary_certificate_retenciones_gives_zero_0596(prior_edition_snapshot: RegistrySnapshot) -> None:
+    """Anti-tautology: with the certificate at zero, casilla 0596 must be zero.
 
-
-def test_m193_annual_retenciones_binding_populates_reviewed_edition_casilla_0597(
-    reviewed_edition_snapshot: RegistrySnapshot,
-) -> None:
-    """M193 annual capital-mobiliario retentions are equivalent source evidence for 0597."""
-    annual_retenciones = Decimal("975.31")
-
-    result = calculate_registry_snapshot(
-        reviewed_edition_snapshot,
-        inputs={"0003": Decimal("32000"), "0102": Decimal("9600")},
-        date_context=_REVIEWED_DATE_CONTEXT,
-        enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
-        binding_values=_reviewed_base_binding_values(m193=annual_retenciones),
-        relation_values=_REVIEWED_RELATION_VALUES,
-        date_binding_values=_REVIEWED_DATE_BINDINGS,
-        boolean_binding_values=_REVIEWED_BOOLEAN_BINDINGS,
-    )
-
-    assert result.values[_M100_RETENCIONES_M123_CASILLA] == annual_retenciones, (
-        f"casilla 0597 = {result.values[_M100_RETENCIONES_M123_CASILLA]!r}; expected {annual_retenciones!r} "
-        "from equivalent binding renta-modelo-193-retenciones-anuales."
-    )
-    assert result.values[_M100_TOTAL_PAGOS_A_CUENTA_CASILLA] == annual_retenciones
-    observation = next(obs for obs in result.observations if obs.casilla_id == _M100_RETENCIONES_M123_CASILLA)
-    assert "boe-modelo-193-2011-form" in observation.source_refs
-
-
-def test_conflicting_reviewed_edition_m123_and_m193_retenciones_refuse_before_calculation(
-    reviewed_edition_snapshot: RegistrySnapshot,
-) -> None:
-    """Equivalent M123/M193 capital-mobiliario sources must agree exactly."""
-    with pytest.raises(RegistryValidationError, match="conflicting equivalent binding values"):
-        calculate_registry_snapshot(
-            reviewed_edition_snapshot,
-            inputs={"0003": Decimal("32000"), "0102": Decimal("9600")},
-            date_context=_REVIEWED_DATE_CONTEXT,
-            enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
-            binding_values=_reviewed_base_binding_values(m123=Decimal("975.31"), m193=Decimal("975.30")),
-            relation_values=_REVIEWED_RELATION_VALUES,
-            date_binding_values=_REVIEWED_DATE_BINDINGS,
-            boolean_binding_values=_REVIEWED_BOOLEAN_BINDINGS,
-        )
-
-
-def test_m123_retenciones_binding_populates_casilla_0597(prior_edition_snapshot: RegistrySnapshot) -> None:
-    """Binding renta-modelo-123-retenciones-periodicas must land in casilla 0597.
-
-    Regression guard for Sergio round-13 C3: with the 2024 casilla missing
-    ``input_kind = "bound"`` and ``binding = "..."``, the engine skipped 0597
-    and it stayed at zero regardless of the binding value supplied.
-
-    Wiring contract: 0597 == binding value (direct pass-through; no formula
-    transforms the binding before it lands in the casilla).
+    This test would pass trivially if 0596 were always zero. Together with the
+    populate test above it proves the channel is responsive rather than constant.
     """
-    m123_retenciones = Decimal("3800.00")
+    binding_values = _prior_base_binding_values(certificado_trabajo=Decimal("0"))
     result = calculate_registry_snapshot(
         prior_edition_snapshot,
-        inputs={_M100_MINIMO_PERSONAL_CASILLA: Decimal("0")},
-        date_context=_PRIOR_DATE_CONTEXT,
-        enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
-        binding_values=_prior_base_binding_values(m123=m123_retenciones),
-        relation_values=_PRIOR_RELATION_VALUES,
-        date_binding_values=_PRIOR_DATE_BINDINGS,
-    )
-
-    assert result.values[_M100_RETENCIONES_M123_CASILLA] == m123_retenciones, (
-        f"casilla 0597 = {result.values[_M100_RETENCIONES_M123_CASILLA]!r}; expected {m123_retenciones!r} "
-        f"from binding renta-modelo-123-retenciones-periodicas. "
-        f"Check {_PRIOR_EDITION}/casillas/c0597.toml: must have "
-        'input_kind = "bound" and binding = "renta-modelo-123-retenciones-periodicas".'
-    )
-
-
-def test_m193_annual_retenciones_binding_populates_prior_edition_casilla_0597(
-    prior_edition_snapshot: RegistrySnapshot,
-) -> None:
-    """M193 annual capital-mobiliario retentions must not be silently dropped in the prior edition."""
-    annual_retenciones = Decimal("864.20")
-    result = calculate_registry_snapshot(
-        prior_edition_snapshot,
-        inputs={_M100_MINIMO_PERSONAL_CASILLA: Decimal("0")},
-        date_context=_PRIOR_DATE_CONTEXT,
-        enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
-        binding_values=_prior_base_binding_values(m193=annual_retenciones),
-        relation_values=_PRIOR_RELATION_VALUES,
-        date_binding_values=_PRIOR_DATE_BINDINGS,
-    )
-
-    assert result.values[_M100_RETENCIONES_M123_CASILLA] == annual_retenciones, (
-        f"casilla 0597 = {result.values[_M100_RETENCIONES_M123_CASILLA]!r}; expected {annual_retenciones!r} "
-        "from equivalent binding renta-modelo-193-retenciones-anuales."
-    )
-    assert result.values[_M100_TOTAL_PAGOS_A_CUENTA_CASILLA] == annual_retenciones
-    observation = next(obs for obs in result.observations if obs.casilla_id == _M100_RETENCIONES_M123_CASILLA)
-    assert "boe-modelo-193-2011-form" in observation.source_refs
-
-
-def test_conflicting_prior_edition_m123_and_m193_retenciones_refuse_before_calculation(
-    prior_edition_snapshot: RegistrySnapshot,
-) -> None:
-    """Equivalent M123/M193 capital-mobiliario sources must agree exactly."""
-    with pytest.raises(RegistryValidationError, match="conflicting equivalent binding values"):
-        calculate_registry_snapshot(
+        inputs=_with_bound_projection(
             prior_edition_snapshot,
-            inputs={_M100_MINIMO_PERSONAL_CASILLA: Decimal("0")},
-            date_context=_PRIOR_DATE_CONTEXT,
-            enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
-            binding_values=_prior_base_binding_values(m123=Decimal("864.20"), m193=Decimal("864.21")),
-            relation_values=_PRIOR_RELATION_VALUES,
-            date_binding_values=_PRIOR_DATE_BINDINGS,
-        )
-
-
-def test_m111_retenciones_binding_populates_casilla_0596(prior_edition_snapshot: RegistrySnapshot) -> None:
-    """Binding renta-modelo-111-retenciones-periodicas must land in casilla 0596.
-
-    M111 (trabajo retenciones) shares the same structural gap as M123:
-    without ``input_kind = "bound"`` + ``binding`` on casilla 0596, the
-    binding is accepted but silently dropped.
-    """
-    m111_retenciones = Decimal("6000.00")
-    result = calculate_registry_snapshot(
-        prior_edition_snapshot,
-        inputs={_M100_MINIMO_PERSONAL_CASILLA: Decimal("0")},
+            {_M100_MINIMO_PERSONAL_CASILLA: Decimal("0")},
+            binding_values,
+        ),
         date_context=_PRIOR_DATE_CONTEXT,
         enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
-        binding_values=_prior_base_binding_values(m111=m111_retenciones),
+        binding_values=binding_values,
         relation_values=_PRIOR_RELATION_VALUES,
         date_binding_values=_PRIOR_DATE_BINDINGS,
     )
 
-    assert result.values[_M100_RETENCIONES_M111_CASILLA] == m111_retenciones, (
-        f"casilla 0596 = {result.values[_M100_RETENCIONES_M111_CASILLA]!r}; expected {m111_retenciones!r} "
-        f"from binding renta-modelo-111-retenciones-periodicas. "
-        f"Check {_PRIOR_EDITION}/casillas/c0596.toml: must have "
-        'input_kind = "bound" and binding = "renta-modelo-111-retenciones-periodicas".'
-    )
+    assert result.values[_M100_RETENCIONES_TRABAJO_CASILLA] == Decimal("0")
 
 
-def test_m123_retenciones_flows_into_0609_total_pagos_a_cuenta(prior_edition_snapshot: RegistrySnapshot) -> None:
-    """M123 retenciones in 0597 must propagate through 0609 to reduce cuota diferencial.
+def test_keyed_capital_mobiliario_retenciones_reach_0609(prior_edition_snapshot: RegistrySnapshot) -> None:
+    """Casilla 0597 is keyed by the declarant and still reaches the credit total.
 
-    The formula renta-total-pagos-a-cuenta sums casillas 0592-0606 into
-    0609.  With only M123 retenciones supplied, 0609 must equal the M123 amount.
-
-    This exercises the full chain: binding → 0597 → formula → 0609.
+    0597 carries no binding, so the amount arrives as a manual casilla input.
+    The formula renta-total-pagos-a-cuenta must still sum it into 0609.
     """
-    m123_retenciones = Decimal("3800.00")
+    capital_retenciones = Decimal("3800.00")
     result = calculate_registry_snapshot(
         prior_edition_snapshot,
-        inputs={_M100_MINIMO_PERSONAL_CASILLA: Decimal("0")},
+        inputs={
+            _M100_MINIMO_PERSONAL_CASILLA: Decimal("0"),
+            _M100_RETENCIONES_CAPITAL_MOBILIARIO_CASILLA: capital_retenciones,
+        },
         date_context=_PRIOR_DATE_CONTEXT,
         enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
-        binding_values=_prior_base_binding_values(m123=m123_retenciones),
+        binding_values=_prior_base_binding_values(),
         relation_values=_PRIOR_RELATION_VALUES,
         date_binding_values=_PRIOR_DATE_BINDINGS,
     )
 
-    # 0609 = sum of all retenciones operands; only 0597 is non-zero here.
-    assert result.values[_M100_TOTAL_PAGOS_A_CUENTA_CASILLA] == m123_retenciones, (
-        f"casilla 0609 = {result.values[_M100_TOTAL_PAGOS_A_CUENTA_CASILLA]!r}; expected {m123_retenciones!r}. "
-        "With only renta-modelo-123-retenciones-periodicas supplied "
-        "and all other retenciones operands zero, "
-        "0609 (total pagos a cuenta) must equal the M123 binding value."
-    )
+    assert result.values[_M100_RETENCIONES_CAPITAL_MOBILIARIO_CASILLA] == capital_retenciones
+    assert result.values[_M100_TOTAL_PAGOS_A_CUENTA_CASILLA] == capital_retenciones
 
 
-def test_zero_m123_retenciones_gives_zero_0597(prior_edition_snapshot: RegistrySnapshot) -> None:
-    """Anti-tautology: with binding = 0, casilla 0597 must be 0 (not a stale value).
+def test_salary_certificate_retenciones_change_reflects_proportionally_in_0610(
+    prior_edition_snapshot: RegistrySnapshot,
+) -> None:
+    """A change in the certificate amount moves 0609 up and 0610 down by the same delta.
 
-    This test would pass trivially if 0597 were always 0 (the pre-fix state).
-    Combined with test_m123_retenciones_binding_populates_casilla_0597, the
-    two tests together prove the channel is bidirectional and responsive.
+    This guards against any intermediate transformation that would attenuate or
+    amplify the credit between the binding and the cuota diferencial.
     """
-    result = calculate_registry_snapshot(
-        prior_edition_snapshot,
-        inputs={_M100_MINIMO_PERSONAL_CASILLA: Decimal("0")},
-        date_context=_PRIOR_DATE_CONTEXT,
-        enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
-        binding_values=_prior_base_binding_values(m123=Decimal("0")),
-        relation_values=_PRIOR_RELATION_VALUES,
-        date_binding_values=_PRIOR_DATE_BINDINGS,
-    )
-
-    assert result.values[_M100_RETENCIONES_M123_CASILLA] == Decimal("0"), (
-        f"casilla 0597 = {result.values[_M100_RETENCIONES_M123_CASILLA]!r}; expected 0.00 when M123 binding is zero."
-    )
-
-
-def test_m123_retenciones_change_reflects_proportionally_in_0610(prior_edition_snapshot: RegistrySnapshot) -> None:
-    """Changing M123 retenciones amount changes cuota diferencial by the same amount.
-
-    Increases in M123 retenciones must reduce cuota diferencial (0610) by exactly
-    the same delta. This guards against any intermediate transformation that would
-    attenuate or amplify the value.
-    """
+    low_bindings = _prior_base_binding_values(certificado_trabajo=Decimal("1000.00"))
+    high_bindings = _prior_base_binding_values(certificado_trabajo=Decimal("2000.00"))
     result_low = calculate_registry_snapshot(
         prior_edition_snapshot,
-        inputs={_M100_MINIMO_PERSONAL_CASILLA: Decimal("0")},
+        inputs=_with_bound_projection(
+            prior_edition_snapshot,
+            {_M100_MINIMO_PERSONAL_CASILLA: Decimal("0")},
+            low_bindings,
+        ),
         date_context=_PRIOR_DATE_CONTEXT,
         enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
-        binding_values=_prior_base_binding_values(m123=Decimal("1000.00")),
+        binding_values=low_bindings,
         relation_values=_PRIOR_RELATION_VALUES,
         date_binding_values=_PRIOR_DATE_BINDINGS,
     )
     result_high = calculate_registry_snapshot(
         prior_edition_snapshot,
-        inputs={_M100_MINIMO_PERSONAL_CASILLA: Decimal("0")},
+        inputs=_with_bound_projection(
+            prior_edition_snapshot,
+            {_M100_MINIMO_PERSONAL_CASILLA: Decimal("0")},
+            high_bindings,
+        ),
         date_context=_PRIOR_DATE_CONTEXT,
         enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
-        binding_values=_prior_base_binding_values(m123=Decimal("2000.00")),
+        binding_values=high_bindings,
         relation_values=_PRIOR_RELATION_VALUES,
         date_binding_values=_PRIOR_DATE_BINDINGS,
     )
 
-    delta_0597 = result_high.values[_M100_RETENCIONES_M123_CASILLA] - result_low.values[_M100_RETENCIONES_M123_CASILLA]
+    delta_0596 = (
+        result_high.values[_M100_RETENCIONES_TRABAJO_CASILLA] - result_low.values[_M100_RETENCIONES_TRABAJO_CASILLA]
+    )
     delta_0609 = (
         result_high.values[_M100_TOTAL_PAGOS_A_CUENTA_CASILLA] - result_low.values[_M100_TOTAL_PAGOS_A_CUENTA_CASILLA]
     )
@@ -507,12 +307,40 @@ def test_m123_retenciones_change_reflects_proportionally_in_0610(prior_edition_s
         result_low.values[_M100_CUOTA_DIFERENCIAL_CASILLA] - result_high.values[_M100_CUOTA_DIFERENCIAL_CASILLA]
     )
 
-    assert delta_0597 == Decimal("1000.00"), (
-        f"expected 0597 to increase by 1000 when M123 binding increases by 1000, got delta={delta_0597!r}"
+    assert delta_0596 == Decimal("1000.00"), (
+        f"expected 0596 to increase by 1000 when the certificate increases by 1000, got delta={delta_0596!r}"
     )
     assert delta_0609 == Decimal("1000.00"), (
-        f"0609 should increase by the same 1000 delta as 0597, got delta={delta_0609!r}"
+        f"0609 should increase by the same 1000 delta as 0596, got delta={delta_0609!r}"
     )
     assert delta_0610 == Decimal("1000.00"), (
-        f"0610 (cuota diferencial) should decrease by 1000 when retenciones increase by 1000, got delta={delta_0610!r}"
+        f"0610 (cuota diferencial) should decrease by 1000 when the credit increases by 1000, got delta={delta_0610!r}"
     )
+
+
+def test_conflicting_equivalent_binding_values_refuse_before_projection(
+    prior_edition_snapshot: RegistrySnapshot,
+) -> None:
+    """Two reviewed equivalent sources for one casilla must agree exactly.
+
+    Modelo 100 declares no equivalent pair today, so the refusal is exercised
+    against an in-memory revision that gives 0596 a second, deliberately
+    disagreeing source. Nothing on disk is touched, and the refusal comes from
+    the same projection every calculate path calls.
+    """
+    casillas = tuple(
+        casilla.model_copy(update={"alternate_bindings": ("renta-modelo-130-pagos-fraccionados",)})
+        if casilla.id == _M100_RETENCIONES_TRABAJO_CASILLA
+        else casilla
+        for casilla in prior_edition_snapshot.revision.casillas
+    )
+    revision = prior_edition_snapshot.revision.model_copy(update={"casillas": casillas})
+
+    with pytest.raises(RegistryValidationError, match="conflicting equivalent binding values"):
+        resolve_available_bound_inputs_by_casilla_id(
+            revision,
+            {
+                "renta-certificado-trabajo-retenciones": Decimal("4500.00"),
+                "renta-modelo-130-pagos-fraccionados": Decimal("4499.99"),
+            },
+        )
