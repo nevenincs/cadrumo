@@ -1,13 +1,3 @@
-[[revisions.2025-y-siguientes.bindings]]
-id = "modelo-202-incn-prior-12-months"
-provider = { kind = "profile", profile_model = "taxpayer", field = "incn_prior_12_months" }
-value = { data_type = "money", channel = "decimal" }
-aggregation = { op = "copy" }
-legal_refs = ["ley-27-2014:art-40"]
-
-[[revisions.2025-y-siguientes.bindings.source_citations]]
-source_ref = "aeat-modelo-202-instructions"
-required_text = ["importe neto de la cifra de negocios"]
 # Modelo 202 modalidad art. 40.2 LIS — base del pago fraccionado from the
 # prior period's cuota líquida.
 #
@@ -33,8 +23,8 @@ required_text = ["importe neto de la cifra de negocios"]
 # Modelo 200 revisions are authored.
 #
 # The binding inherits the existing INCN modality gate
-# (derive_modelo_202_modality, driven by
-# modelo-202-2025-y-siguientes-incn-prior-12-months): for an INCN > EUR 6M
+# (derive_modelo_202_modality, driven by the inherited
+# modelo-202-incn-prior-12-months profile binding): for an INCN > EUR 6M
 # entity, modalidad 40.2 is not offered (only 40.3 clave 32), so casilla 01 is
 # not populated for a 40.3-mandatory filer.
 [[revisions.2025-y-siguientes.bindings]]

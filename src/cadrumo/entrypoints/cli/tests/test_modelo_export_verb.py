@@ -192,6 +192,7 @@ _M111_CASILLA_27: CasillaId = validated_casilla_id("27", surface="modelo 111 exp
 _M111_CASILLA_29: CasillaId = validated_casilla_id("29", surface="modelo 111 export test casilla")
 _M202_CASILLA_01: CasillaId = validated_casilla_id("01", surface="modelo 202 export test casilla")
 _M202_2023_2024_PRIOR_PAYMENTS_BINDING = "modelo-202-pagos-fraccionados-anteriores"
+_M202_INCN_PRIOR_12_MONTHS_BINDING = "modelo-202-incn-prior-12-months"
 # The last exercise of the Modelo 202 revision the registry authors right before the
 # first one that declares the B2 tramo casilla 67; the exportable fixture revision
 # below is seeded for its first period.
@@ -369,7 +370,9 @@ def _seed_exportable_modelo_202_pre_b2_revision(*, operation: PinnedAuthorityOpe
         revision_id=revision_id,
     )
     inputs = {_M202_CASILLA_01: "0"}
-    binding_overrides = {_M202_2023_2024_PRIOR_PAYMENTS_BINDING: "0"}
+    # Every supported year requires the prior-twelve-month turnover; the recorded value
+    # is the one the Emilio export profile declares.
+    binding_overrides = {_M202_2023_2024_PRIOR_PAYMENTS_BINDING: "0", _M202_INCN_PRIOR_12_MONTHS_BINDING: "500000"}
     casilla_values = {_M202_CASILLA_01: Decimal("0")}
     calculation_revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,

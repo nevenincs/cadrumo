@@ -94,3 +94,200 @@ The rate boxes 17, 21, 24, 62 and 65 (19/20 or 5/7 of the tipo de gravamen by ci
 negocios) stay filer input, as does the minimum [33]. NOT CLAIMED -- filing: the \
 relationship families are unresolved and Modelo 220 group data has no binding."""
 reviewed_at = 2026-09-11
+# Storage reuse only, not legal continuity: the keyed families below are stored
+# as differences from the 2024 edition's effective members. The casillas and the
+# export layout stay stated in full for the structural reason the predecessor
+# declaration gives.
+family_storage_baseline = "2024"
+scoped_families = ["workbook_parity_refs", "verification_expectations", "completeness_manifest"]
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "formulas"
+selector = {revision = "2024", id = "modelo-222-base-a-tipo-2-b2"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2024", id = "modelo-222-2024-1p"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2024", id = "modelo-222-2024-2p"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2024", id = "modelo-222-2024-3p"}
+
+[[revisions."2025-y-siguientes".family_positions]]
+family = "formulas"
+id = "modelo-222-importe-pago-fraccionado-b2-tipo-3"
+position = 10
+
+[[revisions."2025-y-siguientes".family_positions]]
+family = "formulas"
+id = "modelo-222-importe-pago-fraccionado-b2-tipo-4"
+position = 11
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "modelo-222-base-imponible-previa"}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-222-instructions", required_text = ["clave [13]", "base imponible previa", "] = clave [10] + clave [11] - clave [12]"]}], source_refs = ["aeat-dr-222-2025", "aeat-modelo-222-instructions"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "modelo-222-base-pago-fraccionado-b1"}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-222-instructions", required_text = ["clave [16]", "] será = clave [13] + clave [44] + clave [45] – clave [46] – clave [14] – clave [15] + clave [47] – clave [48], sin poder ser negativa"]}], source_refs = ["aeat-dr-222-2025", "aeat-modelo-222-instructions"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "modelo-222-base-pago-fraccionado-b2"}
+fields = {expression = {op = "add"}}
+sequence_additions = {"expression.args" = [{op = "add", args = [{op = "add", args = [{casilla_id = "20"}, {casilla_id = "23"}]}, {casilla_id = "61"}]}, {casilla_id = "64"}], source_citations = [{source_ref = "aeat-modelo-222-instructions", required_text = ["la clave [19] será = clave [20] + clave [23] + clave [61] + clave [64]"]}], source_refs = ["aeat-dr-222-2025", "aeat-modelo-222-instructions"]}
+sequence_removals = {"expression.args" = [0, 1], source_citations = [0], source_refs = [0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "modelo-222-cantidad-a-ingresar"}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-222-instructions", required_text = ["clave [34]", "cantidad a ingresar", "la mayor de las claves [32] o [33]"]}], source_refs = ["aeat-dr-222-2025", "aeat-modelo-222-instructions"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "modelo-222-importe-pago-fraccionado-b2-tipo-1"}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-222-instructions", required_text = ["] será = (clave [20] x clave [21]) / 100"]}], source_refs = ["aeat-dr-222-2025", "aeat-modelo-222-instructions"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "modelo-222-importe-pago-fraccionado-b2-tipo-2"}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-222-instructions", required_text = ["] = (clave [23] x clave [24]) /100"]}], source_refs = ["aeat-dr-222-2025", "aeat-modelo-222-instructions"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "modelo-222-modalidad-40-2-a-ingresar"}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-222-instructions", required_text = ["clave [03]", "porcentaje del 18%", "base del pago fraccionado"]}], source_refs = ["aeat-dr-222-2025", "aeat-modelo-222-instructions"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "modelo-222-modalidad-40-3-resultado"}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-222-instructions", required_text = ["clave [32]", "] = [[(clave [18] o clave [26]) – clave [27] – clave [28]] x clave [29]/100] - clave [30] - clave [31]"]}], source_refs = ["aeat-dr-222-2025", "aeat-modelo-222-instructions"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "modelo-222-resultado-previo-b1"}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-222-instructions", required_text = ["clave [18]", "] será = clave [16] x clave [17] /100 + clave [49] + clave [50] - clave [51] – clave [58] + clave [52] – clave [53]"]}], source_refs = ["aeat-dr-222-2025", "aeat-modelo-222-instructions"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "modelo-222-resultado-previo-b2"}
+sequence_additions = {"expression.args" = [{op = "subtract", args = [{op = "add", args = [{op = "subtract", args = [{op = "subtract", args = [{op = "add", args = [{op = "add", args = [{op = "add", args = [{op = "add", args = [{op = "add", args = [{casilla_id = "22"}, {casilla_id = "25"}]}, {casilla_id = "63"}]}, {casilla_id = "66"}]}, {casilla_id = "54"}]}, {casilla_id = "57"}]}, {casilla_id = "42"}]}, {casilla_id = "43"}]}, {casilla_id = "55"}]}, {casilla_id = "56"}]}], source_citations = [{source_ref = "aeat-modelo-222-instructions", required_text = ["la clave [26] = clave [22] + clave [25] + clave [63] + clave [66] + clave [54] + clave [57] – clave [42] – clave [43] + clave [55] – clave [56]", "su importe no puede ser negativo"]}], source_refs = ["aeat-dr-222-2025", "aeat-modelo-222-instructions"]}
+sequence_removals = {"expression.args" = [1], source_citations = [0], source_refs = [0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "modelo-222-suma-bases-imponibles-individuales"}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-222-instructions", required_text = ["clave [10]", "] = clave [04] + clave [38] - clave [39] + clave [59] - clave [60]"]}], source_refs = ["aeat-dr-222-2025", "aeat-modelo-222-instructions"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "modelo-222-total-correcciones-aumentos"}
+sequence_additions = {"expression.args" = [{op = "add", args = [{casilla_id = "05"}, {casilla_id = "67"}]}], source_citations = [{source_ref = "aeat-modelo-222-instructions", required_text = ["claves [38] y [39]", "] = clave [05] + clave [67] + clave [07]"]}], source_refs = ["aeat-dr-222-2025", "aeat-modelo-222-instructions"]}
+sequence_removals = {"expression.args" = [0], source_citations = [0], source_refs = [0]}
+sequence_order = {"expression.args" = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "modelo-222-total-correcciones-disminuciones"}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-222-instructions", required_text = ["claves [38] y [39]", "] = clave [06] + clave [37] + clave [08]"]}], source_refs = ["aeat-dr-222-2025", "aeat-modelo-222-instructions"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "constructs"
+selector = {revision = "2024", id = "modelo-222-declaration-construct"}
+sequence_additions = {deadline_windows = ["modelo-222-2025-1p", "modelo-222-2025-2p", "modelo-222-2025-3p", "modelo-222-2026-1p", "modelo-222-2026-2p", "modelo-222-2026-3p"], formulas = ["modelo-222-importe-pago-fraccionado-b2-tipo-3", "modelo-222-importe-pago-fraccionado-b2-tipo-4"], source_refs = ["aeat-modelo-202-instructions", "aeat-dr-222-2025"]}
+sequence_removals = {deadline_windows = [0, 1, 2], formulas = [8], source_refs = [0, 3]}
+sequence_order = {formulas = [3, 1, 2, 4, 5, 7, 6, 10, 8, 9, 13, 14, 0, 11, 12], source_refs = [2, 0, 3, 1]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2024", id = "modelo-222-approval"}
+sequence_additions = {source_refs = ["aeat-dr-222-2025", "aeat-modelo-222-instructions"]}
+sequence_removals = {legal_refs = [1, 2, 3], source_refs = [0]}
+sequence_order = {legal_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2024", id = "modelo-222-calculation"}
+sequence_additions = {source_refs = ["aeat-dr-222-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2024", id = "modelo-222-deadline"}
+sequence_additions = {source_refs = ["aeat-modelo-202-instructions", "boe-modelo-202-base-order"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2024", id = "modelo-222-export"}
+sequence_additions = {source_refs = ["aeat-dr-222-2025"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2024", id = "modelo-222-filing"}
+sequence_additions = {source_refs = ["aeat-modelo-202-instructions", "boe-modelo-202-base-order"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2024", id = "modelo-222-reconciliation"}
+sequence_additions = {source_refs = ["aeat-dr-222-2025", "aeat-modelo-222-instructions"]}
+sequence_removals = {legal_refs = [1, 2, 3], source_refs = [0]}
+sequence_order = {legal_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2024", id = "modelo-222-review"}
+sequence_additions = {source_refs = ["aeat-dr-222-2025", "aeat-modelo-222-instructions"]}
+sequence_removals = {legal_refs = [1, 2, 3], source_refs = [0]}
+sequence_order = {legal_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2024", id = "modelo-222-workflow"}
+sequence_additions = {source_refs = ["aeat-modelo-202-instructions", "boe-modelo-202-base-order"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "parameters"
+selector = {revision = "2024", id = "is.modalidad_cuota.percentage"}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-222-instructions", required_text = ["modalidad artículo 40.2 lis", "porcentaje del 18%", "base del pago fraccionado"]}], source_refs = ["aeat-dr-222-2025", "aeat-modelo-222-instructions"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "workbook_parity_refs"
+selector = {revision = "2024", id = "modelo-222-record-design"}
+fields = {fixture_id = "modelo-222-record-design-layout", workbook_source = "boe-modelo-202-base-order"}
+sequence_additions = {source_refs = ["boe-modelo-202-base-order"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "verification_expectations"
+selector = {revision = "2024", id = "modelo-222-reconcile-when-present"}
+sequence_additions = {reconcile_when_present_casilla_ids = ["63", "66"], source_refs = ["aeat-modelo-222-instructions", "aeat-dr-222-2025"]}
+sequence_removals = {reconcile_when_present_casilla_ids = [7], source_refs = [0, 1]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "completeness_manifest"
+selector = {revision = "2024", id = "aeat-dr-222-2023-2024"}
+replacement_id = "aeat-dr-222-2025"
+sequence_additions = {casillas = [{casilla_id = "61", number = "61"}, {casilla_id = "62", number = "62"}, {casilla_id = "63", number = "63"}, {casilla_id = "64", number = "64"}, {casilla_id = "65", number = "65"}, {casilla_id = "66", number = "66"}, {casilla_id = "67", number = "67"}], source_refs = ["aeat-dr-222-2025", "aeat-modelo-222-instructions"]}
+sequence_removals = {source_refs = [0, 1]}
