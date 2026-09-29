@@ -101,11 +101,11 @@ REPO_ROOT_PLACEHOLDER: str = "<repo-root>"
 
 #: Stands in for the running package version in captured output.
 #:
-#: A golden must not carry a version literal. Docs are rendered FROM the golden,
+#: A record must not carry a version literal. Docs are rendered FROM records,
 #: so a captured "CADRUMO 0.2.1" is a hardcoded version in user-facing
 #: documentation: it rots at the next release, and it silently disagrees with
 #: the version the reader actually has. The version is release-managed in one
-#: place, so the golden stores this token and the render substitutes the live
+#: place, so the record stores this token and the render substitutes the live
 #: value back.
 PACKAGE_VERSION_PLACEHOLDER: str = "<version>"
 
@@ -313,7 +313,7 @@ PLATFORM_CONDITIONAL_PREFLIGHT_CHECKS = frozenset(
 )
 """Health rows whose ``detail`` describes the HOST, not the product.
 
-Docs are rendered FROM these goldens, so a row here becomes a sentence in
+Docs are rendered FROM records, so a row here would become a sentence in
 user-facing prose. Every member states a fact about the machine that happened
 to record the capture:
 
@@ -508,7 +508,7 @@ def normalise_text_output(
     version becomes :data:`PACKAGE_VERSION_TOKEN`. No regex wildcards, no fuzzy
     matching: the result is compared by exact string equality.
 
-    The version family exists because docs are rendered FROM these goldens, so a
+    The version family exists because docs are rendered FROM records, so a
     captured version literal is a hardcoded version in user-facing prose. It is
     value-anchored on the exact declared version like every other replacement,
     never a digit pattern, so it cannot over-match an unrelated number.

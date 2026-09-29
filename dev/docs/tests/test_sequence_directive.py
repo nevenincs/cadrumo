@@ -290,6 +290,70 @@ def test_output_bodies_ship_once_in_static_html_not_in_inline_payload() -> None:
         }
 
 
+def test_rendered_json_hides_host_facts_the_digest_does_not_verify() -> None:
+    """A page shows the envelope exactly as its golden digest verified it.
+
+    The building machine's free memory and its hardware sentence are masked
+    before comparison, so rendering them would publish unverified host facts;
+    the row's id and its verdict still render.
+    """
+    sequence = parse_sequence(
+        sequence_id="host-facts",
+        options={"verify": "Confirm the workstation check."},
+        body='@result aeat --format json config check\n@expect result.status == "ok"',
+    )
+    row = {
+        "service": "local-inference-hardware",
+        "healthy": True,
+        "detail": "total system memory 63.9 GiB meets the floor",
+        "facts": {"free_memory_bytes": 51_000_000_000, "total_memory_bytes": 68_000_000_000},
+    }
+    record = SequenceRecord(
+        sequence_id="host-facts",
+        frames=(
+            RecordFrame(
+                kind=FrameKind.RESULT,
+                argv=("aeat", "--format", "json", "config", "check"),
+                exit_code=0,
+                envelope={"schema_version": 1, "status": "ok", "result": {"status": "ok", "dependencies": [row]}},
+                envelope_source="stdout",
+            ),
+        ),
+    )
+    body = build_sequence_payload(sequence, record)["frames"][0]["output"]["body"]
+
+    assert "63.9 GiB" not in body and "51000000000" not in body
+    assert "local-inference-hardware" in body and "68000000000" in body
+
+
+def test_the_version_token_resolves_on_stderr_too() -> None:
+    """Records store the version as a token; every rendered stream shows the live version."""
+    from cadrumo.core.package_version import PACKAGE_VERSION
+
+    from ..sequences.golden_store import PACKAGE_VERSION_PLACEHOLDER
+
+    sequence = parse_sequence(
+        sequence_id="version-stderr",
+        options={"verify": "Confirm the listing."},
+        body="@result aeat config profile list\n@expect exit_code == 0\n@expect result.x == 1",
+    )
+    record = SequenceRecord(
+        sequence_id="version-stderr",
+        frames=(
+            RecordFrame(
+                kind=FrameKind.RESULT,
+                argv=("aeat", "config", "profile", "list"),
+                exit_code=0,
+                text="listed\n",
+                stderr_text=f"notice from CADRUMO {PACKAGE_VERSION_PLACEHOLDER}\n",
+            ),
+        ),
+    )
+    stderr = build_sequence_payload(sequence, record)["frames"][0]["stderr"]
+
+    assert stderr == {"format": "text", "body": f"notice from CADRUMO {PACKAGE_VERSION}\n"}
+
+
 def test_stale_record_frame_count_is_refused() -> None:
     """A record whose frame count disagrees with the body is refused (stale golden)."""
     sequence = _parsed_sequence()

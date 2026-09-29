@@ -2497,6 +2497,8 @@
         "dev.docs.sequences.errors",
         "dev.docs.sequences.golden_store",
         "dev.docs.sequences.parser",
+        "dev.docs.sequences.record_store",
+        "dev.docs.sequences.recorded_faults",
         "dev.docs.sequences.runner",
         "dev.docs.sequences.schema",
         "dev.docs.sequences.tokeniser",

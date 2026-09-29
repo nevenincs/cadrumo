@@ -8,25 +8,31 @@ frames 8-9 recorded a storage-fault traceback, captured while the fault was live
 and was re-recorded in commit ``7991f30d19``.
 
 The refusal therefore lives where a golden is born: refresh will not fingerprint
-such a record, and check fails on one even when it matches its golden. The
-scanner reads every carrier of every frame, so each carrier and each frame
-position is proved separately below — a first version of this gate read the
-wrong keys and reported a clean corpus of 189 goldens after reading nothing.
+such a record, and check fails on one even when it matches its golden. Both are
+proved through the real engine on a real run whose output carries the fault
+shapes. The scanner reads every carrier of every frame, so each carrier and each
+frame position is proved separately below — a first version of this gate read
+the wrong keys and reported a clean corpus of 189 goldens after reading nothing.
 """
 
 from __future__ import annotations
 
-import ast
-import inspect
-import textwrap
-from collections.abc import Callable
+from pathlib import Path
 
 import pytest
 from pydantic import JsonValue
 
-from ..checks import check_sequences, refresh_sequences
+from ..checks import check_sequences, discover_sequences, refresh_sequences
+from ..golden_store import golden_path, write_golden
 from ..parser import parse_sequence
-from ..record_store import RecordFrame, SequenceRecord
+from ..record_store import (
+    RecordFrame,
+    SequenceRecord,
+    build_record,
+    diverged_record_path,
+    golden_from_record,
+    record_path,
+)
 from ..recorded_faults import (
     FAILURE_MARKERS,
     VERSION_LITERAL,
@@ -35,6 +41,7 @@ from ..recorded_faults import (
     undeclared_error_findings,
     version_literal_findings,
 )
+from ..runner import execute_sequence
 from ..schema import FrameKind, ParsedSequence
 
 _PAGE = "how-to/recorded-faults"
@@ -173,22 +180,66 @@ class TestVersionLiterals:
         assert version_literal_findings(_record(_frame(text="CADRUMO <version>\n")), page=_PAGE) == ()
 
 
-def _called_names(function: Callable[..., object]) -> set[str]:
-    tree = ast.parse(textwrap.dedent(inspect.getsource(function)))
-    return {node.func.id for node in ast.walk(tree) if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)}
+#: A refusal echoes the modelo it was given, so a real run can carry fault shapes.
+_ECHOED = "Traceback (most recent call last) CADRUMO 9.9.9"
+_FAULT_PAGE = "how-to/recorded-faults"
+_FAULT_ID = "recorded-faults-echo"
+_FAULT_CONTRACT = (
+    f'aeat --format json app modelo casillas "{_ECHOED}"\n'
+    "@expect exit_code == 4\n"
+    "@result aeat --format json config profile list\n"
+    "@expect result.profiles[0].active == true\n"
+)
 
 
-@pytest.mark.unit
+def _fault_docs(root: Path) -> Path:
+    docs = root / "docs"
+    page = docs / f"{_FAULT_PAGE}.md"
+    page.parent.mkdir(parents=True)
+    page.write_text(
+        "# Recorded faults\n\nCreate a profile first with `aeat config profile create`.\n\n"
+        f"```{{cli-sequence}} {_FAULT_ID}\n:verify: Verify the listing succeeds.\n```\n",
+        encoding="utf-8",
+    )
+    contract = docs / "_sequences" / "contracts" / _FAULT_PAGE / f"{_FAULT_ID}.seq"
+    contract.parent.mkdir(parents=True)
+    contract.write_text(_FAULT_CONTRACT, encoding="utf-8")
+    return docs
+
+
+@pytest.mark.integration
 @pytest.mark.hex_core
 @pytest.mark.docs
-@pytest.mark.parametrize("engine_function", [refresh_sequences, check_sequences], ids=["refresh", "check"])
-def test_refresh_and_check_judge_every_record(engine_function: Callable[..., object]) -> None:
-    """Both places a record is produced run both rules over it.
+class TestTheEngineRefusesFaultBearingOutput:
+    def test_refresh_will_not_fingerprint_a_real_run_that_recorded_faults(self, tmp_path: Path) -> None:
+        docs = _fault_docs(tmp_path)
+        goldens, records = tmp_path / "goldens", tmp_path / "records"
 
-    No hermetic command crashes on demand, and the runner itself refuses an
-    undeclared non-zero exit before a record exists, so the wiring is proved on
-    the engine's own source rather than by an end-to-end run.
-    """
-    assert {"crash_findings", "undeclared_error_findings", "version_literal_findings"} <= _called_names(
-        engine_function,
-    )
+        written, problems, _ = refresh_sequences(docs_root=docs, goldens_root=goldens, records_root=records)
+
+        assert written == ()
+        assert any("(traceback:" in problem and "frame 0" in problem for problem in problems), problems
+        assert any("'CADRUMO 9.9.9'" in problem for problem in problems), problems
+        assert not golden_path(_FAULT_PAGE, _FAULT_ID, goldens_root=goldens).exists()
+        assert not record_path(_FAULT_PAGE, _FAULT_ID, records_root=records).exists()
+
+    def test_check_fails_a_golden_recorded_before_the_rules_existed(self, tmp_path: Path) -> None:
+        """A golden that fingerprints faulty output matches the live run, and still fails.
+
+        The golden is written straight from a real execution through the store,
+        the way a golden committed before these rules would have been, so the
+        digest comparison passes and only the fault rules can red the check.
+        """
+        docs = _fault_docs(tmp_path)
+        goldens, records = tmp_path / "goldens", tmp_path / "records"
+        (item,), discovery_problems = discover_sequences(docs_root=docs)
+        assert discovery_problems == ()
+        record = build_record(execute_sequence(item.sequence, sandbox_root=tmp_path / "sandbox"))
+        write_golden(golden_from_record(record), page=_FAULT_PAGE, goldens_root=goldens)
+
+        problems, _ = check_sequences(docs_root=docs, goldens_root=goldens, records_root=records)
+
+        assert any("(traceback:" in problem for problem in problems), problems
+        assert not any("output changed" in problem for problem in problems), problems
+        assert not record_path(_FAULT_PAGE, _FAULT_ID, records_root=records).exists()
+        assert diverged_record_path(_FAULT_PAGE, _FAULT_ID, records_root=records).is_file()

@@ -123,10 +123,46 @@ def test_sequence_check_skip_env_suppresses_the_check_for_a_non_html_build(tmp_p
 
 
 def test_a_skipped_html_build_with_every_record_verified_runs_nothing(tmp_path: Path) -> None:
-    """With nothing unverified to render, a skipped HTML build returns without a check."""
+    """With every enrolled sequence's record verified, a skipped HTML build executes nothing.
+
+    The seeded contract could not execute in any sandbox (its import file does
+    not exist), so a hook that ran the check anyway would raise here; the
+    golden and its matching record are written straight to disk.
+    """
+    from ..sequences.golden_store import write_golden
+    from ..sequences.record_store import RecordFrame, SequenceRecord, golden_from_record, record_path, write_record
+    from ..sequences.schema import FrameKind
+
+    docs = tmp_path / "docs"
+    page = docs / "how-to" / "seeded.md"
+    page.parent.mkdir(parents=True)
+    page.write_text(
+        "# Seeded\n\nCreate a profile first with `aeat config profile create`.\n\n"
+        "```{cli-sequence} seeded-demo\n:verify: Confirm the import.\n```\n",
+        encoding="utf-8",
+    )
+    contract = docs / "_sequences" / "contracts" / "how-to" / "seeded" / "seeded-demo.seq"
+    contract.parent.mkdir(parents=True)
+    contract.write_text(
+        "@result aeat app ledger import --file fixtures/missing.csv\n@expect result.imported == 3\n",
+        encoding="utf-8",
+    )
+    record = SequenceRecord(
+        sequence_id="seeded-demo",
+        frames=(
+            RecordFrame(
+                kind=FrameKind.RESULT,
+                argv=("aeat", "app", "ledger", "import", "--file", "fixtures/missing.csv"),
+                exit_code=0,
+                text="Imported 3 transactions.\n",
+            ),
+        ),
+    )
+    goldens, records = tmp_path / "goldens", tmp_path / "records"
+    write_golden(golden_from_record(record), page="how-to/seeded", goldens_root=goldens)
+    write_record(record, target=record_path("how-to/seeded", "seeded-demo", records_root=records))
+    config = SimpleNamespace(cadrumo_sequences_goldens_root=str(goldens), cadrumo_sequences_records_root=str(records))
+
     with scoped_env_var("CADRUMO_DOCS_SKIP_SEQUENCE_CHECK", "1"):
-        app = cast(
-            Sphinx,
-            SimpleNamespace(srcdir=str(tmp_path), config=SimpleNamespace(), builder=SimpleNamespace(format="html")),
-        )
+        app = cast(Sphinx, SimpleNamespace(srcdir=str(docs), config=config, builder=SimpleNamespace(format="html")))
         check_sequence_goldens(app, pages=None)

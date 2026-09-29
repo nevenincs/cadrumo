@@ -5,7 +5,7 @@ tags:
 date: '2026-09-29'
 modified: '2026-09-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:0a2320695bade1f6598d989a0c1c7ee2ff630dc69330623114764b67b29e0b96'
+body_hash: 'sha256:cb4797ecb58feb43dac3cb21b8836d585589f8d48fab6d7d5228cc1e432a12d1'
 related:
   - "[[2026-09-29-file-size-optimisation-plan]]"
 ---
@@ -266,6 +266,13 @@ related:
 - `S04` `M` `.vault/adr/2026-07-13-docs-cli-sequences-adr.md`
 - `S04` `M` `.vault/adr/2026-09-29-file-size-optimisation-sequence-golden-storage-adr.md`
 - `S04` `verify:` `vaultspec-core vault check all (no findings for either record)` -> `pass`
+- `S02` `M` `dev/docs/sequences/golden_store.py`
+- `S02` `M` `dev/docs/sequences/verdict_cache.py`
+- `S02` `M` `dev/docs/i18n.py`
+- `S02` `M` `dev/docs/sequences/tests/test_recorded_faults.py`
+- `S02` `M` `dev/quality/metadata/import_load_targets.json`
+- `S02` `verify:` `pytest -m '' owning sequence, directive, gate, i18n, catalogue and deploy tests (397 passed)` -> `pass`
+- `S02` `verify:` `python -m dev.quality.import_gate (0 hard findings, 0 new; import-linter unavailable exactly as at baseline)` -> `pass`
 
 ## Notes
 
@@ -275,3 +282,4 @@ related:
 - `S03` Verification found three S02 defects, fixed here: a deploy test carried both unit and integration markers and did not run; a search-parity test still passed the removed `check_sequences` argument; skipped HTML builds re-checked one page at a time from the directive, which made the serial resolvability sweep 9 minutes slower. The hook now runs one check before reading any page and the directive only renders verified records.
 - `S03` Committed goldens: 12.0 MB and 313,912 lines before, 0.46 MB and 21,651 lines after; the largest file fell from 47,614 to 913 lines.
 - `S03` The 34 failures and 21 errors in the docs and deploy lanes (Pagefind, browser, just binary, full nitpicky build) are pre-existing and identical at the baseline commit.
+- `S02` Plan-close review corrections recorded in 2026-09-29-file-size-optimisation-audit; the pre-existing contract argv drift finding stays open as out of scope.

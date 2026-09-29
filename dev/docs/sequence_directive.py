@@ -31,7 +31,7 @@ import html
 import json
 from functools import cache
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, override
+from typing import TYPE_CHECKING, Any, cast, override
 
 from docutils import nodes
 from docutils.parsers.rst import Directive, directives
@@ -181,17 +181,22 @@ def _frame_header(parsed_frame: SequenceFrame, tokens: tuple[CommandToken, ...])
 def _output_view(record_frame: RecordFrame) -> dict[str, str]:
     """Project a record frame's primary stream to a ``{format, body}`` view.
 
-    The pre-mask envelope is masked with exactly the central mask and canonically
-    rendered so the displayed JSON is deterministic; otherwise the frame's
-    normalised stdout text is shown, or an empty view when the frame produced no
-    stdout content.
+    The pre-mask envelope is shown in exactly the form its golden digest
+    verifies: the central field mask plus the host-conditional carve-out,
+    canonically rendered. A host fact such as the building machine's free
+    memory is neither verified nor the reader's, so it never reaches the page.
+    Otherwise the frame's normalised stdout text is shown, or an empty view when
+    the frame produced no stdout content.
     """
     from cadrumo.tests.golden_comparison import canonicalise, mask_document
 
+    from .sequences.golden_store import mask_host_conditional_details
+
     if record_frame.envelope is not None:
+        masked = cast("dict[str, object]", mask_host_conditional_details(mask_document(record_frame.envelope)))
         # canonicalise already renders the key-sorted, indented JSON string;
         # dumping it again would double-encode the display into `\n`-escape noise.
-        return {"format": "json", "body": canonicalise(mask_document(record_frame.envelope))}
+        return {"format": "json", "body": canonicalise(masked)}
     if record_frame.text:
         return {"format": "text", "body": _with_live_version(record_frame.text)}
     return {"format": "empty", "body": ""}
@@ -221,7 +226,7 @@ def _stderr_view(record_frame: RecordFrame) -> dict[str, str] | None:
     alongside its stdout.
     """
     if record_frame.envelope_source != "stderr" and record_frame.stderr_text:
-        return {"format": "text", "body": record_frame.stderr_text}
+        return {"format": "text", "body": _with_live_version(record_frame.stderr_text)}
     return None
 
 

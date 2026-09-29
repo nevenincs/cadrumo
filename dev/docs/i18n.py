@@ -50,6 +50,7 @@ from cadrumo.core.external_constants import OutputLanguage
 from dev._paths import REPO_ROOT
 
 from .build import docs_build_jobs, ensure_isolated_storage_root
+from .sequence_build_gate import SEQUENCE_CHECK_SKIP_ENV
 
 SOURCE_MANIFEST_NAME: Final[str] = ".source-manifest.json"
 SOURCE_MANIFEST_SCHEMA_VERSION: Final[int] = 1
@@ -478,7 +479,7 @@ def extract_pot(repo_root: Path, out_dir: Path | None = None) -> Path:
         # goldens gate owns that verification and runs it exactly once, which is
         # the same reason every sibling gate build sets this
         # (``dev/docs/tests/_sphinx_build_harness.py``).
-        "CADRUMO_DOCS_SKIP_SEQUENCE_CHECK": "1",
+        SEQUENCE_CHECK_SKIP_ENV: "1",
     }
     print(f"DOCS_I18N_SCOPE authored_pages={len(pages)} mode=gettext", flush=True)
     command = [

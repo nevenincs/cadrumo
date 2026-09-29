@@ -10,7 +10,10 @@ the filesystem, so any change to any input is a cache miss and a re-run.
 
 Only a clean verdict is stored. A divergence is never cached, so a cache can
 cost a re-run but can never turn a failing gate green; a hit always says which
-recorded verdict it reused.
+recorded verdict it reused. The verdict alone does not let a build skip the
+gate: pages render the verified records the gate caches, which live outside
+this key, so the build reuses a verdict only while every record is also
+present and verified.
 """
 
 from __future__ import annotations
