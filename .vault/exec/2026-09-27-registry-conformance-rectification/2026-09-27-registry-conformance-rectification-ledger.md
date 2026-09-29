@@ -5,7 +5,7 @@ tags:
 date: '2026-09-27'
 modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:eb90d66295088b51e74599853257b9663ae2220765127a67e6f2332d8b203883'
+body_hash: 'sha256:61e20ab50c6a40c7f80bbe2417bd7b9cea97680344339a6558f279a9cfb12345'
 related:
   - "[[2026-09-27-registry-conformance-rectification-plan]]"
 ---
@@ -213,6 +213,29 @@ related:
 - `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/180/revisions/2019-2022/bindings/0002-type2-row-bindings.toml`
 - `S11` `verify:` `180 converter fingerprint unchanged; test_committed_authored_sections_are_consolidated` -> `pass`
 - `S11` `verify:` `registry_collapse_verification --modelo 180, 184, 182, 303 (equivalence, facts, indexed, cache, publication_readiness passed; 0 findings)` -> `pass`
+- `S11` `A` `dev/registry/tests/test_modelo_131_edition_surfaces_across_supported_years.py`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2026/applicability/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2026/application_links/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2026/bindings/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2026/casillas/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2026/completeness_manifest/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2026/constructs/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2026/dependency_classifications/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2026/export_layouts/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2026/extraction_profiles/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2026/filing_schedules/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2026/formulas/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2026/live_cross_references/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2026/parameters/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2026/revision.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2026/verification_expectations/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2026/verification_predicates/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2026/workbook_parity_refs/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/locales/ca/modelo/schema/131.yml`
+- `S11` `M` `src/cadrumo/locales/en/modelo/schema/131.yml`
+- `S11` `M` `src/cadrumo/locales/es/modelo/schema/131.yml`
+- `S11` `M` `src/cadrumo/locales/hu/modelo/schema/131.yml`
+- `S11` `verify:` `131 hydration all families and labels unchanged; converter proof no-op; inspect_authoring_candidate publication_valid; published 6ce4c1b8; pytest 131 set 1226 passed` -> `pass`
 
 ## Notes
 
@@ -228,3 +251,4 @@ related:
 - `S11` 180 type-2 surface authored at 2019-2022 (2014 design governs 2022); 2022 perceptor count now counts type-2 records per that design; 123, 190 and 193 candidates all genuinely new on later designs, no change
 - `S11` 184 filing surface authored at 2022 (2023 design differs only by two HFP/1284/2023 fields); 182 donor bindings and construct at 2024; modelo-184-member-row-reduccion held on 2023-2024 until the legal catalogue carries 2022 redactions of ley-35-2006 arts 23 and 32; 184/2022 and 182/2024 review text awaits re-review
 - `S11` 303 2022 carries printed-box projections, results, bindings and predicates; 2023 transitional rates, simplified-regime endpoints and later boxes kept as genuinely new; box 69 omits 108 from 2024 (separate grounding needed); m349 reconciliation years, gated total-cuota at 2022 and casilla 18 rate for 2022 left for ruling
+- `S11` 131/2026 explicit root reuses 2025 storage (192 to 10 stated members); late-authoring candidates genuinely new or unevidenced; 2022-2023 modulos engine blocked on legal catalogue entries (orden-hfp-1335-2021 and orden-hfp-1172-2022 DA and Anexo II instructions) owned by P05.S17; 2026 parameter rows close at 2026-12-31 and are restated
