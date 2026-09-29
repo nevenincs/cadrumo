@@ -5,7 +5,7 @@ tags:
 date: '2026-09-29'
 modified: '2026-09-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:61bef93925f58027541c7b5e40cc605919838cc3f90ca7ef8dff7d4988bb6fd6'
+body_hash: 'sha256:408dcaf1325d52dc8169fa148ae4158ca0f17af7a013faca1c15d57ef64bff8d'
 related:
   - "[[2026-07-13-docs-cli-sequences-adr]]"
   - "[[2026-09-29-docs-sequence-output-weight-plan]]"
@@ -66,6 +66,41 @@ Options, not decided here:
 - Rejected by the governing ADR: truncating displayed output, and content-addressed deduplication across goldens.
 
 The evidence favours narrowing the product surface, since the golden weight mirrors what a reader is actually shown.
+
+### A, continued. Do the sequence goldens meet the test for committed artifacts?
+
+The operator's test has three parts: is the file generated, is it cheap to regenerate, and does anything need its history? The goldens meet all three.
+
+**Generated.** The only writer is the refresh CLI (`dev/docs/sequences/golden_store.py:641`, invoked by `justfile:1301`). Hand edits are refused by design.
+
+**Cheap and deterministic to regenerate.** Measured on 2026-09-29 in a 4-core Linux container on CPython 3.13.12; the project pins 3.13.11.
+
+- The prerequisite `python -m dev.registry.pipeline publish-authority` took 73 s. The check needs it too.
+- A full serial `python -m dev.docs.sequences refresh --goldens-root <scratch>` then took 4 min 0 s wall and 3 min 55 s CPU, and exited 0 with all 205 goldens written.
+- The full docs build already executes every sequence, across 4 worker processes (`dev/docs/sequence_build_gate.py:180`). The pytest gate does the same (`dev/docs/sequences/checks.py:400`).
+- 204 of 205 regenerated files are byte-identical to the committed ones, which were recorded on another machine. The one difference is `result.fingerprint.digest` in `how-to/profile-setup/profile-setup-delete.json`. That path is centrally masked because it hashes encryption material minted fresh on every run (`src/cadrumo/tests/golden_comparison.py:76`). `check --page how-to/profile-setup` reports clean against the committed file. The committed goldens therefore store at least one value the gate deliberately ignores, and every refresh rewrites it.
+- `modelo.export`'s `result.file_sha256` and `result.bucket_event_id` are masked for the same kind of reason: they change at every release (`src/cadrumo/tests/golden_comparison.py:78`).
+
+**No history consumer.** The golden readers are the renderer (`dev/docs/sequence_directive.py:178`), the check engine (`dev/docs/sequences/golden_store.py:666`) and the docs tests that call it. None invokes Git. The quality-gates rule forbids Git state as an oracle. The only use D2 of `2026-07-13-docs-cli-sequences-adr` claims for the committed form is that "the author reviews the git diff". Two facts bear on that:
+
+- GitHub renders at most 20,000 lines or 1 MB of diff per pull request. Per file it renders at most 20,000 lines or 500 KB, and it auto-loads only 400 lines or 20 KB. Beyond that, "anything exceeding the limit is not shown" (https://docs.github.com/en/repositories/creating-and-managing-repositories/repository-limits).
+- Today 40 goldens exceed 400 lines, 46 exceed 20 KB, 6 exceed 500 KB and 4 exceed 20,000 lines.
+
+**Review burden in history.** 83 commits touched goldens between 2026-07-13 and 2026-09-29. Golden churn over that period was 1.71 million lines, against 4.02 million lines of Python churn in `src/` and `dev/`. In individual commits, golden lines made up most of the diff:
+
+| Commit | Golden lines | All changed lines |
+| --- | ---: | ---: |
+| `8099d7d966` | 432,061 | 433,309 |
+| `d91cd929a5` | 241,528 | 279,149 |
+| `f46f4ff4d3` | 172,194 | 285,308 |
+| `218d6baef5` | 66,535 | 66,923 |
+| `c6fdcf8840` | 57,768 | 57,858 |
+
+Each of these exceeds GitHub's per-pull-request rendering limit many times over. Counts come from `git log --numstat`.
+
+**What the committed form protects.** D2 rejected fully regenerated goldens because the build could then not fail on drift. D3 compares the canonicalised, centrally masked form (`dev/docs/sequences/compare.py:176`). A digest of that form detects exactly the same divergences. Keeping each frame's kind, argv, exit code, captures and envelope source, and replacing the bodies with a SHA-256 of the compared form, gives 426 KB and 20,277 lines for all 907 frames. The current form is 12.0 MB and 313,912 lines. That size is computed from the committed goldens with indent-2 JSON. Stability was checked separately. Each frame's compared form was hashed with the project's own `canonicalise`, `mask_document` and `mask_host_conditional_details`, over both the committed and the regenerated goldens. All 907 frames in all 205 goldens produced identical SHA-256 digests. So a digest gate passes on exactly the inputs the current gate passes on, including the profile-delete frame whose stored bytes differ.
+
+**Precedent.** Generated inputs that are regenerated locally are already gitignored: the published authority (`pyproject.toml:421`, `.gitignore:513`) and the `cli-tree.json` help projection (`.gitignore:93`).
 
 ### B. PDF text extraction sidecars
 
