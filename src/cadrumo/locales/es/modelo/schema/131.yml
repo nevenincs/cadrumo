@@ -33,31 +33,6 @@ modelo:
               bajo un mismo código, use el sufijo "a" o "b" (p.ej. "659.4a", "691.9b")
               según la actividad - consulte el parámetro de coeficientes m131-modulos-coeficientes
               para la asignación exacta.
-          irpf-pf-modulos-indice-inicio-actividad:
-            label: 'Índice corrector por inicio de nuevas actividades (letra b.4,
-              actividad iniciada desde el 1-1-2025 en local exclusivo). Índice declarado
-              por el operador (0,80/0,90; 0,60/0,70 con discapacidad ≥33%, Orden HAC/1425/2025
-              Anexo II, instrucción 2.3.b.4); el motor no modela el ejercicio de inicio
-              ni la discapacidad. Incompatible con el índice de temporada (b.2): si
-              ambos se declaran, prevalece la temporada.'
-          irpf-pf-modulos-indice-pequena-dimension:
-            label: Índice corrector para empresas de pequeña dimensión (letra b.1
-              - municipio, local único, sin personal o hasta 2 trabajadores). Índice
-              declarado por el operador (0,70/0,75/0,80/0,90, Orden HAC/1425/2025
-              Anexo II, instrucción 2.3.b.1); el motor no modela hechos del contribuyente.
-              Nunca se aplica a las actividades con índice especial (721.2, 722).
-          irpf-pf-modulos-indice-temporada:
-            label: 'Índice corrector de temporada (letra b.2 - actividad de temporada,
-              hasta 180 días/año). Índice declarado por el operador (1,50/1,35/1,25
-              según duración, Orden HAC/1425/2025 Anexo II, instrucción 2.3.b.2);
-              el motor no modela la duración como hecho del contribuyente. Incompatible
-              con el índice de inicio de nuevas actividades (b.4): si ambos se declaran,
-              prevalece este.'
-          irpf-pf-modulos-pequena-dimension-ignorado-flag:
-            label: 'Indicador interno (1/0): el índice corrector para empresas de
-              pequeña dimensión (b.1) declarado fue ignorado por incompatibilidad
-              con el índice corrector especial de la actividad (Orden HAC/1425/2025
-              Anexo II, instrucción 2.3.a/b.1).'
           irpf-pf-modulos-rendimiento-neto-actividad:
             label: 'Rendimiento neto de la actividad (Fase 4ª: módulos − reducción
               general 5 por 100)'
@@ -73,11 +48,6 @@ modelo:
             label: Resultados negativos de trimestres anteriores
           irpf-pf-modulos-suma-rendimientos:
             label: Suma de rendimientos netos
-          irpf-pf-modulos-temporada-inicio-actividad-conflicto-flag:
-            label: 'Indicador interno (1/0): se declararon simultáneamente el índice
-              corrector de temporada (b.2) y el índice corrector por inicio de nuevas
-              actividades (b.4), incompatibles entre sí (Orden HAC/1425/2025 Anexo
-              II, instrucción 2.3).'
           irpf-pf-modulos-total:
             label: Total
           irpf-pf-modulos-volumen-agrario:
@@ -228,15 +198,45 @@ modelo:
                 anterior (2023), a efectos de la minoración por incentivos al empleo'
               label: 'Módulo 1 (Personal asalariado): número de unidades del ejercicio
                 anterior (2025), a efectos de la minoración por incentivos al empleo'
+            modulos-indice-inicio-actividad:
+              label: 'Índice corrector por inicio de nuevas actividades (letra b.4,
+                actividad iniciada desde el 1-1-2025 en local exclusivo). Índice declarado
+                por el operador (0,80/0,90; 0,60/0,70 con discapacidad ≥33%, Orden
+                HAC/1425/2025 Anexo II, instrucción 2.3.b.4); el motor no modela el
+                ejercicio de inicio ni la discapacidad. Incompatible con el índice
+                de temporada (b.2): si ambos se declaran, prevalece la temporada.'
+            modulos-indice-pequena-dimension:
+              label: Índice corrector para empresas de pequeña dimensión (letra b.1
+                - municipio, local único, sin personal o hasta 2 trabajadores). Índice
+                declarado por el operador (0,70/0,75/0,80/0,90, Orden HAC/1425/2025
+                Anexo II, instrucción 2.3.b.1); el motor no modela hechos del contribuyente.
+                Nunca se aplica a las actividades con índice especial (721.2, 722).
+            modulos-indice-temporada:
+              label: 'Índice corrector de temporada (letra b.2 - actividad de temporada,
+                hasta 180 días/año). Índice declarado por el operador (1,50/1,35/1,25
+                según duración, Orden HAC/1425/2025 Anexo II, instrucción 2.3.b.2);
+                el motor no modela la duración como hecho del contribuyente. Incompatible
+                con el índice de inicio de nuevas actividades (b.4): si ambos se declaran,
+                prevalece este.'
             modulos-minoracion-inversion:
               label: Minoración por incentivos a la inversión (amortización del inmovilizado
                 material o intangible afecto, según su libro registro de bienes de
                 inversión). Importe declarado por el operador; el motor no modela
                 un registro de bienes por elemento - consulte la Orden HAC/1425/2025
                 Anexo II, instrucción 2.2.b) y su propia tabla de amortización.
+            modulos-pequena-dimension-ignorado-flag:
+              label: 'Indicador interno (1/0): el índice corrector para empresas de
+                pequeña dimensión (b.1) declarado fue ignorado por incompatibilidad
+                con el índice corrector especial de la actividad (Orden HAC/1425/2025
+                Anexo II, instrucción 2.3.a/b.1).'
             modulos-rendimiento-neto-modulos:
               label: 'Rendimiento neto de módulos (Fase 3ª: minorado ajustado por
                 el índice corrector de exceso)'
+            modulos-temporada-inicio-actividad-conflicto-flag:
+              label: 'Indicador interno (1/0): se declararon simultáneamente el índice
+                corrector de temporada (b.2) y el índice corrector por inicio de nuevas
+                actividades (b.4), incompatibles entre sí (Orden HAC/1425/2025 Anexo
+                II, instrucción 2.3).'
           construct:
             modelo-131-objective-estimation-instalment:
               field:
