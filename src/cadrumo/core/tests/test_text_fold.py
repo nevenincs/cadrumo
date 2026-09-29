@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import functools
 import unicodedata
 
 import pytest
@@ -10,11 +11,35 @@ from ..text_fold import (
     COMBINING_MARK_RANGES,
     COMBINING_MARK_UNIDATA_VERSION,
     ascii_slug,
-    combining_mark_ranges_from_unicodedata,
     fold_diacritics,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+#: AHOM CONSONANT SIGN MEDIAL RA: ``Mn`` in Unicode 15.1, ``Mc`` from 16.0.
+_RECATEGORISED_MARK = "\U0001171e"
+
+
+@functools.cache
+def _mark_ranges_of_the_running_database() -> tuple[tuple[int, int], ...]:
+    """Derive the inclusive ``Mn`` codepoint ranges from this interpreter's database."""
+    ranges: list[tuple[int, int]] = []
+    for codepoint in range(0x110000):
+        if unicodedata.category(chr(codepoint)) != "Mn":
+            continue
+        if ranges and ranges[-1][1] == codepoint - 1:
+            ranges[-1] = (ranges[-1][0], codepoint)
+        else:
+            ranges.append((codepoint, codepoint))
+    return tuple(ranges)
+
+
+def _codepoints(ranges: tuple[tuple[int, int], ...]) -> frozenset[int]:
+    return frozenset(codepoint for first, last in ranges for codepoint in range(first, last + 1))
+
+
+def _version(text: str) -> tuple[int, ...]:
+    return tuple(int(part) for part in text.split("."))
 
 
 def test_strips_precomposed_spanish_accents() -> None:
@@ -111,23 +136,52 @@ def test_dropping_combining_marks_is_redundant_under_the_ascii_pass() -> None:
         assert ascii_slug(sample) == slug_run.sub("-", decomposed).strip("-"), sample
 
 
-def test_checked_in_combining_mark_ranges_match_the_live_unicode_database() -> None:
-    """The checked-in ``Mn`` ranges are exactly what the running interpreter derives.
+def test_checked_in_combining_mark_ranges_regenerate_from_their_pinned_unicode_database() -> None:
+    """The checked-in ``Mn`` ranges are exactly what the pinned database derives.
 
-    On failure, replace ``COMBINING_MARK_RANGES`` and
-    ``COMBINING_MARK_UNIDATA_VERSION`` with the values printed here.
+    Only an interpreter shipping the pinned database can regenerate the table,
+    and the oldest supported interpreter always does; a newer one ships a newer
+    database, never an older one. On failure, replace ``COMBINING_MARK_RANGES``
+    with the literal printed here.
     """
-    live = combining_mark_ranges_from_unicodedata()
+    assert _version(unicodedata.unidata_version) >= _version(COMBINING_MARK_UNIDATA_VERSION), (
+        f"this interpreter's Unicode {unicodedata.unidata_version} predates the pinned "
+        f"{COMBINING_MARK_UNIDATA_VERSION}; the pin must be the oldest supported interpreter's database"
+    )
+    if unicodedata.unidata_version != COMBINING_MARK_UNIDATA_VERSION:
+        return
+    live = _mark_ranges_of_the_running_database()
     regenerated = "\n".join(f"    (0x{first:04X}, 0x{last:04X})," for first, last in live)
-    assert unicodedata.unidata_version == COMBINING_MARK_UNIDATA_VERSION, unicodedata.unidata_version
     assert live == COMBINING_MARK_RANGES, f"COMBINING_MARK_RANGES = (\n{regenerated}\n)"
 
 
+def test_the_fold_strips_the_pinned_marks_rather_than_the_running_databases() -> None:
+    """Where the running database disagrees with the pin, the pin decides.
+
+    That is what makes the fold interpreter-independent: a mark that left
+    ``Mn`` in a later database is still stripped, and a mark that database
+    added is not, exactly as under the pinned one, where the added codepoint
+    is unassigned and passes through. On the pinned database there is no
+    disagreement to judge.
+    """
+    pinned = _codepoints(COMBINING_MARK_RANGES)
+    live = _codepoints(_mark_ranges_of_the_running_database())
+    kept_by_the_pin = sorted(hex(cp) for cp in pinned - live if fold_diacritics(chr(cp)) != "")
+    stripped_beyond_the_pin = sorted(hex(cp) for cp in live - pinned if fold_diacritics(chr(cp)) == "")
+    assert kept_by_the_pin == []
+    assert stripped_beyond_the_pin == []
+
+
+def test_a_mark_recategorised_by_a_later_database_folds_the_same_on_every_interpreter() -> None:
+    """U+1171E is stripped under 15.1 as ``Mn``; 16.0 calls it ``Mc`` and must not change that."""
+    assert fold_diacritics(f"x{_RECATEGORISED_MARK}y") == "xy"
+
+
 def test_range_derivation_detects_a_dropped_combining_mark() -> None:
-    """A table missing one ``Mn`` codepoint no longer equals the live derivation."""
+    """A table missing one ``Mn`` codepoint no longer equals the database's derivation."""
     first, last = COMBINING_MARK_RANGES[0]
     truncated = ((first + 1, last), *COMBINING_MARK_RANGES[1:])
-    assert truncated != combining_mark_ranges_from_unicodedata()
+    assert truncated != _mark_ranges_of_the_running_database()
     assert unicodedata.category(chr(first)) == "Mn"
 
 

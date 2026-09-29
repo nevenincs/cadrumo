@@ -39,6 +39,10 @@ aggregation:
   iva_ledger:
     errors:
       bucket_mismatch: A tranzakciós tár vödre nem egyezik a kért aggregálási vödörrel.
+      deduction_authority_on_non_deducible_row: Az olyan áfasor, amely nem hordoz
+        levonható adóösszeget, nem viselhet levonási osztályozást; a %{category} áfakategória
+        %{flow_direction} irányban számol el. Törölje a megadott levonási típust,
+        vagy javítsa a kategóriát.
       differentiated_sector_inactive_for_filing_year: Egy elkülönített szektor inaktív
         a bevallási évre.
       differentiated_sector_without_filing_year_entry: Egy elkülönített szektorhoz
@@ -49,6 +53,9 @@ aggregation:
         nem érvényes Közösségen belüli ügylethez.
       eu_member_state_on_export_transaction: 'Export vagy exporttal egy tekintet alá
         eső ügylet nem tartalmazhat EU-tagállamot; kapott érték: %{member_state}.'
+      inadmissible_deduction_classification: 'A megadott %{deduction_fact_kind} áfalevonási
+        típus nem fogadható el a %{iva_category} áfakategóriába tartozó sornál: %{refusal}.
+        Javítsa a megadott levonási típust, az áfakategóriát vagy a hozzárendelt bizonyítékot.'
       investment_observations_missing_bienes_inversion_authority: A beruházási áfa-megfigyelésekhez
         kifejezett tárgyi eszköz nyilvántartás és egyező profiljogosultság szükséges.
       missing_counterparty_establishment_on_export: Az export azért mentes, mert az
@@ -143,9 +150,6 @@ aggregation:
     errors:
       filing_year_out_of_range: A(z) %{filing_year} bevallási év a támogatott %{min_year}-%{max_year}
         tartományon kívül van.
-      invoice_retencion_collision: A(z) %{source_object_ids} számlá(k)hoz tartozó
-        levonás-megfigyelés(eke)t kézzel is megadták és a --received-invoice-retencion
-        is irányította; az összesítés előtt szüntesse meg a duplikációt.
       m111_no_retenciones_attestation_missing: 'A 111-es modellhez nincs perceptoronkénti
         levonási megfigyelés a következőre: %{filing_year} %{period}. Ne nyújts be
         teljesen üres 111-es modellt: nyilatkozz a negyedévről mint levonásmentes
@@ -1970,6 +1974,11 @@ tui:
       legal: Jogszabályi hivatkozás
       source: Forráshivatkozás
     export:
+      artefact:
+        calculation_report_csv: Számítási jelentés (CSV), csak helyi nyilvántartás
+        calculation_report_pdf: Aláírt számítási összesítő (PDF), csak helyi nyilvántartás
+        fichero_boe: BOE-fájl az AEAT-nál való benyújtáshoz
+        label: Exportálandó dokumentum
       payment_election:
         cuenta_corriente: Adófolyószámla (cuenta corriente tributaria)
         domiciliacion: Csoportos beszedés (domiciliación)
@@ -1983,6 +1992,52 @@ tui:
         compensar: Továbbvitel a későbbi időszakokra (compensar)
         devolver: Visszatérítés kérése (devolver)
         label: 'Negatív eredmény: továbbvitel vagy visszatérítés kérése'
+      replace_existing:
+        label: Az ezen az útvonalon már meglévő fájl lecserélése
+      result:
+        close: Bezárás
+        completeness:
+          not_assessed: 'Nem értékelt: a számítási jelentés nem benyújtási fájl'
+          not_flagged: Az exportálás nem jelzett teljességi figyelmeztetést
+          unverified: 'Nem ellenőrzött: a változat nem ad meg teljességi jegyzéket'
+        evidence_status:
+          local_calculation_report_not_official_aeat_filing_evidence: Helyi számítási
+            jelentés; nem az AEAT hivatalos benyújtási bizonylata
+          local_export_not_official_aeat_filing_evidence: Helyi export; nem az AEAT
+            hivatalos benyújtási bizonylata
+        label:
+          artefact: Exportált dokumentum
+          byte_size: Méret (bájt)
+          calculation_revision_id: Számítási változat
+          completeness: Teljesség
+          evidence_status: Bizonylati státusz
+          export_format: Formátum
+          file_sha256: A fájl SHA-256 kivonata
+          output_path: Fájl
+          software_identity_grade: Szoftverazonosító a fájl fejlécében
+        software_identity_grade:
+          development_mock: Fejlesztői azonosító (csupa nulla); az AEAT nem fogadja
+            el
+          none: 'Nincs: ennek a fájlnak a szerkezete nem tartalmaz helyet szoftverazonosítónak'
+          reviewed: Ellenőrzött szoftverregisztráció
+        title: Az exportálás eredménye
+        unavailable: Az exportálás befejeződött, de az eredménye nem olvasható, ezért
+          nem ismert a bizonylati státusza, a teljessége és a szoftverazonosítója.
+          Mielőtt a fájlra hagyatkozna, ellenőrizze.
+        warning:
+          completeness_unverified: 'Ennek a benyújtási fájlnak a teljessége nincs
+            ellenőrizve: a változata nem ad meg teljességi jegyzéket, így a szerkezeti
+            egyezés ellenőrzése nem tudta megerősíteni, hogy minden kötelező mező
+            bekerült a fájlba. Benyújtás előtt vesse össze az exportált mezőket a
+            hivatalos Diseño de Registros rekordleírással.'
+          development_software_identity: A fájl fejléce a csupa nullából álló fejlesztői
+            szoftverazonosítót hordozza; az AEAT ezt a fájlt nem fogadja el benyújtásra.
+          development_software_identity_of_filing_file: Ennek a modellnek a benyújtási
+            fájlja a csupa nullából álló fejlesztői szoftverazonosítót hordozná; az
+            AEAT ezt a fájlt nem fogadja el benyújtásra.
+          not_official: 'Ez a fájl nem az AEAT hivatalos benyújtási bizonylata. A
+            hivatalos bizonylatot az AEAT adja ki a benyújtás után: justificante;
+            benyújtott bevallások lekérdezése; vagy CSV-egyeztetés.'
     finding_kind:
       advisory: Tanács
       blocking_rule: Nem teljesülő szabály

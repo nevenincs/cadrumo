@@ -16,13 +16,15 @@ from typing import override
 from keyring.backend import KeyringBackend
 from keyring.errors import PasswordDeleteError
 
+from .explicit_keyring_selection import explicit_selection_priority
+
 IN_MEMORY_KEYRING = f"{__name__}.InMemoryKeyring"
 
 
 class InMemoryKeyring(KeyringBackend):
     """A usable, process-local credential store that begins empty."""
 
-    priority = 1
+    priority = explicit_selection_priority(IN_MEMORY_KEYRING)
 
     def __init__(self) -> None:
         super().__init__()

@@ -32,6 +32,16 @@ class ProfileCustodyRecordError(ProfileCustodyError):
     """Raised when a current-format custody record is malformed or altered."""
 
 
+class ProfileCustodyPathAbsentError(ProfileCustodyRecordError):
+    """Raised when a directory on a custody path does not exist.
+
+    Absence is not an unsafe component: a path below a missing directory names
+    nothing yet. A distinct subclass lets a no-follow existence probe report
+    "not there", as a missing ancestor already reads on Windows, while every
+    writer that catches :class:`ProfileCustodyRecordError` still refuses.
+    """
+
+
 class ProfileCustodyConcurrentCapsuleChangeError(ProfileCustodyRecordError):
     """Raised when a capsule changed generation between two anchored reads.
 
@@ -92,6 +102,7 @@ __all__ = [
     "ProfileCustodyConcurrentCapsuleChangeError",
     "ProfileCustodyError",
     "ProfileCustodyPasswordError",
+    "ProfileCustodyPathAbsentError",
     "ProfileCustodyRecordError",
     "ProfileCustodyRecoveryGuidance",
     "ProfileCustodyRecoverySecretError",

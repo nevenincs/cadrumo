@@ -6,6 +6,7 @@ import json
 
 import pytest
 
+from ....domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ._isolated_profile_storage_fixtures import active_profile_isolated_backend
 from .cli_runner import invoke_cached_cli
 
@@ -35,14 +36,15 @@ def test_explain_renders_envelope_for_known_modelo() -> None:
     assert "profile_fact\ttax_id\t" in result.output
 
 
-def test_explain_json_uses_the_registry_backed_modelo_303_2025_schedule() -> None:
+@pytest.mark.parametrize("year", PublishedGovernedFactSource().supported_filing_years().years)
+def test_explain_json_uses_the_registry_backed_modelo_303_schedule(year: int) -> None:
     result = invoke_cached_cli(
-        ["--format", "json", "app", "overview", "explain", "303", "--year", "2025"],
+        ["--format", "json", "app", "overview", "explain", "303", "--year", str(year)],
     )
 
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)["result"]
-    assert (payload["modelo"], payload["year"]) == ("303", 2025)
+    assert (payload["modelo"], payload["year"]) == ("303", year)
     assert payload["applicable"] is True
     assert payload["scheduling_rationale"]
 

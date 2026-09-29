@@ -1,17 +1,21 @@
 from __future__ import annotations
 
 import os
+import threading
 from pathlib import Path
+from zipfile import BadZipFile
 
 import pytest
 
+from cadrumo.core.locks import exclusive_file_lock
+from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from dev.registry.compiler.record_design_schema import (
     RecordDesignExtraction,
     RecordDesignSkippedSheet,
 )
 
-from ..record_design import extract_record_design
+from ..record_design import extract_record_design, warm_record_design_cache
 from ..record_design_cache import (
     RECORD_DESIGN_CACHE_DIR_ENV,
     load_cached_record_design,
@@ -130,3 +134,83 @@ def test_an_unreadable_source_is_refused_once_and_replayed_thereafter(
         extract_record_design(source)
 
     assert parses == 1
+
+
+_SMALL_BUNDLED_DESIGNS = (
+    ("modelo_131", "08-131-orden-eha-580-2009-ejercicios-2009-a-2014-26-kb-pdf.pdf"),
+    ("modelo_128", "02-128-orden-eha-3435-2007-ejercicios-2015-a-2019.pdf"),
+    ("modelo_126", "02-126-orden-eha-3435-2007-ejercicios-2015-a-2019.pdf"),
+)
+
+
+def _cache_bytes(root: Path) -> dict[str, bytes]:
+    return {path.name: path.read_bytes() for path in sorted(root.glob("*.json"))}
+
+
+def test_a_parallel_warm_writes_exactly_what_serial_reads_write(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The warm-up changes when a source is parsed, never what the cache holds.
+
+    Real bundled designs are warmed by worker processes into one store and read
+    serially in this process into another; the two stores must hold the same
+    entries byte for byte. The unreadable source proves the other half: a
+    failure the extractor does not persist leaves no entry either way, so the
+    serial reader still meets it exactly as before.
+    """
+    root = bundled_path("corpus", "aeat_official", "disenos_registro")
+    sources = [root / modelo / "files" / name for modelo, name in _SMALL_BUNDLED_DESIGNS]
+    unreadable = _source(tmp_path)
+    parallel_store, serial_store = tmp_path / "parallel", tmp_path / "serial"
+
+    monkeypatch.setenv(RECORD_DESIGN_CACHE_DIR_ENV, str(parallel_store))
+    assert warm_record_design_cache([*sources, unreadable], max_workers=2) == len(sources) + 1
+    # Nothing a warm-up already holds is extracted again; the unreadable source
+    # is still pending because its failure is not a persisted refusal.
+    assert warm_record_design_cache([*sources, unreadable], max_workers=2) == 1
+
+    monkeypatch.setenv(RECORD_DESIGN_CACHE_DIR_ENV, str(serial_store))
+    extract_record_design.__globals__["_extract_record_design_cached"].cache_clear()
+    for source in sources:
+        extract_record_design(source)
+    with pytest.raises(BadZipFile):
+        extract_record_design(unreadable)
+
+    warmed = _cache_bytes(parallel_store)
+    assert len(warmed) == len(sources)
+    assert warmed == _cache_bytes(serial_store)
+
+
+def test_a_second_warm_up_waits_for_the_first_and_extracts_nothing_it_left(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Concurrent warm-ups take turns, so the later one re-extracts nothing.
+
+    The first warm-up is played by a thread that holds the warm-up lock while it
+    reads the sources into the cache; the second is started while that lock is
+    held. Without the lock the second would find every source uncached and parse
+    it again, which is what several test workers reaching the corpus together did.
+    """
+    root = bundled_path("corpus", "aeat_official", "disenos_registro")
+    sources = [root / modelo / "files" / name for modelo, name in _SMALL_BUNDLED_DESIGNS]
+    store = tmp_path / "store"
+    store.mkdir()
+    monkeypatch.setenv(RECORD_DESIGN_CACHE_DIR_ENV, str(store))
+    extract_record_design.__globals__["_extract_record_design_cached"].cache_clear()
+    holding = threading.Event()
+
+    def first_warm_up() -> None:
+        with exclusive_file_lock(store / "warm-up"):
+            holding.set()
+            for source in sources:
+                extract_record_design(source)
+
+    first = threading.Thread(target=first_warm_up)
+    first.start()
+    assert holding.wait(timeout=60)
+    try:
+        assert warm_record_design_cache(sources, max_workers=2) == 0
+    finally:
+        first.join(timeout=120)
+    assert len(_cache_bytes(store)) == len(sources)

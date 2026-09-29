@@ -32,11 +32,18 @@ release run reaches
 from __future__ import annotations
 
 import json
+import os
+import sys
+from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority_store import AuthorityDescriptor
+
+from ..authority_staging import AUTHORITY_ROOT_ENV
 from ..serving_path_benchmark import (
     _ENVIRONMENT_IDENTITY,
+    ServingPathBenchmarkError,
     ServingPathEvidence,
     assert_acceptance,
     run_serving_path_benchmark,
@@ -56,9 +63,10 @@ def test_advisory_wall_clock_table_is_published(evidence: ServingPathEvidence) -
     """Print the wall-clock advisory table (greppable in job logs, never asserted)."""
     for measurement in evidence.measurements:
         cpu = "n/a" if measurement.cpu_seconds is None else f"{measurement.cpu_seconds:.3f}"
+        child = "n/a" if measurement.child_cpu_seconds is None else f"{measurement.child_cpu_seconds:.3f}"
         print(
             f"[perf advisory] {measurement.mode}/{measurement.label}: "
-            f"wall={measurement.seconds:.3f}s cpu={cpu}s "
+            f"wall={measurement.seconds:.3f}s cpu={cpu}s child_cpu={child}s "
             f"(gate={'cpu<=' + str(measurement.threshold_cpu_seconds) if measurement.gated else 'none'})",
         )
     assert evidence.measurements
@@ -78,11 +86,50 @@ def test_every_measurement_is_environment_labelled(evidence: ServingPathEvidence
         assert measurement.environment == _ENVIRONMENT_IDENTITY, measurement
 
 
+def test_the_measured_generation_is_the_published_one(evidence: ServingPathEvidence) -> None:
+    """The evidence names the one published generation both environments served.
+
+    The subprocess children run with every inherited Cadrumo setting removed,
+    and an editable tree has no packaged authority to fall back on; recording
+    the generation read from the published descriptor is what makes a table
+    comparable with the next run's.
+    """
+    root = Path(os.environ[AUTHORITY_ROOT_ENV]).resolve()
+    published = AuthorityDescriptor.read(root / "authority.current.json")
+
+    assert evidence.environment["authority_root"] == str(root)
+    assert evidence.environment["authority_logical_generation"] == published.logical_generation
+    assert evidence.environment["authority_database_sha256"] == published.database_sha256
+
+
+def test_a_checkout_without_a_published_authority_is_refused_before_measuring(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """An unpublished authority is named up front, not as a refusal inside a child."""
+    unpublished = tmp_path / "unpublished-authority"
+    unpublished.mkdir()
+    monkeypatch.setenv(AUTHORITY_ROOT_ENV, str(unpublished))
+
+    with pytest.raises(ServingPathBenchmarkError, match="needs a published authority") as refused:
+        run_serving_path_benchmark(cli=Path(sys.executable), work_dir=tmp_path / "work")
+
+    assert str(unpublished / "authority.current.json") in str(refused.value)
+    assert not (tmp_path / "work" / "subprocess-state").exists()
+
+
 def test_every_measurement_records_wall_and_cpu(evidence: ServingPathEvidence) -> None:
-    """Both clocks ride every row: wall for the advisory, CPU for the gates."""
+    """Both clocks ride every row: wall for the advisory, CPU for the gates.
+
+    Every row also names its child-process share. A row whose command ran in a
+    child must carry that child's CPU inside ``cpu_seconds``; a share larger
+    than the whole would mean the two were measured over different spans.
+    """
     for measurement in evidence.measurements:
         assert measurement.seconds >= 0.0, measurement
         assert measurement.cpu_seconds is not None and measurement.cpu_seconds >= 0.0, measurement
+        assert measurement.child_cpu_seconds is not None, measurement
+        assert 0.0 <= measurement.child_cpu_seconds <= measurement.cpu_seconds, measurement
 
 
 def test_server_reads_and_writes_are_sub_second_cpu(evidence: ServingPathEvidence) -> None:
@@ -94,7 +141,7 @@ def test_server_reads_and_writes_are_sub_second_cpu(evidence: ServingPathEvidenc
     gated = {m.label: m for m in evidence.measurements if m.mode == "server" and m.gated}
     read = gated["modelo list read"]
     write = gated["work create (simple write, idempotent re-touch)"]
-    mcp_read = gated["review.queue read (MCP memory transport)"]
+    mcp_read = gated["modelo list read (MCP memory transport)"]
     assert read.within_threshold and read.cpu_seconds is not None and read.cpu_seconds <= 1.0, read
     assert write.within_threshold and write.cpu_seconds is not None and write.cpu_seconds <= 1.0, write
     # The full MCP memory-transport round-trip is sub-CPU-second too, so the

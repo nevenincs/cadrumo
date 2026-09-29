@@ -471,12 +471,19 @@ class StagedPublication:
         """Whether :meth:`publish` has already moved the staged bytes into place."""
         return self._published
 
-    def publish(self) -> None:
+    def publish(self, *, replace_existing: bool = True) -> None:
         """Atomically move the staged bytes onto the target and sync its directory.
 
+        With ``replace_existing`` false the publication is no-clobber: the
+        staged inode is hard-linked to the target, which fails atomically when
+        anything already occupies it, so a file that appeared after the
+        caller's own existence check is refused rather than overwritten.
+
         Raises:
-            OSError: When the replace or the directory sync fails. The staged
-                file is left in place for the enclosing context manager to
+            FileExistsError: When ``replace_existing`` is false and the target
+                exists at publication time.
+            OSError: When the replace, the link or the directory sync fails. The
+                staged file is left in place for the enclosing context manager to
                 discard, so a failed publication never strands the payload.
             RuntimeError: When called a second time. One staging file publishes
                 once; a second call would replace the target with a path the
@@ -484,7 +491,12 @@ class StagedPublication:
         """
         if self._published:
             raise InternalInvariantError("staged publication has already been published")
-        _replace_and_fsync(self._staging_path, self._target_path)
+        if replace_existing:
+            _replace_and_fsync(self._staging_path, self._target_path)
+        else:
+            os.link(self._staging_path, self._target_path)
+            self._staging_path.unlink()
+            fsync_parent_dir(self._target_path)
         self._published = True
 
 

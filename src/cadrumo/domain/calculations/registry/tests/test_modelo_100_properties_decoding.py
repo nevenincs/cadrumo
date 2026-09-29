@@ -6,7 +6,7 @@ import pytest
 
 from .....core.resources.bundled_data import bundled_path
 from ..errors import RegistryValidationError
-from ..export_parse import _read_dictionary_text, xml_dictionary_entries
+from ..export_parse import decode_dictionary_text, xml_dictionary_entries
 from ..schema import ModeloDefinition, RegistryCatalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -25,7 +25,7 @@ def test_cp1252_dictionary_preserves_runtime_ids_and_decodes_0x96_as_punctuation
     source = catalogues.sources[source_ref]
     source_path = bundled_path() / source.corpus_path
     raw = source_path.read_bytes()
-    decoded = _read_dictionary_text(raw)
+    decoded = decode_dictionary_text(raw)
     assert "\u2013[0454]" in decoded
     assert "\u0096" not in decoded
 
@@ -42,4 +42,4 @@ def test_cp1252_dictionary_preserves_runtime_ids_and_decodes_0x96_as_punctuation
 def test_dictionary_decoder_refuses_bytes_undefined_in_cp1252() -> None:
     """Malformed fallback bytes surface through the registry validation contract."""
     with pytest.raises(RegistryValidationError, match="neither UTF-8 nor CP1252"):
-        _read_dictionary_text(b"\x81")
+        decode_dictionary_text(b"\x81")

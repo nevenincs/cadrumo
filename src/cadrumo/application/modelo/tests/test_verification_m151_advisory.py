@@ -62,7 +62,7 @@ def _m151_advisory_predicate() -> VerificationPredicateDefinition:
     return predicate
 
 
-def test_m151_advisory_ships_in_2015_revision() -> None:
+def test_m151_advisory_ships_in_its_open_ended_revision() -> None:
     """The 2015-y-siguientes revision carries the base-liquidable->cuota-integra advisory."""
     predicate = _m151_advisory_predicate()
     assert "ley-35-2006:art-93" in tuple(str(r) for r in predicate.legal_refs)

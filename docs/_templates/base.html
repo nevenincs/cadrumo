@@ -1,0 +1,5 @@
+{% extends "!base.html" %}
+
+{# Cloudflare declines prefetch requests on route-based static hosting. The
+   visible brand loads normally; speculative logo requests add only failures. #}
+{% block logo_prefetch_links %}{% endblock logo_prefetch_links %}

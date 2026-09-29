@@ -175,27 +175,31 @@ def test_renta_first_slice_binding_target_casillas_is_revision_scoped(
 ) -> None:
     """The per-revision binding-target helper reflects real registry data.
 
-    The 2020-2022 Modelo 100 revisions declare no
-    ``ledger_renta_gastos_estimacion_directa_aggregation`` bindings at all -- "Aportaciones a
-    mutualidades alternativas" shares the combined ``0186`` Seguridad
-    Social casilla on those years rather than the dedicated ``0195`` box
-    introduced from 2023 onward. The 2024/2025 revisions declare the full
-    14-casilla binding set. This is the property that makes the universal
-    ``first_slice_target_casillas`` codomain unsuitable as a
+    Every edition inside the support envelope binds exactly the routing
+    casillas its own design declares: "Aportaciones a mutualidades
+    alternativas" shares the combined ``0186`` Seguridad Social casilla until
+    the design adds the dedicated ``0195`` box, so the edition before that box
+    exists binds one casilla fewer. Editions below the floor are stored history
+    and declare no ledger bindings. This is the property that makes the
+    universal ``first_slice_target_casillas`` codomain unsuitable as a
     per-revision referential-integrity requirement.
     """
 
     modelo_100 = full_published_modelo(operation, "100")
+    support = operation.supported_filing_years()
+    routing = frozenset(_first_slice_expense_routing(operation).values())
+    in_envelope = 0
 
-    for year in ("2020", "2021", "2022"):
-        revision = modelo_100.revisions[year]
-        assert renta_first_slice_binding_target_casillas(revision) == frozenset()
-
-    for year in ("2024", "2025"):
-        revision = modelo_100.revisions[year]
+    for revision in modelo_100.revisions.values():
         targets = renta_first_slice_binding_target_casillas(revision)
-        assert targets == frozenset(_first_slice_expense_routing(operation).values())
-        assert "0195" in targets
+        if not support.admits_filing_year(revision.valid_from.year):
+            assert targets == frozenset(), revision.id
+            continue
+        in_envelope += 1
+        declared = frozenset(casilla.id for casilla in revision.casillas)
+        assert targets == routing & declared, revision.id
+
+    assert in_envelope, "no Modelo 100 edition lies inside the support envelope"
 
 
 def test_modelo_100_snapshots_build_cleanly_across_every_revision(operation: PinnedAuthorityOperation) -> None:

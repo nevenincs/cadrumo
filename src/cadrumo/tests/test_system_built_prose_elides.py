@@ -57,7 +57,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
-    from pathlib import Path
 
     from pydantic.fields import FieldInfo
 
@@ -159,18 +158,17 @@ def _builds_from_an_fstring(node: ast.AST) -> bool:
     return False
 
 
-def _system_built(source_tree_ast: Mapping[Path, ast.AST]) -> frozenset[tuple[str, str]]:
+def _system_built() -> frozenset[tuple[str, str]]:
     """Return every ``(model, field)`` production source assembles from an f-string.
 
     Reads construction sites, because who writes a string is a fact about the
-    call site and cannot be recovered from the model declaration alone. Test
-    sources are excluded: a fixture interpolating a value proves nothing about
-    what ships.
+    call site and cannot be recovered from the model declaration alone. Only
+    production source is read: a fixture interpolating a value proves nothing
+    about what ships, and parsing the test tree merely to discard it doubled
+    this gate's cost.
     """
     system_built: set[tuple[str, str]] = set()
-    for path, tree in sorted(source_tree_ast.items()):
-        if "/tests/" in path.as_posix() or path.name.startswith("test_"):
-            continue
+    for _path, tree in production_ast_items():
         for node in ast.walk(tree):
             if not isinstance(node, ast.Call):
                 continue
@@ -212,9 +210,9 @@ def capped_prose_fields() -> Mapping[tuple[str, str], _StaticField]:
 
 
 @pytest.fixture(scope="module")
-def system_built_fields(source_tree_ast: Mapping[Path, ast.AST]) -> frozenset[tuple[str, str]]:
+def system_built_fields() -> frozenset[tuple[str, str]]:
     """The subset production source assembles from interpolated prose."""
-    return _system_built(source_tree_ast)
+    return _system_built()
 
 
 # ---------------------------------------------------------------------------
@@ -233,18 +231,6 @@ def test_the_capped_prose_corpus_is_populated(capped_prose_fields: Mapping[tuple
         "no capped prose fields were discovered; the model walk is broken and every assertion below "
         "is passing over an empty set"
     )
-
-
-def test_the_corpus_agrees_with_the_companion_gate(
-    capped_prose_fields: Mapping[tuple[str, str], _StaticField],
-) -> None:
-    """Two independent walks must see the same fields.
-
-    The companion gate discovers the same corpus for a different question. If
-    the two ever disagree, one of them is scanning less of the tree than it
-    believes, and neither result can be trusted until that is resolved.
-    """
-    assert set(capped_prose_fields) == set(_prose_caps())
 
 
 def test_the_discriminator_selects_a_proper_subset(

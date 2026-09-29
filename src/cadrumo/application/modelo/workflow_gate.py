@@ -91,12 +91,12 @@ def _deadline_window_period_for_registry_period(
     filing_year: int,
     registry_period: str,
 ) -> Period | None:
-    """Return the typed :class:`~cadrumo.core.Period` declared by the registry deadline window.
+    """Return the typed :class:`~cadrumo.core.period.Period` declared by the registry deadline window.
 
     Delegates entirely to :func:`~cadrumo.domain.deadlines.plazo.resolve_filing_window`,
     the single matching authority for "which registry deadline window covers this
     filing target" — this helper only projects the matched window's
-    :class:`~cadrumo.core.Period` rather than its dates. Returns ``None`` when the
+    :class:`~cadrumo.core.period.Period` rather than its dates. Returns ``None`` when the
     registry declares no window for the combination.
     """
     target = Period.from_year_and_code(filing_year, registry_period)
@@ -105,7 +105,7 @@ def _deadline_window_period_for_registry_period(
 
 
 def workflow_period_for_work_unit(work_unit: WorkUnit) -> Period:
-    """Return the canonical :class:`~cadrumo.core.Period` consumed by the workflow engine.
+    """Return the canonical :class:`~cadrumo.core.period.Period` consumed by the workflow engine.
 
     Quarterly work units use their registry token (for example ``"1T"``) but the
     deadline engine may declare a typed window period with a richer canonical
@@ -145,7 +145,7 @@ class _RevisionInputsProvider:
         The :class:`TaxpayerProfile` parameter comes from the workflow Protocol and
         is passed to :func:`revision_filing_replay_inputs` so applicability-driven
         relation zeroes can be derived after ``modelo`` and
-        :class:`~cadrumo.core.Period` have matched the stored revision.
+        :class:`~cadrumo.core.period.Period` have matched the stored revision.
         """
         if modelo != self._modelo or period != self._period:
             raise WorkflowInputMismatchError(

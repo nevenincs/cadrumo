@@ -17,7 +17,7 @@ from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from cadrumo.entrypoints.tui.tests.fixture import workspace
 
 from .journal import Click, Fill, Press, Session, Type, describe, read_session, write_session
-from .replay import replay, screenshot
+from .replay import replay, replay_with_screenshot, screenshot
 from .surfaces import SURFACES, resolve
 
 SESSION_PATH = workspace() / "session.jsonl"
@@ -36,7 +36,7 @@ def _load() -> Session:
     return read_session(SESSION_PATH)
 
 
-def _attempt(session: Session, *, refusal_note: str) -> int:
+def _attempt(session: Session, *, refusal_note: str, shot: Path | None = None) -> int:
     """Replay ``session`` and persist it only once the replay has succeeded.
 
     Every command rebuilds the app from birth and replays the WHOLE
@@ -52,7 +52,11 @@ def _attempt(session: Session, *, refusal_note: str) -> int:
     observe a partial walk.
     """
     try:
-        frame = replay(session)
+        if shot is None:
+            frame = replay(session)
+        else:
+            shot.parent.mkdir(parents=True, exist_ok=True)
+            frame = replay_with_screenshot(session, str(shot))
     except Exception as exc:  # a harness refusal, not a bug to hide — the harness has no gate to satisfy
         _emit(f"refused: {exc}\n{refusal_note}; the session on disk is unchanged.")
         return 1
@@ -76,6 +80,7 @@ def main(argv: list[str] | None = None) -> int:
         choices=sorted(SUPPORTED_OUTPUT_LANGUAGES),
         help="force the output language; omit to resolve ambiently (profile preference, then default)",
     )
+    p_open.add_argument("--shot", default=None, help="also write the opening frame as SVG to this path")
 
     p_press = sub.add_parser("press", help="send key chords")
     p_press.add_argument("keys", nargs="+")
@@ -138,7 +143,11 @@ def main(argv: list[str] | None = None) -> int:
             theme=args.theme,
             locale=args.locale,
         )
-        return _attempt(session, refusal_note="the surface did not open")
+        return _attempt(
+            session,
+            refusal_note="the surface did not open",
+            shot=None if args.shot is None else Path(args.shot),
+        )
 
     session = _load()
 

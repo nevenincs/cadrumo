@@ -12,8 +12,8 @@ from ...core.refund_election import RefundElection
 from .selectors import ModeloCalculationRevisionSelector
 
 
-class ModeloExportOperatorInput(BaseModel):
-    """Canonical operator input required to resolve and export a modelo."""
+class ModeloExportSelectionInput(BaseModel):
+    """Operator input shared by every workflow that renders a modelo export."""
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
@@ -32,10 +32,16 @@ class ModeloExportOperatorInput(BaseModel):
     prior_domiciliation_election: PriorDomiciliationElection = PriorDomiciliationElection.KEEP
 
 
-class ModeloReviewPackageBuildOperatorInput(ModeloExportOperatorInput):
-    """Canonical export input plus review-package annotations."""
+class ModeloExportOperatorInput(ModeloExportSelectionInput):
+    """Canonical operator input required to resolve and export a modelo to a chosen file."""
+
+    replace_existing: bool = False
+
+
+class ModeloReviewPackageBuildOperatorInput(ModeloExportSelectionInput):
+    """Canonical export selection plus review-package annotations."""
 
     notes: str = ""
 
 
-__all__ = ["ModeloExportOperatorInput", "ModeloReviewPackageBuildOperatorInput"]
+__all__ = ["ModeloExportOperatorInput", "ModeloExportSelectionInput", "ModeloReviewPackageBuildOperatorInput"]

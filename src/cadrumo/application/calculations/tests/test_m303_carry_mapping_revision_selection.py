@@ -7,9 +7,12 @@ from collections.abc import Iterator
 import pytest
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ..m303_carry_ingress import m303_declaration_type_header_key
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_SUPPORT = PublishedGovernedFactSource().supported_filing_years()
 
 
 @pytest.fixture
@@ -18,15 +21,10 @@ def authority_operation() -> Iterator[PinnedAuthorityOperation]:
         yield operation
 
 
-@pytest.mark.parametrize(
-    ("filing_year", "period"),
-    (
-        pytest.param(2025, "4T", id="2025-design"),
-        pytest.param(2026, "1T", id="2026-design-first-quarter"),
-        pytest.param(2026, "4T", id="2026-design-terminal-quarter"),
-        pytest.param(2026, "12", id="2026-design-monthly"),
-    ),
-)
+# Every supported year, at its first quarter, its terminal quarter and its terminal month,
+# so each revision the selector can pick for a filing scope is exercised.
+@pytest.mark.parametrize("period", ("1T", "4T", "12"), ids=("first-quarter", "terminal-quarter", "monthly"))
+@pytest.mark.parametrize("filing_year", _SUPPORT.years)
 def test_carry_mapping_matches_the_selected_modelo_303_revision(
     authority_operation: PinnedAuthorityOperation,
     filing_year: int,

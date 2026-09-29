@@ -19,6 +19,7 @@ import re
 import unicodedata
 from dataclasses import dataclass
 from datetime import date
+from functools import lru_cache
 from html import escape
 from pathlib import Path
 from typing import Final, cast
@@ -492,11 +493,18 @@ def _record_from_table(path: Path, legal_id: str, body: object) -> LegalProvisio
     )
 
 
+@lru_cache(maxsize=4)
 def load_legal_provisions(repo_root: Path) -> tuple[LegalProvisionRecord, ...]:
     """Load every provision from the legal catalogue, ordered deterministically.
 
     Only ``[legal."<id>"]`` tables are read.  Other tables in the same TOML
     files, such as ``[sources]``, are intentionally ignored.
+
+    The catalogue is read-only authored data and the records are frozen, so the
+    parse is memoised per source root for the process: the glossary, the casilla
+    reference, the legal reference and the legal search projection all ground on
+    the same rows, and each was re-parsing the whole catalogue for itself. A
+    caller reading a DIFFERENT root (a temporary catalogue) keys its own entry.
     """
     catalogue = repo_root / LEGAL_CATALOGUE_RELPATH
     if not catalogue.is_dir():

@@ -7,6 +7,12 @@ materialisation emits
 :class:`~cadrumo.domain.calculations.registry.bindings.CasillaObservation` rows carrying
 registry provenance.
 
+The numeric channel seeds only numeric casillas. A text-family casilla enters
+through the text channel or not at all: with no text value it is absent, and
+its absence is carried as the lack of any observation for it -- the same state
+the draft, review and export boundaries already read as empty. It is never
+seeded with a structural zero, because zero is not a state a text casilla has.
+
 See Also:
     :mod:`cadrumo.domain.calculations.registry.formula_runtime`
         Runtime caller that consumes the initial values and materialised
@@ -32,7 +38,7 @@ from .binding_targets import bound_casilla_binding_ids
 from .binding_temporal import SameTargetContext
 from .bindings import CasillaObservation, CasillaObservationValueKind, resolve_bound_casilla_binding_value
 from .bindings_previous_filing import PreviousFilingProvider
-from .casilla_membership import casillas_by_id
+from .casilla_membership import casillas_by_id, text_family_casilla_ids
 from .errors import RegistryValidationError
 from .ids import BindingId
 from .schema import BindingDefinition, ModeloRevision
@@ -57,10 +63,12 @@ def materialise_observations(
     reference set.
     """
     resolved_text_values = text_values or {}
+    text_casilla_ids = text_family_casilla_ids(casillas_by_id.values())
     materialised: list[CasillaObservation] = []
     for casilla_id in sorted(values.keys() | resolved_text_values.keys()):
         computed = computed_provenance.get(casilla_id)
         if computed is not None:
+            _refuse_numeric_text_observation(computed, text_casilla_ids)
             materialised.append(computed)
             continue
         registry_casilla = casillas_by_id.get(casilla_id)
@@ -90,7 +98,28 @@ def materialise_observations(
                 absent_by_design=casilla_id in absent_by_design_casilla_ids,
             ),
         )
+        _refuse_numeric_text_observation(materialised[-1], text_casilla_ids)
     return tuple(materialised)
+
+
+def _refuse_numeric_text_observation(
+    observation: CasillaObservation,
+    text_casilla_ids: frozenset[CasillaId],
+) -> None:
+    """Refuse a numeric observation for a casilla the registry declares as text.
+
+    A text casilla is populated with validated text or absent. A numeric value
+    for one can only be a coerced absence -- the structural zero that once
+    stood in for "no text" and reached the preview, report and filing file as
+    a plausible ``0`` -- or a formula writing a figure into a text box. Both are
+    refused here, at the one place every observation is materialised.
+    """
+    if observation.casilla_id in text_casilla_ids and observation.value_kind == CasillaObservationValueKind.DECIMAL:
+        raise RegistryValidationError(
+            f"text casilla {observation.casilla_id!r} cannot carry a numeric observation; "
+            "a text casilla is either populated with text or absent",
+            context={"casilla_id": observation.casilla_id},
+        )
 
 
 def initial_values(
@@ -110,6 +139,7 @@ def initial_values(
     casillas = casillas_by_id(revision)
     _reject_unknown_inputs(inputs, casillas)
     _reject_non_input_kind_inputs(inputs, casillas, {formula.target_casilla_id for formula in revision.formulas})
+    _reject_numeric_inputs_for_text_casillas(inputs, casillas)
 
     bindings_by_id = {binding.id: binding for binding in revision.bindings}
     _reject_smuggled_previous_filing_inputs(
@@ -216,6 +246,25 @@ def _reject_unknown_inputs(
     unknown = sorted(set(inputs).difference(casillas))
     if unknown:
         raise RegistryValidationError.for_unknown_input_casilla_ids(casilla_ids=unknown)
+
+
+def _reject_numeric_inputs_for_text_casillas(
+    inputs: Mapping[CasillaId, Decimal],
+    casillas: Mapping[CasillaId, CasillaDefinition],
+) -> None:
+    """Refuse a numeric input addressed to a casilla the registry declares as text.
+
+    Text reaches the calculation only through the text channel. Accepting a
+    number here would either drop it unseen or let it stand for text, so the
+    caller is refused and must route the value by the casilla's declared type.
+    """
+    text_casilla_ids = text_family_casilla_ids(casillas.values())
+    misrouted = sorted(casilla_id for casilla_id in inputs if casilla_id in text_casilla_ids)
+    if misrouted:
+        raise RegistryValidationError(
+            f"text casillas cannot be supplied as numeric inputs: {misrouted!r}",
+            context={"casilla_ids": ",".join(misrouted)},
+        )
 
 
 def _reject_non_input_kind_inputs(
@@ -343,8 +392,9 @@ def _initial_values_for_casillas(
     """Build initial values for non-computed registry casilla definitions."""
     values: dict[CasillaId, Decimal] = {}
     absent_by_design: set[CasillaId] = set()
+    text_casilla_ids = text_family_casilla_ids(casillas)
     for casilla in casillas:
-        if casilla.input_kind in {InputKind.COMPUTED, InputKind.PROJECTION_ONLY}:
+        if casilla.input_kind in {InputKind.COMPUTED, InputKind.PROJECTION_ONLY} or casilla.id in text_casilla_ids:
             continue
         value, absent = _initial_value_for_casilla(
             casilla,

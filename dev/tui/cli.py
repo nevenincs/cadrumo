@@ -6,8 +6,9 @@ enumeration kept in two places drifted in one of them, which is how ``runs``
 and ``snapshot`` came to be undocumented verbs.
 
 Rendering shells out to the development harness once per frame, so a
-full matrix is minutes rather than seconds -- each frame rebuilds its app
-from birth, and the surfaces that need a profile pay real key derivation.
+full matrix is tens of minutes rather than seconds -- each frame starts an
+interpreter and rebuilds its app from birth, a few seconds apiece, and the
+surfaces that need a profile also pay real key derivation.
 That cost buys the property that makes the artefacts worth reviewing: no
 frame is a cached statement about a tree that existed earlier.
 """
@@ -339,7 +340,7 @@ def render_command(
     directory.mkdir(parents=True, exist_ok=True)
 
     # Taken BEFORE the first frame, compared after the last: a full matrix runs
-    # for about twenty-five minutes, and an edit landing inside that window
+    # for tens of minutes, and an edit landing inside that window
     # produces a set that is half old and half new while the manifest reports
     # every frame as current.
     source_at_start = source_fingerprint()
@@ -359,7 +360,7 @@ def render_command(
 
                 # A surface that already refused refuses at every geometry: the
                 # guard runs while building the app, before layout. Attempting
-                # the remaining frames costs minutes per frame on the surfaces
+                # the remaining frames costs a cold build per frame on the surfaces
                 # that provision a real encrypted profile, and buys a reviewer
                 # nothing but the same sentence repeated.
                 if refusal_reason is not None and skip_refused:
@@ -457,7 +458,7 @@ def render_command(
             "Re-run against a settled tree."
         )
     # Written BEFORE the sweep, not after. The sweep is the only destructive
-    # step in a command that takes about twenty-five minutes, and running it
+    # step in a command that takes tens of minutes, and running it
     # first meant any refusal or filesystem error inside it discarded the
     # manifest and index of a render that had already succeeded.
     write_manifest(directory, manifest)
@@ -511,7 +512,7 @@ def snapshot_command(
     deliberate snapshot of a review that actually happened.
 
     A name already taken is REFUSED. Runs are gitignored and a full matrix
-    costs about twenty-five minutes, so an existing snapshot is the only
+    costs tens of minutes, so an existing snapshot is the only
     copy of the review it holds; overwriting it on a bare name collision
     would destroy the evidence this verb exists to keep. ``--replace`` is
     how an operator says the older review is finished with.
@@ -560,7 +561,7 @@ def rasterise_command(
     The harness is not driven at all. A run's SVGs are the harness's own
     output and stay valid however this tool's rasteriser changes, so fixing a
     rendering defect -- or simply wanting the frames at another resolution --
-    should not cost another full matrix at minutes per frame. Only the
+    should not cost another full matrix at seconds per frame. Only the
     raster-derived fields are rewritten; the captured text, the timings and
     the geometry readings still belong to the run that produced them.
     """

@@ -14,7 +14,6 @@ Submodules
    :maxdepth: 4
 
    cadrumo.application.actividad_asset.history
-   cadrumo.application.actividad_asset.iva_linkage
    cadrumo.application.actividad_asset.modality
    cadrumo.application.actividad_asset.operations
    cadrumo.application.actividad_asset.ports

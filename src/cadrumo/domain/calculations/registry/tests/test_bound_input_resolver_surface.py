@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+import unicodedata
 from pathlib import Path
 
 import pytest
@@ -17,8 +18,21 @@ _RETIRED_RESOLVER = "resolve_bound_inputs_by_casilla_id"
 
 
 def _production_python_paths() -> tuple[Path, ...]:
+    """Return the production modules that can name a bound-input resolver at all.
+
+    Every name either sweep matches -- a ``resolve_*`` definition ending in the
+    suffix, or an import of the retired resolver -- contains the suffix, and an
+    identifier is spelled in the source after the NFKC normalisation Python
+    applies to non-ASCII ones. A module that never spells it has nothing to
+    report, so it is not parsed.
+    """
     package_root = Path(resolve_available_bound_inputs_by_casilla_id.__code__.co_filename).resolve().parents[3]
-    return scan_directory(package_root, pattern="*.py", recursive=True, prune_directories=("tests",))
+    candidates: list[Path] = []
+    for path in scan_directory(package_root, pattern="*.py", recursive=True, prune_directories=("tests",)):
+        source = path.read_text(encoding="utf-8")
+        if _RESOLVER_SUFFIX in (source if source.isascii() else unicodedata.normalize("NFKC", source)):
+            candidates.append(path)
+    return tuple(candidates)
 
 
 def _resolver_definitions(paths: tuple[Path, ...]) -> tuple[tuple[str, str], ...]:

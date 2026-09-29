@@ -6,6 +6,8 @@ from contextvars import Context
 
 import pytest
 
+from cadrumo.adapters.outbound.fx.ecb_provider import EcbReferenceRateProvider
+from cadrumo.application.exchange_rate_provider import bind_exchange_rate_provider_factory, exchange_rate_provider
 from cadrumo.application.user_profile.custody_ports import profile_custody_port
 from cadrumo.core.errors.hierarchy import InternalInvariantError
 
@@ -52,3 +54,30 @@ def test_composing_again_where_the_binding_is_visible_is_a_no_op() -> None:
     first, second = Context().run(bound_port_across_two_builds)
 
     assert first is second
+
+
+def test_a_server_built_under_a_host_keeps_the_hosts_rate_source() -> None:
+    """DETECTOR TEETH: the composition is never unwound, so a replaced source outlives the server.
+
+    Built in-process under a test host, the server had bound the live ECB rates
+    over the host's recorded ones, and every later conversion in that process
+    read the network.
+    """
+    hosts_provider = EcbReferenceRateProvider(fetch=lambda url: "")
+
+    def rate_source_after_building() -> object:
+        with bind_exchange_rate_provider_factory(lambda: hosts_provider):
+            server_module._ensure_adapter_composition()
+            return exchange_rate_provider()
+
+    assert Context().run(rate_source_after_building) is hosts_provider
+
+
+def test_a_server_with_no_host_rate_source_binds_the_ecb_reference_rates() -> None:
+    """ANTI-VACUITY: a server process with no host choice still converts against the ECB."""
+
+    def rate_source_after_building() -> object:
+        server_module._ensure_adapter_composition()
+        return exchange_rate_provider()
+
+    assert isinstance(Context().run(rate_source_after_building), EcbReferenceRateProvider)

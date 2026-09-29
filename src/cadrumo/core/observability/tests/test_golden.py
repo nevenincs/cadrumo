@@ -154,13 +154,19 @@ class TestCanonicaliseAndMask:
         b = {"result": {"x": 1, "y": 3}}
         assert differing_paths(a, b) == frozenset({"result.y"})
 
-    def test_profile_delete_masks_only_its_fingerprint_digest_path(self) -> None:
+    def test_the_path_mask_is_exactly_the_enrolled_leaves(self) -> None:
         assert (
             frozenset(
-                {("config.profile.delete", "result.fingerprint.digest")},
+                {
+                    ("config.profile.delete", "result.fingerprint.digest"),
+                    ("modelo.export", "result.file_sha256"),
+                    ("modelo.export", "result.bucket_event_id"),
+                },
             )
             == GOLDEN_MASK_PATHS
         )
+
+    def test_profile_delete_masks_only_its_fingerprint_digest_path(self) -> None:
         delete = {
             "command": "config.profile.delete",
             "digest": "visible-top-level",
@@ -179,6 +185,27 @@ class TestCanonicaliseAndMask:
         sibling = {**delete, "command": "config.profile.inspect"}
         sibling_masked = cast("dict[str, Any]", mask_document(sibling))
         assert sibling_masked["result"]["fingerprint"]["digest"] == "flapping"
+
+    def test_modelo_export_masks_only_its_version_bound_digests(self) -> None:
+        export = {
+            "command": "modelo.export",
+            "result": {
+                "bucket_event_id": "release-bound-event",
+                "byte_size": 2282,
+                "calculation_revision_id": "content-addressed",
+                "file_sha256": "release-bound-digest",
+            },
+        }
+        masked = cast("dict[str, Any]", mask_document(export))
+        assert masked["result"]["file_sha256"] == MASK_SENTINEL
+        assert masked["result"]["bucket_event_id"] == MASK_SENTINEL
+        assert masked["result"]["byte_size"] == 2282
+        assert masked["result"]["calculation_revision_id"] == "content-addressed"
+
+        other_command = {**export, "command": "modelo.verify"}
+        other_masked = cast("dict[str, Any]", mask_document(other_command))
+        assert other_masked["result"]["file_sha256"] == "release-bound-digest"
+        assert other_masked["result"]["bucket_event_id"] == "release-bound-event"
 
 
 class TestAssertGoldenMatch:

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+import unicodedata
 from datetime import UTC, date, datetime, timedelta, timezone
 from decimal import Decimal
 from pathlib import Path
@@ -441,6 +442,17 @@ def test_exonerado_evidence_requires_every_explicit_s56_field(missing_field: str
         )
 
 
+def _may_spell(text: str, identifier: str) -> bool:
+    """Whether a module's text can name ``identifier`` at all.
+
+    A call names its callee by an identifier the source must spell, after the
+    NFKC normalisation Python applies to non-ASCII identifiers. A module that
+    never spells it cannot contain the call, and parsing every module of the
+    tree to learn that was nearly all of each sweep's cost.
+    """
+    return identifier in (text if text.isascii() else unicodedata.normalize("NFKC", text))
+
+
 def test_every_calculation_revision_constructor_declares_filing_evidence_explicitly() -> None:
     source_root = Path(__file__).parents[4]
     omissions: list[str] = []
@@ -452,7 +464,10 @@ def test_every_calculation_revision_constructor_declares_filing_evidence_explici
     for path in swept:
         if path.relative_to(source_root).as_posix() == "cadrumo/core/tests/test_period.py":
             continue
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        text = path.read_text(encoding="utf-8")
+        if not _may_spell(text, "CalculationRevision"):
+            continue
+        tree = ast.parse(text, filename=str(path))
         for node in ast.walk(tree):
             if not isinstance(node, ast.Call):
                 continue
@@ -483,7 +498,10 @@ def test_production_revision_id_derivations_name_the_single_annual_summary_input
         relative = path.relative_to(source_root).as_posix()
         if "/tests/" in relative:
             continue
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        text = path.read_text(encoding="utf-8")
+        if not _may_spell(text, "derive_calculation_revision_id"):
+            continue
+        tree = ast.parse(text, filename=str(path))
         calls = [
             node
             for node in ast.walk(tree)

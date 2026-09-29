@@ -19,7 +19,12 @@ from .export_value_policy import ParsedExportPolicyValue
 from .fixed_width_codec import parse_fixed_width_export_field
 from .ids import BindingId, ExportFieldId, ExportLayoutId, RecordId
 from .schema_base import RegistryModel
-from .schema_exports import ExportFieldDefinition, ExportLayoutDefinition, ExportRecordDefinition
+from .schema_exports import (
+    ExportFieldDefinition,
+    ExportLayoutDefinition,
+    ExportRecordDefinition,
+    FilingEnvelopeDefinition,
+)
 from .schema_references import SourceReference
 
 # The dictionary's two boolean row types. ``LGC`` resolves to the XSD's
@@ -83,7 +88,9 @@ def parse_export_payload(
         return _parse_xml_dictionary_payload(layout, payload, sources=sources, source_payloads=source_payloads)
 
     cursor = 0
-    if layout.auxiliary_envelope_header is not None:
+    if layout.filing_envelope is not None:
+        cursor, payload = _filing_envelope_body(layout.filing_envelope, payload)
+    elif layout.auxiliary_envelope_header is not None:
         # The total-less page-zero header opens the payload ahead of the
         # records. Its bytes carry filing-instance facts (year, period,
         # product identity) this parser does not hold, so the skip is exact
@@ -108,6 +115,28 @@ def parse_export_payload(
         raise RegistryValidationError(f"payload has {len(payload) - cursor} trailing byte(s) after export layout")
     casillas = tuple(value for value in parsed if value.casilla_id is not None)
     return ParsedExportPayload(layout_id=layout.id, fields=tuple(parsed), casillas=casillas)
+
+
+def _filing_envelope_body(envelope: FilingEnvelopeDefinition, payload: bytes) -> tuple[int, bytes]:
+    """Return the body start and the payload without its closer, refusing a malformed envelope.
+
+    The prefix carries filing-instance facts (year, period, product identity)
+    this parser does not hold, so it is skipped by exact extent; the closer is
+    derived from the payload's own opening tag and must end the payload, so a
+    truncated or foreign envelope refuses instead of parsing as records.
+    """
+    if len(payload) < envelope.prefix_extent:
+        raise RegistryValidationError(
+            f"filing envelope {envelope.record_identity!r} payload is shorter than its "
+            f"{envelope.prefix_extent}-byte prefix"
+        )
+    closer = envelope.closer_for(payload[: envelope.opening_tag_extent])
+    body_end = len(payload.rstrip(b"\r\n"))
+    if payload[body_end - len(closer) : body_end] != closer:
+        raise RegistryValidationError(
+            f"filing envelope {envelope.record_identity!r} payload does not end with its relative closer"
+        )
+    return envelope.prefix_extent, payload[: body_end - len(closer)]
 
 
 def _consume_record_block(
@@ -239,7 +268,7 @@ def xml_dictionary_entries(
     # verify as drift against itself.
     overrides = {override.field_id: override.path for override in layout.dictionary_path_overrides}
     entries: list[XmlDictionaryEntry] = []
-    for line in _read_dictionary_text(dictionary_payload).splitlines():
+    for line in decode_dictionary_text(dictionary_payload).splitlines():
         entry = _parse_xml_dictionary_line(line, source=source, overrides=overrides)
         if entry is not None:
             entries.append(entry)
@@ -272,7 +301,7 @@ def _assert_every_override_was_applied(
         )
 
 
-def _read_dictionary_text(body: bytes) -> str:
+def decode_dictionary_text(body: bytes) -> str:
     """Decode publisher-projected dictionary bytes without a filesystem read."""
     try:
         return body.decode("utf-8")
@@ -555,6 +584,7 @@ __all__ = [
     "ParsedExportFieldValue",
     "ParsedExportPayload",
     "XmlDictionaryEntry",
+    "decode_dictionary_text",
     "parse_export_payload",
     "xml_dictionary_entries",
 ]

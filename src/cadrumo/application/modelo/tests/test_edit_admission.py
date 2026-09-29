@@ -189,7 +189,7 @@ def _sized_snapshot(*, casillas: int, bindings: int) -> RegistrySnapshot:
     )
 
 
-def test_published_2025_modelo_100_surface_size_is_admitted_without_dropping_entries() -> None:
+def test_published_modelo_100_surface_size_is_admitted_without_dropping_entries() -> None:
     outcome, _ = _admit(snapshot=_sized_snapshot(casillas=2249, bindings=71))
 
     assert isinstance(outcome, ModeloEditAdmittedV1)

@@ -36,6 +36,9 @@ class CasillaSchema(Protocol):
             ``"bool"``, ``"date"``.
         required: Whether the casilla must be present in a valid
             draft.
+        operator_supplied: Whether the operator supplies the value as a
+            manual input, rather than the calculation deriving, binding or
+            projecting it.
         formula: ID of the formula declared on this casilla, or
             ``None`` for literal casillas.
         formula_input_casilla_ids: Tuple of casilla IDs this casilla depends
@@ -62,6 +65,11 @@ class CasillaSchema(Protocol):
     @property
     def required(self) -> bool:
         """Return whether the casilla must be present in a valid draft."""
+        ...
+
+    @property
+    def operator_supplied(self) -> bool:
+        """Return whether the operator supplies the value as a manual input."""
         ...
 
     @property

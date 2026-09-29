@@ -349,7 +349,7 @@ modelo:
             help: Az adócsoport részletfizetési elszámolásának 39. rovata (Mod. 40.3
               LIS).
             label: A LIS 40.3. cikke szerinti módszer - ÖSSZESEN - Csökkenések
-          tipo-declaracion:
+          tipo-declaracion-resultado:
             label: Részletfizetés módja (40.2. cikk teljes adóösszeg / 40.3. cikk
               adóalap)
       construct:

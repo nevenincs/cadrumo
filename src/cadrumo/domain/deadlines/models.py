@@ -957,9 +957,9 @@ class Recovery(BaseModel):
 
 
 def _parse_modelo_deadline_period(value: object) -> Period:
-    """Coerce runtime or persisted periods into :class:`~cadrumo.core.Period`.
+    """Coerce runtime or persisted periods into :class:`~cadrumo.core.period.Period`.
 
-    Runtime producers pass :class:`~cadrumo.core.Period`; JSON persistence
+    Runtime producers pass :class:`~cadrumo.core.period.Period`; JSON persistence
     restores it from ``{"filing_year": ..., "code": ...}``.
     """
     if isinstance(value, Period):
@@ -976,7 +976,7 @@ class ModeloDeadline(BaseModel):
         modelo: The modelo string identifier; carried as a plain
             ``str`` on this record so JSON round-tripping is loss-free
             for downstream consumers.
-        period: The period covered as a typed :class:`~cadrumo.core.Period`
+        period: The period covered as a typed :class:`~cadrumo.core.period.Period`
             (e.g. ``Period.from_year_and_code(2026, "1T")``).
         opens_on: The first day the AEAT filing window accepts the
             modelo for this period.

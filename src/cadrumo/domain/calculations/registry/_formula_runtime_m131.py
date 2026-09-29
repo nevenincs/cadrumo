@@ -56,10 +56,12 @@ if TYPE_CHECKING:
 
 
 def _read_modulos_indice(casilla_id: CasillaId, ctx: _EvalContext) -> Decimal:
-    if casilla_id in ctx.text_values:
+    # A text-declared índice has no numeric entry; read it from the text channel
+    # even when the operator left it blank, where it means "índice not applied".
+    if casilla_id in ctx.text_values or casilla_id in ctx.text_casilla_ids:
         ctx.operand_refs.append(casilla_id)
         ctx.operand_casilla_refs.append(casilla_id)
-        raw_text = ctx.text_values[casilla_id].strip()
+        raw_text = ctx.text_values.get(casilla_id, "").strip()
         try:
             value = Decimal(raw_text) if raw_text else ZERO
         except ArithmeticError:

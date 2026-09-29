@@ -96,6 +96,7 @@ from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryPr
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
 from ..user_profile.profile_read_ports import ProfileReadPorts
+from ..user_profile.projections import profile_fact_index
 from ._calculation_aggregation_context import load_bucket_aggregation_context as _load_bucket_aggregation_context
 from ._calculation_helpers import (
     build_typed_observations as _build_typed_observations,
@@ -169,6 +170,7 @@ from .m303_regimen_simplificado_scope import (
     taxpayer_profile_for_work,
 )
 from .preconditions import build_modelo_precondition_failure
+from .profile_export_binding import profile_text_casilla_gap_diagnostics, resolve_profile_text_casilla_inputs
 from .revision_persistence import persist_calculation_revision
 from .work_profile import ModeloWorkProfile, ModeloWorkProfilePathValues
 
@@ -529,6 +531,10 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
         resolved_bindings=prepared.channels.bindings,
         casilla_inputs=prepared.casilla_inputs,
         text_casilla_inputs=text_casilla_inputs,
+        profile_text_casilla_inputs=resolve_profile_text_casilla_inputs(
+            snapshot.revision,
+            profile_fact_index(prepared.profile.record, prepared.profile.profile_decode_context.schema),
+        ).values,
     )
     resolved_inputs = channel_inputs.casilla_inputs
 
@@ -1554,8 +1560,16 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         transaction_repository=memoized_transaction_repository,
         profile=preparation.profile,
     )
+    profile_text_diagnostics = profile_text_casilla_gap_diagnostics(
+        preparation.snapshot.revision,
+        profile_fact_index(preparation.profile.record, preparation.profile.profile_decode_context.schema),
+        supplied_casilla_ids=frozenset(text_casilla_inputs or ()),
+    )
     source_diagnostics = (
-        channels.reconciliation.source_diagnostics + channels.override_diagnostics + advisory_diagnostics
+        channels.reconciliation.source_diagnostics
+        + channels.override_diagnostics
+        + advisory_diagnostics
+        + profile_text_diagnostics
     )
     return BucketAggregationCalculationResult(
         revision=revision,
@@ -1570,13 +1584,14 @@ _DurableSourceIssueReason = Literal[
     "unrouted_declarable_quantity",
     "iva_selected_scope_evidence_failure",
     "iva_compensation_annual_source_evidence_failure",
+    "withholding_detail_absent",
 ]
 
 
 def _durable_source_issue_reason(diagnostic: CalculationSourceDiagnostic) -> _DurableSourceIssueReason | None:
     """Narrow a diagnostic reason to the durable subset, or ``None``.
 
-    Both durable reasons describe a value ABSENT from the filing, which is what
+    Every durable reason describes a value ABSENT from the filing, which is what
     a verification or export gate reading the persisted revision needs; every
     other reason is calculate-time operator feedback that dies with the
     response. Written as explicit comparisons rather than a set membership test
@@ -1592,6 +1607,8 @@ def _durable_source_issue_reason(diagnostic: CalculationSourceDiagnostic) -> _Du
         return "iva_selected_scope_evidence_failure"
     if diagnostic.reason == "iva_compensation_annual_source_evidence_failure":
         return "iva_compensation_annual_source_evidence_failure"
+    if diagnostic.reason == "withholding_detail_absent":
+        return "withholding_detail_absent"
     return None
 
 

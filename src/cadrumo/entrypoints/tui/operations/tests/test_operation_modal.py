@@ -814,7 +814,7 @@ def test_the_terminal_receipt_reaches_the_receipt_widget(tmp_path: Path) -> None
 @pytest.mark.parametrize(
     ("refusal_ref", "explained"),
     [
-        ("REFUSED_MODELO_EXPORT_PRODUCT_IDENTITY_UNAVAILABLE", True),
+        ("REFUSED_MODELO_EXPORT_PRIOR_DOMICILIATION_ELECTION_REQUIRED", True),
         ("REFUSED_PROFILE_LIFO_FORBIDDEN", False),
     ],
 )
@@ -841,10 +841,9 @@ def test_a_refusal_code_is_explained_only_when_its_registry_message_is_public(
                         break
                 modal._refresh_detail_rows(refused)
                 receipt = str(modal.query_one("#operation-modal-receipt", Static).content)
-                explanation = tr("errors.refused.refused_modelo_export_product_identity_unavailable")
+                explanation = tr("errors.refused.refused_modelo_export_prior_domiciliation_election_required")
                 assert refusal_ref in receipt
                 assert (explanation in receipt) is explained
-                assert ("Versión del Programa" in receipt) is explained
                 await host.action_quit()
 
         asyncio.run(run())

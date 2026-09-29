@@ -1,17 +1,10 @@
-"""Deploy the documentation Worker and manage its zone wiring through the Cloudflare API.
-
-The Worker is a single JavaScript module uploaded as it stands, so the deploy
-is one multipart API call and needs no bundler, no Wrangler and no Node on the
-publishing host. Every call here states its intent in a verb and refuses any
-answer the API does not mark successful.
-"""
+"""Manage documentation delivery routes through the Cloudflare API."""
 
 from __future__ import annotations
 
 import json
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Any, Final
 
 import httpx
@@ -59,44 +52,6 @@ def zone_id(account: CloudflareAccount, zone_name: str) -> str:
     if not isinstance(zones, list) or len(zones) != 1:
         raise SystemExit(f"Expected exactly one Cloudflare zone named {zone_name!r}.")
     return str(zones[0]["id"])
-
-
-def deploy_worker(
-    account: CloudflareAccount,
-    *,
-    script: str,
-    module: Path,
-    compatibility_date: str,
-    bindings: Sequence[Mapping[str, str]],
-) -> None:
-    """Upload ``module`` as the Worker ``script`` with ``bindings``, then close its workers.dev URL.
-
-    The workers.dev URL is closed on every deploy rather than once: it is a
-    per-script setting, and a Worker reachable there would serve every
-    release outside the declared hosts.
-    """
-    metadata = {
-        "main_module": module.name,
-        "compatibility_date": compatibility_date,
-        "bindings": list(bindings),
-        "observability": {"enabled": True},
-    }
-    files = {
-        "metadata": (None, json.dumps(metadata), "application/json"),
-        module.name: (module.name, module.read_bytes(), "application/javascript+module"),
-    }
-    base = f"/accounts/{account.account_id}/workers/scripts/{script}"
-    _call(account, "PUT", base, files=files)
-    _call(account, "POST", f"{base}/subdomain", json={"enabled": False, "previews_enabled": False})
-
-
-def worker_release(account: CloudflareAccount, *, script: str) -> str | None:
-    """Return the ``RELEASE_ID`` binding the deployed Worker carries, or ``None``."""
-    settings = _call(account, "GET", f"/accounts/{account.account_id}/workers/scripts/{script}/settings")
-    for binding in settings.get("bindings", []) if isinstance(settings, dict) else []:
-        if binding.get("name") == "RELEASE_ID":
-            return str(binding.get("text"))
-    return None
 
 
 def ensure_routes(account: CloudflareAccount, zone: str, routes: Sequence[WorkerRoute]) -> None:

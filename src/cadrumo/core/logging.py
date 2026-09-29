@@ -939,7 +939,8 @@ class _ConfigureOnFirstRecordHandler(logging.Handler):
     @override
     def emit(self, record: logging.LogRecord) -> None:
         root_logger = logging.getLogger()
-        position = root_logger.handlers.index(self) if self in root_logger.handlers else 0
+        walked = root_logger.handlers
+        position = walked.index(self) if self in walked else 0
         if record.levelno >= logging.WARNING and not (
             _configured or _configuration_deferred or type(self)._configuring
         ):
@@ -954,10 +955,17 @@ class _ConfigureOnFirstRecordHandler(logging.Handler):
             else:
                 _pending_records.append(record)
             return
-        # ``Logger.callHandlers`` is still walking the root's handler list,
-        # which configuration replaced in place; the walk resumes after this
-        # handler's former position, so only the handlers before it are ours.
-        for handler in root_logger.handlers[: position + 1]:
+        # ``Logger.callHandlers`` is still walking the handler list it read
+        # before configuration ran. Where removing a handler mutates that list
+        # in place, the walk resumes over the configured handlers after this
+        # handler's former position, so only the ones up to it are ours. Where
+        # removal replaces the list instead (CPython 3.13.15 and 3.14.7 onward,
+        # gh-79366), the walk continues over the old list and reaches none of
+        # them, so all of them are ours; forwarding only the prefix there drops
+        # the very record that triggered configuration from the log file.
+        configured = root_logger.handlers
+        ours = configured if configured is not walked else configured[: position + 1]
+        for handler in ours:
             if record.levelno >= handler.level:
                 handler.handle(record)
 

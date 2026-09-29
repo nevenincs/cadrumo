@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from functools import lru_cache
@@ -283,6 +284,8 @@ def _calculate_303_from_observations(
     filing_year: int,
     period: str,
     observations: tuple[IvaLedgerObservation, ...],
+    compensacion_pendiente_anteriores: Decimal = Decimal("0"),
+    operator_inputs: Mapping[CasillaId, Decimal] | None = None,
 ) -> RegistryCalculationResult:
     # Stays on ``compiled_bundled_authority()`` (unlike the M390 helper below):
     # M303 snapshots include the compiled annual-Orden authority, and the
@@ -290,13 +293,26 @@ def _calculate_303_from_observations(
     # projection -- bypassing it via ``load_registry_tree`` would silently
     # produce a partial snapshot rather than a scoped one.
     snapshot = compiled_bundled_authority().snapshot("303", filing_year=filing_year, period=period)
+    declared_binding_ids = {binding.id for binding in snapshot.revision.bindings}
+    # Profile-sourced pins apply only where the edition declares the binding;
+    # an edition that keeps the box as operator input has nothing to pin.
+    profile_pins = {
+        binding_id: value
+        for binding_id, value in (
+            ("modelo-303-compensacion-pendiente-anteriores", compensacion_pendiente_anteriores),
+            ("modelo-303-autoconsumo-promotor-base", Decimal("0")),
+            ("modelo-303-profile-state-attribution-ratio", Decimal("100")),
+        )
+        if binding_id in declared_binding_ids
+    }
     binding_values = {
-        "modelo-303-compensacion-pendiente-anteriores": Decimal("0"),
-        "modelo-303-autoconsumo-promotor-base": Decimal("0"),
-        "modelo-303-profile-state-attribution-ratio": Decimal("100"),
+        **profile_pins,
         **resolve_ledger_iva_aggregation_binding_values(snapshot.revision, observations),
     }
-    inputs = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
+    inputs = {
+        **resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
+        **(operator_inputs or {}),
+    }
     return calculate_registry_snapshot(
         snapshot,
         inputs=inputs,
@@ -330,6 +346,7 @@ def _calculate_390_from_observations_and_303_filings(
     filing_year: int,
     observations: tuple[IvaLedgerObservation, ...],
     quarterly_results: dict[str, RegistryCalculationResult],
+    operator_inputs: Mapping[CasillaId, Decimal] | None = None,
 ) -> RegistryCalculationResult:
     snapshot = compiled_bundled_authority().snapshot(
         "390",
@@ -398,7 +415,10 @@ def _calculate_390_from_observations_and_303_filings(
         **annual_partition_values,
         **_empty_register_bienes_inversion_binding_values(snapshot.revision),
     }
-    inputs = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
+    inputs = {
+        **resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
+        **(operator_inputs or {}),
+    }
     return calculate_registry_snapshot(
         snapshot,
         inputs=inputs,

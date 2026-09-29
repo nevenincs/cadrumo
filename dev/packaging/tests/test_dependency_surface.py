@@ -31,7 +31,7 @@ def test_dependency_surface_summary_names_runtime_optional_registry() -> None:
     summary = _summary()
 
     assert summary["ok"] is True
-    assert summary["registry_extras"] == ["anthropic", "browser", "google", "llm", "ofx"]
+    assert summary["registry_extras"] == ["anthropic", "browser", "google", "llm", "ofx", "pdf"]
     assert summary["project_dependency_count"] > _MINIMUM_PROJECT_DEPENDENCIES, summary
     assert summary["optional_dependency_count"] >= len(summary["registry_extras"])
     assert summary["dev_only_dependency_count"] > _MINIMUM_DEV_ONLY_DEPENDENCIES, summary
@@ -49,7 +49,7 @@ def test_dependency_surface_cli_json_contract() -> None:
     assert result.returncode == 0, result.stderr
     payload = json.loads(result.stdout)
     assert payload["ok"] is True
-    assert payload["registry_extras"] == ["anthropic", "browser", "google", "llm", "ofx"]
+    assert payload["registry_extras"] == ["anthropic", "browser", "google", "llm", "ofx", "pdf"]
     assert payload["project_dependency_count"] > _MINIMUM_PROJECT_DEPENDENCIES, payload
     # Split from a chained comparison, which read as one claim but carried a
     # `> 0` floor inside it that was easy to miss.

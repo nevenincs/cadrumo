@@ -99,27 +99,25 @@ def _taxonomy_vocabulary() -> frozenset[str]:
     )
 
 
-def _docstring_nodes(tree: ast.AST) -> set[int]:
-    """Return the ``id()`` of every string constant serving as a docstring.
+def _docstring_constant(node: ast.AST) -> ast.Constant | None:
+    """Return the string constant serving as ``node``'s docstring, if it has one.
 
     A module naming a vocabulary word inside its own docstring -- to explain
     why a location is or is not governed, as this very module does -- must not
     read as a hand-typed location. Collected structurally, the same way the
     provenance and liveness gates do it, rather than by an allowlist entry.
     """
-    found: set[int] = set()
-    for node in ast.walk(tree):
-        if not isinstance(node, ast.Module | ast.ClassDef | ast.FunctionDef | ast.AsyncFunctionDef):
-            continue
-        body = node.body
-        if (
-            body
-            and isinstance(body[0], ast.Expr)
-            and isinstance(body[0].value, ast.Constant)
-            and isinstance(body[0].value.value, str)
-        ):
-            found.add(id(body[0].value))
-    return found
+    if not isinstance(node, ast.Module | ast.ClassDef | ast.FunctionDef | ast.AsyncFunctionDef):
+        return None
+    body = node.body
+    if (
+        body
+        and isinstance(body[0], ast.Expr)
+        and isinstance(body[0].value, ast.Constant)
+        and isinstance(body[0].value.value, str)
+    ):
+        return body[0].value
+    return None
 
 
 def _function_spans(tree: ast.AST) -> list[tuple[int, int, str]]:
@@ -233,37 +231,39 @@ def _flatten_div_chain(node: ast.expr) -> list[ast.expr]:
     return [node]
 
 
-def _outermost_div_nodes(tree: ast.AST) -> list[ast.BinOp]:
-    """Return each ``/`` chain's outermost node, so a chain is counted once.
-
-    A nested ``BinOp`` chain visits every sub-expression under ``ast.walk``;
-    without this, a five-hop chain would be inspected five times, once per
-    intermediate node, each time seeing a different, truncated slice of it.
-    """
-    parents: dict[ast.AST, ast.AST] = {}
-    for node in ast.walk(tree):
-        for child in ast.iter_child_nodes(node):
-            parents[child] = node
-    tops: list[ast.BinOp] = []
-    for node in ast.walk(tree):
-        if not (isinstance(node, ast.BinOp) and isinstance(node.op, ast.Div)):
-            continue
-        parent = parents.get(node)
-        if isinstance(parent, ast.BinOp) and isinstance(parent.op, ast.Div) and parent.left is node:
-            continue
-        tops.append(node)
-    return tops
-
-
 def chain_sites(module: str, tree: ast.AST) -> tuple[ChainSite, ...]:
     """Return every ``/``-join or ``.joinpath()`` chain naming 2+ taxonomy segments.
 
     A pure function over a display name and a parsed tree, so the
     discrimination tests can hand it synthetic source and prove each shape
     fires or does not.
+
+    One walk collects everything the answer needs, because the scan covers
+    every package module and each extra walk cost about as much as the rest of
+    the unit lane's slowest test. A chain is counted once, at its outermost
+    ``/``: a node that is the left operand of another ``/`` is part of that
+    longer chain. A module holding fewer than two vocabulary strings cannot
+    chain two of them, so it is answered without the rest of the work.
     """
     vocabulary = _taxonomy_vocabulary()
-    docstrings = _docstring_nodes(tree)
+    docstrings: set[int] = set()
+    chained_left: set[int] = set()
+    divisions: list[ast.BinOp] = []
+    joins: list[ast.Call] = []
+    governed = 0
+    for node in ast.walk(tree):
+        docstring = _docstring_constant(node)
+        if docstring is not None:
+            docstrings.add(id(docstring))
+        elif isinstance(node, ast.BinOp) and isinstance(node.op, ast.Div):
+            divisions.append(node)
+            chained_left.add(id(node.left))
+        elif isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr in _JOIN_METHODS:
+            joins.append(node)
+        elif isinstance(node, ast.Constant) and isinstance(node.value, str) and node.value in vocabulary:
+            governed += 1
+    if governed < 2:
+        return ()
     spans = _function_spans(tree)
     sites: list[ChainSite] = []
 
@@ -279,19 +279,20 @@ def chain_sites(module: str, tree: ast.AST) -> tuple[ChainSite, ...]:
                 found.append(operand.value)
         return tuple(found)
 
-    for top in _outermost_div_nodes(tree):
+    for top in divisions:
+        if id(top) in chained_left:
+            continue
         operands = _flatten_div_chain(top)
         segments = _literal_segments(operands)
         if len(segments) >= 2:
             scope = _enclosing_scope(top.lineno, spans)
             sites.append(ChainSite(module=module, function=scope, lineno=top.lineno, segments=segments))
 
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr in _JOIN_METHODS:
-            segments = _literal_segments(list(node.args))
-            if len(segments) >= 2:
-                scope = _enclosing_scope(node.lineno, spans)
-                sites.append(ChainSite(module=module, function=scope, lineno=node.lineno, segments=segments))
+    for node in joins:
+        segments = _literal_segments(list(node.args))
+        if len(segments) >= 2:
+            scope = _enclosing_scope(node.lineno, spans)
+            sites.append(ChainSite(module=module, function=scope, lineno=node.lineno, segments=segments))
 
     return tuple(sites)
 

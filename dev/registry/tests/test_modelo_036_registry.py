@@ -8,6 +8,7 @@ import pytest
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.domain.calculations.registry.tests.legal_text import spanish_date
 
 from ..conformance.registry_schema_support import (
     committed_modelo as _committed_modelo,
@@ -15,6 +16,7 @@ from ..conformance.registry_schema_support import (
 from ..conformance.registry_schema_support import (
     committed_snapshot as _committed_snapshot,
 )
+from .authored_edition_support import legal_text_match
 from .profile_schema_support import committed_registry_validator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
@@ -42,7 +44,7 @@ def test_modelo_036_validator_accepts_committed_definition() -> None:
     committed_registry_validator(catalogues).validate_modelo(modelo)
 
 
-def test_modelo_036_metadata_matches_orden_eha_1274_2007_and_hac_1526_2024() -> None:
+def test_modelo_036_metadata_matches_its_approving_and_amending_ordenes() -> None:
     modelo, _ = _load_modelo_036()
     assert modelo.tax_domain == "censo"
     assert modelo.cadence == "ad_hoc"
@@ -56,11 +58,18 @@ def test_modelo_036_metadata_matches_orden_eha_1274_2007_and_hac_1526_2024() -> 
     assert "aeat-dr-036-2025" in modelo.source_refs
 
 
-def test_modelo_036_revision_starts_at_2025_02_03() -> None:
+# The day Orden HAC/1526/2024 (disposicion final unica) makes the amended census
+# forms applicable, read from the provision's own text.
+_AMENDED_FORMS_APPLY_FROM = spanish_date(
+    *legal_text_match("orden-hac-1526-2024:df-unica", r"entrara en vigor el dia (\d+) de (\w+) de (\d{4})").groups()
+)
+
+
+def test_modelo_036_revision_starts_when_the_amending_orden_applies() -> None:
     modelo, _ = _load_modelo_036()
-    revision = modelo.revisions["2025-02-03-y-siguientes"]
-    assert revision.valid_from == date(2025, 2, 3)
-    assert revision.period_selector.year_from == 2025
+    revision = modelo.revisions[f"{_AMENDED_FORMS_APPLY_FROM.isoformat()}-y-siguientes"]
+    assert revision.valid_from == _AMENDED_FORMS_APPLY_FROM
+    assert revision.period_selector.year_from == _AMENDED_FORMS_APPLY_FROM.year
     assert set(revision.period_selector.periods) == {"alta", "modificacion", "baja"}
     assert revision.orden_aplicabilidad == (
         "orden-eha-1274-2007:art-1",

@@ -23,6 +23,7 @@ from ....core.payment_election import PaymentElection
 from ....core.period import Period, PeriodError
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....core.refund_election import RefundElection
+from ....core.resources.bundled_data import bundled_path
 from ....core.result_disposition import ResultDisposition
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....domain.bienes_inversion.register import (
@@ -928,8 +929,8 @@ def test_m303_filing_facts_resolver_refuses_non_official_period_before_producer_
         )
 
 
-def test_real_2026_dp30301_source_pins_a16_a30_lexical_domains() -> None:
-    """The official 2026 design pins the A16-A30 lexical domains verbatim.
+def test_real_open_ended_design_dp30301_source_pins_a16_a30_lexical_domains() -> None:
+    """The official open-ended design pins the A16-A30 lexical domains verbatim.
 
     This case once also asserted that A29, the non-zero annual volume marker,
     had NO producer key. That pin was written while the box was unmodelled and
@@ -940,11 +941,16 @@ def test_real_2026_dp30301_source_pins_a16_a30_lexical_domains() -> None:
     about the same box disagreed, and the newer one is the one with the
     grounding, so the stale assertion is gone rather than the producer.
     """
-    source = (
-        Path(__file__).parents[3]
-        / "_data/corpus/aeat_official/disenos_registro/modelo_303/files"
-        / "01-303-ejercicio-2026-y-siguientes-actualizado-28-01-26-378-kb-xlsx.xlsx"
-    )
+    # The open-ended Modelo 303 revision's endpoint design, found by its pinned bytes.
+    with bundled_indexed_authority().operation() as operation:
+        directory = operation.modelo_directory("303")
+        open_ended = next(revision for revision in directory.revisions if revision.valid_to is None)
+        (design,) = (
+            source
+            for source in (operation.source_reference(ref) for ref in directory.endpoint_source_ids(open_ended.id))
+            if source.sha256 == _M303_2026_IR_SHA256
+        )
+    source = bundled_path(*design.corpus_path.split("/"))
     extracted = Path(f"{source}.extracted.json")
     assert sha256(source.read_bytes()).hexdigest() == _M303_2026_IR_SHA256
     payload = json.loads(extracted.read_text(encoding="utf-8"))

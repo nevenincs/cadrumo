@@ -40,8 +40,19 @@ from ._synthetic_locale_fixtures import (
     _synthetic_locale_scope,
     _write_test_label,
 )
+from .authored_edition_support import authored_revisions
+from .profile_schema_support import committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_SUPPORT = committed_supported_filing_years()
+# The first authored Modelo 100 edition that carries the descendant/ascendant family
+# fields its XML dictionary publishes.
+_FAMILY_FIELD_FIRST_EDITION = next(
+    revision.valid_from.year
+    for revision in authored_revisions("100")
+    if any(c.id == "ANOASDLG" for c in revision.casillas)
+)
 
 _TEST_CASILLA_ID: CasillaId = validated_casilla_id("test_casilla", surface="_TEST_CASILLA_ID")
 
@@ -815,7 +826,7 @@ class TestTypoTwinWarning:
             assert casilla.semantic_role_cardinality == "intentional_singleton"
             assert casilla.semantic_role_cardinality_reason is not None
 
-    def test_m100_2024_2025_family_profile_roles_are_shared(self) -> None:
+    def test_m100_family_profile_roles_are_shared_across_editions(self) -> None:
         modelo = _bundled_modelo("100")
         casillas = {
             (revision.id, casilla.id): casilla
@@ -834,13 +845,18 @@ class TestTypoTwinWarning:
             ("FALLASDLG", "irpf_ascendiente_fecha_fallecimiento"),
         )
 
+        editions = tuple(
+            str(year)
+            for year in _SUPPORT.years
+            if year >= _FAMILY_FIELD_FIRST_EDITION and str(year) in modelo.revisions
+        )
+        assert len(editions) >= 2, editions
+
         for casilla_id, role in shared_roles:
-            casilla_2024 = casillas[("2024", casilla_id)]
-            casilla_2025 = casillas[("2025", casilla_id)]
-            assert casilla_2024.semantic_role == role
-            assert casilla_2025.semantic_role == role
-            assert casilla_2024.semantic_role_cardinality == "shared"
-            assert casilla_2025.semantic_role_cardinality == "shared"
+            for edition in editions:
+                casilla = casillas[(edition, casilla_id)]
+                assert casilla.semantic_role == role, (edition, casilla_id)
+                assert casilla.semantic_role_cardinality == "shared", (edition, casilla_id)
 
     def test_reviewed_singleton_markers_do_not_warn(self) -> None:
         reviewed_modelos = (

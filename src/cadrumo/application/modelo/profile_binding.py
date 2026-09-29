@@ -1565,7 +1565,8 @@ def _select_profile_bindings(snapshot: RegistrySnapshot) -> _ProfileBindingSelec
     censo event are registry-owned profile inputs even though neither is read
     by a numeric formula. Identity/export-layout bindings (NIF, display name,
     and similar) retain an export address and must not be pushed through a
-    calculation channel.
+    calculation channel: a bound text casilla reads them through
+    :func:`~application.modelo.profile_export_binding.resolve_profile_text_casilla_inputs`.
     """
     formula_consumed: set[BindingId] = set()
     formula_date_consumed: set[BindingId] = set()

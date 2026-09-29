@@ -28,6 +28,15 @@ _ALTERNATE_SCREEN = b"?1049h"
 """The control sequence a Textual session emits when it takes the terminal."""
 
 _STARTUP_GRACE_SECONDS = 45.0
+"""The longest a cold start may take to reach the terminal."""
+
+_SETTLE_SECONDS = 5.0
+"""How long a started session must then stay up.
+
+A delegation that raises on the way up does so while the app is being built
+and mounted, which is inside this window; waiting out the whole start-up grace
+after the terminal was already taken only spent it.
+"""
 
 _REPO_ROOT = Path(__file__).parents[5]
 
@@ -65,15 +74,24 @@ async def _run_module_async(*, timeout: float, root: Path) -> tuple[int | None, 
         raise RuntimeError("the TUI module process has no output pipe")
     received = bytearray()
 
+    # Read into a buffer this frame owns. Cancelling ``communicate()`` on a
+    # timeout discards whatever it had already read, which made a session that
+    # DID take the terminal look as if it had printed nothing.
+    async def drain_until_started() -> bool:
+        while chunk := await stream.read(4096):
+            received.extend(chunk)
+            if _ALTERNATE_SCREEN in received:
+                return True
+        return False
+
     async def drain() -> None:
-        # Read into a buffer this frame owns. Cancelling ``communicate()`` on
-        # the timeout discards whatever it had already read, which made a
-        # session that DID take the terminal look as if it had printed nothing.
         while chunk := await stream.read(4096):
             received.extend(chunk)
 
     try:
-        await asyncio.wait_for(drain(), timeout=timeout)
+        started = await asyncio.wait_for(drain_until_started(), timeout=timeout)
+        if started:
+            await asyncio.wait_for(drain(), timeout=_SETTLE_SECONDS)
     except TimeoutError:
         process.kill()
         await process.wait()
@@ -87,9 +105,15 @@ def _run_module(*, timeout: float, root: Path) -> tuple[int | None, bytes]:
     return asyncio.run(_run_module_async(timeout=timeout, root=root))
 
 
-def test_module_execution_starts_a_session_rather_than_raising(tmp_path: Path) -> None:
+@pytest.fixture(scope="module")
+def module_run(tmp_path_factory: pytest.TempPathFactory) -> tuple[int | None, bytes]:
+    """One real execution of the module, read by every proof below."""
+    return _run_module(timeout=_STARTUP_GRACE_SECONDS, root=tmp_path_factory.mktemp("tui-module"))
+
+
+def test_module_execution_starts_a_session_rather_than_raising(module_run: tuple[int | None, bytes]) -> None:
     """The module runs a real full-screen session instead of failing on invocation."""
-    status, output = _run_module(timeout=_STARTUP_GRACE_SECONDS, root=tmp_path)
+    status, output = module_run
 
     assert status is None, (
         f"the session ended by itself with status {status}; a started TUI holds the terminal:\n"
@@ -100,9 +124,9 @@ def test_module_execution_starts_a_session_rather_than_raising(tmp_path: Path) -
     )
 
 
-def test_module_execution_reports_no_traceback(tmp_path: Path) -> None:
+def test_module_execution_reports_no_traceback(module_run: tuple[int | None, bytes]) -> None:
     """A delegation that resolves but raises on the way up leaves a traceback."""
-    _, output = _run_module(timeout=_STARTUP_GRACE_SECONDS, root=tmp_path)
+    _, output = module_run
     rendered = output.decode("utf-8", errors="replace")
 
     assert "Traceback (most recent call last)" not in rendered, rendered[:2000]

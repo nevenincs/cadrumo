@@ -17,6 +17,8 @@ from typing import override
 
 from keyring.backend import KeyringBackend
 
+from .explicit_keyring_selection import explicit_selection_priority
+
 CALL_TIME_REFUSING_KEYRING = f"{__name__}.CallTimeRefusingKeyring"
 
 
@@ -27,7 +29,7 @@ class CredentialManagerLogonSessionError(Exception):
 class CallTimeRefusingKeyring(KeyringBackend):
     """Passes the usability probe, then refuses each credential call with error 1312."""
 
-    priority = 1
+    priority = explicit_selection_priority(CALL_TIME_REFUSING_KEYRING)
 
     @override
     def get_password(self, service: str, username: str) -> str | None:

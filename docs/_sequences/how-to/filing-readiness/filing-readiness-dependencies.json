@@ -5473,6 +5473,358 @@
                 {
                   "filing_year": 2025,
                   "legal_refs": [
+                    "ley-37-1992:art-130",
+                    "ley-37-1992:art-131",
+                    "ley-37-1992:art-99",
+                    "orden-eha-3111-2009:art-1",
+                    "rd-1624-1992:art-71"
+                  ],
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-prev-303-compensaciones-reagp"
+                  ],
+                  "period": {
+                    "code": "1T",
+                    "filing_year": 2025
+                  },
+                  "required_source_casilla_ids": null,
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "42"
+                  ],
+                  "source_modelo": "303",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-dr-390-2022",
+                    "aeat-modelo-390-procedure",
+                    "boe-modelo-390-2009-form"
+                  ]
+                },
+                {
+                  "filing_year": 2025,
+                  "legal_refs": [
+                    "ley-37-1992:art-130",
+                    "ley-37-1992:art-131",
+                    "ley-37-1992:art-99",
+                    "orden-eha-3111-2009:art-1",
+                    "rd-1624-1992:art-71"
+                  ],
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-prev-303-compensaciones-reagp"
+                  ],
+                  "period": {
+                    "code": "2T",
+                    "filing_year": 2025
+                  },
+                  "required_source_casilla_ids": null,
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "42"
+                  ],
+                  "source_modelo": "303",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-dr-390-2022",
+                    "aeat-modelo-390-procedure",
+                    "boe-modelo-390-2009-form"
+                  ]
+                },
+                {
+                  "filing_year": 2025,
+                  "legal_refs": [
+                    "ley-37-1992:art-130",
+                    "ley-37-1992:art-131",
+                    "ley-37-1992:art-99",
+                    "orden-eha-3111-2009:art-1",
+                    "rd-1624-1992:art-71"
+                  ],
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-prev-303-compensaciones-reagp"
+                  ],
+                  "period": {
+                    "code": "3T",
+                    "filing_year": 2025
+                  },
+                  "required_source_casilla_ids": null,
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "42"
+                  ],
+                  "source_modelo": "303",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-dr-390-2022",
+                    "aeat-modelo-390-procedure",
+                    "boe-modelo-390-2009-form"
+                  ]
+                },
+                {
+                  "filing_year": 2025,
+                  "legal_refs": [
+                    "ley-37-1992:art-130",
+                    "ley-37-1992:art-131",
+                    "ley-37-1992:art-99",
+                    "orden-eha-3111-2009:art-1",
+                    "rd-1624-1992:art-71"
+                  ],
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-prev-303-compensaciones-reagp"
+                  ],
+                  "period": {
+                    "code": "4T",
+                    "filing_year": 2025
+                  },
+                  "required_source_casilla_ids": null,
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "42"
+                  ],
+                  "source_modelo": "303",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-dr-390-2022",
+                    "aeat-modelo-390-procedure",
+                    "boe-modelo-390-2009-form"
+                  ]
+                },
+                {
+                  "filing_year": 2025,
+                  "legal_refs": [
+                    "ley-37-1992:art-80",
+                    "ley-37-1992:art-99",
+                    "orden-eha-3111-2009:art-1",
+                    "rd-1624-1992:art-71"
+                  ],
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-prev-303-regularizacion-cuotas-art-80-cinco-5"
+                  ],
+                  "period": {
+                    "code": "1T",
+                    "filing_year": 2025
+                  },
+                  "required_source_casilla_ids": null,
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "76"
+                  ],
+                  "source_modelo": "303",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-dr-390-2022",
+                    "aeat-modelo-390-procedure",
+                    "boe-modelo-390-2009-form"
+                  ]
+                },
+                {
+                  "filing_year": 2025,
+                  "legal_refs": [
+                    "ley-37-1992:art-80",
+                    "ley-37-1992:art-99",
+                    "orden-eha-3111-2009:art-1",
+                    "rd-1624-1992:art-71"
+                  ],
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-prev-303-regularizacion-cuotas-art-80-cinco-5"
+                  ],
+                  "period": {
+                    "code": "2T",
+                    "filing_year": 2025
+                  },
+                  "required_source_casilla_ids": null,
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "76"
+                  ],
+                  "source_modelo": "303",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-dr-390-2022",
+                    "aeat-modelo-390-procedure",
+                    "boe-modelo-390-2009-form"
+                  ]
+                },
+                {
+                  "filing_year": 2025,
+                  "legal_refs": [
+                    "ley-37-1992:art-80",
+                    "ley-37-1992:art-99",
+                    "orden-eha-3111-2009:art-1",
+                    "rd-1624-1992:art-71"
+                  ],
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-prev-303-regularizacion-cuotas-art-80-cinco-5"
+                  ],
+                  "period": {
+                    "code": "3T",
+                    "filing_year": 2025
+                  },
+                  "required_source_casilla_ids": null,
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "76"
+                  ],
+                  "source_modelo": "303",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-dr-390-2022",
+                    "aeat-modelo-390-procedure",
+                    "boe-modelo-390-2009-form"
+                  ]
+                },
+                {
+                  "filing_year": 2025,
+                  "legal_refs": [
+                    "ley-37-1992:art-80",
+                    "ley-37-1992:art-99",
+                    "orden-eha-3111-2009:art-1",
+                    "rd-1624-1992:art-71"
+                  ],
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-prev-303-regularizacion-cuotas-art-80-cinco-5"
+                  ],
+                  "period": {
+                    "code": "4T",
+                    "filing_year": 2025
+                  },
+                  "required_source_casilla_ids": null,
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "76"
+                  ],
+                  "source_modelo": "303",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-dr-390-2022",
+                    "aeat-modelo-390-procedure",
+                    "boe-modelo-390-2009-form"
+                  ]
+                },
+                {
+                  "filing_year": 2025,
+                  "legal_refs": [
+                    "ley-37-1992:art-115",
+                    "ley-37-1992:art-99",
+                    "orden-eha-3111-2009:art-1",
+                    "rd-1624-1992:art-71"
+                  ],
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-prev-303-iva-importacion-aduana"
+                  ],
+                  "period": {
+                    "code": "1T",
+                    "filing_year": 2025
+                  },
+                  "required_source_casilla_ids": null,
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "77"
+                  ],
+                  "source_modelo": "303",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-dr-390-2022",
+                    "aeat-modelo-390-procedure",
+                    "boe-modelo-390-2009-form"
+                  ]
+                },
+                {
+                  "filing_year": 2025,
+                  "legal_refs": [
+                    "ley-37-1992:art-115",
+                    "ley-37-1992:art-99",
+                    "orden-eha-3111-2009:art-1",
+                    "rd-1624-1992:art-71"
+                  ],
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-prev-303-iva-importacion-aduana"
+                  ],
+                  "period": {
+                    "code": "2T",
+                    "filing_year": 2025
+                  },
+                  "required_source_casilla_ids": null,
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "77"
+                  ],
+                  "source_modelo": "303",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-dr-390-2022",
+                    "aeat-modelo-390-procedure",
+                    "boe-modelo-390-2009-form"
+                  ]
+                },
+                {
+                  "filing_year": 2025,
+                  "legal_refs": [
+                    "ley-37-1992:art-115",
+                    "ley-37-1992:art-99",
+                    "orden-eha-3111-2009:art-1",
+                    "rd-1624-1992:art-71"
+                  ],
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-prev-303-iva-importacion-aduana"
+                  ],
+                  "period": {
+                    "code": "3T",
+                    "filing_year": 2025
+                  },
+                  "required_source_casilla_ids": null,
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "77"
+                  ],
+                  "source_modelo": "303",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-dr-390-2022",
+                    "aeat-modelo-390-procedure",
+                    "boe-modelo-390-2009-form"
+                  ]
+                },
+                {
+                  "filing_year": 2025,
+                  "legal_refs": [
+                    "ley-37-1992:art-115",
+                    "ley-37-1992:art-99",
+                    "orden-eha-3111-2009:art-1",
+                    "rd-1624-1992:art-71"
+                  ],
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-prev-303-iva-importacion-aduana"
+                  ],
+                  "period": {
+                    "code": "4T",
+                    "filing_year": 2025
+                  },
+                  "required_source_casilla_ids": null,
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "77"
+                  ],
+                  "source_modelo": "303",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-dr-390-2022",
+                    "aeat-modelo-390-procedure",
+                    "boe-modelo-390-2009-form"
+                  ]
+                },
+                {
+                  "filing_year": 2025,
+                  "legal_refs": [
                     "ley-37-1992:art-92",
                     "orden-eha-3111-2009:art-1",
                     "rd-1624-1992:art-71"
@@ -5811,7 +6163,7 @@
                   ]
                 }
               ],
-              "dependency_count": 12,
+              "dependency_count": 24,
               "source_modelos": [
                 "303"
               ],
@@ -6070,6 +6422,358 @@
                 {
                   "filing_year": 2025,
                   "legal_refs": [
+                    "ley-37-1992:art-130",
+                    "ley-37-1992:art-131",
+                    "ley-37-1992:art-99",
+                    "orden-eha-3111-2009:art-1",
+                    "rd-1624-1992:art-71"
+                  ],
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-prev-303-compensaciones-reagp"
+                  ],
+                  "period": {
+                    "code": "1T",
+                    "filing_year": 2025
+                  },
+                  "required_source_casilla_ids": null,
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "42"
+                  ],
+                  "source_modelo": "303",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-dr-390-2022",
+                    "aeat-modelo-390-procedure",
+                    "boe-modelo-390-2009-form"
+                  ]
+                },
+                {
+                  "filing_year": 2025,
+                  "legal_refs": [
+                    "ley-37-1992:art-130",
+                    "ley-37-1992:art-131",
+                    "ley-37-1992:art-99",
+                    "orden-eha-3111-2009:art-1",
+                    "rd-1624-1992:art-71"
+                  ],
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-prev-303-compensaciones-reagp"
+                  ],
+                  "period": {
+                    "code": "2T",
+                    "filing_year": 2025
+                  },
+                  "required_source_casilla_ids": null,
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "42"
+                  ],
+                  "source_modelo": "303",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-dr-390-2022",
+                    "aeat-modelo-390-procedure",
+                    "boe-modelo-390-2009-form"
+                  ]
+                },
+                {
+                  "filing_year": 2025,
+                  "legal_refs": [
+                    "ley-37-1992:art-130",
+                    "ley-37-1992:art-131",
+                    "ley-37-1992:art-99",
+                    "orden-eha-3111-2009:art-1",
+                    "rd-1624-1992:art-71"
+                  ],
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-prev-303-compensaciones-reagp"
+                  ],
+                  "period": {
+                    "code": "3T",
+                    "filing_year": 2025
+                  },
+                  "required_source_casilla_ids": null,
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "42"
+                  ],
+                  "source_modelo": "303",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-dr-390-2022",
+                    "aeat-modelo-390-procedure",
+                    "boe-modelo-390-2009-form"
+                  ]
+                },
+                {
+                  "filing_year": 2025,
+                  "legal_refs": [
+                    "ley-37-1992:art-130",
+                    "ley-37-1992:art-131",
+                    "ley-37-1992:art-99",
+                    "orden-eha-3111-2009:art-1",
+                    "rd-1624-1992:art-71"
+                  ],
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-prev-303-compensaciones-reagp"
+                  ],
+                  "period": {
+                    "code": "4T",
+                    "filing_year": 2025
+                  },
+                  "required_source_casilla_ids": null,
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "42"
+                  ],
+                  "source_modelo": "303",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-dr-390-2022",
+                    "aeat-modelo-390-procedure",
+                    "boe-modelo-390-2009-form"
+                  ]
+                },
+                {
+                  "filing_year": 2025,
+                  "legal_refs": [
+                    "ley-37-1992:art-80",
+                    "ley-37-1992:art-99",
+                    "orden-eha-3111-2009:art-1",
+                    "rd-1624-1992:art-71"
+                  ],
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-prev-303-regularizacion-cuotas-art-80-cinco-5"
+                  ],
+                  "period": {
+                    "code": "1T",
+                    "filing_year": 2025
+                  },
+                  "required_source_casilla_ids": null,
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "76"
+                  ],
+                  "source_modelo": "303",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-dr-390-2022",
+                    "aeat-modelo-390-procedure",
+                    "boe-modelo-390-2009-form"
+                  ]
+                },
+                {
+                  "filing_year": 2025,
+                  "legal_refs": [
+                    "ley-37-1992:art-80",
+                    "ley-37-1992:art-99",
+                    "orden-eha-3111-2009:art-1",
+                    "rd-1624-1992:art-71"
+                  ],
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-prev-303-regularizacion-cuotas-art-80-cinco-5"
+                  ],
+                  "period": {
+                    "code": "2T",
+                    "filing_year": 2025
+                  },
+                  "required_source_casilla_ids": null,
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "76"
+                  ],
+                  "source_modelo": "303",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-dr-390-2022",
+                    "aeat-modelo-390-procedure",
+                    "boe-modelo-390-2009-form"
+                  ]
+                },
+                {
+                  "filing_year": 2025,
+                  "legal_refs": [
+                    "ley-37-1992:art-80",
+                    "ley-37-1992:art-99",
+                    "orden-eha-3111-2009:art-1",
+                    "rd-1624-1992:art-71"
+                  ],
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-prev-303-regularizacion-cuotas-art-80-cinco-5"
+                  ],
+                  "period": {
+                    "code": "3T",
+                    "filing_year": 2025
+                  },
+                  "required_source_casilla_ids": null,
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "76"
+                  ],
+                  "source_modelo": "303",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-dr-390-2022",
+                    "aeat-modelo-390-procedure",
+                    "boe-modelo-390-2009-form"
+                  ]
+                },
+                {
+                  "filing_year": 2025,
+                  "legal_refs": [
+                    "ley-37-1992:art-80",
+                    "ley-37-1992:art-99",
+                    "orden-eha-3111-2009:art-1",
+                    "rd-1624-1992:art-71"
+                  ],
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-prev-303-regularizacion-cuotas-art-80-cinco-5"
+                  ],
+                  "period": {
+                    "code": "4T",
+                    "filing_year": 2025
+                  },
+                  "required_source_casilla_ids": null,
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "76"
+                  ],
+                  "source_modelo": "303",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-dr-390-2022",
+                    "aeat-modelo-390-procedure",
+                    "boe-modelo-390-2009-form"
+                  ]
+                },
+                {
+                  "filing_year": 2025,
+                  "legal_refs": [
+                    "ley-37-1992:art-115",
+                    "ley-37-1992:art-99",
+                    "orden-eha-3111-2009:art-1",
+                    "rd-1624-1992:art-71"
+                  ],
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-prev-303-iva-importacion-aduana"
+                  ],
+                  "period": {
+                    "code": "1T",
+                    "filing_year": 2025
+                  },
+                  "required_source_casilla_ids": null,
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "77"
+                  ],
+                  "source_modelo": "303",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-dr-390-2022",
+                    "aeat-modelo-390-procedure",
+                    "boe-modelo-390-2009-form"
+                  ]
+                },
+                {
+                  "filing_year": 2025,
+                  "legal_refs": [
+                    "ley-37-1992:art-115",
+                    "ley-37-1992:art-99",
+                    "orden-eha-3111-2009:art-1",
+                    "rd-1624-1992:art-71"
+                  ],
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-prev-303-iva-importacion-aduana"
+                  ],
+                  "period": {
+                    "code": "2T",
+                    "filing_year": 2025
+                  },
+                  "required_source_casilla_ids": null,
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "77"
+                  ],
+                  "source_modelo": "303",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-dr-390-2022",
+                    "aeat-modelo-390-procedure",
+                    "boe-modelo-390-2009-form"
+                  ]
+                },
+                {
+                  "filing_year": 2025,
+                  "legal_refs": [
+                    "ley-37-1992:art-115",
+                    "ley-37-1992:art-99",
+                    "orden-eha-3111-2009:art-1",
+                    "rd-1624-1992:art-71"
+                  ],
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-prev-303-iva-importacion-aduana"
+                  ],
+                  "period": {
+                    "code": "3T",
+                    "filing_year": 2025
+                  },
+                  "required_source_casilla_ids": null,
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "77"
+                  ],
+                  "source_modelo": "303",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-dr-390-2022",
+                    "aeat-modelo-390-procedure",
+                    "boe-modelo-390-2009-form"
+                  ]
+                },
+                {
+                  "filing_year": 2025,
+                  "legal_refs": [
+                    "ley-37-1992:art-115",
+                    "ley-37-1992:art-99",
+                    "orden-eha-3111-2009:art-1",
+                    "rd-1624-1992:art-71"
+                  ],
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-prev-303-iva-importacion-aduana"
+                  ],
+                  "period": {
+                    "code": "4T",
+                    "filing_year": 2025
+                  },
+                  "required_source_casilla_ids": null,
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "77"
+                  ],
+                  "source_modelo": "303",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-dr-390-2022",
+                    "aeat-modelo-390-procedure",
+                    "boe-modelo-390-2009-form"
+                  ]
+                },
+                {
+                  "filing_year": 2025,
+                  "legal_refs": [
                     "ley-37-1992:art-92",
                     "orden-eha-3111-2009:art-1",
                     "rd-1624-1992:art-71"
@@ -6408,7 +7112,7 @@
                   ]
                 }
               ],
-              "dependency_count": 12,
+              "dependency_count": 24,
               "source_modelos": [
                 "303"
               ],
@@ -6721,6 +7425,258 @@
                 },
                 "source_modelo": "303",
                 "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [
+                  "missing_observation",
+                  "missing_current_filing_record"
+                ],
+                "calculation_revision_id": null,
+                "clean": false,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2025,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "1T",
+                  "filing_year": 2025
+                },
+                "source_modelo": "303",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [
+                  "missing_observation",
+                  "missing_current_filing_record"
+                ],
+                "calculation_revision_id": null,
+                "clean": false,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2025,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "2T",
+                  "filing_year": 2025
+                },
+                "source_modelo": "303",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [
+                  "missing_observation",
+                  "missing_current_filing_record"
+                ],
+                "calculation_revision_id": null,
+                "clean": false,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2025,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "3T",
+                  "filing_year": 2025
+                },
+                "source_modelo": "303",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [
+                  "missing_observation",
+                  "missing_current_filing_record"
+                ],
+                "calculation_revision_id": null,
+                "clean": false,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2025,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "4T",
+                  "filing_year": 2025
+                },
+                "source_modelo": "303",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [
+                  "missing_observation",
+                  "missing_current_filing_record"
+                ],
+                "calculation_revision_id": null,
+                "clean": false,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2025,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "1T",
+                  "filing_year": 2025
+                },
+                "source_modelo": "303",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [
+                  "missing_observation",
+                  "missing_current_filing_record"
+                ],
+                "calculation_revision_id": null,
+                "clean": false,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2025,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "2T",
+                  "filing_year": 2025
+                },
+                "source_modelo": "303",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [
+                  "missing_observation",
+                  "missing_current_filing_record"
+                ],
+                "calculation_revision_id": null,
+                "clean": false,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2025,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "3T",
+                  "filing_year": 2025
+                },
+                "source_modelo": "303",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [
+                  "missing_observation",
+                  "missing_current_filing_record"
+                ],
+                "calculation_revision_id": null,
+                "clean": false,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2025,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "4T",
+                  "filing_year": 2025
+                },
+                "source_modelo": "303",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [
+                  "missing_observation",
+                  "missing_current_filing_record"
+                ],
+                "calculation_revision_id": null,
+                "clean": false,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2025,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "1T",
+                  "filing_year": 2025
+                },
+                "source_modelo": "303",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [
+                  "missing_observation",
+                  "missing_current_filing_record"
+                ],
+                "calculation_revision_id": null,
+                "clean": false,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2025,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "2T",
+                  "filing_year": 2025
+                },
+                "source_modelo": "303",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [
+                  "missing_observation",
+                  "missing_current_filing_record"
+                ],
+                "calculation_revision_id": null,
+                "clean": false,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2025,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "3T",
+                  "filing_year": 2025
+                },
+                "source_modelo": "303",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [
+                  "missing_observation",
+                  "missing_current_filing_record"
+                ],
+                "calculation_revision_id": null,
+                "clean": false,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2025,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "4T",
+                  "filing_year": 2025
+                },
+                "source_modelo": "303",
+                "unexpected_member_nifs": []
               }
             ],
             "requires_clean_state": true,
@@ -6735,6 +7691,358 @@
           "items": [
             {
               "dependencies": [
+                {
+                  "filing_year": 2025,
+                  "legal_refs": [
+                    "ley-37-1992:art-130",
+                    "ley-37-1992:art-131",
+                    "ley-37-1992:art-99",
+                    "orden-eha-3111-2009:art-1",
+                    "rd-1624-1992:art-71"
+                  ],
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-prev-303-compensaciones-reagp"
+                  ],
+                  "period": {
+                    "code": "1T",
+                    "filing_year": 2025
+                  },
+                  "required_source_casilla_ids": null,
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "42"
+                  ],
+                  "source_modelo": "303",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-dr-390-2022",
+                    "aeat-modelo-390-procedure",
+                    "boe-modelo-390-2009-form"
+                  ]
+                },
+                {
+                  "filing_year": 2025,
+                  "legal_refs": [
+                    "ley-37-1992:art-130",
+                    "ley-37-1992:art-131",
+                    "ley-37-1992:art-99",
+                    "orden-eha-3111-2009:art-1",
+                    "rd-1624-1992:art-71"
+                  ],
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-prev-303-compensaciones-reagp"
+                  ],
+                  "period": {
+                    "code": "2T",
+                    "filing_year": 2025
+                  },
+                  "required_source_casilla_ids": null,
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "42"
+                  ],
+                  "source_modelo": "303",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-dr-390-2022",
+                    "aeat-modelo-390-procedure",
+                    "boe-modelo-390-2009-form"
+                  ]
+                },
+                {
+                  "filing_year": 2025,
+                  "legal_refs": [
+                    "ley-37-1992:art-130",
+                    "ley-37-1992:art-131",
+                    "ley-37-1992:art-99",
+                    "orden-eha-3111-2009:art-1",
+                    "rd-1624-1992:art-71"
+                  ],
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-prev-303-compensaciones-reagp"
+                  ],
+                  "period": {
+                    "code": "3T",
+                    "filing_year": 2025
+                  },
+                  "required_source_casilla_ids": null,
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "42"
+                  ],
+                  "source_modelo": "303",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-dr-390-2022",
+                    "aeat-modelo-390-procedure",
+                    "boe-modelo-390-2009-form"
+                  ]
+                },
+                {
+                  "filing_year": 2025,
+                  "legal_refs": [
+                    "ley-37-1992:art-130",
+                    "ley-37-1992:art-131",
+                    "ley-37-1992:art-99",
+                    "orden-eha-3111-2009:art-1",
+                    "rd-1624-1992:art-71"
+                  ],
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-prev-303-compensaciones-reagp"
+                  ],
+                  "period": {
+                    "code": "4T",
+                    "filing_year": 2025
+                  },
+                  "required_source_casilla_ids": null,
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "42"
+                  ],
+                  "source_modelo": "303",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-dr-390-2022",
+                    "aeat-modelo-390-procedure",
+                    "boe-modelo-390-2009-form"
+                  ]
+                },
+                {
+                  "filing_year": 2025,
+                  "legal_refs": [
+                    "ley-37-1992:art-80",
+                    "ley-37-1992:art-99",
+                    "orden-eha-3111-2009:art-1",
+                    "rd-1624-1992:art-71"
+                  ],
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-prev-303-regularizacion-cuotas-art-80-cinco-5"
+                  ],
+                  "period": {
+                    "code": "1T",
+                    "filing_year": 2025
+                  },
+                  "required_source_casilla_ids": null,
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "76"
+                  ],
+                  "source_modelo": "303",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-dr-390-2022",
+                    "aeat-modelo-390-procedure",
+                    "boe-modelo-390-2009-form"
+                  ]
+                },
+                {
+                  "filing_year": 2025,
+                  "legal_refs": [
+                    "ley-37-1992:art-80",
+                    "ley-37-1992:art-99",
+                    "orden-eha-3111-2009:art-1",
+                    "rd-1624-1992:art-71"
+                  ],
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-prev-303-regularizacion-cuotas-art-80-cinco-5"
+                  ],
+                  "period": {
+                    "code": "2T",
+                    "filing_year": 2025
+                  },
+                  "required_source_casilla_ids": null,
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "76"
+                  ],
+                  "source_modelo": "303",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-dr-390-2022",
+                    "aeat-modelo-390-procedure",
+                    "boe-modelo-390-2009-form"
+                  ]
+                },
+                {
+                  "filing_year": 2025,
+                  "legal_refs": [
+                    "ley-37-1992:art-80",
+                    "ley-37-1992:art-99",
+                    "orden-eha-3111-2009:art-1",
+                    "rd-1624-1992:art-71"
+                  ],
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-prev-303-regularizacion-cuotas-art-80-cinco-5"
+                  ],
+                  "period": {
+                    "code": "3T",
+                    "filing_year": 2025
+                  },
+                  "required_source_casilla_ids": null,
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "76"
+                  ],
+                  "source_modelo": "303",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-dr-390-2022",
+                    "aeat-modelo-390-procedure",
+                    "boe-modelo-390-2009-form"
+                  ]
+                },
+                {
+                  "filing_year": 2025,
+                  "legal_refs": [
+                    "ley-37-1992:art-80",
+                    "ley-37-1992:art-99",
+                    "orden-eha-3111-2009:art-1",
+                    "rd-1624-1992:art-71"
+                  ],
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-prev-303-regularizacion-cuotas-art-80-cinco-5"
+                  ],
+                  "period": {
+                    "code": "4T",
+                    "filing_year": 2025
+                  },
+                  "required_source_casilla_ids": null,
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "76"
+                  ],
+                  "source_modelo": "303",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-dr-390-2022",
+                    "aeat-modelo-390-procedure",
+                    "boe-modelo-390-2009-form"
+                  ]
+                },
+                {
+                  "filing_year": 2025,
+                  "legal_refs": [
+                    "ley-37-1992:art-115",
+                    "ley-37-1992:art-99",
+                    "orden-eha-3111-2009:art-1",
+                    "rd-1624-1992:art-71"
+                  ],
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-prev-303-iva-importacion-aduana"
+                  ],
+                  "period": {
+                    "code": "1T",
+                    "filing_year": 2025
+                  },
+                  "required_source_casilla_ids": null,
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "77"
+                  ],
+                  "source_modelo": "303",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-dr-390-2022",
+                    "aeat-modelo-390-procedure",
+                    "boe-modelo-390-2009-form"
+                  ]
+                },
+                {
+                  "filing_year": 2025,
+                  "legal_refs": [
+                    "ley-37-1992:art-115",
+                    "ley-37-1992:art-99",
+                    "orden-eha-3111-2009:art-1",
+                    "rd-1624-1992:art-71"
+                  ],
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-prev-303-iva-importacion-aduana"
+                  ],
+                  "period": {
+                    "code": "2T",
+                    "filing_year": 2025
+                  },
+                  "required_source_casilla_ids": null,
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "77"
+                  ],
+                  "source_modelo": "303",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-dr-390-2022",
+                    "aeat-modelo-390-procedure",
+                    "boe-modelo-390-2009-form"
+                  ]
+                },
+                {
+                  "filing_year": 2025,
+                  "legal_refs": [
+                    "ley-37-1992:art-115",
+                    "ley-37-1992:art-99",
+                    "orden-eha-3111-2009:art-1",
+                    "rd-1624-1992:art-71"
+                  ],
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-prev-303-iva-importacion-aduana"
+                  ],
+                  "period": {
+                    "code": "3T",
+                    "filing_year": 2025
+                  },
+                  "required_source_casilla_ids": null,
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "77"
+                  ],
+                  "source_modelo": "303",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-dr-390-2022",
+                    "aeat-modelo-390-procedure",
+                    "boe-modelo-390-2009-form"
+                  ]
+                },
+                {
+                  "filing_year": 2025,
+                  "legal_refs": [
+                    "ley-37-1992:art-115",
+                    "ley-37-1992:art-99",
+                    "orden-eha-3111-2009:art-1",
+                    "rd-1624-1992:art-71"
+                  ],
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-prev-303-iva-importacion-aduana"
+                  ],
+                  "period": {
+                    "code": "4T",
+                    "filing_year": 2025
+                  },
+                  "required_source_casilla_ids": null,
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "77"
+                  ],
+                  "source_modelo": "303",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-dr-390-2022",
+                    "aeat-modelo-390-procedure",
+                    "boe-modelo-390-2009-form"
+                  ]
+                },
                 {
                   "filing_year": 2025,
                   "legal_refs": [
@@ -7076,7 +8384,7 @@
                   ]
                 }
               ],
-              "dependency_count": 12,
+              "dependency_count": 24,
               "source_modelos": [
                 "303"
               ],

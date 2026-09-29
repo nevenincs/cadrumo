@@ -36,6 +36,7 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema_formula import BracketEntry, ParameterDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import manual_editions_printing
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -161,52 +162,61 @@ def test_no_stale_accumulated_cuota_exemptions() -> None:
 # that must appear in the bundled AEAT manual cannot be satisfied that way.
 # ---------------------------------------------------------------------------
 
+#: The one bundled AEAT Manual practico de Renta edition that prints the Region de
+#: Murcia scale Decreto-ley 4/2022 enacts, with its top-rung cuota and rate.
+(_MURCIA_DECRETO_LEY_EXERCISE,) = manual_editions_printing("renta", "Región de Murcia", "8.716,67", "22,70")
+
 #: Cuota integra at 60.000,00 EUR, as enacted by Decreto-ley 4/2022 de la Region
 #: de Murcia. See the _KNOWN_BREAKS entry for why it exceeds what the tranches
 #: beneath it accumulate.
-_MURCIA_2022_TOP_RUNG_CUOTA = Decimal("8716.67")
+_MURCIA_DECRETO_LEY_TOP_RUNG_CUOTA = Decimal("8716.67")
 
 #: The same figure in the Spanish decimal notation the AEAT manual prints.
-_MURCIA_2022_TOP_RUNG_CUOTA_AS_PRINTED = "8.716,67"
+_MURCIA_DECRETO_LEY_TOP_RUNG_CUOTA_AS_PRINTED = "8.716,67"
 
 #: Marginal rate above 60.000,00 EUR: "el tipo del 22,70 %".
-_MURCIA_2022_TOP_RUNG_RATE = Decimal("0.227")
+_MURCIA_DECRETO_LEY_TOP_RUNG_RATE = Decimal("0.227")
 
 
-def _murcia_2022_top_rung() -> BracketEntry:
-    """Return the open top bracket of the Region de Murcia 2022 autonomic scale."""
+def _murcia_decreto_ley_top_rung() -> BracketEntry:
+    """Return the open top bracket of the Region de Murcia Decreto-ley autonomic scale."""
     for modelo in compiled_bundled_authority().modelos:
         for revision_id, revision in modelo.revisions.items():
-            if str(revision_id) != "2022":
+            if str(revision_id) != str(_MURCIA_DECRETO_LEY_EXERCISE):
                 continue
             for parameter in getattr(revision, "parameters", ()) or ():
                 if parameter.id != "renta-escala-autonomica-murcia-base-general":
                     continue
                 top = max(parameter.brackets or (), key=lambda entry: entry.lower_bound)
                 return top
-    raise AssertionError("renta-escala-autonomica-murcia-base-general [2022] is not in the registry")
+    raise AssertionError(
+        f"renta-escala-autonomica-murcia-base-general [{_MURCIA_DECRETO_LEY_EXERCISE}] is not in the registry"
+    )
 
 
-def test_murcia_2022_top_rung_matches_the_enacted_cuota() -> None:
+def test_murcia_decreto_ley_top_rung_matches_the_enacted_cuota() -> None:
     """The registry must state the cuota the norm enacts, not the one its tranches imply."""
-    top = _murcia_2022_top_rung()
+    top = _murcia_decreto_ley_top_rung()
 
     assert top.lower_bound == Decimal("60000.00")
-    assert top.fixed_addition == _MURCIA_2022_TOP_RUNG_CUOTA
-    assert top.marginal_rate == _MURCIA_2022_TOP_RUNG_RATE
+    assert top.fixed_addition == _MURCIA_DECRETO_LEY_TOP_RUNG_CUOTA
+    assert top.marginal_rate == _MURCIA_DECRETO_LEY_TOP_RUNG_RATE
 
 
-def test_murcia_2022_top_rung_cuota_is_printed_in_the_bundled_aeat_manual() -> None:
+def test_murcia_decreto_ley_top_rung_cuota_is_printed_in_the_bundled_aeat_manual() -> None:
     """Anchor the pin: the figure must be readable in the bundled source, not merely asserted.
 
-    The AEAT Manual practico Renta 2022 reproduces the Region de Murcia scale and
+    The AEAT Manual practico Renta for that exercise reproduces the Region de Murcia scale and
     its closing sentence at page 979. Without this half, the test above is a
     literal a future author can edit to match a wrong registry change.
     """
-    manual = bundled_path("corpus", "manuals", "renta", "2022", "part1") / "source.pdf.extracted.md"
+    manual = (
+        bundled_path("corpus", "manuals", "renta", str(_MURCIA_DECRETO_LEY_EXERCISE), "part1")
+        / "source.pdf.extracted.md"
+    )
     body = manual.read_text(encoding="utf-8")
 
-    assert _MURCIA_2022_TOP_RUNG_CUOTA_AS_PRINTED in body
+    assert _MURCIA_DECRETO_LEY_TOP_RUNG_CUOTA_AS_PRINTED in body
     assert "Región de Murcia" in body
     assert "22,70" in body
 

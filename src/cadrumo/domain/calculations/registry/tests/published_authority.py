@@ -19,7 +19,7 @@ from datetime import date
 from .....core.authority_grade import RegistryAuthorityGrade
 from ....user_profile.schema import ProfileSchemaDefinition
 from ..authority import PinnedAuthorityOperation, bundled_indexed_authority
-from ..authority_artifact import ProfileCreateContext
+from ..authority_artifact import AuthorityGenerationPin, ProfileCreateContext
 from ..facts.resolution import GovernedFactQuery, ResolvedGovernedFact
 from ..governed_fact_scope import governed_facts_in_scope
 from ..ids import RevisionId
@@ -125,14 +125,25 @@ def published_revision(modelo_id: str, revision_id: str) -> ModeloRevision:
         return operation.revision_with_export_layouts(modelo_id, revision_id)
 
 
+_DEFINITIONS_BY_GENERATION: dict[AuthorityGenerationPin, tuple[ModeloDefinition, ...]] = {}
+"""The views for the one generation last leased; registry models are frozen."""
+
+
 def published_revision_definitions() -> tuple[ModeloDefinition, ...]:
     """Return one single-revision modelo view per published revision.
 
     Each view is materialized by its modelo directory, so revision-identity
     references resolve against every revision the directory declares.  A
     modelo with several revisions therefore appears once per revision.
+
+    Kept per leased generation: every call decodes every revision with its
+    export layouts, callers ask once per casilla or parameter, and the answer
+    cannot change while the generation does not.
     """
     with bundled_indexed_authority().operation() as operation:
+        cached = _DEFINITIONS_BY_GENERATION.get(operation.generation)
+        if cached is not None:
+            return cached
         definitions: list[ModeloDefinition] = []
         for modelo_id in operation.modelo_ids():
             directory = operation.modelo_directory(modelo_id)
@@ -140,7 +151,9 @@ def published_revision_definitions() -> tuple[ModeloDefinition, ...]:
                 directory.materialize(operation.revision_with_export_layouts(modelo_id, str(metadata.id)))
                 for metadata in directory.revisions
             )
-        return tuple(definitions)
+        _DEFINITIONS_BY_GENERATION.clear()
+        _DEFINITIONS_BY_GENERATION[operation.generation] = tuple(definitions)
+        return _DEFINITIONS_BY_GENERATION[operation.generation]
 
 
 def published_selected_revision_id(modelo_id: str, *, filing_year: int, period: str) -> str:

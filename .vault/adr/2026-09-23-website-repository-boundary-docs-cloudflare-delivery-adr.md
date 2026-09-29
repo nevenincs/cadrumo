@@ -1,17 +1,17 @@
 ---
 tags:
-  - '#adr'
-  - '#website-repository-boundary'
+  - "#adr"
+  - "#website-repository-boundary"
 date: '2026-09-23'
-modified: '2026-09-23'
-body_schema: 'body-v2'
-body_hash: 'sha256:846239829f9292ae4b378a9418321824dda9e300c48d75dde7ac18ee46164cc3'
 related:
   - "[[2026-08-23-website-repository-boundary-adr]]"
   - "[[2026-09-22-website-repository-boundary-docs-deployment-ownership-reference]]"
+superseded_by: '2026-09-27-website-repository-boundary-docs-static-delivery-adr'
+modified: '2026-09-27'
+body_schema: 'body-v2'
+body_hash: 'sha256:6aaef4bd7769ffdb05e8e540e0938eb866336ba02c59ea6aa6afe5047d9882d8'
 ---
-
-# `website-repository-boundary` adr: `documentation delivery moves to Cloudflare R2 and a Worker` | (**status:** `accepted`)
+# `website-repository-boundary` adr: `documentation delivery moves to Cloudflare R2 and a Worker` | (**status:** `superseded`)
 
 ## Problem Statement
 

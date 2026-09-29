@@ -141,7 +141,7 @@ def _dispatch_m200_calculate_positive_resultado_zero_base(runtime_profile: TestR
 
     The binding/relation set mirrors
     ``test_modelo_calculation_through_real_cli.py::
-    test_modelo_200_micro_empresa_pyme_cuota_2024`` (a confirmed-passing real-CLI
+    test_modelo_200_micro_empresa_pyme_cuota_under_the_first_dt44_scale`` (a confirmed-passing real-CLI
     M200 dispatch), minus the base-chain casilla overrides that test supplies for
     ``00501``/correcciones/reserva/BIN - this scenario deliberately omits them.
     ``modelo-200-profile-new-entity-flag`` is a profile-sourced boolean-channel

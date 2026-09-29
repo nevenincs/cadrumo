@@ -23,6 +23,7 @@ from typing import TYPE_CHECKING
 
 from ....core.casilla_id import CasillaId
 from .errors import RegistryValidationError
+from .schema_scalars import registry_scalar_value_type
 from .schema_surfaces import CasillaDefinition
 
 if TYPE_CHECKING:
@@ -65,6 +66,18 @@ def casillas_by_id(revision: ModeloRevision) -> dict[CasillaId, CasillaDefinitio
             context={"revision_id": revision.id, "casilla_ids": ",".join(duplicate_ids)},
         )
     return {casilla.id: casilla for casilla in revision.casillas}
+
+
+def text_family_casilla_ids(casillas: Iterable[CasillaDefinition]) -> frozenset[CasillaId]:
+    """Return the casillas whose declared data type belongs to the text family.
+
+    Membership is read from the registry's scalar taxonomy, never from a literal
+    ``data_type`` spelling, so every text family (``nif``, ``name``,
+    ``period_code`` and the rest, not only generic ``text``) is covered. A text
+    casilla has no numeric reading: it is either populated with validated text
+    or absent, and zero is not one of its states.
+    """
+    return frozenset(casilla.id for casilla in casillas if registry_scalar_value_type(casilla.data_type) == "str")
 
 
 def declared_casilla_ids(revision: ModeloRevision) -> frozenset[CasillaId]:

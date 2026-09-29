@@ -87,6 +87,7 @@ from cadrumo.core.prior_domiciliation_election import PriorDomiciliationElection
 from cadrumo.core.result_disposition import ResultDisposition
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.tests.authored_editions import split_exercise_revisions
 from cadrumo.domain.contribuyente.entity_type import EntityType, LegalEntityForm
 from cadrumo.domain.deadlines.models import (
     IVARegime,
@@ -156,11 +157,14 @@ def bucket_id() -> str:
 
 _YEAR = 2025
 _TAX_ID = "12345678Z"
-_IRENE_YEAR = 2024
+# Irene SL files the exercise whose Modelo 303 design the registry splits mid-year, so
+# the annual Modelo 390 folds quarters calculated under both designs.
+_IRENE_YEAR = split_exercise_revisions("303")[0].valid_from.year
 _IRENE_TAX_ID = "B12345674"
 _T0 = datetime(2025, 1, 10, 10, 0, tzinfo=UTC)
 _FILE_AT = datetime(2025, 4, 10, 12, 0, tzinfo=UTC)
-_IRENE_FILE_AT = datetime(2026, 7, 1, 12, 0, tzinfo=UTC)
+# Her local filings land well after every quarter and the annual summary fell due.
+_IRENE_FILE_AT = datetime(_IRENE_YEAR + 2, 7, 1, 12, 0, tzinfo=UTC)
 
 _QUARTER_ORDER = ("1T", "2T", "3T", "4T")
 _IVA_RATE = Decimal("0.21")
@@ -758,10 +762,10 @@ def test_persisted_m303_ledger_revision_verifies_and_exports(
                 output_path=output_path,
                 actor="operator",
                 prior_domiciliation_election=PriorDomiciliationElection.KEEP,
-                product_software_identity=_product_software_identity(),
             ),
             workflow_profile=workflow_profile(),
             export_ports=modelo_export_ports_for_test(
+                product_software_identity=_product_software_identity(),
                 bucket_id=_BUCKET_ID,
                 taxpayer_tax_id=_TAX_ID,
                 secure_objects=secure_objects,
@@ -822,10 +826,10 @@ def _non_official_local_chain_advisory_periods(report: VerificationReport) -> se
     return periods
 
 
-def test_irene_sl_2024_local_m303_files_support_m390_verify_and_annual_export(
+def test_irene_sl_local_m303_files_support_m390_verify_and_annual_export(
     secure_objects: SecureObjectRepository, tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
-    """Irene SL: 2024 M303 late local FILE chain feeds M390 without claiming AEAT acceptance.
+    """Irene SL: a late local M303 FILE chain feeds M390 without claiming AEAT acceptance.
 
     This is the persona path that direct observation seeding did not cover:
     calculate -> verify -> local file for each closed/overdue M303 quarter,
@@ -956,10 +960,10 @@ def test_irene_sl_2024_local_m303_files_support_m390_verify_and_annual_export(
                 calculation_revision_id=annual.calculation_revision_id,
                 output_path=annual_output,
                 actor="irene",
-                product_software_identity=_product_software_identity(),
             ),
             workflow_profile=workflow_profile,
             export_ports=modelo_export_ports_for_test(
+                product_software_identity=_product_software_identity(),
                 bucket_id=_BUCKET_ID,
                 taxpayer_tax_id=_IRENE_TAX_ID,
                 secure_objects=secure_objects,

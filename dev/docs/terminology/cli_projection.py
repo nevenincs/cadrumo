@@ -35,6 +35,7 @@ import subprocess
 import sys
 import textwrap
 from dataclasses import dataclass
+from functools import lru_cache
 from typing import TypedDict, cast
 
 from pydantic import Field
@@ -302,6 +303,7 @@ def _coerce_param_payload(raw_param: object) -> _ParamPayload:
 # ---------------------------------------------------------------------------
 
 
+@lru_cache(maxsize=1)
 def project_cli_search_records() -> tuple[
     tuple[CliSurfaceRecord, ...],
     tuple[CliOptionRecord, ...],
@@ -313,6 +315,13 @@ def project_cli_search_records() -> tuple[
     ca / hu) in language-pinned subprocesses and merges the four passes into
     one record per command and one record per option, each carrying its
     four-language help.
+
+    Memoised for the process: the command specifications are code, so they
+    cannot change while it runs, and four subprocess walks per caller is the
+    single most expensive projection the search corpus needs. ``lru_cache``
+    never records a raised call, so a walk that fails -- the failure mode the
+    Pagefind injector reports rather than swallows -- is retried by the next
+    caller instead of becoming a sticky skip.
 
     The Spanish pass is the structural authority: the command and option
     inventory (paths, families, option names, required flags) is taken from

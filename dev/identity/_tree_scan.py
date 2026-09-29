@@ -95,6 +95,7 @@ from typing import Final
 
 from dev._paths import UTF_8
 from dev.sanitizer.residual_identity import ResidualKind, checksum_valid_spans, identity_authority_scope
+from dev.source_tree import is_nested_repository
 from dev.source_tree import repository_files as _visible_repository_files
 
 _UTF_8: Final[str] = UTF_8
@@ -381,6 +382,12 @@ def _raw_relative_paths(repo_root: Path) -> list[str]:
     every developer's verdict depend on which caches happen to exist locally.
     Pruning happens at the directory boundary so a skipped tree is never opened
     at all, matching the file-level check in :func:`repository_files` below.
+
+    A nested repository -- a linked worktree or clone that a tool parked inside
+    this checkout -- is pruned as well. Its files are another repository's
+    content: git refuses to stage anything inside it, so none of them is one
+    force-add from this repository's history, and walking a whole second
+    checkout doubled the sweep on a machine that had two.
     """
     found: list[str] = []
 
@@ -402,8 +409,9 @@ def _raw_relative_paths(repo_root: Path) -> list[str]:
                 continue
             relative = f"{base}/{entry.name}" if base else entry.name
             if entry.is_dir(follow_symlinks=False):
-                if unenumerated_reason(f"{relative}/") is None:
-                    visit(Path(entry.path), relative)
+                child = Path(entry.path)
+                if unenumerated_reason(f"{relative}/") is None and not is_nested_repository(child):
+                    visit(child, relative)
             else:
                 found.append(relative)
 
