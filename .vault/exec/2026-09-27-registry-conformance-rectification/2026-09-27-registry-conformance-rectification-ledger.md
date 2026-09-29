@@ -5,7 +5,7 @@ tags:
 date: '2026-09-27'
 modified: '2026-09-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:fe5faaabdf68af6275039617949e60d1aeda68e7cadb45d4bb4419ed49b7cc08'
+body_hash: 'sha256:41b418118cf20388d187aff4049ed6c069a4f7c89c27c4acb7e43b4d59e65e58'
 related:
   - "[[2026-09-27-registry-conformance-rectification-plan]]"
 ---
@@ -166,6 +166,33 @@ related:
 - `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/180/revisions/2023-y-siguientes/live_cross_references/0001-declarations.toml`
 - `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/180/revisions/2023-y-siguientes/revision.toml`
 - `S11` `verify:` `edition_delta_migration 180 proof, apply, no-op; inspect_authoring_candidate publication_valid; pytest 180/123 set 331 passed` -> `pass`
+- `S11` `A` `dev/registry/tests/test_modelo_182_donor_surface_across_editions.py`
+- `S11` `A` `dev/registry/tests/test_modelo_184_filing_surface_across_supported_years.py`
+- `S11` `A` `src/cadrumo/_data/registry/aeat/modelos/182/revisions/2024/bindings/0001-declarations.toml`
+- `S11` `A` `src/cadrumo/_data/registry/aeat/modelos/182/revisions/2024/constructs/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/182/revisions/2024/revision.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/182/revisions/2025/bindings/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/182/revisions/2025/constructs/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/182/revisions/2025/revision.toml`
+- `S11` `A` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2022/applicability/0001-declarations.toml`
+- `S11` `A` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2022/application_links/0001-declarations.toml`
+- `S11` `A` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2022/bindings/0001-declarations.toml`
+- `S11` `A` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2022/casillas/0001-declarations.toml`
+- `S11` `A` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2022/constructs/0001-declarations.toml`
+- `S11` `A` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2022/extraction_profiles/0001-declarations.toml`
+- `S11` `A` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2022/filing_schedules/0001-declarations.toml`
+- `S11` `A` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2022/live_cross_references/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2022/revision.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2023-2024/applicability/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2023-2024/application_links/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2023-2024/bindings/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2023-2024/casillas/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2023-2024/constructs/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2023-2024/extraction_profiles/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2023-2024/filing_schedules/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2023-2024/live_cross_references/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2023-2024/revision.toml`
+- `S11` `verify:` `edition_delta_migration 184/182 proof and drop-restatement no-op; inspect_authoring_candidate publication_valid; pytest 184/182 set 925 passed, 4 failed on host keyring (WinVaultKeyring 1312), identical on untouched 349` -> `pass`
 
 ## Notes
 
@@ -179,3 +206,4 @@ related:
 - `S12` The ruling list is returned to the operator in the session report rather than persisted, as the brief directs.
 - `S11` Partial: closed-window re-keying only. Late authoring in 180, 303, 131, 193, 190, 184, 123, 202, 222, 151, 182, 210, 390 and the low items, and the whole-family restatements under explicit roots, remain open; Modelo 200's 2024 rows in its 2025-y-siguientes edition are returned for ruling.
 - `S11` 180 type-2 surface authored at 2019-2022 (2014 design governs 2022); 2022 perceptor count now counts type-2 records per that design; 123, 190 and 193 candidates all genuinely new on later designs, no change
+- `S11` 184 filing surface authored at 2022 (2023 design differs only by two HFP/1284/2023 fields); 182 donor bindings and construct at 2024; modelo-184-member-row-reduccion held on 2023-2024 until the legal catalogue carries 2022 redactions of ley-35-2006 arts 23 and 32; 184/2022 and 182/2024 review text awaits re-review
