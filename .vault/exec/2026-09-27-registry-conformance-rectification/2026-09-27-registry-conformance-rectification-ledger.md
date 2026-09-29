@@ -5,7 +5,7 @@ tags:
 date: '2026-09-27'
 modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:6fd3994a0ff0e7b5b82b71dc14d5e38f414d100c1e5142df55a53925993481bc'
+body_hash: 'sha256:d13bb1e8d210b763d4cd8a1ea92460eb56ce5328e21879fb5f66afac5221d673'
 related:
   - "[[2026-09-27-registry-conformance-rectification-plan]]"
 ---
@@ -284,6 +284,25 @@ related:
 - `S22` `M` `src/cadrumo/locales/hu/common.yml`
 - `S22` `M` `src/cadrumo/locales/hu/errors.yml`
 - `S22` `verify:` `aggregation, TUI withholding and core errors 1210 passed; two-defect CLI test en and es; check-symbol-usage finding for project_received_invoice_retencion gone` -> `pass`
+- `S11` `A` `dev/registry/tests/test_modelo_296_edition_design_citations_across_supported_years.py`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-y-siguientes/applicability/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-y-siguientes/application_links/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-y-siguientes/bindings/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-y-siguientes/casillas/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-y-siguientes/completeness_manifest/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-y-siguientes/constructs/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-y-siguientes/dependency_classifications/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-y-siguientes/filing_schedules/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-y-siguientes/projection_endpoints/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-y-siguientes/revision.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-y-siguientes/verification_expectations/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-y-siguientes/verification_predicates/0001-declarations.toml`
+- `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-y-siguientes/workbook_parity_refs/0001-declarations.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/308/revisions/2011-julio-2015/revision.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/308/revisions/2016-2018/revision.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/308/revisions/2019-y-siguientes/revision.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/604/revisions/2024-y-siguientes/revision.toml`
+- `S11` `verify:` `296 converter proof, apply and no-op; candidate inspection publication_valid for 308, 216, 296, 604; hydration and 1612 locale labels unchanged; pytest 485 passed` -> `pass`
 
 ## Notes
 
@@ -301,3 +320,4 @@ related:
 - `S11` 303 2022 carries printed-box projections, results, bindings and predicates; 2023 transitional rates, simplified-regime endpoints and later boxes kept as genuinely new; box 69 omits 108 from 2024 (separate grounding needed); m349 reconciliation years, gated total-cuota at 2022 and casilla 18 rate for 2022 left for ruling
 - `S11` 131/2026 explicit root reuses 2025 storage (192 to 10 stated members); late-authoring candidates genuinely new or unevidenced; 2022-2023 modulos engine blocked on legal catalogue entries (orden-hfp-1335-2021 and orden-hfp-1172-2022 DA and Anexo II instructions) owned by P05.S17; 2026 parameter rows close at 2026-12-31 and are restated
 - `S11` 202 INCN binding authored at 2019-2022 (every design prints the 6M flag); cuota-base relation kept at 2025 because its source box sits on DP200014 before 2023; 222/2025 root reuses 2024 non-structural families; its 18% modality row inherits the open 2023 row
+- `S11` 296/2024 root reuses 2023 storage (124 to 56 stated); 308 roots already stored by baseline, stale cause tokens dropped as false; 604 root reason corrected, storage reuse deferred to the converter fix; 216 unchanged; all late-authoring candidates genuinely new

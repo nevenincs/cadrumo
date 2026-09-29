@@ -10,7 +10,7 @@ related:
   - '[[2026-09-21-retenciones-workflow-observation-payment-contract-adr]]'
 modified: '2026-09-29'
 body_schema: body-v2
-body_hash: 'sha256:13b3a4a06e17b4d733a0a9deb93d0700d9dc890b2bfa2b582589bddb40e0a266'
+body_hash: 'sha256:04a3f7a579ad8cffa0a93f821033069f40c8af3166016fc16b5b3d0b1edabc9b'
 ---
 
 # `registry-conformance-rectification` plan
@@ -45,6 +45,7 @@ Rulings, 2026-09-29. Basis: the operator delegated the returned rulings to this 
 - 5 (F2 and P1) is not ruled: its content is not in any persisted record.
 - Found in P04.S11: Modelo 131's 2026 parameter rows open like every other edition's, as P02.S07 set and the support declaration's horizon requires, keying only the annual values such as the general reduction; its 2022 and 2023 modulos engine is authored once the modulos orden provisions are catalogued (P05.S26).
 - Found in P04.S11: Modelo 190 and 193 extraction profiles stay undeclared for 2022 and 2023 until a printed specimen is captured, since the record design describes the file, not the PDF; the 2024 Modelo 193 perceptor count follows its design and counts records, and the 2024 Modelo 190 relation to Modelo 111 is grounded in 2024 instructions or loses filing grade (P05.S25).
+- Found in P04.S11: an explicit root keeps storage reuse only where it is lossless and leaves an export layout a per-edition statement; a root whose reuse would fold its layout into one whole-layout override stays stated until the converter can keep it per edition (P05.S32, P05.S33). A cause token that is false is dropped rather than kept, as for the 308 roots. Modelo 296's stale earliest-authored note and Modelo 216's years before its 2024 design feed the support-range cells (P05.S19).
 
 ## Steps
 
@@ -103,6 +104,8 @@ Implement the rulings the operator delegated on 2026-09-29, each within the exis
 - [ ] `P05.S29` - Have the modelo aggregate report read the stored withholding rows the calculation reads for Modelos 180, 190 and 193, and name only the modelos that accept invoice evidence in its refusal; `src/cadrumo/entrypoints/cli/_modelo_aggregate_cli.py`.
 - [ ] `P05.S30` - Let the test-run command runner read lines longer than asyncio's default limit, so check-locales completes; `dev/test_runs/command.py`.
 - [ ] `P05.S31` - Move the raw identifier pattern out of the work report CLI module into its support owner, clearing the architecture boundary test; `src/cadrumo/entrypoints/cli/_modelo_work_report_cli.py`.
+- [ ] `P05.S32` - Fix the delta converter defects the rectification lanes found, each with a detector case: uncaused roots judged minimal, constraints carrying both source-ref forms, greedy positions over declared ones, a casilla baseline forcing a family baseline, export layouts folded into whole overrides, and out-of-period windows inherited by storage; `dev/registry/edition_delta_migration.py`.
+- [ ] `P05.S33` - Complete the Modelo 604 2024 and Modelo 308 2019 construct memberships from their designs, and re-measure 604's storage reuse once the converter keeps its layout per edition; `src/cadrumo/_data/registry/aeat/modelos/604/`.
 
 ## Parallelization
 
