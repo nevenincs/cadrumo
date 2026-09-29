@@ -956,9 +956,9 @@ def bundled_authority_descriptor_path() -> Path:
             descriptor. Fail-closed: every registry read follows this
             selector, so an absent authority cannot be answered partially.
     """
-    from ....core.config import load_settings
+    from ....core.config import configured_authority_root
 
-    authority_root = load_settings().cadrumo_authority_root
+    authority_root = configured_authority_root()
     if authority_root is not None:
         configured = authority_root / _BUNDLED_AUTHORITY_DESCRIPTOR_PARTS[-1]
         if not configured.is_file():

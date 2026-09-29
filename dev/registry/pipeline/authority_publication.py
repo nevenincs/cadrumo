@@ -589,9 +589,9 @@ def authority_publication_destination() -> Path:
             unconfigured destination is a refusal rather than a guess at the
             packaged location, which callers must treat as read-only.
     """
-    from cadrumo.core.config import load_settings
+    from cadrumo.core.config import configured_authority_root
 
-    configured = load_settings().cadrumo_authority_root
+    configured = configured_authority_root()
     if configured is None:
         raise RegistryValidationError(
             "authority publication has no destination; set CADRUMO_AUTHORITY_ROOT or pass an explicit destination"
