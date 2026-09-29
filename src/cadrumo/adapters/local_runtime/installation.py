@@ -20,6 +20,29 @@ from ..persistence.storage.custody.filesystem import (
 from ..persistence.storage.custody.filesystem_primitives import ensure_profile_custody_local_directory
 
 
+def _validated_identity(raw: bytes, *, os_owner_id: str, storage_identity: str) -> RuntimeInstallation:
+    parsed = json.loads(raw, object_pairs_hook=reject_duplicate_json_members, parse_constant=reject_json_constant)
+    identity = RuntimeInstallation.model_validate_json(canonical_json_bytes(parsed))
+    if identity.os_owner_id != os_owner_id or identity.storage_identity != storage_identity:
+        raise RuntimeRefusalError(RuntimeRefusalCode.ROOT_MISMATCH)
+    return identity
+
+
+def read_runtime_installation(*, storage_root: Path, os_owner_id: str, storage_identity: str) -> RuntimeInstallation:
+    """Read existing anchored identity without creating metadata or an owner lock."""
+    if not storage_root.is_absolute():
+        raise RuntimeRefusalError(RuntimeRefusalCode.ROOT_MISMATCH)
+    try:
+        raw = read_optional_profile_custody_local_record(
+            storage_root / ".runtime" / "installation.json", maximum_bytes=4096
+        )
+        if raw is None:
+            raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+        return _validated_identity(raw, os_owner_id=os_owner_id, storage_identity=storage_identity)
+    except (OSError, ProfileCustodyRecordError, ValueError, TypeError, RecursionError, ValidationError):
+        raise RuntimeRefusalError(RuntimeRefusalCode.ENDPOINT_UNTRUSTED) from None
+
+
 def runtime_installation(*, storage_root: Path, os_owner_id: str, storage_identity: str) -> RuntimeInstallation:
     """Read or atomically create an owner/root identity, refusing corrupt or displaced state.
 
@@ -44,10 +67,7 @@ def runtime_installation(*, storage_root: Path, os_owner_id: str, storage_identi
                     path, canonical_json_bytes(identity.model_dump(mode="json")), publish_once=True
                 )
             else:
-                parsed = json.loads(
-                    raw, object_pairs_hook=reject_duplicate_json_members, parse_constant=reject_json_constant
-                )
-                identity = RuntimeInstallation.model_validate_json(canonical_json_bytes(parsed))
+                identity = _validated_identity(raw, os_owner_id=os_owner_id, storage_identity=storage_identity)
             if identity.os_owner_id != os_owner_id or identity.storage_identity != storage_identity:
                 raise RuntimeRefusalError(RuntimeRefusalCode.ROOT_MISMATCH)
             return identity

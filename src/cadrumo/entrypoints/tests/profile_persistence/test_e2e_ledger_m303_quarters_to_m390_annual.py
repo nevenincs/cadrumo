@@ -250,6 +250,7 @@ _QUARTER_MONTH: dict[str, int] = {"1T": 2, "2T": 5, "3T": 8, "4T": 11}
 
 def _verification_ports(
     *,
+    operation: PinnedAuthorityOperation,
     work_repo: WorkUnitCatalogueRepository,
     calc_repo: CalculationRevisionCatalogueRepository,
     filing_repo: ModeloRecordCatalogueRepository,
@@ -259,7 +260,7 @@ def _verification_ports(
 ) -> VerificationRepositoryBundle:
     """Compose complete verification ports over the isolated repositories."""
     return replace(
-        build_verification_repository_bundle(_BUCKET_ID),
+        build_verification_repository_bundle(_BUCKET_ID, operation=operation),
         work_unit=work_repo,
         calculation=calc_repo,
         filing=filing_repo,
@@ -728,6 +729,7 @@ def test_persisted_m303_ledger_revision_verifies_and_exports(
             revision.calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             verification_repositories=_verification_ports(
+                operation=operation,
                 work_repo=wu_repo,
                 calc_repo=cr_repo,
                 filing_repo=filing_repo,
@@ -873,6 +875,7 @@ def test_irene_sl_2024_local_m303_files_support_m390_verify_and_annual_export(
                 revision.calculation_revision_id,
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
                 verification_repositories=_verification_ports(
+                    operation=operation,
                     work_repo=wu_repo,
                     calc_repo=cr_repo,
                     filing_repo=filing_repo,
@@ -892,6 +895,7 @@ def test_irene_sl_2024_local_m303_files_support_m390_verify_and_annual_export(
         with bundled_indexed_authority().operation() as operation:
             filing = file_modelo_revision(
                 revision.calculation_revision_id,
+                approved_verification_report_id=report.verification_report_id,
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
                 actor="irene",
                 workflow_profile=workflow_profile,
@@ -907,7 +911,7 @@ def test_irene_sl_2024_local_m303_files_support_m390_verify_and_annual_export(
                 clock=_IRENE_FILE_AT,
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 operation=operation,
-            )
+            ).record
         assert filing.aeat_accepted is False
         assert filing.external_evidence is None
         stored_observation = observation_repo.load_observation("303", Period.from_year_and_code(_IRENE_YEAR, period))
@@ -931,6 +935,7 @@ def test_irene_sl_2024_local_m303_files_support_m390_verify_and_annual_export(
             annual.calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             verification_repositories=_verification_ports(
+                operation=operation,
                 work_repo=wu_repo,
                 calc_repo=cr_repo,
                 filing_repo=filing_repo,

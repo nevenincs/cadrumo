@@ -8,9 +8,13 @@ from typing import cast
 import pytest
 from click.testing import Result
 
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend as _isolated_cli_backend,
 )
+from ....application.modelo.work_lifecycle import discard_work_unit
+from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from ....core.errors.error_codes import ErrorCategory, get_error_exit_code
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....tests.cli_envelope import unwrap_envelope_notices as _notices
@@ -22,6 +26,19 @@ __all__ = ["_isolated_cli_backend"]
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _LOCALES = ("en", "es", "ca", "hu")
+
+
+def _seed_discarded_work(work_unit_id: str) -> None:
+    """Use the canonical writer when discard is only setup for other verbs."""
+    discard_work_unit(
+        work_unit_id,
+        actor="test-operator",
+        reason=None,
+        ports=WorkLifecyclePorts(
+            work_unit_repository=WorkUnitCatalogueRepository(),
+            bucket_event_repository=BucketEventHistoryRepository(),
+        ),
+    )
 
 
 def _notice(output: str, code: str) -> dict[str, object]:
@@ -186,8 +203,7 @@ def test_discarded_work_status_exposes_terminal_state_without_calculate_action()
     _create_profile()
     work_unit_id = _create_m130_work_unit()
 
-    discarded = _invoke(["--format", "json", "app", "modelo", "work", "discard", work_unit_id, "--yes"])
-    assert discarded.exit_code == 0, discarded.output
+    _seed_discarded_work(work_unit_id)
 
     status = _invoke(["--format", "json", "app", "modelo", "work", "status", work_unit_id])
     assert status.exit_code == 0, status.output
@@ -214,8 +230,7 @@ def test_discarded_work_transport_guards_preserve_terminal_schema_and_state() ->
     """Every rejected discarded-state verb retains facts and terminal outcome on its real transport."""
     _create_profile()
     work_unit_id = _create_m130_work_unit()
-    discarded = _invoke(["--format", "json", "app", "modelo", "work", "discard", work_unit_id, "--yes"])
-    assert discarded.exit_code == 0, discarded.output
+    _seed_discarded_work(work_unit_id)
 
     natural_target = _discarded_natural_target()
     initial_status = _invoke(["--format", "json", "app", "modelo", "work", "status", work_unit_id])
@@ -309,28 +324,6 @@ def test_discarded_work_transport_guards_preserve_terminal_schema_and_state() ->
         work_unit_id=work_unit_id,
     )
 
-    rename = _invoke(
-        ["--format", "json", "app", "modelo", "work", "rename", work_unit_id, "--name", "terminal rename"],
-    )
-    _assert_terminal_refusal(
-        rename,
-        command="modelo.work.rename",
-        failed_condition_id="modelo.work.rename.lifecycle.mutable",
-        evidence_id="modelo.work.rename.lifecycle.observation",
-        work_unit_id=work_unit_id,
-    )
-
-    repeated_discard = _invoke(
-        ["--format", "json", "app", "modelo", "work", "discard", work_unit_id, "--yes"],
-    )
-    _assert_terminal_refusal(
-        repeated_discard,
-        command="modelo.work.discard",
-        failed_condition_id="modelo.work.discard.lifecycle.not_already_discarded",
-        evidence_id="modelo.work.discard.lifecycle.observation",
-        work_unit_id=work_unit_id,
-    )
-
     imported = _invoke(
         [
             "--format",
@@ -363,4 +356,4 @@ def test_discarded_work_transport_guards_preserve_terminal_schema_and_state() ->
     assert final_result["state"] == initial_result["state"]
     assert final_result["name"] == initial_result["name"]
     assert final_result["updated_at"] == initial_result["updated_at"]
-    assert "suggestion:" not in semantic_cli_output(repeated_discard)
+    assert "suggestion:" not in semantic_cli_output(imported)

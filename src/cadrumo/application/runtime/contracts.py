@@ -39,6 +39,14 @@ class RuntimeRefusalError(CadrumoError):
         super().__init__(code.value)
 
 
+class RuntimeShutdownIncompleteError(RuntimeRefusalError):
+    """The runtime still owns work; its native listener must remain claimed."""
+
+    def __init__(self) -> None:
+        """Expose a fixed containment refusal without carrying private diagnostics."""
+        super().__init__(RuntimeRefusalCode.CONTAINMENT_UNAVAILABLE)
+
+
 class RuntimeClientHello(BaseModel):
     """Nonsecret expected installation cohort and canonical storage identity."""
 

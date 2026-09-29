@@ -43,7 +43,7 @@ from ...domain.modelos.verification_report import (
     VerificationCompletenessStatus,
 )
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
-from ._row_source_identity_replay import ModeloRowSourceFingerprint
+from .row_source_fingerprint import ModeloRowSourceFingerprint
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation

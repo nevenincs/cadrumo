@@ -32,6 +32,14 @@ Submodules
    cadrumo.adapters.persistence.storage.custody._recovery_secret_codec
    cadrumo.adapters.persistence.storage.custody.acceleration_receipt
    cadrumo.adapters.persistence.storage.custody.acceleration_receipt_crypto
+   cadrumo.adapters.persistence.storage.custody.automation_client_credentials
+   cadrumo.adapters.persistence.storage.custody.automation_crypto
+   cadrumo.adapters.persistence.storage.custody.automation_delivery
+   cadrumo.adapters.persistence.storage.custody.automation_profile
+   cadrumo.adapters.persistence.storage.custody.automation_records
+   cadrumo.adapters.persistence.storage.custody.automation_secret_store
+   cadrumo.adapters.persistence.storage.custody.automation_store
+   cadrumo.adapters.persistence.storage.custody.automation_store_composition
    cadrumo.adapters.persistence.storage.custody.capsule
    cadrumo.adapters.persistence.storage.custody.capsule_discovery
    cadrumo.adapters.persistence.storage.custody.capsule_records

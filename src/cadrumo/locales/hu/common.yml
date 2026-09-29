@@ -732,6 +732,7 @@ operation:
     refusal:
       cancellation_unavailable: A megszakítás most nem érhető el. Próbáld újra hamarosan.
       cancellation_unsupported: Ez a művelet az elindítása után nem szakítható meg.
+      detach_not_allowed: Ez a művelet nem választható le.
       operation_terminal: A művelet már befejeződött, nincs mit megszakítani.
       response_authority_unavailable: A választ most nem sikerült rögzíteni. Próbáld
         újra hamarosan.
@@ -741,9 +742,13 @@ operation:
       unknown_operation: A háttérrendszer már nem ismeri ezt a műveletet.
       unsupported_cancellation_version: Ez a verzió nem tudja megszakítani azt a műveletet.
         Frissítsd a Cadrumót.
+      unsupported_detach_version: Ez a verzió nem tudja leválasztani azt a műveletet.
+        Frissítsd az alkalmazást.
       unsupported_response_control_version: Ez a verzió nem tud válaszolni arra a
         műveletre. Frissítsd a Cadrumót.
     status:
+      access_unavailable: A művelethez való hozzáférés nem érhető el. Zárd be ezt
+        a nézetet, és szükség esetén jelentkezz be újra.
       running: Folyamatban
     terminal:
       cancelled: Megszakítva
@@ -1214,6 +1219,99 @@ tui:
       notifications: Értesítések
       overview: Áttekintés
       reconciliation: Egyeztetés
+  automation_decision:
+    access_lost: A profilhoz való hozzáférés megszűnt. A művelet ellenőrzéséhez jelentkezzen
+      be újra.
+    busy: Döntés rögzítése…
+    cancel: Mégse
+    completed: A döntés rögzítve.
+    confirm_approve: A megjelenített kérelem jóváhagyása
+    confirm_decline: A megjelenített kérelem elutasítása
+    consent: Kért hozzáférés
+    effect: Megfigyelt hatás
+    missing_selection: Válasszon ki egy kérelmet az áttekintéshez.
+    operation_id: Művelet
+    password: A profil jelenlegi jelszava
+    terminal_condition: Végállapot
+    title: Automatizálási kérelem áttekintése
+    unavailable: A döntést nem sikerült megerősíteni. Újrapróbálkozás előtt ellenőrizze
+      a műveletet.
+    unknown_effect: Ismeretlen; újrapróbálkozás előtt ellenőrizze a műveletet.
+  automation_inventory:
+    access_lost: Ez a profil-munkamenet már nem érhető el.
+    actions: Engedélyezett lépések
+    all_periods: Minden bevallási időszak
+    approve: Kérelem jóváhagyása
+    client: Kliens
+    close: Bezárás
+    decline: Kérelem elutasítása
+    delegation: Továbbadási jog
+    destination: Cél
+    details: Részletek
+    disclosures: Hozzáférhető adatok
+    empty: Nincs elem
+    expires: Lejárat
+    grant: Jogosultság
+    grant_expires: A jogosultság javasolt lejárata
+    grants: Jogosultságok
+    id: Azonosító
+    key_expires: A kulcs javasolt lejárata
+    keys: Kulcsok
+    kind: Típus
+    last_used: Utolsó használat
+    no_periods: Nincs bevallási időszak
+    not_applicable: Nem alkalmazható
+    operations: Műveletek
+    os_lock: Zárolt rendszeren engedélyezett
+    period_independent: Időszaktól független
+    periods: Időszakok
+    profile: Profil
+    refresh: Frissítés
+    requests: Kérelmek
+    review_digest: Felülvizsgálati kivonat
+    state: Állapot
+    target_grant: Céljogosultság
+    target_key: Célkulcs
+    title: Automatizált hozzáférés
+    unattended: Felügyelet nélküli
+    unavailable: Az automatizálási jogosultságok listája nem érhető el. Az újrapróbálkozáshoz
+      frissítse.
+  automation_request:
+    actions: Tevékenységek
+    capability_note: A felsorolt műveletek képességeket írnak le, nem az aktuális
+      rendelkezésre állást.
+    change_scope: Hatókör módosítása
+    complete: Jóváhagyva és befejezve
+    credential_reference: Meglévő védett hitelesítőadat-hivatkozás UUID-ja
+    declined: Elutasítva
+    delegation: Átruházás engedélyezése
+    disclosures: Kiadott adatok
+    enroll: Hozzáférés létrehozása
+    grant_expiry: Jogosultság lejárata (ISO dátum és idő)
+    invalid: Érvénytelen vagy nem elérhető kérelem
+    key_expiry: Kulcs lejárata (ISO dátum és idő)
+    kind: Kérelem típusa
+    operations: Műveletek
+    os_lock: Használat engedélyezése zárolt operációs rendszer mellett
+    period_add: Időszak hozzáadása
+    period_code: Időszakkód
+    period_independent: Időszaktól független műveletek engedélyezése
+    period_mode: Időszakok hatóköre
+    period_selected: Kiválasztott időszakok
+    period_year: Év
+    reference: Védett hitelesítőadat-hivatkozás
+    renew: Jogosultság megújítása
+    request_id: Kérelemazonosító
+    requested: Külön emberi felülvizsgálatra vár
+    review_digest: Felülvizsgálati ellenőrzőösszeg
+    rotate: Kulcs cseréje
+    submit: Beküldés felülvizsgálatra
+    target_grant: Meglévő jogosultság UUID-ja
+    target_key: Meglévő kulcs UUID-ja (csak kulcscsere)
+    title: API-hozzáférés kérése
+    unattended: Felügyelet nélküli használat engedélyezése
+    uncertain: Ismeretlen eredmény; őrizze meg a kérelem azonosítóját
+    waiting: Kérelem beküldése folyamatban
   declarations:
     availability:
       available: Elérhető
@@ -2073,8 +2171,26 @@ tui:
           újra az aktuális állapot megtekintéséhez.
       static_fallback: Csak az űrlap elrendezése látható. Az alábbiakban nem jelennek
         meg számított értékek.
+  restricted:
+    actions: 'Engedélyezett tevékenységek: {values}'
+    all_periods: Minden időszak
+    availability: 'Elérhetőség — tároló: {storage}; jogosultság: {authority}; szolgáltató:
+      {provider}'
+    change_user: Felhasználóváltás
+    close: Bezárás
+    grant: 'Engedély érvényes: {valid}; lejár: {expires_at}'
+    lock: Munkamenet zárolása
+    'no': Nem
+    none: Nincs
+    operations: 'Engedélyezett műveletek: {values}'
+    periods: 'Időszakok: {values}; időszaktól független munka: {independent}'
+    profile: 'Profil: {label} ({profile_id})'
+    session_expiry: 'A munkamenet lejár: {expires_at}'
+    title: Korlátozott API-munkamenet
+    'yes': Igen
   root:
     account:
+      access: Hozzáférés
       appearance: Megjelenés
       change_user: Felhasználóváltás
       default_profile: Fiók
@@ -2087,6 +2203,7 @@ tui:
       line: '{label} · {status}'
       line_with_expiry: '{label} · {status} · lejár: {expires_at}'
     account_help:
+      access: Munkamenetek és automatizálási hozzáférés kezelése
       appearance: Váltás a világos és a sötét megjelenés között
       change_user: Bejelentkezés egy másik profilba ezen a számítógépen
       language: Válaszd ki, milyen nyelven jelenjenek meg a profil oldalai
@@ -2094,6 +2211,7 @@ tui:
       profile: A profil adatainak áttekintése és szerkesztése
       sign_out: A profil munkamenetének lezárása és adatainak zárolása
     account_key:
+      access: Hozzáférés
       appearance: Téma
       change_user: Felhasználó
       language: Nyelv
@@ -2112,6 +2230,96 @@ tui:
         marad
     title: Cadrumo terminálmunkamenet
     updating: A munkaterület frissítése…
+  runtime_access:
+    access_lost: A profilhoz való hozzáférés nem érhető el. Jelentkezzen be újra.
+    busy: Feldolgozás…
+    close: Bezárás
+    completed: Befejezve.
+    deny_all: Minden automatizált hozzáférés visszavonása
+    deny_grant: Jogosultság visszavonása
+    deny_key: Kulcs visszavonása
+    deny_target: Cél UUID
+    invalid_grants: Adjon meg érvényes jogosultság-UUID-kat.
+    invalid_target: Adjon meg érvényes cél UUID-t.
+    lock_current: Munkamenet zárolása
+    lock_profile: Profil zárolása mindenhol
+    refresh: Frissítés
+    refused: A hozzáférést elutasították.
+    resume: Profil feloldása
+    resume_grants: Újraaktiválandó jogosultságok UUID-jai
+    resume_password: Profiljelszó
+    revoke_session: Munkamenet visszavonása
+    sessions: Munkamenetek
+    sessions_empty: Nincsenek aktuális munkamenetek.
+    title: Profilhozzáférés
+    view_automation: Automatizált hozzáférés megtekintése
+  runtime_login:
+    cancel: Mégse
+    credential_hint_api_key: Adja meg a kiválasztott profil kulcsát.
+    credential_hint_api_reference: A pontos kulcs beolvasása a védett helyi hitelesítőadat-tárolóból,
+      majd hitelesítés a helyi szolgáltatáshoz.
+    credential_hint_receipt: A profil védett bizonylatát használja; nem kell jelszót
+      vagy API-kulcsot megadni.
+    credential_label_api_key: API-kulcs
+    credential_label_api_reference: Hitelesítőadat-hivatkozás (UUID)
+    credential_label_password: Jelszó
+    credential_required: Adjon meg egy hitelesítő adatot.
+    method_api_key: API-kulcs
+    method_api_reference: Tárolt API-kulcs
+    method_label: Bejelentkezési mód
+    method_password: Jelszó
+    method_receipt: Folytatás védett bizonylattal
+    profile_label: Profil
+    progress: Bejelentkezés…
+    reference_invalid: Adjon meg érvényes hitelesítőadat-hivatkozási UUID-t.
+    refused: A bejelentkezés elutasítva.
+    submit: Bejelentkezés
+    title: Bejelentkezés egy profilba
+  runtime_management:
+    availability:
+      available: Elérhető
+      refused: Elutasítva
+      unavailable: Nem érhető el
+      unknown: Ismeretlen
+      unsupported: Nem támogatott
+    busy: A helyi futtatókörnyezet állapotának ellenőrzése…
+    disable: Kézi indítás
+    enable: Indítás bejelentkezéskor
+    kind:
+      linux_user_service: Linux felhasználói szolgáltatás
+      macos_agent: macOS indítóügynök
+      windows_task: Windows ütemezett feladat
+    labels:
+      binding_matches: Ehhez a telepítéshez tartozik
+      listener: Figyelő végpont
+      login_autostart: Bejelentkezéskor indul
+      manager_availability: Kezelő elérhetősége
+      manager_kind: Kezelő típusa
+      process_state: Folyamat állapota
+      provisioned: Kiépítve
+    listener:
+      draining: Leállás alatt
+      ready: Kész
+      refused: Elutasítva
+      unavailable: Nem érhető el
+      unknown: Ismeretlen
+    not_reported: Nincs adat
+    open: Futtatókörnyezet kezelése
+    open_help: A helyi futtatókörnyezet megtekintése, indítása és beállítása.
+    process:
+      running: Fut
+      starting: Indítás alatt
+      stopped: Leállítva
+      unknown: Ismeretlen
+    refused: A futtatókörnyezet állapotát nem sikerült megerősíteni.
+    start: Indítás
+    stop: Leállítás
+    stop_accepted: A leállítás elfogadva; a futtatókörnyezet leállóban van.
+    stop_cancel: Maradjon futásban
+    stop_confirm: Minden profil és feladat leállítása
+    stop_scope: Leállítja a megosztott futtatókörnyezetet minden profil és feladat
+      számára?
+    title: Helyi futtatókörnyezet kezelése
   search:
     action:
       classify_ledger: Főkönyv osztályozása

@@ -187,7 +187,7 @@ def quickfile(
         operator_probe_ports=operator_probe_ports(ctx),
         operator_scope_ports=operator_scope_ports(ctx),
         operation=operation,
-        verification_repositories=verification_repository_bundle_factory(ctx)(resolved_bucket),
+        verification_repositories=verification_repository_bundle_factory(ctx)(resolved_bucket, operation=operation),
         calculation_action_ports=calculation_ports,
         modelo_export_ports=modelo_export_ports_factory(ctx)(
             bucket_id=resolved_bucket,

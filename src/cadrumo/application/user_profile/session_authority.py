@@ -40,6 +40,7 @@ from .access_contracts import (
     Availability,
     OperationAccessPolicy,
     OperationAccessRequest,
+    OperationResponseScopeAllowed,
     ProfileAccessBinding,
     ProfileAccessState,
     ProfileAccessStatus,
@@ -47,10 +48,15 @@ from .access_contracts import (
     SessionState,
 )
 from .access_errors import ProfileAccessRefusedError
-from .access_policy import evaluate_operation_access, evaluate_session_authority, intersect_scopes
-from .access_projections import project_access_status
+from .access_policy import (
+    evaluate_operation_access,
+    evaluate_response_scope,
+    evaluate_session_authority,
+    intersect_scopes,
+)
+from .access_projections import PublicAccessSession, project_access_session, project_access_status
 from .automation_custody_port import AutomationCustodyError, AutomationCustodyPort, AutomationCustodySnapshot
-from .automation_enrollment import AutomationKeyIssuer
+from .automation_enrollment import AdministrationFacts, AutomationKeyIssuer
 from .automation_lifecycle import AutomationDenial, AutomationDenialKind
 from .login_session import ProfileLoginOutcome
 
@@ -458,39 +464,116 @@ class ProfileSessionAuthority:
         independently valid password sessions available.
         """
         with self.owner.admission_guard():
-            before = set(self._sessions)
-            for connection_id in {session.connection_id for session in self._sessions.values()}:
-                connected = {item.session_id for item in self._sessions.values() if item.connection_id == connection_id}
+            return self._revalidate_sessions_locked()
+
+    def _revalidate_sessions_locked(self) -> tuple[UUID, ...]:
+        """Run the one canonical lease sweep while the admission fence is held."""
+        before = set(self._sessions)
+        for connection_id in {session.connection_id for session in self._sessions.values()}:
+            connected = {item.session_id for item in self._sessions.values() if item.connection_id == connection_id}
+            try:
+                facts = self._facts(connection_id)
+            except AutomationCustodyError:
+                self._retire(connected)
+                continue
+            if isinstance(facts, AccessDenied):
+                self._retire(connected)
+                continue
+            current = tuple(item for item in self._sessions.values() if item.connection_id == connection_id)
+            snapshot = None
+            if any(item.kind is not SessionKind.HUMAN for item in current):
                 try:
-                    facts = self._facts(connection_id)
+                    observed = self._snapshot(facts)
+                    if not isinstance(observed, AccessDenied):
+                        snapshot = observed
                 except AutomationCustodyError:
-                    self._retire(connected)
+                    pass
+            for session in current:
+                if session.session_id not in self._sessions:
                     continue
-                if isinstance(facts, AccessDenied):
-                    self._retire(connected)
-                    continue
-                current = tuple(item for item in self._sessions.values() if item.connection_id == connection_id)
-                snapshot = None
-                if any(item.kind is not SessionKind.HUMAN for item in current):
-                    try:
-                        observed = self._snapshot(facts)
-                        if not isinstance(observed, AccessDenied):
-                            snapshot = observed
-                    except AutomationCustodyError:
-                        pass
-                for session in current:
-                    if session.session_id not in self._sessions:
-                        continue
-                    if session.kind is SessionKind.HUMAN:
-                        self._evaluate(session, facts, None, None)
-                    elif snapshot is None:
-                        self._retire({session.session_id})
-                    else:
-                        grant, key = self._records(snapshot, key_id=session.key_id, grant_id=session.grant_id)
-                        self._evaluate(session, facts, grant, key)
-            if self._pending_retirements:
-                self._retire(self._pending_retirements.copy())
-            return tuple(sorted(before - self._sessions.keys()))
+                if session.kind is SessionKind.HUMAN:
+                    self._evaluate(session, facts, None, None)
+                elif snapshot is None:
+                    self._retire({session.session_id})
+                else:
+                    grant, key = self._records(snapshot, key_id=session.key_id, grant_id=session.grant_id)
+                    self._evaluate(session, facts, grant, key)
+        if self._pending_retirements:
+            self._retire(self._pending_retirements.copy())
+        return tuple(sorted(before - self._sessions.keys()))
+
+    def session_inventory(self, *, connection_id: UUID, session_id: UUID) -> tuple[PublicAccessSession, ...]:
+        """Project all currently live leases only for the exact human owner.
+
+        IDs in this result are observation identities, never authority. The
+        lifecycle sweep and final caller check share one admission fence.
+        """
+        with self.owner.admission_guard():
+            self._human_administration_facts_locked(connection_id, session_id)
+            self._revalidate_sessions_locked()
+            self._human_administration_facts_locked(connection_id, session_id)
+            return tuple(
+                project_access_session(session)
+                for session in sorted(self._sessions.values(), key=lambda item: item.session_id)
+            )
+
+    def _current_operation_authority(
+        self, connection_id: UUID, session_id: UUID
+    ) -> tuple[SessionAuthorityFacts, AccessSession, AutomationGrant | None, ApiKeyRecord | None]:
+        """Reobserve authority only while the caller holds the admission guard."""
+        facts = self._facts(connection_id)
+        if isinstance(facts, AccessDenied):
+            raise ProfileAccessRefusedError(facts.code)
+        session = self._sessions.get(session_id)
+        if session is None:
+            raise ProfileAccessRefusedError(AccessDenialCode.AUTHENTICATION_REQUIRED)
+        grant, key = None, None
+        if session.kind is not SessionKind.HUMAN:
+            snapshot = self._snapshot(facts)
+            if isinstance(snapshot, AccessDenied):
+                self._retire({session_id})
+                raise ProfileAccessRefusedError(snapshot.code)
+            grant, key = self._records(snapshot, key_id=session.key_id, grant_id=session.grant_id)
+        current = self._evaluate(session, facts, grant, key)
+        if isinstance(current, AccessDenied):
+            raise ProfileAccessRefusedError(current.code)
+        return facts, session, grant, key
+
+    def automation_request_session(self, *, connection_id: UUID, session_id: UUID) -> AccessSession:
+        """Resolve an exact root-key lease for an inactive grant-change request.
+
+        This grants no administrative authority. The caller holds the same
+        admission fence through request creation and rechecks before delivery.
+        Human consent and fresh password proof still own every activation.
+        """
+        with self.owner.admission_guard():
+            _facts, session, grant, key = self._current_operation_authority(connection_id, session_id)
+            if session.kind is not SessionKind.API_KEY or session.parent_session_id is not None:
+                raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+            if grant is None or key is None:
+                raise ProfileAccessRefusedError(AccessDenialCode.AUTHENTICATION_REQUIRED)
+            return session
+
+    def human_administration_facts(self, *, connection_id: UUID, session_id: UUID) -> AdministrationFacts:
+        """Resolve fresh human facts from live leases, never from frontend identities.
+
+        Administration owners hold this same admission guard through their
+        complete read or publication. A returned snapshot alone is no permit.
+        """
+        with self.owner.admission_guard():
+            return self._human_administration_facts_locked(connection_id, session_id)
+
+    def _human_administration_facts_locked(self, connection_id: UUID, session_id: UUID) -> AdministrationFacts:
+        """Check exact human authority under the caller's existing guard."""
+        facts, session, _, _ = self._current_operation_authority(connection_id, session_id)
+        if session.kind is not SessionKind.HUMAN or session.originating_login_id is None:
+            raise ProfileAccessRefusedError(AccessDenialCode.HUMAN_AUTHORITY_REQUIRED)
+        return AdministrationFacts(
+            profile=facts.profile,
+            context=facts.context,
+            originating_login_id=session.originating_login_id,
+            session=session,
+        )
 
     @contextmanager
     def operation_guard(
@@ -510,23 +593,36 @@ class ProfileSessionAuthority:
         never carry the RLock across interleaved event-loop tasks.
         """
         with self.owner.admission_guard():
-            facts = self._facts(connection_id)
-            if isinstance(facts, AccessDenied):
-                raise ProfileAccessRefusedError(facts.code)
-            session = self._sessions.get(session_id)
-            if session is None:
-                raise ProfileAccessRefusedError(AccessDenialCode.AUTHENTICATION_REQUIRED)
-            grant, key = None, None
-            if session.kind is not SessionKind.HUMAN:
-                snapshot = self._snapshot(facts)
-                if isinstance(snapshot, AccessDenied):
-                    self._retire({session_id})
-                    raise ProfileAccessRefusedError(snapshot.code)
-                grant, key = self._records(snapshot, key_id=session.key_id, grant_id=session.grant_id)
-            current = self._evaluate(session, facts, grant, key)
-            if isinstance(current, AccessDenied):
-                raise ProfileAccessRefusedError(current.code)
+            facts, session, grant, key = self._current_operation_authority(connection_id, session_id)
             allowed = evaluate_operation_access(
+                request=request,
+                policy=policy,
+                registry=registry,
+                session=session,
+                ancestors=self._ancestors(session),
+                grant=grant,
+                key=key,
+                profile=facts.profile,
+                context=facts.context,
+            )
+            if isinstance(allowed, AccessDenied):
+                raise ProfileAccessRefusedError(allowed.code)
+            yield allowed
+
+    @contextmanager
+    def response_scope_guard(
+        self,
+        *,
+        connection_id: UUID,
+        session_id: UUID,
+        request: OperationAccessRequest,
+        policy: OperationAccessPolicy,
+        registry: OperationRegistry,
+    ) -> Generator[OperationResponseScopeAllowed]:
+        """Hold current profile response permissions, without issuing a transaction proof."""
+        with self.owner.admission_guard():
+            facts, session, grant, key = self._current_operation_authority(connection_id, session_id)
+            allowed = evaluate_response_scope(
                 request=request,
                 policy=policy,
                 registry=registry,

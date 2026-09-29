@@ -1447,6 +1447,10 @@ cli:
         discard_requires_yes: 'Az eldobás auditálható állapotváltás. Futtassa újra:
           `aeat app modelo work discard %{work_unit_id} --yes` a megerősítéshez.'
         discard_yes_help: Az eldobási művelet explicit megerősítése.
+        file:
+          verification_report_ambiguous: Ehhez a változathoz több jóváhagyó ellenőrzési
+            jelentés tartozik. A bevallás rögzítése előtt oldja fel az ellenőrzési
+            ütközést.
         file_help: Hitelesített revízió megjelölése belső benyújtottként. NEM nyújt
           be az AEAT-hoz.
         file_idempotent_noop: 'Idempotens nincs-művelet: a(z) %{calculation_revision_id}
@@ -1695,8 +1699,6 @@ cli:
         row_kv_format_error: 'A --row {token} mezőt KULCS=ÉRTÉK alakban kell megadni.
           Ez egy kulcs-érték bejegyzés: a sor mezőneve a bal oldalon áll, utána egyetlen
           egyenlőségjel következik, az érték pedig a jobb oldalon.'
-        row_m349_invalid_nif: '--row operador: a nif_comunitario {nif} nem felel meg
-          {pais} ország elvárt NIF-IVA formátumának (2006/112/EK irányelv XI. melléklet)'
         row_unknown_type: 'Ismeretlen --row típus: {row_type!r}; támogatott típusok:
           {supported}.'
         row_validation_error: 'A --row {row_type!r} sor validálása sikertelen: {error}'
@@ -1769,6 +1771,20 @@ cli:
       app_help: 'Futtassa a teljes helyi modell beadási láncot egyetlen paranccsal:
         készenlét -> létrehozás -> számítás -> ellenőrzés -> exportálás. Csak összeállít
         és exportál; soha nem nyújt be az AEAT-hoz'
+    runtime:
+      disable:
+        help: A bejelentkezéskori indítás kikapcsolása; a kézi indítás megmarad.
+      enable:
+        help: A futtatókörnyezet indítása a felhasználó bejelentkezésekor.
+      help: A telepített helyi futtatókörnyezet állapotának megtekintése és kezelése.
+      start:
+        help: A telepített futtatókörnyezet indítása és a kapcsolat ellenőrzése.
+      status:
+        help: A helyi szolgáltatás elérhetőségének és kezelője állapotának megjelenítése.
+      stop:
+        acknowledge_help: 'Megerősítés: a leállítás minden profilt és feladatot érint.'
+        help: A megosztott futtatókörnyezet leállítása a teljes hatókör jóváhagyása
+          után.
   common:
     errors:
       filing_requires_declared_tax_id: 'Az aktív profil nem ad meg adóazonosítót,
@@ -1918,6 +1934,14 @@ cli:
     custody:
       current_passphrase_prompt: 'A profil jelenlegi jelszava: '
       errors:
+        automation_change_credential_ref_required: Jogosultság módosításához adja
+          meg a --profile-auth-method api-key és --profile-credential-ref UUID beállításokat.
+        automation_change_kind_mismatch: A védett kérelem típusának meg kell egyeznie
+          a kért jogosultságmódosítással.
+        automation_change_proposal_required: A jogosultságmódosítási kérelmet a --secrets-stdin
+          vagy --secrets-fd csatornán adja meg.
+        automation_create_proposal_required: A jogosultsági kérelmet a --secrets-stdin
+          vagy --secrets-fd csatornán adja meg.
         echo_suppression_unavailable: Ez a terminál nem tudja elrejteni a beírt szöveget,
           így a titok láthatóvá válna a képernyőn; használja a --secrets-stdin vagy
           --secrets-fd kapcsolót.
@@ -1927,6 +1951,16 @@ cli:
           munkamenetből.
         non_interactive_secret_required: Titok szükséges, de nincs interaktív terminál;
           használja a --secrets-stdin vagy --secrets-fd kapcsolót.
+        profile_credential_ref_conflict: Válassza a --profile-credential-ref kapcsolót
+          vagy a gyökérszintű profil titkos adatcsatornáját.
+        profile_credential_ref_inapplicable: A --profile-credential-ref csak a helyi
+          szolgáltatás által futtatott privát profilparancsokhoz használható.
+        profile_credential_ref_requires_api_key: A --profile-credential-ref használatához
+          --profile-auth-method api-key szükséges.
+        profile_secrets_api_key_inapplicable: Az API-kulcsos hitelesítés csak a helyi
+          futtatókörnyezet által kiszolgált parancsokhoz használható.
+        profile_secrets_api_key_requires_channel: Az API-kulcsos hitelesítéshez --profile-secrets-stdin
+          vagy --profile-secrets-fd szükséges.
         profile_secrets_channel_conflict: 'Pontosan egy profilhitelesítési csatornát
           válasszon: --profile-secrets-stdin vagy --profile-secrets-fd.'
         profile_secrets_fd_collision: A profilhitelesítési és a parancstitok-adatoknak
@@ -1943,6 +1977,8 @@ cli:
           profilhitelesítési csatorna.
         profile_secrets_inapplicable: A profilhitelesítési bemenet nem alkalmazható
           erre a parancsra, ezért nem történt beolvasás.
+        profile_secrets_method_mismatch: A védett profilszekrétum-csatorna tartalma
+          nem egyezik a --profile-auth-method beállítással.
         profile_secrets_missing_target: A profilhitelesítéshez pontos célprofil szükséges,
           amelyet a --profile vagy a parancs választ ki.
         profile_secrets_stdin_collision: A szabványos bemenet nem hordozhatja egyszerre
@@ -1973,6 +2009,11 @@ cli:
           vagy váratlan mezőket tartalmaz. Pontosan ezeket a kulcsokat küldje: {expected_fields}.'
         secrets_stdin_too_large: A gépi titok tartalma meghaladja a megengedett maximális
           méretet.
+      profile_auth_method_help: 'A védett profilszekrétum-csatorna hitelesítési módja:
+        password vagy api-key.'
+      profile_credential_ref_help: Hitelesítés a helyi szolgáltatás profiljához a
+        védett natív tárolóban lévő hitelesítő adat UUID-jával (--profile-auth-method
+        api-key szükséges).
       profile_secrets_fd_help: A pontos célprofil jelmondatának beolvasása egy korlátozott
         JSON-objektumból egy örökölt, olvasható fájlleíróból, miután a munkamenet
         folytatása sikertelen.
@@ -2109,9 +2150,13 @@ cli:
         terminálban, vagy használja a --secrets-stdin vagy --secrets-fd kapcsolót.
       passphrase_prompt: 'Profil jelszava: '
     logout:
-      help: A profil munkamenetének lezárása és helyi mutatójának törlése
+      help: A CLI-környezetben kiválasztott profil törlése.
       notices:
         already_logged_out: Egyetlen profil sem volt bejelentkezve; nincs mit lezárni.
+        remaining_access: A CLI profilkiválasztása törölve. A többi munkamenet, az
+          időkorlátos emberi bejelentkezés folytatása és a regisztrált API-kulcsok
+          megőrzik saját jogosultságukat. A hozzáférés visszavonásához használja a
+          munkamenet vagy a profil vezérlőit.
     passphrase:
       change_help: Megváltoztatja a jelszót a rekordok újratitkosítása és a helyreállítási
         kód érvénytelenítése nélkül.
@@ -2184,6 +2229,39 @@ cli:
           export_target_exists: A célútvonalon már van fájl, és a biztonsági mentés
             sosem kerül felülírásra. Válassz másik --output értéket, vagy előbb helyezd
             át a meglévő fájlt; egyetlen profil sem került beolvasásra.
+      automation:
+        approve:
+          digest_help: Az inspect által megjelenített pontos felülvizsgálati kivonat.
+          help: A felülvizsgált kérelem jóváhagyása a profil jelszavának újbóli megadásával.
+          request_help: A felülvizsgált kérelem UUID-azonosítója.
+        change:
+          help: Meglévő API-jogosultság kulcscseréjének, megújításának vagy hatókör-módosításának
+            kérelmezése.
+          kind_help: 'A módosítás típusa: rotate, renew vagy change_scope.'
+        create:
+          help: API-jogosultság kérelmezése és a hitelesítő adat átvétele védett tárolóba,
+            külön felhasználói jóváhagyás után.
+        decline:
+          digest_help: Az inspect által megjelenített pontos felülvizsgálati kivonat.
+          help: A felülvizsgált kérelem elutasítása.
+          request_help: A felülvizsgált kérelem UUID-azonosítója.
+        deny:
+          help: Automatizálási kulcs, jogosultság vagy az összes automatizált hozzáférés
+            visszavonása.
+          kind_help: 'A visszavonás típusa: key, grant vagy all.'
+          target_help: A visszavonandó kulcs vagy jogosultság UUID-azonosítója.
+          target_mismatch: Kulcs vagy jogosultság visszavonásához szükséges a cél
+            UUID-ja; az all típus nem fogad el célt.
+        help: A profil automatizált hozzáférésének kezelése.
+        inspect:
+          help: A felülvizsgált automatizálási kérelem pontos megjelenítése.
+          request_help: A felülvizsgált kérelem UUID-azonosítója.
+        list:
+          help: A profil automatizálási jogosultságainak, kulcsainak és függőben lévő
+            kérelmeinek listázása.
+        review_digest_mismatch: Az aktuális felülvizsgálati kivonat nem egyezik a
+          megadottal. Ellenőrizze újra a kérelmet.
+        review_not_found: A felülvizsgált kérelem nem érhető el ehhez a profilhoz.
       bundle_flow:
         export_section_title: Profilcsomag exportálása
         import_section_title: Profilcsomag importálása
@@ -2339,9 +2417,18 @@ cli:
         incoherent_observation_advisory: 'A profillista nem volt megbízhatóan beolvasható
           (állapot: {outcome}). Futtassa újra a parancsot; ha továbbra is fennáll,
           ellenőrizze a profiltárolót.'
+      lock:
+        all_help: A profil mindenhol zárolása és az összes automatizálási jogosultság
+          felfüggesztése.
+        help: A munkamenet zárolása, vagy a teljes profil zárolása a --all kapcsolóval.
+        selector_conflict: Válassza a --session vagy a --all kapcsolót, de ne mindkettőt.
+        session_help: A profil zárolása nélkül visszavonandó munkamenet UUID-ja.
       manager_closed_created: A(z) '{profile}' profil létrejött. A modellekkel végzett
         munka előtt jelentsd be a beállítás befejezését az `aeat config profile complete-setup`
         paranccsal. Bármikor újranyithatod az 'aeat config profile edit' paranccsal.
+      mutation:
+        committed_view_unavailable: A profil módosítása mentésre került, de a frissített
+          nézet nem érhető el. Újabb módosítás előtt olvassa be újra a profilt.
       no_active_profile: 'Nincs aktív profil. Futtassa: `aeat config profile create
         NÉV --tax-id <NIF/CIF/DNI/NIE>`.'
       notices:
@@ -2407,6 +2494,10 @@ cli:
           hogy megvan: '
       remove_row:
         help: Az ismételhető profilszakasz azonosított sorának eltávolítása.
+      resume:
+        grant_help: Az újraaktiválandó jogosultság UUID-ja; több jogosultsághoz ismételje
+          meg.
+        help: A profil feloldása jelszóval és a kiválasztott jogosultságok újraaktiválása.
       row:
         invalid_row: A(z) '%{row}' nem érvényes sorkulcs; használjon nemnegatív egész
           számot vagy base értéket.
@@ -2416,6 +2507,8 @@ cli:
       sandbox:
         active_indicator_info: A(z) %{label} homokozóban dolgozol, nem egy valódi
           profilban; minden parancs ebben az elkülönített, eldobható tárolóban fut.
+      sessions:
+        help: A profil aktuális helyi futtatókörnyezeti munkameneteinek listázása.
       show:
         summary_invalid: 'A profil rekordja érvénytelen: %{count} blokkoló probléma.'
         summary_valid: A profil rekordja érvényes.

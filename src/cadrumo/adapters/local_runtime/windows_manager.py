@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import asyncio
+import os
 import sys
 from collections.abc import Callable
 from pathlib import Path
+from threading import Event
 from typing import Protocol, cast
 from xml.etree import ElementTree
 
@@ -20,10 +22,21 @@ from ...application.runtime.management import (
     RuntimeServiceBinding,
 )
 from .service_definitions import runtime_service_name, windows_task_xml
-from .windows import WindowsRuntimeEndpoint, _current_owner_sid
+from .windows import WindowsRuntimeEndpoint
+from .windows_task_process import task_engine_owns_process
 
 _XML_NAMESPACE = "{http://schemas.microsoft.com/windows/2004/02/mit/task}"
 _MISSING = {0x80070002, 0x8004130F}
+
+
+class _RunningTask(Protocol):
+    EnginePID: int
+    Stop: Callable[[int], None]
+
+
+class _RunningTasks(Protocol):
+    Count: int
+    Item: Callable[[int], _RunningTask]
 
 
 class _RegisteredTask(Protocol):
@@ -33,10 +46,12 @@ class _RegisteredTask(Protocol):
 
     Run: Callable[[object], object]
     Stop: Callable[[int], None]
+    GetInstances: Callable[[int], _RunningTasks]
 
 
 class _TaskFolder(Protocol):
     GetTask: Callable[[str], _RegisteredTask]
+    RegisterTask: Callable[[str, str, int, str, None, int, str | None], _RegisteredTask]
 
 
 class _TaskService(Protocol):
@@ -136,13 +151,13 @@ def windows_task_binding_matches(xml: str, binding: RuntimeServiceBinding, *, lo
 
 
 class WindowsTaskManager:
-    """Control a pre-provisioned task; never register or enable one implicitly."""
+    """Control one bound task; provisioning requires an explicit configure call."""
 
     def __init__(self, binding: RuntimeServiceBinding) -> None:
         """Bind management to the native OS owner and stable storage-root name."""
-        if binding.os_owner_id != _current_owner_sid():
-            raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
         endpoint = WindowsRuntimeEndpoint(storage_root=Path(binding.storage_root))
+        if binding.os_owner_id != endpoint.os_owner_id:
+            raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
         if endpoint.storage_identity != binding.storage_identity:
             raise RuntimeRefusalError(RuntimeRefusalCode.ROOT_MISMATCH)
         # Validate all paths/fields even when no manager operation is attempted.
@@ -156,21 +171,41 @@ class WindowsTaskManager:
         try:
             return folder.GetTask(self._name)
         except pythoncom.com_error as error:
-            hresult = error.args[0] if error.args else None
-            detail = error.args[2] if len(error.args) > 2 else None
-            if hresult == -2147352567 and isinstance(detail, tuple) and len(detail) == 6:
-                hresult = detail[5]
+            arguments = cast(tuple[object, ...], error.args)
+            hresult = arguments[0] if arguments else None
+            detail = arguments[2] if len(arguments) > 2 else None
+            if hresult == -2147352567 and isinstance(detail, tuple):
+                details = cast(tuple[object, ...], detail)
+                if len(details) == 6:
+                    hresult = details[5]
             if isinstance(hresult, int) and hresult & 0xFFFFFFFF in _MISSING:
                 return None
             raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE) from None
 
-    def _autostart(self, task: _RegisteredTask) -> bool | None:
+    def _autostart(self, task: _RegisteredTask, *, xml: str | None = None) -> bool | None:
         if not task.Enabled:
             return None
+        definition = task.Xml if xml is None else xml
         for enabled in (False, True):
-            if windows_task_binding_matches(task.Xml, self._binding, login_autostart=enabled):
+            if windows_task_binding_matches(definition, self._binding, login_autostart=enabled):
                 return enabled
         return None
+
+    def _task_inspection(self, task: _RegisteredTask) -> RuntimeManagerInspection:
+        autostart = self._autostart(task)
+        state = {
+            2: RuntimeManagerProcessState.STARTING,
+            3: RuntimeManagerProcessState.STOPPED,
+            4: RuntimeManagerProcessState.RUNNING,
+        }.get(task.State, RuntimeManagerProcessState.UNKNOWN)
+        return RuntimeManagerInspection(
+            kind=RuntimeManagerKind.WINDOWS_TASK,
+            available=True,
+            provisioned=True,
+            binding_matches=autostart is not None,
+            login_autostart=autostart is True,
+            process_state=state,
+        )
 
     async def inspect(self) -> RuntimeManagerInspection:
         """Distinguish an available scheduler from missing or foreign provisioning."""
@@ -179,25 +214,90 @@ class WindowsTaskManager:
             task = self._find(folder)
             if task is None:
                 return self._inspection(available=True)
-            autostart = self._autostart(task)
-            state = {
-                2: RuntimeManagerProcessState.STARTING,
-                3: RuntimeManagerProcessState.STOPPED,
-                4: RuntimeManagerProcessState.RUNNING,
-            }.get(task.State, RuntimeManagerProcessState.UNKNOWN)
-            return RuntimeManagerInspection(
-                kind=RuntimeManagerKind.WINDOWS_TASK,
-                available=True,
-                provisioned=True,
-                binding_matches=autostart is not None,
-                login_autostart=autostart is True,
-                process_state=state,
-            )
+            return self._task_inspection(task)
 
         try:
             return await asyncio.to_thread(lambda: _scheduler_call(inspect_task))
         except RuntimeRefusalError:
             return self._inspection(available=False)
+
+    async def configure(self, *, login_autostart: bool) -> RuntimeManagerInspection:
+        """Provision or change only this owner's exact task, without starting it.
+
+        The scheduler call and final read remain on the same initialized COM
+        thread. A cancelled caller waits for that thread to finish so it cannot
+        mistake an in-flight registration for a rolled-back change.
+        """
+
+        def configure_task(folder: _TaskFolder) -> RuntimeManagerInspection:
+            current = self._find(folder)
+            if current is None:
+                # TASK_CREATE refuses a concurrent task occupying the same name.
+                flags = 0x2
+                xml = windows_task_xml(self._binding, login_autostart=login_autostart)
+                # SYSTEM must retain access for the scheduler itself. The task
+                # owner receives access only under the exact native SID.
+                sddl: str | None = f"D:P(A;;GA;;;SY)(A;;GA;;;{self._binding.os_owner_id})"
+            else:
+                current_xml = current.Xml
+                current_autostart = self._autostart(current, xml=current_xml)
+                if current_autostart is None:
+                    raise RuntimeRefusalError(RuntimeRefusalCode.VERSION_MISMATCH)
+                if current_autostart is login_autostart:
+                    return self._task_inspection(current)
+                # Preserve accepted registration metadata and all other XML.
+                root = fromstring(current_xml, forbid_dtd=True, forbid_entities=True, forbid_external=True)
+                triggers = root.find(_XML_NAMESPACE + "Triggers")
+                if triggers is not None:
+                    root.remove(triggers)
+                if login_autostart:
+                    triggers = ElementTree.Element(_XML_NAMESPACE + "Triggers")
+                    trigger = ElementTree.SubElement(triggers, _XML_NAMESPACE + "LogonTrigger")
+                    ElementTree.SubElement(trigger, _XML_NAMESPACE + "Enabled").text = "true"
+                    ElementTree.SubElement(trigger, _XML_NAMESPACE + "UserId").text = self._binding.os_owner_id
+                    principals = root.find(_XML_NAMESPACE + "Principals")
+                    if principals is None:
+                        raise RuntimeRefusalError(RuntimeRefusalCode.VERSION_MISMATCH)
+                    root.insert(list(root).index(principals), triggers)
+                xml = ElementTree.tostring(root, encoding="unicode")
+                if not windows_task_binding_matches(xml, self._binding, login_autostart=login_autostart):
+                    raise RuntimeRefusalError(RuntimeRefusalCode.VERSION_MISMATCH)
+                # TASK_UPDATE refuses disappearance; DONT_ADD_PRINCIPAL_ACE
+                # preserves the existing task ACL when its principal is stable.
+                flags = 0x4 | 0x10
+                sddl = None
+
+            # Interactive-token logon requires an already logged-in owner and
+            # stores no Windows password. No Run call follows registration.
+            folder.RegisterTask(self._name, xml, flags, self._binding.os_owner_id, None, 3, sddl)
+            observed = self._find(folder)
+            if observed is None:
+                raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+            result = self._task_inspection(observed)
+            if not result.binding_matches or result.login_autostart is not login_autostart:
+                raise RuntimeRefusalError(RuntimeRefusalCode.VERSION_MISMATCH)
+            return result
+
+        operation = asyncio.create_task(asyncio.to_thread(_scheduler_call, configure_task))
+        cancelled = False
+        while True:
+            try:
+                await asyncio.shield(operation)
+                break
+            except asyncio.CancelledError:
+                cancelled = True
+                if operation.done():
+                    break
+        if cancelled:
+            # Retrieve any native failure to avoid an unobserved task exception;
+            # cancellation never asserts that registration was rolled back.
+            if not operation.cancelled():
+                operation.exception()
+            raise asyncio.CancelledError
+        result = operation.result()
+        if not isinstance(result, RuntimeManagerInspection):
+            raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+        return result
 
     @staticmethod
     def _inspection(*, available: bool) -> RuntimeManagerInspection:
@@ -235,3 +335,27 @@ class WindowsTaskManager:
             task.Stop(0)
 
         await asyncio.to_thread(_scheduler_call, stop_task)
+
+    def stop_current_process(self, submitted: Event) -> None:
+        """Ask the exact running instance to stop, preserving task triggers.
+
+        Called on a dedicated thread because native Stop may wait for the
+        process to finish its own drain before returning.
+        """
+
+        def stop_task(folder: _TaskFolder) -> None:
+            task = self._find(folder)
+            if task is None:
+                raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+            if self._autostart(task) is None:
+                raise RuntimeRefusalError(RuntimeRefusalCode.VERSION_MISMATCH)
+            instances = task.GetInstances(0)
+            if instances.Count != 1:
+                raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
+            instance = instances.Item(1)
+            if not task_engine_owns_process(instance.EnginePID, os.getpid()):
+                raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
+            submitted.set()
+            instance.Stop(0)
+
+        _scheduler_call(stop_task)

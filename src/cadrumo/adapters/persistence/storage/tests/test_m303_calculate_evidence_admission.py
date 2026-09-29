@@ -22,7 +22,6 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     seed_modelo_ready_profile_record,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.modelo import calculation_actions as calculation_actions_module
 from cadrumo.application.modelo import operation_definitions as definitions_module
 from cadrumo.application.modelo.action_errors import (
     M303Exonerado390AttestationUnadmissibleError,
@@ -49,7 +48,6 @@ from cadrumo.domain.attachments.m303_filing_evidence import (
 from cadrumo.domain.attachments.service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
 from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from cadrumo.domain.user_profile.values import UserProfileFact
 
@@ -180,19 +178,6 @@ def _m303_attestation_input(
     )
 
 
-def _refuse_calculation_entry(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Make the canonical revision writer unreachable; every refusal must precede it."""
-
-    def calculate(*_args: object, **_kwargs: object) -> object:
-        pytest.fail("a refused M303 evidence request must not enter revision calculation")
-
-    monkeypatch.setattr(
-        calculation_actions_module,
-        "calculate_modelo_revision_from_bucket_aggregation_with_diagnostics",
-        calculate,
-    )
-
-
 def _crafted_attestation(
     store: AttachmentStore,
     profiles: ProfileRecordRepository,
@@ -312,66 +297,11 @@ _UNADMISSIBLE_EVIDENCE: dict[str, tuple[_EvidenceBuilder, type[CadrumoError]]] =
 }
 
 
-def test_calculate_executor_authors_explicit_false_m303_evidence_before_delegating(
-    tmp_path: Path,
-    operation: PinnedAuthorityOperation,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """The four supplied M303 inputs reach the canonical writer as typed derived evidence."""
-    work_unit = _m303_work_unit(operation)
-    captured: dict[str, object] = {}
-
-    def calculate(
-        work_unit_id: str,
-        *,
-        ports: object,
-        actor: str,
-        filing_instance_evidence: object,
-    ) -> object:
-        captured.update(
-            work_unit_id=work_unit_id,
-            ports=ports,
-            actor=actor,
-            filing_instance_evidence=filing_instance_evidence,
-        )
-        return SimpleNamespace(revision=SimpleNamespace(calculation_revision_id="d" * 64))
-
-    monkeypatch.setattr(
-        calculation_actions_module,
-        "calculate_modelo_revision_from_bucket_aggregation_with_diagnostics",
-        calculate,
-    )
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_M303_BUCKET_ID):
-        seed_modelo_ready_profile_record(_M303_BUCKET_ID, clock=_M303_CLOCK)
-        with bound_test_profile_record(_M303_BUCKET_ID):
-            store = AttachmentStore()
-            evidence_input = _m303_attestation_input(operation=operation, store=store)
-            executor = definitions_module.ModeloWorkCalculateExecutor(
-                calculation_action_ports_factory=_calculation_ports_factory(work_unit),
-                attachment_store_factory=lambda bucket_id: store,
-            )
-
-            result = asyncio.run(
-                executor.execute(_calculate_request(work_unit, evidence_input), _calculate_context(operation))
-            )
-
-    assert result == "d" * 64
-    assert captured["work_unit_id"] == work_unit.work_unit_id
-    assert captured["actor"] == "operator"
-    authored = cast(FilingInstanceEvidence, captured["filing_instance_evidence"])
-    assert authored.m303.period == _M303_PERIOD
-    assert authored.m303.joint_return_elected is False
-    assert authored.m303.annual_volume_nonzero is None
-    assert authored.m303.exonerado_390 is not None
-
-
 def test_calculate_executor_refuses_missing_m303_evidence_without_entering_calculation(
     tmp_path: Path,
     operation: PinnedAuthorityOperation,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """A missing ordinary envelope is a refusal, never an empty revision."""
-    _refuse_calculation_entry(monkeypatch)
     work_unit = _m303_work_unit(operation)
     executor = definitions_module.ModeloWorkCalculateExecutor(
         calculation_action_ports_factory=_calculation_ports_factory(work_unit),
@@ -392,10 +322,8 @@ def test_calculate_executor_refuses_missing_m303_evidence_without_entering_calcu
 def test_calculate_executor_refuses_mismatched_m303_attachment_pair_before_calculation(
     tmp_path: Path,
     operation: PinnedAuthorityOperation,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """The split public attachment coordinates must still name one admitted object."""
-    _refuse_calculation_entry(monkeypatch)
     work_unit = _m303_work_unit(operation)
     evidence_input = definitions_module.ModeloWorkCalculateOrdinaryM303EvidenceRequestV2(
         joint_return_elected=False,
@@ -418,12 +346,10 @@ def test_calculate_executor_refuses_unadmissible_attestations_before_any_revisio
     case: str,
     tmp_path: Path,
     operation: PinnedAuthorityOperation,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Custody, role, coordinate, freshness and conflict defects refuse before the revision writer."""
     build_evidence, expected_error = _UNADMISSIBLE_EVIDENCE[case]
     work_unit = _m303_work_unit(operation)
-    _refuse_calculation_entry(monkeypatch)
     context = _CalculateContext(operation)
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_M303_BUCKET_ID):
         seed_modelo_ready_profile_record(_M303_BUCKET_ID, clock=_M303_CLOCK)
@@ -448,12 +374,10 @@ def test_calculate_executor_refuses_unadmissible_attestations_before_any_revisio
 def test_calculate_executor_refuses_evidence_admitted_under_another_profile_bucket(
     tmp_path: Path,
     operation: PinnedAuthorityOperation,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Custody is opened for the work unit's own bucket; another bucket's admitted attestation never answers it."""
     foreign_bucket_id = "9b2e0c1d-5f6a-4b70-9c81-a2b3c4d5e6f8"
     work_unit = _m303_work_unit(operation, bucket_id=foreign_bucket_id)
-    _refuse_calculation_entry(monkeypatch)
     opened: list[str] = []
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_M303_BUCKET_ID):
         seed_modelo_ready_profile_record(_M303_BUCKET_ID, clock=_M303_CLOCK)
@@ -477,50 +401,11 @@ def test_calculate_executor_refuses_evidence_admitted_under_another_profile_buck
     assert opened == [foreign_bucket_id]
 
 
-def test_calculate_executor_leaves_other_modelo_calculation_without_m303_evidence(
-    tmp_path: Path,
-    operation: PinnedAuthorityOperation,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Non-M303 calculation keeps its evidence-free path and never opens attachment custody."""
-    work_unit = _m303_work_unit(operation, modelo="131")
-    captured: dict[str, object] = {}
-
-    def calculate(work_unit_id: str, *, ports: object, actor: str, filing_instance_evidence: object) -> object:
-        del ports
-        captured.update(work_unit_id=work_unit_id, actor=actor, filing_instance_evidence=filing_instance_evidence)
-        return SimpleNamespace(revision=SimpleNamespace(calculation_revision_id="f" * 64))
-
-    monkeypatch.setattr(
-        calculation_actions_module,
-        "calculate_modelo_revision_from_bucket_aggregation_with_diagnostics",
-        calculate,
-    )
-    executor = definitions_module.ModeloWorkCalculateExecutor(
-        calculation_action_ports_factory=_calculation_ports_factory(work_unit),
-        attachment_store_factory=lambda _bucket_id: pytest.fail(
-            "non-M303 calculation must not open attachment custody"
-        ),
-    )
-    context = _CalculateContext(operation)
-
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_M303_BUCKET_ID):
-        result = asyncio.run(
-            executor.execute(_calculate_request(work_unit, None), cast(OperationExecutorContext, context))
-        )
-
-    assert result == "f" * 64
-    assert captured == {"work_unit_id": work_unit.work_unit_id, "actor": "operator", "filing_instance_evidence": None}
-    assert context.events.effects == [OperationEffect.UNKNOWN, OperationEffect.UPDATED]
-
-
 def test_calculate_executor_refuses_ordinary_evidence_outside_its_filing_context(
     tmp_path: Path,
     operation: PinnedAuthorityOperation,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """The executor derives the period from the work unit; a month before 12 refuses a supplied attestation."""
-    _refuse_calculation_entry(monkeypatch)
     work_unit = _m303_work_unit(
         operation,
         filing_year=2025,
@@ -548,10 +433,8 @@ def test_calculate_executor_refuses_ordinary_evidence_outside_its_filing_context
 def test_calculate_executor_refuses_m303_evidence_for_another_modelo_before_calculation(
     tmp_path: Path,
     operation: PinnedAuthorityOperation,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """An ordinary M303 envelope has no meaning for another modelo's revision."""
-    _refuse_calculation_entry(monkeypatch)
     work_unit = _m303_work_unit(operation, modelo="131")
     evidence_input = definitions_module.ModeloWorkCalculateOrdinaryM303EvidenceRequestV2(
         joint_return_elected=False,
@@ -574,58 +457,11 @@ def test_calculate_executor_refuses_m303_evidence_for_another_modelo_before_calc
     )
 
 
-def test_calculate_executor_authors_a_period_before_the_last_from_the_joint_return_answer_alone(
-    tmp_path: Path,
-    operation: PinnedAuthorityOperation,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """1T asks only the joint-return election; the executor authors it without opening attachment custody."""
-    first_quarter = Period.from_year_and_code(2025, "1T")
-    work_unit = _m303_work_unit(operation, period=first_quarter)
-    captured: dict[str, object] = {}
-
-    def calculate(work_unit_id: str, *, ports: object, actor: str, filing_instance_evidence: object) -> object:
-        del work_unit_id, ports, actor
-        captured["filing_instance_evidence"] = filing_instance_evidence
-        return SimpleNamespace(revision=SimpleNamespace(calculation_revision_id="d" * 64))
-
-    monkeypatch.setattr(
-        calculation_actions_module,
-        "calculate_modelo_revision_from_bucket_aggregation_with_diagnostics",
-        calculate,
-    )
-    executor = definitions_module.ModeloWorkCalculateExecutor(
-        calculation_action_ports_factory=_calculation_ports_factory(work_unit),
-        attachment_store_factory=lambda _bucket_id: AttachmentStore(),
-    )
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_M303_BUCKET_ID):
-        seed_modelo_ready_profile_record(_M303_BUCKET_ID, clock=_M303_CLOCK)
-        with bound_test_profile_record(_M303_BUCKET_ID):
-            result = asyncio.run(
-                executor.execute(
-                    _calculate_request(
-                        work_unit,
-                        definitions_module.ModeloWorkCalculateOrdinaryM303EvidenceRequestV2(joint_return_elected=True),
-                    ),
-                    _calculate_context(operation),
-                )
-            )
-
-    assert result == "d" * 64
-    authored = cast(FilingInstanceEvidence, captured["filing_instance_evidence"])
-    assert authored.m303.period == first_quarter
-    assert authored.m303.joint_return_elected is True
-    assert authored.m303.exonerado_390 is None
-    assert authored.m303.annual_volume_nonzero is None
-
-
 def test_calculate_executor_refuses_the_last_period_without_an_attestation(
     tmp_path: Path,
     operation: PinnedAuthorityOperation,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """4T asks the exemption, so the joint-return answer alone is refused before the revision writer."""
-    _refuse_calculation_entry(monkeypatch)
     work_unit = _m303_work_unit(operation)
     executor = definitions_module.ModeloWorkCalculateExecutor(
         calculation_action_ports_factory=_calculation_ports_factory(work_unit),

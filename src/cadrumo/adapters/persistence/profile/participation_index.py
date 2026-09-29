@@ -21,6 +21,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from ....application.modelo.participation_index_rebuild_ports import ParticipationRebuildSourceRevisions
 from ....core.bucket_pointer import resolve_repository_bucket_id
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.logging import get_logger
@@ -32,7 +33,12 @@ from ....domain.modelos.participation_index import (
     derive_participation_index_id,
 )
 from ..storage.runtime_repository import secure_object_repository_for_bucket
-from ..storage.secure_object_namespaces import TRANSACTION_PARTICIPATION_INDEX_NAMESPACE
+from ..storage.secure_object_namespaces import (
+    MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE,
+    MODELO_FILING_RECORD_CATALOGUE_NAMESPACE,
+    MODELO_WORK_UNIT_CATALOGUE_NAMESPACE,
+    TRANSACTION_PARTICIPATION_INDEX_NAMESPACE,
+)
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
     from collections.abc import Iterable
@@ -179,7 +185,12 @@ class TransactionParticipationIndexRepository:
         """Persist one transaction's participation index to encrypted storage."""
         self._objects.save_many((self.to_secure_object_write(index),))
 
-    def replace_all(self, indexes: Iterable[TransactionRevisionParticipationIndex]) -> int:
+    def replace_all(
+        self,
+        indexes: Iterable[TransactionRevisionParticipationIndex],
+        *,
+        source_revisions: ParticipationRebuildSourceRevisions,
+    ) -> int:
         """Atomically make ``indexes`` the complete persisted participation index.
 
         The participation index is a derived cache whose authority is the
@@ -207,7 +218,7 @@ class TransactionParticipationIndexRepository:
             The number of stale participation objects removed.
         """
         from ..storage.crypto.encrypted_columns import secure_object_key_digest
-        from ..storage.sql.secure_object_records import SecureObjectDeletion
+        from ..storage.sql.secure_object_records import SecureObjectDeletion, SecureObjectRevisionAssertion
 
         writes = tuple(self.to_secure_object_write(index) for index in indexes)
         retained = {secure_object_key_digest(write.object_key).hex() for write in writes}
@@ -219,7 +230,19 @@ class TransactionParticipationIndexRepository:
             for stored_key in self._objects.list_keys(_PARTICIPATION_INDEX_NAMESPACE)
             if stored_key not in retained
         )
-        self._objects.apply_batch(writes, deletions)
+        assertions = tuple(
+            SecureObjectRevisionAssertion(
+                namespace=definition.namespace,
+                object_key=definition.require_default_object_key(),
+                expected_revision_id=revision,
+            )
+            for definition, revision in (
+                (MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE, source_revisions.calculation),
+                (MODELO_WORK_UNIT_CATALOGUE_NAMESPACE, source_revisions.work_units),
+                (MODELO_FILING_RECORD_CATALOGUE_NAMESPACE, source_revisions.filings),
+            )
+        )
+        self._objects.apply_batch(writes, deletions, assertions=assertions)
         return len(deletions)
 
     def to_secure_object_write(self, index: TransactionRevisionParticipationIndex) -> SecureObjectWrite:

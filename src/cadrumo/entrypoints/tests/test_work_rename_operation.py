@@ -13,10 +13,12 @@ import pytest
 from pydantic import ValidationError
 
 from ...application.auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
+from ...application.modelo.export_projection import ModeloExportPublicResultV2
+from ...application.modelo.filing_projection import ModeloFilingRecordSnapshot
+from ...application.modelo.lifecycle_advisories import ModeloLifecycleAdvisories
 from ...application.modelo.operation_definitions import (
     MODELO_WORK_RENAME_OPERATION_DEFINITION_ID,
     ModeloExportExecutor,
-    ModeloExportPublicResultV1,
     ModeloExportRequest,
     ModeloWorkAmendBaseline,
     ModeloWorkAmendExecutor,
@@ -24,16 +26,16 @@ from ...application.modelo.operation_definitions import (
     ModeloWorkAmendRequest,
     ModeloWorkDiscardBaseline,
     ModeloWorkDiscardExecutor,
-    ModeloWorkDiscardPublicResultV1,
+    ModeloWorkDiscardPublicResultV2,
     ModeloWorkFileApproval,
     ModeloWorkFileExecutor,
-    ModeloWorkFilePublicResultV1,
+    ModeloWorkFilePublicResultV2,
     ModeloWorkFileRequest,
     ModeloWorkRenameExecutor,
-    ModeloWorkRenamePublicResultV1,
+    ModeloWorkRenamePublicResultV2,
     ModeloWorkRenameRequest,
     ModeloWorkVerifyExecutor,
-    ModeloWorkVerifyPublicResultV1,
+    ModeloWorkVerifyPublicResultV2,
     ModeloWorkVerifyRequest,
     build_modelo_export_definition,
     build_modelo_work_amend_definition,
@@ -47,6 +49,8 @@ from ...application.modelo.operation_definitions import (
 )
 from ...application.modelo.operator_inputs import ModeloExportOperatorInput
 from ...application.modelo.tests.operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
+from ...application.modelo.verification_preconditions import ModeloVerificationResult
+from ...application.modelo.verification_projection import ModeloVerificationSnapshot
 from ...application.operations.capabilities import (
     OperationBaselinePolicy,
     OperationConflictScope,
@@ -54,9 +58,23 @@ from ...application.operations.capabilities import (
 )
 from ...application.operations.models import CredentialFreeOperationRequest
 from ...core.operations import OperationCancellation, OperationDurability, OperationEffect
+from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.deadlines.models import IVARegime, TaxpayerProfile
 from ...domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
+from ...domain.modelos.filing_record import (
+    AeatConfirmationState,
+    FilingDeclarationKind,
+    FilingOrigin,
+    ModeloRecord,
+    derive_filing_record_id,
+)
+from ...domain.modelos.verification_report import (
+    VerificationCompletenessStatus,
+    VerificationReport,
+    derive_verification_report_id,
+)
 from ..adapter_composition import (
     build_active_work_lifecycle_ports,
     build_amendment_action_ports,
@@ -108,16 +126,28 @@ def test_the_request_is_credential_free_and_journalable() -> None:
 def test_the_request_refuses_an_empty_unit_or_name() -> None:
     """A rename with no subject or no label is refused at the boundary."""
     with pytest.raises(ValidationError):
-        ModeloWorkRenameRequest(work_unit_id="", new_name="Q1", actor="operator")
+        ModeloWorkRenameRequest(
+            work_unit_id="",
+            new_name="Q1",
+            actor="operator",
+            observed_name="Q1",
+            observed_updated_at=datetime(2026, 1, 1, tzinfo=UTC),
+        )
     with pytest.raises(ValidationError):
-        ModeloWorkRenameRequest(work_unit_id="unit-1", new_name="", actor="operator")
+        ModeloWorkRenameRequest(
+            work_unit_id="a" * 64,
+            new_name="",
+            actor="operator",
+            observed_name="Q1",
+            observed_updated_at=datetime(2026, 1, 1, tzinfo=UTC),
+        )
 
 
 def test_the_public_result_is_a_projection_not_the_stored_record() -> None:
-    """The result carries no lifecycle state a consumer could depend on."""
-    fields = set(ModeloWorkRenamePublicResultV1.model_fields)
+    """The result carries a validated committed snapshot under its versioned schema."""
+    fields = set(ModeloWorkRenamePublicResultV2.model_fields)
 
-    assert fields == {"result_version", "work_unit_id", "name", "bucket_id"}
+    assert fields == {"result_version", "work_unit_id", "name", "bucket_id", "unit"}
     assert "state" not in fields
     assert "updated_at" not in fields
 
@@ -131,9 +161,14 @@ def test_the_executor_delegates_and_recreates_no_lifecycle_policy() -> None:
     """
     source = inspect.getsource(ModeloWorkRenameExecutor)
     tree = ast.parse(textwrap.dedent(source))
-    called = {node.func.id for node in ast.walk(tree) if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)}
 
-    assert "rename_work_unit" in called
+    assert "rename_work_unit" in {
+        argument.id
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr == "to_thread"
+        for argument in node.args[:1]
+        if isinstance(argument, ast.Name)
+    }
     for forbidden in ("WorkUnitCatalogueRepository", "BucketEventHistoryRepository", "upsert_work_unit"):
         assert forbidden not in source, f"the executor reaches past its writer: {forbidden}"
     assert "DESCARTADO" not in source, "discard policy belongs to the writer, not the enrolment"
@@ -208,18 +243,23 @@ def test_the_discard_executor_delegates_and_holds_no_lifecycle_rule() -> None:
     """Whether a discarded unit may be discarded again is the writer's rule."""
     source = inspect.getsource(ModeloWorkDiscardExecutor)
     tree = ast.parse(textwrap.dedent(source))
-    called = {node.func.id for node in ast.walk(tree) if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)}
 
-    assert "discard_work_unit" in called
+    assert "discard_work_unit" in {
+        argument.id
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr == "to_thread"
+        for argument in node.args[:1]
+        if isinstance(argument, ast.Name)
+    }
     assert "DESCARTADO" not in source, "the already-discarded refusal belongs to the writer"
     assert "WorkUnitAlreadyDiscardedError" not in source, "the no-effect refusal is the writer's, not the enrolment's"
 
 
 def test_the_discard_result_reports_the_settled_transition_only() -> None:
-    """The public result says what happened, not what the record now holds."""
-    fields = set(ModeloWorkDiscardPublicResultV1.model_fields)
+    """The public result retains the writer-returned unit, never a later reread."""
+    fields = set(ModeloWorkDiscardPublicResultV2.model_fields)
 
-    assert fields == {"result_version", "work_unit_id", "bucket_id", "discarded"}
+    assert fields == {"result_version", "work_unit_id", "bucket_id", "discarded", "unit"}
     assert "state" not in fields
 
 
@@ -267,14 +307,48 @@ def test_the_verify_request_never_carries_the_profile_it_is_judged_against() -> 
     assert not any("profile" in name for name in fields)
 
 
-def test_the_verify_result_reports_counts_not_a_filing_shaped_payload() -> None:
-    """The report is the record of truth; the result says outcome and how much."""
-    fields = set(ModeloWorkVerifyPublicResultV1.model_fields)
-
-    assert "finding_count" in fields
-    assert "missing_required_casilla_count" in fields
-    assert "resolved_casilla_ids" not in fields
-    assert "findings" not in fields
+def test_the_verify_result_round_trips_the_exact_report_and_refuses_false_summary() -> None:
+    """A public summary may not contradict its actual persisted report."""
+    revision_id = "a" * 64
+    report_id = derive_verification_report_id(
+        calculation_revision_id=revision_id,
+        completeness_status=VerificationCompletenessStatus.COMPLETE,
+        findings=(),
+        verified_by="operator",
+    )
+    report = VerificationReport(
+        verification_report_id=report_id,
+        calculation_revision_id=revision_id,
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo="303", revision_id="2026-y-siguientes", modelo_year=2026, period="1T"
+        ),
+        completeness_status=VerificationCompletenessStatus.COMPLETE,
+        findings=(),
+        run_at=datetime(2026, 4, 1, tzinfo=UTC),
+        verified_by="operator",
+        granted_verificado_completo=True,
+    )
+    result = ModeloWorkVerifyPublicResultV2(
+        verification=ModeloVerificationSnapshot.from_verification(
+            ModeloVerificationResult(report=report, published=True, finding_preconditions=())
+        ),
+        advisories=ModeloLifecycleAdvisories(
+            work_unit_id="b" * 64,
+            calculation_revision_id=revision_id,
+            modelo="303",
+            filing_year=2026,
+            period="1T",
+        ),
+        verification_report_id=report_id,
+        calculation_revision_id=revision_id,
+        completeness_status="complete",
+        granted_verificado_completo=True,
+        finding_count=0,
+        missing_required_casilla_count=0,
+    )
+    assert ModeloWorkVerifyPublicResultV2.model_validate_json(result.model_dump_json()) == result
+    with pytest.raises(ValidationError, match="verification summary"):
+        ModeloWorkVerifyPublicResultV2.model_validate(result.model_dump(mode="python") | {"finding_count": 1})
 
 
 def test_the_verify_executor_delegates_and_decides_no_completeness() -> None:
@@ -283,9 +357,11 @@ def test_the_verify_executor_delegates_and_decides_no_completeness() -> None:
     tree = ast.parse(textwrap.dedent(source))
     called = {node.func.id for node in ast.walk(tree) if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)}
 
-    assert "verify_modelo_revision" in called
-    for forbidden in ("VerificationReportCatalogueRepository", "granted_verificado_completo", "completeness_status"):
+    assert "verify_modelo_revision_with_preconditions" in called
+    for forbidden in ("VerificationReportCatalogueRepository", "VerificationCompletenessStatus.COMPLETE"):
         assert forbidden not in source, f"the executor decides what the authority owns: {forbidden}"
+    assert "report.granted_verificado_completo" in source
+    assert "report.completeness_status.value" in source
 
 
 def test_every_enrolment_here_targets_a_distinct_subject() -> None:
@@ -322,16 +398,44 @@ def test_filing_approval_names_the_verification_that_justified_it() -> None:
 
 
 def test_filing_records_locally_and_always_requires_a_human_handoff() -> None:
-    """Live submission is prohibited, so handoff is contract, not computation."""
-    assert ModeloWorkFilePublicResultV1.model_fields["handoff_required"].default is True
-
-    result = ModeloWorkFilePublicResultV1(
-        filing_record_id="record-1",
-        work_unit_id="unit-1",
-        calculation_revision_id="revision-1",
+    """The public V2 receipt round-trips and cannot contradict its record."""
+    work_unit_id = "b" * 64
+    revision_id = "a" * 64
+    filing_id = derive_filing_record_id(
+        work_unit_id=work_unit_id, calculation_revision_id=revision_id, filed_by="operator"
     )
-
-    assert result.handoff_required
+    record = ModeloRecord(
+        filing_record_id=filing_id,
+        work_unit_id=work_unit_id,
+        calculation_revision_id=revision_id,
+        bucket_id="91fb7268-c9d4-4309-879c-d44fa7970f9d",
+        modelo="303",
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "1T"),
+        filed_at=datetime(2026, 4, 1, tzinfo=UTC),
+        filed_by="operator",
+        origin=FilingOrigin.LOCAL,
+        confirmation=AeatConfirmationState.PENDIENTE,
+        declaration_kind=FilingDeclarationKind.ORIGINAL,
+    )
+    result = ModeloWorkFilePublicResultV2(
+        record=ModeloFilingRecordSnapshot.from_record(record),
+        advisories=ModeloLifecycleAdvisories(
+            work_unit_id=work_unit_id,
+            calculation_revision_id=revision_id,
+            modelo="303",
+            filing_year=2026,
+            period="1T",
+        ),
+        published=True,
+        filing_record_id=filing_id,
+        work_unit_id=work_unit_id,
+        calculation_revision_id=revision_id,
+    )
+    assert ModeloWorkFilePublicResultV2.model_validate_json(result.model_dump_json()) == result
+    assert result.handoff_required is True
+    with pytest.raises(ValidationError, match="filing summary"):
+        ModeloWorkFilePublicResultV2.model_validate(result.model_dump() | {"calculation_revision_id": "c" * 64})
 
 
 def test_the_filing_executor_reaches_no_remote_surface() -> None:
@@ -382,11 +486,24 @@ def _export_definition():
 
 def test_the_export_result_fingerprints_the_artefact_and_carries_no_bytes() -> None:
     """Custody of the artefact is the operator's; the result only proves which bytes."""
-    fields = set(ModeloExportPublicResultV1.model_fields)
+    fields = set(ModeloExportPublicResultV2.model_fields)
 
-    assert {"output_path", "byte_size", "file_sha256"} <= fields
+    assert {"result_version", "output_path", "byte_size", "file_sha256", "handoff_required"} <= fields
     for carrier in ("bytes", "content", "payload", "document"):
         assert not any(carrier in name for name in fields), f"the export result carries material: {carrier}"
+
+
+def test_export_request_refuses_a_relative_output_path() -> None:
+    """The requesting frontend must resolve its destination before submission."""
+    with pytest.raises(ValidationError, match="export output path must be resolved by the requesting frontend"):
+        ModeloExportRequest.model_validate(
+            {
+                "calculation_revision_id": "revision-1",
+                "output_path": "reports/return.txt",
+                "actor": "operator:test",
+            },
+            strict=True,
+        )
 
 
 def test_the_export_executor_reaches_no_remote_surface() -> None:

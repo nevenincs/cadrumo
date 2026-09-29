@@ -1,12 +1,8 @@
 """Behavior for modelo workflow-run discovery and resume.
 
-This CLI module is a transport boundary for persisted
-:class:`WorkflowResult` rows. The ``runs`` command
-renders local run history from :func:`list_runs`; the
-``resume`` command validates operator selectors, delegates target resolution to
-:func:`resolve_modelo_workflow_resume_target`, and
-passes the selected run id to
-:func:`resume_modelo_workflow`.
+This CLI module renders authenticated terminal snapshots. The runtime owns
+history capture, target resolution and resumability validation in its bound
+profile worker. The CLI does not reopen the encrypted workflow repository.
 
 Resume output combines the resumable
 :class:`WorkflowResumeContext` with the selector
@@ -16,7 +12,7 @@ this module contacts AEAT or mutates workflow, bucket, or modelo state.
 
 See Also:
     :mod:`workflow`:
-        Public workflow facade that owns run persistence and resume validation.
+        Workflow application services own run persistence and resume validation.
     :mod:`modelo`:
         Public modelo facade used indirectly by workflow resume resolution for
         visible filing targets, exact work-unit targets, and revision selectors.
@@ -28,23 +24,19 @@ from typing import NamedTuple
 
 import typer
 
+from ...application.runtime.contracts import RuntimeRefusalCode
 from ...application.workflow.errors import WorkflowError
-from ...application.workflow.persistence import list_runs, load_run
 from ...application.workflow.resume import (
     WorkflowResumeContext,
-    WorkflowResumeRefusedError,
     WorkflowResumeTargetResolution,
-    resolve_modelo_workflow_resume_target,
-    resume_modelo_workflow,
 )
 from ...application.workflow.run_models import (
     SiteHealthAlert,
     WorkflowObligationFacts,
-    WorkflowResult,
     WorkflowStage,
     WorkflowStepDetails,
 )
-from ...core.bucket_pointer import require_active_bucket_id
+from ...application.workflow.run_projection import WorkflowRunSnapshot
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr
 from ...core.json_contract import ResolvedPreconditionAction
@@ -65,7 +57,9 @@ from .modelo_aux_payloads import (
     WorkRunResult,
     WorkRunsResult,
 )
-from .state_projection_support import authority_operation, calculation_action_ports_factory
+from .runtime_registered_operation import submitted_operation_error
+from .runtime_workflow_resume import read_workflow_resume_context
+from .runtime_workflow_runs import read_workflow_run, read_workflow_runs
 
 
 def _render_workflow_step_summary(summary_locale_key: str, details: WorkflowStepDetails | None) -> str:
@@ -86,23 +80,22 @@ class _WorkflowRunProjection(NamedTuple):
     action: ResolvedPreconditionAction | None
 
 
-def _workflow_run_projection(run: WorkflowResult) -> _WorkflowRunProjection:
+def _workflow_run_projection(run: WorkflowRunSnapshot) -> _WorkflowRunProjection:
     """Resolve optional terminal-step and obligation facts for one run."""
-    final_step = run.steps[-1] if run.steps else None
     obligation = run.obligation
-    terminal_verdict = final_step.precondition_verdict if final_step is not None else None
+    terminal_verdict = run.to_terminal_verdict()
     return _WorkflowRunProjection(
         modelo=obligation.modelo if obligation is not None else None,
-        period=str(obligation.period) if obligation is not None else None,
-        summary_stage=final_step.stage if final_step is not None else None,
-        summary_locale_key=final_step.summary_locale_key if final_step is not None else run.summary_locale_key,
-        summary_details=final_step.details if final_step is not None else run.summary_details,
-        site_health_alert=final_step.site_health_alert if final_step is not None else None,
+        period=str(obligation.period.to_period()) if obligation is not None else None,
+        summary_stage=run.summary_stage,
+        summary_locale_key=run.summary_locale_key,
+        summary_details=run.to_terminal_details(),
+        site_health_alert=run.to_terminal_site_health(),
         action=resolve_cli_precondition_action(terminal_verdict) if terminal_verdict is not None else None,
     )
 
 
-def _workflow_run_payload(run: WorkflowResult) -> WorkflowRunPayload:
+def _workflow_run_payload(run: WorkflowRunSnapshot) -> WorkflowRunPayload:
     """Project one persisted workflow run into localized CLI-only presentation fields."""
     projection = _workflow_run_projection(run)
     return WorkflowRunPayload(
@@ -112,7 +105,7 @@ def _workflow_run_payload(run: WorkflowResult) -> WorkflowRunPayload:
         final_stage=run.final_stage.value,
         aborted_reason=run.aborted_reason.value if run.aborted_reason is not None else None,
         started_at=run.started_at.isoformat(),
-        obligation=run.obligation,
+        obligation=run.obligation.to_obligation() if run.obligation is not None else None,
         summary_stage=projection.summary_stage,
         summary_locale_key=projection.summary_locale_key,
         summary_details=projection.summary_details,
@@ -122,7 +115,7 @@ def _workflow_run_payload(run: WorkflowResult) -> WorkflowRunPayload:
     )
 
 
-def _workflow_run_summary_payload(run: WorkflowResult) -> WorkflowRunSummaryPayload:
+def _workflow_run_summary_payload(run: WorkflowRunSnapshot) -> WorkflowRunSummaryPayload:
     """Project one persisted run into the compact listing contract."""
     payload = _workflow_run_payload(run)
     return WorkflowRunSummaryPayload(
@@ -208,29 +201,42 @@ def work_run_details(
     """Show the typed terminal-step facts for one persisted workflow run."""
     activate_subcommand_output_language(ctx, output_language)
     try:
-        run = load_run(run_id)
+        completion = read_workflow_run(ctx, run_id=run_id)
     except WorkflowError as exc:
         raise bad_parameter_from_error(exc) from exc
-    projection = _workflow_run_projection(run)
-    detail_facts = (
-        projection.summary_details.model_dump(mode="json", exclude={"kind"}, exclude_none=True)
-        if projection.summary_details is not None
-        else None
-    )
-    result = WorkRunDetailsResult(
-        run_id=run.run_id,
-        summary_stage=projection.summary_stage,
-        summary_locale_key=projection.summary_locale_key,
-        summary_detail_kind=projection.summary_details.kind if projection.summary_details is not None else None,
-        summary_detail_facts=detail_facts,
-    )
-    lines = [
-        "operation\tmodelo.work.run_details",
-        f"run_id\t{run.run_id}",
-        f"summary_stage\t{projection.summary_stage.value if projection.summary_stage is not None else ''}",
-        f"summary_locale_key\t{projection.summary_locale_key}",
-    ]
-    emit_envelope(ctx, command="modelo.work.run_details", result=result, lines=lines)
+    try:
+        run = completion.run
+        projection = _workflow_run_projection(run)
+        detail_facts = (
+            projection.summary_details.model_dump(mode="json", exclude={"kind"}, exclude_none=True)
+            if projection.summary_details is not None
+            else None
+        )
+        result = WorkRunDetailsResult(
+            run_id=run.run_id,
+            summary_stage=projection.summary_stage,
+            summary_locale_key=projection.summary_locale_key,
+            summary_detail_kind=projection.summary_details.kind if projection.summary_details is not None else None,
+            summary_detail_facts=detail_facts,
+        )
+        lines = [
+            "operation\tmodelo.work.run_details",
+            f"run_id\t{run.run_id}",
+            f"summary_stage\t{projection.summary_stage.value if projection.summary_stage is not None else ''}",
+            f"summary_locale_key\t{projection.summary_locale_key}",
+        ]
+        emit_envelope(ctx, command="modelo.work.run_details", result=result, lines=lines)
+    except typer.Exit:
+        raise
+    except Exception:
+        receipt = completion.completion
+        raise submitted_operation_error(
+            receipt.operation_id,
+            RuntimeRefusalCode.UNAVAILABLE.value,
+            terminal_condition=receipt.terminal_condition,
+            effect=receipt.effect,
+            refusal_code=receipt.refusal_code,
+        ) from None
 
 
 def _workflow_run_obligation_fields(
@@ -265,68 +271,92 @@ def work_run(
     run_id: str,
     output_language: OutputLanguage | None = None,
 ) -> None:
-    """Show one full persisted :class:`WorkflowResult`."""
+    """Show the authorized terminal snapshot of one persisted workflow run."""
     activate_subcommand_output_language(ctx, output_language)
     try:
-        run = load_run(run_id)
+        completion = read_workflow_run(ctx, run_id=run_id)
     except WorkflowError as exc:
         raise bad_parameter_from_error(exc) from exc
-    payload = _workflow_run_payload(run)
-    (
-        obligation_opens_on,
-        obligation_closes_on,
-        obligation_status,
-    ) = _workflow_run_obligation_fields(run.obligation)
-    (
-        site_health_stage,
-        site_health_state,
-        site_health_observed_at,
-        site_health_http_status,
-        site_health_retry_after_seconds,
-        site_health_detected_marker_count,
-    ) = _workflow_run_health_fields(payload.site_health_alert)
-    result = WorkRunResult(
-        run_id=payload.run_id,
-        modelo=payload.modelo,
-        period=payload.period,
-        final_stage=payload.final_stage,
-        aborted_reason=payload.aborted_reason,
-        started_at=payload.started_at,
-        obligation_opens_on=obligation_opens_on,
-        obligation_closes_on=obligation_closes_on,
-        obligation_status=obligation_status,
-        summary_stage=payload.summary_stage,
-        summary_locale_key=payload.summary_locale_key,
-        site_health_stage=site_health_stage,
-        site_health_state=site_health_state,
-        site_health_observed_at=site_health_observed_at,
-        site_health_http_status=site_health_http_status,
-        site_health_retry_after_seconds=site_health_retry_after_seconds,
-        site_health_detected_marker_count=site_health_detected_marker_count,
-        summary=payload.summary,
-        action=payload.action,
-    )
-    lines = [
-        "operation\tmodelo.work.run",
-        "run_id\tmodelo\tperiod\tfinal_stage\taborted_reason\tstarted_at\tsummary\taction",
-        _workflow_run_tab_line(payload),
-    ]
-    emit_envelope(ctx, command="modelo.work.run", result=result, lines=lines)
+    try:
+        payload = _workflow_run_payload(completion.run)
+        (
+            obligation_opens_on,
+            obligation_closes_on,
+            obligation_status,
+        ) = _workflow_run_obligation_fields(payload.obligation)
+        (
+            site_health_stage,
+            site_health_state,
+            site_health_observed_at,
+            site_health_http_status,
+            site_health_retry_after_seconds,
+            site_health_detected_marker_count,
+        ) = _workflow_run_health_fields(payload.site_health_alert)
+        result = WorkRunResult(
+            run_id=payload.run_id,
+            modelo=payload.modelo,
+            period=payload.period,
+            final_stage=payload.final_stage,
+            aborted_reason=payload.aborted_reason,
+            started_at=payload.started_at,
+            obligation_opens_on=obligation_opens_on,
+            obligation_closes_on=obligation_closes_on,
+            obligation_status=obligation_status,
+            summary_stage=payload.summary_stage,
+            summary_locale_key=payload.summary_locale_key,
+            site_health_stage=site_health_stage,
+            site_health_state=site_health_state,
+            site_health_observed_at=site_health_observed_at,
+            site_health_http_status=site_health_http_status,
+            site_health_retry_after_seconds=site_health_retry_after_seconds,
+            site_health_detected_marker_count=site_health_detected_marker_count,
+            summary=payload.summary,
+            action=payload.action,
+        )
+        lines = [
+            "operation\tmodelo.work.run",
+            "run_id\tmodelo\tperiod\tfinal_stage\taborted_reason\tstarted_at\tsummary\taction",
+            _workflow_run_tab_line(payload),
+        ]
+        emit_envelope(ctx, command="modelo.work.run", result=result, lines=lines)
+    except typer.Exit:
+        raise
+    except Exception:
+        receipt = completion.completion
+        raise submitted_operation_error(
+            receipt.operation_id,
+            RuntimeRefusalCode.UNAVAILABLE.value,
+            terminal_condition=receipt.terminal_condition,
+            effect=receipt.effect,
+            refusal_code=receipt.refusal_code,
+        ) from None
 
 
 def work_runs(ctx: typer.Context, output_language: OutputLanguage | None = None) -> None:
-    """List persisted :class:`WorkflowResult` rows."""
+    """List authenticated workflow terminal snapshots."""
     activate_subcommand_output_language(ctx, output_language)
-    runs = list_runs()
-    run_payloads = [_workflow_run_summary_payload(run) for run in runs]
-    result = WorkRunsResult(run_count=len(runs), runs=run_payloads)
-    lines = [
-        "operation\tmodelo.work.runs",
-        f"run_count\t{len(runs)}",
-        "run_id\tmodelo\tperiod\tfinal_stage\taborted_reason\tstarted_at\tsummary\taction",
-    ]
-    lines.extend(_workflow_run_tab_line(run) for run in run_payloads)
-    emit_envelope(ctx, command="modelo.work.runs", result=result, lines=lines)
+    completion = read_workflow_runs(ctx)
+    try:
+        run_payloads = [_workflow_run_summary_payload(run) for run in completion.runs]
+        result = WorkRunsResult(run_count=len(completion.runs), runs=run_payloads)
+        lines = [
+            "operation\tmodelo.work.runs",
+            f"run_count\t{len(completion.runs)}",
+            "run_id\tmodelo\tperiod\tfinal_stage\taborted_reason\tstarted_at\tsummary\taction",
+        ]
+        lines.extend(_workflow_run_tab_line(run) for run in run_payloads)
+        emit_envelope(ctx, command="modelo.work.runs", result=result, lines=lines)
+    except typer.Exit:
+        raise
+    except Exception:
+        receipt = completion.completion
+        raise submitted_operation_error(
+            receipt.operation_id,
+            RuntimeRefusalCode.UNAVAILABLE.value,
+            terminal_condition=receipt.terminal_condition,
+            effect=receipt.effect,
+            refusal_code=receipt.refusal_code,
+        ) from None
 
 
 def work_resume(
@@ -344,33 +374,37 @@ def work_resume(
 ) -> None:
     """Surface workflow-resume preconditions and resumable context.
 
-    The natural-key path, exact work-unit path, calculation-revision path,
-    and direct workflow-run path are normalized by
-    :func:`resolve_modelo_workflow_resume_target`
-    before :func:`resume_modelo_workflow` validates
-    that the selected run is actually resumable.
+    The profile worker resolves natural and exact targets and validates the
+    same captured record before releasing the authorized resume context.
     """
     activate_subcommand_output_language(ctx, output_language)
     try:
         typed_period = resolve_optional_cli_period(year=year, period=period, modelo=modelo)
-        resolution = resolve_modelo_workflow_resume_target(
+        completion = read_workflow_resume_context(
+            ctx,
             target=target,
             work_unit_id=validate_work_unit_id(work_unit_id) if work_unit_id is not None else None,
             calculation_revision_id=validate_calculation_revision_id(calculation_revision_id)
             if calculation_revision_id is not None
             else None,
             modelo=modelo,
-            year=year,
             period=typed_period,
-            registry_revision_id=revision,
+            revision_id=revision,
             bucket_id=bucket_id,
             selector=parse_revision_selector(select) if select is not None else None,
-            ports=calculation_action_ports_factory(ctx)(
-                bucket_id=bucket_id or require_active_bucket_id(),
-                operation=authority_operation(ctx),
-            ),
         )
-        result = resume_modelo_workflow(resolution.run_id)
-    except (WorkflowResumeRefusedError, WorkflowError) as exc:
+    except WorkflowError as exc:
         raise bad_parameter_from_error(exc) from exc
-    _emit_work_resume(ctx, result=result, resolution=resolution)
+    try:
+        _emit_work_resume(ctx, result=completion.context, resolution=completion.resolution)
+    except typer.Exit:
+        raise
+    except Exception:
+        receipt = completion.completion
+        raise submitted_operation_error(
+            receipt.operation_id,
+            RuntimeRefusalCode.UNAVAILABLE.value,
+            terminal_condition=receipt.terminal_condition,
+            effect=receipt.effect,
+            refusal_code=receipt.refusal_code,
+        ) from None

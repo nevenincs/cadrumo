@@ -391,14 +391,16 @@ class ConfigPassphraseResetResult(OutputSchema):
 class ConfigLogoutResult(OutputSchema):
     """JSON envelope for ``aeat config logout``.
 
-    Reports which profile the strong close signed out, or ``None`` when
-    nothing was signed in. ``already_logged_out`` marks that idempotent
-    no-op, so a retry is distinguishable from a first close without
-    parsing prose.
+    Reports the cleared CLI default. Each invocation's runtime connection
+    has its own lifetime; clearing selection cannot retire a prior process's
+    connection or revoke independent human acceleration and API grants.
     """
 
     logged_out_profile: str | None = None
     already_logged_out: bool
+    scope: Literal["cli_context"] = "cli_context"
+    human_receipt_revoked: Literal[False] = False
+    automation_revoked: Literal[False] = False
 
 
 class ConfigProfileViewResult(OutputSchema):

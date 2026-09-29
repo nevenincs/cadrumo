@@ -1,0 +1,264 @@
+"""Join runtime-owned captures to the existing immutable workbench screens."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from threading import Lock
+from typing import TYPE_CHECKING
+
+from textual.screen import Screen
+
+from ...adapters.local_runtime.frontend_client import RuntimeFrontendRefusedError
+from ...adapters.local_runtime.workbench_generation import read_workbench_generation
+from ...application.operations.registry import OperationFrontendProjection
+from ...application.operator_actions.catalogue import lookup_action
+from ...application.operator_actions.models import ActionReference
+from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from ...application.search.workbench import WorkbenchDestinationAdmission, WorkbenchDestinationAdmissionState
+from ...core.external_constants import OutputLanguage
+from ...domain.user_profile.values import ProfileSetupState
+from .account import AccountSessionExpiredError
+from .aeat_sync.routes import aeat_sync_screen_factory
+from .app import RootBindingV1, RootPresentationV1
+from .declarations.models import DeclarationsRefreshSnapshotV1
+from .declarations.routes import declarations_screen_factory
+from .home import HomeScreen
+from .ledger.routes import ledger_screen_factory
+from .modelo.installed_workspace import compose_installed_modelo_workspace_factory
+from .modelo.runtime_lifecycle import compose_runtime_modelo_lifecycle_door
+from .modelo.runtime_work_create import compose_runtime_calendar_create_handoff, compose_runtime_work_create_handoff
+from .navigation import TuiScreenContextV1, TuiScreenFactoryV1, build_destination_catalogue
+from .profile.runtime_manager import RuntimeProfileManagerComposition
+from .profile.runtime_overview import read_runtime_profile_overview
+from .runtime_account import compose_runtime_account_factories
+from .runtime_account_session import read_runtime_account_session, runtime_account_session_reader
+
+if TYPE_CHECKING:
+    from ...adapters.local_runtime.frontend_client import RuntimeFrontendClient
+    from ...application.user_profile.overview import ProfileOverview
+    from ...application.workbench_generation import WorkbenchGenerationV1
+    from .navigation import TuiDestinationCatalogueV1
+    from .profile.overview import ProfileManagerScreen
+    from .runtime_access_management import RecoveryClientOpener
+
+
+def _action(action_id: str) -> ActionReference:
+    return ActionReference(action_id=lookup_action(action_id).action_id)
+
+
+def _available(destination: str) -> WorkbenchDestinationAdmission:
+    return WorkbenchDestinationAdmission(destination=destination, state=WorkbenchDestinationAdmissionState.AVAILABLE)
+
+
+@dataclass(frozen=True, slots=True)
+class _Capture:
+    """Individually guarded reads; these do not claim a shared storage revision."""
+
+    generation: WorkbenchGenerationV1
+    profile: ProfileOverview
+
+
+class RuntimeWorkbenchRoot:
+    """Keep one exact client's capture and refresh doors without local custody.
+
+    Construction and ``load`` run off the UI loop. Screen factories consume
+    only captured values. Mutations are supplied individually by registered
+    runtime operations; a missing mutation door stays unavailable.
+    """
+
+    def __init__(
+        self,
+        client: RuntimeFrontendClient,
+        *,
+        profile_label: str,
+        output_language: OutputLanguage,
+        open_recovery_client: RecoveryClientOpener,
+    ) -> None:
+        """Pin a TUI client and its explicit capture language without performing I/O."""
+        if client.frontend is not OperationFrontendProjection.TUI:
+            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+        self._client = client
+        self._profile_id, self._session_id = client.profile_id, client.session_id
+        self._label, self._language = profile_label, output_language
+        self._open_recovery_client = open_recovery_client
+
+    def _require_binding(self) -> None:
+        try:
+            if (
+                self._client.profile_id != self._profile_id
+                or self._client.session_id != self._session_id
+                or self._client.frontend is not OperationFrontendProjection.TUI
+            ):
+                raise AccountSessionExpiredError()
+        except (RuntimeFrontendRefusedError, RuntimeRefusalError):
+            raise AccountSessionExpiredError() from None
+
+    def _read(self) -> _Capture:
+        self._require_binding()
+        try:
+            generation = read_workbench_generation(self._client, output_language=self._language)
+            profile = read_runtime_profile_overview(
+                self._client, profile_label=self._label, output_language=self._language
+            )
+        except (RuntimeFrontendRefusedError, RuntimeRefusalError):
+            # A permission/readiness refusal does not imply expiry. A fresh
+            # status check distinguishes it from a lost originating session.
+            read_runtime_account_session(
+                self._client, profile_id=self._profile_id, session_id=self._session_id, profile_label=self._label
+            )
+            raise
+        read_runtime_account_session(
+            self._client, profile_id=self._profile_id, session_id=self._session_id, profile_label=self._label
+        )
+        if generation.home.projection is None or profile.profile_id != str(self._profile_id):
+            raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+        return _Capture(generation, profile)
+
+    def _destinations(
+        self, generation: WorkbenchGenerationV1, profile_factory: TuiScreenFactoryV1
+    ) -> TuiDestinationCatalogueV1:
+        admissions = {
+            "workbench.home": _available("workbench.home"),
+            "workbench.profile": _available("workbench.profile"),
+            "workbench.ledger": generation.ledger_admission,
+            "workbench.declarations": generation.declarations_admission,
+            "workbench.aeat_sync": generation.aeat_sync_admission,
+            "workbench.withholding": WorkbenchDestinationAdmission(
+                destination="workbench.withholding",
+                state=WorkbenchDestinationAdmissionState.UNAVAILABLE,
+                reason_code="workbench.withholding.runtime_unavailable",
+            ),
+        }
+
+        def home(context: TuiScreenContextV1) -> Screen[None]:
+            if context.destination != "workbench.home" or generation.home.projection is None:
+                raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+            return HomeScreen(generation.home.projection)
+
+        factories: dict[str, TuiScreenFactoryV1] = {"workbench.home": home, "workbench.profile": profile_factory}
+        if generation.ledger_admission.state is WorkbenchDestinationAdmissionState.AVAILABLE:
+            if generation.ledger.projection is None:
+                raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            factories["workbench.ledger"] = ledger_screen_factory(
+                generation.ledger.projection, review_action=_action("operator.ledger.review")
+            )
+        if generation.declarations_admission.state is WorkbenchDestinationAdmissionState.AVAILABLE:
+            current = [generation]
+            generation_lock = Lock()
+
+            def refresh_declarations() -> WorkbenchGenerationV1:
+                captured = self._read().generation
+                self._require_binding()
+                with generation_lock:
+                    current[0] = captured
+                return captured
+
+            def declarations_snapshot() -> DeclarationsRefreshSnapshotV1:
+                self._require_binding()
+                with generation_lock:
+                    captured = current[0]
+                declarations = captured.declarations.projection
+                if (
+                    captured.declarations_admission.state is not WorkbenchDestinationAdmissionState.AVAILABLE
+                    or declarations is None
+                ):
+                    raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+                modelo = captured.modelo.projection
+                modelo_factory = (
+                    None
+                    if modelo is None
+                    else compose_installed_modelo_workspace_factory(
+                        bucket_id=declarations.bucket_id,
+                        declarations=declarations.declarations,
+                        projections=modelo,
+                        lifecycle_projections=captured.modelo_lifecycle.projection or (),
+                        graded_refusals=captured.modelo_graded_refusals.projection or {},
+                        lifecycle_actions_factory=lambda lifecycle: compose_runtime_modelo_lifecycle_door(
+                            self._client, lifecycle, refresh_after_success=refresh_declarations
+                        ),
+                    )
+                )
+                return DeclarationsRefreshSnapshotV1(
+                    projection=declarations,
+                    modelo_workspace_factory=modelo_factory,
+                    calendar_projection=captured.declarations_calendar.projection,
+                )
+
+            def declarations_factory(context: TuiScreenContextV1) -> Screen[None]:
+                snapshot = declarations_snapshot()
+                create_work = compose_runtime_work_create_handoff(
+                    self._client, refresh_after_success=refresh_declarations
+                )
+                return declarations_screen_factory(
+                    snapshot.projection,
+                    work_action=_action("operator.modelo.work.list"),
+                    revisions_action=_action("operator.modelo.work.revisions"),
+                    filing_action=_action("operator.modelo.filing_record.list"),
+                    modelo_workspace_factory=snapshot.modelo_workspace_factory,
+                    calendar_projection=snapshot.calendar_projection,
+                    work_create_handoff=create_work,
+                    calendar_recovery_handoff=compose_runtime_calendar_create_handoff(create_work),
+                    refresh_snapshot=declarations_snapshot,
+                )(context)
+
+            factories["workbench.declarations"] = declarations_factory
+        if generation.aeat_sync_admission.state is WorkbenchDestinationAdmissionState.AVAILABLE:
+            if generation.aeat_sync.projection is None:
+                raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            factories["workbench.aeat_sync"] = aeat_sync_screen_factory(generation.aeat_sync.projection)
+        return build_destination_catalogue(admissions=admissions, factories=factories)
+
+    def _presentation(self, capture: _Capture) -> RootPresentationV1:
+        generation = capture.generation
+        home = generation.home.projection
+        if home is None:
+            raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+
+        def profile(context: TuiScreenContextV1) -> ProfileManagerScreen:
+            if context.destination != "workbench.profile":
+                raise ValueError("profile factory requires its exact destination")
+            self._require_binding()
+            return RuntimeProfileManagerComposition(
+                self._client, profile_label=self._label, output_language=self._language
+            ).compose_from_overview(capture.profile)
+
+        search = generation.search.projection
+        return RootPresentationV1(
+            home=home,
+            destination_catalogue=self._destinations(generation, profile),
+            workbench_search_service=None if search is None else search.service(),
+            account_factories=compose_runtime_account_factories(
+                self._client,
+                profile=profile,
+                open_recovery_client=self._open_recovery_client,
+                onboarding_pending=capture.profile.setup_state is ProfileSetupState.INCOMPLETE,
+            ),
+        )
+
+    def load(self) -> RootBindingV1:
+        """Read the first authorized generation, then join its existing screens."""
+        first = self._presentation(self._read())
+        pending = [first]
+        pending_lock = Lock()
+
+        def refresh_home() -> RootPresentationV1:
+            self._require_binding()
+            with pending_lock:
+                if pending:
+                    return pending.pop()
+            # Nothing is published by the capturing thread. The root applies
+            # Home, navigation, search and account factories together only
+            # after checking that this session and navigation still own it.
+            return self._presentation(self._read())
+
+        return RootBindingV1(
+            destination_catalogue=first.destination_catalogue,
+            refresh_home=refresh_home,
+            workbench_search_service=first.workbench_search_service,
+            refresh_workbench_search=None,
+            refresh_destination_catalogue=None,
+            account_factories=first.account_factories,
+            read_account_session=runtime_account_session_reader(
+                self._client, profile_id=self._profile_id, profile_label=self._label
+            ),
+        )

@@ -19,12 +19,16 @@ before any state access.
 
 from __future__ import annotations
 
+import json
+import sys
 from collections.abc import Sequence
+from pathlib import Path
 
 import pytest
 
 from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from ._isolated_profile_storage_fixtures import _isolated_state
+from ._runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 from .cli_runner import invoke_cached_cli, semantic_cli_output
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -106,7 +110,7 @@ def _assert_output_language_registered(args: Sequence[str]) -> None:
     )
 
 
-def _assert_output_language_effective(args: Sequence[str]) -> None:
+def _assert_output_language_effective(args: Sequence[str], fixture: NativeCliProfileFixture) -> None:
     """Assert *args* actually localises its output, not just accepts the flag.
 
     Runs the command twice — once in English and once in Hungarian — through both
@@ -118,8 +122,16 @@ def _assert_output_language_effective(args: Sequence[str]) -> None:
     assertion catches. The surfaces enrolled here render a localised operator
     verdict line, so the two locales must diverge.
     """
-    leaf_en = invoke_cached_cli([*args, "--output-language", "en"])
-    leaf_hu = invoke_cached_cli([*args, "--output-language", "hu"])
+    assert fixture.label is not None
+
+    def invoke(command: Sequence[str]):
+        return invoke_cached_cli(
+            ["--profile", fixture.label, "--profile-secrets-stdin", *command],
+            input=json.dumps({"profile_passphrase": fixture.passphrase}),
+        )
+
+    leaf_en = invoke([*args, "--output-language", "en"])
+    leaf_hu = invoke([*args, "--output-language", "hu"])
     assert leaf_en.exit_code == 0, (
         f"`{' '.join(args)} --output-language en` exited {leaf_en.exit_code}:\n{leaf_en.output}"
     )
@@ -131,8 +143,8 @@ def _assert_output_language_effective(args: Sequence[str]) -> None:
         f"the flag is accepted but INEFFECTIVE (output not routed through tr()).\n"
         f"Output:\n{leaf_en.output}"
     )
-    root_en = invoke_cached_cli(["--language", "en", *args])
-    root_hu = invoke_cached_cli(["--language", "hu", *args])
+    root_en = invoke(["--language", "en", *args])
+    root_hu = invoke(["--language", "hu", *args])
     assert root_en.output != root_hu.output, (
         f"`--language ... {' '.join(args)}` output is identical under `en` and `hu`; "
         f"the root flag is accepted but INEFFECTIVE.\nOutput:\n{root_en.output}"
@@ -141,20 +153,24 @@ def _assert_output_language_effective(args: Sequence[str]) -> None:
 
 # Surfaces that render a localised operator verdict line, so ``--language`` /
 # ``--output-language`` must produce different output per locale. These are the
-# anchors for the ineffective-flag regression gate; ``config auth status`` runs
-# without an active profile so it is driveable in the sessionless test harness.
+# anchors for the ineffective-flag regression gate; auth status uses a native
+# profile worker because private status now requires profile-bound admission.
 _OUTPUT_LANGUAGE_EFFECTIVE_COMMANDS = (("config", "auth", "status"),)
 
 
-def test_output_language_is_effective_not_just_accepted() -> None:
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
+def test_output_language_is_effective_not_just_accepted(tmp_path: Path) -> None:
     """Enrolled surfaces must localise output, not merely accept ``--output-language``.
 
     Regression companion to the presence checks: it fails when a command accepts
     the flag but ignores it (the ZSOFIA R9-B ineffective-flag class), which the
     presence-only assertions cannot detect.
     """
-    for argv in _OUTPUT_LANGUAGE_EFFECTIVE_COMMANDS:
-        _assert_output_language_effective(argv)
+    with native_cli_profile_scope(tmp_path) as fixture:
+        fixture.register(label="auth-language-reader", facts={"identity.name": "Auth", "identity.surnames": "Reader"})
+        for argv in _OUTPUT_LANGUAGE_EFFECTIVE_COMMANDS:
+            _assert_output_language_effective(argv, fixture)
 
 
 def test_auth_commands_accept_output_language() -> None:

@@ -23,6 +23,7 @@ Submodules
    cadrumo.application.ledger.actions_split_merge
    cadrumo.application.ledger.attachment_review
    cadrumo.application.ledger.batch_ingest
+   cadrumo.application.ledger.check_operation
    cadrumo.application.ledger.check_query
    cadrumo.application.ledger.classification_assembly
    cadrumo.application.ledger.classification_assembly_rules
@@ -59,6 +60,7 @@ Submodules
    cadrumo.application.ledger.filer_establishment
    cadrumo.application.ledger.grounded_reading
    cadrumo.application.ledger.grounding_anchor
+   cadrumo.application.ledger.history_operation
    cadrumo.application.ledger.history_query
    cadrumo.application.ledger.id_resolution
    cadrumo.application.ledger.identity_roles
@@ -71,6 +73,7 @@ Submodules
    cadrumo.application.ledger.invoice_draft_records
    cadrumo.application.ledger.invoice_extraction_authority
    cadrumo.application.ledger.invoice_label_reader
+   cadrumo.application.ledger.list_operation
    cadrumo.application.ledger.list_query
    cadrumo.application.ledger.llm_classification
    cadrumo.application.ledger.llm_classification_ports
@@ -81,25 +84,35 @@ Submodules
    cadrumo.application.ledger.models
    cadrumo.application.ledger.notices
    cadrumo.application.ledger.operator_input_contracts
+   cadrumo.application.ledger.participation_operation
    cadrumo.application.ledger.participation_read
+   cadrumo.application.ledger.participation_rebuild_operation
    cadrumo.application.ledger.party_attribution
    cadrumo.application.ledger.party_colocation
    cadrumo.application.ledger.persistence_ports
    cadrumo.application.ledger.postal_shape_finding
    cadrumo.application.ledger.preconditions
    cadrumo.application.ledger.preflight
+   cadrumo.application.ledger.preflight_operation
    cadrumo.application.ledger.protocols
    cadrumo.application.ledger.ratios
+   cadrumo.application.ledger.read_access
    cadrumo.application.ledger.readiness_query
    cadrumo.application.ledger.regime_contradiction
    cadrumo.application.ledger.review_advisories
    cadrumo.application.ledger.review_filter
+   cadrumo.application.ledger.review_operation
    cadrumo.application.ledger.review_projection
    cadrumo.application.ledger.rule_repository
    cadrumo.application.ledger.source_jurisdiction
    cadrumo.application.ledger.stale_filing_query
+   cadrumo.application.ledger.status_operation
    cadrumo.application.ledger.structured_invoice_ports
+   cadrumo.application.ledger.track_operation
+   cadrumo.application.ledger.tracking_projection
+   cadrumo.application.ledger.transaction_projection
    cadrumo.application.ledger.transaction_repository
    cadrumo.application.ledger.usage_ratio_repository
+   cadrumo.application.ledger.view_operation
    cadrumo.application.ledger.workspace
    cadrumo.application.ledger.workspace_reader

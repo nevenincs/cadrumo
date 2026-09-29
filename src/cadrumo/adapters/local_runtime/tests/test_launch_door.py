@@ -124,7 +124,13 @@ async def test_concurrent_clients_converge_with_autostart_disabled_and_disconnec
 async def test_existing_ready_owner_needs_no_manager(tmp_path: Path) -> None:
     async with _fixture(tmp_path) as (manager, endpoint):
         await manager.start()
-        connection = await RuntimeLaunchDoor(endpoint, expected=_expected(endpoint)).open()
+
+        def unexpected_manager() -> _FixtureManager:
+            raise AssertionError("a verified ready owner must not construct a manager")
+
+        connection = await RuntimeLaunchDoor(
+            endpoint, expected=_expected(endpoint), manager_factory=unexpected_manager
+        ).open()
         connection.close()
         assert manager.process is not None and manager.process.returncode is None
 
@@ -135,6 +141,26 @@ async def test_missing_manager_refuses_without_direct_launch(tmp_path: Path) -> 
         with pytest.raises(RuntimeRefusalError) as caught:
             await RuntimeLaunchDoor(endpoint, expected=_expected(endpoint)).open()
         assert caught.value.reason is RuntimeRefusalCode.UNAVAILABLE
+
+
+@pytest.mark.asyncio
+async def test_missing_endpoint_constructs_manager_once_for_existing_provisioning(tmp_path: Path) -> None:
+    async with _fixture(tmp_path) as (manager, endpoint):
+        factory_calls = 0
+
+        def manager_factory() -> _FixtureManager:
+            nonlocal factory_calls
+            factory_calls += 1
+            return manager
+
+        connection = await RuntimeLaunchDoor(
+            endpoint, expected=_expected(endpoint), manager_factory=manager_factory
+        ).open(timeout=20)
+        try:
+            assert factory_calls == 1
+            assert manager.start_count == 1
+        finally:
+            connection.close()
 
 
 @pytest.mark.asyncio
@@ -196,8 +222,12 @@ async def test_foreign_cohort_is_refused_without_restart_or_repair(tmp_path: Pat
     async with _fixture(tmp_path) as (manager, endpoint):
         manager.version = "different-cohort"
         await manager.start()
+
+        def unexpected_manager() -> _FixtureManager:
+            raise AssertionError("an incompatible peer must not invoke manager provisioning")
+
         with pytest.raises(RuntimeRefusalError) as caught:
-            await RuntimeLaunchDoor(endpoint, expected=_expected(endpoint), manager=manager).open()
+            await RuntimeLaunchDoor(endpoint, expected=_expected(endpoint), manager_factory=unexpected_manager).open()
         assert caught.value.reason is RuntimeRefusalCode.VERSION_MISMATCH
         assert manager.start_count == 1
         assert manager.process is not None and manager.process.returncode is None
@@ -224,11 +254,13 @@ async def test_cancelled_handshake_closes_late_connection_without_stopping_owner
         try:
             assert await manager.line() == b"handshake\n"
             opening.cancel()
-            with pytest.raises(asyncio.CancelledError):
-                await opening
+            await asyncio.sleep(0)
+            assert not opening.done(), "cancellation must retain native handshake cleanup"
             assert manager.process is not None and manager.process.stdin is not None
             manager.process.stdin.write(b"release\n")
             await manager.process.stdin.drain()
+            with pytest.raises(asyncio.CancelledError):
+                await opening
             assert await manager.line() == b"late_closed\n"
             assert manager.process.returncode is None
         finally:

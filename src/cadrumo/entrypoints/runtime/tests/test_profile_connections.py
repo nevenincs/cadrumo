@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
@@ -27,10 +28,21 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
 )
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
+from cadrumo.application.operations.frontend_projection import OperationReviewProjectionReferenceV1
 from cadrumo.application.operations.frontend_requests import (
     OPERATION_OBSERVATION_PROJECTION_ID,
+    OperationCancellationRefusalV1,
+    OperationCancellationRequestV1,
+    OperationDetachRefusalV1,
+    OperationDetachRequestV1,
+    OperationDetachSuccessV1,
     OperationObservationRequestV1,
     OperationObservationSuccessV1,
+    OperationResponseControlRequestV1,
+    OperationResultProjectionRefusalV1,
+    OperationResultProjectionRequestV1,
+    OperationResultProjectionSuccessV1,
+    OperationReviewProjectionRequestV1,
 )
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.runtime.contracts import RuntimeClientHello
@@ -39,8 +51,13 @@ from cadrumo.application.runtime.operation_access import (
     RuntimeOperationContract,
     RuntimeOperationContractReply,
     RuntimeOperationControl,
+    RuntimeOperationManage,
+    RuntimeOperationManaged,
     RuntimeOperationObserve,
     RuntimeOperationObserved,
+    RuntimeOperationProjected,
+    RuntimeOperationResult,
+    RuntimeOperationReview,
     RuntimeOperationSubmit,
     RuntimeOperationSubmitted,
 )
@@ -61,9 +78,16 @@ from cadrumo.application.user_profile.access_contracts import (
 )
 from cadrumo.application.user_profile.automation_lifecycle import AutomationDenial, AutomationDenialKind
 from cadrumo.application.user_profile.login_session import login_profile
-from cadrumo.application.user_profile.operations import ProfileFieldMutationOperationRequest
-from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
+from cadrumo.application.user_profile.operations import (
+    ProfileFieldMutationOperationRequest,
+    ProfileMutationOperationProjection,
+)
+from cadrumo.application.user_profile.profile_record_repository import (
+    ProfileRecordRepository,
+    active_profile_record_session,
+)
 from cadrumo.application.user_profile.projections import record_to_path_values
+from cadrumo.core.hashing import content_hash_hex
 from cadrumo.core.operations import OperationTerminalCondition
 from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 
@@ -108,7 +132,12 @@ def connect(endpoint: WindowsRuntimeEndpoint) -> VerifiedRuntimeConnection:
 def login(client: VerifiedRuntimeConnection, profile: UUID, method: str, raw: bytes):
     buffer = bytearray(raw)
     request = RuntimeProfileLogin.model_validate(
-        {"request_id": uuid4(), "profile_id": profile, "method": method, "frontend": OperationFrontendProjection.MCP}
+        {
+            "request_id": uuid4(),
+            "profile_id": profile,
+            "method": method,
+            "frontend": OperationFrontendProjection.MCP if method == "api_key" else OperationFrontendProjection.CLI,
+        }
     )
     result = client.login(request, buffer, deadline=time.monotonic() + 20)
     assert buffer == bytes(len(raw))
@@ -131,8 +160,8 @@ def test_real_connection_admission_lock_reconnect_and_native_dependency_loss(tmp
         record = enrollment.store.enrollment_state().requests[0]
         secret = enrollment.owner.delivery.endpoint.possession(record)
         assert secret is not None
-        close_active_bucket_session()
         profile = enrollment.store.binding.profile_id
+        close_active_bucket_session()
         stop, boot, native_login = Event(), uuid4(), LoginObservation(owner_id())
         profiles = RuntimeProfileConnections(
             storage_root=root,
@@ -264,6 +293,11 @@ def test_api_authority_reaches_real_effects_and_guards_public_output(tmp_path: P
                         projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
                         category=DisclosureCategory.OPERATION_METADATA,
                     ),
+                    DisclosurePermission(
+                        destination_id=enrollment.owner.requesting.client_id,
+                        projection_id="user-profile.field-mutation.result",
+                        category=DisclosureCategory.PROFILE_VALUES,
+                    ),
                 )
             )
             scope = changed(enrollment.proposal.scope, disclosures=permissions)
@@ -279,8 +313,13 @@ def test_api_authority_reaches_real_effects_and_guards_public_output(tmp_path: P
         record = enrollment.store.enrollment_state().requests[0]
         secret = enrollment.owner.delivery.endpoint.possession(record)
         assert secret is not None
-        close_active_bucket_session()
         profile = enrollment.store.binding.profile_id
+        record_session = active_profile_record_session()
+        assert record_session is not None
+        baseline = ProfileRecordRepository.for_current_session(
+            profile, profile_decode_context=record_session.profile_decode_context
+        ).load(profile)
+        close_active_bucket_session()
         stop, boot, native_login = Event(), uuid4(), LoginObservation(owner_id())
         profiles = RuntimeProfileConnections(
             storage_root=root,
@@ -291,6 +330,7 @@ def test_api_authority_reaches_real_effects_and_guards_public_output(tmp_path: P
             secret_store=lambda: enrollment.native,
         )
         barrier = ProjectionWriteBarrier()
+        projected_revision = None
         server = RuntimeTransportServer(
             PausedProjectionListener(endpoint, barrier),
             product_version="test",
@@ -329,6 +369,19 @@ def test_api_authority_reaches_real_effects_and_guards_public_output(tmp_path: P
                     deadline=time.monotonic() + 5,
                 )
                 assert isinstance(contract, RuntimeOperationContractReply)
+                assert (
+                    content_hash_hex(contract.request_json_schema)
+                    == contract.contract.request_schema.schema_fingerprint
+                )
+                request_properties = contract.request_json_schema.get("properties")
+                assert isinstance(request_properties, dict)
+                assert {
+                    "profile_id",
+                    "expected_revision",
+                    "expected_content_digest",
+                    "path",
+                    "value",
+                } <= request_properties.keys()
                 submission = RuntimeOperationSubmit(
                     request_id=uuid4(),
                     profile_id=profile,
@@ -336,7 +389,11 @@ def test_api_authority_reaches_real_effects_and_guards_public_output(tmp_path: P
                     definition_id="user-profile.field-mutation",
                     subject_ref=f"profile:{profile}",
                     payload_json=ProfileFieldMutationOperationRequest(
-                        profile_id=profile, path=PROFILE_OUTPUT_LANGUAGE_PATH, value="es"
+                        profile_id=profile,
+                        expected_revision=baseline.record_revision,
+                        expected_content_digest=baseline.content_digest,
+                        path=PROFILE_OUTPUT_LANGUAGE_PATH,
+                        value="es",
                     ).model_dump_json(),
                     idempotency_key="autonomous-language-request",
                 )
@@ -392,7 +449,127 @@ def test_api_authority_reaches_real_effects_and_guards_public_output(tmp_path: P
                     assert time.monotonic() < deadline
                     time.sleep(0.02)
                 assert snapshot.terminal_condition is OperationTerminalCondition.SUCCEEDED
+                control = RuntimeOperationManage(
+                    request_id=uuid4(),
+                    profile_id=profile,
+                    session_id=session_id,
+                    management=OperationDetachRequestV1(
+                        operation_id=submitted.receipt.operation_id, expected_revision=snapshot.revision
+                    ),
+                )
+                detached = client.operation(control, deadline=time.monotonic() + 5)
+                if allow_observation:
+                    assert isinstance(detached, RuntimeOperationManaged), detached
+                    detached_receipt = OperationDetachSuccessV1.model_validate_json(json.dumps(detached.document))
+                    assert detached_receipt.operation_id == submitted.receipt.operation_id
+                    assert detached_receipt.revision == snapshot.revision
+                    stale = client.operation(
+                        changed(
+                            control,
+                            request_id=uuid4(),
+                            management=OperationDetachRequestV1(
+                                operation_id=submitted.receipt.operation_id, expected_revision=snapshot.revision - 1
+                            ),
+                        ),
+                        deadline=time.monotonic() + 5,
+                    )
+                    assert isinstance(stale, RuntimeOperationManaged)
+                    assert OperationDetachRefusalV1.model_validate_json(json.dumps(stale.document)).outcome == "refused"
+                else:
+                    assert isinstance(detached, RuntimeAccessRefusal), detached
+                    assert detached.code is AccessDenialCode.DISCLOSURE_DENIED
+                cancelled = client.operation(
+                    changed(
+                        control,
+                        request_id=uuid4(),
+                        management=OperationCancellationRequestV1(
+                            operation_id=submitted.receipt.operation_id, expected_revision=snapshot.revision
+                        ),
+                    ),
+                    deadline=time.monotonic() + 5,
+                )
+                if allow_observation:
+                    assert isinstance(cancelled, RuntimeOperationManaged), cancelled
+                    assert (
+                        OperationCancellationRefusalV1.model_validate_json(json.dumps(cancelled.document)).outcome
+                        == "refused"
+                    )
+                else:
+                    assert isinstance(cancelled, RuntimeAccessRefusal)
+                    assert cancelled.code is AccessDenialCode.DISCLOSURE_DENIED
+                response = client.operation(
+                    changed(
+                        control,
+                        request_id=uuid4(),
+                        management=OperationResponseControlRequestV1(
+                            operation_id=submitted.receipt.operation_id,
+                            interaction_id="a" * 64,
+                            revision=snapshot.revision,
+                            actor_ref=f"session:{session_id}",
+                        ),
+                    ),
+                    deadline=time.monotonic() + 5,
+                )
+                assert isinstance(response, RuntimeAccessRefusal)
+                assert response.code is AccessDenialCode.RESPONSE_AUTHORITY_REQUIRED
+                # Control acknowledgements/refusals do not rewrite settled effects.
+                assert asyncio.run(journal.load(submitted.receipt.operation_id)) == snapshot
+                result_schema = contract.contract.result_schema
+                assert result_schema is not None
+                result_request = RuntimeOperationResult(
+                    request_id=uuid4(),
+                    profile_id=profile,
+                    session_id=session_id,
+                    result=OperationResultProjectionRequestV1(
+                        operation_id=submitted.receipt.operation_id,
+                        terminal_revision=snapshot.revision,
+                        definition_contract_digest=contract.contract.definition_contract_digest,
+                        result_schema=result_schema,
+                    ),
+                )
+                projected = client.operation(result_request, deadline=time.monotonic() + 5)
+                if allow_observation:
+                    assert isinstance(projected, RuntimeOperationProjected), projected
+                    typed_result = OperationResultProjectionSuccessV1[
+                        ProfileMutationOperationProjection
+                    ].model_validate_json(json.dumps(projected.document))
+                    assert typed_result.projection.profile_id == profile
+                    projected_revision = typed_result.projection.record_revision
+                    wrong = client.operation(
+                        changed(
+                            result_request,
+                            request_id=uuid4(),
+                            result=changed(result_request.result, result_schema=contract.contract.request_schema),
+                        ),
+                        deadline=time.monotonic() + 5,
+                    )
+                    assert isinstance(wrong, RuntimeOperationProjected)
+                    refused_result = OperationResultProjectionRefusalV1.model_validate_json(json.dumps(wrong.document))
+                    assert refused_result.outcome == "refused"
+                else:
+                    assert isinstance(projected, RuntimeAccessRefusal), projected
+                    assert projected.code is AccessDenialCode.DISCLOSURE_DENIED
                 host = profiles._profiles[profile]
+                unsupported_review = client.operation(
+                    RuntimeOperationReview(
+                        request_id=uuid4(),
+                        profile_id=profile,
+                        session_id=session_id,
+                        review=OperationReviewProjectionRequestV1(
+                            reference=OperationReviewProjectionReferenceV1(
+                                operation_id=submitted.receipt.operation_id,
+                                interaction_id="a" * 64,
+                                revision=snapshot.revision,
+                                review_projection_schema=result_schema,
+                                definition_contract_digest=contract.contract.definition_contract_digest,
+                                expires_at=None,
+                            )
+                        ),
+                    ),
+                    deadline=time.monotonic() + 5,
+                )
+                assert isinstance(unsupported_review, RuntimeAccessRefusal)
+                assert unsupported_review.code is AccessDenialCode.OPERATION_DENIED
                 if allow_observation:
                     human = connect(endpoint)
                     clients.append(human)
@@ -459,5 +636,7 @@ def test_api_authority_reaches_real_effects_and_guards_public_output(tmp_path: P
                 profile
             )
             assert record_to_path_values(persisted)[PROFILE_OUTPUT_LANGUAGE_PATH] == "es"
+            if allow_observation:
+                assert persisted.record_revision == projected_revision
         finally:
             close_active_bucket_session()

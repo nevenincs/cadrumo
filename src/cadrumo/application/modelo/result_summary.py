@@ -41,6 +41,7 @@ from pydantic import BaseModel, Field
 from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import CadrumoError
+from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import output_language
 from ...core.logging import get_logger
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -116,6 +117,7 @@ def calculation_result_summary(
     operation: PinnedAuthorityOperation,
     work_unit: WorkUnit | None = None,
     work_unit_resolver: Callable[[str], WorkUnit] | None = None,
+    language: OutputLanguage | None = None,
 ) -> CalculationResultSummary | None:
     """Return the :class:`CalculationResultSummary` for ``revision``, if available.
 
@@ -134,7 +136,9 @@ def calculation_result_summary(
 
     Rows are emitted only when their casilla id exists in
     ``revision.casilla_values``. Returns ``None`` when no candidate row
-    survives.
+    survives. An explicit ``language`` selects labels without consulting the
+    ambient operator profile; existing presentation callers retain their
+    default output-language behavior.
     """
     require_calculation_revision_coordinates_current(revision, operation=operation)
     casilla_values = revision.casilla_values
@@ -175,6 +179,7 @@ def calculation_result_summary(
         casillas_by_id=casillas_by_id,
         result_roles=result_roles,
         key_figures=key_figures,
+        language=language,
     )
 
     if not rows:
@@ -208,6 +213,7 @@ def _summary_rows(
     casillas_by_id: Mapping[CasillaId, CasillaDefinition],
     result_roles: Mapping[CasillaId, ResultSummaryRole],
     key_figures: list[CasillaId],
+    language: OutputLanguage | None,
 ) -> list[ResultSummaryRow]:
     rows: list[ResultSummaryRow] = []
     seen: set[CasillaId] = set()
@@ -219,6 +225,7 @@ def _summary_rows(
             value=casilla_values.get(casilla_id),
             role=role,
             casillas_by_id=casillas_by_id,
+            language=language,
         )
     for casilla_id in key_figures:
         _append_summary_row(
@@ -228,6 +235,7 @@ def _summary_rows(
             value=casilla_values.get(casilla_id),
             role=ResultSummaryRole.KEY_FIGURE,
             casillas_by_id=casillas_by_id,
+            language=language,
         )
     return rows
 
@@ -240,6 +248,7 @@ def _append_summary_row(
     value: Decimal | None,
     role: ResultSummaryRole,
     casillas_by_id: Mapping[CasillaId, CasillaDefinition],
+    language: OutputLanguage | None,
 ) -> None:
     if value is None or casilla_id in seen:
         return
@@ -247,7 +256,7 @@ def _append_summary_row(
     rows.append(
         ResultSummaryRow(
             casilla_id=casilla_id,
-            label=casilla.get_label(output_language()) if casilla is not None else casilla_id,
+            label=casilla.get_label(language if language is not None else output_language()) if casilla else casilla_id,
             value=value,
             role=role,
         ),

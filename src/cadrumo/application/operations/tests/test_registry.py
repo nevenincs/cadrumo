@@ -1059,11 +1059,12 @@ def test_registry_public_contract_is_a_live_definition_fixed_point() -> None:
     registration = public_registration(item)
     registry = OperationRegistry(definitions=(item,), public_registrations=(registration,))
 
+    assert registration.contract.refusal_detail_codes == frozenset()
     assert registration.contract.definition_contract_digest == (
-        "52cca15e062028441c31313f2337360487b878bb89fc90d8817a9848dabc7cb3"
+        "2f822406103069dc323c9a700537f6f7185037633360014bcfcb3b3ea4187e7b"
     )
     assert registry.public_contract_set.contract_set_digest == (
-        "44d6bb71a45ff1e0d67881d3dc26433de7c509e2c26cfcd25d4fa84937c373f2"
+        "88e1914b229c76ec39d57a06379d6a1c379a6fd1d8003e52050bfde68d2f8492"
     )
     assert registry.public_contract_set.definitions == (registration.contract,)
     assert registry.lookup_public_contract(item.definition_id) == registration.contract

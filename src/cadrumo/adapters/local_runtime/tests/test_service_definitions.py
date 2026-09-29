@@ -113,9 +113,10 @@ def test_linux_definition_escapes_specifiers_and_disables_environment_expansion(
     unit = linux_user_service(binding)
     assert 'ExecStart=:"/opt/Cadrumo tools/runtime"' in unit
     assert '"/synthetic/literal %%n $HOME \\"quoted\\""' in unit
-    assert "KillMode=control-group\n" in unit
+    assert "KillMode=mixed\n" in unit
     assert "Restart=on-failure\n" in unit
-    assert "TimeoutStopSec=15\n" in unit
+    assert "TimeoutStopSec=25\n" in unit
+    assert "SendSIGKILL=yes\n" in unit
     assert "User=" not in unit
     assert "PAMName=" not in unit
 

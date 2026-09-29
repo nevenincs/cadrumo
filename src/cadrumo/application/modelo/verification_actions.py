@@ -891,7 +891,7 @@ def verify_modelo_revision_with_preconditions(
     # Revisioned, and threaded to the persistence below: the catalogue is
     # composed into a co-commit there, so it cannot use a self-committing
     # mutation, and the revision belongs to whoever performed the read.
-    revisions, revisions_revision_id = cr_repo.load_revisioned()
+    revisions, revisions_revision_id = cr_repo.load_revisioned(operation=operation)
     target = revisions.get(calculation_revision_id)
     if target is None:
         raise CalculationRevisionNotFoundError(
@@ -930,12 +930,13 @@ def verify_modelo_revision_with_preconditions(
         # so it falls through to the hard refusal below rather than fabricating
         # one. Mirrors the re-file no-op in file_modelo_revision.
         existing = _existing_granting_verification_report(
-            require_verification_report_coordinates_current(vr_repo.load(), operation=operation),
+            require_verification_report_coordinates_current(vr_repo.load(operation=operation), operation=operation),
             calculation_revision_id,
         )
         if existing is not None:
             return ModeloVerificationResult(
                 report=existing,
+                published=False,
                 finding_preconditions=project_verification_findings(
                     existing.findings,
                     failures_by_finding_id={},
@@ -1067,8 +1068,10 @@ def verify_modelo_revision_with_preconditions(
     # are part of the audit trail.
     vr_repo.save(
         upsert_verification_report(
-            require_verification_report_coordinates_current(vr_repo.load(), operation=operation), report
-        )
+            require_verification_report_coordinates_current(vr_repo.load(operation=operation), operation=operation),
+            report,
+        ),
+        operation=operation,
     )
 
     if granted:
@@ -1106,6 +1109,7 @@ def verify_modelo_revision_with_preconditions(
 
     return ModeloVerificationResult(
         report=report,
+        published=True,
         finding_preconditions=project_verification_findings(
             findings,
             failures_by_finding_id=failures_by_finding_id,

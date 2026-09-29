@@ -51,6 +51,7 @@ class AccessAction(StrEnum):
     REVIEW = "review"
     RESPOND = "respond"
     CANCEL = "cancel"
+    DETACH = "detach"
     COMMIT = "commit"
 
 
@@ -340,6 +341,9 @@ class OperationAccessPolicy(BaseModel):
     published_authority: Availability
     provider: Availability
     transaction_authority_required: bool
+    requires_human: bool = False
+    requires_all_periods: bool = False
+    """Profile-wide tax discovery additionally requires an unrestricted period ceiling."""
 
 
 class AccessDenialCode(StrEnum):
@@ -402,6 +406,17 @@ class AccessAllowed(BaseModel):
 
 
 type AccessDecision = Annotated[AccessAllowed | AccessDenied, Field(discriminator="outcome")]
+
+
+class OperationResponseScopeAllowed(BaseModel):
+    """Current profile permission only; the response owner still must prove its bearer."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    outcome: Literal["response_scope_allowed"] = "response_scope_allowed"
+    profile_id: UUID
+    session_id: UUID
+    expires_at: UtcInstant
 
 
 class ProfileAccessStatus(BaseModel):

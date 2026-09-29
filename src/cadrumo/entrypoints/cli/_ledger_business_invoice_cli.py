@@ -4,10 +4,9 @@ One ``aeat app ledger invoice`` noun-group gated by ``--kind issued|received``
 replaces the prior payable-invoice / collectible-invoice split. Every verb
 reads and writes the sole invoice aggregate — the
 :class:`Invoice` records held in the
-:class:`InvoiceCatalogue` — through the
-application-layer lifecycle functions in
-:mod:`~application.invoices`, so the operator surface has exactly one invoice
-record behind it and ``link --invoice-id`` resolves against that same identity.
+:class:`InvoiceCatalogue`. Mutations use the application-layer lifecycle
+functions; list and view use authenticated profile-worker snapshots of that
+same catalogue identity.
 """
 
 from __future__ import annotations
@@ -30,35 +29,41 @@ from ...application.invoices.bulk_import import (
 )
 from ...application.invoices.catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
 from ...application.invoices.catalogue_creation_ports import CatalogueCreationPorts
-from ...application.invoices.catalogue_lifecycle import (
-    CatalogueInvoicePatch,
-    remove_catalogue_invoice,
-    resolve_catalogue_invoice_from_repository,
-    update_catalogue_invoice,
-)
+from ...application.invoices.catalogue_lifecycle import CatalogueInvoicePatch
+from ...application.invoices.catalogue_read_projection import CatalogueInvoiceSnapshot
+from ...application.invoices.catalogue_update_operation import InvoiceUpdatePatch
 from ...application.invoices.simplificada_advisory import (
     SimplificadaTaxIdAdvisory,
     resolve_simplificada_tax_id_advisory,
     resolve_simplificada_tax_id_legal_refs,
 )
 from ...application.invoices.source_resolver import iva_category_for_operation_type
+from ...application.runtime.contracts import RuntimeRefusalCode
 from ...core.aggregation import IntracomOperationType
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.field_role import FieldRole
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.type_guards import is_object_list_or_tuple
-from ...domain.invoices.enums import default_invoice_class, require_invoice_class
+from ...domain.invoices.enums import (
+    InvoiceClass,
+    InvoiceOperationDateRole,
+    IvaRate,
+    default_invoice_class,
+    require_invoice_class,
+)
 from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.invoices.models import Invoice, InvoiceLine
 from ...domain.iva.classification import InvoiceKind
-from ...domain.iva.schema import IvaCategory
+from ...domain.iva.schema import IvaCategory, IvaRateKind
 from ._date_parsing import _parse_iso_date
 from ._decimal_parsing import parse_decimal_amount, parse_optional_decimal_amount
 from ._ledger_catalogue_invoice_payloads import (
     CatalogueInvoiceCreatePayload,
     CatalogueInvoiceImportResult,
+    CatalogueInvoiceLinePayload,
     CatalogueInvoiceListResult,
+    CatalogueInvoiceRecordPayload,
     CatalogueInvoiceRemovePayload,
     CatalogueInvoiceUpdatePayload,
     CatalogueInvoiceViewResult,
@@ -69,15 +74,20 @@ from .common import (
     active_bucket_id_or_refuse as _business_invoice_bucket_id,
 )
 from .common import bad, emit_envelope
+from .runtime_invoice_catalogue import (
+    read_invoice_catalogue,
+    remove_invoice_catalogue,
+    update_invoice_catalogue,
+    view_invoice_catalogue,
+)
+from .runtime_registered_operation import submitted_operation_error
 from .state_projection_support import (
     authority_operation,
     catalogue_creation_ports_factory,
-    catalogue_lifecycle_ports_factory,
 )
 
-# The invoice fields every operator surface renders, declared once. Both
-# projections below read this tuple, so a field added to one surface cannot go
-# missing from the other -- which is exactly how the two drifted apart before.
+# The domain-invoice fields shared by mutation readback and evidence-confirm.
+# Authenticated list/view use the closed application snapshot instead.
 _SHARED_INVOICE_FIELDS: tuple[str, ...] = (
     "invoice_id",
     "kind",
@@ -138,8 +148,8 @@ def catalogue_invoice_shared_fields(invoice: Invoice) -> dict[str, object]:
     """Project the :class:`Invoice` identity/total fields in their string wire form.
 
     Consumed by the evidence-confirm verb, whose envelope is all-``str``. Shares
-    :data:`_SHARED_INVOICE_FIELDS` with :func:`_catalogue_invoice_payload`, so
-    the two operator surfaces cannot carry different field sets.
+    :data:`_SHARED_INVOICE_FIELDS` with mutation readback via
+    :func:`_catalogue_invoice_payload`.
     """
     return {name: _wire_scalar(getattr(invoice, name)) for name in _SHARED_INVOICE_FIELDS}
 
@@ -168,6 +178,74 @@ def _catalogue_invoice_payload(invoice: Invoice) -> dict[str, object]:
     payload["source_sha256"] = provenance.source_sha256 if provenance is not None else None
     payload["source_row_index"] = provenance.source_row_index if provenance is not None else None
     return payload
+
+
+def _snapshot_invoice_payload(snapshot: CatalogueInvoiceSnapshot) -> CatalogueInvoiceRecordPayload:
+    """Restore the output DTO's tokens from the worker's canonical projection.
+
+    The authenticated result already captured registry values under its held
+    authority. Rendering neither constructs new tax values nor resolves them
+    against a different publication.
+    """
+
+    def amount(value: object) -> Decimal | None:
+        from ...application.operations.public_scalar import PublicDecimal
+
+        return Decimal(value.decimal) if isinstance(value, PublicDecimal) else None
+
+    return CatalogueInvoiceRecordPayload(
+        invoice_id=snapshot.invoice_id,
+        bucket_id=snapshot.bucket_id,
+        kind=snapshot.kind,
+        invoice_number=snapshot.invoice_number,
+        issued_at=snapshot.issued_at,
+        counterparty_name=snapshot.counterparty_name,
+        counterparty_tax_id=snapshot.counterparty_tax_id,
+        counterparty_country=snapshot.counterparty_country,
+        base_total=Decimal(snapshot.base_total.decimal),
+        iva_total=Decimal(snapshot.iva_total.decimal),
+        grand_total=Decimal(snapshot.grand_total.decimal),
+        currency=snapshot.currency,
+        payment_status=snapshot.payment_status,
+        linked_transaction_ids=list(snapshot.linked_transaction_ids),
+        source_filename=snapshot.source_filename,
+        source_sha256=snapshot.source_sha256,
+        source_row_index=snapshot.source_row_index,
+        notes=snapshot.notes,
+        retention_rate=amount(snapshot.retention_rate),
+        retention_amount=amount(snapshot.retention_amount),
+        recargo_amount=amount(snapshot.recargo_amount),
+        operation_type=snapshot.operation_type,
+        lines=[
+            CatalogueInvoiceLinePayload(
+                description=line.description,
+                quantity=Decimal(line.quantity.decimal),
+                unit_price=Decimal(line.unit_price.decimal),
+                subtotal=Decimal(line.subtotal.decimal),
+                iva_rate=IvaRate.from_registry(line.iva_rate),
+                iva_amount=Decimal(line.iva_amount.decimal),
+                spending_category_id=line.spending_category_id,
+                oss_rate_kind=IvaRateKind(line.oss_rate_kind) if line.oss_rate_kind is not None else None,
+            )
+            for line in snapshot.lines
+        ],
+        invoice_class=InvoiceClass.from_registry(snapshot.invoice_class),
+        series=snapshot.series,
+        operation_date=snapshot.operation_date,
+        operation_date_role=(
+            InvoiceOperationDateRole.from_registry(snapshot.operation_date_role)
+            if snapshot.operation_date_role is not None
+            else None
+        ),
+        iva_category=IvaCategory(snapshot.iva_category) if snapshot.iva_category is not None else None,
+        rectifies_invoice_number=snapshot.rectifies_invoice_number,
+        fx_rate=amount(snapshot.fx_rate),
+        fx_rate_date=snapshot.fx_rate_date,
+        fx_rate_source=snapshot.fx_rate_source,
+        base_total_eur=amount(snapshot.base_total_eur),
+        iva_total_eur=amount(snapshot.iva_total_eur),
+        grand_total_eur=amount(snapshot.grand_total_eur),
+    )
 
 
 def _parse_invoice_lines(raw_lines: Sequence[str]) -> tuple[InvoiceLine, ...]:
@@ -248,7 +326,7 @@ def _simplificada_tax_id_notices(invoice: Invoice) -> list[Notice]:
     ]
 
 
-def _catalogue_invoice_lines(invoice: Invoice) -> list[str]:
+def _catalogue_invoice_lines(invoice: Invoice | CatalogueInvoiceRecordPayload) -> list[str]:
     return [
         f"invoice_id\t{invoice.invoice_id}",
         f"kind\t{invoice.kind.value}",
@@ -723,31 +801,33 @@ def invoice_list(
     kind: InvoiceKind | None = None,
 ) -> None:
     """List the rich reconciliation catalogue invoices for the active bucket."""
-    from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-
-    authority_operation(ctx)
-    bucket_id = _business_invoice_bucket_id()
-    catalogue = InvoiceCatalogueRepository(bucket_id=bucket_id).load()
-    wanted = None if kind is None else kind
-    rows = tuple(invoice for invoice in catalogue.values() if wanted is None or invoice.kind is wanted)
-    payload = {
-        "bucket_id": bucket_id,
-        "rows": [_catalogue_invoice_payload(invoice) for invoice in rows],
-        "count": len(rows),
-    }
-    lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
-    for invoice in rows:
-        lines.append(
-            f"{invoice.invoice_id}\t{invoice.kind.value}\t{invoice.counterparty_tax_id}\t"
-            f"{invoice.invoice_number}\t{invoice.issued_at.isoformat()}\t{format(invoice.grand_total, 'f')}",
+    read = read_invoice_catalogue(ctx, kind=kind)
+    try:
+        rows = [_snapshot_invoice_payload(invoice) for invoice in read.invoices]
+        bucket_id = str(read.completion.projection.profile_id)
+        lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
+        for invoice in rows:
+            lines.append(
+                f"{invoice.invoice_id}\t{invoice.kind.value}\t{invoice.counterparty_tax_id}\t"
+                f"{invoice.invoice_number}\t{invoice.issued_at.isoformat()}\t{format(invoice.grand_total, 'f')}",
+            )
+        emit_envelope(
+            ctx,
+            command="ledger.invoice.list",
+            result=CatalogueInvoiceListResult(bucket_id=bucket_id, rows=rows, count=len(rows)),
+            lines=lines,
         )
-
-    emit_envelope(
-        ctx,
-        command="ledger.invoice.list",
-        result=CatalogueInvoiceListResult.model_validate(payload),
-        lines=lines,
-    )
+    except typer.Exit:
+        raise
+    except Exception:
+        receipt = read.completion
+        raise submitted_operation_error(
+            receipt.operation_id,
+            RuntimeRefusalCode.UNAVAILABLE.value,
+            terminal_condition=receipt.terminal_condition,
+            effect=receipt.effect,
+            refusal_code=receipt.refusal_code,
+        ) from None
 
 
 def invoice_view(
@@ -762,16 +842,26 @@ def invoice_view(
     linking or removing it. A not-found id, or a prefix matching more than one
     invoice, is a typed refusal naming the candidates — never a silent miss.
     """
-    authority_operation(ctx)
-    bucket_id = _business_invoice_bucket_id()
-    lifecycle_ports = catalogue_lifecycle_ports_factory(ctx)(bucket_id=bucket_id)
-    invoice = resolve_catalogue_invoice_from_repository(invoice_id=invoice_id, ports=lifecycle_ports.read_ports)
-    emit_envelope(
-        ctx,
-        command="ledger.invoice.view",
-        result=CatalogueInvoiceViewResult.model_validate(_catalogue_invoice_payload(invoice)),
-        lines=_catalogue_invoice_lines(invoice),
-    )
+    read = view_invoice_catalogue(ctx, invoice_id=invoice_id)
+    try:
+        invoice = _snapshot_invoice_payload(read.invoice)
+        emit_envelope(
+            ctx,
+            command="ledger.invoice.view",
+            result=CatalogueInvoiceViewResult.model_validate(invoice.model_dump(mode="python")),
+            lines=_catalogue_invoice_lines(invoice),
+        )
+    except typer.Exit:
+        raise
+    except Exception:
+        receipt = read.completion
+        raise submitted_operation_error(
+            receipt.operation_id,
+            RuntimeRefusalCode.UNAVAILABLE.value,
+            terminal_condition=receipt.terminal_condition,
+            effect=receipt.effect,
+            refusal_code=receipt.refusal_code,
+        ) from None
 
 
 def invoice_remove(
@@ -790,16 +880,25 @@ def invoice_remove(
         raise bad(
             tr("cli.app.ledger.invoice.yes_required"),
         )
-    authority_operation(ctx)
-    bucket_id = _business_invoice_bucket_id()
-    lifecycle_ports = catalogue_lifecycle_ports_factory(ctx)(bucket_id=bucket_id)
-    result = remove_catalogue_invoice(bucket_id=bucket_id, invoice_id=invoice_id, ports=lifecycle_ports)
-    emit_envelope(
-        ctx,
-        command="ledger.invoice.remove",
-        result=CatalogueInvoiceRemovePayload.model_validate(_catalogue_invoice_payload(result.invoice)),
-        lines=_catalogue_invoice_lines(result.invoice),
-    )
+    completed, snapshot = remove_invoice_catalogue(ctx, invoice_id=invoice_id)
+    try:
+        invoice = _snapshot_invoice_payload(snapshot)
+        emit_envelope(
+            ctx,
+            command="ledger.invoice.remove",
+            result=CatalogueInvoiceRemovePayload.model_validate(invoice.model_dump(mode="python")),
+            lines=_catalogue_invoice_lines(invoice),
+        )
+    except typer.Exit:
+        raise
+    except Exception:
+        raise submitted_operation_error(
+            completed.operation_id,
+            RuntimeRefusalCode.UNAVAILABLE.value,
+            terminal_condition=completed.terminal_condition,
+            effect=completed.effect,
+            refusal_code=completed.refusal_code,
+        ) from None
 
 
 def invoice_update(
@@ -826,8 +925,6 @@ def invoice_update(
     correction is a remove followed by a create, which the remove verb guards
     by refusing to delete a linked record.
     """
-    authority_operation(ctx)
-    bucket_id = _business_invoice_bucket_id()
     patch_values = {
         "counterparty_name": counterparty_name,
         "counterparty_country": counterparty_country,
@@ -844,26 +941,39 @@ def invoice_update(
     patch = CatalogueInvoicePatch.model_validate(
         {key: value for key, value in patch_values.items() if value is not None}
     )
-    lifecycle_ports = catalogue_lifecycle_ports_factory(ctx)(bucket_id=bucket_id)
-    try:
-        result = update_catalogue_invoice(
-            bucket_id=bucket_id,
-            invoice_id=invoice_id,
-            patch=patch,
-            ports=lifecycle_ports,
+    if not patch.model_fields_set:
+        empty_patch = InvoiceValidationError(
+            translated_message="application.invoices.lifecycle.errors.empty_invoice_patch",
+            context={"invoice_id": invoice_id},
         )
-    except (InvoiceValidationError, ValidationError) as exc:
-        if (refusal := ledger_invoice_validation_no_recovery(exc)) is not None:
+        if (refusal := ledger_invoice_validation_no_recovery(empty_patch)) is not None:
             raise refusal from None
-        raise
-
-    payload = _catalogue_invoice_payload(result.invoice)
-    payload["bucket_event_ids"] = list(result.bucket_event_ids)
-    lines = _catalogue_invoice_lines(result.invoice)
-    lines.append(f"bucket_event_ids	{','.join(result.bucket_event_ids)}")
-    emit_envelope(
+        raise empty_patch
+    completed, result = update_invoice_catalogue(
         ctx,
-        command="ledger.invoice.update",
-        result=CatalogueInvoiceUpdatePayload.model_validate(payload),
-        lines=lines,
+        invoice_id=invoice_id,
+        patch=InvoiceUpdatePatch.from_patch(patch),
     )
+
+    try:
+        invoice = _snapshot_invoice_payload(result.invoice)
+        payload = invoice.model_dump(mode="python")
+        payload["bucket_event_ids"] = list(result.bucket_event_ids)
+        lines = _catalogue_invoice_lines(invoice)
+        lines.append(f"bucket_event_ids	{','.join(result.bucket_event_ids)}")
+        emit_envelope(
+            ctx,
+            command="ledger.invoice.update",
+            result=CatalogueInvoiceUpdatePayload.model_validate(payload),
+            lines=lines,
+        )
+    except typer.Exit:
+        raise
+    except Exception:
+        raise submitted_operation_error(
+            completed.operation_id,
+            RuntimeRefusalCode.UNAVAILABLE.value,
+            terminal_condition=completed.terminal_condition,
+            effect=completed.effect,
+            refusal_code=completed.refusal_code,
+        ) from None

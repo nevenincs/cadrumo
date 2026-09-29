@@ -7,13 +7,14 @@ import sys
 import time
 from collections.abc import Generator
 from concurrent.futures import ThreadPoolExecutor
-from contextlib import contextmanager
+from contextlib import AbstractContextManager, contextmanager
 from datetime import timedelta
 from pathlib import Path
 from threading import Event, RLock
 from uuid import uuid4
 
 import pytest
+from pydantic import SecretBytes
 
 from cadrumo.adapters.local_runtime.profile_worker import ProfileWorkerProcess
 from cadrumo.adapters.local_runtime.tests.profile_worker_support import PROFILE_INPUT, changed, lease, worker_profiles
@@ -26,10 +27,18 @@ from cadrumo.application.operations.frontend_requests import (
 )
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.runtime.worker_authorization import WorkerAuthorizationRequest
+from cadrumo.application.runtime.worker_authorization import (
+    WorkerAuthorityRequest,
+    WorkerAuthorizationRequest,
+    WorkerAutomationInventoryAllowed,
+    WorkerAutomationInventoryRequest,
+    WorkerResponseScopeRequest,
+)
+from cadrumo.application.runtime.worker_enrollment import WorkerApprovalPublication, WorkerApprovalRequest
 from cadrumo.application.user_profile.access_contracts import AccessAction, AccessAllowed, AccessDenialCode
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyError
+from cadrumo.application.user_profile.automation_enrollment import EnrollmentTransition
 from cadrumo.application.user_profile.login_session import login_profile
 from cadrumo.application.user_profile.operations import ProfileFieldMutationOperationRequest
 from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
@@ -46,6 +55,23 @@ pytestmark = [
     pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows worker containment"),
     pytest.mark.usefixtures("authority_operation"),
 ]
+
+
+def _profile_baseline(profile_id: object) -> tuple[int, str]:
+    """Read the real encrypted record before handing custody to a native worker."""
+    _, decode = profile_authority_contexts()
+    login_profile(
+        name=str(profile_id),
+        passphrase_callback=lambda: PROFILE_INPUT,
+        profile_decode_context=decode,
+    )
+    try:
+        record = ProfileRecordRepository.for_current_session(str(profile_id), profile_decode_context=decode).load(
+            str(profile_id)
+        )
+        return record.record_revision, record.content_digest
+    finally:
+        close_active_bucket_session()
 
 
 def test_worker_hosts_the_canonical_operation_services_and_rechecks_custody(tmp_path: Path) -> None:
@@ -81,7 +107,9 @@ class BoundaryAuthority:
         self.attempted = Event()
 
     @contextmanager
-    def authorize(self, request: WorkerAuthorizationRequest) -> Generator[AccessAllowed]:
+    def authorize(self, request: WorkerAuthorityRequest) -> Generator[AccessAllowed]:
+        if isinstance(request, WorkerResponseScopeRequest):
+            raise ProfileAccessRefusedError(AccessDenialCode.RESPONSE_AUTHORITY_REQUIRED)
         self.attempted.set()
         with self.guard:
             self.calls.append(request.request.action)
@@ -97,11 +125,28 @@ class BoundaryAuthority:
                 expires_at=now() + timedelta(seconds=20),
             )
 
+    def automation_inventory(
+        self, request: WorkerAutomationInventoryRequest
+    ) -> AbstractContextManager[WorkerAutomationInventoryAllowed]:
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+
+    def approval_preflight(self, request: WorkerApprovalRequest) -> None:
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+
+    def approval_phase(self, request: WorkerApprovalRequest, password: SecretBytes | None) -> bool | None:
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+
+    def approval_publication(
+        self, authority: WorkerAuthorizationRequest, command: WorkerApprovalPublication
+    ) -> EnrollmentTransition | None:
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+
 
 @pytest.mark.parametrize("deny_commit", [False, True])
 def test_installed_worker_uses_native_guards_for_real_profile_mutation(tmp_path: Path, deny_commit: bool) -> None:
     with worker_profiles(tmp_path) as profiles:
         root, ((identity, key), _) = profiles
+        expected_revision, expected_digest = _profile_baseline(identity.binding.profile_id)
         authority = BoundaryAuthority(deny_commit=deny_commit)
         worker = ProfileWorkerProcess(identity, storage_root=root, authorization=authority)
         try:
@@ -111,7 +156,11 @@ def test_installed_worker_uses_native_guards_for_real_profile_mutation(tmp_path:
                 definition_id="user-profile.field-mutation",
                 subject_ref=f"profile:{identity.binding.profile_id}",
                 payload=ProfileFieldMutationOperationRequest(
-                    profile_id=identity.binding.profile_id, path=PROFILE_OUTPUT_LANGUAGE_PATH, value="es"
+                    profile_id=identity.binding.profile_id,
+                    expected_revision=expected_revision,
+                    expected_content_digest=expected_digest,
+                    path=PROFILE_OUTPUT_LANGUAGE_PATH,
+                    value="es",
                 ),
                 idempotency_key="profile-language-mutation",
             )
@@ -207,6 +256,7 @@ def test_installed_worker_uses_native_guards_for_real_profile_mutation(tmp_path:
 def test_custody_control_retires_while_operation_waits_for_profile_authority(tmp_path: Path) -> None:
     with worker_profiles(tmp_path) as profiles:
         root, ((identity, key), _) = profiles
+        expected_revision, expected_digest = _profile_baseline(identity.binding.profile_id)
         authority = BoundaryAuthority(deny_commit=False)
         worker = ProfileWorkerProcess(identity, storage_root=root, authorization=authority)
         try:
@@ -216,7 +266,11 @@ def test_custody_control_retires_while_operation_waits_for_profile_authority(tmp
                 definition_id="user-profile.field-mutation",
                 subject_ref=f"profile:{identity.binding.profile_id}",
                 payload=ProfileFieldMutationOperationRequest(
-                    profile_id=identity.binding.profile_id, path=PROFILE_OUTPUT_LANGUAGE_PATH, value="es"
+                    profile_id=identity.binding.profile_id,
+                    expected_revision=expected_revision,
+                    expected_content_digest=expected_digest,
+                    path=PROFILE_OUTPUT_LANGUAGE_PATH,
+                    value="es",
                 ),
             )
             with ThreadPoolExecutor(max_workers=1) as pool:

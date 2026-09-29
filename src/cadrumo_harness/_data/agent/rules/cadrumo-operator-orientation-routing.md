@@ -1,16 +1,15 @@
 # Orientation — where to look for each kind of question
 
-This is a routing table, not a knowledge dump. Every row mirrors a command family's
-own `operator_question` field on the capability manifest
-(the MCP `contract` tool → `contract.command_families[].operator_question`).
-When a question is not covered below, read that field directly — it is the live
-authority this table paraphrases, and it grows as command families are added.
+This table identifies CLI command families. In MCP, use `status` to check the
+connection's exact profile and current authorization, `search` to discover granted
+registered operations, and `describe` to obtain an operation's current input schema.
+CLI availability does not imply that an operation is exposed or granted to MCP.
 
 ## Capability and shape questions
 
-- "What can the CLI do, and is a command read-only or state-mutating?" →
-  the MCP `contract` tool. Read `contract.command_families` for the
-  `mutability` of the family you are about to use before you act.
+- "Which operations can this agent use?" → MCP `search`, then `describe`.
+  Read the registered contract and schema before calling `execute`; never infer
+  permission from a persona name or the human's active profile.
 - "How do I read the result of any command?" → the envelope-reading rule; every
   `--format json` response shares one spine.
 

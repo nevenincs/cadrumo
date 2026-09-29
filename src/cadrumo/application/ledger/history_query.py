@@ -21,7 +21,7 @@ from typing import TYPE_CHECKING, Final
 from pydantic import BaseModel, NonNegativeInt
 
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
+from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType, bucket_event_order_key
 from .actions_common import resolve_bucket_event_repository, resolve_transaction_repository
 
 if TYPE_CHECKING:
@@ -161,7 +161,7 @@ def read_ledger_history(
         for event in catalogue.values()
         if event.event_type in LEDGER_EVIDENCE_HISTORY_EVENT_TYPES and event.payload.get("transaction_id") in anchored
     )
-    events.sort(key=lambda event: event.occurred_at)
+    events.sort(key=bucket_event_order_key)
 
     return LedgerHistoryV1(
         bucket_id=bucket_id,

@@ -9,6 +9,7 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, TypeAdapter, ValidationError
 
+from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from cadrumo.application.operations.registry import (
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
@@ -75,7 +76,8 @@ OTHER_PERIOD = Period.from_year_and_code(2025, "3T")
 
 def changed[T: BaseModel](model: T, **updates: object) -> T:
     """Revalidate modified facts instead of bypassing validation with model_copy."""
-    return type(model).model_validate({**{name: getattr(model, name) for name in type(model).model_fields}, **updates})
+    model_type = model.__class__
+    return model_type.model_validate({**{name: getattr(model, name) for name in model_type.model_fields}, **updates})
 
 
 @dataclass(frozen=True)
@@ -329,6 +331,69 @@ def test_all_scope_dimensions_intersect(scenario: Scenario) -> None:
     assert intersect_scopes(()).operations == frozenset()
 
 
+@pytest.mark.parametrize("periods", [frozenset({PERIOD}), frozenset()])
+def test_all_periods_policy_refuses_finite_and_empty_scopes_for_independent_request(
+    scenario: Scenario, periods: frozenset[Period]
+) -> None:
+    scope = changed(scenario.profile.scope, periods=periods, allow_period_independent=True)
+    subject = replace(
+        scenario,
+        profile=changed(scenario.profile, scope=scope),
+        grant=changed(scenario.grant, scope=scope),
+        session=changed(scenario.session, scope=scope),
+        request=changed(scenario.request, periods=frozenset(), period_independent=True),
+        policy=changed(scenario.policy, allow_period_independent=True, requires_all_periods=True),
+    )
+
+    assert_denied(subject, AccessDenialCode.PERIOD_DENIED)
+
+
+def test_all_periods_policy_accepts_unrestricted_scope(scenario: Scenario) -> None:
+    subject = replace(
+        scenario,
+        request=changed(scenario.request, periods=frozenset(), period_independent=True),
+        policy=changed(scenario.policy, allow_period_independent=True, requires_all_periods=True),
+    )
+
+    assert isinstance(subject.evaluate(), AccessAllowed)
+
+
+def test_all_periods_policy_checks_narrower_current_child_scope(scenario: Scenario) -> None:
+    parent = scenario.session
+    child = changed(
+        parent,
+        session_id=uuid4(),
+        connection_id=uuid4(),
+        parent_session_id=parent.session_id,
+        scope=changed(parent.scope, periods=frozenset({PERIOD}), allow_period_independent=True),
+        expires_at=NOW + timedelta(minutes=2),
+    )
+    subject = replace(
+        scenario,
+        session=child,
+        ancestors=(parent,),
+        context=changed(scenario.context, connection_id=child.connection_id),
+        request=changed(scenario.request, periods=frozenset(), period_independent=True),
+        policy=changed(scenario.policy, allow_period_independent=True, requires_all_periods=True),
+    )
+
+    assert_denied(subject, AccessDenialCode.PERIOD_DENIED)
+
+
+def test_ordinary_independent_operation_keeps_finite_scope_behavior(scenario: Scenario) -> None:
+    scope = changed(scenario.profile.scope, periods=frozenset({PERIOD}), allow_period_independent=True)
+    subject = replace(
+        scenario,
+        profile=changed(scenario.profile, scope=scope),
+        grant=changed(scenario.grant, scope=scope),
+        session=changed(scenario.session, scope=scope),
+        request=changed(scenario.request, periods=frozenset(), period_independent=True),
+        policy=changed(scenario.policy, allow_period_independent=True, requires_all_periods=False),
+    )
+
+    assert isinstance(subject.evaluate(), AccessAllowed)
+
+
 def test_disclosure_requires_projection_category_and_destination(scenario: Scenario) -> None:
     permission = DisclosurePermission(
         destination_id=scenario.request.destination_id,
@@ -446,6 +511,98 @@ def human_session(scenario: Scenario) -> AccessSession:
         key_id=None,
         key_generation=None,
         expires_at=NOW + timedelta(hours=4),
+    )
+
+
+@pytest.mark.parametrize(
+    "action",
+    [
+        AccessAction.SUBMIT,
+        AccessAction.START,
+        AccessAction.RESUME,
+        AccessAction.COMMIT,
+        AccessAction.CANCEL,
+        AccessAction.DETACH,
+        AccessAction.OBSERVE,
+        AccessAction.RESULT,
+        AccessAction.RESPOND,
+    ],
+)
+def test_human_only_operation_refuses_live_api_and_attended_authority_at_every_action(
+    scenario: Scenario, action: AccessAction
+) -> None:
+    """A valid delegated lease and disclosure scope cannot release human inventory."""
+    disclosure = None
+    if action in {AccessAction.OBSERVE, AccessAction.CANCEL, AccessAction.DETACH}:
+        disclosure = DisclosurePermission(
+            destination_id=scenario.request.destination_id,
+            projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
+            category=DisclosureCategory.OPERATION_METADATA,
+        )
+    elif action is AccessAction.RESULT:
+        result_schema = scenario.registry.lookup_public_contract(scenario.request.definition_id).result_schema
+        assert result_schema is not None
+        disclosure = DisclosurePermission(
+            destination_id=scenario.request.destination_id,
+            projection_id=result_schema.schema_id,
+            category=DisclosureCategory.PROFILE_VALUES,
+        )
+    scope = changed(
+        scenario.session.scope,
+        disclosures=frozenset((disclosure,)) if disclosure is not None else frozenset(),
+    )
+    base = replace(
+        scenario,
+        profile=changed(scenario.profile, scope=scope),
+        grant=changed(scenario.grant, scope=scope),
+        session=changed(scenario.session, scope=scope),
+        request=changed(scenario.request, action=action),
+        policy=changed(
+            scenario.policy,
+            requires_human=True,
+            disclosures=frozenset((disclosure,)) if disclosure is not None else frozenset(),
+        ),
+    )
+    assert_denied(base, AccessDenialCode.HUMAN_AUTHORITY_REQUIRED)
+    human = human_session(base)
+    attended = changed(
+        base.session,
+        session_id=uuid4(),
+        kind=SessionKind.ATTENDED,
+        originating_login_id="login-a",
+        parent_session_id=human.session_id,
+        key_id=None,
+        key_generation=None,
+    )
+    assert_denied(
+        replace(
+            base,
+            session=attended,
+            ancestors=(human,),
+            grant=changed(base.grant, unattended=False, allow_os_lock=False),
+        ),
+        AccessDenialCode.HUMAN_AUTHORITY_REQUIRED,
+    )
+    expected = (
+        AccessDenied(code=AccessDenialCode.RESPONSE_AUTHORITY_REQUIRED)
+        if action is AccessAction.RESPOND
+        else AccessAllowed(
+            profile_id=human.binding.profile_id, session_id=human.session_id, expires_at=human.expires_at
+        )
+    )
+    assert (
+        evaluate_operation_access(
+            registry=base.registry,
+            profile=base.profile,
+            grant=None,
+            key=None,
+            session=human,
+            context=base.context,
+            request=base.request,
+            policy=base.policy,
+            ancestors=(),
+        )
+        == expected
     )
 
 

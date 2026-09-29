@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Annotated, Literal, Protocol
+from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Annotated, Literal, Protocol
 from uuid import UUID
 
 from pydantic import BaseModel, Field, RootModel
@@ -11,9 +12,39 @@ from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ..operations.registry import OperationFrontendProjection
 from ..user_profile.access_contracts import AccessDenialCode, AccessScope, ProfileAccessStatus
 from ..user_profile.automation_custody_port import AutomationCustodyCode
+from ..user_profile.login_session import ProfileHumanLoginReceipt
+from .access_management import (
+    RuntimeAccessManagementReply,
+    RuntimeAccessManagementRequest,
+    RuntimeAutomationDeny,
+    RuntimeProfileRecoveryPrepare,
+    RuntimeProfileResume,
+    RuntimeSessionInventory,
+)
 from .contracts import RuntimeByteChannel, RuntimeRefusalCode
+from .enrollment_access import (
+    RuntimeEnrollmentReply,
+    RuntimeEnrollmentRequest,
+)
 from .operation_access import RuntimeOperationReply, RuntimeOperationRequest
+from .owner_control import RuntimeStopAccepted, RuntimeStopConfirm, RuntimeStopPreview, RuntimeStopPreviewRequest
 from .transport import RuntimeConnectionContext, RuntimeStatusRequest, RuntimeTransportStatus
+
+if TYPE_CHECKING:
+    from .profile_worker import ProfileWorkerDrained
+
+
+type RuntimeHumanProofMethod = Literal["password", "receipt"]
+
+
+@dataclass(frozen=True, slots=True)
+class RuntimeHumanProof:
+    """Borrowed secret and native login context, never a serialized credential."""
+
+    method: RuntimeHumanProofMethod
+    secret: bytearray = field(repr=False)
+    originating_login_id: str
+    persist_receipt: bool = False
 
 
 class RuntimeProfileLogin(BaseModel):
@@ -23,9 +54,10 @@ class RuntimeProfileLogin(BaseModel):
     action: Literal["profile_login"] = "profile_login"
     request_id: UUID
     profile_id: UUID
-    method: Literal["password", "api_key"]
+    method: Literal["password", "receipt", "api_key"]
     frontend: OperationFrontendProjection
     scope: AccessScope | None = None
+    persist_receipt: bool = False
 
 
 class RuntimeSessionRequest(BaseModel):
@@ -42,7 +74,14 @@ class RuntimeSessionRequest(BaseModel):
 class RuntimeRequest(
     RootModel[
         Annotated[
-            RuntimeStatusRequest | RuntimeProfileLogin | RuntimeSessionRequest | RuntimeOperationRequest,
+            RuntimeStatusRequest
+            | RuntimeStopPreviewRequest
+            | RuntimeStopConfirm
+            | RuntimeProfileLogin
+            | RuntimeSessionRequest
+            | RuntimeOperationRequest
+            | RuntimeEnrollmentRequest
+            | RuntimeAccessManagementRequest,
             Field(discriminator="action"),
         ]
     ]
@@ -69,6 +108,7 @@ class RuntimeProfileStatus(BaseModel):
     runtime_boot_id: UUID
     connection_id: UUID
     status: ProfileAccessStatus
+    human_login: ProfileHumanLoginReceipt | None = None
 
 
 class RuntimeSessionsLocked(BaseModel):
@@ -97,16 +137,30 @@ class RuntimeReply(
     RootModel[
         Annotated[
             RuntimeTransportStatus
+            | RuntimeStopPreview
+            | RuntimeStopAccepted
             | RuntimeSecretReady
             | RuntimeProfileStatus
             | RuntimeSessionsLocked
             | RuntimeOperationReply
+            | RuntimeEnrollmentReply
+            | RuntimeAccessManagementReply
             | RuntimeAccessRefusal,
             Field(discriminator="kind"),
         ]
     ]
 ):
     """Strict response union shared by local projections."""
+
+
+@dataclass(frozen=True)
+class RuntimeProfileDrainResult:
+    """Host-only proof of receipts and containment, never a public wire reply."""
+
+    receipts: tuple[ProfileWorkerDrained, ...]
+    missing_receipts: tuple[UUID, ...]
+    uncontained: tuple[UUID, ...]
+    unsettled: tuple[UUID, ...]
 
 
 class RuntimeProfileHandler(Protocol):
@@ -131,10 +185,32 @@ class RuntimeProfileHandler(Protocol):
         """Resolve and write a canonical projection while holding current output authority."""
         ...
 
+    def enrollment(
+        self,
+        context: RuntimeConnectionContext,
+        channel: RuntimeByteChannel,
+        request: RuntimeEnrollmentRequest,
+    ) -> None:
+        """Complete one exact pre-unlock exchange on the verified native channel."""
+        ...
+
+    def manage_access(
+        self,
+        context: RuntimeConnectionContext,
+        channel: RuntimeByteChannel,
+        request: RuntimeAutomationDeny | RuntimeProfileRecoveryPrepare | RuntimeProfileResume | RuntimeSessionInventory,
+    ) -> None:
+        """Complete one exact access-management exchange on the verified channel."""
+        ...
+
     def poll(self) -> None:
         """Revalidate leases without requiring a frontend call."""
         ...
 
     def close(self) -> None:
         """Fence and settle owned profile custody before runtime ownership is released."""
+        ...
+
+    def drain(self, *, deadline: float) -> RuntimeProfileDrainResult:
+        """Fence admissions and drain all workers under one monotonic deadline."""
         ...

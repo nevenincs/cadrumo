@@ -940,7 +940,6 @@ convention = "google"
 # trusted `uv` build driver (resolved from PATH by design), mirroring the
 # src/cadrumo wheel-build gates. Corpus membership is enumerated in-process.
 "dev/packaging/tests/test_cadrumo_data_distribution.py" = ["S603", "S607"]
-"src/cadrumo_harness/mcp/tests/test_stdio_lifetime.py" = ["S603"]
 "src/cadrumo/adapters/persistence/storage/bucket/tests/test_lockfile.py" = ["S603"]
 # Cross-process custody-root exclusion is only provable against real spawned
 # processes killed abruptly; every argv is a fixed `sys.executable -c <script>`

@@ -39,8 +39,11 @@ Submodules
    cadrumo.application.auth.operator_scope
    cadrumo.application.auth.operator_scope_ports
    cadrumo.application.auth.output
+   cadrumo.application.auth.passphrase_operation_access
    cadrumo.application.auth.probes
    cadrumo.application.auth.protocols
    cadrumo.application.auth.providers
+   cadrumo.application.auth.read_operation
    cadrumo.application.auth.session_types
    cadrumo.application.auth.sessions
+   cadrumo.application.auth.teardown_operation_access

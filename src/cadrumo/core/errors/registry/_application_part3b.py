@@ -8,6 +8,26 @@ from ..error_codes import ErrorCategory, ErrorCode
 
 DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
+        "cadrumo.application.invoices.catalogue_selection.InvoiceLookupRefusedError",
+        ErrorCode(
+            code="REFUSED_INVOICE_LOOKUP",
+            category=ErrorCategory.REFUSED,
+            message_key="application.invoices.lifecycle.errors.invoice_not_found",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.modelo.work_create_policy.ModeloWorkCreateApplicabilityRefusedError",
+        ErrorCode(
+            code="REFUSED_MODELO_WORK_CREATE_APPLICABILITY",
+            category=ErrorCategory.REFUSED,
+            message_key="cli.app.modelo.work.create_not_applicable_refused",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.modelo.declarations_calendar.DeclarationsCalendarProjectionError",
         ErrorCode(
             code="INTEGRITY_DECLARATIONS_CALENDAR_PROJECTION",
@@ -93,6 +113,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="FAIL_TAXATION_COMPARISON_PERSISTENCE",
             category=ErrorCategory.FAIL,
             message_key="errors.fail.canonical_taxation_comparison_persistence",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.modelo.work_missing_input.ModeloWorkMissingInputError",
+        ErrorCode(
+            code="ERROR_MODELO_WORK_INPUT_REQUIRED",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_calculations_registry_validation",
             retryable=False,
             runbook_id=None,
         ),

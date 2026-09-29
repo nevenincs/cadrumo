@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from dataclasses import replace
+from typing import cast
+from uuid import uuid4
 
 import pytest
 from pydantic import ValidationError
@@ -10,6 +12,7 @@ from pydantic import ValidationError
 from cadrumo.application.operator_surface.command_ports import ProfileAuthenticationPosture
 
 from .._profile_authentication_contract import (
+    ProfileAuthenticationMethod,
     ProfileAuthenticationSecrets,
     ProfileSecretSourceOptions,
     profile_authentication_posture,
@@ -62,9 +65,14 @@ def test_live_root_click_contract_contains_each_profile_option_once() -> None:
     assert parameters["profile_secrets_stdin"].default is False
     assert parameters["profile_secrets_fd"].opts == ["--profile-secrets-fd"]
     assert parameters["profile_secrets_fd"].default is None
+    assert parameters["profile_auth_method"].opts == ["--profile-auth-method"]
+    assert parameters["profile_auth_method"].default == "password"
+    assert parameters["profile_credential_ref"].opts == ["--profile-credential-ref"]
+    assert parameters["profile_credential_ref"].default is None
     all_options = tuple(option for parameter in parameters.values() for option in parameter.opts)
     assert all_options.count("--profile-secrets-stdin") == 1
     assert all_options.count("--profile-secrets-fd") == 1
+    assert all_options.count("--profile-credential-ref") == 1
 
 
 def test_leaf_machine_secret_inventory_remains_leaf_only_and_scope_disjoint() -> None:
@@ -77,6 +85,8 @@ def test_leaf_machine_secret_inventory_remains_leaf_only_and_scope_disjoint() ->
         "config.profile.recovery.enable",
         "config.profile.recovery.disable",
         "config.profile.archive.import",
+        "config.profile.resume",
+        "config.profile.automation.approve",
         "config.auth.certificate.secret.set",
     }
     for node in adopters:
@@ -92,10 +102,16 @@ def test_leaf_machine_secret_inventory_remains_leaf_only_and_scope_disjoint() ->
 
 def test_profile_payload_is_strict_frozen_secretstr_and_value_free_in_repr() -> None:
     payload = ProfileAuthenticationSecrets.model_validate({"profile_passphrase": "not-a-real-passphrase"})
-    assert tuple(ProfileAuthenticationSecrets.model_fields) == ("profile_passphrase",)
+    api_payload = ProfileAuthenticationSecrets.model_validate({"api_key": "not-a-real-api-key"})
+    assert tuple(ProfileAuthenticationSecrets.model_fields) == ("profile_passphrase", "api_key")
     assert "not-a-real-passphrase" not in repr(payload)
+    assert "not-a-real-api-key" not in repr(api_payload)
     with pytest.raises(ValidationError):
         ProfileAuthenticationSecrets.model_validate({})
+    with pytest.raises(ValidationError):
+        ProfileAuthenticationSecrets.model_validate(
+            {"profile_passphrase": "not-a-real-passphrase", "api_key": "not-a-real-api-key"}
+        )
     with pytest.raises(ValidationError):
         ProfileAuthenticationSecrets.model_validate(
             {"profile_passphrase": "not-a-real-passphrase", "extra": "forbidden"}
@@ -147,7 +163,10 @@ def test_profile_authentication_posture_is_graph_and_exemption_derived() -> None
 
 def test_profile_authentication_metadata_is_public_bounded_and_value_free() -> None:
     contract = command_registration_projection().profile_authentication_contract
-    assert tuple((field.name, field.json_type) for field in contract.fields) == (("profile_passphrase", "string"),)
+    assert tuple((field.name, field.json_type) for field in contract.fields) == (
+        ("profile_passphrase", "string"),
+        ("api_key", "string"),
+    )
     assert contract.maximum_bytes == MACHINE_SECRET_MAX_BYTES == 8192
     assert contract.same_scope_exclusive is True
     assert contract.stdin_exclusive_across_scopes is True
@@ -161,6 +180,13 @@ def test_root_source_options_are_parse_only_authority() -> None:
     both = ProfileSecretSourceOptions(stdin=True, descriptor=7)
     assert both.supplied is True
     assert replace(both, stdin=False, descriptor=None).supplied is False
+    assert both.method is ProfileAuthenticationMethod.PASSWORD
+    assert replace(both, method=ProfileAuthenticationMethod.API_KEY).method is ProfileAuthenticationMethod.API_KEY
+    reference = uuid4()
+    assert ProfileSecretSourceOptions(credential_reference=reference).supplied
+    assert ProfileSecretSourceOptions(credential_reference=reference).credential_reference == reference
+    with pytest.raises(TypeError, match="known method"):
+        ProfileSecretSourceOptions(method=cast(ProfileAuthenticationMethod, cast(object, "api-key")))
 
 
 @pytest.mark.parametrize(

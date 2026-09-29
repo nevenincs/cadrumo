@@ -197,18 +197,30 @@ def iva_wallet_history_cmd(
 ) -> None:
     """List stored :class:`IvaCompensationHistoryReport` evidence.
 
-    Delegates to :func:`list_iva_compensation_history` and emits
+    Delegates to the registered profile worker and emits
     :class:`IvaWalletHistoryResult`. This local-only read reloads compensation
     history, carry-forward lots, and wallet authority decisions from secure
     profile storage without contacting AEAT.
     """
-    from ...application.live.iva_remote_state import list_iva_compensation_history
-    from ..live_state_composition import compose_live_state
+    from .runtime_iva_wallet_history import read_iva_wallet_history_for_cli
 
-    composition = compose_live_state()
-    report = list_iva_compensation_history(ports=composition.iva_remote_state_port, as_of_year=as_of_year)
-    result = _iva_wallet_history_result(report)
-    emit_envelope(ctx, command="app.live.iva_wallet.history", result=result, lines=_iva_wallet_history_lines(report))
+    read = read_iva_wallet_history_for_cli(ctx, as_of_year=as_of_year)
+    try:
+        result = _iva_wallet_history_result(read.report)
+        lines = _iva_wallet_history_lines(read.report)
+        emit_envelope(ctx, command="app.live.iva_wallet.history", result=result, lines=lines)
+    except Exception:
+        from ...application.runtime.contracts import RuntimeRefusalCode
+        from .runtime_registered_operation import submitted_operation_error
+
+        completed = read.completion
+        raise submitted_operation_error(
+            completed.operation_id,
+            RuntimeRefusalCode.INVALID_FRAME.value,
+            terminal_condition=completed.terminal_condition,
+            effect=completed.effect,
+            refusal_code=completed.refusal_code,
+        ) from None
 
 
 def _iva_wallet_history_result(report: IvaCompensationHistoryReport) -> Any:

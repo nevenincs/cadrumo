@@ -12,6 +12,8 @@ from pydantic import (
     BaseModel,
     ConfigDict,
     Field,
+    JsonValue,
+    TypeAdapter,
     field_validator,
     model_validator,
 )
@@ -60,9 +62,11 @@ from .interactions import OperationInteractionRequest
 from .models import (
     CredentialFreeOperationRequest,
     OperationDefinitionId,
+    OperationFailureErrorCode,
     OperationTerminalReceipt,
 )
 from .owner import OperationExecutor, OperationResumableExecutor
+from .refusal_evidence import validate_refusal_code
 from .registry_schema_validation import strict_model_json_schema, validate_credential_free_schema
 from .secret_submission import OperationEphemeralSecretDeclaration
 
@@ -121,6 +125,7 @@ class OperationPublicDefinitionContractV1(BaseModel):
     action_reference: ActionReference | None
     request_schema: OperationSchemaIdentityV1
     result_schema: OperationSchemaIdentityV1 | None
+    refusal_detail_codes: frozenset[OperationFailureErrorCode]
     review_projection_schema: OperationSchemaIdentityV1 | None
     interaction_response_schema: OperationSchemaIdentityV1 | None
     workspace_refresh_target_schema: OperationSchemaIdentityV1 | None
@@ -144,9 +149,29 @@ class OperationPublicDefinitionContractV1(BaseModel):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _validate_digest(self) -> OperationPublicDefinitionContractV1:
+        if self.refusal_detail_codes and self.result_schema is None:
+            raise ValueError("refusal evidence requires a registered terminal projection schema")
+        for code in self.refusal_detail_codes:
+            validate_refusal_code(code)
         expected = _definition_contract_digest(self)
         if self.definition_contract_digest != expected:
             raise ValueError("operation definition contract digest does not reproduce")
+        return self
+
+
+class OperationPublicDefinitionDescriptionV1(BaseModel):
+    """A registered request schema bound to the current public contract digest."""
+
+    model_config = _STRICT_PUBLIC_MODEL_CONFIG
+
+    contract: OperationPublicDefinitionContractV1
+    request_json_schema: dict[str, JsonValue]
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _validate_request_schema(self) -> OperationPublicDefinitionDescriptionV1:
+        if content_hash_hex(self.request_json_schema) != self.contract.request_schema.schema_fingerprint:
+            raise ValueError("operation request schema does not match its registered fingerprint")
         return self
 
 
@@ -252,6 +277,7 @@ class OperationDefinition(BaseModel):
     action_reference: ActionReference | None = None
     ephemeral_secret: OperationEphemeralSecretDeclaration | None = None
     transient_financial_operands: tuple[OperationTransientFinancialOperandDeclaration, ...] = ()
+    refusal_detail_codes: frozenset[OperationFailureErrorCode] = frozenset()
 
     @field_validator("phase_codes")
     @classmethod
@@ -264,6 +290,10 @@ class OperationDefinition(BaseModel):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _validate_factory_request_type(self) -> OperationDefinition:
+        if self.refusal_detail_codes and self.result_type is None:
+            raise ValueError("refusal evidence requires a declared result model")
+        for code in self.refusal_detail_codes:
+            validate_refusal_code(code)
         if self.executor_factory.request_type is not self.request_type:
             raise ValueError("operation executor factory request type must match the definition request type")
         self._validate_request_storage()
@@ -618,6 +648,17 @@ class OperationRegistry(BaseModel):
             if registration.contract.definition_id == definition_id:
                 return registration.contract
         raise KeyError(f"operation definition has no public contract: {definition_id!r}")
+
+    def describe_public_definition(self, definition_id: str) -> OperationPublicDefinitionDescriptionV1:
+        """Describe the exact registered request model without constructing an executor."""
+        contract = self.lookup_public_contract(definition_id)
+        binding = self.lookup_public_schema_binding(contract.request_schema)
+        return OperationPublicDefinitionDescriptionV1(
+            contract=contract,
+            request_json_schema=TypeAdapter(dict[str, JsonValue]).validate_python(
+                strict_model_json_schema(binding.model_type), strict=True
+            ),
+        )
 
     def lookup_public_registration(self, definition_id: str) -> OperationPublicDefinitionRegistrationV1:
         """Return the sole runtime binding for one public operation definition."""

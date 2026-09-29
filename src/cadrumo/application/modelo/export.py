@@ -1316,7 +1316,7 @@ def _load_modelo_export_authorities(
     export_ports: ModeloExportPorts,
     operation: PinnedAuthorityOperation,
 ) -> tuple[CalculationRevision, WorkUnit]:
-    revision = export_ports.calculation.load().get(command.calculation_revision_id)
+    revision = export_ports.calculation.load(operation=operation).get(command.calculation_revision_id)
     if revision is None:
         raise CalculationRevisionNotFoundError(
             translated_message="application.modelo.errors.calculation_revision_not_found",

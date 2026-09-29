@@ -3,15 +3,15 @@
 from __future__ import annotations
 
 from importlib import import_module
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Never, cast
 
 import typer
 
 from ...application.operator_surface.command_ports import ProfileAuthenticationPosture
 from ...core.errors.hierarchy import InternalInvariantError
 from ._profile_authentication_contract import (
+    ProfileAuthenticationMethod,
     ProfileAuthenticationSecrets,
-    ProfileSecretSourceOptions,
     command_needs_state_tree,
     profile_authentication_posture,
     root_profile_secret_model,
@@ -43,20 +43,93 @@ if TYPE_CHECKING:
 
 
 _RESOLVED_PROFILE_TARGET_KEY = "cadrumo.resolved_profile_target"
+_RUNTIME_PROFILE_KEYS = frozenset(
+    {
+        "app_live_iva_wallet_history",
+        "app_overview_pipeline",
+        "app_overview_status",
+        "app_overview_calendar",
+        "app_overview_agenda",
+        "app_overview_backlog",
+        "app_overview_explain",
+        "app_overview_prepare",
+        "app_ledger_invoice_list",
+        "app_ledger_invoice_view",
+        "app_ledger_invoice_remove",
+        "app_ledger_invoice_update",
+        "app_ledger_status",
+        "app_ledger_check",
+        "app_ledger_preflight",
+        "app_ledger_history",
+        "app_ledger_view",
+        "app_ledger_track",
+        "app_ledger_list",
+        "app_ledger_review",
+        "app_ledger_participation",
+        "app_ledger_participation_rebuild",
+        "app_modelo_work_rename",
+        "app_modelo_work_discard",
+        "app_modelo_work_status",
+        "app_modelo_work_history",
+        "app_modelo_work_list",
+        "app_modelo_work_create",
+        "app_modelo_work_review",
+        "app_modelo_work_run",
+        "app_modelo_work_run_details",
+        "app_modelo_work_runs",
+        "app_modelo_work_resume",
+        "app_modelo_work_dependencies",
+        "app_modelo_work_select",
+        "app_modelo_work_revision",
+        "app_modelo_work_revisions",
+        "app_modelo_work_observations",
+        "app_modelo_work_calculate",
+        "app_modelo_work_wizard",
+        "app_modelo_work_amend",
+        "app_modelo_work_amend_wizard",
+        "app_modelo_work_attest_m303_exonerado_390",
+        "app_modelo_export",
+        "app_modelo_review_package_build",
+        "app_modelo_work_verify",
+        "app_modelo_work_file",
+        "config_profile_descendiente",
+        "config_auth_status",
+        "config_auth_test",
+        "config_auth_logout",
+        "config_auth_reset",
+        "config_auth_diagnostics_list",
+        "config_auth_diagnostics_view",
+        "config_profile_descendiente_add",
+        "config_profile_descendiente_list",
+        "config_profile_descendiente_remove",
+        "config_profile_sessions",
+        "config_profile_automation_deny",
+        "config_profile_automation_list",
+        "config_profile_automation_inspect",
+        "config_profile_automation_approve",
+        "config_profile_automation_decline",
+        "config_profile_automation_change",
+        "config_profile_lock",
+        "config_profile_view",
+        "config_profile_validate",
+        "config_profile_status",
+        "config_profile_plantilla_media_set",
+        "config_profile_plantilla_media_list",
+        "config_profile_plantilla_media_remove",
+        "config_profile_edit",
+        "config_profile_add_row",
+        "config_profile_edit_row",
+        "config_profile_remove_row",
+        "config_profile_complete_setup",
+        "config_profile_capabilities_view",
+        "config_profile_capabilities_set",
+    }
+)
 
 
-def _refuse(key: str) -> None:
+def _refuse(key: str) -> Never:
     error = import_module(".errors", __package__).CliRefusedBoundaryError
     raise error(translated_message=f"cli.config.custody.errors.{key}")
-
-
-def _root_source(ctx: typer.Context) -> ProfileSecretSourceOptions:
-    value = cast("dict[str, object]", ctx.find_root().ensure_object(dict)).get("profile_secret_source")
-    if value is None:
-        return ProfileSecretSourceOptions()
-    if not isinstance(value, ProfileSecretSourceOptions):
-        raise TypeError("root profile-secret source has an invalid type")
-    return value
 
 
 def _leaf_selection(spec: CommandSpec, arguments: Mapping[str, object]) -> MachineSecretSelection | None:
@@ -176,7 +249,11 @@ def _select_preflight_channels(
     arguments: Mapping[str, object],
 ) -> tuple[ProfileSecretSelection | None, MachineSecretSelection | None]:
     """Select both secret scopes and reject any cross-scope channel collision."""
-    source = _root_source(ctx)
+    from .runtime_profile_admission import parsed_root_profile_source
+
+    source = parsed_root_profile_source(ctx)
+    if source.credential_reference is not None and (source.stdin or source.descriptor is not None):
+        _refuse("profile_credential_ref_conflict")
     root = select_profile_secret_channel(
         profile_secrets_stdin=source.stdin,
         profile_secrets_fd=source.descriptor,
@@ -245,7 +322,9 @@ def _resolve_profile_targets(
     return explicit_target, explicit_label
 
 
-def _diagnose_unregistered_profile(*, spec: CommandSpec, root: ProfileSecretSelection | None) -> bool:
+def _diagnose_unregistered_profile(
+    *, spec: CommandSpec, root: ProfileSecretSelection | None, credential_reference: bool = False
+) -> bool:
     """Handle the one diagnostic that may finish dispatch before session activation."""
     if not spec.allow_unregistered_profile_diagnostic:
         return False
@@ -255,7 +334,7 @@ def _diagnose_unregistered_profile(*, spec: CommandSpec, root: ProfileSecretSele
     active = resolve_active_bucket_id()
     if active is None or read_profile_bucket_by_id(active) is not None:
         return False
-    if root is not None:
+    if root is not None or credential_reference:
         _refuse("profile_secrets_inapplicable")
     from ...core.storage_materialization import ensure_storage_tree
 
@@ -263,9 +342,11 @@ def _diagnose_unregistered_profile(*, spec: CommandSpec, root: ProfileSecretSele
     return True
 
 
-def _require_resume_target(root: ProfileSecretSelection | None, explicit_target: str | None) -> None:
+def _require_resume_target(
+    root: ProfileSecretSelection | None, explicit_target: str | None, *, credential_reference: bool = False
+) -> None:
     """Refuse root credentials that have no exact profile target to authenticate."""
-    if root is None or explicit_target is not None:
+    if (root is None and not credential_reference) or explicit_target is not None:
         return
     from ...core.bucket_pointer import resolve_active_bucket_id
 
@@ -328,7 +409,36 @@ def preflight_parsed_leaf(
     """Preflight parsed root/leaf sources, then run the ordinary root gate."""
     node = graph.node(spec.key)
     posture = profile_authentication_posture(node)
+    if spec.key == "app_modelo_work_discard" and arguments.get("confirmed") is not True:
+        from ...core.i18n.render import tr
+
+        target_label = arguments.get("work_unit_id") or " ".join(
+            str(arguments.get(key) or "?") for key in ("modelo", "year", "period")
+        )
+        raise typer.BadParameter(tr("cli.app.modelo.work.discard_requires_yes", work_unit_id=str(target_label)))
     root, leaf = _select_preflight_channels(ctx, spec=spec, arguments=arguments)
+    if spec.key == "config_profile_automation_create" and leaf is None:
+        _refuse("automation_create_proposal_required")
+    from .runtime_profile_admission import parsed_root_profile_source
+
+    source = parsed_root_profile_source(ctx)
+    method = source.method
+    credential_reference = source.credential_reference
+    if spec.key == "config_profile_automation_change":
+        if method is not ProfileAuthenticationMethod.API_KEY or credential_reference is None:
+            _refuse("automation_change_credential_ref_required")
+        if leaf is None:
+            _refuse("automation_change_proposal_required")
+    if credential_reference is not None:
+        if method is not ProfileAuthenticationMethod.API_KEY:
+            _refuse("profile_credential_ref_requires_api_key")
+        if posture is not ProfileAuthenticationPosture.RESUME_FALLBACK or spec.key not in _RUNTIME_PROFILE_KEYS:
+            _refuse("profile_credential_ref_inapplicable")
+    elif method is ProfileAuthenticationMethod.API_KEY:
+        if root is None:
+            _refuse("profile_secrets_api_key_requires_channel")
+        if posture is not ProfileAuthenticationPosture.RESUME_FALLBACK or spec.key not in _RUNTIME_PROFILE_KEYS:
+            _refuse("profile_secrets_api_key_inapplicable")
     if posture is not ProfileAuthenticationPosture.RESUME_FALLBACK and root is not None:
         _refuse("profile_secrets_inapplicable")
     # The secret-source refusals above are still parse-time refusals and write
@@ -362,7 +472,68 @@ def preflight_parsed_leaf(
             arguments=arguments,
         )
 
-    if _diagnose_unregistered_profile(spec=spec, root=root):
+    if _diagnose_unregistered_profile(spec=spec, root=root, credential_reference=credential_reference is not None):
+        return
+    if (
+        spec.key == "config_profile_status"
+        and explicit_target is None
+        and root is None
+        and credential_reference is None
+    ):
+        from ...core.bucket_pointer import resolve_active_bucket_id
+
+        if resolve_active_bucket_id() is None:
+            return
+    if spec.key == "config_profile_resume":
+        from ...core.bucket_pointer import resolve_active_bucket_id
+        from .common import no_active_profile_refusal
+        from .runtime_profile_admission import activate_runtime_recovery
+
+        if explicit_target is None and resolve_active_bucket_id() is None:
+            raise no_active_profile_refusal()
+        _read_and_stage_leaf(spec=spec, arguments=arguments, selection=leaf)
+        activate_runtime_recovery(ctx, target_bucket_id=explicit_target, root_selection=root)
+        return
+    if spec.key == "config_profile_automation_create":
+        from ...core.bucket_pointer import resolve_active_bucket_id
+        from ._profile_session_gate import bind_profile_target
+        from .common import no_active_profile_refusal
+
+        bucket_id = explicit_target or resolve_active_bucket_id()
+        if bucket_id is None:
+            raise no_active_profile_refusal()
+        _read_and_stage_leaf(spec=spec, arguments=arguments, selection=leaf)
+        bind_profile_target(ctx, bucket_id=bucket_id)
+        return
+    if spec.key == "config_profile_automation_change":
+        from .config.runtime_automation_request import stage_automation_change_input
+        from .runtime_profile_admission import activate_runtime_profile
+
+        if leaf is None:
+            _refuse("automation_change_proposal_required")
+        stage_automation_change_input(selection=leaf, kind=arguments.get("kind"))
+        _require_resume_target(root, explicit_target, credential_reference=True)
+        activate_runtime_profile(
+            ctx,
+            target_bucket_id=explicit_target,
+            target_profile_label=explicit_label,
+            root_selection=root,
+            method=method,
+            credential_reference=credential_reference,
+        )
+        return
+    if spec.key in _RUNTIME_PROFILE_KEYS:
+        from .runtime_profile_admission import activate_runtime_profile
+
+        _require_resume_target(root, explicit_target, credential_reference=credential_reference is not None)
+        activate_runtime_profile(
+            ctx,
+            target_bucket_id=explicit_target,
+            target_profile_label=explicit_label,
+            root_selection=root,
+            method=method,
+            credential_reference=credential_reference,
+        )
         return
     _activate_parsed_profile_session(
         ctx,
@@ -433,6 +604,8 @@ def consume_root_fallback(
     try:
         if not isinstance(payload, ProfileAuthenticationSecrets):
             raise TypeError("root profile-secret model resolved an unexpected payload type")
+        if payload.profile_passphrase is None:
+            _refuse("profile_secrets_method_mismatch")
         passphrase = payload.profile_passphrase.get_secret_value()
         return _authenticate_for_invocation(ctx, bucket_id=bucket_id, passphrase_callback=lambda: passphrase)
     finally:

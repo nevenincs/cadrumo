@@ -116,7 +116,7 @@ from cadrumo.core.json_contract import Notice, NoticeSeverity, ResolvedActionArg
 from cadrumo.core.operator_action_enums import ActionArgumentSource, ActionArgumentStatus
 from cadrumo.entrypoints.cli.command_schema import command_schema_refs
 from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
-from cadrumo.entrypoints.cli.common import _action_text_lines, _resolve_notice_actions, resolve_notice_action
+from cadrumo.entrypoints.cli.common import _action_text_lines, resolve_notice_action, resolve_notice_actions
 
 action = resolve_notice_action(
     action=ActionReference(action_id="operator.profile.create"),
@@ -130,7 +130,7 @@ action = resolve_notice_action(
         ),
     ),
 )
-notices = _resolve_notice_actions(
+notices = resolve_notice_actions(
     (Notice(severity=NoticeSeverity.INFO, code="test.notice", message="Continue.", action=action),)
 )
 print(json.dumps({

@@ -54,6 +54,7 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Mapping
+from contextlib import nullcontext
 from datetime import datetime
 from decimal import Decimal
 
@@ -300,6 +301,7 @@ def collect_prorrata_regularizacion_diagnostics(
     prorrata_register_repository: ProrrataRegisterServiceRepositoryProtocol,
     transaction_repository: TransactionCatalogueRepositoryProtocol,
     bucket_id: str | None = None,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     """Return the annual prorrata-general regularización advisory for one calculation.
 
@@ -335,6 +337,8 @@ def collect_prorrata_regularizacion_diagnostics(
         observation_repository: The local
             :class:`~application.calculations.observations_repository.CalculationObservationRepositoryProtocol`
             scanned for the prior-year definitive-percentage carry.
+        operation: The calculation's pinned registry authority. Standalone
+            callers may omit it to lease one for this collector.
 
     Returns:
         A tuple of advisories. At the settlement period it may carry the
@@ -349,7 +353,7 @@ def collect_prorrata_regularizacion_diagnostics(
     if modelo != Modelo("303").value:
         return ()
 
-    with bundled_indexed_authority().operation() as operation:
+    with nullcontext(operation) if operation is not None else bundled_indexed_authority().operation() as authority:
         missing_carry_diagnostics = _missing_carry_diagnostics(
             revision,
             casilla_values,
@@ -357,7 +361,7 @@ def collect_prorrata_regularizacion_diagnostics(
             filing_year=filing_year,
             prorrata_register_repository=prorrata_register_repository,
             bucket_id=bucket_id,
-            operation=operation,
+            operation=authority,
         )
         if not is_m303_annual_settlement_period(Period.from_year_and_code(filing_year, period_token)):
             return missing_carry_diagnostics
@@ -374,7 +378,7 @@ def collect_prorrata_regularizacion_diagnostics(
             prorrata_register_repository=prorrata_register_repository,
             transaction_repository=transaction_repository,
             bucket_id=bucket_id,
-            operation=operation,
+            operation=authority,
         )
 
 

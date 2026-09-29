@@ -75,8 +75,8 @@ def refresh_active_profile_output_language() -> str | None:
     """
     try:
         language = active_profile_output_language_from_storage()
-    except Exception:
-        _logger.debug("profile output language could not be read; using settings", exc_info=True)
+    except Exception as error:
+        _logger.debug("profile output language could not be read; using settings error_type=%s", type(error).__name__)
         language = None
     _SNAPSHOT.set(language)
     clear_output_language_cache()
@@ -186,5 +186,5 @@ def mirror_profile_output_language_hint(bucket_id: str, language: OutputLanguage
             bucket_id=trimmed,
             language=language,
         )
-    except Exception:
-        _logger.debug("could not mirror the output-language hint", exc_info=True)
+    except Exception as error:
+        _logger.debug("could not mirror the output-language hint error_type=%s", type(error).__name__)

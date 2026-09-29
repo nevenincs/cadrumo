@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import StrEnum
+from uuid import UUID
 
-from pydantic import SecretStr
+from pydantic import SecretStr, model_validator
 
 from cadrumo.application.operator_surface.command_ports import Capability, ProfileAuthenticationPosture
 
@@ -21,7 +23,19 @@ from .config.secure_input import MachineSecretPayload
 class ProfileAuthenticationSecrets(MachineSecretPayload):
     """Strict root payload used to authenticate one exact profile target."""
 
-    profile_passphrase: SecretStr
+    profile_passphrase: SecretStr | None = None
+    api_key: SecretStr | None = None
+
+    @model_validator(mode="after")
+    def exactly_one_credential(self) -> ProfileAuthenticationSecrets:
+        if (self.profile_passphrase is None) == (self.api_key is None):
+            raise ValueError("root profile authentication requires exactly one credential field")
+        return self
+
+
+class ProfileAuthenticationMethod(StrEnum):
+    PASSWORD = "password"  # noqa: S105 -- public method token, not a credential.
+    API_KEY = "api-key"
 
 
 @dataclass(frozen=True, slots=True)
@@ -30,10 +44,18 @@ class ProfileSecretSourceOptions:
 
     stdin: bool = False
     descriptor: int | None = None
+    method: ProfileAuthenticationMethod = ProfileAuthenticationMethod.PASSWORD
+    credential_reference: UUID | None = None
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.method, ProfileAuthenticationMethod):
+            raise TypeError("root profile authentication requires a known method")
+        if self.credential_reference is not None and not isinstance(self.credential_reference, UUID):
+            raise TypeError("root profile credential reference must be a UUID")
 
     @property
     def supplied(self) -> bool:
-        return self.stdin or self.descriptor is not None
+        return self.stdin or self.descriptor is not None or self.credential_reference is not None
 
 
 def resolve_profile_secret_model(spec: ProfileSecretSpec) -> type[MachineSecretPayload]:
@@ -98,6 +120,7 @@ def command_needs_state_tree(node: CommandSpecNode) -> bool:
 
 __all__ = [
     "PROFILE_FREE_CAPABILITIES",
+    "ProfileAuthenticationMethod",
     "ProfileAuthenticationSecrets",
     "ProfileSecretSourceOptions",
     "command_is_profile_free",

@@ -243,6 +243,7 @@ __all__ = [
     "profile_grounding_index_for_operation",
     "resolve_lifecycle_continuation_notice",
     "resolve_notice_action",
+    "resolve_notice_actions",
 ]
 
 
@@ -725,7 +726,7 @@ def _live_action_input_schema(command_key: str) -> VerbInputSchema:
     return build_verb_input_schema(command_key)
 
 
-def _resolve_notice_actions(notices: Sequence[Notice] | None) -> tuple[Notice, ...]:
+def resolve_notice_actions(notices: Sequence[Notice] | None) -> tuple[Notice, ...]:
     """Join success-notice actions to their live CLI paths before presentation."""
     from ...application.operator_actions.catalogue import lookup_action
     from ...core.json_contract import ResolvedNoticeAction
@@ -877,7 +878,7 @@ def emit_envelope(
     if metadata_invocation:
         resolved_notices = supplied_notices
     else:
-        from ._payer_fact_migration_notice import drain_payer_fact_migration_notices
+        from ..payer_fact_migration_notices import drain_payer_fact_migration_notices
         from ._profile_authentication_notice import drain_profile_authentication_notices
 
         supplied_notices = (
@@ -885,7 +886,7 @@ def emit_envelope(
             *drain_profile_authentication_notices(),
             *drain_payer_fact_migration_notices(),
         )
-        resolved_notices = _resolve_notice_actions(supplied_notices)
+        resolved_notices = resolve_notice_actions(supplied_notices)
     if output_format is OutputFormat.JSON:
         if metadata_invocation:
             # The ``--help`` / ``--version`` fast path stays off the

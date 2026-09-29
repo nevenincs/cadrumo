@@ -29,8 +29,11 @@ from __future__ import annotations
 
 import hashlib
 import json
+from collections.abc import Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
+from pathlib import Path
+from uuid import UUID
 
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
@@ -41,6 +44,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import o
 from ....adapters.inbound.pdf.source_provenance import source_pdf_reference_path
 from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....adapters.persistence.profile.tests.modelo_303_filed_disposition import modelo_303_filed_disposition
+from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from ....adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend as _isolated_cli_backend,
 )
@@ -49,20 +53,37 @@ from ....application.flows.definition import FlowPage
 from ....application.flows.errors import FlowAnswerError
 from ....application.flows.scripted import run_scripted_flow
 from ....application.modelo.action_errors import amendment_evidence_missing_precondition
+from ....application.modelo.amendment_context_operation import ModeloWorkAmendmentContextProjection
 from ....application.modelo.calculation_actions import get_calculation_revision
+from ....application.modelo.calculation_projection import ModeloCalculationSnapshot
+from ....application.modelo.calculation_repository import calculation_revision_catalogue_repository
 from ....application.modelo.external_import_actions import import_external_filing_evidence
 from ....application.modelo.filing_actions import get_filing_record
+from ....application.modelo.filing_projection import ModeloFilingRecordSnapshot
+from ....application.modelo.filing_repository import modelo_record_catalogue_repository
+from ....application.modelo.metadata_projection import ModeloWorkMetadataSnapshot
+from ....application.modelo.registry_discovery import registry_casillas_for_registry_scope
 from ....application.modelo.work_lifecycle import get_work_unit
+from ....application.modelo.work_unit_repository import work_unit_catalogue_repository
+from ....application.user_profile.login_session import login_profile
 from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.casilla_id import validated_casilla_id
 from ....core.flows import FlowMode
 from ....core.operator_action_enums import ActionConditionality, NoRecoveryOutcome
 from ....core.period import Period
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
-from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.calculations.registry.amendment_regime_policy import permitted_amendment_kind_values_for_period
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.justificante.schema import Justificante
+from ....domain.modelos.calculation_revision import CalculationRevision
+from ....domain.modelos.calculation_revision_amendment import (
+    CalculationRevisionAmendmentKind,
+    m303_rectificativa_motive_is_applicable,
+)
 from ....domain.modelos.filing_record import ExternalEvidenceKind
+from ....domain.modelos.work_unit import WorkUnit
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ...adapter_composition import build_calculation_action_ports, build_filing_action_ports
@@ -72,7 +93,7 @@ from .._modelo_amend_wizard_cli import (
     _MOTIVE_PAGE_ID,
     _REASON_PAGE_ID,
     _amendable_rows,
-    _baseline_casilla_rows,
+    _baseline_values,
     _selected_rows,
     _selection_definition,
     _value_page_id,
@@ -80,12 +101,19 @@ from .._modelo_amend_wizard_cli import (
 )
 from .._modelo_behavior_support import resolve_work_unit_for_cli as _resolve_work_unit_for_cli
 from ._modelo_work_ux_support import _create_m130_work_unit, _create_m303_work_unit
+from ._runtime_profile_cli_fixture import (
+    NativeCliProfileFixture,
+    RuntimeFailureObservation,
+    native_cli_profile_scope,
+)
 from .cli_runner import invoke_cached_cli
 from .modelo_cli import create_modelo_work_unit_via_cli
 
 __all__ = ["_isolated_cli_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
+
+_NATIVE_RUNTIME_FAILURES: list[RuntimeFailureObservation] = []
 
 
 def test_amend_wizard_missing_evidence_has_no_invented_recovery_action() -> None:
@@ -122,6 +150,58 @@ def _m303_revision_id(*, filing_year: int, period: str) -> str:
     return str(published_snapshot("303", filing_year=filing_year, period=period).revision.id)
 
 
+def _context_amendment_options(
+    *, unit: WorkUnit, baseline_revision: CalculationRevision, operation: PinnedAuthorityOperation
+) -> tuple[tuple[CalculationRevisionAmendmentKind, ...], bool]:
+    """Read legal kind and M303 motive options from the pinned authority."""
+    with validating_governed_facts(operation):
+        permitted_values = permitted_amendment_kind_values_for_period(str(unit.modelo), unit.period)
+    permitted_kinds = tuple(kind for kind in CalculationRevisionAmendmentKind if kind.value in permitted_values)
+
+    motive_applicable = False
+    evidence = baseline_revision.filing_instance_evidence
+    if evidence is not None and str(unit.modelo) == "303":
+        regimen = evidence.m303.regimen_simplificado.regimen_snapshot
+        motive_applicable = m303_rectificativa_motive_is_applicable(
+            registry_revision_id=regimen.registry_revision_id,
+            record_design=regimen.record_design,
+            operation=operation,
+        )
+    return permitted_kinds, motive_applicable
+
+
+def _context_projection(
+    *,
+    baseline,
+    unit: WorkUnit,
+    baseline_revision: CalculationRevision,
+    operation: PinnedAuthorityOperation,
+) -> ModeloWorkAmendmentContextProjection:
+    """Project real stored facts and registry rows through the worker context contract."""
+    permitted_kinds, motive_applicable = _context_amendment_options(
+        unit=unit, baseline_revision=baseline_revision, operation=operation
+    )
+    registry_rows = registry_casillas_for_registry_scope(
+        str(unit.modelo),
+        filing_year=unit.filing_year,
+        period=unit.period.registry_token,
+        operation=operation,
+    ).rows
+    return ModeloWorkAmendmentContextProjection(
+        profile_id=UUID(unit.bucket_id),
+        record=ModeloFilingRecordSnapshot.from_record(baseline),
+        unit=ModeloWorkMetadataSnapshot.from_work_unit(unit),
+        calculation=ModeloCalculationSnapshot.from_revision(
+            baseline_revision,
+            work_unit=unit,
+            operation=operation,
+        ),
+        casilla_rows=registry_rows,
+        permitted_amendment_kinds=permitted_kinds,
+        m303_rectificativa_motive_applicable=motive_applicable,
+    )
+
+
 # The fields whose values must be identical for the same amendment expressed
 # through either surface (the wizard-derived inputs and a hand-built ``work
 # amend``). Deliberately excluded: the fields that identify the individual
@@ -146,8 +226,14 @@ _AMEND_PARITY_SPINE = (
 )
 
 
-def _invoke(args: list[str]):
-    return invoke_cached_cli(args)
+def _invoke(args: list[str], *, native_profile: NativeCliProfileFixture | None = None):
+    if native_profile is None:
+        return invoke_cached_cli(args)
+    close_active_bucket_session()
+    return invoke_cached_cli(
+        ["--profile", "operator", "--profile-secrets-stdin", *args],
+        input=json.dumps({"profile_passphrase": native_profile.passphrase}),
+    )
 
 
 def _payload_string(output: str, key: str) -> str:
@@ -163,19 +249,54 @@ def _casilla_observation(revision_payload, casilla_id: str):
     return rows[0]
 
 
+def _operator_profile_facts() -> dict[str, str]:
+    """Return the synthetic profile facts required by amendment command tests."""
+    return {
+        "taxpayer_type.entity_type": "natural_person",
+        "taxpayer_type.irpf_income_categories": "actividad_economica",
+        "identity.tax_id": _TAX_ID,
+        "identity.name": "Operator",
+        "identity.surnames": "Amend",
+        "activities.description": "design",
+    }
+
+
 def _create_profile() -> None:
     """Register the profile through the shared CLI registration door."""
-    register_cli_profile(
-        label="operator",
-        facts={
-            "taxpayer_type.entity_type": "natural_person",
-            "taxpayer_type.irpf_income_categories": "actividad_economica",
-            "identity.tax_id": _TAX_ID,
-            "identity.name": "Operator",
-            "identity.surnames": "Amend",
-            "activities.description": "design",
-        },
-        log_in=False,
+    register_cli_profile(label="operator", facts=_operator_profile_facts(), log_in=False)
+
+
+@pytest.fixture
+def _native_operator_profile(tmp_path: Path) -> Iterator[NativeCliProfileFixture]:
+    """Register the test profile and serve its real Windows worker runtime."""
+    with native_cli_profile_scope(tmp_path) as profile:
+        _NATIVE_RUNTIME_FAILURES.clear()
+        profile.failure_observer = _capture_native_runtime_failure
+        profile.register(label="operator", facts=_operator_profile_facts())
+        yield profile
+
+
+def _capture_native_runtime_failure(observation: RuntimeFailureObservation) -> None:
+    """Retain sanitized exception, source location and worker exchange evidence."""
+    _NATIVE_RUNTIME_FAILURES.append(observation)
+
+
+def _profile_amend_catalogue_state(
+    *,
+    native_profile: NativeCliProfileFixture,
+    bucket_id: str,
+) -> tuple[object, object, object]:
+    """Snapshot catalogues after real password custody opens the registered profile."""
+    with bundled_indexed_authority().operation() as operation:
+        login_profile(
+            name="operator",
+            passphrase_callback=lambda: native_profile.passphrase,
+            profile_decode_context=operation.profile_decode_context(),
+        )
+    return (
+        work_unit_catalogue_repository(bucket_id=bucket_id).load(),
+        modelo_record_catalogue_repository(bucket_id=bucket_id).load(),
+        calculation_revision_catalogue_repository(bucket_id=bucket_id).load(),
     )
 
 
@@ -294,19 +415,25 @@ def _scripted_amend(
             ports=build_filing_action_ports(bucket_id=bucket_id),
         )
         with bundled_indexed_authority().operation() as operation:
-            casilla_rows = _baseline_casilla_rows(unit, operation=operation)
             baseline_revision = get_calculation_revision(
                 baseline.calculation_revision_id,
                 ports=build_calculation_action_ports(bucket_id=bucket_id, operation=operation),
             )
-        amendable = _amendable_rows(casilla_rows, baseline_revision)
+            context = _context_projection(
+                baseline=baseline,
+                unit=unit,
+                baseline_revision=baseline_revision,
+                operation=operation,
+            )
+        baseline_values = _baseline_values(context)
+        amendable = _amendable_rows(context.casilla_rows, baseline_values)
         by_number = {row.number: row for row in amendable}
         selected_ids = [by_number[number].casilla_id for number in change_numbers]
         _ACTIVE_RUNS[run_id] = {}
         try:
             selection_definition = _selection_definition(
                 amendable=amendable,
-                baseline_revision=baseline_revision,
+                baseline_values=baseline_values,
                 unit=unit,
                 run_token=run_id,
             )
@@ -320,9 +447,10 @@ def _scripted_amend(
 
             corrections_definition = _values_kind_reason_definition(
                 selected=selected,
-                baseline_revision=baseline_revision,
+                baseline_values=baseline_values,
                 modelo=str(baseline.modelo),
-                period=baseline.period,
+                permitted_amendment_kinds=context.permitted_amendment_kinds,
+                m303_rectificativa_motive_applicable=context.m303_rectificativa_motive_applicable,
                 run_token=run_id,
             )
             has_motive_page = any(
@@ -356,6 +484,7 @@ def _amend_via_shared_path(
     from_filing_record_id: str,
     overrides: dict[str, str],
     kind: str,
+    native_profile: NativeCliProfileFixture,
     motive: str | None = None,
     reason: str,
 ):
@@ -374,6 +503,7 @@ def _amend_via_shared_path(
             "--reason", reason,
             *set_flags,
         ],
+        native_profile=native_profile,
     )  # fmt: skip
 
 
@@ -399,21 +529,28 @@ def _permitted_kind_choice_values(
             ports=build_filing_action_ports(bucket_id=bucket_id),
         )
         with bundled_indexed_authority().operation() as operation:
-            casilla_rows = _baseline_casilla_rows(unit, operation=operation)
             baseline_revision = get_calculation_revision(
                 baseline.calculation_revision_id,
                 ports=build_calculation_action_ports(bucket_id=bucket_id, operation=operation),
             )
-        amendable = _amendable_rows(casilla_rows, baseline_revision)
+            context = _context_projection(
+                baseline=baseline,
+                unit=unit,
+                baseline_revision=baseline_revision,
+                operation=operation,
+            )
+        baseline_values = _baseline_values(context)
+        amendable = _amendable_rows(context.casilla_rows, baseline_values)
         by_number = {row.number: row for row in amendable}
         selected = tuple(by_number[number] for number in change_numbers)
         _ACTIVE_RUNS[run_id] = {}
         try:
             definition = _values_kind_reason_definition(
                 selected=selected,
-                baseline_revision=baseline_revision,
+                baseline_values=baseline_values,
                 modelo=str(baseline.modelo),
-                period=baseline.period,
+                permitted_amendment_kinds=context.permitted_amendment_kinds,
+                m303_rectificativa_motive_applicable=context.m303_rectificativa_motive_applicable,
                 run_token=run_id,
             )
             kind_page = next(
@@ -425,7 +562,9 @@ def _permitted_kind_choice_values(
             _ACTIVE_RUNS.pop(run_id, None)
 
 
-def test_amend_wizard_scripted_sequence_files_m130_complementaria() -> None:
+def test_amend_wizard_scripted_sequence_files_m130_complementaria(
+    _native_operator_profile: NativeCliProfileFixture,
+) -> None:
     """The wizard's scripted definitions, fed to the shared amend path, file the correction.
 
     The substrate's scripted driver walks the wizard's own selection CHECKBOX
@@ -434,7 +573,6 @@ def test_amend_wizard_scripted_sequence_files_m130_complementaria() -> None:
     ``work amend`` composition the wizard uses -- supersede the imported
     AEAT-attested baseline with the corrected casilla value.
     """
-    _create_profile()
     work_unit_id = _create_m130_work_unit()
     baseline_filing_id = _import_external_baseline(work_unit_id)
 
@@ -456,6 +594,7 @@ def test_amend_wizard_scripted_sequence_files_m130_complementaria() -> None:
         kind=kind,
         motive=motive,
         reason=reason,
+        native_profile=_native_operator_profile,
     )
     assert result.exit_code == 0, result.output
     assert "Traceback" not in result.output
@@ -472,12 +611,15 @@ def test_amend_wizard_scripted_sequence_files_m130_complementaria() -> None:
     revision = _payload(
         _invoke(
             ["--format", "json", "app", "modelo", "work", "revision", payload["calculation_revision_id"]],
+            native_profile=_native_operator_profile,
         ).output,
     )
     assert Decimal(revision["casilla_values"]["01"]) == _CORRECTED_INGRESOS
 
 
-def test_amend_wizard_scripted_sequence_files_m303_rectificativa() -> None:
+def test_amend_wizard_scripted_sequence_files_m303_rectificativa(
+    _native_operator_profile: NativeCliProfileFixture,
+) -> None:
     """An Autoliquidación Rectificativa on M303 files through the wizard's scripted drive.
 
     Modelo 303 adopts the unified ``autoliquidación rectificativa`` (LGT art.
@@ -488,7 +630,6 @@ def test_amend_wizard_scripted_sequence_files_m303_rectificativa() -> None:
     selection + values/kind/reason answers file it through the shared amend
     path.
     """
-    _create_profile()
     work_unit_id = _create_m303_work_unit()
     baseline_filing_id = _import_external_m303_baseline(work_unit_id)
 
@@ -509,6 +650,7 @@ def test_amend_wizard_scripted_sequence_files_m303_rectificativa() -> None:
         kind=kind,
         motive=motive,
         reason=reason,
+        native_profile=_native_operator_profile,
     )
     assert result.exit_code == 0, result.output
     assert "Traceback" not in result.output
@@ -523,16 +665,21 @@ def test_amend_wizard_scripted_sequence_files_m303_rectificativa() -> None:
     revision = _payload(
         _invoke(
             ["--format", "json", "app", "modelo", "work", "revision", payload["calculation_revision_id"]],
+            native_profile=_native_operator_profile,
         ).output,
     )
     assert Decimal(revision["casilla_values"]["07"]) == _M303_CORRECTED_BASE_GENERAL
 
 
-def test_work_amend_m303_rectificativa_missing_motive_refuses_before_persistence() -> None:
+def test_work_amend_m303_rectificativa_missing_motive_refuses_before_persistence(
+    _native_operator_profile: NativeCliProfileFixture,
+) -> None:
     """The public command cannot infer the motive from kind, casilla, result, or reason."""
-    _create_profile()
     work_unit_id = _create_m303_work_unit()
     baseline_filing_id = _import_external_m303_baseline(work_unit_id)
+    bucket_id = resolve_active_bucket_id()
+    assert bucket_id is not None
+    before = _profile_amend_catalogue_state(native_profile=_native_operator_profile, bucket_id=bucket_id)
 
     result = _invoke(
         [
@@ -551,11 +698,17 @@ def test_work_amend_m303_rectificativa_missing_motive_refuses_before_persistence
             "--set",
             f"07={_M303_CORRECTED_BASE_GENERAL}",
         ],
+        native_profile=_native_operator_profile,
     )
 
     assert result.exit_code != 0
     assert "Traceback" not in result.output
-    assert json.loads(result.output)["error"]["code"] == "REFUSED_MODELO_M303_RECTIFICATIVA_MOTIVE"
+    error = json.loads(result.output)["error"]
+    assert error["code"] == "REFUSED_CLI_BOUNDARY", result.output
+    assert error["context"]["reason"] == "REFUSED_MODELO_M303_RECTIFICATIVA_MOTIVE", result.output
+    assert error["context"]["terminal_condition"] == "refused", result.output
+    assert error["context"]["effect"] == "unknown", result.output
+    assert _profile_amend_catalogue_state(native_profile=_native_operator_profile, bucket_id=bucket_id) == before
 
 
 def test_work_amend_refuses_free_text_m303_rectificativa_motive_at_the_public_parser() -> None:
@@ -583,7 +736,9 @@ def test_work_amend_refuses_free_text_m303_rectificativa_motive_at_the_public_pa
     assert "Traceback" not in result.output
 
 
-def test_amend_wizard_scripted_inputs_match_hand_built_work_amend() -> None:
+def test_amend_wizard_scripted_inputs_match_hand_built_work_amend(
+    _native_operator_profile: NativeCliProfileFixture,
+) -> None:
     """Wizard-derived amend inputs and a hand-built ``work amend`` agree exactly.
 
     Two independently-seeded M303 2025 baselines (different quarters, both
@@ -594,8 +749,6 @@ def test_amend_wizard_scripted_inputs_match_hand_built_work_amend() -> None:
     (``aeat-architecture-boundaries``), not a second,
     independently-derived amendment surface.
     """
-    _create_profile()
-
     wizard_unit_id = _create_m303_work_unit()
     wizard_baseline_filing_id = _import_external_m303_baseline(
         wizard_unit_id,
@@ -610,16 +763,6 @@ def test_amend_wizard_scripted_inputs_match_hand_built_work_amend() -> None:
         motive=_M303_RECTIFICATIVA_MOTIVE,
         reason="wizard-driven rectificativa",
     )
-    wizard_result = _amend_via_shared_path(
-        from_filing_record_id=wizard_baseline_filing_id,
-        overrides=overrides,
-        kind=kind,
-        motive=motive,
-        reason=reason,
-    )
-    assert wizard_result.exit_code == 0, wizard_result.output
-    wizard_payload = _payload(wizard_result.output)
-
     hand_unit_id = create_modelo_work_unit_via_cli(
         modelo="303",
         filing_year=2025,
@@ -631,6 +774,17 @@ def test_amend_wizard_scripted_inputs_match_hand_built_work_amend() -> None:
         csv="JUST20253032TRECTHANDBUILT",
         period="2T",
     )
+    wizard_result = _amend_via_shared_path(
+        from_filing_record_id=wizard_baseline_filing_id,
+        overrides=overrides,
+        kind=kind,
+        motive=motive,
+        reason=reason,
+        native_profile=_native_operator_profile,
+    )
+    assert wizard_result.exit_code == 0, wizard_result.output
+    wizard_payload = _payload(wizard_result.output)
+
     hand_built_result = _invoke(
         [
             "--format", "json",
@@ -641,8 +795,11 @@ def test_amend_wizard_scripted_inputs_match_hand_built_work_amend() -> None:
             "--reason", "hand-built rectificativa",
             "--set", f"07={_M303_CORRECTED_BASE_GENERAL}",
         ],
+        native_profile=_native_operator_profile,
     )  # fmt: skip
-    assert hand_built_result.exit_code == 0, hand_built_result.output
+    assert hand_built_result.exit_code == 0, (
+        f"{hand_built_result.output}; server failure observations={_NATIVE_RUNTIME_FAILURES}"
+    )
     hand_built_payload = _payload(hand_built_result.output)
 
     # The wizard-derived override set is exactly the hand-typed one.
@@ -658,6 +815,7 @@ def test_amend_wizard_scripted_inputs_match_hand_built_work_amend() -> None:
     wizard_revision = _payload(
         _invoke(
             ["--format", "json", "app", "modelo", "work", "revision", wizard_payload["calculation_revision_id"]],
+            native_profile=_native_operator_profile,
         ).output,
     )
     hand_built_revision = _payload(
@@ -666,6 +824,7 @@ def test_amend_wizard_scripted_inputs_match_hand_built_work_amend() -> None:
                 "--format", "json",
                 "app", "modelo", "work", "revision", hand_built_payload["calculation_revision_id"],
             ],
+            native_profile=_native_operator_profile,
         ).output,
     )  # fmt: skip
     assert (
@@ -752,17 +911,23 @@ def test_amend_wizard_blank_selection_yields_no_corrections() -> None:
             ports=build_filing_action_ports(bucket_id=bucket_id),
         )
         with bundled_indexed_authority().operation() as operation:
-            casilla_rows = _baseline_casilla_rows(unit, operation=operation)
             baseline_revision = get_calculation_revision(
                 baseline.calculation_revision_id,
                 ports=build_calculation_action_ports(bucket_id=bucket_id, operation=operation),
             )
-        amendable = _amendable_rows(casilla_rows, baseline_revision)
+            context = _context_projection(
+                baseline=baseline,
+                unit=unit,
+                baseline_revision=baseline_revision,
+                operation=operation,
+            )
+        baseline_values = _baseline_values(context)
+        amendable = _amendable_rows(context.casilla_rows, baseline_values)
         _ACTIVE_RUNS[run_id] = {}
         try:
             definition = _selection_definition(
                 amendable=amendable,
-                baseline_revision=baseline_revision,
+                baseline_values=baseline_values,
                 unit=unit,
                 run_token=run_id,
             )
@@ -773,7 +938,9 @@ def test_amend_wizard_blank_selection_yields_no_corrections() -> None:
             _ACTIVE_RUNS.pop(run_id, None)
 
 
-def test_amend_wizard_non_interactive_host_refuses_with_the_typed_console_error() -> None:
+def test_amend_wizard_non_interactive_host_refuses_with_the_typed_console_error(
+    _native_operator_profile: NativeCliProfileFixture,
+) -> None:
     """A non-TTY caller with an amendable baseline gets the substrate's typed refusal.
 
     The test process is non-interactive, so the wizard -- which has a CHECKBOX
@@ -781,11 +948,13 @@ def test_amend_wizard_non_interactive_host_refuses_with_the_typed_console_error(
     unsupported-console error rather than block. Asserted structurally on the
     envelope error code, never on localized prose.
     """
-    _create_profile()
     work_unit_id = _create_m130_work_unit()
     _import_external_baseline(work_unit_id)
 
-    result = _invoke(["--format", "json", "app", "modelo", "work", "amend-wizard", work_unit_id])
+    result = _invoke(
+        ["--format", "json", "app", "modelo", "work", "amend-wizard", work_unit_id],
+        native_profile=_native_operator_profile,
+    )
 
     assert result.exit_code != 0
     assert "Traceback" not in result.output

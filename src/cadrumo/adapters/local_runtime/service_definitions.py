@@ -154,8 +154,11 @@ def linux_user_service(binding: RuntimeServiceBinding) -> str:
         f"ExecStart=:{command}\n"
         # WorkingDirectory is a scalar path, not the ExecStart word grammar.
         f"WorkingDirectory={binding.storage_root.replace('%', '%%')}\n"
-        "Restart=on-failure\nRestartSec=60\nTimeoutStopSec=15\n"
-        "KillMode=control-group\nSendSIGKILL=yes\n"
+        "Restart=on-failure\nRestartSec=60\n"
+        # The main process owns a 15-second drain and 17-second watchdog.
+        # Give them room before systemd's final kill; signal only the main
+        # process first so its workers remain available for orderly settlement.
+        "TimeoutStopSec=25\nKillMode=mixed\nSendSIGKILL=yes\n"
         "UMask=0077\nStandardInput=null\nStandardOutput=null\nStandardError=null\n"
         "[Install]\nWantedBy=default.target\n"
     )

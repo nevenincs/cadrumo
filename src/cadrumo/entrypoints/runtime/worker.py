@@ -18,34 +18,52 @@ from ...adapters.local_runtime.profile_worker import worker_operation_namespace
 from ...adapters.local_runtime.windows import WindowsRuntimeChannel, WindowsRuntimeEndpoint
 from ...adapters.local_runtime.worker_authorization_client import WorkerAuthorizationClient
 from ...adapters.persistence.storage.master_key.profile_worker_custody import ProfileWorkerCustody
-from ...adapters.persistence.storage.profile_persistence_composition import composed_profile_persistence_ports
 from ...application.runtime.contracts import RuntimeClientHello, RuntimeRefusalCode, RuntimeRefusalError
+from ...application.runtime.operation_access import operation_management_action
 from ...application.runtime.profile_worker import (
     ProfileWorkerContractRequest,
+    ProfileWorkerDrained,
     ProfileWorkerHumanBindingRequest,
+    ProfileWorkerHumanBound,
+    ProfileWorkerHumanOutcome,
     ProfileWorkerIdentity,
     ProfileWorkerLeaseRequest,
+    ProfileWorkerManageRequest,
     ProfileWorkerObservation,
     ProfileWorkerObserveRequest,
     ProfileWorkerOperationContract,
     ProfileWorkerOperationReceipt,
     ProfileWorkerOperationRequest,
-    ProfileWorkerPasswordOutcome,
+    ProfileWorkerProjection,
+    ProfileWorkerProjectionPage,
+    ProfileWorkerProjectPageRequest,
+    ProfileWorkerProjectRequest,
     ProfileWorkerRefusal,
     ProfileWorkerRequest,
     ProfileWorkerResumeRequest,
     ProfileWorkerRetireRequest,
+    ProfileWorkerSecretRequest,
+    ProfileWorkerSettlement,
+    ProfileWorkerSettlementRequest,
     ProfileWorkerStatus,
     ProfileWorkerSubmission,
+    ProfileWorkerSubmissionAbortRequest,
+    ProfileWorkerSubmissionBeginRequest,
+    ProfileWorkerSubmissionChunkRequest,
+    ProfileWorkerSubmissionFinishRequest,
     ProfileWorkerSubmitRequest,
+    ProfileWorkerUploadAccepted,
 )
-from ...application.user_profile.access_contracts import AccessAction
+from ...application.runtime.projection_pages import project_document_page
+from ...application.user_profile.access_contracts import AccessAction, AccessDenialCode
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.config import override_settings
+from ..adapter_composition import profile_adapter_composition
 from .operation_host import ProfileWorkerOperationHost
 from .profile_login import ProfileWorkerHumanLogin
+from .worker_submission_staging import StagedSubmission, WorkerSubmissionStaging
 
 
 async def _receive(channel: WindowsRuntimeChannel, failed: asyncio.Event) -> ProfileWorkerRequest:
@@ -59,35 +77,115 @@ async def _receive(channel: WindowsRuntimeChannel, failed: asyncio.Event) -> Pro
     raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
 
 
+async def _submit_payload_reply(
+    channel: WindowsRuntimeChannel,
+    operations: ProfileWorkerOperationHost,
+    *,
+    request_id: UUID,
+    payload: StagedSubmission,
+) -> None:
+    """Admit both small and staged payloads through the one canonical owner."""
+    submitted = await operations.submit_payload(
+        session_id=payload.session_id,
+        frontend=payload.frontend,
+        definition_id=payload.definition_id,
+        subject_ref=payload.subject_ref,
+        payload_json=payload.payload_json,
+        idempotency_key=payload.idempotency_key,
+    )
+    async with operations.release(
+        payload.session_id, submitted.receipt.operation_id, payload.frontend, AccessAction.SUBMIT
+    ) as release:
+        write_document(
+            channel,
+            ProfileWorkerSubmission(
+                identity=operations.custody.identity,
+                request_id=request_id,
+                receipt=submitted.receipt,
+                release=release,
+            ),
+            deadline=time.monotonic() + 5,
+        )
+
+
 async def _operate(
-    channel: WindowsRuntimeChannel, operations: ProfileWorkerOperationHost, failed: asyncio.Event
+    channel: WindowsRuntimeChannel,
+    operations: ProfileWorkerOperationHost,
+    failed: asyncio.Event,
+    uploads: WorkerSubmissionStaging,
 ) -> None:
     try:
         while True:
             request = (await _receive(channel, failed)).root
             try:
                 if isinstance(request, ProfileWorkerSubmitRequest):
-                    submitted = await operations.submit_payload(
-                        session_id=request.session_id,
-                        frontend=request.frontend,
-                        definition_id=request.definition_id,
-                        subject_ref=request.subject_ref,
-                        payload_json=request.payload_json,
-                        idempotency_key=request.idempotency_key,
+                    await _submit_payload_reply(
+                        channel,
+                        operations,
+                        request_id=request.request_id,
+                        payload=StagedSubmission(
+                            session_id=request.session_id,
+                            frontend=request.frontend,
+                            definition_id=request.definition_id,
+                            subject_ref=request.subject_ref,
+                            payload_json=request.payload_json,
+                            idempotency_key=request.idempotency_key,
+                        ),
                     )
-                    async with operations.release(
-                        request.session_id, submitted.receipt.operation_id, request.frontend, AccessAction.SUBMIT
-                    ) as release:
-                        write_document(
-                            channel,
-                            ProfileWorkerSubmission(
-                                identity=operations.custody.identity,
-                                request_id=request.request_id,
-                                receipt=submitted.receipt,
-                                release=release,
-                            ),
-                            deadline=time.monotonic() + 5,
+                    continue
+                elif isinstance(request, ProfileWorkerSubmissionBeginRequest):
+                    operations.contract(request.session_id, request.definition_id)
+                    uploads.begin(request)
+                    result = ProfileWorkerUploadAccepted(
+                        identity=operations.custody.identity,
+                        request_id=request.request_id,
+                        upload_id=request.upload_id,
+                    )
+                elif isinstance(request, ProfileWorkerSubmissionChunkRequest):
+                    operations.custody.require(request.session_id)
+                    uploads.append(request)
+                    result = ProfileWorkerUploadAccepted(
+                        identity=operations.custody.identity,
+                        request_id=request.request_id,
+                        upload_id=request.upload_id,
+                    )
+                elif isinstance(request, ProfileWorkerSubmissionFinishRequest):
+                    staged = uploads.finish(request)
+                    try:
+                        await _submit_payload_reply(channel, operations, request_id=request.request_id, payload=staged)
+                    finally:
+                        del staged
+                    continue
+                elif isinstance(request, ProfileWorkerSubmissionAbortRequest):
+                    uploads.abort(request)
+                    result = ProfileWorkerUploadAccepted(
+                        identity=operations.custody.identity,
+                        request_id=request.request_id,
+                        upload_id=request.upload_id,
+                    )
+                elif isinstance(request, ProfileWorkerSecretRequest):
+                    # The parent has already performed preflight. Always
+                    # consume the promised bounded frame before rechecking
+                    # authority, so a refusal cannot desynchronize the stream.
+                    with ExitStack() as secrets:
+                        secret = (
+                            secrets.enter_context(read_secret(channel, deadline=time.monotonic() + 5))
+                            if request.action == "operation_secret"
+                            else None
                         )
+                        async with operations.operation_secret(
+                            request.session_id, request.requirement, frontend=request.frontend, secret=secret
+                        ) as release:
+                            write_document(
+                                channel,
+                                ProfileWorkerOperationReceipt(
+                                    identity=operations.custody.identity,
+                                    request_id=request.request_id,
+                                    operation_id=request.requirement.identity.operation_id,
+                                    release=release,
+                                ),
+                                deadline=time.monotonic() + 5,
+                            )
                     continue
                 elif isinstance(request, ProfileWorkerOperationRequest | ProfileWorkerResumeRequest):
                     if isinstance(request, ProfileWorkerResumeRequest):
@@ -127,6 +225,48 @@ async def _operate(
                             deadline=time.monotonic() + 5,
                         )
                     continue
+                elif isinstance(request, ProfileWorkerProjectRequest | ProfileWorkerProjectPageRequest):
+                    async with operations.project(
+                        request.session_id, request.projection, frontend=request.frontend
+                    ) as (document, release):
+                        projected = (
+                            ProfileWorkerProjectionPage(
+                                identity=operations.custody.identity,
+                                request_id=request.request_id,
+                                page=project_document_page(document, request.page),
+                                release=release,
+                            )
+                            if isinstance(request, ProfileWorkerProjectPageRequest)
+                            else ProfileWorkerProjection(
+                                identity=operations.custody.identity,
+                                request_id=request.request_id,
+                                document=document,
+                                release=release,
+                            )
+                        )
+                        write_document(channel, projected, deadline=time.monotonic() + 5)
+                    continue
+                elif isinstance(request, ProfileWorkerManageRequest):
+                    async with operations.manage(request.session_id, request.management, frontend=request.frontend) as (
+                        document,
+                        release,
+                    ):
+                        if (
+                            release.operation_id != request.management.operation_id
+                            or release.request.action is not operation_management_action(request.management)
+                        ):
+                            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+                        write_document(
+                            channel,
+                            ProfileWorkerProjection(
+                                identity=operations.custody.identity,
+                                request_id=request.request_id,
+                                document=document,
+                                release=release,
+                            ),
+                            deadline=time.monotonic() + 5,
+                        )
+                    continue
                 else:
                     raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
             except (AutomationCustodyError, ProfileAccessRefusedError, ValidationError) as refusal:
@@ -139,6 +279,8 @@ async def _operate(
     except Exception:
         failed.set()
         raise
+    finally:
+        uploads.close()
 
 
 async def _serve(
@@ -149,19 +291,23 @@ async def _serve(
     operations: ProfileWorkerOperationHost,
 ) -> None:
     stop, failed = asyncio.Event(), asyncio.Event()
+    uploads = WorkerSubmissionStaging()
 
     async def expire() -> None:
         while not stop.is_set():
             await asyncio.sleep(0.1)
             try:
                 await asyncio.to_thread(custody.expire)
+                uploads.expire(live_sessions=custody.live_sessions())
                 await asyncio.to_thread(human.expire)
             except Exception:
                 failed.set()
                 return
 
     expiry = asyncio.create_task(expire(), name="profile-custody-expiry")
-    executing = asyncio.create_task(_operate(operation_channel, operations, failed), name="profile-operation-requests")
+    executing = asyncio.create_task(
+        _operate(operation_channel, operations, failed, uploads), name="profile-operation-requests"
+    )
     try:
         while not failed.is_set():
             request = (await _receive(channel, failed)).root
@@ -178,34 +324,69 @@ async def _serve(
                         custody.share(request.lease)
                 elif isinstance(request, ProfileWorkerRetireRequest):
                     custody.retire(request.session_id)
+                    uploads.expire(live_sessions=custody.live_sessions())
                 elif isinstance(request, ProfileWorkerHumanBindingRequest):
-                    human.bind(request.candidate_id, request.lease)
+                    receipt = human.bind(request.candidate_id, request.lease, persist_receipt=request.persist_receipt)
+                    write_document(
+                        channel,
+                        ProfileWorkerHumanBound(
+                            identity=custody.identity,
+                            request_id=request.request_id,
+                            session_id=request.lease.session_id,
+                            receipt=receipt,
+                        ),
+                        deadline=time.monotonic() + 5,
+                    )
+                    continue
                 elif isinstance(
                     request,
                     ProfileWorkerSubmitRequest
+                    | ProfileWorkerSubmissionBeginRequest
+                    | ProfileWorkerSubmissionChunkRequest
+                    | ProfileWorkerSubmissionFinishRequest
+                    | ProfileWorkerSubmissionAbortRequest
                     | ProfileWorkerOperationRequest
                     | ProfileWorkerObserveRequest
-                    | ProfileWorkerResumeRequest,
+                    | ProfileWorkerResumeRequest
+                    | ProfileWorkerProjectRequest
+                    | ProfileWorkerManageRequest
+                    | ProfileWorkerSecretRequest,
                 ):
                     raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
                 elif isinstance(request, ProfileWorkerContractRequest):
-                    contract = operations.contract(request.session_id, request.definition_id)
+                    description = operations.describe(request.session_id, request.definition_id)
                     write_document(
                         channel,
                         ProfileWorkerOperationContract(
                             identity=custody.identity,
                             request_id=request.request_id,
-                            contract=contract,
+                            contract=description.contract,
+                            request_json_schema=description.request_json_schema,
                         ),
                         deadline=time.monotonic() + 5,
                     )
                     continue
-                elif request.action == "password":
-                    with read_secret(channel, deadline=time.monotonic() + 5) as secret:
-                        candidate, login = human.authenticate(secret)
+                elif isinstance(request, ProfileWorkerSettlementRequest):
+                    settled = await operations.settlement(request.operation_identity, timeout=request.wait_seconds)
                     write_document(
                         channel,
-                        ProfileWorkerPasswordOutcome(
+                        ProfileWorkerSettlement(
+                            identity=custody.identity,
+                            request_id=request.request_id,
+                            operation_identity=request.operation_identity,
+                            settled=settled,
+                        ),
+                        deadline=time.monotonic() + 5,
+                    )
+                    continue
+                elif request.action in {"password", "receipt"}:
+                    with read_secret(channel, deadline=time.monotonic() + 5) as secret:
+                        candidate, login = (
+                            human.authenticate(secret) if request.action == "password" else human.resume(secret)
+                        )
+                    write_document(
+                        channel,
+                        ProfileWorkerHumanOutcome(
                             identity=custody.identity,
                             request_id=request.request_id,
                             candidate_id=candidate,
@@ -214,12 +395,27 @@ async def _serve(
                         deadline=time.monotonic() + 5,
                     )
                     continue
-                elif request.action == "cancel_password":
+                elif request.action == "cancel_human":
                     human.close()
                 elif request.action == "stop":
-                    await operations.close()
-                    human.close()
-                    custody.close()
+                    uploads.close()
+                    drained = await operations.close()
+                    write_document(
+                        channel,
+                        ProfileWorkerDrained(
+                            identity=custody.identity,
+                            request_id=request.request_id,
+                            unresolved=drained.unresolved,
+                            recovery_required=drained.recovery_required,
+                        ),
+                        deadline=time.monotonic() + 5,
+                    )
+                    # Keep the pipe open until the parent consumes the reply and
+                    # contains this scope. Closing immediately can discard an
+                    # unread named-pipe frame on Windows.
+                    with suppress(RuntimeRefusalError):
+                        await asyncio.to_thread(channel.read_exact, 1, deadline=time.monotonic() + 5)
+                    return
                 result = ProfileWorkerStatus(
                     identity=custody.identity, request_id=request.request_id, sessions=custody.live_sessions()
                 )
@@ -236,10 +432,9 @@ async def _serve(
                     ),
                     deadline=time.monotonic() + 5,
                 )
-            if request.action == "stop":
-                return
     finally:
         stop.set()
+        uploads.close()
         executing.cancel()
         await await_cancellation_complete(expiry, task_name="profile-custody-expiry-stop")
         try:
@@ -317,7 +512,7 @@ def run(arguments: list[str] | None = None) -> int:
                     cadrumo_active_profile=str(identity.binding.profile_id),
                 )
             )
-            composition.enter_context(composed_profile_persistence_ports())
+            composition.enter_context(profile_adapter_composition())
             operations = ProfileWorkerOperationHost(
                 custody,
                 authorization=WorkerAuthorizationClient(

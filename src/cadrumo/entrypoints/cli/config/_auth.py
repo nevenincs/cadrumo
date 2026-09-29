@@ -3,29 +3,27 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
 from pathlib import Path
 from typing import TYPE_CHECKING, Protocol
 
 import typer
 
+from ....application.auth.operator_results import AuthLogoutResult, AuthResetResult
+from ....application.runtime.contracts import RuntimeRefusalCode
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
 from ....core.json_contract import strict_round_trip
 from ..common import activate_subcommand_output_language as _activate_subcommand_output_language
 from ..common import emit_envelope, resolve_cli_precondition_action
 from ..errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
+from ..runtime_registered_operation import RegisteredOperationCompletion, submitted_operation_error
+from .runtime_auth_teardown import run_auth_teardown
 from .status_rendering import precondition_action_lines
 
 if TYPE_CHECKING:
-    from ....application.auth.certificate_secret_backend import CertificateSecretBackendFactory
-    from ....application.auth.operator_probe_ports import OperatorProbePorts
     from ....application.auth.operator_results import AuthConfigureResult
-    from ....application.auth.operator_scope_ports import OperatorScopePorts
     from ....application.operator_actions.models import PreconditionVerdict
-    from ....application.state_projection_ports import StateProjectionReadPorts
     from ....core.json_contract import ResolvedPreconditionAction
-    from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 
 
 def _auth_configure_lines(configure_result: AuthConfigureResult) -> list[str]:
@@ -54,64 +52,6 @@ def _auth_configure_lines(configure_result: AuthConfigureResult) -> list[str]:
     if configure_result.identity_alignment_detail:
         lines.append(f"identity_alignment_detail\t{configure_result.identity_alignment_detail}")
     return lines
-
-
-def _run_provider_auth_operation[AuthResultT](
-    operation: Callable[..., AuthResultT],
-    *,
-    certificate_secret_backend_factory: CertificateSecretBackendFactory,
-    operator_scope_ports: OperatorScopePorts,
-    provider: str | None,
-    all_providers: bool,
-) -> AuthResultT:
-    """Run a provider-scoped auth operation, mapping backend refusals to CLI boundaries.
-
-    ``logout`` and ``reset`` share the exact refusal fan-out: an unknown provider,
-    no active bucket, a missing custody session, an operation-scope conflict, and an
-    unconfigured provider each map to the same translated boundary message for both
-    verbs.
-
-    The custody-session refusal is mapped separately from the scope conflict on
-    purpose. Collapsing the two would render "choose either --provider or --all"
-    at an operator whose real remedy is ``aeat config login`` for the target
-    profile — an instruction that cannot resolve the refusal it answers.
-    """
-    from ....application.auth.operator_results import (
-        AuthConfigureNoActiveBucketError,
-        AuthOperationRequiresCustodySessionError,
-        AuthOperationScopeConflictError,
-        AuthProviderNotConfiguredError,
-    )
-
-    try:
-        return operation(
-            certificate_secret_backend_factory=certificate_secret_backend_factory,
-            operator_scope_ports=operator_scope_ports,
-            provider=provider,
-            all_providers=all_providers,
-        )
-    except KeyError as exc:
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.auth.unknown_provider",
-            context={"provider": provider or ""},
-        ) from exc
-    except AuthConfigureNoActiveBucketError as exc:
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.auth.no_active_bucket",
-        ) from exc
-    except AuthOperationRequiresCustodySessionError as exc:
-        raise _CliRefusedBoundaryError(
-            translated_message="application.auth.operator.errors.requires_custody_session",
-            context=exc.context,
-        ) from exc
-    except AuthOperationScopeConflictError as exc:
-        raise _CliRefusedBoundaryError(
-            translated_message="application.auth.operator.errors.scope_conflict",
-        ) from exc
-    except AuthProviderNotConfiguredError as exc:
-        raise _CliRefusedBoundaryError(
-            translated_message="application.auth.operator.errors.provider_not_configured",
-        ) from exc
 
 
 def auth_providers(
@@ -174,52 +114,9 @@ def auth_configure(
     emit_envelope(ctx, command="config.auth.configure", result=auth_configure_payload, lines=lines)
 
 
-class _OperatorAuthRead[ResultT](Protocol):
-    def __call__(
-        self,
-        provider: str | None = None,
-        *,
-        certificate_secret_backend_factory: CertificateSecretBackendFactory,
-        operator_probe_ports: OperatorProbePorts,
-        operator_scope_ports: OperatorScopePorts,
-        read_ports: StateProjectionReadPorts,
-        operation: PinnedAuthorityOperation,
-    ) -> ResultT: ...
-
-
 class _PreconditionBearingResult(Protocol):
     @property
     def active_profile_precondition_verdict(self) -> PreconditionVerdict | None: ...
-
-
-def _read_operator_auth[ResultT](
-    ctx: typer.Context,
-    provider: str | None,
-    read: _OperatorAuthRead[ResultT],
-) -> ResultT:
-    """Run one operator auth read, refusing an unknown provider slot."""
-    from ..state_projection_support import (
-        authority_operation,
-        certificate_secret_backend_factory,
-        operator_probe_ports,
-        operator_scope_ports,
-        state_projection_read_ports,
-    )
-
-    try:
-        return read(
-            provider,
-            certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
-            operator_probe_ports=operator_probe_ports(ctx),
-            operator_scope_ports=operator_scope_ports(ctx),
-            read_ports=state_projection_read_ports(ctx),
-            operation=authority_operation(ctx),
-        )
-    except KeyError as exc:
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.auth.unknown_provider",
-            context={"provider": provider or ""},
-        ) from exc
 
 
 def _active_profile_precondition_action(result: _PreconditionBearingResult) -> ResolvedPreconditionAction | None:
@@ -235,10 +132,12 @@ def auth_status(
 ) -> None:
     """Show the configured local authentication state."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.auth.operator import inspect_operator_auth
     from ..config_payloads import AuthStatusPayload
+    from .runtime_auth_read import cli_auth_read
 
-    result = _read_operator_auth(ctx, provider, inspect_operator_auth)
+    result = cli_auth_read(ctx, kind="status", provider=provider, output_language=output_language).status
+    if result is None:
+        raise _CliRefusedBoundaryError(context={"reason": "invalid_frame"})
     precondition_action = _active_profile_precondition_action(result)
     envelope_result = AuthStatusPayload.from_result(
         result,
@@ -287,10 +186,12 @@ def auth_test(
 ) -> None:
     """Render auth readiness through the application-owned auth state."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.auth.operator import test_operator_auth
     from ..config_payloads import AuthTestPayload
+    from .runtime_auth_read import cli_auth_read
 
-    result = _read_operator_auth(ctx, provider, test_operator_auth)
+    result = cli_auth_read(ctx, kind="test", provider=provider, output_language=output_language).test
+    if result is None:
+        raise _CliRefusedBoundaryError(context={"reason": "invalid_frame"})
     precondition_action = _active_profile_precondition_action(result)
     envelope_result = AuthTestPayload.from_test_result(
         result,
@@ -361,30 +262,33 @@ def auth_logout(
 ) -> None:
     """Terminate local auth sessions without removing provider configuration."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.auth.operator import logout_operator_auth
-    from ..state_projection_support import certificate_secret_backend_factory, operator_scope_ports
-
-    result = _run_provider_auth_operation(
-        logout_operator_auth,
-        certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
-        operator_scope_ports=operator_scope_ports(ctx),
+    completed = run_auth_teardown(
+        ctx,
+        kind="logout",
         provider=provider,
         all_providers=all_providers,
+        result_type=AuthLogoutResult,
     )
     from ..config_payloads import AuthLogoutPayload
 
-    payload = strict_round_trip(AuthLogoutPayload, result)
-    emit_envelope(
-        ctx,
-        command="config.auth.logout",
-        result=payload,
-        lines=(
-            f"bucket_id\t{result.bucket_id}",
-            f"providers\t{','.join(result.providers)}",
-            f"removed_sessions\t{result.removed_sessions}",
-            f"cleared_session_state\t{result.cleared_session_state}",
-        ),
-    )
+    try:
+        result = completed.projection
+        payload = strict_round_trip(AuthLogoutPayload, result)
+        emit_envelope(
+            ctx,
+            command="config.auth.logout",
+            result=payload,
+            lines=(
+                f"bucket_id\t{result.bucket_id}",
+                f"providers\t{','.join(result.providers)}",
+                f"removed_sessions\t{result.removed_sessions}",
+                f"cleared_session_state\t{result.cleared_session_state}",
+            ),
+        )
+    except (typer.Exit, _CliRefusedBoundaryError):
+        raise
+    except Exception:
+        raise _teardown_presentation_error(completed) from None
 
 
 def auth_reset(
@@ -400,24 +304,40 @@ def auth_reset(
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.auth.reset_requires_yes",
         )
-    from ....application.auth.operator import reset_operator_auth
-    from ..state_projection_support import certificate_secret_backend_factory, operator_scope_ports
-
-    result = _run_provider_auth_operation(
-        reset_operator_auth,
-        certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
-        operator_scope_ports=operator_scope_ports(ctx),
+    completed = run_auth_teardown(
+        ctx,
+        kind="reset",
         provider=provider,
         all_providers=all_providers,
+        result_type=AuthResetResult,
     )
     from ..config_payloads import AuthResetPayload
 
-    payload = strict_round_trip(AuthResetPayload, result)
-    emit_envelope(
-        ctx,
-        command="config.auth.reset",
-        result=payload,
-        lines=tuple(f"{key}\t{value}" for key, value in result.model_dump(mode="json").items()),
+    try:
+        result = completed.projection
+        payload = strict_round_trip(AuthResetPayload, result)
+        emit_envelope(
+            ctx,
+            command="config.auth.reset",
+            result=payload,
+            lines=tuple(f"{key}\t{value}" for key, value in result.model_dump(mode="json").items()),
+        )
+    except (typer.Exit, _CliRefusedBoundaryError):
+        raise
+    except Exception:
+        raise _teardown_presentation_error(completed) from None
+
+
+def _teardown_presentation_error(
+    completed: RegisteredOperationCompletion[AuthLogoutResult] | RegisteredOperationCompletion[AuthResetResult],
+) -> _CliRefusedBoundaryError:
+    """Keep the settled teardown receipt when local rendering fails."""
+    return submitted_operation_error(
+        completed.operation_id,
+        RuntimeRefusalCode.UNAVAILABLE.value,
+        terminal_condition=completed.terminal_condition,
+        effect=completed.effect,
+        refusal_code=completed.refusal_code,
     )
 
 

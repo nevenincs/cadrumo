@@ -3,13 +3,15 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from datetime import datetime, timedelta
+from decimal import Decimal
 from typing import TYPE_CHECKING, override
 
 from pydantic import BaseModel
 
 from ...core.async_cleanup import AsyncCloseable
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.hex import Hex64Str
 from ...core.logging import get_logger
 from ...core.operations import (
@@ -25,21 +27,27 @@ from ._supervisor_lease import OperationSupervisorLeaseMixin
 from ._supervisor_reconciliation import SupervisorReconciliationMixin
 from ._supervisor_settlement import SupervisorSettlementMixin
 from .authorization import OperationExecutionAuthority
+from .drain import OperationDrainResult
 from .event_replay import OperationEventCursor
+from .financial_operand import (
+    OperationTransientFinancialOperandDelivery,
+    OperationTransientFinancialOperandRequirement,
+)
 from .financial_operand_submission import (
     BoundTransientFinancialOperandAccess,
     OperationTransientFinancialOperandBroker,
 )
 from .interactions import (
+    OperationApplyResponse,
     OperationConsumedInteraction,
     OperationRejectResponse,
 )
 from .models import (
     OperationId,
     OperationIdentity,
-    OperationReference,
     OperationRequest,
     OperationStoredInvocation,
+    new_operation_id,
 )
 from .persistence.events import (
     OperationNoticeEvent,
@@ -64,13 +72,17 @@ from .persistence.replay import (
     OperationReplayPage,
 )
 from .projection_services import OperationResponseAuthorityIssuer
+from .provenance import OperationAdmissionProvenance
 from .registry import OperationDefinition, OperationRegistry
 from .secret_submission import (
     EphemeralSecretBroker,
+    OperationSecretRequirement,
+    zeroize_secret_buffer,
 )
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from .refusal_evidence import OperationExecutorResult
 
 _log = get_logger(__name__)
 
@@ -156,10 +168,15 @@ class OperationSupervisor(
         self._lease_locks: dict[OperationId, asyncio.Lock] = {}
         self._resources: dict[OperationId, list[AsyncCloseable]] = {}
         self._contexts: dict[OperationId, DefinitionBoundContext] = {}
-        self._executor_tasks: dict[OperationId, asyncio.Task[OperationReference | None]] = {}
+        self._executor_tasks: dict[OperationId, asyncio.Task[OperationExecutorResult]] = {}
         self._cleanup_tasks: dict[OperationId, asyncio.Task[None]] = {}
         self._continuation_tasks: dict[OperationId, asyncio.Task[OperationPersistedSnapshot]] = {}
         self._settlement_tasks: dict[OperationId, asyncio.Task[OperationPersistedSnapshot]] = {}
+        self._accepting_admissions = True
+        self._admissions: dict[asyncio.Task[object], OperationId] = {}
+        self._drain_tasks: dict[OperationId, set[asyncio.Task[object]]] = {}
+        self._drain_close_tasks: dict[OperationId, asyncio.Task[None]] = {}
+        self._drain_settlements: dict[OperationId, asyncio.Task[OperationPersistedSnapshot]] = {}
         self._durable_change_events: dict[OperationId, asyncio.Event] = {}
         self._durable_revisions: dict[OperationId, int] = {}
         self._ephemeral_secrets = EphemeralSecretBroker()
@@ -216,23 +233,181 @@ class OperationSupervisor(
             return
         await self._financial_operands.settle_operation(operation_id, now=self._clock())
 
-    async def shutdown(self) -> None:
-        """Wipe runtime-only secrets and stop supervising unsettled work.
+    async def _admit[T](self, operation_id: OperationId, action: Callable[[], Awaitable[T]]) -> T:
+        if not self._accepting_admissions:
+            raise ValueError("operation owner is draining")
+        task = asyncio.current_task()
+        if task is None:
+            raise InternalInvariantError("operation admission requires an asyncio task")
+        previous = self._admissions.get(task)
+        self._admissions[task] = operation_id
+        try:
+            return await action()
+        finally:
+            if previous is None:
+                self._admissions.pop(task, None)
+            else:
+                self._admissions[task] = previous
 
-        Ephemeral secrets are wiped first, so no executor still holding one can
-        read it. Each running task is then closed under its definition's policy:
-        a detachable operation is cancelled and left for owner recovery, any
-        other is asked to cancel and given its cleanup window first. Each task
-        settles its operand custody as it stops, before the operand broker is
-        closed.
+    @override
+    async def submit[RequestPayloadT: BaseModel](
+        self,
+        request: OperationRequest[RequestPayloadT],
+        *,
+        operation_id: OperationId | None = None,
+        provenance: OperationAdmissionProvenance | None = None,
+    ) -> OperationId:
+        proposed_id = operation_id or new_operation_id()
+        return await self._admit(
+            proposed_id,
+            lambda: SupervisorExecutionMixin.submit(self, request, operation_id=proposed_id, provenance=provenance),
+        )
+
+    @override
+    async def start(self, operation_id: OperationId) -> OperationPersistedSnapshot:
+        return await self._admit(operation_id, lambda: SupervisorExecutionMixin.start(self, operation_id))
+
+    @override
+    async def respond(self, response: OperationApplyResponse | OperationRejectResponse) -> OperationConsumedInteraction:
+        return await self._admit(response.operation_id, lambda: SupervisorExecutionMixin.respond(self, response))
+
+    @override
+    def _schedule_continuation(
+        self,
+        snapshot: OperationPersistedSnapshot,
+        definition: OperationDefinition,
+        continuation: OperationConsumedInteraction,
+    ) -> None:
+        if not self._accepting_admissions:
+            raise ValueError("operation owner is draining")
+        SupervisorExecutionMixin._schedule_continuation(self, snapshot, definition, continuation)
+
+    @override
+    async def submit_transient_financial_operand(
+        self, requirement: OperationTransientFinancialOperandRequirement, amount: Decimal
+    ) -> OperationTransientFinancialOperandDelivery:
+        return await self._admit(
+            requirement.identity.operation_id,
+            lambda: SupervisorExecutionMixin.submit_transient_financial_operand(self, requirement, amount),
+        )
+
+    @override
+    async def submit_ephemeral_secret(self, requirement: OperationSecretRequirement, secret: bytearray) -> None:
+        try:
+            await self._admit(
+                requirement.identity.operation_id,
+                lambda: SupervisorExecutionMixin.submit_ephemeral_secret(self, requirement, secret),
+            )
+        except BaseException:
+            zeroize_secret_buffer(secret)
+            raise
+
+    async def require_ephemeral_secret_ready(self, requirement: OperationSecretRequirement) -> None:
+        """Inspect the canonical wait without accepting or reserving any secret.
+
+        Delivery still rechecks lifecycle and single-use custody atomically;
+        this inspection grants no permission to a later delivery.
         """
+
+        async def inspect_ready() -> None:
+            async with self._lease_lock(requirement.identity.operation_id):
+                snapshot = await self.inspect(requirement.identity.operation_id)
+                if snapshot.secret_requirement != requirement:
+                    raise ValueError("ephemeral secret submission does not match the durable requirement")
+                if snapshot.lifecycle is not OperationLifecycle.CREATED or snapshot.executor_entered_at is not None:
+                    raise ValueError("ephemeral secret requirement is no longer awaiting submission")
+                self._ephemeral_secrets.require_ready(requirement, observed_at=self._clock())
+
+        await self._admit(requirement.identity.operation_id, inspect_ready)
+
+    async def drain(self, timeout: timedelta) -> OperationDrainResult:
+        """Stop admissions and wait one total monotonic window for declared close.
+
+        Any live task at the deadline is reported, not assumed cancelled. The
+        caller owns process and descendant containment before releasing custody.
+        Repeating drain observes the same local work under a new finite window.
+        """
+        _require_positive_duration("operation host drain timeout", timeout)
+        loop = asyncio.get_running_loop()
+        deadline = loop.time() + timeout.total_seconds()
+        self._accepting_admissions = False
         self._ephemeral_secrets.close()
+        self._capture_drain_tasks()
         for operation_id, settlement in tuple(self._settlement_tasks.items()):
-            if not settlement.done():
-                await self._close_unsettled(operation_id, settlement)
-        self._settlement_tasks.clear()
+            if settlement.done() or operation_id in self._drain_close_tasks:
+                continue
+            close_task = asyncio.create_task(
+                self._close_unsettled(operation_id, settlement, deadline),
+                name=f"operation-drain-{operation_id}",
+            )
+            self._drain_close_tasks[operation_id] = close_task
+            self._drain_tasks.setdefault(operation_id, set()).add(close_task)
+            close_task.add_done_callback(self._drain_close_completed)
+        pending = self._pending_drain_tasks()
+        if pending:
+            await asyncio.wait(pending, timeout=max(0.0, deadline - loop.time()))
+        self._capture_drain_tasks()
+        pending = self._pending_drain_tasks()
+        if pending:
+            for task in pending:
+                if task not in self._admissions:
+                    task.cancel()
+            await asyncio.wait(pending, timeout=max(0.0, deadline - loop.time()))
+        self._capture_drain_tasks()
+        unresolved = tuple(
+            sorted(
+                operation_id
+                for operation_id, tasks in self._drain_tasks.items()
+                if any(not task.done() for task in tasks)
+            )
+        )
+        recovery_required = tuple(
+            sorted(
+                operation_id
+                for operation_id, tasks in self._drain_tasks.items()
+                if self._requires_recovery(operation_id, tasks)
+            )
+        )
         if self._financial_operands is not None:
             self._financial_operands.close()
+        return OperationDrainResult(unresolved=unresolved, recovery_required=recovery_required)
+
+    async def shutdown(self) -> OperationDrainResult:
+        """Close within a default bound and expose any remaining ownership."""
+        return await self.drain(timedelta(seconds=5))
+
+    def _capture_drain_tasks(self) -> None:
+        for operation_id in tuple(self._leases_by_operation):
+            self._drain_tasks.setdefault(operation_id, set())
+        for mapping in (self._executor_tasks, self._cleanup_tasks, self._continuation_tasks, self._settlement_tasks):
+            for operation_id, task in tuple(mapping.items()):
+                self._drain_tasks.setdefault(operation_id, set()).add(task)
+        for operation_id, task in tuple(self._settlement_tasks.items()):
+            self._drain_settlements.setdefault(operation_id, task)
+        for task, operation_id in tuple(self._admissions.items()):
+            self._drain_tasks.setdefault(operation_id, set()).add(task)
+
+    def _pending_drain_tasks(self) -> set[asyncio.Task[object]]:
+        return {task for tasks in self._drain_tasks.values() for task in tasks if not task.done()}
+
+    def _requires_recovery(self, operation_id: OperationId, tasks: set[asyncio.Task[object]]) -> bool:
+        settlement = self._drain_settlements.get(operation_id)
+        if settlement is None:
+            return operation_id in self._leases_by_operation or bool(tasks)
+        if not settlement.done() or settlement.cancelled():
+            return True
+        try:
+            return settlement.result().lifecycle is not OperationLifecycle.TERMINAL
+        except Exception:
+            return True
+
+    @staticmethod
+    def _drain_close_completed(task: asyncio.Task[None]) -> None:
+        if task.cancelled():
+            return
+        error = task.exception()
+        if error is not None:
+            _log.error("operation close failed: %s", task.get_name(), exc_info=error)
 
     @override
     def _require_cleanup_timeout(self, cancellation: OperationCancellation) -> None:
@@ -273,6 +448,15 @@ class OperationSupervisor(
     async def stored_invocation(
         self, operation_id: OperationId, *, require_idle: bool = False
     ) -> OperationStoredInvocation:
+        """Resolve a host invocation only while private admission remains open."""
+        return await self._admit(
+            operation_id,
+            lambda: self._stored_invocation(operation_id, require_idle=require_idle),
+        )
+
+    async def _stored_invocation(
+        self, operation_id: OperationId, *, require_idle: bool = False
+    ) -> OperationStoredInvocation:
         """Resolve exact pinned operands for the authenticated host's policy owner.
 
         This internal door grants neither execution nor disclosure. The host
@@ -283,14 +467,24 @@ class OperationSupervisor(
         if require_idle:
             self._require_idle_invocation(operation_id)
         payload = await self._resolve_request_payload(snapshot, self._require_pinned_definition(snapshot))
+        request = OperationRequest(
+            definition_id=snapshot.identity.definition_id,
+            subject_ref=snapshot.identity.subject_ref,
+            payload=payload,
+        )
+        provenance = None
+        if snapshot.admission_provenance_reference is not None:
+            if self._operands is None:
+                raise ValueError("operation admission provenance requires its encrypted operand store")
+            provenance = await self._operands.resolve(
+                snapshot.admission_provenance_reference, OperationAdmissionProvenance
+            )
+            provenance.require_invocation(snapshot.identity, request)
         return OperationStoredInvocation(
             identity=snapshot.identity,
-            request=OperationRequest(
-                definition_id=snapshot.identity.definition_id,
-                subject_ref=snapshot.identity.subject_ref,
-                payload=payload,
-            ),
+            request=request,
             lifecycle=snapshot.lifecycle,
+            provenance=provenance,
         )
 
     def _require_idle_invocation(self, operation_id: OperationId) -> None:
@@ -304,6 +498,15 @@ class OperationSupervisor(
             raise ValueError("operation still has live local execution or settlement")
 
     async def continue_operation(self, operation_id: OperationId) -> OperationPersistedSnapshot:
+        """Admit a freshly authorized continuation while this owner is active."""
+        return await self._admit(operation_id, lambda: self._continue_operation(operation_id))
+
+    @override
+    async def reconcile(self, operation_id: OperationId) -> OperationPersistedSnapshot:
+        """Allow direct recovery only while this owner accepts private work."""
+        return await self._admit(operation_id, lambda: SupervisorReconciliationMixin.reconcile(self, operation_id))
+
+    async def _continue_operation(self, operation_id: OperationId) -> OperationPersistedSnapshot:
         """Continue admitted intent through canonical lease recovery, never blind replay.
 
         A newly authorized host binding is required when execution authority is
@@ -346,6 +549,7 @@ class OperationSupervisor(
         self,
         operation_id: OperationId,
         settlement: asyncio.Task[OperationPersistedSnapshot],
+        deadline: float,
     ) -> None:
         definition = self._require_pinned_definition(await self.inspect(operation_id))
         capabilities = definition.capabilities
@@ -358,11 +562,11 @@ class OperationSupervisor(
             except ValueError:
                 _log.debug("operation %s could not accept a cancellation at host close", operation_id)
             else:
+                loop = asyncio.get_running_loop()
                 window = self._cleanup_timeout.total_seconds() if self._cleanup_timeout is not None else 0.0
-                await asyncio.wait((settlement,), timeout=window)
+                await asyncio.wait((settlement,), timeout=min(window, max(0.0, deadline - loop.time())))
         if not settlement.done():
             settlement.cancel()
-        await asyncio.gather(settlement, return_exceptions=True)
 
     @override
     def _settlement_completed(self, task: asyncio.Task[OperationPersistedSnapshot]) -> None:

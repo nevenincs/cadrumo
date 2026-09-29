@@ -28,4 +28,11 @@ Submodules
    cadrumo.application.overview.home
    cadrumo.application.overview.next_actions
    cadrumo.application.overview.pipeline_health
+   cadrumo.application.overview.pipeline_operation
+   cadrumo.application.overview.pipeline_projection
+   cadrumo.application.overview.pipeline_read_ports
+   cadrumo.application.overview.read_calendar_projection
+   cadrumo.application.overview.read_operation
+   cadrumo.application.overview.read_ports
+   cadrumo.application.overview.read_projection
    cadrumo.application.overview.status_report

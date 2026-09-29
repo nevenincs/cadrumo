@@ -8,11 +8,13 @@ fact, and ``show`` resolves it back with its source. No mocks.
 from __future__ import annotations
 
 import json
+import sys
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
 
 import pytest
+from click.testing import Result
 from pydantic import ValidationError
 
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
@@ -22,9 +24,15 @@ from ....application.user_profile.registration import register_profile_with_cred
 from ....core.capabilities import ServiceCapability
 from ....core.config import override_settings
 from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ..config.tests.isolated_storage_fixture import native_profile_view_server
 from .cli_runner import invoke_cached_cli
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.hex_entrypoint,
+    pytest.mark.windows_only,
+    pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile runtime"),
+]
 
 _LABEL = "Capability test profile"
 _CREDENTIAL_INPUT = "capability-test-passphrase"
@@ -53,11 +61,22 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
                 passphrase_callback=lambda: _CREDENTIAL_INPUT,
                 profile_decode_context=operation.profile_decode_context(),
             )
-        yield
+        with native_profile_view_server(tmp_path / "cadrumo-storage"):
+            yield
+
+
+def _invoke(argv: list[str]) -> Result:
+    if "capabilities" not in argv:
+        return invoke_cached_cli(argv)
+    config_index = argv.index("config")
+    return invoke_cached_cli(
+        [*argv[:config_index], "--profile", _LABEL, "--profile-secrets-stdin", *argv[config_index:]],
+        input=json.dumps({"profile_passphrase": _CREDENTIAL_INPUT}),
+    )
 
 
 def _show() -> dict[str, Any]:
-    result = invoke_cached_cli(["--format", "json", "config", "profile", "capabilities", "view"])
+    result = _invoke(["--format", "json", "config", "profile", "capabilities", "view"])
     assert result.exit_code == 0, result.output
     rows = json.loads(result.output)["result"]["capabilities"]
     return {row["capability"]: row for row in rows}
@@ -91,7 +110,7 @@ def test_capability_payload_refuses_unknown_capability_or_source(
 
 
 def test_set_disables_a_capability_and_show_reflects_it() -> None:
-    setres = invoke_cached_cli(
+    setres = _invoke(
         ["--format", "json", "config", "profile", "capabilities", "set", "llm_vision", "off"],
     )
     assert setres.exit_code == 0, setres.output
@@ -106,7 +125,7 @@ def test_set_disables_a_capability_and_show_reflects_it() -> None:
 def test_config_check_reports_capabilities_and_dependencies() -> None:
     # Opt out of llm_vision so the report is deterministic regardless of whether a
     # real Ollama is running in the test environment (no opted-in dependency gap).
-    off = invoke_cached_cli(["config", "profile", "capabilities", "set", "llm_vision", "off"])
+    off = _invoke(["config", "profile", "capabilities", "set", "llm_vision", "off"])
     assert off.exit_code == 0, off.output
 
     result = invoke_cached_cli(["--format", "json", "config", "check"])
@@ -162,7 +181,7 @@ def test_every_google_write_verb_refuses_when_google_export_disabled(argv: list[
     With the capability off, each Drive/Sheets
     write verb refuses with the capability message *before* any Google call.
     """
-    off = invoke_cached_cli(["config", "profile", "capabilities", "set", "google_export", "off"])
+    off = _invoke(["config", "profile", "capabilities", "set", "google_export", "off"])
     assert off.exit_code == 0, off.output
 
     result = invoke_cached_cli(argv)
@@ -172,7 +191,7 @@ def test_every_google_write_verb_refuses_when_google_export_disabled(argv: list[
 
 
 def test_set_enables_cloud_upload_via_profile_opt_in() -> None:
-    setres = invoke_cached_cli(
+    setres = _invoke(
         ["config", "profile", "capabilities", "set", "google_export", "off"],
     )
     assert setres.exit_code == 0, setres.output

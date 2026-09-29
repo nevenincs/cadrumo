@@ -3,21 +3,44 @@
 from __future__ import annotations
 
 import json
+import sys
+from collections.abc import Iterator
+from contextvars import ContextVar
 
 import pytest
 
-from ._isolated_profile_storage_fixtures import active_profile_isolated_backend
-from .cli_runner import invoke_cached_cli
+from ._overview_native_support import invoke_native_overview
+from ._runtime_profile_cli_fixture import NativeCliProfileFixture
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-__all__ = ["active_profile_isolated_backend"]
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.hex_entrypoint,
+    pytest.mark.windows_only,
+    pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers"),
+]
+
+_PROFILE: ContextVar[NativeCliProfileFixture] = ContextVar("agenda_native_profile")
+
+
+@pytest.fixture(autouse=True)
+def _native_profile(native_overview_profile: NativeCliProfileFixture) -> Iterator[None]:
+    token = _PROFILE.set(native_overview_profile)
+    try:
+        yield
+    finally:
+        _PROFILE.reset(token)
+
+
+def _invoke(args: list[str]):
+    """Exercise the installed worker route for each legacy behavior assertion."""
+    return invoke_native_overview(_PROFILE.get(), args)
 
 
 def test_agenda_renders_envelope_with_explicit_date() -> None:
     """A concrete --date renders the agenda envelope including as_of,
     horizon, and the four cohort headers."""
 
-    result = invoke_cached_cli(
+    result = _invoke(
         ["app", "overview", "agenda", "--date", "2026-04-15", "--allow-incomplete"],
     )
     assert result.exit_code == 0, result.output
@@ -30,7 +53,7 @@ def test_agenda_renders_envelope_with_explicit_date() -> None:
 
 
 def test_agenda_json_preserves_exact_modelo_303_2025_quarterly_coordinates() -> None:
-    result = invoke_cached_cli(
+    result = _invoke(
         [
             "--format",
             "json",
@@ -65,7 +88,7 @@ def test_agenda_json_preserves_exact_modelo_303_2025_quarterly_coordinates() -> 
 def test_agenda_rejects_zero_horizon() -> None:
     """A non-positive --horizon is refused before the service runs."""
 
-    result = invoke_cached_cli(
+    result = _invoke(
         ["app", "overview", "agenda", "--date", "2026-04-15", "--horizon", "0"],
     )
     assert result.exit_code != 0, result.output
@@ -74,7 +97,7 @@ def test_agenda_rejects_zero_horizon() -> None:
 def test_agenda_rejects_malformed_date() -> None:
     """A non-ISO --date is rejected by the parsing boundary."""
 
-    result = invoke_cached_cli(
+    result = _invoke(
         ["app", "overview", "agenda", "--date", "not-a-date"],
     )
     assert result.exit_code != 0, result.output
@@ -83,7 +106,7 @@ def test_agenda_rejects_malformed_date() -> None:
 def test_agenda_help_advertises_local_only() -> None:
     """Help text must signal `local-only` across locales."""
 
-    result = invoke_cached_cli(["app", "overview", "agenda", "--help"])
+    result = _invoke(["app", "overview", "agenda", "--help"])
     assert result.exit_code == 0, result.output
     assert any(
         token in result.output.lower() for token in ("local-only", "local;", "nunca", "mai contacta", "csak helyi")
@@ -95,7 +118,7 @@ def test_agenda_horizon_widens_due_soon_window() -> None:
     default 14-day window. Asserts the horizon is honoured by the
     service rather than being a cosmetic flag."""
 
-    narrow = invoke_cached_cli(
+    narrow = _invoke(
         [
             "app",
             "overview",
@@ -107,7 +130,7 @@ def test_agenda_horizon_widens_due_soon_window() -> None:
             "--allow-incomplete",
         ],
     )
-    wide = invoke_cached_cli(
+    wide = _invoke(
         [
             "app",
             "overview",

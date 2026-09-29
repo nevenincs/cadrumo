@@ -25,3 +25,5 @@ Submodules
    cadrumo.entrypoints.tui.modelo.lifecycle
    cadrumo.entrypoints.tui.modelo.m303_evidence
    cadrumo.entrypoints.tui.modelo.routes
+   cadrumo.entrypoints.tui.modelo.runtime_lifecycle
+   cadrumo.entrypoints.tui.modelo.runtime_work_create

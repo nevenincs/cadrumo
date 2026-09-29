@@ -720,6 +720,7 @@ operation:
       cancellation_unavailable: Cancellation is not available right now. Try again
         shortly.
       cancellation_unsupported: This operation cannot be cancelled once it has started.
+      detach_not_allowed: This operation cannot be detached.
       operation_terminal: The operation has already finished, so there is nothing
         to cancel.
       response_authority_unavailable: The response could not be recorded right now.
@@ -730,9 +731,13 @@ operation:
       unknown_operation: This operation is no longer known to the backend.
       unsupported_cancellation_version: This build cannot cancel that operation. Update
         Cadrumo.
+      unsupported_detach_version: This version cannot detach that operation. Update
+        the application.
       unsupported_response_control_version: This build cannot answer that operation.
         Update Cadrumo.
     status:
+      access_unavailable: Access to this operation is unavailable. Close this view
+        and sign in again if needed.
       running: Running
     terminal:
       cancelled: Cancelled
@@ -1191,6 +1196,95 @@ tui:
       notifications: Notifications
       overview: Overview
       reconciliation: Reconciliation
+  automation_decision:
+    access_lost: Profile access ended. Authenticate again to inspect the operation.
+    busy: Recording your decision…
+    cancel: Cancel
+    completed: Decision recorded.
+    confirm_approve: Approve this exact request
+    confirm_decline: Decline this exact request
+    consent: Requested access
+    effect: Observed effect
+    missing_selection: Select a request to review.
+    operation_id: Operation
+    password: Current profile password
+    terminal_condition: Terminal condition
+    title: Review automation request
+    unavailable: The decision could not be confirmed. Check the operation before retrying.
+    unknown_effect: Unknown; check the operation before retrying.
+  automation_inventory:
+    access_lost: This profile session is no longer available.
+    actions: Actions
+    all_periods: All filing periods
+    approve: Approve request
+    client: Client
+    close: Close
+    decline: Decline request
+    delegation: Delegation
+    destination: Destination
+    details: Details
+    disclosures: Disclosures
+    empty: No items
+    expires: Expires
+    grant: Grant
+    grant_expires: Proposed grant expiry
+    grants: Grants
+    id: ID
+    key_expires: Proposed key expiry
+    keys: Keys
+    kind: Kind
+    last_used: Last used
+    no_periods: No filing periods
+    not_applicable: Not applicable
+    operations: Operations
+    os_lock: Allowed while OS locked
+    period_independent: Period independent
+    periods: Periods
+    profile: Profile
+    refresh: Refresh
+    requests: Requests
+    review_digest: Review digest
+    state: State
+    target_grant: Target grant
+    target_key: Target key
+    title: Automation access
+    unattended: Unattended
+    unavailable: Automation inventory is unavailable. Refresh to try again.
+  automation_request:
+    actions: Actions
+    capability_note: Listed operations describe capabilities, not current readiness.
+    change_scope: Change scope
+    complete: Approved and completed
+    credential_reference: Existing protected credential reference UUID
+    declined: Declined
+    delegation: Allow delegation
+    disclosures: Disclosures
+    enroll: Create access
+    grant_expiry: Grant expiry (ISO date and time)
+    invalid: Invalid or unavailable request
+    key_expiry: Key expiry (ISO date and time)
+    kind: Request type
+    operations: Operations
+    os_lock: Allow use while OS is locked
+    period_add: Add period
+    period_code: Period code
+    period_independent: Allow period-independent operations
+    period_mode: Period scope
+    period_selected: Selected periods
+    period_year: Year
+    reference: Protected credential reference
+    renew: Renew grant
+    request_id: Request ID
+    requested: Awaiting separate human review
+    review_digest: Review fingerprint
+    rotate: Rotate key
+    submit: Submit for review
+    target_grant: Existing grant UUID
+    target_key: Existing key UUID (rotation only)
+    title: Request API access
+    unattended: Allow unattended use
+    uncertain: Outcome unknown; retain request ID
+    waiting: Submitting request
   declarations:
     availability:
       available: Available
@@ -2048,8 +2142,26 @@ tui:
           see the current state.
       static_fallback: Showing the form layout only. No calculated values are shown
         below.
+  restricted:
+    actions: 'Allowed actions: {values}'
+    all_periods: All periods
+    availability: 'Availability — storage: {storage}; authority: {authority}; provider:
+      {provider}'
+    change_user: Change user
+    close: Close
+    grant: 'Grant valid: {valid}; expires: {expires_at}'
+    lock: Lock this session
+    'no': 'No'
+    none: None
+    operations: 'Allowed operations: {values}'
+    periods: 'Periods: {values}; period-independent work: {independent}'
+    profile: 'Profile: {label} ({profile_id})'
+    session_expiry: 'Session expires: {expires_at}'
+    title: Restricted API session
+    'yes': 'Yes'
   root:
     account:
+      access: Access
       appearance: Appearance
       change_user: Change user
       default_profile: Account
@@ -2062,6 +2174,7 @@ tui:
       line: '{label} · {status}'
       line_with_expiry: '{label} · {status} · until {expires_at}'
     account_help:
+      access: Manage sessions and automation access
       appearance: Switch between the light and dark appearance
       change_user: Sign in to another profile on this computer
       language: Choose the language this profile's pages are written in
@@ -2069,6 +2182,7 @@ tui:
       profile: Review and edit this profile's details
       sign_out: Close this profile's session and lock its data
     account_key:
+      access: Access
       appearance: Theme
       change_user: User
       language: Language
@@ -2086,6 +2200,95 @@ tui:
       quit_help: Leave Cadrumo; the profile's session stays as it is
     title: Cadrumo terminal session
     updating: Updating the workbench…
+  runtime_access:
+    access_lost: Access to this profile is unavailable. Sign in again.
+    busy: Working…
+    close: Close
+    completed: Completed.
+    deny_all: Revoke all automation
+    deny_grant: Revoke grant
+    deny_key: Revoke key
+    deny_target: Target UUID
+    invalid_grants: Enter valid grant UUIDs.
+    invalid_target: Enter a valid target UUID.
+    lock_current: Lock this session
+    lock_profile: Lock profile everywhere
+    refresh: Refresh
+    refused: Access was refused.
+    resume: Unlock profile
+    resume_grants: Grant UUIDs to reactivate
+    resume_password: Profile password
+    revoke_session: Revoke session
+    sessions: Sessions
+    sessions_empty: No current sessions.
+    title: Profile access
+    view_automation: View automation
+  runtime_login:
+    cancel: Cancel
+    credential_hint_api_key: Enter the key for the selected profile.
+    credential_hint_api_reference: Read the exact key from protected local credentials
+      and authenticate with the local service.
+    credential_hint_receipt: Uses this profile’s protected receipt; no password or
+      API key is entered.
+    credential_label_api_key: API key
+    credential_label_api_reference: Credential reference (UUID)
+    credential_label_password: Password
+    credential_required: Enter a credential.
+    method_api_key: API key
+    method_api_reference: Stored API key
+    method_label: Sign-in method
+    method_password: Password
+    method_receipt: Resume with protected receipt
+    profile_label: Profile
+    progress: Signing in…
+    reference_invalid: Enter a valid credential reference UUID.
+    refused: Sign-in was refused.
+    submit: Sign in
+    title: Sign in to a profile
+  runtime_management:
+    availability:
+      available: Available
+      refused: Refused
+      unavailable: Unavailable
+      unknown: Unknown
+      unsupported: Unsupported
+    busy: Checking local runtime status…
+    disable: On demand
+    enable: Start at login
+    kind:
+      linux_user_service: Linux user service
+      macos_agent: macOS launch agent
+      windows_task: Windows scheduled task
+    labels:
+      binding_matches: Binding matches this installation
+      listener: Listener
+      login_autostart: Starts at login
+      manager_availability: Manager availability
+      manager_kind: Manager kind
+      process_state: Process state
+      provisioned: Provisioned
+    listener:
+      draining: Draining
+      ready: Ready
+      refused: Refused
+      unavailable: Unavailable
+      unknown: Unknown
+    not_reported: Not reported
+    open: Runtime management
+    open_help: Inspect, start or configure the local runtime.
+    process:
+      running: Running
+      starting: Starting
+      stopped: Stopped
+      unknown: Unknown
+    refused: Runtime status could not be confirmed.
+    start: Start
+    stop: Stop
+    stop_accepted: Stop accepted; the runtime is draining.
+    stop_cancel: Keep running
+    stop_confirm: Stop all profiles and work
+    stop_scope: Stop the shared runtime for all profiles and work?
+    title: Local runtime management
   search:
     action:
       classify_ledger: Classify ledger

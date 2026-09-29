@@ -164,6 +164,11 @@ def _validate_advance_identity(
         RepositoryError,
     )
     _raise_if(
+        snapshot.admission_provenance_reference != current.admission_provenance_reference,
+        "operation journal transition cannot change admission provenance",
+        RepositoryError,
+    )
+    _raise_if(
         snapshot.request_storage != current.request_storage
         or snapshot.credential_free_request_json != current.credential_free_request_json,
         "operation journal transition cannot change request storage",

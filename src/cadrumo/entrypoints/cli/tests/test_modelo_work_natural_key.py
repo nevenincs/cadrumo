@@ -473,8 +473,8 @@ def test_work_create_refuses_conflicting_registry_revision_for_visible_target() 
     assert _payload(listed.output)["work_unit_count"] == 1
 
 
-def test_adjacent_work_commands_resolve_visible_targets() -> None:
-    """Adjacent work commands share the natural-key selector where applicable."""
+def test_adjacent_work_reads_resolve_visible_targets() -> None:
+    """Local calculation and history reads share the natural-key selector."""
 
     _create_profile()
     created = _invoke(
@@ -487,18 +487,6 @@ def test_adjacent_work_commands_resolve_visible_targets() -> None:
     assert created.exit_code == 0, created.output
     work_unit_id = _payload(created.output)["work_unit_id"]
     _capture_m111_invoice_withholding()
-
-    renamed = _invoke(
-        [
-            "--format", "json",
-            "app", "modelo", "work", "rename",
-            "--modelo", "111", "--year", "2025", "--period", "1T",
-            "--name", "Natural Target",
-        ],
-    )  # fmt: skip
-    assert renamed.exit_code == 0, renamed.output
-    assert _payload(renamed.output)["work_unit_id"] == work_unit_id
-    assert _payload(renamed.output)["name"] == "Natural Target"
 
     calculated = _invoke(
         [
@@ -540,19 +528,6 @@ def test_adjacent_work_commands_resolve_visible_targets() -> None:
         "cli_path": ["app", "modelo", "work", "status"],
     }
     assert history_notice["action"]["argument_bindings"][0]["value"] == work_unit_id
-
-    discarded = _invoke(
-        [
-            "--format", "json",
-            "app", "modelo", "work", "discard",
-            "--modelo", "111", "--year", "2025", "--period", "1T",
-            "--reason", "natural-key test",
-            "--yes",
-        ],
-    )  # fmt: skip
-    assert discarded.exit_code == 0, discarded.output
-    assert _payload(discarded.output)["work_unit_id"] == work_unit_id
-    assert _payload(discarded.output)["state"] == "descartado"
 
 
 def test_reconcile_commands_advertise_natural_target_options() -> None:

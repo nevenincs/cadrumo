@@ -367,11 +367,13 @@ class _EmptyCalculationRepository(CalculationRevisionCatalogueRepositoryProtocol
         return bool(self._catalogue.revisions)
 
     @override
-    def load(self) -> CalculationRevisionCatalogue:
+    def load(self, *, operation: PinnedAuthorityOperation | None = None) -> CalculationRevisionCatalogue:
         return self._catalogue
 
     @override
-    def load_revisioned(self) -> tuple[CalculationRevisionCatalogue, str]:
+    def load_revisioned(
+        self, *, operation: PinnedAuthorityOperation | None = None
+    ) -> tuple[CalculationRevisionCatalogue, str]:
         return self._catalogue, self._revision_id
 
     @override

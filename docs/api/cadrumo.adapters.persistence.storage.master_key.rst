@@ -21,3 +21,5 @@ Submodules
    cadrumo.adapters.persistence.storage.master_key.login_handover_journal
    cadrumo.adapters.persistence.storage.master_key.login_throttle
    cadrumo.adapters.persistence.storage.master_key.master_key_derivation
+   cadrumo.adapters.persistence.storage.master_key.profile_worker_binding
+   cadrumo.adapters.persistence.storage.master_key.profile_worker_custody

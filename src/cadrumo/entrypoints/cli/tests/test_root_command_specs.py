@@ -29,6 +29,8 @@ def test_root_specs_own_the_executable_namespace_and_parameter_contracts() -> No
         "profile",
         "profile_secrets_stdin",
         "profile_secrets_fd",
+        "profile_auth_method",
+        "profile_credential_ref",
         "version",
         "detail",
         "help_",

@@ -742,6 +742,7 @@ operation:
       cancellation_unavailable: La cancel·lació no està disponible ara mateix. Torna-ho
         a provar d'aquí a poc.
       cancellation_unsupported: Aquesta operació no es pot cancel·lar un cop iniciada.
+      detach_not_allowed: Aquesta operació no es pot desvincular.
       operation_terminal: L'operació ja ha acabat, així que no hi ha res a cancel·lar.
       response_authority_unavailable: No s'ha pogut registrar la resposta ara mateix.
         Torna-ho a provar d'aquí a poc.
@@ -751,9 +752,13 @@ operation:
       unknown_operation: El backend ja no coneix aquesta operació.
       unsupported_cancellation_version: Aquesta versió no pot cancel·lar aquesta operació.
         Actualitza Cadrumo.
+      unsupported_detach_version: Aquesta versió no pot desvincular aquesta operació.
+        Actualitza l'aplicació.
       unsupported_response_control_version: Aquesta versió no pot respondre a aquesta
         operació. Actualitza Cadrumo.
     status:
+      access_unavailable: L'accés a aquesta operació no està disponible. Tanca aquesta
+        vista i torna a iniciar la sessió si cal.
       running: En curs
     terminal:
       cancelled: Cancel·lada
@@ -1224,6 +1229,99 @@ tui:
       notifications: Notificacions
       overview: Resum
       reconciliation: Conciliació
+  automation_decision:
+    access_lost: L’accés al perfil ha finalitzat. Torna a autenticar-te per consultar
+      l’operació.
+    busy: S’està registrant la teva decisió…
+    cancel: Cancel·lar
+    completed: Decisió registrada.
+    confirm_approve: Aprovar aquesta sol·licitud exacta
+    confirm_decline: Rebutjar aquesta sol·licitud exacta
+    consent: Accés sol·licitat
+    effect: Efecte observat
+    missing_selection: Selecciona una sol·licitud per revisar-la.
+    operation_id: Operació
+    password: Contrasenya actual del perfil
+    terminal_condition: Estat terminal
+    title: Revisar la sol·licitud d’automatització
+    unavailable: No s’ha pogut confirmar la decisió. Consulta l’operació abans de
+      tornar-ho a provar.
+    unknown_effect: Desconegut; consulta l’operació abans de tornar-ho a provar.
+  automation_inventory:
+    access_lost: Aquesta sessió del perfil ja no està disponible.
+    actions: Accions
+    all_periods: Tots els períodes de declaració
+    approve: Aprovar la sol·licitud
+    client: Client
+    close: Tanca
+    decline: Rebutjar la sol·licitud
+    delegation: Delegació
+    destination: Destinació
+    details: Detalls
+    disclosures: Dades que es poden revelar
+    empty: No hi ha elements
+    expires: Caduca
+    grant: Concessió
+    grant_expires: Caducitat proposada de la concessió
+    grants: Concessions
+    id: ID
+    key_expires: Caducitat proposada de la clau
+    keys: Claus
+    kind: Tipus
+    last_used: Últim ús
+    no_periods: Cap període de declaració
+    not_applicable: No aplicable
+    operations: Operacions
+    os_lock: Permès amb el sistema bloquejat
+    period_independent: Independent del període
+    periods: Períodes
+    profile: Perfil
+    refresh: Actualitza
+    requests: Sol·licituds
+    review_digest: Empremta de revisió
+    state: Estat
+    target_grant: Concessió de destinació
+    target_key: Clau de destinació
+    title: Accés automatitzat
+    unattended: Sense supervisió
+    unavailable: L'inventari d'automatització no està disponible. Actualitza per tornar-ho
+      a provar.
+  automation_request:
+    actions: Accions
+    capability_note: Les operacions llistades descriuen capacitats, no la disponibilitat
+      actual.
+    change_scope: Canvia l'abast
+    complete: Aprovat i completat
+    credential_reference: UUID de la referència de credencial protegida existent
+    declined: Rebutjat
+    delegation: Permet la delegació
+    disclosures: Divulgacions
+    enroll: Crea un accés
+    grant_expiry: Caducitat de la concessió (data i hora ISO)
+    invalid: Sol·licitud no vàlida o no disponible
+    key_expiry: Caducitat de la clau (data i hora ISO)
+    kind: Tipus de sol·licitud
+    operations: Operacions
+    os_lock: Permet l'ús amb el sistema operatiu bloquejat
+    period_add: Afegeix un període
+    period_code: Codi del període
+    period_independent: Permet operacions independents del període
+    period_mode: Abast dels períodes
+    period_selected: Períodes seleccionats
+    period_year: Any
+    reference: Referència de credencial protegida
+    renew: Renova la concessió
+    request_id: ID de la sol·licitud
+    requested: Pendent d'una revisió humana independent
+    review_digest: Empremta de la revisió
+    rotate: Canvia la clau
+    submit: Envia a revisió
+    target_grant: UUID de la concessió existent
+    target_key: UUID de la clau existent (només en canviar-la)
+    title: Sol·licita accés a l'API
+    unattended: Permet l'ús sense supervisió
+    uncertain: Resultat desconegut; conserveu l'ID de la sol·licitud
+    waiting: S'està enviant la sol·licitud
   declarations:
     availability:
       available: Disponible
@@ -2090,8 +2188,26 @@ tui:
           a obrir per veure l'estat actual.
       static_fallback: Només es mostra el disseny del formulari. No es mostren valors
         calculats a continuació.
+  restricted:
+    actions: 'Accions permeses: {values}'
+    all_periods: Tots els períodes
+    availability: 'Disponibilitat — emmagatzematge: {storage}; autoritat: {authority};
+      proveïdor: {provider}'
+    change_user: Canvia d’usuari
+    close: Tanca
+    grant: 'Concessió vàlida: {valid}; venç: {expires_at}'
+    lock: Bloqueja aquesta sessió
+    'no': 'No'
+    none: Cap
+    operations: 'Operacions permeses: {values}'
+    periods: 'Períodes: {values}; treball sense període: {independent}'
+    profile: 'Perfil: {label} ({profile_id})'
+    session_expiry: 'La sessió venç: {expires_at}'
+    title: Sessió API restringida
+    'yes': Sí
   root:
     account:
+      access: Accés
       appearance: Aparença
       change_user: Canvia d'usuari
       default_profile: Compte
@@ -2104,6 +2220,7 @@ tui:
       line: '{label} · {status}'
       line_with_expiry: '{label} · {status} · fins a les {expires_at}'
     account_help:
+      access: Gestionar sessions i accés d'automatització
       appearance: Canvia entre l'aparença clara i la fosca
       change_user: Inicia la sessió en un altre perfil d'aquest ordinador
       language: Tria l'idioma en què es mostren les pàgines d'aquest perfil
@@ -2111,6 +2228,7 @@ tui:
       profile: Revisa i edita les dades d'aquest perfil
       sign_out: Tanca la sessió d'aquest perfil i bloqueja les seves dades
     account_key:
+      access: Accés
       appearance: Tema
       change_user: Usuari
       language: Idioma
@@ -2128,6 +2246,95 @@ tui:
       quit_help: Surt de Cadrumo; la sessió del perfil queda com està
     title: 'Cadrumo: sessió de terminal'
     updating: S'està actualitzant l'àrea de treball…
+  runtime_access:
+    access_lost: L'accés a aquest perfil no està disponible. Torna a iniciar la sessió.
+    busy: S'està processant…
+    close: Tanca
+    completed: Completat.
+    deny_all: Revoca tota l'automatització
+    deny_grant: Revoca la concessió
+    deny_key: Revoca la clau
+    deny_target: UUID de la destinació
+    invalid_grants: Introdueix UUID vàlids de concessions.
+    invalid_target: Introdueix un UUID de destinació vàlid.
+    lock_current: Bloqueja aquesta sessió
+    lock_profile: Bloqueja el perfil arreu
+    refresh: Actualitza
+    refused: S'ha rebutjat l'accés.
+    resume: Desbloqueja el perfil
+    resume_grants: UUID de les concessions que es reactivaran
+    resume_password: Contrasenya del perfil
+    revoke_session: Revocar la sessió
+    sessions: Sessions
+    sessions_empty: No hi ha sessions actuals.
+    title: Accés al perfil
+    view_automation: Mostra l'automatització
+  runtime_login:
+    cancel: Cancel·la
+    credential_hint_api_key: Introdueix la clau del perfil seleccionat.
+    credential_hint_api_reference: Llegiu la clau exacta de les credencials locals
+      protegides i autentiqueu-vos al servei local.
+    credential_hint_receipt: Fa servir el rebut protegit d’aquest perfil; no cal introduir
+      cap contrasenya ni clau API.
+    credential_label_api_key: Clau d'API
+    credential_label_api_reference: Referència de credencial (UUID)
+    credential_label_password: Contrasenya
+    credential_required: Introdueix una credencial.
+    method_api_key: Clau d'API
+    method_api_reference: Clau API desada
+    method_label: Mètode d'inici de sessió
+    method_password: Contrasenya
+    method_receipt: Reprèn amb el rebut protegit
+    profile_label: Perfil
+    progress: S'està iniciant la sessió…
+    reference_invalid: Introduïu un UUID vàlid de referència de credencial.
+    refused: S'ha rebutjat l'inici de sessió.
+    submit: Inicia la sessió
+    title: Inicia la sessió en un perfil
+  runtime_management:
+    availability:
+      available: Disponible
+      refused: Rebutjat
+      unavailable: No disponible
+      unknown: Desconegut
+      unsupported: No compatible
+    busy: S'està comprovant l'estat del servei local…
+    disable: A demanda
+    enable: Inicia en obrir sessió
+    kind:
+      linux_user_service: Servei d'usuari de Linux
+      macos_agent: Agent d'inici de macOS
+      windows_task: Tasca programada de Windows
+    labels:
+      binding_matches: Vinculat a aquesta instal·lació
+      listener: Punt d'escolta
+      login_autostart: S'inicia en obrir sessió
+      manager_availability: Disponibilitat del gestor
+      manager_kind: Tipus de gestor
+      process_state: Estat del procés
+      provisioned: Configurat
+    listener:
+      draining: En aturada
+      ready: A punt
+      refused: Rebutjat
+      unavailable: No disponible
+      unknown: Desconegut
+    not_reported: No informat
+    open: Administrar el servei
+    open_help: Consulta, inicia o configura el servei local.
+    process:
+      running: En execució
+      starting: S'està iniciant
+      stopped: Aturat
+      unknown: Desconegut
+    refused: No s'ha pogut confirmar l'estat del servei.
+    start: Inicia
+    stop: Atura
+    stop_accepted: Aturada acceptada; el servei s'està finalitzant.
+    stop_cancel: Mantén-lo en marxa
+    stop_confirm: Atura tots els perfils i treballs
+    stop_scope: Voleu aturar el servei compartit per a tots els perfils i treballs?
+    title: Administració del servei local
   search:
     action:
       classify_ledger: Classifica el llibre major

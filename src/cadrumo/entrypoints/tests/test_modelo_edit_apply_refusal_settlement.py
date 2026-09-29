@@ -39,9 +39,11 @@ from ...core.i18n.render import tr
 from ...core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ..adapter_composition import build_calculation_action_ports
+from .modelo_operation_test_support import (
+    FIRST_QUARTER_PRIOR_PERIOD_BINDINGS,
+    MODELO_OPERATION_TEST_ACTOR,
+)
 from .test_registered_executor_conformance import (
-    _ACTOR,
-    _FIRST_QUARTER_PRIOR_PERIOD_BINDINGS,
     _CloseWitness,
     _runtime,
     _seeded_modelo_edit_submission,
@@ -68,11 +70,11 @@ def _recalculate_after_the_baseline(submission: ModeloEditSubmissionV1) -> Model
         calculate_modelo_revision(
             baseline.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=baseline.bucket_id, operation=operation),
-            actor=_ACTOR,
+            actor=MODELO_OPERATION_TEST_ACTOR,
             # The same free casilla the seeded revision was calculated from,
             # now with another amount, so a new revision supersedes it.
             casilla_inputs={validated_casilla_id("06"): Decimal("7")},
-            binding_values=_FIRST_QUARTER_PRIOR_PERIOD_BINDINGS,
+            binding_values=FIRST_QUARTER_PRIOR_PERIOD_BINDINGS,
         )
     return submission
 

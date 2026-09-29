@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#mcp-purpose-authentication'
 date: '2026-09-26'
-modified: '2026-09-27'
+modified: '2026-09-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:22e1e26a097b0247e4ebba1d6fb98434b38f587d2d3c64090ec624445e0a8c56'
+body_hash: 'sha256:29a7ec88f978b705687e667aa1445eda7befc732ce3dd4c33d3f071e05e300fb'
 related:
   - "[[2026-09-26-mcp-purpose-authentication-plan]]"
 ---
@@ -332,6 +332,1904 @@ related:
 - `S09` `M` `src/cadrumo/adapters/persistence/operations/tests/test_execution_authority.py`
 - `S09` `verify:` `uv run --no-sync pytest -n 0 src/cadrumo/entrypoints/tests/test_operation_composition.py src/cadrumo/entrypoints/runtime/tests/test_profile_worker_operations.py -m integration --tb=short -q` -> `pass`
 - `S09` `verify:` `uv run --no-sync pytest -n 0 src/cadrumo/adapters/persistence/operations/tests/test_execution_authority.py src/cadrumo/entrypoints/runtime/tests/test_profile_worker_operations.py -m integration --tb=short -q` -> `pass`
+- `S09` `M` `src/cadrumo/application/runtime/operation_access.py`
+- `S09` `M` `src/cadrumo/application/runtime/profile_access.py`
+- `S09` `M` `src/cadrumo/entrypoints/runtime/operation_projection.py`
+- `S09` `M` `src/cadrumo/adapters/local_runtime/framing.py`
+- `S09` `M` `src/cadrumo/adapters/local_runtime/server.py`
+- `S09` `M` `src/cadrumo/entrypoints/runtime/tests/test_profile_connections.py`
+- `S09` `M` `src/cadrumo/entrypoints/runtime/tests/operation_transport_support.py`
+- `S09` `M` `src/cadrumo/application/runtime/contracts.py`
+- `S09` `M` `src/cadrumo/adapters/local_runtime/tests/test_server.py`
+- `S09` `M` `src/cadrumo/adapters/local_runtime/posix.py`
+- `S09` `verify:` `uv run --no-sync pytest -n 0 src/cadrumo/entrypoints/runtime/tests/test_profile_connections.py -m integration --tb=short -q` -> `pass`
+- `S09` `verify:` `uv run --no-sync pytest -n 0 src/cadrumo/adapters/local_runtime/tests src/cadrumo/entrypoints/runtime/tests src/cadrumo/adapters/persistence/operations/tests/test_execution_authority.py src/cadrumo/entrypoints/tests/test_operation_composition.py -m 'unit or integration' --tb=short -q` -> `fail`
+- `S09` `A` `src/cadrumo/application/runtime/operation_access.py`
+- `S09` `A` `src/cadrumo/entrypoints/runtime/operation_projection.py`
+- `S09` `A` `src/cadrumo/entrypoints/runtime/tests/operation_transport_support.py`
+- `S09` `M` `src/cadrumo/application/user_profile/tests/test_operation_access_resolution.py`
+- `S09` `verify:` `focused projection integration 20260927T114913.071041Z-pytest-13572-46ba40df 159 tests` -> `pass`
+- `S09` `A` `src/cadrumo/application/operations/drain.py`
+- `S09` `A` `src/cadrumo/adapters/persistence/operations/tests/test_host_drain.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/operations/tests/test_ephemeral_secret_submission.py`
+- `S09` `M` `src/cadrumo/application/user_profile/access_contracts.py`
+- `S09` `M` `src/cadrumo/domain/calculations/registry/authority.py`
+- `S09` `A` `src/cadrumo/domain/calculations/registry/tests/test_authority_host_lease.py`
+- `S09` `A` `src/cadrumo/entrypoints/runtime/tests/admission_cancellation_fixture.py`
+- `S09` `A` `src/cadrumo/entrypoints/runtime/tests/test_admission_cancellation.py`
+- `S09` `A` `src/cadrumo/application/runtime/tests/test_operation_management_transport.py`
+- `S09` `verify:` `public controls and policy 20260927T120147.083094Z-pytest-40568-c3c41cdb 61 tests` -> `pass`
+- `S09` `verify:` `canonical operation regressions 20260927T120519.069123Z-pytest-64384-485b898a 234 passed one obsolete refusal assertion` -> `fail`
+- `S09` `verify:` `focused ephemeral-secret regression after refusal expectation correction 8 tests` -> `pass`
+- `S09` `verify:` `publication lifetime 20260927T120915.148524Z-pytest-4784-40ee709e 2 tests` -> `pass`
+- `S09` `verify:` `native isolated admission cancellation and cross-task close 2 tests` -> `pass`
+- `S10` `M` `src/cadrumo/application/runtime/profile_worker.py`
+- `S10` `M` `src/cadrumo/entrypoints/runtime/worker.py`
+- `S10` `M` `src/cadrumo/adapters/local_runtime/profile_worker.py`
+- `S10` `A` `src/cadrumo/entrypoints/runtime/tests/test_worker_drain.py`
+- `S10` `verify:` `native Windows profile worker drain and retained-handle termination integration` -> `pass`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/posix.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/linux_manager.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/manager_commands.py`
+- `S11` `verify:` `owned POSIX adapters pyrefly Windows Linux Darwin` -> `pass`
+- `S11` `verify:` `owned POSIX adapters basedpyright Windows Linux Darwin` -> `pass`
+- `S11` `verify:` `owned POSIX adapters ty Windows Linux` -> `pass`
+- `S11` `verify:` `service-definition tests 19 cases` -> `pass`
+- `S09` `A` `src/cadrumo/application/operations/provenance.py`
+- `S09` `M` `src/cadrumo/application/operations/persistence/journal.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/operations/_journal_validation.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/operations/tests/test_journal.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/operations/tests/test_startup_inventory.py`
+- `S09` `A` `src/cadrumo/adapters/persistence/operations/tests/test_admission_provenance.py`
+- `S09` `verify:` `Ruff check and format provenance-owned modules` -> `pass`
+- `S09` `verify:` `ty pyrefly basedpyright provenance-owned modules` -> `pass`
+- `S09` `verify:` `pytest provenance policy journal inventory selection 87 tests` -> `pass`
+- `S09` `verify:` `pytest encrypted admission provenance integration 7 tests` -> `pass`
+- `S10` `M` `src/cadrumo/application/runtime/contracts.py`
+- `S10` `M` `src/cadrumo/application/runtime/profile_access.py`
+- `S10` `M` `src/cadrumo/entrypoints/runtime/session_owner.py`
+- `S10` `M` `src/cadrumo/entrypoints/runtime/profile_host.py`
+- `S10` `M` `src/cadrumo/entrypoints/runtime/profile_connections.py`
+- `S10` `M` `src/cadrumo/adapters/local_runtime/server.py`
+- `S10` `M` `src/cadrumo/entrypoints/runtime/main.py`
+- `S10` `A` `src/cadrumo/entrypoints/runtime/shutdown.py`
+- `S10` `M` `src/cadrumo/entrypoints/runtime/tests/test_worker_drain.py`
+- `S10` `A` `src/cadrumo/entrypoints/runtime/tests/test_runtime_drain.py`
+- `S10` `A` `src/cadrumo/entrypoints/runtime/tests/test_runtime_drain_refusal.py`
+- `S10` `A` `src/cadrumo/adapters/local_runtime/tests/test_server_drain_order.py`
+- `S10` `A` `src/cadrumo/entrypoints/runtime/tests/test_shutdown_watchdog.py`
+- `S10` `A` `src/cadrumo/entrypoints/runtime/tests/shutdown_watchdog_fixture.py`
+- `S10` `verify:` `pytest native aggregate and worker drain 2 tests` -> `pass`
+- `S10` `verify:` `pytest drain refusal and server-order 5 tests` -> `pass`
+- `S10` `verify:` `pytest isolated native watchdog 6 tests` -> `pass`
+- `S10` `verify:` `Ruff format ty runtime drain owned files` -> `pass`
+- `S10` `verify:` `Ruff ty pyrefly basedpyright installed process shutdown owner` -> `pass`
+- `S08` `M` `src/cadrumo/application/user_profile/operations.py`
+- `S08` `A` `src/cadrumo/application/user_profile/view_operation.py`
+- `S08` `A` `src/cadrumo/adapters/persistence/operations/tests/test_profile_view_operation.py`
+- `S08` `A` `src/cadrumo/adapters/persistence/operations/tests/test_profile_operation_concurrency.py`
+- `S08` `M` `src/cadrumo/adapters/persistence/operations/tests/test_operation_definitions.py`
+- `S08` `M` `src/cadrumo/application/user_profile/tests/test_operation_access_resolution.py`
+- `S08` `M` `src/cadrumo/entrypoints/runtime/tests/test_profile_worker_operations.py`
+- `S08` `M` `src/cadrumo/entrypoints/runtime/tests/admission_cancellation_fixture.py`
+- `S08` `verify:` `pytest canonical paged profile view integration 3 tests` -> `pass`
+- `S08` `verify:` `pytest operation definitions and stale-writer concurrency 7 tests` -> `pass`
+- `S08` `verify:` `pytest profile access resolver 6 tests` -> `pass`
+- `S08` `verify:` `pytest native worker operations 4 tests` -> `pass`
+- `S08` `verify:` `pytest native profile connection effects 2 tests` -> `pass`
+- `S08` `verify:` `pytest cancellation-complete native admission 2 tests` -> `pass`
+- `S08` `verify:` `Ruff ty pyrefly basedpyright profile view and CAS owned files` -> `pass`
+- `S09` `M` `src/cadrumo/adapters/persistence/operations/journal.py`
+- `S09` `A` `src/cadrumo/entrypoints/runtime/tests/test_operation_provenance.py`
+- `S09` `A` `src/cadrumo/entrypoints/runtime/tests/test_journal_startup.py`
+- `S09` `verify:` `pytest native provenance lease and scope 4 tests` -> `pass`
+- `S09` `verify:` `pytest native old provenance and replacement boot after shared-namespace fix 3 tests` -> `pass`
+- `S09` `verify:` `pytest native startup journal refusals 2 tests` -> `pass`
+- `S09` `M` `src/cadrumo/application/runtime/worker_authorization.py`
+- `S09` `M` `src/cadrumo/adapters/local_runtime/worker_authorization.py`
+- `S09` `M` `src/cadrumo/adapters/local_runtime/worker_authorization_client.py`
+- `S09` `M` `src/cadrumo/application/operations/_projection_authority.py`
+- `S09` `M` `src/cadrumo/application/operations/projection_services.py`
+- `S09` `M` `src/cadrumo/application/user_profile/censal_operation.py`
+- `S09` `A` `src/cadrumo/application/user_profile/tests/test_censal_operation_access.py`
+- `S09` `A` `src/cadrumo/adapters/persistence/operations/tests/test_response_inspection.py`
+- `S09` `verify:` `uv run --no-sync pytest -q -m 'unit or integration' src/cadrumo/application/user_profile/tests/test_access_policy.py src/cadrumo/adapters/persistence/storage/custody/tests/test_session_authority.py` -> `pass`
+- `S09` `verify:` `uv run --no-sync pytest -q -m 'unit or integration' src/cadrumo/entrypoints/runtime/tests src/cadrumo/adapters/local_runtime/tests` -> `pass`
+- `S09` `verify:` `uv run --no-sync pytest -q -m 'unit or integration' src/cadrumo/application/operations/tests src/cadrumo/adapters/persistence/operations/tests` -> `pass`
+- `S09` `verify:` `uv run --no-sync ty check response authorization and aggregate runtime owners` -> `pass`
+- `S09` `verify:` `uv run --no-sync pyrefly check response authorization and aggregate runtime owners` -> `pass`
+- `S09` `verify:` `uv run --no-sync basedpyright response authorization and aggregate runtime owners` -> `pass`
+- `S09` `verify:` `uv run --no-sync ty check src/cadrumo/application/user_profile/access_contracts.py src/cadrumo/application/user_profile/access_policy.py src/cadrumo/application/user_profile/session_authority.py src/cadrumo/application/runtime/worker_authorization.py src/cadrumo/application/runtime/profile_worker.py src/cadrumo/entrypoints/runtime/operation_host.py src/cadrumo/entrypoints/runtime/operation_projection.py src/cadrumo/entrypoints/runtime/operation_authority.py src/cadrumo/entrypoints/runtime/profile_host.py src/cadrumo/adapters/local_runtime/worker_authorization.py src/cadrumo/adapters/local_runtime/worker_authorization_client.py src/cadrumo/application/operations/composition.py src/cadrumo/application/operations/_projection_authority.py src/cadrumo/application/operations/projection_services.py src/cadrumo/application/user_profile/censal_operation.py src/cadrumo/entrypoints/runtime/session_owner.py src/cadrumo/entrypoints/runtime/profile_connections.py src/cadrumo/application/runtime/contracts.py src/cadrumo/application/runtime/profile_access.py src/cadrumo/adapters/local_runtime/profile_worker.py src/cadrumo/adapters/local_runtime/server.py` -> `pass`
+- `S09` `verify:` `uv run --no-sync pyrefly check src/cadrumo/application/user_profile/access_contracts.py src/cadrumo/application/user_profile/access_policy.py src/cadrumo/application/user_profile/session_authority.py src/cadrumo/application/runtime/worker_authorization.py src/cadrumo/application/runtime/profile_worker.py src/cadrumo/entrypoints/runtime/operation_host.py src/cadrumo/entrypoints/runtime/operation_projection.py src/cadrumo/entrypoints/runtime/operation_authority.py src/cadrumo/entrypoints/runtime/profile_host.py src/cadrumo/adapters/local_runtime/worker_authorization.py src/cadrumo/adapters/local_runtime/worker_authorization_client.py src/cadrumo/application/operations/composition.py src/cadrumo/application/operations/_projection_authority.py src/cadrumo/application/operations/projection_services.py src/cadrumo/application/user_profile/censal_operation.py src/cadrumo/entrypoints/runtime/session_owner.py src/cadrumo/entrypoints/runtime/profile_connections.py src/cadrumo/application/runtime/contracts.py src/cadrumo/application/runtime/profile_access.py src/cadrumo/adapters/local_runtime/profile_worker.py src/cadrumo/adapters/local_runtime/server.py` -> `pass`
+- `S09` `verify:` `uv run --no-sync basedpyright src/cadrumo/application/user_profile/access_contracts.py src/cadrumo/application/user_profile/access_policy.py src/cadrumo/application/user_profile/session_authority.py src/cadrumo/application/runtime/worker_authorization.py src/cadrumo/application/runtime/profile_worker.py src/cadrumo/entrypoints/runtime/operation_host.py src/cadrumo/entrypoints/runtime/operation_projection.py src/cadrumo/entrypoints/runtime/operation_authority.py src/cadrumo/entrypoints/runtime/profile_host.py src/cadrumo/adapters/local_runtime/worker_authorization.py src/cadrumo/adapters/local_runtime/worker_authorization_client.py src/cadrumo/application/operations/composition.py src/cadrumo/application/operations/_projection_authority.py src/cadrumo/application/operations/projection_services.py src/cadrumo/application/user_profile/censal_operation.py src/cadrumo/entrypoints/runtime/session_owner.py src/cadrumo/entrypoints/runtime/profile_connections.py src/cadrumo/application/runtime/contracts.py src/cadrumo/application/runtime/profile_access.py src/cadrumo/adapters/local_runtime/profile_worker.py src/cadrumo/adapters/local_runtime/server.py` -> `pass`
+- `S08` `M` `src/cadrumo/application/runtime/profile_access.py`
+- `S08` `M` `src/cadrumo/application/runtime/profile_worker.py`
+- `S08` `M` `src/cadrumo/entrypoints/runtime/profile_login.py`
+- `S08` `M` `src/cadrumo/entrypoints/runtime/worker.py`
+- `S08` `M` `src/cadrumo/entrypoints/runtime/profile_host.py`
+- `S08` `M` `src/cadrumo/application/user_profile/login_session_port.py`
+- `S08` `M` `src/cadrumo/adapters/persistence/storage/profile_login_session.py`
+- `S08` `M` `src/cadrumo/adapters/persistence/storage/custody/acceleration_receipt.py`
+- `S08` `A` `src/cadrumo/adapters/persistence/storage/custody/tests/test_supplied_human_receipt.py`
+- `S08` `A` `src/cadrumo/entrypoints/runtime/tests/test_receipt_login.py`
+- `S08` `M` `src/cadrumo/entrypoints/runtime/tests/test_session_owner.py`
+- `S08` `M` `src/cadrumo/entrypoints/runtime/tests/test_runtime_drain.py`
+- `S08` `A` `src/cadrumo/entrypoints/runtime/frontend_client.py`
+- `S08` `A` `src/cadrumo/entrypoints/runtime/tests/test_frontend_client.py`
+- `S08` `A` `src/cadrumo/entrypoints/runtime/tests/test_response_scope.py`
+- `S08` `A` `src/cadrumo/entrypoints/tests/test_censal_access_policy.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -m integration src/cadrumo/entrypoints/runtime/tests/test_receipt_login.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -m 'unit or integration' src/cadrumo/entrypoints/runtime/tests src/cadrumo/adapters/local_runtime/tests src/cadrumo/entrypoints/tests/test_censal_access_policy.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n 0 -m windows_only src/cadrumo/entrypoints/runtime/tests/test_frontend_client.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -m 'unit or integration' src/cadrumo/application/operations/tests src/cadrumo/adapters/persistence/operations/tests` -> `pass`
+- `S08` `verify:` `just check-import-boundaries` -> `pass`
+- `S08` `A` `src/cadrumo/adapters/persistence/operations/tests/test_profile_additional_mutations.py`
+- `S08` `A` `src/cadrumo/entrypoints/tui/profile/runtime_overview.py`
+- `S08` `A` `src/cadrumo/entrypoints/tui/profile/tests/test_runtime_overview.py`
+- `S08` `A` `src/cadrumo/entrypoints/runtime_client.py`
+- `S08` `A` `src/cadrumo/entrypoints/tests/test_runtime_client.py`
+- `S08` `M` `src/cadrumo/adapters/local_runtime/startup.py`
+- `S08` `M` `src/cadrumo/adapters/local_runtime/tests/test_launch_door.py`
+- `S08` `verify:` `uv run --no-sync pytest -n0 src/cadrumo/adapters/persistence/operations/tests/test_profile_additional_mutations.py src/cadrumo/adapters/persistence/operations/tests/test_operation_definitions.py::test_profile_operation_families_have_one_secure_registered_definition_each -m 'unit or integration' -q --tb=short` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -n0 src/cadrumo/entrypoints/tui/profile/tests/test_runtime_overview.py -m 'unit or integration' -q --tb=short` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -m integration src/cadrumo/entrypoints/tests/test_runtime_client.py src/cadrumo/adapters/local_runtime/tests/test_launch_door.py` -> `pass`
+- `S08` `A` `src/cadrumo/adapters/local_runtime/frontend_client.py`
+- `S08` `D` `src/cadrumo/entrypoints/runtime/frontend_client.py`
+- `S08` `A` `src/cadrumo/entrypoints/cli/runtime_profile_admission.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/_profile_authentication_gate.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/config/_profile_inspect.py`
+- `S08` `A` `src/cadrumo/entrypoints/cli/config/runtime_profile_view.py`
+- `S08` `A` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_profile_view.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -m 'unit or integration' src/cadrumo/adapters/local_runtime/tests/test_windows.py src/cadrumo/adapters/local_runtime/tests/test_server.py src/cadrumo/adapters/local_runtime/tests/test_connection_serialization.py src/cadrumo/adapters/local_runtime/tests/test_launch_door.py src/cadrumo/entrypoints/tests/test_runtime_client.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n 0 -m windows_only src/cadrumo/entrypoints/cli/config/tests/test_runtime_profile_view.py src/cadrumo/entrypoints/runtime/tests/test_frontend_client.py` -> `pass`
+- `S08` `A` `src/cadrumo/entrypoints/tui/operations/controller_port.py`
+- `S08` `A` `src/cadrumo/entrypoints/tui/operations/runtime_controller.py`
+- `S08` `M` `src/cadrumo/entrypoints/tui/operations/modal.py`
+- `S08` `M` `src/cadrumo/entrypoints/tui/operations/interactions.py`
+- `S08` `A` `src/cadrumo/entrypoints/tui/operations/tests/test_runtime_controller.py`
+- `S08` `verify:` `uv run --no-sync pytest -n0 src/cadrumo/entrypoints/tui/operations/tests/test_runtime_controller.py -m 'unit or integration' -q --tb=short` -> `pass`
+- `S08` `A` `src/cadrumo/entrypoints/tui/operations/tests/test_runtime_access_loss.py`
+- `S08` `M` `src/cadrumo/entrypoints/tui/operations/tests/test_modal_action_refusals.py`
+- `S08` `M` `dev/locales/fstring_registry.py`
+- `S08` `M` `src/cadrumo/locales/ca/common.yml`
+- `S08` `M` `src/cadrumo/locales/en/common.yml`
+- `S08` `M` `src/cadrumo/locales/es/common.yml`
+- `S08` `M` `src/cadrumo/locales/hu/common.yml`
+- `S08` `M` `src/cadrumo/core/errors/registry/_application_part2.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -m 'unit or integration' src/cadrumo/entrypoints/tui/operations/tests/test_runtime_access_loss.py src/cadrumo/entrypoints/tui/operations/tests/test_modal_action_refusals.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync python -m dev.locales audit` -> `pass`
+- `S08` `verify:` `uv run --no-sync ruff check src/cadrumo/adapters/local_runtime/frontend_client.py src/cadrumo/adapters/local_runtime/startup.py src/cadrumo/adapters/local_runtime/windows.py src/cadrumo/entrypoints/runtime_client.py src/cadrumo/entrypoints/cli/runtime_profile_admission.py src/cadrumo/entrypoints/cli/_profile_authentication_gate.py src/cadrumo/entrypoints/cli/config/_profile_inspect.py src/cadrumo/entrypoints/cli/config/runtime_profile_view.py src/cadrumo/entrypoints/tui/operations/controller_port.py src/cadrumo/entrypoints/tui/operations/runtime_controller.py src/cadrumo/entrypoints/tui/operations/interactions.py src/cadrumo/entrypoints/tui/operations/modal.py src/cadrumo/entrypoints/tui/profile/runtime_overview.py src/cadrumo/application/user_profile/operations.py src/cadrumo/core/errors/registry/_application_part2.py dev/locales/fstring_registry.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync ruff format --check src/cadrumo/adapters/local_runtime/frontend_client.py src/cadrumo/adapters/local_runtime/startup.py src/cadrumo/adapters/local_runtime/windows.py src/cadrumo/entrypoints/runtime_client.py src/cadrumo/entrypoints/cli/runtime_profile_admission.py src/cadrumo/entrypoints/cli/_profile_authentication_gate.py src/cadrumo/entrypoints/cli/config/_profile_inspect.py src/cadrumo/entrypoints/cli/config/runtime_profile_view.py src/cadrumo/entrypoints/tui/operations/controller_port.py src/cadrumo/entrypoints/tui/operations/runtime_controller.py src/cadrumo/entrypoints/tui/operations/interactions.py src/cadrumo/entrypoints/tui/operations/modal.py src/cadrumo/entrypoints/tui/profile/runtime_overview.py src/cadrumo/application/user_profile/operations.py src/cadrumo/core/errors/registry/_application_part2.py dev/locales/fstring_registry.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync ty check src/cadrumo/adapters/local_runtime/frontend_client.py src/cadrumo/adapters/local_runtime/startup.py src/cadrumo/adapters/local_runtime/windows.py src/cadrumo/entrypoints/runtime_client.py src/cadrumo/entrypoints/cli/runtime_profile_admission.py src/cadrumo/entrypoints/cli/_profile_authentication_gate.py src/cadrumo/entrypoints/cli/config/_profile_inspect.py src/cadrumo/entrypoints/cli/config/runtime_profile_view.py src/cadrumo/entrypoints/tui/operations/controller_port.py src/cadrumo/entrypoints/tui/operations/runtime_controller.py src/cadrumo/entrypoints/tui/operations/interactions.py src/cadrumo/entrypoints/tui/operations/modal.py src/cadrumo/entrypoints/tui/profile/runtime_overview.py src/cadrumo/application/user_profile/operations.py src/cadrumo/core/errors/registry/_application_part2.py dev/locales/fstring_registry.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync pyrefly check --python-platform win32 src/cadrumo/adapters/local_runtime/frontend_client.py src/cadrumo/adapters/local_runtime/startup.py src/cadrumo/adapters/local_runtime/windows.py src/cadrumo/entrypoints/runtime_client.py src/cadrumo/entrypoints/cli/runtime_profile_admission.py src/cadrumo/entrypoints/cli/_profile_authentication_gate.py src/cadrumo/entrypoints/cli/config/_profile_inspect.py src/cadrumo/entrypoints/cli/config/runtime_profile_view.py src/cadrumo/entrypoints/tui/operations/controller_port.py src/cadrumo/entrypoints/tui/operations/runtime_controller.py src/cadrumo/entrypoints/tui/operations/interactions.py src/cadrumo/entrypoints/tui/operations/modal.py src/cadrumo/entrypoints/tui/profile/runtime_overview.py src/cadrumo/application/user_profile/operations.py src/cadrumo/core/errors/registry/_application_part2.py dev/locales/fstring_registry.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync basedpyright --pythonplatform Windows src/cadrumo/adapters/local_runtime/frontend_client.py src/cadrumo/adapters/local_runtime/startup.py src/cadrumo/adapters/local_runtime/windows.py src/cadrumo/entrypoints/runtime_client.py src/cadrumo/entrypoints/cli/runtime_profile_admission.py src/cadrumo/entrypoints/cli/_profile_authentication_gate.py src/cadrumo/entrypoints/cli/config/_profile_inspect.py src/cadrumo/entrypoints/cli/config/runtime_profile_view.py src/cadrumo/entrypoints/tui/operations/controller_port.py src/cadrumo/entrypoints/tui/operations/runtime_controller.py src/cadrumo/entrypoints/tui/operations/interactions.py src/cadrumo/entrypoints/tui/operations/modal.py src/cadrumo/entrypoints/tui/profile/runtime_overview.py src/cadrumo/application/user_profile/operations.py src/cadrumo/core/errors/registry/_application_part2.py dev/locales/fstring_registry.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n 0 src/cadrumo/core/i18n/tests/test_placeholder_parity.py::test_no_orphan_placeholder_tokens src/cadrumo/core/i18n/tests/test_placeholder_parity.py::test_no_surplus_kwargs src/cadrumo/core/i18n/tests/test_placeholder_parity.py::test_no_shadow_kwarg_variants src/cadrumo/core/tests/test_locale_coverage_inventory.py::test_operator_error_locale_keys_resolve_in_catalogues src/cadrumo/core/tests/test_locale_coverage_inventory.py::test_wizard_status_locale_key_exists_in_all_locales` -> `pass`
+- `S08` `M` `src/cadrumo/entrypoints/cli/config/tests/isolated_storage_fixture.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/config/tests/test_profile_edit_verb.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/config/tests/test_profile_add_row_cli.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/config/tests/test_profile_readiness_surfaces.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/config/tests/test_config.py`
+- `S08` `A` `src/cadrumo/adapters/local_runtime/profile_mutations.py`
+- `S08` `A` `src/cadrumo/entrypoints/runtime/tests/test_profile_mutation_client.py`
+- `S08` `M` `src/cadrumo/application/user_profile/language_resolver.py`
+- `S08` `A` `src/cadrumo/application/user_profile/tests/test_language_resolver_diagnostics.py`
+- `S08` `verify:` `uv run --no-sync pytest -n0 src/cadrumo/entrypoints/cli/config/tests/test_profile_edit_verb.py src/cadrumo/entrypoints/cli/config/tests/test_profile_add_row_cli.py src/cadrumo/entrypoints/cli/config/tests/test_profile_readiness_surfaces.py::test_status_and_overview_answer_for_a_completed_profile -m 'unit or integration' -q --tb=short` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -n0 src/cadrumo/entrypoints/cli/config/tests/test_profile_readiness_surfaces.py src/cadrumo/entrypoints/cli/config/tests/test_config.py::test_corrupt_profile_view_refuses_without_database_or_secret_details src/cadrumo/entrypoints/cli/config/tests/test_config.py::test_profile_show_surfaces_the_open_divergence_notice src/cadrumo/entrypoints/cli/config/tests/test_config.py::test_profile_show_carries_no_divergence_notice_when_clean -m 'unit or integration' -q --tb=short` -> `fail`
+- `S08` `verify:` `uv run --no-sync pytest -n0 src/cadrumo/entrypoints/cli/config/tests/test_config.py::test_corrupt_profile_view_refuses_without_database_or_secret_details -m 'unit or integration' -q --tb=short` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -n0 src/cadrumo/entrypoints/cli/config/tests/test_config.py -k 'not corrupt_profile_view and not profile_show_surfaces and not profile_show_carries' -m 'unit or integration' -q --tb=short` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n 0 -m windows_only src/cadrumo/entrypoints/runtime/tests/test_profile_mutation_client.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -m 'unit or integration' src/cadrumo/application/user_profile/tests/test_language_resolver_diagnostics.py src/cadrumo/application/user_profile/tests/test_language_resolver_snapshot.py` -> `pass`
+- `S09` `M` `src/cadrumo/entrypoints/tui/account.py`
+- `S09` `M` `src/cadrumo/entrypoints/tui/app.py`
+- `S09` `M` `src/cadrumo/entrypoints/tui/launcher.py`
+- `S09` `A` `src/cadrumo/entrypoints/tui/runtime_account_session.py`
+- `S09` `A` `src/cadrumo/entrypoints/tui/tests/test_runtime_account_session.py`
+- `S09` `verify:` `uv run --no-sync pytest -n0 src/cadrumo/entrypoints/tui/tests/test_runtime_account_session.py src/cadrumo/entrypoints/tui/tests/test_app.py src/cadrumo/entrypoints/tui/tests/test_installed_workbench.py src/cadrumo/entrypoints/tui/tests/test_launcher_composition_root.py -q --tb=short` -> `pass`
+- `S09` `M` `src/cadrumo/adapters/local_runtime/frontend_client.py`
+- `S09` `M` `src/cadrumo/adapters/local_runtime/tests/test_connection_serialization.py`
+- `S09` `verify:` `uv run --no-sync ty check src/cadrumo/application/runtime/operation_access.py src/cadrumo/application/runtime/profile_worker.py src/cadrumo/adapters/local_runtime/server.py src/cadrumo/adapters/local_runtime/framing.py src/cadrumo/adapters/local_runtime/profile_worker.py src/cadrumo/adapters/local_runtime/frontend_client.py src/cadrumo/entrypoints/runtime/operation_host.py src/cadrumo/entrypoints/runtime/worker.py src/cadrumo/entrypoints/runtime/profile_connections.py` -> `pass`
+- `S09` `verify:` `uv run --no-sync pyrefly check --python-platform win32 src/cadrumo/application/runtime/operation_access.py src/cadrumo/application/runtime/profile_worker.py src/cadrumo/adapters/local_runtime/server.py src/cadrumo/adapters/local_runtime/framing.py src/cadrumo/adapters/local_runtime/profile_worker.py src/cadrumo/adapters/local_runtime/frontend_client.py src/cadrumo/entrypoints/runtime/operation_host.py src/cadrumo/entrypoints/runtime/worker.py src/cadrumo/entrypoints/runtime/profile_connections.py` -> `pass`
+- `S09` `verify:` `uv run --no-sync basedpyright --pythonplatform Windows src/cadrumo/application/runtime/operation_access.py src/cadrumo/application/runtime/profile_worker.py src/cadrumo/adapters/local_runtime/server.py src/cadrumo/adapters/local_runtime/framing.py src/cadrumo/adapters/local_runtime/profile_worker.py src/cadrumo/adapters/local_runtime/frontend_client.py src/cadrumo/entrypoints/runtime/operation_host.py src/cadrumo/entrypoints/runtime/worker.py src/cadrumo/entrypoints/runtime/profile_connections.py` -> `pass`
+- `S07` `M` `src/cadrumo/adapters/local_runtime/startup.py`
+- `S07` `M` `src/cadrumo/entrypoints/runtime_client.py`
+- `S07` `M` `src/cadrumo/adapters/local_runtime/tests/test_launch_door.py`
+- `S07` `M` `src/cadrumo/adapters/local_runtime/tests/test_connection_serialization.py`
+- `S07` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/adapters/local_runtime/tests/test_launch_door.py src/cadrumo/entrypoints/tests/test_runtime_client.py src/cadrumo/adapters/local_runtime/tests/test_connection_serialization.py` -> `pass`
+- `S08` `M` `src/cadrumo/entrypoints/cli/runtime_profile_admission.py`
+- `S08` `A` `src/cadrumo/entrypoints/cli/runtime_profile_binding.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/config/runtime_profile_view.py`
+- `S08` `M` `src/cadrumo/adapters/local_runtime/profile_mutations.py`
+- `S08` `M` `src/cadrumo/entrypoints/runtime/tests/test_profile_mutation_client.py`
+- `S08` `verify:` `uv run --no-sync ty check src/cadrumo/entrypoints/cli/runtime_profile_binding.py src/cadrumo/entrypoints/cli/config/runtime_profile_view.py src/cadrumo/entrypoints/cli/config/_profile_inspect.py src/cadrumo/entrypoints/cli/runtime_profile_admission.py src/cadrumo/entrypoints/cli/_profile_authentication_gate.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync pyrefly check --python-platform win32 src/cadrumo/entrypoints/cli/runtime_profile_binding.py src/cadrumo/entrypoints/cli/config/runtime_profile_view.py src/cadrumo/entrypoints/cli/config/_profile_inspect.py src/cadrumo/entrypoints/cli/runtime_profile_admission.py src/cadrumo/entrypoints/cli/_profile_authentication_gate.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync basedpyright --pythonplatform Windows src/cadrumo/entrypoints/cli/runtime_profile_binding.py src/cadrumo/entrypoints/cli/config/runtime_profile_view.py src/cadrumo/entrypoints/cli/config/_profile_inspect.py src/cadrumo/entrypoints/cli/runtime_profile_admission.py src/cadrumo/entrypoints/cli/_profile_authentication_gate.py` -> `pass`
+- `S09` `M` `src/cadrumo/application/user_profile/bundle_export.py`
+- `S09` `A` `src/cadrumo/application/user_profile/tests/test_bundle_export_scope.py`
+- `S09` `verify:` `uv run --no-sync ty check src/cadrumo/entrypoints/runtime/worker.py src/cadrumo/application/user_profile/bundle_export.py` -> `pass`
+- `S09` `verify:` `uv run --no-sync pyrefly check --python-platform win32 src/cadrumo/entrypoints/runtime/worker.py src/cadrumo/application/user_profile/bundle_export.py` -> `pass`
+- `S09` `verify:` `uv run --no-sync basedpyright --pythonplatform Windows src/cadrumo/entrypoints/runtime/worker.py src/cadrumo/application/user_profile/bundle_export.py` -> `pass`
+- `S09` `A` `src/cadrumo/entrypoints/cli/tests/test_bundle_export_scope_resolution.py`
+- `S09` `M` `src/cadrumo/entrypoints/tui/operations/tests/test_runtime_controller.py`
+- `S09` `M` `src/cadrumo/entrypoints/runtime/tests/test_frontend_client.py`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/application/user_profile/tests/test_bundle_export_scope.py src/cadrumo/entrypoints/cli/tests/test_bundle_export_scope_resolution.py` -> `pass`
+- `S09` `A` `src/cadrumo/entrypoints/runtime/tests/test_operation_secret.py`
+- `S09` `A` `src/cadrumo/application/user_profile/tests/test_bundle_export_access.py`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/runtime/tests src/cadrumo/adapters/local_runtime/tests src/cadrumo/entrypoints/tests/test_runtime_client.py src/cadrumo/entrypoints/tui/operations/tests/test_runtime_controller.py src/cadrumo/entrypoints/cli/config/tests/test_profile_add_row_cli.py src/cadrumo/entrypoints/cli/config/tests/test_profile_complete_setup_verb.py src/cadrumo/entrypoints/cli/config/tests/test_runtime_profile_view.py src/cadrumo/entrypoints/tests/test_censal_access_policy.py --tb=short` -> `fail`
+- `S08` `A` `src/cadrumo/application/wizard/patch_edit.py`
+- `S08` `M` `src/cadrumo/application/wizard/commands.py`
+- `S08` `M` `src/cadrumo/application/wizard/tests/test_terminal_preconditions.py`
+- `S08` `M` `src/cadrumo/application/wizard/tests/test_commands_helpers.py`
+- `S08` `A` `src/cadrumo/application/wizard/tests/test_patch_edit.py`
+- `S08` `A` `src/cadrumo/entrypoints/cli/config/runtime_profile_patch.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/config/_manager_dispatch.py`
+- `S08` `A` `src/cadrumo/application/user_profile/tests/test_profile_patch_contracts.py`
+- `S08` `A` `src/cadrumo/entrypoints/runtime/tests/test_profile_patch_client.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/application/wizard/tests` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/application/user_profile/tests/test_profile_patch_contracts.py` -> `pass`
+- `S09` `M` `src/cadrumo/application/operations/secret_submission.py`
+- `S09` `M` `src/cadrumo/entrypoints/runtime/tests/test_operation_secret.py`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/adapters/persistence/operations/tests/test_ephemeral_secret_submission.py` -> `pass`
+- `S09` `M` `src/cadrumo/application/user_profile/tests/test_bundle_export_access.py`
+- `S09` `A` `src/cadrumo/entrypoints/cli/tests/test_bundle_export_recovery_paths.py`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/application/user_profile/tests/test_bundle_export_scope.py src/cadrumo/application/user_profile/tests/test_bundle_export_access.py src/cadrumo/entrypoints/cli/tests/test_bundle_export_scope_resolution.py src/cadrumo/entrypoints/cli/tests/test_bundle_export_recovery_paths.py` -> `pass`
+- `S08` `M` `src/cadrumo/application/user_profile/section_rows.py`
+- `S08` `A` `src/cadrumo/application/user_profile/tests/test_section_row_field_validation.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/config/_profile_repeatable_row.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/config/_complete_setup_cli.py`
+- `S08` `A` `src/cadrumo/entrypoints/cli/config/_runtime_profile_mutation.py`
+- `S08` `A` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_profile_mutation_boundary.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/config/tests/test_profile_complete_setup_verb.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/runtime/tests/test_profile_patch_client.py src/cadrumo/entrypoints/runtime/tests/test_profile_mutation_client.py src/cadrumo/entrypoints/runtime/tests/test_operation_secret.py src/cadrumo/entrypoints/cli/config/tests/test_profile_add_row_cli.py src/cadrumo/entrypoints/cli/config/tests/test_profile_complete_setup_verb.py src/cadrumo/entrypoints/cli/config/tests/test_profile_edit_verb.py src/cadrumo/entrypoints/cli/config/tests/test_profile_readiness_surfaces.py --tb=short` -> `fail`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/application/user_profile/tests/test_bundle_export_scope.py src/cadrumo/application/user_profile/tests/test_bundle_export_access.py src/cadrumo/entrypoints/cli/tests/test_bundle_export_scope_resolution.py src/cadrumo/entrypoints/cli/tests/test_bundle_export_recovery_paths.py --tb=short` -> `pass`
+- `S09` `M` `src/cadrumo/application/user_profile/bundle_export_operation.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/tests/test_bundle_export_recovery_paths.py`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/tests/test_config_profile_archive_reconcile.py src/cadrumo/entrypoints/cli/tests/test_bundle_export_recovery_paths.py --tb=short` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/runtime/tests/test_profile_patch_client.py src/cadrumo/entrypoints/cli/config/tests/test_profile_add_row_cli.py src/cadrumo/entrypoints/cli/config/tests/test_profile_complete_setup_verb.py src/cadrumo/entrypoints/cli/config/tests/test_profile_edit_verb.py::test_a_blank_choice_flag_clears_the_language_preference_and_its_hint --tb=short` -> `pass`
+- `S09` `M` `src/cadrumo/application/wizard/patch_edit.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/config/runtime_profile_patch.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/config/_manager_dispatch.py`
+- `S09` `M` `src/cadrumo/entrypoints/runtime/tests/test_profile_mutation_client.py`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 src/cadrumo/application/wizard/tests/test_patch_edit.py src/cadrumo/application/wizard/tests/test_terminal_preconditions.py` -> `pass`
+- `S09` `M` `src/cadrumo/application/user_profile/automation_enrollment.py`
+- `S09` `M` `src/cadrumo/application/user_profile/automation_administration.py`
+- `S09` `M` `src/cadrumo/application/user_profile/automation_operations.py`
+- `S09` `A` `src/cadrumo/application/user_profile/tests/test_automation_inventory_operation.py`
+- `S09` `M` `src/cadrumo/entrypoints/tests/test_automation_operation_integration.py`
+- `S09` `A` `src/cadrumo/application/runtime/tests/test_worker_automation_inventory_contract.py`
+- `S09` `A` `src/cadrumo/adapters/local_runtime/tests/test_worker_inventory_budget.py`
+- `S09` `M` `src/cadrumo/entrypoints/runtime/tests/admission_cancellation_fixture.py`
+- `S09` `A` `src/cadrumo/entrypoints/runtime/tests/test_automation_inventory.py`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/application/user_profile/tests/test_access_policy.py src/cadrumo/application/user_profile/tests/test_automation_inventory_operation.py src/cadrumo/application/user_profile/tests/test_automation_enrollment.py src/cadrumo/entrypoints/tests/test_automation_operation_integration.py --tb=short` -> `pass`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m unit src/cadrumo/application/runtime/tests/test_worker_automation_inventory_contract.py src/cadrumo/adapters/local_runtime/tests/test_worker_inventory_budget.py --tb=short` -> `pass`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 src/cadrumo/application/wizard/tests` -> `pass`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/_profile_cli_support.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_profile_incn_new_entity_paths.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_profile_create_taxpayer_type_paths.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_profile_output_language.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_profile_create_choice_help.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_profile_lifecycle_verbs.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_200_stored_calculation_drift_cli.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py`
+- `S09` `M` `src/cadrumo/entrypoints/runtime/tests/test_automation_inventory.py`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' --tb=short src/cadrumo/entrypoints/cli/tests/test_profile_create_taxpayer_type_paths.py::test_edit_refuses_natural_person_branch_change_without_legal_name src/cadrumo/entrypoints/cli/tests/test_profile_create_taxpayer_type_paths.py::test_edit_allows_a_natural_person_branch_without_surnames src/cadrumo/entrypoints/cli/tests/test_profile_output_language.py::test_config_profile_edit_quiet_validates_profile_output_language src/cadrumo/entrypoints/cli/tests/test_profile_lifecycle_verbs.py::test_config_profile_edit_non_tty_recovery_hint_points_at_edit src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py::test_each_profile_leaf_answers_as_the_first_command_of_a_process[view-incomplete] src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py::test_each_profile_leaf_answers_as_the_first_command_of_a_process[view-complete] src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py::test_each_profile_leaf_answers_as_the_first_command_of_a_process[edit-incomplete] src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py::test_each_profile_leaf_answers_as_the_first_command_of_a_process[edit-complete] src/cadrumo/entrypoints/runtime/tests/test_automation_inventory.py src/cadrumo/entrypoints/runtime/tests/test_profile_mutation_client.py src/cadrumo/entrypoints/runtime/tests/test_profile_patch_client.py src/cadrumo/adapters/local_runtime/tests/test_worker_authorization.py src/cadrumo/entrypoints/runtime/tests/test_profile_worker_operations.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync python -m dev.quality.import_gate (20260927T152101.031569Z-check-import-boundaries-49024-926bcb30)` -> `fail`
+- `S08` `verify:` `just generate-import-load-targets` -> `pass`
+- `S08` `verify:` `uv run --no-sync python -m dev.quality.import_gate (20260927T152440.163327Z-check-import-boundaries-2612-3921a9d9)` -> `pass`
+- `S04` `M` `src/cadrumo/application/user_profile/automation_administration.py`
+- `S04` `M` `src/cadrumo/application/user_profile/automation_enrollment.py`
+- `S04` `M` `src/cadrumo/application/user_profile/automation_operations.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/enrollment_support.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_automation_administration.py`
+- `S04` `A` `src/cadrumo/entrypoints/tests/test_automation_operation_effects.py`
+- `S04` `verify:` `uv run --no-sync pytest -n0 src/cadrumo/adapters/persistence/storage/custody/tests/test_automation_administration.py src/cadrumo/adapters/persistence/storage/custody/tests/test_automation_denial.py -m integration --tb=short -q` -> `pass`
+- `S04` `verify:` `uv run --no-sync pytest -n0 src/cadrumo/adapters/persistence/storage/custody/tests/test_automation_administration.py::test_transition_receipts_distinguish_publication_from_idempotent_retry -m integration --tb=short -q` -> `pass`
+- `S04` `verify:` `uv run --no-sync pytest -q -n0 -m integration src/cadrumo/entrypoints/tests/test_automation_operation_integration.py --tb=short` -> `pass`
+- `S04` `verify:` `uv run --no-sync pytest -n0 src/cadrumo/entrypoints/tests/test_automation_operation_effects.py -m integration --tb=short -q` -> `pass`
+- `S04` `verify:` `uv run --no-sync pytest -q -n0 src/cadrumo/application/user_profile/tests/test_automation_inventory_operation.py src/cadrumo/application/user_profile/tests/test_automation_enrollment.py --tb=short` -> `pass`
+- `S08` `M` `src/cadrumo/application/user_profile/view_operation.py`
+- `S08` `M` `src/cadrumo/application/workflow/profile_health.py`
+- `S08` `M` `src/cadrumo/adapters/persistence/operations/tests/test_profile_view_operation.py`
+- `S08` `M` `src/cadrumo/adapters/persistence/storage/tests/test_profile_health.py`
+- `S08` `M` `src/cadrumo/entrypoints/tui/profile/tests/test_runtime_overview.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/config/profile_status_cli.py`
+- `S08` `A` `src/cadrumo/entrypoints/runtime/tests/test_profile_status_client.py`
+- `S08` `A` `src/cadrumo/entrypoints/cli/config/tests/test_profile_validate_runtime.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_profile_session_root_resume.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_profile_readiness_blocks_modelo_work.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/adapters/persistence/operations/tests/test_profile_view_operation.py src/cadrumo/adapters/persistence/storage/tests/test_profile_health.py src/cadrumo/entrypoints/tui/profile/tests/test_runtime_overview.py --tb=short` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/tests/test_profile_lifecycle_navigation.py::test_list_and_status_work_from_a_no_active_session_state src/cadrumo/entrypoints/cli/tests/test_profile_lifecycle_verbs.py::test_config_profile_status_exits_nonzero_for_dangling_pointer --tb=short` -> `pass`
+- `S08` `M` `src/cadrumo/entrypoints/cli/config/tests/test_profile_validate_runtime.py`
+- `S08` `M` `src/cadrumo/entrypoints/runtime/tests/test_profile_status_client.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m integration src/cadrumo/adapters/persistence/operations/tests/test_profile_view_operation.py --tb=short` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' --tb=short src/cadrumo/entrypoints/cli/config/tests/test_profile_validate_runtime.py src/cadrumo/entrypoints/cli/tests/test_profile_session_root_resume.py::TestFailClosedRefusals::test_unnamed_validate_is_gated_as_an_active_profile_read src/cadrumo/entrypoints/cli/tests/test_profile_session_root_resume.py::TestFailClosedRefusals::test_explicit_validate_is_not_preempted_by_the_active_profile_gate src/cadrumo/entrypoints/cli/tests/test_profile_readiness_blocks_modelo_work.py::test_defaulted_profile_readiness_surfaces_block_before_modelo_work[m303-defaulted-profile] src/cadrumo/entrypoints/cli/tests/test_profile_readiness_blocks_modelo_work.py::test_defaulted_profile_readiness_surfaces_block_before_modelo_work[m100-defaulted-profile] src/cadrumo/entrypoints/cli/tests/test_profile_readiness_blocks_modelo_work.py::test_no_business_landlord_can_create_m100_while_quarterly_activity_modelos_refuse src/cadrumo/entrypoints/cli/tests/test_profile_readiness_blocks_modelo_work.py::test_attribution_entity_without_activity_remains_status_blocked src/cadrumo/entrypoints/cli/tests/test_profile_lifecycle_verbs.py::test_config_profile_view_emits_active_profile_facts src/cadrumo/entrypoints/cli/tests/test_profile_lifecycle_verbs.py::test_config_profile_view_named_profile_includes_canonical_facts src/cadrumo/entrypoints/cli/tests/test_profile_lifecycle_verbs.py::test_config_profile_view_runs_validation_inline src/cadrumo/entrypoints/cli/tests/test_profile_lifecycle_verbs.py::test_show_and_status_do_not_contradict_on_a_registered_profile src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py::test_each_profile_leaf_answers_as_the_first_command_of_a_process[status-incomplete] src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py::test_each_profile_leaf_answers_as_the_first_command_of_a_process[status-complete] src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py::test_each_profile_leaf_answers_as_the_first_command_of_a_process[validate-incomplete] src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py::test_each_profile_leaf_answers_as_the_first_command_of_a_process[validate-complete] src/cadrumo/entrypoints/runtime/tests/test_profile_status_client.py` -> `fail`
+- `S08` `M` `src/cadrumo/application/user_profile/tests/test_plantilla_media_operation.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 src/cadrumo/application/user_profile/tests/test_plantilla_media_operation.py src/cadrumo/application/user_profile/tests/test_operation_access_resolution.py --tb=short` -> `pass`
+- `S08` `M` `src/cadrumo/application/user_profile/plantilla_media_rows.py`
+- `S08` `M` `src/cadrumo/adapters/persistence/storage/tests/test_plantilla_media_rows.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/config/plantilla_media.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/config/tests/test_profile_plantilla_media_cli.py`
+- `S08` `A` `src/cadrumo/entrypoints/runtime/tests/test_plantilla_media_client.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' --tb=short src/cadrumo/entrypoints/cli/config/tests/test_profile_validate_runtime.py::test_validate_named_target_uses_profile_preference_and_explicit_language src/cadrumo/entrypoints/cli/tests/test_profile_readiness_blocks_modelo_work.py::test_defaulted_profile_readiness_surfaces_block_before_modelo_work[m303-defaulted-profile] src/cadrumo/entrypoints/cli/tests/test_profile_readiness_blocks_modelo_work.py::test_defaulted_profile_readiness_surfaces_block_before_modelo_work[m100-defaulted-profile] src/cadrumo/entrypoints/cli/tests/test_profile_readiness_blocks_modelo_work.py::test_attribution_entity_without_activity_remains_status_blocked src/cadrumo/entrypoints/runtime/tests/test_profile_status_client.py src/cadrumo/entrypoints/runtime/tests/test_plantilla_media_client.py src/cadrumo/entrypoints/cli/config/tests/test_profile_plantilla_media_cli.py src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py::test_each_profile_leaf_answers_as_the_first_command_of_a_process[plantilla-media-set-incomplete] src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py::test_each_profile_leaf_answers_as_the_first_command_of_a_process[plantilla-media-set-complete] src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py::test_each_profile_leaf_answers_as_the_first_command_of_a_process[plantilla-media-list-incomplete] src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py::test_each_profile_leaf_answers_as_the_first_command_of_a_process[plantilla-media-list-complete] src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py::test_each_profile_leaf_answers_as_the_first_command_of_a_process[plantilla-media-remove-incomplete] src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py::test_each_profile_leaf_answers_as_the_first_command_of_a_process[plantilla-media-remove-complete] src/cadrumo/adapters/persistence/storage/tests/test_plantilla_media_rows.py` -> `fail`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' --tb=short src/cadrumo/entrypoints/runtime/tests/test_profile_status_client.py src/cadrumo/entrypoints/runtime/tests/test_plantilla_media_client.py` -> `fail`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' --tb=short src/cadrumo/entrypoints/runtime/tests/test_profile_status_client.py` -> `pass`
+- `S08` `A` `src/cadrumo/application/user_profile/automation_execution.py`
+- `S08` `M` `src/cadrumo/application/user_profile/automation_operations.py`
+- `S08` `M` `src/cadrumo/entrypoints/tests/test_automation_operation_effects.py`
+- `S08` `M` `src/cadrumo/entrypoints/tests/test_automation_operation_integration.py`
+- `S08` `verify:` `uv run --no-sync python -m dev.quality.import_gate` -> `fail`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tests/test_automation_operation_effects.py src/cadrumo/entrypoints/tests/test_automation_operation_integration.py --tb=short` -> `pass`
+- `S08` `A` `src/cadrumo/application/runtime/approval_binding.py`
+- `S08` `A` `src/cadrumo/application/runtime/approval_sessions.py`
+- `S08` `A` `src/cadrumo/application/runtime/worker_enrollment.py`
+- `S08` `M` `src/cadrumo/application/runtime/worker_authorization.py`
+- `S08` `M` `src/cadrumo/adapters/local_runtime/worker_authorization.py`
+- `S08` `M` `src/cadrumo/adapters/local_runtime/worker_authorization_client.py`
+- `S08` `M` `src/cadrumo/entrypoints/runtime/operation_authority.py`
+- `S08` `M` `src/cadrumo/entrypoints/runtime/operation_host.py`
+- `S08` `A` `src/cadrumo/entrypoints/runtime/automation_execution.py`
+- `S08` `A` `src/cadrumo/application/runtime/tests/test_approval_sessions.py`
+- `S08` `A` `src/cadrumo/adapters/local_runtime/tests/worker_approval_fixture.py`
+- `S08` `A` `src/cadrumo/adapters/local_runtime/tests/test_worker_approval_channel.py`
+- `S08` `M` `src/cadrumo/application/user_profile/tests/test_automation_inventory_operation.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/application/runtime/tests/test_approval_sessions.py --tb=short` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' --tb=short src/cadrumo/adapters/local_runtime/tests/test_worker_approval_channel.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 src/cadrumo/application/user_profile/tests/test_automation_inventory_operation.py --tb=short` -> `pass`
+- `S08` `A` `src/cadrumo/adapters/persistence/storage/custody/automation_client_credentials.py`
+- `S08` `M` `src/cadrumo/adapters/persistence/storage/custody/automation_delivery.py`
+- `S08` `A` `src/cadrumo/adapters/persistence/storage/custody/tests/test_automation_client_credentials.py`
+- `S08` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_automation_administration.py`
+- `S08` `A` `src/cadrumo/adapters/local_runtime/tests/test_worker_approval_phases.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/adapters/persistence/storage/custody/tests/test_automation_client_credentials.py src/cadrumo/adapters/persistence/storage/custody/tests/test_automation_administration.py --tb=short` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' --tb=short src/cadrumo/adapters/local_runtime/tests/test_worker_approval_phases.py` -> `pass`
+- `S08` `A` `src/cadrumo/entrypoints/runtime/tests/test_automation_approval.py`
+- `S08` `A` `src/cadrumo/entrypoints/runtime/tests/test_approval_task_authority.py`
+- `S08` `A` `src/cadrumo/adapters/local_runtime/tests/worker_approval_phase_fixture.py`
+- `S08` `M` `src/cadrumo/adapters/local_runtime/tests/test_worker_authorization.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/runtime/tests/test_automation_approval.py --tb=short` -> `fail`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/runtime/tests/test_approval_task_authority.py --tb=short` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/runtime/tests/test_automation_approval.py --tb=short` -> `pass`
+- `S08` `R` `src/cadrumo/application/runtime/tests/test_approval_sessions.py` -> `src/cadrumo/entrypoints/runtime/tests/test_approval_sessions.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' --tb=short src/cadrumo/entrypoints/runtime/tests/test_approval_sessions.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync python -m dev.quality.import_gate` -> `pass`
+- `S08` `A` `src/cadrumo/application/runtime/enrollment_access.py`
+- `S08` `A` `src/cadrumo/application/runtime/tests/test_enrollment_access.py`
+- `S08` `A` `src/cadrumo/application/runtime/enrollment_recipient.py`
+- `S08` `A` `src/cadrumo/application/runtime/tests/test_enrollment_recipient.py`
+- `S08` `A` `src/cadrumo/adapters/local_runtime/enrollment_client.py`
+- `S08` `A` `src/cadrumo/adapters/local_runtime/tests/test_enrollment_client.py`
+- `S08` `A` `src/cadrumo/entrypoints/runtime/enrollment_connections.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/application/runtime/tests/test_enrollment_access.py --tb=short` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/application/runtime/tests/test_enrollment_recipient.py --tb=short` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/adapters/local_runtime/tests/test_enrollment_client.py --tb=short` -> `pass`
+- `S09` `M` `src/cadrumo/application/runtime/worker_enrollment.py`
+- `S09` `M` `src/cadrumo/entrypoints/runtime/automation_execution.py`
+- `S09` `M` `src/cadrumo/entrypoints/runtime/enrollment_connections.py`
+- `S09` `M` `src/cadrumo/entrypoints/runtime/tests/test_approval_task_authority.py`
+- `S09` `A` `src/cadrumo/entrypoints/runtime/tests/test_enrollment_lifecycle.py`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/runtime/tests/test_approval_task_authority.py --tb=short` -> `pass`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/runtime/tests/test_enrollment_lifecycle.py --tb=short` -> `pass`
+- `S08` `A` `src/cadrumo/entrypoints/runtime/tests/test_automation_enrollment.py`
+- `S08` `A` `src/cadrumo/adapters/local_runtime/tests/test_enrollment_framing.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/runtime/tests/test_automation_enrollment.py --tb=short` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' --tb=short src/cadrumo/adapters/local_runtime/tests/test_enrollment_framing.py src/cadrumo/application/runtime/tests/test_enrollment_access.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/application/user_profile/tests/test_automation_inventory_operation.py --tb=short` -> `pass`
+- `S08` `R` `src/cadrumo/application/runtime/tests/test_enrollment_recipient.py` -> `src/cadrumo/entrypoints/runtime/tests/test_enrollment_recipient.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/runtime/tests/test_enrollment_recipient.py --tb=short` -> `pass`
+- `S09` `A` `src/cadrumo/application/runtime/access_management.py`
+- `S09` `A` `src/cadrumo/application/runtime/tests/test_access_management.py`
+- `S09` `A` `src/cadrumo/entrypoints/runtime/access_management.py`
+- `S09` `A` `src/cadrumo/adapters/local_runtime/tests/test_access_management_framing.py`
+- `S09` `A` `src/cadrumo/adapters/local_runtime/tests/test_frontend_access_management.py`
+- `S09` `A` `src/cadrumo/entrypoints/runtime/tests/test_access_management.py`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/application/runtime/tests/test_access_management.py --tb=short` -> `pass`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/adapters/persistence/storage/custody/tests/test_session_authority.py -k 'session_inventory or host_poll' --tb=short` -> `pass`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/adapters/local_runtime/tests/test_access_management_framing.py src/cadrumo/adapters/local_runtime/tests/test_enrollment_framing.py --tb=short` -> `pass`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/runtime/tests/test_access_management.py --tb=short` -> `pass`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/adapters/local_runtime/tests/test_frontend_access_management.py --tb=short` -> `pass`
+- `S09` `M` `src/cadrumo/application/runtime/enrollment_access.py`
+- `S09` `M` `src/cadrumo/adapters/local_runtime/enrollment_client.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_automation_administration.py`
+- `S09` `A` `src/cadrumo/entrypoints/runtime/tests/test_grant_change.py`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/runtime/tests/test_grant_change.py --tb=short` -> `fail`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/runtime/tests/test_grant_change.py -k rotate --tb=short` -> `fail`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/runtime/tests/test_grant_change.py --tb=short` -> `pass`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/adapters/persistence/storage/custody/tests/test_automation_administration.py -k 'simple_grant_change or renewal_and_scope' --tb=short` -> `pass`
+- `S08` `M` `src/cadrumo/entrypoints/tui/app.py`
+- `S08` `M` `src/cadrumo/entrypoints/tui/launcher.py`
+- `S08` `A` `src/cadrumo/entrypoints/tui/tests/test_runtime_root_shell.py`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/runtime/tests/test_grant_change.py -k 'renew or change_scope' --tb=short` -> `pass`
+- `S08` `A` `src/cadrumo/entrypoints/workbench_generation_composition.py`
+- `S08` `M` `src/cadrumo/entrypoints/adapter_composition.py`
+- `S08` `M` `src/cadrumo/entrypoints/ledger_action_composition.py`
+- `S08` `A` `src/cadrumo/entrypoints/tests/test_explicit_profile_diagnostics.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tests/test_explicit_profile_diagnostics.py --tb=short` -> `pass`
+- `S09` `A` `src/cadrumo/application/runtime/projection_pages.py`
+- `S09` `A` `src/cadrumo/entrypoints/runtime/tests/test_projection_pages.py`
+- `S09` `A` `src/cadrumo/application/runtime/tests/test_projection_pages.py`
+- `S09` `A` `src/cadrumo/adapters/local_runtime/tests/test_projection_page_client.py`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/runtime/tests/test_projection_pages.py --tb=short` -> `pass`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/application/runtime/tests/test_projection_pages.py src/cadrumo/adapters/local_runtime/tests/test_projection_page_client.py --tb=short` -> `pass`
+- `S13` `A` `src/cadrumo/entrypoints/cli/config/runtime_access_management.py`
+- `S13` `A` `src/cadrumo/entrypoints/cli/config/runtime_access_management_payloads.py`
+- `S13` `A` `src/cadrumo/entrypoints/cli/config/runtime_access_management_specs.py`
+- `S13` `A` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_access_management.py`
+- `S13` `M` `src/cadrumo/entrypoints/cli/_profile_authentication_contract.py`
+- `S13` `M` `src/cadrumo/entrypoints/cli/_profile_authentication_gate.py`
+- `S13` `M` `src/cadrumo/entrypoints/cli/_root_command_specs.py`
+- `S13` `M` `src/cadrumo/entrypoints/cli/_root_cli.py`
+- `S13` `M` `src/cadrumo/entrypoints/cli/_root_support.py`
+- `S13` `M` `src/cadrumo/entrypoints/cli/runtime_profile_admission.py`
+- `S13` `M` `src/cadrumo/entrypoints/cli/config/command_specs.py`
+- `S13` `A` `src/cadrumo/entrypoints/cli/tests/test_profile_api_key_admission.py`
+- `S13` `A` `src/cadrumo/entrypoints/cli/tests/test_runtime_access_management_gate.py`
+- `S13` `M` `src/cadrumo/entrypoints/cli/tests/test_profile_authentication_contract.py`
+- `S13` `M` `src/cadrumo/entrypoints/cli/tests/test_root_command_specs.py`
+- `S13` `M` `src/cadrumo/entrypoints/cli/tests/test_root_help_shape.py`
+- `S13` `M` `src/cadrumo/locales/en/cli.yml`
+- `S13` `M` `src/cadrumo/locales/es/cli.yml`
+- `S13` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S13` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S13` `verify:` `uv run --no-sync pytest -q -n0 -m unit src/cadrumo/entrypoints/cli/tests/test_profile_authentication_contract.py src/cadrumo/entrypoints/cli/tests/test_profile_api_key_admission.py --tb=short` -> `pass`
+- `S13` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/config/tests/test_runtime_access_management.py src/cadrumo/entrypoints/tui/tests/test_runtime_access_management.py --tb=short` -> `pass`
+- `S15` `A` `src/cadrumo/entrypoints/tui/runtime_access_management.py`
+- `S15` `A` `src/cadrumo/entrypoints/tui/tests/test_runtime_access_management.py`
+- `S15` `M` `src/cadrumo/locales/en/common.yml`
+- `S15` `M` `src/cadrumo/locales/es/common.yml`
+- `S15` `M` `src/cadrumo/locales/ca/common.yml`
+- `S15` `M` `src/cadrumo/locales/hu/common.yml`
+- `S15` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/config/tests/test_runtime_access_management.py src/cadrumo/entrypoints/tui/tests/test_runtime_access_management.py --tb=short` -> `pass`
+- `S09` `verify:` `just generate-import-load-targets` -> `pass`
+- `S13` `A` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_api_key_authentication.py`
+- `S13` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/config/tests/test_runtime_api_key_authentication.py --tb=short` -> `pass`
+- `S13` `A` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_access_management_native.py`
+- `S13` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/config/tests/test_runtime_access_management_native.py --tb=short` -> `pass`
+- `S15` `A` `src/cadrumo/entrypoints/tui/secret/runtime_login.py`
+- `S15` `A` `src/cadrumo/entrypoints/tui/secret/tests/test_runtime_login.py`
+- `S15` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tui/secret/tests/test_runtime_login.py --tb=short` -> `pass`
+- `S09` `M` `src/cadrumo/application/modelo/operation_definitions.py`
+- `S09` `M` `src/cadrumo/application/modelo/work_lifecycle.py`
+- `S09` `A` `src/cadrumo/application/modelo/metadata_operation_access.py`
+- `S09` `M` `src/cadrumo/application/operations/_projection_read.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/operations/tests/test_projection_services.py`
+- `S09` `A` `src/cadrumo/entrypoints/tests/test_modelo_metadata_operation_results.py`
+- `S09` `A` `src/cadrumo/adapters/persistence/profile/tests/test_work_lifecycle_snapshot.py`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tests/test_modelo_metadata_operation_results.py src/cadrumo/adapters/persistence/profile/tests/test_work_lifecycle_snapshot.py src/cadrumo/application/modelo/tests/test_lifecycle_operation_conformance.py --tb=short` -> `pass`
+- `S08` `M` `.vault/adr/2026-09-26-mcp-purpose-authentication-adr.md`
+- `S08` `M` `.vault/adr/2026-09-04-tui-architecture-authenticated-tui-visibility-adr.md`
+- `S09` `A` `src/cadrumo/entrypoints/runtime/tests/test_modelo_metadata.py`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/runtime/tests/test_modelo_metadata.py --tb=short` -> `pass`
+- `S15` `M` `src/cadrumo/entrypoints/tui/app.py`
+- `S15` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_root_shell.py`
+- `S15` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tui/tests/test_runtime_root_shell.py src/cadrumo/entrypoints/tui/tests/test_runtime_account_session.py --tb=short` -> `pass`
+- `S08` `A` `src/cadrumo/application/modelo/row_source_fingerprint.py`
+- `S08` `M` `src/cadrumo/application/modelo/_row_source_identity_replay.py`
+- `S08` `M` `src/cadrumo/application/modelo/work_review.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/application/modelo/tests/test_row_source_identity_replay.py --tb=short` -> `pass`
+- `S15` `A` `src/cadrumo/entrypoints/tui/runtime_admission.py`
+- `S15` `A` `src/cadrumo/entrypoints/tui/tests/test_runtime_admission.py`
+- `S15` `M` `src/cadrumo/entrypoints/tui/tests/test_app.py`
+- `S15` `M` `src/cadrumo/entrypoints/tui/runtime_access_management.py`
+- `S15` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_access_management.py`
+- `S15` `A` `src/cadrumo/entrypoints/tui/profile/runtime_manager.py`
+- `S15` `A` `src/cadrumo/entrypoints/tui/profile/runtime_errors.py`
+- `S15` `A` `src/cadrumo/entrypoints/tui/profile/tests/test_runtime_manager.py`
+- `S15` `M` `src/cadrumo/entrypoints/tui/profile/overview.py`
+- `S15` `M` `src/cadrumo/locales/ca/flows.yml`
+- `S15` `M` `src/cadrumo/locales/en/flows.yml`
+- `S15` `M` `src/cadrumo/locales/es/flows.yml`
+- `S15` `M` `src/cadrumo/locales/hu/flows.yml`
+- `S15` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tui/tests/test_app.py src/cadrumo/entrypoints/tui/tests/test_runtime_root_shell.py src/cadrumo/entrypoints/tui/tests/test_runtime_account_session.py src/cadrumo/entrypoints/tui/tests/test_runtime_admission.py --tb=short [20260927T184900.017775Z-pytest-51304-58009a75; 4 failures, 23 passed]` -> `fail`
+- `S15` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tui/tests/test_app.py src/cadrumo/entrypoints/tui/tests/test_runtime_root_shell.py src/cadrumo/entrypoints/tui/tests/test_runtime_account_session.py src/cadrumo/entrypoints/tui/tests/test_runtime_admission.py --tb=short [20260927T185509.928329Z-pytest-28200-307cbda8; 27 passed]` -> `pass`
+- `S15` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tui/tests/test_runtime_access_management.py --tb=short [20260927T185424.319038Z-pytest-6852-71fcafbd; 13 passed]` -> `pass`
+- `S15` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tui/profile/tests/test_runtime_manager.py --tb=short [20260927T184629.764324Z-pytest-61492-52ef707f; 7 passed]` -> `pass`
+- `S08` `M` `src/cadrumo/entrypoints/operation_composition.py`
+- `S08` `A` `src/cadrumo/adapters/local_runtime/workbench_generation.py`
+- `S08` `A` `src/cadrumo/entrypoints/runtime/tests/test_workbench_generation.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/runtime/tests/test_workbench_generation.py --tb=short [20260927T184755.824836Z-pytest-52336-2b677e3f; adapter INVALID_FRAME]` -> `fail`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/runtime/tests/test_workbench_generation.py --tb=short [20260927T185231.979276Z-pytest-58784-4682f833; unresolved ForwardRef mapping restore]` -> `fail`
+- `S08` `A` `src/cadrumo/application/workbench_generation_operation.py`
+- `S08` `A` `src/cadrumo/application/workbench_generation_projection.py`
+- `S08` `A` `src/cadrumo/application/tests/test_workbench_generation_operation.py`
+- `S08` `M` `src/cadrumo/application/workbench_generation.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/application/tests/test_workbench_generation_operation.py --tb=short [20260927T190315.739142Z-pytest-61612-4efb798a; 15 passed]` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/runtime/tests/test_workbench_generation.py --tb=short [20260927T190403.809563Z-pytest-70448-9c198494; 1 passed]` -> `pass`
+- `S15` `A` `src/cadrumo/entrypoints/tui/runtime_account.py`
+- `S15` `A` `src/cadrumo/entrypoints/tui/runtime_workbench.py`
+- `S15` `A` `src/cadrumo/entrypoints/tui/tests/test_runtime_account_factories.py`
+- `S15` `M` `src/cadrumo/entrypoints/tui/runtime_account_session.py`
+- `S15` `M` `src/cadrumo/entrypoints/tui/profile/runtime_manager.py`
+- `S15` `M` `src/cadrumo/entrypoints/tui/profile/tests/test_runtime_manager.py`
+- `S15` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tui/tests/test_runtime_root_shell.py --tb=short [20260927T185922.835411Z-pytest-57244-aadd3773; 7 passed]` -> `pass`
+- `S15` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tui/tests/test_runtime_account_factories.py --tb=short [20260927T190706.910690Z-pytest-38132-faac05dc; 6 passed]` -> `pass`
+- `S15` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tui/profile/tests/test_runtime_manager.py src/cadrumo/entrypoints/tui/tests/test_runtime_account_session.py src/cadrumo/entrypoints/tui/tests/test_runtime_account_factories.py --tb=short [20260927T191008.221048Z-pytest-45856-9dd57aac; 1 failed, 15 passed]` -> `fail`
+- `S15` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tui/profile/tests/test_runtime_manager.py src/cadrumo/entrypoints/tui/tests/test_runtime_account_session.py src/cadrumo/entrypoints/tui/tests/test_runtime_account_factories.py --tb=short [20260927T191044.629721Z-pytest-55836-3293cc4a; 16 passed]` -> `pass`
+- `S15` `M` `src/cadrumo/entrypoints/tui/account.py`
+- `S15` `M` `src/cadrumo/entrypoints/tui/components/account_chrome.py`
+- `S15` `M` `src/cadrumo/entrypoints/tui/tests/test_account.py`
+- `S15` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tui/tests/test_account.py src/cadrumo/entrypoints/tui/tests/test_app.py src/cadrumo/entrypoints/tui/tests/test_runtime_root_shell.py src/cadrumo/entrypoints/tui/tests/test_runtime_access_management.py --tb=short [20260927T191229.535913Z-pytest-52028-87dc851d; 53 passed]` -> `pass`
+- `S15` `M` `src/cadrumo/entrypoints/tui/secret/runtime_login.py`
+- `S15` `M` `src/cadrumo/entrypoints/tui/secret/tests/test_runtime_login.py`
+- `S15` `M` `dev/quality/metadata/import_load_targets.json`
+- `S15` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tui/tests/test_runtime_access_locale.py src/cadrumo/entrypoints/tui/secret/tests/test_runtime_login.py src/cadrumo/entrypoints/tui/tests/test_runtime_admission.py --tb=short [20260927T191414.427275Z-pytest-22292-27ef14bb; proof retained at handoff, 1 failed and 13 passed]` -> `fail`
+- `S15` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tui/tests/test_runtime_access_locale.py src/cadrumo/entrypoints/tui/secret/tests/test_runtime_login.py src/cadrumo/entrypoints/tui/tests/test_runtime_admission.py --tb=short [20260927T191540.862773Z-pytest-57196-51190065; 14 passed]` -> `pass`
+- `S15` `verify:` `just generate-import-load-targets [2995 current targets]` -> `pass`
+- `S15` `verify:` `uv run --no-sync python -m dev.quality.import_gate [full output C:/Users/hello/AppData/Local/Temp/cadrumo-runtime-import-gate-20260927-final.txt; exit 7]` -> `fail`
+- `S15` `R` `src/cadrumo/entrypoints/runtime/tests/test_workbench_generation.py` -> `src/cadrumo/entrypoints/tui/tests/test_runtime_workbench_native.py`
+- `S15` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/runtime/tests/test_workbench_generation.py --tb=short [20260927T191416.989039Z-pytest-50728-f28e7fd6; invalid test focus=None]` -> `fail`
+- `S15` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/runtime/tests/test_workbench_generation.py --tb=short [20260927T191523.073362Z-pytest-37804-edf593d8; extended native headless TUI passes]` -> `pass`
+- `S15` `M` `src/cadrumo/entrypoints/tui/profile/runtime_errors.py`
+- `S15` `M` `src/cadrumo/core/errors/registry/_entrypoints_part2.py`
+- `S15` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tui/tests/test_runtime_workbench_native.py --tb=short (20260927T191842.120021Z-pytest-46784-8d099dcd; 1 passed)` -> `pass`
+- `S15` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/core/errors/tests/test_exception_base_hygiene.py src/cadrumo/core/errors/tests/test_registry_enforcement.py src/cadrumo/entrypoints/tui/profile/tests/test_runtime_manager.py --tb=short (20260927T191833.034687Z-pytest-68720-4953e0d4; 21 passed, 2 failed)` -> `fail`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/adapters/persistence/operations/tests/test_host_drain.py src/cadrumo/adapters/persistence/operations/tests/test_cancellation_cleanup.py --tb=short (20260927T192536.654404Z-pytest-26364-1f368c50; 6 passed)` -> `pass`
+- `S09` `verify:` `Ruff check, Ruff format --check, ty, pyrefly --python-platform win32 and basedpyright --pythonplatform Windows on both invariant-error owners` -> `pass`
+- `S15` `M` `src/cadrumo/adapters/local_runtime/frontend_client.py`
+- `S15` `M` `src/cadrumo/adapters/local_runtime/profile_mutations.py`
+- `S15` `M` `src/cadrumo/application/user_profile/login_session.py`
+- `S15` `M` `src/cadrumo/core/errors/registry/_adapters_part3.py`
+- `S15` `M` `src/cadrumo/core/errors/registry/_application_part2.py`
+- `S15` `M` `src/cadrumo/entrypoints/cli/config/runtime_access_management.py`
+- `S15` `M` `src/cadrumo/entrypoints/cli/config/_runtime_profile_mutation.py`
+- `S15` `M` `src/cadrumo/entrypoints/cli/config/profile_status_cli.py`
+- `S15` `M` `src/cadrumo/entrypoints/cli/config/_profile_inspect.py`
+- `S15` `M` `src/cadrumo/entrypoints/cli/runtime_profile_admission.py`
+- `S15` `M` `src/cadrumo/entrypoints/tui/operations/modal.py`
+- `S15` `M` `src/cadrumo/entrypoints/runtime/tests/test_grant_change.py`
+- `S15` `M` `src/cadrumo/entrypoints/runtime/tests/test_frontend_client.py`
+- `S15` `M` `src/cadrumo/entrypoints/runtime/tests/test_profile_mutation_client.py`
+- `S15` `M` `src/cadrumo/entrypoints/runtime/tests/test_profile_patch_client.py`
+- `S15` `M` `src/cadrumo/entrypoints/runtime/tests/test_plantilla_media_client.py`
+- `S15` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_workbench_native.py`
+- `S15` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S15` `M` `src/cadrumo/locales/en/errors.yml`
+- `S15` `M` `src/cadrumo/locales/es/errors.yml`
+- `S15` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S15` `verify:` `Canonical error hygiene and registry (20260927T192337.317489Z-pytest-67092-79f50fde; 15 passed)` -> `pass`
+- `S15` `verify:` `Focused exception consumers (20260927T192526.766613Z-pytest-64188-399c9d94; 50 passed)` -> `pass`
+- `S15` `verify:` `TUI and CLI consumer checks (20260927T192556.810717Z; 33 passed)` -> `pass`
+- `S15` `verify:` `Registry and locale checks (20260927T192625.954555Z; 41 passed)` -> `pass`
+- `S15` `verify:` `Ruff check, Ruff format --check, ty, pyrefly --python-platform win32 and basedpyright --pythonplatform Windows on 19 exception migration files` -> `pass`
+- `S15` `verify:` `just generate-import-load-targets` -> `pass`
+- `S15` `verify:` `uv run --no-sync python -m dev.quality.import_gate (source snapshot 300472737867dfceb80282017ff342d04e5faf694b62bc31bb574b0cb4ee62a6; 15 contracts, 2995 loaded, zero failures/hard findings)` -> `pass`
+- `S15` `verify:` `vaultspec feature check --fix (0 errors, 0 warnings)` -> `pass`
+- `S15` `A` `src/cadrumo/entrypoints/tui/tests/local_workbench_composition.py`
+- `S15` `M` `src/cadrumo/entrypoints/tui/tests/workbench_session.py`
+- `S15` `M` `src/cadrumo/entrypoints/tui/tests/test_launcher_entry_point.py`
+- `S15` `A` `src/cadrumo/entrypoints/tui/runtime_session.py`
+- `S15` `A` `src/cadrumo/entrypoints/tui/tests/test_runtime_session.py`
+- `S15` `verify:` `Local workbench component suite (20260927T193203.951276Z; 82 passed, 3 failed due incomplete optional account factory test fixture)` -> `fail`
+- `S15` `verify:` `Three affected launcher cases after completing the test fixture (20260927T193430.515552Z; 3 passed)` -> `pass`
+- `S15` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tui/tests/test_runtime_session.py --tb=short (20260927T193740.984568Z-pytest-73468-7b6ddd6f; 9 passed)` -> `pass`
+- `S15` `verify:` `Ruff check/format, ty, pyrefly Windows and basedpyright Windows on local composition relocation and restricted shell owners` -> `pass`
+- `S15` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tui/secret/tests/test_runtime_login.py --tb=short (20260927T193831.162121Z-pytest-58092-10c3be9e; 11 passed)` -> `pass`
+- `S15` `verify:` `Ruff check/format, ty, pyrefly Windows and basedpyright Windows on explicit receipt login owners` -> `pass`
+- `S15` `M` `src/cadrumo/entrypoints/tui/installed_session.py`
+- `S15` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tui/tests/test_runtime_workbench_native.py --tb=short (20260927T193816.846977Z-pytest-72272-34d27346; 1 passed, 1 failed final inventory before async EOF processing)` -> `fail`
+- `S15` `verify:` `Installed default-launcher native journey after bounded EOF assertion (20260927T194012.896909Z-pytest-22848-a15fa360; 1 passed)` -> `pass`
+- `S15` `verify:` `Ruff check/format, ty, pyrefly Windows and basedpyright Windows on installed launcher and native test` -> `pass`
+- `S09` `A` `src/cadrumo/entrypoints/runtime/tests/custody_rotation_fixture.py`
+- `S09` `A` `src/cadrumo/entrypoints/runtime/tests/test_custody_rotation.py`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/runtime/tests/test_custody_rotation.py --tb=short (20260927T194112.741814Z-pytest-37164-ed9cca86; 4 passed)` -> `pass`
+- `S09` `verify:` `Ruff check/format, ty, pyrefly Windows and basedpyright Windows on custody retirement and its tests` -> `pass`
+- `S09` `A` `src/cadrumo/entrypoints/runtime/tests/test_password_rotation_authority.py`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/core/errors/tests/test_exception_base_hygiene.py src/cadrumo/core/errors/tests/test_registry_enforcement.py --tb=short (20260927T194625.993521Z-pytest-7732-a32d3303; 15 passed)` -> `pass`
+- `S09` `verify:` `Password rotation authority task-boundary test (20260927T194817.559558Z-pytest-49660-68872acc; 1 passed) and five scoped static checks` -> `pass`
+- `S09` `M` `src/cadrumo/application/auth/operation_definitions.py`
+- `S09` `A` `src/cadrumo/application/auth/tests/test_passphrase_rotation_operation.py`
+- `S09` `verify:` `Rotation executor protected-input and strict-outcome tests (20260927T195401.740947Z-pytest-25624-d0b4dc02; 14 passed) and five scoped statics` -> `pass`
+- `S09` `verify:` `Registered real supervisor auth.profile.passphrase-rotate conformance (20260927T195423.721737Z-pytest-28204-360e8312; 1 passed)` -> `pass`
+- `S09` `verify:` `Corrected isolated custody tests with audited child runner (20260927T195355.315939Z-pytest-49412-df2d8462; 4 passed)` -> `pass`
+- `S09` `verify:` `Held-section expiry and unretired-transition custody regressions (20260927T195512.967758Z-pytest-60868-d0641db0; 5 passed) and five scoped test statics` -> `pass`
+- `S09` `M` `src/cadrumo/entrypoints/runtime/tests/test_session_owner.py`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/runtime/tests/test_runtime_drain.py src/cadrumo/entrypoints/runtime/tests/test_runtime_drain_refusal.py --tb=short (20260927T195850.125321Z-pytest-65700-ec6705c1; 3 passed)` -> `pass`
+- `S09` `verify:` `Session owner repeated containment failure and real native admission (20260927T195942.433606Z-pytest-34220-26d674a8; 2 passed) plus five scoped test statics` -> `pass`
+- `S09` `verify:` `Ruff check/format, ty, pyrefly win32, basedpyright Windows: profile_host, profile_connections, session_owner, profile_worker_custody` -> `pass`
+- `S09` `A` `src/cadrumo/entrypoints/runtime/tests/test_profile_binding_retirement.py`
+- `S09` `verify:` `Host-retirement native tests initial fixture (20260927T200019.262123Z-pytest-31248-e76679a9; 2 setup failures)` -> `fail`
+- `S09` `verify:` `Corrected canonical storage-identity fixture native test (20260927T200101.245552Z-pytest-63800-3fec663a; 2 passed)` -> `pass`
+- `S09` `verify:` `Native host-retirement final missing-receipt and repeated-containment-failure regressions (20260927T200153.943726Z-pytest-46852-95cd183a; 2 passed)` -> `pass`
+- `S09` `A` `src/cadrumo/entrypoints/runtime/tests/test_profile_worker_settlement.py`
+- `S09` `A` `src/cadrumo/entrypoints/runtime/tests/test_profile_worker_settlement_native.py`
+- `S09` `verify:` `Internal exact-rotation settlement host/wire contract (20260927T200245.129523Z-pytest-73724-35d4c138; 3 passed)` -> `pass`
+- `S09` `verify:` `Native control-channel typed refusal and wrong-channel rejection (20260927T200229.523231Z-pytest-66352-4a3d0f58; 1 passed)` -> `pass`
+- `S09` `verify:` `Ruff check/format, ty, pyrefly win32, basedpyright Windows on settlement source/tests` -> `pass`
+- `S09` `verify:` `Final five scoped statics on native host retirement regression` -> `pass`
+- `S09` `M` `src/cadrumo/entrypoints/runtime/tests/test_profile_binding_retirement.py`
+- `S09` `verify:` `Full frozen import gate (cadrumo-runtime-import-gate-20260927-rotation.txt; 15 contracts kept, 2996 modules loaded, stable snapshot f7fbcaece86de1338a9525240f24239919efa12edb86125e584e9b1b2f784ded; one REEXPORT_OR_ALIAS test finding)` -> `fail`
+- `S09` `verify:` `Canonical RuntimePeer defining-module import correction and five scoped static checks` -> `pass`
+- `S09` `verify:` `uv run --no-sync python -m dev.quality.import_gate (cadrumo-runtime-import-gate-20260927-rotation-corrected.txt; 15 contracts kept; 2996 modules loaded; stable source; zero hard findings/debt)` -> `pass`
+- `S09` `A` `src/cadrumo/application/auth/passphrase_operation_access.py`
+- `S09` `A` `src/cadrumo/application/auth/tests/test_passphrase_operation_access.py`
+- `S09` `A` `src/cadrumo/adapters/local_runtime/profile_password_rotation.py`
+- `S09` `A` `src/cadrumo/adapters/local_runtime/tests/test_profile_password_rotation.py`
+- `S09` `A` `src/cadrumo/entrypoints/runtime/tests/test_runtime_password_rotation.py`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/application/auth/tests/test_passphrase_operation_access.py and registered conformance; run 20260927T201506.344757Z-pytest-54860-4e35435d; 19 tests` -> `pass`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/adapters/local_runtime/tests/test_profile_password_rotation.py --tb=short; run 20260927T201954.528199Z-pytest-23720-c9013b02; 11 tests` -> `pass`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/runtime/tests/test_runtime_password_rotation.py --tb=short; run 20260927T201619.139938Z-pytest-68044-3544a85d; 1 passed 1 failed` -> `fail`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/runtime/tests/test_runtime_password_rotation.py --tb=short; run 20260927T201902.677393Z-pytest-29740-c4bcd344; 2 tests` -> `pass`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/runtime/tests/test_runtime_password_rotation.py --tb=short; run 20260927T202128.215643Z-pytest-27556-efae72cb; 2 tests including same-profile sibling lease and second-profile isolation` -> `pass`
+- `S09` `verify:` `Scoped ruff check, ruff format --check, ty check, pyrefly check --python-platform win32 and basedpyright --pythonplatform Windows for registration, shared runner and native tests` -> `pass`
+- `S13` `M` `src/cadrumo/entrypoints/cli/config/passphrase.py`
+- `S13` `A` `src/cadrumo/entrypoints/cli/config/tests/test_passphrase_runtime_change.py`
+- `S13` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/config/tests/test_passphrase_runtime_change.py src/cadrumo/entrypoints/cli/config/tests/test_command_specs.py --tb=short; run 20260927T201724.343286Z-pytest-62724-d8512f0d; 9 tests` -> `pass`
+- `S13` `verify:` `Scoped ruff check, ruff format --check, ty check, pyrefly check --python-platform win32 and basedpyright --pythonplatform Windows for CLI passphrase handler and tests` -> `pass`
+- `S15` `M` `src/cadrumo/entrypoints/tui/runtime_account.py`
+- `S15` `M` `src/cadrumo/entrypoints/tui/secret/passphrase.py`
+- `S15` `A` `src/cadrumo/entrypoints/tui/secret/tests/test_passphrase_lifetime.py`
+- `S15` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_account_factories.py`
+- `S15` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tui/secret/tests/test_passphrase_lifetime.py src/cadrumo/entrypoints/tui/tests/test_runtime_account_factories.py --tb=short; run 20260927T202254.177792Z-pytest-35644-01cafe4e; 9 tests` -> `pass`
+- `S15` `verify:` `Scoped ruff check, ruff format --check, ty check, pyrefly check --python-platform win32 and basedpyright --pythonplatform Windows for TUI password factory, screen lifetime and tests` -> `pass`
+- `S15` `A` `src/cadrumo/entrypoints/tui/tests/test_password_recomposition.py`
+- `S15` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tui/tests/test_password_recomposition.py src/cadrumo/entrypoints/tui/secret/tests/test_passphrase_lifetime.py src/cadrumo/entrypoints/tui/tests/test_runtime_account_factories.py --tb=short; run 20260927T203215.476621Z-pytest-51992-c6777497; 12 tests` -> `pass`
+- `S15` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tui/tests/test_app.py src/cadrumo/entrypoints/tui/tests/test_account.py src/cadrumo/entrypoints/tui/tests/test_runtime_root_shell.py --tb=short; run 20260927T203257.655935Z-pytest-48232-37f1a0cc; 40 tests` -> `pass`
+- `S15` `verify:` `Scoped Ruff/format/ty/pyrefly win32/basedpyright Windows for TUI expiry settlement and race tests` -> `pass`
+- `S13` `M` `src/cadrumo/adapters/local_runtime/profile_mutations.py`
+- `S13` `M` `src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py`
+- `S13` `M` `src/cadrumo/entrypoints/cli/tests/test_config_custody_profile_lifecycle.py`
+- `S13` `M` `src/cadrumo/entrypoints/cli/config/tests/test_passphrase_runtime_change.py`
+- `S13` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py -k passphrase_change_succeeds_through_each_leaf_channel --tb=short; run 20260927T202656.670216Z-pytest-65048-2ca8666c; 2 failed` -> `fail`
+- `S13` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py -k passphrase_change_succeeds_through_each_leaf_channel --tb=short; run 20260927T202744.555522Z-pytest-64696-3467c015; 2 tests` -> `pass`
+- `S13` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/tests/test_config_custody_profile_lifecycle.py -k config_passphrase_change_self_authenticates_without_a_keychain --tb=short; run 20260927T203107.077630Z-pytest-72960-8de6069a; 1 test` -> `pass`
+- `S13` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/config/tests/test_passphrase_runtime_change.py --tb=short; run 20260927T202937.926426Z-pytest-65772-8335a767; 3 passed 1 failed` -> `fail`
+- `S13` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/config/tests/test_passphrase_runtime_change.py --tb=short; run 20260927T203212.733023Z-pytest-46228-14f9f52b; 4 tests` -> `pass`
+- `S13` `verify:` `Scoped Ruff/format/ty/pyrefly win32/basedpyright Windows on three CLI test files and shared mutation error` -> `pass`
+- `S15` `A` `src/cadrumo/entrypoints/tui/tests/test_runtime_password_rotation.py`
+- `S15` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tui/tests/test_runtime_password_rotation.py --tb=short; run 20260927T203635.642413Z-pytest-58844-995192bd; 1 failed` -> `fail`
+- `S15` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tui/tests/test_runtime_password_rotation.py --tb=short; run 20260927T203710.578931Z-pytest-43176-5c39cfe3; 1 test` -> `pass`
+- `S15` `verify:` `Scoped Ruff/format/ty/pyrefly win32/basedpyright Windows on installed TUI password native test` -> `pass`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/application/auth/tests/test_passphrase_operation_access.py src/cadrumo/application/auth/tests/test_passphrase_rotation_operation.py src/cadrumo/application/auth/tests/test_operation_definitions.py 'src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py::test_every_production_registered_executor_runs_through_the_shared_supervisor_matrix[auth.profile.passphrase-rotate]' --tb=short; run 20260927T201506.344757Z-pytest-54860-4e35435d; 19 tests` -> `pass`
+- `S13` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/config/tests/test_passphrase_runtime_change.py src/cadrumo/entrypoints/cli/config/tests/test_passphrase_command_spec.py --tb=short; run 20260927T201724.343286Z-pytest-62724-d8512f0d; 9 tests` -> `pass`
+- `S12` `A` `src/cadrumo/adapters/local_runtime/automation_decision.py`
+- `S12` `A` `src/cadrumo/adapters/local_runtime/automation_inventory.py`
+- `S12` `M` `src/cadrumo/core/errors/registry/_adapters_part3.py`
+- `S12` `M` `src/cadrumo/locales/en/errors.yml`
+- `S12` `M` `src/cadrumo/locales/es/errors.yml`
+- `S12` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S12` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S12` `M` `src/cadrumo/locales/en/cli.yml`
+- `S12` `M` `src/cadrumo/locales/es/cli.yml`
+- `S12` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S12` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S12` `verify:` `uv run --no-sync python -m dev.locales set-batch C:/Users/hello/AppData/Local/Temp/cadrumo-automation-inventory-locales-20260927.json` -> `pass`
+- `S12` `verify:` `uv run --no-sync python -m dev.locales set-batch C:/Users/hello/AppData/Local/Temp/cadrumo-automation-management-locales-20260927.json` -> `pass`
+- `S12` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/core/errors/tests/test_registry_enforcement.py src/cadrumo/core/errors/tests/test_lazy_declared_codes.py src/cadrumo/entrypoints/tui/tests/test_runtime_access_locale.py --tb=short; run 20260927T203922.731760Z-pytest-18052-5ff6402c; 11 tests` -> `pass`
+- `S12` `A` `src/cadrumo/adapters/local_runtime/tests/test_automation_inventory.py`
+- `S12` `A` `src/cadrumo/adapters/local_runtime/tests/test_automation_decision.py`
+- `S12` `A` `src/cadrumo/entrypoints/runtime/tests/test_automation_inventory_client.py`
+- `S12` `A` `src/cadrumo/entrypoints/runtime/tests/test_automation_decision_client.py`
+- `S12` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/adapters/local_runtime/tests/test_automation_inventory.py src/cadrumo/adapters/local_runtime/tests/test_automation_decision.py --tb=short; run 20260927T204303.819678Z-pytest-25100-019ce547; 13 tests` -> `pass`
+- `S12` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/runtime/tests/test_automation_inventory_client.py --tb=short; run 20260927T203831.051315Z-pytest-67608-94a54625; 1 test` -> `pass`
+- `S12` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/runtime/tests/test_automation_decision_client.py --tb=short; run 20260927T204154.491546Z-pytest-42980-adff0867; 1 test` -> `pass`
+- `S12` `verify:` `Scoped Ruff/format/ty/pyrefly win32/basedpyright Windows for inventory and decision clients plus four tests` -> `pass`
+- `S12` `M` `src/cadrumo/entrypoints/cli/config/runtime_access_management.py`
+- `S12` `M` `src/cadrumo/entrypoints/cli/config/runtime_access_management_specs.py`
+- `S12` `M` `src/cadrumo/entrypoints/cli/config/runtime_access_management_payloads.py`
+- `S12` `M` `src/cadrumo/entrypoints/cli/_profile_authentication_gate.py`
+- `S12` `A` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_automation_list.py`
+- `S12` `M` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_access_management.py`
+- `S12` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_access_management_gate.py`
+- `S12` `A` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_automation_list_native.py`
+- `S12` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/config/tests/test_runtime_automation_list.py src/cadrumo/entrypoints/cli/config/tests/test_runtime_access_management.py src/cadrumo/entrypoints/cli/tests/test_runtime_access_management_gate.py --tb=short; run 20260927T203241.444013Z-pytest-69748-c103b012; 21 tests` -> `pass`
+- `S12` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/config/tests/test_runtime_automation_list_native.py --tb=short; run 20260927T204532.675723Z-pytest-53920-b80ea07e; 1 failed` -> `fail`
+- `S12` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/config/tests/test_runtime_automation_list_native.py --tb=short; run 20260927T204603.071639Z-pytest-61368-018e0c91; 1 test` -> `pass`
+- `S12` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/tests/test_command_spec_handler_parity.py src/cadrumo/entrypoints/cli/tests/test_command_spec_deferred_targets.py src/cadrumo/entrypoints/cli/tests/test_command_specs.py --tb=short; run 20260927T204417.040513Z-pytest-62704-38a6d786; 10 tests` -> `pass`
+- `S12` `verify:` `Scoped Ruff/format/ty/pyrefly win32/basedpyright Windows for CLI inventory production and tests` -> `pass`
+- `S14` `A` `src/cadrumo/entrypoints/tui/profile/automation_inventory.py`
+- `S14` `M` `src/cadrumo/entrypoints/tui/runtime_access_management.py`
+- `S14` `A` `src/cadrumo/entrypoints/tui/profile/tests/test_automation_inventory.py`
+- `S14` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_access_management.py`
+- `S14` `M` `dev/locales/fstring_registry.py`
+- `S14` `M` `src/cadrumo/locales/en/tui.yml`
+- `S14` `M` `src/cadrumo/locales/es/tui.yml`
+- `S14` `M` `src/cadrumo/locales/ca/tui.yml`
+- `S14` `M` `src/cadrumo/locales/hu/tui.yml`
+- `S14` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tui/profile/tests/test_automation_inventory.py src/cadrumo/entrypoints/tui/tests/test_runtime_access_management.py --tb=short; run 20260927T204251.378136Z-pytest-24084-b5d58a46; 17 tests` -> `pass`
+- `S14` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tui/profile/tests/test_automation_inventory.py src/cadrumo/entrypoints/tui/tests/test_runtime_access_management.py --tb=short; run 20260927T204535.320969Z-pytest-62732-67cbe441; 19 tests` -> `pass`
+- `S14` `verify:` `Scoped Ruff/format/ty/pyrefly win32/basedpyright Windows for TUI inventory, parent access screen and tests` -> `pass`
+- `S14` `verify:` `uv run --no-sync python -m dev.locales set-batch C:/Users/hello/AppData/Local/Temp/cadrumo-automation-review-locales-20260927.json` -> `pass`
+- `S14` `M` `dev/quality/metadata/import_load_targets.json`
+- `S14` `M` `dev/locales/tests/test_dynamic_prefix_registry_coverage.py`
+- `S14` `verify:` `just generate-import-load-targets` -> `pass`
+- `S14` `verify:` `uv run --no-sync python -m dev.quality.import_gate; output C:/Users/hello/AppData/Local/Temp/cadrumo-runtime-import-gate-20260927-management.txt; exit 0; 15 contracts, 3001 modules, zero load failures/hard findings/debt, source before/after 4850474c6d61575200216014804474198609c7f2489143f1983d5c5235096ee6` -> `pass`
+- `S14` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' dev/locales/tests/test_locale_fstring_registry_enum_coverage.py dev/locales/tests/test_dynamic_prefix_registry_coverage.py --tb=short; run 20260927T204521.853246Z-pytest-4308-6fa0ce27; 29 passed 1 failed` -> `fail`
+- `S14` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' dev/locales/tests/test_dynamic_prefix_registry_coverage.py::test_language_override_sites_match_the_sanctioned_inventory --tb=short; run 20260927T205034.236290Z-pytest-62088-887443dc; 1 test` -> `pass`
+- `S14` `verify:` `Scoped Ruff/format/ty/pyrefly win32/basedpyright Windows on reviewed locale gate correction` -> `pass`
+- `S12` `A` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_automation_decision.py`
+- `S12` `A` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_automation_decision_native.py`
+- `S12` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/config/tests/test_runtime_automation_decision_native.py --tb=short` -> `pass`
+- `S13` `M` `src/cadrumo/application/user_profile/login_session.py`
+- `S13` `A` `src/cadrumo/adapters/persistence/storage/custody/tests/test_candidate_receipt_publication.py`
+- `S13` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/adapters/persistence/storage/custody/tests/test_candidate_receipt_publication.py --tb=short` -> `pass`
+- `S14` `M` `src/cadrumo/locales/en/cli.yml`
+- `S14` `M` `src/cadrumo/locales/es/cli.yml`
+- `S14` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S14` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S14` `verify:` `uv run --no-sync python -m dev.locales set-batch C:/Users/hello/AppData/Local/Temp/cadrumo-automation-decisions-locales-20260927.json` -> `pass`
+- `S14` `verify:` `uv run --no-sync python -m dev.locales set-batch C:/Users/hello/AppData/Local/Temp/cadrumo-review-identity-locales-20260927.json` -> `pass`
+- `S14` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' dev/locales/tests/test_dynamic_prefix_registry_coverage.py src/cadrumo/entrypoints/tui/tests/test_runtime_access_locale.py --tb=short` -> `pass`
+- `S13` `M` `src/cadrumo/application/user_profile/profile_pointer.py`
+- `S13` `M` `src/cadrumo/application/user_profile/tests/test_pointer_transition_authority.py`
+- `S13` `M` `src/cadrumo/entrypoints/cli/config/custody.py`
+- `S13` `M` `src/cadrumo/entrypoints/cli/config_payloads.py`
+- `S13` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/application/user_profile/tests/test_pointer_transition_authority.py --tb=short` -> `pass`
+- `S13` `verify:` `uv run --no-sync python -m dev.locales set-batch C:/Users/hello/AppData/Local/Temp/cadrumo-cli-context-logout-locales-20260927.json` -> `pass`
+- `S13` `M` `src/cadrumo/application/runtime/profile_access.py`
+- `S13` `M` `src/cadrumo/application/runtime/profile_worker.py`
+- `S13` `M` `src/cadrumo/adapters/local_runtime/profile_worker.py`
+- `S13` `M` `src/cadrumo/adapters/local_runtime/frontend_client.py`
+- `S13` `M` `src/cadrumo/entrypoints/runtime/profile_login.py`
+- `S13` `M` `src/cadrumo/entrypoints/runtime/worker.py`
+- `S13` `M` `src/cadrumo/entrypoints/runtime/profile_host.py`
+- `S13` `M` `src/cadrumo/entrypoints/runtime/session_owner.py`
+- `S13` `M` `src/cadrumo/entrypoints/runtime/profile_connections.py`
+- `S13` `A` `src/cadrumo/entrypoints/runtime/tests/test_human_login_receipt.py`
+- `S13` `M` `src/cadrumo/entrypoints/runtime/tests/test_receipt_login.py`
+- `S13` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/runtime/tests/test_human_login_receipt.py src/cadrumo/entrypoints/runtime/tests/test_receipt_login.py --tb=short` -> `pass`
+- `S14` `A` `src/cadrumo/entrypoints/tui/secret/automation_decision.py`
+- `S14` `M` `src/cadrumo/entrypoints/tui/profile/automation_inventory.py`
+- `S14` `M` `src/cadrumo/entrypoints/tui/profile/tests/test_automation_inventory.py`
+- `S14` `M` `src/cadrumo/locales/en/common.yml`
+- `S14` `M` `src/cadrumo/locales/es/common.yml`
+- `S14` `M` `src/cadrumo/locales/ca/common.yml`
+- `S14` `M` `src/cadrumo/locales/hu/common.yml`
+- `S14` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tui/tests/test_runtime_access_management.py src/cadrumo/entrypoints/tui/profile/tests/test_automation_inventory.py --tb=short` -> `pass`
+- `S13` `A` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_login.py`
+- `S13` `A` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_logout.py`
+- `S13` `M` `src/cadrumo/entrypoints/cli/tests/test_profile_login_session_lifecycle.py`
+- `S13` `M` `src/cadrumo/entrypoints/runtime/tests/test_profile_connections.py`
+- `S13` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/runtime/tests/test_profile_connections.py src/cadrumo/entrypoints/runtime/tests/test_receipt_login.py src/cadrumo/adapters/persistence/storage/custody/tests/test_candidate_receipt_publication.py --tb=short` -> `pass`
+- `S13` `verify:` `Ruff check/format, ty, pyrefly --python-platform win32, basedpyright --pythonplatform Windows on four changed files` -> `pass`
+- `S14` `A` `src/cadrumo/entrypoints/tui/tests/test_runtime_automation_decision.py`
+- `S14` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tui/tests/test_runtime_automation_decision.py --tb=short` -> `pass`
+- `S14` `verify:` `Ruff check/format, ty, pyrefly --python-platform win32, basedpyright --pythonplatform Windows on native TUI decision test` -> `pass`
+- `S13` `M` `dev/quality/metadata/import_load_targets.json`
+- `S13` `verify:` `just generate-import-load-targets` -> `pass`
+- `S13` `verify:` `uv run --no-sync python -m dev.quality.import_gate` -> `pass`
+- `S12` `M` `src/cadrumo/application/runtime/enrollment_access.py`
+- `S12` `M` `src/cadrumo/application/runtime/profile_access.py`
+- `S12` `M` `src/cadrumo/application/user_profile/automation_administration.py`
+- `S12` `M` `src/cadrumo/application/user_profile/tests/test_automation_enrollment.py`
+- `S12` `M` `src/cadrumo/adapters/local_runtime/server.py`
+- `S12` `M` `src/cadrumo/adapters/local_runtime/framing.py`
+- `S12` `M` `src/cadrumo/adapters/local_runtime/frontend_client.py`
+- `S12` `M` `src/cadrumo/entrypoints/runtime/profile_connections.py`
+- `S12` `M` `src/cadrumo/entrypoints/runtime/enrollment_connections.py`
+- `S12` `M` `src/cadrumo/entrypoints/runtime/tests/test_grant_change.py`
+- `S12` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/runtime/tests/test_grant_change.py src/cadrumo/adapters/local_runtime/tests/test_enrollment_framing.py --tb=short` -> `pass`
+- `S12` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/application/user_profile/tests/test_automation_enrollment.py --tb=short` -> `pass`
+- `S12` `verify:` `Ruff check/format, ty, pyrefly --python-platform win32, basedpyright --pythonplatform Windows on reconciliation files` -> `pass`
+- `S12` `verify:` `uv run --no-sync python -m dev.locales set-batch C:/Users/hello/AppData/Local/Temp/cadrumo-requester-error-locales-20260927.json` -> `pass`
+- `S08` `M` `src/cadrumo/entrypoints/cli/config/_capabilities_cli.py`
+- `S08` `M` `src/cadrumo/application/user_profile/capabilities.py`
+- `S08` `M` `src/cadrumo/application/user_profile/fact_write.py`
+- `S08` `M` `src/cadrumo/application/user_profile/tests/test_fact_write_door_contract.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_config_capabilities.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/tests/test_config_capabilities.py --tb=short` -> `pass`
+- `S08` `verify:` `Scoped portable capability and fact-write-door tests` -> `pass`
+- `S08` `verify:` `Ruff check/format, ty, pyrefly --python-platform win32, basedpyright --pythonplatform Windows on capability migration` -> `pass`
+- `S12` `A` `src/cadrumo/adapters/local_runtime/automation_requester.py`
+- `S12` `M` `src/cadrumo/adapters/local_runtime/enrollment_client.py`
+- `S12` `A` `src/cadrumo/adapters/local_runtime/tests/test_automation_requester.py`
+- `S12` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/adapters/local_runtime/tests/test_automation_requester.py src/cadrumo/adapters/local_runtime/tests/test_enrollment_client.py --tb=short` -> `pass`
+- `S12` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/runtime/tests/test_grant_change.py --tb=short` -> `pass`
+- `S12` `verify:` `Ruff check/format, ty, pyrefly --python-platform win32, basedpyright --pythonplatform Windows on requester helper/tests` -> `pass`
+- `S13` `A` `src/cadrumo/application/runtime/management_status.py`
+- `S13` `A` `src/cadrumo/application/runtime/tests/test_management_status.py`
+- `S13` `A` `src/cadrumo/adapters/local_runtime/management_status.py`
+- `S13` `A` `src/cadrumo/adapters/local_runtime/tests/test_management_status.py`
+- `S13` `A` `src/cadrumo/entrypoints/runtime_management.py`
+- `S13` `A` `src/cadrumo/entrypoints/runtime_manager_composition.py`
+- `S13` `A` `src/cadrumo/entrypoints/tests/test_runtime_management.py`
+- `S13` `M` `src/cadrumo/entrypoints/runtime_client.py`
+- `S13` `M` `src/cadrumo/adapters/local_runtime/posix.py`
+- `S13` `M` `src/cadrumo/adapters/local_runtime/tests/test_posix.py`
+- `S13` `verify:` `Scoped portable management tests` -> `pass`
+- `S13` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tests/test_runtime_client.py src/cadrumo/entrypoints/tests/test_runtime_management.py::test_installed_snapshot_passively_observes_existing_runtime --tb=short` -> `pass`
+- `S13` `verify:` `uv run --no-sync pytest -q -m 'unit or integration' src/cadrumo/adapters/local_runtime/tests/test_posix.py src/cadrumo/entrypoints/tests/test_runtime_management.py` -> `pass`
+- `S13` `verify:` `Ruff check/format, ty, pyrefly --python-platform win32, basedpyright --pythonplatform Windows on management files` -> `pass`
+- `S13` `M` `src/cadrumo/adapters/persistence/storage/custody/automation_client_credentials.py`
+- `S13` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_automation_client_credentials.py`
+- `S13` `M` `src/cadrumo/adapters/local_runtime/installation.py`
+- `S13` `M` `src/cadrumo/adapters/local_runtime/tests/test_installation.py`
+- `S13` `A` `src/cadrumo/entrypoints/automation_store_composition.py`
+- `S13` `A` `src/cadrumo/entrypoints/runtime_credentials.py`
+- `S13` `A` `src/cadrumo/entrypoints/tests/test_runtime_credentials.py`
+- `S13` `verify:` `Scoped client-credential resolver synthetic-store tests` -> `pass`
+- `S13` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/adapters/local_runtime/tests/test_installation.py --tb=short` -> `pass`
+- `S13` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tests/test_runtime_credentials.py --tb=short` -> `pass`
+- `S13` `verify:` `Ruff check/format, ty, pyrefly --python-platform win32, basedpyright --pythonplatform Windows on credential-reference implementation/tests` -> `pass`
+- `S13` `A` `src/cadrumo/entrypoints/cli/tests/test_profile_credential_reference_admission.py`
+- `S13` `M` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_api_key_authentication.py`
+- `S13` `verify:` `uv run --no-sync pytest -q -m 'unit or integration' src/cadrumo/entrypoints/cli/tests/test_profile_credential_reference_admission.py src/cadrumo/entrypoints/cli/tests/test_profile_authentication_contract.py src/cadrumo/entrypoints/cli/tests/test_root_command_specs.py src/cadrumo/entrypoints/cli/tests/test_root_help_shape.py src/cadrumo/entrypoints/cli/tests/test_profile_api_key_admission.py src/cadrumo/entrypoints/cli/tests/test_runtime_access_management_gate.py --tb=short` -> `pass`
+- `S15` `M` `src/cadrumo/adapters/persistence/storage/custody/automation_client_credentials.py`
+- `S15` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_automation_client_credentials.py`
+- `S15` `M` `src/cadrumo/entrypoints/tui/runtime_admission.py`
+- `S15` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_admission.py`
+- `S15` `A` `src/cadrumo/entrypoints/tui/tests/test_runtime_reference_login.py`
+- `S15` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/adapters/persistence/storage/custody/tests/test_automation_client_credentials.py src/cadrumo/entrypoints/tui/secret/tests/test_runtime_login.py src/cadrumo/entrypoints/tui/tests/test_runtime_admission.py --tb=short` -> `pass`
+- `S15` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tui/tests/test_runtime_reference_login.py --tb=short` -> `pass`
+- `S13` `M` `src/cadrumo/adapters/local_runtime/linux_manager.py`
+- `S13` `A` `src/cadrumo/adapters/local_runtime/tests/test_linux_manager_inspection.py`
+- `S13` `M` `src/cadrumo/entrypoints/runtime_management.py`
+- `S13` `M` `src/cadrumo/entrypoints/tests/test_runtime_management.py`
+- `S13` `verify:` `uv run --no-sync pytest -q -m 'unit or integration' src/cadrumo/adapters/local_runtime/tests/test_linux_manager_inspection.py src/cadrumo/adapters/local_runtime/tests/test_linux_manager.py src/cadrumo/entrypoints/tests/test_runtime_management.py --tb=short` -> `pass`
+- `S08` `A` `src/cadrumo/application/user_profile/descendant_rows.py`
+- `S08` `A` `src/cadrumo/application/user_profile/tests/test_descendants_operation.py`
+- `S08` `M` `src/cadrumo/application/user_profile/tests/test_capabilities.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/application/user_profile/tests/test_descendants_operation.py src/cadrumo/application/user_profile/tests/test_fact_write_door_contract.py src/cadrumo/application/user_profile/tests/test_operation_access_resolution.py --tb=short` -> `pass`
+- `S08` `verify:` `uv run --no-sync ruff check src/cadrumo/application/user_profile/descendant_rows.py src/cadrumo/application/user_profile/operations.py src/cadrumo/application/user_profile/fact_write.py src/cadrumo/adapters/local_runtime/profile_mutations.py src/cadrumo/application/user_profile/tests/test_descendants_operation.py src/cadrumo/application/user_profile/tests/test_fact_write_door_contract.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync ruff format --check src/cadrumo/application/user_profile/descendant_rows.py src/cadrumo/application/user_profile/operations.py src/cadrumo/application/user_profile/fact_write.py src/cadrumo/adapters/local_runtime/profile_mutations.py src/cadrumo/application/user_profile/tests/test_descendants_operation.py src/cadrumo/application/user_profile/tests/test_fact_write_door_contract.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync ty check src/cadrumo/application/user_profile/descendant_rows.py src/cadrumo/application/user_profile/operations.py src/cadrumo/application/user_profile/fact_write.py src/cadrumo/adapters/local_runtime/profile_mutations.py src/cadrumo/application/user_profile/tests/test_descendants_operation.py src/cadrumo/application/user_profile/tests/test_fact_write_door_contract.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync pyrefly check --python-platform win32 src/cadrumo/application/user_profile/descendant_rows.py src/cadrumo/application/user_profile/operations.py src/cadrumo/application/user_profile/fact_write.py src/cadrumo/adapters/local_runtime/profile_mutations.py src/cadrumo/application/user_profile/tests/test_descendants_operation.py src/cadrumo/application/user_profile/tests/test_fact_write_door_contract.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync basedpyright --pythonplatform Windows src/cadrumo/application/user_profile/descendant_rows.py src/cadrumo/application/user_profile/operations.py src/cadrumo/application/user_profile/fact_write.py src/cadrumo/adapters/local_runtime/profile_mutations.py src/cadrumo/application/user_profile/tests/test_descendants_operation.py src/cadrumo/application/user_profile/tests/test_fact_write_door_contract.py` -> `pass`
+- `S08` `A` `src/cadrumo/entrypoints/runtime/tests/test_descendants_operation.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/runtime/tests/test_descendants_operation.py --tb=short` -> `pass`
+- `S12` `A` `src/cadrumo/entrypoints/cli/config/runtime_automation_request.py`
+- `S12` `A` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_automation_create.py`
+- `S12` `A` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_automation_create_native.py`
+- `S08` `A` `src/cadrumo/entrypoints/cli/config/runtime_descendants.py`
+- `S08` `A` `src/cadrumo/entrypoints/cli/config/runtime_descendant_door.py`
+- `S08` `A` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_descendant_door.py`
+- `S08` `M` `src/cadrumo/application/wizard/persistence.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/application/wizard/tests/test_descendant_group.py src/cadrumo/application/wizard/tests/test_persistence_canonical.py src/cadrumo/application/user_profile/tests/test_fact_write_door_contract.py --tb=short` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/config/tests/test_runtime_descendant_door.py --tb=short` -> `pass`
+- `S12` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/config/tests/test_runtime_automation_create.py src/cadrumo/entrypoints/cli/config/tests/test_runtime_access_management.py --tb=short` -> `pass`
+- `S12` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/config/tests/test_runtime_automation_create_native.py --tb=short` -> `pass`
+- `S12` `M` `src/cadrumo/entrypoints/cli/runtime_profile_admission.py`
+- `S12` `M` `src/cadrumo/entrypoints/cli/config/runtime_automation_request.py`
+- `S12` `A` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_automation_change.py`
+- `S12` `A` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_automation_change_native.py`
+- `S12` `M` `src/cadrumo/entrypoints/cli/tests/test_profile_api_key_admission.py`
+- `S12` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/config/tests/test_runtime_automation_change.py src/cadrumo/entrypoints/cli/config/tests/test_runtime_automation_create.py src/cadrumo/entrypoints/cli/config/tests/test_runtime_access_management.py src/cadrumo/entrypoints/cli/tests/test_profile_credential_reference_admission.py src/cadrumo/entrypoints/cli/tests/test_profile_api_key_admission.py src/cadrumo/entrypoints/cli/tests/test_runtime_access_management_gate.py --tb=short` -> `pass`
+- `S12` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/config/tests/test_runtime_automation_change_native.py --tb=short` -> `pass`
+- `S10` `A` `src/cadrumo/application/runtime/owner_control.py`
+- `S10` `A` `src/cadrumo/application/runtime/tests/test_owner_control.py`
+- `S10` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/application/runtime/tests/test_owner_control.py --tb=short` -> `pass`
+- `S10` `verify:` `uv run --no-sync ruff check src/cadrumo/application/runtime/owner_control.py src/cadrumo/application/runtime/tests/test_owner_control.py` -> `pass`
+- `S10` `verify:` `uv run --no-sync ruff format --check src/cadrumo/application/runtime/owner_control.py src/cadrumo/application/runtime/tests/test_owner_control.py` -> `pass`
+- `S10` `verify:` `uv run --no-sync ty check src/cadrumo/application/runtime/owner_control.py src/cadrumo/application/runtime/tests/test_owner_control.py` -> `pass`
+- `S10` `verify:` `uv run --no-sync pyrefly check --python-platform win32 src/cadrumo/application/runtime/owner_control.py src/cadrumo/application/runtime/tests/test_owner_control.py` -> `pass`
+- `S10` `verify:` `uv run --no-sync basedpyright --pythonplatform Windows src/cadrumo/application/runtime/owner_control.py src/cadrumo/application/runtime/tests/test_owner_control.py` -> `pass`
+- `S08` `M` `src/cadrumo/entrypoints/cli/config/descendiente.py`
+- `S08` `A` `src/cadrumo/entrypoints/cli/config/tests/test_descendiente_mutation_runtime.py`
+- `S08` `A` `src/cadrumo/entrypoints/cli/config/tests/test_descendiente_list_runtime.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/_runtime_profile_cli_fixture.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_config_descendiente_governed_scope.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_100_descendiente_entry_surface.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_maternidad_meses_reach_the_calculate_path.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/config/tests/test_descendiente_mutation_runtime.py src/cadrumo/entrypoints/cli/config/tests/test_descendiente_list_runtime.py src/cadrumo/entrypoints/cli/tests/test_modelo_100_descendiente_entry_surface.py::test_descendiente_add_then_calculate_computes_the_registry_tranche src/cadrumo/entrypoints/cli/tests/test_maternidad_meses_reach_the_calculate_path.py::test_declared_meses_reach_casilla_0611 src/cadrumo/entrypoints/cli/tests/test_config_descendiente_governed_scope.py::test_add_and_remove_open_their_own_authority_scope --tb=short` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/tests/test_modelo_100_descendiente_entry_surface.py src/cadrumo/entrypoints/cli/tests/test_maternidad_meses_reach_the_calculate_path.py src/cadrumo/entrypoints/cli/tests/test_config_descendiente_governed_scope.py -k 'not test_descendiente_add_then_calculate_computes_the_registry_tranche and not test_declared_meses_reach_casilla_0611 and not test_add_and_remove_open_their_own_authority_scope' --tb=short` -> `pass`
+- `S13` `A` `src/cadrumo/entrypoints/cli/app_runtime.py`
+- `S13` `A` `src/cadrumo/entrypoints/cli/app_runtime_command_specs.py`
+- `S13` `A` `src/cadrumo/entrypoints/cli/app_runtime_payloads.py`
+- `S13` `M` `src/cadrumo/entrypoints/cli/command_specs.py`
+- `S13` `A` `src/cadrumo/entrypoints/cli/tests/test_app_runtime_status.py`
+- `S13` `M` `src/cadrumo/application/operator_surface/contract.py`
+- `S13` `M` `src/cadrumo/application/operator_surface/models.py`
+- `S13` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/tests/test_app_runtime_status.py src/cadrumo/entrypoints/cli/tests/test_operator_surface_contract_drift.py src/cadrumo/entrypoints/cli/tests/test_app_family_command_spec_demand_loading.py --tb=short` -> `pass`
+- `S11` `verify:` `wsl --distribution Ubuntu --cd /mnt/y/code/cadrumo-worktrees/mcp --exec env PYTHONPATH=/mnt/y/code/cadrumo-worktrees/mcp/src TMPDIR=/tmp /home/hello/.cache/cadrumo-mcp-linux-venv/bin/python -m pytest -q -n0 -m 'unit or integration' src/cadrumo/adapters/local_runtime/tests/test_posix.py src/cadrumo/adapters/local_runtime/tests/test_linux_manager.py --tb=short` -> `pass`
+- `S11` `verify:` `wsl --distribution Ubuntu --cd /mnt/y/code/cadrumo-worktrees/mcp --exec env PYTHONPATH=/mnt/y/code/cadrumo-worktrees/mcp/src TMPDIR=/tmp /home/hello/.cache/cadrumo-mcp-linux-venv/bin/python -m pytest -q -n0 -m 'unit or integration' src/cadrumo/adapters/local_runtime/tests/test_server.py src/cadrumo/adapters/local_runtime/tests/test_owner_control_transport.py --tb=short` -> `pass`
+- `S20` `M` `dev/quality/metadata/import_load_targets.json`
+- `S20` `verify:` `just generate-import-load-targets` -> `pass`
+- `S20` `verify:` `uv run --no-sync python -m dev.quality.import_gate` -> `pass`
+- `S10` `M` `src/cadrumo/adapters/local_runtime/framing.py`
+- `S10` `A` `src/cadrumo/adapters/local_runtime/tests/test_owner_control_transport.py`
+- `S10` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/application/runtime/tests/test_owner_control.py src/cadrumo/adapters/local_runtime/tests/test_owner_control_transport.py src/cadrumo/adapters/local_runtime/tests/test_server.py src/cadrumo/adapters/local_runtime/tests/test_server_drain_order.py --tb=short` -> `pass`
+- `S10` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/adapters/local_runtime/tests/test_owner_control_transport.py --tb=short` -> `pass`
+- `S15` `A` `src/cadrumo/entrypoints/tui/runtime_management.py`
+- `S15` `A` `src/cadrumo/entrypoints/tui/tests/test_runtime_management.py`
+- `S15` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tui/tests/test_app.py src/cadrumo/entrypoints/tui/tests/test_runtime_management.py --tb=short` -> `pass`
+- `S15` `verify:` `uv run --no-sync python -m dev.locales set-batch C:/Users/hello/AppData/Local/Temp/cadrumo-tui-runtime-requester-locales-20260928.json` -> `pass`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/service_definitions.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/tests/test_service_definitions.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/tests/test_linux_manager.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/tests/test_linux_manager_stop_native.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/tests/linux_manager_stop_fixture.py`
+- `S11` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/adapters/local_runtime/tests/test_service_definitions.py --tb=short` -> `pass`
+- `S11` `verify:` `wsl --distribution Ubuntu --cd /mnt/y/code/cadrumo-worktrees/mcp --exec env PYTHONPATH=/mnt/y/code/cadrumo-worktrees/mcp/src TMPDIR=/tmp /home/hello/.cache/cadrumo-mcp-linux-venv/bin/python -m pytest -q -n0 -m 'unit or integration' src/cadrumo/adapters/local_runtime/tests/test_linux_manager.py --tb=short` -> `pass`
+- `S11` `verify:` `wsl --distribution Ubuntu --cd /mnt/y/code/cadrumo-worktrees/mcp --exec env PYTHONPATH=/mnt/y/code/cadrumo-worktrees/mcp/src TMPDIR=/tmp /home/hello/.cache/cadrumo-mcp-linux-venv/bin/python -m pytest -q -n0 -m 'unit or integration' src/cadrumo/adapters/local_runtime/tests/test_linux_manager_stop_native.py --tb=short` -> `pass`
+- `S18` `verify:` `wsl --distribution Ubuntu --cd /mnt/y/code/cadrumo-worktrees/mcp --exec env PYTHONPATH=/mnt/y/code/cadrumo-worktrees/mcp/src TMPDIR=/tmp /home/hello/.cache/cadrumo-mcp-linux-venv/bin/python -m pytest -q -n0 -m 'unit or integration' src/cadrumo_harness/mcp/tests/test_captured_cleanup.py --tb=short` -> `pass`
+- `S15` `M` `src/cadrumo/entrypoints/tui/runtime_management.py`
+- `S15` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_management.py`
+- `S15` `verify:` `uv run --no-sync pytest -q -n0 -m unit src/cadrumo/entrypoints/tui/tests/test_runtime_management.py --tb=short` -> `pass`
+- `S08` `M` `src/cadrumo/application/modelo/metadata_projection.py`
+- `S08` `M` `src/cadrumo/application/modelo/metadata_read_operation.py`
+- `S08` `M` `src/cadrumo/application/modelo/operation_definitions.py`
+- `S08` `M` `src/cadrumo/application/operations/public_period.py`
+- `S08` `M` `src/cadrumo/application/workbench_generation_projection.py`
+- `S08` `M` `src/cadrumo/entrypoints/tests/test_work_rename_operation.py`
+- `S08` `M` `src/cadrumo/entrypoints/tests/test_modelo_metadata_operation_results.py`
+- `S08` `M` `src/cadrumo/entrypoints/runtime/tests/test_modelo_metadata.py`
+- `S08` `M` `src/cadrumo/core/errors/registry/_adapters_part3.py`
+- `S08` `M` `src/cadrumo/application/modelo/tests/test_metadata_projection.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m unit src/cadrumo/entrypoints/tests/test_work_rename_operation.py --tb=short` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m unit src/cadrumo/application/modelo/tests/test_metadata_projection.py --tb=short` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tests/test_modelo_metadata_operation_results.py --tb=short` -> `pass`
+- `S08` `verify:` `uv run --no-sync python -m dev.locales set-batch C:/Users/hello/AppData/Local/Temp/cadrumo-modelo-metadata-locales-20260928.json` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m unit src/cadrumo/entrypoints/tests/test_work_rename_operation.py src/cadrumo/entrypoints/tests/test_workspace_refresh_target_resolution.py src/cadrumo/application/modelo/tests/test_metadata_projection.py --tb=short` -> `pass`
+- `S08` `verify:` `uv run --no-sync ruff check src/cadrumo/application/modelo/metadata_projection.py src/cadrumo/application/modelo/metadata_read_operation.py src/cadrumo/application/modelo/operation_definitions.py src/cadrumo/application/operations/public_period.py src/cadrumo/application/workbench_generation_projection.py src/cadrumo/entrypoints/operation_composition.py src/cadrumo/entrypoints/tests/test_work_rename_operation.py src/cadrumo/entrypoints/tests/test_modelo_metadata_operation_results.py src/cadrumo/entrypoints/runtime/tests/test_modelo_metadata.py src/cadrumo/core/errors/registry/_adapters_part3.py src/cadrumo/entrypoints/tests/test_workspace_refresh_target_resolution.py src/cadrumo/entrypoints/cli/_profile_authentication_gate.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync ruff format --check src/cadrumo/application/modelo/metadata_projection.py src/cadrumo/application/modelo/metadata_read_operation.py src/cadrumo/application/modelo/operation_definitions.py src/cadrumo/application/operations/public_period.py src/cadrumo/application/workbench_generation_projection.py src/cadrumo/entrypoints/operation_composition.py src/cadrumo/entrypoints/tests/test_work_rename_operation.py src/cadrumo/entrypoints/tests/test_modelo_metadata_operation_results.py src/cadrumo/entrypoints/runtime/tests/test_modelo_metadata.py src/cadrumo/core/errors/registry/_adapters_part3.py src/cadrumo/entrypoints/tests/test_workspace_refresh_target_resolution.py src/cadrumo/entrypoints/cli/_profile_authentication_gate.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync ty check src/cadrumo/application/modelo/metadata_projection.py src/cadrumo/application/modelo/metadata_read_operation.py src/cadrumo/application/modelo/operation_definitions.py src/cadrumo/application/operations/public_period.py src/cadrumo/application/workbench_generation_projection.py src/cadrumo/entrypoints/operation_composition.py src/cadrumo/entrypoints/tests/test_work_rename_operation.py src/cadrumo/entrypoints/tests/test_modelo_metadata_operation_results.py src/cadrumo/entrypoints/runtime/tests/test_modelo_metadata.py src/cadrumo/core/errors/registry/_adapters_part3.py src/cadrumo/entrypoints/tests/test_workspace_refresh_target_resolution.py src/cadrumo/entrypoints/cli/_profile_authentication_gate.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync pyrefly check --python-platform win32 src/cadrumo/application/modelo/metadata_projection.py src/cadrumo/application/modelo/metadata_read_operation.py src/cadrumo/application/modelo/operation_definitions.py src/cadrumo/application/operations/public_period.py src/cadrumo/application/workbench_generation_projection.py src/cadrumo/entrypoints/operation_composition.py src/cadrumo/entrypoints/tests/test_work_rename_operation.py src/cadrumo/entrypoints/tests/test_modelo_metadata_operation_results.py src/cadrumo/entrypoints/runtime/tests/test_modelo_metadata.py src/cadrumo/core/errors/registry/_adapters_part3.py src/cadrumo/entrypoints/tests/test_workspace_refresh_target_resolution.py src/cadrumo/entrypoints/cli/_profile_authentication_gate.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync basedpyright --pythonplatform Windows src/cadrumo/application/modelo/metadata_projection.py src/cadrumo/application/modelo/metadata_read_operation.py src/cadrumo/application/modelo/operation_definitions.py src/cadrumo/application/operations/public_period.py src/cadrumo/application/workbench_generation_projection.py src/cadrumo/entrypoints/operation_composition.py src/cadrumo/entrypoints/tests/test_work_rename_operation.py src/cadrumo/entrypoints/tests/test_modelo_metadata_operation_results.py src/cadrumo/entrypoints/runtime/tests/test_modelo_metadata.py src/cadrumo/core/errors/registry/_adapters_part3.py src/cadrumo/entrypoints/tests/test_workspace_refresh_target_resolution.py src/cadrumo/entrypoints/cli/_profile_authentication_gate.py` -> `pass`
+- `S14` `M` `src/cadrumo/entrypoints/tui/secret/automation_requester.py`
+- `S14` `M` `src/cadrumo/entrypoints/tui/secret/runtime_login.py`
+- `S14` `M` `src/cadrumo/entrypoints/tui/runtime_admission.py`
+- `S14` `M` `src/cadrumo/entrypoints/tui/installed_session.py`
+- `S14` `M` `src/cadrumo/entrypoints/tui/runtime_session.py`
+- `S14` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_automation_requester_native.py`
+- `S14` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tui/tests/test_runtime_automation_requester_native.py --tb=short` -> `pass`
+- `S09` `M` `src/cadrumo/application/operations/provenance.py`
+- `S09` `M` `src/cadrumo/application/operations/access_resolution.py`
+- `S09` `M` `src/cadrumo/application/modelo/metadata_read_operation.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/operations/tests/test_admission_provenance.py`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/adapters/persistence/operations/tests/test_admission_provenance.py --tb=short` -> `pass`
+- `S08` `A` `src/cadrumo/adapters/local_runtime/modelo_metadata.py`
+- `S08` `A` `src/cadrumo/entrypoints/cli/runtime_modelo_metadata.py`
+- `S08` `A` `src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_metadata.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/_modelo_work_lifecycle_cli.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/_modelo_behavior_support.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_work_natural_key.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_work_lifecycle_action_notices.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_action_recovery.py`
+- `S08` `M` `src/cadrumo/application/modelo/work_lifecycle.py`
+- `S08` `M` `src/cadrumo/adapters/persistence/profile/tests/test_work_lifecycle_snapshot.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_metadata.py --tb=short` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/tests/test_modelo_work_natural_key.py src/cadrumo/entrypoints/cli/tests/test_modelo_work_lifecycle_action_notices.py --tb=short` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/adapters/persistence/profile/tests/test_work_lifecycle_snapshot.py --tb=short` -> `pass`
+- `S09` `M` `src/cadrumo/entrypoints/runtime/tests/test_operation_provenance.py`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tests/test_modelo_metadata_operation_results.py src/cadrumo/entrypoints/tests/test_workspace_refresh_target_resolution.py src/cadrumo/entrypoints/runtime/tests/test_operation_provenance.py src/cadrumo/entrypoints/runtime/tests/test_modelo_metadata.py --tb=short` -> `fail`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' 'src/cadrumo/entrypoints/runtime/tests/test_operation_provenance.py::test_old_provenance_custody_blocks_reentry_but_current_profile_can_observe_history[other_profile_id]' --tb=short` -> `pass`
+- `S14` `A` `src/cadrumo/entrypoints/tui/secret/automation_requester.py`
+- `S14` `A` `src/cadrumo/entrypoints/tui/secret/tests/test_automation_requester.py`
+- `S14` `A` `src/cadrumo/entrypoints/tui/tests/test_runtime_automation_requester_native.py`
+- `S14` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tui/secret/tests/test_automation_requester.py --tb=short` -> `pass`
+- `S09` `A` `src/cadrumo/entrypoints/runtime/tests/test_modelo_metadata_history.py`
+- `S09` `A` `src/cadrumo/application/operations/tests/test_public_period.py`
+- `S09` `M` `src/cadrumo/application/operations/public_period.py`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/application/operations/tests/test_public_period.py src/cadrumo/application/modelo/tests/test_metadata_projection.py --tb=short` -> `pass`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/runtime/tests/test_modelo_metadata_history.py --tb=short` -> `pass`
+- `S11` `A` `src/cadrumo/adapters/local_runtime/linux_managed_stop.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/server.py`
+- `S11` `M` `src/cadrumo/application/runtime/management.py`
+- `S11` `M` `src/cadrumo/entrypoints/runtime_manager_composition.py`
+- `S11` `M` `src/cadrumo/entrypoints/runtime/main.py`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/tests/test_owner_control_transport.py`
+- `S11` `A` `src/cadrumo/adapters/local_runtime/tests/linux_managed_runtime_fixture.py`
+- `S11` `A` `src/cadrumo/adapters/local_runtime/tests/test_linux_managed_runtime_stop_native.py`
+- `S11` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/adapters/local_runtime/tests/test_owner_control_transport.py src/cadrumo/adapters/local_runtime/tests/test_linux_manager_inspection.py src/cadrumo/entrypoints/tests/test_runtime_management.py --tb=short` -> `pass`
+- `S11` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/adapters/local_runtime/tests/test_owner_control_transport.py --tb=short` -> `pass`
+- `S11` `verify:` `wsl.exe -d Ubuntu --cd /mnt/y/code/cadrumo-worktrees/mcp -- /home/hello/.cache/cadrumo-mcp-linux-venv/bin/python -m pytest -q -n0 -m "unit or integration" src/cadrumo/adapters/local_runtime/tests/test_linux_managed_runtime_stop_native.py --tb=short` -> `pass`
+- `S08` `M` `src/cadrumo/entrypoints/cli/runtime_modelo_metadata.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_metadata.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/tests/test_modelo_work_command_specs.py --tb=short` -> `pass`
+- `S11` `M` `src/cadrumo/adapters/local_runtime/tests/test_linux_managed_runtime_stop_native.py`
+- `S20` `M` `docs/api`
+- `S20` `verify:` `uv run --no-sync python -m dev.docs.apidocs scaffold --check` -> `pass`
+- `S20` `verify:` `uv run --no-sync python -m dev.locales status --json --check` -> `fail`
+- `S14` `M` `src/cadrumo/entrypoints/tui/secret/tests/test_automation_requester.py`
+- `S14` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tui/tests/test_runtime_automation_requester_native.py::test_restricted_tui_reviews_renew_rotation_and_scope_change --tb=short --timeout=180` -> `pass`
+- `S09` `M` `src/cadrumo/application/modelo/verification_preconditions.py`
+- `S09` `M` `src/cadrumo/application/modelo/verification_actions.py`
+- `S09` `M` `src/cadrumo/application/modelo/tests/test_verification_preconditions.py`
+- `S09` `A` `src/cadrumo/application/modelo/revision_operation_access.py`
+- `S09` `A` `src/cadrumo/entrypoints/tests/test_modelo_verification_operation_results.py`
+- `S09` `A` `src/cadrumo/application/modelo/filing_projection.py`
+- `S09` `A` `src/cadrumo/application/modelo/verification_projection.py`
+- `S09` `A` `src/cadrumo/application/operations/public_scalar.py`
+- `S09` `A` `src/cadrumo/entrypoints/runtime/tests/test_modelo_revision_lifecycle.py`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/application/modelo/tests/test_verification_preconditions.py --tb=short` -> `pass`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tests/test_modelo_verification_operation_results.py --tb=short --show-capture=no` -> `pass`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/runtime/tests/test_modelo_revision_lifecycle.py --tb=short --show-capture=no` -> `pass`
+- `S09` `M` `src/cadrumo/application/modelo/filing_actions.py`
+- `S09` `M` `src/cadrumo/application/modelo/revision_persistence.py`
+- `S09` `M` `src/cadrumo/domain/modelos/protocols.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/profile/modelos_verification_reports.py`
+- `S09` `A` `src/cadrumo/entrypoints/tests/profile_persistence/test_file_approved_report_cas.py`
+- `S09` `A` `src/cadrumo/application/modelo/tests/test_lifecycle_projection.py`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tests/profile_persistence/test_file_approved_report_cas.py --tb=short` -> `pass`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/application/modelo/tests/test_lifecycle_projection.py --tb=short --show-capture=no` -> `pass`
+- `S20` `M` `src/cadrumo/locales/en/cli.yml`
+- `S20` `M` `src/cadrumo/locales/es/cli.yml`
+- `S20` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S20` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S20` `verify:` `uv run --no-sync python -m dev.locales set-batch C:/Users/hello/AppData/Local/Temp/cadrumo-mcp-filing-locale-20260928.json` -> `pass`
+- `S20` `verify:` `uv run --no-sync python -m dev.locales remove-batch C:/Users/hello/AppData/Local/Temp/cadrumo-mcp-remove-unused-locale-20260928.json` -> `pass`
+- `S09` `A` `src/cadrumo/application/modelo/lifecycle_advisories.py`
+- `S09` `A` `src/cadrumo/application/modelo/tests/test_lifecycle_advisories.py`
+- `S09` `M` `src/cadrumo/application/modelo/work_plazo.py`
+- `S09` `A` `src/cadrumo/application/modelo/revision_selection_operation.py`
+- `S09` `A` `src/cadrumo/application/modelo/tests/test_revision_selection_operation.py`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/application/modelo/tests/test_lifecycle_advisories.py src/cadrumo/application/modelo/tests/test_result_disposition_resolution.py --tb=short` -> `pass`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/application/modelo/tests/test_revision_selection_operation.py --tb=short` -> `pass`
+- `S09` `verify:` `uv run --no-sync ty check src/cadrumo/application/modelo/operation_definitions.py` -> `pass`
+- `S09` `A` `src/cadrumo/application/modelo/calculation_publication.py`
+- `S09` `M` `src/cadrumo/application/modelo/calculation_actions.py`
+- `S09` `M` `src/cadrumo/application/modelo/calculate_input.py`
+- `S09` `M` `src/cadrumo/application/modelo/_calculation_aggregation_context.py`
+- `S09` `M` `src/cadrumo/domain/calculations/registry/applicability_modelo202.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/profile/tests/test_revision_persistence_guarded_writes.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_source_mesh_calculate.py`
+- `S09` `M` `src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/adapters/persistence/profile/tests/test_revision_persistence_guarded_writes.py src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py::test_registered_executor_runs_through_the_shared_lifecycle_matrix[modelo.work.calculate] --tb=short` -> `pass`
+- `S13` `M` `src/cadrumo/entrypoints/cli/_modelo_work_verification_cli.py`
+- `S13` `A` `src/cadrumo/entrypoints/cli/runtime_modelo_verification.py`
+- `S13` `A` `src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_verification.py`
+- `S13` `A` `src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_verification_native.py`
+- `S13` `M` `src/cadrumo/entrypoints/cli/_modelo_rendering.py`
+- `S13` `M` `src/cadrumo/entrypoints/cli/tests/test_m184_socio_handoff_notices.py`
+- `S09` `A` `src/cadrumo/application/modelo/calculation_projection.py`
+- `S09` `A` `src/cadrumo/application/modelo/calculation_request_fields.py`
+- `S09` `A` `src/cadrumo/application/modelo/tests/test_calculation_request_fields.py`
+- `S09` `A` `src/cadrumo/entrypoints/tests/profile_persistence/test_calculation_projection.py`
+- `S09` `M` `src/cadrumo/application/modelo/result_summary.py`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/adapters/persistence/profile/tests/test_revision_persistence_guarded_writes.py 'src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py::test_every_production_registered_executor_runs_through_the_shared_supervisor_matrix[modelo.work.calculate]' --tb=short` -> `pass`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tests/profile_persistence/test_export_iva_wallet.py src/cadrumo/entrypoints/tests/profile_persistence/test_file_flow_calculation.py src/cadrumo/entrypoints/tests/profile_persistence/test_file_flow_events.py src/cadrumo/entrypoints/tests/profile_persistence/test_file_flow_filing.py src/cadrumo/entrypoints/tests/profile_persistence/test_file_flow_filing_idempotent.py src/cadrumo/entrypoints/tests/profile_persistence/test_iva_wallet_engine_filing.py src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_202_modality_lifecycle.py src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_303_deductible_evidence_gate.py src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_303_refund_auto_carry_e2e.py src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_303_refund_election_e2e.py src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_390_303_simplificado_fold_in_live.py src/cadrumo/entrypoints/tests/profile_persistence/test_renta_annual_reconciliations_fold_in_live.py src/cadrumo/entrypoints/tests/profile_persistence/test_revision_parent_lifecycle_admission.py src/cadrumo/entrypoints/tests/test_lifecycle_clock_gate.py src/cadrumo/entrypoints/tests/test_m123_count_authority_gate.py src/cadrumo/entrypoints/tests/test_m193_settled_row_file_verify_gate.py --tb=short -x` -> `pass`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tests/profile_persistence/test_calculation_projection.py::test_real_encrypted_calculation_snapshot_preserves_existing_result_facts --tb=short` -> `pass`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/application/modelo/tests/test_calculation_request_fields.py --tb=short` -> `pass`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/application/modelo/tests/test_result_summary_and_advisory_narrowing.py src/cadrumo/entrypoints/cli/tests/test_modelo_result_summary_labels.py --tb=short` -> `pass`
+- `S13` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_verification_native.py`
+- `S13` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_verification_native.py::test_native_cli_api_key_obeys_exact_enrolled_modelo_scope --tb=short` -> `pass`
+- `S09` `A` `src/cadrumo/application/modelo/calculation_advisory_projection.py`
+- `S09` `A` `src/cadrumo/application/modelo/tests/test_calculation_advisory_projection.py`
+- `S09` `M` `src/cadrumo/application/modelo/metadata_operation_access.py`
+- `S09` `M` `src/cadrumo/entrypoints/runtime/tests/test_modelo_revision_lifecycle.py`
+- `S13` `M` `src/cadrumo/locales/en/application.yml`
+- `S13` `M` `src/cadrumo/locales/es/application.yml`
+- `S13` `M` `src/cadrumo/locales/ca/application.yml`
+- `S13` `M` `src/cadrumo/locales/hu/application.yml`
+- `S13` `verify:` `uv run --no-sync python -m dev.locales set-batch C:/Users/hello/AppData/Local/Temp/cadrumo-calculation-m349-locale-20260928.json` -> `pass`
+- `S13` `verify:` `uv run --no-sync python -m dev.locales remove en cli.app.modelo.work.row_m349_invalid_nif` -> `pass`
+- `S13` `verify:` `uv run --no-sync python -m dev.locales remove es cli.app.modelo.work.row_m349_invalid_nif` -> `pass`
+- `S13` `verify:` `uv run --no-sync python -m dev.locales remove ca cli.app.modelo.work.row_m349_invalid_nif` -> `pass`
+- `S13` `verify:` `uv run --no-sync python -m dev.locales remove hu cli.app.modelo.work.row_m349_invalid_nif` -> `pass`
+- `S09` `M` `src/cadrumo/application/modelo/tests/test_lifecycle_operation_conformance.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/storage/tests/test_m303_calculate_evidence_admission.py`
+- `S09` `A` `src/cadrumo/entrypoints/tests/test_m303_calculate_operation_evidence.py`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/application/modelo/tests/test_lifecycle_operation_conformance.py src/cadrumo/adapters/persistence/storage/tests/test_m303_calculate_evidence_admission.py src/cadrumo/entrypoints/tests/test_m303_calculate_operation_evidence.py --tb=short` -> `pass`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m unit src/cadrumo/application/modelo/tests/test_calculation_request_fields.py src/cadrumo/application/modelo/tests/test_calculation_advisory_projection.py --tb=short --show-capture=no` -> `pass`
+- `S08` `A` `src/cadrumo/application/runtime/submission_payload.py`
+- `S08` `A` `src/cadrumo/application/runtime/tests/test_submission_payload.py`
+- `S08` `A` `src/cadrumo/entrypoints/runtime/worker_submission_staging.py`
+- `S08` `A` `src/cadrumo/entrypoints/runtime/tests/test_worker_submission_staging.py`
+- `S08` `M` `src/cadrumo/application/runtime/operation_access.py`
+- `S08` `M` `src/cadrumo/entrypoints/runtime/operation_projection.py`
+- `S08` `A` `src/cadrumo/entrypoints/runtime/submission_stream.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/runtime/tests/test_worker_submission_staging.py --tb=short --show-capture=no` -> `pass`
+- `S09` `M` `src/cadrumo/adapters/persistence/profile/calculation_revision_override_migration.py`
+- `S09` `M` `src/cadrumo/application/aggregation/modelo_bindings.py`
+- `S09` `M` `src/cadrumo/application/aggregation/modelo_bindings_renta_expenses.py`
+- `S09` `M` `src/cadrumo/application/aggregation/oss_ioss.py`
+- `S09` `M` `src/cadrumo/application/aggregation/renta_gasto_ledger.py`
+- `S09` `M` `src/cadrumo/application/modelo/calculation_diagnostics.py`
+- `S09` `M` `src/cadrumo/application/modelo/prorrata_regularizacion_advisory.py`
+- `S09` `M` `src/cadrumo/application/ledger/tests/test_classification_rule_plan.py`
+- `S09` `M` `src/cadrumo/application/ledger/tests/test_status_unconverted_currency.py`
+- `S09` `M` `src/cadrumo/application/modelo/tests/test_m303_m349_intracom_reconcile.py`
+- `S09` `M` `src/cadrumo/application/modelo/tests/test_participation_rebuild.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/profile/tests/test_prorrata_regularizacion_advisory.py`
+- `S09` `A` `src/cadrumo/entrypoints/tests/test_calculation_authority_binding.py`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tests/test_calculation_authority_binding.py src/cadrumo/adapters/persistence/profile/tests/test_revision_persistence_guarded_writes.py --tb=short` -> `pass`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/adapters/persistence/profile/tests/test_prorrata_regularizacion_advisory.py::test_advisory_uses_supplied_pinned_authority_for_real_m303_carry --tb=short` -> `pass`
+- `S13` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_verification_native.py --tb=short` -> `pass`
+- `S13` `A` `src/cadrumo/entrypoints/cli/runtime_modelo_operation.py`
+- `S13` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_calculation.py`
+- `S13` `A` `src/cadrumo/adapters/local_runtime/tests/test_submission_stream_client.py`
+- `S13` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/adapters/local_runtime/tests/test_submission_stream_client.py src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_calculation.py --tb=short --show-capture=no` -> `pass`
+- `S08` `A` `src/cadrumo/entrypoints/runtime/tests/test_submission_stream_native.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/runtime/tests/test_submission_stream_native.py --tb=short --show-capture=no` -> `pass`
+- `S13` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_kv_format_localization.py`
+- `S13` `M` `src/cadrumo/entrypoints/cli/tests/test_work_calculate_borrador.py`
+- `S13` `M` `src/cadrumo/entrypoints/cli/tests/test_root_guard_typed_projection.py`
+- `S13` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/tests/test_modelo_kv_format_localization.py src/cadrumo/entrypoints/cli/tests/test_work_calculate_borrador.py src/cadrumo/entrypoints/cli/tests/test_root_guard_typed_projection.py --tb=short --show-capture=no` -> `pass`
+- `S09` `M` `src/cadrumo/application/modelo/amendment_actions.py`
+- `S09` `M` `src/cadrumo/application/modelo/_registry_helpers.py`
+- `S09` `A` `src/cadrumo/application/modelo/amendment_projection.py`
+- `S09` `M` `src/cadrumo/application/modelo/revision_operation_access.py`
+- `S09` `A` `src/cadrumo/application/modelo/filing_selection_operation.py`
+- `S09` `M` `src/cadrumo/application/operations/tests/test_credential_free_field_tripwire.py`
+- `S09` `M` `src/cadrumo/application/modelo/tests/test_amend_request_detail_rows.py`
+- `S13` `A` `src/cadrumo/entrypoints/cli/runtime_modelo_amendment.py`
+- `S13` `M` `src/cadrumo/entrypoints/cli/runtime_modelo_operation.py`
+- `S13` `M` `src/cadrumo/entrypoints/cli/_modelo.py`
+- `S09` `A` `src/cadrumo/application/modelo/amendment_context_operation.py`
+- `S09` `A` `src/cadrumo/application/modelo/tests/test_filing_selection_operation.py`
+- `S09` `M` `src/cadrumo/entrypoints/tests/test_modelo_verification_operation_results.py`
+- `S09` `M` `src/cadrumo/application/modelo/export.py`
+- `S08` `M` `src/cadrumo/application/modelo/amendment_context_operation.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/runtime_modelo_amendment.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/_modelo_amend_wizard_cli.py`
+- `S08` `A` `src/cadrumo/application/modelo/export_projection.py`
+- `S08` `A` `src/cadrumo/entrypoints/cli/runtime_modelo_export.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/_modelo_export_cli.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/runtime_modelo_operation.py`
+- `S09` `M` `src/cadrumo/application/modelo/_edit_execution.py`
+- `S09` `M` `src/cadrumo/entrypoints/tui/modelo/lifecycle.py`
+- `S08` `A` `src/cadrumo/application/modelo/tests/test_filing_selection_operation.py`
+- `S08` `M` `src/cadrumo/entrypoints/tests/test_modelo_verification_operation_results.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/application/modelo/tests/test_filing_selection_operation.py src/cadrumo/entrypoints/tests/test_modelo_verification_operation_results.py --tb=short --show-capture=no` -> `pass`
+- `S08` `A` `src/cadrumo/application/modelo/review_package_operation.py`
+- `S08` `A` `src/cadrumo/entrypoints/cli/runtime_modelo_review_package.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/_modelo_review_package_cli.py`
+- `S08` `M` `src/cadrumo/application/modelo/revision_operation_access.py`
+- `S08` `verify:` `uv run --no-sync ruff check src/cadrumo/application/modelo/review_package_operation.py src/cadrumo/entrypoints/cli/runtime_modelo_review_package.py src/cadrumo/entrypoints/cli/_modelo_review_package_cli.py src/cadrumo/entrypoints/operation_composition.py src/cadrumo/application/modelo/revision_operation_access.py src/cadrumo/entrypoints/cli/runtime_modelo_operation.py src/cadrumo/entrypoints/cli/_profile_authentication_gate.py src/cadrumo/application/modelo/operation_definitions.py src/cadrumo/application/modelo/export.py src/cadrumo/application/modelo/_edit_execution.py src/cadrumo/entrypoints/tui/modelo/lifecycle.py src/cadrumo/application/modelo/amendment_context_operation.py src/cadrumo/entrypoints/cli/runtime_modelo_amendment.py src/cadrumo/entrypoints/cli/_modelo_amend_wizard_cli.py src/cadrumo/entrypoints/cli/_modelo_export_cli.py src/cadrumo/application/modelo/export_projection.py src/cadrumo/entrypoints/cli/_modelo.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync ruff format --check src/cadrumo/application/modelo/review_package_operation.py src/cadrumo/entrypoints/cli/runtime_modelo_review_package.py src/cadrumo/entrypoints/cli/_modelo_review_package_cli.py src/cadrumo/entrypoints/operation_composition.py src/cadrumo/application/modelo/revision_operation_access.py src/cadrumo/entrypoints/cli/runtime_modelo_operation.py src/cadrumo/entrypoints/cli/_profile_authentication_gate.py src/cadrumo/application/modelo/operation_definitions.py src/cadrumo/application/modelo/export.py src/cadrumo/application/modelo/_edit_execution.py src/cadrumo/entrypoints/tui/modelo/lifecycle.py src/cadrumo/application/modelo/amendment_context_operation.py src/cadrumo/entrypoints/cli/runtime_modelo_amendment.py src/cadrumo/entrypoints/cli/_modelo_amend_wizard_cli.py src/cadrumo/entrypoints/cli/_modelo_export_cli.py src/cadrumo/application/modelo/export_projection.py src/cadrumo/entrypoints/cli/_modelo.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync ty check src/cadrumo/application/modelo/review_package_operation.py src/cadrumo/entrypoints/cli/runtime_modelo_review_package.py src/cadrumo/entrypoints/cli/_modelo_review_package_cli.py src/cadrumo/entrypoints/operation_composition.py src/cadrumo/application/modelo/revision_operation_access.py src/cadrumo/entrypoints/cli/runtime_modelo_operation.py src/cadrumo/entrypoints/cli/_profile_authentication_gate.py src/cadrumo/application/modelo/operation_definitions.py src/cadrumo/application/modelo/export.py src/cadrumo/application/modelo/_edit_execution.py src/cadrumo/entrypoints/tui/modelo/lifecycle.py src/cadrumo/application/modelo/amendment_context_operation.py src/cadrumo/entrypoints/cli/runtime_modelo_amendment.py src/cadrumo/entrypoints/cli/_modelo_amend_wizard_cli.py src/cadrumo/entrypoints/cli/_modelo_export_cli.py src/cadrumo/application/modelo/export_projection.py src/cadrumo/entrypoints/cli/_modelo.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync pyrefly check --python-platform win32 src/cadrumo/application/modelo/review_package_operation.py src/cadrumo/entrypoints/cli/runtime_modelo_review_package.py src/cadrumo/entrypoints/cli/_modelo_review_package_cli.py src/cadrumo/entrypoints/operation_composition.py src/cadrumo/application/modelo/revision_operation_access.py src/cadrumo/entrypoints/cli/runtime_modelo_operation.py src/cadrumo/entrypoints/cli/_profile_authentication_gate.py src/cadrumo/application/modelo/operation_definitions.py src/cadrumo/application/modelo/export.py src/cadrumo/application/modelo/_edit_execution.py src/cadrumo/entrypoints/tui/modelo/lifecycle.py src/cadrumo/application/modelo/amendment_context_operation.py src/cadrumo/entrypoints/cli/runtime_modelo_amendment.py src/cadrumo/entrypoints/cli/_modelo_amend_wizard_cli.py src/cadrumo/entrypoints/cli/_modelo_export_cli.py src/cadrumo/application/modelo/export_projection.py src/cadrumo/entrypoints/cli/_modelo.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync basedpyright --pythonplatform Windows src/cadrumo/application/modelo/review_package_operation.py src/cadrumo/entrypoints/cli/runtime_modelo_review_package.py src/cadrumo/entrypoints/cli/_modelo_review_package_cli.py src/cadrumo/entrypoints/operation_composition.py src/cadrumo/application/modelo/revision_operation_access.py src/cadrumo/entrypoints/cli/runtime_modelo_operation.py src/cadrumo/entrypoints/cli/_profile_authentication_gate.py src/cadrumo/application/modelo/operation_definitions.py src/cadrumo/application/modelo/export.py src/cadrumo/application/modelo/_edit_execution.py src/cadrumo/entrypoints/tui/modelo/lifecycle.py src/cadrumo/application/modelo/amendment_context_operation.py src/cadrumo/entrypoints/cli/runtime_modelo_amendment.py src/cadrumo/entrypoints/cli/_modelo_amend_wizard_cli.py src/cadrumo/entrypoints/cli/_modelo_export_cli.py src/cadrumo/application/modelo/export_projection.py src/cadrumo/entrypoints/cli/_modelo.py` -> `pass`
+- `S08` `A` `src/cadrumo/application/modelo/m303_attestation_operation.py`
+- `S08` `M` `src/cadrumo/application/modelo/metadata_operation_access.py`
+- `S08` `M` `src/cadrumo/application/modelo/workspace_models.py`
+- `S08` `M` `src/cadrumo/entrypoints/tui/modelo/lifecycle.py`
+- `S08` `M` `src/cadrumo/entrypoints/tui/modelo/view/overview.py`
+- `S08` `A` `src/cadrumo/application/modelo/edit_baseline_projection.py`
+- `S08` `A` `src/cadrumo/entrypoints/tui/modelo/runtime_lifecycle.py`
+- `S08` `M` `src/cadrumo/entrypoints/tui/operations/runtime_controller.py`
+- `S08` `M` `src/cadrumo/entrypoints/tui/runtime_workbench.py`
+- `S08` `verify:` `uv run --no-sync ruff check src/cadrumo/application/modelo/m303_attestation_operation.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync ruff format --check src/cadrumo/application/modelo/m303_attestation_operation.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync ty check src/cadrumo/application/modelo/m303_attestation_operation.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync pyrefly check --python-platform win32 src/cadrumo/application/modelo/m303_attestation_operation.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync basedpyright --pythonplatform Windows src/cadrumo/application/modelo/m303_attestation_operation.py` -> `pass`
+- `S08` `A` `src/cadrumo/application/modelo/tests/test_export_projection.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/application/modelo/tests/test_export_projection.py --tb=short --show-capture=no` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/tests/test_modelo_amend_wizard.py --tb=short --show-capture=no` -> `fail`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py -k amendment_co_commit_refuses_each_stale_catalogue_without_partial_writes --tb=short --show-capture=no` -> `pass`
+- `S09` `M` `src/cadrumo/entrypoints/tui/operations/runtime_controller.py`
+- `S08` `M` `src/cadrumo/entrypoints/tui/declarations/models.py`
+- `S08` `M` `src/cadrumo/entrypoints/tui/declarations/controller.py`
+- `S08` `M` `src/cadrumo/entrypoints/tui/declarations/routes.py`
+- `S08` `M` `src/cadrumo/entrypoints/tui/declarations/overview.py`
+- `S08` `M` `src/cadrumo/entrypoints/tui/modelo/runtime_lifecycle.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/runtime_modelo_operation.py`
+- `S09` `M` `src/cadrumo/entrypoints/tui/modelo/runtime_lifecycle.py`
+- `S08` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_workbench_native.py`
+- `S09` `M` `src/cadrumo/adapters/local_runtime/workbench_generation.py`
+- `S09` `M` `src/cadrumo/adapters/local_runtime/modelo_metadata.py`
+- `S09` `M` `src/cadrumo/adapters/local_runtime/profile_mutations.py`
+- `S09` `M` `src/cadrumo/adapters/local_runtime/automation_decision.py`
+- `S09` `M` `src/cadrumo/adapters/local_runtime/automation_inventory.py`
+- `S09` `M` `src/cadrumo/adapters/local_runtime/profile_password_rotation.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/config/_runtime_profile_mutation.py`
+- `S09` `verify:` `uv run --no-sync ruff check src/cadrumo/adapters/local_runtime/workbench_generation.py src/cadrumo/adapters/local_runtime/modelo_metadata.py src/cadrumo/adapters/local_runtime/frontend_client.py src/cadrumo/adapters/local_runtime/profile_mutations.py src/cadrumo/adapters/local_runtime/automation_decision.py src/cadrumo/adapters/local_runtime/automation_inventory.py src/cadrumo/adapters/local_runtime/profile_password_rotation.py src/cadrumo/entrypoints/cli/config/_runtime_profile_mutation.py` -> `pass`
+- `S09` `verify:` `uv run --no-sync ruff format --check src/cadrumo/adapters/local_runtime/workbench_generation.py src/cadrumo/adapters/local_runtime/modelo_metadata.py src/cadrumo/adapters/local_runtime/frontend_client.py src/cadrumo/adapters/local_runtime/profile_mutations.py src/cadrumo/adapters/local_runtime/automation_decision.py src/cadrumo/adapters/local_runtime/automation_inventory.py src/cadrumo/adapters/local_runtime/profile_password_rotation.py src/cadrumo/entrypoints/cli/config/_runtime_profile_mutation.py` -> `pass`
+- `S09` `verify:` `uv run --no-sync ty check src/cadrumo/adapters/local_runtime/workbench_generation.py src/cadrumo/adapters/local_runtime/modelo_metadata.py src/cadrumo/adapters/local_runtime/frontend_client.py src/cadrumo/adapters/local_runtime/profile_mutations.py src/cadrumo/adapters/local_runtime/automation_decision.py src/cadrumo/adapters/local_runtime/automation_inventory.py src/cadrumo/adapters/local_runtime/profile_password_rotation.py src/cadrumo/entrypoints/cli/config/_runtime_profile_mutation.py` -> `pass`
+- `S09` `verify:` `uv run --no-sync pydoclint src/cadrumo/adapters/local_runtime/workbench_generation.py src/cadrumo/adapters/local_runtime/modelo_metadata.py src/cadrumo/adapters/local_runtime/frontend_client.py src/cadrumo/adapters/local_runtime/profile_mutations.py src/cadrumo/adapters/local_runtime/automation_decision.py src/cadrumo/adapters/local_runtime/automation_inventory.py src/cadrumo/adapters/local_runtime/profile_password_rotation.py src/cadrumo/entrypoints/cli/config/_runtime_profile_mutation.py` -> `pass`
+- `S09` `verify:` `uv run --no-sync pyrefly check src/cadrumo/adapters/local_runtime/workbench_generation.py src/cadrumo/adapters/local_runtime/modelo_metadata.py src/cadrumo/adapters/local_runtime/frontend_client.py src/cadrumo/adapters/local_runtime/profile_mutations.py src/cadrumo/adapters/local_runtime/automation_decision.py src/cadrumo/adapters/local_runtime/automation_inventory.py src/cadrumo/adapters/local_runtime/profile_password_rotation.py src/cadrumo/entrypoints/cli/config/_runtime_profile_mutation.py` -> `pass`
+- `S09` `verify:` `uv run --no-sync basedpyright src/cadrumo/adapters/local_runtime/workbench_generation.py src/cadrumo/adapters/local_runtime/modelo_metadata.py src/cadrumo/adapters/local_runtime/frontend_client.py src/cadrumo/adapters/local_runtime/profile_mutations.py src/cadrumo/adapters/local_runtime/automation_decision.py src/cadrumo/adapters/local_runtime/automation_inventory.py src/cadrumo/adapters/local_runtime/profile_password_rotation.py src/cadrumo/entrypoints/cli/config/_runtime_profile_mutation.py` -> `pass`
+- `S09` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_amend_wizard.py`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/tests/test_modelo_amend_wizard.py -k work_amend_m303_rectificativa_missing_motive_refuses_before_persistence --tb=short --show-capture=no` -> `pass`
+- `S09` `verify:` `uv run --no-sync pyrefly check --min-severity warn src/cadrumo/adapters/local_runtime/workbench_generation.py src/cadrumo/adapters/local_runtime/modelo_metadata.py src/cadrumo/adapters/local_runtime/frontend_client.py src/cadrumo/adapters/local_runtime/profile_mutations.py src/cadrumo/adapters/local_runtime/automation_decision.py src/cadrumo/adapters/local_runtime/automation_inventory.py src/cadrumo/adapters/local_runtime/profile_password_rotation.py src/cadrumo/entrypoints/cli/config/_runtime_profile_mutation.py` -> `pass`
+- `S09` `M` `src/cadrumo/application/modelo/revision_selection_operation.py`
+- `S09` `M` `src/cadrumo/application/modelo/work_addressing.py`
+- `S09` `M` `src/cadrumo/adapters/local_runtime/tests/test_automation_decision.py`
+- `S09` `M` `src/cadrumo/adapters/local_runtime/tests/test_automation_inventory.py`
+- `S09` `M` `src/cadrumo/adapters/local_runtime/tests/test_profile_password_rotation.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_profile_mutation_boundary.py`
+- `S09` `M` `src/cadrumo/adapters/local_runtime/tests/test_projection_page_client.py`
+- `S09` `M` `src/cadrumo/entrypoints/tui/operations/tests/test_runtime_controller_session_swap.py`
+- `S09` `M` `src/cadrumo/entrypoints/tui/modelo/tests/test_runtime_lifecycle_effects.py`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m unit src/cadrumo/adapters/local_runtime/tests/test_automation_decision.py src/cadrumo/adapters/local_runtime/tests/test_automation_inventory.py src/cadrumo/adapters/local_runtime/tests/test_profile_password_rotation.py src/cadrumo/entrypoints/cli/config/tests/test_runtime_profile_mutation_boundary.py --tb=short --show-capture=no` -> `pass`
+- `S09` `verify:` `uv run --no-sync pytest -q src/cadrumo/adapters/local_runtime/tests/test_projection_page_client.py src/cadrumo/entrypoints/tui/operations/tests/test_runtime_controller_session_swap.py src/cadrumo/entrypoints/tui/modelo/tests/test_runtime_lifecycle_effects.py` -> `pass`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_amend_wizard.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/tests/test_modelo_amend_wizard.py -k amend_wizard_scripted_inputs_match_hand_built_work_amend --tb=short --show-capture=no` -> `fail`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tui/tests/test_runtime_workbench_native.py -k native_human_generation --tb=short --show-capture=no --log-cli-level=INFO` -> `fail`
+- `S09` `M` `src/cadrumo/application/modelo/selectors.py`
+- `S09` `M` `src/cadrumo/application/modelo/tests/test_revision_selection_operation.py`
+- `S09` `M` `src/cadrumo/application/modelo/tests/test_work_period_normalization.py`
+- `S09` `M` `src/cadrumo/entrypoints/tests/test_modelo_metadata_operation_results.py`
+- `S09` `verify:` `uv run --no-sync pytest -q src/cadrumo/application/modelo/tests/test_revision_selection_operation.py src/cadrumo/application/modelo/tests/test_work_period_normalization.py` -> `pass`
+- `S09` `M` `src/cadrumo/entrypoints/adapter_composition.py`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/tests/test_modelo_amend_wizard.py -k amend_wizard_scripted_inputs_match_hand_built_work_amend --tb=short --show-capture=no` -> `pass`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/tests/test_modelo_amend_wizard.py --tb=short --show-capture=no` -> `pass`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/application/modelo/tests/test_filing_selection_operation.py src/cadrumo/application/modelo/tests/test_revision_selection_operation.py --tb=short --show-capture=no` -> `pass`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tests/test_modelo_verification_operation_results.py src/cadrumo/entrypoints/tests/test_modelo_metadata_operation_results.py --tb=short --show-capture=no` -> `pass`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tests/profile_persistence/test_selectors.py src/cadrumo/entrypoints/tests/profile_persistence/test_work_addressing.py --tb=short --show-capture=no` -> `pass`
+- `S09` `verify:` `uv run --no-sync ruff check $sourceScope` -> `pass`
+- `S09` `verify:` `uv run --no-sync ruff format --check $sourceScope` -> `pass`
+- `S09` `verify:` `uv run --no-sync ty check $sourceScope` -> `pass`
+- `S09` `verify:` `uv run --no-sync pyrefly check --python-platform win32 $sourceScope` -> `pass`
+- `S09` `verify:` `uv run --no-sync basedpyright --pythonplatform Windows $sourceScope` -> `pass`
+- `S09` `verify:` `uv run --no-sync ruff check $factoryScope` -> `pass`
+- `S09` `verify:` `uv run --no-sync ruff format --check $factoryScope` -> `pass`
+- `S09` `verify:` `uv run --no-sync ty check --python-platform win32 $factoryScope` -> `pass`
+- `S09` `verify:` `uv run --no-sync pyrefly check --python-platform win32 $factoryScope` -> `pass`
+- `S09` `verify:` `uv run --no-sync basedpyright --pythonplatform Windows $factoryScope` -> `pass`
+- `S08` `A` `src/cadrumo/application/modelo/revision_snapshot_operation.py`
+- `S08` `A` `src/cadrumo/entrypoints/cli/runtime_modelo_revision.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/runtime_modelo_verification.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/runtime_modelo_calculation.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/_modelo_work_revision_cli.py`
+- `S08` `verify:` `uv run --no-sync ruff check $revisionSnapshotScope` -> `pass`
+- `S08` `verify:` `uv run --no-sync ruff format --check $revisionSnapshotScope` -> `pass`
+- `S08` `verify:` `uv run --no-sync ty check $revisionSnapshotScope` -> `pass`
+- `S08` `verify:` `uv run --no-sync pyrefly check --python-platform win32 $revisionSnapshotScope` -> `pass`
+- `S08` `verify:` `uv run --no-sync basedpyright --pythonplatform Windows $revisionSnapshotScope` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tui/tests/test_runtime_workbench_native.py -k in_process_secure_generation_captures_the_seeded_profile --tb=short --show-capture=no` -> `fail`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tui/tests/test_runtime_workbench_native.py -k in_process_secure_generation_captures_the_seeded_profile --tb=short --show-capture=no` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tui/tests/test_runtime_workbench_native.py -k native_human_generation --tb=short --show-capture=no --log-cli-level=INFO` -> `pass`
+- `S08` `M` `src/cadrumo/entrypoints/cli/_modelo_rendering.py`
+- `S08` `A` `src/cadrumo/entrypoints/cli/modelo_revision_rendering.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/_modelo_work_calculate_cli.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py src/cadrumo/entrypoints/tests/test_modelo_verification_operation_results.py -k 'revision_snapshot or every_registered_definition_has_a_conformance_scenario' --tb=short --show-capture=no` -> `fail`
+- `S20` `verify:` `just check-import-boundaries` -> `fail`
+- `S08` `M` `src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tests/test_modelo_verification_operation_results.py -k revision_snapshot --tb=short --show-capture=no` -> `pass`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_verification_native.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_verification_native.py -k native_cli_api_key_obeys_exact_enrolled_modelo_scope --tb=short --show-capture=no` -> `pass`
+- `S10` `A` `src/cadrumo/adapters/local_runtime/tests/test_windows_manager_stop_native.py`
+- `S10` `A` `src/cadrumo/adapters/local_runtime/tests/windows_manager_stop_fixture.py`
+- `S10` `verify:` `uv run --no-sync pytest -q -n0 -m 'integration and windows_only and hex_outbound_adapter and serial' src/cadrumo/adapters/local_runtime/tests/test_windows_manager_stop_native.py --tb=short --show-capture=all` -> `pass`
+- `S08` `A` `src/cadrumo/application/modelo/revision_inventory_operation.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/runtime_modelo_revision.py`
+- `S08` `A` `src/cadrumo/entrypoints/tests/modelo_operation_test_support.py`
+- `S08` `M` `src/cadrumo/entrypoints/tests/test_modelo_edit_apply_refusal_settlement.py`
+- `S08` `M` `src/cadrumo/entrypoints/runtime/tests/test_modelo_revision_lifecycle.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py -k 'registered_executor_runs and filing_record' --tb=short --show-capture=no` -> `pass`
+- `S08` `verify:` `uv run --no-sync ruff check $inventoryScope` -> `pass`
+- `S08` `verify:` `uv run --no-sync ruff format --check $inventoryScope` -> `pass`
+- `S08` `verify:` `uv run --no-sync ty check $inventoryScope` -> `pass`
+- `S08` `verify:` `uv run --no-sync pyrefly check --python-platform win32 $inventoryScope` -> `pass`
+- `S08` `verify:` `uv run --no-sync basedpyright --pythonplatform Windows $inventoryScope` -> `pass`
+- `S08` `A` `src/cadrumo/domain/modelos/tests/filing_record_test_support.py`
+- `S08` `M` `src/cadrumo/domain/modelos/tests/test_iva_settlement_snapshot.py`
+- `S08` `M` `src/cadrumo/application/modelo/tests/test_lifecycle_projection.py`
+- `S08` `R` `src/cadrumo/entrypoints/tests/profile_persistence/test_calculation_projection.py` -> `src/cadrumo/entrypoints/cli/tests/profile_persistence/test_calculation_projection.py`
+- `S08` `M` `src/cadrumo/entrypoints/tests/profile_persistence/file_flow_test_support.py`
+- `S08` `M` `src/cadrumo/entrypoints/tests/profile_persistence/conftest.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/profile_persistence/conftest.py`
+- `S08` `M` `src/cadrumo/application/modelo/m303_attestation_operation.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/_modelo_work_m303_attestation_cli.py`
+- `S08` `A` `src/cadrumo/entrypoints/cli/runtime_modelo_attestation.py`
+- `S08` `A` `src/cadrumo/entrypoints/cli/tests/test_runtime_m303_attestation_native.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/tests/test_runtime_m303_attestation_native.py --tb=short --show-capture=no` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/tests/profile_persistence/test_calculation_projection.py -k test_real_encrypted_calculation_snapshot_preserves_existing_result_facts --tb=short --show-capture=no` -> `pass`
+- `S08` `A` `src/cadrumo/application/ledger/status_operation.py`
+- `S08` `A` `src/cadrumo/application/ledger/history_operation.py`
+- `S08` `A` `src/cadrumo/application/ledger/read_access.py`
+- `S08` `M` `src/cadrumo/application/ledger/action_ports.py`
+- `S08` `A` `src/cadrumo/entrypoints/cli/runtime_ledger_status.py`
+- `S08` `A` `src/cadrumo/entrypoints/cli/runtime_ledger_history.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/_ledger_read_cli.py`
+- `S08` `R` `src/cadrumo/entrypoints/cli/runtime_modelo_operation.py` -> `src/cadrumo/entrypoints/cli/runtime_registered_operation.py`
+- `S09` `M` `src/cadrumo/domain/transactions/m210_income_classification.py`
+- `S09` `A` `src/cadrumo/application/ledger/transaction_projection.py`
+- `S09` `A` `src/cadrumo/application/ledger/view_operation.py`
+- `S09` `A` `src/cadrumo/entrypoints/cli/runtime_ledger_view.py`
+- `S08` `A` `src/cadrumo/application/ledger/tests/test_status_operation.py`
+- `S08` `A` `src/cadrumo/application/ledger/tests/test_history_operation.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py -k 'test_every_production_registered_executor_runs_through_the_shared_supervisor_matrix and status' --tb=short --show-capture=no` -> `pass`
+- `S08` `A` `src/cadrumo/entrypoints/cli/tests/test_runtime_ledger_reads_native.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or hex_application' src/cadrumo/application/ledger/tests/test_history_operation.py --tb=short --show-capture=no` -> `pass`
+- `S08` `M` `src/cadrumo/domain/transactions/m210_income_classification.py`
+- `S08` `M` `src/cadrumo/domain/transactions/tests/test_m210_retained_authority_scope.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or hex_domain' src/cadrumo/domain/transactions/tests/test_m210_retained_authority_scope.py --tb=short --show-capture=no` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py -k 'test_every_production_registered_executor_runs_through_the_shared_supervisor_matrix and ledger.view' --tb=short --show-capture=no` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/tests/test_runtime_ledger_reads_native.py --tb=short --show-capture=no` -> `fail`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py src/cadrumo/entrypoints/tests/test_modelo_verification_operation_results.py -k 'test_every_registered_definition_has_a_conformance_scenario or test_unfiltered_revision_inventory_requires_all_periods_and_returns_complete_encrypted_rows or (test_every_production_registered_executor_runs_through_the_shared_supervisor_matrix and (revisions or review_package_build or m303_attestation or ledger_status or ledger_history))' --tb=short --show-capture=no` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py -k 'test_every_production_registered_executor_runs_through_the_shared_supervisor_matrix and (review or status or history)' --tb=short --show-capture=no` -> `fail`
+- `S08` `M` `src/cadrumo/application/ledger/track_operation.py`
+- `S08` `M` `src/cadrumo/application/ledger/tracking_projection.py`
+- `S08` `M` `src/cadrumo/application/ledger/tests/test_tracking_projection.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/runtime_ledger_track.py`
+- `S08` `M` `src/cadrumo/application/ledger/tests/test_view_operation.py`
+- `S08` `verify:` `uv run --no-sync pytest -n0 -m "unit and hex_application" src/cadrumo/application/ledger/tests/test_view_operation.py -q --tb=short` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or hex_application' src/cadrumo/application/ledger/tests/test_tracking_projection.py --tb=short --show-capture=no` -> `pass`
+- `S08` `verify:` `uv run --no-sync ruff check src/cadrumo/application/ledger/tracking_projection.py src/cadrumo/application/ledger/track_operation.py src/cadrumo/application/ledger/tests/test_tracking_projection.py src/cadrumo/entrypoints/cli/runtime_ledger_track.py src/cadrumo/entrypoints/cli/_ledger_read_cli.py src/cadrumo/entrypoints/cli/_profile_authentication_gate.py src/cadrumo/entrypoints/operation_composition.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync ruff format --check src/cadrumo/application/ledger/tracking_projection.py src/cadrumo/application/ledger/track_operation.py src/cadrumo/application/ledger/tests/test_tracking_projection.py src/cadrumo/entrypoints/cli/runtime_ledger_track.py src/cadrumo/entrypoints/cli/_ledger_read_cli.py src/cadrumo/entrypoints/cli/_profile_authentication_gate.py src/cadrumo/entrypoints/operation_composition.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync ty check src/cadrumo/application/ledger/tracking_projection.py src/cadrumo/application/ledger/track_operation.py src/cadrumo/application/ledger/tests/test_tracking_projection.py src/cadrumo/entrypoints/cli/runtime_ledger_track.py src/cadrumo/entrypoints/cli/_ledger_read_cli.py src/cadrumo/entrypoints/cli/_profile_authentication_gate.py src/cadrumo/entrypoints/operation_composition.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync pyrefly check --python-platform win32 src/cadrumo/application/ledger/tracking_projection.py src/cadrumo/application/ledger/track_operation.py src/cadrumo/application/ledger/tests/test_tracking_projection.py src/cadrumo/entrypoints/cli/runtime_ledger_track.py src/cadrumo/entrypoints/cli/_ledger_read_cli.py src/cadrumo/entrypoints/cli/_profile_authentication_gate.py src/cadrumo/entrypoints/operation_composition.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync basedpyright --pythonplatform Windows src/cadrumo/application/ledger/tracking_projection.py src/cadrumo/application/ledger/track_operation.py src/cadrumo/application/ledger/tests/test_tracking_projection.py src/cadrumo/entrypoints/cli/runtime_ledger_track.py src/cadrumo/entrypoints/cli/_ledger_read_cli.py src/cadrumo/entrypoints/cli/_profile_authentication_gate.py src/cadrumo/entrypoints/operation_composition.py` -> `pass`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_ledger_reads_native.py`
+- `S08` `verify:` `uv run --no-sync pytest -n0 -m "integration and hex_entrypoint and windows_only" src/cadrumo/entrypoints/cli/tests/test_runtime_ledger_reads_native.py -q --tb=short` -> `pass`
+- `S08` `M` `src/cadrumo/application/ledger/history_query.py`
+- `S08` `M` `src/cadrumo/application/ledger/history_operation.py`
+- `S08` `M` `src/cadrumo/application/ledger/tests/test_history_query.py`
+- `S08` `M` `src/cadrumo/application/ledger/tests/test_history_operation.py`
+- `S08` `verify:` `uv run --no-sync ruff check src/cadrumo/application/ledger/history_query.py src/cadrumo/application/ledger/history_operation.py src/cadrumo/application/ledger/tests/test_history_query.py src/cadrumo/application/ledger/tests/test_history_operation.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync ruff format --check src/cadrumo/application/ledger/history_query.py src/cadrumo/application/ledger/history_operation.py src/cadrumo/application/ledger/tests/test_history_query.py src/cadrumo/application/ledger/tests/test_history_operation.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync ty check src/cadrumo/application/ledger/history_query.py src/cadrumo/application/ledger/history_operation.py src/cadrumo/application/ledger/tests/test_history_query.py src/cadrumo/application/ledger/tests/test_history_operation.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync pyrefly check --python-platform win32 src/cadrumo/application/ledger/history_query.py src/cadrumo/application/ledger/history_operation.py src/cadrumo/application/ledger/tests/test_history_query.py src/cadrumo/application/ledger/tests/test_history_operation.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync basedpyright --pythonplatform Windows src/cadrumo/application/ledger/history_query.py src/cadrumo/application/ledger/history_operation.py src/cadrumo/application/ledger/tests/test_history_query.py src/cadrumo/application/ledger/tests/test_history_operation.py` -> `pass`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_source_mesh_calculate.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/tests/test_modelo_source_mesh_calculate.py -k test_work_calculate_persists_ledger_source_mesh_observations --tb=short --show-capture=no` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or hex_application' src/cadrumo/application/ledger/tests/test_history_query.py src/cadrumo/application/ledger/tests/test_history_operation.py --tb=short --show-capture=no` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py -k 'test_every_registered_definition_has_a_conformance_scenario or ledger.track or test_ledger_track_uses_null_when_no_finalized_revision_participates' --tb=short --show-capture=no` -> `pass`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_export_review_package_native.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_export_review_package_native.py --tb=short --show-capture=no` -> `pass`
+- `S08` `verify:` `uv run --no-sync ruff check src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_export_review_package_native.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync ruff format --check src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_export_review_package_native.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync ty check src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_export_review_package_native.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync pyrefly check --python-platform win32 src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_export_review_package_native.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync basedpyright --pythonplatform Windows src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_export_review_package_native.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync pyrefly check --python-platform win32 --min-severity warn --output-format full-text src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_export_review_package_native.py` -> `fail`
+- `S08` `M` `docs/api`
+- `S08` `verify:` `uv run --no-sync python -m dev.docs.apidocs scaffold` -> `pass`
+- `S08` `verify:` `uv run --no-sync python -m dev.docs.apidocs scaffold --check` -> `pass`
+- `S08` `M` `src/cadrumo/application/ledger/id_resolution.py`
+- `S08` `A` `src/cadrumo/entrypoints/cli/runtime_ledger_prefix.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/runtime_ledger_history.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/runtime_ledger_view.py`
+- `S08` `A` `src/cadrumo/entrypoints/cli/tests/test_runtime_ledger_prefix_refusals_native.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/tests/test_runtime_ledger_prefix_refusals_native.py --tb=short --show-capture=no` -> `pass`
+- `S08` `A` `src/cadrumo/application/ledger/list_operation.py`
+- `S08` `M` `src/cadrumo/application/ledger/read_access.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/_ledger_list.py`
+- `S08` `A` `src/cadrumo/entrypoints/cli/runtime_ledger_list.py`
+- `S08` `A` `src/cadrumo/application/ledger/participation_operation.py`
+- `S08` `A` `src/cadrumo/application/ledger/participation_rebuild_operation.py`
+- `S08` `M` `src/cadrumo/application/modelo/participation_index_rebuild.py`
+- `S08` `A` `src/cadrumo/entrypoints/cli/runtime_ledger_participation.py`
+- `S08` `A` `src/cadrumo/entrypoints/cli/runtime_ledger_participation_rebuild.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/_participation_cli.py`
+- `S08` `A` `src/cadrumo/entrypoints/cli/tests/_native_api_cli_support.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'integration and hex_entrypoint' src/cadrumo/entrypoints/cli/tests/test_runtime_ledger_reads_native.py::test_native_api_ledger_status_requires_all_periods_even_when_query_selects_one --tb=short --show-capture=no` -> `pass`
+- `S08` `A` `src/cadrumo/application/ledger/review_operation.py`
+- `S08` `A` `src/cadrumo/entrypoints/cli/runtime_ledger_review.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/_ledger_review_cli.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/_ledger_support.py`
+- `S08` `A` `src/cadrumo/application/ledger/tests/test_list_operation.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_list_sort.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/application/ledger/tests/test_list_operation.py src/cadrumo/entrypoints/cli/tests/test_ledger_list_sort.py src/cadrumo/application/modelo/tests/test_participation_rebuild.py --tb=short --show-capture=no` -> `pass`
+- `S08` `M` `src/cadrumo/application/modelo/participation_index_rebuild_ports.py`
+- `S08` `M` `src/cadrumo/adapters/persistence/profile/participation_index.py`
+- `S08` `M` `src/cadrumo/adapters/persistence/storage/sql/session.py`
+- `S08` `M` `src/cadrumo/adapters/persistence/storage/sql/secure_object_records.py`
+- `S08` `M` `src/cadrumo/adapters/persistence/storage/sql/_secure_object_writes.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py::test_every_production_registered_executor_runs_through_the_shared_supervisor_matrix -k 'ledger.list' --tb=short --show-capture=no` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py::test_every_production_registered_executor_runs_through_the_shared_supervisor_matrix -k 'ledger.participation or ledger.review' --tb=short --show-capture=no` -> `fail`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py::test_every_production_registered_executor_runs_through_the_shared_supervisor_matrix -k 'ledger.participation.rebuild' --tb=short --show-capture=no` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py::test_every_registered_definition_has_a_conformance_scenario --tb=short --show-capture=no` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/tests/test_ledger_list_filter.py src/cadrumo/entrypoints/cli/tests/test_ledger_corpus_review.py src/cadrumo/entrypoints/cli/tests/test_ledger_list_sort.py src/cadrumo/entrypoints/cli/tests/test_ledger_review_envelope_branches.py src/cadrumo/entrypoints/cli/tests/test_app_ledger_operations_management_command_specs.py src/cadrumo/entrypoints/cli/tests/test_participation_cli_surface.py --tb=short --show-capture=no` -> `fail`
+- `S08` `A` `src/cadrumo/application/ledger/tests/test_review_operation.py`
+- `S08` `A` `src/cadrumo/application/ledger/tests/test_participation_rebuild_operation.py`
+- `S08` `M` `src/cadrumo/application/modelo/tests/test_participation_rebuild.py`
+- `S08` `M` `src/cadrumo/adapters/persistence/storage/sql/tests/test_session.py`
+- `S08` `verify:` `uv run --no-sync ruff check src/cadrumo/application/ledger/tests/test_review_operation.py src/cadrumo/application/ledger/tests/test_participation_rebuild_operation.py src/cadrumo/application/modelo/tests/test_participation_rebuild.py src/cadrumo/adapters/persistence/storage/sql/tests/test_session.py src/cadrumo/application/ledger/review_operation.py src/cadrumo/entrypoints/cli/runtime_ledger_review.py src/cadrumo/entrypoints/cli/_ledger_review_cli.py src/cadrumo/entrypoints/cli/_profile_authentication_gate.py src/cadrumo/entrypoints/cli/_ledger_read_cli.py src/cadrumo/entrypoints/cli/_ledger_support.py src/cadrumo/entrypoints/operation_composition.py src/cadrumo/application/ledger/participation_rebuild_operation.py src/cadrumo/application/modelo/participation_index_rebuild.py src/cadrumo/application/modelo/participation_index_rebuild_ports.py src/cadrumo/adapters/persistence/profile/participation_index.py src/cadrumo/adapters/persistence/storage/sql/session.py src/cadrumo/adapters/persistence/storage/sql/secure_object_records.py src/cadrumo/adapters/persistence/storage/sql/_secure_object_writes.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync ruff format --check src/cadrumo/application/ledger/tests/test_review_operation.py src/cadrumo/application/ledger/tests/test_participation_rebuild_operation.py src/cadrumo/application/modelo/tests/test_participation_rebuild.py src/cadrumo/adapters/persistence/storage/sql/tests/test_session.py src/cadrumo/application/ledger/review_operation.py src/cadrumo/entrypoints/cli/runtime_ledger_review.py src/cadrumo/entrypoints/cli/_ledger_review_cli.py src/cadrumo/entrypoints/cli/_profile_authentication_gate.py src/cadrumo/entrypoints/cli/_ledger_read_cli.py src/cadrumo/entrypoints/cli/_ledger_support.py src/cadrumo/entrypoints/operation_composition.py src/cadrumo/application/ledger/participation_rebuild_operation.py src/cadrumo/application/modelo/participation_index_rebuild.py src/cadrumo/application/modelo/participation_index_rebuild_ports.py src/cadrumo/adapters/persistence/profile/participation_index.py src/cadrumo/adapters/persistence/storage/sql/session.py src/cadrumo/adapters/persistence/storage/sql/secure_object_records.py src/cadrumo/adapters/persistence/storage/sql/_secure_object_writes.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync ty check src/cadrumo/application/ledger/tests/test_review_operation.py src/cadrumo/application/ledger/tests/test_participation_rebuild_operation.py src/cadrumo/application/modelo/tests/test_participation_rebuild.py src/cadrumo/adapters/persistence/storage/sql/tests/test_session.py src/cadrumo/application/ledger/review_operation.py src/cadrumo/entrypoints/cli/runtime_ledger_review.py src/cadrumo/entrypoints/cli/_ledger_review_cli.py src/cadrumo/entrypoints/cli/_profile_authentication_gate.py src/cadrumo/entrypoints/cli/_ledger_read_cli.py src/cadrumo/entrypoints/cli/_ledger_support.py src/cadrumo/entrypoints/operation_composition.py src/cadrumo/application/ledger/participation_rebuild_operation.py src/cadrumo/application/modelo/participation_index_rebuild.py src/cadrumo/application/modelo/participation_index_rebuild_ports.py src/cadrumo/adapters/persistence/profile/participation_index.py src/cadrumo/adapters/persistence/storage/sql/session.py src/cadrumo/adapters/persistence/storage/sql/secure_object_records.py src/cadrumo/adapters/persistence/storage/sql/_secure_object_writes.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync pyrefly check --python-platform win32 src/cadrumo/application/ledger/tests/test_review_operation.py src/cadrumo/application/ledger/tests/test_participation_rebuild_operation.py src/cadrumo/application/modelo/tests/test_participation_rebuild.py src/cadrumo/adapters/persistence/storage/sql/tests/test_session.py src/cadrumo/application/ledger/review_operation.py src/cadrumo/entrypoints/cli/runtime_ledger_review.py src/cadrumo/entrypoints/cli/_ledger_review_cli.py src/cadrumo/entrypoints/cli/_profile_authentication_gate.py src/cadrumo/entrypoints/cli/_ledger_read_cli.py src/cadrumo/entrypoints/cli/_ledger_support.py src/cadrumo/entrypoints/operation_composition.py src/cadrumo/application/ledger/participation_rebuild_operation.py src/cadrumo/application/modelo/participation_index_rebuild.py src/cadrumo/application/modelo/participation_index_rebuild_ports.py src/cadrumo/adapters/persistence/profile/participation_index.py src/cadrumo/adapters/persistence/storage/sql/session.py src/cadrumo/adapters/persistence/storage/sql/secure_object_records.py src/cadrumo/adapters/persistence/storage/sql/_secure_object_writes.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync basedpyright --pythonplatform Windows src/cadrumo/application/ledger/tests/test_review_operation.py src/cadrumo/application/ledger/tests/test_participation_rebuild_operation.py src/cadrumo/application/modelo/tests/test_participation_rebuild.py src/cadrumo/adapters/persistence/storage/sql/tests/test_session.py src/cadrumo/application/ledger/review_operation.py src/cadrumo/entrypoints/cli/runtime_ledger_review.py src/cadrumo/entrypoints/cli/_ledger_review_cli.py src/cadrumo/entrypoints/cli/_profile_authentication_gate.py src/cadrumo/entrypoints/cli/_ledger_read_cli.py src/cadrumo/entrypoints/cli/_ledger_support.py src/cadrumo/entrypoints/operation_composition.py src/cadrumo/application/ledger/participation_rebuild_operation.py src/cadrumo/application/modelo/participation_index_rebuild.py src/cadrumo/application/modelo/participation_index_rebuild_ports.py src/cadrumo/adapters/persistence/profile/participation_index.py src/cadrumo/adapters/persistence/storage/sql/session.py src/cadrumo/adapters/persistence/storage/sql/secure_object_records.py src/cadrumo/adapters/persistence/storage/sql/_secure_object_writes.py` -> `pass`
+- `S08` `A` `src/cadrumo/application/ledger/check_operation.py`
+- `S08` `A` `src/cadrumo/application/ledger/tests/test_check_operation.py`
+- `S08` `A` `src/cadrumo/entrypoints/cli/runtime_ledger_check.py`
+- `S08` `M` `src/cadrumo/application/modelo/work_wizard.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or hex_application' src/cadrumo/application/ledger/tests/test_review_operation.py src/cadrumo/application/ledger/tests/test_participation_rebuild_operation.py src/cadrumo/application/modelo/tests/test_participation_rebuild.py --tb=short --show-capture=no` -> `fail`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or hex_persistence_adapter' src/cadrumo/adapters/persistence/storage/sql/tests/test_session.py -k test_serializable_session_blocks_insert_after_absence_read_until_commit --tb=short --show-capture=no` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'integration and hex_entrypoint' src/cadrumo/entrypoints/cli/tests/test_runtime_ledger_participation_native.py::test_native_participation_reads_canonical_index_rebuilds_and_requires_commit --tb=short --show-capture=no` -> `fail`
+- `S08` `A` `src/cadrumo/adapters/persistence/profile/tests/test_participation_rebuild_source_guard.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit and hex_application' src/cadrumo/adapters/persistence/profile/tests/test_participation_rebuild_source_guard.py --tb=short --show-capture=no` -> `pass`
+- `S08` `M` `src/cadrumo/application/ledger/preflight_operation.py`
+- `S08` `M` `src/cadrumo/application/ledger/tests/test_preflight_operation.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/runtime_ledger_preflight.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or hex_application' src/cadrumo/application/ledger/tests/test_check_operation.py src/cadrumo/application/ledger/tests/test_preflight_operation.py src/cadrumo/application/ledger/tests/test_review_operation.py --tb=short --show-capture=no` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py::test_every_production_registered_executor_runs_through_the_shared_supervisor_matrix --tb=short --show-capture=no` -> `pass`
+- `S08` `verify:` `uv run --no-sync ruff check src/cadrumo/entrypoints/operation_composition.py src/cadrumo/entrypoints/cli/_ledger_read_cli.py src/cadrumo/entrypoints/cli/_profile_authentication_gate.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync ruff format --check src/cadrumo/entrypoints/operation_composition.py src/cadrumo/entrypoints/cli/_ledger_read_cli.py src/cadrumo/entrypoints/cli/_profile_authentication_gate.py` -> `pass`
+- `S08` `A` `src/cadrumo/application/modelo/wizard_context_operation.py`
+- `S08` `A` `src/cadrumo/application/modelo/tests/test_wizard_context_operation.py`
+- `S08` `A` `src/cadrumo/application/modelo/work_missing_input.py`
+- `S08` `A` `src/cadrumo/application/modelo/tests/test_work_missing_input.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/_native_api_cli_support.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_ledger_participation_native.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'integration and hex_entrypoint' src/cadrumo/entrypoints/cli/tests/test_runtime_ledger_participation_native.py::test_native_participation_reads_canonical_index_rebuilds_and_requires_commit --tb=long --show-capture=no` -> `fail`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or hex_application' src/cadrumo/application/ledger/tests/test_review_operation.py src/cadrumo/application/ledger/tests/test_participation_rebuild_operation.py src/cadrumo/application/modelo/tests/test_participation_rebuild.py --tb=short --show-capture=no` -> `pass`
+- `S08` `M` `src/cadrumo/application/modelo/calculation_actions.py`
+- `S08` `M` `src/cadrumo/core/errors/registry/_application_part3b.py`
+- `S08` `A` `src/cadrumo/application/modelo/tests/test_work_wizard_flow.py`
+- `S08` `A` `src/cadrumo/application/modelo/tests/test_work_missing_input_publication.py`
+- `S08` `A` `src/cadrumo/entrypoints/cli/runtime_modelo_work_wizard.py`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'integration and hex_entrypoint' src/cadrumo/entrypoints/cli/tests/test_runtime_ledger_participation_native.py::test_native_participation_reads_canonical_index_rebuilds_and_requires_commit --tb=long --show-capture=no` -> `fail`
+- `S08` `verify:` `uv run --no-sync pytest -q src/cadrumo/application/modelo/tests/test_work_missing_input.py src/cadrumo/application/modelo/tests/test_wizard_context_operation.py src/cadrumo/application/modelo/tests/test_work_wizard_flow.py src/cadrumo/application/modelo/tests/test_work_missing_input_publication.py` -> `pass`
+- `S09` `M` `src/cadrumo/application/ledger/participation_rebuild_operation.py`
+- `S09` `A` `src/cadrumo/entrypoints/runtime/tests/native_worker_failure_probe.py`
+- `S09` `M` `src/cadrumo/application/ledger/tests/test_participation_rebuild_operation.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_ledger_participation_native.py`
+- `S09` `verify:` `uv run --no-sync pytest -n0 -m "unit and hex_application" src/cadrumo/application/ledger/tests/test_participation_rebuild_operation.py -q --tb=short` -> `pass`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'integration and hex_entrypoint' src/cadrumo/entrypoints/cli/tests/test_runtime_ledger_participation_native.py::test_native_participation_reads_canonical_index_rebuilds_and_requires_commit --tb=short --show-capture=no` -> `pass`
+- `S08` `M` `src/cadrumo/entrypoints/cli/_modelo_work_wizard_cli.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/runtime_modelo_work_wizard.py`
+- `S09` `D` `src/cadrumo/entrypoints/runtime/tests/native_worker_failure_probe.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/tests/_native_api_cli_support.py`
+- `S08` `A` `src/cadrumo/application/modelo/wizard_attempt_operation.py`
+- `S08` `A` `src/cadrumo/application/modelo/tests/test_wizard_attempt_operation.py`
+- `S08` `verify:` `uv run --no-sync pytest -q src/cadrumo/application/modelo/tests/test_wizard_attempt_operation.py src/cadrumo/application/modelo/tests/test_work_missing_input_publication.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q src/cadrumo/application/modelo/tests/test_wizard_attempt_operation.py src/cadrumo/application/modelo/tests/test_work_missing_input_publication.py` -> `fail`
+- `S08` `M` `src/cadrumo/application/modelo/tests/test_lifecycle_operation_conformance.py`
+- `S08` `M` `src/cadrumo/application/modelo/wizard_attempt_operation.py`
+- `S08` `M` `src/cadrumo/application/modelo/tests/test_wizard_attempt_operation.py`
+- `S08` `verify:` `uv run --no-sync pytest -q src/cadrumo/application/modelo/tests/test_wizard_attempt_operation.py src/cadrumo/application/modelo/tests/test_work_missing_input_publication.py src/cadrumo/application/modelo/tests/test_lifecycle_operation_conformance.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py -k 'wizard_context or wizard_attempt or work.calculate' --tb=short --show-capture=no` -> `pass`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_work_wizard.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/tests/test_modelo_work_wizard.py --tb=short --show-capture=no` -> `fail`
+- `S08` `A` `src/cadrumo/application/modelo/work_inventory_operation.py`
+- `S08` `A` `src/cadrumo/application/modelo/tests/test_work_inventory_operation.py`
+- `S08` `A` `src/cadrumo/entrypoints/cli/runtime_modelo_work_inventory.py`
+- `S08` `A` `src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_work_inventory.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/_modelo_work_select_cli.py`
+- `S08` `M` `src/cadrumo/application/modelo/history.py`
+- `S08` `A` `src/cadrumo/application/modelo/history_operation.py`
+- `S08` `A` `src/cadrumo/entrypoints/cli/runtime_modelo_work_history.py`
+- `S08` `M` `src/cadrumo/application/modelo/history_ports.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/_modelo.py`
+- `S08` `A` `src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_work_wizard_empty_steps.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/tests/test_modelo_work_wizard.py::test_registered_m123_wizard_prompts_registry_pages_and_publishes src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_work_wizard_empty_steps.py --tb=short --show-capture=no` -> `pass`
+- `S08` `M` `src/cadrumo/application/modelo/filing_actions.py`
+- `S08` `M` `src/cadrumo/application/modelo/verification_actions.py`
+- `S08` `M` `src/cadrumo/application/modelo/revision_selection_operation.py`
+- `S08` `verify:` `uv run --no-sync pytest -q src/cadrumo/application/modelo/tests/test_work_inventory_operation.py src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_work_inventory.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py -k 'modelo.work.list' --tb=short --show-capture=no` -> `pass`
+- `S08` `M` `src/cadrumo/domain/modelos/protocols.py`
+- `S08` `M` `src/cadrumo/adapters/persistence/profile/modelos_verification_reports.py`
+- `S08` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_history.py`
+- `S08` `A` `src/cadrumo/application/modelo/tests/test_history_operation.py`
+- `S08` `M` `src/cadrumo/application/modelo/history_operation.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/runtime_modelo_work_history.py`
+- `S08` `M` `src/cadrumo/application/modelo/tests/test_revision_selection_operation.py`
+- `S08` `verify:` `uv run --no-sync pytest -q src/cadrumo/entrypoints/tests/profile_persistence/test_history.py::test_history_decodes_persisted_calculation_with_retained_authority_pin src/cadrumo/application/modelo/tests/test_history_operation.py src/cadrumo/application/modelo/tests/test_revision_selection_operation.py` -> `fail`
+- `S08` `A` `src/cadrumo/application/bucket_event_projection.py`
+- `S08` `M` `src/cadrumo/application/modelo/tests/test_history_operation.py`
+- `S08` `M` `src/cadrumo/application/modelo/revision_persistence.py`
+- `S08` `A` `src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_work_history_native.py`
+- `S08` `verify:` `uv run --no-sync pytest -q src/cadrumo/application/ledger/tests/test_history_operation.py src/cadrumo/application/modelo/tests/test_history_operation.py` -> `fail`
+- `S08` `verify:` `uv run --no-sync pytest -q src/cadrumo/application/ledger/tests/test_history_operation.py src/cadrumo/application/modelo/tests/test_history_operation.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py -k 'modelo.work.history or modelo.work.list' --tb=short --show-capture=no` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_work_history_native.py --tb=short --show-capture=no` -> `fail`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_work_history_native.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_work_history_native.py::test_native_work_history_matches_pinned_encrypted_oracle_including_discard --tb=short --show-capture=no` -> `pass`
+- `S08` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_file_approved_report_cas.py`
+- `S08` `verify:` `uv run --no-sync pytest -q src/cadrumo/entrypoints/tests/profile_persistence/test_history.py::test_history_decodes_persisted_calculation_with_retained_authority_pin src/cadrumo/entrypoints/tests/profile_persistence/test_file_approved_report_cas.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_verification_native.py src/cadrumo/entrypoints/cli/tests/test_runtime_m303_attestation_native.py --tb=short --show-capture=no` -> `pass`
+- `S08` `verify:` `uv run --no-sync ruff check src/cadrumo/application/bucket_event_projection.py src/cadrumo/application/ledger/history_operation.py src/cadrumo/application/modelo/history.py src/cadrumo/application/modelo/history_operation.py src/cadrumo/application/modelo/history_ports.py src/cadrumo/application/modelo/work_inventory_operation.py src/cadrumo/application/modelo/filing_actions.py src/cadrumo/application/modelo/verification_actions.py src/cadrumo/application/modelo/revision_persistence.py src/cadrumo/application/modelo/revision_selection_operation.py src/cadrumo/application/modelo/wizard_attempt_operation.py src/cadrumo/application/modelo/wizard_context_operation.py src/cadrumo/application/modelo/operation_definitions.py src/cadrumo/adapters/persistence/profile/modelos_verification_reports.py src/cadrumo/domain/modelos/protocols.py src/cadrumo/entrypoints/adapter_composition.py src/cadrumo/entrypoints/operation_composition.py src/cadrumo/entrypoints/cli/_modelo.py src/cadrumo/entrypoints/cli/_modelo_work_lifecycle_cli.py src/cadrumo/entrypoints/cli/_modelo_work_select_cli.py src/cadrumo/entrypoints/cli/_modelo_work_wizard_cli.py src/cadrumo/entrypoints/cli/_profile_authentication_gate.py src/cadrumo/entrypoints/cli/runtime_modelo_work_history.py src/cadrumo/entrypoints/cli/runtime_modelo_work_inventory.py src/cadrumo/entrypoints/cli/runtime_modelo_work_wizard.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync ruff format --check src/cadrumo/application/bucket_event_projection.py src/cadrumo/application/ledger/history_operation.py src/cadrumo/application/modelo/history.py src/cadrumo/application/modelo/history_operation.py src/cadrumo/application/modelo/history_ports.py src/cadrumo/application/modelo/work_inventory_operation.py src/cadrumo/application/modelo/filing_actions.py src/cadrumo/application/modelo/verification_actions.py src/cadrumo/application/modelo/revision_persistence.py src/cadrumo/application/modelo/revision_selection_operation.py src/cadrumo/application/modelo/wizard_attempt_operation.py src/cadrumo/application/modelo/wizard_context_operation.py src/cadrumo/application/modelo/operation_definitions.py src/cadrumo/adapters/persistence/profile/modelos_verification_reports.py src/cadrumo/domain/modelos/protocols.py src/cadrumo/entrypoints/adapter_composition.py src/cadrumo/entrypoints/operation_composition.py src/cadrumo/entrypoints/cli/_modelo.py src/cadrumo/entrypoints/cli/_modelo_work_lifecycle_cli.py src/cadrumo/entrypoints/cli/_modelo_work_select_cli.py src/cadrumo/entrypoints/cli/_modelo_work_wizard_cli.py src/cadrumo/entrypoints/cli/_profile_authentication_gate.py src/cadrumo/entrypoints/cli/runtime_modelo_work_history.py src/cadrumo/entrypoints/cli/runtime_modelo_work_inventory.py src/cadrumo/entrypoints/cli/runtime_modelo_work_wizard.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync ty check src/cadrumo/application/bucket_event_projection.py src/cadrumo/application/ledger/history_operation.py src/cadrumo/application/modelo/history.py src/cadrumo/application/modelo/history_operation.py src/cadrumo/application/modelo/history_ports.py src/cadrumo/application/modelo/work_inventory_operation.py src/cadrumo/application/modelo/filing_actions.py src/cadrumo/application/modelo/verification_actions.py src/cadrumo/application/modelo/revision_persistence.py src/cadrumo/application/modelo/revision_selection_operation.py src/cadrumo/application/modelo/wizard_attempt_operation.py src/cadrumo/application/modelo/wizard_context_operation.py src/cadrumo/application/modelo/operation_definitions.py src/cadrumo/adapters/persistence/profile/modelos_verification_reports.py src/cadrumo/domain/modelos/protocols.py src/cadrumo/entrypoints/adapter_composition.py src/cadrumo/entrypoints/operation_composition.py src/cadrumo/entrypoints/cli/_modelo.py src/cadrumo/entrypoints/cli/_modelo_work_lifecycle_cli.py src/cadrumo/entrypoints/cli/_modelo_work_select_cli.py src/cadrumo/entrypoints/cli/_modelo_work_wizard_cli.py src/cadrumo/entrypoints/cli/_profile_authentication_gate.py src/cadrumo/entrypoints/cli/runtime_modelo_work_history.py src/cadrumo/entrypoints/cli/runtime_modelo_work_inventory.py src/cadrumo/entrypoints/cli/runtime_modelo_work_wizard.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync pyrefly check --python-platform win32 src/cadrumo/application/bucket_event_projection.py src/cadrumo/application/ledger/history_operation.py src/cadrumo/application/modelo/history.py src/cadrumo/application/modelo/history_operation.py src/cadrumo/application/modelo/history_ports.py src/cadrumo/application/modelo/work_inventory_operation.py src/cadrumo/application/modelo/filing_actions.py src/cadrumo/application/modelo/verification_actions.py src/cadrumo/application/modelo/revision_persistence.py src/cadrumo/application/modelo/revision_selection_operation.py src/cadrumo/application/modelo/wizard_attempt_operation.py src/cadrumo/application/modelo/wizard_context_operation.py src/cadrumo/application/modelo/operation_definitions.py src/cadrumo/adapters/persistence/profile/modelos_verification_reports.py src/cadrumo/domain/modelos/protocols.py src/cadrumo/entrypoints/adapter_composition.py src/cadrumo/entrypoints/operation_composition.py src/cadrumo/entrypoints/cli/_modelo.py src/cadrumo/entrypoints/cli/_modelo_work_lifecycle_cli.py src/cadrumo/entrypoints/cli/_modelo_work_select_cli.py src/cadrumo/entrypoints/cli/_modelo_work_wizard_cli.py src/cadrumo/entrypoints/cli/_profile_authentication_gate.py src/cadrumo/entrypoints/cli/runtime_modelo_work_history.py src/cadrumo/entrypoints/cli/runtime_modelo_work_inventory.py src/cadrumo/entrypoints/cli/runtime_modelo_work_wizard.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync basedpyright --pythonplatform Windows src/cadrumo/application/bucket_event_projection.py src/cadrumo/application/ledger/history_operation.py src/cadrumo/application/modelo/history.py src/cadrumo/application/modelo/history_operation.py src/cadrumo/application/modelo/history_ports.py src/cadrumo/application/modelo/work_inventory_operation.py src/cadrumo/application/modelo/filing_actions.py src/cadrumo/application/modelo/verification_actions.py src/cadrumo/application/modelo/revision_persistence.py src/cadrumo/application/modelo/revision_selection_operation.py src/cadrumo/application/modelo/wizard_attempt_operation.py src/cadrumo/application/modelo/wizard_context_operation.py src/cadrumo/application/modelo/operation_definitions.py src/cadrumo/adapters/persistence/profile/modelos_verification_reports.py src/cadrumo/domain/modelos/protocols.py src/cadrumo/entrypoints/adapter_composition.py src/cadrumo/entrypoints/operation_composition.py src/cadrumo/entrypoints/cli/_modelo.py src/cadrumo/entrypoints/cli/_modelo_work_lifecycle_cli.py src/cadrumo/entrypoints/cli/_modelo_work_select_cli.py src/cadrumo/entrypoints/cli/_modelo_work_wizard_cli.py src/cadrumo/entrypoints/cli/_profile_authentication_gate.py src/cadrumo/entrypoints/cli/runtime_modelo_work_history.py src/cadrumo/entrypoints/cli/runtime_modelo_work_inventory.py src/cadrumo/entrypoints/cli/runtime_modelo_work_wizard.py` -> `pass`
+- `S08` `A` `src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_work_inventory_native.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_work_inventory_native.py --tb=short --show-capture=no` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/tests/test_ledger_list_filter.py src/cadrumo/entrypoints/cli/tests/test_ledger_corpus_review.py src/cadrumo/entrypoints/cli/tests/test_participation_cli_surface.py --tb=short --show-capture=no` -> `pass`
+- `S08` `verify:` `uv run --no-sync ruff check src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py src/cadrumo/entrypoints/cli/tests/test_modelo_work_wizard.py src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_work_wizard_empty_steps.py src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_work_inventory_native.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync ruff format --check src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py src/cadrumo/entrypoints/cli/tests/test_modelo_work_wizard.py src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_work_wizard_empty_steps.py src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_work_inventory_native.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync ty check src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py src/cadrumo/entrypoints/cli/tests/test_modelo_work_wizard.py src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_work_wizard_empty_steps.py src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_work_inventory_native.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync pyrefly check --python-platform win32 src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py src/cadrumo/entrypoints/cli/tests/test_modelo_work_wizard.py src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_work_wizard_empty_steps.py src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_work_inventory_native.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync basedpyright --pythonplatform Windows src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py src/cadrumo/entrypoints/cli/tests/test_modelo_work_wizard.py src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_work_wizard_empty_steps.py src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_work_inventory_native.py` -> `pass`
+- `S08` `verify:` `just docs-generate-api-stubs` -> `pass`
+- `S08` `verify:` `just check-docs-api` -> `pass`
+- `S08` `verify:` `just check-import-boundaries` -> `fail`
+- `S08` `D` `src/cadrumo/application/modelo/tests/test_work_missing_input_publication.py`
+- `S08` `A` `src/cadrumo/entrypoints/tests/profile_persistence/test_work_missing_input_publication.py`
+- `S08` `A` `src/cadrumo/entrypoints/tests/profile_persistence/test_wizard_attempt_publication.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/application/modelo/tests/test_wizard_attempt_operation.py src/cadrumo/entrypoints/tests/profile_persistence/test_work_missing_input_publication.py src/cadrumo/entrypoints/tests/profile_persistence/test_wizard_attempt_publication.py --tb=short --show-capture=no` -> `pass`
+- `S09` `M` `.vault/adr/2026-08-11-tui-architecture-adr.md`
+- `S09` `M` `.vault/audit/2026-09-26-mcp-purpose-authentication-audit.md`
+- `S09` `A` `src/cadrumo/application/operations/refusal_evidence.py`
+- `S09` `M` `src/cadrumo/application/operations/_registry_contracts.py`
+- `S09` `M` `src/cadrumo/application/operations/owner.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/runtime_registered_operation.py`
+- `S09` `M` `src/cadrumo/core/errors/registry/_application_part3b.py`
+- `S08` `A` `src/cadrumo/application/modelo/work_create_operation.py`
+- `S08` `M` `src/cadrumo/application/modelo/work_create_policy.py`
+- `S08` `M` `src/cadrumo/application/modelo/work_addressing.py`
+- `S08` `A` `src/cadrumo/entrypoints/cli/runtime_modelo_work_create.py`
+- `S08` `A` `src/cadrumo/entrypoints/tui/modelo/runtime_work_create.py`
+- `S09` `verify:` `uv run --no-sync ruff check src/cadrumo/application/operations/_supervisor_execution.py src/cadrumo/application/operations/_projection_read.py` -> `pass`
+- `S09` `verify:` `uv run --no-sync ruff format --check src/cadrumo/application/operations/_supervisor_execution.py src/cadrumo/application/operations/_projection_read.py` -> `pass`
+- `S09` `verify:` `Scoped ty, pyrefly --python-platform win32 and basedpyright --pythonplatform Windows for supervisor/projection changes` -> `pass`
+- `S09` `A` `src/cadrumo/application/operations/tests/test_refusal_evidence.py`
+- `S09` `M` `src/cadrumo/application/operations/tests/test_public_contracts.py`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or hex_application or hex_persistence_adapter' src/cadrumo/application/operations/tests/test_refusal_evidence.py src/cadrumo/application/operations/tests/test_models.py src/cadrumo/application/operations/tests/test_registry.py src/cadrumo/application/operations/tests/test_public_contracts.py src/cadrumo/application/operations/tests/test_contract_invariants.py src/cadrumo/application/operations/tests/test_journal.py src/cadrumo/adapters/persistence/operations/tests/test_journal.py src/cadrumo/adapters/persistence/operations/tests/test_projection_services.py --tb=short --show-capture=no` -> `pass`
+- `S08` `A` `src/cadrumo/application/modelo/work_review_operation.py`
+- `S08` `A` `src/cadrumo/application/modelo/tests/test_work_review_operation.py`
+- `S08` `A` `src/cadrumo/entrypoints/cli/runtime_modelo_work_review.py`
+- `S08` `A` `src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_work_review.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/_modelo_work_review_cli.py`
+- `S08` `verify:` `Scoped Ruff check/format, ty, pyrefly win32 and basedpyright Windows for five work-review owned files` -> `pass`
+- `S09` `verify:` `Core/refusal/registry/journal/public-result eight-file pytest batch (run 20260928T142559.939315Z-pytest-66696-8a75ddbb): 277 tests` -> `pass`
+- `S09` `verify:` `Five scoped static checks for refusal evidence, registry, adapter journal and result-service tests` -> `pass`
+- `S08` `A` `src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_work_create.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_work_create.py --tb=short --show-capture=no` -> `pass`
+- `S08` `A` `src/cadrumo/application/modelo/tests/test_work_create_operation.py`
+- `S08` `A` `src/cadrumo/entrypoints/tests/profile_persistence/test_work_create_operation.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/application/modelo/tests/test_work_create_operation.py src/cadrumo/entrypoints/tests/profile_persistence/test_work_create_operation.py --tb=short --show-capture=no` -> `pass`
+- `S08` `verify:` `Marker-selected CLI work-create bridge batch: 19 tests, run 20260928T142932.336866Z-pytest-69000-8e4b9b58` -> `pass`
+- `S08` `A` `src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_work_create_native.py`
+- `S08` `A` `src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_work_review_native.py`
+- `S08` `verify:` `Five scoped static checks for native create fixture including denied refusal-detail output` -> `pass`
+- `S08` `verify:` `Five scoped static checks for final work-review cohort and root composition/auth gate` -> `pass`
+- `S08` `D` `src/cadrumo/entrypoints/tests/profile_persistence/test_work_create_operation.py`
+- `S09` `A` `src/cadrumo/adapters/persistence/operations/tests/test_failure_custody_settlement.py`
+- `S09` `verify:` `Five scoped static gates for financial operand cleanup regression and supervisor/projection dependencies` -> `pass`
+- `S08` `A` `src/cadrumo/entrypoints/tui/modelo/tests/test_runtime_work_create.py`
+- `S08` `verify:` `Five scoped static gates for TUI runtime create/controller/workbench/declarations source and tests` -> `pass`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_work_create_native.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_work_create_native.py::test_native_create_requires_matching_period_and_commit_and_result_disclosure --tb=short --show-capture=no (20260928T144532.136140Z-pytest-49884-113100a5; exit 0; 1 passed)` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'integration' src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py -k 'modelo.work.create or modelo.work.review' --tb=short --show-capture=no (20260928T145233.406510Z-pytest-36844-abc6c3ff; exit 0; 2 passed, 71 deselected)` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'integration' src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py::test_every_registered_definition_has_a_conformance_scenario --tb=short --show-capture=no (20260928T145312.808997Z-pytest-45920-0736771c; exit 0; 1 passed)` -> `pass`
+- `S09` `A` `src/cadrumo/entrypoints/tui/modelo/tests/test_runtime_work_create.py`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'integration and hex_application' src/cadrumo/adapters/persistence/operations/tests/test_failure_custody_settlement.py --tb=short --show-capture=no (20260928T145428.610662Z-pytest-56220-f885aab3; exit 0; 3 passed)` -> `pass`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit and hex_entrypoint' src/cadrumo/entrypoints/tui/modelo/tests/test_runtime_work_create.py --tb=short --show-capture=no (20260928T145444.044162Z-pytest-40532-1c408597; exit 0; 11 passed)` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_work_review.py --tb=short --show-capture=no (20260928T143625.120966Z-pytest-9992-be78a484; exit 0; 6 passed)` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/tests/test_work_create_quiet_emit.py --tb=short --show-capture=no (20260928T143514.639254Z-pytest-34660-6ac38b06; exit 0; 5 passed)` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tui/tests/test_runtime_root_shell.py src/cadrumo/entrypoints/tui/operations/tests/test_runtime_controller.py --tb=short --show-capture=no (20260928T145614.048123Z-pytest-31556-3bac669d; exit 0; 8 passed)` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tui/declarations/tests/test_declarations_workspace.py -k 'declarations_create or modelo_workspace_route' --tb=short --show-capture=no (20260928T145652.641634Z-pytest-61560-a551b925; exit 0; 4 passed, 15 deselected)` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q src/cadrumo/entrypoints/cli/tests/test_work_create_quiet_emit.py (20260928T143514.639254Z-pytest-34660-6ac38b06; exit 0; 5 passed)` -> `pass`
+- `S09` `A` `src/cadrumo/entrypoints/runtime/tests/test_refusal_detail_authority.py`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/runtime/tests/test_refusal_detail_authority.py --tb=short --show-capture=no (20260928T145836.422211Z-pytest-47060-15bc6aa8; exit 0; 2 passed)` -> `pass`
+- `S09` `verify:` `Ruff check and format, ty, pyrefly --python-platform win32, basedpyright --pythonplatform Windows on test_refusal_detail_authority.py` -> `pass`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tui/tests/test_runtime_workbench_native.py::test_native_human_generation_is_exact_profile_and_key_cannot_submit_or_read --tb=short --show-capture=no (20260928T145720.929883Z-pytest-60872-9e91ae0e; exit 0; 1 passed)` -> `pass`
+- `S09` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit and hex_application' src/cadrumo/adapters/persistence/operations/tests/test_projection_services.py --tb=short --show-capture=no (20260928T150253.324093Z-pytest-35664-29f3c2bf; exit 0; 18 passed)` -> `pass`
+- `S09` `verify:` `Ruff check and format, ty, pyrefly --python-platform win32, basedpyright --pythonplatform Windows on test_projection_services.py` -> `pass`
+- `S08` `verify:` `just generate-import-load-targets (frozen cohort 94a0c5a45156acb0169f640debe986c21ef4c3aee5925520a678ce054300157e; exit 0)` -> `pass`
+- `S08` `verify:` `just docs-generate-api-stubs (7 changed, 2090 unchanged, 0 stale removed; exit 0)` -> `pass`
+- `S08` `verify:` `just check-docs-api (exit 0)` -> `pass`
+- `S08` `verify:` `just check-import-boundaries (20260928T150601.299069Z-check-import-boundaries-63680-4c1d4c50; exit 1; REEXPORT_OR_ALIAS test_projection_services.py:15)` -> `fail`
+- `S08` `A` `docs/api/cadrumo.application.modelo.work_create_operation.rst`
+- `S08` `A` `docs/api/cadrumo.application.modelo.work_review_operation.rst`
+- `S08` `A` `docs/api/cadrumo.application.operations.refusal_evidence.rst`
+- `S08` `A` `docs/api/cadrumo.entrypoints.tui.modelo.runtime_work_create.rst`
+- `S08` `M` `docs/api/cadrumo.application.modelo.rst`
+- `S08` `M` `docs/api/cadrumo.application.operations.rst`
+- `S08` `M` `docs/api/cadrumo.entrypoints.tui.modelo.rst`
+- `S08` `M` `src/cadrumo/adapters/persistence/operations/tests/test_projection_services.py`
+- `S08` `verify:` `just generate-import-load-targets (exit 0)` -> `pass`
+- `S08` `verify:` `just docs-generate-api-stubs (retry exit 0; 0 changed, 2097 unchanged, 0 removed)` -> `pass`
+- `S08` `verify:` `just check-import-boundaries (20260928T151059.163838Z-check-import-boundaries-26868-69b9fa71; exit 0; 15 contracts kept, 8081 graph files, 3096/3096 modules loaded, 0 failures/hard findings)` -> `pass`
+- `S08` `A` `src/cadrumo/application/workflow/run_read_ports.py`
+- `S08` `A` `src/cadrumo/application/workflow/run_projection.py`
+- `S08` `A` `src/cadrumo/application/workflow/run_read_operation.py`
+- `S08` `A` `src/cadrumo/application/workflow/tests/test_run_read_operation.py`
+- `S08` `M` `src/cadrumo/application/workflow/resume.py`
+- `S08` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_workflow_resume.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/application/workflow/tests/test_run_read_operation.py --tb=short --show-capture=no` -> `pass`
+- `S08` `A` `src/cadrumo/application/workflow/resume_operation.py`
+- `S08` `A` `src/cadrumo/application/workflow/tests/test_resume_operation.py`
+- `S08` `A` `src/cadrumo/entrypoints/workflow_run_composition.py`
+- `S08` `A` `src/cadrumo/entrypoints/cli/runtime_workflow_runs.py`
+- `S08` `A` `src/cadrumo/entrypoints/cli/runtime_workflow_resume.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/_modelo_work_runs_cli.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_work_runs_action_localization.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_work_resume.py`
+- `S08` `A` `src/cadrumo/entrypoints/cli/tests/test_runtime_workflow_runs.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/tests/test_work_runs_action_localization.py src/cadrumo/entrypoints/cli/tests/test_runtime_workflow_runs.py src/cadrumo/entrypoints/tests/profile_persistence/test_workflow_resume.py --tb=short --show-capture=no` -> `fail`
+- `S08` `A` `src/cadrumo/application/modelo/dependency_operation.py`
+- `S08` `A` `src/cadrumo/application/modelo/dependency_projection.py`
+- `S08` `A` `src/cadrumo/application/modelo/dependency_read_ports.py`
+- `S08` `A` `src/cadrumo/application/modelo/tests/test_dependency_projection.py`
+- `S08` `A` `src/cadrumo/application/modelo/tests/test_dependency_operation.py`
+- `S08` `A` `src/cadrumo/entrypoints/modelo_dependency_composition.py`
+- `S08` `A` `src/cadrumo/entrypoints/cli/runtime_modelo_dependencies.py`
+- `S08` `A` `src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_dependencies.py`
+- `S08` `A` `src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_dependencies_native.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/_modelo_work_verification_cli.py`
+- `S08` `M` `src/cadrumo/application/wizard/status.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py -k 'registered_definition_has_a_conformance_scenario or workflow.run.read or workflow.run.list or workflow.resume.context or modelo.work.dependencies' --tb=short --show-capture=no` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/application/wizard/tests/test_terminal_preconditions.py src/cadrumo/application/wizard/tests/test_status_refusal_grounding.py src/cadrumo/application/wizard/tests/test_status_next_action.py --tb=short --show-capture=no` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/tests/test_runtime_workflow_runs_native.py --tb=short --show-capture=no` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/application/modelo/tests/test_dependency_projection.py src/cadrumo/application/modelo/tests/test_dependency_operation.py src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_dependencies.py src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_dependencies_native.py --tb=short --show-capture=no` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit and hex_entrypoint' src/cadrumo/entrypoints/cli/tests/test_runtime_workflow_runs.py --tb=short --show-capture=no` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/application/workflow/tests/test_resume_operation.py src/cadrumo/entrypoints/cli/tests/test_work_resume.py --tb=short --show-capture=no` -> `pass`
+- `S08` `A` `src/cadrumo/entrypoints/tui/tests/local_launcher_composition.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/runtime_workflow_runs.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/runtime_workflow_resume.py`
+- `S08` `A` `src/cadrumo/entrypoints/cli/tests/test_runtime_workflow_resume.py`
+- `S08` `A` `src/cadrumo/application/overview/pipeline_operation.py`
+- `S08` `A` `src/cadrumo/application/overview/pipeline_projection.py`
+- `S08` `A` `src/cadrumo/application/overview/pipeline_read_ports.py`
+- `S08` `A` `src/cadrumo/entrypoints/overview_pipeline_composition.py`
+- `S08` `A` `src/cadrumo/entrypoints/cli/runtime_overview_pipeline.py`
+- `S08` `A` `src/cadrumo/entrypoints/cli/tests/test_runtime_overview_pipeline.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/_overview.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit and hex_entrypoint' src/cadrumo/entrypoints/cli/tests/test_runtime_workflow_resume.py --tb=short --show-capture=no` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/tests/test_runtime_overview_pipeline.py --tb=short --show-capture=no` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tui/tests/test_launcher_entry_point.py src/cadrumo/entrypoints/tui/tests/test_launcher_composition_root.py src/cadrumo/entrypoints/tui/tests/test_installed_generation_composition.py src/cadrumo/entrypoints/tui/tests/test_destination_admission_refusals.py src/cadrumo/entrypoints/tui/tests/test_calendar_work_create_handoff.py src/cadrumo/entrypoints/tui/tests/test_installed_workbench.py src/cadrumo/entrypoints/tests/test_operation_catalogue.py --tb=short --show-capture=no` -> `fail`
+- `S08` `verify:` `uv run --no-sync vaultspec-core vault check all --feature mcp-purpose-authentication --json` -> `pass`
+- `S08` `verify:` `uv run --no-sync vaultspec-core vault plan check .vault/plan/2026-09-26-mcp-purpose-authentication-plan.md --json` -> `pass`
+- `S08` `A` `src/cadrumo/application/overview/tests/test_pipeline_operation.py`
+- `S08` `A` `src/cadrumo/application/overview/tests/test_pipeline_projection.py`
+- `S08` `M` `src/cadrumo/entrypoints/tests/test_operation_catalogue.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/application/overview/tests/test_pipeline_operation.py src/cadrumo/application/overview/tests/test_pipeline_projection.py src/cadrumo/entrypoints/tests/test_operation_catalogue.py --tb=short --show-capture=no` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/tests/test_overview_pipeline_verb.py --tb=short --show-capture=no` -> `fail`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py -k 'overview and pipeline or registered_definition_has_a_conformance_scenario' --tb=short --show-capture=no` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/tests/test_overview_pipeline_verb.py::test_pipeline_distinguishes_persisted_incomplete_from_never_verified --tb=short --show-capture=no` -> `fail`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_overview_pipeline_verb.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/tests/test_overview_pipeline_verb.py --tb=short --show-capture=no` -> `pass`
+- `S08` `A` `src/cadrumo/entrypoints/cli/tests/test_runtime_overview_pipeline_native.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/tests/test_runtime_overview_pipeline_native.py --tb=short --show-capture=no` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/tests/test_work_runs_action_localization.py --tb=short --show-capture=no` -> `pass`
+- `S08` `A` `docs/api/cadrumo.application.modelo.dependency_operation.rst`
+- `S08` `A` `docs/api/cadrumo.application.modelo.dependency_projection.rst`
+- `S08` `A` `docs/api/cadrumo.application.modelo.dependency_read_ports.rst`
+- `S08` `A` `docs/api/cadrumo.application.overview.pipeline_operation.rst`
+- `S08` `A` `docs/api/cadrumo.application.overview.pipeline_projection.rst`
+- `S08` `A` `docs/api/cadrumo.application.overview.pipeline_read_ports.rst`
+- `S08` `A` `docs/api/cadrumo.application.workflow.resume_operation.rst`
+- `S08` `A` `docs/api/cadrumo.application.workflow.run_projection.rst`
+- `S08` `A` `docs/api/cadrumo.application.workflow.run_read_operation.rst`
+- `S08` `A` `docs/api/cadrumo.application.workflow.run_read_ports.rst`
+- `S08` `A` `docs/api/cadrumo.entrypoints.modelo_dependency_composition.rst`
+- `S08` `A` `docs/api/cadrumo.entrypoints.overview_pipeline_composition.rst`
+- `S08` `A` `docs/api/cadrumo.entrypoints.workflow_run_composition.rst`
+- `S08` `M` `docs/api/cadrumo.application.overview.rst`
+- `S08` `M` `docs/api/cadrumo.application.workflow.rst`
+- `S08` `M` `docs/api/cadrumo.entrypoints.rst`
+- `S08` `A` `src/cadrumo/application/invoices/catalogue_selection.py`
+- `S08` `A` `src/cadrumo/application/invoices/inspection_read_ports.py`
+- `S08` `A` `src/cadrumo/application/invoices/catalogue_read_operation.py`
+- `S08` `A` `src/cadrumo/entrypoints/invoice_inspection_composition.py`
+- `S08` `M` `src/cadrumo/application/invoices/catalogue_lifecycle.py`
+- `S08` `M` `src/cadrumo/entrypoints/tui/withholding/installed.py`
+- `S08` `R` `src/cadrumo/entrypoints/runtime_client.py` -> `src/cadrumo/adapters/local_runtime/runtime_client.py`
+- `S08` `R` `src/cadrumo/entrypoints/runtime_credentials.py` -> `src/cadrumo/adapters/local_runtime/runtime_credentials.py`
+- `S08` `R` `src/cadrumo/entrypoints/runtime_manager_composition.py` -> `src/cadrumo/adapters/local_runtime/runtime_manager_composition.py`
+- `S08` `R` `src/cadrumo/entrypoints/automation_store_composition.py` -> `src/cadrumo/adapters/persistence/storage/custody/automation_store_composition.py`
+- `S16` `M` `src/cadrumo/application/operations/registry.py`
+- `S16` `M` `src/cadrumo/application/runtime/operation_access.py`
+- `S16` `M` `src/cadrumo/application/runtime/profile_worker.py`
+- `S16` `M` `src/cadrumo/entrypoints/runtime/operation_host.py`
+- `S16` `M` `src/cadrumo/entrypoints/runtime/worker.py`
+- `S16` `M` `src/cadrumo/entrypoints/runtime/profile_connections.py`
+- `S16` `M` `src/cadrumo/adapters/local_runtime/profile_worker.py`
+- `S16` `M` `src/cadrumo/adapters/local_runtime/frontend_client.py`
+- `S08` `M` `src/cadrumo/entrypoints/tui/account.py`
+- `S08` `M` `src/cadrumo/entrypoints/tui/tests/fixture.py`
+- `S08` `M` `src/cadrumo/entrypoints/tui/tests/workbench_fixtures.py`
+- `S08` `M` `src/cadrumo/entrypoints/tui/tests/test_app.py`
+- `S08` `M` `src/cadrumo/entrypoints/tui/tests/test_doors_run_off_the_event_loop.py`
+- `S08` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_account_session.py`
+- `S08` `M` `src/cadrumo/entrypoints/tui/tests/test_workspace_route_host.py`
+- `S08` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_root_shell.py`
+- `S08` `M` `src/cadrumo/entrypoints/tui/modelo/tests/test_runtime_lifecycle_effects.py`
+- `S08` `M` `src/cadrumo/entrypoints/tui/modelo/view/tests/test_m303_evidence_lifecycle.py`
+- `S08` `M` `src/cadrumo/entrypoints/tui/tests/test_installed_workbench.py`
+- `S08` `M` `src/cadrumo/entrypoints/tui/tests/test_launcher_composition_root.py`
+- `S08` `M` `src/cadrumo/entrypoints/tui/tests/test_launcher_entry_point.py`
+- `S08` `M` `src/cadrumo/entrypoints/tui/tests/test_destination_admission_refusals.py`
+- `S08` `M` `src/cadrumo/entrypoints/tui/tests/test_terminal_sizes.py`
+- `S08` `M` `src/cadrumo/entrypoints/tui/tests/test_workbench_accessibility.py`
+- `S08` `M` `src/cadrumo/entrypoints/tui/tests/test_workbench_responsive.py`
+- `S08` `D` `src/cadrumo/entrypoints/tui/profile/local_reader.py`
+- `S08` `D` `src/cadrumo/entrypoints/tui/operations/controller.py`
+- `S08` `D` `src/cadrumo/entrypoints/tui/tests/local_launcher_composition.py`
+- `S08` `D` `src/cadrumo/entrypoints/tui/tests/local_workbench_composition.py`
+- `S08` `D` `src/cadrumo/entrypoints/tui/tests/workbench_session.py`
+- `S08` `D` `src/cadrumo/entrypoints/tui/tests/test_account.py`
+- `S08` `D` `src/cadrumo/entrypoints/tui/tests/test_calendar_work_create_handoff.py`
+- `S08` `D` `src/cadrumo/entrypoints/tui/tests/test_installed_generation_composition.py`
+- `S08` `D` `src/cadrumo/entrypoints/tui/tests/test_workbench_security.py`
+- `S08` `D` `src/cadrumo/entrypoints/tui/profile/tests/test_local_reader_page.py`
+- `S08` `D` `src/cadrumo/entrypoints/tui/operations/tests/test_operation_modal.py`
+- `S08` `D` `src/cadrumo/entrypoints/tui/operations/tests/test_operation_modal_lifecycle.py`
+- `S08` `D` `src/cadrumo/entrypoints/tui/modelo/view/tests/test_lifecycle_notice_delivery.py`
+- `S08` `A` `src/cadrumo/entrypoints/cli/tests/test_runtime_invoice_catalogue_native.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/runtime/tests/test_profile_connections.py::test_api_authority_reaches_real_effects_and_guards_public_output src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py::test_every_registered_definition_has_a_conformance_scenario 'src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py::test_every_production_registered_executor_runs_through_the_shared_supervisor_matrix[ledger.invoice.list]' 'src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py::test_every_production_registered_executor_runs_through_the_shared_supervisor_matrix[ledger.invoice.view]' src/cadrumo/entrypoints/cli/tests/test_runtime_invoice_catalogue_native.py src/cadrumo/entrypoints/tui/modelo/tests/test_runtime_lifecycle_effects.py --tb=short --show-capture=no` -> `fail`
+- `S16` `M` `src/cadrumo_harness/mcp/server.py`
+- `S16` `M` `src/cadrumo_harness/mcp/main.py`
+- `S16` `M` `pyproject.toml`
+- `S18` `M` `src/cadrumo_harness/_workspace.py`
+- `S18` `M` `src/cadrumo_harness/mcp/main.py`
+- `S18` `M` `dev/agent_eval/_live_scoring.py`
+- `S13` `M` `src/cadrumo/entrypoints/cli/app_runtime.py`
+- `S13` `M` `src/cadrumo/entrypoints/cli/app_runtime_command_specs.py`
+- `S13` `M` `src/cadrumo/entrypoints/cli/app_runtime_payloads.py`
+- `S10` `M` `src/cadrumo/application/runtime/management.py`
+- `S10` `M` `src/cadrumo/adapters/local_runtime/windows_manager.py`
+- `S18` `D` `dev/agent_eval/tests/test_active_profile_confirmation_golden.py`
+- `S18` `D` `dev/agent_eval/tests/test_confirmation_gate_golden.py`
+- `S18` `D` `dev/agent_eval/tests/test_discovery_scoring.py`
+- `S18` `D` `dev/agent_eval/tests/test_faithfulness_golden.py`
+- `S18` `D` `dev/agent_eval/tests/test_identity_switch_scoring_golden.py`
+- `S18` `D` `dev/agent_eval/tests/test_lifecycle_contradiction_golden.py`
+- `S18` `D` `dev/agent_eval/tests/test_live_harness.py`
+- `S18` `D` `dev/agent_eval/tests/test_tool_call_replay.py`
+- `S18` `D` `dev/packaging/serving_path_benchmark.py`
+- `S18` `D` `dev/packaging/tests/test_serving_path_benchmark.py`
+- `S18` `D` `src/cadrumo_harness/mcp/_action_capabilities.py`
+- `S18` `D` `src/cadrumo_harness/mcp/_annotations.py`
+- `S18` `D` `src/cadrumo_harness/mcp/_cli_executable.py`
+- `S18` `D` `src/cadrumo_harness/mcp/_command_policy.py`
+- `S18` `D` `src/cadrumo_harness/mcp/_completions.py`
+- `S18` `D` `src/cadrumo_harness/mcp/_composition.py`
+- `S18` `D` `src/cadrumo_harness/mcp/_corpus_tools.py`
+- `S18` `D` `src/cadrumo_harness/mcp/_elicitation.py`
+- `S18` `D` `src/cadrumo_harness/mcp/_meta_tools.py`
+- `S18` `D` `src/cadrumo_harness/mcp/_persona_scope.py`
+- `S18` `D` `src/cadrumo_harness/mcp/_profile_secret_channel.py`
+- `S18` `D` `src/cadrumo_harness/mcp/_prompts.py`
+- `S18` `D` `src/cadrumo_harness/mcp/_resources.py`
+- `S18` `D` `src/cadrumo_harness/mcp/_result_thinning.py`
+- `S18` `D` `src/cadrumo_harness/mcp/_settings.py`
+- `S18` `D` `src/cadrumo_harness/mcp/_stdio_lifetime.py`
+- `S18` `D` `src/cadrumo_harness/mcp/_surface.py`
+- `S18` `D` `src/cadrumo_harness/mcp/_telemetry.py`
+- `S18` `D` `src/cadrumo_harness/mcp/_terminology_tools.py`
+- `S18` `D` `src/cadrumo_harness/mcp/_transport.py`
+- `S18` `D` `src/cadrumo_harness/mcp/call_runtime.py`
+- `S18` `D` `src/cadrumo_harness/mcp/capability_manifest.py`
+- `S18` `D` `src/cadrumo_harness/mcp/command_surface.py`
+- `S18` `D` `src/cadrumo_harness/mcp/dispatch.py`
+- `S18` `D` `src/cadrumo_harness/mcp/faithfulness.py`
+- `S18` `D` `src/cadrumo_harness/mcp/harness_tools.py`
+- `S18` `D` `src/cadrumo_harness/mcp/hitl.py`
+- `S18` `D` `src/cadrumo_harness/mcp/identity_gate.py`
+- `S18` `D` `src/cadrumo_harness/mcp/inprocess.py`
+- `S18` `D` `src/cadrumo_harness/mcp/tests/_profile.py`
+- `S18` `D` `src/cadrumo_harness/mcp/tests/_support.py`
+- `S18` `D` `src/cadrumo_harness/mcp/tests/subprocess_cleanup_fixture.py`
+- `S18` `D` `src/cadrumo_harness/mcp/tests/test_action_projection.py`
+- `S18` `D` `src/cadrumo_harness/mcp/tests/test_annotations.py`
+- `S18` `D` `src/cadrumo_harness/mcp/tests/test_bulk_resource_resolution.py`
+- `S18` `D` `src/cadrumo_harness/mcp/tests/test_call_runtime.py`
+- `S18` `D` `src/cadrumo_harness/mcp/tests/test_capability_posture.py`
+- `S18` `D` `src/cadrumo_harness/mcp/tests/test_captured_cleanup.py`
+- `S18` `D` `src/cadrumo_harness/mcp/tests/test_cli_executable.py`
+- `S18` `D` `src/cadrumo_harness/mcp/tests/test_client_handshake.py`
+- `S18` `D` `src/cadrumo_harness/mcp/tests/test_command_policy_authority.py`
+- `S18` `D` `src/cadrumo_harness/mcp/tests/test_command_ranking_golden.py`
+- `S18` `D` `src/cadrumo_harness/mcp/tests/test_command_schema_authority.py`
+- `S18` `D` `src/cadrumo_harness/mcp/tests/test_corpus_resource.py`
+- `S18` `D` `src/cadrumo_harness/mcp/tests/test_corpus_tools.py`
+- `S18` `D` `src/cadrumo_harness/mcp/tests/test_direct_dispatch_gate_composition.py`
+- `S18` `D` `src/cadrumo_harness/mcp/tests/test_elicitation.py`
+- `S18` `D` `src/cadrumo_harness/mcp/tests/test_enum_help_prose_matches_the_set.py`
+- `S18` `D` `src/cadrumo_harness/mcp/tests/test_faithfulness.py`
+- `S18` `D` `src/cadrumo_harness/mcp/tests/test_harness_delivery.py`
+- `S18` `D` `src/cadrumo_harness/mcp/tests/test_hitl_and_live_write.py`
+- `S18` `D` `src/cadrumo_harness/mcp/tests/test_identity_gate.py`
+- `S18` `D` `src/cadrumo_harness/mcp/tests/test_identity_gate_aeat_capability.py`
+- `S18` `D` `src/cadrumo_harness/mcp/tests/test_identity_gate_login_reachability.py`
+- `S18` `D` `src/cadrumo_harness/mcp/tests/test_identity_gate_open_world_invariant.py`
+- `S18` `D` `src/cadrumo_harness/mcp/tests/test_inprocess_runtime.py`
+- `S18` `D` `src/cadrumo_harness/mcp/tests/test_localization_boundary.py`
+- `S18` `D` `src/cadrumo_harness/mcp/tests/test_meta_tools.py`
+- `S18` `D` `src/cadrumo_harness/mcp/tests/test_persona_scope.py`
+- `S18` `D` `src/cadrumo_harness/mcp/tests/test_persona_server_wiring.py`
+- `S18` `D` `src/cadrumo_harness/mcp/tests/test_profile_secret_channel.py`
+- `S18` `D` `src/cadrumo_harness/mcp/tests/test_prompts.py`
+- `S18` `D` `src/cadrumo_harness/mcp/tests/test_result_size_budget.py`
+- `S18` `D` `src/cadrumo_harness/mcp/tests/test_sdk_adaptation.py`
+- `S18` `D` `src/cadrumo_harness/mcp/tests/test_server_adapter_composition_lifetime.py`
+- `S18` `D` `src/cadrumo_harness/mcp/tests/test_server_loop_responsiveness.py`
+- `S18` `D` `src/cadrumo_harness/mcp/tests/test_server_output_encoding.py`
+- `S18` `D` `src/cadrumo_harness/mcp/tests/test_server_profile_secret_composition.py`
+- `S18` `D` `src/cadrumo_harness/mcp/tests/test_server_refusal.py`
+- `S18` `D` `src/cadrumo_harness/mcp/tests/test_serving_gates.py`
+- `S18` `D` `src/cadrumo_harness/mcp/tests/test_stdio_lifetime.py`
+- `S18` `D` `src/cadrumo_harness/mcp/tests/test_surface_policy.py`
+- `S18` `D` `src/cadrumo_harness/mcp/tests/test_telemetry_retention.py`
+- `S18` `D` `src/cadrumo_harness/mcp/tests/test_tool_naming_budget.py`
+- `S18` `D` `src/cadrumo_harness/mcp/tests/test_tools_and_dispatch.py`
+- `S18` `D` `src/cadrumo_harness/mcp/tests/test_toolset_activation.py`
+- `S18` `D` `src/cadrumo_harness/mcp/tests/test_toolsets.py`
+- `S18` `D` `src/cadrumo_harness/mcp/tests/test_warm_wedge_fallback.py`
+- `S18` `D` `src/cadrumo_harness/mcp/tests/test_whoami_readiness_taxonomy.py`
+- `S18` `D` `src/cadrumo_harness/mcp/tests/test_write_policy_mutability_parity.py`
+- `S18` `D` `src/cadrumo_harness/mcp/tools.py`
+- `S18` `D` `src/cadrumo_harness/mcp/toolsets.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/_ledger_business_invoice_cli.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_invoice_catalogue_native.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/cli/tests/test_runtime_invoice_catalogue_native.py::test_native_cli_lists_and_resolves_exact_and_unique_invoice_prefixes --tb=short --show-capture=no` -> `pass`
+- `S18` `M` `src/cadrumo_harness/_data/agent/rules/cadrumo-operator-operating-rules.md`
+- `S18` `M` `src/cadrumo_harness/_data/agent/rules/cadrumo-operator-orientation-routing.md`
+- `S18` `M` `src/cadrumo_harness/_data/agent/rules/cadrumo-operator-grounding.md`
+- `S18` `M` `src/cadrumo_harness/_data/agent/rules/cadrumo-operator-lifecycle-ordering.md`
+- `S16` `M` `src/cadrumo_harness/mcp/tests/test_runtime_protocol.py`
+- `S16` `M` `src/cadrumo_harness/tests/test_plugin_workspace.py`
+- `S08` `M` `src/cadrumo/application/operator_actions/projection.py`
+- `S08` `M` `src/cadrumo/application/workflow/run_projection.py`
+- `S18` `M` `src/cadrumo_harness/_data/agent/personas/cadrumo-verifier.md`
+- `S18` `M` `src/cadrumo_harness/_data/agent/personas/cadrumo-modelo-preparer.md`
+- `S18` `M` `src/cadrumo_harness/_data/agent/personas/cadrumo-coordinator.md`
+- `S18` `M` `src/cadrumo_harness/_data/agent/README.md`
+- `S08` `M` `src/cadrumo/application/auth/read_operation.py`
+- `S08` `M` `src/cadrumo/entrypoints/auth_read_composition.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/config/runtime_auth_read.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/config/_auth.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/config/_auth_diagnostics.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_overview_explain_verb.py`
+- `S16` `verify:` `uv run --no-sync pytest -q -n0 -m 'integration and hex_core' src/cadrumo_harness/tests/test_plugin_workspace.py src/cadrumo_harness/mcp/tests/test_runtime_protocol.py` -> `pass`
+- `S08` `M` `src/cadrumo/application/overview/read_projection.py`
+- `S08` `M` `src/cadrumo/application/overview/read_calendar_projection.py`
+- `S08` `M` `src/cadrumo/application/overview/read_ports.py`
+- `S08` `M` `src/cadrumo/application/overview/read_operation.py`
+- `S08` `M` `src/cadrumo/application/overview/status_report.py`
+- `S08` `M` `src/cadrumo/application/modelo/work_create_operation.py`
+- `S08` `M` `src/cadrumo/entrypoints/overview_read_composition.py`
+- `S08` `M` `src/cadrumo/entrypoints/overview_evidence_composition.py`
+- `S08` `M` `src/cadrumo/entrypoints/payer_fact_migration_notices.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/runtime_overview.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/_overview_rendering.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/common.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/errors.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/_overview_native_support.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/_overview_calendar_support.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_overview_agenda_verb.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_overview_backlog_verb.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_overview_calendar_verb.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_overview_historical_work_units.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_overview_prepare_verb.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_overview_profile_refusal_end_to_end.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_overview_profile_refusal_grounding.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_overview_status_no_aeat_history_notice.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_payer_fact_migration_notice.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_common_action_resolution.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_refusal_target_reconciliation.py`
+- `S16` `M` `src/cadrumo_harness/_workspace.py`
+- `S16` `verify:` `scoped Ruff check and format on MCP main/server and workspace` -> `pass`
+- `S16` `verify:` `scoped ty win32, pyrefly win32 and basedpyright Windows on MCP main/server and workspace` -> `pass`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_destructive_verbs_require_yes.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_output_language_parity.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_cli_workflow_verification.py`
+- `S08` `verify:` `scoped Ruff, format and basedpyright on migrated auth-read behavior tests` -> `pass`
+- `S09` `A` `src/cadrumo/application/auth/teardown_operation_access.py`
+- `S09` `M` `src/cadrumo/application/auth/teardown_operation_access.py`
+- `S08` `A` `src/cadrumo/entrypoints/cli/config/runtime_auth_teardown.py`
+- `S08` `verify:` `scoped Ruff check, Ruff format, ty win32, pyrefly win32 and basedpyright Windows on auth teardown application/CLI cohort` -> `pass`
+- `S08` `verify:` `build_production_operation_registry after projector correction` -> `pass`
+- `S10` `A` `src/cadrumo/adapters/local_runtime/windows_managed_stop.py`
+- `S10` `A` `src/cadrumo/adapters/local_runtime/windows_task_process.py`
+- `S10` `M` `src/cadrumo/adapters/local_runtime/tests/test_windows_manager_stop_native.py`
+- `S10` `verify:` `scoped Ruff check, Ruff format, basedpyright Windows, ty win32 and pyrefly win32 on Windows managed-stop cohort` -> `pass`
+- `S19` `A` `dev/agent_eval/tests/test_authenticated_mcp_runtime.py`
+- `S19` `verify:` `pytest -q -n0 -m integration dev/agent_eval/tests/test_authenticated_mcp_runtime.py (20260928T182203.250684Z-pytest-69580-3a87d941; 1 passed)` -> `pass`
+- `S19` `verify:` `scoped Ruff check/format, ty, pyrefly win32 and basedpyright Windows on authenticated MCP native test` -> `pass`
+- `S20` `verify:` `just docs-generate-api-stubs` -> `pass`
+- `S20` `verify:` `just check-docs-api` -> `pass`
+- `S20` `verify:` `just check-import-boundaries (20260928T182655.281102Z-check-import-boundaries-68144-e039b30b)` -> `fail`
+- `S08` `verify:` `five corrected calendar native nodes (20260928T182546.867967Z-pytest-12776-5bd989e8; 5 passed)` -> `pass`
+- `S08` `verify:` `auth teardown executor scenarios and census (20260928T182918.472957Z-pytest-19900-85e94362; 3 passed)` -> `pass`
+- `S13` `M` `src/cadrumo/entrypoints/cli/_bootstrap_exempt.py`
+- `S13` `M` `src/cadrumo/entrypoints/cli/tests/test_app_runtime_status.py`
+- `S13` `verify:` `runtime control focused regression final stop node 20260928T183711.275294Z-pytest-47700-09f60f63` -> `pass`
+- `S08` `verify:` `native auth logout reset status journey 20260928T183116.388687Z-pytest-53720-500d9eed` -> `pass`
+- `S20` `R` `src/cadrumo_harness/tests/test_rule_surface_conformance.py` -> `dev/agent_eval/tests/test_rule_surface_conformance.py`
+- `S20` `verify:` `pytest moved rule surface conformance -m integration 20260928T183836.522084Z-pytest-47352-94e39211` -> `pass`
+- `S20` `R` `src/cadrumo/entrypoints/cli/tests/_native_api_cli_support.py` -> `src/cadrumo/entrypoints/cli/tests/native_api_cli_support.py`
+- `S20` `M` `src/cadrumo/application/invoices/tests/test_catalogue_read_projection.py`
+- `S20` `verify:` `just check-import-boundaries 20260928T184033.830860Z-check-import-boundaries-71096-9f96e308 exit 0` -> `pass`
+- `S20` `verify:` `scoped 14 files Ruff lint format ty win32 Pyrefly win32` -> `pass`
+- `S08` `A` `src/cadrumo/application/invoices/catalogue_remove_operation.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/runtime_invoice_catalogue.py`
+- `S08` `verify:` `invoice removal five scoped production checks Ruff lint format ty win32 Pyrefly win32 basedpyright Windows` -> `pass`
+- `S08` `verify:` `production registry construction and ledger.invoice.remove lookup` -> `pass`
+- `S08` `M` `src/cadrumo/adapters/persistence/profile/catalogue_creation.py`
+- `S08` `A` `src/cadrumo/application/live/iva_wallet_history_operation.py`
+- `S08` `A` `src/cadrumo/entrypoints/cli/runtime_iva_wallet_history.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/_app_live.py`
+- `S08` `verify:` `IVA persisted history five scoped production statics Ruff lint format ty Pyrefly basedpyright` -> `pass`
+- `S08` `verify:` `IVA history production registry and public report JSON round trip` -> `pass`
+- `S08` `verify:` `catalogue_creation.py five scoped Windows statics` -> `pass`
+- `S08` `verify:` `native invoice remove credential-reference receipt journey 20260928T185353.125473Z-pytest-57940-ca998764` -> `pass`
+- `S08` `verify:` `two exact supervisor conformance nodes ledger.invoice.remove live.iva-wallet.history 20260928T185938.188642Z-pytest-53864-22c263a1` -> `pass`
+- `S08` `verify:` `registered-definition conformance census 20260928T185815.377987Z-pytest-62324-2ed21ca1` -> `pass`
+- `S08` `verify:` `two changed test files five scoped Windows statics` -> `pass`
+- `S16` `M` `src/cadrumo_harness/_data/agent/README.md`
+- `S16` `verify:` `MCP protocol pytest -n0 -m integration and hex_core 20260928T190611.435075Z-pytest-6544-c5a442e6` -> `pass`
+- `S16` `verify:` `MCP server and protocol test five scoped Windows statics` -> `pass`
+- `S20` `verify:` `combined cohort just generate-import-load-targets` -> `pass`
+- `S20` `verify:` `combined cohort just docs-generate-api-stubs` -> `pass`
+- `S20` `verify:` `combined cohort just check-docs-api` -> `pass`
+- `S20` `A` `docs/api/cadrumo.application.invoices.catalogue_remove_operation.rst`
+- `S20` `M` `docs/api/cadrumo.application.invoices.rst`
+- `S20` `A` `docs/api/cadrumo.application.live.iva_wallet_history_operation.rst`
+- `S20` `M` `docs/api/cadrumo.application.live.rst`
+- `S20` `verify:` `just check-import-boundaries 20260928T190712.120911Z-check-import-boundaries-59292-71f87fce exit 0` -> `pass`
+- `S08` `A` `src/cadrumo/application/invoices/catalogue_update_operation.py`
+- `S08` `verify:` `uv run --no-sync ruff check src/cadrumo/entrypoints/cli/runtime_invoice_catalogue.py src/cadrumo/entrypoints/cli/_ledger_business_invoice_cli.py src/cadrumo/entrypoints/cli/_profile_authentication_gate.py src/cadrumo/entrypoints/operation_composition.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync ruff format --check src/cadrumo/entrypoints/cli/runtime_invoice_catalogue.py src/cadrumo/entrypoints/cli/_ledger_business_invoice_cli.py src/cadrumo/entrypoints/cli/_profile_authentication_gate.py src/cadrumo/entrypoints/operation_composition.py` -> `pass`
+- `S08` `A` `src/cadrumo/application/invoices/tests/test_catalogue_update_operation.py`
+- `S08` `verify:` `focused invoice-update pytest run 20260929T030813.985988Z-pytest-19212-1b4cac31 (collection failed; no behavior acceptance)` -> `fail`
+- `S18` `M` `src/cadrumo/entrypoints/tui/ledger_doors.py`
+- `S18` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_invoice_entry_lines.py`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/application/invoices/tests/test_catalogue_update_operation.py src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py::test_every_registered_definition_has_a_conformance_scenario --tb=short --show-capture=no [20260929T030913.095722Z-pytest-13548-6ec59689; 5 passed]` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py::test_every_production_registered_executor_runs_through_the_shared_supervisor_matrix[ledger.invoice.update] --tb=short --show-capture=no [20260929T030933.159815Z-pytest-64064-82a34b04; 1 passed]` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest -q -n0 -m 'integration and hex_entrypoint' src/cadrumo/entrypoints/cli/tests/test_runtime_invoice_catalogue_native.py --tb=short --show-capture=no [20260929T031122.201344Z-pytest-73816-e80c6d87; 5 passed]` -> `pass`
+- `S08` `verify:` `invoice-update eight-file Ruff, Ruff format, ty win32, Pyrefly win32 and basedpyright Windows scoped checks` -> `pass`
+- `S18` `verify:` `targeted TUI real-writer/readback and invalid-line nodes [20260929T031252.053924Z-pytest-32664-c0684337; 3 passed]` -> `pass`
+- `S18` `verify:` `two-file TUI Ruff check, Ruff format, ty and Pyrefly (zero errors; one hidden warning)` -> `pass`
+- `S18` `verify:` `two-file TUI basedpyright Windows before baseline annotation fix (ledger_doors.py settled empty-set inference; unchanged by teardown)` -> `fail`
+- `S08` `A` `docs/api/cadrumo.application.invoices.catalogue_update_operation.rst`
+- `S08` `M` `docs/api/cadrumo.application.invoices.rst`
+- `S08` `verify:` `just check-import-boundaries [20260929T031303.763557Z-check-import-boundaries-30664-682c8b63]` -> `pass`
 
 ## Notes
 
@@ -397,3 +2295,497 @@ related:
 - `S09` After observation/strict-operand changes, 91 durable supervisor/profile/installed-authentication integration cases passed. The full import gate is running against the unchanged source snapshot. No operation replay/recovery completion is claimed.
 - `S09` Final gate after observation/strict decoding: 15 contracts kept; 2947/2947 configured modules loaded; zero hard findings; authoritative stable graph. S08/S09 remain open.
 - `S09` Idempotent retries issue no new response capability; fresh stored-intent observation and idle reentry use canonical operation ownership. Public frontend emission and full S08/S09 remain open.
+- `S09` Import: stable authoritative graph, 15 contracts, 2949/2949 loaded, zero hard findings. Full selected regression: 104 passed, 25 platform skips, one native fixture PID-file publication race (empty file observed before write completed); investigating and correcting fixture handoff. No native containment failure inferred from that fixture error. Both new idle/partial-frame deadline cases passed.
+- `S09` Five native authorization containment cases pass after atomic fixture PID publication, including expiry and repeated cancellation. Previous full selection was 104 passed/25 skipped/one fixture handoff failure; no product code changed for that correction.
+- `S09` Partial S09 evidence only; native login/store and cross-platform acceptance remain unproven.
+- `S09` S09 remains open; response capability composition and durable input/publication provenance are pending. Broad canonical run failure was obsolete shutdown error text; corrected owning file passed without product behavior relaxation.
+- `S10` Worker drain prerequisite only; runtime-wide manager stop, complete lifecycle acceptance and native automation-store acceptance remain open.
+- `S11` Typing corrections only. Five native POSIX integration tests skipped on Windows; no native Linux or macOS acceptance claim.
+- `S09` Runtime restart provenance selection remains in progress; no Step or Phase acceptance is closed.
+- `S10` Missing receipts are distinct from incomplete containment. Native interactive session management and full platform lifecycle acceptance remain open.
+- `S08` CLI/TUI runtime admission and paged result assembly are unfinished; S08 remains open.
+- `S09` Native inventory gate initially rejected the canonical login-handover witness; exact defining-owner path exclusion fixes that regression. Startup inventory does not migrate or adopt outstanding records.
+- `S09` Import gate loaded all 2953 modules with all 15 graph contracts kept; three test defining-import/private-symbol violations corrected afterward. Full rerun pending. S08/S09 remain open; no platform acceptance closes.
+- `S09` The preceding three verification entries labeled 'response authorization and aggregate runtime owners' described the checked file set, not literal executable commands. These expanded commands record the exact successful invocations.
+- `S08` Native integrated run: 123 passed, 25 platform skips. Canonical operation suites: 579 passed. Synthetic encrypted profiles and explicit test login/native-store ports do not prove interactive desktop credential facilities or POSIX acceptance.
+- `S08` Wrong supplied receipt proof exposed an uncaught ProfileAccessRefusedError at connection dispatch; corrected to typed refusal and verified wrong then correct proof over the same native connection.
+- `S08` Response/censo tests relocated from `application/user_profile/tests` to entrypoint-owned tests because they consume production adapter composition; prior application-path ledger additions describe displaced paths.
+- `S08` One prior integrated run overlapped partial product imports and was not coherent acceptance; the green 123-case run used a source freeze. CLI/TUI production admission migration remains open.
+- `S08` Frozen-source gate loaded 2,954 configured first-party non-test modules; zero failures, blocking findings, new unapproved occurrences or active debt.
+- `S08` Installed launch selection passed 13 tests, 3 Unix-only skips. Canonical additional-mutation selection passed 3 tests; encrypted TUI overview reconstruction passed 2. Production TUI session composition remains open.
+- `S08` Launch cancellation now finishes native connection cleanup before endpoint ownership returns; the test releases its blocking fixture while cancellation remains pending. Shared client moved to `adapters/local_runtime/frontend_client.py;` original entrypoint path is deleted without a compatibility shim.
+- `S08` Frozen native selections passed 30 tests with 3 Unix skips, then 2 frontend tests. CLI uses exact named profile, preserved success/invalid-record envelope contract, safe identity redaction and no password output. Missing/unreadable worker records retain typed refusal instead of fabricating old local repository diagnostics.
+- `S08` Principal native inspection caught a PyHANDLE/int mismatch introduced during type cleanup before acceptance. Corrected to retain and close native handle owners; the coherent 30-case run verifies the correction. A prior run during half-written typing source was invalidated, not classified as product acceptance.
+- `S08` Native TUI controller test passed original-session registered-view execution and fresh API sessions' refusal to borrow start/response authority by IDs. Positive censo provider acquisition remains unavailable; existing canonical encrypted-review tests supply the implemented response-service evidence.
+- `S08` Controller now discovers the canonical definition and refuses separate ephemeral-secret requirements before submission; this follow-up awaits the integrated native rerun. Runtime controllers and overview decoders are not yet installed TUI session composition.
+- `S08` TUI access-loss and updated refusal-taxonomy selection passed 20 tests. Prior complete modal selection passed 69 cases and failed 4 omitted detach-enumeration cases; the focused correction covers all four locales. UI authority fault ports are not native platform acceptance.
+- `S08` Windows static typing retains one known `_win32typing` source warning; no type errors. Canonical locale audit passed all four supported catalogues.
+- `S08` Locale core-test setup exposed missing RuntimeShutdownIncompleteError registration. The first correction duplicated a canonical code and was rejected by its registry; the current unique `REFUSED_LOCAL_RUNTIME_SHUTDOWN` loads. The five blocked test cases are rerunning.
+- `S08` All five previously setup-blocked locale cases passed after the unique shutdown-refusal registry correction.
+- `S08` CLI native selection initially passed seven cases but deliberate corrupt-storage fixture teardown refused UNAVAILABLE for missing graceful worker receipt. The corruption-only fixture now allows exactly this outcome while preserving RuntimeShutdownIncompleteError; corrected case passes and public output excludes exception/password/traceback. Internal resolver debug traceback was separately removed and both diagnostic paths tested.
+- `S08` Profile mutation native test proves one real encrypted field commit, terminal stale-CAS conflict with operation identity/effect retained, and unchanged persisted final value after refusal. Other mutation result schemas were reviewed; this is not complete frontend/platform acceptance. Lost submission receipt can leave operation identity unknown; explicit stable idempotency is supported.
+- `S09` 24 selected unit tests passed; 13 cases deselected by default marker, no native TUI session acceptance claimed. Async account reader binds one exact connection/session, status never refreshes human activity, UI coalesces polling and discards replies after root capability severance. Installed TUI admission and remaining ambient private surfaces are not yet migrated.
+- `S09` Operation-secret handoff is implemented through canonical ephemeral-secret custody, with native positive execution still under investigation. First real bundle-export native test reached protected acknowledgement, refused cross-session/mismatched/duplicate/MCP requests, but export execution failed `INTERNAL_INVARIANT.` This is not acceptance; investigation remains open.
+- `S07` 16 native/contract cases passed; three Unix endpoint-substitution cases skipped on Windows. Verified manager factory is not consulted for an existing or incompatible endpoint; queued request deadline expires without closing another caller's exchange and queued secret is wiped. No installed-manager provisioning/autostart change or additional platform acceptance is claimed.
+- `S08` CLI client binding moved atomically from view-specific helper to its one general defining module; no shim. Parsed admission now enrolls row add/update/remove and complete setup alongside view. Native CLI tests for these additional leaves are pending. Field editor remains unmigrated until atomic patch semantics are preserved.
+- `S09` Scoped exporter recovery and exact immutable target binding correct discovered runtime hazards; native real encrypted export now succeeds but its public result registration still needs correction. Worker catalogue factories reuse existing shared adapter composition. Scope tests passed independently; native integration remains pending.
+- `S09` Three scoped-export tests pass using real journals and registered synthetic profiles; exact Beta target remains Beta while ambient Alpha is selected, conflicting explicit Alpha refuses. API-key refresh helper and human-refusal assertions are implemented/static-clean and included in the in-flight integrated native gate; no native refresh claim yet.
+- `S09` Integrated native selection: 132 passed, 25 skipped, 4 failed. Protected secret submission/refusals and actual encrypted bundle export with public result passed. Four CLI row/setup failures were `runtime_invalid_frame` before submission: admission gate compared dotted envelope command IDs with underscore CommandSpec keys. Corrected exact keys; rerun pending. Other changes now in progress; no Step closure.
+- `S08` 271 wizard tests and 2 pure patch contract cases pass. Native atomic patch/client/CLI acceptance is prepared but not yet run; full TUI root/private surface and platform migrations remain open.
+- `S09` Eight real-journal secret custody cases pass including non-consuming readiness and expired/duplicate/terminal/draining refusal. Native duplicate refusal before protected-byte framing is pending.
+- `S09` 12 cases pass: scoped recovery, exact profile binding, absolute runtime request, relative canonical publication anchoring, recovery across CWD changes, and retention of unsupported relative/missing-parent journals. Review of follow-on publication overwriting unresolved deterministic journal identity remains open; native source frozen while selected run executes.
+- `S08` Native selected run 20260927T144515.344221Z: 12 passed, 7 failed. Patch positive/no-op and native pre-secret duplicate refusal passed; patch invalid input was REFUSED, not the test's expected FAILED. Five row/setup fixtures supplied no runtime receipt/password; now require explicit protected proof. One edit test inspected an unrelated parent-process language snapshot after the worker committed; updated to the actual public hint reader. Corrected-case rerun remains pending.
+- `S09` 14 focused and 10 reconciliation cases pass. Exclusive repository-locked create now refuses every existing same-ID journal path; a failed recovery cannot be erased by a later publication. Completion updates retain the existing save path. Native operation rerun remains separately tracked.
+- `S08` Seven corrected native cases pass in run 20260927T145129.021053Z. Real encrypted patch proves two fields/one event, unchanged-value NONE, invalid-part refusal without partial write, stale CAS, explicit clear and exact-profile refusal; row/setup/actual language hint tests pass. Passing cases from previous selection remain evidence for unchanged paths. Remaining migrated CLI regression selection and full import boundary pending.
+- `S09` Root changes add current human administration observations and verified worker inventory composition, canonical preflight diagnostics, and scalar no-op effect truth. Native inventory/diagnostic/no-op verification pending; no Step or Phase closed. Scoped Ruff, format, ty, pyrefly win32 and basedpyright Windows passed.
+- `S09` 83 inventory/policy/application tests and 4 worker contract/budget tests passed. Wizard selection: 269 passed, 2 integration deselected. Scoped Ruff/format/ty/pyrefly/basedpyright passed; native batch pending. Read-only review found no concrete high authority leak in inventory; oversized inventory returns unavailable without truncation or pagination. P02.S04 reopened for registered mutation receipt/effect/cancellation finding.
+- `S08` Migrated CLI regression fixtures to real runtime with explicit protected proof. Failed native runs retained: 20260927T145402.898000Z-pytest-55912-20d60c84 (9 passed, 2 failed, 13 setup errors); 20260927T145521.628595Z-pytest-50472-0d6ce7e5 (6 cold-template setup errors); 20260927T145656.175674Z-pytest-10176-0bcf85d0 (11 passed, 4 failed); 20260927T150100.030295Z-pytest-35524-5881b7d3 (2 passed, 2 copied-root setup failures). Root creation, copied runtime identity and independent proof fixtures corrected; missing-field diagnostics required product correction through shared patch validation. Current frozen combined native rerun is pending. No failing expectation weakened.
+- `S09` 22 passed, zero skipped, exit 0; run 20260927T151553.384321Z-pytest-27932-ca149acd. Includes the eight previously failing/pending CLI nodes, three inventory cases and scalar/patch/native worker regressions. Explicit test native login/store ports remain the platform boundary. Full import gate pending; no Step/Phase closure.
+- `S08` Initial import gate exited 7: target ordering inversion, zero load attempts. Canonical regeneration corrected ordering; zero missing/stale targets. Retry exit 0 on frozen source: 2966/2966 governed modules loaded, 15/15 contracts kept, zero hard findings or current architectural debt. Native inventory/CLI regression selection remains 22 passed, no skips.
+- `S04` 53 encrypted custody tests plus 1 new transition test, 3 registered lifecycle tests, 6 effect/cancellation/failure tests and 19 pure inventory/enrollment cases pass. Scoped Ruff/format/ty/pyrefly win32/basedpyright Windows pass. Candidate publication now stays UNKNOWN until activation/receipt success; protected delivery failure retries same candidate without redelivery. Initial effects rerun 20260927T153923.285770Z-pytest-53920-478f394c failed five tests at concurrent STATUS public schema construction, before automation execution; corrected schema allowed 6/6 retry 20260927T154205.138352Z-pytest-61716-52577c88. Runtime enrollment/delivery exposure remains P03 integration; no native enrollment claim.
+- `S08` 16 backend/health/TUI cases and 2 public unregistered-status regressions passed. Scoped Ruff/format/ty/pyrefly/basedpyright passed. Typed STATUS includes only canonical readiness, explicit public recovery projection and four scoped facts; local discovery-only health cannot read private records. Validate reads ISSUES only with exact-profile non-secret language hint. Native combined CLI/status tests and full import gate pending on frozen source; no Step closure.
+- `S08` Native validate/status run 20260927T154855.357107Z-pytest-38388-3656f0e9: exit 1, 12 passed and 5 failed. Complete command and failures retained in run.json/run.log; corrected readiness projection and fixtures await native retry. No import gate was run after this failure.
+- `S08` Initial registry check failed all six access-resolution cases because Decimal public request validation and serialization shapes differ; replaced the wire amount with finite decimal text, preserving exact precision for canonical worker validation. Subsequent registry and new contract selection: 13 passed, run 20260927T160041.207499Z-pytest-63240-afeb1cb9. Native plantilla-media and CLI acceptance pending; S08 remains open.
+- `S08` Run 20260927T160357.310674Z-pytest-43988-71c561b9 exited 1: readiness regression nodes and CLI/cold workforce journeys passed; STATUS test lacked a modelo-baseline activity fact and native workforce precision assertion expected FAILED instead of canonical REFUSED. Exact two test corrections and focused retry pending; import gate held.
+- `S08` Two-file retry 20260927T160925.131675Z-pytest-42684-1da9eb61: workforce native test passed; STATUS returned server-side `runtime_deadline_exceeded` during password login, before STATUS assertions. No timeout or product change. One isolated unchanged STATUS rerun 20260927T161238.183776Z-pytest-19920-4e0731f2 passed; the intermittent login refusal is unexplained, not corrected by the passing rerun.
+- `S08` Frozen gate: 15 contracts kept and 2966 modules loaded with zero load failures; one `PRIVATE_CROSS_PACKAGE` in plantilla CLI test. The test now uses public `tests.cli_runner.invoke_cached_cli;` focused checker confirms that finding removed. A later scan overlapped approval module creation and saw a transient unresolved import, so no new whole-tree pass is claimed. Native STATUS unchanged isolated rerun passed after one unexplained server-side login deadline refusal; preserve the transient as unresolved. Async execution boundary effects/integration run 20260927T161955.104537Z-pytest-9996-7fb52713 passed 9 tests; runtime enrollment remains under integration.
+- `S08` Approval map: 6 actual-service tests, run 20260927T162627.758735Z-pytest-59100-3b5d638f. Native held channel: 1 passed, zero skipped, run 20260927T162800.456158Z-pytest-29056-4fc158fa. Registered human inventory/approval policy schemas: 3 passed, run 20260927T163129.022572Z-pytest-51580-9a823cc7. Native renewal and task-isolation tests still in progress; no full enrollment acceptance.
+- `S08` Client store and recipient consolidated to one current strict native envelope; 50 synthetic encrypted custody tests passed. No real platform-store acceptance claimed. Approval phase transport run 20260927T163330.790345Z-pytest-8132-48a8f138: 2 passed, zero skipped, covering actual Windows pipe/job mechanics with an explicit parent policy fault port.
+- `S08` Native renewal runs 20260927T163537.890769Z-pytest-1924-c3365d06 and 20260927T163620.592594Z-pytest-72896-237a71f7 failed: wrong-password approval lost its worker and returned `runtime_connection_closed;` `runtime_containment_unavailable` during cleanup initially obscured the primary failure. Static trace found the new native parent approval thread lacked the canonical context-local custody port. RuntimeProfileHost now binds only `build_profile_custody_port` during password preparation; owning retry is running. Task-authority test passed with real worker custody, registered policy and explicit no-I/O native client port; child/wrong-operation/wrong-action/post-guard publication refuses and cancellation retains guard ownership until callback settlement.
+- `S08` Native realistic renewal run 20260927T164123.497206Z-pytest-73628-75437cf3 passed after two P03 integration corrections: explicit custody-port composition on parent native proof threads, and exact reviewed recipient delegation ceiling independent of the human operational destination. Intermediate 20260927T163808.754738Z-pytest-50448-cd189266 reached canonical refusal but rejected valid cross-client scope; narrowed fixture run 20260927T163906.994218Z-pytest-57192-5fb78dd8 isolated that issue and was not retained as acceptance. The final test keeps recipient-scoped consent, proves unchanged grant on wrong password, API administration refusal, exact one-revision renewal, unchanged human disclosure scope and secret-free journal/output. Full enrollment delivery remains open.
+- `S08` Frozen gate before test relocation failed the application boundary on five imports from adapter test support. Relocated real-custody integration coverage to the runtime entrypoint owner; no boundary exception. Final frozen rerun: 15/15 contracts, 2972/2972 loads, zero hard findings; log `C:\Users\hello\AppData\Local\Temp\cadrumo-import-gate-20260927T1649.log.` New enrollment work proceeds after this frozen snapshot; no P03 completion.
+- `S08` First-enrollment native test is still pending. Protected client wrapper and broker have synthetic port evidence only; no real native credential-store or installed frontend parity acceptance. Runtime bounds are 32 volatile offers and 128 retained protected enrollment records; quota exhaustion refuses new requests, with no implicit cleanup or migration.
+- `S09` Review identified an offer surviving global-lock followed by resume between lifecycle polls because its original profile-lock generation was not retained. Runtime-private offers now capture and compare generation. The discriminating real encrypted-store test restores unlocked/enabled state through canonical password-authorized resume and proves only a current-generation offer remains usable. DECLINE native registered execution is still under verification.
+- `S08` Frozen native run 20260927T170927.234657Z-pytest-54168-a0f441e9: 2 passed, no skips. Real Windows pipe/job/profile workers, canonical encrypted custody and registered operations; native login observations and distinct server/client credential stores remain explicit synthetic ports. Positive proves actual client store/read and fresh API login after initial requester/human connections close. Negative proves client store failure leaves CANDIDATE/PENDING with REFUSED/UNKNOWN; wrong-digest decline refuses, authorized decline returns DECLINED/UPDATED. No first-enrollment UI, production native-store, platform manager or Phase3 completion claimed.
+- `S08` Frozen enrollment snapshot loaded all 2976 modules, zero loadability root causes and zero subordinate hard findings; the application-is-inward contract rejected concrete adapter crypto imported by `application/runtime/tests/test_enrollment_recipient.py.` The real-crypto integration test is being relocated unchanged in behavior to `entrypoints/runtime/tests/test_enrollment_recipient.py;` no allowlist or product exception. Rerun pending.
+- `S08` Final frozen enrollment/decline gate: 15/15 contracts kept, 2976/2976 modules loaded, zero hard findings; log `C:\Users\hello\AppData\Local\Temp\cadrumo-import-gate-20260927-1716.log.` Test location/marker corrected without boundary exception. Lifecycle-management source work starts after this snapshot and requires its own verification.
+- `S09` Native lifecycle run 20260927T172847.595063Z-pytest-46464-b9ac89dd: one real encrypted two-grant test passed in 14.25 seconds with synthetic OS observations/store ports; this does not establish native credential-store/login/platform acceptance.
+- `S09` Scoped management schemas 6 pass, session inventory/poll 3 pass, management+enrollment framing 6 pass, frontend framed wrappers 2 pass. First frontend test attempt failed due to a missing purpose marker in its synthetic admitted fixture; corrected fixture then passed (20260927T173021.589789Z-pytest-41064-c66f17b6).
+- `S09` Five scoped statics passed for management contracts/framing/host/frontend and new tests. The existing full custody session-authority test file still has a ty Future generic-inference diagnostic at `denial.result(timeout=10).access_denied;` product ty passes and this pre-existing diagnostic was not changed.
+- `S09` Initial native grant-change run 20260927T174005.699862Z-pytest-49168-1977eff3: renewal passed, rotation delivery future masked primary outcome, scope assertion assumed a status document rather than typed refusal after lease retirement. Rotation-only reproduction 20260927T174233.330729Z-pytest-20428-3ce9aa69 confirmed human approval succeeded but old source lease then refused `privilege_expansion` after predecessor expiry was clipped.
+- `S09` Corrected client handoff accepts a COMPLETE human receipt only against its pinned request/review/grant and actual delivery identity; it cannot write a key or confer authority. Fresh native-store read and API login prove the new key. Final native run 20260927T174420.176951Z-pytest-11784-ab79482a passed all 3 cases in43.79s with synthetic native-login/store observations.
+- `S09` Further review found renewal/scope publication lacked the recipient-resolution phase used by enrollment/rotation. Canonical simple-change publication now resolves its original live requester before changing the grant. Real custody regression 20260927T174645.069898Z-pytest-62060-dc8e588f:3pass. Native renewal/scope rerun after this last correction pending.
+- `S09` Nine changed grant-change source/test files pass Ruff, formatting, ty, pyrefly win32 (one hidden warning), basedpyright Windows. Authenticated request preparation deliberately refuses expired keys/grants and child/human sessions; expired-grant recovery through a distinct reviewed renewal door remains unfinished.
+- `S08` Preparatory caller-composed TUI shell avoids building local operation services; existing installed root remains active and its ambient-custody bypass is not yet removed. Focused 3test run20260927T173803.803197Z-pytest-68956-3976bb28 and all five scoped statics pass; no S08/parity acceptance.
+- `S09` Final native replay after simple-change live-requester validation:2pass in45.11s, run20260927T175146.771839Z-pytest-50544-2a109a4f. Combined with previous rotation pass, final grant-change correction has scoped encrypted native evidence; synthetic OS/store limits remain.
+- `S08` Neutral generation extraction preserves canonical readers and typed Modelo graded refusal/static fallback;25focused existing TUI/Modelo tests pass with five scoped statics. Installed runtime root not activated.
+- `S08` Explicit ledger attachment port now uses the already addressed bucket repository; workbench state-projection diagnostics receive the exact unit bucket. Real encrypted two-profile diagnostic regression1pass run20260927T175339.234572Z-pytest-29324-86538c7e proves wrong-session refusal and distinct unreadable counts. Five scoped statics pass for corrections.
+- `S09` Native run 20260927T175835.963666Z-pytest-37624-bab2b6ab: 1 passed with real encrypted storage and Windows workers; OS login/store ports remain synthetic. Pure/framed run 20260927T175915.467700Z-pytest-10072-a87c03be: 13 passed. Scoped five static checks passed before the final post-decode deadline check; frozen import gate now running. A 16 MiB result may exceed the client's 60-second deadline because every page resolves and hashes the canonical result again; no performance acceptance claimed.
+- `S13` 27 focused API-input cases passed; initial 49-case selection had four curated root-help failures, corrected and all four affected cases rerun passing. Native installed CLI API-key acceptance remains pending. Combined management run 20260927T175956.049430Z-pytest-14716-bcacbfbf: 18 passed. Scoped lint, formatting and three type checks passed.
+- `S15` Standalone Textual controls pass selected/current/global lock, inventory, denial and password recovery tests. They are not yet installed into the complete runtime-backed TUI root. No parity or Step completion claimed.
+- `S09` Coherent frozen source: all 15 contracts kept, 2984/2984 modules loaded, zero failures and hard findings. Source snapshot before/after ed4c787f51a692ae32eb28bd7552d6c6acc31f9ab348b8ddcfdc2ddbf24c326d; target digest 1f571d259b53a796376114870ed69e07426ab4ec64754c78f7b3161250bfa10f. Large advisory output was truncated in tool capture; final exit-0 verdict/counts captured but no complete temporary log exists. This gate predates workbench-generation registration.
+- `S13` Run 20260927T181558.604769Z-pytest-3764-f284dd34: 1 passed in 43.13 seconds. Actual encrypted enrollment/approval/possession and native Windows CLI profile view; explicit synthetic login/store ports. Human administration, altered key and foreign-profile refusals pass without leaking key/private result. Five scoped static gates passed. This slice does not establish full platform credential-store acceptance or frontend parity.
+- `S13` Scoped synthetic encrypted Windows acceptance: 1 passed, run 20260927T182339.393681Z-pytest-67072-dcc91528. Initial test expected success instead of canonical optional-language warning; corrected envelope expectation then reran. Native OS login and credential store remain synthetic ports. Ruff check/format, ty, pyrefly win32 and basedpyright Windows passed on this test. S13 remains open.
+- `S15` Seven standalone Textual cases passed after explicit handoff acceptance correction, run 20260927T183319.307923Z-pytest-33488-03f9dfa9; one anomalously slow case passed isolated repeat 20260927T183451.515412Z-pytest-55160-d2872221. All five scoped statics passed. Locale keys added through dev.locales set-batch. No installed root composition or complete S15 acceptance yet.
+- `S09` 60 focused cases passed, run 20260927T183340.506318Z-pytest-71164-6e5ac4e9. Initial encrypted regression confirmed three failures: exact stored/public result rejected and stale discard incorrectly UNKNOWN. Three focused encrypted projection cases also pass (8 deselected), run 20260927T183327.156020Z-pytest-18140-fd59f6bb. Five scoped statics passed before final root approval precheck movement; final root checks remain due. Native period-scoped runtime acceptance in progress; S09 remains open.
+- `S08` Focused accepted predecessor topology amendment under existing shared-runtime/CLI-TUI implementation authorization. Local-human workbench projection remains unregistered pending strict schema, disclosure and native validation.
+- `S09` 1 native Windows case passed, run 20260927T183936.049721Z-pytest-72680-aa7af1d2; all five scoped static checks passed. Actual encrypted two-period work catalogue and enrolled API key; synthetic OS/store ports. Positive in-period rename/result, period/subject/profile refusals and post-lock original-result fencing. Calculation/filing and full S09 remain unvalidated.
+- `S15` 6 Textual/read cases passed, run 20260927T184047.791185Z-pytest-43620-5db33768. Root load/home/search own thread completion, fence late results after recomposition, and avoid rendering loader exceptions. Ruff check/format, ty, pyrefly win32, basedpyright Windows clean. Installed root migration remains open.
+- `S08` 6 replay cases passed, run 20260927T183554.121915Z-pytest-11096-a733d236; five scoped statics clean on three modelo files. Public defining-module relocation supports pending strict workbench projection without a private cross-package import or compatibility export. Projection remains under separate validation.
+- `S15` Navigation failures were actual scheduling regressions, corrected with navigation intent fencing. Subsequent deferred-workspace fence awaits its deterministic regression.
+- `S15` New admission, manager and access-control modules have clean scoped static checks; profile overview retains three pre-existing DataTable unknown-type diagnostics at lines 1410–1411. Runtime surfaces remain uninstalled; no S15 completion.
+- `S15` The localized completed-write/readback-unavailable message was generated through dev.locales set-batch; it does not imply rollback.
+- `S08` Native owner paging and second-human/API/MCP refusal reached before client restoration failed; subsequent post-lock assertions were not reached. Projection owner is correcting fresh-client rebuilding and reviewed boundary defects. No native workbench PASS or S08 completion.
+- `S08` Prior fresh-client restoration failure corrected by rebuilding model annotations before restoration. Native positive encrypted result restored; original-session lock and second-human/API/MCP refusal all reached. Injected native-store/login ports remain synthetic; this is not platform/store acceptance.
+- `S08` Projection corrections also enforce reviewed nested profile coordinates, strict canonical values, reviewed generic aliases and exact 16MiB success-document limit before persistence. All five scoped static tools passed for owning projection/operation/test files.
+- `S15` The new preload regression initially asserted CadrumoError.code against the transport refusal enum; corrected to RuntimeRefusalError.reason without changing product behavior.
+- `S15` Standalone account factories use actual direct session-lock acknowledgement; six tests use a synthetic client boundary. Runtime root bundle review found no local custody calls; native TUI composition extension remains pending. Root five-file static checks pass.
+- `S15` New ACCESS footer/palette/help locale leaves were generated via dev.locales set-batch for all four languages. No S15 completion.
+- `S15` Eight owned account/app/test files passed Ruff check, format, ty, pyrefly win32 and basedpyright Windows. Per-action availability covers optional password/access, and direct session effects sever presentation before retained cleanup. Home bundles apply atomically; home-only installed providers retain search-before-Home capture order. Native headless root validation is pending; S15 remains open.
+- `S15` Login proof now wipes immediately after the owned exchange completes and before handoff acceptance. The test records the buffer state inside the receiving callback; outer finally still wipes refusal/cancellation paths. All five scoped static checks pass.
+- `S15` Import gate kept 15 graph contracts and loaded all 2995 modules with zero load/hard failures, but found 8 new shared-entrypoint-to-TUI test imports and a changed source snapshot during login correction. Native TUI test is being relocated to its owning TUI test directory. This run is not a complete import PASS.
+- `S15` Review separately found the new profile-manager completion error derives raw Exception; correction to the canonical error registry is underway before final gates.
+- `S15` Native integration constructs real RuntimeWorkbenchRoot, consumes coherent bundled presentation, opens a profile manager from preloaded runtime overview, runs headless CadrumoTuiApp with no local operation services, refuses API workbench access and refuses locked original owner. Native login/store observations remain injected test ports.
+- `S15` The initially invalid navigation target was corrected to canonical exact profile focus. Subsequent relocation places the cohesive TUI journey in its owning test package, removing eight shared-entrypoint test boundary occurrences. Relocated test rerun is pending; all five scoped static checks pass.
+- `S15` Native acceptance uses synthetic login/credential-store ports with real Windows pipes, job containment, encrypted custody and headless TUI; it does not establish native secret-store or full platform acceptance.
+- `S15` Core exception gates exposed three bare application/adapter exceptions and two direct invariant RuntimeErrors; correction is in progress. Installed TUI composition remains open.
+- `S15` Full import output retained at C:/Users/hello/AppData/Local/Temp/cadrumo-runtime-import-gate-20260927-settled.txt. This settled snapshot precedes installed TUI migration.
+- `S15` Historical local-composition fixtures remain component evidence only. Installed launcher native acceptance is running separately. Restricted-key shell exposes status and own-session controls; complete scoped domain operation parity remains open.
+- `S15` The native journey uses actual installed version/endpoint and launcher.main default path, synthetic login/store observations, real encrypted custody and Windows workers. Three distinct password/API/password sessions and their change-user retirement are proven; this is not native credential-store or full platform acceptance.
+- `S15` Complete scoped-key domain journeys, password rotation, runtime management and remaining CLI/TUI parity remain open.
+- `S09` Fresh interpreters exercise real encrypted capsule/password replacement with synthetic HUMAN leases. This verifies only denial and material-retirement behavior under held sections, not runtime authorization, terminal acknowledgment or frontend rotation acceptance. Runtime rotation remains unavailable.
+- `S09` Runtime rotation exposure remains withheld pending parent transition, terminal acknowledgement and host replacement. Authority test is a bounded task/fence test, not native authorization acceptance.
+- `S09` Custody expiry polling defers committed-binding observation during an already-authorized held section; new require remains strict and final section exit still validates unless verified retirement removed all leases. Parent retirement integration remains in progress and runtime rotation resolver remains absent.
+- `S09` Password generation retirement integration and native exact-operation settlement routing remain under verification. Runtime rotation exposure remains withheld. A retained worker is now contained again before callback settlement can remove its ownership record.
+- `S09` Initial failures were fixture schema violations before native behavior ran. Final tests use actual Windows worker containment and synthetic custody, with explicit per-instance drain/close fault injection; they do not prove full rotation operation or native credential-store acceptance.
+- `S09` Review corrected settlement's initially unreachable control route before native execution. Native test proves routing/refusal; positive timeout/terminal contract uses a narrow shielded-supervisor test seam and does not claim complete runtime password rotation.
+- `S09` Gate found `test_profile_binding_retirement` imported RuntimePeer through transport rather than its defining contracts module. Corrected; full gate rerun pending.
+- `S09` Gate covers installed TUI admission and rotation retirement prerequisites. Further registered rotation/frontend work begins after this frozen pass; full runtime rotation is not yet accepted.
+- `S09` Initial native test proved rotation but attempted a valid password immediately after deliberate old-password rejection; the canonical login backoff refused it. Reordered valid replacement admission before the deliberate invalid proof; no product throttling change. Native Windows pipes/jobs and encrypted synthetic profiles are real; OS-login/store observations remain synthetic.
+- `S15` Initial scoped type check rejected a redundant PassphraseScreen isinstance check already guaranteed by AccountFactoriesV1; removed it. Initial format check required compact method signature; corrected before tests.
+- `S13` Initial subprocess fixture omitted the runtime listener and refused `runtime_unavailable;` composing the actual native server corrected the fixture. Native channel acceptance is Windows-scoped; other platforms remain unproven.
+- `S13` The error-envelope regression exposed public None attributes overwriting canonical unknown-effect context. Optional typed facts now use private backing fields/read-only properties so the canonical envelope preserves the submitted operation ID, unknown effect and absence of unobserved terminal state.
+- `S15` Initial headless pilot attempted a button outside its viewport; test now invokes the mounted screen's real action after filling the actual masked fields. Native encrypted/runtime path was unchanged. Windows pipes/Jobs/profile custody real, login and store observations synthetic.
+- `S09` Exact command recovered from the retained run.json replaces the earlier abbreviated registration/conformance command description; it is the same passing run, not additional execution.
+- `S13` The earlier S13 record incorrectly named `test_command_specs.py.` Retained run.json confirms the actual second file was `test_passphrase_command_spec.py;` this corrects the command identity for the same passing run.
+- `S12` Initial four inventory error translations were edited directly before rereading the locale workflow rule; the same values and new help keys were then applied through the canonical set-batch CLI, which owns the resulting catalogue writes. Decision runner/native frontend acceptance remains in progress.
+- `S12` Windows native decision acceptance uses real encrypted profiles, verified pipes and workers with synthetic OS/store ports; it proves refused/no-effect wrong proof, protected enrollment delivery/possession, human decline, API refusal and matching nonempty inventory. It is not native credential-store or other-platform acceptance.
+- `S12` Initial native CLI list assertion expected success despite the existing truthful warning for an explicit password login without optional persisted receipt storage. The handler had succeeded; test now checks the warning and inventory. No product change was required.
+- `S14` Review corrected unrestricted versus empty period display, separated review timeout from proposed grant/key expiry and targets, prevented markup interpretation and cleared cached rows at known session expiry without touching authority. Native TUI inventory presentation remains unproven.
+- `S14` The frozen import pass precedes only the locale gate correction. Failed locale test found the runtime capture and registered profile-view language scopes missing from its approved inventory. Reviewed both synchronous with-blocks and ContextVar restoration; enrolled the sites and added a with-block requirement, without altering product locale behavior.
+- `S12` Native Windows CLI decision journey: 1 passed; retained run 20260927T210152.816160Z-pytest-21784-597b6447. OS-login and native-store observations synthetic; real worker, CLI parser, encrypted custody and protected requester delivery. Agent scoped five static checks pass; focused CLI 30-case run 20260927T205727.374393Z-pytest-17268-439e2e42 and schema/parity 7-case run 20260927T205811.916439Z-pytest-70648-dc719e8f remain bounded verification, not Step completion.
+- `S13` 4 real encrypted candidate/receipt cases passed; retained run 20260927T210243.176710Z-pytest-56620-a71c24c7. Only receipt keyring substituted. Runtime acknowledgement and installed login wiring remain in progress.
+- `S14` 32 locale/visibility cases passed, run 20260927T210712.018355Z-pytest-20336-33cbe852. This is not a frozen import gate; subsequent CLI logout labels require normal next source-key verification.
+- `S13` Five pointer cases passed, run 20260927T211021.833337Z-pytest-70368-d21f4c43, including stale ABA clear refusal and monotonic/idempotent clear. CLI login/logout wiring remains under focused acceptance; older strong-close command tests require reconciliation to accepted separate-session semantics.
+- `S13` Run 20260927T211225.402431Z-pytest-20576-1e7e8a35: 5 passed; four isolated child custody cases and one Windows receipt/native transport case. Initial run 20260927T210910.803594Z-pytest-50432-65e71d09 had four passes and an incorrect timestamp oracle; acknowledgement correctly follows persisted receipt metadata, not a later local login projection. Native retry corrected only that oracle and tightened defining exception assertion. Subsequently added MCP password/receipt refusal without persistence opt-in requires next native rerun.
+- `S14` 23 passed; run 20260927T211457.703821Z-pytest-68300-0c7384f1. Root review corrected cancellation losing actual completion/operation identity and stale private review retention. Native TUI acceptance is still retrying: initial runs 20260927T210639.375875Z-pytest-12728-490673ac and 20260927T211019.843307Z-pytest-20060-2715dce6 timed out initial inventory; bounded diagnostic 20260927T211318.809971Z-pytest-9452-fa898c4f proved mount scheduling dropped first refresh. Root now schedules it after refresh. Subsequent run 20260927T211445.047447Z-pytest-40368-56b517e6 reached approval but had a test assertion before the posted Button event handled proof wipe. No native TUI completion claimed yet.
+- `S13` Focused CLI login sequencing: six cases pass, run 20260927T211355.238795Z-pytest-4396-4ccd41c2, real encrypted targets with narrow runtime-client stand-in (not installed acceptance). Native Windows CLI receipt resume passed, run 20260927T211836.011042Z-pytest-60208-21b6095f: real runtime/worker/pipes and synthetic in-memory human keyring; B selection preserves A live lease plus both receipts/keys; fresh B view resumes. Initial native fixtures failed because registration minted no receipt and old `login_profile` handover revoked A; final fixture uses nonselecting candidate receipt publication. Logout parser tests: two pass, run 20260927T211719.275999Z-pytest-4200-b009099d; independent local session and receipt survive; corrupt selection refuses.
+- `S13` Historical lifecycle suite now explicitly requires `os_keychain` and Windows installed runtime; retired adaptive worker-keyring oracle removed because parent `PYTHON_KEYRING_BACKEND` is deliberately sanitized before worker launch. Two collected cases did not execute bodies in opt-in run 20260927T211917.897646Z-pytest-27148-48cc57d1: canonical OS-store prerequisite raised Windows CredRead WinError 1312 (no logon session), two setup errors. No native human-store persistence acceptance; no ignored hook or fallback.
+- `S13` 8 passed; 20260927T212058.123870Z-pytest-27176-51e8e5e9. Native Windows encrypted profiles and workers use synthetic login/store observations. MCP human proof refused before secret-ready even without receipt opt-in; candidate deadlines rechecked after publication lock. Read-only integrated review found no confirmed authority defect; delayed keyring write may leave an expired unusable receipt refused by status/resume.
+- `S14` 1 passed; 20260927T211938.638875Z-pytest-66380-6da5de83. Prior 20260927T211621.210483Z-pytest-33488-ceed2b39 exercised approval but selected decline before DataTable highlight changed review; corrected event-aware test. Native pipes/workers use synthetic login/store; no native credential-store or POSIX acceptance.
+- `S13` Frozen-source gate: 15 contracts kept, 3002 modules loaded, zero load failures/hard findings/architectural debt. Source before/after 1a98bef781542d0dd0a8df82463f355e7a9d5ada7a4312cb6c9b589836a9af3f; target digest a2cbae92ac0751bca7e0a090b711e7ffa65cf4b14d0fffe5eafafb1b6cb8f776. Output C:/Users/hello/AppData/Local/Temp/cadrumo-runtime-import-gate-20260927-human-login.txt.
+- `S12` Native 6 passed 20260927T213552.993465Z-pytest-36852-66df2f19: new root admission recovers exact own-grant terminal receipt; pending, human, foreign and locked sessions refuse. Synthetic login/store; no native credential-store acceptance. Pure policy 24 passed 20260927T213849.878936Z-pytest-31168-de06cd2d after correcting missing test import (7 failures/17 passed 20260927T213828.234181Z-pytest-19608-efe33ffe). State selection factored pure after initial native run; native requester integration remains scheduled.
+- `S08` Native Windows 12 passed/no skips 20260927T213846.094735Z-pytest-57752-699529fe; synthetic login/store observations. Portable 13 passed 20260927T213557.562951Z-pytest-72096-52e6abf5; safety-floor resolver 9 passed 20260927T213726.306536Z-pytest-48576-1ce02fcc. Removed retired `CLI_CAPACIDAD` direct write door; corrected existing `wizard/patch_edit` defining-door enrollment surfaced by structural test.
+- `S12` Native integrated requester 3 passed 20260927T214213.296383Z-pytest-50792-978237cd; portable 16 passed 20260927T214328.624363Z-pytest-55580-95818b7f. Separate human approval never transfers its receipt into requester; requester recovers via fresh API admission. Native processes use synthetic login/store ports. Helper keeps total budget and scopes per-call timeout; candidate decline truth and key/result-kind mismatch corrected during review.
+- `S13` Portable12 20260927T213816.908434Z-pytest-70768-d7528608; native4 20260927T213827.291021Z-pytest-4256-2f2345bd. POSIX passive namespace follow-up7 passed/20 POSIX skips on Windows 20260927T214302.056772Z-pytest-57424-e06ad886; no Linux/macOS native acceptance. Reviewed one-total-timeout and endpoint-untrusted refusal correction. Status never starts/provisions; mutating controls remain unimplemented.
+- `S13` Resolver20 passed 20260927T214541.340150Z-pytest-27744-e263a13d; passive installation6 passed 20260927T214322.306432Z-pytest-30228-2ae83c33; native installed credential1 passed 20260927T214842.737325Z-pytest-38796-dcb3ee66. Native synthetic profiles/IPC/workers use explicit MemoryNativePort; no OS-store acceptance. Current definition is `NativeClientCredentialStore.resolve_reference;` duplicate module forwarding wrapper removed. Review found no current authority or cleanup defect.
+- `S13` Scoped reference admission: portable 71 pass, run 20260927T215123.030953Z-pytest-34892-5771a347; native 1 pass, run 20260927T215307.382382Z-pytest-38060-5e8c7de7. Five scoped statics pass on eleven owned files. Native test uses a synthetic protected store and proves no native OS keychain availability. No Step closure.
+- `S15` Portable 38 pass, run 20260927T215149.028248Z-pytest-43360-bde62e67. Native reference journey 1 pass, run 20260927T215638.360595Z-pytest-42468-4d4e0724; first run 20260927T215538.469244Z-pytest-37768-84b39e4c failed because second Textual pilot click had not dispatched; fixture corrected to invoke the screen action and await worker settlement. Five scoped static checks pass. Native journey uses explicit synthetic protected store and no OS keychain writes. No Step closure.
+- `S13` Frozen reference-login import gate output C:/Users/hello/AppData/Local/Temp/cadrumo-runtime-import-gate-20260927-reference-login.txt: 15 contracts kept, 3009/3009 modules loaded, zero failures/hard findings/debt; matching before/after source digest 66cd2a9d324ab82489a4dcbd8df6e78e99fe30a0e6ba8ab8fffb59f85ef004ba, target digest 825fc4fe5c5c13b0a8377a0ed599c5c3c402f071df30946b2fb49894a10560dc. Subsequent Linux status correction not included in that gate: 19 portable tests pass and 3 Linux-native skips on Windows, run 20260927T220320.190363Z-pytest-67876-33e4f256; five scoped statics pass. Malformed manager output remains refusal, deadline becomes unknown. No Step closure/native Linux acceptance.
+- `S08` Atomic family operation portable 13 pass, run 20260927T220913.149154Z-pytest-25004-1c096703. Earlier run 20260927T220505.601366Z-pytest-37784-eef11435 had 9 failures/4 pass because embedding the domain record violated the strict schema and a synthetic NIF was malformed; 20260927T220543.815188Z-pytest-72720-fa20c693 had 9 failures/4 pass because the base record still used a custom governed-token schema; 20260927T220831.146549Z-pytest-34748-17d3c796 had 2 assertion failures/11 pass from checking registry error code instead of policy reason. Final typed fact-row transport preserves strict public schemas and validates under pinned authority. Native acceptance pending. Capability test row belongs to earlier logged capability slice. No Step closure.
+- `S08` Native Windows encrypted descendant replacement acceptance 1 pass, run 20260927T221338.293751Z-pytest-19120-88f66dfe. Five scoped statics pass. First coherent run had test-only raw count type mismatch (Decimal versus text); corrected assertion distinguishes encrypted record value from public FACTS text. Earlier interrupted overlapping launch establishes no result. Covers count/rows, orphan clearing, unknown/lost-field refusal, stale CAS, empty/no-op, foreign-profile refusal and second-profile isolation. No Step closure.
+- `S12` First CLI create journey: portable 14 pass run 20260927T221621.391974Z-pytest-5948-11d81795; native Windows 1 pass run 20260927T221815.802588Z-pytest-19308-b6970c12. Initial native run 20260927T221729.155758Z-pytest-46048-0d0864d0 failed only profile-ID redaction test expectation. Five scoped statics pass. Real encrypted profile and held verified requester connection with separate human approval; synthetic client/server protected-store ports, not OS keychain evidence. Grant-change frontend additions are subsequent work under verification. No Step closure.
+- `S08` Canonical flow/fact-door regression 47 pass run 20260927T222401.398819Z-pytest-66632-9c977515; native bound interactive flow 1 pass run 20260927T222744.640515Z-pytest-71940-b1473472. Five scoped statics pass on production/test files. Native test drives actual line widgets and runtime replacement after closing ambient custody, then abandons a later flow and proves unchanged revision. It tests explicit terminal adapters and a bound CLI context, not an installed PTY session. No new application supervisor or direct CLI fact write. Removed unused `CLI_DESCENDIENTE` enum and structural enrollment. No Step closure.
+- `S12` First-enrollment verification commands supplement the existing slice record: 14 portable cases (20260927T221621.391974Z-pytest-5948-11d81795), one installed Windows case (20260927T221815.802588Z-pytest-19308-b6970c12). Native process/transport and synthetic encrypted custody are exercised with explicit synthetic native-store/login ports. This is bounded acceptance, not complete CLI lifecycle or native credential-store acceptance.
+- `S12` Grant-change CLI acceptance: 47 portable cases after public-definition relocation (20260927T224218.702841Z-pytest-56064-f16b5e89), three native Windows journeys before behavior-preserving relocation (20260927T222941.945675Z-pytest-70132-35d835d9). Native journeys use real workers and encrypted synthetic custody with explicit synthetic store/login facilities. Review removed the new private cross-package accessor import by moving parsed-root source ownership and the accessor into `runtime_profile_admission.py,` without a shim. Earlier 14-case portable run passed after correcting the command resume policy and synthetic ENROLL expiry fixture. Full lifecycle Step remains open.
+- `S10` Standalone owner-stop consent policy: 16 portable cases pass (20260927T224418.690043Z-pytest-63920-331706ac); not yet wired into transport. Review found `Literal[True]` alone accepts numeric JSON 1; the boundary now requires the literal boolean before Pydantic literal normalization. Cases cover cross-connection/boot replay, changed login ownership/lock/logout, unknown eligibility and dual-clock expiry. No native drain or runtime-management completion is claimed.
+- `S08` Native Windows descendant frontend migration passed five focused cases (20260927T223050.907961Z-pytest-40684-022387d1) and 47 remaining legacy calculation/refusal cases with the three preceding smoke cases deselected (20260927T223237.787235Z-pytest-68580-2e8ca722). Existing local-only custody fixtures were replaced with real registered encrypted synthetic profiles and native runtime workers, retaining monthly maternity/relationship/advisory/removal and actual CLI-to-calculation assertions. These fixtures are explicitly Windows-native; portability and filing readiness are not inferred. All five scoped static checks passed. Earlier LIST slice passed one native list case, two cold first-command cases and 24 then-portable cases; the initial four failures were fixture admission refusals, not weakened authentication.
+- `S13` Passive app runtime status parser/contract/demand-loading acceptance passes 14 cases after canonical public module placement (20260927T224314.601625Z-pytest-51992-9311ca7c). Earlier native Windows real-listener case passed (20260927T222640.069740Z-pytest-15116-13931c9e); pure relocation did not repeat it. Initial family graph run had seven failures because the new family lacked canonical operator-surface enrollment; the contract/model now enroll it and final graph passes. Status separately projects listener and manager facts and does not start/provision or authenticate. All five scoped static checks passed.
+- `S11` First Linux native source-checkout evidence: 23 POSIX/manager cases (20260927T224851.660192Z-pytest-168410-e466d33b) and 12 server/owner-control cases (20260927T225041.662931Z-pytest-168451-5c2200b3), no skips. WSL Ubuntu kernel6.18.40.1, systemd259.5, Python3.13.14, independent ext4 venv and /tmp native IPC roots. This does not prove installed-package startup, Linux private profile workers/login/store custody or provisioned systemd lifecycle. Initial locked editable project installation was aborted because its Hatch hook began authority generation; owned build processes terminated, one empty authority-candidate-llgsilyc retained, active authority.current.json unchanged from pre-build timestamp with SHA256 b7bab151787111293eb2729ae2736ec3ddd6d78fba589b1b0b1be8ca00a86dca. No authority publication, service provisioning or real credentials used.
+- `S20` Frozen import gate for descendant, CLI create/change/status and standalone owner-control policy passes: 15 contracts, 3017 governed module loads, zero failures/hard findings/debt. Equal source snapshots 6831ee90eaa6659c72311d84d3c09ab19b1950e3443b939ebea94b8d4a7e7e3b; target digest 7ab54abb38376fdd0be110b44dc09d7082321e1aa88f62de3974e086845cfe7e. Output C:/Users/hello/AppData/Local/Temp/cadrumo-runtime-import-gate-20260928-requester-descendants.txt. Subsequent owner transport and TUI requester/status edits require fresh integrated verification; this is not final S20 acceptance.
+- `S10` Owner-stop protocol integration passed 31 Windows policy/native transport/drain cases (20260927T225052.501246Z-pytest-23012-6f1db243), then five native owner transport cases after adding managed-capability refusal (20260927T225337.489048Z-pytest-20112-57cb8c48). Actual native pipes/peer checks run; login observations are explicitly synthetic. One dedicated owner connection retains single-use consent; any attempted profile/private use makes it ineligible, and an owner connection cannot enter private admission. Acknowledgement means accepted, not drained. Managed installed runtimes refuse until restart suppression is implemented; ordinary exit must not silently restart. No frontend stop control or complete service-management acceptance is claimed.
+- `S15` Passive TUI status screen and human-root palette navigation pass 29 combined cases (20260927T225828.972725Z-pytest-67796-3b2ead85), including native Windows listener observation without a profile or credential. Isolated listener acceptance passed 20260927T225810.064186Z-pytest-7012-c8fb93e2. The first isolated selection collected none because file-level unit/native integration markers conflicted; marker placement corrected before acceptance. A close-while-probe test caught a late-widget race; close now fences presentation before dismissal. All five scoped static checks passed. Locale manifest adds64keys per supported language for this screen and in-flight requester; generic close/refresh/period labels reuse existing keys. Login/restricted-shell navigation remains owned by the requester integration until its gates pass.
+- `S11` Linux unit uses KillMode=mixed, TimeoutStopSec=25, final SIGKILL retained: main gets initial TERM to permit 15s drain/17s watchdog. Declaration 19 PASS run 20260927T230210.128155Z-pytest-50892-9ef1df96; WSL manager 3 PASS incl native systemd-analyze verify run 20260927T230224.575491Z-pytest-168736-68c8e2c4.
+- `S11` Real temporary disabled user-systemd unit: 2 PASS no skips run 20260927T231507.713159Z-pytest-169558-83a1455e. Graceful drain and exit2 during accepted external stop: helper departed, children alive until main drain release then contained, NRestarts=0, one boot, autostart unchanged disabled. Exact inode/content cleanup verified. First attempt 2 skips before provisioning because Python lacks `pidfd_open,` run 20260927T231353.458863Z-pytest-169533-afbf3ad3; final uses procfs PID/start-tick/state observation. Synthetic source-checkout manager evidence; installed runtime stop integration, private custody and platform acceptance remain open.
+- `S18` 8 PASS no skips, 20260927T230708.224533Z-pytest-168797-dde8ed7a. Outer native POSIX fixture verifies separate PID/PGID/SID before enabling timeout; captured/supervised paths preserve caller and sentinel, target launch-owned groups. Exited-leader case declines unsafe group signal; bounded descendants finish independently. This closes the prior lack of Linux reproduction/regression evidence for scoped cleanup correction, not recursive runtime containment or old MCP retirement.
+- `S15` 5 PASS, 1 integration deselected, 20260927T230247.183800Z-pytest-35336-164ee423. Review correction sets busy synchronously before scheduling refresh, fences liveness before widgets, proves queued-close behavior; app constructor attribute docstring restored. Five scoped static checks pass.
+- `S08` Partial integration: registered modelo.work.metadata uses canonical selector in exact-profile worker with persisted period and fresh disclosure checks. Strict public metadata snapshot restores canonical WorkUnit; rename/discard result schemas and types now V2 and include exact writer-returned unit. PublicPeriod extracted atomically from workbench projection into `operations/public_period.py.` Native CLI route enrolled but its acceptance is pending.
+- `S08` 35 unit PASS run20260927T231536.096232Z-pytest-15632-684b9dce; initial 33PASS2FAIL run20260927T231423.370619Z-pytest-51416-27f5ef5d exposed stale AST tests expecting direct writer calls after prior `to_thread` conversion, corrected exact delegated-call assertion. Snapshot9PASS run20260927T231744.467964Z-pytest-65352-5866dc91. Six actual encrypted backend cases PASS run20260927T232211.801636Z-pytest-65892-36b35bd6: exact/short/natural selection, profile/period resolution, no domain write on read, stale discard refusal, committed result remains original after a later rename.
+- `S08` Strict registry initially rejected embedded domain Period/CCAA coercion hooks; replaced with canonical PublicPeriod projection and bounded CCAA token, kept strict gate. Scoped statics corrected tuple-vs-set typecheck and formatting; final aggregate checks pending. Review identified stale rename between frontend observation and submission, plus conservative natural-selector history refusal after catalogue ambiguity; both remain tracked for S08/S09 correction, no Step closure.
+- `S11` Principal fixture review found unbounded main/child loops after abrupt pytest loss. Added independent 45-second alarms; main lifetime expiry exits successfully so Restart=on-failure cannot revive an abandoned fixture. Native rerun2PASS run20260927T232124.518571Z-pytest-169841-88d6b444; scoped five statics pass.
+- `S08` 44 PASS4 integration deselected, run20260927T232937.629036Z-pytest-4432-da6b8e24. Five scoped static gates pass12files after rename request schema2 observation binding and V2 result correction; encrypted stale-rename/native CLI checks remain queued, the four refresh-target integration tests were not run by this unit selection.
+- `S14` Native1PASS run20260927T233018.110855Z-pytest-51596-bd9df978,16.48s: preauth TUI request, separate human native login/review/approval, protected delivery, fresh API credential-reference admission. Real encrypted synthetic profile and verified Windows worker; explicit synthetic native-store/login ports, not native OS-vault acceptance.
+- `S14` Initial two300s test timeouts (20260927T231617.152349Z-pytest-29356-c0aabb49;20260927T232433.008347Z-pytest-59820-80421081) reached request publication but ThreadPoolExecutor failed to propagate storage-root ContextVar into human callback. Textual idle polling prevented early failure observation. Corrected `copy_context` thread submission, non-idle polling, trusted30s requester test budget; production default remains300s. An interrupted diagnostic retry has no usable acceptance evidence.
+- `S14` Subsequent run20260927T232932.638099Z-pytest-57064-bb22b6fe completed actual approval/delivery but final API admission refused `grant_inactive` because fixture omitted unattended consent. Final passing case explicitly selects that consent. No authentication policy bypass was introduced. Portable/scoped final test details and final inventory gates to follow.
+- `S09` Partial S09: current-only encrypted provenance schema 2 retains the resolved SUBMIT access request, bound to exact invocation/profile/definition. Historical metadata observation uses that admitted period after selector changes while every release still acquires fresh session/disclosure authority. Schema 1/missing or substituted requests fail closed. Encrypted owning suite: 11 passed, run 20260927T233500.773640Z-pytest-55308-0208d8ce. Native worker and historical-selector integration acceptance remains pending.
+- `S08` Partial S08: CLI work rename/discard use registered runtime metadata read then guarded mutation and committed snapshot; runtime preserves exact profile selection even when a different profile is hot. Native encrypted CLI case passed run 20260927T233131.811617Z-pytest-24616-95be2f2f; preceding failure 20260927T233053.896696Z-pytest-42244-ea633e8f was an oracle expecting raw UUID rather than canonical `<bucket-id>` redaction. Local selector/continuation suite 11 passed run 20260927T232919.726131Z-pytest-55584-c4402dc8. Metadata writer snapshot suite 3 passed run 20260927T233201.415141Z-pytest-62252-c23b0d08. Canonical writer accepts expected observed WorkUnit and rejects a stale rename before catalogue/events. Rename request version 2 binds observed name/time; both mutation results version 2 require the writer-returned snapshot. Legacy detailed action/evidence notice assertions for rename/repeated discard were replaced by typed native refusal/operation-ID checks, not equivalent private notice evidence. OS-keychain subprocess recovery was adapted only for incidental discard setup and not rerun here.
+- `S09` Integration run 20260927T233939.421874Z-pytest-34216-8cd09a2d: 17 passed, 1 fixture failed. Schema2 correctly rejected a test record whose admitted request remained bound to original profile while the fixture substituted another profile binding. The hostile stored provenance fixture now substitutes both consistently to exercise worker refusal rather than parser rejection. Focused native rerun 20260927T234145.337946Z-pytest-54292-a1c888af: 1 passed. All seven metadata backend cases, four workspace refresh cases and six native provenance behaviors plus native modelo scope behavior have passed their respective current affected executions; new historical-selector test remains pending.
+- `S14` Portable explicit-scope form cases: 6 passed, run 20260927T234016.536817Z-pytest-40376-762e23e5. Integrated review found COMMIT omitted as supposedly internal even though runtime write authority requires that action; corrected form to expose all canonical AccessAction values and preserve explicit COMMIT in `ENROLL/ROTATE/RENEW/CHANGE_SCOPE` without automatic scope widening. Native grant-change journey remains pending.
+- `S09` Native history first run 20260927T234237.508554Z-pytest-44248-786c96d1 proved original recorded output after selector ambiguity but failed because an expected selector exception escaped admission and retired the worker. Corrected only canonical selector/address/period exceptions to input-free `OPERATION_DENIED;` repository/custody faults still propagate. PublicPeriod now validates canonical domain meaning during request parsing, converting PeriodError to input-free validation failure. Native rerun 20260927T234709.656623Z-pytest-28788-880b6b26 passed1: real encrypted second revision, original OBSERVE/RESULT, ambiguous/missing target refusal, malformed period/year refusal, same-session period restriction and subsequent lock. Synthetic OS-login and credential-store ports remain explicit. Public period/projection suite passed20 run 20260927T234658.412987Z-pytest-10916-318ef1b5.
+- `S11` Partial S11: managed Linux owner confirmation verifies exact unit plus native MainPID, queues systemd stop before runtime drain, and leaves login autostart untouched. Owner consent completes before preparation; typed native refusal preserves serving. In-flight owner acknowledgements retain their channels within the existing global drain deadline when SIGTERM arrives during preparation. Transport/parser/status suite24 passed run20260927T235302.211519Z-pytest-13804-757361b9; expanded owner transport7 passed run20260927T235402.244180Z-pytest-61552-d7ab848c. Native real user-service/socket callback case1 passed run20260927T235423.494298Z-pytest-172313-af5303cb: foreign-process callback refused, acceptance received, stopped/disabled unit, NRestarts0. Principal requested replacing machine-specific fixture paths with current interpreter/source before final evidence; rerun pending. Uses synthetic owner login, finite synthetic launcher and no private profile; not installed main/private Linux acceptance. Windows/macOS managed owner stop remains unavailable.
+- `S08` Status migration native fixture passed1 run20260927T235425.158344Z-pytest-22644-d413c626; command-spec suite passed6 run20260927T234403.306754Z-pytest-20512-15db5191. Exact `app_modelo_work_status` joins rename/discard runtime admission. Snapshot renders existing JSON and continuation without another private profile/work read, including explicit target with different ambient hot profile. Existing deadline/recargo advisory still consults current published authority outside the recorded result.
+- `S11` Native rerun after removing machine-specific source/interpreter constants passed1 run20260927T235704.400790Z-pytest-179790-aefde50f (32.91s). Fixture derives current source and preserves sys.executable's virtualenv invocation path; all five scoped statics pass. Source-checkout server/callback and real systemd acceptance remain distinct from installed main/private custody/native-login acceptance.
+- `S20` Partial settled gate only, no S20 closure. Import gate all15contracts kept,3025/3025modulesloaded,zero hard findings/debt/failures; identical before/after source snapshot f13085bb3a2f7f6eef464dfb9131b87f7152cf595d8176693296591b26c08008, target digest211b17cc9ba6d1c3613121cff5cbb55c634a428abf7112738cbcd794168a69d7. Full output C:/Users/hello/AppData/Local/Temp/cadrumo-mcp-import-gate-20260928-metadata-stop.txt. API scaffold initial check found124missing/14stale; owning scaffold regenerated138stubs, subsequent check conformant. Locale result C:/Users/hello/AppData/Local/Temp/cadrumo-mcp-locales-20260928.json: zero missing/repair/review cells among27636required, but full gate fails: missing locked dictionaries, absent generated gettext source manifest,3terminology translations,2unbounded unrelated TUI key families,21477catalogue-only keys including one feature key `tui.runtime_access.deny_kind` to remove through owner CLI. No broad catalogue deletion or authority publication performed. Current frozen gate includes unresolved TUI grant-change test source; it is import evidence, not behavioral completion.
+- `S14` Native renewal/rotation/scope-change run 20260928T001007.871923Z-pytest-60860-2b99c203: 1 passed. Prior bounded diagnostics 20260927T234327.301771Z-pytest-68576-29f34c36, 234809.541529Z-pytest-16828-c5234c15, 234849.692865Z-pytest-60916-4bdf0408, 234948.968973Z-pytest-66772-1caf709b, 235038.121045Z-pytest-45908-fa5424cc, 235305.805899Z-pytest-8352-d80ddbe8, 235513.722640Z-pytest-23652-8d4523fe, 235758.199015Z-pytest-44644-9ff301f2 and 20260928T000249.647793Z-pytest-46680-fa006a8a, 000521.527177Z-pytest-25992-46b862ee, 000720.435256Z-pytest-24988-854621c5 failed while isolating fixture store composition and replay. Final cause: installed-session expiry recomposed login and replayed already completed renewal; fixture now exits after retained completion. Temporary instrumentation removed. Real Windows runtime/encrypted custody, synthetic login/store ports; no native credential-store claim.
+- `S09` Partial S09: verify/file are exact revision/profile/period operations, guarded cancellation-complete commits, encrypted typed V2 results and canonical publication/no-op witnesses. Native Windows API-key pipeline run20260928T003119.060177Z-pytest-21732-27be3b61 passed1: protected revision selection, verify no-op, local-file publication/retry, wrong-subject refusal; synthetic login/store ports. Earlier native collection run20260928T002419.817738Z-pytest-47368-b070a2a4 failed strict nested-domain hooks. Explicit wire snapshots preserve timestamps, decimals, canonical report/precondition fields and filing receipts; strict schema gate unchanged. Backend result/access run20260928T001637.019031Z-pytest-66992-bc1a67dd passed2 after initial foreign-context test fixture attempted to open unavailable foreign custody; corrected to bind real original repositories and assert profile mismatch. That backend run preceded V2 expansion and requires current V2 rerun. Verification precondition4 passed run20260928T001404.393807Z-pytest-43652-fe09dfdc. CLI advisory parity, broader caller migrations and current full import gate remain open.
+- `S09` Canonical filing encrypted regression final run20260928T002610.998765Z-pytest-73232-ab0bac9b:8 passed; previous7-case run20260928T002143.490328Z-pytest-15144-487762e0 also passed before preflight-lineage race added. Four independent catalogue CAS conflicts roll back the filing batch; concurrent filing lineage advance between preflight and persistence refuses even when content is unchanged. Strict snapshot run20260928T003359.332124Z-pytest-13392-0d4b7f44:2 passed exact settlement/evidence/time and decimal/string/int/bool report/precondition round trips, invalid credit equation and duplicate fact rejection.
+- `S20` Owner CLI enrolled ambiguous approved-report refusal in four locales; removed unused feature `tui.runtime_access.deny_kind` key discovered by full locale check. Full locale acceptance remains open with separately recorded catalogue/tooling findings.
+- `S09` Preparatory runtime integration; S09 remains open. Advisory 9-case run 20260928T004037.003553Z-pytest-69292-3044913a proves explicit pinned M210 operation avoids fallback authority opener. Revision reader 8-case run 20260928T001821.164032Z-pytest-31448-c8b02863. Both worker slices passed five scoped static checks; new required V2 advisory executor integration awaits current native reruns.
+- `S09` Run 20260928T005458.876008Z-pytest-66824-6330865c: six actual encrypted calculation co-commit/no-op/pointer/side-write cases plus registered calculation scenario passed. Receipt witnesses only its revision/pointer transaction, not prior migration or IVA-wallet writes; do not infer full calculation no-effect from false. Canonical service now returns the writer's parent snapshot. Root 21-file Ruff/format/ty/pyrefly/basedpyright pass. Conformance full run 20260928T004910.265018Z-pytest-46840-fadd83fe passed 45/47; exact two corrected stale expectations passed in 20260928T005159.418991Z-pytest-49904-c9897109; all five scoped statics passed. S09 remains open.
+- `S13` Native protected-password CLI verify/reverify/file/refile passed 1 case run 20260928T004816.679636Z-pytest-19960-40922da4. First 20260928T004402.365423Z-pytest-31616-72e1f16f failed an incorrect repeat-file selector oracle; explicit --select filed preserves canonical selector policy. Portable wrapper and notice parity passed 7 cases; five scoped static checks passed. API-key CLI native case in progress. Synthetic encrypted profiles and native Windows transport use explicit synthetic login/store ports; no native credential-store or live-provider claim.
+- `S09` Evidence correction: the preceding log's guessed command node `test_registered_executor_runs_through_the_shared_lifecycle_matrix` was not executed and its =pass row must not be treated as command evidence. Actual seven-case run is 20260928T005458.876008Z-pytest-66824-6330865c; verified defining node is `test_every_production_registered_executor_runs_through_the_shared_supervisor_matrix.` Exact worker command is being reconciled. Run outcome 7 passed is unchanged.
+- `S09` Corrected exact seven-pass command for run 20260928T005458.876008Z-pytest-66824-6330865c replaces the earlier explicitly retracted guessed conformance node; that earlier spelling was not executed.
+- `S09` Filing caller selection: 99 passed run 20260928T005550.716209Z-pytest-72896-6bdff472. Projection: one passed run 20260928T010429.848632Z-pytest-56544-0452c318 after removal of an unsupported fixture amount oracle. Input fields: nine passed run 20260928T010214.884107Z-pytest-63352-696d1ed8. Summary: twelve passed run 20260928T010454.629256Z-pytest-12728-e2f6c22b.
+- `S09` Calculation operation integration remains in progress; this evidence predates its request/result contract replacement and is not full runtime acceptance.
+- `S13` Native protected API key verification, idempotent verification and exact-profile refusal passed run 20260928T010038.487060Z-pytest-30020-67b49267. Synthetic OS login/store facilities; not native OS-store or live filing acceptance. Earlier fixture failures involved requester destination mismatch and an incomplete activity period; canonical admission and verification policy remained intact.
+- `S09` Calculation request4/result2 now binds complete scalar/detail-row channels, exact writer-returned calculation/unit projections, pinned diagnostics/modality/deadline advisories, encrypted result operands and cancellation-complete COMMIT holding across the canonical service. Registry schema smoke passes. Native pipeline still in progress; first attempt calculated and projected successfully before a string/UUID fixture assertion, second encountered a generic execution failure while resolver constructors were concurrently changing. Neither is acceptance.
+- `S09` Revision publication false conservatively retains UNKNOWN because preparatory relation/IVA migrations and wallet decisions do not all expose aggregate publication witnesses. Do not claim whole-operation NONE from the revision receipt.
+- `S09` The broad no-second-authority regression found unthreaded repository/source-resolver helpers; corrective propagation is in progress. No S08/S09 completion.
+- `S13` M349 NIF format refusal now uses one application-owned key across registered calculation and CLI parsing, with UI-independent en/es/ca/hu translations and retained nif/pais placeholders. Initial locale move dry-run refused because the tool handles subtrees; no mutation occurred. Applied leaf enrollment/removal through canonical CLI; no direct catalogue edits.
+- `S09` Current4/2 contract and evidence selection passed69 run20260928T012356.913693Z-pytest-20960-280e6e9d. The three displaced adapter executor-positive tests now live at the entrypoint composition boundary and use real encrypted persistence/operands instead of mocked writers. Negative encrypted custody assertions remain in the adapter tests. Five scoped statics passed.
+- `S09` Input/advisory14 passed run20260928T011845.676680Z-pytest-49408-9d2d40e9. These are focused checks, not phase/native-store completion.
+- `S09` Two native Windows API-key journeys passed run20260928T013132.847827Z-pytest-44848-1bc56035. One exercises the seeded verified revision; the other performs registered calculation, duplicate calculation, revision selection, verification and local filing/retry under the exact enrolled profile/period/operation/disclosure scope. New publication reports UPDATED; duplicate revision reports false and aggregateUNKNOWN; filing records prove local handoff only. Synthetic OS-login/store ports; native secret-store and live AEAT acceptance remain unproven.
+- `S09` Root five scoped static checks passed. Full source-aggregation no-second-lease evidence is separate M130 public-service coverage with a separate M303 prorrata case, not registry-wide live acceptance.
+- `S08` Bounded protected submission staging is integrated across both framed transports; six staging tests passed in run 20260928T045017.025156Z-pytest-45396-477e29f7. Outer client coverage and native shared-worker isolation acceptance are being integrated separately; this does not close S08.
+- `S09` Pinned-authority forwarding and actual revision publication receipts: seven tests passed in 20260928T013011.283633Z-pytest-47024-aa432088; real M303 carry test passed in 20260928T013051.005337Z-pytest-72228-02323c5c. These prove the selected calculation/receipt paths, not every Modelo or overall lifecycle acceptance.
+- `S13` Two native runtime-backed CLI calculation/verification tests passed in 20260928T014040.990312Z-pytest-63708-966b52a6. Real Windows worker/encrypted profile; synthetic login and secret-store ports, so native OS credential-store availability is not established.
+- `S13` Nineteen tests passed in 20260928T045449.634096Z-pytest-43664-4a0bebd2 after correcting a malformed-string test fixture and helper type annotation. Real framed in-memory client tests cover readiness correlation and protected body transmission; this is not native runtime acceptance. CLI preflight now enforces the canonical UTF-8 byte bound.
+- `S08` Native Windows encrypted-worker upload acceptance passed in 20260928T051044.769176Z-pytest-69604-f8428877 (one integrated test): large valid JSON submission, partial-upload disconnect isolation and lock between readiness/completion followed by surviving-session writes. Synthetic login/secret-store facilities; no claim that canonical journal inventory excludes every orphan record.
+- `S13` Fifteen tests passed in 20260928T045753.622375Z-pytest-61316-3f3373d3 after moving private calculation refusal journeys through real runtime admission; parser/help coverage remains portable. Scoped five static gates passed.
+- `S09` Amendment integration now uses catalogue CAS, retained authority, encrypted value-bearing requests and typed V2 writer results inside a cancellation-complete COMMIT guard. Requested source and actual confirmed amendment baseline remain distinct. Edit execution now retains the COMMIT guard and stores its declared result; exact profile/period resolvers are composed. Earlier amendment consumer checks passed before final selector/source-identity integration; current scoped gates, actual CAS races and new read/access tests remain in flight. No Step closure.
+- `S13` The work-amend command now uses authenticated exact filing selection and registered amendment submission; native command acceptance remains pending. The separate amendment wizard and export paths remain unmigrated.
+- `S09` Added a separate amendment-context read to bind the selected filing, persisted calculation and motive applicability to worker custody and one authority operation. Pure reader tests need schema-assertion corrections; real amendment access checks passed within the owning batch. Wizard wiring and native acceptance remain in flight; this record does not close S09.
+- `S09` Export executor COMMIT guard, cancellation-complete publication, encrypted typed result and exact revision access are implemented; scoped verification pending. CLI export migration and full-result parity remain open.
+- `S08` Wizard now reads worker-owned amendment context and submits registered amendment; legal kinds, motive, casilla descriptions and values share one pinned worker authority. Runtime authentication gate enrolled; scoped/native verification pending.
+- `S08` Standalone export now selects and submits through registered runtime operations, using full strict V2 receipt and frontend-resolved absolute output path. Scoped/native tests pending; review-package build still being migrated.
+- `S09` Edit catalogue decoding now consumes the operation's pinned authority. Export request refuses unresolved relative destinations; existing TUI exporter resolves frontend path. Scoped verification queued.
+- `S08` Run 20260928T063508.891862Z-pytest-35540-18268eae: 9 passed. Amendment CAS race and native command acceptance remain pending.
+- `S08` Review-package build registered with secure request, exact profile/revision/period access and worker-owned temporary draft/package assembly. Captured calculation/work-unit catalogue tokens must remain current after export before packaging. Shared COMMIT guard retains UNKNOWN on post-export failure. Scoped/schema/native acceptance pending; other review-package handlers remain unconverted.
+- `S08` Removed dead direct export helper after both CLI consumers migrated. Integrated review-package result schema probe currently fails on RegistrySnapshotRef.period custom schema hook; explicit strict projection fix assigned. Request schema binds; type checks pass on scoped sources, Ruff/format repairs in progress. Wizard test collection currently fails on its removed private-read helper import; test migration assigned, no tests claimed for that failed run.
+- `S08` 17-source checks passed at export/review-package freeze. Subsequent TUI lifecycle submission-port edits require repeat owning TUI checks; the earlier result is not evidence for those later edits. Review-package request/result strict schema graph bindings pass after nested registry-coordinate mirror fix.
+- `S08` TUI lifecycle integration in progress: common request assembly accepts a runtime submission port; worker generation carries safe edit baseline and M303 question context; canonical M303 attachment admission is registered in worker. Baseline wire extraction and TUI composition remain in flight. No validation or completion is claimed for this slice.
+- `S08` Baseline wire type moved to its defining module to avoid workspace import cycles. TUI runtime lifecycle is wired to existing request assembly; attestation uses exact session binding and bounded registered execution. Runtime generation refresh updates the captured declarations generation after success. Principal review requires UNKNOWN effect on transport loss before a terminal attestation observation; correction assigned. Full owning verification pending.
+- `S08` M303 request/result strict V1 schema graph binding passed. Native attachment admission and integrated TUI acceptance remain pending; schema/type checks are not custody evidence.
+- `S08` Run 20260928T065529.363767Z-pytest-49204-a75567d4: 3 passed; complete export receipt canonical/wire roundtrip and V2 registry binding. Native file publication and CLI acceptance remain pending.
+- `S08` Run 20260928T065605.268254Z-pytest-30472-4269a7e7: 6 passed, 5 command cases refused `runtime_unavailable` because their fixtures have no live runtime. Real-runtime fixture migration assigned; production admission is retained.
+- `S09` Run 20260928T065756.927341Z-pytest-17344-851c6268: all 3 selected cases passed (51 deselected). Real encrypted filing/work-unit/calculation competitors are preserved and canonical co-commit refuses without partial amendment writes. This proves the scoped catalogue CAS behavior, not all runtime/platform acceptance.
+- `S09` Principal review corrected result-read deadline propagation: TUI supplies an absolute monotonic deadline to the existing paged reader so thread queue delay cannot extend attestation's total budget. Scoped type/deadline checks queued; existing relative-timeout callers retain their limit.
+- `S08` Corrected newly wired TUI refresh: child close consumes the already captured same-profile declarations snapshot, replaces the old workspace factory, rebuilds mounted tables and restores semantic selection. This adds no UI-thread private reads. Scoped/native UI checks pending.
+- `S09` Expected runtime start refusals now retain the submitted operation identity and report UNKNOWN effect through the existing typed lifecycle refusal. A lost start acknowledgement does not establish rollback. Scoped verification pending.
+- `S08` Expected runtime refusals are adapted at submission, attestation and refresh into the existing lifecycle error; terminal observations retain their authoritative effect, otherwise UNKNOWN is reported. Cancellation and session-expiry exceptions are preserved. Focused verification remains pending.
+- `S09` Native wizard refusal exposed lost canonical domain reason: the supervisor stores REFUSED registry codes in `refusal_ref,` while these consumers inspected only `failure_error_code.` Both now prioritize the canonical refusal reference; CLI preserves it as context.reason with operation/effect coordinates. Current native regression and scoped gates pending.
+- `S08` Added real encrypted M130 installed TUI lifecycle journey through captured declarations/Modelo factories, typed verification result and post-action refresh. Native execution is queued with the sole test-lane owner; no native acceptance claimed.
+- `S09` TUI operation exchange now rechecks its original application-session identity after the awaited native reply, matching submission/result guards. A replacement session cannot inherit a queued old-session projection or control reply. Focused regression and gates pending.
+- `S08` Correction to prior exception-adapter note: both runtime refusal classes already inherit CadrumoError. Removed redundant pre-submit/composition/refresh conversion; retained the original post-submit identity/effect guard and canonical refusal-reference correction. Regression scope narrowed accordingly.
+- `S09` Seven runtime terminal consumers now preserve `refusal_ref` before `failure_error_code` and previous fallback. Existing structured run-error/CLI contexts retain reason and unchanged effect/operation coordinates. Focused behavioral regressions pending; Pyrefly reported zero errors with six hidden warnings, which need classification before broad gate completion.
+- `S09` Run 20260928T072658.596606Z-pytest-72240-759a166d: one passed, ten deselected. Proves canonical M303 motive refusal, terminal REFUSED with honest UNKNOWN effect, and unchanged real encrypted work-unit/filing/calculation catalogues. Earlier oracle failures were caused by `open_test_profile_session` reopening a password-registered profile with its synthetic derived test key after CLI session closure; fixed by real password login with pinned decode context. Separate parity connection failure remains under investigation.
+- `S09` The six previously hidden Pyrefly warnings are existing unnecessary str() conversions around string operation IDs in runner error contexts and one committed-view context. The reason-preservation edits did not introduce those conversions; no errors or new warning class. Behavioral regressions remain pending.
+- `S09` Source-confirmed authority leak corrected: live revision access and selection previously called calculation catalogue load without the retained operation, opening a second descriptor-following authority lease. Trusted host access context now carries its pin; affected live resolvers refuse missing pin; worker scopes governed facts before resolution. Natural-address period mismatch diagnostics accept the same pin; valid year/period address construction no longer opens an unused lease. Focused regression and static validation pending; this is not yet evidence of native parity failure resolution.
+- `S09` Portable refusal consumers: 30 passed, exit 0, run 20260928T073926.794651Z-pytest-42744-06510acc. Deadline/session/effect boundaries: 14 passed, exit 0, run 20260928T074049.145761Z-pytest-4780-60bf9674. These exercise typed strict contracts and fake transports; native platform acceptance remains separate.
+- `S08` Parity diagnostic run 20260928T073735.751769Z-pytest-24500-b9de0667: second amend `runtime_connection_closed;` teardown observer captured ExceptionGroup at `server._connection` -> `profile_connections.disconnect` -> `session_authority.disconnect` -> `_retire.` This is subsequent retirement failure; original worker loss still being diagnosed. No secret values recorded.
+- `S08` Workbench run 20260928T074110.449661Z-pytest-24004-72c44cf5 crossed a source edit and is not final acceptance. Source inspection independently confirms fixture incorrectly attempted password login on MCP frontend, explicitly refused by `_prepare.` Correct test to use its enrolled API key; retain production human-proof restriction. No generation size/verification journey evidence obtained in this failed run.
+- `S09` Refinement of preceding pin fix: standalone address normalization still acquires and validates authority when no explicit operation is supplied, preserving prior missing-publication behavior. Worker revision selection supplies its retained pin for both valid and mismatching periods, so no second lease is opened there. Supersedes preceding note describing the valid standalone path as lease-free.
+- `S09` Registered-operation caller census identified `metadata_read_operation` as the other natural-selector consumer. Threaded its retained authority through read/execution/live access resolution, refusing missing pin for live resolution. Historical disclosure branch unchanged. Scoped tests and static checks delegated with the revision pin regression batch.
+- `S09` Fail-before execution detector exposed two more same-generation defects: `_revisions_for_work_unit` and `_explicit_revision_for_work_unit` accepted an authority operation but called `calculation_repository.load` without it. Both now forward operation explicitly. Detector run 20260928T075128.330838Z-pytest-50324-7e3a00bd had 12 passed and two failed same-pin assertions; rerun and existing encrypted selector tests pending.
+- `S09` Run 20260928T075409.213077Z-pytest-6772-3db1b45c: 14 portable tests passed, exit 0. Real executor capture for exact/natural selection asserts all catalogue loads use the same pin and blocks ambient lease acquisition; missing live pin refuses before repository construction; historical result remains sealed-scope/pin-free. Encrypted entrypoint and existing selector-owner suites queued separately; not counted as passing. Five scoped static gates on four test files passed as reported; source gates have separate owner.
+- `S09` Source-confirmed verification-bundle omission: persisted M303 rectificativa validation requires authoritative taxpayer ID, but `build_verification_repository_bundle` constructed its calculation repository without it. Concrete factory now requires the existing pinned operation and uses the established exact-profile `_export_taxpayer_tax_id` resolver, matching amendment composition. Protocol/caller/test propagation delegated to bounded Sol-medium worker; no ambient authority fallback or aggregate-validation relaxation. Native second-amendment causality/acceptance remains under verification.
+- `S09` Run 20260928T080218.114936Z-pytest-29872-069ca02b: exit 0, 1 passed, 10 deselected. Real synthetic encrypted-profile journey performs two consecutive M303 amendments and compares persisted outcomes. Prior second-submit worker-channel loss is resolved after explicit pinned verification-factory taxpayer context. Native login/store observation remains synthetic; this does not establish credential-store/platform-wide acceptance.
+- `S09` Native wizard run 20260928T080600.958413Z-pytest-44336-0396e494: 11 passed, zero deselected. Confirms both consecutive amendments and missing-motive refusal after required factory pin/taxpayer identity integration. Selection/access run 20260928T080809.035410Z-pytest-46732-2533e174: 19 passed, zero deselected; missing-pin pre-query refusal, sealed historical scope and pinned catalogue cases. No phase/platform acceptance implied.
+- `S08` Run 20260928T080304.245906Z-pytest-43592-82828541: 1 failed, 1 deselected. Corrected MCP API-key fixture progressed to workbench.generation.execute, which settled FAILED/NONE with no public `failure_error_code` or `refusal_ref.` Opaque diagnostic reference is not decoded; in-process synthetic-custody reproduction is being prepared to establish the original cause. Workbench acceptance remains open.
+- `S09` Runs 20260928T080856.638311Z-pytest-54520-22667212 (10 passed) and 20260928T081022.220501Z-pytest-53072-bb558747 (34 passed), zero deselected. Required factory pin and exact-profile result/access regressions pass. Native encrypted lane released before subsequent registry changes.
+- `S09` Scoped 43-file static sweep reported by its verification owner before the later required-factory and revision-snapshot changes. Exact ordered $sourceScope: `src/cadrumo/adapters/local_runtime/workbench_generation.py,` `src/cadrumo/application/workbench_generation.py,` `src/cadrumo/application/workbench_generation_operation.py,` `src/cadrumo/application/workbench_generation_projection.py,` `src/cadrumo/entrypoints/workbench_generation_composition.py,` `src/cadrumo/application/modelo/_registry_helpers.py,` `src/cadrumo/application/modelo/amendment_actions.py,` `src/cadrumo/application/modelo/amendment_context_operation.py,` `src/cadrumo/application/modelo/amendment_projection.py,` `src/cadrumo/application/modelo/edit_baseline_projection.py,` src/cadrumo/application/modelo/export.py, `src/cadrumo/application/modelo/export_projection.py,` `src/cadrumo/application/modelo/filing_projection.py,` `src/cadrumo/application/modelo/filing_selection_operation.py,` `src/cadrumo/application/modelo/metadata_read_operation.py,` `src/cadrumo/application/modelo/operation_definitions.py,` `src/cadrumo/application/modelo/revision_operation_access.py,` `src/cadrumo/application/modelo/revision_selection_operation.py,` `src/cadrumo/application/modelo/review_package_operation.py,` src/cadrumo/application/modelo/selectors.py, `src/cadrumo/application/modelo/work_addressing.py,` `src/cadrumo/application/modelo/work_review.py,` `src/cadrumo/application/modelo/workspace_models.py,` `src/cadrumo/application/operations/access_resolution.py,` `src/cadrumo/entrypoints/runtime/operation_authority.py,` `src/cadrumo/entrypoints/cli/_modelo_amend_wizard_cli.py,` `src/cadrumo/entrypoints/cli/_modelo_export_cli.py,` `src/cadrumo/entrypoints/cli/_modelo_review_package_cli.py,` `src/cadrumo/entrypoints/cli/runtime_modelo_amendment.py,` `src/cadrumo/entrypoints/cli/runtime_modelo_export.py,` `src/cadrumo/entrypoints/cli/runtime_modelo_review_package.py,` src/cadrumo/entrypoints/tui/declarations/controller.py, src/cadrumo/entrypoints/tui/declarations/models.py, src/cadrumo/entrypoints/tui/declarations/overview.py, src/cadrumo/entrypoints/tui/declarations/routes.py, src/cadrumo/entrypoints/tui/modelo/lifecycle.py, `src/cadrumo/entrypoints/tui/modelo/runtime_lifecycle.py,` src/cadrumo/entrypoints/tui/modelo/view/overview.py, `src/cadrumo/entrypoints/tui/operations/runtime_controller.py,` src/cadrumo/entrypoints/tui/profile/overview.py, `src/cadrumo/entrypoints/tui/profile/runtime_overview.py,` `src/cadrumo/entrypoints/tui/runtime_workbench.py,` `src/cadrumo/entrypoints/tui/tests/test_runtime_workbench_native.py.` Default Pyrefly reported zero errors and 46 hidden warnings; warning-level audit exited 1 with unnecessary-type-conversion warnings. Eight new redundant conversions were removed in `local_runtime/workbench_generation.py,` `cli/_modelo_amend_wizard_cli.py,` tui/modelo/lifecycle.py and `tui/tests/test_runtime_workbench_native.py;` those four passed all five gates afterward. Remaining 38 broad-scope warnings were unchanged. This scoped evidence does not replace post-freeze global gates.
+- `S09` Required pinned-authority factory migration: exact ordered $factoryScope: `src/cadrumo/application/modelo/verification_repository_ports.py,` `src/cadrumo/application/modelo/operation_definitions.py,` `src/cadrumo/application/modelo/revision_operation_access.py,` `src/cadrumo/application/modelo/review_package_operation.py,` `src/cadrumo/application/modelo/revision_selection_operation.py,` `src/cadrumo/application/modelo/filing_selection_operation.py,` `src/cadrumo/application/modelo/amendment_context_operation.py,` `src/cadrumo/application/modelo/tests/test_revision_selection_operation.py,` `src/cadrumo/application/modelo/tests/test_lifecycle_operation_conformance.py,` `src/cadrumo/entrypoints/adapter_composition.py,` `src/cadrumo/entrypoints/cli/_app_quickfile.py,` `src/cadrumo/entrypoints/cli/_modelo_work_verification_cli.py,` `src/cadrumo/entrypoints/tests/test_modelo_verification_operation_results.py,` `src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py,` `src/cadrumo/entrypoints/tests/profile_persistence/test_verify_ledger_drift_gate.py,` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_390_303_simplificado_fold_in_live.py,` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_303_deductible_evidence_gate.py,` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_202_modality_lifecycle.py,` `src/cadrumo/entrypoints/tests/profile_persistence/test_e2e_ledger_m303_quarters_to_m390_annual.py.` All five gates exited zero; Pyrefly reported ten hidden warnings whose categories/newness were not captured. The later tests-only `filing_selection_operation` test update also passed those five gates scoped to its file. These are pre-revision-snapshot scoped checks, not a full-tree clean claim.
+- `S08` Full CLI work revision is being migrated from direct active-profile reads to registered exact-profile `revision_snapshot` execution. Existing metadata selector remains distinct; the full projection uses `TAX_VALUES` admission, pinned catalogue/visibility rules, encrypted result storage and NONE effect. Modelo 202 modality reads the explicit worker profile record under the retained pin. Existing JSON and verbose trace rendering are projected without frontend custody. Source/type and native tests are in flight; observations/list remain on their existing paths and S08 stays open.
+- `S08` Exact nine-file $revisionSnapshotScope: `src/cadrumo/application/modelo/revision_snapshot_operation.py,` `src/cadrumo/application/modelo/revision_operation_access.py,` `src/cadrumo/entrypoints/operation_composition.py,` `src/cadrumo/entrypoints/cli/runtime_modelo_revision.py,` `src/cadrumo/entrypoints/cli/runtime_modelo_operation.py,` `src/cadrumo/entrypoints/cli/runtime_modelo_verification.py,` `src/cadrumo/entrypoints/cli/runtime_modelo_calculation.py,` `src/cadrumo/entrypoints/cli/_modelo_work_revision_cli.py,` `src/cadrumo/entrypoints/cli/_profile_authentication_gate.py.` Final scoped checks include strict request/result bridge parsing and read-only policy excluding COMMIT. Ruff/format/ty/pyrefly/basedpyright all exited zero; Pyrefly reported three hidden warnings, not classified here. Native tests remain pending.
+- `S08` Run 20260928T082138.378882Z-pytest-56800-8bc8f7e9: one failed, two deselected. Extending real encrypted provider capture through the real public projection exposes ValueError 'workbench bucket-bearing model needs review'. Confirmed production omission: the newly embedded ModeloEditApplyBaselineV1 was absent from `_PROFILE_BOUND_PUBLIC_MODELS.` The exact class is now reviewed and remains subject to recursive exact-profile equality; no fixture bypass or validator relaxation. Positive native rerun and foreign-baseline regression are pending. Earlier provider-only run 20260928T081530.421999Z-pytest-39024-425be2be passed capture but did not cover projection and did not isolate a worker-only defect.
+- `S08` Run 20260928T082401.629864Z-pytest-17968-03be25c5: one failed, two deselected. With the baseline reviewed, restoration exposes a second production defect: it validates an AVAILABLE canonical search result with no projection before the existing parent reconstruction runs. WorkbenchGenerationV1 restoration now omits only the recursive search-child construction and rebuilds search immediately from restored siblings using the canonical assembler. Public availability/timestamp/refusal equality checks remain in force. Positive regression/native reruns are pending.
+- `S08` Run 20260928T082634.147470Z-pytest-52512-91eb3a3c: one passed, two deselected. Real synthetic encrypted profile now passes provider capture, typed public projection/restore, available search reconstruction, complete result envelope serialization/size bound, and nested foreign-profile baseline rejection. This resolves both projection detector failures in process; actual native worker/TUI journey is running separately.
+- `S08` Run 20260928T082825.753580Z-pytest-69256-ef8bba31: one failed, two deselected. Native generation, result paging, envelope serialization and RuntimeWorkbenchRoot.load succeeded after the projection corrections. The test then incorrectly expected DeclarationsModeloWorkspaceLauncherScreen from the root declarations route; the live route intentionally opens DeclarationsOverviewScreen except for calendar focus. Only the test import/assertion is corrected, preserving production navigation. Failure occurred before the subsequent verification action, so full journey acceptance remains pending.
+- `S08` Run 20260928T083025.313882Z-pytest-31360-3600f77e: one passed, two deselected. Actual Windows worker generation, paged result/root load, strict envelope, captured baseline, installed declarations-to-Modelo factory, registered verification publication and refreshed state pass after two production projection corrections and the test-only overview-class correction. API-key/human-only boundary assertions pass. Login observation and credential-store ports remain synthetic; this is not installed native credential-store or full platform acceptance.
+- `S08` `work_observations` now consumes the same registered exact-profile revision snapshot and projects the established WorkObservationsResult and ordered text without frontend private reads. The old local resolver/dependency chain had no other consumers and was removed. `work_revisions` remains unchanged and still requires migration. Initial three-file scoped gates passed; principal review is moving the new public payload renderer into its non-underscore canonical module before regeneration and final scoped checks. Native read parity remains pending.
+- `S08` Canonical pure renderer relocation inspected: localized state labels and observation payload formatting have one public definition; no former private state-label forwarding definition remains. Five scoped source gates reported passing; native read acceptance and fresh import evidence remain pending. No Step completion claimed.
+- `S08` Run 20260928T084414.855369Z-pytest-24180-bc3f8fae: exit 1, one passed, two failed, 56 deselected. Real registered `revision_snapshot` executor scenario passed. Registry census exposed missing `review_package.build,` `work.amendment_context,` `work.filing_record` and `work.m303_attestation` conformance cases; denominator retained. Historical read fixture attempted an invalid explicit observation-backed casilla override and is being corrected through canonical calculation. No acceptance closure.
+- `S20` Run 20260928T084032.055799Z-check-import-boundaries-50416-b61b64c4: exit 1, 174.284 seconds. All 15 Import-Linter contracts kept and 3055/3055 loadability targets passed with zero failures, but overall gate failed with source snapshot mismatch plus seven `PRIVATE_CROSS_PACKAGE` hard findings and four unapproved test contract occurrences. Exact diagnostic extraction in progress. This is not a complete import pass and does not supersede pending stable-tree acceptance.
+- `S08` Historical revision snapshot run 20260928T084804.496839Z-pytest-58988-5abc7eb0: exit 0, one passed, three deselected. Exact stored historical values/input mappings remain distinguishable from a later same-unit revision; profile refusal, sealed historical RESULT period, absent COMMIT policy, encrypted typed result and NONE effect pass. Earlier run 20260928T084534.095344Z-pytest-59692-6a18f598 reached result resolution but failed an incorrect empty-input test expectation; canonical seeded prior-period binding produces input 05=0. Assertion now compares canonical meaning including tagged decimal values. Native CLI acceptance remains running.
+- `S08` Run 20260928T084850.377149Z-pytest-39992-3cfa323b: exit 0, one passed, one deselected. Native Windows runtime API grant allows selector but not full revision snapshot; refusal emits no tax payload. Human CLI full read matches calculation JSON observation trace and verbose rendered trace. Synthetic login/store ports limit platform claim; observations-specific regression and wider migration remain pending.
+- `S10` Authored Windows Task Scheduler experiment reviewed before execution: isolated temporary root and unique owner/root task, `TASK_CREATE` collision refusal, interactive least-privilege token, no trigger, hidden pythonw -I child using installed pywin32, normalized registered-XML identity checked before Start/Stop/Delete, identity-specific fixture cleanup and finite child lifetime. Graceful `WM_CLOSE` uses parent-released bounded drain; separate stop-failure and unrequested-failure restart control remain native experiments. Five scoped statics reported passing. Native run delegated through serialized lane; no platform acceptance yet.
+- `S10` Run 20260928T085347.139926Z-pytest-36984-f5f6877d exited 0 but all three scenarios SKIPPED: caller process token could not be verified as non-elevated. No task registered or native stop/restart scenario executed; this run proves no Windows manager behavior. No escalation or alternate-launch fallback attempted. Native stop delivery, cleanup and restart suppression remain unproven.
+- `S08` Revision inventory source implemented, verification pending. Exact unit filtering derives persisted period; unfiltered profile-wide discovery requires explicit period-independent permission and cannot inherit a period-only grant. Historical result release uses sealed admission. Executor reads canonical current records under retained authority without invoking the prior list helper's write-side relation-override migration. Encrypted ordered metadata projection retains old CLI listing payload/text; no COMMIT capability and NONE effect. Real conformance/native scope tests and current gates remain open.
+- `S09` Scope review found that period-independent consent alone is insufficient for profile-wide tax inventories: a finite-period grant can legitimately permit unrelated profile administration. Added default-false `OperationAccessPolicy.requires_all_periods,` checked in the canonical `operation_scope_refusal` against every intersected/current and original-provenance ceiling. Unfiltered revision inventory opts in; its scope must have periods=None as well as independent consent. Filtered inventory keeps exact persisted period authority. This enforces the accepted no-omission-widening boundary without changing grant permission vocabulary. Focused policy and integrated tests pending.
+- `S08` Seed-helper boundary correction implemented and reviewed: three real Modelo fixtures now have one public defining support module; consumers use direct imports and old private seed references are absent. Existing filing-record and amendment-context conformance additions preserved. Seven-file Ruff/format/ty/basedpyright passed; Pyrefly zero errors with seven hidden warnings. Focused encrypted/native regression queued, so relocation acceptance and full import pass remain pending.
+- `S08` Initial eight-file inventory/policy static sweep: ty and Pyrefly passed (one hidden Pyrefly warning). Ruff import/format findings were mechanically corrected and both gates now pass across all eight paths. Basedpyright identified inferred empty-period-set types and Pydantic frozen-model hash inference in set literals; principal added explicit `frozenset[Period]` annotation and the existing tuple-backed frozenset construction. Final single-file type recheck pending. No behavioral policy restriction was removed.
+- `S09` Added unrestricted-period predicate is undergoing pure policy regression alongside test relocation fixes. Combined reported run 20260928T090837.484949Z-pytest-38380-b59fecdb passed 79 cases, but its reported command omitted the explicit integration marker and serial flags required for encrypted acceptance. Verifier is checking actual selections; no encrypted relocation acceptance inferred solely from aggregate count. Inventory static checks now pass Ruff/Pyrefly/basedpyright; final ty recheck follows an explicit generic empty-frozenset clarification.
+- `S08` Eight-file inventory and scope-predicate source sweep is now clean after focused corrections: Ruff/import sorting and format passed; ty and Pyrefly passed across the scope; basedpyright's inventory findings were corrected with explicit `frozenset[Period]` typing and tuple-backed frozen DisclosurePermission collection. Final inventory-only Ruff/format, Pyrefly win32, basedpyright Windows passed; ty then passed after empty frozenset was explicitly parameterized. These static passes do not establish native listing or all-period refusal acceptance.
+- `S08` Principal integrated registered M303 attestation V2 into the CLI closed request/result union and strict result parser, and enrolled the existing attestation command in runtime admission. Bounded worker owns the generalized work-unit-or-period request, canonical guarded executor, CLI/TUI consumers and owning tests. Principal review requested sealed historical release for both targets before repository reconstruction, plus typed preadmission mismatch refusal. Native standalone-period acceptance remains pending; no newly required work unit is permitted for the existing CLI journey.
+- `S08` Run 20260928T085157.553134Z-pytest-47728-49d335a7: exit 0, one passed, 54 deselected. Newly added real filing-record selection conformance scenario runs through the canonical supervisor with NONE effect. Amendment-context case remains in the source after helper extraction; full live registry coverage is not complete.
+- `S08` Inventory source scope: $inventoryScope = `@('src/cadrumo/application/modelo/revision_inventory_operation.py',` `'src/cadrumo/entrypoints/operation_composition.py',` `'src/cadrumo/entrypoints/cli/runtime_modelo_operation.py',` `'src/cadrumo/entrypoints/cli/runtime_modelo_revision.py',` `'src/cadrumo/entrypoints/cli/_modelo_work_revision_cli.py',` `'src/cadrumo/entrypoints/cli/_profile_authentication_gate.py',` `'src/cadrumo/application/user_profile/access_contracts.py',` `'src/cadrumo/application/user_profile/access_policy.py').` Final green status combines initial clean seven-file results with the targeted inventory-file corrections and rechecks recorded above; one hidden Pyrefly warning. Later M303 integration changes `runtime_modelo_operation.py` and `_profile_authentication_gate.py` again; its owning scoped recheck must cover those updates.
+- `S08` Test ownership correction frozen: CLI rendering/projection parity test moved to CLI owning subtree and uses the same public `file_flow_repositories` builder, not copied encrypted fixture logic. Two private cross-package settlement builders moved to one public test-support definition. All seven changed paths passed Ruff/check+format, ty, Pyrefly win32 and basedpyright Windows. Focused run 20260928T090837.484949Z-pytest-38380-b59fecdb selected 11 domain and two lifecycle cases successfully, but omitted relocated integration case; verifier owns explicit-marker single-node rerun.
+- `S09` New `requires_all_periods` policy tests pass: finite/empty period sets refuse despite independent consent, unrestricted scope admits, narrower child scope refuses, and ordinary period-independent operations preserve default-false behavior. Source inspected; five scoped static gates pass. All 66 policy cases selected and passed within run 20260928T090837.484949Z-pytest-38380-b59fecdb; aggregate 79 includes 13 domain/lifecycle cases but not the omitted encrypted projection test.
+- `S08` Native attestation: run 20260928T091856.214501Z-pytest-72456-42e0f330, exit 0, one passed; synthetic login/store ports. Password encrypted projection: run 20260928T091824.829927Z-pytest-63220-c10d45de, exit 0, one passed. Neither closes full native platform acceptance.
+- `S08` Six-file helper-extraction regression run 20260928T090959.316507Z-pytest-68212-fee71a0d: exit 1, 71 passed and four failures solely census/per-case guards for missing real conformance scenarios `modelo.review_package.build,` `modelo.work.m303_attestation,` modelo.work.revisions. Preserve the live denominator; scenarios are being added.
+- `S08` Ledger status and history runtime source integration is under scoped validation, not accepted. Existing whole-profile counts/stale findings and cross-period lineage require independent consent plus an unrestricted period ceiling; a period filter on one subquery cannot widen a finite grant. Existing canonical query semantics retained.
+- `S08` Strict registered schema review identified Decimal validation/serialization shape drift in readiness facts; the worker-result projection uses explicit decimal strings with canonical converters rather than weakening schema validation. Full CLI/modelo transport is generalized under unchanged exact registered-schema and original-session checks; focused tests remain queued.
+- `S09` M210 domain validators were found to lease bundled authority during an existing worker governed-fact scope, allowing stored transaction admission to cross the retained generation. Both M210 detail-fact and revision-declaration paths now reuse the scoped published PinnedAuthorityOperation; a nonpublished scoped authority refuses instead of falling back. Owning detector/type checks are in progress; no validated M210 runtime claim yet.
+- `S09` Ledger view application/strict projection source is prepared but NOT yet enrolled or connected to the CLI handler. Static checks pass for the two application modules; the new frontend helper and full integration remain pending. Current native/conformance census is unchanged by this preparatory slice.
+- `S08` Run 20260928T094331.099832Z-pytest-46624-d55b2018: exit0, one ledger.status real conformance case passed,57 deselected. Prior 094206 run had4passed/1failed/53deselected: review-package/history passed; only empty-status oracle expected '0.00' instead of canonical '0'. Corrected oracle compares numeric meaning; no production formatting change.
+- `S08` 094107 targeted conformance/scope batch: exit0,4passed/59deselected; selected census, encrypted inventory scope/result, inventory executor and M303 executor. Selection omitted review/status/history, subsequently run separately.
+- `S08` 094354 pure ledger batch: exit1,20passed/5failed. Status suite passed; history negative tests incorrectly supplied JSON-mode strings/lists to strict Python-mode model validation, failing before intended normalization detectors. Correcting those tests, including one overly broad altered-event test that could otherwise pass for the wrong reason. No passing history detector claim until corrected run.
+- `S08` History detector run094528: exit0,14passed. Generic CLI wrapper/review-package payload batch094709: exit0,26passed after three existing loss-context expectations were updated to assert the precise `runtime_connection_closed` reason together with original operation/effect. No production error context was weakened.
+- `S08` Native ledger reads run20260928T094808.861600Z-pytest-48576-4903f17b: exit1,onefailed before status/history. Seed ledger.add supplied password while fixture.register had kept custody open; fixed fixture closes active custody before password seed. Native rerun queued; no new read acceptance claimed.
+- `S08` Ledger view is now genuinely enrolled and routed through the shared runtime, superseding its prior preparatory/unregistered status. Handler no longer resolves/reopens transaction/event stores; standing-rejection notice is rendered from admitted operation facts. Its current source gates, real conformance and native acceptance remain pending.
+- `S08` M210 retained-pin detector: 20260928T095347.216779Z-pytest-1244-c01c1c5a exit 0, 2 passed. Actual published pin plus forbidden nested bundle acquisition; not multi-generation publication acceptance.
+- `S08` ledger.view real registered supervisor row: 20260928T095519.215991Z-pytest-51764-e5fcec2a exit 0, 1 passed / 58 deselected; profile, prefix, transaction, status and genuine rejection checked.
+- `S08` Native ledger rerun 20260928T095552.907198Z-pytest-29740-1dadf640 exit 1, 0 passed / 1 failed: seed/session correction reaches status/history commands, but direct encrypted oracle fails `StorageRuntime.require_ready` after login. Fixture repair and complete rerun required; no native acceptance claimed.
+- `S08` Exact-command correction for recorded selected conformance runs: 20260928T094107.049013Z-pytest-71256-6b3aa0de exit 0, 4 passed/59 deselected; selector reached only census, inventory, revisions and attestation, not review/status/history.
+- `S08` 20260928T094206.716864Z-pytest-51844-c3423258 exit 1, 4 passed/1 failed/53 deselected; only status zero display oracle failed. Corrected numerical assertion passed in already-recorded 20260928T094331.099832Z-pytest-46624-d55b2018.
+- `S08` View pure schema/scope/canonical M210 precision and future-field refusal: 20260928T100509.003359Z-pytest-7096-94c932db exit 0, 5 passed.
+- `S08` Track canonical lineage and ordered participation/provenance projection: 20260928T100707.626417Z-pytest-52372-001ab657 exit 0, 4 passed. Production executor, CLI and registration now wired; integration statics and real runtime conformance pending.
+- `S08` Native ledger diagnostic 20260928T100306.892504Z-pytest-29788-3e76a8c9 exit 1, 0 passed/1 failed identifies `route_bucket_mismatch` at the parent-process oracle only. Exact-UUID reauthentication/assertion correction is authored and scoped statics pass; rerun pending frozen track source. No native acceptance claimed.
+- `S08` Track projection and all production route integrations frozen after five scoped static gates; no deleted participation-helper references remain. Pure four-case projection suite already recorded. Real conformance and native acceptance remain open.
+- `S08` 20260928T100952.358497Z-pytest-25088-25fe3f56 exit 1, 0 passed/1 failed. Attempted exact seed-bucket UUID reauthentication fails ProfileNotFoundError before storage readiness. No product login weakening or expected-ID replacement authorized; compare resolved original label identity and raw CLI seed output to locate the mismatch. Earlier `route_bucket_mismatch` remains unresolved.
+- `S08` Located native ledger oracle defect in existing default CLI redaction: core/redaction/rules.py `_cli_placeholder_for_key` substitutes profile/bucket identifiers unless `cadrumo_cli_reveal_identifiers` is enabled. The test treated the emitted bucket placeholder as a real persisted UUID. This explains both `route_bucket_mismatch` and the later UUID lookup refusal; M303's independent oracle does not consume an emitted bucket ID. Fix remains test-only: resolve actual profile identity for custody, compare wire output through its declared redaction contract (or scoped supported synthetic identifier opt-in). Complete corrected native run still required.
+- `S08` 20260928T101744.605931Z-pytest-64828-e3ff6781 exit 0, 1 passed. Real native Windows password worker status/history verified against canonical decrypted repositories using resolved profile UUID and canonical default-redacted expected CLI output. Earlier failures were oracle misuse of `<bucket-id>;` no product auth weakening. Synthetic OS login/secret-store ports remain, so this does not prove native secret-store or complete platform acceptance. View/track extension and finite-period API native denial remain open.
+- `S08` Concrete integrated-review correction: merged ledger history and its registered projection now use the existing domain `bucket_event_order_key` for equal-time cross-anchor events. Same-instant reversed-order detectors authored; their pytest run remains queued. No other high/medium access, retained-pin or disclosure defect identified in the bounded four-route source review; native and full integration evidence remain separate.
+- `S08` 20260928T102301.277015Z-pytest-17268-c22c886d exit 0, 1 passed / 8 marker-deselected. Exact previously failing native calculation/source-mesh observations node now passes against current frozen runtime sources; this closes that specific `runtime_unavailable` regression, not all Modelo or platform acceptance.
+- `S08` Expanded run 20260928T102447.622688Z-pytest-72924-0dcef206 exit 0, 1 passed: real native Windows password CLI status/history/view/track; view/track complete JSON parity after canonical redaction, text identity/description, decrypted canonical ledger/event oracle and absent persisted participation -> null. Synthetic login/store ports remain. Finite-period API denial and nonempty native participation are separate evidence gaps; real supervisor track case remains queued.
+- `S08` 20260928T102527.028819Z-pytest-49672-12862a51 exit 0, 22 passed. Canonical merged-history and strict projection tests detect reversed equal-time cross-anchor order and pass with domain `bucket_event_order_key.` Concrete medium ordering finding corrected for the bounded route review.
+- `S08` 20260928T102929.714824Z-pytest-9328-254aa613 exit 0, 3 passed / 58 deselected. Live registry census has scenarios; ledger.track genuine supervisor case seeds transaction, calculates with source IDs, completes verification/co-emitted encrypted participation, then checks registered result. Separate real absent-index case preserves null. Native finite-period API denial remains open.
+- `S08` 20260928T103152.300980Z-pytest-45232-9dfc2c41 exit 0, 1 passed. Real Windows password-authenticated worker export and review-package operations produced export artifacts, typed receipts and ZIP manifest checks from a canonically verified revision. Actual custody UUID and CLI default-redacted bucket projection are distinguished. Synthetic OS login/secret-store ports remain; not live filing or complete native credential-store acceptance.
+- `S08` Final two-file configured static gates exit 0 after removing two new redundant str conversions. Diagnostic warn-display Pyrefly exits 1 only for three unchanged conformance warnings: two unnecessary str calls at line 622 and literal-boolean comparison at line 1433. New track case introduces no warning; existing assertions and suppressions were not weakened.
+- `S08` All Python writers frozen after the scoped native/projection/conformance queue passed. Owning import-target/API-reference generators and full import gate authorized serially; results pending.
+- `S08` Stable-tree run 20260928T103417.828490Z-check-import-boundaries-5396-6e451e04: 15 contracts kept; 3068/3068 modules loaded; 8022 files and 55248 dependencies scanned; zero hard findings; matching before/after fingerprint de3ef449033960f7e4545d65cf874203c2276fb04315a71c255178e5e37c3600. 9607 advisories remain. No suppression or baseline edits. Gate supersedes prior failed gate; S08 and platform acceptance remain open.
+- `S08` Native run 20260928T104934.324965Z-pytest-36584-b8d4f37e exit 0: 1 test; real encrypted persisted collision and no-match; malformed lexical input produces specialized refusal before submit; history/view/track worker refusals preserve distinct operation IDs, reason, effect NONE and terminal REFUSED. Optional native credential store/login facilities remain synthetic. Current source found legacy resolver still live for participation/review, so preserved until their migration.
+- `S08` Implementation in progress, no acceptance yet: ledger.list uses encrypted filter/group request and canonical period derivation, exact-profile query under retained pin and pure page rendering. Shared read scope helper atomically renamed with explicit periods; pre-existing full-profile readers remain unrestricted-period only. Participation lookup and rebuild are both routed because executable group parses rebuild as a reserved positional value. Rebuild now explicitly passes retained authority to canonical calculation catalogue load and holds COMMIT guard through read/replace/receipt; native, conformance and scoped static verification pending.
+- `S08` Final native run 20260928T105906.811878Z-pytest-48352-58fb26b1 exit 0, 1 passed: real enrolled API reference authenticates, finite matching period plus independent consent denies whole-profile status with `REFUSED_RUNTIME_FRONTEND` / `period_denied` before operation creation; periods=None succeeds with canonical totals. Prior pair run 20260928T105524.263829Z-pytest-42620-a95ca3a1 passed extracted Modelo API scope node and failed only status envelope expectation. Diagnostic run 20260928T105753.323954Z-pytest-63668-9be16c1d confirmed exact `period_denied` refusal; corrected test, no product-authentication change. Synthetic OS-login and credential stores; no native keychain acceptance.
+- `S08` Source implementation pending verification: review now executes canonical query inside retained exact-profile custody, with encrypted filters and result and canonical period scope. CLI retains pure list/detail/verbose rendering and filter/prefix refusal behavior. Removed displaced local lineage helper after rg confirmed its last caller migrated. Current registrations frozen for batch acceptance; no S08 closure.
+- `S08` Run 20260928T110205.568169Z-pytest-36588-16651d0c exit 0: 20 passed. Scope/schema/filter privacy, encrypted canonical list sort renderer and existing participation rebuild tests. Does not replace native list/review/rebuild or live registry conformance acceptance.
+- `S08` Rebuild correction under verification: carry all three opened authority revisions into read-only assertions in the same derived-index replacement transaction. SQLite reserves writer before present/absent checks; other SQL engines request SERIALIZABLE. Existing source catalogues are not rewritten. Registered COMMIT host locking does not cover the still-live direct work input wizard. No Step closure or completed race acceptance claimed.
+- `S08` 20260928T110654.893212Z-pytest-34284-4b247217: ledger.list 1 passed/52 deselected. 20260928T110714.974888Z-pytest-54908-4ef75fe7: lookup/review pass; rebuild fixture incorrectly expected one revision rather than actual two. Corrected pinned persisted-catalogue oracle passes in 20260928T110839.301059Z-pytest-71032-10996ae5. Live census passes 20260928T110907.578060Z-pytest-14820-a50c4c5e. These runs precede source revision assertion correction.
+- `S08` 20260928T111032.148343Z-pytest-3760-1f06b092: CLI batch 42 passed/25 failed; legacy runtime-unavailable fixtures `(list_filter` 15, `corpus_review` 8, `participation_cli_surface` 2) require real runtime setup, no product admission bypass.
+- `S08` Native participation first attempt 20260928T111413.852662Z-pytest-30516-bf5a0136 refused unread password because setup custody remained active. Fixture releases custody before native login. Next attempt hit root's transient docstring syntax during patch, before collection/no run ID; patch syntax subsequently corrected and retry pending.
+- `S08` Bounded review: wrong index target refused before source reads/replacement; two-connection SQLite absence-lock detector authored. Five scoped static gates pass over the 18-file correction/review scope; pytest delegated and pending. Root restored the still-live ledger.check handler's defining TransactionCatalogueRepository import after review found the earlier helper removal had removed it. Other SQL dialect SERIALIZABLE behavior remains unverified.
+- `S08` Remaining-private-routes worker completed all five 18-path gates with exit 0; Pyrefly reported zero errors and two unexpanded warnings, basedpyright zero errors/warnings. No pytest evidence is implied.
+- `S08` ledger.check now uses real registered canonical worker query and encrypted projection. Whole-profile authority remains required even with a preflight period because invoice link consistency is global. New wire issue DTO excludes canonical IssueDetail's custom Pydantic elision hook and refuses overlength transport instead of truncating it. Sol source statics and direct registry construction passed; root wiring/scoped tests and genuine conformance pending.
+- `S08` Work input wizard prerequisite: profile-resolvable binding discovery now uses the addressed work unit bucket, not the ambient active-profile pointer. Full wizard runtime migration remains open; no wizard completion claimed.
+- `S08` 112807.955021Z-pytest-50524-c7efc82f: 15 passed/1 fixture failure (OperationIdentity UUID string too short). Sol corrected fixture to hex64; rerun pending. 112828.767299Z-pytest-36200-6753d5a1: two-connection SQLite absence-lock regression passed (1 passed/2 deselected).
+- `S08` 20260928T112939.466270Z-pytest-61668-0efb2d00: native participation reaches canonical finalized lookup and empty lookup after setup correction; attempted rebuild with no COMMIT returns `runtime_connection_closed` instead of expected clean authorization refusal. Investigating product path and safe persisted journal evidence; no negative acceptance claimed.
+- `S08` 20260928T113837.053215Z-pytest-46048-f8a87dd2: 2 passed. Real canonical filing/index co-commit invalidates stale source snapshot; stale replacement preserves newer index; fresh canonical rebuild leaves source revisions unchanged. Formerly absent filing singleton insertion independently invalidates absence assertion. Scope is encrypted local SQLite; native authorization result still under investigation.
+- `S08` Focused ledger check/preflight/review suite: run 20260928T114524.936551Z-pytest-33648-ddb997dd, exit 0, 25 passed. Native no-COMMIT participation rebuild remains unresolved: repeated connection-closed CLI refusal despite recorded profile-access terminal refusal. No Step or platform acceptance is closed.
+- `S08` Expanded live conformance census run 20260928T114816.148090Z-pytest-59244-31edd039: exit 0, 1 passed. Frozen native participation run 20260928T113957.096672Z-pytest-37112-1f179ab9: exit 1, 1 failed. Follow-up whitelisted evidence confirms matched operation journal `REFUSED_PROFILE_ACCESS` with effect NONE; caller loses connection before seeing terminal condition. Exact unchanged encrypted source/index checks pass. A subsequent diagnostic run used showlocals; this was stopped as a diagnostic practice, and only whitelisted facts were retained. No negative acceptance or Step completion.
+- `S08` Run 20260928T115129.789167Z-pytest-34808-41d34d6d: exit 0, 55 passed in 176.94 seconds, including check/preflight and the current registered-definition denominator. This is supervisor conformance, not installed CLI/TUI/MCP or platform acceptance. Native CLI refusal delivery remains unresolved.
+- `S08` Focused shared-wiring review found only I001/E501 and format findings in these three files. Targeted import ordering and formatting corrected them; no behavior changes. The 14-path check/preflight/shared scope already passed ty, pyrefly Win32 (15 hidden warnings), and basedpyright Windows (0 diagnostics). Product source frozen again for native refusal diagnostics.
+- `S08` Preparatory, unregistered work-input wizard modules only. Context operation captures canonical profile-dependent steps and work-unit metadata under exact profile/period admission; application tests and five scoped static gates authored/passed, direct schema/OperationRegistry smoke passed, pytest pending. Missing-input subtype/classifier covers four emitted engine tags with a canonical binding identity; static gates passed. It is not imported by production yet: declared error-code registration and exact pre-publication engine catch must land before integration. The typed condition proves no calculation publication, not absence of earlier relation/IVA migration writes. Existing work-input wizard route remains direct until the full bridge lands. Native observation-channel investigation continues; no Step closure.
+- `S08` Diagnostic native run 20260928T120227.425979Z-pytest-69312-8998b57f: exit 1, 1 failed. Exact refused journal has effect NONE; native worker operation-observe read ends with `CONNECTION_CLOSED` while shared runtime is ready/not stopping. Separate teardown reports runtime unavailable. Test-only observer extraction preserves dispatch and records only typed reasons, exception types and source-frame locations, with no arguments or payloads. Final expected reason corrected to canonical `REFUSED_PROFILE_ACCESS;` connection loss remains a failure. Pure corrected review/rebuild run 20260928T115835.736334Z-pytest-67020-dd6fb926: exit 0, 16 passed. No native acceptance or Step closure.
+- `S08` Work-input wizard preparation: canonical flow can render supplied authenticated steps; engine classifies supported single-binding input errors only inside the prepublication calculation call. Later failures remain generic. Dedicated encrypted wizard context/attempt integration and native acceptance remain unfinished. Scoped statics passed as reported by owning verifier; real publication-boundary tests queued.
+- `S09` Diagnostic run 20260928T121125.143796Z-pytest-65656-f6790f49: exact submitted rebuild journal is terminal REFUSED with effect NONE and `REFUSED_PROFILE_ACCESS;` caller loses worker `operation_observe` reply and reports `runtime_connection_closed/unknown.` No authorization held-body exception observed. Parent first closes the worker after read EOF. Runtime remained ready. Test-only child fatal-source probe pending; no native acceptance.
+- `S08` Run 20260928T122149.142653Z-pytest-59412-8f24195f: 23 passed, including real encrypted prepublication missing-binding rejection and same-tag postpublication detector. Registered wizard transport/CLI integration remains unfinished.
+- `S09` Cause isolated by diagnostic run 20260928T122245.259034Z-pytest-37028-fdefb497: worker TypeError originates in `policy.model_dump` during observation access resolution; frozen disclosure models serialize into unhashable dictionaries. Correction retains typed model fields and revalidates the expanded policy. Pure nonempty-disclosure regressions and unwrapped native journey pending; diagnostic probe not acceptance.
+- `S09` Pure run 20260928T122855.807693Z-pytest-53900-7acb9012: 9 passed. Normal installed-worker run 20260928T122906.674824Z-pytest-55412-e6d7434e: 1 passed, including no-COMMIT canonical refusal with effect NONE and authorized canonical rebuild. Synthetic login/store ports retain native credential-store limitation. Temporary child probe not enabled.
+- `S08` Wizard discovery/attempt definitions enrolled and CLI admission/handler migrated to bound worker transport. Ordinary calculation request/result versions remain unchanged; typed attempt results preserve unknown preparatory effects and do not retry transport or postpublication failures. New conformance/native integration still pending.
+- `S09` Removed temporary child fatal-source probe and its launch/report plumbing after unwrapped native acceptance; general sanitized failure observation remains. Scoped five static gates passed as reported by owner.
+- `S08` Initial schema/access/publication batch run 20260928T123335.446082Z-pytest-30404-a9eb5f27: 5 passed. Real encrypted attempt executor branches and final supervisor/native acceptance are still being added. Shared calculation preparation preserves exact bucket checks and cancellation ownership; ordinary request/result schema versions unchanged.
+- `S08` Real executor expansion: run 20260928T123601.163833Z-pytest-63060-d470aa3f had 7 passes and a fixture failure from prohibited source-binding overrides. The corrected operator-only fixture in run 20260928T124012.760805Z-pytest-21972-d13271d7 reached encrypted needs-input but assumed the first missing binding; canonical aggregation reported a missing prior-filing input first. Independent declared-binding/grounding oracle correction pending rerun; no production guard weakened.
+- `S08` Wizard discovery now uses the already authorized unit profile explicitly instead of rereading ambient active-profile selection. Post-attempt prompt failures preserve original flow error plus operation identity/effect; malformed emitted success payloads retain the settled receipt. Canonical writer detector follows the extracted shared calculation seam; final scoped gates pending.
+- `S08` Application/source-cut batch: 63 passed, run 20260928T124656.776563Z-pytest-47472-169dcba2. Includes encrypted missing-input UNKNOWN, calculated UPDATED and postpublication generic-error persistence checks.
+- `S08` Registered ordinary calculation plus wizard context/attempt: 3 passed, run 20260928T124939.159934Z-pytest-46516-82f5d553. Live registry scenario census: 1 passed, run 20260928T125014.932150Z-pytest-55844-025f5d55.
+- `S08` Native wizard CLI acceptance remains in progress. No P03 Step or platform acceptance is claimed.
+- `S08` Run 20260928T125057.539642Z-pytest-49664-daf10954: 13 passed, 1 failed. Existing native interactive/noninteractive cases pass; new M123 empty-discovery case returned unexpected CLI boundary. Sanitized diagnosis pending; no full wizard native acceptance claimed.
+- `S08` Removed redundant string conversions from operation receipt context without changing values.
+- `S08` Staged exact-profile modelo.work.list operation and CLI bridge. Canonical `list_work_units` receives the admitted bucket explicitly, preserving order/filter behavior; projection validates profile, unique identities and BORRADOR-only default.
+- `S08` Whole-profile discovery requires independent consent and unrestricted period authority. Result is encrypted; no COMMIT or domain mutation. Five scoped static gates reported passed by assigned executor; pytest, enrollment and native acceptance remain pending.
+- `S08` Enrolled modelo.work.list and routed existing list/select CLI handlers through exact-profile runtime admission. Existing output payload, filter echo, order and continuation rendering retained. Scoped integration gates and genuine conformance/native tests queued to sole verifier.
+- `S08` Work history now passes its retained authority operation into calculation-catalogue load; omitting it caused the persistence adapter to acquire another published bundle. Focused real-pin regression pending.
+- `S08` Single-node wizard diagnosis run 20260928T125643.652151Z-pytest-65312-73296537 established the new M123 no-prompt fixture premise was false: canonical discovery returns nine prompts and its intentional AssertionError caused the public unexpected boundary. Product discovery remains unchanged; test is being corrected to real headless prompt acceptance.
+- `S08` Staged registered exact-work history read reusing WorkUnitHistory and canonical BucketEvent constraints; projection checks profile/event bucket binding, identity uniqueness and ordering. Fresh admission resolves stored period; historical disclosure retains sealed scope. No enrollment/native acceptance yet.
+- `S08` History composition now requires caller's authority pin and supplies canonical taxpayer identity to calculation and verification repositories; both existing CLI history factory callers pass their root-owned pin.
+- `S08` Earlier three-file scoped static pass preceded required-factory-signature change and is superseded; five affected gates and nested pinned verification regression are in progress.
+- `S08` Run 20260928T130222.857719Z-pytest-57424-dfb45357: 2 passed. Real native M123 nine-page wizard published the revision and matched encrypted oracle; pure empty-step control proves no frontend construction when canonical steps are empty.
+- `S08` Together with previous 13 passing wizard cases, this resolves the only native wizard batch failure, which was an incorrect test premise. Existing synthetic login/store limitations remain; no platform or Phase3 completion.
+- `S08` Thread existing retained authority into seven verification-catalogue reads, so nested parent-revision validation no longer acquires another generation on these paths. The shared verification bundle supplies the same canonical taxpayer identity to its report and calculation repositories. No validation is weakened.
+- `S08` Affected static gates and real encrypted history pin detector are pending. Full-import gate remains stale; no platform/Step completion.
+- `S08` Inventory pure policy/bridge batch 8 passed: 20260928T130413.603458Z-pytest-67888-f14b3365. Genuine supervisor work-list row 1 passed: 20260928T130643.216084Z-pytest-69736-8946821b. Live census 1 passed: 20260928T130707.355399Z-pytest-7428-9485dc53.
+- `S08` History operation/CLI enrolled after that census snapshot; fresh history supervisor/census and encrypted pin tests now queued. Earlier census does not cover history enrollment. Inventory native CLI acceptance pending.
+- `S08` Verification repository read contract carries optional retained authority through `load/load_revisioned` and same-store parent-calculation validation. Existing validation remains intact.
+- `S08` History policy/projection tests and real encrypted calculation+verification retained-pin detector authored; source gates pass in executor scope, execution queued to sole verifier. No test pass or native history acceptance inferred from authored cases.
+- `S08` Run 20260928T130807.500036Z-pytest-14304-0b61e153: 13 passed, 6 failed. Real encrypted calculation+verification retained-pin regression and revision-selection tests pass. New history registrations fail strict public schema construction because canonical event UtcInstant customizes core schema; no binder relaxation authorized.
+- `S08` Correction uses a closed history snapshot and shared validated bucket-event projection, extracted atomically from the existing ledger projection. Same event facts reconstruct through canonical BucketEvent validation. New schema/conformance checks pending; no native history acceptance.
+- `S08` Shared closed bucket-event projection relocated atomically from ledger; direct consumers updated, no compatibility aliases. Unreleased current-only public schema definitions now use shared type titles/digests.
+- `S08` Run 20260928T131255.958350Z-pytest-44644-4e15f731: 17 passed, 5 failed. Modelo history strict registration/schema tests now pass. Five ledger assertions still expected old ledger-specific error wording; assigned executor is updating those expectations to shared bucket-event wording without changing validations.
+- `S08` Review found two additional concrete lost-pin revisioned reads in verification and filing persistence; both now pass the available retained operation. Native history test is authored, not yet executed; synthetic login/store limitations apply.
+- `S08` Closed projection/policy batch: 22 passed, run 20260928T131410.453667Z-pytest-72532-d364383a. Earlier stale error-text assertions corrected without weakening domain validation.
+- `S08` Combined real supervisor work history/list cases: 2 passed, run 20260928T131428.211213Z-pytest-3088-bd816628 (exact command requested from verifier). Live census after both enrollments: 1 passed, run 20260928T131507.010906Z-pytest-39248-89194f87.
+- `S08` Native list/history and queued wider regressions remain pending; no Phase3 or platform completion.
+- `S08` Combined supervisor command confirmed by verifier: 2 passed, run 20260928T131428.211213Z-pytest-3088-bd816628.
+- `S08` Native history run 20260928T131607.285217Z-pytest-10052-44bfd9bd failed one expected-payload equality: CLI uses +00:00 while oracle model JSON used Z. Event identities/types and other values match. Oracle serialization correction assigned; no product serializer change and no native pass claimed before rerun.
+- `S08` Run 20260928T131811.760395Z-pytest-55860-b3ba5691: native history 1 passed with exact canonical encrypted oracle, adjacent-period exclusion and discarded work. Product serializer unchanged; test oracle uses CLI-compatible UTC representation. Synthetic login/store fixture limits remain.
+- `S08` Preceding command without required marker selector collected zero tests (run 20260928T131734.941340Z-pytest-14236-63febae5); it supplies no acceptance evidence.
+- `S08` Retained authority now reaches verification report save and secure-object-write preparation as well as reads. Existing catalogue validation, same-store parent checks and CAS remain intact. Canonical verify and filing co-commit callers supply the held operation.
+- `S08` Encrypted poison-ambient regression now exercises both writer APIs before history read. Assigned executor reports scoped five-gate pass; execution and approval-report CAS regression queued to sole verifier. This row does not claim their test outcomes.
+- `S08` Run 20260928T132232.122950Z-pytest-60328-d5c9c273: 9 passed. Poisoned ambient authority detector covers real encrypted calculation/report history plus verification report save and secure-write preparation; approval-report CAS regressions pass with retained pin forwarding.
+- `S08` Native verification/M303 and remaining inventory/legacy CLI regressions continue. No Step or platform acceptance inferred.
+- `S08` Run 20260928T132314.628747Z-pytest-52124-77c9777c: 3 native cases passed (2 verification, 1 M303). Tests exercise retained-pin report paths and ordinary M303 behavior with synthetic login/store ports.
+- `S08` Final production25-file ty, pyrefly win32 and basedpyright Windows gates pass. Ruff found import ordering/formatting only in composition/auth gate; mechanical correction and exact gate evidence pending.
+- `S08` Final25-file production static cohort passes all five gates. Ruff import-order/format issues corrected only in composition/auth gate; Ruff checks rerun afterward. Ty, Pyrefly and explicit-Windows basedpyright passed before those formatting-only changes; no semantic changes followed.
+- `S08` Pyrefly reports zero errors with 13 warnings not shown by configured invocation; basedpyright reports zero errors/warnings/notes. Full import gate remains stale until all-Python freeze.
+- `S08` Run 20260928T133036.200692Z-pytest-41748-80615a49: 2 passed. Real worker list/select preserves canonical order and discard filters, refuses explicit foreign-profile mismatch before submit, denies finite-period API scope, and returns genuinely empty inventory under unrestricted scope.
+- `S08` New native test file passes all five scoped static gates. Synthetic login/store fixture limits apply. Queued legacy ledger batch is running; full import gate still awaits all-Python freeze.
+- `S08` Legacy ledger CLI regression run 20260928T133138.665911Z-pytest-49252-19b9a82c: 33 passed in 339 seconds. Final test statics and regenerated full import gate remain pending; P03.S08 remains open.
+- `S08` Final scoped test static gates passed; Pyrefly reported three suppressed warnings without exposed locations even under verbose/full-text. Final live census run 20260928T133843.036069Z-pytest-41568-77278094: one passed. All-Python freeze declared before generators and full import gate.
+- `S08` Frozen import run 20260928T134059.751159Z-check-import-boundaries-63900-0a61152d: all 3090 modules loaded; nine new test-scoped application-is-inward violations in `test_work_missing_input_publication` (six) and `test_wizard_attempt_operation` (three). Internal snapshots matched f7108f7410160d8fe7d33659ad9bdfb84a25740d0e630ae2c09f6bb4907557b8. External initial fingerprint 4832354f3863238df9ff1e95dd8993ac9690221e011b5d83db9cda1fe1811319; sequence stopped on failure without external after fingerprint. Relocate concrete integration tests to their owning layer, preserving assertions; no allowlist relaxation. API scaffold changed 15 files, zero removals; precise generated paths to be logged after inspection.
+- `S08` Relocation preserves three pure application cases and five real encrypted integration cases; run 20260928T135022.392826Z-pytest-63964-76d491e1 passed all eight. Initial command without explicit markers selected only three and is not encrypted acceptance. Scoped five static gates passed on relocated files; full frozen import rerun pending.
+- `S09` Accepted focused predecessor refinement under existing full-plan/CLI-TUI parity authorization: optional encrypted `refusal_detail_ref` separate from forbidden REFUSED `result_ref;` explicit registered code/schema/projector opt-in and unchanged terminal/effect, RESULT guards and current-only cutover. Evidence records concrete work-create parity gap and expected-unit rename guard. No implementation or acceptance claimed yet. Hosted decision search unavailable, known RAG mismatch; ADR listing, targeted cross-feature clause search and full accepted-parent read supplied coverage. Feature checks MCP zero errors/two blank-line warnings; predecessor feature has unrelated missing-ledger/scaffold findings, full check pending.
+- `S08` Corrected frozen run 20260928T135338.629724Z-check-import-boundaries-59132-8451de45 passes all15 contracts,8065files,3090/3090 modules,zero hard/unapproved findings. External before/after fingerprint both736ccbc1f302af86b9ad8fee5743c3498a0de6ea29fba5d88cb55ae11cc01dec. API generator snapshot proves zero paths changed on retry (2093 unchanged,zero removed). Closes this cohort's concrete test-placement/import finding; later source edits require their own gate. P03.S08 remains open.
+- `S09` Initial refusal-detail substrate implemented; tests/integrated acceptance pending. Private snapshot current version8 rejects displaced version7. Definitions explicitly declare canonical `refusal_detail_codes` in digest; typed executor evidence validated against distinct registered private/public models and exact receipt before REFUSED settlement. REFUSED `result_ref` ban retained, optional private `refusal_detail_ref` separate; ordinary exceptions code-only. CLI detail opt-in preserves known terminal/effect/refusal on retrieval failure. Review removed initially proposed same-model projector exception before acceptance; existing private/public separation remains mandatory. Scoped static corrections addressed executor result annotations and helper protected-member access; final basedpyright rerun pending.
+- `S08` Work-create enrolled through exact-profile worker with secure request, typed encrypted success/refusal and exact-period COMMIT/RESULT policy. Canonical profile preparation and ensure share one COMMIT permit to serialize against registered profile mutations while loading profile once. Advisory keys computed before mutation; known effect published immediately after writer return. Selected rename now carries expected unit into existing writer. CLI no longer reads private profile/catalogue for creation; presentation consumes worker metadata/advisory keys and retains effect receipt on rendering failure. TUI existing policy caller now uses held pin; its runtime create-route reachability is under review, not claimed migrated. Focused tests/native journeys pending.
+- `S09` Refusal-detail integrated review corrected result lookup to accept only SUCCEEDED `result_ref` or declared REFUSED `refusal_detail_ref;` FAILED/INTERRUPTED references must remain unreleasable. Regression verification pending.
+- `S09` Focused core/refusal/journal run 20260928T141409.366561Z-pytest-62608-f7e570f0 interrupted by system-drive ENOSPC; partial failures are not a completed test result. Original logs preserved. Subsequent runs use process-local `TEMP/TMP/TMPDIR/CADRUMO_SCRATCH_BASE` on workspace drive; no cleanup or product environment changes.
+- `S09` Integrated review found ordinary exception settlement was awaited before financial operand cleanup in finally. Execution now retains the exception, completes custody release, then publishes failure/refusal settlement; typed returned refusal evidence already followed cleanup. Focused real-supervisor ordering regression and statics pending.
+- `S08` Installed RuntimeWorkbenchRoot now composes declaration and calendar create callbacks through registered modelo.work.create with originating session/profile correlation. Result reader gains explicit declared-refusal opt-in; default successful-result behavior remains. Localized applicability details and advisory keys originate in worker projection. Static and behavioral verification pending; legacy custom-provider callbacks remain an unresolved census item.
+- `S09` Run 20260928T142143.015017Z-pytest-22672-148ee240 passed 277 tests using process-local workspace scratch. Public service regressions cover `FAILED/INTERRUPTED/CANCELLED/TIMED_OUT` references. Digest fixture updated after confirming new empty `refusal_detail_codes` is the sole canonical input addition. New test fake type corrections and financial-custody ordering regressions remain pending.
+- `S08` Registered modelo.work.review captures canonical compact review with exact profile/unit and retained published authority, excluding casilla values and source fingerprint identities from public projection. CLI metadata selection and review now use runtime session. Root enrolled production composition and authentication gate after owned source static pass. Focused behavior/native tests, final shared-file statics and conformance census remain pending.
+- `S09` Ledger correction: the definition/contract-set golden update modifies `application/operations/tests/test_registry.py,` not `test_public_contracts.py.` The earlier row naming `test_public_contracts.py` was erroneous; current diff confirms it is unchanged.
+- `S08` Pure CLI bridge batch passed 19 tests in run 20260928T142709.063461Z-pytest-69928-5a57af55. Application projector fixture had inconsistent profile/work identity and is being corrected; encrypted integration selection must be verified explicitly before acceptance.
+- `S08` Work-create pure/projector and real encrypted create/reuse/rename batch selected all three cases and passed in run 20260928T142914.662322Z-pytest-32196-f9e0c8e1 after correcting only a test's derived foreign-profile work-unit identity. Native runtime/supervisor refusal-detail and permission acceptance remains pending.
+- `S08` Work-review marker-selected batch run 20260928T142950.419837Z-pytest-38568-4c2d650c passed 16 and failed one native setup assertion: fixture indexed success fields on a refused create envelope. Owner is diagnosing actual refusal; no product acceptance claimed.
+- `S08` Correction to the native review test diagnosis: source inspection confirms the matching-period API call passed exit-code and operation checks. The failing assertion addressed `work_unit_id` at the envelope root instead of `result.review.work_unit_id.` It was not a refused create envelope. Only this nested assertion was corrected; a fresh native rerun is required.
+- `S08` Review presentation wrapper still needed two source corrections: suppress chaining possibly private reconstruction errors, and preserve completion receipt when envelope rendering fails. Those narrow fixes are in progress before final verification.
+- `S08` Native create source now covers create/reuse/rename, applicability REFUSED, finite period and COMMIT denial, denied successful result with known persisted mutation, and denied refusal detail with no work creation. Pytest pending on final source.
+- `S08` Native review human encrypted-oracle journey and matching/adjacent finite-period grant journey passed in run 20260928T143318.976677Z-pytest-67688-76c68971; that batch still failed two pure presentation-test expectations for the canonical `runtime_unavailable` code. Those assertions are corrected and await rerun.
+- `S08` Native run 20260928T143804.310109Z-pytest-5328-fcde8a97 passed three cases: create/reuse/rename with reauthenticated encrypted oracle, applicability REFUSED with explanation, and RESULT-denied applicability REFUSED without explanation or work creation. Fourth case failed only at no-COMMIT code expectation; worker ProfileAccessRefusedError canonically maps to `REFUSED_PROFILE_ACCESS.` Corrected assertion now also requires REFUSED/NONE and unchanged reauthenticated storage; single-node rerun pending.
+- `S08` Removed the owned duplicate fake-context encrypted create test only after native create/reuse/rename plus real encrypted oracle passed. Pure application contract/projector tests remain; prior fake-context run is not runtime authorization evidence.
+- `S09` Real supervisor/custody adapter tests are ready for registered-refusal and ordinary-failure cleanup ordering plus release-failure nonterminal behavior; pytest pending.
+- `S08` TUI tests cover exact request binding, declared refusal detail, ceded-model pre-submit redirect, session/correlation refusals, post-success refresh failure receipt, calendar address and explicit result-reader opt-in. Pytest pending. Pyrefly reports zero errors with five suppressed warnings; no suppression directives were introduced.
+- `S08` Runs 20260928T144030.816808Z-pytest-28100-5434a23e and 20260928T144306.414085Z-pytest-64696-700eab27 exposed test expectation and scope-fixture defects: missing RESULT action returns `operation_denied` after a successful mutation; a separate retained RESULT action with withheld disclosure returns `disclosure_denied.` The corrected node preserves SUCCEEDED/UPDATED and verifies persisted rename through the encrypted oracle. Earlier three native cases passed in their full-file run; no full final-file pass is claimed. Tests redirect process-local temporary paths to the worktree .tmp because C-drive pytest logging exhausted disk space.
+- `S08` Registered create exercises genuine REFUSED/NONE with encrypted opted-in detail and no work write; registered review exercises SUCCEEDED/NONE. Registry scenario coverage is not a completed private-entrypoint census or full scenario-suite pass. Integrated review identifies missing post-REFUSED lock/revocation and corrupt/missing detail with UNKNOWN-effect preservation; those acceptance tests are being added before the next frozen gate.
+- `S09` Real encrypted financial-custody regression confirms cleanup precedes refusal and ordinary-failure terminal settlement, and cleanup failure withholds terminal receipt. TUI protocol evidence covers session/period correlation, opt-in detail and receipt-preserving refresh failure; it does not replace installed native TUI acceptance. Frozen full gate and remaining refusal authority/detail tests are pending.
+- `S08` Corrected review wrapper expectations use canonical `runtime_unavailable` and preserve known receipts. These targeted UI/controller checks do not establish the unfinished private-entrypoint census.
+- `S08` Command correction: the earlier ledger row for quiet-emitter run 20260928T143514.639254Z-pytest-34660-6ac38b06 incorrectly expanded the invocation with the current cohort's marker/output options. The actual successful command is recorded here; its result is unchanged. The earlier review command was confirmed exact.
+- `S09` A real Windows runtime and enrolled API grant release the M202 applicability REFUSED/NONE detail, then deny the exact RESULT after human session lock or key revocation. The still-authorized human observes the same operation ID, terminal revision, refusal code and effect; no replay is involved. Synthetic OS-login and native secret-store fixtures retain their declared limits.
+- `S09` Real encrypted refusal-detail resolution releases only the public model. Missing and wrong-model encrypted detail return `RESULT_PROJECTION_UNAVAILABLE` while independent public observation retains identical REFUSED receipt/code and UNKNOWN effect; plaintext/projected/error sentinel checks pass. Wrong-model is schema-integrity evidence, not a ciphertext-tamper test. All Python writers are frozen for the generator/import gate.
+- `S08` All 15 contracts were kept and 3096/3096 modules loaded with zero load failures, but the boundary gate failed and is not acceptance. Root verified that `OPERATION_SECURE_REFERENCE_NAMESPACE` must be imported from its defining `adapters/persistence/storage/secure_object_namespaces.py` rather than the forwarding `operations/secure_references.py.` The test owner is applying that import-only correction before a fresh frozen gate.
+- `S08` Fresh pre/post Python fingerprints match f9164a5c0a1ef28e65653f899099de7285a14c97237d456724090caa7a4e76be; fresh docs inventories both 2098 files, unchanged. The first failed gate also had matching fingerprint 94a0c5a45156acb0169f640debe986c21ef4c3aee5925520a678ce054300157e, with docs 2094 to 2098 (four added, three modified as recorded). This closes the forwarding-import defect without claiming the first gate passed. P03.S08/S09 and platform acceptance remain open.
+- `S08` Workflow-history cohort in progress; run 20260928T152800.191260Z-pytest-71252-e7b54aca passed 7 pure cases. Read/list application five scoped statics passed before integration. Resume now captures through explicit profile-bound ports and validates the selected immutable record; encrypted overwrite regression authored but not yet run. No S08 closure or native acceptance. Canonical app-leaf census identifies 160 additional encrypted-facts leaves outside runtime-key admission beyond the five prior Modelo-work keys; ordinary parsed human login remains. Full import gate from prior cohort predates these changes.
+- `S08` Run 20260928T154103.288679Z-pytest-37100-5c527f24: 41 passed, one missing-record test used a malformed ID and reached selector validation. Fixture corrected to canonical absent ffffffffffffffff while preserving expected `run_not_found;` targeted retry run 20260928T154616.100282Z-pytest-50872-53f574a4 passed one node. Subsequent resume batch run 20260928T154638.246254Z-pytest-64392-f22d1079: 19 passed, two failures under investigation/correction (malformed CLI guidance and extra native-authentication-era bucket event); not acceptance. Root added canonical token validation before CLI request construction. Exact resume now accepts an explicit expected-period constraint, enforcing it on the same captured obligation; unconstrained targets remain all-period. Read-only exact revision lookup avoids relation-override migration. All listed scoped static checks passed before latest guidance correction; new final checks pending.
+- `S08` Dependency read preserves full-year PUBLIC registry inventory while private clean-state output requires the requested target plus all possible source periods derived from the retained published snapshot. Scope review confirmed no private facts occur in inventory rows. Minimal explicit read composition replaces broad verification bundle to avoid hidden fresh authority acquisition; taxpayer, M111 attestations and rectificativa identity derive from one captured profile record. Calculation composition now supplies its held operation to profile-read and recorded-revision decoding. Ten-file scoped Ruff/format/ty/Pyrefly-win32/basedpyright-Windows checks passed; schema construction smoke passed. Projection/CLI/static checks passed for separately owned surfaces; native dependency and new operation policy tests authored but not yet accepted. All twenty Modelo-work keys now enrolled in source; whole CLI/TUI migration, full gate and platform acceptance remain open.
+- `S08` Run 20260928T155622.835551Z-pytest-56692-71004cff: five passed, 72 deselected. Four genuine registered executors (workflow read/list/resume context and Modelo dependencies) publish encrypted typed projections; registry scenario census passes. Resume-by-calculation-revision compares canonical calculation catalogue before/after unchanged. Five scoped statics passed for the conformance file. Native scope/refusal and CLI receipt regression work remains in progress; no whole Step or platform closure.
+- `S08` Wizard regression run 20260928T155801.929313Z-pytest-71440-88c8d393: exit 0, 26 passed. Native workflow run/read/list run 20260928T160420.176503Z-pytest-35832-3492ce37: exit 0, 3 passed. Earlier native run 20260928T155819.091513Z-pytest-55164-00a1400e had 2 passed/1 failed: fixture expected post-admission refusal where missing/rewritten expected period correctly refused before admission. Corrected precise RuntimeFrontendRefusedError `period_denied` assertion passed focused and full suite. Synthetic Windows custody evidence only; Step remains open.
+- `S08` Dependency cohort run 20260928T160511.067701Z-pytest-43916-6c7f4930 exit 0: 16 passed. Prior identical command run 20260928T155943.832498Z-pytest-7132-b727667a exit 1: 15 passed/1 failed; no-mutation oracle now narrowly classifies added `PROFILE_ACTIVATED/PROFILE/profile-login` event for same profile and preserves prior events, rejecting any domain addition. Corrected focused node passed before cohort rerun. Workflow bridge receipt suite run 20260928T160614.356326Z-pytest-35624-ef248f75 exit 0: 18 passed, including rendering/emission failure receipts and deliberate exits. P03 acceptance remains incomplete.
+- `S08` Final resume cohort run 20260928T160730.186162Z-pytest-49084-d60a5b32 exit 0, 20 passed. Earlier identical command run 20260928T154638.246254Z-pytest-64392-f22d1079 exit 1, 19 passed/2 failed: malformed-target guidance and extra login event. Shared canonical token validation restores localized guidance; narrow `PROFILE_ACTIVATED/PROFILE/profile-login` same-profile oracle preserves prior events and unchanged workflow records. No domain-write or full-platform acceptance is inferred beyond these tests.
+- `S08` Workflow resume bridge run 20260928T161541.214256Z-pytest-1824-26c1de0c exit 0: 3 passed. Overview bridge run 20260928T161503.283002Z-pytest-49444-1ba8446e exit 0: 8 passed. Overview source integration, native tests, conformance and frozen global gate remain pending. TUI tests require final shared catalogue rerun after explicit operation and event-loop-site reconciliation; component results are not native runtime acceptance.
+- `S08` Run 20260928T161215.538927Z-pytest-41564-3dec8b4e exit 1: 62 passed/3 failed. All failures in shared operation catalogue: overview.pipeline registration/exposure checks sampled during concurrent integration, plus four files with existing off-loop asyncio.run bridges absent from the declared site census. Six TUI-specific suites passed selected cases; final source-stable shared census rerun required. Earlier attempt ran no tests because touched fixture marker removal omitted required hex marker; markers restored, no evidence claimed for empty attempt.
+- `S08` Read-only focused checks both exit 0. Feature warnings: Reference extra blank lines (subsequently normalized through owning edit), exec mappings to still-open Steps, and foreign triggers note. No structure/frontmatter/link/schema/ADR-status/stamp/encoding findings; plan check has no findings. No automatic fixes used and no Step closed.
+- `S08` App projection/access and exact-site event-loop catalogue run 20260928T162318.195909Z-pytest-37920-9f36c400 exit 0: 17 passed. Public schema construction also passes after explicit tagged action arguments; native executor acceptance remains pending. Existing overview pipeline CLI regression run 20260928T162351.999017Z-pytest-68572-69e1e4da exit 1: 6 failed/1 passed, all behavior failures before execution at `REFUSED_LOCAL_RUNTIME/runtime_unavailable.` The old local fixture lacks installed runtime admission; sole-file fixture migration is underway, not suppressed or treated as product acceptance.
+- `S08` Run 20260928T162716.058632Z-pytest-10132-314b2c9d exit 0: 2 passed/76 deselected. Genuine overview.pipeline executor returns the selected-period snapshot with two global ledger rows seeded across distinct periods; transaction, work-unit, calculation, filing and verification catalogues remain unchanged. The live definition/scenario census passes. This does not replace native grant/disclosure and legacy owning-regression acceptance, which remain in flight.
+- `S08` Run 20260928T162740.798423Z-pytest-1556-6a4f304c: six passed, one failed in persisted-incomplete fixture. Fixture opened a synthetic test bucket key instead of authenticating the actual native profile; the correction uses real profile login and retained authority, without weakening repository guards. Correction verification pending.
+- `S08` Run 20260928T163458.633457Z-pytest-60808-ddf68558: native fixture now reaches persisted incomplete behavior; the remaining assertion expected English while invocation used default Spanish. Fixture now explicitly selects English; scoped statics pass, owning rerun pending. No product behavior weakened.
+- `S08` Run 20260928T164048.290776Z-pytest-41364-f7454fbb: seven passed after actual profile login replaced the synthetic-key fixture and invocation explicitly selected English. Native runtime tests retain synthetic login/store fixture limits; this does not establish installed manager or platform completion.
+- `S08` Run 20260928T164417.467355Z-pytest-64924-be7c7e9b: one native Windows synthetic-profile journey passed; finite-period refusal, whole-profile API success with global ledger count across two quarters, denied RESULT retains SUCCEEDED/NONE without private result fields. Human status/count readback is not full catalogue equality; genuine conformance supplies that separate proof. Five scoped static checks also passed.
+- `S08` Run 20260928T164514.873007Z-pytest-50024-255997d6: five workflow localization cases passed after receipt-preserving completion wrappers.
+- `S08` Run 20260928T165135.173001Z-check-import-boundaries-56944-a58bf61f: all 3113 governed modules loaded; 15/15 contracts kept; no hard findings or load failures. Src/dev fingerprint unchanged before/after: d1a4cc25ee35d9dd3640306ad61278751404e36325fec243a643638a86522894. API docs SHA256 inventory: 2097 to 2110, 13 additions, 4 modifications, no removals. Advisory import spelling/coupling findings remain, without gate failure. This gate covers workflow/dependency/pipeline and TUI launch changes before subsequent invoice implementation.
+- `S08` Installed runtime admission and native credential composition moved atomically to adapter-owned definitions so all frontends, including the separately shipped harness, can reuse them without importing entrypoints. All source consumers and dynamic monkeypatch references updated; no forwarding modules retained. Scoped Ruff, format, ty, Pyrefly Windows and basedpyright Windows passed on the 23 existing relocation paths. Generated metadata/reference reconciliation is pending the integrated replacement batch. No Step closure.
+- `S16` Registered runtime discovery now carries the actual strict request JSON schema, fingerprint-checked against the canonical contract. Worker custody and runtime live-scope/frontend checks remain on the same discovery door. Source integration in progress; native verification pending. Independent MCP replacement preparation does not close preceding runtime/platform Steps.
+- `S08` Removed displaced local TUI operation controller, reader, service constructor and lifecycle submission fallback. Retired old local-execution fixtures/tests while preserving current UI layout/navigation and runtime-owned coverage. Visual harness still imports with 84 surfaces using isolated encrypted profile bootstrap and existing adapter composition; this does not establish full visual/native acceptance. Scoped Ruff and diff whitespace check passed. Combined native/runtime verification pending; no Step closure.
+- `S08` Run 20260928T172520.597413Z-pytest-5128-722c99f9: 8 passed, 3 failed. Exact-profile native runtime schema/effect/output checks, invoice real executor conformance/census and TUI lifecycle passed. New native invoice cases failed on list exit 2, password-oracle profile-label resolution and expected CLI refusal category versus actual runtime refusal. Triage/focused correction pending; passing cases are not queued for repetition. Y-drive scratch used.
+- `S16` Integrated replacement review removed duplicate authenticate tool declaration, validates credential-reference syntax before closing an existing lease, and preserves durable submission receipt when any start call fails. Native authenticated MCP acceptance remains outstanding; no Step closure. Removed the obsolete watchdog-specific Ruff exception alongside deleted watchdog tests.
+- `S08` Enrolled six immutable profile-bound overview readers and their strict registered public contracts, with injectable canonical capture factory. CLI status/calendar/agenda/backlog/explain/prepare now select runtime admission. Integration and conformance verification pending; S08 remains open.
+- `S18` Removed obsolete plugin persona/surface configuration and `persona_default` materializer argument; emitted stdio launch now supplies exact profile UUID and optional nonsecret credential reference. Retained independent root/harness cohort version checks. Deleted unused legacy identity-gate replay scoring and exports. Owning packaging assertions/static verification delegated; generated references remain pending.
+- `S16` Added response inspect/apply/reject projection over existing RuntimeOperationManage. Adapter derives actor from admitted session and response time locally; original runtime-held response capability and current RESPOND authority remain mandatory. Review observation does not confer apply authority. Verification queued with owning protocol batch.
+- `S13` Added profile-free explicit start, enable/disable login startup, and owner preview/confirm stop through shared backend. Start never enables autostart or unattended grants; stop requires all-profile/work acknowledgement and never directly calls manager.stop. Lost stop acknowledgement remains uncertain; Windows managed stop remains unavailable pending its native restart-suppression guarantee. Worker reports scoped Ruff/format/basedpyright and command-graph import passing; frontend/native acceptance outstanding.
+- `S15` TUI uses same runtime start/configure services and retains owner stop connection through explicit scope confirmation, closing abandoned previews. Integrated review reserves busy state before scheduling stop to prevent repeated-button races. Owning frontend acceptance outstanding.
+- `S10` Added optional configurable manager capability and explicit Windows interactive-token task create/update with exact binding checks, no password/elevation/start. Native registration, ACL, update-running-instance behavior and external definition replacement races remain unproven; no platform acceptance.
+- `S18` Retired old MCP wrappers, identity-flag/password-file paths, unsafe timeout/lifetime implementation, and directly obsolete consumers alongside runtime adapter replacement. Original timeout cleanup risk was not reproduced; the displaced implementation has been deleted. Generated inventory/reference cleanup and installed acceptance remain outstanding.
+- `S08` Native invoice list/exact-ID/unique-prefix journey passed after fixing strict registry-token reconstruction from the worker's canonical snapshot. Verification run 20260928T174413.712649Z-pytest-67956-7f8b87dc: 1 passed. Temporary diagnostic observers removed. Earlier finite-period and RESULT-denial cases passed their focused retry; broad Step acceptance remains open.
+- `S18` Focused shipped-instruction maintenance replaces removed MCP contract-tool guidance with status/search/describe/authority and exact-profile protected-reference enrollment. Explains current grant/disclosure boundaries, receipt reconciliation and separate response authority without retaining obsolete persona identity claims.
+- `S16` Verifier reports protocol/plugin batch 20260928T174642.985522Z-pytest-37632-2004228b: 11 passed, marker integration and `hex_core.` Protocol verifies unique tool names and unauthenticated disclosure refusals; packaging assertions cover exact profile/optional reference launch. This is not native authenticated MCP acceptance. Owning test-file Ruff/format/ty/pyrefly/basedpyright passed; production static batch queued.
+- `S08` Extracted the existing typed workflow evidence/argument/verdict snapshots into their operator-actions owner for reuse by authentication read projections. Removed original workflow class definitions and updated its consumers, with no forwarding aliases or opaque JSON public-schema fallback. Schema-definition names and fingerprints change under current-only contracts. Scoped static and owning projection evidence queued.
+- `S18` Removed shipped persona-grants and obsolete contract-tool claims; instructions now distinguish advisory role boundaries from exact-profile session grants, registered operation discovery and protected credential references.
+- `S08` Migrated four private local auth readiness/diagnostic reads through lazy exact-profile worker composition and existing CLI registered-operation driver. Requests use encrypted secure references; closed result snapshots share canonical typed verdict projection and require `PROFILE_VALUES` disclosure. No COMMIT or implicit human-only privilege requirement. Removed newly duplicated auth transport driver and opaque JSON schema workaround during integrated review. Worker reports Ruff/format/basedpyright and strict schema registration passing; native behavior/conformance verification still pending. Provider authentication mutations remain outside this read batch.
+- `S08` Verifier reports native overview explain suite 20260928T174706.034268Z-pytest-51384-755235ee: 6 passed; production executor census plus auth.local-read and six overview scenarios 20260928T175424.202935Z-pytest-39824-41ba2b73: 8 passed. Remaining calendar fixture migration and global gates are not covered by these results.
+- `S16` Protocol/plugin run 20260928T174642.985522Z-pytest-37632-2004228b: 11 passed. Production Ruff/format/ty/pyrefly passed; basedpyright reported 61 diagnostics in harness workspace/server/main. Bounded typing correction delegated; not a clean static acceptance yet.
+- `S08` Six-leaf overview cohort frozen after canonical capture, explicit profile/period/result checks, retained authority pin, shared evidence/payer composition and removal of local CLI reads. Notice resolution remains at CLI success/error/wizard presentation funnels. Existing calendar/historical tests now seed credentialed encrypted profiles while preserving financial assertions. Worker reports all five scoped statics passing; calendar/refusal/historical native verification remains queued.
+- `S16` Resolved 61 basedpyright diagnostics; supplied runtime clients must match both selected profile and MCP frontend. Pyrefly reports two warnings, no errors. Authenticated native MCP journey remains in progress; no Step completion claimed.
+- `S08` Auth payload contract tests required no changes. Existing private auth status/test CLI assertions now use synthetic native profile custody. Calendar native run 20260928T180224.181239Z-pytest-28004-747feec0 had 18 passes and five failures traced to generated profile tax identity differing from seeded evidence; fixture identity corrected, focused rerun pending. No production taxpayer filter weakened.
+- `S09` Auth logout/reset now enter the existing irreversible-section COMMIT guard before local mutation; cancellation waits for the mutation and result publication. Reuse existing registered executors and typed result models, with exact-profile access and fresh disclosure policy. Result projection rejects mismatched profile, unsuccessful receipts and inconsistent NONE/UPDATED effects. CLI bypass replacement and scoped verification remain in progress; no Step completion.
+- `S08` The five calendar failures' identity correction is in `test_overview_calendar_verb.py` profile fixture: use the synthetic tax identity already carried by saved evidence. Earlier log named the related calendar support file; this row records the precise correction location.
+- `S09` Registry smoke rejected a custom projector with identical definition/public result types. Removed unnecessary projector and moved strict exact-profile/nonnegative-count validation before executor effect/result publication. Public schemas reuse canonical AuthLogoutResult/AuthResetResult without duplicate wrappers. Earlier projector description is superseded. Cheap registry recheck and native verification pending.
+- `S08` Registry construction succeeds with 75 definitions after removing invalid redundant projector. Native CLI mutation acceptance and MCP journey remain in progress; no Step completion.
+- `S10` Managed owner-stop now retains a matching running task instance and invokes instance-scoped Stop; runtime `WM_CLOSE` starts existing bounded drain without changing persistent task/autostart policy. Engine ancestry uses native process snapshots and creation-time comparisons rather than incorrect action-PID equality. Actual installed runtime test uses an isolated synthetic root/task and no matcher replacement. Native acceptance pending; no Windows platform completion.
+- `S19` MCP SDK journey proves search/describe input schema, execute, observe-to-terminal, typed encrypted result, connection close and fresh protected-reference admission with a distinct MCP session ID. Uses real Windows pipe/profile worker and synthetic encrypted profile with existing memory native-secret port; does not claim OS-store or full cross-interface/platform acceptance. Initial admission failure was the invalid auth result registration corrected in S09; subsequent wire-parser test issue corrected to strict JSON validation.
+- `S20` Frozen cohort: custom source fingerprint96076a4fa0302321f5645646352847addb51bc8acec179b349c7837430dfea6b matched before/after over8031src/dev Python files. Gate snapshotca441524c006f0430cb07f0f50796e9e2869672d1e7f71e3014d3c8156c07361 matched;3098/3098 modules loadable and15/15 contracts kept, but five hard import-authority findings remain in three tests (private cross-package, reexport/alias and unresolved retired MCP imports). Scoped corrections assigned; full gate not passing. Generated API31changed/2095unchanged/6stale removed.
+- `S08` Extended native CLI teardown reached successful reset, then its test incorrectly parsed default text output as JSON. Add explicit JSON format and rerun only that node; this does not yet establish persisted-status assertion. Windows installed stop test skipped elevated-token environment, not platform acceptance.
+- `S13` Live route census exposed runtime start/enable/disable/stop incorrectly inheriting profile resume fallback from truthful local-storage/subprocess capabilities. Four exact bootstrap exemptions now preserve OS-owner authorization and stop consent without profile custody. Runtime state-tree materialization remains appropriate for writes. Focused regression assertions are being corrected to distinguish state tree from profile admission and use canonical runtime refusal codes; no test or Step completion claimed yet.
+- `S10` Installed stop native node 20260928T182828.170980Z-pytest-44172-576351da skipped because runner token is elevated. Native token inspection: TokenElevation=1, TokenElevationType=Default, TokenSessionId=0; TokenLinkedToken query fails Win32 1312, active console is session1. No linked standard-user token exists for the permitted reduced-privilege test launch. No console token acquisition, privilege changes or OS changes attempted. Native installed stop acceptance remains unproven.
+- `S13` Runtime start/enable/disable/stop require state-tree effects but no profile custody. Four graph postures and secret-input refusals passed in staged scoped runs; installed Windows stop remains unproven.
+- `S08` One synthetic-profile journey proves local provider configuration cleared after explicit reset; no remote provider or tax filing acceptance.
+- `S20` Seven existing rule-surface cases now derive verb and flag schemas from canonical live CLI APIs after displaced MCP modules were deleted.
+- `S20` Frozen corrected cohort: 8031 src/dev Python files; fingerprint ddf5fee98e33dcfc5b2309aa4998c3fa68b5580ffae680be2249c0e3c3dea1be before=after; 15/15 contracts, 3098/3098 modules, zero hard findings. Earlier generation/API-stub checks remain their own evidence.
+- `S20` Basedpyright project excludes these test files: zero selected, not a passing scoped type check. Temporary strict Windows configuration selected 14 files and reported 33 existing test-tree diagnostics; they remain visible and unresolved.
+- `S16` Enrollment prepare retires only a known COMPLETE/DECLINED or expired prior request transport; preserves admitted client and refuses still-live pending replacement. Focused adapter behavior checks delegated; no native-store acceptance inferred.
+- `S08` Reuses `catalogue_lifecycle.remove_catalogue_invoice` inside fresh COMMIT and cancellation-complete publication. Direct CLI mutation removed; finite-period grants refused because whole-catalogue lookup requires all-period scope. Native acceptance delegated; no remote provider effects.
+- `S08` IVA history uses canonical persisted read port with exact profile, all-period `TAX_VALUES` disclosure and correlated presentation failures; direct CLI read composition removed.
+- `S08` Invoice native check failed `INTERNAL_INVARIANT.` Review found lifecycle builder unnecessarily resolved creation-only exchange-rate provider absent in worker. Shared local repository composition now separates that dependency; targeted native retry pending.
+- `S08` Missing confirmation preserves catalogue. API grant permits COMMIT but denies RESULT; refused output preserves SUCCEEDED/UPDATED and operation ID, and independent authenticated persisted read proves deletion. Uses synthetic profile and existing memory secret port, not native credential-store acceptance.
+- `S08` Prior retry 20260928T185244.511801Z-pytest-65172-f7b0dd74 reached successful deletion but its test wrongly used password auth for API-grant refusal assertions. Corrected fixture entrypoint, not product grant policy.
+- `S11` Read-only environment probe found Ubuntu WSL2 with systemd PID1, active login for uid1001, user manager active default.target but degraded, Linger=no, Python3.14.4 and uv0.11.25; worktree accessible on /mnt/y DrvFS. Existing failed units left untouched. This establishes a possible Linux test environment, not Linux worker implementation or platform acceptance.
+- `S08` IVA conformance hydrates a persisted `APP_FILING` row, checks PublicPeriod/carry-forward conversion and unchanged persistence. Earlier -k selected census only (88 deselected); the two operation cases were subsequently run by exact IDs, not inferred from that census pass.
+- `S16` Review found fresh MCP enrollment client identity cannot change an existing grant. Optional protected `credential_reference` now selects separate authenticated `prepare_grant_change;` submit/poll reuse canonical AutomationRequesterJourney and CLI-equivalent fresh-root reconciliation after approval invalidates source lease. Uncertain replies retain request ID and are MCP errors. Scoped adapter checks in progress; full native grant-change acceptance not inferred.
+- `S16` Six protocol cases cover live-pending refusal, COMPLETE/DECLINED/expired replacement preserving primary admitted client, and protected-reference grant-change routing. Adapter boundary fixtures do not establish native rotation/renewal or OS-store acceptance.
+- `S20` Source-before fingerprint: 8034 src/dev Python files, 006660281a2ddfa6eab698fbcd8438252276986723f13396ec8b9eb0af30d079. API generation reports four changed, 2124 unchanged, no stale removals. Final import-boundary run 20260928T190712.120911Z-check-import-boundaries-59292-71f87fce is pending; generator success is not import-gate acceptance.
+- `S20` Final frozen cohort: 15/15 contracts, 3101/3101 modules, zero hard findings/debt. Before/after 8034-file src/dev fingerprint matches 006660281a2ddfa6eab698fbcd8438252276986723f13396ec8b9eb0af30d079; gate internal snapshots match e635965faf78c6db0229852cf2ecb706f47fab0b97943fc2f9d8d53f2df69f1a. Log/report under .logs/test-runs/2026-09-28/20260928T190712.120911Z-check-import-boundaries-59292-71f87fce/. This supersedes the pending gate observation for this cohort only.
+- `S08` Invoice-update operation implemented against canonical atomic invoice/audit lifecycle writer. Explicit patch field mask preserves omitted/null/zero meanings through public serialization; COMMIT guard and cancellation-complete encrypted receipt reuse existing runtime authority. CLI enrollment and focused verification are still in progress; no Step completion claimed.
+- `S08` Invoice-update CLI route now uses exact-profile registered runtime invocation and preserves operation receipt through guarded presentation. Replaced direct lifecycle call and unused lifecycle factory import deleted. Focused runtime/persistence acceptance remains in progress.
+- `S08` Registry validation rejected custom governed-token core schemas nested in the new public DTO. Corrected IVA category and invoice class public fields to nonempty strings, retaining canonical lifecycle conversion/authority validation. Prior type failure for frozenset `model_dump` include corrected to set. Focused retry pending.
+- `S18` Removed unused LedgerRecordDoors production implementation: current source constructors were test-only. Preserve LedgerRecordDoorsV1 and record screens; owning line persistence tests now inspect the canonical repository and render captured values instead of retaining a direct-storage production adapter. Teardown acceptance is pending; S18 remains open.
+- `S08` Synthetic encrypted profile and native worker acceptance uses the existing memory credential-store test port; it does not establish installed OS-store/platform acceptance. Pyrefly: zero errors, nine hidden warnings. Invoice update proves partial patch/zero persistence, unchanged identity and sibling records, retained omitted notes, and durable update audit event. S08 remains open.
+- `S18` Root inspected live source and diff: both basedpyright findings concern an unchanged empty frozenset tuple in `LedgerEvidenceDoor.list_records,` outside removed LedgerRecordDoors. One-line annotation cleanup is queued until the generated/import source freeze ends; no behavior test rerun required for annotation-only correction.
+- `S08` Frozen cohort: 8036 src/dev Python files; before/after SHA-256 33234f2ce67386999d000185495adcbf2cbc577b2e3e87871359946805e6067c. 15/15 contracts kept, 3102/3102 modules loaded, zero hard findings, 137.1s. Internal snapshots 8ec98590758d24afa32b1c7687bd16f2453e710bdf4e880bc657d0a2884f523d match. API generator: two changed, 2127 unchanged, zero stale. A subsequent annotation-only correction in `ledger_doors.py` is validated separately by scoped statics; this fingerprint describes the completed frozen cohort, not that later source revision.

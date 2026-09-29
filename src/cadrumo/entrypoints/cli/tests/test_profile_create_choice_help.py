@@ -24,7 +24,8 @@ import pytest
 
 from ....adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
-from ._profile_cli_support import login_profile
+from ..config.tests.isolated_storage_fixture import native_profile_view_server
+from ._profile_cli_support import invoke_protected_profile
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -99,6 +100,7 @@ def test_profile_create_help_advertises_situacion_familiar_runtime_choices(
     assert not missing, f"--situacion-familiar runtime choices are not all visible in profile-create help: {missing}"
 
 
+@pytest.mark.windows_only
 def test_profile_edit_cli_accepts_objetiva_modulos_facts_and_directa_without_them(
     tmp_path: Path,
 ) -> None:
@@ -109,61 +111,56 @@ def test_profile_edit_cli_accepts_objetiva_modulos_facts_and_directa_without_the
     registration door and patched with ``edit --quiet``, which is the
     surviving surface that takes these flags.
 
-    Session custody is not this case's subject. Registering the second profile
-    retires the first one's session, so ``direct-profile`` is read back after
-    an explicit login in this process rather than through a cross-invocation
-    resume, which would need the OS credential store to hold a receipt.
+    Both records are read through the installed runtime with their registered
+    password, so the second registration cannot lend either profile authority.
     """
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_cli_profile(
-            label="direct-profile",
-            log_in=False,
-            facts={
-                "identity.tax_id": "12345678Z",
-                "taxpayer_type.entity_type": "natural_person",
-                "identity.name": "Direct",
-                "identity.surnames": "Operator",
-                "activities.description": "direct activity",
-                "taxpayer_type.irpf_income_categories": "actividad_economica",
-                "irpf.estimation_regime": "directa_normal",
-                "tax_residence.jurisdiction_scope": "common_regime",
-                "iva.regime": "GENERAL",
-                "iva.m303_regime_composition": "general",
-                "iva.redeme_enrolled": "false",
-                "iva.cash_accounting_regime_enrolled": "false",
-                "iva.voluntary_sii_enrolled": "false",
-                "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
-            },
-        )
-        register_cli_profile(
-            label="modulos-profile",
-            log_in=False,
-            facts={
-                "identity.tax_id": "87654321X",
-                "taxpayer_type.entity_type": "natural_person",
-                "identity.name": "Modulos",
-                "identity.surnames": "Operator",
-                "activities.description": "barber shop",
-                "taxpayer_type.irpf_income_categories": "actividad_economica",
-                "irpf.estimation_regime": "objetiva",
-                "tax_residence.jurisdiction_scope": "common_regime",
-                "iva.regime": "GENERAL",
-                "iva.m303_regime_composition": "general",
-                "iva.redeme_enrolled": "false",
-                "iva.cash_accounting_regime_enrolled": "false",
-                "iva.voluntary_sii_enrolled": "false",
-                "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
-            },
-        )
+    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
+        storage_root.mkdir(parents=True, exist_ok=True)
+        with native_profile_view_server(storage_root):
+            register_cli_profile(
+                label="direct-profile",
+                log_in=False,
+                facts={
+                    "identity.tax_id": "12345678Z",
+                    "taxpayer_type.entity_type": "natural_person",
+                    "identity.name": "Direct",
+                    "identity.surnames": "Operator",
+                    "activities.description": "direct activity",
+                    "taxpayer_type.irpf_income_categories": "actividad_economica",
+                    "irpf.estimation_regime": "directa_normal",
+                    "tax_residence.jurisdiction_scope": "common_regime",
+                    "iva.regime": "GENERAL",
+                    "iva.m303_regime_composition": "general",
+                    "iva.redeme_enrolled": "false",
+                    "iva.cash_accounting_regime_enrolled": "false",
+                    "iva.voluntary_sii_enrolled": "false",
+                    "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
+                },
+            )
+            register_cli_profile(
+                label="modulos-profile",
+                log_in=False,
+                facts={
+                    "identity.tax_id": "87654321X",
+                    "taxpayer_type.entity_type": "natural_person",
+                    "identity.name": "Modulos",
+                    "identity.surnames": "Operator",
+                    "activities.description": "barber shop",
+                    "taxpayer_type.irpf_income_categories": "actividad_economica",
+                    "irpf.estimation_regime": "objetiva",
+                    "tax_residence.jurisdiction_scope": "common_regime",
+                    "iva.regime": "GENERAL",
+                    "iva.m303_regime_composition": "general",
+                    "iva.redeme_enrolled": "false",
+                    "iva.cash_accounting_regime_enrolled": "false",
+                    "iva.voluntary_sii_enrolled": "false",
+                    "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
+                },
+            )
 
-        patched = invoke_cached_cli(
-            [
-                "--language",
-                "en",
-                "config",
-                "profile",
-                "edit",
+            patched = invoke_protected_profile(
                 "modulos-profile",
+                "edit",
                 "--quiet",
                 "--objective-estimation-modulos-iae-epigraph",
                 "972.1",
@@ -173,23 +170,16 @@ def test_profile_edit_cli_accepts_objetiva_modulos_facts_and_directa_without_the
                 "85",
                 "--objective-estimation-modulos-module-3-units",
                 "12000.75",
-            ],
-        )
-        assert patched.exit_code == 0, patched.output
+            )
+            assert patched.exit_code == 0, patched.output
 
-        shown = invoke_cached_cli(
-            ["--language", "en", "config", "profile", "view", "modulos-profile"],
-        )
-        assert shown.exit_code == 0, shown.output
-        assert "irpf.objective_estimation_modulos_iae_epigraph" in shown.output
-        assert "972.1" in shown.output
-        assert "irpf.objective_estimation_modulos_module_1_units" in shown.output
-        assert "2.50" in shown.output
+            shown = invoke_protected_profile("modulos-profile", "view")
+            assert shown.exit_code == 0, shown.output
+            assert "irpf.objective_estimation_modulos_iae_epigraph" in shown.output
+            assert "972.1" in shown.output
+            assert "irpf.objective_estimation_modulos_module_1_units" in shown.output
+            assert "2.50" in shown.output
 
-        logged_in = login_profile("direct-profile")
-        assert logged_in.exit_code == 0, logged_in.output
-        shown_direct = invoke_cached_cli(
-            ["--language", "en", "config", "profile", "view", "direct-profile"],
-        )
-        assert shown_direct.exit_code == 0, shown_direct.output
-        assert "objective_estimation_modulos" not in shown_direct.output
+            shown_direct = invoke_protected_profile("direct-profile", "view")
+            assert shown_direct.exit_code == 0, shown_direct.output
+            assert "objective_estimation_modulos" not in shown_direct.output

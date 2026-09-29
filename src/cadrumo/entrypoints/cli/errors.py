@@ -809,10 +809,13 @@ def render_error_payload(
     line without reconstructing a command or recovery sentence.
     """
     notice = sandbox_notice_for_error(error)
-    from ._payer_fact_migration_notice import drain_payer_fact_migration_notices
+    from ..payer_fact_migration_notices import drain_payer_fact_migration_notices
     from ._profile_authentication_notice import drain_profile_authentication_notices
+    from .common import resolve_notice_actions
 
-    authentication_notices = (*drain_profile_authentication_notices(), *drain_payer_fact_migration_notices())
+    authentication_notices = resolve_notice_actions(
+        (*drain_profile_authentication_notices(), *drain_payer_fact_migration_notices()),
+    )
     if as_json:
         return render_error_json(
             error,

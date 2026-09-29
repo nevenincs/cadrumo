@@ -17,3 +17,4 @@ Submodules
    cadrumo.application.operator_actions.models
    cadrumo.application.operator_actions.ports
    cadrumo.application.operator_actions.preconditions
+   cadrumo.application.operator_actions.projection

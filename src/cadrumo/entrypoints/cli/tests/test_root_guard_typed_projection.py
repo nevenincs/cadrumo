@@ -139,7 +139,7 @@ def test_real_root_fallback_refusal_attaches_the_typed_projection(tmp_path: Path
     assert projection is not None
     assert projection.requested_leaf is not None
     assert projection.requested_leaf.subject_leaf_key == "modelo.work.verify"
-    assert projection.precondition_action.failed_condition_id == "profile.active"
+    assert projection.precondition_action.failed_condition_id == "profile.active.available"
     assert projection.precondition_action.action is not None
     assert projection.precondition_action.action.action_id == "operator.profile.create"
 

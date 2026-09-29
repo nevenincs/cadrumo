@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#mcp-purpose-authentication'
 date: '2026-09-26'
-modified: '2026-09-26'
+modified: '2026-09-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:622789ab75337b125bfce692461b06f73790cb81551aff1440c411522d19e237'
+body_hash: 'sha256:127a8d561d8ca007b44d3aec66a9808723dc497d58a1dd4a3ccd51920a87eea8'
 related:
   - "[[2026-09-26-mcp-purpose-authentication-reference]]"
   - "[[2026-09-26-mcp-purpose-authentication-research]]"
@@ -168,6 +168,14 @@ Delete the displaced identity-flag admission, password-file bootstrap, retained-
 The implementation plan must prove installed CLI/TUI/MCP flows using synthetic encrypted profiles: independent sessions, A/B isolation during hot-profile switches, autonomous reconnect after human timeout, revocation before commit/output, crash/restart, child containment and service lifecycle on Windows/macOS/Linux.
 
 Use the existing real operation, storage and authority boundaries. Prove idempotent retries, honest uncertain effects and pinned publication changes; keep unsupported executor/provider/filing capability refusals. Passing a mocked host or one OS does not establish the deployment matrix.
+
+### Authenticated local workbench projections
+
+The shared-runtime decision replaces the in-process topology assumption in 2026-09-04-tui-architecture-authenticated-tui-visibility-adr. An exact-profile, password-authenticated human CLI/TUI session may receive a registered owner-workbench projection through the verified local transport. Custody remains in the profile worker. The frontend receives display and navigation data without a DEK, direct repository access or execution authority derived from those values. Enrollment or API-key authentication does not confer this full-owner projection; MCP and other off-host destinations cannot request it.
+
+The projection has an explicit current strict schema and is retained only through canonical encrypted result custody. Its contract may carry the reviewed domain identities needed for profile binding, work-unit/revision/filing/lifecycle joins and truthful amendment display, plus catalogue-declared recovery actions. These are data and addresses, never admission or response capabilities. Existing exclusions in other canonical serializers remain unchanged. Every included excluded field must be individually declared and tested; new excluded fields fail projection conformance until separately reviewed. Credentials, raw secure references, source evidence bytes and response bearers remain absent.
+
+Memory-only search documents and identity bases are not persisted or transported. The frontend rebuilds its search snapshot through the canonical assembler using only the admitted projection; process-local search IDs need not survive that rebuild. Original-session human authority, exact profile, result schema and disclosure are rechecked at private result release, including every page. Session loss clears retained private presentation. This amendment is accepted under the operator's authorization to implement shared runtime custody and complete CLI/TUI parity; the grounding and unvalidated implementation status remain in the feature Reference and Audit.
 
 ## Rationale
 

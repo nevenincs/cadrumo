@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from typing import Protocol
 
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
     ModeloRecordCatalogueRepositoryProtocol,
@@ -35,7 +36,7 @@ class ModeloHistoryPorts:
 class ModeloHistoryPortsFactory(Protocol):
     """Construct the history authorities for one profile bucket."""
 
-    def __call__(self, *, bucket_id: str) -> ModeloHistoryPorts:
+    def __call__(self, *, bucket_id: str, operation: PinnedAuthorityOperation) -> ModeloHistoryPorts:
         """Return the complete history bundle for ``bucket_id``."""
         ...
 

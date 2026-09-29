@@ -30,7 +30,9 @@ class Seed(BaseModel):
 
 
 async def exercise(root: Path, seed: Seed) -> int:
-    (root / "worker.pid").write_text(str(os.getpid()), encoding="ascii")
+    candidate = root / "worker.pid.pending"
+    candidate.write_text(str(os.getpid()), encoding="ascii")
+    candidate.replace(root / "worker.pid")
     client = WorkerAuthorizationClient(identity=seed.identity, root=root, parent_pid=seed.parent_pid)
     deadline = time.monotonic() + 10
     if seed.mode == "cancel":

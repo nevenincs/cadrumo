@@ -6,20 +6,11 @@ import ast
 import hashlib
 import json
 import re
-from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    open_test_profile_session,
-    seed_test_profile_record,
-)
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
-
-from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.operator_actions.models import (
     ActionArgumentBinding,
     ActionReference,
@@ -27,7 +18,6 @@ from ....application.operator_actions.models import (
     PreconditionVerdict,
 )
 from ....application.workflow.abort import WorkflowAbortReason
-from ....application.workflow.persistence import save_run
 from ....application.workflow.run_models import (
     SiteHealthAlert,
     WorkflowFailureDetails,
@@ -37,6 +27,8 @@ from ....application.workflow.run_models import (
     WorkflowStage,
     WorkflowStep,
 )
+from ....application.workflow.run_projection import WorkflowRunSnapshot
+from ....core.config import override_settings
 from ....core.errors.hierarchy import SiteHealthState
 from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from ....core.modelo import Modelo
@@ -48,63 +40,15 @@ from ....core.operator_action_enums import (
     NoRecoveryOutcome,
 )
 from ....core.period import Period
-from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.tests.published_authority import (
-    leased_profile_create_context as _profile_creation_context_for_test,
-)
 from ....domain.deadlines.models import ObligationStatus
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from .._action_rendering import resolved_precondition_action_json_cell
 from .._modelo_work_runs_cli import _workflow_run_payload, _workflow_run_tab_line
 from ..common import resolve_cli_precondition_action
-from .cli_runner import invoke_cached_cli
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _T = datetime(2026, 4, 12, 9, 0, tzinfo=UTC)
-_PROFILE_ID = "22222222-2222-4222-8222-222222222222"
-_PROFILE_LABEL = "work-runs-locales"
-_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
-    UserProfileFact(path="identity.tax_id", value="00000000T"),
-    UserProfileFact(path="identity.name", value="Operator"),
-    UserProfileFact(path="identity.surnames", value="Workflow"),
-    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-    UserProfileFact(path="activities.description", value="economic activity"),
-    UserProfileFact(path="iva.regime", value="GENERAL"),
-    UserProfileFact(path="iva.m303_regime_composition", value="general"),
-    UserProfileFact(path="iva.redeme_enrolled", value=False),
-    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-    UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-    UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-    UserProfileFact(path="provenance.source", value="manual_cli"),
-    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-)
 _RAW_COMMAND_PATTERN = re.compile(r"(?i)(?:^|[\s`'\"])(?:aeat)\s+")
-
-
-@pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path, authority_operation: PinnedAuthorityOperation) -> Iterator[None]:
-    del authority_operation
-    with (
-        isolated_profile_storage_root(tmp_path=tmp_path),
-        open_test_profile_session(_PROFILE_ID),
-    ):
-        register_minimal_profile(profile_id=_PROFILE_ID, display_name=_PROFILE_LABEL)
-        seed_test_profile_record(
-            _create_profile_record_for_test(
-                setup_state=ProfileSetupState.COMPLETE,
-                profile_id=_PROFILE_ID,
-                facts=_PROFILE_FACTS,
-                created_at=_T,
-                updated_at=_T,
-                context=_profile_creation_context_for_test(),
-            ),
-            label=_PROFILE_LABEL,
-        )
-        yield
 
 
 def _obligation() -> WorkflowObligationFacts:
@@ -215,53 +159,31 @@ def _site_health_run() -> WorkflowResult:
 
 
 def test_work_runs_localizes_only_human_text_and_keeps_one_structural_envelope() -> None:
-    """Four real CLI locales share one typed graph and vary only human summaries."""
+    """Four renderer locales share one terminal graph and vary only human summaries."""
     action_run = _actionable_run()
     health_run = _site_health_run()
-    save_run(action_run)
-    save_run(health_run)
 
     summaries_by_locale: dict[str, tuple[str, str]] = {}
     structural_digests: set[str] = set()
     for language in SUPPORTED_OUTPUT_LANGUAGES:
         rows = {}
-        for run in (action_run, health_run):
-            result = invoke_cached_cli(
-                [
-                    "--format",
-                    "json",
-                    "app",
-                    "modelo",
-                    "work",
-                    "run",
-                    run.run_id,
-                    "--output-language",
-                    language,
-                ],
-            )
-            assert result.exit_code == 0, result.output
-            row = json.loads(result.output)["result"]
-            details_result = invoke_cached_cli(
-                [
-                    "--format",
-                    "json",
-                    "app",
-                    "modelo",
-                    "work",
-                    "run-details",
-                    run.run_id,
-                    "--output-language",
-                    language,
-                ],
-            )
-            assert details_result.exit_code == 0, details_result.output
-            details = json.loads(details_result.output)["result"]
-            details["summary_details"] = {
-                "kind": details.pop("summary_detail_kind"),
-                **details.pop("summary_detail_facts"),
-            }
-            row.update(details)
-            rows[row["run_id"]] = row
+        with override_settings(cadrumo_output_language=language):
+            for run in (action_run, health_run):
+                snapshot = WorkflowRunSnapshot.from_run(run)
+                payload = _workflow_run_payload(snapshot)
+                row = payload.model_dump(mode="json", exclude_none=False)
+                row["obligation_status"] = payload.obligation.status.value if payload.obligation is not None else None
+                health = payload.site_health_alert
+                row["site_health_state"] = health.status.state.value if health is not None else None
+                row["site_health_observed_at"] = health.status.observed_at.isoformat() if health is not None else None
+                row["site_health_http_status"] = health.status.http_status if health is not None else None
+                row["site_health_retry_after_seconds"] = (
+                    health.status.retry_after_seconds if health is not None else None
+                )
+                row["site_health_detected_marker_count"] = (
+                    health.status.detected_marker_count if health is not None else None
+                )
+                rows[row["run_id"]] = row
         action_row = rows[action_run.run_id]
         health_row = rows[health_run.run_id]
         summaries_by_locale[language] = (action_row["summary"], health_row["summary"])
@@ -376,7 +298,7 @@ def test_workflow_action_projection_rejects_binding_provenance_outside_the_catal
 
 def test_workflow_run_text_projects_the_same_canonical_typed_action_dto() -> None:
     """The run table is a text view of the resolved action DTO, not a command rebuild."""
-    payload = _workflow_run_payload(_actionable_run())
+    payload = _workflow_run_payload(WorkflowRunSnapshot.from_run(_actionable_run()))
 
     assert payload.action is not None
     assert _workflow_run_tab_line(payload).rsplit("\t", 1)[-1] == resolved_precondition_action_json_cell(

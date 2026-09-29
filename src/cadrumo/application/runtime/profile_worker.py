@@ -5,20 +5,26 @@ from __future__ import annotations
 from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, Field, RootModel
+from pydantic import BaseModel, Field, JsonValue, RootModel
 
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ..operations.frontend_requests import (
     OperationObservationRequestV1,
     OperationObservationResultV1,
+    OperationResultProjectionRequestV1,
+    OperationReviewProjectionRequestV1,
     OperationSubmissionReceiptV1,
 )
-from ..operations.models import OperationDefinitionId, OperationId, OperationReference
+from ..operations.models import OperationDefinitionId, OperationId, OperationIdentity, OperationReference
 from ..operations.registry import OperationFrontendProjection, OperationPublicDefinitionContractV1
+from ..operations.secret_submission import OperationSecretRequirement
 from ..user_profile.access_contracts import AccessDenialCode, AccessSession, ProfileAccessBinding
 from ..user_profile.automation_custody_port import AutomationCustodyCode
-from ..user_profile.login_session import ProfileLoginOutcome
-from .worker_authorization import WorkerAuthorizationRequest
+from ..user_profile.login_session import ProfileHumanLoginReceipt, ProfileLoginOutcome
+from .operation_access import OperationManagementRequest
+from .projection_pages import ProjectionPage, ProjectionPageRequest
+from .submission_payload import SubmissionPayloadChunk, SubmissionPayloadDescriptor
+from .worker_authorization import WorkerAuthorityRequest
 
 
 class ProfileWorkerIdentity(BaseModel):
@@ -48,22 +54,33 @@ class ProfileWorkerRetireRequest(BaseModel):
     session_id: UUID
 
 
-class ProfileWorkerControlRequest(BaseModel):
-    """Credential-free internal observation or explicit worker shutdown."""
+class ProfileWorkerSettlementRequest(BaseModel):
+    """Wait only for one worker-admitted rotation's canonical terminal state."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    action: Literal["status", "stop", "password", "cancel_password"]
+    action: Literal["operation_settlement"] = "operation_settlement"
+    request_id: UUID
+    operation_identity: OperationIdentity
+    wait_seconds: Annotated[float, Field(gt=0, le=5, allow_inf_nan=False)]
+
+
+class ProfileWorkerControlRequest(BaseModel):
+    """Internal lifecycle control or a request for a following protected proof frame."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    action: Literal["status", "stop", "password", "receipt", "cancel_human"]
     request_id: UUID
 
 
 class ProfileWorkerHumanBindingRequest(BaseModel):
-    """Promote one exact password candidate after runtime human-session admission."""
+    """Promote one exact human candidate after runtime human-session admission."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     action: Literal["bind_human"] = "bind_human"
     request_id: UUID
     candidate_id: UUID
     lease: AccessSession
+    persist_receipt: bool = False
 
 
 class ProfileWorkerContractRequest(BaseModel):
@@ -90,6 +107,60 @@ class ProfileWorkerSubmitRequest(BaseModel):
     idempotency_key: str | None = Field(default=None, min_length=1, max_length=256, repr=False)
 
 
+class ProfileWorkerSubmissionBeginRequest(BaseModel):
+    """Bind a finite upload to its original runtime connection and live lease."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    action: Literal["operation_submit_begin"] = "operation_submit_begin"
+    request_id: UUID
+    upload_id: UUID
+    connection_id: UUID
+    session_id: UUID
+    frontend: OperationFrontendProjection
+    definition_id: OperationDefinitionId
+    subject_ref: OperationReference
+    idempotency_key: str | None = Field(default=None, min_length=1, max_length=256, repr=False)
+    descriptor: SubmissionPayloadDescriptor
+
+
+class ProfileWorkerSubmissionChunkRequest(BaseModel):
+    """One bounded protected JSON-frame chunk for the bound upload."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    action: Literal["operation_submit_chunk"] = "operation_submit_chunk"
+    request_id: UUID
+    upload_id: UUID
+    connection_id: UUID
+    session_id: UUID
+    chunk: SubmissionPayloadChunk
+
+
+class ProfileWorkerSubmissionFinishRequest(BaseModel):
+    """Verify exact staged bytes before canonical SUBMIT and fresh authority."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    action: Literal["operation_submit_finish"] = "operation_submit_finish"
+    request_id: UUID
+    upload_id: UUID
+    connection_id: UUID
+    session_id: UUID
+
+
+class ProfileWorkerSubmissionAbortRequest(BaseModel):
+    """Wipe only the matching upload, including after its lease was retired."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    action: Literal["operation_submit_abort"] = "operation_submit_abort"
+    request_id: UUID
+    upload_id: UUID
+    connection_id: UUID
+    session_id: UUID
+
+
 class ProfileWorkerOperationRequest(BaseModel):
     """Internal lifecycle access to a previously session-bound invocation."""
 
@@ -99,6 +170,17 @@ class ProfileWorkerOperationRequest(BaseModel):
     session_id: UUID
     frontend: OperationFrontendProjection
     operation_id: OperationId
+
+
+class ProfileWorkerSecretRequest(BaseModel):
+    """Preflight or deliver one original submission's runtime-only secret."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    action: Literal["operation_secret_ready", "operation_secret"]
+    request_id: UUID
+    session_id: UUID
+    frontend: OperationFrontendProjection
+    requirement: OperationSecretRequirement
 
 
 class ProfileWorkerObserveRequest(BaseModel):
@@ -123,17 +205,60 @@ class ProfileWorkerResumeRequest(BaseModel):
     operation_id: OperationId
 
 
+class ProfileWorkerProjectRequest(BaseModel):
+    """Only canonical result/review coordinates, never an encrypted record reference."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    action: Literal["operation_project"] = "operation_project"
+    request_id: UUID
+    session_id: UUID
+    frontend: OperationFrontendProjection
+    projection: OperationResultProjectionRequestV1 | OperationReviewProjectionRequestV1
+
+
+class ProfileWorkerProjectPageRequest(BaseModel):
+    """Bounded output over the same canonical result and authorization owner."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    action: Literal["operation_project_page"] = "operation_project_page"
+    request_id: UUID
+    session_id: UUID
+    frontend: OperationFrontendProjection
+    projection: OperationResultProjectionRequestV1
+    page: ProjectionPageRequest
+
+
+class ProfileWorkerManageRequest(BaseModel):
+    """Canonical control coordinates, with frontend and actor resolved by the worker."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    action: Literal["operation_manage"] = "operation_manage"
+    request_id: UUID
+    session_id: UUID
+    frontend: OperationFrontendProjection
+    management: OperationManagementRequest
+
+
 class ProfileWorkerRequest(
     RootModel[
         Annotated[
             ProfileWorkerLeaseRequest
             | ProfileWorkerRetireRequest
+            | ProfileWorkerSettlementRequest
             | ProfileWorkerControlRequest
             | ProfileWorkerHumanBindingRequest
             | ProfileWorkerContractRequest
             | ProfileWorkerSubmitRequest
+            | ProfileWorkerSubmissionBeginRequest
+            | ProfileWorkerSubmissionChunkRequest
+            | ProfileWorkerSubmissionFinishRequest
+            | ProfileWorkerSubmissionAbortRequest
             | ProfileWorkerOperationRequest
+            | ProfileWorkerSecretRequest
             | ProfileWorkerResumeRequest
+            | ProfileWorkerProjectRequest
+            | ProfileWorkerProjectPageRequest
+            | ProfileWorkerManageRequest
             | ProfileWorkerObserveRequest,
             Field(discriminator="action"),
         ]
@@ -152,15 +277,48 @@ class ProfileWorkerStatus(BaseModel):
     sessions: tuple[UUID, ...]
 
 
-class ProfileWorkerPasswordOutcome(BaseModel):
-    """Password proof awaiting runtime admission; the candidate ID is not a bearer."""
+class ProfileWorkerDrained(BaseModel):
+    """Bounded operation shutdown result, requiring native containment on return."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    kind: Literal["password"] = "password"
+    kind: Literal["drained"] = "drained"
+    identity: ProfileWorkerIdentity
+    request_id: UUID
+    unresolved: tuple[OperationId, ...]
+    recovery_required: tuple[OperationId, ...]
+
+
+class ProfileWorkerSettlement(BaseModel):
+    """Terminal completion only, without condition, result, or private reference."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    kind: Literal["operation_settlement"] = "operation_settlement"
+    identity: ProfileWorkerIdentity
+    request_id: UUID
+    operation_identity: OperationIdentity
+    settled: bool
+
+
+class ProfileWorkerHumanOutcome(BaseModel):
+    """Human proof awaiting runtime admission; the candidate ID is not a bearer."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    kind: Literal["human_candidate"] = "human_candidate"
     identity: ProfileWorkerIdentity
     request_id: UUID
     candidate_id: UUID
     login: ProfileLoginOutcome
+
+
+class ProfileWorkerHumanBound(BaseModel):
+    """Acknowledge the exact admitted human session and acceleration outcome."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    kind: Literal["human_bound"] = "human_bound"
+    identity: ProfileWorkerIdentity
+    request_id: UUID
+    session_id: UUID
+    receipt: ProfileHumanLoginReceipt
 
 
 class ProfileWorkerRefusal(BaseModel):
@@ -181,6 +339,7 @@ class ProfileWorkerOperationContract(BaseModel):
     identity: ProfileWorkerIdentity
     request_id: UUID
     contract: OperationPublicDefinitionContractV1
+    request_json_schema: dict[str, JsonValue]
 
 
 class ProfileWorkerSubmission(BaseModel):
@@ -191,7 +350,18 @@ class ProfileWorkerSubmission(BaseModel):
     identity: ProfileWorkerIdentity
     request_id: UUID
     receipt: OperationSubmissionReceiptV1
-    release: WorkerAuthorizationRequest
+    release: WorkerAuthorityRequest
+
+
+class ProfileWorkerUploadAccepted(BaseModel):
+    """Acknowledge staging only; no operation exists until finish succeeds."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    kind: Literal["operation_upload_accepted"] = "operation_upload_accepted"
+    identity: ProfileWorkerIdentity
+    request_id: UUID
+    upload_id: UUID
 
 
 class ProfileWorkerOperationReceipt(BaseModel):
@@ -202,7 +372,7 @@ class ProfileWorkerOperationReceipt(BaseModel):
     identity: ProfileWorkerIdentity
     request_id: UUID
     operation_id: OperationId
-    release: WorkerAuthorizationRequest
+    release: WorkerAuthorityRequest
 
 
 class ProfileWorkerObservation(BaseModel):
@@ -213,19 +383,47 @@ class ProfileWorkerObservation(BaseModel):
     identity: ProfileWorkerIdentity
     request_id: UUID
     observation: OperationObservationResultV1
-    release: WorkerAuthorizationRequest
+    release: WorkerAuthorityRequest
+
+
+class ProfileWorkerProjection(BaseModel):
+    """Registered canonical public projection with fresh output policy coordinates."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    kind: Literal["operation_projection"] = "operation_projection"
+    identity: ProfileWorkerIdentity
+    request_id: UUID
+    document: dict[str, JsonValue]
+    release: WorkerAuthorityRequest
+
+
+class ProfileWorkerProjectionPage(BaseModel):
+    """One bounded result page with its exact output policy coordinates."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    kind: Literal["operation_projection_page"] = "operation_projection_page"
+    identity: ProfileWorkerIdentity
+    request_id: UUID
+    page: ProjectionPage
+    release: WorkerAuthorityRequest
 
 
 class ProfileWorkerReply(
     RootModel[
         Annotated[
             ProfileWorkerStatus
-            | ProfileWorkerPasswordOutcome
+            | ProfileWorkerDrained
+            | ProfileWorkerSettlement
+            | ProfileWorkerHumanOutcome
+            | ProfileWorkerHumanBound
             | ProfileWorkerRefusal
             | ProfileWorkerOperationContract
             | ProfileWorkerSubmission
+            | ProfileWorkerUploadAccepted
             | ProfileWorkerOperationReceipt
-            | ProfileWorkerObservation,
+            | ProfileWorkerObservation
+            | ProfileWorkerProjection
+            | ProfileWorkerProjectionPage,
             Field(discriminator="kind"),
         ]
     ]

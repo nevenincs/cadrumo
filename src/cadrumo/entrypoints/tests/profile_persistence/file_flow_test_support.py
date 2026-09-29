@@ -1,4 +1,4 @@
-"""Shared support for modelo file-flow application tests."""
+"""Shared support for Modelo file-flow integration tests."""
 
 from __future__ import annotations
 
@@ -271,6 +271,7 @@ __all__ = [
     "Repos",
     "WorkflowGate",
     "canonical_work_unit_period",
+    "file_flow_repositories",
     "file_revision",
     "registry_required_manual_casillas",
     "seed_modelo_180_work_unit",
@@ -356,7 +357,7 @@ _Repos = tuple[
 ]
 
 
-def _repos(tmp_path: Path) -> Iterator[_Repos]:
+def file_flow_repositories(tmp_path: Path) -> Iterator[Repos]:
     """Yield the five catalogue repositories over an encrypted SQLite
     database through the shared active-profile runtime. Tuple shape:
     ``(work_unit, calculation_revision, filing_record,
@@ -585,8 +586,15 @@ def _file_revision(
             filing_repository=filing_repository,
             bucket_event_repository=bucket_event_repository,
         )
+        granting_reports = tuple(
+            report
+            for report in filing_ports.verification_repository.load().reports.values()
+            if report.calculation_revision_id == calculation_revision_id and report.granted_verificado_completo
+        )
+        assert len(granting_reports) == 1, "filing test must use one actual granting verification report"
         return file_modelo_revision(
             calculation_revision_id,
+            approved_verification_report_id=granting_reports[0].verification_report_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             ports=filing_ports,
             actor=actor,
@@ -596,7 +604,7 @@ def _file_revision(
             clock=clock,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
-        )
+        ).record
 
 
 def _verify_revision(

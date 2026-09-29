@@ -38,6 +38,7 @@ Subpackages
    cadrumo.application.overview
    cadrumo.application.prorrata_register
    cadrumo.application.review
+   cadrumo.application.runtime
    cadrumo.application.search
    cadrumo.application.storage
    cadrumo.application.storage_management
@@ -55,6 +56,7 @@ Submodules
    cadrumo.application._state_projection_readiness
    cadrumo.application.auth_credentials
    cadrumo.application.bucket_deletion_contracts
+   cadrumo.application.bucket_event_projection
    cadrumo.application.bucket_event_repository
    cadrumo.application.cli_exception_preconditions
    cadrumo.application.config_reset
@@ -89,3 +91,5 @@ Submodules
    cadrumo.application.storage_write_policy
    cadrumo.application.workbench_capture_memory
    cadrumo.application.workbench_generation
+   cadrumo.application.workbench_generation_operation
+   cadrumo.application.workbench_generation_projection

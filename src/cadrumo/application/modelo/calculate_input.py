@@ -30,6 +30,7 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
+from contextlib import nullcontext
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal, InvalidOperation
@@ -52,6 +53,7 @@ from ...domain.calculations.registry.casilla_membership import (
 )
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.calculations.registry.ids import (
     BindingId,
     RelationId,
@@ -89,9 +91,13 @@ from ...domain.modelos.row_models import (
     Modelo184ShareSumError,
     Modelo347ContraparteRow,
     Modelo347ThresholdError,
+    Modelo349OperadorRow,
+    Modelo349RectificacionRow,
     ModeloDetailRow,
     validate_m184_member_share_sum,
     validate_m347_threshold,
+    validate_m349_country_prefix_context,
+    validate_m349_nif_format,
 )
 from ...domain.modelos.sal_reserva_especial import compute_sal_reserva_especial_dotacion
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
@@ -313,7 +319,7 @@ class ModeloWorkCalculationServiceResult:
 
     ``revision`` is the persisted
     :class:`~CalculationRevision`; ``work_unit`` is the
-    parent :class:`~WorkUnit` loaded after persistence so
+    parent :class:`~WorkUnit` returned by the writer so
     renderers do not have to repeat the lookup. The optional advisory summaries
     are presentation data derived from registry applicability and authorization
     metadata.
@@ -331,6 +337,7 @@ class ModeloWorkCalculationServiceResult:
 
     revision: CalculationRevision
     work_unit: WorkUnit
+    revision_published: bool
     modality: Modelo202ModalitySummary | None = None
     source_diagnostics: tuple[CalculationSourceDiagnostic, ...] = ()
     plazo_resolutions: tuple[M210PlazoResolution, ...] = ()
@@ -347,7 +354,7 @@ def calculate_modelo_work_revision(
     """Persist a draft calculation revision as a :class:`ModeloWorkCalculationServiceResult`.
 
     The function forwards the already validated :class:`WorkCalculateInputBundle`
-    into the bucket-aggregation calculation path, reloads the parent
+    into the bucket-aggregation calculation path, retains the writer-returned parent
     :class:`~WorkUnit`, and attaches any Modelo 202
     modality, authorization, or non-blocking source diagnostics needed by the
     CLI payload. ``profile`` is the work profile the command already loaded;
@@ -379,15 +386,7 @@ def calculate_modelo_work_revision(
         profile=profile,
     )
     revision = calculation.revision
-    catalogue, bucket_id = _capture_work_catalogue(
-        revision.work_unit_id,
-        repository=ports.work_unit_repository,
-    )
-    work_unit = _selected_work_unit(
-        work_unit_id=revision.work_unit_id,
-        catalogue=catalogue,
-        bucket_id=bucket_id,
-    )
+    work_unit = calculation.publication.work_unit
     plazo_resolutions: tuple[M210PlazoResolution, ...] = ()
     if work_unit.modelo == Modelo("210"):
         from .m303_regimen_simplificado_scope import taxpayer_profile_for_work
@@ -397,13 +396,15 @@ def calculate_modelo_work_revision(
             work_unit=work_unit,
             revision=revision,
             workflow_profile=taxpayer_profile_for_work(calculation.profile),
+            operation=ports.operation,
         )
         if resolution is not None:
             plazo_resolutions = (resolution,)
     return ModeloWorkCalculationServiceResult(
         revision=revision,
         work_unit=work_unit,
-        modality=modelo_202_modality_for_record(work_unit, calculation.profile.record),
+        revision_published=calculation.publication.published,
+        modality=modelo_202_modality_for_record(work_unit, calculation.profile.record, operation=ports.operation),
         source_diagnostics=(*inputs.shortcut_diagnostics, *calculation.source_diagnostics),
         plazo_resolutions=plazo_resolutions,
     )
@@ -597,7 +598,7 @@ def build_work_calculate_input_bundle(
     """
     catalogue, bucket_id = _capture_work_catalogue(work_unit_id, repository=ports.work_unit_repository)
     work_unit = _selected_work_unit(work_unit_id=work_unit_id, catalogue=catalogue, bucket_id=bucket_id)
-    _validate_detail_rows(detail_rows, effective_date=date(work_unit.filing_year, 12, 31))
+    _validate_detail_rows(detail_rows, work_unit=work_unit, operation=operation)
     revision = _revision_for_work_unit(work_unit, operation=operation)
     casilla_inputs, text_casilla_inputs, m210_official_tipo_renta_code = _resolve_casilla_overrides(
         casilla_overrides,
@@ -647,7 +648,9 @@ def build_work_calculate_input_bundle(
     )
 
 
-def _validate_detail_rows(rows: tuple[ModeloDetailRow, ...], *, effective_date: date) -> None:
+def _validate_detail_rows(
+    rows: tuple[ModeloDetailRow, ...], *, work_unit: WorkUnit, operation: PinnedAuthorityOperation
+) -> None:
     member_rows = [row for row in rows if isinstance(row, Modelo184MemberRow)]
     try:
         validate_m184_member_share_sum(member_rows)
@@ -659,12 +662,42 @@ def _validate_detail_rows(rows: tuple[ModeloDetailRow, ...], *, effective_date: 
 
     contraparte_rows = [row for row in rows if isinstance(row, Modelo347ContraparteRow)]
     try:
-        validate_m347_threshold(contraparte_rows, effective_date=effective_date)
+        with validating_governed_facts(operation):
+            validate_m347_threshold(contraparte_rows, effective_date=date(work_unit.filing_year, 12, 31))
     except Modelo347ThresholdError as exc:
         raise ModeloCalculateDetailRowsError(
             context={"nif": exc.nif, "total": str(exc.total), "threshold": str(exc.threshold.payload.value)},
             translated_message="application.modelo.errors.calculate_m347_threshold_not_met",
         ) from exc
+
+    if str(work_unit.modelo) != "349":
+        return
+    with validating_governed_facts(operation):
+        for row in rows:
+            if isinstance(row, (Modelo349OperadorRow, Modelo349RectificacionRow)) and not validate_m349_nif_format(
+                row.nif_comunitario, row.codigo_pais
+            ):
+                raise ModeloCalculateDetailRowsError(
+                    context={"nif": row.nif_comunitario, "pais": row.codigo_pais},
+                    translated_message="application.modelo.errors.calculate_m349_invalid_nif",
+                )
+            if isinstance(row, Modelo349OperadorRow):
+                validate_m349_country_prefix_context(
+                    country_code=row.codigo_pais,
+                    clave_operacion=row.clave_operacion,
+                    filing_year=work_unit.filing_year,
+                    period=work_unit.period.registry_token,
+                )
+            elif isinstance(row, Modelo349RectificacionRow):
+                validate_m349_country_prefix_context(
+                    country_code=row.codigo_pais,
+                    clave_operacion=row.clave_operacion,
+                    filing_year=work_unit.filing_year,
+                    period=work_unit.period.registry_token,
+                    is_rectification=True,
+                    rectified_year=int(row.ejercicio),
+                    rectified_period=row.periodo,
+                )
 
 
 def _decimal(raw_value: str, *, flag: str, key: str) -> Decimal:
@@ -1288,6 +1321,8 @@ def modelo_202_modality_for_work_unit(work_unit: WorkUnit) -> Modelo202ModalityS
 def modelo_202_modality_for_record(
     work_unit: WorkUnit,
     record: UserProfileRecord | None,
+    *,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> Modelo202ModalitySummary | None:
     """Return the Modelo 202 modality summary for an already-loaded profile record.
 
@@ -1301,9 +1336,11 @@ def modelo_202_modality_for_record(
     from ...domain.calculations.registry.authority import bundled_indexed_authority
     from ..user_profile.projections import projection_for_taxpayer
 
-    with bundled_indexed_authority().operation() as operation:
-        profile = projection_for_taxpayer(record or {}, schema=operation.profile_schema())
-        verdict = derive_modelo_202_modality(profile, effective_date=date(work_unit.filing_year, 12, 31))
+    with nullcontext(operation) if operation is not None else bundled_indexed_authority().operation() as authority:
+        profile = projection_for_taxpayer(record or {}, schema=authority.profile_schema())
+        verdict = derive_modelo_202_modality(
+            profile, effective_date=date(work_unit.filing_year, 12, 31), authority=authority
+        )
     return Modelo202ModalitySummary(modality=verdict.modality.value, reason=verdict.reason)
 
 

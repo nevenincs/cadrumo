@@ -1,24 +1,4 @@
-"""MCP server entrypoint for the operator agent-harness.
-
-Exposes the deterministic ``aeat`` CLI to an LLM operator as Model Context
-Protocol tools, sourcing the tool list, output schemas, and mutability
-annotations from the Layer 0 capability manifest. The manifest itself is served
-to the operator by the MCP-native ``contract`` meta-tool
-(:func:`~cadrumo_harness.mcp._meta_tools.build_capability_manifest`), which
-composes the application-layer manifest builder with the CLI's registered
-result-schema references. The human-in-the-loop confirmation tiers and the
-faithfulness check live here too.
-
-The protocol runtime (the MCP SDK) is supplied by the sibling
-``cadrumo-harness`` distribution and imported lazily by :func:`main`; the tool-building,
-annotation, HITL, faithfulness, and dispatch logic in this package is
-SDK-independent and fully unit-tested. A bare-core invocation of the ``cadrumo-mcp``
-console script refuses with the install hint rather than crashing - the same
-graceful-degradation contract every optional integration follows.
-
-Live AEAT submission is permanently forbidden: no live-write tool is ever exposed
-(enforced by test), and the CLI rails remain the deterministic backstop.
-"""
+"""Installed local MCP stdio entry point."""
 
 from __future__ import annotations
 
@@ -26,81 +6,37 @@ import argparse
 import io
 import os
 import sys
-from pathlib import Path
-
-from ._annotations import McpAnnotations, annotations_for_command
-from ._persona_scope import (
-    PERSONA_TOOL_SCOPES,
-    AgentPersona,
-    PersonaToolScope,
-    is_tool_in_persona_scope,
-    live_family_mutability,
-    scope_for_persona,
-)
-from .dispatch import command_key_for_tool, tool_name_for_command, tool_request_argv
-from .faithfulness import FaithfulnessResult, faithfulness_check
-from .hitl import ConfirmationPolicy, confirmation_for_tool
-from .identity_gate import (
-    IDENTITY_READ_CONSOLE_TOOLS,
-    SessionIdentityState,
-    identity_gate_refusal,
-)
-from .server import build_server
-from .tools import McpToolDescriptor, build_tool_descriptors
-
-__all__ = [
-    "IDENTITY_READ_CONSOLE_TOOLS",
-    "PERSONA_TOOL_SCOPES",
-    "AgentPersona",
-    "ConfirmationPolicy",
-    "FaithfulnessResult",
-    "McpAnnotations",
-    "McpToolDescriptor",
-    "PersonaToolScope",
-    "SessionIdentityState",
-    "annotations_for_command",
-    "build_server",
-    "build_tool_descriptors",
-    "command_key_for_tool",
-    "confirmation_for_tool",
-    "faithfulness_check",
-    "identity_gate_refusal",
-    "is_tool_in_persona_scope",
-    "live_family_mutability",
-    "main",
-    "scope_for_persona",
-    "tool_name_for_command",
-    "tool_request_argv",
-]
+from importlib.metadata import version
+from typing import BinaryIO, TextIO, cast
+from uuid import UUID
 
 
 def main() -> None:
-    """Console-script entry point for the ``cadrumo-mcp`` server.
-
-    Lazily imports the MCP SDK runtime. If the ``cadrumo-harness`` distribution's
-    runtime is incomplete, it refuses with the install hint and a non-zero exit rather than
-    raising a raw ``ModuleNotFoundError``.
-    """
-    # Pydantic scans every installed distribution's entry points on its first
-    # model build, which costs about a tenth of a second in a process that
-    # builds models before it has parsed a command. Cadrumo declares no
-    # pydantic plugin, and a third-party one would observe taxpayer models it
-    # has no business seeing. ``setdefault`` leaves an operator's explicit
-    # value alone.
+    """Serve one explicitly bound profile and protected credential reference."""
     os.environ.setdefault("PYDANTIC_DISABLE_PLUGINS", "__all__")
-    # stderr carries the refusals and diagnostics a client reads verbatim. Text
-    # mode would translate every line ending to CRLF on Windows alone, so pin LF
-    # before anything writes and keep the byte stream platform-independent.
-    stderr = sys.stderr
-    if isinstance(stderr, io.TextIOWrapper):
-        stderr.reconfigure(newline="\n")
-
+    if isinstance(sys.stderr, io.TextIOWrapper):
+        # CPython's stdlib types leave the TextIOWrapper buffer parameter unknown.
+        cast(io.TextIOWrapper[BinaryIO], sys.stderr).reconfigure(newline="\n")
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--profile-id", type=UUID, required=True)
+    parser.add_argument("--credential-reference", type=lambda value: UUID(value) if value else None)
+    args = parser.parse_args()
+    required_version = os.environ.get("CADRUMO_MCP_REQUIRED_VERSION")
+    required_harness_version = os.environ.get("CADRUMO_MCP_REQUIRED_HARNESS_VERSION")
+    if (required_version is not None and version("cadrumo") != required_version) or (
+        required_harness_version is not None and version("cadrumo-harness") != required_harness_version
+    ):
+        parser.error("installed Cadrumo cohort does not match the required version")
     from cadrumo.core.logging import configure_logging
 
-    from .server import serve
-
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--profile-secrets-file", type=Path)
-    args = parser.parse_args()
     configure_logging()
-    serve(profile_secrets_file=args.profile_secrets_file)
+    try:
+        from .server import serve
+
+        serve(profile_id=args.profile_id, credential_reference=args.credential_reference)
+    except ModuleNotFoundError as error:
+        if error.name != "mcp":
+            raise
+        # stderr's platform-dependent stdlib annotation includes Any; the text stream contract is stable.
+        cast(TextIO, sys.stderr).write("Cadrumo MCP requires the cadrumo-harness MCP SDK installation.\n")
+        raise SystemExit(3) from None

@@ -92,6 +92,20 @@ ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 profile_secret_channel=ProfileSecretChannelKind.FILE_DESCRIPTOR,
             ),
             OptionSpec(
+                name="profile_auth_method",
+                declarations=("--profile-auth-method",),
+                value=ValueContract(DeferredTarget("builtins", "str"), choices=("password", "api-key")),
+                default=ParameterDefault.value("password"),
+                help_key=TranslationKey("cli.config.custody.profile_auth_method_help"),
+            ),
+            OptionSpec(
+                name="profile_credential_ref",
+                declarations=("--profile-credential-ref",),
+                value=ValueContract(DeferredTarget("uuid", "UUID")),
+                default=ParameterDefault.value(None),
+                help_key=TranslationKey("cli.config.custody.profile_credential_ref_help"),
+            ),
+            OptionSpec(
                 name="version",
                 declarations=("--version", "-V"),
                 value=FLAG_VALUE,
@@ -158,7 +172,7 @@ ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             identity="root.status",
         ),
         profile_secret=ProfileSecretSpec(
-            fields=(MachineSecretFieldSpec("profile_passphrase"),),
+            fields=(MachineSecretFieldSpec("profile_passphrase"), MachineSecretFieldSpec("api_key")),
             model=DeferredTarget(
                 "._profile_authentication_contract",
                 "ProfileAuthenticationSecrets",

@@ -254,15 +254,22 @@ class CatalogueCreationRateProviderAdapter(CatalogueInvoiceRateProviderPort):
             raise CatalogueInvoiceRateError("exchange_rate_lookup") from exc
 
 
-def build_catalogue_creation_ports(*, bucket_id: str) -> CatalogueCreationPorts:
-    """Bind the existing encrypted repositories and the host's rate provider for a bucket."""
-    from ....application.exchange_rate_provider import exchange_rate_provider
+def _catalogue_repositories(*, bucket_id: str) -> tuple[InvoiceCatalogueRepository, BucketEventHistoryRepository]:
+    """Bind local invoice and audit storage without resolving an outbound provider."""
     from ..storage.runtime_repository import secure_object_repository_for_bucket
 
     normalized_bucket_id = bucket_id.strip()
     objects = secure_object_repository_for_bucket(normalized_bucket_id)
     invoice_repository = InvoiceCatalogueRepository(bucket_id=normalized_bucket_id, objects=objects)
     event_repository = BucketEventHistoryRepository(objects=objects)
+    return invoice_repository, event_repository
+
+
+def build_catalogue_creation_ports(*, bucket_id: str) -> CatalogueCreationPorts:
+    """Bind the existing encrypted repositories and the host's rate provider for a bucket."""
+    from ....application.exchange_rate_provider import exchange_rate_provider
+
+    invoice_repository, event_repository = _catalogue_repositories(bucket_id=bucket_id)
     return CatalogueCreationPorts(
         invoice_repository=CatalogueCreationInvoiceRepositoryAdapter(repository=invoice_repository),
         event_repository=CatalogueCreationEventRepositoryAdapter(repository=event_repository),
@@ -277,12 +284,15 @@ def build_catalogue_creation_ports(*, bucket_id: str) -> CatalogueCreationPorts:
 def build_catalogue_lifecycle_ports(*, bucket_id: str) -> CatalogueLifecyclePorts:
     """Bind read, mutation, and audit adapters for one invoice bucket."""
     normalized_bucket_id = bucket_id.strip()
-    creation_ports = build_catalogue_creation_ports(bucket_id=normalized_bucket_id)
+    invoice_repository, event_repository = _catalogue_repositories(bucket_id=normalized_bucket_id)
     return CatalogueLifecyclePorts(
         read_ports=build_invoice_catalogue_read_ports(bucket_id=normalized_bucket_id),
-        invoice_repository=creation_ports.invoice_repository,
-        event_repository=creation_ports.event_repository,
-        audit_commit=creation_ports.audit_commit,
+        invoice_repository=CatalogueCreationInvoiceRepositoryAdapter(repository=invoice_repository),
+        event_repository=CatalogueCreationEventRepositoryAdapter(repository=event_repository),
+        audit_commit=CatalogueCreationAuditCommitAdapter(
+            invoice_repository=invoice_repository,
+            event_repository=event_repository,
+        ),
     )
 
 

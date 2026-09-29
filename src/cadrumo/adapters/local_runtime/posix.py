@@ -18,37 +18,115 @@ from pathlib import Path
 from ...application.runtime.contracts import RuntimePeer, RuntimeRefusalCode, RuntimeRefusalError
 
 
+def posix_owner_uid() -> int:
+    """Return the native owner UID on a supported POSIX host."""
+    if sys.platform != "win32":
+        return os.getuid()
+    raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+
+
+def _namespace_flags() -> int:
+    if sys.platform != "win32":
+        return os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC
+    raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+
+
+def _lock_flags() -> int:
+    if sys.platform != "win32":
+        return os.O_RDWR | os.O_NOFOLLOW | os.O_CLOEXEC | os.O_NONBLOCK
+    raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+
+
+def _unix_socket() -> socket.socket:
+    if sys.platform != "win32":
+        return socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+
+
+def _accept_socket(listener: socket.socket) -> socket.socket:
+    if sys.platform != "win32":
+        connection, _address = listener.accept()
+        return connection
+    raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+
+
+def _linux_peer_credentials(sock: socket.socket) -> tuple[int, int, int]:
+    if sys.platform == "linux":
+        return struct.unpack("3i", sock.getsockopt(socket.SOL_SOCKET, socket.SO_PEERCRED, 12))
+    raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+
+
+def _lock_exclusive(descriptor: int) -> None:
+    if sys.platform != "win32":
+        import fcntl
+
+        fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        return
+    raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+
+
+def _open_lock(directory_fd: int, name: str, flags: int) -> int:
+    try:
+        try:
+            # Keep one persistent inode across contenders.
+            return os.open(name, flags | os.O_CREAT | os.O_EXCL, 0o600, dir_fd=directory_fd)
+        except FileExistsError:
+            return os.open(name, flags, dir_fd=directory_fd)
+    except OSError:
+        raise RuntimeRefusalError(RuntimeRefusalCode.ENDPOINT_UNTRUSTED) from None
+
+
+def _socket_metadata(path: Path) -> os.stat_result | None:
+    try:
+        return path.lstat()
+    except FileNotFoundError:
+        return None
+
+
 def posix_storage_identity(root: Path) -> str:
     """Bind aliases of one existing directory to its physical storage identity."""
     if sys.platform == "win32":
         raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
     try:
         metadata = root.resolve(strict=True).stat()
-        if not stat.S_ISDIR(metadata.st_mode) or metadata.st_uid != os.getuid():
+        if not stat.S_ISDIR(metadata.st_mode) or metadata.st_uid != posix_owner_uid():
             raise RuntimeRefusalError(RuntimeRefusalCode.ENDPOINT_UNTRUSTED)
+        return hashlib.sha256(f"{posix_owner_uid()}:{metadata.st_dev}:{metadata.st_ino}".encode("ascii")).hexdigest()
     except OSError:
         raise RuntimeRefusalError(RuntimeRefusalCode.ENDPOINT_UNTRUSTED) from None
-    digest = hashlib.sha256(f"{os.getuid()}:{metadata.st_dev}:{metadata.st_ino}".encode("ascii")).hexdigest()
-    return digest
 
 
-def _open_namespace(namespace: Path) -> tuple[Path, int]:
+def _open_namespace(namespace: Path, *, create: bool) -> tuple[Path, int]:
     if sys.platform == "win32":
         raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
     try:
         parent = namespace.parent.resolve(strict=True)
         for ancestor in (parent, *parent.parents):
             metadata = ancestor.stat()
-            if metadata.st_uid not in (0, os.getuid()):
+            if metadata.st_uid not in (0, posix_owner_uid()):
                 raise RuntimeRefusalError(RuntimeRefusalCode.ENDPOINT_UNTRUSTED)
             if metadata.st_mode & 0o022 and not metadata.st_mode & stat.S_ISVTX:
                 raise RuntimeRefusalError(RuntimeRefusalCode.ENDPOINT_UNTRUSTED)
         path = parent / namespace.name
-        with contextlib.suppress(FileExistsError):
-            path.mkdir(mode=0o700)
-        descriptor = os.open(path, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC)
+        if create:
+            with contextlib.suppress(FileExistsError):
+                path.mkdir(mode=0o700)
+        else:
+            try:
+                path.lstat()
+            except FileNotFoundError:
+                return path, -1
+        try:
+            descriptor = os.open(path, _namespace_flags())
+        except FileNotFoundError:
+            if not create:
+                try:
+                    path.lstat()
+                except FileNotFoundError:
+                    return path, -1
+            raise
         metadata = os.fstat(descriptor)
-        if metadata.st_uid != os.getuid() or metadata.st_mode & 0o077:
+        if metadata.st_uid != posix_owner_uid() or metadata.st_mode & 0o077:
             os.close(descriptor)
             raise RuntimeRefusalError(RuntimeRefusalCode.ENDPOINT_UNTRUSTED)
         return path, descriptor
@@ -61,7 +139,7 @@ def _peer(sock: socket.socket) -> RuntimePeer:
         raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
     try:
         if sys.platform.startswith("linux"):
-            pid, uid, _gid = struct.unpack("3i", sock.getsockopt(socket.SOL_SOCKET, socket.SO_PEERCRED, 12))
+            pid, uid, _gid = _linux_peer_credentials(sock)
         elif sys.platform == "darwin":
             import ctypes
 
@@ -76,7 +154,7 @@ def _peer(sock: socket.socket) -> RuntimePeer:
             pid = struct.unpack("i", sock.getsockopt(0, 2, 4))[0]
         else:
             raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
-        if uid != os.getuid() or pid <= 0:
+        if uid != posix_owner_uid() or pid <= 0:
             raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
         return RuntimePeer(os_owner_id=str(uid), process_id=pid)
     except OSError:
@@ -156,16 +234,18 @@ class PosixRuntimeEndpoint:
     _path: Path
     _name: str
 
-    def __init__(self, *, storage_root: Path, namespace: Path | None = None) -> None:
-        """Pin an owner-only directory and one physical storage-root identity."""
+    def __init__(self, *, storage_root: Path, namespace: Path | None = None, create_namespace: bool = True) -> None:
+        """Pin an owner-only namespace; passive probes never create it."""
         if sys.platform == "win32":
             raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
         self.storage_identity = posix_storage_identity(storage_root)
         # TMPDIR can differ between clients and login contexts. Ownership must
         # converge for one OS owner/root, and Darwin's per-user temporary paths
         # can exceed the Unix socket path limit after adding the endpoint name.
-        namespace = namespace or Path("/").joinpath("tmp", f"cdr-{os.getuid()}")
-        self._directory, self._directory_fd = _open_namespace(namespace)
+        namespace = namespace or Path("/").joinpath("tmp", f"cdr-{posix_owner_uid()}")
+        self._create_namespace = create_namespace
+        self._closed = False
+        self._directory, self._directory_fd = _open_namespace(namespace, create=create_namespace)
         self._name = self.storage_identity[:32] + ".sock"
         self._path = self._directory / self._name
         self._lock_fd: int | None = None
@@ -178,27 +258,38 @@ class PosixRuntimeEndpoint:
     def _verify_namespace(self) -> None:
         if sys.platform == "win32":
             raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+        if self._closed:
+            raise RuntimeRefusalError(RuntimeRefusalCode.CONNECTION_CLOSED)
+        if self._directory_fd < 0:
+            directory, descriptor = _open_namespace(self._directory, create=False)
+            if directory != self._directory:
+                if descriptor >= 0:
+                    os.close(descriptor)
+                raise RuntimeRefusalError(RuntimeRefusalCode.ENDPOINT_UNTRUSTED)
+            if descriptor < 0:
+                raise RuntimeRefusalError(RuntimeRefusalCode.ENDPOINT_NOT_READY)
+            self._directory_fd = descriptor
         try:
             metadata = self._directory.lstat()
             held = os.fstat(self._directory_fd)
+            if (
+                (metadata.st_dev, metadata.st_ino) != (held.st_dev, held.st_ino)
+                or not stat.S_ISDIR(metadata.st_mode)
+                or metadata.st_uid != posix_owner_uid()
+                or metadata.st_mode & 0o077
+            ):
+                raise RuntimeRefusalError(RuntimeRefusalCode.ENDPOINT_UNTRUSTED)
         except OSError:
             raise RuntimeRefusalError(RuntimeRefusalCode.ENDPOINT_UNTRUSTED) from None
-        if (
-            (metadata.st_dev, metadata.st_ino) != (held.st_dev, held.st_ino)
-            or not stat.S_ISDIR(metadata.st_mode)
-            or metadata.st_uid != os.getuid()
-            or metadata.st_mode & 0o077
-        ):
-            raise RuntimeRefusalError(RuntimeRefusalCode.ENDPOINT_UNTRUSTED)
 
     def connect(self, *, timeout: float = 5.0) -> PosixRuntimeChannel:
         """Connect after validating the namespace and socket, then verify the peer."""
         self._verify_namespace()
         try:
             metadata = self._path.lstat()
-            if sys.platform == "win32" or not stat.S_ISSOCK(metadata.st_mode) or metadata.st_uid != os.getuid():
+            if sys.platform == "win32" or not stat.S_ISSOCK(metadata.st_mode) or metadata.st_uid != posix_owner_uid():
                 raise RuntimeRefusalError(RuntimeRefusalCode.ENDPOINT_UNTRUSTED)
-            sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            sock = _unix_socket()
             try:
                 sock.settimeout(timeout)
                 sock.connect(str(self._path))
@@ -215,36 +306,29 @@ class PosixRuntimeEndpoint:
         """Acquire the persistent lock inode before recovering a proven stale socket."""
         if sys.platform == "win32":
             raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
-        import fcntl
-
+        if not self._create_namespace:
+            raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
         if self._lock_fd is not None:
             raise RuntimeRefusalError(RuntimeRefusalCode.OWNER_BUSY)
         self._verify_namespace()
         lock_name = self._name.removesuffix(".sock") + ".lock"
-        flags = os.O_RDWR | os.O_NOFOLLOW | os.O_CLOEXEC | os.O_NONBLOCK
-        try:
-            try:
-                # Exclusive creation avoids Darwin's observed concurrent
-                # O_CREAT/openat ENOENT race. The persistent inode is never
-                # replaced or unlinked; every contender locks that inode.
-                descriptor = os.open(lock_name, flags | os.O_CREAT | os.O_EXCL, 0o600, dir_fd=self._directory_fd)
-            except FileExistsError:
-                descriptor = os.open(lock_name, flags, dir_fd=self._directory_fd)
-        except OSError:
-            raise RuntimeRefusalError(RuntimeRefusalCode.ENDPOINT_UNTRUSTED) from None
+        flags = _lock_flags()
+        # Exclusive creation avoids Darwin's observed concurrent O_CREAT/openat
+        # ENOENT race. The persistent inode is never replaced or unlinked.
+        descriptor = _open_lock(self._directory_fd, lock_name, flags)
         try:
             metadata = os.fstat(descriptor)
-            if not stat.S_ISREG(metadata.st_mode) or metadata.st_uid != os.getuid() or metadata.st_nlink != 1:
+            if not stat.S_ISREG(metadata.st_mode) or metadata.st_uid != posix_owner_uid() or metadata.st_nlink != 1:
                 raise RuntimeRefusalError(RuntimeRefusalCode.ENDPOINT_UNTRUSTED)
             if metadata.st_mode & 0o077:
                 raise RuntimeRefusalError(RuntimeRefusalCode.ENDPOINT_UNTRUSTED)
             try:
-                fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                _lock_exclusive(descriptor)
             except BlockingIOError:
                 raise RuntimeRefusalError(RuntimeRefusalCode.OWNER_BUSY) from None
             self._lock_fd = descriptor
             self._remove_stale_socket()
-            listener = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            listener = _unix_socket()
             self._listener = listener
             listener.bind(str(self._path))
             metadata = self._path.lstat()
@@ -262,25 +346,23 @@ class PosixRuntimeEndpoint:
     def _remove_stale_socket(self) -> None:
         if sys.platform == "win32":
             raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
-        try:
-            metadata = self._path.lstat()
-        except FileNotFoundError:
-            return
-        if not stat.S_ISSOCK(metadata.st_mode) or metadata.st_uid != os.getuid():
-            raise RuntimeRefusalError(RuntimeRefusalCode.ENDPOINT_UNTRUSTED)
-        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as probe:
-            probe.settimeout(0.25)
-            try:
-                probe.connect(str(self._path))
-            except OSError as error:
-                if error.errno != errno.ECONNREFUSED:
-                    raise RuntimeRefusalError(RuntimeRefusalCode.ENDPOINT_UNTRUSTED) from None
-            else:
-                raise RuntimeRefusalError(RuntimeRefusalCode.OWNER_BUSY)
-        current = self._path.lstat()
-        if (metadata.st_dev, metadata.st_ino) != (current.st_dev, current.st_ino):
-            raise RuntimeRefusalError(RuntimeRefusalCode.ENDPOINT_UNTRUSTED)
-        os.unlink(self._name, dir_fd=self._directory_fd)
+        metadata = _socket_metadata(self._path)
+        if metadata is not None:
+            if not stat.S_ISSOCK(metadata.st_mode) or metadata.st_uid != posix_owner_uid():
+                raise RuntimeRefusalError(RuntimeRefusalCode.ENDPOINT_UNTRUSTED)
+            with _unix_socket() as probe:
+                probe.settimeout(0.25)
+                try:
+                    probe.connect(str(self._path))
+                except OSError as error:
+                    if error.errno != errno.ECONNREFUSED:
+                        raise RuntimeRefusalError(RuntimeRefusalCode.ENDPOINT_UNTRUSTED) from None
+                else:
+                    raise RuntimeRefusalError(RuntimeRefusalCode.OWNER_BUSY)
+            current = self._path.lstat()
+            if (metadata.st_dev, metadata.st_ino) != (current.st_dev, current.st_ino):
+                raise RuntimeRefusalError(RuntimeRefusalCode.ENDPOINT_UNTRUSTED)
+            os.unlink(self._name, dir_fd=self._directory_fd)
 
     def accept(self, *, timeout: float = 5.0) -> PosixRuntimeChannel:
         """Return only accepted connections with native owner identity verified."""
@@ -288,13 +370,13 @@ class PosixRuntimeEndpoint:
             raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
         self._listener.settimeout(timeout)
         try:
-            connection, _address = self._listener.accept()
-            return PosixRuntimeChannel(connection)
+            return PosixRuntimeChannel(_accept_socket(self._listener))
         except TimeoutError:
             raise RuntimeRefusalError(RuntimeRefusalCode.DEADLINE_EXCEEDED) from None
 
     def close(self) -> None:
         """Remove only the owned socket inode; never unlink the ownership lock."""
+        self._closed = True
         if self._listener is not None:
             self._listener.close()
             self._listener = None

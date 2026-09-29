@@ -4,9 +4,10 @@ Both operator purposes -- portable transfer and the subject-access request --
 share this one service and one bundle schema; only their typed
 :class:`ProfileBundleExportPurpose` metadata differs. Publication is a
 three-phase durable sequence so a crash in any window recovers honestly: the
-service serializes to a restrictive temporary file, fsyncs it, records a durable
-``PREPARED`` operation-state journal OUTSIDE the target artifact (carrying the
-payload digest), atomically replaces the target, fsyncs the parent directory,
+service serializes in memory, records a durable ``PREPARED`` operation-state
+journal OUTSIDE the target artifact (carrying the payload digest and staged
+path), writes and fsyncs the restrictive staged file, atomically replaces the
+target, fsyncs the parent directory,
 transitions the journal to ``COMPLETED``, and only then emits the completion
 event before clearing the journal. A durably-published bundle is never
 un-published; every crash window is reconciled without loss:
@@ -19,9 +20,9 @@ un-published; every crash window is reconciled without loss:
   so no durably-published bundle is ever left without its audit event.
 
 Reconciliation is not an optional maintenance chore: :func:`export_profile_bundle`
-runs it before every publication, so the next export an operator performs -- to
-any destination, for any profile -- is what clears a previous crash's orphan
-journal and its leftover cleartext staged temp.
+runs it before every publication. An explicitly authorized profile recovers only
+its own journals; an unscoped operator call may recover all readable journals.
+Unsupported or unavailable recovery targets remain journalled and are reported.
 
 The sealed recovery archive is a separate surface and is not folded in here.
 """
@@ -39,6 +40,7 @@ from ...core.directory_scan import scan_directory
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.fsync import fsync_parent_dir
 from ...core.hashing import sha256_hex
+from ...core.identity.profile import canonical_profile_bucket_id
 from ...core.link_safety import is_link_like
 from ...core.locks import exclusive_file_lock
 from ...core.locks_errors import LockAcquisitionError
@@ -55,6 +57,7 @@ from .bundle_export_contracts import (
     bundle_excluded_data_categories,
 )
 from .bundle_export_operation import (
+    ProfileBundleExportJournalError,
     ProfileBundleExportJournalNotFoundError,
     ProfileBundleExportJournalRepository,
     ProfileBundleExportOperation,
@@ -110,10 +113,44 @@ class ProfileBundleExportReconciliation:
     failures: tuple[ProfileBundleExportReconcileFailure, ...]
 
 
+def _anchored_destination(destination: Path) -> Path:
+    """Anchor and normalize without following a destination leaf symlink."""
+    return Path(os.path.abspath(os.path.expanduser(os.fspath(destination))))
+
+
+def _anchored_export_request(request: ProfileBundleExportRequest) -> ProfileBundleExportRequest:
+    """Bind the output path before journal identity or publication outlives this CWD."""
+    destination = _anchored_destination(request.destination)
+    return request.model_copy(update={"destination": destination})
+
+
+def _require_recoverable_target(operation: ProfileBundleExportOperation) -> None:
+    """Refuse a journal whose paths or identity can retarget during recovery."""
+    destination = Path(operation.destination)
+    staged = Path(operation.staged_path)
+    if (
+        not destination.is_absolute()
+        or not staged.is_absolute()
+        or str(destination) != str(_anchored_destination(destination))
+        or str(staged) != str(_anchored_destination(staged))
+        or ProfileBundleExportTarget(destination=destination).identity != operation.target_identity
+        or operation.operation_id
+        != derive_export_operation_id(
+            profile_id=operation.profile_id,
+            target_identity=operation.target_identity,
+            purpose=operation.purpose,
+        )
+    ):
+        raise ProfileExportError(
+            translated_message="errors.fail.profile_export", context={"reconciliation_available": False}
+        )
+
+
 def export_profile_bundle(
     request: ProfileBundleExportRequest,
     *,
     profile_decode_context: ProfileDecodeContext,
+    authorized_profile_id: str | None = None,
 ) -> ProfileBundleExportResult:
     """Resolve, serialize, atomically publish, and record one profile export.
 
@@ -124,11 +161,24 @@ def export_profile_bundle(
     then holds one exclusive lock on the resolved target for the whole
     publication so a concurrent export to the same file is excluded, and
     composes :func:`prepare_profile_export` and :func:`publish_prepared_export`.
+
+    The destination is anchored without following its leaf link before a
+    journal is written, so a later process CWD cannot retarget recovery. A
+    host supplying ``authorized_profile_id`` binds both the export and its
+    recovery sweep to that exact profile. An ambient selection cannot change
+    it; unreadable recovery ownership refuses without disclosing journal IDs.
     """
+    request = _anchored_export_request(request)
+    if authorized_profile_id is not None:
+        authorized_profile_id = canonical_profile_bucket_id(authorized_profile_id)
+        # Bind before inspecting recovery metadata or acquiring a destination.
+        # A worker's immutable custody does not select the human's hot profile.
+        _resolve_export_profile(request.profile_name, authorized_profile_id=authorized_profile_id)
     journal = ProfileBundleExportJournalRepository()
     reconcile_failures = _reconcile_crash_orphans_before_publication(
         journal,
         profile_decode_context=profile_decode_context,
+        authorized_profile_id=authorized_profile_id,
     )
     try:
         with exclusive_file_lock(request.destination):
@@ -136,6 +186,7 @@ def export_profile_bundle(
                 request,
                 journal=journal,
                 profile_decode_context=profile_decode_context,
+                authorized_profile_id=authorized_profile_id,
             )
             published = publish_prepared_export(
                 prepared,
@@ -156,14 +207,15 @@ def _reconcile_crash_orphans_before_publication(
     journal: ProfileBundleExportJournalRepository,
     *,
     profile_decode_context: ProfileDecodeContext,
+    authorized_profile_id: str | None = None,
 ) -> tuple[ProfileBundleExportReconcileFailure, ...]:
     """Sweep crash-interrupted prior publications before this export begins.
 
     This is the production trigger for :func:`reconcile_prepared_exports`. The
     journal repository is one storage-root-wide directory rather than a
-    per-target or per-profile store, so a single sweep here recovers EVERY crash
-    orphan left behind by any profile and any destination -- and the staged temp
-    is a sibling of the operator's own chosen destination, which nothing else
+    per-target or per-profile store. An unscoped caller sweeps every readable
+    crash orphan; an authorized caller acts only on its own profile. The staged
+    temp is a sibling of the operator's chosen destination, which nothing else
     ever revisits.
 
     Running the sweep here, before the target lock, is required rather than
@@ -177,10 +229,9 @@ def _reconcile_crash_orphans_before_publication(
     acquires its own destination lock: from inside that lock it would skip the
     very operation it is here to clear.
 
-    A failure here never fails the new export. The unfinished work stays
-    journalled and is retried on the next publication, whereas refusing to
-    export because some older unrelated operation could not be finalised would
-    let one stale record block every future export.
+    An unscoped failure does not fail the new export: unfinished work stays
+    journalled for the next publication. A scoped caller refuses an unreadable
+    ownership scan rather than disclosing or acting on an unknown profile.
 
     The isolated failures are RETURNED rather than logged and dropped. A journal
     left behind may still describe cleartext bundle bytes on disk, and the
@@ -191,11 +242,17 @@ def _reconcile_crash_orphans_before_publication(
         return reconcile_prepared_exports(
             journal=journal,
             profile_decode_context=profile_decode_context,
+            authorized_profile_id=authorized_profile_id,
         ).failures
-    except Exception:
+    except Exception as error:
+        if authorized_profile_id is not None:
+            raise ProfileExportError(
+                translated_message="errors.fail.profile_export",
+                context={"reconciliation_available": False, "destination_published": False},
+            ) from None
         get_logger(__name__).warning(
             "profile export could not reconcile a crash-interrupted prior publication",
-            exc_info=True,
+            extra={"error_type": type(error).__name__},
         )
         return ()
 
@@ -205,6 +262,7 @@ def prepare_profile_export(
     *,
     journal: ProfileBundleExportJournalRepository | None = None,
     profile_decode_context: ProfileDecodeContext,
+    authorized_profile_id: str | None = None,
 ) -> PreparedProfileExport:
     """Record the PREPARED journal, THEN stage the bundle to a restrictive temp.
 
@@ -229,9 +287,10 @@ def prepare_profile_export(
     """
     from .profile_record_repository import require_profile_record_session
 
+    request = _anchored_export_request(request)
     repository = journal or ProfileBundleExportJournalRepository()
     target = ProfileBundleExportTarget(destination=request.destination)
-    pointer = _resolve_export_profile(request.profile_name)
+    pointer = _resolve_export_profile(request.profile_name, authorized_profile_id=authorized_profile_id)
     _refuse_link_target(request.destination)
     require_profile_record_session(pointer.bucket_id, profile_decode_context=profile_decode_context)
     bundle = _serialize_export_bundle(pointer.bucket_id, profile_decode_context=profile_decode_context)
@@ -263,7 +322,16 @@ def prepare_profile_export(
         updated_at=occurred_at,
         event_occurred_at=occurred_at,
     )
-    repository.save(operation)
+    try:
+        repository.create(operation)
+    except ProfileBundleExportJournalError as error:
+        raise ProfileExportError(
+            translated_message="errors.fail.profile_export",
+            context={
+                "journal_present": bool(error.context and error.context.get("journal_present") is True),
+                "destination_published": False,
+            },
+        ) from error
     try:
         _stage_export_tempfile(staged_path, payload_bytes)
     except BaseException:
@@ -342,6 +410,7 @@ def reconcile_prepared_exports(
     *,
     journal: ProfileBundleExportJournalRepository | None = None,
     profile_decode_context: ProfileDecodeContext,
+    authorized_profile_id: str | None = None,
 ) -> ProfileBundleExportReconciliation:
     """Reconcile crash-interrupted exports honestly in a fresh process.
 
@@ -349,14 +418,11 @@ def reconcile_prepared_exports(
     :func:`_reconcile_crash_orphans_before_publication`), and the operator can
     invoke it directly, so recovery happens on the next export or on demand.
 
-    Every operation is isolated. One journal that cannot be read, or one
-    operation that cannot be finalised -- a profile deleted after its crash, a
-    destination on a volume that has gone away -- is recorded in ``failures``
-    and the walk continues, so a single bad record can never starve every
-    later-ordered operation of its recovery. A failed operation keeps its
-    journal, so the next sweep retries it. Failures are reported rather than
-    swallowed: a journal left behind may still describe cleartext bundle bytes
-    on disk, which is precisely what an operator needs told.
+    Every readable operation is isolated. A journal that cannot be finalised
+    -- including an unsupported relative path or unavailable destination
+    parent -- is recorded in ``failures`` and retained for later recovery.
+    Scoped callers refuse an unreadable journal whose owner is unknown before
+    the walk, rather than disclose its identifier or touch another profile.
 
     Each operation is reconciled only while holding the SAME per-destination lock
     a live :func:`export_profile_bundle` holds across its whole publication. An
@@ -380,7 +446,14 @@ def reconcile_prepared_exports(
       an artifact that was never durably published.
     """
     repository = journal or ProfileBundleExportJournalRepository()
+    if authorized_profile_id is not None:
+        authorized_profile_id = canonical_profile_bucket_id(authorized_profile_id)
     scan = repository.scan()
+    if authorized_profile_id is not None and scan.unreadable:
+        # Unknown ownership cannot authorize cleanup or disclosure of its ID.
+        raise ProfileExportError(
+            translated_message="errors.fail.profile_export", context={"reconciliation_available": False}
+        )
     reconciled: list[ProfileBundleExportOperation] = []
     failures = [
         ProfileBundleExportReconcileFailure(
@@ -391,16 +464,20 @@ def reconcile_prepared_exports(
         for unreadable in scan.unreadable
     ]
     for operation in scan.operations:
+        if authorized_profile_id is not None and operation.profile_id != authorized_profile_id:
+            continue
         try:
+            _require_recoverable_target(operation)
             current = _reconcile_one_operation(
                 repository,
                 operation,
                 profile_decode_context=profile_decode_context,
+                authorized_profile_id=authorized_profile_id,
             )
         except Exception as exc:
             get_logger(__name__).warning(
                 "profile export reconciliation could not finalise one operation",
-                exc_info=True,
+                extra={"error_type": type(exc).__name__},
             )
             failures.append(
                 ProfileBundleExportReconcileFailure(
@@ -420,6 +497,7 @@ def _reconcile_one_operation(
     operation: ProfileBundleExportOperation,
     *,
     profile_decode_context: ProfileDecodeContext,
+    authorized_profile_id: str | None = None,
 ) -> ProfileBundleExportOperation | None:
     """Reconcile exactly one operation, or return ``None`` when it is skipped.
 
@@ -427,24 +505,30 @@ def _reconcile_one_operation(
     is held by a live export, or its journal cleared between the scan and the
     lock -- never that it failed. A failure raises, so the caller can isolate it.
     """
+    _require_recoverable_target(operation)
     destination = Path(operation.destination)
     if not destination.parent.exists():
-        # No live export can be staging beside a missing parent directory, so
-        # no target lock is needed. A COMPLETED operation was durably
-        # published before the target was later moved away and still owes its
-        # audit event; a PREPARED one never published and is a bare orphan.
-        _finalise_reconciled_operation(
-            repository,
-            operation,
-            published=_is_completed(operation),
-            profile_decode_context=profile_decode_context,
+        # The directory may reappear immediately. Without its target lock,
+        # deleting this scan-time record could erase a new writer's journal.
+        raise ProfileExportError(
+            translated_message="errors.fail.profile_export", context={"reconciliation_available": False}
         )
-        return operation
     try:
         with exclusive_file_lock(destination, timeout=_RECONCILE_LOCK_TIMEOUT_S):
             current = _reload_operation(repository, operation.operation_id)
             if current is None:
                 return None
+            _require_recoverable_target(current)
+            if (
+                current.profile_id != operation.profile_id
+                or current.destination != operation.destination
+                or current.target_identity != operation.target_identity
+                or (authorized_profile_id is not None and current.profile_id != authorized_profile_id)
+            ):
+                raise ProfileExportError(
+                    translated_message="errors.fail.profile_export", context={"reconciliation_available": False}
+                )
+            _refuse_link_target(destination)
             published = _is_completed(current) or _destination_matches_digest(
                 destination,
                 current.content_sha256,
@@ -507,11 +591,23 @@ def _reload_operation(
         return None
 
 
-def _resolve_export_profile(profile_name: str | None) -> ProfileBucketPointer:
+def _resolve_export_profile(
+    profile_name: str | None, *, authorized_profile_id: str | None = None
+) -> ProfileBucketPointer:
     from ...core.bucket_pointer import resolve_active_bucket_id
     from ..workflow.profile_bucket_scan import read_profile_bucket, read_profile_bucket_by_id
 
-    if profile_name is not None:
+    if authorized_profile_id is not None:
+        profile_id = canonical_profile_bucket_id(authorized_profile_id)
+        pointer = read_profile_bucket_by_id(profile_id)
+        if profile_name is not None:
+            named = read_profile_bucket(profile_name)
+            if named is None or named.bucket_id != profile_id:
+                raise ProfileExportError(
+                    translated_message="errors.fail.profile_export", context={"profile_matches": False}
+                )
+        missing_identity = profile_id
+    elif profile_name is not None:
         pointer = read_profile_bucket(profile_name)
         missing_identity = profile_name
     else:
@@ -662,15 +758,17 @@ def _discard_prepared_operation(
     try:
         _remove_orphan_staged_temp(operation)
         repository.delete(operation.operation_id)
-    except OSError:
-        get_logger(__name__).debug("profile export could not discard a failed preparation", exc_info=True)
+    except OSError as error:
+        get_logger(__name__).debug(
+            "profile export could not discard a failed preparation", extra={"error_type": type(error).__name__}
+        )
 
 
 def _safe_delete_journal(repository: ProfileBundleExportJournalRepository, operation_id: str) -> None:
     try:
         repository.delete(operation_id)
-    except OSError:
-        get_logger(__name__).debug("profile export journal cleanup failed", exc_info=True)
+    except OSError as error:
+        get_logger(__name__).debug("profile export journal cleanup failed", extra={"error_type": type(error).__name__})
 
 
 def _emit_export_event(

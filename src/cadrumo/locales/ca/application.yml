@@ -881,6 +881,8 @@ application:
       calculate_m347_threshold_not_met: La contrapart %{nif} del model 347 suma %{total},
         que no supera el llindar de %{threshold} EUR exigit pel RD 1065/2007 art.
         31.1.
+      calculate_m349_invalid_nif: El NIF-IVA {nif} no coincideix amb el format esperat
+        per al país {pais}.
       calculate_pension_inputs_incomplete: Les dades del rescat del pla de pensions
         s'han d'indicar juntes.
       calculate_relation_unknown: '--relation %{key} no coincideix amb cap relation

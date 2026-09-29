@@ -30,7 +30,12 @@ from cadrumo.core.config import Settings
 from cadrumo.core.iva_compensation_provenance import IvaCompensationStateProvenance
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
-from cadrumo.domain.modelos.filing_record import IvaSettlementRefundState, ModeloRecordStatus
+from cadrumo.domain.modelos.filing_record import (
+    IvaSettlementRefundState,
+    IvaSettlementSnapshot,
+    ModeloRecord,
+    ModeloRecordStatus,
+)
 from cadrumo.entrypoints.adapter_composition import build_filing_action_ports
 from cadrumo.entrypoints.tests.profile_persistence._iva_wallet_engine_support import (
     _BUCKET_ID,
@@ -139,6 +144,7 @@ def test_wallet_only_modelo_303_can_be_locally_filed_with_real_clave_provider_pr
         with bundled_indexed_authority().operation() as operation:
             filing = file_modelo_revision(
                 revision.calculation_revision_id,
+                approved_verification_report_id=verification_report.verification_report_id,
                 actor="operator",
                 workflow_profile=workflow_profile(taxpayer_nif),
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
@@ -150,7 +156,7 @@ def test_wallet_only_modelo_303_can_be_locally_filed_with_real_clave_provider_pr
                 clock=datetime(2026, 7, 15, 10, 0, 0, tzinfo=UTC),
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 operation=operation,
-            )
+            ).record
 
         assert filing.status is ModeloRecordStatus.VIGENTE
         assert filing.aeat_accepted is False
@@ -266,6 +272,7 @@ def test_refiling_local_modelo_303_preserves_each_settlement_credit_snapshot_and
             with bundled_indexed_authority().operation() as operation:
                 filing = file_modelo_revision(
                     revision.calculation_revision_id,
+                    approved_verification_report_id=verification.verification_report_id,
                     actor="operator",
                     workflow_profile=workflow_profile(taxpayer_nif),
                     certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
@@ -277,7 +284,7 @@ def test_refiling_local_modelo_303_preserves_each_settlement_credit_snapshot_and
                     clock=filing_times[index],
                     operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                     operation=operation,
-                )
+                ).record
             revisions.append(revision)
             filings.append(filing)
 
@@ -297,10 +304,11 @@ def test_refiling_local_modelo_303_preserves_each_settlement_credit_snapshot_and
             filing_year=_TARGET_YEAR,
             period=_period(_TARGET_YEAR, _TARGET_PERIOD),
         )
-        assert retired is not None
+        assert isinstance(retired, ModeloRecord)
         assert retired.status is ModeloRecordStatus.SUPERSEDIDO
         assert retired.superseded_at == filing_times[1]
         assert retired.superseded_by_filing_record_id == second_filing.filing_record_id
+        assert isinstance(retired.settlement, IvaSettlementSnapshot)
         assert retired.settlement == first_snapshot
         assert retired.settlement.calculation_revision_id == revisions[0].calculation_revision_id
         assert retired.settlement.credit_snapshot.opening_amount == Decimal("1200.00")
@@ -308,7 +316,9 @@ def test_refiling_local_modelo_303_preserves_each_settlement_credit_snapshot_and
         assert retired.settlement.credit_snapshot.applied_amount == Decimal("1000.00")
         assert retired.settlement.credit_snapshot.remaining_amount == Decimal("200.00")
 
+        assert isinstance(current, ModeloRecord)
         assert current == second_filing
+        assert isinstance(current.settlement, IvaSettlementSnapshot)
         assert current.settlement == second_snapshot
         assert current.settlement.calculation_revision_id == revisions[1].calculation_revision_id
         assert current.settlement.credit_snapshot.opening_amount == Decimal("600.00")
@@ -404,6 +414,7 @@ def test_local_filed_303_compensation_updates_wallet_balance_but_next_period_sti
         with bundled_indexed_authority().operation() as operation:
             filing = file_modelo_revision(
                 revision_1t.calculation_revision_id,
+                approved_verification_report_id=verification.verification_report_id,
                 actor="operator",
                 workflow_profile=filing_profile,
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
@@ -415,7 +426,7 @@ def test_local_filed_303_compensation_updates_wallet_balance_but_next_period_sti
                 clock=datetime(2026, 4, 15, 10, 0, 0, tzinfo=UTC),
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 operation=operation,
-            )
+            ).record
         assert filing.status is ModeloRecordStatus.VIGENTE
 
         history = IvaCompensationHistoryRepository().load_period(filed_period)

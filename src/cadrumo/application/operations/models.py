@@ -8,17 +8,21 @@ from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 from enum import Enum, StrEnum
 from pathlib import PurePath
-from typing import Annotated, cast
+from typing import TYPE_CHECKING, Annotated, cast
 from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.hex import HEX_PATTERN_64, Hex64Str
+from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from ...core.time.utc import validate_utc_aware
 from ._model_contract import require_strict_frozen_operation_model_graph
+
+if TYPE_CHECKING:
+    from .provenance import OperationAdmissionProvenance
 
 type OperationId = Hex64Str
 """Opaque 256-bit identity of one operation invocation."""
@@ -105,6 +109,7 @@ class OperationStoredInvocation:
     identity: OperationIdentity
     request: OperationRequest[BaseModel] = field(repr=False)
     lifecycle: OperationLifecycle
+    provenance: OperationAdmissionProvenance | None = field(default=None, repr=False)
 
 
 class OperationTerminalReceipt(BaseModel):
@@ -119,6 +124,7 @@ class OperationTerminalReceipt(BaseModel):
     settled_at: datetime
     result_ref: OperationReference | None = None
     refusal_ref: OperationReference | None = None
+    refusal_detail_ref: ContentDigest | None = None
     failure_error_code: OperationFailureErrorCode | None = None
     diagnostic_ref: OperationDiagnosticReference | None = None
 
@@ -126,6 +132,8 @@ class OperationTerminalReceipt(BaseModel):
     @pydantic_validation_boundary
     def _validate_terminal_references(self) -> OperationTerminalReceipt:
         validate_utc_aware(self.settled_at)
+        if self.refusal_detail_ref is not None and self.condition is not OperationTerminalCondition.REFUSED:
+            raise ValueError("refusal detail is valid only for a refused operation")
         validate_terminal_reference_meaning(
             condition=self.condition,
             result_ref=self.result_ref,

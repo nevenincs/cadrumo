@@ -883,6 +883,8 @@ application:
       calculate_m347_threshold_not_met: La contraparte %{nif} del modelo 347 suma
         %{total}, que no supera el umbral de %{threshold} EUR exigido por el RD 1065/2007
         art. 31.1.
+      calculate_m349_invalid_nif: El NIF-IVA {nif} no coincide con el formato esperado
+        para el país {pais}.
       calculate_pension_inputs_incomplete: Los datos del rescate del plan de pensiones
         deben indicarse juntos.
       calculate_relation_unknown: '--relation %{key} no coincide con ninguna relation

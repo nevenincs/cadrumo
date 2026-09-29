@@ -27,6 +27,29 @@ class ManagerCommandResult:
     output: str
 
 
+async def _start_manager_process(
+    tool: NativeManagerCommand, arguments: tuple[str, ...], environment: dict[str, str]
+) -> tuple[asyncio.subprocess.Process, asyncio.StreamReader]:
+    try:
+        process = await asyncio.create_subprocess_exec(
+            tool.value,
+            *arguments,
+            stdin=asyncio.subprocess.DEVNULL,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.DEVNULL,
+            env=environment,
+            close_fds=True,
+            start_new_session=True,
+        )
+        if process.stdout is not None:
+            return process, process.stdout
+        process.kill()
+        await process.wait()
+    except OSError:
+        raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE) from None
+    raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
+
+
 async def run_manager_command(tool: NativeManagerCommand, arguments: tuple[str, ...]) -> ManagerCommandResult:
     """Run a fixed tool with bounded I/O, no prompt and no inherited descriptors.
 
@@ -43,25 +66,11 @@ async def run_manager_command(tool: NativeManagerCommand, arguments: tuple[str, 
     # caller-supplied DBUS_SESSION_BUS_ADDRESS or imported shell environment.
     if sys.platform == "linux":
         environment["XDG_RUNTIME_DIR"] = f"/run/user/{os.getuid()}"
+    process, stdout = await _start_manager_process(tool, arguments, environment)
     try:
-        process = await asyncio.create_subprocess_exec(
-            tool.value,
-            *arguments,
-            stdin=asyncio.subprocess.DEVNULL,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.DEVNULL,
-            env=environment,
-            close_fds=True,
-            start_new_session=True,
-        )
-    except OSError:
-        raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE) from None
-    try:
-        if process.stdout is None:
-            raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
         async with asyncio.timeout(5):
             output = bytearray()
-            while block := await process.stdout.read(4096):
+            while block := await stdout.read(4096):
                 output.extend(block)
                 if len(output) > 64 * 1024:
                     raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)

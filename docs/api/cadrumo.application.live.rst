@@ -29,6 +29,7 @@ Submodules
    cadrumo.application.live.filed_observation_ports
    cadrumo.application.live.iva_remote_state
    cadrumo.application.live.iva_remote_state_ports
+   cadrumo.application.live.iva_wallet_history_operation
    cadrumo.application.live.justificante
    cadrumo.application.live.justificante_ports
    cadrumo.application.live.notification_documents

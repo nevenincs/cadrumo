@@ -33,7 +33,6 @@ from ....application.ledger.workspace import (
     LedgerWorkspaceSource,
     LedgerWorkspaceStatus,
 )
-from ....application.operations.composition import OperationComposedServices
 from ....application.operator_actions.catalogue import lookup_action
 from ....application.operator_actions.models import ActionReference
 from ....application.search.workbench import WorkbenchDestinationAdmissionState
@@ -125,7 +124,6 @@ def _catalogue() -> TuiDestinationCatalogueV1:
 def _app() -> CadrumoTuiApp:
     projection = build_home_projection_fixture(HomeFixtureScenario.READY)
     return CadrumoTuiApp(
-        services=cast("OperationComposedServices", object()),
         destination_catalogue=_catalogue(),
         refresh_home=lambda: projection,
     )

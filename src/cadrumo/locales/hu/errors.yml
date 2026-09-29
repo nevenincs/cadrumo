@@ -172,6 +172,12 @@ errors:
       mielőtt AEAT-bizonyítékot adott volna vissza.
     error_application_registry: A modellnyilvántartás vezénylése meghiúsult vagy el
       lett utasítva.
+    error_automation_decision_run: Az automatizálási döntést nem sikerült megerősíteni.
+      Újrapróbálkozás előtt ellenőrizze a műveletet.
+    error_automation_inventory_read: Az automatizálási jogosultságok listáját nem
+      sikerült ellenőrizni.
+    error_automation_requester_uncertain: Az engedélykérés eredményét nem sikerült
+      megerősíteni. Újrapróbálkozás előtt ellenőrizze a meglévő kérelmet.
     error_borrador_artefact_not_recognised: A PDF nem egyezik egyetlen ismert 100-as
       nyomtatvány tervezet-sémával sem.
     error_cadrumo_async_resource_cleanup: Az aszinkron erőforrás-tisztítás meghiúsult;
@@ -271,6 +277,8 @@ errors:
     error_modelo_filing_record_not_found: A kért benyújtási rekord nem található.
     error_modelo_iva_wallet_reconciliation_blocked: 'A 303-es nyomtatvány számítása
       blokkolva: az IVA tárca egyeztetése szükséges'
+    error_modelo_metadata_run: A munka metaadatain végzett művelet nem adott megerősített
+      eredményt. Újrapróbálás előtt ellenőrizze a művelet azonosítóját.
     error_modelo_verification_report_not_found: A kért ellenőrzési jelentés nem található.
     error_modelo_work_unit_already_discarded: A munkajegység már el van vetve.
     error_modelo_work_unit_mutation_refused: Egy elvetett munkajegység nem módosítható.
@@ -292,6 +300,8 @@ errors:
     error_profile_bienes_inversion_record: Egy beruházási javak áfa-korrekciós nyilvántartása
       szerkezetileg érvénytelen.
     error_profile_inventory_ledger: Egy profil készlet-főkönyvi művelete érvénytelen.
+    error_profile_mutation_run: A profilmódosítás használható eredmény nélkül zárult.
+      Újrapróbálkozás előtt ellenőrizze a műveletet.
     error_profile_prorrata_register_record: Egy időszakok közötti áfa-arányosítási
       nyilvántartás szerkezetileg érvénytelen.
     error_profile_tax_residence: Adóügyi illetőségi profil hiba történt.
@@ -906,6 +916,8 @@ errors:
     modelo_work_period_token: Érvénytelen modell időszak.
     modelo_work_registry_year_mismatch: A kiválasztott nyilvántartási revízió nem
       fedi le a kért benyújtási évet.
+    modelo_work_rename_approval_stale: A munka megváltozott a beolvasása óta. Átnevezés
+      előtt olvassa be újra.
     modelo_work_selector_ambiguous: Több modell munkaegység is illeszkedik a választóra.
     modelo_work_selector_contradiction: A modell munkaválasztó argumentumai ellentmondanak
       egymásnak.
@@ -1201,6 +1213,8 @@ errors:
       profilválasztót. A folytatás előtt töltse ki a profilt.
     refused_profile_prorrata_register_validation: Egy időszakok közötti áfa-arányosítási
       nyilvántartás nem ment át az ellenőrzésen.
+    refused_profile_receipt: A mentett emberi bejelentkezési igazolás nem tudta hitelesíteni
+      ezt a profilt.
     refused_profile_schema_validation: A profiladatok sértik a séma-szerződést. Javítsa
       a megjelenített értékeket.
     refused_renta_maritime_exemption_inactive: A tengeri munkából származó jövedelem
@@ -1212,6 +1226,7 @@ errors:
       a felülbíráláshoz.'
     refused_review_filter_parse: A `--filter KULCS=ÉRTÉK` paramétert nem sikerült
       elemezni. Ellenőrizze a megadott szűrő szintaxisát.
+    refused_runtime_frontend: A profil futtatókörnyezete elutasította a kérést.
     refused_source_mesh_invariant: 'Elutasítva: a forrásháló invariánsának megsértése.'
     refused_storage_bucket_already_present: Már létezik ilyen azonosítójú bucket.
     refused_storage_master_key_no_active_session: A titkosításhoz aktív munkamenet

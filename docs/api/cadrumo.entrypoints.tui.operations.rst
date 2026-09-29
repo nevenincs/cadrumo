@@ -13,9 +13,10 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.entrypoints.tui.operations.controller
+   cadrumo.entrypoints.tui.operations.controller_port
    cadrumo.entrypoints.tui.operations.interactions
    cadrumo.entrypoints.tui.operations.logs
    cadrumo.entrypoints.tui.operations.modal
    cadrumo.entrypoints.tui.operations.projection
    cadrumo.entrypoints.tui.operations.refusal_explanation
+   cadrumo.entrypoints.tui.operations.runtime_controller

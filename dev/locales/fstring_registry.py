@@ -192,6 +192,7 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
     )
     from cadrumo.application.operations.frontend_requests import (
         OperationCancellationRefusalCode,
+        OperationDetachRefusalCode,
         OperationResponseControlRefusalCode,
     )
     from cadrumo.application.overview.home import HOME_ACTION_REASON_CODES
@@ -269,14 +270,15 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
         *_generated_docs_registrations(),
         FStringKeyRegistration(
             # Bounded union: the operations modal derives its refusal copy key
-            # from the code's own value across BOTH refusal enums, so the enums
+            # from the code's own value across all three refusal enums, so the enums
             # decide which keys must exist (entrypoints/tui/operations/modal.py).
-            description="operation.modal.refusal.* (Operation{ResponseControl,Cancellation}RefusalCode)",
+            description="operation.modal.refusal.* (Operation{ResponseControl,Cancellation,Detach}RefusalCode)",
             key_factory=lambda v: f"operation.modal.refusal.{v}",
             values=tuple(
                 dict.fromkeys(
                     [code.value for code in OperationResponseControlRefusalCode]
                     + [code.value for code in OperationCancellationRefusalCode]
+                    + [code.value for code in OperationDetachRefusalCode]
                 )
             ),
         ),
@@ -300,6 +302,35 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
             description="errors.prefix.* (ErrorCategory)",
             key_factory=lambda v: f"errors.prefix.{v}",
             values=tuple(c.value.lower() for c in ErrorCategory),
+        ),
+        FStringKeyRegistration(
+            # Closed detail-label arguments in entrypoints/tui/profile/automation_inventory.py.
+            description="tui.automation_inventory.* (automation inventory detail labels)",
+            key_factory=lambda v: f"tui.automation_inventory.{v}",
+            values=(
+                "id",
+                "client",
+                "destination",
+                "kind",
+                "state",
+                "expires",
+                "grant",
+                "last_used",
+                "operations",
+                "actions",
+                "disclosures",
+                "periods",
+                "delegation",
+                "period_independent",
+                "unattended",
+                "os_lock",
+                "grant_expires",
+                "key_expires",
+                "target_grant",
+                "target_key",
+                "profile",
+                "review_digest",
+            ),
         ),
         FStringKeyRegistration(
             # Bounded enumeration, pinned to _COLUMN_KEYS in

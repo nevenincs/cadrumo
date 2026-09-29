@@ -19,15 +19,19 @@ from ..adapters.persistence.operations.financial_operand_custody import (
 from ..adapters.persistence.operations.journal import OperationJournalRepository
 from ..adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from ..adapters.persistence.operations.secure_references import operation_secure_reference_repository
+from ..adapters.persistence.profile.catalogue_creation import build_catalogue_lifecycle_ports
+from ..adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from ..adapters.persistence.profile.sync_runs import SyncRunRecordRepository
 from ..adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
 from ..adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from ..application.auth.operation_definitions import (
     AuthOperationPorts,
+    ProfileRotationFinalizer,
     build_auth_operation_definitions,
     build_auth_operation_registrations,
 )
 from ..application.auth.operator_scope_ports import OperatorScopePorts
+from ..application.auth.read_operation import build_auth_read_definition, build_auth_read_registration
 from ..application.export.google_operation import (
     GoogleSheetsExportAuthDependencyError,
     GoogleSheetsExportClientMissingError,
@@ -38,26 +42,140 @@ from ..application.export.google_operation import (
     build_google_sheets_export_operation_definition,
     build_google_sheets_export_operation_registration,
 )
+from ..application.invoices.catalogue_lifecycle_ports import CatalogueLifecyclePortsFactory
+from ..application.invoices.catalogue_read_operation import (
+    build_invoice_list_definition,
+    build_invoice_list_registration,
+    build_invoice_view_definition,
+    build_invoice_view_registration,
+)
+from ..application.invoices.catalogue_remove_operation import (
+    build_invoice_remove_definition,
+    build_invoice_remove_registration,
+)
+from ..application.invoices.catalogue_update_operation import (
+    build_invoice_update_definition,
+    build_invoice_update_registration,
+)
+from ..application.invoices.inspection_read_ports import InvoiceInspectionReadPortsFactory
+from ..application.ledger.action_ports import LedgerActionPortsFactory
+from ..application.ledger.check_operation import build_ledger_check_definition, build_ledger_check_registration
+from ..application.ledger.history_operation import (
+    build_ledger_history_definition,
+    build_ledger_history_registration,
+)
+from ..application.ledger.list_operation import build_ledger_list_definition, build_ledger_list_registration
+from ..application.ledger.participation_operation import (
+    build_ledger_participation_definition,
+    build_ledger_participation_registration,
+)
+from ..application.ledger.participation_read import TransactionParticipationIndexRepositoryFactory
+from ..application.ledger.participation_rebuild_operation import (
+    build_ledger_participation_rebuild_definition,
+    build_ledger_participation_rebuild_registration,
+)
+from ..application.ledger.preflight_operation import (
+    build_ledger_preflight_definition,
+    build_ledger_preflight_registration,
+)
+from ..application.ledger.review_operation import build_ledger_review_definition, build_ledger_review_registration
+from ..application.ledger.status_operation import (
+    build_ledger_status_definition,
+    build_ledger_status_registration,
+)
+from ..application.ledger.track_operation import build_ledger_track_definition, build_ledger_track_registration
+from ..application.ledger.view_operation import build_ledger_view_definition, build_ledger_view_registration
 from ..application.live.filed_history_operation import (
     bind_shared_filed_history_pull,
     build_filed_history_operation_definition,
     build_filed_history_operation_registration,
+)
+from ..application.live.iva_wallet_history_operation import (
+    build_iva_wallet_history_definition,
+    build_iva_wallet_history_registration,
 )
 from ..application.local_reader_operation import (
     build_local_reader_operation_definition,
     build_local_reader_operation_registration,
 )
 from ..application.modelo.amendment_action_ports import AmendmentActionPortsFactory
+from ..application.modelo.amendment_context_operation import (
+    build_modelo_work_amendment_context_definition,
+    build_modelo_work_amendment_context_registration,
+)
 from ..application.modelo.calculation_action_ports import CalculationActionPortsFactory
+from ..application.modelo.dependency_operation import (
+    build_modelo_dependency_definition,
+    build_modelo_dependency_registration,
+)
+from ..application.modelo.dependency_read_ports import DependencyReadPortsFactory
 from ..application.modelo.edit_receipt_ports import ModeloEditReceiptRepositoryFactory
 from ..application.modelo.export_ports import ModeloExportPortsFactory
 from ..application.modelo.filing_action_ports import FilingActionPortsFactory
+from ..application.modelo.filing_selection_operation import (
+    build_modelo_work_filing_record_definition,
+    build_modelo_work_filing_record_registration,
+)
+from ..application.modelo.history_operation import (
+    build_modelo_work_history_definition,
+    build_modelo_work_history_registration,
+)
+from ..application.modelo.history_ports import ModeloHistoryPortsFactory
+from ..application.modelo.m303_attestation_operation import (
+    build_modelo_work_m303_attestation_definition,
+    build_modelo_work_m303_attestation_registration,
+)
+from ..application.modelo.metadata_operation_access import compose_modelo_metadata_access
+from ..application.modelo.metadata_read_operation import (
+    build_modelo_metadata_definition,
+    build_modelo_metadata_registration,
+)
 from ..application.modelo.operation_definitions import (
+    ModeloWorkVerifyProfileResolver,
     build_modelo_lifecycle_operation_definitions,
     build_modelo_lifecycle_operation_registrations,
+    resolve_active_workflow_profile,
+)
+from ..application.modelo.participation_index_rebuild_ports import ParticipationIndexRebuildPortsFactory
+from ..application.modelo.review_package_operation import (
+    build_modelo_review_package_build_definition,
+    build_modelo_review_package_build_registration,
+)
+from ..application.modelo.revision_inventory_operation import (
+    build_modelo_work_revisions_definition,
+    build_modelo_work_revisions_registration,
+)
+from ..application.modelo.revision_operation_access import compose_modelo_revision_access
+from ..application.modelo.revision_selection_operation import (
+    build_modelo_work_revision_definition,
+    build_modelo_work_revision_registration,
+)
+from ..application.modelo.revision_snapshot_operation import (
+    build_modelo_work_revision_snapshot_definition,
+    build_modelo_work_revision_snapshot_registration,
 )
 from ..application.modelo.verification_repository_ports import VerificationRepositoryBundleFactory
+from ..application.modelo.wizard_attempt_operation import (
+    build_modelo_work_wizard_attempt_definition,
+    build_modelo_work_wizard_attempt_registration,
+)
+from ..application.modelo.wizard_context_operation import (
+    build_modelo_work_wizard_context_definition,
+    build_modelo_work_wizard_context_registration,
+)
+from ..application.modelo.work_create_operation import (
+    build_modelo_work_create_definition,
+    build_modelo_work_create_registration,
+)
+from ..application.modelo.work_inventory_operation import (
+    build_modelo_work_list_definition,
+    build_modelo_work_list_registration,
+)
 from ..application.modelo.work_lifecycle_ports import ActiveWorkLifecyclePortsFactory
+from ..application.modelo.work_review_operation import (
+    build_modelo_work_review_definition,
+    build_modelo_work_review_registration,
+)
 from ..application.operations.authorization import OperationExecutionAuthority
 from ..application.operations.composition import (
     OperationComposedServices,
@@ -67,10 +185,22 @@ from ..application.operations.registry import (
     OperationDefinition,
     OperationRegistry,
 )
+from ..application.overview.pipeline_operation import (
+    build_overview_pipeline_definition,
+    build_overview_pipeline_registration,
+)
+from ..application.overview.pipeline_read_ports import PipelineReadPortsFactory
+from ..application.overview.read_operation import (
+    OverviewReadKind,
+    build_overview_read_definition,
+    build_overview_read_registration,
+)
+from ..application.overview.read_ports import OverviewReadPortsFactory
 from ..application.storage.calc_sheets.export_service import export_modelo_to_sheets
 from ..application.storage.calc_sheets.records import SheetExportPlan, TabName
 from ..application.user_profile.automation_operations import (
     AutomationAdministrationFactory,
+    AutomationInventoryReader,
     build_automation_operation_definitions,
     build_automation_operation_registrations,
 )
@@ -82,6 +212,19 @@ from ..application.user_profile.operations import (
     build_user_profile_operation_definitions,
     build_user_profile_operation_registrations,
 )
+from ..application.workbench_generation_operation import (
+    WorkbenchGenerationReader,
+    build_workbench_generation_operation_definition,
+    build_workbench_generation_operation_registration,
+)
+from ..application.workflow.resume_operation import build_workflow_resume_definition, build_workflow_resume_registration
+from ..application.workflow.run_read_operation import (
+    build_workflow_run_list_definition,
+    build_workflow_run_list_registration,
+    build_workflow_run_read_definition,
+    build_workflow_run_read_registration,
+)
+from ..application.workflow.run_read_ports import WorkflowRunReadPortsFactory
 from ..core.config import Settings, load_settings
 from ..core.paths import effective_storage_root
 from ..core.time.clock import now
@@ -94,13 +237,22 @@ from .adapter_composition import (
     build_filing_action_ports,
     build_modelo_edit_receipt_repository,
     build_modelo_export_ports,
+    build_modelo_history_ports,
     build_operator_probe_ports,
+    build_participation_index_rebuild_ports,
     build_verification_repository_bundle,
 )
+from .auth_read_composition import compose_auth_read_ports
+from .invoice_inspection_composition import build_invoice_inspection_read_ports
+from .ledger_action_composition import compose_ledger_action_ports
 from .live_state_composition import (
     compose_live_state,
     pull_filed_history_with_shared_composition,
 )
+from .modelo_dependency_composition import build_dependency_read_ports
+from .overview_pipeline_composition import build_pipeline_read_ports
+from .overview_read_composition import build_overview_read_ports
+from .workflow_run_composition import build_workflow_run_read_ports
 
 _LEASE_DURATION = timedelta(minutes=10)
 _EXECUTION_TIMEOUT = timedelta(hours=1)
@@ -201,10 +353,28 @@ def build_production_operation_registry(
     amendment_action_ports_factory: AmendmentActionPortsFactory = build_amendment_action_ports,
     filing_action_ports_factory: FilingActionPortsFactory = build_filing_action_ports,
     work_lifecycle_ports_factory: ActiveWorkLifecyclePortsFactory = build_active_work_lifecycle_ports,
+    modelo_history_ports_factory: ModeloHistoryPortsFactory = build_modelo_history_ports,
+    workflow_run_read_ports_factory: WorkflowRunReadPortsFactory = build_workflow_run_read_ports,
+    dependency_read_ports_factory: DependencyReadPortsFactory = build_dependency_read_ports,
+    pipeline_read_ports_factory: PipelineReadPortsFactory = build_pipeline_read_ports,
+    overview_read_ports_factory: OverviewReadPortsFactory = build_overview_read_ports,
+    invoice_inspection_read_ports_factory: InvoiceInspectionReadPortsFactory = build_invoice_inspection_read_ports,
+    invoice_lifecycle_ports_factory: CatalogueLifecyclePortsFactory = build_catalogue_lifecycle_ports,
     modelo_edit_receipt_repository_factory: ModeloEditReceiptRepositoryFactory = build_modelo_edit_receipt_repository,
     verification_repository_bundle_factory: VerificationRepositoryBundleFactory = build_verification_repository_bundle,
+    ledger_action_ports_factory: LedgerActionPortsFactory = compose_ledger_action_ports,
+    ledger_participation_repository_factory: TransactionParticipationIndexRepositoryFactory = (
+        TransactionParticipationIndexRepository
+    ),
+    participation_rebuild_ports_factory: ParticipationIndexRebuildPortsFactory = (
+        build_participation_index_rebuild_ports
+    ),
     operator_scope_ports: OperatorScopePorts | None = None,
     automation_administration_factory: AutomationAdministrationFactory | None = None,
+    automation_inventory_reader: AutomationInventoryReader | None = None,
+    workbench_generation_reader: WorkbenchGenerationReader | None = None,
+    profile_rotation_finalizer: ProfileRotationFinalizer | None = None,
+    modelo_profile_resolver: ModeloWorkVerifyProfileResolver = resolve_active_workflow_profile,
 ) -> OperationRegistry:
     """Build the sole immutable production inventory from the owner facades."""
     resolved_settings = settings or load_settings()
@@ -212,11 +382,18 @@ def build_production_operation_registry(
     resolved_auth_definitions = (
         auth_definitions
         if auth_definitions is not None
-        else build_auth_operation_definitions(ports=build_auth_operation_ports(resolved_operator_scope_ports))
+        else build_auth_operation_definitions(
+            ports=build_auth_operation_ports(resolved_operator_scope_ports),
+            finalize_rotation=profile_rotation_finalizer,
+        )
     )
     profile_definitions = build_user_profile_operation_definitions()
-    automation_definitions = build_automation_operation_definitions(automation_administration_factory)
+    auth_read_definition = build_auth_read_definition(compose_auth_read_ports)
+    automation_definitions = build_automation_operation_definitions(
+        automation_administration_factory, inventory_reader=automation_inventory_reader
+    )
     modelo_definitions = build_modelo_lifecycle_operation_definitions(
+        profile_resolver=modelo_profile_resolver,
         certificate_secret_backend_factory=build_certificate_secret_backend,
         operator_scope_ports=resolved_operator_scope_ports,
         export_ports_factory=modelo_export_ports_factory,
@@ -240,6 +417,9 @@ def build_production_operation_registry(
         composition_factory=compose_live_state,
         pull=bind_shared_filed_history_pull(pull_filed_history_with_shared_composition),
     )
+    iva_wallet_history_definition = build_iva_wallet_history_definition(
+        lambda: compose_live_state().iva_remote_state_port
+    )
     local_reader_definition = build_local_reader_operation_definition(
         spawn=spawn_runtime_server,
         run_installer=run_runtime_installer,
@@ -255,17 +435,115 @@ def build_production_operation_registry(
             censal_fetch_port=build_censal_fetch_port(),
         )
     )
+    workbench_definition = build_workbench_generation_operation_definition(workbench_generation_reader)
+    metadata_definition = build_modelo_metadata_definition(work_lifecycle_ports_factory)
+    history_definition = build_modelo_work_history_definition(modelo_history_ports_factory)
+    work_list_definition = build_modelo_work_list_definition(work_lifecycle_ports_factory)
+    work_create_definition = build_modelo_work_create_definition(work_lifecycle_ports_factory)
+    work_review_definition = build_modelo_work_review_definition(modelo_history_ports_factory)
+    workflow_run_read_definition = build_workflow_run_read_definition(workflow_run_read_ports_factory)
+    workflow_run_list_definition = build_workflow_run_list_definition(workflow_run_read_ports_factory)
+    dependency_definition = build_modelo_dependency_definition(dependency_read_ports_factory)
+    pipeline_definition = build_overview_pipeline_definition(pipeline_read_ports_factory)
+    overview_definitions = tuple(
+        build_overview_read_definition(kind, overview_read_ports_factory) for kind in OverviewReadKind
+    )
+    invoice_list_definition = build_invoice_list_definition(invoice_inspection_read_ports_factory)
+    invoice_view_definition = build_invoice_view_definition(invoice_inspection_read_ports_factory)
+    invoice_remove_definition = build_invoice_remove_definition(invoice_lifecycle_ports_factory)
+    invoice_update_definition = build_invoice_update_definition(invoice_lifecycle_ports_factory)
+    workflow_resume_definition = build_workflow_resume_definition(
+        workflow_run_read_ports_factory, calculation_action_ports_factory
+    )
+    wizard_context_definition = build_modelo_work_wizard_context_definition(work_lifecycle_ports_factory)
+    wizard_attempt_definition = build_modelo_work_wizard_attempt_definition(
+        calculation_action_ports_factory=calculation_action_ports_factory,
+        attachment_store_factory=attachment_store_factory,
+    )
+    revision_definition = build_modelo_work_revision_definition(verification_repository_bundle_factory)
+    revisions_definition = build_modelo_work_revisions_definition(verification_repository_bundle_factory)
+    ledger_status_definition = build_ledger_status_definition(
+        ledger_action_ports_factory, verification_repository_bundle_factory
+    )
+    ledger_history_definition = build_ledger_history_definition(ledger_action_ports_factory)
+    ledger_check_definition = build_ledger_check_definition(ledger_action_ports_factory)
+    ledger_preflight_definition = build_ledger_preflight_definition(ledger_action_ports_factory)
+    ledger_review_definition = build_ledger_review_definition(ledger_action_ports_factory)
+    ledger_list_definition = build_ledger_list_definition(ledger_action_ports_factory)
+    ledger_view_definition = build_ledger_view_definition(ledger_action_ports_factory)
+    ledger_track_definition = build_ledger_track_definition(
+        ledger_action_ports_factory, ledger_participation_repository_factory
+    )
+    ledger_participation_definition = build_ledger_participation_definition(
+        ledger_action_ports_factory, ledger_participation_repository_factory
+    )
+    ledger_participation_rebuild_definition = build_ledger_participation_rebuild_definition(
+        participation_rebuild_ports_factory
+    )
+    revision_snapshot_definition = build_modelo_work_revision_snapshot_definition(
+        verification_repository_bundle_factory
+    )
+    filing_record_definition = build_modelo_work_filing_record_definition(verification_repository_bundle_factory)
+    amendment_context_definition = build_modelo_work_amendment_context_definition(
+        verification_repository_bundle_factory
+    )
+    m303_attestation_definition = build_modelo_work_m303_attestation_definition(
+        work_lifecycle_ports_factory=work_lifecycle_ports_factory,
+        attachment_store_factory=attachment_store_factory,
+    )
+    review_package_definition = build_modelo_review_package_build_definition(
+        profile_resolver=modelo_profile_resolver,
+        export_ports_factory=modelo_export_ports_factory,
+        repositories=verification_repository_bundle_factory,
+    )
     definitions = tuple(
         sorted(
             (
                 *resolved_auth_definitions,
+                auth_read_definition,
                 *profile_definitions,
                 *automation_definitions,
                 *modelo_definitions,
                 resolved_censal_definition,
                 filed_history_definition,
+                iva_wallet_history_definition,
                 resolved_google_export_definition,
                 local_reader_definition,
+                workbench_definition,
+                metadata_definition,
+                wizard_context_definition,
+                history_definition,
+                work_list_definition,
+                work_create_definition,
+                work_review_definition,
+                workflow_run_read_definition,
+                workflow_run_list_definition,
+                dependency_definition,
+                pipeline_definition,
+                *overview_definitions,
+                invoice_list_definition,
+                invoice_view_definition,
+                invoice_remove_definition,
+                invoice_update_definition,
+                workflow_resume_definition,
+                wizard_attempt_definition,
+                revision_definition,
+                revisions_definition,
+                ledger_status_definition,
+                ledger_history_definition,
+                ledger_check_definition,
+                ledger_preflight_definition,
+                ledger_review_definition,
+                ledger_list_definition,
+                ledger_view_definition,
+                ledger_track_definition,
+                ledger_participation_definition,
+                ledger_participation_rebuild_definition,
+                revision_snapshot_definition,
+                filing_record_definition,
+                amendment_context_definition,
+                m303_attestation_definition,
+                review_package_definition,
             ),
             key=lambda item: item.definition_id,
         )
@@ -274,13 +552,67 @@ def build_production_operation_registry(
         sorted(
             (
                 *build_auth_operation_registrations(resolved_auth_definitions),
+                build_auth_read_registration(auth_read_definition),
                 *build_user_profile_operation_registrations(profile_definitions),
                 *build_automation_operation_registrations(automation_definitions),
-                *build_modelo_lifecycle_operation_registrations(modelo_definitions),
+                *build_modelo_lifecycle_operation_registrations(
+                    modelo_definitions,
+                    metadata_access_resolver=compose_modelo_metadata_access(work_lifecycle_ports_factory),
+                    revision_access_resolver=compose_modelo_revision_access(verification_repository_bundle_factory),
+                ),
                 build_censal_operation_registration(resolved_censal_definition),
                 build_filed_history_operation_registration(filed_history_definition),
+                build_iva_wallet_history_registration(iva_wallet_history_definition),
                 build_google_sheets_export_operation_registration(resolved_google_export_definition),
                 build_local_reader_operation_registration(local_reader_definition),
+                build_workbench_generation_operation_registration(workbench_definition),
+                build_modelo_metadata_registration(metadata_definition, work_lifecycle_ports_factory),
+                build_modelo_work_wizard_context_registration(wizard_context_definition, work_lifecycle_ports_factory),
+                build_modelo_work_history_registration(history_definition, modelo_history_ports_factory),
+                build_modelo_work_list_registration(work_list_definition),
+                build_modelo_work_create_registration(work_create_definition),
+                build_modelo_work_review_registration(work_review_definition, modelo_history_ports_factory),
+                build_workflow_run_read_registration(workflow_run_read_definition, workflow_run_read_ports_factory),
+                build_workflow_run_list_registration(workflow_run_list_definition, workflow_run_read_ports_factory),
+                build_modelo_dependency_registration(dependency_definition),
+                build_overview_pipeline_registration(pipeline_definition),
+                *(build_overview_read_registration(definition) for definition in overview_definitions),
+                build_invoice_list_registration(invoice_list_definition),
+                build_invoice_view_registration(invoice_view_definition),
+                build_invoice_remove_registration(invoice_remove_definition),
+                build_invoice_update_registration(invoice_update_definition),
+                build_workflow_resume_registration(workflow_resume_definition),
+                build_modelo_work_wizard_attempt_registration(wizard_attempt_definition, work_lifecycle_ports_factory),
+                build_modelo_work_revision_registration(revision_definition, verification_repository_bundle_factory),
+                build_modelo_work_revisions_registration(revisions_definition, verification_repository_bundle_factory),
+                build_ledger_status_registration(ledger_status_definition),
+                build_ledger_history_registration(ledger_history_definition),
+                build_ledger_check_registration(ledger_check_definition),
+                build_ledger_preflight_registration(ledger_preflight_definition),
+                build_ledger_review_registration(ledger_review_definition),
+                build_ledger_list_registration(ledger_list_definition),
+                build_ledger_view_registration(ledger_view_definition),
+                build_ledger_track_registration(ledger_track_definition),
+                build_ledger_participation_registration(ledger_participation_definition),
+                build_ledger_participation_rebuild_registration(ledger_participation_rebuild_definition),
+                build_modelo_work_revision_snapshot_registration(
+                    revision_snapshot_definition,
+                    access_resolver=compose_modelo_revision_access(verification_repository_bundle_factory),
+                ),
+                build_modelo_work_filing_record_registration(
+                    filing_record_definition, verification_repository_bundle_factory
+                ),
+                build_modelo_work_amendment_context_registration(
+                    amendment_context_definition, verification_repository_bundle_factory
+                ),
+                build_modelo_work_m303_attestation_registration(
+                    m303_attestation_definition,
+                    access_resolver=compose_modelo_metadata_access(work_lifecycle_ports_factory),
+                ),
+                build_modelo_review_package_build_registration(
+                    review_package_definition,
+                    access_resolver=compose_modelo_revision_access(verification_repository_bundle_factory),
+                ),
             ),
             key=lambda item: item.contract.definition_id,
         )
@@ -298,12 +630,23 @@ def compose_operation_dependencies(
     amendment_action_ports_factory: AmendmentActionPortsFactory = build_amendment_action_ports,
     filing_action_ports_factory: FilingActionPortsFactory = build_filing_action_ports,
     work_lifecycle_ports_factory: ActiveWorkLifecyclePortsFactory = build_active_work_lifecycle_ports,
+    modelo_history_ports_factory: ModeloHistoryPortsFactory = build_modelo_history_ports,
+    workflow_run_read_ports_factory: WorkflowRunReadPortsFactory = build_workflow_run_read_ports,
+    dependency_read_ports_factory: DependencyReadPortsFactory = build_dependency_read_ports,
+    pipeline_read_ports_factory: PipelineReadPortsFactory = build_pipeline_read_ports,
+    overview_read_ports_factory: OverviewReadPortsFactory = build_overview_read_ports,
+    invoice_inspection_read_ports_factory: InvoiceInspectionReadPortsFactory = build_invoice_inspection_read_ports,
+    invoice_lifecycle_ports_factory: CatalogueLifecyclePortsFactory = build_catalogue_lifecycle_ports,
     modelo_edit_receipt_repository_factory: ModeloEditReceiptRepositoryFactory = build_modelo_edit_receipt_repository,
     verification_repository_bundle_factory: VerificationRepositoryBundleFactory = build_verification_repository_bundle,
     operator_scope_ports: OperatorScopePorts | None = None,
     automation_administration_factory: AutomationAdministrationFactory | None = None,
+    automation_inventory_reader: AutomationInventoryReader | None = None,
+    workbench_generation_reader: WorkbenchGenerationReader | None = None,
+    profile_rotation_finalizer: ProfileRotationFinalizer | None = None,
     execution_authority: OperationExecutionAuthority | None = None,
     execution_authority_factory: Callable[[OperationRegistry], OperationExecutionAuthority] | None = None,
+    modelo_profile_resolver: ModeloWorkVerifyProfileResolver = resolve_active_workflow_profile,
 ) -> OperationComposedServices:
     """Compose the immutable production registry and all public services.
 
@@ -320,6 +663,7 @@ def compose_operation_dependencies(
     resolved_operator_scope_ports = operator_scope_ports or build_operator_scope_ports()
     storage_root = effective_storage_root(settings=resolved_settings)
     registry = build_production_operation_registry(
+        modelo_profile_resolver=modelo_profile_resolver,
         settings=resolved_settings,
         modelo_export_ports_factory=modelo_export_ports_factory,
         calculation_action_ports_factory=calculation_action_ports_factory,
@@ -327,10 +671,20 @@ def compose_operation_dependencies(
         amendment_action_ports_factory=amendment_action_ports_factory,
         filing_action_ports_factory=filing_action_ports_factory,
         work_lifecycle_ports_factory=work_lifecycle_ports_factory,
+        modelo_history_ports_factory=modelo_history_ports_factory,
+        workflow_run_read_ports_factory=workflow_run_read_ports_factory,
+        dependency_read_ports_factory=dependency_read_ports_factory,
+        pipeline_read_ports_factory=pipeline_read_ports_factory,
+        overview_read_ports_factory=overview_read_ports_factory,
+        invoice_inspection_read_ports_factory=invoice_inspection_read_ports_factory,
+        invoice_lifecycle_ports_factory=invoice_lifecycle_ports_factory,
         modelo_edit_receipt_repository_factory=modelo_edit_receipt_repository_factory,
         verification_repository_bundle_factory=verification_repository_bundle_factory,
         operator_scope_ports=resolved_operator_scope_ports,
         automation_administration_factory=automation_administration_factory,
+        automation_inventory_reader=automation_inventory_reader,
+        workbench_generation_reader=workbench_generation_reader,
+        profile_rotation_finalizer=profile_rotation_finalizer,
     )
     journal = OperationJournalRepository(storage_root=storage_root)
     if execution_authority_factory is not None:

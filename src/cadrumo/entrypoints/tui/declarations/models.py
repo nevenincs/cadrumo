@@ -9,11 +9,15 @@ from typing import Literal, Protocol
 from pydantic import BaseModel
 from textual.screen import Screen
 
-from ....application.modelo.declarations_calendar import DeclarationsCalendarEntryRefV1
+from ....application.modelo.declarations_calendar import (
+    DeclarationsCalendarEntryRefV1,
+    DeclarationsCalendarProjectionV1,
+)
 from ....application.modelo.declarations_workspace import (
     DeclarationsWorkspaceCalculationRevisionRefV1,
     DeclarationsWorkspaceDeclarationRefV1,
     DeclarationsWorkspaceFilingRefV1,
+    DeclarationsWorkspaceProjectionV1,
     DeclarationsWorkspaceZone,
 )
 from ....application.operator_actions.models import DeclaredNextAction
@@ -57,6 +61,15 @@ class ModeloWorkspaceScreenFactoryV1(Protocol):
         ...
 
 
+@dataclass(frozen=True, slots=True)
+class DeclarationsRefreshSnapshotV1:
+    """Latest already-captured safe facts for the same declarations route."""
+
+    projection: DeclarationsWorkspaceProjectionV1
+    modelo_workspace_factory: ModeloWorkspaceScreenFactoryV1 | None
+    calendar_projection: DeclarationsCalendarProjectionV1 | None
+
+
 class RevisionHandoffV1(Protocol):
     """Injected navigation handoff for one calculation revision identity."""
 
@@ -94,6 +107,7 @@ class ModeloWorkCreateResultV1:
     """The persisted outcome of one explicitly selected declaration address."""
 
     reused: bool
+    advisory_keys: tuple[str, ...] = ()
 
 
 class ModeloWorkCreateHandoffV1(Protocol):
@@ -109,6 +123,7 @@ __all__ = [
     "CalendarRecoveryHandoffV1",
     "DeclarationsCalendarScopeV1",
     "DeclarationsDestinationIdV1",
+    "DeclarationsRefreshSnapshotV1",
     "DeclarationsRouteTargetV1",
     "FilingHandoffV1",
     "ModeloWorkCreateHandoffV1",

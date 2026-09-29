@@ -53,6 +53,8 @@ Submodules
    cadrumo.application.modelo.action_errors
    cadrumo.application.modelo.amendment_action_ports
    cadrumo.application.modelo.amendment_actions
+   cadrumo.application.modelo.amendment_context_operation
+   cadrumo.application.modelo.amendment_projection
    cadrumo.application.modelo.art20_advisory
    cadrumo.application.modelo.art52_advisory
    cadrumo.application.modelo.binding_readiness
@@ -62,8 +64,12 @@ Submodules
    cadrumo.application.modelo.calculation
    cadrumo.application.modelo.calculation_action_ports
    cadrumo.application.modelo.calculation_actions
+   cadrumo.application.modelo.calculation_advisory_projection
    cadrumo.application.modelo.calculation_diagnostics
+   cadrumo.application.modelo.calculation_projection
+   cadrumo.application.modelo.calculation_publication
    cadrumo.application.modelo.calculation_repository
+   cadrumo.application.modelo.calculation_request_fields
    cadrumo.application.modelo.calculation_resolution
    cadrumo.application.modelo.calculation_revision_gate
    cadrumo.application.modelo.calculation_route
@@ -71,9 +77,13 @@ Submodules
    cadrumo.application.modelo.data_inventory
    cadrumo.application.modelo.declarations_calendar
    cadrumo.application.modelo.declarations_workspace
+   cadrumo.application.modelo.dependency_operation
+   cadrumo.application.modelo.dependency_projection
+   cadrumo.application.modelo.dependency_read_ports
    cadrumo.application.modelo.dt12_advisory
    cadrumo.application.modelo.dt12_antiquity_advisory
    cadrumo.application.modelo.edit_admission
+   cadrumo.application.modelo.edit_baseline_projection
    cadrumo.application.modelo.edit_contract
    cadrumo.application.modelo.edit_models
    cadrumo.application.modelo.edit_receipt_ports
@@ -81,18 +91,23 @@ Submodules
    cadrumo.application.modelo.export
    cadrumo.application.modelo.export_amendment_evidence
    cadrumo.application.modelo.export_ports
+   cadrumo.application.modelo.export_projection
    cadrumo.application.modelo.external_import_actions
    cadrumo.application.modelo.filed_revision_observation
    cadrumo.application.modelo.filing_action_ports
    cadrumo.application.modelo.filing_actions
    cadrumo.application.modelo.filing_chain_reconciliation
+   cadrumo.application.modelo.filing_projection
    cadrumo.application.modelo.filing_repository
+   cadrumo.application.modelo.filing_selection_operation
    cadrumo.application.modelo.history
+   cadrumo.application.modelo.history_operation
    cadrumo.application.modelo.history_ports
    cadrumo.application.modelo.iva_wallet_gate
    cadrumo.application.modelo.iva_wallet_seed
    cadrumo.application.modelo.iva_wallet_seed_ports
    cadrumo.application.modelo.justificante_repository
+   cadrumo.application.modelo.lifecycle_advisories
    cadrumo.application.modelo.lifecycle_clock_gate
    cadrumo.application.modelo.local_observation_actions
    cadrumo.application.modelo.local_observation_spreadsheet
@@ -104,12 +119,16 @@ Submodules
    cadrumo.application.modelo.m145_communication_records
    cadrumo.application.modelo.m145_communication_records_ports
    cadrumo.application.modelo.m193_settled_row_gate
+   cadrumo.application.modelo.m303_attestation_operation
    cadrumo.application.modelo.m303_exonerado_390_applicability_attestation
    cadrumo.application.modelo.m303_filing_evidence
    cadrumo.application.modelo.m303_ordinary_evidence_coordinate
    cadrumo.application.modelo.m303_ordinary_filing_evidence_authoring
    cadrumo.application.modelo.m303_regimen_simplificado_scope
    cadrumo.application.modelo.maritime_preview
+   cadrumo.application.modelo.metadata_operation_access
+   cadrumo.application.modelo.metadata_projection
+   cadrumo.application.modelo.metadata_read_operation
    cadrumo.application.modelo.minimo_descendientes_advisory
    cadrumo.application.modelo.operation_definitions
    cadrumo.application.modelo.operator_inputs
@@ -138,14 +157,20 @@ Submodules
    cadrumo.application.modelo.review_package_collab_audit
    cadrumo.application.modelo.review_package_counter_sign
    cadrumo.application.modelo.review_package_feedback
+   cadrumo.application.modelo.review_package_operation
    cadrumo.application.modelo.review_package_recipient_encryption
    cadrumo.application.modelo.review_package_recipient_registry
    cadrumo.application.modelo.review_package_recipient_registry_ports
    cadrumo.application.modelo.review_package_signing
    cadrumo.application.modelo.review_package_signing_ports
    cadrumo.application.modelo.review_package_text
+   cadrumo.application.modelo.revision_inventory_operation
+   cadrumo.application.modelo.revision_operation_access
    cadrumo.application.modelo.revision_persistence
    cadrumo.application.modelo.revision_replay_inputs
+   cadrumo.application.modelo.revision_selection_operation
+   cadrumo.application.modelo.revision_snapshot_operation
+   cadrumo.application.modelo.row_source_fingerprint
    cadrumo.application.modelo.selectors
    cadrumo.application.modelo.semantic_role_resolution
    cadrumo.application.modelo.settlement_casilla
@@ -156,15 +181,22 @@ Submodules
    cadrumo.application.modelo.verification_cross_period
    cadrumo.application.modelo.verification_preconditions
    cadrumo.application.modelo.verification_predicates
+   cadrumo.application.modelo.verification_projection
    cadrumo.application.modelo.verification_repository_ports
    cadrumo.application.modelo.verify_selector
+   cadrumo.application.modelo.wizard_attempt_operation
+   cadrumo.application.modelo.wizard_context_operation
    cadrumo.application.modelo.work_addressing
+   cadrumo.application.modelo.work_create_operation
    cadrumo.application.modelo.work_create_policy
+   cadrumo.application.modelo.work_inventory_operation
    cadrumo.application.modelo.work_lifecycle
    cadrumo.application.modelo.work_lifecycle_ports
+   cadrumo.application.modelo.work_missing_input
    cadrumo.application.modelo.work_plazo
    cadrumo.application.modelo.work_profile
    cadrumo.application.modelo.work_review
+   cadrumo.application.modelo.work_review_operation
    cadrumo.application.modelo.work_selection
    cadrumo.application.modelo.work_unit_repository
    cadrumo.application.modelo.work_wizard

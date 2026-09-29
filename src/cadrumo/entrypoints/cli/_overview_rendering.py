@@ -25,7 +25,6 @@ from __future__ import annotations
 
 import json
 from collections.abc import Sequence
-from datetime import date
 
 from ...application.operator_actions.models import ActionReference, DeclaredNextAction
 from ...application.overview.agenda import OverviewAgenda
@@ -67,9 +66,6 @@ from ...core.json_contract import (
 )
 from ...core.notificacion_estado_servicio import NotificacionEstadoServicio
 from ...core.operator_action_enums import ActionArgumentSource, ActionArgumentStatus
-from ...domain.calculations.registry.authority import bundled_indexed_authority
-from ...domain.calculations.registry.facts.resolution import ResolvedScalarFact, ScalarFactQuery
-from ...domain.calculations.registry.schema_base import DateAxis
 from ._ledger_payloads import LedgerStatusResult
 from ._overview_payloads import (
     OverviewAgendaResult,
@@ -306,28 +302,9 @@ def overview_post_filing_event_notices(events: Sequence[OverviewCalendarEvent]) 
 _DEEMED_SERVED_NOTICE_CODE = "overview.notificacion.rechazo_tacito"
 
 
-def _deemed_served_legal_ref(*, effective_date: date) -> str:
-    """Project the legal reference from the governed DEHu window fact.
-
-    The renderer carries provenance, not a parallel legal-reference catalogue.
-    The existing scalar fact owns both the ten-day window and its legal
-    evidence; resolving it here keeps the notice's context attached to the
-    same authority row that drives service-state calculation.
-    """
-    with bundled_indexed_authority().operation() as operation:
-        resolved = operation.resolve_governed_fact(
-            ScalarFactQuery(
-                fact_id="dehu-tacit-rejection-natural-days",
-                date_axis=DateAxis.SUBMISSION_DATE,
-                effective_date=effective_date,
-            )
-        )
-    if not isinstance(resolved, ResolvedScalarFact) or not resolved.legal_refs:
-        raise InternalInvariantError("dehu tacit-rejection fact has no legal-reference provenance")
-    return str(resolved.legal_refs[0])
-
-
-def overview_deemed_served_notification_notices(events: Sequence[OverviewCalendarEvent]) -> list[Notice]:
+def overview_deemed_served_notification_notices(
+    events: Sequence[OverviewCalendarEvent], *, legal_ref: str | None = None
+) -> list[Notice]:
     """Surface notifications the law already deems served, whatever their procedural kind.
 
     A DEHu notification left unopened for the
@@ -350,6 +327,8 @@ def overview_deemed_served_notification_notices(events: Sequence[OverviewCalenda
     )
     if not deemed_served:
         return []
+    if not legal_ref:
+        raise InternalInvariantError("deemed-served notification is missing captured legal provenance")
     certificado_ids = sorted({event.reference_id for event in deemed_served if event.reference_id})
     message = tr(
         "cli.overview.notificacion.rechazo_tacito_summary",
@@ -363,7 +342,7 @@ def overview_deemed_served_notification_notices(events: Sequence[OverviewCalenda
             message=message,
             action=resolve_notice_action(action=ActionReference(action_id="operator.live.notifications.list")),
             context={
-                "legal_ref": _deemed_served_legal_ref(effective_date=max(event.event_date for event in deemed_served)),
+                "legal_ref": legal_ref,
                 "certificado_ids": ",".join(certificado_ids),
                 "count": str(len(deemed_served)),
             },
@@ -426,7 +405,9 @@ def _calendar_primary_lines_and_notices(cal: OverviewCalendar) -> tuple[list[str
     return lines, list(warning_notices)
 
 
-def _calendar_secondary_lines_and_notices(cal: OverviewCalendar) -> tuple[list[str], list[Notice]]:
+def _calendar_secondary_lines_and_notices(
+    cal: OverviewCalendar, *, deemed_served_legal_ref: str | None = None
+) -> tuple[list[str], list[Notice]]:
     lines: list[str] = []
     notices: list[Notice] = []
     for notice in overview_coverage_notices(cal.coverage):
@@ -435,16 +416,20 @@ def _calendar_secondary_lines_and_notices(cal: OverviewCalendar) -> tuple[list[s
     for notice in overview_post_filing_event_notices(cal.events):
         lines.append(f"post_filing_pending\t{len(notice.context or {})}\t{notice.message}")
         notices.append(notice)
-    for notice in overview_deemed_served_notification_notices(cal.events):
+    for notice in overview_deemed_served_notification_notices(cal.events, legal_ref=deemed_served_legal_ref):
         context = notice.context or {}
         lines.append(f"notificacion_rechazo_tacito\t{context.get('count', '')}\t{notice.message}")
         notices.append(notice)
     return lines, notices
 
 
-def _calendar_lines_and_notices(cal: OverviewCalendar) -> tuple[list[str], list[Notice]]:
+def _calendar_lines_and_notices(
+    cal: OverviewCalendar, *, deemed_served_legal_ref: str | None = None
+) -> tuple[list[str], list[Notice]]:
     primary_lines, primary_notices = _calendar_primary_lines_and_notices(cal)
-    secondary_lines, secondary_notices = _calendar_secondary_lines_and_notices(cal)
+    secondary_lines, secondary_notices = _calendar_secondary_lines_and_notices(
+        cal, deemed_served_legal_ref=deemed_served_legal_ref
+    )
     return [*primary_lines, *secondary_lines], [*primary_notices, *secondary_notices]
 
 
@@ -477,6 +462,7 @@ def _profile_secondary_lines_and_notices(
     cal: OverviewCalendar,
     *,
     label: str,
+    deemed_served_legal_ref: str | None = None,
 ) -> tuple[list[str], list[Notice]]:
     lines: list[str] = []
     notices: list[Notice] = []
@@ -488,7 +474,7 @@ def _profile_secondary_lines_and_notices(
         tagged = notice.model_copy(update={"context": {**(notice.context or {}), "profile": label}})
         notices.append(tagged)
         lines.append(f"post_filing_pending\t{label}\t{len(notice.context or {})}\t{notice.message}")
-    for notice in overview_deemed_served_notification_notices(cal.events):
+    for notice in overview_deemed_served_notification_notices(cal.events, legal_ref=deemed_served_legal_ref):
         context = notice.context or {}
         tagged = notice.model_copy(update={"context": {**context, "profile": label}})
         notices.append(tagged)
@@ -500,9 +486,12 @@ def _profile_calendar_lines_and_notices(
     cal: OverviewCalendar,
     *,
     label: str,
+    deemed_served_legal_ref: str | None = None,
 ) -> tuple[list[str], list[Notice]]:
     primary_lines, primary_notices = _profile_primary_lines_and_notices(cal, label=label)
-    secondary_lines, secondary_notices = _profile_secondary_lines_and_notices(cal, label=label)
+    secondary_lines, secondary_notices = _profile_secondary_lines_and_notices(
+        cal, label=label, deemed_served_legal_ref=deemed_served_legal_ref
+    )
     return [*primary_lines, *secondary_lines], [*primary_notices, *secondary_notices]
 
 
@@ -511,6 +500,7 @@ def overview_calendar_output(
     rng: OverviewCalendarRange,
     *,
     evidence_notices: Sequence[Notice],
+    deemed_served_legal_ref: str | None = None,
 ) -> tuple[OverviewCalendarResult, list[str], list[Notice]]:
     """Project one active-profile calendar into payload, text lines, and notices."""
     entries = [
@@ -527,7 +517,7 @@ def overview_calendar_output(
             days_overdue=entry.days_overdue,
             user_state=entry.user_state.value,
             censo_enrolment_state=entry.censo_enrolment_state.value,
-            local_filing_state=entry.filing_evidence.local_filing_state.value,
+            local_filing_state=entry.filing_evidence.local_filing_state,
             aeat_submission_state=entry.filing_evidence.aeat_submission_state,
             justificante_verified=entry.filing_evidence.justificante_verified,
             detail_action=_calendar_entry_detail_action(entry),
@@ -537,7 +527,7 @@ def overview_calendar_output(
     ]
     events = [
         OverviewCalendarEventSummaryPayload(
-            event_type=event.event_type.value,
+            event_type=event.event_type,
             event_date=event.event_date.isoformat(),
             source=event.source,
             summary=str(event.summary),
@@ -582,7 +572,7 @@ def overview_calendar_output(
         f"entries\t{len(cal.entries)}",
         f"events\t{len(cal.events)}",
     ]
-    calendar_lines, calendar_notices = _calendar_lines_and_notices(cal)
+    calendar_lines, calendar_notices = _calendar_lines_and_notices(cal, deemed_served_legal_ref=deemed_served_legal_ref)
     lines.extend(calendar_lines)
     for evidence_notice in evidence_notices:
         notice = _calendar_evidence_notice_with_action(evidence_notice)
@@ -596,6 +586,7 @@ def overview_calendar_profile_output(
     bucket_id: str,
     label: str,
     cal: OverviewCalendar,
+    deemed_served_legal_ref: str | None = None,
 ) -> tuple[dict[str, object], list[str], list[Notice]]:
     """Project one profile block for ``overview calendar --all-profiles``."""
     lines = [
@@ -603,7 +594,9 @@ def overview_calendar_profile_output(
         f"entries\t{len(cal.entries)}",
         f"events\t{len(cal.events)}",
     ]
-    profile_lines, notices = _profile_calendar_lines_and_notices(cal, label=label)
+    profile_lines, notices = _profile_calendar_lines_and_notices(
+        cal, label=label, deemed_served_legal_ref=deemed_served_legal_ref
+    )
     lines.extend(profile_lines)
     payload: dict[str, object] = {
         "profile_id": bucket_id,

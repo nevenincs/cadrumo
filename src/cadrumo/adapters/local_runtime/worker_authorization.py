@@ -12,29 +12,55 @@ from pathlib import Path
 from threading import BoundedSemaphore, Event, Thread
 from uuid import UUID, uuid4, uuid5
 
+from pydantic import SecretBytes
+
 from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError, RuntimeServerHello
 from ...application.runtime.profile_access import RuntimeAccessRefusal
 from ...application.runtime.profile_worker import ProfileWorkerIdentity
 from ...application.runtime.worker_authorization import (
     AUTHORITY_SECTION_MAXIMUM_SECONDS,
+    WORKER_AUTOMATION_INVENTORY_MAX_BYTES,
+    WorkerAuthorityEnvelope,
+    WorkerAuthorityRequest,
     WorkerAuthorizationAcknowledgement,
+    WorkerAuthorizationInstruction,
     WorkerAuthorizationOwner,
     WorkerAuthorizationPermit,
     WorkerAuthorizationRelease,
     WorkerAuthorizationReleased,
     WorkerAuthorizationRequest,
+    WorkerAutomationInventoryAllowed,
+    WorkerAutomationInventoryPermit,
+    WorkerAutomationInventoryRequest,
+    WorkerResponseScopePermit,
+    WorkerResponseScopeRequest,
 )
-from ...application.user_profile.access_contracts import AccessDenialCode
+from ...application.runtime.worker_enrollment import (
+    WorkerApprovalPhaseResult,
+    WorkerApprovalPublished,
+    WorkerApprovalReady,
+    WorkerApprovalRequest,
+)
+from ...application.user_profile.access_contracts import AccessDenialCode, OperationResponseScopeAllowed
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...application.user_profile.automation_custody_port import AutomationCustodyError
+from ...application.user_profile.automation_enrollment import AutomationInventory
+from ...core.hashing import canonical_json_bytes
 from ...core.time.clock import now
-from .framing import accept_runtime_handshake, read_document, write_document
+from .framing import MAXIMUM_FRAME_BYTES, accept_runtime_handshake, read_document, read_secret, write_document
 from .windows import WindowsRuntimeChannel, WindowsRuntimeEndpoint
 
 
 def worker_authorization_namespace(worker_id: UUID) -> UUID:
     """Derive a separate endpoint identity; the name itself grants no authority."""
     return uuid5(worker_id, "cadrumo-operation-authorization")
+
+
+def _require_inventory_ipc_budget(inventory: AutomationInventory) -> None:
+    """Refuse a whole inventory that cannot fit a protected native response."""
+    size = len(canonical_json_bytes(inventory.model_dump(mode="json")))
+    if size > WORKER_AUTOMATION_INVENTORY_MAX_BYTES:
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
 
 
 class WorkerAuthorizationServer:
@@ -101,7 +127,7 @@ class WorkerAuthorizationServer:
             self._endpoint.close()
 
     def _connection(self, channel: WindowsRuntimeChannel) -> None:
-        request: WorkerAuthorizationRequest | None = None
+        request: WorkerAuthorityRequest | WorkerAutomationInventoryRequest | WorkerApprovalRequest | None = None
         try:
             if (
                 channel.peer.process_id != self._pid
@@ -118,13 +144,37 @@ class WorkerAuthorizationServer:
                 ),
                 deadline=time.monotonic() + 5,
             )
-            request = read_document(channel, WorkerAuthorizationRequest, deadline=time.monotonic() + 5)
+            request = read_document(channel, WorkerAuthorityEnvelope, deadline=time.monotonic() + 5).root
             if self._owner is None:
                 raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
             if request.request.profile_id != self.identity.binding.profile_id:
                 raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+            if isinstance(request, WorkerApprovalRequest):
+                try:
+                    self._approval_phase(channel, request)
+                except BaseException:
+                    # A lost phase reply must not strand proof until expiry.
+                    # Retirement is peer-bound cleanup and needs no live lease.
+                    self._owner.approval_phase(request.model_copy(update={"phase": "close"}), None)
+                    raise
+                return
             permit_id = uuid4()
-            with self._owner.authorize(request) as allowed:
+            guard = (
+                self._owner.automation_inventory(request)
+                if isinstance(request, WorkerAutomationInventoryRequest)
+                else self._owner.authorize(request)
+            )
+            with guard as allowed:
+                # No inventory payload can be advertised through an ordinary
+                # permit, and no scope-only response can become an effect permit.
+                if isinstance(request, WorkerAutomationInventoryRequest):
+                    if not isinstance(allowed, WorkerAutomationInventoryAllowed):
+                        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+                elif isinstance(allowed, WorkerAutomationInventoryAllowed) or (
+                    isinstance(request, WorkerResponseScopeRequest)
+                    != isinstance(allowed, OperationResponseScopeAllowed)
+                ):
+                    raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
                 # A queued callback may acquire the profile guard only after
                 # shutdown began. It must not publish a new permit then.
                 if self._stop.is_set():
@@ -135,20 +185,40 @@ class WorkerAuthorizationServer:
                 if remaining <= 0:
                     raise ProfileAccessRefusedError(AccessDenialCode.SESSION_EXPIRED)
                 deadline = time.monotonic() + remaining
+                if isinstance(request, WorkerAutomationInventoryRequest):
+                    if not isinstance(allowed, WorkerAutomationInventoryAllowed):
+                        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+                    _require_inventory_ipc_budget(allowed.inventory)
+                    permit = WorkerAutomationInventoryPermit(
+                        request_id=request.request_id,
+                        runtime_boot_id=self.identity.runtime_boot_id,
+                        permit_id=permit_id,
+                        expires_at=expires,
+                        inventory=allowed.inventory,
+                    )
+                    if len(canonical_json_bytes(permit.model_dump(mode="json"))) > MAXIMUM_FRAME_BYTES:
+                        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+                elif isinstance(request, WorkerResponseScopeRequest):
+                    permit = WorkerResponseScopePermit(
+                        request_id=request.request_id,
+                        runtime_boot_id=self.identity.runtime_boot_id,
+                        permit_id=permit_id,
+                        expires_at=expires,
+                    )
+                else:
+                    permit = WorkerAuthorizationPermit(
+                        request_id=request.request_id,
+                        runtime_boot_id=self.identity.runtime_boot_id,
+                        permit_id=permit_id,
+                        expires_at=expires,
+                    )
                 try:
                     write_document(
                         channel,
-                        WorkerAuthorizationPermit(
-                            request_id=request.request_id,
-                            runtime_boot_id=self.identity.runtime_boot_id,
-                            permit_id=permit_id,
-                            expires_at=expires,
-                        ),
+                        permit,
                         deadline=deadline,
                     )
-                    released = read_document(channel, WorkerAuthorizationRelease, deadline=deadline)
-                    if released.request_id != request.request_id or released.permit_id != permit_id:
-                        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+                    self._held_body(channel, request, permit_id=permit_id, deadline=deadline)
                 except BaseException:
                     # A missing/ambiguous release cannot prove the effect body
                     # stopped. Contain the owned job before dropping the fence.
@@ -191,6 +261,75 @@ class WorkerAuthorizationServer:
         finally:
             channel.close()
             self._slots.release()
+
+    def _approval_phase(self, channel: WindowsRuntimeChannel, request: WorkerApprovalRequest) -> None:
+        if self._owner is None or self._stop.is_set():
+            raise RuntimeRefusalError(RuntimeRefusalCode.DRAINING)
+        self._owner.approval_preflight(request)
+        deadline = time.monotonic() + 60
+        if request.phase == "prepare":
+            write_document(
+                channel,
+                WorkerApprovalReady(request_id=request.request_id, runtime_boot_id=self.identity.runtime_boot_id),
+                deadline=deadline,
+            )
+            with read_secret(channel, deadline=deadline) as secret:
+                result = self._owner.approval_phase(request, SecretBytes(bytes(secret)))
+        else:
+            result = self._owner.approval_phase(request, None)
+        write_document(
+            channel,
+            WorkerApprovalPhaseResult(
+                request_id=request.request_id,
+                runtime_boot_id=self.identity.runtime_boot_id,
+                needs_candidate=result,
+            ),
+            deadline=deadline,
+        )
+        acknowledged = read_document(channel, WorkerAuthorizationAcknowledgement, deadline=deadline)
+        if acknowledged.request_id != request.request_id:
+            raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+
+    def _held_body(
+        self,
+        channel: WindowsRuntimeChannel,
+        request: WorkerAuthorityRequest | WorkerAutomationInventoryRequest,
+        *,
+        permit_id: UUID,
+        deadline: float,
+    ) -> None:
+        """Execute at most one publication on the native thread retaining the guard."""
+        command_seen = False
+        while True:
+            instruction = read_document(channel, WorkerAuthorizationInstruction, deadline=deadline).root
+            if instruction.request_id != request.request_id or instruction.permit_id != permit_id:
+                raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            if isinstance(instruction, WorkerAuthorizationRelease):
+                return
+            if command_seen or not isinstance(request, WorkerAuthorizationRequest) or self._owner is None:
+                raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+            command_seen = True
+            # The owner validates exact operation/profile/session coordinates
+            # and performs canonical publication on this same lock-owning thread.
+            try:
+                transition = self._owner.approval_publication(request, instruction)
+            except (AutomationCustodyError, ProfileAccessRefusedError) as error:
+                reply = RuntimeAccessRefusal(
+                    request_id=request.request_id,
+                    runtime_boot_id=self.identity.runtime_boot_id,
+                    connection_id=request.connection_id,
+                    code=error.reason,
+                )
+            else:
+                reply = WorkerApprovalPublished(
+                    request_id=request.request_id,
+                    permit_id=permit_id,
+                    command_id=instruction.command_id,
+                    runtime_boot_id=self.identity.runtime_boot_id,
+                    receipt=transition.receipt if transition is not None else None,
+                    published=transition.published if transition is not None else False,
+                )
+            write_document(channel, reply, deadline=deadline)
 
     def require_healthy(self) -> None:
         """A failed or stopping callback owner cannot authorize another operation."""

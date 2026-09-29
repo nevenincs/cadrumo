@@ -57,18 +57,33 @@ def _root_profile_secret_help_lines() -> tuple[str, ...]:
     from .command_spec import OptionSpec
 
     root = _COMMAND_GRAPH.root()
-    options = tuple(
+    channels = tuple(
         parameter
         for parameter in root.parameters
         if isinstance(parameter, OptionSpec) and parameter.profile_secret_channel is not None
     )
-    if len(options) != 2:
-        raise InternalInvariantError("root help requires exactly two profile-secret channel options")
+    methods = tuple(
+        parameter
+        for parameter in root.parameters
+        if isinstance(parameter, OptionSpec) and parameter.name == "profile_auth_method"
+    )
+    references = tuple(
+        parameter
+        for parameter in root.parameters
+        if isinstance(parameter, OptionSpec) and parameter.name == "profile_credential_ref"
+    )
+    if len(channels) != 2 or len(methods) != 1 or len(references) != 1:
+        raise InternalInvariantError("root help requires two profile-secret channels, method and reference")
+    options = (*channels, *methods, *references)
     rendered: list[tuple[str, str]] = []
     for option in options:
         declaration = option.declarations[0]
-        if not option.is_flag:
+        if option.profile_secret_channel is not None and not option.is_flag:
             declaration = f"{declaration} FD"
+        elif option.value.choices:
+            declaration = f"{declaration} {{{'|'.join(option.value.choices)}}}"
+        elif option.name == "profile_credential_ref":
+            declaration = f"{declaration} UUID"
         if option.help_key is None:
             raise InternalInvariantError("a root profile-secret option lacks localised help")
         rendered.append((declaration, tr(option.help_key.value)))

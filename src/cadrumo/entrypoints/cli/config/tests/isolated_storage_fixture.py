@@ -1,16 +1,35 @@
 """Canonical isolated profile-storage fixtures for CLI config tests."""
 
 import json
+import sys
 from collections.abc import Iterator
+from concurrent.futures import ThreadPoolExecutor
+from contextlib import contextmanager
+from importlib.metadata import version
 from pathlib import Path
+from threading import Event
+from uuid import uuid4
 
 import pytest
 from click.testing import Result
 from pydantic import TypeAdapter
 
+from .....adapters.local_runtime.installation import runtime_installation
+from .....adapters.local_runtime.server import RuntimeTransportServer
+from .....adapters.local_runtime.tests.profile_worker_support import owner_id
+from .....adapters.local_runtime.windows import WindowsRuntimeEndpoint
+from .....adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
 from .....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from .....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
+from .....application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from .....application.user_profile.access_contracts import Availability, LoginEligibility, OsLoginContext
+from .....application.user_profile.profile_record_repository import (
+    ProfileRecordRepository,
+    active_profile_record_session,
+)
 from .....core.config import override_settings
+from .....domain.user_profile.values import UserProfileRecord
+from ....runtime.profile_connections import RuntimeProfileConnections
 from ...tests.cli_runner import invoke_cached_cli
 
 #: The passphrase every profile these fixtures create is protected by.
@@ -93,8 +112,81 @@ def live_cli_profile(tmp_path: Path) -> Iterator[None]:
             close_active_bucket_session()
 
 
+class _NativeLogin:
+    login_id = "cli-config-test-login"
+
+    def observe(self, *, credential_facilities: Availability) -> OsLoginContext:
+        return OsLoginContext(
+            login_id=self.login_id,
+            os_owner_id=owner_id(),
+            active=True,
+            locked=False,
+            unattended=LoginEligibility.ELIGIBLE,
+            credential_facilities=credential_facilities,
+        )
+
+
+@contextmanager
+def native_profile_view_server(storage_root: Path, *, allow_unavailable_shutdown: bool = False) -> Iterator[None]:
+    """Host real native profile workers for explicit password-backed CLI reads."""
+    if sys.platform != "win32":
+        pytest.skip("requires native Windows profile workers")
+    endpoint = WindowsRuntimeEndpoint(storage_root=storage_root)
+    runtime_installation(storage_root=storage_root, os_owner_id=owner_id(), storage_identity=endpoint.storage_identity)
+    stop, boot, native = Event(), uuid4(), MemoryNativePort()
+    profiles = RuntimeProfileConnections(
+        storage_root=storage_root,
+        storage_identity=endpoint.storage_identity,
+        runtime_boot_id=boot,
+        stop=stop,
+        capture_login=lambda _channel: _NativeLogin(),
+        secret_store=lambda: native,
+    )
+    server = RuntimeTransportServer(
+        endpoint, product_version=version("cadrumo"), stop=stop, profiles=profiles, boot_id=boot
+    )
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        running = pool.submit(server.serve)
+        try:
+            assert server.ready.wait(3)
+            yield
+        finally:
+            stop.set()
+            try:
+                try:
+                    running.result(timeout=15)
+                except RuntimeRefusalError as error:
+                    if not allow_unavailable_shutdown or error.reason is not RuntimeRefusalCode.UNAVAILABLE:
+                        raise
+            finally:
+                endpoint.close()
+
+
+@pytest.fixture
+def native_cli_profile_view(live_cli_profile: None, tmp_path: Path) -> Iterator[None]:
+    """Opt-in native authority for tests whose assertion is the CLI view itself."""
+    with native_profile_view_server(tmp_path / "cadrumo-storage"):
+        yield
+
+
 def profile_cli(*args: str) -> Result:
     """Run one ``config profile`` verb in JSON mode against the live profile."""
+    if args == ("view",) or (args and args[0] in {"edit", "complete-setup"}):
+        # Registration mints no receipt. This password is consumed only on
+        # the verified secret frame for the explicit profile.
+        return invoke_cached_cli(
+            (
+                "--format",
+                "json",
+                "--profile",
+                "Editor",
+                "--profile-secrets-stdin",
+                "config",
+                "profile",
+                *args,
+            ),
+            input=json.dumps({"profile_passphrase": CREDENTIAL_INPUT}),
+        )
     return invoke_cached_cli(("--format", "json", "config", "profile", *args))
 
 
@@ -103,11 +195,20 @@ def profile_view_document() -> dict[str, object]:
     return _JSON_OBJECT.validate_python(json.loads(profile_cli("view").stdout))
 
 
-def profile_facts() -> dict[str, str]:
-    """Return the live profile's facts as a path -> value mapping."""
-    result = profile_view_document()["result"]
-    assert isinstance(result, dict)
-    return {str(fact["path"]): str(fact["value"]) for fact in result["facts"]}
+def profile_persisted_record() -> UserProfileRecord:
+    """Read actual encrypted state for mutation tests without claiming runtime view."""
+    session = active_profile_record_session()
+    assert session is not None
+    return ProfileRecordRepository.for_current_session(
+        session.profile_id, profile_decode_context=session.profile_decode_context
+    ).load(session.profile_id)
+
+
+def profile_persisted_facts() -> dict[str, str]:
+    """Return the live encrypted record's facts as path/value test evidence."""
+    from .....application.user_profile.projections import record_to_path_values
+
+    return record_to_path_values(profile_persisted_record())
 
 
 def profile_event_count(event_type: str) -> int:
@@ -124,8 +225,11 @@ __all__ = [
     "config_check_backend",
     "config_check_isolated_backend",
     "live_cli_profile",
+    "native_cli_profile_view",
+    "native_profile_view_server",
     "profile_cli",
     "profile_event_count",
-    "profile_facts",
+    "profile_persisted_facts",
+    "profile_persisted_record",
     "profile_view_document",
 ]

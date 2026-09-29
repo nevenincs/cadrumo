@@ -29,6 +29,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.runtime.contracts.RuntimeShutdownIncompleteError",
+        ErrorCode(
+            code="REFUSED_LOCAL_RUNTIME_SHUTDOWN",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_operator_surface_contract",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.user_profile.automation_custody_port.AutomationCustodyError",
         ErrorCode(
             code="REFUSED_AUTOMATION_CUSTODY",
@@ -580,6 +590,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.refused_profile_login_throttled",
             retryable=True,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.user_profile.login_session.ProfileReceiptRefusedError",
+        ErrorCode(
+            code="REFUSED_PROFILE_RECEIPT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_profile_receipt",
+            retryable=False,
             runbook_id=None,
         ),
     ),

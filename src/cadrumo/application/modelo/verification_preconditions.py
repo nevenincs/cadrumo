@@ -46,6 +46,7 @@ class ModeloVerificationResult(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     report: VerificationReport
+    published: bool
     finding_preconditions: tuple[VerificationFindingPreconditionProjection, ...]
 
     @model_validator(mode="after")

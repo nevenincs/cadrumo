@@ -40,6 +40,7 @@ from .....core.modelo import Modelo
 from .....core.observed_header_fact import ObservedHeaderFact
 from .....core.period import Period
 from .....core.prorrata_register import ProrrataRegisterRegime
+from .....domain.calculations.registry.authority import IndexedRegistryAuthority, bundled_indexed_authority
 from .....domain.calculations.registry.binding_targets import casillas_by_binding
 from .....domain.calculations.registry.errors import RegistrySnapshotError
 from .....domain.calculations.registry.iva_compensation_annual_partition_bindings import (
@@ -65,6 +66,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _BUCKET = "108e9631-8e8f-4a81-840f-39ba3e07a70b"  # was 'prorrata-advisory-bucket'
 _YEAR = 2026
 _PRIOR_YEAR = 2025
+_SETTLEMENT_PERIOD_CODE = "4T"
+_FIRST_PERIOD_CODE = "1T"
 
 _VOLUMEN_TOTAL_ID = validated_casilla_id("iva.prorrata-volumen-total", surface="test casilla id")
 _VOLUMEN_CON_DERECHO_ID = validated_casilla_id("iva.prorrata-volumen-con-derecho", surface="test casilla id")
@@ -123,7 +126,7 @@ def test_advisory_fires_when_prior_year_percentage_available_and_differs(tmp_pat
             _revision(),
             casilla_values,
             modelo=Modelo("303").value,
-            **{"period_token": "4T"},
+            period_token=_SETTLEMENT_PERIOD_CODE,
             filing_year=_YEAR,
             observation_repository=obs_repo,
             prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET),
@@ -135,6 +138,42 @@ def test_advisory_fires_when_prior_year_percentage_available_and_differs(tmp_pat
     assert diagnostic.binding_source is BindingSourceKind.PRORRATA_REGULARIZACION
     assert "44" in diagnostic.message
     assert "ingreso" in diagnostic.message
+
+
+def test_advisory_uses_supplied_pinned_authority_for_real_m303_carry(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A calculate-path collector does not lease a second authority generation."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET) as profile:
+        obs_repo = CalculationObservationRepository(objects=profile.repository)
+        _seed_prior_year_percentage(obs_repo, percentage=Decimal("90"))
+        with bundled_indexed_authority().operation() as operation:
+            revision = operation.snapshot(Modelo("303").value, filing_year=_YEAR, period="4T").revision
+
+            def unexpected_authority(_authority: IndexedRegistryAuthority) -> None:
+                raise AssertionError("prorrata advisory opened another registry authority")
+
+            with monkeypatch.context() as patch:
+                patch.setattr(IndexedRegistryAuthority, "operation", unexpected_authority)
+                diagnostics = collect_prorrata_regularizacion_diagnostics(
+                    revision,
+                    {
+                        _VOLUMEN_TOTAL_ID: Decimal("100000"),
+                        _VOLUMEN_CON_DERECHO_ID: Decimal("80000"),
+                        _PORCENTAJE_ID: Decimal("80"),
+                        _CUOTA_DEDUCIBLE_TOTAL_ID: Decimal("20000.00"),
+                    },
+                    modelo="303",
+                    period_token=_SETTLEMENT_PERIOD_CODE,
+                    filing_year=_YEAR,
+                    observation_repository=obs_repo,
+                    prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET),
+                    transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET),
+                    operation=operation,
+                )
+
+    assert len(diagnostics) == 1
+    assert diagnostics[0].binding_source is BindingSourceKind.PRORRATA_REGULARIZACION
 
 
 def test_advisory_refuses_prior_year_observation_with_stale_registry_stamp(tmp_path: Path) -> None:
@@ -159,7 +198,7 @@ def test_advisory_refuses_prior_year_observation_with_stale_registry_stamp(tmp_p
                     _CUOTA_DEDUCIBLE_TOTAL_ID: Decimal("20000.00"),
                 },
                 modelo=Modelo("303").value,
-                **{"period_token": "4T"},
+                period_token=_SETTLEMENT_PERIOD_CODE,
                 filing_year=_YEAR,
                 observation_repository=obs_repo,
                 prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET),
@@ -188,7 +227,7 @@ def test_advisory_fires_pending_when_no_prior_year_observation_exists(tmp_path: 
             _revision(),
             casilla_values,
             modelo=Modelo("303").value,
-            **{"period_token": "4T"},
+            period_token=_SETTLEMENT_PERIOD_CODE,
             filing_year=_YEAR,
             observation_repository=obs_repo,
             prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET),
@@ -217,7 +256,7 @@ def test_no_advisory_when_no_sin_derecho_operations(tmp_path: Path) -> None:
             _revision(),
             casilla_values,
             modelo=Modelo("303").value,
-            **{"period_token": "4T"},
+            period_token=_SETTLEMENT_PERIOD_CODE,
             filing_year=_YEAR,
             observation_repository=obs_repo,
             prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET),
@@ -242,7 +281,7 @@ def test_no_advisory_on_mid_year_quarter(tmp_path: Path) -> None:
             _revision(),
             casilla_values,
             modelo=Modelo("303").value,
-            **{"period_token": "1T"},
+            period_token=_FIRST_PERIOD_CODE,
             filing_year=_YEAR,
             observation_repository=obs_repo,
             prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET),
@@ -273,7 +312,7 @@ def test_mid_year_active_prorrata_without_provisional_emits_missing_carry(tmp_pa
             _revision(period="1T"),
             {},
             modelo=Modelo("303").value,
-            **{"period_token": "1T"},
+            period_token=_FIRST_PERIOD_CODE,
             filing_year=_YEAR,
             bucket_id=_BUCKET,
             observation_repository=obs_repo,
@@ -306,7 +345,7 @@ def test_no_advisory_for_non_m303_modelo(tmp_path: Path) -> None:
             _revision(),
             {},
             modelo=Modelo("130").value,
-            **{"period_token": "4T"},
+            period_token=_SETTLEMENT_PERIOD_CODE,
             filing_year=_YEAR,
             observation_repository=obs_repo,
             prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET),

@@ -52,7 +52,8 @@ PROFILE_INPUT = "synthetic-enrollment-password"
 
 def changed[T: BaseModel](model: T, **values: object) -> T:
     """Revalidate every altered test fact."""
-    return type(model).model_validate({**{name: getattr(model, name) for name in type(model).model_fields}, **values})
+    model_type = model.__class__
+    return model_type.model_validate({**{name: getattr(model, name) for name in model_type.model_fields}, **values})
 
 
 class DeliveryFaults:
@@ -122,7 +123,7 @@ class AdministrationSubject:
         record = next(item for item in self.store.enrollment_state().requests if item.request_id == request_id)
         return self.service.approve(
             request_id, review_digest=enrollment_review_digest(record), password=SecretBytes(PROFILE_INPUT.encode())
-        )
+        ).receipt
 
 
 @contextmanager

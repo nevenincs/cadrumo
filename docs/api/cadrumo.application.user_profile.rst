@@ -13,9 +13,22 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   cadrumo.application.user_profile.access_administration
+   cadrumo.application.user_profile.access_contracts
+   cadrumo.application.user_profile.access_errors
+   cadrumo.application.user_profile.access_policy
+   cadrumo.application.user_profile.access_projections
    cadrumo.application.user_profile.acquisition_sources
    cadrumo.application.user_profile.aggregate
    cadrumo.application.user_profile.authentication
+   cadrumo.application.user_profile.automation_administration
+   cadrumo.application.user_profile.automation_custody_port
+   cadrumo.application.user_profile.automation_enrollment
+   cadrumo.application.user_profile.automation_execution
+   cadrumo.application.user_profile.automation_lifecycle
+   cadrumo.application.user_profile.automation_lifecycle_service
+   cadrumo.application.user_profile.automation_operations
+   cadrumo.application.user_profile.automation_password
    cadrumo.application.user_profile.bundle
    cadrumo.application.user_profile.bundle_encryption
    cadrumo.application.user_profile.bundle_export
@@ -39,6 +52,7 @@ Submodules
    cadrumo.application.user_profile.custody_repository
    cadrumo.application.user_profile.custody_service
    cadrumo.application.user_profile.custody_transactions
+   cadrumo.application.user_profile.descendant_rows
    cadrumo.application.user_profile.fact_write
    cadrumo.application.user_profile.filing_baseline
    cadrumo.application.user_profile.keys_validation
@@ -70,5 +84,7 @@ Submodules
    cadrumo.application.user_profile.repository
    cadrumo.application.user_profile.section_rows
    cadrumo.application.user_profile.session_admission
+   cadrumo.application.user_profile.session_authority
    cadrumo.application.user_profile.usage_ratio_resolution
    cadrumo.application.user_profile.validation
+   cadrumo.application.user_profile.view_operation

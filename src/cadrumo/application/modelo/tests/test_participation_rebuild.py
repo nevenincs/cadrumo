@@ -17,6 +17,7 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.classification.policies import SensitivityClass
 from ....core.period import Period
 from ....core.secure_object_write import SecureObjectWrite
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
 from ....domain.modelos.calculation_revision import (
@@ -49,7 +50,7 @@ from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ....domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..participation_index_rebuild import rebuild_participation_index
-from ..participation_index_rebuild_ports import ParticipationIndexRebuildPorts
+from ..participation_index_rebuild_ports import ParticipationIndexRebuildPorts, ParticipationRebuildSourceRevisions
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -99,7 +100,7 @@ class _CalculationRepository(CalculationRevisionCatalogueRepositoryProtocol):
         return _BUCKET_ID
 
     @override
-    def load(self) -> CalculationRevisionCatalogue:
+    def load(self, *, operation: PinnedAuthorityOperation | None = None) -> CalculationRevisionCatalogue:
         """Return the current in-memory calculation catalogue."""
         return self._catalogue
 
@@ -109,7 +110,9 @@ class _CalculationRepository(CalculationRevisionCatalogueRepositoryProtocol):
         return bool(self._catalogue.revisions)
 
     @override
-    def load_revisioned(self) -> tuple[CalculationRevisionCatalogue, str]:
+    def load_revisioned(
+        self, *, operation: PinnedAuthorityOperation | None = None
+    ) -> tuple[CalculationRevisionCatalogue, str]:
         """Return the catalogue and its stable in-memory revision marker."""
         return self._catalogue, _REPOSITORY_REVISION_ID
 
@@ -284,6 +287,11 @@ class _ParticipationIndexRepository:
     def __init__(self) -> None:
         self._indexes: dict[str, TransactionRevisionParticipationIndex] = {}
 
+    @property
+    def bucket_id(self) -> str:
+        """Return the bucket whose in-memory index is being rebuilt."""
+        return _BUCKET_ID
+
     def exists(self, transaction_id: str) -> bool:
         """Report whether an index exists for ``transaction_id``."""
         return transaction_id in self._indexes
@@ -299,8 +307,14 @@ class _ParticipationIndexRepository:
         """Persist one in-memory index."""
         self._indexes[index.transaction_id] = index
 
-    def replace_all(self, indexes: Iterable[TransactionRevisionParticipationIndex]) -> int:
+    def replace_all(
+        self,
+        indexes: Iterable[TransactionRevisionParticipationIndex],
+        *,
+        source_revisions: ParticipationRebuildSourceRevisions,
+    ) -> int:
         """Replace every in-memory index and return the stale-row count."""
+        del source_revisions
         replacement = {index.transaction_id: index for index in indexes}
         stale_count = len(self._indexes.keys() - replacement.keys())
         self._indexes = replacement

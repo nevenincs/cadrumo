@@ -31,13 +31,22 @@ regulated work.
 
 The CLI has exactly two roots: `aeat config` (local configuration, profile/bucket
 custody, auth, diagnostics) and `aeat app` (operational tax work: `overview`,
-`ledger`, `live`, `modelo`, `registry`, `review`). Call the MCP `contract` tool to
-read the capability manifest and learn the command tree, each family's intent,
-and its mutability before you act.
+`ledger`, `live`, `modelo`, `registry`, `review`). MCP exposes registered
+operations through `search` and `describe`; it does not execute arbitrary CLI
+commands. Bind the connection to an exact profile UUID. Use `status` to inspect
+current authority, and request human-approved enrollment when access is absent.
+Keep API secrets in protected storage; only the nonsecret credential reference
+belongs in agent configuration. A grant can permit fresh admission after an
+earlier session expires; expiry, revocation and profile-wide lock still apply.
 
 ## Respect mutability
 
-The manifest annotates each command family `READ_ONLY` or `LOCAL_STATE_MUTATING`.
-Read freely. Before a state-mutating command, confirm it is the action the taxpayer
+Read only within the current grant and disclosure permissions. Before a state-mutating command, confirm it is the action the taxpayer
 asked for. Destructive verbs require explicit confirmation (`--yes` / `--confirm`);
 never pass them to bypass a question you should ask the operator first.
+
+Retain submission receipts. If a start reply is lost, observe the recorded
+operation before retrying. Reading a review does not grant permission to apply it;
+`respond` still requires the originating session's response authority. Local API
+authentication does not replace AEAT authentication or make an unvalidated tax or
+filing operation available.

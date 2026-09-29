@@ -14,5 +14,6 @@ Subpackages
    :maxdepth: 4
 
    cadrumo.adapters.inbound
+   cadrumo.adapters.local_runtime
    cadrumo.adapters.outbound
    cadrumo.adapters.persistence

@@ -19,9 +19,15 @@ Submodules
    cadrumo.application.invoices.catalogue_creation_ports
    cadrumo.application.invoices.catalogue_lifecycle
    cadrumo.application.invoices.catalogue_lifecycle_ports
+   cadrumo.application.invoices.catalogue_read_operation
+   cadrumo.application.invoices.catalogue_read_projection
    cadrumo.application.invoices.catalogue_reads
    cadrumo.application.invoices.catalogue_reads_ports
+   cadrumo.application.invoices.catalogue_remove_operation
+   cadrumo.application.invoices.catalogue_selection
+   cadrumo.application.invoices.catalogue_update_operation
    cadrumo.application.invoices.creation_wizard
+   cadrumo.application.invoices.inspection_read_ports
    cadrumo.application.invoices.issuer_establishment
    cadrumo.application.invoices.self_counterparty
    cadrumo.application.invoices.simplificada_advisory

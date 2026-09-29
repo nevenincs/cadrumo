@@ -76,7 +76,25 @@ class DeclarationsOverviewScreen(DeclarationsWorkspaceScreen):
     def on_mount(self) -> None:
         """Populate safe natural-coordinate declaration rows."""
         self.populate_navigation()
+        table = self._populate_declarations()
+        restored = self.controller.restored_id("declarations.work")
+        row_index = next((i for i, item in enumerate(table.ordered_rows) if item.key.value == restored), None)
+        if row_index is None:
+            self.query_one("#declarations-navigation", DataTable).focus()
+            # Focusing scrolls the table into view, which on a page taller than
+            # the terminal scrolls the opening heading away. A fresh arrival
+            # belongs at the top; the restored branch keeps its own position.
+            # After the refresh, because the focus scroll lands once layout
+            # settles and would overwrite a scroll issued here.
+            self.call_after_refresh(self._scroll_to_top)
+        else:
+            table.move_cursor(row=row_index)
+            table.focus()
+
+    def _populate_declarations(self) -> DataTable[str]:
+        """Rebuild one table from the controller's current safe projection."""
         table = cast("DataTable[str]", self.query_one("#declarations-list", DataTable))
+        table.clear(columns=True)
         table.add_column(declarations_copy("tui.declarations.column.declaration"), key="declaration")
         table.add_column(declarations_copy("tui.declarations.column.local_state"), key="state")
         table.add_column(declarations_copy("tui.declarations.column.calculation"), key="calculation")
@@ -98,19 +116,9 @@ class DeclarationsOverviewScreen(DeclarationsWorkspaceScreen):
             )
         if not table.row_count:
             self.show_empty()
-        restored = self.controller.restored_id("declarations.work")
-        row_index = next((i for i, item in enumerate(table.ordered_rows) if item.key.value == restored), None)
-        if row_index is None:
-            self.query_one("#declarations-navigation", DataTable).focus()
-            # Focusing scrolls the table into view, which on a page taller than
-            # the terminal scrolls the opening heading away. A fresh arrival
-            # belongs at the top; the restored branch keeps its own position.
-            # After the refresh, because the focus scroll lands once layout
-            # settles and would overwrite a scroll issued here.
-            self.call_after_refresh(self._scroll_to_top)
         else:
-            table.move_cursor(row=row_index)
-            table.focus()
+            self.query_one("#declarations-empty", Static).update("")
+        return table
 
     def _scroll_to_top(self) -> None:
         """Return the page to its opening heading after focus has settled."""
@@ -185,11 +193,24 @@ class DeclarationsOverviewScreen(DeclarationsWorkspaceScreen):
         finally:
             self._work_create_in_flight = False
         message_key = "tui.declarations.work_create.reused" if result.reused else "tui.declarations.work_create.created"
-        notice.update(declarations_copy(message_key, address=natural_address(modelo, filing_year, period)))
+        notice.update(
+            "\n".join(
+                (
+                    declarations_copy(message_key, address=natural_address(modelo, filing_year, period)),
+                    *(declarations_copy(key) for key in result.advisory_keys),
+                )
+            )
+        )
 
     def _restore_declaration_focus(self, _: None) -> None:
         """Restore the semantic declaration table after its child dismisses."""
-        table = cast("DataTable[str]", self.query_one("#declarations-list", DataTable))
+        if self.controller.refresh_from_capture():
+            navigation = cast("DataTable[str]", self.query_one("#declarations-navigation", DataTable))
+            navigation.clear(columns=True)
+            self.populate_navigation()
+            table = self._populate_declarations()
+        else:
+            table = cast("DataTable[str]", self.query_one("#declarations-list", DataTable))
         row_index = next(
             (
                 index

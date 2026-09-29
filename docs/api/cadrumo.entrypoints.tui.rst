@@ -37,4 +37,11 @@ Submodules
    cadrumo.entrypoints.tui.launcher
    cadrumo.entrypoints.tui.ledger_doors
    cadrumo.entrypoints.tui.navigation
+   cadrumo.entrypoints.tui.runtime_access_management
+   cadrumo.entrypoints.tui.runtime_account
+   cadrumo.entrypoints.tui.runtime_account_session
+   cadrumo.entrypoints.tui.runtime_admission
+   cadrumo.entrypoints.tui.runtime_management
+   cadrumo.entrypoints.tui.runtime_session
+   cadrumo.entrypoints.tui.runtime_workbench
    cadrumo.entrypoints.tui.search

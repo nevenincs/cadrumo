@@ -2,12 +2,18 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import TYPE_CHECKING
 from uuid import UUID
 
 import typer
 from pydantic import SecretStr
 
+from cadrumo.adapters.local_runtime.runtime_client import open_installed_runtime_client
+
+from ....adapters.local_runtime.frontend_client import RuntimeFrontendClient, RuntimeFrontendRefusedError
+from ....adapters.local_runtime.profile_password_rotation import run_profile_password_rotation
+from ....application.operations.registry import OperationFrontendProjection
 from ....core.bucket_pointer import resolve_active_bucket_id as _resolve_active_bucket_id
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
@@ -15,7 +21,6 @@ from ....core.json_contract import Notice, NoticeSeverity
 from ..common import activate_subcommand_output_language as _activate_subcommand_output_language
 from ..common import emit_envelope, notice_lines
 from ..errors import CliRefusedBoundaryError
-from ..state_projection_support import authority_operation
 from .secure_input import MachineSecretPayload
 
 if TYPE_CHECKING:
@@ -64,6 +69,11 @@ def _rotation_lines(outcome: ProfilePassphraseRotationOutcome) -> tuple[str, ...
     )
 
 
+def _open_rotation_client(profile_id: UUID) -> RuntimeFrontendClient:
+    """Open one exact CLI connection without local profile custody."""
+    return asyncio.run(open_installed_runtime_client(profile_id=profile_id, frontend=OperationFrontendProjection.CLI))
+
+
 def passphrase_change(
     ctx: typer.Context,
     secrets_stdin: bool = False,
@@ -72,7 +82,6 @@ def passphrase_change(
 ) -> None:
     """Rotate the active profile's passphrase without replacing its data key."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.user_profile.passphrase_rotation import rotate_profile_passphrase
     from ..config_payloads import ConfigPassphraseChangeResult
 
     active = _resolve_active_bucket_id()
@@ -80,18 +89,45 @@ def passphrase_change(
         raise CliRefusedBoundaryError(translated_message="cli.config.passphrase.no_active_profile")
     profile_id = UUID(active)
 
-    # Resolve the exact mutation target before consuming any secret source.
-    # The application authority still owns proof, policy, transaction entry,
-    # and the custody-envelope swap after the bounded payload is collected.
-    secrets = _collect_passphrases(secrets_stdin=secrets_stdin, secrets_fd=secrets_fd)
-
-    outcome = rotate_profile_passphrase(
-        profile_id=profile_id,
-        current_passphrase=secrets.current_passphrase.get_secret_value(),
-        new_passphrase=secrets.new_passphrase.get_secret_value(),
-        new_passphrase_confirmation=secrets.new_passphrase_confirmation.get_secret_value(),
-        profile_decode_context=authority_operation(ctx).profile_decode_context(),
-    )
+    # The selected profile is fixed before reading a leaf secret channel.
+    current, replacement, confirmation = bytearray(), bytearray(), bytearray()
+    try:
+        secrets = _collect_passphrases(secrets_stdin=secrets_stdin, secrets_fd=secrets_fd)
+        try:
+            current.extend(secrets.current_passphrase.get_secret_value().encode("utf-8"))
+            replacement.extend(secrets.new_passphrase.get_secret_value().encode("utf-8"))
+            confirmation.extend(secrets.new_passphrase_confirmation.get_secret_value().encode("utf-8"))
+        finally:
+            del secrets
+        client = _open_rotation_client(profile_id)
+        try:
+            proof = bytearray(current)
+            try:
+                client.login_password(proof)
+            except RuntimeFrontendRefusedError as error:
+                raise CliRefusedBoundaryError(error.reason, context={"reason": error.reason}) from error
+            finally:
+                proof[:] = bytes(len(proof))
+            completion = run_profile_password_rotation(
+                client,
+                current_passphrase=current,
+                new_passphrase=replacement,
+                new_passphrase_confirmation=confirmation,
+                fresh_client=lambda: _open_rotation_client(profile_id),
+            )
+            outcome = completion.outcome
+        except BaseException as primary:
+            try:
+                client.close()
+            except Exception:
+                primary.add_note("Runtime connection cleanup did not complete.")
+            raise
+        else:
+            client.close()
+    finally:
+        current[:] = bytes(len(current))
+        replacement[:] = bytes(len(replacement))
+        confirmation[:] = bytes(len(confirmation))
     emit_envelope(
         ctx,
         command="config.passphrase.change",

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -18,6 +19,9 @@ from ..user_profile.access_errors import ProfileAccessRefusedError
 from .models import OperationRequest
 from .registry import OperationFrontendProjection, OperationPublicDefinitionContractV1, OperationRegistry
 
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+
 
 @dataclass(frozen=True, slots=True)
 class OperationAccessContext:
@@ -29,6 +33,8 @@ class OperationAccessContext:
     frontend: OperationFrontendProjection
     contract: OperationPublicDefinitionContractV1
     published_authority: Availability
+    admitted_request: OperationAccessRequest | None = None
+    authority_operation: PinnedAuthorityOperation | None = None
 
 
 @dataclass(frozen=True, slots=True)

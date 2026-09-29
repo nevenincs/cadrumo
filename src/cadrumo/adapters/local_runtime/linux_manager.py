@@ -15,7 +15,7 @@ from ...application.runtime.management import (
     RuntimeServiceBinding,
 )
 from .manager_commands import NativeManagerCommand, run_manager_command
-from .posix import posix_storage_identity
+from .posix import posix_owner_uid, posix_storage_identity
 from .service_definitions import linux_user_service, runtime_service_name
 
 _PROPERTIES = (
@@ -26,6 +26,12 @@ _PROPERTIES = (
     "UnitFileState",
     "NeedDaemonReload",
 )
+
+
+def _fragment_flags() -> int:
+    if sys.platform == "linux":
+        return os.O_RDONLY | os.O_CLOEXEC | os.O_NOFOLLOW | os.O_NONBLOCK
+    raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
 
 
 def _properties(output: str) -> dict[str, str]:
@@ -50,15 +56,15 @@ def _exact_fragment(path: str, expected: str) -> bool:
             return False
         for parent in target.parents:
             metadata = parent.lstat()
-            if not stat.S_ISDIR(metadata.st_mode) or metadata.st_uid not in (0, os.getuid()):
+            if not stat.S_ISDIR(metadata.st_mode) or metadata.st_uid not in (0, posix_owner_uid()):
                 return False
             if metadata.st_mode & 0o022 and not metadata.st_mode & stat.S_ISVTX:
                 return False
-        descriptor = os.open(target, os.O_RDONLY | os.O_CLOEXEC | os.O_NOFOLLOW | os.O_NONBLOCK)
+        descriptor = os.open(target, _fragment_flags())
         metadata = os.fstat(descriptor)
         if (
             not stat.S_ISREG(metadata.st_mode)
-            or metadata.st_uid not in (0, os.getuid())
+            or metadata.st_uid not in (0, posix_owner_uid())
             or metadata.st_mode & 0o022
             or metadata.st_size > 64 * 1024
         ):
@@ -81,7 +87,7 @@ class LinuxUserManager:
         """Bind the native UID and physical root before consulting user systemd."""
         if not sys.platform.startswith("linux"):
             raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
-        if binding.os_owner_id != str(os.getuid()):
+        if binding.os_owner_id != str(posix_owner_uid()):
             raise RuntimeRefusalError(RuntimeRefusalCode.PEER_UNTRUSTED)
         if binding.storage_identity != posix_storage_identity(Path(binding.storage_root)):
             raise RuntimeRefusalError(RuntimeRefusalCode.ROOT_MISMATCH)
@@ -102,6 +108,8 @@ class LinuxUserManager:
                     "--property=" + ",".join(_PROPERTIES),
                 ),
             )
+            if response.returncode != 0 and not response.output:
+                raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
             values = _properties(response.output)
             if response.returncode != 0 and values["LoadState"] != "not-found":
                 raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
@@ -126,7 +134,9 @@ class LinuxUserManager:
                     "failed": RuntimeManagerProcessState.STOPPED,
                 }.get(values["ActiveState"], RuntimeManagerProcessState.UNKNOWN),
             )
-        except RuntimeRefusalError:
+        except RuntimeRefusalError as error:
+            if error.reason is not RuntimeRefusalCode.UNAVAILABLE:
+                raise
             return RuntimeManagerInspection(
                 kind=RuntimeManagerKind.LINUX_USER_SERVICE,
                 available=False,
@@ -154,5 +164,9 @@ class LinuxUserManager:
         await self._control("start")
 
     async def stop(self) -> None:
-        """Queue stop after application draining; successful queuing is not settlement."""
+        """Queue stop to signal main-process drain and suppress automatic restart.
+
+        The exact unit's mixed kill policy leaves descendants available for the
+        bounded application drain. Successful queuing is not settlement.
+        """
         await self._control("stop")

@@ -6,7 +6,7 @@ import os
 import sys
 import time
 from collections.abc import Generator
-from contextlib import contextmanager
+from contextlib import AbstractContextManager, contextmanager
 from datetime import timedelta
 from pathlib import Path
 from threading import Event, RLock
@@ -14,10 +14,18 @@ from typing import Literal
 from uuid import uuid4
 
 import pytest
+from pydantic import SecretBytes
 
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.runtime.profile_worker import ProfileWorkerIdentity
-from cadrumo.application.runtime.worker_authorization import WorkerAuthorizationRequest
+from cadrumo.application.runtime.worker_authorization import (
+    WorkerAuthorityRequest,
+    WorkerAuthorizationRequest,
+    WorkerAutomationInventoryAllowed,
+    WorkerAutomationInventoryRequest,
+    WorkerResponseScopeRequest,
+)
+from cadrumo.application.runtime.worker_enrollment import WorkerApprovalPublication, WorkerApprovalRequest
 from cadrumo.application.user_profile.access_contracts import (
     AccessAction,
     AccessAllowed,
@@ -28,6 +36,7 @@ from cadrumo.application.user_profile.access_contracts import (
     ProfileAccessBinding,
 )
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
+from cadrumo.application.user_profile.automation_enrollment import EnrollmentTransition
 from cadrumo.core.time.clock import now
 
 from ..windows_process import WindowsProcessScope
@@ -52,7 +61,9 @@ class Authority:
         self.root = root
 
     @contextmanager
-    def authorize(self, request: WorkerAuthorizationRequest) -> Generator[AccessAllowed]:
+    def authorize(self, request: WorkerAuthorityRequest) -> Generator[AccessAllowed]:
+        if isinstance(request, WorkerResponseScopeRequest):
+            raise ProfileAccessRefusedError(AccessDenialCode.RESPONSE_AUTHORITY_REQUIRED)
         assert request == self.seed.request
         with self.lock:
             if self.seed.mode == "deny":
@@ -69,6 +80,22 @@ class Authority:
             finally:
                 self.members_at_exit = self.scope.active_process_ids()
                 self.exited.set()
+
+    def automation_inventory(
+        self, request: WorkerAutomationInventoryRequest
+    ) -> AbstractContextManager[WorkerAutomationInventoryAllowed]:
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+
+    def approval_preflight(self, request: WorkerApprovalRequest) -> None:
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+
+    def approval_phase(self, request: WorkerApprovalRequest, password: SecretBytes | None) -> bool | None:
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+
+    def approval_publication(
+        self, authority: WorkerAuthorizationRequest, command: WorkerApprovalPublication
+    ) -> EnrollmentTransition | None:
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
 
 
 def wait_file(path: Path) -> None:

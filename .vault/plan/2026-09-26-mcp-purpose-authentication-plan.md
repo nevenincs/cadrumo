@@ -13,9 +13,9 @@ related:
   - '[[2026-08-13-cli-action-envelope-successor-adr]]'
   - '[[2026-09-04-tui-architecture-authenticated-tui-visibility-adr]]'
   - '[[2026-09-14-registry-authority-artifact-boundary-indexed-storage-adr]]'
-modified: '2026-09-27'
+modified: '2026-09-29'
 body_schema: body-v2
-body_hash: 'sha256:6948ced122f1cf43e97a88fe238c11c296852c6a5f0c3b27f6a277b1344d4438'
+body_hash: 'sha256:f0d92f68fefee895bb5cb915d45217ef96078abdfa552f02a7a50f65ed775f82'
 ---
 
 # `mcp-purpose-authentication` plan
@@ -26,7 +26,7 @@ Implement profile-scoped API authentication, shared local runtime ownership and 
 
 Approved 2026-09-26
 
-Scoped authorization: on 2026-09-27 the operator explicitly instructed this session to execute the plan. This authorizes implementation, verification, review and integration of all remaining Steps from P02.S05 through P05.S20 under the accepted decisions, superseding prior session-specific stop points. P01.S01-P02.S04 remain complete with their recorded limits. Continue until the plan is implemented and its acceptance obligations are met; unavailable native environments remain unproven rather than passing. Preserve concurrent work and coordinate by current source and durable records. No commit, external publication, real taxpayer access or live filing is authorized.
+Scoped authorization: on 2026-09-27 the operator explicitly instructed this session to execute the plan. This authorizes implementation, verification, review and integration of all remaining Steps from P02.S05 through P05.S20 under the accepted decisions, superseding prior session-specific stop points. P01.S01-P02.S06 remain complete with their recorded limits. The reopened P02.S04 registered-executor finding is corrected: mutations persist typed enrollment receipts, report actual publication/no-op effects, and retain cancellation ownership across each guarded publication. Runtime enrollment exposure remains P03 integration. Continue until the plan is implemented and its acceptance obligations are met; unavailable native environments remain unproven rather than passing. Preserve concurrent work and coordinate by current source and durable records. No commit, external publication, real taxpayer access or live filing is authorized.
 
 Confirmed scope: local installation with multiple users/profiles, concurrent agents with separately tracked sessions, durable API-key grants enabling autonomous reconnect, and full CLI/TUI parity for authentication, key management and locking. The design supports separate OS accounts and multiple password profiles within one account; the latter is not a hostile-user isolation boundary. Replace the old MCP; do not preserve its implementation or bootstrap interfaces.
 
@@ -48,7 +48,11 @@ The scope includes all existing private entrypoint paths affected by shared admi
 
 Resume requirements: read both feature ADRs and this plan; inspect the current worktree and in-flight custody/TUI plans; use the authorization recorded above. P01.S01 resolves the security-contract prerequisites and predecessor amendments before dependent coding. Preserve other contributors' edits; serialize overlapping work with their owning plan rather than duplicating it.
 
-Execution resume: P03.S08/S09, guarded result/review/response projections, durable publication/input provenance and convergence of the live private CLI/TUI census. Public local transport now routes registered contract discovery, submit, start, fresh continuation and bounded observation through the real profile authority and installed immutable workers. Native worker and final runtime output writes hold distinct current authorization guards. Canonical retries issue no new response capability; reattachment resolves stored operands and uses existing lease reconciliation. Keep backend/calculation/filing refusals. S08/S09, full platform lifecycle, CLI/TUI parity and replacement MCP remain open.
+Execution resume: P03.S08 remains the next open Step; integrate its replacements with P03.S09 authorization and commit/output guards. Continue the live private-entrypoint census through existing registered operations and immutable profile workers. Delete displaced entrypoint paths with each replacement. Counts and current source bindings live in the Reference; review findings live in the Audit; commands and outcomes live in the execution ledger. Representative routes do not complete the census or Phase 3.
+
+The replacement frontier now includes invoice update through the authenticated registered operation; its displaced CLI storage path and unused TUI LedgerRecordDoors implementation are removed. Continue the remaining command families, reusing canonical services and deleting each displaced direct path. Current routing counts and source bindings live in the Reference; acceptance evidence and limits live in the Audit and ledger. Native key rotation/renewal remains separate acceptance work. Multi-stage remote filed-history acquisition needs application-owned authorization at each effect boundary and worker-owned auth preflight before CLI enrollment; public registration alone is insufficient. Do not retain a COMMIT fence across the remote sweep.
+
+Remaining platform work includes Linux private-worker portability, demonstrated macOS descendant containment, native secret-store acceptance and the complete installed lifecycle matrix. The available Windows session-0 elevated token cannot run the required limited interactive-user manager acceptance; that evidence remains open. Continue implementation on available surfaces without weakening these acceptance conditions. Preserve the Phase order and existing Step scopes below. No full platform, Phase 3 or filing-readiness claim follows from scoped synthetic-profile checks.
 
 ## Steps
 
@@ -99,7 +103,9 @@ Connect agents to the shared authority, remove the old MCP paths and verify auto
 
 ## Parallelization
 
-Execute P01 through P05 in order. Default to one writer; this plan does not request delegation. P02 owns shared custody and admission before P03 binds service execution. P04 requires that runtime boundary, and P05 integrates the MCP only after CLI/TUI contracts are available.
+Execution cadence clarified 2026-09-28: implement complete command families and frontend replacement batches; retire displaced production paths and their obsolete consumers in the same batch. Preserve meaningful current-behavior tests, but do not retain obsolete implementations solely for historical tests. Consolidate verification around changed authorization, persistence, disclosure and lifecycle behavior; repeat passed gates only after relevant changes or concrete failures. The principal owns shared architectural integration; bounded coding is delegated. Independent replacement preparation may proceed against established runtime contracts while earlier Steps remain open; this does not waive Phase ordering or acceptance.
+
+Execute P01 through P05 in order. The operator authorizes three execution tiers: the principal implements architecture, protocols and difficult integration; Sol medium/high handles bounded feature engineering; Luna max handles established-pattern enrollment, import changes, teardown and focused verification. Each delegated task has exclusive file ownership, context, a concrete completion condition and a bounded validation/reporting brief. Use explicit exclusive file ownership; do not wait idly for workers. The principal owns integrated acceptance and durable records. P02 owns shared custody and admission before P03 binds service execution. P04 requires that runtime boundary, and P05 integrates the MCP only after CLI/TUI contracts are available.
 
 CLI and TUI presentation Steps may later be assigned independently once their application contracts are stable, with explicit disjoint ownership. Shared application services, composition roots, schemas, packaging, locale generation and vault metadata remain serialized. Any approved parallel work must preserve concurrent edits.
 

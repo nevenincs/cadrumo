@@ -30,7 +30,7 @@ from ..errors import RepositoryError, SecureObjectRevisionConflictError, Storage
 from ._secure_object_schema import build_revision_ancestor_ids, parse_revision_ancestor_ids
 from .orm import SecureObjectRow
 from .secure_object_crypto import derive_revision_id
-from .secure_object_records import SecureObjectDeletion
+from .secure_object_records import SecureObjectDeletion, SecureObjectRevisionAssertion
 from .session import session_scope
 
 if TYPE_CHECKING:
@@ -202,6 +202,8 @@ class SecureObjectWriteOperations:
         self,
         writes: tuple[SecureObjectWrite, ...],
         deletions: tuple[SecureObjectDeletion, ...] = (),
+        *,
+        assertions: tuple[SecureObjectRevisionAssertion, ...] = (),
     ) -> None:
         """Atomically upsert ``writes`` and remove ``deletions`` in one unit of work.
 
@@ -215,8 +217,11 @@ class SecureObjectWriteOperations:
         Deletions are addressed by raw HMAC digest (see
         :class:`SecureObjectDeletion`); the digest passes straight through the
         ``HashedLookup`` column comparison without re-hashing.
+        Source assertions are checked under serializable isolation before any
+        mutations and remain protected through commit. They never rewrite the
+        authoritative source or advance its revision lineage.
         """
-        if not writes and not deletions:
+        if not writes and not deletions and not assertions:
             return
         for write in writes:
             self._enforce_registered_write_policy(
@@ -227,6 +232,8 @@ class SecureObjectWriteOperations:
             )
         for removal in deletions:
             self._registered_namespace_definition(removal.namespace)
+        for assertion in assertions:
+            self._registered_namespace_definition(assertion.namespace)
         self._check_session_freshness()
         pending = tuple(
             self._pending_write(
@@ -242,7 +249,26 @@ class SecureObjectWriteOperations:
             )
             for write in writes
         )
-        with session_scope(self._engine) as session:
+        with session_scope(self._engine, serializable=bool(assertions)) as session:
+            for assertion in assertions:
+                row = session.execute(
+                    select(SecureObjectRow.revision_id).where(
+                        SecureObjectRow.namespace == assertion.namespace,
+                        SecureObjectRow.object_key == secure_object_key_digest(assertion.object_key),
+                    ),
+                ).one_or_none()
+                current_revision = row[0] if row is not None else None
+                matches = (
+                    row is None
+                    if assertion.expected_revision_id == ABSENT_SECURE_OBJECT_REVISION_ID
+                    else row is not None and current_revision == assertion.expected_revision_id
+                )
+                if not matches:
+                    raise self._revision_conflict(
+                        namespace=assertion.namespace,
+                        expected_revision_id=assertion.expected_revision_id,
+                        current_revision_id=current_revision,
+                    )
             self._write_pending_in_session(session, pending)
             for removal in deletions:
                 statement = delete(SecureObjectRow).where(

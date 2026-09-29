@@ -58,7 +58,6 @@ See Also:
 
 from __future__ import annotations
 
-import tempfile
 from pathlib import Path
 
 import typer
@@ -67,15 +66,10 @@ from ...adapters.persistence.profile.recipient_replay_guard import (
     RecipientPackageReplayedError,
     RecipientReplayGuardRepository,
 )
-from ...application.modelo.action_errors import CalculationRevisionNotFoundError
 from ...application.modelo.operator_inputs import ModeloReviewPackageBuildOperatorInput
 from ...application.modelo.recipient_encryption import RecipientEncryptedPackage
-from ...application.modelo.registry_discovery import declared_modelo_period_tokens
 from ...application.modelo.review_package import (
-    ReviewPackageError,
     ReviewPackageIntegrityError,
-    ReviewPackageRevisionStateError,
-    build_review_package,
     verify_review_package,
 )
 from ...application.modelo.review_package_collab_audit import emit_collab_feedback_countersign_attached_event
@@ -91,6 +85,10 @@ from ...application.modelo.review_package_feedback import (
     build_feedback_package,
     encrypt_feedback_package_for_originator,
     import_feedback_package,
+)
+from ...application.modelo.review_package_operation import (
+    ModeloReviewPackageBuildPublicResultV1,
+    ModeloReviewPackageBuildRequest,
 )
 from ...application.modelo.review_package_recipient_encryption import (
     RecipientDecryptionError,
@@ -111,16 +109,14 @@ from ...application.modelo.review_package_signing import (
     sign_review_package,
     verify_review_package_signature,
 )
-from ...application.workflow.persistence import workflow_state_repository
+from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.i18n.render import tr
-from ._modelo_behavior_support import bare_period_error, resolve_exportable_revision_for_cli
 from ._modelo_cli_support import (
-    load_modelo_work_unit,
-    resolve_default_actor,
+    parse_revision_selector,
+    resolve_actor_option,
     resolve_explicit_or_active_bucket_id,
 )
-from ._modelo_export_cli import export_modelo_revision_for_cli
 from ._modelo_review_package_rendering import (
     review_package_build_result_lines,
     review_package_build_result_payload,
@@ -134,11 +130,11 @@ from ._modelo_review_package_rendering import (
     review_package_verify_result,
     review_package_verify_signature_result,
 )
-from .common import emit_envelope, filing_taxpayer_or_refuse
+from .common import emit_envelope
+from .runtime_modelo_review_package import run_modelo_review_package_build
+from .runtime_modelo_verification import select_modelo_work_revision_for_cli
 from .state_projection_support import (
     authority_operation,
-    calculation_action_ports_factory,
-    modelo_export_ports_factory,
     recipient_encryption_capability_factory,
     recipient_fingerprint_registry_ports_factory,
     review_package_signing_keypair_capability_factory,
@@ -150,18 +146,7 @@ def review_package_build(
     **input_values: object,
 ) -> None:
     """Assemble a shareable review package for the resolved revision."""
-    from ._modelo_cli_support import bad_parameter_from_error
-
     operator_input = ModeloReviewPackageBuildOperatorInput.model_validate(input_values)
-    if operator_input.modelo is not None and operator_input.period is not None:
-        operation = authority_operation(ctx)
-        declared_periods = declared_modelo_period_tokens(operator_input.modelo, operation=operation)
-        if declared_periods and operator_input.period.upper() not in declared_periods:
-            raise typer.BadParameter(
-                bare_period_error(operator_input.modelo, operator_input.period, operation=operation)
-            )
-    workflow_state = workflow_state_repository().load()
-    workflow_profile = filing_taxpayer_or_refuse(workflow_state)
     if (
         operator_input.output is None
         or not str(operator_input.output).strip()
@@ -172,71 +157,41 @@ def review_package_build(
                 "cli.app.modelo.review_package.errors.output_required",
             )
         )
-    calculation_ports = calculation_action_ports_factory(ctx)(
-        bucket_id=resolve_explicit_or_active_bucket_id(operator_input.bucket_id),
-        operation=authority_operation(ctx),
-    )
-    selected_revision = resolve_exportable_revision_for_cli(
-        revision=operator_input.revision,
+    client, selected_revision = select_modelo_work_revision_for_cli(
+        ctx,
+        calculation_revision_id=operator_input.revision,
         work_unit_id=operator_input.work_unit_id,
         modelo=operator_input.modelo,
         year=operator_input.year,
         period=operator_input.period,
-        registry_revision=operator_input.registry_revision,
+        revision=operator_input.registry_revision,
         bucket_id=operator_input.bucket_id,
-        select=operator_input.select,
-        calculation_ports=calculation_ports,
+        selector=parse_revision_selector(operator_input.select),
+        default_for="export",
     )
-    target_revision_id = selected_revision.calculation_revision_id
-    resolved_actor = operator_input.actor or resolve_default_actor()
-    work_unit = load_modelo_work_unit(
-        selected_revision.work_unit_id,
-        ports=calculation_ports.work_lifecycle_ports,
-    )
-    operator_input.output.parent.mkdir(parents=True, exist_ok=True)
-    with tempfile.TemporaryDirectory(
-        prefix="cadrumo-review-package-draft-", dir=operator_input.output.parent
-    ) as staging_name:
-        draft_path = Path(staging_name) / "draft.fichero-boe"
-        export_result = export_modelo_revision_for_cli(
-            calculation_revision_id=target_revision_id,
-            output_path=draft_path,
-            actor=resolved_actor,
+    completed = run_modelo_review_package_build(
+        client,
+        ModeloReviewPackageBuildRequest(
+            profile_id=client.profile_id,
+            calculation_revision_id=selected_revision.calculation_revision_id,
+            output_path=str(operator_input.output.resolve()),
+            actor=resolve_actor_option(operator_input.actor),
             refund_election=operator_input.refund_election,
             payment_election=operator_input.payment_election,
             prior_domiciliation_election=operator_input.prior_domiciliation_election,
-            operation=authority_operation(ctx),
-            workflow_profile=workflow_profile,
-            export_ports=modelo_export_ports_factory(ctx)(
-                bucket_id=str(work_unit.bucket_id),
-                m303_rectificativa_taxpayer_tax_id=workflow_profile.tax_id,
-            ),
-        )
-        from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-
-        revision_record = CalculationRevisionCatalogueRepository().load().get(target_revision_id)
-        if revision_record is None:
-            raise bad_parameter_from_error(
-                CalculationRevisionNotFoundError(context={"calculation_revision_id": target_revision_id})
-            )
-        draft_bytes = draft_path.read_bytes()
-        try:
-            build_result = build_review_package(
-                revision=revision_record,
-                work_unit=work_unit,
-                draft_bytes=draft_bytes,
-                output_path=operator_input.output,
-                built_by=resolved_actor,
-                operation=authority_operation(ctx),
-                notes=operator_input.notes,
-            )
-        except (ReviewPackageRevisionStateError, ReviewPackageError) as exc:
-            raise bad_parameter_from_error(exc) from exc
+            notes=operator_input.notes,
+        ),
+        work_unit_id=selected_revision.unit.work_unit_id,
+    )
+    result = completed.projection
+    if not isinstance(result, ModeloReviewPackageBuildPublicResultV1):
+        raise RuntimeRefusalError(RuntimeRefusalCode.INVALID_FRAME)
+    build_result = result.to_result()
     emit_envelope(
         ctx,
         command="modelo.review_package.build",
         result=review_package_build_result_payload(build_result),
-        lines=review_package_build_result_lines(build_result, export_bucket_event_id=export_result.bucket_event_id),
+        lines=review_package_build_result_lines(build_result, export_bucket_event_id=result.export_bucket_event_id),
     )
 
 

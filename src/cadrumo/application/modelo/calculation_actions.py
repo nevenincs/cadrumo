@@ -60,6 +60,7 @@ from ...domain.calculations.registry.binding_provider_registration import BINDIN
 from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids
 from ...domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from ...domain.calculations.registry.casilla_membership import casillas_by_id, reject_row_field_template_scalar_inputs
+from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.formula_runtime import (
     RegistryCalculationResult,
     calculate_registry_snapshot,
@@ -150,6 +151,7 @@ from .calculation_action_ports import (
     CalculationActionPorts,
 )
 from .calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
+from .calculation_publication import CalculationRevisionPublication
 from .calculation_resolution import build_calculation_replay_payloads as _build_calculation_replay_payloads
 from .calculation_resolution import resolve_calculation_inputs as _resolve_calculation_inputs
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
@@ -170,6 +172,7 @@ from .m303_regimen_simplificado_scope import (
 )
 from .preconditions import build_modelo_precondition_failure
 from .revision_persistence import persist_calculation_revision
+from .work_missing_input import ModeloWorkMissingInputError
 from .work_profile import ModeloWorkProfile, ModeloWorkProfilePathValues
 
 if TYPE_CHECKING:
@@ -202,6 +205,7 @@ class BucketAggregationCalculationResult:
 
     revision: CalculationRevision
     profile: ModeloWorkProfile
+    publication: CalculationRevisionPublication
     source_diagnostics: tuple[CalculationSourceDiagnostic, ...] = ()
 
 
@@ -318,7 +322,7 @@ def calculate_modelo_revision(
         source_issues=(),
         clock=clock,
         profile=None,
-    )
+    ).revision
 
 
 def _draft_ledger_anchor(
@@ -423,7 +427,7 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
         Callable[[str, str | None], tuple[SecureObjectWrite, ...]] | None
     ) = None,
     profile: ModeloWorkProfile | None,
-) -> CalculationRevision:
+) -> CalculationRevisionPublication:
     """Calculate with source evidence produced by the in-module source mesh only.
 
     This is deliberately private: provenance and source issues are an authority
@@ -537,19 +541,27 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
     # scalar input for one would be persisted with no observation to ground it.
     reject_row_field_template_scalar_inputs(snapshot.revision, (*resolved_inputs, *resolved_text_inputs))
 
-    engine_result = _calculate_prepared_registry_snapshot(
-        snapshot,
-        resolved_inputs=resolved_inputs,
-        resolved_text_inputs=resolved_text_inputs,
-        period_date=prepared.period_date,
-        binding_values=prepared.channels.bindings,
-        enum_binding_values=prepared.channels.enum_bindings,
-        relation_values=resolved_relations,
-        unresolved_relation_ids=unresolved_relation_ids,
-        unresolved_binding_ids=unresolved_binding_ids,
-        date_binding_values=prepared.channels.date_bindings,
-        boolean_binding_values=prepared.channels.boolean_bindings,
-    )
+    try:
+        engine_result = _calculate_prepared_registry_snapshot(
+            snapshot,
+            resolved_inputs=resolved_inputs,
+            resolved_text_inputs=resolved_text_inputs,
+            period_date=prepared.period_date,
+            binding_values=prepared.channels.bindings,
+            enum_binding_values=prepared.channels.enum_bindings,
+            relation_values=resolved_relations,
+            unresolved_relation_ids=unresolved_relation_ids,
+            unresolved_binding_ids=unresolved_binding_ids,
+            date_binding_values=prepared.channels.date_bindings,
+            boolean_binding_values=prepared.channels.boolean_bindings,
+        )
+    except RegistryValidationError as error:
+        missing = ModeloWorkMissingInputError.from_registry_error(error)
+        if missing is None:
+            raise
+        # This boundary precedes revision publication. Earlier migrations may
+        # already have written state; later advisory failures never enter it.
+        raise missing from error
 
     replay_payloads = _build_calculation_replay_payloads(
         resolved_inputs=resolved_inputs,
@@ -596,6 +608,7 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
         instants=work_unit_ordering_instants(work_unit),
     )
     return persist_calculation_revision(
+        operation=ports.operation,
         work_unit_id=work_unit_id,
         registry_snapshot_ref=snapshot.snapshot_ref,
         work_unit=work_unit,
@@ -826,6 +839,7 @@ def resolve_bucket_source_mesh(
                     prorrata_register_repository=prorrata_register_repository,
                     investment_asset_register=iva_investment_asset_register,
                     investment_asset_profile_id=iva_investment_asset_profile_id,
+                    operation=ports.operation,
                 )
             ),
             resolve_declared(
@@ -834,12 +848,14 @@ def resolve_bucket_source_mesh(
                     prorrata_register_repository=prorrata_register_repository,
                     usage_ratio_profile_loader=ports.usage_ratio_profile_loader,
                     activity_asset_history_repository=ports.activity_asset_history_repository,
+                    operation=ports.operation,
                 )
             ),
             # M130 actividad-económica income (ledger_renta_income_aggregation).
             resolve_declared(
                 LedgerRentaIncomeAggregationSourceResolver(
                     ports=renta_catalogue_read_ports,
+                    operation=ports.operation,
                 )
             ),
             # M130 deductible-expense / gasto into casilla 02
@@ -850,6 +866,7 @@ def resolve_bucket_source_mesh(
                     transaction_repository=memoized_transaction_repository,
                     prorrata_register_repository=prorrata_register_repository,
                     activity_asset_history_repository=ports.activity_asset_history_repository,
+                    operation=ports.operation,
                 )
             ),
             # M151 impatriado (Ley Beckham) Spanish-source base
@@ -860,6 +877,7 @@ def resolve_bucket_source_mesh(
             resolve_declared(
                 LedgerImpatriadoIncomeAggregationSourceResolver(
                     transaction_repository=memoized_transaction_repository,
+                    operation=ports.operation,
                 )
             ),
             # M210 explicit IRNR income: the registry-bound gross-income source
@@ -867,13 +885,19 @@ def resolve_bucket_source_mesh(
             resolve_declared(
                 LedgerIrnrIncomeAggregationSourceResolver(
                     transaction_repository=memoized_transaction_repository,
+                    operation=ports.operation,
                 )
             ),
             # M369 OSS/IOSS (ledger_oss_aggregation).  The live path projects
             # OSS/IOSS-tagged issued invoices into validated ledger candidates;
             # pre-classified callers can still pass candidates directly through
             # the resolver constructor.
-            resolve_declared(OssIossLedgerSourceResolver(ports=ports.invoice_catalogue_read_ports)),
+            resolve_declared(
+                OssIossLedgerSourceResolver(
+                    ports=ports.invoice_catalogue_read_ports,
+                    operation=ports.operation,
+                )
+            ),
             # Retenciones family source (retenciones_aggregation): M115 reads the
             # dedicated per-perceptor store for quarterly count/base, while M180/M193
             # read it for distinct perceptor-NIF counts. Empty store on a declaring
@@ -1244,6 +1268,7 @@ def _prepare_bucket_aggregation_calculation(
     *,
     work_unit_id: str,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
+    operation: PinnedAuthorityOperation,
     casilla_inputs: Mapping[CasillaId, Decimal] | None,
     m210_official_tipo_renta_code: str | None,
     m210_gross_income_source_mode: M210GrossIncomeSourceMode | None,
@@ -1258,6 +1283,7 @@ def _prepare_bucket_aggregation_calculation(
         work_unit_id,
         work_unit_repository=work_unit_repository,
         profile=profile,
+        operation=operation,
     )
     assert_no_novel_source_kinds(snapshot.revision)
     validated_casilla_inputs = _validated_bucket_casilla_inputs(snapshot, casilla_inputs)
@@ -1471,6 +1497,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     preparation = _prepare_bucket_aggregation_calculation(
         work_unit_id=work_unit_id,
         work_unit_repository=ports.work_unit_repository,
+        operation=ports.operation,
         casilla_inputs=casilla_inputs,
         m210_official_tipo_renta_code=m210_official_tipo_renta_code,
         m210_gross_income_source_mode=m210_gross_income_source_mode,
@@ -1502,7 +1529,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         transaction_repository=memoized_transaction_repository,
         detail_rows=detail_rows,
     )
-    revision = _calculate_modelo_revision_with_trusted_mesh_sources(
+    publication = _calculate_modelo_revision_with_trusted_mesh_sources(
         work_unit_id,
         ports=ports,
         actor=actor,
@@ -1541,6 +1568,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         profile=preparation.profile,
         transaction_repository=memoized_transaction_repository,
     )
+    revision = publication.revision
     advisory_diagnostics = collect_bucket_aggregation_advisory_diagnostics(
         preparation.snapshot.revision,
         revision.casilla_values,
@@ -1552,6 +1580,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         observation_repository=ports.observation_repository,
         prorrata_register_repository=ports.prorrata_register_repository,
         transaction_repository=memoized_transaction_repository,
+        operation=ports.operation,
         profile=preparation.profile,
     )
     source_diagnostics = (
@@ -1560,6 +1589,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     return BucketAggregationCalculationResult(
         revision=revision,
         profile=preparation.profile,
+        publication=publication,
         source_diagnostics=source_diagnostics,
     )
 
@@ -2010,9 +2040,22 @@ def get_calculation_revision(
     ``calculation_revision_id``.
     """
     ports.relation_override_migration.migrate(ports.calculation_repository, operation=ports.operation)
+    return get_recorded_calculation_revision(calculation_revision_id, ports=ports)
+
+
+def get_recorded_calculation_revision(
+    calculation_revision_id: CalculationRevisionId,
+    *,
+    ports: CalculationActionPorts,
+) -> CalculationRevision:
+    """Read current persisted coordinates without migrating or changing storage.
+
+    Read-only operations use this door so an unsupported persisted revision
+    refuses through the canonical coordinate gate before any domain write.
+    """
     revision, _ = _calculation_revision_in_repository_bucket(
         calculation_revision_id,
-        catalogue=ports.calculation_repository.load(),
+        catalogue=ports.calculation_repository.load(operation=ports.operation),
         calculation_repository=ports.calculation_repository,
         work_unit_repository=ports.work_unit_repository,
         operation=ports.operation,

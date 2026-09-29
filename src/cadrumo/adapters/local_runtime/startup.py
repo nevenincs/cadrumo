@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import math
 import time
+from collections.abc import Callable
 from typing import Protocol
 
 from ...application.runtime.contracts import (
@@ -14,6 +15,7 @@ from ...application.runtime.contracts import (
     RuntimeRefusalError,
 )
 from ...application.runtime.management import RuntimeUserManager
+from ...core.async_cleanup import await_cancellation_complete
 from .framing import VerifiedRuntimeConnection
 
 
@@ -37,13 +39,6 @@ def _remaining(deadline: float) -> float:
     return remaining
 
 
-def _discard_connection(task: asyncio.Task[VerifiedRuntimeConnection]) -> None:
-    # asyncio cancellation does not stop a native I/O thread. Retain ownership
-    # of its result until the thread finishes; never leak a late connection.
-    if not task.cancelled() and task.exception() is None:
-        task.result().close()
-
-
 class RuntimeLaunchDoor:
     """Connect first, otherwise request existing provisioning once and await readiness.
 
@@ -60,13 +55,17 @@ class RuntimeLaunchDoor:
         *,
         expected: RuntimeClientHello,
         manager: RuntimeUserManager | None = None,
+        manager_factory: Callable[[], RuntimeUserManager | None] | None = None,
     ) -> None:
         """Bind a native endpoint to the exact expected root and installed cohort."""
         if endpoint.storage_identity != expected.storage_identity:
             raise RuntimeRefusalError(RuntimeRefusalCode.ROOT_MISMATCH)
+        if manager is not None and manager_factory is not None:
+            raise ValueError("supply one runtime manager source")
         self._endpoint = endpoint
         self._expected = expected
         self._manager = manager
+        self._manager_factory = manager_factory
 
     async def _connect(self, deadline: float) -> VerifiedRuntimeConnection:
         def connect() -> VerifiedRuntimeConnection:
@@ -76,8 +75,15 @@ class RuntimeLaunchDoor:
         task = asyncio.create_task(asyncio.to_thread(connect))
         try:
             return await asyncio.shield(task)
-        except asyncio.CancelledError:
-            task.add_done_callback(_discard_connection)
+        except asyncio.CancelledError as cancellation:
+            # Finish native I/O before returning endpoint ownership to the
+            # caller. A callback alone would allow its directory/handle to be
+            # closed while the connection thread still uses it.
+            async def discard() -> None:
+                connection = await task
+                connection.close()
+
+            await await_cancellation_complete(discard(), task_name="runtime-connect-cleanup", cancellation=cancellation)
             raise
 
     async def open(self, *, timeout: float = 10) -> VerifiedRuntimeConnection:
@@ -92,7 +98,7 @@ class RuntimeLaunchDoor:
                 except RuntimeRefusalError as error:
                     if error.reason is not RuntimeRefusalCode.ENDPOINT_NOT_READY:
                         raise
-                manager = self._manager
+                manager = self._manager if self._manager_factory is None else self._manager_factory()
                 if manager is None:
                     raise RuntimeRefusalError(RuntimeRefusalCode.UNAVAILABLE)
                 current = await manager.inspect()

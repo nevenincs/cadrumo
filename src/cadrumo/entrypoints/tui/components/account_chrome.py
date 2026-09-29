@@ -35,6 +35,7 @@ class AccountActionV1(StrEnum):
     APPEARANCE = auto()
     PROFILE = auto()
     CHANGE_USER = auto()
+    ACCESS = auto()
     PASSWORD = auto()
     SIGN_OUT = auto()
 
@@ -65,6 +66,10 @@ class TuiAccountHostV1(Protocol):
     @property
     def account_actions_available(self) -> bool:
         """Whether the account controls can act from the screen now in front."""
+        ...
+
+    def account_action_available(self, action: AccountActionV1, /) -> bool:
+        """Whether this exact action has an installed door on the current root."""
         ...
 
     @property

@@ -304,8 +304,11 @@ def _verify(revision_id: CalculationRevisionId, *, operation: PinnedAuthorityOpe
 
 
 def _file(revision_id: CalculationRevisionId, *, operation: PinnedAuthorityOperation) -> None:
+    # These cases assert an earlier settled-row/state refusal. No granting
+    # verification report exists; the caller-supplied ID has no authority.
     file_modelo_revision(
         revision_id,
+        approved_verification_report_id="0" * 64,
         certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
         operator_scope_ports=build_operator_scope_ports(),
         ports=build_filing_action_ports(bucket_id=_BUCKET_ID),
@@ -339,14 +342,12 @@ def _with_source_filing_years(revision: CalculationRevision, year: int | None) -
 
 
 def _blocking(report: VerificationReport) -> list[tuple[str, dict[str, object]]]:
-    return sorted(
-        (
-            (finding.message_locale_key, dict(finding.message_facts))
-            for finding in report.findings
-            if finding.severity is ModeloVerificationFindingSeverity.BLOCKING
-        ),
-        key=repr,
-    )
+    rows: list[tuple[str, dict[str, object]]] = []
+    for finding in report.findings:
+        if finding.severity is ModeloVerificationFindingSeverity.BLOCKING:
+            facts: dict[str, object] = dict(finding.message_facts)
+            rows.append((finding.message_locale_key, facts))
+    return sorted(rows, key=repr)
 
 
 def _verify_2026(tmp_path: Path, *, capture: bool, operation: PinnedAuthorityOperation) -> VerificationReport:

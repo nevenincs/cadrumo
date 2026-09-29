@@ -325,6 +325,36 @@ class UnavailableOperationSecureResponseAuthority:
         """Close the empty authority idempotently."""
 
 
+@dataclass(frozen=True, slots=True)
+class InspectionOnlyOperationSecureResponseAuthority:
+    """Read current intents from process-local custody without moving the bearer."""
+
+    broker: OperationResponseAuthorityBroker
+    capability: OperationResponseCapability
+    clock: Callable[[], datetime]
+
+    async def permitted_intents(
+        self,
+        request: OperationResponseControlRequestV1,
+        pending: OperationPendingInteraction,
+        /,
+    ) -> frozenset[OperationResponseIntent]:
+        return self.broker.inspect(request, pending, self.capability, clock=self.clock)
+
+    async def response_token(
+        self,
+        request: OperationResponseControlRequestV1,
+        pending: OperationPendingInteraction,
+        intent: OperationResponseIntent,
+        /,
+    ) -> OperationResponseToken:
+        del request, pending, intent
+        raise ValueError("inspection authority cannot consume a response")
+
+    def close(self) -> None:
+        """Inspection owns no token and cannot close the caller's capability."""
+
+
 _CAPABILITY_ISSUER = object()
 
 

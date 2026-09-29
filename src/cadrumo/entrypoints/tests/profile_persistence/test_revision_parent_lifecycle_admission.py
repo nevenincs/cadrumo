@@ -281,12 +281,19 @@ def test_direct_file_rejects_discarded_verified_revision_without_a_filing(repos:
         verification_repository,
         bucket_event_repository,
     ) = repos
+    granting = tuple(
+        report
+        for report in verification_repository.load().reports.values()
+        if report.calculation_revision_id == revision.calculation_revision_id and report.granted_verificado_completo
+    )
+    assert len(granting) == 1
     _discard_target(work_unit=work_unit, repos=repos)
     before = _catalogue_snapshot(repos)
 
     with pytest.raises(CalculationRevisionNotFoundError) as raised:
         _file_modelo_revision(
             revision.calculation_revision_id,
+            approved_verification_report_id=granting[0].verification_report_id,
             actor="operator-A",
             workflow_profile=workflow_profile(),
             work_unit_repository=work_unit_repository,

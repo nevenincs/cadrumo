@@ -32,7 +32,7 @@ import zipfile
 from collections.abc import Mapping, Sequence
 from importlib.resources.abc import Traversable  # nosem
 from pathlib import Path, PurePosixPath
-from typing import Protocol
+from typing import Protocol, cast
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -70,25 +70,23 @@ _PLUGIN_DISPLAY_NAME = f"{PRODUCT_IDENTITY.display_name} Spanish tax assistant"
 # through a new approval record and re-enrollment in verify_distribution_identity.py.
 _PLUGIN_DESCRIPTION = (
     "English: Operate Cadrumo, the deterministic Spanish-tax CLI, from Claude: "
-    "grounded search over the bundled BOE/AEAT legal corpus, situation-keyed guided "
-    "workflows, and human-confirmed execution of every state-changing step. Cadrumo "
+    "queries against the published tax authority and registered operations under "
+    "an explicitly approved profile grant. Cadrumo "
     "is read-only toward AEAT and never files - live submission is impossible and "
     "the taxpayer files outside the app. All financial data stays on-host in "
     "encrypted storage; only what the conversation shows reaches the model "
-    "provider. The server advertises an orientation core by default (overview + "
-    "contract + search/execute); set the surface option to 'full' to advertise "
-    "every verb up front.\n"
+    "provider. Each connection binds one exact profile; authorization controls "
+    "which operations and results are available.\n"
     "Español: Opera Cadrumo, la CLI determinista de impuestos españoles, desde "
-    "Claude: búsqueda fundamentada sobre el corpus legal BOE/AEAT incluido, flujos "
-    "guiados según la situación del contribuyente y ejecución con confirmación "
-    "humana de cada paso que modifica el estado. Cadrumo es de solo lectura frente "
+    "Claude: consultas a la autoridad tributaria publicada y operaciones "
+    "registradas bajo una autorización de perfil aprobada explícitamente. "
+    "Cadrumo es de solo lectura frente "
     "a la AEAT y nunca presenta declaraciones - la presentación en vivo es "
     "imposible y el contribuyente presenta fuera de la aplicación. Todos los datos "
     "financieros permanecen en el equipo en almacenamiento cifrado; solo lo que "
-    "muestra la conversación llega al proveedor del modelo. El servidor anuncia por "
-    "defecto un núcleo de orientación (visión general + contrato + buscar/ejecutar); "
-    "configura la opción de superficie en 'full' para anunciar todos los verbos "
-    "desde el inicio."
+    "muestra la conversación llega al proveedor del modelo. Cada conexión se "
+    "vincula a un perfil exacto; la autorización controla qué operaciones y "
+    "resultados están disponibles."
 )
 # The single product author-identity string, derived from the central product
 # identity, declared once in this defining workspace module.
@@ -107,14 +105,6 @@ _MCP_CONFIG = ".mcp.json"
 _MCP_SERVER_NAME = "cadrumo"
 _MCP_LAUNCHER = "uvx"
 _MCP_CONSOLE_SCRIPT = "cadrumo-mcp"
-_MCP_PERSONA_ENV = f"{PRODUCT_IDENTITY.environment_prefix}MCP_PERSONA"
-_MCP_PERSONA_INTERPOLATION = "${user_config.persona}"
-# The advertised-tool-surface toggle. ``core`` (default) advertises only the
-# orientation slice; ``full`` restores the flat
-# per-verb surface. Wired from the ``userConfig`` surface option; the server
-# validates the value and refuses an unknown one.
-_MCP_SURFACE_ENV = f"{PRODUCT_IDENTITY.environment_prefix}MCP_SURFACE"
-_MCP_SURFACE_INTERPOLATION = "${user_config.surface}"
 _MCP_REQUIRED_VERSION_ENV = f"{PRODUCT_IDENTITY.environment_prefix}MCP_REQUIRED_VERSION"
 _CLAUDE_PLUGIN_ROOT = "${CLAUDE_PLUGIN_ROOT}"
 _PLUGIN_ARTIFACTS_SUBDIR = Path("artifacts") / "python"
@@ -129,6 +119,22 @@ _PLUGIN_COHORT_SCHEMA = "cadrumo.plugin-python-cohort.v1"
 _RUNTIME_WHEELHOUSE_SCHEMA = "cadrumo.runtime-wheelhouse.v3"
 _RUNTIME_WHEELHOUSE_MANIFEST = "runtime-wheelhouse.json"
 _RUNTIME_WHEELHOUSE_PREFIX = "wheels/"
+
+
+def _json_object(pairs: list[tuple[str, object]]) -> dict[str, object]:
+    """Build a string-keyed object at every JSON object level."""
+    return dict(pairs)
+
+
+def _string_keyed_object(value: object) -> dict[str, object] | None:
+    """Narrow an object decoded through the string-keyed JSON object hook."""
+    if not isinstance(value, dict):
+        return None
+    # `_json_object` receives JSON member names, which the decoder defines as
+    # strings, and installs this type at every object level.
+    return cast(dict[str, object], value)
+
+
 _RUNTIME_WHEELHOUSE_SUBDIR = "wheelhouse"
 _SUPPORTED_WHEELHOUSE_TARGETS = frozenset({"linux-aarch64", "linux-x86-64", "macos-arm64", "windows-x86-64"})
 _RUNTIME_WHEELHOUSE_FLOORS = {
@@ -144,8 +150,6 @@ class PluginManifest(BaseModel):
 
     ``skills_written`` / ``agents_written`` count the ``skills/<name>/SKILL.md``
     and ``agents/<persona>.md`` documents written at the plugin root;
-    ``persona_default`` is the ``userConfig`` persona default baked into the
-    manifest (empty string = the full tool surface).
     """
 
     model_config = _STRICT_FROZEN
@@ -155,7 +159,6 @@ class PluginManifest(BaseModel):
     version: str = Field(min_length=1)
     skills_written: int = Field(ge=0)
     agents_written: int = Field(ge=0)
-    persona_default: str = ""
 
 
 class _PluginPythonCohort(Protocol):
@@ -179,56 +182,33 @@ def _write_json(dest_dir: Path, name: str, document: object) -> None:
     (dest_dir / name).write_text(json.dumps(document, indent=2) + "\n", encoding=_UTF_8, newline="\n")
 
 
-_PERSONA_CONFIG_KEY = "persona"
-_PERSONA_CONFIG_TITLE = "Persona"
-_PERSONA_CONFIG_DESCRIPTION = (
-    "The harness persona scoping the tool surface; leave blank for the full "
-    "surface. The cadrumo-mcp server validates the value and refuses an unknown "
-    "persona."
-)
-_SURFACE_CONFIG_KEY = "surface"
-_SURFACE_CONFIG_TITLE = "Tool surface"
-_SURFACE_CONFIG_DEFAULT = "core"
-_SURFACE_CONFIG_DESCRIPTION = (
-    "Which tools the server advertises up front: 'core' (default) advertises the "
-    "orientation slice plus search/execute; 'full' advertises every verb. Either "
-    "way the whole verb universe stays reachable through search and execute."
-)
-
-
-def _plugin_user_config(persona_default: str) -> dict[str, object]:
-    """Build the ``userConfig`` block declaring the persona string option.
-
-    The plugin format offers no enum/dropdown ``userConfig`` type, so the
-    persona is a string option with a default; the cadrumo-mcp server stays the
-    refusal surface for an unknown persona.
-    """
+def _plugin_user_config() -> dict[str, object]:
+    """Configure one immutable profile and an optional nonsecret key reference."""
     return {
-        _PERSONA_CONFIG_KEY: {
+        "profile_id": {
             "type": "string",
-            "title": _PERSONA_CONFIG_TITLE,
-            "description": _PERSONA_CONFIG_DESCRIPTION,
-            "default": persona_default,
-            "required": False,
+            "title": "Cadrumo profile ID",
+            "description": "Exact profile UUID. Labels and the human active profile do not select agent authority.",
+            "required": True,
         },
-        _SURFACE_CONFIG_KEY: {
+        "credential_reference": {
             "type": "string",
-            "title": _SURFACE_CONFIG_TITLE,
-            "description": _SURFACE_CONFIG_DESCRIPTION,
-            "default": _SURFACE_CONFIG_DEFAULT,
+            "title": "Protected credential reference",
+            "description": "Nonsecret reference UUID from approved enrollment. Leave empty to request authorization.",
+            "default": "",
             "required": False,
         },
     }
 
 
-def _plugin_manifest_document(version: str, persona_default: str) -> dict[str, object]:
+def _plugin_manifest_document(version: str) -> dict[str, object]:
     """Build the ``.claude-plugin/plugin.json`` manifest document.
 
     ``name`` is the sole validator-required field; the remaining fields are the
     publication metadata a first-class external-service plugin declares.
     ``defaultEnabled`` is ``false`` per the external-service recommendation so
     the plugin never auto-activates its MCP server on install. ``userConfig``
-    declares the persona option prompted on enable.
+    declares the exact profile and protected credential reference.
     """
     return {
         "$schema": _PLUGIN_SCHEMA,
@@ -240,7 +220,7 @@ def _plugin_manifest_document(version: str, persona_default: str) -> dict[str, o
         "license": _PLUGIN_LICENSE,
         "keywords": list(_PLUGIN_KEYWORDS),
         "defaultEnabled": False,
-        "userConfig": _plugin_user_config(persona_default),
+        "userConfig": _plugin_user_config(),
     }
 
 
@@ -267,8 +247,7 @@ _TOOL_SCOPE_HEADING = "## Tool scope"
 # Claude built-in tools that mutate the local workspace filesystem. A persona
 # whose declared tool scope is read-only (orchestration only) does not carry
 # them; every other persona inherits the full tool set and relies on the
-# cadrumo-mcp server's own persona-scope gate as the refusal surface:
-# server-side validation stays the refusal surface.
+# runtime's exact-profile grant checks for application operations.
 _WORKSPACE_MUTATION_TOOLS = ("Edit", "Write", "NotebookEdit")
 
 
@@ -383,6 +362,10 @@ def _mcp_args(cohort: _PluginPythonCohort) -> list[str]:
         "--with",
         f"{root}/{wheels['cadrumo-data-official'].name}",
         _MCP_CONSOLE_SCRIPT,
+        "--profile-id",
+        "${user_config.profile_id}",
+        "--credential-reference",
+        "${user_config.credential_reference}",
     ]
 
 
@@ -395,8 +378,7 @@ def _mcp_config_document(version: str, cohort: _PluginPythonCohort) -> dict[str,
                 "args": _mcp_args(cohort),
                 "env": {
                     _MCP_REQUIRED_VERSION_ENV: version,
-                    _MCP_PERSONA_ENV: _MCP_PERSONA_INTERPOLATION,
-                    _MCP_SURFACE_ENV: _MCP_SURFACE_INTERPOLATION,
+                    "CADRUMO_MCP_REQUIRED_HARNESS_VERSION": cohort.harness_version,
                     "PYTHONNOUSERSITE": "1",
                     "PYTHONPATH": "",
                 },
@@ -449,7 +431,11 @@ def _extract_runtime_wheelhouse(
         names = archive.namelist()
         if names.count(_RUNTIME_WHEELHOUSE_MANIFEST) != 1 or len(names) != len(set(names)):
             raise ValueError("runtime wheelhouse has a missing or duplicate member")
-        document = json.loads(archive.read(_RUNTIME_WHEELHOUSE_MANIFEST))
+        document = _string_keyed_object(
+            json.loads(archive.read(_RUNTIME_WHEELHOUSE_MANIFEST), object_pairs_hook=_json_object)
+        )
+        if document is None:
+            raise ValueError("runtime wheelhouse manifest must be an object with string keys")
         if not isinstance(document, dict) or set(document) != {"lock_sha256", "platform_floors", "runtimes", "schema"}:
             raise ValueError("runtime wheelhouse manifest schema drifted")
         if document != dict(cohort.runtime_wheelhouse_manifest):
@@ -458,17 +444,18 @@ def _extract_runtime_wheelhouse(
             raise ValueError("runtime wheelhouse identity drifted")
         if document.get("platform_floors") != _RUNTIME_WHEELHOUSE_FLOORS:
             raise ValueError("runtime wheelhouse platform support floor drifted")
-        runtimes = document.get("runtimes")
-        if not isinstance(runtimes, dict) or not runtimes:
+        runtimes = _string_keyed_object(document.get("runtimes"))
+        if not runtimes:
             raise ValueError("runtime wheelhouse declares no runtimes")
         expected_members = {_RUNTIME_WHEELHOUSE_MANIFEST}
         destination.mkdir(parents=True)
         ready_runtime = False
-        for python_version, runtime in sorted(runtimes.items()):
+        for python_version, runtime_value in sorted(runtimes.items()):
+            runtime = _string_keyed_object(runtime_value)
             if (
                 not isinstance(python_version, str)
                 or re.fullmatch(r"3\.[0-9]+", python_version) is None
-                or not isinstance(runtime, dict)
+                or runtime is None
                 or runtime.get("python") != python_version
             ):
                 raise ValueError(f"runtime wheelhouse runtime declaration is invalid: {python_version!r}")
@@ -480,36 +467,38 @@ def _extract_runtime_wheelhouse(
             if status != "ready" or set(runtime) != {"platforms", "python", "status", "wheels"}:
                 raise ValueError(f"runtime wheelhouse runtime status is invalid: {python_version!r}")
             ready_runtime = True
-            platforms = runtime.get("platforms")
-            wheels = runtime.get("wheels")
-            if not isinstance(platforms, dict) or set(platforms) != _SUPPORTED_WHEELHOUSE_TARGETS:
+            platforms = _string_keyed_object(runtime.get("platforms"))
+            wheels = _string_keyed_object(runtime.get("wheels"))
+            if platforms is None or frozenset(platforms) != _SUPPORTED_WHEELHOUSE_TARGETS:
                 raise ValueError(f"runtime wheelhouse platform closure is incomplete: {python_version!r}")
-            if not isinstance(wheels, dict) or not wheels:
+            if not wheels:
                 raise ValueError(f"runtime wheelhouse declares no wheels: {python_version!r}")
             for filename, record in sorted(wheels.items()):
+                record_object = _string_keyed_object(record)
                 if (
                     not isinstance(filename, str)
                     or PurePosixPath(filename).name != filename
                     or not filename.endswith(".whl")
-                    or not isinstance(record, dict)
-                    or set(record) != {"distribution", "sha256", "size", "version"}
+                    or record_object is None
+                    or set(record_object) != {"distribution", "sha256", "size", "version"}
                 ):
                     raise ValueError(f"runtime wheelhouse record is invalid: {filename!r}")
                 member = f"{_RUNTIME_WHEELHOUSE_PREFIX}{python_version}/{filename}"
                 expected_members.add(member)
                 payload = archive.read(member)
-                if len(payload) != record.get("size") or sha256_hex(payload) != record.get("sha256"):
+                if len(payload) != record_object.get("size") or sha256_hex(payload) != record_object.get("sha256"):
                     raise ValueError(f"runtime wheelhouse wheel bytes drifted: {python_version}/{filename!r}")
                 destination_path = destination / filename
                 if destination_path.exists() and destination_path.read_bytes() != payload:
                     raise ValueError(f"runtime wheelhouse runtime variants disagree: {filename!r}")
                 destination_path.write_bytes(payload)
-            for target, rows in platforms.items():
-                if not isinstance(rows, dict) or not rows:
+            for target, rows_value in platforms.items():
+                rows = _string_keyed_object(rows_value)
+                if not rows:
                     raise ValueError(f"runtime wheelhouse target closure is empty: {python_version}/{target!r}")
                 for distribution, filename in rows.items():
-                    record = wheels.get(filename) if isinstance(filename, str) else None
-                    if not isinstance(distribution, str) or not isinstance(record, dict):
+                    record = _string_keyed_object(wheels.get(filename)) if isinstance(filename, str) else None
+                    if not isinstance(distribution, str) or record is None:
                         raise ValueError(
                             f"runtime wheelhouse target references an unknown wheel: {python_version}/{target!r}"
                         )
@@ -551,20 +540,18 @@ def _verify_and_copy_cohort_wheels(cohort: _PluginPythonCohort, artifact_dir: Pa
 def materialise_plugin(
     output_dir: Path,
     *,
-    persona_default: str = "",
     cohort: _PluginPythonCohort,
 ) -> PluginManifest:
     """Write the shipped harness under ``output_dir`` as a Claude plugin.
 
     Emits ``.claude-plugin/plugin.json`` carrying the plugin manifest (including
-    the ``userConfig`` persona option), the top-level ``skills/<name>/SKILL.md``
+    the ``userConfig`` profile binding), the top-level ``skills/<name>/SKILL.md``
     tree (plus each skill's ``reference/`` material), the ``agents/<persona>.md``
     tree with Claude-native frontmatter, and the ``.mcp.json`` stdio server
     declaration, all from the single authored harness source. The validated
     ``cohort`` supplies the plugin version and every exact product wheel; the
     plugin embeds and launches that closed set without an index, installed
-    package metadata, ambient executable, or project checkout. ``persona_default``
-    seeds the ``userConfig`` persona default.
+    package metadata, ambient executable, or project checkout.
 
     Returns:
         :class:`PluginManifest` describing the plugin written.
@@ -574,7 +561,7 @@ def materialise_plugin(
     _write_json(
         output_dir / _PLUGIN_DIR,
         _PLUGIN_MANIFEST,
-        _plugin_manifest_document(resolved_version, persona_default),
+        _plugin_manifest_document(resolved_version),
     )
     skills = _emit_plugin_skills(output_dir)
     agents = _emit_plugin_agents(output_dir)
@@ -591,7 +578,6 @@ def materialise_plugin(
         version=resolved_version,
         skills_written=skills,
         agents_written=agents,
-        persona_default=persona_default,
     )
 
 

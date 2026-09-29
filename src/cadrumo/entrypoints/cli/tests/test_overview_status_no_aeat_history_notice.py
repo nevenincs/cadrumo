@@ -13,19 +13,38 @@ serve.
 
 from __future__ import annotations
 
+import sys
+from collections.abc import Iterator
+from pathlib import Path
+
 import pytest
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 
-from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage
+from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
-from .cli_runner import invoke_cached_cli
-
-__all__ = ["isolated_profile_storage"]
 from ....tests.cli_envelope import unwrap_envelope_notices
-from ._profile_cli_support import seed_profile as _seed_profile
+from ._overview_native_support import invoke_native_overview
+from ._runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.hex_entrypoint,
+    pytest.mark.windows_only,
+    pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers"),
+]
+
+
+@pytest.fixture
+def _native_scope(tmp_path: Path) -> Iterator[NativeCliProfileFixture]:
+    with native_cli_profile_scope(tmp_path) as fixture:
+        yield fixture
+
+
+def _seed_profile(fixture: NativeCliProfileFixture, label: str, **facts: str) -> None:
+    fixture.register(label=label, facts=facts)
+    close_active_bucket_session()
+
 
 _NOTICE_CODE = "overview.no_aeat_history"
 # The profile facts a filer needs to be readiness-complete for M303 work.
@@ -55,9 +74,9 @@ _LEGAL_ENTITY_FACTS = {
 }
 
 
-def _status_notices() -> list[dict[str, object]]:
-    result = invoke_cached_cli(["--format", "json", "app", "overview", "status"])
-    assert result.exit_code == 0, result.output
+def _status_notices(fixture: NativeCliProfileFixture) -> list[dict[str, object]]:
+    result = invoke_native_overview(fixture, ["--format", "json", "app", "overview", "status"])
+    assert result.exit_code == 0
     return [STR_KEYED_MAPPING_ADAPTER.validate_python(notice) for notice in unwrap_envelope_notices(result.output)]
 
 
@@ -67,36 +86,43 @@ def _history_notice(notices: list[dict[str, object]]) -> dict[str, object]:
     return matches[0]
 
 
-def test_a_fresh_natural_person_profile_gets_the_history_notice_with_the_sweep_action() -> None:
+def test_a_fresh_natural_person_profile_gets_the_history_notice_with_the_sweep_action(
+    _native_scope: NativeCliProfileFixture,
+) -> None:
     """The measured defect: the envelope now carries the notice at all."""
     _seed_profile(
+        _native_scope,
         "freelancer",
         **_M303_READY_FACTS,
         **{"taxpayer_type.entity_type": "natural_person", "identity.tax_id": "12345678Z"},
     )
 
-    notice = _history_notice(_status_notices())
+    notice = _history_notice(_status_notices(_native_scope))
     assert notice["severity"] == "info"
     action = notice.get("action")
     assert isinstance(action, dict)
     assert action["action"]["action_id"] == "operator.live.filed.pull_all"
 
 
-def test_a_fresh_sociedades_profile_gets_the_history_notice_with_no_action() -> None:
+def test_a_fresh_sociedades_profile_gets_the_history_notice_with_no_action(
+    _native_scope: NativeCliProfileFixture,
+) -> None:
     """A Sociedades filer's own direct-tax modelos (200/202) the sweep cannot fetch.
 
     Measured over a real isolated encrypted profile holding a Sociedades
     taxpayer and zero calculation observations: the notice fires (the gap is
     real) but carries no action (the whole-history sweep is not a fix for it).
     """
-    _seed_profile("webco", **_M303_READY_FACTS, **_LEGAL_ENTITY_FACTS)
+    _seed_profile(_native_scope, "webco", **_M303_READY_FACTS, **_LEGAL_ENTITY_FACTS)
 
-    notice = _history_notice(_status_notices())
+    notice = _history_notice(_status_notices(_native_scope))
     assert notice["severity"] == "info"
     assert notice.get("action") is None
 
 
-def test_one_pulled_observation_from_any_modelo_silences_the_sociedades_notice_too() -> None:
+def test_one_pulled_observation_from_any_modelo_silences_the_sociedades_notice_too(
+    _native_scope: NativeCliProfileFixture,
+) -> None:
     """The predicate stays official-source membership, not a Sociedades-only exemption."""
     from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 
@@ -104,7 +130,7 @@ def test_one_pulled_observation_from_any_modelo_silences_the_sociedades_notice_t
     from ....domain.calculations.registry.bindings import RegistryModeloObservation
     from ....domain.calculations.registry.tests.published_authority import published_snapshot
 
-    _seed_profile("webco-with-history", **_M303_READY_FACTS, **_LEGAL_ENTITY_FACTS)
+    _seed_profile(_native_scope, "webco-with-history", **_M303_READY_FACTS, **_LEGAL_ENTITY_FACTS)
 
     pointer = read_profile_bucket("webco-with-history")
     assert pointer is not None
@@ -118,5 +144,5 @@ def test_one_pulled_observation_from_any_modelo_silences_the_sociedades_notice_t
             ),
         )
 
-    notices = _status_notices()
+    notices = _status_notices(_native_scope)
     assert not [notice for notice in notices if notice.get("code") == _NOTICE_CODE], notices

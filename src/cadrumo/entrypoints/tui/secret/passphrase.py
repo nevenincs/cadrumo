@@ -19,6 +19,8 @@ See Also:
 
 from __future__ import annotations
 
+import asyncio
+from contextlib import suppress
 from contextvars import copy_context
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, override
@@ -26,7 +28,9 @@ from typing import TYPE_CHECKING, override
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.widgets import Button, Footer, Input, Label, Static
+from textual.worker import Worker
 
+from ....core.async_cleanup import await_cancellation_complete
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.i18n.render import tr
 from ..components.status import PinnedStatusBar
@@ -114,10 +118,64 @@ class PassphraseScreen(CredentialScreen["ProfilePassphraseRotationOutcome"]):
         super().__init__()
         self._assess_profile_password = assess
         self._rotate_passphrase = rotate
+        self._rotation_task: asyncio.Task[CredentialAttempt[ProfilePassphraseRotationOutcome]] | None = None
+        self._live = True
         """Applies the typed current/new/confirmation triple and returns the
         presentation-ready attempt. Injected rather than imported, exactly
         like registration's ``register`` door: the profile identity is
         already closed over by whatever composed this screen."""
+
+    @override
+    def start_attempt(self, work: Callable[[], CredentialAttempt[ProfilePassphraseRotationOutcome]]) -> None:
+        """Own the blocking mutation until it settles, including during unmount."""
+        if self.attempt_in_flight:
+            return
+        self.error = None
+        self.set_busy(busy=True)
+        for field in self.query(Input):
+            field.value = ""
+        task = asyncio.create_task(asyncio.to_thread(work), name=self.ATTEMPT_NAME)
+        self._rotation_task = task
+        self._attempt = self.run_worker(
+            await_cancellation_complete(task, task_name=self.ATTEMPT_NAME),
+            name=self.ATTEMPT_NAME,
+            group=self.ATTEMPT_NAME,
+            exit_on_error=False,
+            exclusive=True,
+        )
+
+    @override
+    def on_worker_state_changed(self, event: Worker.StateChanged) -> None:
+        """Discard presentation after unmount while retaining execution ownership."""
+        if not self._live:
+            return
+        super().on_worker_state_changed(event)
+        if not self.attempt_in_flight:
+            self._rotation_task = None
+
+    async def settle_rotation(self) -> ProfilePassphraseRotationOutcome | None:
+        """Read the submitted attempt's result without restoring expired authority."""
+        task = self._rotation_task
+        if task is not None:
+            try:
+                attempt = await await_cancellation_complete(task, task_name="passphrase-result-settlement")
+            except (asyncio.CancelledError, Exception):
+                return None
+            return attempt.outcome
+        return self.outcome
+
+    async def on_unmount(self) -> None:
+        """Do not release the borrowed runtime client while rotation still uses it."""
+        self._live = False
+        for field in self.query(Input):
+            field.value = ""
+        if self._attempt is not None:
+            self._attempt.cancel()
+        task = self._rotation_task
+        if task is not None:
+            with suppress(asyncio.CancelledError, Exception):
+                await await_cancellation_complete(task, task_name="passphrase-unmount-settlement")
+        self._rotation_task = None
 
     @override
     def compose(self) -> ComposeResult:
@@ -165,7 +223,7 @@ class PassphraseScreen(CredentialScreen["ProfilePassphraseRotationOutcome"]):
 
     def on_input_changed(self, event: Input.Changed) -> None:
         """Re-render the advisory strength line as the new password is typed."""
-        if event.input.id == "field-new":
+        if self._live and event.input.id == "field-new":
             self._render_strength(event.value, assess=self._assess_profile_password)
 
     def on_button_pressed(self, event: Button.Pressed) -> None:

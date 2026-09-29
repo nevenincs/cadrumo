@@ -19,6 +19,7 @@ constant.
 from __future__ import annotations
 
 import ast
+from collections import Counter
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from functools import cache
@@ -63,26 +64,50 @@ class _DeclaredExclusion:
     """
 
     path: str
+    owner: str
     construct: str
     reason: str
 
 
 _ASYNCIO_RUN_EXCLUSIONS: tuple[_DeclaredExclusion, ...] = (
     _DeclaredExclusion(
-        path="src/cadrumo/entrypoints/tui/launcher.py",
+        path="src/cadrumo/entrypoints/tui/installed_session.py",
+        owner="_run_runtime_session.requester_for_api.fresh_credential_client",
         construct="asyncio.run",
-        reason=(
-            "the launcher is the composition root, not a projection; owning the "
-            "event loop for one session is the job it exists to do"
-        ),
+        reason="the requester calls this credential-client opener on its owned worker thread",
     ),
     _DeclaredExclusion(
         path="src/cadrumo/entrypoints/tui/installed_session.py",
+        owner="run_installed_workbench_session",
         construct="asyncio.run",
         reason=(
             "the installed session is the launcher's production composition root; "
             "it owns one event loop per admitted profile session"
         ),
+    ),
+    _DeclaredExclusion(
+        path="src/cadrumo/entrypoints/tui/runtime_account.py",
+        owner="compose_runtime_account_factories.password.rotate",
+        construct="asyncio.run",
+        reason="PassphraseScreen.start_attempt invokes rotation on an owned worker thread",
+    ),
+    _DeclaredExclusion(
+        path="src/cadrumo/entrypoints/tui/runtime_management.py",
+        owner="_read_off_loop",
+        construct="asyncio.run",
+        reason="the runtime-status screen calls this inspector through asyncio.to_thread",
+    ),
+    _DeclaredExclusion(
+        path="src/cadrumo/entrypoints/tui/modelo/runtime_lifecycle.py",
+        owner="compose_runtime_modelo_lifecycle_door.admit",
+        construct="asyncio.run",
+        reason="the lifecycle door invokes attestation admission through asyncio.to_thread",
+    ),
+    _DeclaredExclusion(
+        path="src/cadrumo/entrypoints/tui/modelo/runtime_work_create.py",
+        owner="compose_runtime_work_create_handoff.create",
+        construct="asyncio.run",
+        reason="declarations overview and calendar invoke the create handoff through asyncio.to_thread",
     ),
 )
 
@@ -331,41 +356,59 @@ def test_every_surface_reference_joins_a_definition_that_claims_it() -> None:
     assert not unclaimed, f"a surface exposes an operation its definition does not permit there: {unclaimed}"
 
 
-def _asyncio_run_sites(prefix: str) -> tuple[str, ...]:
-    """Production files under ``prefix`` that own an event loop."""
-    found: list[str] = []
-    for path in _paths_under(prefix):
-        for node in ast.walk(_parsed(path)):
-            if (
-                isinstance(node, ast.Attribute)
-                and node.attr == "run"
-                and isinstance(node.value, ast.Name)
-                and node.value.id == "asyncio"
-            ):
-                found.append(path)
-                break
-    return tuple(sorted(found))
+def _asyncio_run_sites_in_tree(path: str, tree: ast.AST) -> tuple[tuple[str, str], ...]:
+    """Name every exact call site, retaining duplicates within one owner."""
+    found: list[tuple[str, str]] = []
+
+    def visit(node: ast.AST, owners: tuple[str, ...]) -> None:
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            owners = (*owners, node.name)
+        if (
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Attribute)
+            and node.func.attr == "run"
+            and isinstance(node.func.value, ast.Name)
+            and node.func.value.id == "asyncio"
+        ):
+            found.append((path, ".".join(owners)))
+        for child in ast.iter_child_nodes(node):
+            visit(child, owners)
+
+    visit(tree, ())
+    return tuple(found)
+
+
+def _asyncio_run_sites(prefix: str) -> tuple[tuple[str, str], ...]:
+    """Enumerate exact event-loop owners under one production frontend."""
+    return tuple(
+        sorted(site for path in _paths_under(prefix) for site in _asyncio_run_sites_in_tree(path, _parsed(path)))
+    )
 
 
 def test_no_undeclared_full_screen_surface_owns_the_event_loop() -> None:
-    """Only the declared composition and diagnostic seams call ``asyncio.run``."""
-    declared = {exclusion.path for exclusion in _ASYNCIO_RUN_EXCLUSIONS}
-    live = set(_asyncio_run_sites(_FRONTEND_PACKAGES[OperationFrontendProjection.TUI]))
-    undeclared = sorted(live - declared)
+    """Each off-loop bridge has exactly one declared call site."""
+    declared = Counter((item.path, item.owner) for item in _ASYNCIO_RUN_EXCLUSIONS)
+    live = Counter(_asyncio_run_sites(_FRONTEND_PACKAGES[OperationFrontendProjection.TUI]))
+    undeclared = sorted((live - declared).elements())
     assert not undeclared, f"a full-screen surface owns its own event loop: {undeclared}"
 
 
 def test_every_declared_exclusion_still_answers_a_live_site() -> None:
     """A stale exclusion fails rather than silently widening the census."""
-    live = set(_asyncio_run_sites(_FRONTEND_PACKAGES[OperationFrontendProjection.TUI]))
-    stale = [
-        exclusion.path
-        for exclusion in _ASYNCIO_RUN_EXCLUSIONS
-        if exclusion.construct == "asyncio.run" and exclusion.path not in live
-    ]
+    live = Counter(_asyncio_run_sites(_FRONTEND_PACKAGES[OperationFrontendProjection.TUI]))
+    declared = Counter((item.path, item.owner) for item in _ASYNCIO_RUN_EXCLUSIONS if item.construct == "asyncio.run")
+    stale = sorted((declared - live).elements())
     assert not stale, f"a declared exclusion no longer answers a live site and must be removed: {stale}"
-    missing_reason = [exclusion.path for exclusion in _ASYNCIO_RUN_EXCLUSIONS if not exclusion.reason.strip()]
+    missing_reason = [(item.path, item.owner) for item in _ASYNCIO_RUN_EXCLUSIONS if not item.reason.strip()]
     assert not missing_reason, f"a declared exclusion states no reason: {missing_reason}"
+
+
+def test_event_loop_census_detects_an_extra_call_in_the_same_owner() -> None:
+    """A path or function-name allowlist must not hide a second call."""
+    tree = ast.parse("def bridge():\n    asyncio.run(first())\n    asyncio.run(second())\n")
+    sites = _asyncio_run_sites_in_tree("bridge.py", tree)
+    assert sites == (("bridge.py", "bridge"), ("bridge.py", "bridge"))
+    assert Counter(sites) - Counter({("bridge.py", "bridge"): 1}) == Counter({("bridge.py", "bridge"): 1})
 
 
 def test_no_full_screen_surface_reaches_an_outbound_adapter_directly() -> None:

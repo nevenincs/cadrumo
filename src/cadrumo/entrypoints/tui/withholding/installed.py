@@ -22,9 +22,9 @@ from ....application.aggregation.withholding_filing_cadence import (
     load_bucket_withholding_filer_cadence,
 )
 from ....application.invoices.catalogue_lifecycle import resolve_catalogue_invoice
+from ....application.invoices.catalogue_selection import InvoiceLookupRefusalReason, InvoiceLookupRefusedError
 from ....core.errors.hierarchy import CadrumoError
 from ....domain.calculations.registry.authority import bundled_indexed_authority
-from ....domain.invoices.errors import InvoiceNotFoundError
 from ....domain.invoices.models import Invoice, InvoiceCatalogue
 from ....domain.transactions.models import TransactionCatalogue
 from ...adapter_composition import build_withholding_observation_service
@@ -78,7 +78,9 @@ def _resolve_visible_invoice(catalogue: InvoiceCatalogue, supplied: str) -> Invo
     """
     try:
         return resolve_catalogue_invoice(catalogue, supplied)
-    except InvoiceNotFoundError:
+    except InvoiceLookupRefusedError as exc:
+        if exc.reason is InvoiceLookupRefusalReason.AMBIGUOUS:
+            return None
         matches = tuple(invoice for invoice in catalogue.values() if invoice.invoice_number == supplied.strip())
         return matches[0] if len(matches) == 1 else None
     except CadrumoError:

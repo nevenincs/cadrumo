@@ -32,8 +32,12 @@ Submodules
    cadrumo.application.operations._supervisor_lease
    cadrumo.application.operations._supervisor_reconciliation
    cadrumo.application.operations._supervisor_settlement
+   cadrumo.application.operations.access_port
+   cadrumo.application.operations.access_resolution
+   cadrumo.application.operations.authorization
    cadrumo.application.operations.capabilities
    cadrumo.application.operations.composition
+   cadrumo.application.operations.drain
    cadrumo.application.operations.errors
    cadrumo.application.operations.event_replay
    cadrumo.application.operations.events
@@ -48,6 +52,10 @@ Submodules
    cadrumo.application.operations.observation
    cadrumo.application.operations.owner
    cadrumo.application.operations.projection_services
+   cadrumo.application.operations.provenance
+   cadrumo.application.operations.public_period
+   cadrumo.application.operations.public_scalar
+   cadrumo.application.operations.refusal_evidence
    cadrumo.application.operations.registry
    cadrumo.application.operations.registry_schema_validation
    cadrumo.application.operations.secret_submission

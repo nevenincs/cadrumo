@@ -8,6 +8,8 @@ or UUID supplied by an agent cannot construct either authority.
 from __future__ import annotations
 
 from contextlib import AbstractContextManager
+from dataclasses import dataclass
+from datetime import datetime
 from enum import StrEnum
 from typing import Annotated, Protocol
 from uuid import UUID
@@ -19,10 +21,13 @@ from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.time.utc import UtcInstant
 from .access_contracts import (
     ACCESS_LEASE_MAXIMUM,
+    AccessAction,
     AccessEvaluationContext,
     AccessScope,
     AccessSession,
+    AuthorityState,
     AutomationGrant,
+    DisclosurePermission,
     ProfileAccessBinding,
     ProfileAccessState,
 )
@@ -154,6 +159,14 @@ class EnrollmentReceipt(BaseModel):
     credential_reference: UUID | None
 
 
+@dataclass(frozen=True, slots=True)
+class EnrollmentTransition:
+    """One call's receipt and whether its guarded publication completed."""
+
+    receipt: EnrollmentReceipt
+    published: bool
+
+
 class EnrollmentReview(BaseModel):
     """Human-authorized exact consent display, excluding transport internals."""
 
@@ -174,6 +187,109 @@ class AutomationInventory(BaseModel):
     requests: tuple[EnrollmentReview, ...]
 
 
+class AutomationPeriodProjection(BaseModel):
+    """Portable filing coordinate without the domain Period's schema hook."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    filing_year: int
+    code: str
+
+
+class AutomationScopeProjection(BaseModel):
+    """Typed public scope with explicit stable ordering for allow sets."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    operations: tuple[str, ...]
+    actions: tuple[AccessAction, ...]
+    disclosures: tuple[DisclosurePermission, ...]
+    periods: tuple[AutomationPeriodProjection, ...] | None
+    allow_period_independent: bool
+    allow_delegation: bool
+
+
+class AutomationGrantProjection(BaseModel):
+    """Public grant facts without protected custody bindings."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    grant_id: UUID
+    profile_id: UUID
+    client_id: UUID
+    state: AuthorityState
+    scope: AutomationScopeProjection
+    valid_from: datetime
+    expires_at: datetime
+    unattended: bool
+    allow_os_lock: bool
+
+
+class AutomationProposalProjection(BaseModel):
+    """Human-visible reviewed consent, using the portable scope shape."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    kind: EnrollmentKind
+    scope: AutomationScopeProjection
+    expires_at: datetime
+    key_expires_at: datetime | None
+    unattended: bool
+    allow_os_lock: bool
+    target_grant_id: UUID | None
+    target_key_id: UUID | None
+
+
+class AutomationKeyProjection(BaseModel):
+    """Public key status without possession, verifier or storage locator."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    key_id: UUID
+    grant_id: UUID
+    profile_id: UUID
+    state: AuthorityState
+    valid_from: datetime
+    expires_at: datetime
+    last_used_at: datetime | None
+
+
+class AutomationReceiptProjection(BaseModel):
+    """Public review identity, never a credential-delivery capability."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    request_id: UUID
+    profile_id: UUID
+    stage: EnrollmentStage
+    review_digest: ContentDigest
+    grant_id: UUID
+    key_id: UUID | None
+    credential_reference: UUID | None
+
+
+class AutomationReviewProjection(BaseModel):
+    """One exact review and recipient identity without secret delivery data."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    receipt: AutomationReceiptProjection
+    client_id: UUID
+    destination_id: UUID
+    proposal: AutomationProposalProjection
+    expires_at: datetime
+
+
+class AutomationInventoryProjection(BaseModel):
+    """Strict public result projected only from authorized inventory facts."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    grants: tuple[AutomationGrantProjection, ...]
+    keys: tuple[AutomationKeyProjection, ...]
+    requests: tuple[AutomationReviewProjection, ...]
+
+
 class AdministrationFacts(BaseModel):
     """Fresh observations supplied by the trusted lifecycle owner."""
 
@@ -184,12 +300,20 @@ class AdministrationFacts(BaseModel):
     session: AccessSession | None
 
 
-class AutomationAdministrationOwner(Protocol):
-    """Reobserve authority and locate an exact authenticated recipient."""
+class AutomationInventoryOwner(Protocol):
+    """Reobserve and serialize human authority for inventory inspection."""
 
     def facts(self) -> AdministrationFacts:
         """Read current fences, login provenance, monotonic clock and connection."""
         ...
+
+    def administration_guard(self) -> AbstractContextManager[None]:
+        """Serialize revalidation/publication with lifecycle denial fences."""
+        ...
+
+
+class AutomationAdministrationOwner(AutomationInventoryOwner, Protocol):
+    """Inventory authority plus exact requester and protected recipient."""
 
     def requester(self) -> EnrollmentRequester:
         """Return the requesting connection's verified recipient coordinates."""
@@ -197,10 +321,6 @@ class AutomationAdministrationOwner(Protocol):
 
     def recipient(self, requester: EnrollmentRequester) -> ProtectedEnrollmentRecipient:
         """Require this exact live connection, boot, client and destination."""
-        ...
-
-    def administration_guard(self) -> AbstractContextManager[None]:
-        """Serialize revalidation/publication with lifecycle denial fences."""
         ...
 
 

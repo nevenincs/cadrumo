@@ -17,10 +17,12 @@ from ....application.user_profile.login_session_port import (
 )
 from .custody.acceleration_receipt import (
     advance_persisted_profile_session_idle_deadline,
+    borrow_profile_session_key,
     delete_profile_session,
     mint_profile_session,
     profile_session_path,
     resume_profile_session,
+    resume_profile_session_with_key,
 )
 from .custody.acceleration_receipt_crypto import PersistedProfileSession
 from .custody.zeroise import zeroise
@@ -163,6 +165,42 @@ class _PersistenceProfileLoginSession:
             custody_generation=custody_generation,
             dek_epoch=dek_epoch,
             now=now,
+        )
+
+    def borrow_acceleration_receipt_key(
+        self,
+        *,
+        storage_root: Path,
+        profile_id: UUID,
+        custody_generation: int,
+        dek_epoch: str,
+        now: datetime,
+    ) -> tuple[ProfileSessionResumeOutcomePort, bytearray | None]:
+        return borrow_profile_session_key(
+            storage_root=storage_root,
+            profile_id=profile_id,
+            custody_generation=custody_generation,
+            dek_epoch=dek_epoch,
+            now=now,
+        )
+
+    def resume_acceleration_receipt_with_key(
+        self,
+        *,
+        storage_root: Path,
+        profile_id: UUID,
+        custody_generation: int,
+        dek_epoch: str,
+        now: datetime,
+        receipt_key: bytearray,
+    ) -> tuple[ProfileSessionResumeOutcomePort, bytearray | None]:
+        return resume_profile_session_with_key(
+            storage_root=storage_root,
+            profile_id=profile_id,
+            custody_generation=custody_generation,
+            dek_epoch=dek_epoch,
+            now=now,
+            receipt_key=receipt_key,
         )
 
     def delete_acceleration_receipt(self, *, storage_root: Path, profile_id: UUID) -> None:

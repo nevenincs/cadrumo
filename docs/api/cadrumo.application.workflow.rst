@@ -29,6 +29,10 @@ Submodules
    cadrumo.application.workflow.profile_health
    cadrumo.application.workflow.protocols
    cadrumo.application.workflow.resume
+   cadrumo.application.workflow.resume_operation
    cadrumo.application.workflow.review_models
    cadrumo.application.workflow.run_models
+   cadrumo.application.workflow.run_projection
+   cadrumo.application.workflow.run_read_operation
+   cadrumo.application.workflow.run_read_ports
    cadrumo.application.workflow.state_models

@@ -5,16 +5,23 @@ from __future__ import annotations
 import argparse
 import signal
 import sys
+from collections.abc import Callable
+from contextlib import ExitStack
 from importlib.metadata import version
 from pathlib import Path
 from threading import Event
 from uuid import uuid4
 
+from cadrumo.adapters.local_runtime.runtime_manager_composition import installed_runtime_binding
+
+from ...adapters.local_runtime.linux_managed_stop import LinuxManagedRuntimeStop
 from ...adapters.local_runtime.posix import PosixRuntimeEndpoint
 from ...adapters.local_runtime.server import RuntimeTransportServer
 from ...adapters.local_runtime.windows import WindowsRuntimeEndpoint
-from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError
+from ...adapters.local_runtime.windows_managed_stop import WindowsManagedRuntimeStop
+from ...application.runtime.contracts import RuntimeRefusalCode, RuntimeRefusalError, RuntimeShutdownIncompleteError
 from .profile_connections import RuntimeProfileConnections
+from .shutdown import RuntimeShutdownWatchdog, terminate_runtime
 
 
 def run(arguments: list[str] | None = None) -> int:
@@ -45,15 +52,35 @@ def run(arguments: list[str] | None = None) -> int:
             for number in previous:
                 signal.signal(number, lambda _number, _frame: stop.set())
             boot_id = uuid4()
-            profiles = RuntimeProfileConnections(
-                storage_root=root,
-                storage_identity=endpoint.storage_identity,
-                runtime_boot_id=boot_id,
-                stop=stop,
-            )
-            RuntimeTransportServer(
-                endpoint, product_version=installed_version, stop=stop, profiles=profiles, boot_id=boot_id
-            ).serve()
+            prepare_stop: Callable[[], None] | None = None
+            with ExitStack() as resources:
+                if options.managed_session and sys.platform in {"linux", "win32"}:
+                    binding = installed_runtime_binding(root=root, endpoint=endpoint, product_version=installed_version)
+                    if binding is not None and sys.platform == "linux":
+                        prepare_stop = LinuxManagedRuntimeStop(binding)
+                    elif binding is not None and sys.platform == "win32":
+                        prepare_stop = resources.enter_context(WindowsManagedRuntimeStop(binding, stop))
+                profiles = RuntimeProfileConnections(
+                    storage_root=root,
+                    storage_identity=endpoint.storage_identity,
+                    runtime_boot_id=boot_id,
+                    stop=stop,
+                )
+                with RuntimeShutdownWatchdog(stop, timeout=RuntimeTransportServer.DRAIN_SECONDS + 2):
+                    try:
+                        RuntimeTransportServer(
+                            endpoint,
+                            product_version=installed_version,
+                            stop=stop,
+                            profiles=profiles,
+                            boot_id=boot_id,
+                            owner_stop_available=not options.managed_session or prepare_stop is not None,
+                            prepare_owner_stop=prepare_stop,
+                        ).serve()
+                    except RuntimeShutdownIncompleteError:
+                        # Never release the owner lock while callbacks, constructors
+                        # or uncontained descendants still belong to this runtime.
+                        terminate_runtime()
         finally:
             endpoint.close()
         return 0

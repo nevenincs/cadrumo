@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
-from typing import ClassVar, cast
+from typing import ClassVar
 
 import pytest
 from textual.binding import Binding
@@ -12,7 +13,6 @@ from textual.pilot import Pilot
 from textual.screen import Screen
 from textual.widgets import Static
 
-from ....application.operations.composition import OperationComposedServices
 from ....application.overview.home import HomeProjectionV1, HomeSessionPosture
 from ....application.search.workbench import WorkbenchDestinationAdmissionState, WorkbenchSearchService
 from ....application.user_profile.login_session import ProfileLoginOutcome
@@ -21,13 +21,14 @@ from ....core.errors.hierarchy import InternalInvariantError
 from ....core.i18n.render import tr
 from ....core.operations import OperationTerminalCondition
 from ..account import (
+    AccountDirectSessionActionV1,
     AccountFactoriesV1,
     AccountRecomposeReasonV1,
     AccountRecomposeRequiredV1,
     AccountSessionExpiredError,
 )
-from ..app import CadrumoTuiApp
-from ..components.account_chrome import AccountActionV1, account_status_line
+from ..app import CadrumoTuiApp, RootPresentationV1
+from ..components.account_chrome import AccountActionV1, AccountChromeScreen
 from ..home import HomeScreen
 from ..navigation import (
     TUI_DESTINATION_CATALOGUE,
@@ -41,6 +42,7 @@ from ..navigation import (
     build_destination_catalogue,
 )
 from ..operations.modal import OperationModalSettledOutcomeV1
+from ..runtime_access_management import RuntimeAccessManagementScreen
 from .home_fixtures import HomeFixtureScenario, build_home_projection_fixture
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -117,7 +119,6 @@ async def test_navigate_to_refuses_unavailable_destination_without_replacing_hom
         focus=TuiFocusIdentityV1(destination="workbench.ledger", semantic_key="ledger.entry"),
     )
     app = CadrumoTuiApp(
-        services=cast(OperationComposedServices, object()),
         destination_catalogue=_catalogue([], destination_state=destination_state),
         refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
         account_factories=_account_factories(HandoverScreen()),
@@ -154,7 +155,6 @@ async def test_navigate_to_refuses_a_factory_invocation_failure_without_replacin
         focus=TuiFocusIdentityV1(destination="workbench.ledger", semantic_key="ledger.entry"),
     )
     app = CadrumoTuiApp(
-        services=cast(OperationComposedServices, object()),
         destination_catalogue=_catalogue(
             [],
             destination_factory=broken_factory,
@@ -187,7 +187,6 @@ async def test_child_dismissal_refreshes_home_and_restores_its_semantic_focus() 
     contexts: list[TuiScreenContextV1] = []
     projection = build_home_projection_fixture(HomeFixtureScenario.READY)
     app = CadrumoTuiApp(
-        services=cast(OperationComposedServices, object()),
         destination_catalogue=_catalogue(contexts),
         refresh_home=lambda: projection,
     )
@@ -243,7 +242,6 @@ async def test_expired_child_return_tears_down_profile_bound_doors_and_recompose
     )
     projections = [ready, expired]
     app = CadrumoTuiApp(
-        services=cast(OperationComposedServices, object()),
         destination_catalogue=_catalogue(contexts),
         refresh_home=lambda: projections.pop(0),
     )
@@ -261,10 +259,8 @@ async def test_expired_child_return_tears_down_profile_bound_doors_and_recompose
         await pilot.press("escape")
         await pilot.pause()
 
-        # The bar names the session as the root now holds it: expired.
-        assert app.account_session is not None
-        assert app.account_session.posture is HomeSessionPosture.EXPIRED
-        assert str(app.query_one("#root-account-bar", Static).render()) == account_status_line(app.account_session)
+        # Expiry severs private presentation together with its read doors.
+        assert app.account_session is None
         assert app._active_target is None
         assert app.return_value == AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.EXPIRED)
         with pytest.raises(InternalInvariantError, match="no composed destination"):
@@ -277,7 +273,6 @@ async def test_expired_child_return_tears_down_profile_bound_doors_and_recompose
 async def test_expired_custody_refresh_recomposes_without_rendering_a_stale_root() -> None:
     """A precise custody expiry becomes the same non-secret expiry handoff."""
     app = CadrumoTuiApp(
-        services=cast(OperationComposedServices, object()),
         destination_catalogue=_catalogue([]),
         refresh_home=lambda: (_ for _ in ()).throw(AccountSessionExpiredError()),
         workbench_search_service=WorkbenchSearchService(()),
@@ -314,7 +309,6 @@ async def test_a_refused_home_refresh_keeps_the_session_and_reports_a_code() -> 
         raise RuntimeError("secure workbench generation changed during capture")
 
     app = CadrumoTuiApp(
-        services=cast(OperationComposedServices, object()),
         destination_catalogue=_catalogue([]),
         refresh_home=refresh,
         workbench_search_service=WorkbenchSearchService(()),
@@ -343,7 +337,6 @@ async def test_a_refused_refresh_never_reports_an_expiry_it_did_not_observe() ->
     write -- so the refusal must not be reported as a recomposition.
     """
     app = CadrumoTuiApp(
-        services=cast(OperationComposedServices, object()),
         destination_catalogue=_catalogue([]),
         refresh_home=lambda: (_ for _ in ()).throw(RuntimeError("secure workbench generation changed during capture")),
         workbench_search_service=WorkbenchSearchService(()),
@@ -364,19 +357,23 @@ class HandoverScreen(Screen[ProfileLoginOutcome | None]):
 
 
 def _account_factories(
-    change_user: Screen[ProfileLoginOutcome | None],
+    change_user: Screen[ProfileLoginOutcome | None] | AccountDirectSessionActionV1,
     *,
     password: Screen[ProfilePassphraseRotationOutcome | None] | None = None,
+    password_available: bool = True,
+    sign_out: AccountDirectSessionActionV1 | None = None,
+    access: Screen[None] | None = None,
     onboarding_pending: bool = False,
 ) -> AccountFactoriesV1:
     """Supply observable account doors without reproducing an account surface."""
     factories = object.__new__(AccountFactoriesV1)
     object.__setattr__(factories, "profile", lambda context: MarkerScreen(context))
     object.__setattr__(factories, "change_user", lambda: change_user)
-    object.__setattr__(factories, "password", lambda: password or Screen())
+    object.__setattr__(factories, "password", (lambda: password or Screen()) if password_available else None)
+    object.__setattr__(factories, "access", (lambda: access) if access is not None else None)
     object.__setattr__(factories, "appearance", lambda _app: "appearance.changed")
     object.__setattr__(factories, "language", lambda _screen: None)
-    object.__setattr__(factories, "sign_out", lambda: None)
+    object.__setattr__(factories, "sign_out", lambda: sign_out)
     object.__setattr__(factories, "onboarding_pending", onboarding_pending)
     return factories
 
@@ -386,7 +383,6 @@ async def test_an_unfinished_profile_opens_on_setup_once_then_returns_home() -> 
     """The first Home of a session hands on to the Profile setup walk, and only once."""
     contexts: list[TuiScreenContextV1] = []
     app = CadrumoTuiApp(
-        services=cast(OperationComposedServices, object()),
         destination_catalogue=_catalogue(contexts),
         refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
         account_factories=_account_factories(HandoverScreen(), onboarding_pending=True),
@@ -423,7 +419,6 @@ async def test_change_user_returns_typed_identity_and_revokes_old_profile_root()
     )
     handover = HandoverScreen()
     app = CadrumoTuiApp(
-        services=cast(OperationComposedServices, object()),
         destination_catalogue=_catalogue(contexts),
         refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
         workbench_search_service=WorkbenchSearchService(()),
@@ -454,7 +449,6 @@ async def test_password_rotation_recomposes_before_the_old_session_root_can_be_r
     """A new custody generation cannot leave prior profile-bound doors live."""
     password = Screen[ProfilePassphraseRotationOutcome | None]()
     app = CadrumoTuiApp(
-        services=cast(OperationComposedServices, object()),
         destination_catalogue=_catalogue([]),
         refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
         workbench_search_service=WorkbenchSearchService(()),
@@ -486,7 +480,6 @@ async def test_password_rotation_recomposes_before_the_old_session_root_can_be_r
 async def test_successful_sign_out_tears_down_root_but_refusal_does_not_claim_logout() -> None:
     """Only a canonical successful settlement authorizes signed-out recomposition."""
     app = CadrumoTuiApp(
-        services=cast(OperationComposedServices, object()),
         destination_catalogue=_catalogue([]),
         refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
         workbench_search_service=WorkbenchSearchService(()),
@@ -518,7 +511,6 @@ async def test_successful_sign_out_tears_down_root_but_refusal_does_not_claim_lo
 async def test_account_header_is_keyboard_reachable_without_horizontal_overflow(width: int) -> None:
     """Every account control has a key named in the footer, and the bar fits the width."""
     app = CadrumoTuiApp(
-        services=cast(OperationComposedServices, object()),
         destination_catalogue=_catalogue([]),
         refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
         account_factories=_account_factories(HandoverScreen()),
@@ -530,12 +522,194 @@ async def test_account_header_is_keyboard_reachable_without_horizontal_overflow(
         bound = {action for action in actions if action.startswith("account(") or action == "toggle_appearance"}
         assert bound == {
             "toggle_appearance",
-            *(f"account('{action.value}')" for action in AccountActionV1 if action is not AccountActionV1.APPEARANCE),
+            *(
+                f"account('{action.value}')"
+                for action in AccountActionV1
+                if action not in {AccountActionV1.APPEARANCE, AccountActionV1.ACCESS}
+            ),
         }
         bar = app.query_one("#root-account-bar")
         assert bar.region.x >= 0
         assert bar.region.right <= width
         assert bar.scrollable_content_region.width <= width
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("action", "expected"),
+    [
+        (AccountActionV1.SIGN_OUT, AccountRecomposeReasonV1.SIGNED_OUT),
+        (AccountActionV1.CHANGE_USER, AccountRecomposeReasonV1.CHANGE_USER),
+    ],
+)
+async def test_direct_account_action_severs_private_root_before_completion(
+    action: AccountActionV1, expected: AccountRecomposeReasonV1
+) -> None:
+    started = asyncio.Event()
+    release = asyncio.Event()
+    desired = AccountRecomposeRequiredV1(reason=expected)
+
+    async def complete() -> AccountRecomposeRequiredV1:
+        assert app._account_factories is None
+        assert app._destination_catalogue is None
+        assert app._workbench_search_service is None
+        assert len(app.screen_stack) == 1
+        started.set()
+        await asyncio.wait_for(release.wait(), 5)
+        return desired
+
+    direct = AccountDirectSessionActionV1(complete=complete)
+    factories = _account_factories(
+        direct if action is AccountActionV1.CHANGE_USER else HandoverScreen(),
+        sign_out=direct if action is AccountActionV1.SIGN_OUT else None,
+    )
+    app = CadrumoTuiApp(
+        destination_catalogue=_catalogue([]),
+        refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
+        workbench_search_service=WorkbenchSearchService(()),
+        account_factories=factories,
+    )
+    async with app.run_test() as pilot:
+        await _settle(app, pilot)
+        child = AccountChromeScreen()
+        app._replace_destination(child, return_to_home=True)
+        await pilot.pause()
+        assert app.screen is child
+        app.run_account_action(action)
+        assert app._account_factories is None
+        assert app._destination_catalogue is None
+        assert not child.display
+        await asyncio.wait_for(started.wait(), 5)
+        assert app.return_value is None
+        release.set()
+        async with asyncio.timeout(5):
+            while app.return_value is None:
+                await pilot.pause(0.02)
+        assert app.return_value == desired
+
+
+@pytest.mark.asyncio
+async def test_failed_direct_action_exits_to_fresh_admission_and_hides_unavailable_password() -> None:
+    async def complete() -> AccountRecomposeRequiredV1:
+        raise ValueError("synthetic-private-failure")
+
+    factories = _account_factories(AccountDirectSessionActionV1(complete=complete), password_available=False)
+    app = CadrumoTuiApp(
+        destination_catalogue=_catalogue([]),
+        refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
+        account_factories=factories,
+    )
+    async with app.run_test() as pilot:
+        await _settle(app, pilot)
+        assert not app.account_action_available(AccountActionV1.PASSWORD)
+        assert not app.check_action("account", ("password",))
+        assert "account('password')" not in {active.binding.action for active in app.active_bindings.values()}
+        app.run_account_action(AccountActionV1.CHANGE_USER)
+        async with asyncio.timeout(5):
+            while app.return_value is None:
+                await pilot.pause(0.02)
+        assert app.return_value == AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.EXPIRED)
+
+
+@pytest.mark.asyncio
+async def test_cancelled_direct_action_retains_completion_until_runtime_effect_settles() -> None:
+    started = asyncio.Event()
+    release = asyncio.Event()
+    completed = asyncio.Event()
+
+    async def complete() -> AccountRecomposeRequiredV1:
+        started.set()
+        await release.wait()
+        completed.set()
+        return AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.SIGNED_OUT)
+
+    app = CadrumoTuiApp(
+        destination_catalogue=_catalogue([]),
+        refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
+        account_factories=_account_factories(
+            HandoverScreen(), sign_out=AccountDirectSessionActionV1(complete=complete)
+        ),
+    )
+    async with app.run_test() as pilot:
+        await _settle(app, pilot)
+        app.run_account_action(AccountActionV1.SIGN_OUT)
+        try:
+            await asyncio.wait_for(started.wait(), 5)
+            worker = next(worker for worker in app.workers if worker.name == "account-direct-action")
+            worker.cancel()
+            worker.cancel()
+            await pilot.pause()
+            assert not completed.is_set()
+            assert app.return_value is None
+        finally:
+            release.set()
+        await asyncio.wait_for(completed.wait(), 5)
+        await pilot.pause()
+        assert app.return_value == AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.EXPIRED)
+
+
+@pytest.mark.asyncio
+async def test_access_dismissal_with_lost_admission_exits_before_old_root_can_return() -> None:
+    app = CadrumoTuiApp(
+        destination_catalogue=_catalogue([]),
+        refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
+        account_factories=_account_factories(HandoverScreen(), access=Screen()),
+    )
+    lost_screen = object.__new__(RuntimeAccessManagementScreen)
+    object.__setattr__(lost_screen, "_access_lost", True)
+    async with app.run_test() as pilot:
+        await _settle(app, pilot)
+        assert app.account_action_available(AccountActionV1.ACCESS)
+        private_screen = app.screen
+        app._on_access_dismissed(lost_screen)
+        assert not private_screen.display
+        assert app._account_factories is None
+        assert app.return_value == AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.EXPIRED)
+
+
+@pytest.mark.asyncio
+async def test_captured_home_bundle_replaces_matching_catalogue_account_and_clears_search() -> None:
+    old_catalogue = _catalogue([])
+    new_catalogue = _catalogue([])
+    old_factories = _account_factories(HandoverScreen())
+    new_factories = _account_factories(HandoverScreen(), password_available=False)
+    bundle = RootPresentationV1(
+        home=build_home_projection_fixture(HomeFixtureScenario.READY),
+        destination_catalogue=new_catalogue,
+        workbench_search_service=None,
+        account_factories=new_factories,
+    )
+    app = CadrumoTuiApp(
+        destination_catalogue=old_catalogue,
+        refresh_home=lambda: bundle,
+        workbench_search_service=WorkbenchSearchService(()),
+        refresh_workbench_search=None,
+        refresh_destination_catalogue=None,
+        account_factories=old_factories,
+    )
+    async with app.run_test() as pilot:
+        await _settle(app, pilot)
+        assert isinstance(app.screen, HomeScreen)
+        assert app.destination_catalogue is new_catalogue
+        assert app._account_factories is new_factories
+        assert app.workbench_search_refusal_code == "workbench.search.unavailable"
+        with pytest.raises(InternalInvariantError, match="no composed workbench search"):
+            _ = app.workbench_search_service
+        assert not app.account_action_available(AccountActionV1.PASSWORD)
+        app.navigate_to(
+            TuiNavigationTargetV1(
+                destination="workbench.profile",
+                focus=TuiFocusIdentityV1(destination="workbench.profile", semantic_key="profile.overview"),
+            )
+        )
+        await pilot.pause()
+        child = app.screen
+        assert isinstance(child, MarkerScreen)
+        child.dismiss(None)
+        await _settle(app, pilot)
+        assert app.destination_catalogue is new_catalogue
+        assert app.workbench_search_refusal_code == "workbench.search.unavailable"
+        app.exit(None)
 
 
 @pytest.mark.asyncio
@@ -546,7 +720,6 @@ async def test_authoritative_child_return_rebuilds_the_injected_search_snapshot_
     refreshed_search = WorkbenchSearchService(())
     refreshes: list[WorkbenchSearchService] = []
     app = CadrumoTuiApp(
-        services=cast(OperationComposedServices, object()),
         destination_catalogue=_catalogue(contexts),
         refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
         workbench_search_service=initial_search,
@@ -581,7 +754,6 @@ async def test_failed_search_refresh_retains_last_good_and_sanitizes_refusal() -
         raise RuntimeError("12345678Z C:\\protected\\search.json")
 
     app = CadrumoTuiApp(
-        services=cast(OperationComposedServices, object()),
         destination_catalogue=_catalogue(contexts),
         refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
         workbench_search_service=initial_search,
@@ -621,7 +793,6 @@ async def test_the_return_to_home_rereads_off_the_event_loop_and_shows_that_it_i
         return refreshed_search
 
     app = CadrumoTuiApp(
-        services=cast(OperationComposedServices, object()),
         destination_catalogue=_catalogue(contexts),
         refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
         workbench_search_service=WorkbenchSearchService(()),

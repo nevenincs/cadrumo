@@ -9,12 +9,14 @@ success.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import datetime
+from pathlib import Path
 
 from pydantic import BaseModel
 
+from ....adapters.local_runtime.frontend_client import RuntimeFrontendRefusedError
 from ....application.modelo.edit_contract import ModeloEditMutationFamily
 from ....application.modelo.edit_models import (
     ModeloBindingEditIntentV1,
@@ -44,13 +46,14 @@ from ....application.modelo.operation_definitions import (
     ModeloWorkFileRequest,
     ModeloWorkVerifyRequest,
 )
-from ....application.operations.composition import OperationComposedServices
 from ....application.operations.models import OperationRequest
+from ....application.runtime.contracts import RuntimeRefusalError
 from ....core.errors.hierarchy import CadrumoError
+from ....core.operations import OperationEffect
 from ....core.payment_election import PaymentElection
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....core.refund_election import RefundElection
-from ..operations.controller import OperationController
+from ..operations.controller_port import OperationControllerPort
 
 _ACTOR_REF = "operator:tui-modelo"
 
@@ -61,10 +64,10 @@ class ModeloLifecycleActionUnavailableError(CadrumoError):
 
 @dataclass(frozen=True, slots=True)
 class ModeloWorkspaceLifecycleDoor:
-    """Submit one selected declaration lifecycle action through public services."""
+    """Submit one selected declaration lifecycle action through the runtime host."""
 
-    services: OperationComposedServices
     work_unit_id: str
+    submit_operation: Callable[[OperationRequest[BaseModel]], Awaitable[OperationControllerPort]]
     calculation_revision_id: str | None = None
     verification_report_id: str | None = None
     refresh_after_success: Callable[[], object] | None = None
@@ -79,7 +82,7 @@ class ModeloWorkspaceLifecycleDoor:
         self,
         *,
         ordinary_m303_filing_evidence: ModeloWorkCalculateOrdinaryM303EvidenceRequestV2 | None = None,
-    ) -> OperationController:
+    ) -> OperationControllerPort:
         """Calculate the selected work unit from its canonical persisted ledger."""
         # Other modelos keep the request shape without the optional M303 field set at all.
         payload = (
@@ -123,7 +126,7 @@ class ModeloWorkspaceLifecycleDoor:
         *,
         scalar_values: dict[str, str],
         binding_values: dict[str, str],
-    ) -> OperationController:
+    ) -> OperationControllerPort:
         """Apply staged registry-addressed values through Modelo Edit Contract V1."""
         baseline = self.edit_baseline
         if baseline is None:
@@ -160,7 +163,7 @@ class ModeloWorkspaceLifecycleDoor:
             )
         )
 
-    async def verify(self) -> OperationController:
+    async def verify(self) -> OperationControllerPort:
         """Verify the selected current calculation or refuse when none is present."""
         calculation_revision_id = self._require_calculation_revision()
         return await self._submit(
@@ -171,7 +174,7 @@ class ModeloWorkspaceLifecycleDoor:
             )
         )
 
-    async def file(self) -> OperationController:
+    async def file(self) -> OperationControllerPort:
         """Record the locally filed revision after the caller's explicit confirmation."""
         calculation_revision_id = self._require_calculation_revision()
         if self.verification_report_id is None:
@@ -199,7 +202,7 @@ class ModeloWorkspaceLifecycleDoor:
         refund_election: RefundElection,
         payment_election: PaymentElection,
         prior_domiciliation_election: PriorDomiciliationElection,
-    ) -> OperationController:
+    ) -> OperationControllerPort:
         """Export the selected verified revision to the operator-selected path with the operator's elections."""
         return await self._submit(
             OperationRequest(
@@ -207,7 +210,7 @@ class ModeloWorkspaceLifecycleDoor:
                 subject_ref=self.work_unit_id,
                 payload=ModeloExportRequest(
                     calculation_revision_id=self._require_calculation_revision(),
-                    output_path=output_path,
+                    output_path=str(Path(output_path).resolve()),
                     refund_election=refund_election,
                     payment_election=payment_election,
                     prior_domiciliation_election=prior_domiciliation_election,
@@ -223,10 +226,20 @@ class ModeloWorkspaceLifecycleDoor:
             )
         return self.calculation_revision_id
 
-    async def _submit(self, request: OperationRequest[BaseModel]) -> OperationController:
-        submission = await self.services.submission.submit(request, actor_ref=_ACTOR_REF)
-        controller = OperationController(services=self.services, submission=submission, actor_ref=_ACTOR_REF)
-        await controller.start()
+    async def _submit(self, request: OperationRequest[BaseModel]) -> OperationControllerPort:
+        controller = await self.submit_operation(request)
+        try:
+            await controller.start()
+        except (RuntimeRefusalError, RuntimeFrontendRefusedError) as refusal:
+            # Admission may have succeeded before its acknowledgement was lost.
+            # Keep the submitted identity without inferring rollback or retry.
+            raise ModeloLifecycleActionUnavailableError(
+                refusal.reason.value if isinstance(refusal, RuntimeRefusalError) else refusal.reason,
+                context={
+                    "operation_id": controller.operation_id,
+                    "effect": OperationEffect.UNKNOWN.value,
+                },
+            ) from None
         return controller
 
 

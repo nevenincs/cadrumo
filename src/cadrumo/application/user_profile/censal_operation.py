@@ -7,6 +7,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from enum import StrEnum
 from typing import TYPE_CHECKING, Final, Literal
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -31,6 +32,7 @@ from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
 from ..auth.operator_scope_ports import OperatorScopePorts
 from ..auth.protocols import BrowserSessionFactoryPort
 from ..live.censo_ports import CensalFetchPort
+from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,
@@ -40,6 +42,7 @@ from ..operations.capabilities import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
+from ..operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from ..operations.interactions import OperationResponseIntentValue
 from ..operations.models import OperationRequest
 from ..operations.owner import OperationExecutorContext, OperationResumeCheckpoint
@@ -52,6 +55,16 @@ from ..operations.registry import (
     OperationSchemaBindingV1,
     operation_public_schema_reference,
 )
+from .access_contracts import (
+    AccessAction,
+    AccessDenialCode,
+    Availability,
+    DisclosureCategory,
+    DisclosurePermission,
+    OperationAccessPolicy,
+    OperationAccessRequest,
+)
+from .access_errors import ProfileAccessRefusedError
 from .capsule_record import ProfileRecordConflictError
 from .censal_observation import CensalObservation
 from .censo_sync import (
@@ -310,6 +323,79 @@ def _project_censal_review(
     )
 
 
+def resolve_censal_operation_access(
+    request: OperationRequest[BaseModel], context: OperationAccessContext, /
+) -> ResolvedOperationAccess:
+    """Resolve only exact-profile censal work, with separate provider readiness."""
+    payload = request.payload
+    if request.definition_id != CENSAL_OPERATION_DEFINITION_ID or not isinstance(payload, CensalOperationRequest):
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+    baseline = payload.baseline
+    if request.subject_ref != str(baseline.profile_id) or context.profile_id != UUID(str(baseline.profile_id)):
+        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    disclosure = None
+    if context.action in {AccessAction.OBSERVE, AccessAction.CANCEL, AccessAction.DETACH}:
+        disclosure = DisclosurePermission(
+            destination_id=context.destination_id,
+            projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
+            category=DisclosureCategory.OPERATION_METADATA,
+        )
+    elif context.action in {AccessAction.REVIEW, AccessAction.RESPOND}:
+        projection = context.contract.review_projection_schema
+        if projection is None or context.contract.interaction_response_schema is None:
+            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+        disclosure = DisclosurePermission(
+            destination_id=context.destination_id,
+            projection_id=projection.schema_id,
+            category=DisclosureCategory.PROFILE_VALUES,
+        )
+    elif context.action is AccessAction.RESULT:
+        projection = context.contract.result_schema
+        if projection is None:
+            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+        disclosure = DisclosurePermission(
+            destination_id=context.destination_id,
+            projection_id=projection.schema_id,
+            category=DisclosureCategory.PROFILE_VALUES,
+        )
+    return ResolvedOperationAccess(
+        request=OperationAccessRequest(
+            profile_id=context.profile_id,
+            definition_id=request.definition_id,
+            action=context.action,
+            frontend=context.frontend,
+            periods=frozenset(),
+            period_independent=True,
+            destination_id=context.destination_id,
+        ),
+        policy=OperationAccessPolicy(
+            definition_id=request.definition_id,
+            definition_contract_digest=context.contract.definition_contract_digest,
+            actions=frozenset(
+                {
+                    AccessAction.SUBMIT,
+                    AccessAction.START,
+                    AccessAction.RESUME,
+                    AccessAction.COMMIT,
+                    AccessAction.CANCEL,
+                    AccessAction.DETACH,
+                    AccessAction.OBSERVE,
+                    AccessAction.REVIEW,
+                    AccessAction.RESPOND,
+                    AccessAction.RESULT,
+                }
+            ),
+            disclosures=frozenset((disclosure,)) if disclosure is not None else frozenset(),
+            periods=frozenset(),
+            allow_period_independent=True,
+            backend=Availability.AVAILABLE,
+            published_authority=context.published_authority,
+            provider=(Availability.NEEDS_USER if context.action is AccessAction.START else Availability.NOT_REQUIRED),
+            transaction_authority_required=False,
+        ),
+    )
+
+
 def build_censal_operation_registration(
     definition: OperationDefinition,
 ) -> OperationPublicDefinitionRegistrationV1:
@@ -330,6 +416,7 @@ def build_censal_operation_registration(
         interaction_response_schema=CENSAL_REVIEW_RESPONSE_SCHEMA_BINDING,
         reviewed_operand_type=CensalReviewedOperand,
         review_projector=_project_censal_review,
+        access_resolver=resolve_censal_operation_access,
     )
 
 
@@ -649,4 +736,5 @@ __all__ = [
     "build_censal_operation_definition",
     "build_censal_operation_registration",
     "build_censal_operation_request",
+    "resolve_censal_operation_access",
 ]

@@ -149,10 +149,9 @@ def resolve_id(
     :func:`resolve_transaction_id`. Used by the *mutation*
     verbs (update, classify, allocate, link, attach, doclink, archive, stash,
     restore, remove, split, merge). It matches only ids of rows still in the
-    catalogue, because a mutation always targets a live row. Read verbs use the
-    lineage-following ``resolve_ledger_transaction_id`` in
-    :mod:`_ledger_read_cli` instead, which resolves a superseded id through the
-    edit chain.
+    catalogue, because a mutation always targets a live row. Read operations
+    resolve superseded handles through ``resolve_lineage_transaction_id``
+    inside the profile worker.
 
     ``catalogue`` is a snapshot the verb already loaded and will hand to the
     same action, so resolving the id does not decrypt the catalogue again.

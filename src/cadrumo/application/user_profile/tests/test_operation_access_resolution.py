@@ -44,7 +44,13 @@ def test_profile_owner_resolves_only_exact_registered_work(wrong_coordinate: str
         subject_ref=f"profile:{uuid4() if wrong_coordinate == 'subject' else profile}",
         payload=ProfileLogoutOperationRequest(profile_id=profile)
         if wrong_coordinate == "payload"
-        else ProfileFieldMutationOperationRequest(profile_id=profile, path="preferences.output_language", value="es"),
+        else ProfileFieldMutationOperationRequest(
+            profile_id=profile,
+            expected_revision=1,
+            expected_content_digest="0" * 64,
+            path="preferences.output_language",
+            value="es",
+        ),
     )
     if wrong_coordinate == "profile":
         context = replace(context, profile_id=uuid4())
@@ -67,4 +73,5 @@ def test_profile_owner_resolves_only_exact_registered_work(wrong_coordinate: str
     assert resolution.request.destination_id == context.destination_id
     assert resolution.policy.definition_contract_digest == context.contract.definition_contract_digest
     assert AccessAction.COMMIT in resolution.policy.actions
-    assert AccessAction.RESULT not in resolution.policy.actions
+    assert AccessAction.RESULT in resolution.policy.actions
+    assert AccessAction.REVIEW not in resolution.policy.actions

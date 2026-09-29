@@ -132,13 +132,15 @@ class _InMemoryCalculationRevisionRepository:
     def bucket_id(self) -> str | None:
         return _BUCKET_ID
 
-    def load(self) -> CalculationRevisionCatalogue:
+    def load(self, *, operation: PinnedAuthorityOperation | None = None) -> CalculationRevisionCatalogue:
         return self._catalogue
 
     def exists(self) -> bool:
         return bool(self._catalogue.revisions)
 
-    def load_revisioned(self) -> tuple[CalculationRevisionCatalogue, str]:
+    def load_revisioned(
+        self, *, operation: PinnedAuthorityOperation | None = None
+    ) -> tuple[CalculationRevisionCatalogue, str]:
         return self._catalogue, _REPOSITORY_REVISION_ID
 
     def save(self, catalogue: CalculationRevisionCatalogue) -> None:

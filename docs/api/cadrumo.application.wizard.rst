@@ -23,6 +23,7 @@ Submodules
    cadrumo.application.wizard.errors
    cadrumo.application.wizard.flow_validators
    cadrumo.application.wizard.models
+   cadrumo.application.wizard.patch_edit
    cadrumo.application.wizard.persistence
    cadrumo.application.wizard.results
    cadrumo.application.wizard.setup_legal_validators

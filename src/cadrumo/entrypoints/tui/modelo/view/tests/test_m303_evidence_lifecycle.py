@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import Any, cast
 
 import pytest
+from pydantic import BaseModel
 
 from ......application.modelo.m303_exonerado_390_applicability_attestation import (
     M303Exonerado390ApplicabilityAttestationAdmission,
@@ -15,6 +15,7 @@ from ......application.modelo.operation_definitions import (
     ModeloWorkCalculateRequest,
 )
 from ......application.operations.models import OperationRequest
+from ....operations.controller_port import OperationControllerPort
 from ...lifecycle import ModeloLifecycleActionUnavailableError, ModeloWorkspaceLifecycleDoor
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -24,7 +25,10 @@ _ATTACHMENT_ID = "a" * 64
 
 def _door() -> ModeloWorkspaceLifecycleDoor:
     """Build a door whose private submit seam is replaced by each test."""
-    return ModeloWorkspaceLifecycleDoor(services=cast(Any, object()), work_unit_id="work-unit-303")
+    async def submit(_request: OperationRequest[BaseModel]) -> OperationControllerPort:
+        raise AssertionError("submission is not used by this test")
+
+    return ModeloWorkspaceLifecycleDoor(work_unit_id="work-unit-303", submit_operation=submit)
 
 
 @pytest.mark.asyncio
@@ -88,8 +92,8 @@ async def test_attestation_admission_exposes_only_its_secure_coordinates_to_calc
         sha256=_ATTACHMENT_ID,
     )
     door = ModeloWorkspaceLifecycleDoor(
-        services=cast(Any, object()),
         work_unit_id="work-unit-303",
+        submit_operation=_door().submit_operation,
         m303_exonerado_390_attestation_admission=lambda _observed_at: admission,
     )
 

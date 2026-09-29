@@ -26,6 +26,21 @@ if TYPE_CHECKING:
     from ..calculations.registry.authority import PinnedAuthorityOperation
 
 
+def _retained_m210_operation(operation: PinnedAuthorityOperation | None) -> PinnedAuthorityOperation | None:
+    """Keep nested transaction validation on its caller's published generation."""
+    if operation is not None:
+        return operation
+    from ..calculations.registry.authority import PinnedAuthorityOperation
+    from ..calculations.registry.governed_fact_scope import governed_facts_in_scope
+
+    scoped = governed_facts_in_scope()
+    if scoped is None:
+        return None
+    if not isinstance(scoped, PinnedAuthorityOperation):
+        raise TransactionValidationError("M210 classification requires a published generation-pinned authority")
+    return scoped
+
+
 def _resolved_m210_detail_declarations(
     effective_date: date,
     *,
@@ -43,6 +58,7 @@ def _resolved_m210_detail_declarations(
         date_axis=DateAxis.FILING_PERIOD,
         effective_date=effective_date,
     )
+    operation = _retained_m210_operation(operation)
     if operation is None:
         with bundled_indexed_authority().operation() as indexed_operation:
             return _resolved_m210_detail_declarations(effective_date, operation=indexed_operation)
@@ -127,6 +143,7 @@ def _registry_m210_declarations(
     from ..calculations.registry.temporal import select_revision_metadata_for_year
 
     effective_date = today_madrid()
+    operation = _retained_m210_operation(operation)
     if operation is None:
         with bundled_indexed_authority().operation() as indexed_operation:
             return _registry_m210_declarations(operation=indexed_operation)

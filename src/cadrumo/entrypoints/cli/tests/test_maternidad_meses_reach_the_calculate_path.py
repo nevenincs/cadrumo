@@ -31,29 +31,32 @@ por descendientes".
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+import json
+import sys
+from collections.abc import Iterator, Sequence
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from click.testing import Result
 
-from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
-from ....core.config import override_settings
+from ....core.config import load_settings, override_settings
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
-from ....domain.calculations.registry.tests.published_authority import (
-    leased_profile_create_context as _profile_creation_context_for_test,
-)
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from ....tests.cli_envelope import unwrap_envelope_notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
-from .cli_runner import invoke_cached_cli
+from ._runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
+from .cli_runner import invoke_cached_cli as _invoke_cached_cli
 from .modelo_cli import create_modelo_work_unit_via_cli
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.hex_entrypoint,
+    pytest.mark.usefixtures("authority_operation"),
+    pytest.mark.windows_only,
+    pytest.mark.skipif(sys.platform != "win32", reason="CLI descendant mutation requires native Windows workers"),
+]
 
-_PROFILE_ID = "0ac1e000-0000-4000-8000-000000611001"
+_PROFILE_LABEL = "Maternidad meses arrival test profile"
 
 #: Modelo 100 casilla ``0611`` -- semantic role ``irpf_deduccion_maternidad``.
 _MATERNIDAD_CASILLA_ID = "0611"
@@ -93,44 +96,50 @@ _REQUIRED_2024_BINDING_FLAGS: tuple[str, ...] = (
 
 
 @pytest.fixture
-def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    with isolated_cli_runtime_profile(
-        tmp_path=tmp_path,
-        bucket_id=_PROFILE_ID,
-        label="Maternidad meses arrival test profile",
-    ) as profile:
+def runtime_profile(tmp_path: Path) -> Iterator[NativeCliProfileFixture]:
+    with native_cli_profile_scope(tmp_path) as profile:
         yield profile
 
 
-def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
+def _seed_natural_person_profile(runtime_profile: NativeCliProfileFixture) -> None:
     """Seed the minimum facts an M100 work-unit applicability guard requires."""
-    record = _create_profile_record_for_test(
-        profile_id=_PROFILE_ID,
-        setup_state=ProfileSetupState.COMPLETE,
-        facts=(
-            UserProfileFact(path="identity.name", value="Marta"),
-            UserProfileFact(path="identity.surnames", value="Diaz Ortega"),
-            UserProfileFact(path="identity.tax_id", value="12345678Z"),
-            UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-            UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-            UserProfileFact(path="iva.regime", value="GENERAL"),
-            UserProfileFact(path="iva.m303_regime_composition", value="general"),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-            UserProfileFact(path="activities.description", value="economic activity"),
-            UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-            UserProfileFact(path="provenance.source", value="manual_cli"),
-            UserProfileFact(path="renta_taxpayer.birth_date", value="1985-06-15"),
-            UserProfileFact(path="renta_filing.declaration_type", value="1"),
-            UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),
-        ),
-        context=_profile_creation_context_for_test(),
+    runtime_profile.register(
+        label=_PROFILE_LABEL,
+        facts={
+            "identity.name": "Marta",
+            "identity.surnames": "Diaz Ortega",
+            "identity.tax_id": "12345678Z",
+            "taxpayer_type.entity_type": "natural_person",
+            "taxpayer_type.irpf_income_categories": "actividad_economica",
+            "irpf.estimation_regime": "directa_normal",
+            "iva.regime": "GENERAL",
+            "iva.m303_regime_composition": "general",
+            "iva.redeme_enrolled": "false",
+            "iva.cash_accounting_regime_enrolled": "false",
+            "iva.voluntary_sii_enrolled": "false",
+            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
+            "activities.description": "economic activity",
+            "tax_residence.ccaa": "madrid",
+            "tax_residence.jurisdiction_scope": "common_regime",
+            "provenance.source": "manual_cli",
+            "renta_taxpayer.birth_date": "1985-06-15",
+            "renta_filing.declaration_type": "1",
+            "renta_taxpayer.marriage_full_year": "false",
+        },
     )
-    seed_test_profile_record(record, root=runtime_profile.storage_root, label="Maternidad meses arrival test profile")
+
+
+def invoke_cached_cli(args: Sequence[str]) -> Result:
+    """Supply a fresh verified password only for descendant runtime verbs."""
+    target = ("config", "profile", "descendiente")
+    if any(tuple(args[index : index + 3]) == target for index in range(len(args) - 2)):
+        return _invoke_cached_cli(
+            ("--profile", _PROFILE_LABEL, "--profile-secrets-stdin", *args),
+            input=json.dumps(
+                {"profile_passphrase": load_settings().cadrumo_dev_test_database_password.get_secret_value()}
+            ),
+        )
+    return _invoke_cached_cli(args)
 
 
 def _declare(*descendiente_specs: str) -> None:
@@ -192,7 +201,7 @@ def _advisory_messages(output: str, *, source_kind: str) -> list[str]:
 # ---------------------------------------------------------------------------
 
 
-def test_declared_meses_reach_casilla_0611(runtime_profile: TestRuntimeProfile) -> None:
+def test_declared_meses_reach_casilla_0611(runtime_profile: NativeCliProfileFixture) -> None:
     """The AEAT worked example, driven through the surface an operator actually uses.
 
     Two mellizos under three, twelve qualifying months each. Before the connect
@@ -212,7 +221,7 @@ def test_declared_meses_reach_casilla_0611(runtime_profile: TestRuntimeProfile) 
 
 
 def test_one_hijo_twelve_months_reaches_the_manual_per_hijo_figure(
-    runtime_profile: TestRuntimeProfile,
+    runtime_profile: NativeCliProfileFixture,
 ) -> None:
     """The same example's per-hijo line, isolated: one child, twelve months, 1.200."""
     _seed_natural_person_profile(runtime_profile)
@@ -224,7 +233,7 @@ def test_one_hijo_twelve_months_reaches_the_manual_per_hijo_figure(
     assert _casilla_0611(output) == _ORACLE_ONE_HIJO_TWELVE_MONTHS
 
 
-def test_declaring_fewer_months_moves_the_casilla(runtime_profile: TestRuntimeProfile) -> None:
+def test_declaring_fewer_months_moves_the_casilla(runtime_profile: NativeCliProfileFixture) -> None:
     """Anti-tautology: the casilla must TRACK the declared months, not merely be nonzero.
 
     A connect that wrote a constant, or that read some other fact, passes both
@@ -240,7 +249,7 @@ def test_declaring_fewer_months_moves_the_casilla(runtime_profile: TestRuntimePr
     assert _casilla_0611(output) == Decimal("600")
 
 
-def test_alta_posterior_reaches_the_1350_per_hijo_cap(runtime_profile: TestRuntimeProfile) -> None:
+def test_alta_posterior_reaches_the_1350_per_hijo_cap(runtime_profile: NativeCliProfileFixture) -> None:
     """The 2024 manual's Art. 81.1 cap rises to 1.350 after a qualifying alta.
 
     This child has twelve qualifying months and its declared alta is in the
@@ -256,7 +265,7 @@ def test_alta_posterior_reaches_the_1350_per_hijo_cap(runtime_profile: TestRunti
     assert _casilla_0611(output) == Decimal("1350")
 
 
-def test_mixed_alta_cap_descendants_are_folded_per_child(runtime_profile: TestRuntimeProfile) -> None:
+def test_mixed_alta_cap_descendants_are_folded_per_child(runtime_profile: NativeCliProfileFixture) -> None:
     """The 1.350 and 1.200 annual caps apply to their respective children.
 
     A premature aggregate cap would lose the child-specific alta entitlement.
@@ -275,7 +284,7 @@ def test_mixed_alta_cap_descendants_are_folded_per_child(runtime_profile: TestRu
     assert _casilla_0611(output) == Decimal("2550")
 
 
-def test_0611_is_a_provenance_carrying_registry_formula(runtime_profile: TestRuntimeProfile) -> None:
+def test_0611_is_a_provenance_carrying_registry_formula(runtime_profile: NativeCliProfileFixture) -> None:
     """The calculated record retains formula and legal/source provenance for 0611."""
     _seed_natural_person_profile(runtime_profile)
     _declare(f"{_MELLIZO_BIRTH},MESES_TRABAJO=1-12")
@@ -300,7 +309,7 @@ def test_0611_is_a_provenance_carrying_registry_formula(runtime_profile: TestRun
 
 
 def test_months_declared_for_a_child_over_three_are_withheld_and_disclosed(
-    runtime_profile: TestRuntimeProfile,
+    runtime_profile: NativeCliProfileFixture,
 ) -> None:
     """Art. 81.1 runs only "hasta que el menor alcance los tres anos de edad".
 
@@ -337,7 +346,7 @@ def test_months_declared_for_a_child_over_three_are_withheld_and_disclosed(
 
 
 def test_an_eligible_child_does_not_raise_the_withheld_advisory(
-    runtime_profile: TestRuntimeProfile,
+    runtime_profile: NativeCliProfileFixture,
 ) -> None:
     """The advisory must fire on the state it names and not on the healthy one."""
     _seed_natural_person_profile(runtime_profile)
@@ -350,7 +359,7 @@ def test_an_eligible_child_does_not_raise_the_withheld_advisory(
 
 
 def test_a_child_turning_three_mid_year_contributes_its_months_before_the_birthday(
-    runtime_profile: TestRuntimeProfile,
+    runtime_profile: NativeCliProfileFixture,
 ) -> None:
     """The under-grant the month window closes, proven through the real CLI.
 
@@ -370,7 +379,7 @@ def test_a_child_turning_three_mid_year_contributes_its_months_before_the_birthd
 
 
 def test_the_art_81_1_entry_window_reaches_the_casilla_for_a_child_over_three(
-    runtime_profile: TestRuntimeProfile,
+    runtime_profile: NativeCliProfileFixture,
 ) -> None:
     """The adopcion limb, driven through the surface an operator uses.
 
@@ -394,7 +403,7 @@ def test_the_art_81_1_entry_window_reaches_the_casilla_for_a_child_over_three(
 
 
 def test_no_month_before_the_adoption_reaches_the_casilla(
-    runtime_profile: TestRuntimeProfile,
+    runtime_profile: NativeCliProfileFixture,
 ) -> None:
     """The over-grant this test removes, driven through the surface an operator uses.
 
@@ -413,7 +422,7 @@ def test_no_month_before_the_adoption_reaches_the_casilla(
 
 
 def test_a_child_over_the_rentas_ceiling_contributes_nothing(
-    runtime_profile: TestRuntimeProfile,
+    runtime_profile: NativeCliProfileFixture,
 ) -> None:
     """The deduction reaches only a child who holds the minimo por descendientes.
 
@@ -438,7 +447,7 @@ def test_a_child_over_the_rentas_ceiling_contributes_nothing(
 # ---------------------------------------------------------------------------
 
 
-def test_the_calculate_time_flag_no_longer_exists(runtime_profile: TestRuntimeProfile) -> None:
+def test_the_calculate_time_flag_no_longer_exists(runtime_profile: NativeCliProfileFixture) -> None:
     """``--meses-trabajo-con-hijo-menor-3`` is retired outright, not merely reconciled.
 
     The flag was a second, unvalidated authority over casilla 0611: a
@@ -461,7 +470,7 @@ def test_the_calculate_time_flag_no_longer_exists(runtime_profile: TestRuntimePr
     assert "meses-trabajo-con-hijo-menor-3" in output.lower()
 
 
-def test_the_profile_declaration_alone_is_now_the_only_route(runtime_profile: TestRuntimeProfile) -> None:
+def test_the_profile_declaration_alone_is_now_the_only_route(runtime_profile: NativeCliProfileFixture) -> None:
     """With the flag gone, the descendiente-declared figure reaches 0611 unaided."""
     _seed_natural_person_profile(runtime_profile)
     _declare(f"{_MELLIZO_BIRTH},MESES_TRABAJO=1-12")
@@ -474,7 +483,7 @@ def test_the_profile_declaration_alone_is_now_the_only_route(runtime_profile: Te
 
 @pytest.mark.parametrize("attempted_value", ("0", "9999"))
 def test_direct_casilla_0611_cannot_bypass_or_overwrite_the_profile_producer(
-    runtime_profile: TestRuntimeProfile,
+    runtime_profile: NativeCliProfileFixture,
     attempted_value: str,
 ) -> None:
     """A caller may neither manufacture nor overwrite the Art. 81.1 result.
@@ -506,7 +515,7 @@ def test_direct_casilla_0611_cannot_bypass_or_overwrite_the_profile_producer(
 
 
 def test_a_contributing_descendant_under_the_default_relacion_is_disclosed(
-    runtime_profile: TestRuntimeProfile,
+    runtime_profile: NativeCliProfileFixture,
 ) -> None:
     """The representability gap the research identified, reaching every already-stored record.
 
@@ -538,7 +547,7 @@ def test_a_contributing_descendant_under_the_default_relacion_is_disclosed(
 
 
 def test_the_advisory_names_every_contributing_descendant_under_the_default(
-    runtime_profile: TestRuntimeProfile,
+    runtime_profile: NativeCliProfileFixture,
 ) -> None:
     """Both mellizos are under the default relación and both are named."""
     _seed_natural_person_profile(runtime_profile)
@@ -555,7 +564,7 @@ def test_the_advisory_names_every_contributing_descendant_under_the_default(
     assert "0" in messages[0] and "1" in messages[0]
 
 
-def test_an_adopted_contributing_descendant_is_not_disclosed(runtime_profile: TestRuntimeProfile) -> None:
+def test_an_adopted_contributing_descendant_is_not_disclosed(runtime_profile: NativeCliProfileFixture) -> None:
     """An explicitly-stated relación never triggers the advisory, whether entitling or not.
 
     Art. 81.1 admits ``ADOPTADO`` outright, but the advisory's scope is
@@ -573,7 +582,7 @@ def test_an_adopted_contributing_descendant_is_not_disclosed(runtime_profile: Te
     assert "maternidad_ambiguous_relacion" not in _advisory_kinds(output)
 
 
-def test_a_tutela_contributing_descendant_is_not_disclosed(runtime_profile: TestRuntimeProfile) -> None:
+def test_a_tutela_contributing_descendant_is_not_disclosed(runtime_profile: NativeCliProfileFixture) -> None:
     """Tutela is likewise explicitly stated, so it is unambiguous even though entitled."""
     _seed_natural_person_profile(runtime_profile)
     _declare(f"{_MELLIZO_BIRTH},RELACION=tutela,MESES_TRABAJO=1-12")
@@ -585,7 +594,7 @@ def test_a_tutela_contributing_descendant_is_not_disclosed(runtime_profile: Test
 
 
 def test_a_withheld_descendant_under_the_default_relacion_is_not_disclosed(
-    runtime_profile: TestRuntimeProfile,
+    runtime_profile: NativeCliProfileFixture,
 ) -> None:
     """The advisory names a contributing figure at risk, not every default-relación row.
 
@@ -604,7 +613,7 @@ def test_a_withheld_descendant_under_the_default_relacion_is_not_disclosed(
 
 
 def test_a_temporal_acogimiento_contributing_nothing_is_not_disclosed(
-    runtime_profile: TestRuntimeProfile,
+    runtime_profile: NativeCliProfileFixture,
 ) -> None:
     """A stated, non-entitling relación is unambiguous even though it also contributes nothing."""
     _seed_natural_person_profile(runtime_profile)
@@ -631,7 +640,7 @@ def _descendiente_add_result(*specs: str):
 
 
 def test_declaring_working_months_under_the_default_relacion_is_disclosed_immediately(
-    runtime_profile: TestRuntimeProfile,
+    runtime_profile: NativeCliProfileFixture,
 ) -> None:
     """An operator actively declaring the row is told at that moment, not only on the next calculate."""
     _seed_natural_person_profile(runtime_profile)
@@ -647,7 +656,7 @@ def test_declaring_working_months_under_the_default_relacion_is_disclosed_immedi
 
 
 def test_declaring_working_months_with_an_explicit_relacion_is_not_disclosed(
-    runtime_profile: TestRuntimeProfile,
+    runtime_profile: NativeCliProfileFixture,
 ) -> None:
     """A stated relación resolves the ambiguity at declaration, same as at calculate time."""
     _seed_natural_person_profile(runtime_profile)
@@ -659,7 +668,7 @@ def test_declaring_working_months_with_an_explicit_relacion_is_not_disclosed(
     assert not [n for n in notices if n["code"] == "config.profile.descendiente.ambiguous_relacion"]
 
 
-def test_declaring_no_working_months_is_not_disclosed(runtime_profile: TestRuntimeProfile) -> None:
+def test_declaring_no_working_months_is_not_disclosed(runtime_profile: NativeCliProfileFixture) -> None:
     """The default relación alone is not the trigger; nothing is at risk without declared months."""
     _seed_natural_person_profile(runtime_profile)
 
@@ -670,7 +679,7 @@ def test_declaring_no_working_months_is_not_disclosed(runtime_profile: TestRunti
     assert not [n for n in notices if n["code"] == "config.profile.descendiente.ambiguous_relacion"]
 
 
-def test_only_the_newly_added_ambiguous_rows_are_named(runtime_profile: TestRuntimeProfile) -> None:
+def test_only_the_newly_added_ambiguous_rows_are_named(runtime_profile: NativeCliProfileFixture) -> None:
     """A later `add` call does not re-disclose an earlier row it did not touch."""
     _seed_natural_person_profile(runtime_profile)
     _declare(f"{_MELLIZO_BIRTH},RELACION=tutela,MESES_TRABAJO=1-12")

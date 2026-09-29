@@ -196,12 +196,12 @@ def test_profile_operation_families_have_one_secure_registered_definition_each()
         public_registrations=build_user_profile_operation_registrations(USER_PROFILE_OPERATION_DEFINITIONS),
     )
     definition_ids = tuple(definition.definition_id for definition in USER_PROFILE_OPERATION_DEFINITIONS)
-    assert definition_ids == (
+    assert {
         PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID,
         PROFILE_REPEATABLE_ROW_MUTATION_OPERATION_DEFINITION_ID,
         PROFILE_BUNDLE_EXPORT_OPERATION_DEFINITION_ID,
         PROFILE_LOGOUT_OPERATION_DEFINITION_ID,
-    )
+    } <= set(definition_ids)
     assert len(set(definition_ids)) == len(definition_ids)
     assert all(
         registry.lookup(definition_id).capabilities.request_storage is OperationRequestStoragePolicy.SECURE_REFERENCE
@@ -228,6 +228,7 @@ def test_profile_operation_families_have_one_secure_registered_definition_each()
 def test_field_mutation_runs_through_the_supervisor_and_real_encrypted_profile_store(tmp_path: Path) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path) as root:
         profile_id = _register_profile()
+        baseline = _load_profile(profile_id)
         with profile_custody_secure_object_repository(profile_id=profile_id, dek=b"", root=root) as profile_objects:
             terminal, operands = _start_operation(
                 root,
@@ -237,6 +238,8 @@ def test_field_mutation_runs_through_the_supervisor_and_real_encrypted_profile_s
                     subject_ref=f"profile:{profile_id}",
                     payload=ProfileFieldMutationOperationRequest(
                         profile_id=profile_id,
+                        expected_revision=baseline.record_revision,
+                        expected_content_digest=baseline.content_digest,
                         path=PROFILE_OUTPUT_LANGUAGE_PATH,
                         value="es",
                     ),
@@ -260,6 +263,7 @@ def test_field_mutation_runs_through_the_supervisor_and_real_encrypted_profile_s
 def test_repeatable_row_mutation_allocates_and_persists_one_real_schema_row(tmp_path: Path) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path) as root:
         profile_id = _register_profile()
+        baseline = _load_profile(profile_id)
         with profile_custody_secure_object_repository(profile_id=profile_id, dek=b"", root=root) as profile_objects:
             terminal, operands = _start_operation(
                 root,
@@ -269,6 +273,8 @@ def test_repeatable_row_mutation_allocates_and_persists_one_real_schema_row(tmp_
                     subject_ref=f"profile:{profile_id}",
                     payload=ProfileRepeatableRowMutationOperationRequest(
                         profile_id=profile_id,
+                        expected_revision=baseline.record_revision,
+                        expected_content_digest=baseline.content_digest,
                         section_key="activities",
                         values=(ProfileRepeatableRowValue(field_key="description", value="Consultoria"),),
                     ),

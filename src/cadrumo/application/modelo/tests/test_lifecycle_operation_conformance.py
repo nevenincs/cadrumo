@@ -12,10 +12,10 @@ import ast
 import inspect
 import textwrap
 from datetime import UTC, datetime
-from typing import Any
+from typing import Annotated, Any
 
 import pytest
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operations import OperationDurability, OperationEffect, OperationLifecycle
@@ -42,7 +42,7 @@ _FACTORY_ARGUMENTS: dict[str, Any] = {
     "command_builder": lambda revision, path: None,
     "operator_scope_ports": object(),
     "work_lifecycle_ports_factory": lambda: None,
-    "verification_repository_bundle_factory": lambda bucket_id: None,
+    "verification_repository_bundle_factory": lambda bucket_id, *, operation: None,
     "certificate_secret_backend_factory": lambda: None,
     "filing_action_ports_factory": lambda **_: None,
     "export_ports_factory": lambda **_: None,
@@ -55,8 +55,8 @@ _FACTORY_ARGUMENTS: dict[str, Any] = {
 _KNOWN_AUTHORITIES = {
     "rename_work_unit",
     "discard_work_unit",
-    "calculate_modelo_revision_from_bucket_aggregation_with_diagnostics",
-    "verify_modelo_revision",
+    "calculate_modelo_work_revision",
+    "verify_modelo_revision_with_preconditions",
     "file_modelo_revision",
     "export_modelo_revision",
     "amend_modelo_revision",
@@ -110,6 +110,16 @@ class _SupersededCalculateExecutorV2:
     async def execute(self, request: OperationRequest[_SupersededCalculateRequestV2], context: object) -> str | None:
         del request, context
         return None
+
+
+class _HistoricalCalculatePublicResultV1(BaseModel):
+    """The exact former three-field result schema, owned only by replay tests."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
+
+    result_version: int = 1
+    work_unit_id: Annotated[str, Field(min_length=1, max_length=128, pattern=r"\S")]
+    calculation_revision_id: Annotated[str, Field(min_length=1, max_length=128)]
 
 
 def _definition_factories() -> dict[str, Any]:
@@ -180,6 +190,7 @@ def test_each_enrolment_is_recorded_and_stores_its_request_safely(factory_name: 
     assert definition.capabilities.durability is OperationDurability.RECORDED
     if definition.definition_id in {
         definitions_module.MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID,
+        definitions_module.MODELO_WORK_AMEND_OPERATION_DEFINITION_ID,
         definitions_module.MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
     }:
         assert definition.capabilities.request_storage is OperationRequestStoragePolicy.SECURE_REFERENCE
@@ -222,14 +233,19 @@ def test_calculate_request_no_longer_accepts_an_annual_volume_answer() -> None:
         )
 
 
-def test_calculate_request_schema_v3_declares_the_period_scoped_m303_contract() -> None:
-    """The changed request cannot be replayed as an earlier shape."""
+def test_calculate_request_v4_and_result_v2_bind_the_full_writer_contract() -> None:
+    """The full input and writer-returned projection cannot replay as earlier schemas."""
     definition = _build(definitions_module.build_modelo_work_calculate_definition)
     registration = definitions_module.build_modelo_work_calculate_registration(definition)
 
     request_schema = registration.contract.request_schema
     assert request_schema.schema_id == "modelo.work.calculate.request"
-    assert request_schema.schema_version == 3
+    assert request_schema.schema_version == 4
+    result_schema = registration.contract.result_schema
+    assert result_schema is not None
+    assert result_schema.schema_id == "modelo.work.calculate.result"
+    assert result_schema.schema_version == 2
+    assert definition.result_type is definitions_module.ModeloWorkCalculatePublicResultV2
 
 
 def _pending_superseded_invocation(
@@ -246,7 +262,7 @@ def _pending_superseded_invocation(
     legacy_definition = OperationDefinition(
         definition_id=current.definition_id,
         request_type=request_type,
-        result_type=current.result_type,
+        result_type=_HistoricalCalculatePublicResultV1,
         executor_factory=OperationExecutorFactory(
             request_type=request_type,
             executor_type=executor_type,
@@ -277,7 +293,7 @@ def _pending_superseded_invocation(
         result_schema=OperationSchemaBindingV1.bind(
             schema_id="modelo.work.calculate.result",
             schema_version=1,
-            model_type=definitions_module.ModeloWorkCalculatePublicResultV1,
+            model_type=_HistoricalCalculatePublicResultV1,
         ),
         workspace_refresh_target_schema=next(
             binding
@@ -367,6 +383,14 @@ def test_each_executor_delegates_to_exactly_one_known_writer(factory_name: str) 
         for target in (node.func, *node.args)
         if isinstance(target, ast.Name)
     }
+    # Calculation admission is shared with the wizard attempt; follow its
+    # public service seam to the same canonical writer rather than treating
+    # that extraction as an unobserved second write path.
+    if "calculate_prepared_modelo_work" in called:
+        helper = ast.parse(textwrap.dedent(inspect.getsource(definitions_module.calculate_prepared_modelo_work)))
+        called.update(
+            node.func.id for node in ast.walk(helper) if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+        )
     writers = called & _KNOWN_AUTHORITIES
 
     assert len(writers) == 1, f"{factory_name} delegates to {writers or 'no known writer'}"

@@ -10,6 +10,7 @@ owning ``CommandSpec`` nodes; importing command authority never imports it.
 from __future__ import annotations
 
 from typing import cast
+from uuid import UUID
 
 import typer
 
@@ -32,6 +33,8 @@ def root_command(
     profile: str | None = None,
     profile_secrets_stdin: bool = False,
     profile_secrets_fd: int | None = None,
+    profile_auth_method: str = "password",
+    profile_credential_ref: UUID | None = None,
     version: bool = False,
     detail: bool = False,
     help_: bool = False,
@@ -83,11 +86,13 @@ def root_command(
         else:
             normalize_root_active_profile(ctx)
         emit_bare_invocation_and_exit(ctx)
-    from ._profile_authentication_contract import ProfileSecretSourceOptions
+    from ._profile_authentication_contract import ProfileAuthenticationMethod, ProfileSecretSourceOptions
 
     state["profile_secret_source"] = ProfileSecretSourceOptions(
         stdin=profile_secrets_stdin,
         descriptor=profile_secrets_fd,
+        method=ProfileAuthenticationMethod(profile_auth_method),
+        credential_reference=profile_credential_ref,
     )
 
 

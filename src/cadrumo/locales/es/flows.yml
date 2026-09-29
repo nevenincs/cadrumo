@@ -56,6 +56,8 @@ flows:
       cancel: Cancelar
       choose_one: Elige una de las opciones, o cancela para dejar el valor sin cambios.
       clear: Borrar
+      completed_refresh_unavailable: La operación se completó, pero la vista actualizada
+        no está disponible. Vuelve a Inicio para actualizarla.
       masked_kept: Este valor está oculto, por eso el campo empieza vacío. Déjalo
         vacío para conservar el valor guardado o escribe uno nuevo para sustituirlo.
       no_change: No fue necesario realizar cambios.

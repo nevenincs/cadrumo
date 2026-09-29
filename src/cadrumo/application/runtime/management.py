@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Annotated, Protocol
+from typing import Annotated, Protocol, runtime_checkable
 
 from pydantic import BaseModel, Field
 
@@ -62,8 +62,8 @@ class RuntimeUserManager(Protocol):
     """Native deployment port consumed by authorized runtime management only.
 
     Start uses existing provisioning and never enables login autostart. Stop
-    follows application fencing/draining; the manager cannot certify committed
-    effects, application settlement, or profile custody release.
+    ordering follows each platform's bounded drain and restart policy; a native
+    command cannot certify committed effects, settlement or custody release.
     """
 
     async def inspect(self) -> RuntimeManagerInspection:
@@ -75,5 +75,14 @@ class RuntimeUserManager(Protocol):
         ...
 
     async def stop(self) -> None:
-        """Stop only the bound deployment after its application's drain phase."""
+        """Stop only the bound deployment under its native drain/termination contract."""
+        ...
+
+
+@runtime_checkable
+class RuntimeConfigurableUserManager(RuntimeUserManager, Protocol):
+    """Manager able to provision and change explicit login-start policy."""
+
+    async def configure(self, *, login_autostart: bool) -> RuntimeManagerInspection:
+        """Apply the requested policy and return the observed native state."""
         ...

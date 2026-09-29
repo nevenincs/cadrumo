@@ -9,11 +9,13 @@ import subprocess
 import sys
 import threading
 from collections.abc import Iterator
-from contextlib import suppress
+from contextlib import nullcontext, suppress
 from pathlib import Path
+from uuid import UUID
 
 import pytest
 
+from cadrumo.adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 from cadrumo.adapters.persistence.storage.recovery_key import (
     RECOVERY_CODE_ALPHABET,
     RECOVERY_CODE_GROUP_COUNT,
@@ -22,9 +24,11 @@ from cadrumo.adapters.persistence.storage.recovery_key import (
 )
 from cadrumo.tests.audited_process import WindowsStartupInfo, run_audited_process
 
-from ....core.config import load_settings
+from ....application.user_profile.lifecycle import ProfileCapsuleLifecycle
+from ....core.config import load_settings, override_settings
+from ....core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
 from ....tests.inventory import SRC_CADRUMO
-from ..config.tests.isolated_storage_fixture import COMPLETE_NATURAL_PERSON_FLAGS
+from ..config.tests.isolated_storage_fixture import COMPLETE_NATURAL_PERSON_FLAGS, native_profile_view_server
 from ._machine_secret_channels_support import (
     _CERTIFICATE_INPUT,
     _HARNESS,
@@ -227,9 +231,17 @@ def test_profile_recovery_enable_succeeds_through_each_leaf_channel(tmp_path: Pa
 
 
 @pytest.mark.parametrize("channel", ("stdin", "fd"))
+@pytest.mark.windows_only
 def test_passphrase_change_succeeds_through_each_leaf_channel(tmp_path: Path, channel: str) -> None:
+    """The installed CLI rotates only its selected profile through the native worker."""
     root = tmp_path / f"rotate-{channel}"
-    register_password_only_profile(root)
+    selected = register_password_only_profile(root, label="rotation-target")
+    other = register_password_only_profile(root, label="untouched-profile")
+    selected_id, other_id = UUID(selected.profile_id), UUID(other.profile_id)
+    with override_settings(cadrumo_local_storage_root=root):
+        ProfileCapsuleLifecycle().select(selected.profile_id)
+    selected_before = load_committed_profile_password_material(selected_id, root=root)
+    other_before = load_committed_profile_password_material(other_id, root=root)
     payload = json.dumps(
         {
             "current_passphrase": FIXTURE_PROFILE_INPUT,
@@ -238,13 +250,36 @@ def test_passphrase_change_succeeds_through_each_leaf_channel(tmp_path: Path, ch
         }
     )
     args = ["--format", "json", "config", "passphrase", "change"]
-    result = (
-        _run(root, [*args, "--secrets-stdin"], stdin=payload)
-        if channel == "stdin"
-        else _run(root, [*args, "--secrets-fd", "{fd:0}"], inherited_payloads=(payload,), assert_closed_index=0)
-    )
-    document = _assert_success(result, root)
-    assert document["result"]["changed"] is True
+    with native_profile_view_server(root):
+        result = (
+            _run(root, [*args, "--secrets-stdin"], stdin=payload)
+            if channel == "stdin"
+            else _run(root, [*args, "--secrets-fd", "{fd:0}"], inherited_payloads=(payload,), assert_closed_index=0)
+        )
+        document = _assert_success(result, root)
+        reopened = _run(
+            root,
+            ["--format", "json", "config", "login", "rotation-target", "--secrets-stdin"],
+            stdin=json.dumps({"passphrase": _NEW_PROFILE_INPUT}),
+        )
+        login_document = _assert_success(reopened, root)
+    assert document["status"] == "success"
+    assert document["command"] == "config.passphrase.change"
+    assert document["result"] == {
+        "profile_id": CLI_PROFILE_ID_PLACEHOLDER,
+        "changed": True,
+        "password_generation": selected_before.envelope.password_generation + 1,
+        "dek_epoch_preserved": True,
+        "recovery_enrollment_retained": False,
+    }
+    selected_after = load_committed_profile_password_material(selected_id, root=root)
+    other_after = load_committed_profile_password_material(other_id, root=root)
+    assert selected_after.envelope.password_generation == selected_before.envelope.password_generation + 1
+    assert selected_after.envelope.dek_epoch == selected_before.envelope.dek_epoch
+    assert other_after.commit == other_before.commit
+    assert other_after.envelope == other_before.envelope
+
+    assert login_document["command"] == "config.login"
 
 
 @pytest.mark.parametrize("channel", ("stdin", "fd"))
@@ -835,7 +870,8 @@ def _cold_profile_templates(tmp_path_factory: pytest.TempPathFactory) -> Iterato
     complete = base / "complete"
     register_password_only_profile(incomplete)
     register_password_only_profile(complete)
-    _complete_registered_profile(complete, flags=COMPLETE_NATURAL_PERSON_FLAGS)
+    with native_profile_view_server(complete):
+        _complete_registered_profile(complete, flags=COMPLETE_NATURAL_PERSON_FLAGS)
     try:
         yield {"incomplete": incomplete, "complete": complete}
     finally:
@@ -864,7 +900,14 @@ def test_each_profile_leaf_answers_as_the_first_command_of_a_process(
     of its own fresh process, against a record in each setup state.
     """
     root = tmp_path / "storage"
-    shutil.copytree(_cold_profile_templates[state], root)
+    template = _cold_profile_templates[state]
+
+    def omit_template_runtime(source: str, names: list[str]) -> set[str]:
+        # Installation identity pins the template's physical root; the copied
+        # capsule gets a fresh installed owner for this isolated subprocess.
+        return {".runtime"} if Path(source).resolve() == template.resolve() and ".runtime" in names else set()
+
+    shutil.copytree(template, root, ignore=omit_template_runtime)
     archive = tmp_path / "profile.cadrumo-bucket.tar.gz"
     if leaf == "archive-inspect":
         exported = _run(
@@ -884,11 +927,27 @@ def test_each_profile_leaf_answers_as_the_first_command_of_a_process(
         )
         assert exported.returncode == 0, _combined(exported)
 
-    result = _run(
-        root,
-        ["--format", "json", *(str(archive) if argument == "{archive}" else argument for argument in argv)],
-        stdin=stdin,
+    runtime = (
+        native_profile_view_server(root)
+        if leaf
+        in {
+            "descendiente-list",
+            "edit",
+            "plantilla-media-list",
+            "plantilla-media-remove",
+            "plantilla-media-set",
+            "status",
+            "validate",
+            "view",
+        }
+        else nullcontext()
     )
+    with runtime:
+        result = _run(
+            root,
+            ["--format", "json", *(str(archive) if argument == "{archive}" else argument for argument in argv)],
+            stdin=stdin,
+        )
 
     envelope = _envelope(result)
     error_code = str((envelope.get("error") or {}).get("code", ""))

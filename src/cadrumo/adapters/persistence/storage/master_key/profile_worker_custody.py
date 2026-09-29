@@ -157,7 +157,10 @@ class ProfileWorkerCustody:
     def expire(self) -> None:
         """Release expired custody during idle polling as well as before requests."""
         with self._lock:
-            if self._leases:
+            # A publication may replace its own envelope inside a held native
+            # fence. Revalidate at the last section exit; each new require still
+            # validates independently, so this cannot admit successor work.
+            if self._leases and not self._sections:
                 try:
                     validate_automation_profile_binding(self.identity.binding, root=self.root)
                 except BaseException:
@@ -219,6 +222,32 @@ class ProfileWorkerCustody:
         with self._lock:
             self.expire()
             return tuple(sorted(self._leases))
+
+    def retire_password_successor(self, *, password_generation: int) -> None:
+        """Retire old leases after verifying one committed, same-key successor.
+
+        The operation owner must retain its native COMMIT fence and persist any
+        encrypted outcome before calling this door. This grants no successor
+        authority: the worker remains permanently bound to its old identity.
+        Physical material survives only until its already-held sections exit.
+        """
+        with self._lock:
+            if (
+                self._closed
+                or not self._sections
+                or not self._leases
+                or password_generation != self.identity.binding.custody_generation + 1
+            ):
+                raise AutomationCustodyError(AutomationCustodyCode.CONFLICT)
+            session = current_active_bucket_session()
+            if session is None:
+                raise AutomationCustodyError(AutomationCustodyCode.MISSING)
+            successor = self.identity.binding.model_copy(update={"custody_generation": password_generation})
+            validate_automation_profile_binding(successor, root=self.root, dek=session.dek)
+            # Clear logical authority before the generic section cleanup. Its
+            # old-binding validation must not misreport this proven transition
+            # as a failed operation after the password was already replaced.
+            self.close()
 
     def close(self) -> None:
         """Fence further installation and release all process custody."""

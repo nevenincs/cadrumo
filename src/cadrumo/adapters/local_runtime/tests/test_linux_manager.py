@@ -43,7 +43,10 @@ async def test_systemd_native_parser_accepts_definition_without_loading_or_start
     root.mkdir()
     binding = _binding(root)
     unit = tmp_path / (runtime_service_name(binding) + ".service")
-    unit.write_text(linux_user_service(binding))
+    definition = linux_user_service(binding)
+    assert "TimeoutStopSec=25\n" in definition
+    assert "KillMode=mixed\nSendSIGKILL=yes\n" in definition
+    unit.write_text(definition)
     process = await asyncio.create_subprocess_exec(
         "/usr/bin/systemd-analyze",
         "--user",

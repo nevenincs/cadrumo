@@ -301,6 +301,7 @@ def test_evidence_captured_after_verification_refuses_filing_and_export(
         with pytest.raises(Modelo123CountAuthorityUnresolvedError) as file_info:
             file_modelo_revision(
                 revision_id,
+                approved_verification_report_id=granted.verification_report_id,
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
                 operator_scope_ports=build_operator_scope_ports(),
                 ports=build_filing_action_ports(bucket_id=_BUCKET_ID),

@@ -15,6 +15,7 @@ COMMAND_GRAPH = CommandSpecGraph(
     (
         _family("config", ".config.command_specs", "CONFIG_COMMAND_SPECS"),
         _family("app", "._app_diagnostics_command_specs", "DIAGNOSTICS_COMMAND_SPECS"),
+        _family("app", ".app_runtime_command_specs", "APP_RUNTIME_COMMAND_SPECS"),
         _family("app", "._app_ledger_command_specs", "LEDGER_COMMAND_SPECS"),
         _family("app", "._app_live_command_specs", "LIVE_COMMAND_SPECS"),
         _family("app", "._modelo_audit_command_specs", "MODELO_ROOT_COMMAND_SPEC"),

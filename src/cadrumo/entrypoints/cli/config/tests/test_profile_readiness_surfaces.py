@@ -19,6 +19,7 @@ from .isolated_storage_fixture import (
     profile_view_document,
 )
 from .isolated_storage_fixture import live_cli_profile as live_cli_profile
+from .isolated_storage_fixture import native_cli_profile_view as native_cli_profile_view
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("live_cli_profile")]
 
@@ -30,6 +31,8 @@ def _complete_the_profile() -> None:
     assert promoted.exit_code == 0, promoted.output
 
 
+@pytest.mark.windows_only
+@pytest.mark.usefixtures("native_cli_profile_view")
 def test_status_and_overview_answer_for_a_completed_profile() -> None:
     """Completing setup must not break the surfaces that report readiness.
 
@@ -52,6 +55,8 @@ def test_status_and_overview_answer_for_a_completed_profile() -> None:
     assert overview.exit_code == 0, overview.output
 
 
+@pytest.mark.windows_only
+@pytest.mark.usefixtures("native_cli_profile_view")
 def test_viewing_an_incomplete_profile_succeeds_and_still_lists_what_is_missing() -> None:
     """An unfinished record is a valid record; its gaps are information.
 
@@ -69,6 +74,8 @@ def test_viewing_an_incomplete_profile_succeeds_and_still_lists_what_is_missing(
     assert any(issue["code"] == "required_field_missing" for issue in result["issues"])
 
 
+@pytest.mark.windows_only
+@pytest.mark.usefixtures("native_cli_profile_view")
 def test_status_and_view_count_the_same_missing_required_fields() -> None:
     """One record, one answer to "what is still required".
 
@@ -89,6 +96,8 @@ def test_status_and_view_count_the_same_missing_required_fields() -> None:
     assert counts == [len(missing_in_view)]
 
 
+@pytest.mark.windows_only
+@pytest.mark.usefixtures("native_cli_profile_view")
 def test_view_publishes_the_identity_its_spec_declares() -> None:
     """The envelope's command field is how automation routes a result.
 
@@ -99,3 +108,14 @@ def test_view_publishes_the_identity_its_spec_declares() -> None:
     declared = next(spec.result_schema.identity for spec in PROFILE_COMMAND_SPECS if spec.key == "config_profile_view")
 
     assert profile_view_document()["command"] == declared
+
+
+@pytest.mark.windows_only
+@pytest.mark.usefixtures("native_cli_profile_view")
+def test_cli_edit_is_read_back_through_native_runtime_view() -> None:
+    """The runtime view reflects a CLI mutation without borrowing local custody."""
+    edited = profile_cli("edit", "--quiet", "--notes", "Native readback")
+    assert edited.exit_code == 0, edited.output
+    result = profile_view_document()["result"]
+    assert isinstance(result, dict)
+    assert any(fact["path"] == "identity.notes" and fact["value"] == "Native readback" for fact in result["facts"])

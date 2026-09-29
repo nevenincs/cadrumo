@@ -16,13 +16,13 @@ from __future__ import annotations
 import inspect
 import json
 import shutil
+import subprocess
 from pathlib import Path
 
 import pytest
 import yaml
 
 from .._workspace import _PluginPythonCohort, materialise_plugin
-from ..mcp.call_runtime import run_captured
 from ..resources import harness_root, iter_personas
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
@@ -141,8 +141,13 @@ def test_exact_closed_world_cohort_interpolates_into_manifest_and_mcp_launch(
     materialise_plugin(output, cohort=plugin_cohort)
     document = json.loads((output / ".claude-plugin" / "plugin.json").read_text(encoding=_UTF_8))
     assert document["version"] == "1.2.3"
-    # The surface option defaults to the orientation core.
-    assert document["userConfig"]["surface"]["default"] == "core"
+    profile = document["userConfig"]["profile_id"]
+    assert profile["type"] == "string"
+    assert profile["required"] is True
+    credential_reference = document["userConfig"]["credential_reference"]
+    assert credential_reference["type"] == "string"
+    assert credential_reference["default"] == ""
+    assert credential_reference["required"] is False
 
     mcp = json.loads((output / ".mcp.json").read_text(encoding=_UTF_8))
     assert "aeat" not in mcp["mcpServers"]
@@ -166,6 +171,10 @@ def test_exact_closed_world_cohort_interpolates_into_manifest_and_mcp_launch(
         "--with",
         f"${{CLAUDE_PLUGIN_ROOT}}/artifacts/python/{plugin_cohort.official_wheel.name}",
         "cadrumo-mcp",
+        "--profile-id",
+        "${user_config.profile_id}",
+        "--credential-reference",
+        "${user_config.credential_reference}",
     ]
     retained = json.loads((output / "artifacts" / "python" / "plugin-python-cohort.json").read_text(encoding=_UTF_8))
     assert set(retained) == {
@@ -194,28 +203,10 @@ def test_exact_closed_world_cohort_interpolates_into_manifest_and_mcp_launch(
     assert retained["runtime_wheelhouse_sha256"] == plugin_cohort.sha256["runtime-wheelhouse"]
     assert server["env"] == {
         "CADRUMO_MCP_REQUIRED_VERSION": "1.2.3",
-        "CADRUMO_MCP_PERSONA": "${user_config.persona}",
-        "CADRUMO_MCP_SURFACE": "${user_config.surface}",
+        "CADRUMO_MCP_REQUIRED_HARNESS_VERSION": plugin_cohort.harness_version,
         "PYTHONNOUSERSITE": "1",
         "PYTHONPATH": "",
     }
-
-
-def test_persona_default_interpolates_into_user_config(tmp_path: Path, plugin_cohort: _PluginPythonCohort) -> None:
-    output = tmp_path / "plugin"
-    materialise_plugin(output, persona_default="cadrumo-verifier", cohort=plugin_cohort)
-    document = json.loads((output / ".claude-plugin" / "plugin.json").read_text(encoding=_UTF_8))
-    persona = document["userConfig"]["persona"]
-    assert persona["type"] == "string"
-    assert persona["default"] == "cadrumo-verifier"
-    assert persona["required"] is False
-
-
-def test_default_persona_is_the_full_surface(tmp_path: Path, plugin_cohort: _PluginPythonCohort) -> None:
-    output = tmp_path / "plugin"
-    materialise_plugin(output, cohort=plugin_cohort)
-    document = json.loads((output / ".claude-plugin" / "plugin.json").read_text(encoding=_UTF_8))
-    assert document["userConfig"]["persona"]["default"] == ""
 
 
 def test_emitted_plugin_passes_claude_validate_strict_when_cli_present(
@@ -237,8 +228,11 @@ def test_emitted_plugin_passes_claude_validate_strict_when_cli_present(
 
     claude = shutil.which("claude")
     if claude is not None:
-        completed = run_captured(
+        completed = subprocess.run(  # noqa: S603 - explicit validator executable and fixed argv, no shell
             [claude, "plugin", "validate", "--strict", str(output)],
+            capture_output=True,
+            check=False,
+            timeout=60,
             encoding=_UTF_8,
         )
         assert completed.returncode == 0, (

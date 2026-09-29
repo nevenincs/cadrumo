@@ -158,6 +158,11 @@ errors:
     error_application_live_iva_surface_timeout: Live IVA read surface timed out before
       returning AEAT evidence.
     error_application_registry: The modelo registry orchestration failed or was refused.
+    error_automation_decision_run: The automation decision could not be confirmed.
+      Inspect the operation before retrying.
+    error_automation_inventory_read: The automation inventory could not be confirmed.
+    error_automation_requester_uncertain: The authorization request outcome could
+      not be confirmed. Inspect the existing request before trying again.
     error_borrador_artefact_not_recognised: The PDF does not match any known Modelo
       100 borrador shape.
     error_cadrumo_async_resource_cleanup: Asynchronous resource cleanup failed; retry
@@ -263,6 +268,8 @@ errors:
     error_modelo_filing_record_not_found: The requested filing record was not found.
     error_modelo_iva_wallet_reconciliation_blocked: 'Modelo 303 calculation is blocked:
       IVA wallet reconciliation is required'
+    error_modelo_metadata_run: The work metadata operation did not return a confirmed
+      result. Inspect its operation ID before retrying.
     error_modelo_verification_report_not_found: The requested verification report
       was not found.
     error_modelo_work_unit_already_discarded: The work unit is already discarded.
@@ -286,6 +293,8 @@ errors:
     error_profile_bienes_inversion_record: A capital-goods IVA regularisation record
       is structurally invalid.
     error_profile_inventory_ledger: A profile inventory ledger operation is not valid.
+    error_profile_mutation_run: The profile change finished without a usable result.
+      Inspect the operation before retrying.
     error_profile_prorrata_register_record: A cross-period IVA prorrata register record
       is structurally invalid.
     error_profile_tax_residence: A tax-residence profile error occurred.
@@ -884,6 +893,8 @@ errors:
     modelo_work_period_token: Invalid modelo period token.
     modelo_work_registry_year_mismatch: The selected registry revision does not cover
       the requested filing year.
+    modelo_work_rename_approval_stale: The work unit changed after it was read. Read
+      it again before renaming it.
     modelo_work_selector_ambiguous: More than one modelo work unit matches the selector.
     modelo_work_selector_contradiction: The modelo work selector arguments contradict
       each other.
@@ -1171,6 +1182,8 @@ errors:
       profile selector. Complete the profile before continuing.
     refused_profile_prorrata_register_validation: A cross-period IVA prorrata register
       record failed validation.
+    refused_profile_receipt: The saved human sign-in receipt could not authenticate
+      this profile.
     refused_profile_schema_validation: The profile data violates the schema contract.
       Correct the values shown.
     refused_renta_maritime_exemption_inactive: 'DA 41 LIRPF exemption is inactive:
@@ -1183,6 +1196,7 @@ errors:
       or re-run with --override-retention and --reason to override.'
     refused_review_filter_parse: '`--filter KEY=VALUE` could not be parsed. Check
       the syntax of the filter provided.'
+    refused_runtime_frontend: The profile runtime refused this request.
     refused_source_mesh_invariant: 'Refused: source mesh invariant violation.'
     refused_storage_bucket_already_present: A bucket with that identifier already
       exists.

@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, TypeAdapter
 
 from .authorization import OperationExecutionAuthority
+from .drain import OperationDrainResult
 from .frontend_requests import OperationResponseControlRequestV1, OperationSubmissionReceiptV1
 from .interactions import OperationActorReference
 from .models import OperationId, OperationRequest, OperationStoredInvocation, new_operation_id
@@ -17,12 +18,15 @@ from .observation import OperationObservationService
 from .persistence.financial_operand_custody import OperationFinancialOperandCustodyRepository
 from .persistence.journal import (
     OperationEventStream,
+    OperationInventoryLimit,
     OperationJournal,
     OperationLeaseRepository,
     OperationObservationReader,
+    OperationRecoveryInventoryPage,
     OperationSecureReferenceStore,
 )
 from .projection_services import (
+    InspectionOnlyOperationSecureResponseAuthority,
     OperationCancellationService,
     OperationDetachService,
     OperationResponseAuthorityBroker,
@@ -35,6 +39,7 @@ from .projection_services import (
     UnavailableSnapshot,
     read_snapshot,
 )
+from .provenance import OperationAdmissionProvenance
 from .registry import OperationPublicContractSetV1, OperationRegistry
 from .secret_submission import OperationSecretRequirement
 from .supervisor import OperationSupervisor
@@ -71,11 +76,12 @@ class OperationSubmissionService:
         *,
         actor_ref: str,
         operation_id: OperationId | None = None,
+        provenance: OperationAdmissionProvenance | None = None,
     ) -> OperationSubmission:
         """Durably submit one typed registered request without starting it."""
         validated_actor = _ACTOR_REFERENCE_ADAPTER.validate_python(actor_ref)
         proposed_id = operation_id or new_operation_id()
-        submitted_id = await self.supervisor.submit(request, operation_id=proposed_id)
+        submitted_id = await self.supervisor.submit(request, operation_id=proposed_id, provenance=provenance)
         snapshot = await self.supervisor.inspect(submitted_id)
         receipt = OperationSubmissionReceiptV1(
             operation_id=submitted_id, secret_requirement=snapshot.secret_requirement
@@ -90,6 +96,10 @@ class OperationSubmissionService:
     async def submit_secret(self, requirement: OperationSecretRequirement, secret: bytearray) -> None:
         """Transfer one exact mutable secret buffer into runtime-only custody."""
         await self.supervisor.submit_ephemeral_secret(requirement, secret)
+
+    async def require_secret_ready(self, requirement: OperationSecretRequirement) -> None:
+        """Check the exact canonical wait before requesting protected bytes."""
+        await self.supervisor.require_ephemeral_secret_ready(requirement)
 
     async def stored_invocation(
         self, operation_id: OperationId, *, require_idle: bool = False
@@ -136,11 +146,25 @@ class OperationComposedServices:
         [OperationResponseControlRequestV1, OperationResponseCapability],
         Awaitable[OperationResponseControlService],
     ]
-    _shutdown: Callable[[], Awaitable[None]]
+    _response_broker: OperationResponseAuthorityBroker
+    _response_clock: Callable[[], datetime]
+    _shutdown: Callable[[], Awaitable[OperationDrainResult]]
+    _drain: Callable[[timedelta], Awaitable[OperationDrainResult]]
+    _inventory: Callable[[OperationId | None, OperationInventoryLimit], Awaitable[OperationRecoveryInventoryPage]]
 
-    async def shutdown(self) -> None:
-        """Settle owner-held runtime resources without exposing them."""
-        await self._shutdown()
+    async def shutdown(self) -> OperationDrainResult:
+        """Close within the default bound and report remaining ownership."""
+        return await self._shutdown()
+
+    async def drain(self, timeout: timedelta) -> OperationDrainResult:
+        """Fence admissions and return unresolved ownership within one deadline."""
+        return await self._drain(timeout)
+
+    async def recovery_inventory(
+        self, *, after: OperationId | None, limit: OperationInventoryLimit
+    ) -> OperationRecoveryInventoryPage:
+        """Read one bounded page of existing canonical journal identities."""
+        return await self._inventory(after, limit)
 
     async def response(
         self,
@@ -157,6 +181,25 @@ class OperationComposedServices:
                 supervisor=self.submission.supervisor,
             )
         return await self._response_factory(request, capability)
+
+    async def inspect_response(
+        self,
+        request: OperationResponseControlRequestV1,
+        capability: OperationResponseCapability | None,
+    ) -> OperationResponseControlService:
+        """Inspect a live REVIEW capability without consuming its one-shot bearer."""
+        del request  # The returned service validates the exact request against current journal state.
+        authority = (
+            InspectionOnlyOperationSecureResponseAuthority(self._response_broker, capability, self._response_clock)
+            if capability is not None
+            else UnavailableOperationSecureResponseAuthority()
+        )
+        return OperationResponseControlService(
+            reader=self.observation.reader,
+            registry=self.observation.registry,
+            authority=authority,
+            supervisor=self.submission.supervisor,
+        )
 
 
 def compose_operation_services(
@@ -226,9 +269,16 @@ def compose_operation_services(
             supervisor=supervisor,
         )
 
-    async def shutdown() -> None:
+    async def shutdown() -> OperationDrainResult:
         authority_broker.close()
-        await supervisor.shutdown()
+        return await supervisor.shutdown()
+
+    async def drain(timeout: timedelta) -> OperationDrainResult:
+        authority_broker.close()
+        return await supervisor.drain(timeout)
+
+    async def inventory(after: OperationId | None, limit: OperationInventoryLimit) -> OperationRecoveryInventoryPage:
+        return await journal.inventory_page(after=after, limit=limit)
 
     return OperationComposedServices(
         public_contracts=public_contracts,
@@ -240,7 +290,11 @@ def compose_operation_services(
         cancellation=OperationCancellationService(reader=reader, registry=registry, supervisor=supervisor),
         detach=OperationDetachService(reader=reader, registry=registry, supervisor=supervisor),
         _response_factory=bind_response,
+        _response_broker=authority_broker,
+        _response_clock=clock,
         _shutdown=shutdown,
+        _drain=drain,
+        _inventory=inventory,
     )
 
 

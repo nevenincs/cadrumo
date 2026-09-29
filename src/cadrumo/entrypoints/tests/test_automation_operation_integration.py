@@ -26,17 +26,74 @@ from cadrumo.application.operations.frontend_requests import (
     OperationObservationRequestV1,
     OperationObservationSuccessV1,
 )
-from cadrumo.application.operations.models import OperationRequest
-from cadrumo.application.user_profile.automation_enrollment import EnrollmentKind, EnrollmentStage
+from cadrumo.application.operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
+from cadrumo.application.user_profile.automation_administration import inspect_automation_inventory
+from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
+from cadrumo.application.user_profile.automation_enrollment import (
+    AutomationInventoryProjection,
+    EnrollmentKind,
+    EnrollmentStage,
+)
+from cadrumo.application.user_profile.automation_execution import ThreadedAutomationAdministration
 from cadrumo.application.user_profile.automation_operations import (
     AutomationOperationRequest,
     build_automation_operation_definitions,
+    project_automation_inventory_result,
 )
-from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
+from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+
+def test_human_inventory_remains_visible_after_automation_is_disabled(tmp_path: Path) -> None:
+    """Disablement blocks mutation but cannot hide a surviving consent request."""
+    with administration_subject(tmp_path) as subject:
+        request_id = uuid4()
+        subject.service.request(request_id, subject.proposal)
+        state = subject.store.enrollment_state()
+        subject.store.publish_enrollment(changed(state, automation_enabled=False))
+        with pytest.raises(AutomationCustodyError) as mismatch:
+            inspect_automation_inventory(custody=subject.store, owner=subject.owner)
+        assert mismatch.value.reason is AutomationCustodyCode.NEEDS_USER
+        subject.owner.current = changed(
+            subject.owner.current,
+            profile=changed(subject.owner.current.profile, automation_enabled=False),
+        )
+        inventory = inspect_automation_inventory(custody=subject.store, owner=subject.owner)
+        assert inventory == subject.service.inventory()
+        assert tuple(item.receipt.request_id for item in inventory.requests) == (request_id,)
+        receipt = OperationTerminalReceipt(
+            identity=OperationIdentity(
+                operation_id="a" * 64,
+                definition_id="user-profile.automation-inventory",
+                subject_ref=profile_operation_subject(str(subject.store.binding.profile_id)),
+            ),
+            revision=3,
+            condition=OperationTerminalCondition.SUCCEEDED,
+            effect=OperationEffect.NONE,
+            settled_at=NOW,
+            result_ref="inventory:synthetic-human",
+        )
+        projected = project_automation_inventory_result(inventory, receipt)
+        assert isinstance(projected, AutomationInventoryProjection)
+        assert tuple(item.receipt.request_id for item in projected.requests) == (request_id,)
+        assert projected.requests[0].proposal.scope.operations == tuple(sorted(subject.proposal.scope.operations))
+        with pytest.raises(ValueError, match="settled subject"):
+            project_automation_inventory_result(
+                inventory,
+                receipt.model_copy(
+                    update={
+                        "identity": receipt.identity.model_copy(
+                            update={"subject_ref": profile_operation_subject(str(uuid4()))}
+                        )
+                    }
+                ),
+            )
+        with pytest.raises(AutomationCustodyError) as mutation:
+            subject.service.request(uuid4(), subject.proposal)
+        assert mutation.value.reason is AutomationCustodyCode.NEEDS_USER
 
 
 def test_registered_enrollment_lifecycle_uses_real_supervisor_and_protected_operands(
@@ -47,7 +104,9 @@ def test_registered_enrollment_lifecycle_uses_real_supervisor_and_protected_oper
 ) -> None:
     with administration_subject(tmp_path) as subject:
         registry = build_production_operation_registry(
-            automation_administration_factory=lambda _context, _profile: subject.service
+            automation_administration_factory=lambda _context, _profile: ThreadedAutomationAdministration(
+                subject.service
+            )
         )
         journal = OperationJournalRepository(storage_root=subject.store.root / "operations")
         services = compose_operation_services(

@@ -6,9 +6,22 @@ from uuid import uuid4
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from cadrumo.application.user_profile.access_contracts import AccessAction, AccessScope, ProfileAccessBinding
-from cadrumo.application.user_profile.automation_administration import enrollment_receipt, enrollment_review_digest
+from cadrumo.application.user_profile.access_contracts import (
+    AccessAction,
+    AccessScope,
+    AccessSession,
+    ProfileAccessBinding,
+    SessionKind,
+    SessionState,
+)
+from cadrumo.application.user_profile.automation_administration import (
+    enrollment_receipt,
+    enrollment_review_digest,
+    reconcile_automation_receipt,
+)
+from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.application.user_profile.automation_enrollment import (
+    EnrollmentControlState,
     EnrollmentKind,
     EnrollmentProposal,
     EnrollmentRecord,
@@ -114,3 +127,63 @@ def test_enrollment_cannot_claim_progress_without_delivery_binding(
 ) -> None:
     with pytest.raises(ValidationError):
         changed(record, stage=stage)
+
+
+@pytest.mark.parametrize("mismatch", [None, "grant", "client", "destination", "profile", "child", "pending"])
+def test_terminal_receipt_recovery_is_limited_to_current_root_principal(
+    record: EnrollmentRecord, mismatch: str | None
+) -> None:
+    """Admission is independently proved by native tests; this owns receipt scope."""
+    record = changed(
+        record,
+        requester=changed(record.requester, destination_id=record.requester.client_id),
+        stage=EnrollmentStage.COMPLETE,
+        candidate_key_id=uuid4(),
+        credential_reference=uuid4(),
+    )
+    session = AccessSession(
+        session_id=uuid4(),
+        binding=record.binding,
+        profile_lock_generation=0,
+        runtime_boot_id=uuid4(),
+        connection_id=uuid4(),
+        client_id=record.requester.client_id,
+        kind=SessionKind.API_KEY,
+        state=SessionState.ACTIVE,
+        scope=record.proposal.scope,
+        grant_id=record.grant_id,
+        grant_generation=2,
+        key_id=record.candidate_key_id,
+        key_generation=1,
+        issued_at=record.expires_at,
+        expires_at=record.expires_at + timedelta(minutes=5),
+        issued_monotonic=100.0,
+    )
+    if mismatch == "grant":
+        session = changed(session, grant_id=uuid4())
+    elif mismatch == "client":
+        session = changed(session, client_id=uuid4())
+    elif mismatch == "destination":
+        record = changed(record, requester=changed(record.requester, destination_id=uuid4()))
+    elif mismatch == "profile":
+        session = changed(session, binding=changed(session.binding, profile_id=uuid4()))
+    elif mismatch == "child":
+        session = changed(session, parent_session_id=uuid4())
+    elif mismatch == "pending":
+        record = changed(record, stage=EnrollmentStage.CANDIDATE)
+    state = EnrollmentControlState(
+        revision=1,
+        binding=record.binding,
+        profile_lock_generation=0,
+        automation_enabled=True,
+        grants=(),
+        requests=(record,),
+    )
+    if mismatch is None:
+        recovered = reconcile_automation_receipt(state=state, session=session, request_id=record.request_id)
+        assert recovered.model_dump() == enrollment_receipt(record).model_dump()
+        assert str(record.requester.connection_id) not in recovered.model_dump_json()
+    else:
+        with pytest.raises(AutomationCustodyError) as failure:
+            reconcile_automation_receipt(state=state, session=session, request_id=record.request_id)
+        assert failure.value.reason is AutomationCustodyCode.CREDENTIAL_REJECTED

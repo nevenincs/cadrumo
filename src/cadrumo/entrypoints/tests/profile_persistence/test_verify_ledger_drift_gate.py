@@ -46,7 +46,7 @@ from cadrumo.application.ledger.evidence import PurchaseInvoiceEvidenceService
 from cadrumo.application.ledger.models import ManualLedgerTransactionPatch
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision
 from cadrumo.application.modelo.verification_repository_ports import VerificationRepositoryBundle
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.domain.modelos.verification_report import (
     ModeloVerificationFindingSeverity,
@@ -102,11 +102,11 @@ def _ledger_ports(
         yield ports
 
 
-def _verification_ports(repos: _Repos) -> VerificationRepositoryBundle:
+def _verification_ports(repos: _Repos, *, operation: PinnedAuthorityOperation) -> VerificationRepositoryBundle:
     """Compose the complete verification bundle over the isolated repositories."""
     wu_repo, cr_repo, filing_repo, vr_repo, event_repo, tx_repo = repos
     return replace(
-        build_verification_repository_bundle(BUCKET_ID),
+        build_verification_repository_bundle(BUCKET_ID, operation=operation),
         work_unit=wu_repo,
         calculation=cr_repo,
         filing=filing_repo,
@@ -205,7 +205,7 @@ def _verify(revision_id: str, repos: _Repos) -> VerificationReport:
             actor="operator",
             workflow_profile=workflow_profile(),
             settings=ready_clave_settings(TAX_ID),
-            verification_repositories=_verification_ports(repos),
+            verification_repositories=_verification_ports(repos, operation=operation),
             clock=_AT,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,

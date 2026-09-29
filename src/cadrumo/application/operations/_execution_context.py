@@ -8,6 +8,7 @@ from contextlib import AsyncExitStack, asynccontextmanager
 from datetime import datetime
 
 from ...core.async_cleanup import AsyncCloseable
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.operations import OperationEffect, OperationLifecycle
 from .authorization import OperationExecutionAuthority
 from .capabilities import OperationOwnedResource
@@ -66,7 +67,7 @@ class _Cancellation:
         """Protect one executor-owned mutation boundary from an unsafe stop."""
         task = asyncio.current_task()
         if task is None:
-            raise RuntimeError("irreversible section requires an owning async task")
+            raise InternalInvariantError("irreversible section requires an owning async task")
         async with AsyncExitStack() as authority:
             if task is not self._irreversible_owner:
                 await authority.enter_async_context(self._irreversible_lock)

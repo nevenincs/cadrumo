@@ -1,10 +1,8 @@
 # Lifecycle ordering — calculate, then verify, then file
 
-The modelo lifecycle has one canonical order. The manifest carries it as data
-(the MCP `contract` tool → `contract.lifecycle.steps`, currently
-`calculate → verify → file`) so this ordering is never a convention you invent —
-confirm it against that field if you are ever unsure, rather than trusting a stale
-paraphrase.
+The modelo lifecycle follows `calculate → verify → file`. Use MCP `describe`
+before submitting a registered lifecycle operation and retain its result and
+effect receipt. A local filing record is not evidence that AEAT accepted a filing.
 
 ## The invariant
 

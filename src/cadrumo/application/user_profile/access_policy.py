@@ -7,6 +7,7 @@ private release and local commit while holding its authoritative denial fence.
 
 from __future__ import annotations
 
+from ...core.operations import OperationInteractionKind
 from ..operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from ..operations.registry import OperationRegistry
 from .access_contracts import (
@@ -26,6 +27,7 @@ from .access_contracts import (
     LoginEligibility,
     OperationAccessPolicy,
     OperationAccessRequest,
+    OperationResponseScopeAllowed,
     ProfileAccessState,
     SessionKind,
     SessionState,
@@ -247,7 +249,31 @@ def _parent_refusal(child: AccessSession, parent: AccessSession) -> AccessDenial
     return None
 
 
-def evaluate_operation_access(
+def operation_scope_refusal(
+    *, request: OperationAccessRequest, policy: OperationAccessPolicy, scope: AccessScope
+) -> AccessDenied | None:
+    """Apply one authority ceiling without authenticating or granting an operation."""
+    if (
+        request.definition_id not in scope.operations
+        or request.action not in scope.actions
+        or request.action not in policy.actions
+    ):
+        return AccessDenied(code=AccessDenialCode.OPERATION_DENIED)
+    if (
+        (request.period_independent and not (scope.allow_period_independent and policy.allow_period_independent))
+        or (policy.requires_all_periods and scope.periods is not None)
+        or (scope.periods is not None and not request.periods <= scope.periods)
+        or (policy.periods is not None and not request.periods <= policy.periods)
+    ):
+        return AccessDenied(code=AccessDenialCode.PERIOD_DENIED)
+    if not policy.disclosures <= scope.disclosures or any(
+        item.destination_id != request.destination_id for item in policy.disclosures
+    ):
+        return AccessDenied(code=AccessDenialCode.DISCLOSURE_DENIED)
+    return None
+
+
+def _evaluate_operation_scope(
     *,
     request: OperationAccessRequest,
     policy: OperationAccessPolicy,
@@ -263,8 +289,8 @@ def evaluate_operation_access(
 
     Success is only the policy half of an application operation. It does not
     certify calculation/filing readiness or supply an apply/reject capability.
-    RESPOND always hands off with a refusal requiring the existing response
-    authority service; this evaluator cannot recover a lost capability.
+    Response callers receive a separate scope-only result from their public
+    evaluator; the existing response owner must still prove its capability.
     """
     if request.profile_id != profile.binding.profile_id:
         return AccessDenied(code=AccessDenialCode.PROFILE_MISMATCH)
@@ -290,28 +316,17 @@ def evaluate_operation_access(
         or policy.definition_contract_digest != contract.definition_contract_digest
     ):
         return AccessDenied(code=AccessDenialCode.OPERATION_UNAVAILABLE)
+    if policy.requires_human and session.kind is not SessionKind.HUMAN:
+        return AccessDenied(code=AccessDenialCode.HUMAN_AUTHORITY_REQUIRED)
     if request.frontend not in contract.permitted_frontends:
         return AccessDenied(code=AccessDenialCode.FRONTEND_DENIED)
     scopes = (profile.scope, session.scope, *(item.scope for item in ancestors))
     if grant is not None and session.kind is not SessionKind.HUMAN:
         scopes += (grant.scope,)
     scope = intersect_scopes(scopes)
-    if (
-        request.definition_id not in scope.operations
-        or request.action not in scope.actions
-        or request.action not in policy.actions
-    ):
-        return AccessDenied(code=AccessDenialCode.OPERATION_DENIED)
-    if (
-        (request.period_independent and not (scope.allow_period_independent and policy.allow_period_independent))
-        or (scope.periods is not None and not request.periods <= scope.periods)
-        or (policy.periods is not None and not request.periods <= policy.periods)
-    ):
-        return AccessDenied(code=AccessDenialCode.PERIOD_DENIED)
-    if not policy.disclosures <= scope.disclosures or any(
-        item.destination_id != request.destination_id for item in policy.disclosures
-    ):
-        return AccessDenied(code=AccessDenialCode.DISCLOSURE_DENIED)
+    refusal = operation_scope_refusal(request=request, policy=policy, scope=scope)
+    if refusal is not None:
+        return refusal
     if request.action is AccessAction.OBSERVE and (
         not policy.disclosures
         or any(
@@ -338,8 +353,84 @@ def evaluate_operation_access(
     ):
         if readiness not in {Availability.AVAILABLE, Availability.NOT_REQUIRED}:
             return AccessDenied(code=refusal)
-    if request.action is AccessAction.RESPOND:
-        return AccessDenied(code=AccessDenialCode.RESPONSE_AUTHORITY_REQUIRED)
     if policy.transaction_authority_required:
         return AccessDenied(code=AccessDenialCode.TRANSACTION_AUTHORITY_REQUIRED)
     return decision
+
+
+def evaluate_operation_access(
+    *,
+    request: OperationAccessRequest,
+    policy: OperationAccessPolicy,
+    registry: OperationRegistry,
+    session: AccessSession | None,
+    ancestors: tuple[AccessSession, ...],
+    grant: AutomationGrant | None,
+    key: ApiKeyRecord | None,
+    profile: ProfileAccessState,
+    context: AccessEvaluationContext,
+) -> AccessDecision:
+    """Check current operation permissions without granting response authority."""
+    decision = _evaluate_operation_scope(
+        request=request,
+        policy=policy,
+        registry=registry,
+        session=session,
+        ancestors=ancestors,
+        grant=grant,
+        key=key,
+        profile=profile,
+        context=context,
+    )
+    if isinstance(decision, AccessDenied):
+        return decision
+    if request.action is AccessAction.RESPOND:
+        return AccessDenied(code=AccessDenialCode.RESPONSE_AUTHORITY_REQUIRED)
+    return decision
+
+
+def evaluate_response_scope(
+    *,
+    request: OperationAccessRequest,
+    policy: OperationAccessPolicy,
+    registry: OperationRegistry,
+    session: AccessSession | None,
+    ancestors: tuple[AccessSession, ...],
+    grant: AutomationGrant | None,
+    key: ApiKeyRecord | None,
+    profile: ProfileAccessState,
+    context: AccessEvaluationContext,
+) -> OperationResponseScopeAllowed | AccessDenied:
+    """Validate only the profile scope half of a canonical REVIEW response.
+
+    This distinct result cannot supply the original transaction capability.
+    The response owner must independently prove and consume that capability.
+    """
+    if request.action is not AccessAction.RESPOND:
+        return AccessDenied(code=AccessDenialCode.OPERATION_DENIED)
+    decision = _evaluate_operation_scope(
+        request=request,
+        policy=policy,
+        registry=registry,
+        session=session,
+        ancestors=ancestors,
+        grant=grant,
+        key=key,
+        profile=profile,
+        context=context,
+    )
+    if isinstance(decision, AccessDenied):
+        return decision
+    contract = registry.lookup_public_contract(request.definition_id)
+    projection = contract.review_projection_schema
+    if (
+        OperationInteractionKind.REVIEW not in contract.interaction_kinds
+        or contract.interaction_response_schema is None
+        or projection is None
+    ):
+        return AccessDenied(code=AccessDenialCode.RESPONSE_AUTHORITY_REQUIRED)
+    if not policy.disclosures or any(item.projection_id != projection.schema_id for item in policy.disclosures):
+        return AccessDenied(code=AccessDenialCode.DISCLOSURE_DENIED)
+    return OperationResponseScopeAllowed(
+        profile_id=decision.profile_id, session_id=decision.session_id, expires_at=decision.expires_at
+    )

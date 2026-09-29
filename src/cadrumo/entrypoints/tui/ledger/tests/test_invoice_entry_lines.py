@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
+from typing import cast
 
 import pytest
 from pydantic import ValidationError
@@ -17,12 +18,19 @@ from .....adapters.persistence.storage.tests.active_profile_isolated_backend_fix
 from .....core.aggregation import IntracomOperationType
 from .....core.config import override_settings
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
+from .....domain.invoices.models import Invoice
 from .....domain.iva.classification import InvoiceKind
 from ...components.host import ScreenHostApp
-from ...ledger_doors import LedgerRecordDoors, ledger_invoice_add_door
+from ...ledger_doors import ledger_invoice_add_door
 from ..controller import LedgerWorkspaceController
 from ..invoice_entry import LedgerInvoiceEntryScreen
-from ..models import LedgerFlowState, LedgerInvoiceAddResultV1, LedgerInvoiceEntryV1, LedgerInvoiceLineEntryV1
+from ..models import (
+    LedgerFlowState,
+    LedgerInvoiceAddResultV1,
+    LedgerInvoiceEntryV1,
+    LedgerInvoiceLineEntryV1,
+    LedgerRecordDoorsV1,
+)
 from ..record_views import LedgerInvoiceDetailScreen
 from ..workspace_injection import LedgerWorkspaceInjection
 from .test_ledger_selection_journey import _WorkspaceHostApp
@@ -98,6 +106,23 @@ class _RecordingDoor:
             grand_total=base + iva,
             currency=entry.currency,
         )
+
+
+class _CapturedInvoiceDoor:
+    """Return one repository value to the detail screen without opening storage."""
+
+    def __init__(self, invoice: Invoice) -> None:
+        self._invoice = invoice
+
+    async def invoice(self, invoice_id: str) -> Invoice:
+        assert invoice_id == self._invoice.invoice_id
+        return self._invoice
+
+
+def _saved_invoices() -> dict[str, Invoice]:
+    from .....adapters.persistence.profile.catalogue_reads import build_invoice_catalogue_read_ports
+
+    return dict(build_invoice_catalogue_read_ports(bucket_id=DEFAULT_BUCKET_ID).invoice_reader.load().invoices)
 
 
 def _entry_screen(door: _RecordingDoor) -> LedgerInvoiceEntryScreen:
@@ -231,7 +256,7 @@ async def test_an_invoice_is_entered_by_lines_or_by_one_base_never_both_and_neve
 async def test_the_real_writer_keeps_every_line_and_the_detail_view_reads_them_back(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    """The per-rate breakdown survives the canonical writer and the canonical read."""
+    """The per-rate breakdown survives the canonical writer, repository and detail view."""
     recorded = await ledger_invoice_add_door(DEFAULT_BUCKET_ID, operation)(_entry(*_LINES))
 
     assert (recorded.base_total, recorded.iva_total, recorded.grand_total) == (
@@ -239,14 +264,15 @@ async def test_the_real_writer_keeps_every_line_and_the_detail_view_reads_them_b
         Decimal("2.60"),
         Decimal("17.60"),
     )
-    doors = LedgerRecordDoors(bucket_id=DEFAULT_BUCKET_ID, operation=operation)
+    invoice = _saved_invoices()[recorded.invoice_id]
+    doors = cast(LedgerRecordDoorsV1, _CapturedInvoiceDoor(invoice))
     controller = LedgerWorkspaceController(
         ledger_context(),
         ledger_projection(),
         LedgerWorkspaceInjection(review_action=ledger_review_action(), record_doors=doors),
     )
     with override_settings(cadrumo_output_language="en"):
-        detail = LedgerInvoiceDetailScreen(controller, doors, recorded.invoice_id)
+        detail = LedgerInvoiceDetailScreen(controller, doors, invoice.invoice_id)
         async with _WorkspaceHostApp(detail).run_test(size=(110, 55)) as pilot:
             await pilot.app.workers.wait_for_complete()
             await pilot.pause()
@@ -276,4 +302,4 @@ async def test_the_real_writer_refuses_a_line_the_domain_line_refuses_and_record
 ) -> None:
     with pytest.raises(ValidationError, match=refusal):
         await ledger_invoice_add_door(DEFAULT_BUCKET_ID, operation)(_entry(line, _LINES[1]))
-    assert await LedgerRecordDoors(bucket_id=DEFAULT_BUCKET_ID, operation=operation).invoices() == ()
+    assert not _saved_invoices()

@@ -22,8 +22,10 @@ from cadrumo.application.runtime.contracts import (
     RuntimeRefusalError,
     RuntimeServerHello,
 )
+from cadrumo.application.runtime.management_status import RuntimeListenerState
 
 from ..framing import VerifiedRuntimeConnection, accept_runtime_handshake, read_document
+from ..management_status import probe_runtime_listener
 from ..posix import PosixRuntimeChannel, PosixRuntimeEndpoint, posix_storage_identity
 
 pytestmark = [
@@ -115,6 +117,48 @@ def test_namespace_permission_and_symlink_substitution_refused(tmp_path: Path, n
     namespace.symlink_to(tmp_path, target_is_directory=True)
     with pytest.raises(RuntimeRefusalError):
         PosixRuntimeEndpoint(storage_root=tmp_path, namespace=namespace)
+
+
+def test_passive_endpoint_does_not_create_missing_namespace(tmp_path: Path, namespace: Path) -> None:
+    endpoint = PosixRuntimeEndpoint(storage_root=tmp_path, namespace=namespace, create_namespace=False)
+    try:
+        assert not namespace.exists()
+        expected = RuntimeClientHello(product_version="test", storage_identity=endpoint.storage_identity)
+        assert probe_runtime_listener(endpoint, expected=expected, timeout=0.1) is RuntimeListenerState.UNAVAILABLE
+        with pytest.raises(RuntimeRefusalError) as caught:
+            endpoint.connect(timeout=0.1)
+        assert caught.value.reason is RuntimeRefusalCode.ENDPOINT_NOT_READY
+        with pytest.raises(RuntimeRefusalError) as caught:
+            endpoint.listen()
+        assert caught.value.reason is RuntimeRefusalCode.UNAVAILABLE
+        assert not namespace.exists()
+    finally:
+        endpoint.close()
+    assert not namespace.exists()
+
+
+def test_passive_endpoint_verifies_namespace_created_after_construction(tmp_path: Path, namespace: Path) -> None:
+    passive = PosixRuntimeEndpoint(storage_root=tmp_path, namespace=namespace, create_namespace=False)
+    owner = PosixRuntimeEndpoint(storage_root=tmp_path, namespace=namespace)
+    try:
+        owner.listen()
+        client = passive.connect(timeout=1)
+        server = owner.accept(timeout=1)
+        client.close()
+        server.close()
+    finally:
+        passive.close()
+        owner.close()
+
+
+def test_passive_endpoint_refuses_symlink_without_replacing_target(tmp_path: Path, namespace: Path) -> None:
+    target = tmp_path / "untouched"
+    target.mkdir()
+    namespace.symlink_to(target, target_is_directory=True)
+    with pytest.raises(RuntimeRefusalError) as caught:
+        PosixRuntimeEndpoint(storage_root=tmp_path, namespace=namespace, create_namespace=False)
+    assert caught.value.reason is RuntimeRefusalCode.ENDPOINT_UNTRUSTED
+    assert namespace.is_symlink() and target.is_dir()
 
 
 @pytest.mark.parametrize("substitution", ["symlink", "fifo", "public_file", "hardlink"])

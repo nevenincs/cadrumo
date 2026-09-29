@@ -31,6 +31,7 @@ from .secret_submission import OperationEphemeralSecretAccess
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from .refusal_evidence import OperationExecutorResult
 
 
 @runtime_checkable
@@ -244,8 +245,8 @@ class OperationExecutor[RequestPayloadT: BaseModel](Protocol):
         self,
         request: OperationRequest[RequestPayloadT],
         context: OperationExecutorContext,
-    ) -> OperationReference | None:
-        """Run one request and return an optional domain-owned result reference."""
+    ) -> OperationExecutorResult:
+        """Run one request and return a result, refusal evidence, or no result."""
         ...
 
 
@@ -258,7 +259,7 @@ class OperationResumableExecutor[RequestPayloadT: BaseModel](Protocol):
         request: OperationRequest[RequestPayloadT],
         checkpoint: OperationResumeCheckpoint,
         context: OperationExecutorContext,
-    ) -> OperationReference | None:
+    ) -> OperationExecutorResult:
         """Resume from the exact durable checkpoint under a new supervisor lease."""
         ...
 

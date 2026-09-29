@@ -48,6 +48,7 @@ from cadrumo.application.user_profile.access_contracts import (
     SessionKind,
 )
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
+from cadrumo.application.user_profile.access_projections import project_access_session
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodyCode, AutomationCustodyError
 from cadrumo.application.user_profile.automation_enrollment import AdministrationFacts
 from cadrumo.application.user_profile.automation_lifecycle import (
@@ -766,6 +767,35 @@ def test_host_poll_preserves_password_access_when_automation_storage_is_lost(sub
     assert isinstance(api, AccessSession) and isinstance(human, AccessSession)
     subject.enrollment.native.unavailable = True
     assert subject.authority.revalidate_sessions() == (api.session_id,)
+    assert subject.owner.active == {human.session_id}
+
+
+def test_session_inventory_requires_current_human_and_revalidates_every_lease(subject: Subject) -> None:
+    api = subject.admit()
+    human = subject.authority.admit_human(connection_id=subject.connection)
+    assert isinstance(api, AccessSession) and isinstance(human, AccessSession)
+    inventory = subject.authority.session_inventory(connection_id=subject.connection, session_id=human.session_id)
+    assert inventory == tuple(
+        project_access_session(item) for item in sorted((api, human), key=lambda item: item.session_id)
+    )
+    assert tuple(item.session_id for item in inventory) == tuple(sorted((api.session_id, human.session_id)))
+    assert not {"connection_id", "runtime_boot_id", "originating_login_id", "issued_monotonic"} & set(
+        inventory[0].model_dump()
+    )
+
+    with pytest.raises(ProfileAccessRefusedError) as denied:
+        subject.authority.session_inventory(connection_id=subject.connection, session_id=api.session_id)
+    assert denied.value.reason is AccessDenialCode.HUMAN_AUTHORITY_REQUIRED
+    foreign = uuid4()
+    subject.owner.connections[foreign] = uuid4()
+    with pytest.raises(ProfileAccessRefusedError) as mismatch:
+        subject.authority.session_inventory(connection_id=foreign, session_id=human.session_id)
+    assert mismatch.value.reason is AccessDenialCode.CONNECTION_MISMATCH
+
+    subject.enrollment.native.unavailable = True
+    assert subject.authority.session_inventory(connection_id=subject.connection, session_id=human.session_id) == (
+        project_access_session(human),
+    )
     assert subject.owner.active == {human.session_id}
 
 

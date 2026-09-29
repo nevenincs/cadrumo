@@ -1465,6 +1465,10 @@ cli:
         discard_requires_yes: El descarte es una transición de estado auditable. Vuelva
           a ejecutar 'aeat app modelo work discard %{work_unit_id} --yes' para confirmar.
         discard_yes_help: Confirmar explícitamente la operación de descarte
+        file:
+          verification_report_ambiguous: Hay más de un informe de verificación favorable
+            para esta revisión. Resuelva el conflicto de verificación antes de registrar
+            la presentación.
         file_help: Marcar una revisión verificada como internamente presentada. NO
           envía a la AEAT
         file_idempotent_noop: 'Operación idempotente sin efecto: la revisión de cálculo
@@ -1707,9 +1711,6 @@ cli:
         row_kv_format_error: 'El campo --row {token} debe escribirse como CLAVE=VALOR.
           Es una entrada clave-valor: pon el nombre del campo de la fila a la izquierda
           de un único signo igual y su valor a la derecha.'
-        row_m349_invalid_nif: '--row operador: nif_comunitario {nif} no coincide con
-          el formato NIF-IVA esperado para el país {pais} (Directiva 2006/112/CE Anexo
-          XI)'
         row_unknown_type: 'Tipo de fila --row {row_type!r} no reconocido; tipos soportados:
           {supported}.'
         row_validation_error: 'Validación fallida para fila --row tipo {row_type!r}:
@@ -1785,6 +1786,20 @@ cli:
       app_help: 'Ejecuta toda la cadena local de presentación de un modelo en un solo
         comando: preparación -> crear -> calcular -> verificar -> exportar. Solo construye
         y exporta; nunca presenta ante la AEAT'
+    runtime:
+      disable:
+        help: Desactiva el inicio al abrir sesión y conserva el inicio bajo demanda.
+      enable:
+        help: Activa el inicio del servicio al abrir sesión este usuario.
+      help: Consulta y administra el servicio local de esta instalación.
+      start:
+        help: Inicia el servicio instalado y verifica su punto de escucha.
+      status:
+        help: Muestre la disponibilidad del servicio local y el estado de su gestor.
+      stop:
+        acknowledge_help: Confirma que la detención afecta a todos los perfiles y
+          trabajos.
+        help: Detiene el servicio compartido tras confirmar su alcance completo.
   common:
     errors:
       filing_requires_declared_tax_id: 'El perfil activo no declara una identidad
@@ -1938,6 +1953,14 @@ cli:
     custody:
       current_passphrase_prompt: 'Contraseña actual del perfil: '
       errors:
+        automation_change_credential_ref_required: Use --profile-auth-method api-key
+          junto con --profile-credential-ref UUID para cambiar una autorización.
+        automation_change_kind_mismatch: El tipo de propuesta protegida debe coincidir
+          con el cambio de autorización solicitado.
+        automation_change_proposal_required: Proporcione la propuesta de cambio mediante
+          --secrets-stdin o --secrets-fd.
+        automation_create_proposal_required: Proporcione la propuesta de autorización
+          mediante --secrets-stdin o --secrets-fd.
         echo_suppression_unavailable: Esta terminal no puede ocultar lo que se escribe,
           por lo que el secreto quedaría visible en pantalla; use --secrets-stdin
           o --secrets-fd.
@@ -1947,6 +1970,16 @@ cli:
           una sesión interactiva.
         non_interactive_secret_required: Se requiere un secreto pero no hay una terminal
           interactiva; use --secrets-stdin o --secrets-fd.
+        profile_credential_ref_conflict: Elija --profile-credential-ref o un canal
+          de secretos de perfil de la raíz.
+        profile_credential_ref_inapplicable: --profile-credential-ref solo está disponible
+          para órdenes privadas de perfil alojadas en el servicio local.
+        profile_credential_ref_requires_api_key: --profile-credential-ref requiere
+          --profile-auth-method api-key.
+        profile_secrets_api_key_inapplicable: La autenticación con clave API solo
+          está disponible para los comandos atendidos por el entorno local.
+        profile_secrets_api_key_requires_channel: La autenticación con clave API requiere
+          --profile-secrets-stdin o --profile-secrets-fd.
         profile_secrets_channel_conflict: 'Elija exactamente un canal de autenticación
           del perfil: --profile-secrets-stdin o --profile-secrets-fd.'
         profile_secrets_fd_collision: La autenticación del perfil y el secreto del
@@ -1964,6 +1997,8 @@ cli:
           heredado para autenticar el perfil.
         profile_secrets_inapplicable: La entrada de autenticación del perfil no se
           aplica a este comando y no se leyó.
+        profile_secrets_method_mismatch: El contenido del canal protegido no coincide
+          con --profile-auth-method.
         profile_secrets_missing_target: La autenticación del perfil requiere un destino
           exacto seleccionado mediante --profile o el comando.
         profile_secrets_stdin_collision: La entrada estándar no puede contener a la
@@ -1996,6 +2031,11 @@ cli:
           claves: {expected_fields}.'
         secrets_stdin_too_large: El contenido de secretos de máquina supera el tamaño
           máximo permitido.
+      profile_auth_method_help: 'Método de autenticación del canal protegido de secretos
+        del perfil: password o api-key.'
+      profile_credential_ref_help: Autentique un perfil del servicio local mediante
+        un UUID de credencial del almacenamiento nativo protegido (requiere --profile-auth-method
+        api-key).
       profile_secrets_fd_help: Lee la contraseña del perfil de destino exacto desde
         un objeto JSON acotado en un descriptor legible heredado después de que falle
         la reanudación de la sesión.
@@ -2134,10 +2174,13 @@ cli:
         este verbo en un terminal o use --secrets-stdin o --secrets-fd.
       passphrase_prompt: 'Contraseña del perfil: '
     logout:
-      help: Cierra la sesión del perfil y borra su puntero local
+      help: Borrar el perfil seleccionado en este contexto de la CLI.
       notices:
         already_logged_out: Ningún perfil tenía la sesión iniciada; no hay nada que
           cerrar.
+        remaining_access: Se ha borrado la selección de la CLI. Las demás sesiones,
+          la reanudación humana limitada y las claves API inscritas conservan su propia
+          autorización. Usa los controles de sesión o perfil para revocar el acceso.
     passphrase:
       change_help: Cambia la contraseña sin volver a cifrar los registros ni invalidar
         un código de recuperación.
@@ -2210,6 +2253,39 @@ cli:
           export_target_exists: Ya existe un archivo en la ruta de destino y no se
             sobrescribe una copia de seguridad. Elige otro --output o mueve primero
             el archivo existente; no se ha leído ningún perfil.
+      automation:
+        approve:
+          digest_help: Huella exacta de revisión mostrada por inspect.
+          help: Aprobar la solicitud exacta revisada introduciendo de nuevo la contraseña
+            del perfil.
+          request_help: UUID de la solicitud revisada.
+        change:
+          help: Solicite la rotación, renovación o cambio de permisos de una autorización
+            API existente.
+          kind_help: 'Cambio de autorización: rotate, renew o change_scope.'
+        create:
+          help: Solicite una autorización API y reciba su credencial en almacenamiento
+            protegido tras la aprobación humana por separado.
+        decline:
+          digest_help: Huella exacta de revisión mostrada por inspect.
+          help: Rechazar la solicitud exacta revisada.
+          request_help: UUID de la solicitud revisada.
+        deny:
+          help: Revoca una clave, una concesión o todo el acceso automatizado.
+          kind_help: 'Tipo de revocación: key, grant o all.'
+          target_help: UUID de la clave o concesión que se va a revocar.
+          target_mismatch: La revocación de una clave o concesión requiere su UUID;
+            all no admite destino.
+        help: Gestiona el acceso automatizado de este perfil.
+        inspect:
+          help: Mostrar la solicitud exacta de automatización revisada.
+          request_help: UUID de la solicitud revisada.
+        list:
+          help: Lista las concesiones, claves y solicitudes pendientes de automatización
+            de este perfil.
+        review_digest_mismatch: La huella de revisión actual no coincide con la proporcionada.
+          Consulta de nuevo la solicitud.
+        review_not_found: La solicitud revisada no está disponible para este perfil.
       bundle_flow:
         export_section_title: Exportar el paquete de perfil
         import_section_title: Importar el paquete de perfil
@@ -2363,9 +2439,19 @@ cli:
         incoherent_observation_advisory: 'No se pudo obtener un listado fiable de
           perfiles (estado: {outcome}). Vuelva a ejecutar el comando; si persiste,
           revise el almacenamiento de perfiles.'
+      lock:
+        all_help: Bloquea el perfil en todas partes y suspende todas las concesiones
+          automatizadas.
+        help: Bloquea esta sesión o, con --all, todo el perfil.
+        selector_conflict: Elige --session o --all, pero no ambos.
+        session_help: UUID de la sesión que se revocará sin bloquear el perfil.
       manager_closed_created: Perfil '{profile}' creado. Declara que la configuración
         está completa con `aeat config profile complete-setup` antes de trabajar con
         modelos. Vuelve a abrirlo cuando quieras con 'aeat config profile edit'.
+      mutation:
+        committed_view_unavailable: El cambio del perfil se ha guardado, pero la vista
+          actualizada no está disponible. Vuelve a consultar el perfil antes de hacer
+          otro cambio.
       no_active_profile: No hay un perfil activo. Ejecuta `aeat config profile create
         NAME --tax-id <NIF/CIF/DNI/NIE>` primero.
       notices:
@@ -2431,6 +2517,10 @@ cli:
           lo tienes: '
       remove_row:
         help: Elimina una fila identificada de una sección repetible del perfil.
+      resume:
+        grant_help: UUID de la concesión que se reactivará; repite la opción para
+          elegir varias.
+        help: Desbloquea el perfil con su contraseña y reactiva las concesiones seleccionadas.
       row:
         invalid_row: '''%{row}'' no es una clave de fila válida; use un entero no
           negativo o base.'
@@ -2441,6 +2531,8 @@ cli:
         active_indicator_info: Estás operando dentro del sandbox %{label}, no en un
           perfil real; todos los comandos se ejecutan contra este bucket aislado y
           descartable.
+      sessions:
+        help: Enumera las sesiones actuales de este perfil en el entorno local.
       show:
         summary_invalid: 'El registro del perfil no es válido: %{count} problema(s)
           bloqueante(s).'

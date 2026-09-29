@@ -19,7 +19,6 @@ from textual.screen import Screen
 from textual.widgets import Button, DataTable, Static
 
 from ....application.ledger.attachment_review import AttachmentReviewItem
-from ....application.operations.composition import OperationComposedServices
 from ....application.overview.next_actions import declare_next_action
 from ....application.search.workbench import WorkbenchSearchService
 from ..app import CadrumoTuiApp, RootBindingV1
@@ -104,7 +103,7 @@ async def test_the_root_opens_and_returns_home_without_reading_on_the_loop() -> 
             read_account_session=None,
         )
 
-    app = CadrumoTuiApp(services=cast(OperationComposedServices, object()), load_root=load_root)
+    app = CadrumoTuiApp(load_root=load_root)
     async with app.run_test() as pilot:
         await app.workers.wait_for_complete()
         for _ in range(4):

@@ -46,8 +46,8 @@ from __future__ import annotations
 
 import os
 from collections.abc import Callable, Generator
-from contextlib import contextmanager
-from dataclasses import dataclass
+from contextlib import ExitStack, contextmanager
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import StrEnum
 from pathlib import Path
@@ -58,6 +58,7 @@ from pydantic import BaseModel
 
 from ...core.bucket_pointer import BucketPointer, resolve_active_bucket_id
 from ...core.config import load_settings
+from ...core.errors.hierarchy import CadrumoError
 from ...core.identity.bucket import BucketId
 from ...core.logging import get_logger
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -75,6 +76,7 @@ from .custody_ports import (
     profile_is_keyring_unavailable,
     refuse_profile_login_without_password_channel,
     unlock_profile_custody_password,
+    verify_profile_custody_dek_against_sentinel,
 )
 from .language_resolver import refresh_active_profile_output_language
 from .login_handover import HandoverPhase, ProfileLoginHandoverJournal
@@ -189,7 +191,9 @@ class _CandidateProfileLogin:
     session: ProfileBucketSessionPort
     record_session: ProfileRecordSession
     material: ProfileCustodyPasswordMaterialPort
+    windows: tuple[int, int]
     closed: bool = False
+    receipt_persisted: bool | None = None
 
     def close(self) -> None:
         """Destroy an unpromoted candidate without touching active A."""
@@ -210,7 +214,40 @@ class ProfileLoginCandidate:
     """
 
     outcome: ProfileLoginOutcome
-    session: ProfileBucketSessionPort
+    session: ProfileBucketSessionPort = field(repr=False)
+    _publish_receipt: Callable[[], bool] | None = field(default=None, repr=False, compare=False)
+
+    def persist_acceleration_receipt(self) -> bool:
+        """Publish bounded human acceleration from this still-live password proof.
+
+        Receipt candidates retain their original record without minting another.
+        Publication never selects a profile or installs ambient custody.
+        """
+        _require_live_receipt_candidate(self.session)
+        if self._publish_receipt is None:
+            return self.outcome.session_persisted
+        return self._publish_receipt()
+
+
+class ProfileHumanLoginReceipt(BaseModel):
+    """Nonsecret acknowledgement of human proof and optional bounded acceleration."""
+
+    model_config = _STRICT_FROZEN
+
+    authenticated_at: datetime
+    idle_deadline: datetime
+    absolute_deadline: datetime
+    session_persisted: bool
+    resumed: bool
+
+
+class ProfileReceiptRefusedError(CadrumoError):
+    """A human receipt did not prove the exact current capsule and deadline."""
+
+    def __init__(self, reason: ProfileSessionRefusalReason) -> None:
+        """Preserve the core refusal without exposing receipt material."""
+        self.reason = reason
+        super().__init__(reason.value)
 
 
 @dataclass(slots=True)
@@ -971,9 +1008,144 @@ def authenticate_profile_candidate(
                 closed_previous_bucket_id=None,
             ),
             session=candidate.session,
+            _publish_receipt=lambda: _persist_candidate_receipt(candidate, storage_root=storage_root),
         )
     finally:
         candidate.close()
+
+
+def _require_live_receipt_candidate(session: ProfileBucketSessionPort) -> None:
+    """Refuse retired or expired proof, including time spent acquiring custody."""
+    instant = _now()
+    if session.sealed or instant < session.opened_at:
+        raise ProfileReceiptRefusedError(ProfileSessionRefusalReason.CUSTODY_CHANGED)
+    if instant >= session.absolute_deadline:
+        raise ProfileReceiptRefusedError(ProfileSessionRefusalReason.EXPIRED_ABSOLUTE)
+    if instant >= session.idle_deadline:
+        raise ProfileReceiptRefusedError(ProfileSessionRefusalReason.EXPIRED_IDLE)
+
+
+def _persist_candidate_receipt(candidate: _CandidateProfileLogin, *, storage_root: Path) -> bool:
+    """Recheck the proven capsule while holding its canonical publication lock."""
+    with active_profile_pointer_transaction(storage_root):
+        if candidate.closed or candidate.session.sealed:
+            raise ProfileReceiptRefusedError(ProfileSessionRefusalReason.CUSTODY_CHANGED)
+        _require_live_receipt_candidate(candidate.session)
+        pinned = candidate.material
+        current = load_profile_custody_password_material(UUID(candidate.bucket_id), root=storage_root)
+        if (
+            current.envelope.canonical_json_bytes() != pinned.envelope.canonical_json_bytes()
+            or current.sentinel.canonical_json_bytes() != pinned.sentinel.canonical_json_bytes()
+            or current.commit.transaction_id != pinned.commit.transaction_id
+        ):
+            raise ProfileReceiptRefusedError(ProfileSessionRefusalReason.CUSTODY_CHANGED)
+        if candidate.receipt_persisted is None:
+            candidate.receipt_persisted = _mint_or_warn(
+                storage_root=storage_root, material=pinned, session=candidate.session, windows=candidate.windows
+            )
+        return candidate.receipt_persisted
+
+
+@contextmanager
+def borrow_profile_receipt_key(*, bucket_id: UUID, now: datetime | None = None) -> Generator[bytearray]:
+    """Borrow only the existing human wrap key for one trusted local client.
+
+    This is a secret capability for a protected IPC frame, never a public
+    result. Its buffer is wiped even when the caller's exchange fails.
+    """
+    instant = _now() if now is None else now
+    storage_root = effective_storage_root()
+    material = load_profile_custody_password_material(bucket_id, root=storage_root)
+    outcome, key = _profile_login_sessions().borrow_acceleration_receipt_key(
+        storage_root=storage_root,
+        profile_id=bucket_id,
+        custody_generation=material.envelope.password_generation,
+        dek_epoch=material.envelope.dek_epoch,
+        now=instant,
+    )
+    if not outcome.resumed or outcome.record is None or key is None:
+        if key is not None:
+            _profile_login_sessions().zeroise_owned_buffer(key)
+        raise ProfileReceiptRefusedError(outcome.refusal or ProfileSessionRefusalReason.ABSENT)
+    try:
+        yield key
+    finally:
+        _profile_login_sessions().zeroise_owned_buffer(key)
+
+
+@contextmanager
+def resume_profile_candidate(
+    *,
+    bucket_id: UUID,
+    receipt_key: bytearray,
+    profile_decode_context: ProfileDecodeContext,
+    now: datetime | None = None,
+) -> Generator[ProfileLoginCandidate]:
+    """Prove a supplied human receipt without binding or selecting a profile.
+
+    A valid proof inherits the receipt's original deadlines. It never reads
+    the OS keyring, renews human life, or changes the active frontend context.
+    """
+    instant = _now() if now is None else now
+    storage_root = effective_storage_root()
+    material = load_profile_custody_password_material(bucket_id, root=storage_root)
+    outcome, dek = _profile_login_sessions().resume_acceleration_receipt_with_key(
+        storage_root=storage_root,
+        profile_id=bucket_id,
+        custody_generation=material.envelope.password_generation,
+        dek_epoch=material.envelope.dek_epoch,
+        now=instant,
+        receipt_key=receipt_key,
+    )
+    if not outcome.resumed or outcome.record is None or dek is None:
+        if dek is not None:
+            _profile_login_sessions().zeroise_owned_buffer(dek)
+        raise ProfileReceiptRefusedError(outcome.refusal or ProfileSessionRefusalReason.ABSENT)
+    record = outcome.record
+    with ExitStack() as cleanup:
+        cleanup.callback(_profile_login_sessions().zeroise_owned_buffer, dek)
+        try:
+            verify_profile_custody_dek_against_sentinel(
+                dek=bytes(dek),
+                profile_id=bucket_id,
+                dek_epoch=material.envelope.dek_epoch,
+                sentinel=material.sentinel,
+            )
+        except CadrumoError as error:
+            raise ProfileReceiptRefusedError(ProfileSessionRefusalReason.TAMPERED) from error
+        idle_minutes, _ = _bucket_session_windows()
+        session = _profile_login_sessions().open_resumed_session(
+            bucket_id=str(bucket_id),
+            dek=bytes(dek),
+            idle_minutes=idle_minutes,
+            opened_at=record.issued_at,
+            idle_deadline=record.idle_deadline,
+            absolute_deadline=record.absolute_deadline,
+            storage_root=storage_root,
+        )
+        cleanup.callback(session.close)
+        # Match password candidates' local record authority construction;
+        # actual record reads retain their own later authenticated boundary.
+        record_session = ProfileRecordSession.from_envelope(
+            envelope=material.envelope,
+            dek=bytes(dek),
+            profile_decode_context=profile_decode_context,
+        )
+        record_session.close()
+        target = resolve_login_target(str(bucket_id))
+        yield ProfileLoginCandidate(
+            outcome=ProfileLoginOutcome(
+                bucket_id=str(bucket_id),
+                label=target.label,
+                authenticated_at=record.issued_at,
+                idle_deadline=record.idle_deadline,
+                absolute_deadline=record.absolute_deadline,
+                session_persisted=True,
+                already_authenticated=True,
+                closed_previous_bucket_id=None,
+            ),
+            session=session,
+        )
 
 
 def authenticate_profile_for_invocation(
@@ -1206,6 +1378,7 @@ def _authenticate_candidate_or_record_failure(
         session=session,
         record_session=record_session,
         material=material,
+        windows=(idle_minutes, absolute_minutes),
     )
 
 
@@ -1578,6 +1751,7 @@ def _mint_or_warn(
     storage_root: Path,
     material: ProfileCustodyPasswordMaterialPort,
     session: ProfileBucketSessionPort,
+    windows: tuple[int, int] | None = None,
 ) -> bool:
     """Mint the persisted session, or report a process-scoped login.
 
@@ -1587,7 +1761,7 @@ def _mint_or_warn(
     for this process; the caller surfaces the warning.
     """
     try:
-        idle_minutes, absolute_minutes = _bucket_session_windows()
+        idle_minutes, absolute_minutes = _bucket_session_windows() if windows is None else windows
         _profile_login_sessions().mint_acceleration_receipt(
             storage_root=storage_root,
             profile_id=material.envelope.profile_id,
@@ -1611,15 +1785,21 @@ def _mint_or_warn(
 
 __all__ = [
     "ProfileCustodySessionOwnerEffect",
+    "ProfileHumanLoginReceipt",
+    "ProfileLoginCandidate",
     "ProfileLoginOutcome",
     "ProfileLoginThrottledError",
+    "ProfileReceiptRefusedError",
+    "authenticate_profile_candidate",
     "authenticate_profile_for_invocation",
     "bind_resumed_profile_session",
+    "borrow_profile_receipt_key",
     "close_profile_session_artefacts",
     "has_live_profile_session",
     "login_profile",
     "logout_active_profile",
     "publish_created_profile_session",
     "remove_profile_session_acceleration_for_custody_delete",
+    "resume_profile_candidate",
     "revoke_live_profile_secret_for_custody_delete",
 ]

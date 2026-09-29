@@ -4,28 +4,12 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from pydantic import BaseModel, Field
-
-from ...core.aggregation import BindingSourceKind
-from ...core.identity.digest import ContentDigest
-from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.row_source_identity import RowBindingKey
 from ...domain.filing.schema import ModeloBindingValue, ModeloDraft, compute_modelo_draft_id
 from ...domain.identifiers import canonical_decimal_string
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.errors import ModeloValidationError
-
-
-class ModeloRowSourceFingerprint(BaseModel):
-    """Safe public provenance for one replayed row coordinate."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    binding_id: BindingId
-    row_index: int = Field(ge=1)
-    source_kind: BindingSourceKind
-    fingerprint: ContentDigest
+from .row_source_fingerprint import ModeloRowSourceFingerprint
 
 
 def attach_revision_row_source_identities(
@@ -156,7 +140,6 @@ def revision_row_source_fingerprints_for_review(
 
 
 __all__ = [
-    "ModeloRowSourceFingerprint",
     "attach_revision_row_source_identities",
     "revision_row_source_fingerprints_for_review",
 ]
