@@ -5,7 +5,7 @@ tags:
 date: '2026-09-27'
 modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:bc9335549f0f0cb26a96177408a1238fee64620e14ad045354fb6035cf9f3e4e'
+body_hash: 'sha256:6fd3994a0ff0e7b5b82b71dc14d5e38f414d100c1e5142df55a53925993481bc'
 related:
   - "[[2026-09-27-registry-conformance-rectification-plan]]"
 ---
@@ -260,6 +260,30 @@ related:
 - `S14` `verify:` `core tests and authority subsystems 1399 passed; release lane test_installed_mcp_server_serves_when_storage_root_refuses passed` -> `pass`
 - `S15` `M` `dev/packaging/tests/test_installed_oracles.py`
 - `S15` `verify:` `grounded CLI and MCP oracle test reports and asserts the consumed generation (6ce4c1b8)` -> `pass`
+- `S21` `M` `src/cadrumo/entrypoints/cli/_modelo_aggregate_cli.py`
+- `S21` `M` `src/cadrumo/entrypoints/cli/_modelo_nonwork_calculations_command_specs.py`
+- `S21` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_payment_capital_withholding_aggregate_cli.py`
+- `S21` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_payment_withholding_aggregate_cli.py`
+- `S21` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_source_mesh_calculate.py`
+- `S21` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_typed_observations.py`
+- `S21` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S21` `M` `src/cadrumo/locales/en/cli.yml`
+- `S21` `M` `src/cadrumo/locales/es/cli.yml`
+- `S21` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S21` `verify:` `CLI lane 5459 passed (1 pre-existing boundary failure at HEAD); CLI reference regenerated without the option` -> `pass`
+- `S22` `M` `src/cadrumo/application/aggregation/invoice_retencion.py`
+- `S22` `A` `src/cadrumo/application/aggregation/tests/test_invoice_withholding_capture_defects.py`
+- `S22` `M` `src/cadrumo/core/errors/registry/_application_part3a1.py`
+- `S22` `M` `src/cadrumo/entrypoints/cli/tests/test_invoice_retencion_aggregate_cli.py`
+- `S22` `M` `src/cadrumo/locales/ca/common.yml`
+- `S22` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S22` `M` `src/cadrumo/locales/en/common.yml`
+- `S22` `M` `src/cadrumo/locales/en/errors.yml`
+- `S22` `M` `src/cadrumo/locales/es/common.yml`
+- `S22` `M` `src/cadrumo/locales/es/errors.yml`
+- `S22` `M` `src/cadrumo/locales/hu/common.yml`
+- `S22` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S22` `verify:` `aggregation, TUI withholding and core errors 1210 passed; two-defect CLI test en and es; check-symbol-usage finding for project_received_invoice_retencion gone` -> `pass`
 
 ## Notes
 

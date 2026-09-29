@@ -10,7 +10,7 @@ related:
   - '[[2026-09-21-retenciones-workflow-observation-payment-contract-adr]]'
 modified: '2026-09-29'
 body_schema: body-v2
-body_hash: 'sha256:5540eb900111a151b9719ffff2c62ed6f25d9fa51fbe24be7d565e859a138280'
+body_hash: 'sha256:13b3a4a06e17b4d733a0a9deb93d0700d9dc890b2bfa2b582589bddb40e0a266'
 ---
 
 # `registry-conformance-rectification` plan
@@ -92,14 +92,17 @@ Implement the rulings the operator delegated on 2026-09-29, each within the exis
 - [ ] `P05.S18` - Give the accelerated DA 18 regime its own refusal token (ruling 9); `src/cadrumo/domain/renta/actividad_asset/`.
 - [ ] `P05.S19` - Resolve each support-range cell by evidence: projection, a grounded delta edition, or the modelo's own later start (ruling 6); `src/cadrumo/_data/registry/aeat/modelos/`.
 - [ ] `P05.S20` - Relocate Modelo 200's 2024 rows to the edition 2024 resolves to and store the 2025 edition as a delta (ruling 13); `src/cadrumo/_data/registry/aeat/modelos/200/`.
-- [ ] `P05.S21` - Remove the unpersisted --retencion-observation option (ruling 14); `src/cadrumo/entrypoints/cli/_modelo_aggregate_cli.py`.
-- [ ] `P05.S22` - Report every invoice withholding defect through the one projection path (ruling 15); `src/cadrumo/application/aggregation/invoice_retencion.py`.
+- [x] `P05.S21` - Remove the unpersisted --retencion-observation option (ruling 14); `src/cadrumo/entrypoints/cli/_modelo_aggregate_cli.py`.
+- [x] `P05.S22` - Report every invoice withholding defect through the one projection path (ruling 15); `src/cadrumo/application/aggregation/invoice_retencion.py`.
 - [ ] `P05.S23` - Let the label reading stand with a visible notice when the optional model fill is refused for headroom (ruling 17); `src/cadrumo/adapters/outbound/llm/`.
 - [ ] `P05.S24` - Move the private ingest corpus behind a capability marker, a configured root and its own recipe (ruling 18); `dev/ingest_harness/`.
 - [ ] `P05.S25` - Correct the 2024 Modelo 193 perceptor count to count records, and ground or downgrade the 2024 Modelo 190 relation to Modelo 111; `src/cadrumo/_data/registry/aeat/modelos/193/`.
 - [ ] `P05.S26` - Author Modelo 131's 2022 and 2023 modulos engine with dated reduction rows and open the 2026 parameter rows, after P05.S17 enrolls the modulos orden provisions; `src/cadrumo/_data/registry/aeat/modelos/131/`.
 - [ ] `P05.S27` - Ground Modelo 202's 2025 art. 40.2 base on the Modelo 200 box net of retenciones and ingresos a cuenta, which every era's instructions define it as; `src/cadrumo/_data/registry/aeat/modelos/202/`.
 - [ ] `P05.S28` - Make the open-row gate also report an open row a later edition restates unchanged, with a detector case; `dev/registry/tests/test_parameter_rows_stay_open_across_editions.py`.
+- [ ] `P05.S29` - Have the modelo aggregate report read the stored withholding rows the calculation reads for Modelos 180, 190 and 193, and name only the modelos that accept invoice evidence in its refusal; `src/cadrumo/entrypoints/cli/_modelo_aggregate_cli.py`.
+- [ ] `P05.S30` - Let the test-run command runner read lines longer than asyncio's default limit, so check-locales completes; `dev/test_runs/command.py`.
+- [ ] `P05.S31` - Move the raw identifier pattern out of the work report CLI module into its support owner, clearing the architecture boundary test; `src/cadrumo/entrypoints/cli/_modelo_work_report_cli.py`.
 
 ## Parallelization
 
