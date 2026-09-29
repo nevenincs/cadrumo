@@ -1,14 +1,15 @@
 ---
 tags:
-  - '#adr'
-  - '#m100-dependent-modelo-applicability'
+  - "#adr"
+  - "#m100-dependent-modelo-applicability"
 date: '2026-06-19'
-modified: '2026-07-17'
-body_hash: 'sha256:07d668c88a0f2ba7d4e2451a6bb7991a6f706649217c99225be2109e051fe60b'
 related:
-  - '[[2026-06-19-m100-dependent-modelo-applicability-research]]'
+  - "[[2026-06-19-m100-dependent-modelo-applicability-research]]"
+superseded_by: '2026-09-27-export-parity-renta-withholding-sources-adr'
+modified: '2026-09-29'
+body_hash: 'sha256:577550d514b712308bef49ca9a5d3b7d787c1f3b69b30dcbdb57ab56f7374d9b'
 ---
-# `m100-dependent-modelo-applicability` adr: `Suppress cross-period dependencies on modelos the taxpayer does not file (C3)` | (**status:** `accepted`)
+# `m100-dependent-modelo-applicability` adr: `Suppress cross-period dependencies on modelos the taxpayer does not file (C3)` | (**status:** `superseded`)
 
 ## Problem Statement
 
