@@ -1066,6 +1066,11 @@ test-gate base="origin/main":
 test-registry-conformance:
     @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not resident_service and not external_tool and not os_keychain and not windows_only" --timeout=300 dev/registry/tests dev/registry/analysis/tests dev/registry/compiler/tests dev/registry/conformance/tests dev/registry/aeip/tests dev/registry/newmodelo/tests dev/registry/parity/tests dev/registry/pipeline dev/tests/test_no_casilla_is_routed_to_a_valueless_slot.py dev/tests/test_registry_conformance_gate.py dev/tests/test_registry_identity_enrolment.py
 
+[doc('Run the committed cli-sequence goldens gate when changes since BASE can alter documented output; reuses a recorded clean verdict.')]
+[group('test')]
+test-sequence-goldens-gate base="origin/main":
+    uv run --no-sync python -m dev.ci.sequence_goldens_gate --base {{base}}
+
 [doc('Run only the parallel integration lane, holding the isolation-sensitive serial tests out.')]
 [group('test')]
 test-integration-parallel:

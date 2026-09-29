@@ -5,7 +5,7 @@ tags:
 date: '2026-09-29'
 modified: '2026-09-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:712bd97cfcb8096fc52707690bd3fc76aff533b5c604be04a17deb1c310762df'
+body_hash: 'sha256:bc2df8cf6d0ad0c24d04098c45e4fa15c244904fab627711cd818d082c118efb'
 related:
   - "[[2026-09-29-docs-build-workflow-plan]]"
 ---
@@ -48,8 +48,25 @@ related:
 - `S03` `M` `dev/docs/tests/test_docs_serve.py`
 - `S03` `verify:` `pytest dev/docs/tests/test_docs_build.py dev/docs/tests/test_docs_serve.py -m ''` -> `pass`
 - `S03` `by:` `opus-high`
+- `S02` `M` `dev/ci/change_scope.py`
+- `S02` `A` `dev/ci/sequence_goldens_gate.py`
+- `S02` `M` `.github/workflows/merge-gate.yml`
+- `S02` `M` `.github/ci-control-plane.md`
+- `S02` `M` `justfile`
+- `S02` `M` `dev/ci/tests/test_change_scope.py`
+- `S02` `A` `dev/ci/tests/test_sequence_goldens_gate.py`
+- `S02` `M` `dev/ci/tests/test_ci_workflow.py`
+- `S02` `M` `dev/docs/sequences/verdict_cache.py`
+- `S02` `M` `dev/docs/sequences/tests/test_verdict_cache.py`
+- `S02` `M` `dev/docs/sequence_build_gate.py`
+- `S02` `M` `dev/quality/metadata/import_load_targets.json`
+- `S02` `verify:` `pytest dev/ci/tests + justfile wiring + verdict and build-gate tests -m '' (751 parallel + 3 serial passed)` -> `pass`
+- `S02` `verify:` `python -m dev.ci_contract .` -> `pass`
+- `S02` `verify:` `python -m dev.actionlint` -> `pass`
+- `S02` `by:` `opus-high`
 
 ## Notes
 
 - `S04` `test_docs_build_full_scope` failed before this change: autodoc mocked reportlab, so `summary_layout's` A4 unpack raised; reportlab removed from the mocks in the same commit
 - `S03` Preview wall times: docs-page how-to/modelo-303 cold 29s, warm 22s; docs-page how-to (37 pages) 69s
+- `S02` Cache-miss duration on the Linux fleet is projected at 6 to 6.5 minutes, not yet measured in CI

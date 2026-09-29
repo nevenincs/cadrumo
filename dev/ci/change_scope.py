@@ -11,6 +11,12 @@ narrowing must never under-select silently. Selection has four sources:
   ``CHANGE_CLASS_RULES``;
 - the fixed contract set in ``CONTRACT_TARGETS`` is always selected.
 
+Two change classes add a whole gate instead of pytest targets: ``ci_contracts``
+selects the CI contract population, and ``sequence_goldens`` selects the
+committed cli-sequence goldens gate for any change that can alter documented
+CLI output. ``too_broad`` withdraws neither flag, because neither gate depends
+on narrowing.
+
 A selection that cannot be narrowed honestly -- one above ``MAX_TARGETS``, one
 touching a fan-out package such as ``cadrumo.core``, a rule declared broad, or a
 Python change with no owning tests -- is reported with ``too_broad=True`` and a
@@ -46,6 +52,7 @@ __all__ = [
     "compute_change_scope",
     "git_changed_files",
     "main",
+    "selects_sequence_goldens",
 ]
 
 #: Selections with more non-contract targets than this run the contract set only.
@@ -69,7 +76,8 @@ class ChangeClassRule:
     ``patterns`` are repository-relative globs matched with
     ``PurePosixPath.full_match``. ``broad_reason`` marks a class whose change
     cannot be narrowed; ``contract`` marks a rule that belongs to the always-run
-    contract set rather than to a path class.
+    contract set rather than to a path class. ``sequence_goldens`` selects the
+    committed cli-sequence goldens gate.
     """
 
     name: str
@@ -78,11 +86,22 @@ class ChangeClassRule:
     ci_contracts: bool = False
     broad_reason: str | None = None
     contract: bool = False
+    sequence_goldens: bool = False
 
     def matches(self, path: str) -> bool:
         """Return whether ``path`` falls in this change class."""
         pure = PurePosixPath(path)
         return any(pure.full_match(pattern) for pattern in self.patterns)
+
+    @property
+    def classifies(self) -> bool:
+        """Return whether a match accounts for the tests covering the path.
+
+        A rule that only adds the goldens gate says nothing about which tests
+        cover the changed file, so a match on it must neither replace
+        owning-test selection nor silence the unclassified-Python advisory.
+        """
+        return bool(self.targets) or self.ci_contracts or self.broad_reason is not None
 
 
 CHANGE_CLASS_RULES: Final[tuple[ChangeClassRule, ...]] = (
@@ -140,6 +159,14 @@ CHANGE_CLASS_RULES: Final[tuple[ChangeClassRule, ...]] = (
         patterns=(".github/**", "dev/**"),
         ci_contracts=True,
     ),
+    # Each pattern holds an input of the goldens gate's verdict: the pages with
+    # their sequence contracts and goldens, the engine that executes them, and
+    # the product and locked dependencies whose output the goldens record.
+    ChangeClassRule(
+        name="documented-output",
+        patterns=("docs/**", "dev/docs/**", "src/cadrumo/**", "uv.lock"),
+        sequence_goldens=True,
+    ),
 )
 
 
@@ -149,6 +176,7 @@ class ChangeScope:
 
     targets: tuple[str, ...]
     ci_contracts: bool
+    sequence_goldens: bool
     too_broad: bool
     reason: str | None
 
@@ -157,6 +185,7 @@ class ChangeScope:
         return {
             "targets": list(self.targets),
             "ci_contracts": self.ci_contracts,
+            "sequence_goldens": self.sequence_goldens,
             "too_broad": self.too_broad,
             "reason": self.reason,
         }
@@ -232,6 +261,16 @@ def _module_path(module: str, graph_roots: dict[str, Path], root: Path) -> str |
     return None
 
 
+def selects_sequence_goldens(
+    changed_files: Iterable[str],
+    *,
+    rules: Sequence[ChangeClassRule] = CHANGE_CLASS_RULES,
+) -> bool:
+    """Return whether any of ``changed_files`` selects the committed goldens gate."""
+    paths = [path for path in (_normalise(raw) for raw in changed_files) if path]
+    return any(rule.sequence_goldens and rule.matches(path) for rule in rules for path in paths)
+
+
 def _in_fanout(module: str, fanout: Sequence[str]) -> bool:
     return any(module == package or module.startswith(f"{package}.") for package in fanout)
 
@@ -256,16 +295,18 @@ def compute_change_scope(
 ) -> ChangeScope:
     """Compute the pytest selection for ``changed_files`` relative to ``root``."""
     contract = _contract_targets(rules)
+    changed = tuple(changed_files)
+    sequence_goldens = selects_sequence_goldens(changed, rules=rules)
     selected: set[str] = set()
     ci_contracts = False
     reasons: list[str] = []
     changed_modules: set[str] = set()
 
-    for raw in changed_files:
+    for raw in changed:
         path = _normalise(raw)
         if not path:
             continue
-        matched = [rule for rule in rules if not rule.contract and rule.matches(path)]
+        matched = [rule for rule in rules if not rule.contract and rule.classifies and rule.matches(path)]
         for rule in matched:
             selected.update(rule.targets)
             ci_contracts = ci_contracts or rule.ci_contracts
@@ -306,10 +347,17 @@ def compute_change_scope(
     if len(narrowed) > max_targets:
         reasons.append(f"{len(narrowed)} targets exceed the limit of {max_targets}")
     if reasons:
-        return ChangeScope(targets=contract, ci_contracts=ci_contracts, too_broad=True, reason="; ".join(reasons))
+        return ChangeScope(
+            targets=contract,
+            ci_contracts=ci_contracts,
+            sequence_goldens=sequence_goldens,
+            too_broad=True,
+            reason="; ".join(reasons),
+        )
     return ChangeScope(
         targets=(*contract, *sorted(narrowed)),
         ci_contracts=ci_contracts,
+        sequence_goldens=sequence_goldens,
         too_broad=False,
         reason=None,
     )

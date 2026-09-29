@@ -9,7 +9,7 @@ import pytest
 from cadrumo.tests.env_scope import scoped_env_var
 from dev.cache_root import DEV_CACHE_ROOT_ENV
 
-from ..verdict_cache import FORCE_ENV, record_clean_verdict, reused_verdict, verdict_key
+from ..verdict_cache import FORCE_ENV, check_reusing_verdict, record_clean_verdict, reused_verdict, verdict_key
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -76,3 +76,26 @@ def test_only_a_recorded_clean_verdict_is_reused_and_force_bypasses_it(tmp_path:
         assert reused_verdict("b" * 64) is None
         with scoped_env_var(FORCE_ENV, "1"):
             assert reused_verdict("a" * 64) is None
+
+
+def test_the_shared_flow_runs_once_reuses_after_a_pass_and_never_records_a_divergence(tmp_path: Path) -> None:
+    calls: list[str] = []
+
+    def passing() -> tuple[str, ...]:
+        calls.append("pass")
+        return ()
+
+    def diverging() -> tuple[str, ...]:
+        calls.append("diverge")
+        return ("frame 3 diverged",)
+
+    with scoped_env_var(DEV_CACHE_ROOT_ENV, str(tmp_path / "cache")):
+        assert check_reusing_verdict("c" * 64, passing) == ((), None)
+        problems, reused = check_reusing_verdict("c" * 64, passing)
+        assert problems == ()
+        assert reused is not None
+        assert calls == ["pass"]
+
+        assert check_reusing_verdict("d" * 64, diverging) == (("frame 3 diverged",), None)
+        assert check_reusing_verdict("d" * 64, diverging) == (("frame 3 diverged",), None)
+        assert calls == ["pass", "diverge", "diverge"]

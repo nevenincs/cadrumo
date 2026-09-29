@@ -21,6 +21,7 @@ import os
 import platform
 import re
 import sys
+from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Final, Protocol
@@ -28,6 +29,8 @@ from typing import Final, Protocol
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from dev._paths import REPO_ROOT
 from dev.cache_root import dev_cache_dir
+
+from .authority_currency import require_current_authority
 
 #: Set to bypass the cache and always execute the gate.
 FORCE_ENV: Final[str] = "CADRUMO_DOCS_FORCE_SEQUENCE_CHECK"
@@ -123,3 +126,39 @@ def record_clean_verdict(key: str) -> None:
         )
     except OSError:
         return
+
+
+def published_verdict_key(*, docs_root: Path, goldens_root: Path | None) -> str:
+    """Return the verdict key under the published authority the runner will read.
+
+    A stale authority is refused before its generation can key anything, so a
+    clean verdict recorded under it can never be reused.
+
+    Raises:
+        SequenceEngineError: When the published authority is not current.
+    """
+    from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+
+    require_current_authority()
+    with bundled_indexed_authority().operation() as operation:
+        generation = str(operation.generation)
+    return verdict_key(docs_root=docs_root, goldens_root=goldens_root, authority_generation=generation)
+
+
+def check_reusing_verdict(key: str, check: Callable[[], tuple[str, ...]]) -> tuple[tuple[str, ...], str | None]:
+    """Run ``check`` unless a clean verdict is recorded for ``key``, recording it when clean.
+
+    The docs build and the merge gate both go through this one flow, so neither
+    can reuse or record a verdict on terms the other would not.
+
+    Returns:
+        The problems ``check`` reported, and the description of the recorded
+        verdict when one stood in for execution (``None`` when ``check`` ran).
+    """
+    reused = reused_verdict(key)
+    if reused is not None:
+        return (), reused
+    problems = check()
+    if not problems:
+        record_clean_verdict(key)
+    return problems, None
