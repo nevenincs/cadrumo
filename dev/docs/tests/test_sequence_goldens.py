@@ -58,8 +58,9 @@ from ..sequences.checks import (
 )
 from ..sequences.cli import main as sequences_cli_main
 from ..sequences.compare import compare_transcript_to_golden
-from ..sequences.golden_store import SequenceGolden, build_golden
+from ..sequences.golden_store import SequenceGolden
 from ..sequences.parser import parse_sequence
+from ..sequences.record_store import SequenceRecord, build_record, golden_from_record
 from ..sequences.runner import SequenceTranscript, execute_sequence
 from ..sequences.schema import ParsedSequence
 
@@ -175,11 +176,17 @@ def _envelope_keys(node: object) -> frozenset[str]:
     return frozenset(keys)
 
 
-def _mutated_golden(golden: SequenceGolden, key: str, value: str) -> SequenceGolden:
-    """Return the golden with ``key: value`` injected into frame 0's result."""
-    document = golden.model_dump(mode="json")
+def _golden(transcript: SequenceTranscript) -> SequenceGolden:
+    """Return the golden fingerprint refresh would commit for ``transcript``."""
+    return golden_from_record(build_record(transcript))
+
+
+def _mutated_golden(transcript: SequenceTranscript, key: str, value: str) -> tuple[SequenceGolden, SequenceRecord]:
+    """Return the golden, and its record, of ``transcript`` with ``key: value`` in frame 0's result."""
+    document = build_record(transcript).model_dump(mode="json")
     document["frames"][0]["envelope"]["result"][key] = value
-    return SequenceGolden.model_validate_json(json.dumps(document))
+    record = SequenceRecord.model_validate_json(json.dumps(document))
+    return golden_from_record(record), record
 
 
 def _mutated_transcript(transcript: SequenceTranscript, key: str, value: str) -> SequenceTranscript:
@@ -262,15 +269,15 @@ def profile_delete_double_run(
 
 
 def _set_delete_fingerprint_leaf(
-    value: SequenceGolden | SequenceTranscript,
+    value: SequenceTranscript,
     leaf: str,
     replacement: object,
-) -> SequenceGolden | SequenceTranscript:
+) -> SequenceTranscript:
     """Return ``value`` with one real profile-delete fingerprint leaf changed."""
     document = value.model_dump(mode="json")
     fingerprint = document["frames"][1]["envelope"]["result"]["fingerprint"]
     fingerprint[leaf] = replacement
-    return type(value).model_validate_json(json.dumps(document))
+    return SequenceTranscript.model_validate_json(json.dumps(document))
 
 
 def _workstation_sequence() -> ParsedSequence:
@@ -336,7 +343,7 @@ class TestWorkstationFreeMemoryMaskHonesty:
     ) -> None:
         """Fresh diagnostics remain comparable without pinning the free-RAM reading."""
         page, first, second = workstation_double_run
-        assert compare_transcript_to_golden(second, build_golden(first), page=page) == ()
+        assert compare_transcript_to_golden(second, _golden(first), page=page) == ()
 
     def test_only_free_memory_tampering_is_ignored_and_deterministic_facts_bite(
         self,
@@ -344,7 +351,7 @@ class TestWorkstationFreeMemoryMaskHonesty:
     ) -> None:
         """The real compare path masks free RAM but retains host and product evidence."""
         page, first, second = workstation_double_run
-        golden = build_golden(first)
+        golden = _golden(first)
 
         volatile = _set_workstation_fact(
             second,
@@ -392,13 +399,12 @@ class TestProfileDeletePathMaskHonesty:
     ) -> None:
         """The path mask hides the real flap but preserves fingerprint evidence."""
         page, first, second = profile_delete_double_run
-        golden = build_golden(first)
+        golden, baseline = _golden(first), build_record(first)
         assert compare_transcript_to_golden(second, golden, page=page) == ()
 
         for leaf, tampered in (("file_count", 999), ("total_bytes", 999999)):
             changed = _set_delete_fingerprint_leaf(second, leaf, tampered)
-            assert isinstance(changed, SequenceTranscript)
-            problems = compare_transcript_to_golden(changed, golden, page=page)
+            problems = compare_transcript_to_golden(changed, golden, page=page, baseline=baseline)
             assert len(problems) == 1
             assert f"result.fingerprint.{leaf}" in problems[0]
 
@@ -501,14 +507,14 @@ class TestModeloExportReleaseMaskHonesty:
     ) -> None:
         """Through the real compare path the release difference is hidden and nothing else is."""
         (_, first, _), (_, second, _) = export_release_double_run
-        golden = build_golden(first)
+        golden, baseline = _golden(first), build_record(first)
         assert compare_transcript_to_golden(second, golden, page=_EXPORT_PAGE) == ()
 
         export = _export_frame(second)
         document = second.model_dump(mode="json")
         document["frames"][export]["envelope"]["result"]["byte_size"] += 1
         resized = SequenceTranscript.model_validate_json(json.dumps(document))
-        problems = compare_transcript_to_golden(resized, golden, page=_EXPORT_PAGE)
+        problems = compare_transcript_to_golden(resized, golden, page=_EXPORT_PAGE, baseline=baseline)
         assert len(problems) == 1
         assert "result.byte_size" in problems[0]
 
@@ -564,7 +570,7 @@ class TestExecutorMaskHonesty:
         value compares clean through ``compare_transcript_to_golden`` — the
         exact flap (a uuid tail) the central mask exists to hide."""
         first, second = double_run
-        golden = _mutated_golden(build_golden(first), masked_key, "writer-run-value-1111")
+        golden, _ = _mutated_golden(first, masked_key, "writer-run-value-1111")
         live = _mutated_transcript(second, masked_key, "checker-run-value-2222")
         assert compare_transcript_to_golden(live, golden, page=_PAGE) == ()
 
@@ -578,9 +584,9 @@ class TestExecutorMaskHonesty:
         first, second = double_run
         undeclared_key = "some_other_surrogate_id"
         assert undeclared_key not in GOLDEN_MASK_FIELDS
-        golden = _mutated_golden(build_golden(first), undeclared_key, "writer-run-value-1111")
+        golden, baseline = _mutated_golden(first, undeclared_key, "writer-run-value-1111")
         live = _mutated_transcript(second, undeclared_key, "checker-run-value-2222")
-        problems = compare_transcript_to_golden(live, golden, page=_PAGE)
+        problems = compare_transcript_to_golden(live, golden, page=_PAGE, baseline=baseline)
         assert len(problems) == 1
         assert undeclared_key in problems[0]
 

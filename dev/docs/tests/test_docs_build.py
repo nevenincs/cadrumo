@@ -613,20 +613,21 @@ _SEQUENCE_DIRECTIVE_BODY = (
 )
 
 
-def _sequence_golden_json() -> str:
-    """Return a schema-valid golden matching the fixture directive's three frames."""
-    from ..sequences.golden_store import GoldenFrame, SequenceGolden
+def _write_sequence_golden(goldens_root: Path, records_root: Path) -> None:
+    """Write a schema-valid record matching the fixture directive's three frames, and its golden."""
+    from ..sequences.golden_store import write_golden
+    from ..sequences.record_store import RecordFrame, SequenceRecord, golden_from_record, record_path, write_record
     from ..sequences.schema import FrameKind
 
-    golden = SequenceGolden(
+    record = SequenceRecord(
         sequence_id=_SEQUENCE_ID,
         frames=(
-            GoldenFrame(
+            RecordFrame(
                 kind=FrameKind.SETUP,
                 argv=("aeat", "app", "ledger", "import", "--file", "fixtures/x.csv"),
                 exit_code=0,
             ),
-            GoldenFrame(
+            RecordFrame(
                 kind=FrameKind.COMMAND,
                 argv=("aeat", "app", "modelo", "work", "calculate", "wu_demo"),
                 exit_code=0,
@@ -639,7 +640,7 @@ def _sequence_golden_json() -> str:
                 },
                 envelope_source="stdout",
             ),
-            GoldenFrame(
+            RecordFrame(
                 kind=FrameKind.RESULT,
                 argv=("aeat", "app", "modelo", "work", "verify", "wu_demo"),
                 exit_code=0,
@@ -654,10 +655,11 @@ def _sequence_golden_json() -> str:
             ),
         ),
     )
-    return json.dumps(golden.model_dump(mode="json"), indent=2) + "\n"
+    write_golden(golden_from_record(record), page=_SEQUENCE_PAGE, goldens_root=goldens_root)
+    write_record(record, target=record_path(_SEQUENCE_PAGE, _SEQUENCE_ID, records_root=records_root))
 
 
-def _write_sequence_site(root: Path, *, goldens_root: Path) -> None:
+def _write_sequence_site(root: Path, *, goldens_root: Path, records_root: Path) -> None:
     """Write a minimal MyST site: one page with the directive, shipping the widget assets."""
     static = root / "_static"
     static.mkdir()
@@ -671,6 +673,7 @@ def _write_sequence_site(root: Path, *, goldens_root: Path) -> None:
         'html_css_files = ["cadrumo-docs.css"]\n'
         'html_js_files = ["cadrumo-docs.js"]\n'
         f"cadrumo_sequences_goldens_root = {str(goldens_root)!r}\n"
+        f"cadrumo_sequences_records_root = {str(records_root)!r}\n"
         "\n"
         "def setup(app):\n"
         "    from dev.docs.sequence_directive import register\n"
@@ -843,9 +846,9 @@ def test_sequence_page_ships_widget_and_degrades_without_js(
     site = tmp_path / "site"
     site.mkdir()
     goldens_root = tmp_path / "goldens"
-    (goldens_root / _SEQUENCE_PAGE).mkdir(parents=True)
-    (goldens_root / _SEQUENCE_PAGE / f"{_SEQUENCE_ID}.json").write_text(_sequence_golden_json(), encoding="utf-8")
-    _write_sequence_site(site, goldens_root=goldens_root)
+    records_root = tmp_path / "records"
+    _write_sequence_golden(goldens_root, records_root)
+    _write_sequence_site(site, goldens_root=goldens_root, records_root=records_root)
 
     html, out, warnings = _build_html(site)
 

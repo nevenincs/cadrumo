@@ -1,10 +1,11 @@
 """The ``cli-sequence`` MyST directive: server-rendered frames plus one inline payload.
 
 An author writes a backtick-fenced ``{cli-sequence}`` directive; at build time
-this directive parses the body into typed frames, reads the sequence's committed
-golden (it RENDERS from the golden, it never executes — the engine's check/refresh
-CLI owns execution), tokenises each command line against the command graph, and
-emits, in document order:
+this directive parses the body into typed frames, reads the sequence's verified
+record (it RENDERS from the record, it never executes — the engine's check and
+refresh own execution, and the build's check runs before any page is read),
+tokenises each command line against the command graph, and emits, in document
+order:
 
 - each reader-facing frame as static HTML — setup scaffolding and expectation
   assertions remain build-only;
@@ -16,8 +17,9 @@ Both surfaces are rendered from ONE computed payload, so the JSON a widget reads
 cannot drift from the visible frames. Output and stderr bodies live only in the
 static HTML: the widget never reads them, and repeating them in the inline JSON
 would ship every output twice. The widget only toggles visibility and adds
-controls; it never injects content. A missing or stale golden is an instructive
-build error naming the exact ``refresh`` command.
+controls; it never injects content. A record is rendered only when its
+fingerprint equals the committed golden; a missing or stale one is an
+instructive build error naming the check or refresh that produces it.
 
 This module lives outside the ``dev/docs/sequences`` engine package; ``docs/conf.py``
 registers the directive by calling :func:`register`.
@@ -28,6 +30,7 @@ from __future__ import annotations
 import html
 import json
 from functools import cache
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, override
 
 from docutils import nodes
@@ -37,7 +40,7 @@ if TYPE_CHECKING:
     from sphinx.application import Sphinx
 
     from .cli_tree import CliTree
-    from .sequences.golden_store import GoldenFrame, SequenceGolden
+    from .sequences.record_store import RecordFrame, SequenceRecord
     from .sequences.schema import ParsedSequence, SequenceFrame
     from .sequences.tokeniser import CommandToken
 
@@ -175,8 +178,8 @@ def _frame_header(parsed_frame: SequenceFrame, tokens: tuple[CommandToken, ...])
     return _leaf_help_summary(tokens)
 
 
-def _output_view(golden_frame: GoldenFrame) -> dict[str, str]:
-    """Project a golden frame's primary stream to a ``{format, body}`` view.
+def _output_view(record_frame: RecordFrame) -> dict[str, str]:
+    """Project a record frame's primary stream to a ``{format, body}`` view.
 
     The pre-mask envelope is masked with exactly the central mask and canonically
     rendered so the displayed JSON is deterministic; otherwise the frame's
@@ -185,19 +188,19 @@ def _output_view(golden_frame: GoldenFrame) -> dict[str, str]:
     """
     from cadrumo.tests.golden_comparison import canonicalise, mask_document
 
-    if golden_frame.envelope is not None:
+    if record_frame.envelope is not None:
         # canonicalise already renders the key-sorted, indented JSON string;
         # dumping it again would double-encode the display into `\n`-escape noise.
-        return {"format": "json", "body": canonicalise(mask_document(golden_frame.envelope))}
-    if golden_frame.text:
-        return {"format": "text", "body": _with_live_version(golden_frame.text)}
+        return {"format": "json", "body": canonicalise(mask_document(record_frame.envelope))}
+    if record_frame.text:
+        return {"format": "text", "body": _with_live_version(record_frame.text)}
     return {"format": "empty", "body": ""}
 
 
 def _with_live_version(body: str) -> str:
-    """Substitute the running version back into a rendered golden body.
+    """Substitute the running version back into a rendered record body.
 
-    The golden stores :data:`PACKAGE_VERSION_PLACEHOLDER` rather than a version
+    The record stores :data:`PACKAGE_VERSION_PLACEHOLDER` rather than a version
     literal, so it never rots at a release and never disagrees with the build the
     reader has. Rendering resolves it from the package's single release-managed
     declaration, which is what makes the displayed version derived rather than
@@ -210,33 +213,33 @@ def _with_live_version(body: str) -> str:
     return body.replace(PACKAGE_VERSION_PLACEHOLDER, PACKAGE_VERSION)
 
 
-def _stderr_view(golden_frame: GoldenFrame) -> dict[str, str] | None:
-    """Project a golden frame's stderr text to a ``{format, body}`` view, if any.
+def _stderr_view(record_frame: RecordFrame) -> dict[str, str] | None:
+    """Project a record frame's stderr text to a ``{format, body}`` view, if any.
 
     The stderr envelope (a refusal's error document) is already the primary
     output view; this surfaces only the non-envelope stderr text a frame emitted
     alongside its stdout.
     """
-    if golden_frame.envelope_source != "stderr" and golden_frame.stderr_text:
-        return {"format": "text", "body": golden_frame.stderr_text}
+    if record_frame.envelope_source != "stderr" and record_frame.stderr_text:
+        return {"format": "text", "body": record_frame.stderr_text}
     return None
 
 
 def _frame_payload(
     parsed_frame: SequenceFrame,
-    golden_frame: GoldenFrame | None,
+    record_frame: RecordFrame | None,
     index: int,
     shells: list[str],
 ) -> dict[str, Any]:
-    """Build one frame's payload dict from the authored frame and its golden.
+    """Build one frame's payload dict from the authored frame and its record.
 
     The command line and its tokens come from the AUTHORED frame (``{name}``
     placeholders intact, so the reader sees the reproducible form); the output
-    and exit code come from the committed golden. ``wrapped`` carries
+    and exit code come from the verified record. ``wrapped`` carries
     the token-index groupings per display line for each declared shell — the
     packing is shell-independent (only the continuation marker differs), so the
     groupings are identical across shells and the render appends the shell's
-    marker at build time. A ``@static`` frame passes ``golden_frame=None``: it is
+    marker at build time. A ``@static`` frame passes ``record_frame=None``: it is
     display-only, so it carries no output, no stderr, and no exit code (output is
     never fabricated).
     """
@@ -252,20 +255,20 @@ def _frame_payload(
         "command_line": parsed_frame.command_line,
         "tokens": token_dicts,
         "wrapped": {shell: [list(line) for line in lines] for shell in shells},
-        "exit_code": golden_frame.exit_code if golden_frame is not None else None,
-        "output": _output_view(golden_frame) if golden_frame is not None else {"format": "empty", "body": ""},
-        "stderr": _stderr_view(golden_frame) if golden_frame is not None else None,
+        "exit_code": record_frame.exit_code if record_frame is not None else None,
+        "output": _output_view(record_frame) if record_frame is not None else {"format": "empty", "body": ""},
+        "stderr": _stderr_view(record_frame) if record_frame is not None else None,
     }
     return payload
 
 
 def build_sequence_payload(
     sequence: ParsedSequence,
-    golden: SequenceGolden | None,
+    record: SequenceRecord | None,
     *,
     shells: list[str] | None = None,
 ) -> dict[str, Any]:
-    """Assemble the one computed payload for a sequence from its parse and golden.
+    """Assemble the one computed payload for a sequence from its parse and record.
 
     The computed payload carries every output and stderr body, because the static
     HTML renders from it; :func:`inline_sequence_payload` projects it to the
@@ -273,39 +276,40 @@ def build_sequence_payload(
 
     ``shells`` is the ordered reader-facing shell set (default ``bash pwsh``);
     the first entry is the default variant. ``@static`` frames render from the
-    parse alone (no golden); ``golden`` is the executed-frames golden, aligned
-    1:1 with the sequence's executed (non-static) frames, and is ``None`` for an
-    all-static sequence (nothing executes, so there is no golden).
+    parse alone (no record); ``record`` is the verified executed-frames record,
+    aligned 1:1 with the sequence's executed (non-static) frames, and is
+    ``None`` for an all-static sequence (nothing executes, so there is no
+    record).
 
     Raises:
-        ValueError: When the authored body's executed frames and its committed
-            golden disagree on count or a frame's kind — the golden is stale and
-            must be refreshed.
+        ValueError: When the authored body's executed frames and the record
+            disagree on count or a frame's kind — the golden is stale and must
+            be refreshed.
     """
     resolved_shells = shells if shells else list(_DEFAULT_SHELLS)
-    golden_frames = golden.frames if golden is not None else ()
+    record_frames = record.frames if record is not None else ()
     executed = [frame for frame in sequence.frames if frame.kind.value != "static"]
-    if len(executed) != len(golden_frames):
+    if len(executed) != len(record_frames):
         raise ValueError(
-            f"the golden for {sequence.sequence_id!r} has {len(golden_frames)} frames "
+            f"the record for {sequence.sequence_id!r} has {len(record_frames)} frames "
             f"but the directive body parses to {len(executed)} executed frames; refresh the golden",
         )
     frames: list[dict[str, Any]] = []
-    golden_index = 0
+    record_index = 0
     for source_index, parsed_frame in enumerate(sequence.frames):
         if parsed_frame.kind.value == "static":
             frames.append(_frame_payload(parsed_frame, None, len(frames), resolved_shells))
             continue
-        golden_frame = golden_frames[golden_index]
-        if parsed_frame.kind is not golden_frame.kind:
+        record_frame = record_frames[record_index]
+        if parsed_frame.kind is not record_frame.kind:
             raise ValueError(
                 f"frame {source_index} of {sequence.sequence_id!r} is {parsed_frame.kind.value!r} in the "
-                f"body but {golden_frame.kind.value!r} in the golden; refresh the golden",
+                f"body but {record_frame.kind.value!r} in the record; refresh the golden",
             )
-        golden_index += 1
+        record_index += 1
         if parsed_frame.kind.value == "setup":
             continue
-        frames.append(_frame_payload(parsed_frame, golden_frame, len(frames), resolved_shells))
+        frames.append(_frame_payload(parsed_frame, record_frame, len(frames), resolved_shells))
     return {
         "sequence_id": sequence.sequence_id,
         "verify": sequence.verify,
@@ -449,15 +453,54 @@ def render_sequence_html(payload: dict[str, Any]) -> str:
     )
 
 
+def _verified_record(
+    page: str,
+    sequence_id: str,
+    *,
+    docs_root: Path,
+    goldens_root: Path | None,
+    records_root: Path | None,
+) -> SequenceRecord:
+    """Return the page's verified record, running the page's check once if none is cached.
+
+    A build normally finds the record its own ``builder-inited`` check, or the
+    lane's earlier check, cached. A build that skipped the check and finds none
+    runs the same check for this page in a child interpreter rather than render
+    output nobody verified; a golden that is missing or stale still fails.
+
+    Raises:
+        SequenceEngineError: When the golden is missing or malformed, or the
+            page's check does not pass.
+    """
+    from .sequences.checks import check_sequences_in_subprocess
+    from .sequences.errors import SequenceEngineError, SequenceGoldenError
+    from .sequences.golden_store import read_golden
+    from .sequences.record_store import read_verified_record
+
+    read_golden(page, sequence_id, goldens_root=goldens_root)
+    try:
+        return read_verified_record(page, sequence_id, goldens_root=goldens_root, records_root=records_root)
+    except SequenceGoldenError:
+        problems = check_sequences_in_subprocess(
+            docs_root=docs_root,
+            goldens_root=goldens_root,
+            records_root=records_root,
+            page=page,
+        )
+        if problems:
+            raise SequenceEngineError("\n".join(problems)) from None
+    return read_verified_record(page, sequence_id, goldens_root=goldens_root, records_root=records_root)
+
+
 class CliSequenceDirective(Directive):
     """The backtick-fenced ``{cli-sequence}`` MyST directive.
 
     Argument: the unique sequence id. The sole public option is the
     reader-facing ``:verify:`` sentence. The directive body is empty; frame
     grammar and private seed/shell settings are read from the keyed contract
-    under ``docs/_sequences/contracts``. The directive reads the committed
-    golden and emits server-rendered static frames plus one inline JSON payload.
-    It never executes a command.
+    under ``docs/_sequences/contracts``. The directive reads the verified record
+    and emits server-rendered static frames plus one inline JSON payload. It
+    never executes a command.
     """
 
     required_arguments = 1
@@ -472,12 +515,9 @@ class CliSequenceDirective(Directive):
 
     @override
     def run(self) -> list[nodes.Node]:
-        """Parse the body, render from the committed golden, and emit the frames + payload."""
-        from pathlib import Path
-
+        """Parse the body, render from the verified record, and emit the frames + payload."""
         from .sequences.contracts import read_sequence_contract
         from .sequences.errors import SequenceEngineError
-        from .sequences.golden_store import read_golden
         from .sequences.parser import parse_sequence, refuse_payload_less_result_frame
         from .sequences.runner import refuse_live_frames
 
@@ -485,12 +525,15 @@ class CliSequenceDirective(Directive):
         env = self.state.document.settings.env
         page = env.docname
         # The golden and seed roots default to the committed ``docs/_sequences``
-        # tree; a Sphinx config value (tests set it to a fixture directory)
-        # overrides each so the directive is buildable in isolation.
+        # tree and the records root to the development cache; a Sphinx config
+        # value (tests set it to a fixture directory) overrides each so the
+        # directive is buildable in isolation.
         goldens_root = getattr(env.config, "cadrumo_sequences_goldens_root", None)
+        records_root = getattr(env.config, "cadrumo_sequences_records_root", None)
         seeds_root = getattr(env.config, "cadrumo_sequences_seeds_root", None)
         contracts_root = getattr(env.config, "cadrumo_sequences_contracts_root", None)
         goldens_root = Path(goldens_root) if goldens_root else None
+        records_root = Path(records_root) if records_root else None
         seeds_root = Path(seeds_root) if seeds_root else None
         contracts_root = Path(contracts_root) if contracts_root else None
         body = "\n".join(self.content)
@@ -532,11 +575,27 @@ class CliSequenceDirective(Directive):
             # be declined by the build; a synthetic sequence built by a unit test is
             # not documentation and is deliberately not subject to it.
             refuse_payload_less_result_frame(sequence)
-            # An all-@static sequence executes nothing, so it has no golden; it
-            # renders from the parse alone. A sequence with executed frames reads
-            # its committed golden (executed frames only).
-            golden = read_golden(page, sequence_id, goldens_root=goldens_root) if sequence.executed_frames else None
-            payload = build_sequence_payload(sequence, golden, shells=shells)
+            # The rendered sequence is raw HTML, which only an HTML builder
+            # writes. Any other builder (dummy, gettext) has now validated the
+            # contract and needs no recorded output.
+            if env.app.builder.format != "html":
+                return []
+            # An all-@static sequence executes nothing, so it has no golden and
+            # no record; it renders from the parse alone. A sequence with
+            # executed frames renders the record whose fingerprint is its
+            # committed golden (executed frames only).
+            record = (
+                _verified_record(
+                    page,
+                    sequence_id,
+                    docs_root=Path(env.srcdir),
+                    goldens_root=goldens_root,
+                    records_root=records_root,
+                )
+                if sequence.executed_frames
+                else None
+            )
+            payload = build_sequence_payload(sequence, record, shells=shells)
         except SequenceEngineError as exc:
             raise self.error(f"cli-sequence {sequence_id!r} on page {page!r}: {exc}") from exc
         except ValueError as exc:
@@ -548,11 +607,13 @@ class CliSequenceDirective(Directive):
 def register(app: Sphinx) -> None:
     """Register the ``cli-sequence`` directive and its config values on the Sphinx app.
 
-    The golden, seed, and contract config roots default to ``None`` (the
-    engine's committed ``docs/_sequences`` roots); a build sets them only to
-    redirect the directive at a fixture tree in isolation.
+    The golden, record, seed, and contract config roots default to ``None``
+    (the committed ``docs/_sequences`` roots and the development-cache records
+    root); a build sets them only to redirect the directive at a fixture tree
+    in isolation.
     """
     app.add_config_value("cadrumo_sequences_goldens_root", None, "env")
+    app.add_config_value("cadrumo_sequences_records_root", None, "env")
     app.add_config_value("cadrumo_sequences_seeds_root", None, "env")
     app.add_config_value("cadrumo_sequences_contracts_root", None, "env")
     app.add_directive("cli-sequence", CliSequenceDirective)

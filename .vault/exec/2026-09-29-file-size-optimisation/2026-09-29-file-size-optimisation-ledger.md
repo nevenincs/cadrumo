@@ -5,7 +5,7 @@ tags:
 date: '2026-09-29'
 modified: '2026-09-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:9b1076d2a8b643cf723cc7b90ca0e58da72f4a5729b9cad2627454a73f430b6e'
+body_hash: 'sha256:e70d7741e3998161b66c5d076a22cabc585f409801ca06548692b0cb2253d9ca'
 related:
   - "[[2026-09-29-file-size-optimisation-plan]]"
 ---
@@ -55,7 +55,25 @@ related:
 - `S01` `verify:` `ruff check + format --check` -> `pass`
 - `S01` `verify:` `ty check on changed files` -> `pass`
 - `S01` `verify:` `basedpyright on changed files (no new diagnostics vs baseline)` -> `pass`
+- `S02` `M` `dev/docs/sequence_directive.py`
+- `S02` `M` `dev/docs/sequence_build_gate.py`
+- `S02` `M` `dev/docs/sequences/checks.py`
+- `S02` `M` `dev/docs/sequences/record_store.py`
+- `S02` `A` `dev/docs/sequences/recorded_faults.py`
+- `S02` `R` `dev/docs/tests/test_golden_records_no_crash.py` -> `dev/docs/sequences/tests/test_recorded_faults.py`
+- `S02` `M` `dev/deploy/docs_static_site.py`
+- `S02` `M` `dev/deploy/tests/test_docs_static_site.py`
+- `S02` `M` `dev/docs/tests/test_docs_build.py`
+- `S02` `M` `dev/docs/tests/test_sequence_build_gate.py`
+- `S02` `M` `dev/docs/tests/test_sequence_directive.py`
+- `S02` `M` `dev/docs/tests/test_sequence_goldens.py`
+- `S02` `verify:` `pytest -m '' dev/docs/sequences/tests dev/docs/tests/test_sequence_directive.py dev/docs/tests/test_sequence_build_gate.py dev/deploy/tests/test_docs_static_site.py (372 passed)` -> `pass`
+- `S02` `verify:` `ruff check + format` -> `pass`
+- `S02` `verify:` `ty check on changed files` -> `pass`
+- `S02` `verify:` `basedpyright on changed files (no new diagnostics vs baseline)` -> `pass`
 
 ## Notes
 
 - `S01` The cli-sequence renderer still reads output from goldens until S02 lands; the docs build is not expected to pass between S01 and S02.
+- `S02` The crash-marker and version-literal corpus scans over committed golden bodies became engine rules applied to every record at refresh and check, since goldens no longer hold output.
+- `S02` The committed goldens are regenerated in S03; until then the committed-corpus check fails on the schema-2 goldens.

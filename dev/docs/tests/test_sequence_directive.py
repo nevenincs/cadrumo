@@ -5,16 +5,17 @@ Two tiers, both real, no mocks or skips:
 - **Pure-function tier.** The Python tokeniser (``dev/docs/sequences/_tokeniser``)
   classifies a frame's argv against the command graph, and the directive's
   render pipeline (``dev/docs/sequence_directive``) projects a parsed sequence
-  plus its golden into one payload and renders the static HTML from that single
+  plus its record into one payload and renders the static HTML from that single
   source. These assert token classification, the payload shape the browser
   widget consumes, and that the inline JSON cannot drift from the visible frames.
 
 - **Real-build tier.** A minimal Sphinx site is built in-process with the
-  directive registered and a committed golden fixture: the rendered ``index.html``
-  must carry the server-side static frames (the no-JS transcript), the tokenised
-  spans, and one well-formed inline ``application/json`` payload that matches the
-  static content; a directive whose golden is absent must fail the build with an
-  instructive error naming the exact ``refresh`` invocation.
+  directive registered, a committed golden fixture and the record it
+  fingerprints: the rendered ``index.html`` must carry the server-side static
+  frames (the no-JS transcript), the tokenised spans, and one well-formed inline
+  ``application/json`` payload that matches the static content; a directive
+  whose golden is absent, or whose cached record does not match it, must fail
+  the build with an instructive error naming the exact remedy.
 """
 
 from __future__ import annotations
@@ -35,8 +36,9 @@ from ..sequence_directive import (
     render_sequence_html,
     wrap_token_lines,
 )
-from ..sequences.golden_store import GoldenFrame, SequenceGolden
+from ..sequences.golden_store import write_golden
 from ..sequences.parser import parse_sequence
+from ..sequences.record_store import RecordFrame, SequenceRecord, golden_from_record, record_path, write_record
 from ..sequences.schema import FrameKind, ParsedSequence
 from ..sequences.tokeniser import TokenKind, tokenise_command
 
@@ -63,22 +65,22 @@ def _parsed_sequence() -> ParsedSequence:
     )
 
 
-def _golden() -> SequenceGolden:
-    """A schema-valid golden fixture matching the fixture directive's four frames.
+def _record() -> SequenceRecord:
+    """A schema-valid record fixture matching the fixture directive's four frames.
 
-    This mirrors what ``python -m dev.docs.sequences refresh`` would commit; the
+    This mirrors what ``python -m dev.docs.sequences refresh`` would cache; the
     directive renders from it. Non-default fields (real captured id, masked
     surrogate ids in the envelopes) are populated so the render exercises masking.
     """
-    return SequenceGolden(
+    return SequenceRecord(
         sequence_id=_SEQUENCE_ID,
         frames=(
-            GoldenFrame(
+            RecordFrame(
                 kind=FrameKind.SETUP,
                 argv=("aeat", "app", "ledger", "import", "--file", "fixtures/x.csv"),
                 exit_code=0,
             ),
-            GoldenFrame(
+            RecordFrame(
                 kind=FrameKind.COMMAND,
                 argv=("aeat", "app", "modelo", "work", "create", "303", "--year", "2026", "--period", "1T"),
                 exit_code=0,
@@ -91,7 +93,7 @@ def _golden() -> SequenceGolden:
                 },
                 envelope_source="stdout",
             ),
-            GoldenFrame(
+            RecordFrame(
                 kind=FrameKind.COMMAND,
                 argv=("aeat", "app", "modelo", "work", "calculate", "wu_demo"),
                 exit_code=0,
@@ -104,7 +106,7 @@ def _golden() -> SequenceGolden:
                 },
                 envelope_source="stdout",
             ),
-            GoldenFrame(
+            RecordFrame(
                 kind=FrameKind.RESULT,
                 argv=("aeat", "app", "modelo", "work", "verify", "wu_demo"),
                 exit_code=0,
@@ -161,14 +163,14 @@ def test_tokeniser_links_value_option_to_its_value() -> None:
 def test_payload_shape_and_render_exclude_authoring_metadata() -> None:
     """The reader payload omits setup scaffolding and build-only assertions."""
     sequence = _parsed_sequence()
-    payload = build_sequence_payload(sequence, _golden())
+    payload = build_sequence_payload(sequence, _record())
 
     assert payload["sequence_id"] == _SEQUENCE_ID
     assert payload["verify"] == "Verify the calculation before exporting."
     assert [frame["kind"] for frame in payload["frames"]] == ["command", "command", "result"]
 
     # The authored command line keeps its placeholder (the reproducible form),
-    # not the golden's resolved id.
+    # not the record's resolved id.
     calculate = payload["frames"][1]
     assert calculate["command_line"] == "aeat app modelo work calculate {work_unit_id}"
     assert any(tok["kind"] == "placeholder" and tok["text"] == "{work_unit_id}" for tok in calculate["tokens"])
@@ -245,17 +247,17 @@ def test_output_bodies_ship_once_in_static_html_not_in_inline_payload() -> None:
             '@expect result.status == "verified_complete"'
         ),
     )
-    golden = SequenceGolden(
+    record = SequenceRecord(
         sequence_id="body-once",
         frames=(
-            GoldenFrame(
+            RecordFrame(
                 kind=FrameKind.COMMAND,
                 argv=("aeat", "app", "modelo", "work", "calculate", "wu"),
                 exit_code=0,
                 text="Calculated casilla 01 as distinctive-stdout-marker.",
                 stderr_text="distinctive-stderr-marker: advisory notice",
             ),
-            GoldenFrame(
+            RecordFrame(
                 kind=FrameKind.RESULT,
                 argv=("aeat", "app", "modelo", "work", "verify", "wu"),
                 exit_code=0,
@@ -270,7 +272,7 @@ def test_output_bodies_ship_once_in_static_html_not_in_inline_payload() -> None:
             ),
         ),
     )
-    payload = build_sequence_payload(sequence, golden)
+    payload = build_sequence_payload(sequence, record)
     html = render_sequence_html(payload)
     static_html, _, script = html.partition('<script type="application/json" class="cadrumo-sequence-payload">')
 
@@ -288,10 +290,10 @@ def test_output_bodies_ship_once_in_static_html_not_in_inline_payload() -> None:
         }
 
 
-def test_stale_golden_frame_count_is_refused() -> None:
-    """A golden whose frame count disagrees with the body is refused (stale golden)."""
+def test_stale_record_frame_count_is_refused() -> None:
+    """A record whose frame count disagrees with the body is refused (stale golden)."""
     sequence = _parsed_sequence()
-    truncated = SequenceGolden(sequence_id=_SEQUENCE_ID, frames=_golden().frames[:2])
+    truncated = SequenceRecord(sequence_id=_SEQUENCE_ID, frames=_record().frames[:2])
     with pytest.raises(
         ValueError,
         match=r"has 2 frames but the directive body parses to 4 executed frames; refresh the golden",
@@ -299,22 +301,22 @@ def test_stale_golden_frame_count_is_refused() -> None:
         build_sequence_payload(sequence, truncated)
 
 
-def test_stale_golden_frame_kind_is_refused() -> None:
-    """A golden matching the body's frame COUNT but diverging on a frame KIND is refused.
+def test_stale_record_frame_kind_is_refused() -> None:
+    """A record matching the body's frame COUNT but diverging on a frame KIND is refused.
 
     The count guard and the per-frame kind guard are two distinct refusals that
     share the "refresh the golden" remedy, so a loose match on that fragment lets
     the count case stand in for both. This drives the kind guard directly.
     """
     sequence = _parsed_sequence()
-    frames = list(_golden().frames)
+    frames = list(_record().frames)
     frames[3] = frames[3].model_copy(update={"kind": FrameKind.COMMAND})
-    divergent = SequenceGolden(sequence_id=_SEQUENCE_ID, frames=tuple(frames))
-    assert len(divergent.frames) == len(_golden().frames), "the count guard must not fire first"
+    divergent = SequenceRecord(sequence_id=_SEQUENCE_ID, frames=tuple(frames))
+    assert len(divergent.frames) == len(_record().frames), "the count guard must not fire first"
 
     with pytest.raises(
         ValueError,
-        match=r"frame 3 of .* is 'result' in the body but 'command' in the golden; refresh the golden",
+        match=r"frame 3 of .* is 'result' in the body but 'command' in the record; refresh the golden",
     ):
         build_sequence_payload(sequence, divergent)
 
@@ -332,12 +334,16 @@ def _write_site(
     sequence_id: str,
     contract_body: str,
 ) -> None:
-    """Write a minimal MyST site with a public directive and private contract."""
+    """Write a minimal MyST site with a public directive and private contract.
+
+    The records root is the ``records`` directory beside ``goldens_root``.
+    """
     conf = (
         'extensions = ["myst_parser"]\n'
         'myst_enable_extensions = ["colon_fence"]\n'
         "nitpicky = True\n"
         f"cadrumo_sequences_goldens_root = {str(goldens_root)!r}\n"
+        f"cadrumo_sequences_records_root = {str(goldens_root.parent / 'records')!r}\n"
         "\n"
         "def setup(app):\n"
         "    from dev.docs.sequence_directive import register\n"
@@ -384,11 +390,8 @@ def test_directive_build_renders_frames_and_payload(tmp_path: Path, _isolated_se
     site = tmp_path / "site"
     site.mkdir()
     goldens_root = tmp_path / "goldens"
-    (goldens_root / _PAGE).mkdir(parents=True)
-    (goldens_root / _PAGE / f"{_SEQUENCE_ID}.json").write_text(
-        json.dumps(_golden().model_dump(mode="json"), indent=2) + "\n",
-        encoding="utf-8",
-    )
+    write_golden(golden_from_record(_record()), page=_PAGE, goldens_root=goldens_root)
+    write_record(_record(), target=record_path(_PAGE, _SEQUENCE_ID, records_root=tmp_path / "records"))
     _write_site(
         site,
         index_body=_INDEX_WITH_DIRECTIVE,
@@ -424,6 +427,71 @@ def test_directive_build_renders_frames_and_payload(tmp_path: Path, _isolated_se
     # The built payload carries output formats only; the bodies are in the static frames.
     assert [frame["output"] for frame in payload["frames"]] == [{"format": "json"}] * 3
     assert "verified_complete" in html.partition('class="cadrumo-sequence-payload"')[0]
+
+
+_REVERIFY_ID = "reverify-demo"
+_REVERIFY_INDEX = (
+    "# Profiles\n\nCreate a profile first with `aeat config profile create`.\n\n"
+    f"```{{cli-sequence}} {_REVERIFY_ID}\n:verify: Verify the profile listing succeeds.\n```\n"
+)
+_REVERIFY_CONTRACT = "@result aeat --format json config profile list\n@expect result.profiles[0].active == true"
+
+
+def test_a_stale_record_is_reverified_before_it_renders(tmp_path: Path, _isolated_sequence_storage: None) -> None:
+    """A cached record that no longer fingerprints to the golden never reaches the page.
+
+    The golden comes from a real refresh; the cached record is then tampered
+    with, as a stale cache from an earlier golden would be. The build re-runs the
+    page's check, which replaces the record with verified output, and renders
+    that instead.
+    """
+    from ..sequences.checks import refresh_sequences
+
+    site = tmp_path / "site"
+    site.mkdir()
+    goldens_root = tmp_path / "goldens"
+    records_root = tmp_path / "records"
+    _write_site(
+        site,
+        index_body=_REVERIFY_INDEX,
+        goldens_root=goldens_root,
+        sequence_id=_REVERIFY_ID,
+        contract_body=_REVERIFY_CONTRACT,
+    )
+    written, problems, _ = refresh_sequences(docs_root=site, goldens_root=goldens_root, records_root=records_root)
+    assert problems == () and len(written) == 1
+    target = record_path(_PAGE, _REVERIFY_ID, records_root=records_root)
+    verified = SequenceRecord.model_validate_json(target.read_text(encoding="utf-8"))
+    envelope = dict(verified.frames[0].envelope or {})
+    envelope["status"] = "stale-output-marker"
+    stale_frame = verified.frames[0].model_copy(update={"envelope": envelope})
+    write_record(verified.model_copy(update={"frames": (stale_frame,)}), target=target)
+
+    html, warnings = _build(site, warningiserror=False)
+
+    assert "cadrumo-sequence" in html, warnings
+    assert "stale-output-marker" not in html
+    assert SequenceRecord.model_validate_json(target.read_text(encoding="utf-8")) == verified
+
+
+def test_a_record_that_cannot_be_reverified_fails_the_build(tmp_path: Path, _isolated_sequence_storage: None) -> None:
+    """When re-running the page's check cannot reproduce the golden, the build fails and renders nothing."""
+    site = tmp_path / "site"
+    site.mkdir()
+    goldens_root = tmp_path / "goldens"
+    write_golden(golden_from_record(_record()), page=_PAGE, goldens_root=goldens_root)
+    _write_site(
+        site,
+        index_body=_INDEX_WITH_DIRECTIVE,
+        goldens_root=goldens_root,
+        sequence_id=_SEQUENCE_ID,
+        contract_body="\n".join(_DIRECTIVE_BODY.splitlines()[1:]),
+    )
+
+    html, warnings = _build(site, warningiserror=False)
+
+    assert f"cli-sequence {_SEQUENCE_ID!r} on page {_PAGE!r}" in warnings
+    assert "cadrumo-sequence" not in html
 
 
 def test_directive_missing_golden_is_instructive_build_error(tmp_path: Path, _isolated_sequence_storage: None) -> None:
@@ -567,12 +635,12 @@ def test_token_longer_than_budget_renders_alone() -> None:
     assert flattened == tokens
 
 
-def _wrapping_golden(sequence_id: str) -> SequenceGolden:
-    """A single-result-frame golden for a long command that wraps."""
-    return SequenceGolden(
+def _wrapping_record(sequence_id: str) -> SequenceRecord:
+    """A single-result-frame record for a long command that wraps."""
+    return SequenceRecord(
         sequence_id=sequence_id,
         frames=(
-            GoldenFrame(
+            RecordFrame(
                 kind=FrameKind.RESULT,
                 argv=("aeat", "x"),
                 exit_code=0,
@@ -603,7 +671,7 @@ def test_payload_carries_shells_and_per_frame_wrapping() -> None:
         options={"verify": "Confirm the import."},
         body=_LONG_BODY,
     )
-    payload = build_sequence_payload(sequence, _wrapping_golden("wrap-demo"), shells=["bash", "pwsh"])
+    payload = build_sequence_payload(sequence, _wrapping_record("wrap-demo"), shells=["bash", "pwsh"])
     assert payload["shells"] == ["bash", "pwsh"]
     frame = payload["frames"][0]
     assert set(frame["wrapped"]) == {"bash", "pwsh"}
@@ -623,7 +691,7 @@ def test_render_emits_per_shell_variants_with_markers_and_default() -> None:
         options={"verify": "Confirm the import."},
         body=_LONG_BODY,
     )
-    payload = build_sequence_payload(sequence, _wrapping_golden("wrap-demo"), shells=["bash", "pwsh"])
+    payload = build_sequence_payload(sequence, _wrapping_record("wrap-demo"), shells=["bash", "pwsh"])
     html = render_sequence_html(payload)
 
     # The sequence root declares the default (first) shell so the correct variant
@@ -646,7 +714,7 @@ def test_single_shell_renders_one_variant_no_switcher_metadata() -> None:
         options={"verify": "Confirm the import."},
         body=_LONG_BODY,
     )
-    payload = build_sequence_payload(sequence, _wrapping_golden("one-shell"), shells=["pwsh"])
+    payload = build_sequence_payload(sequence, _wrapping_record("one-shell"), shells=["pwsh"])
     assert payload["shells"] == ["pwsh"]
     html = render_sequence_html(payload)
     assert 'data-cadrumo-shell="pwsh"' in html
@@ -702,10 +770,10 @@ def test_authored_step_header_flows_to_payload() -> None:
         options={"verify": "Confirm the verification."},
         body=("@step Create the quarterly draft.\n@result aeat app modelo work verify wu\n@expect exit_code == 0"),
     )
-    golden = SequenceGolden(
+    record = SequenceRecord(
         sequence_id="step-demo",
         frames=(
-            GoldenFrame(
+            RecordFrame(
                 kind=FrameKind.RESULT,
                 argv=("aeat", "app", "modelo", "work", "verify", "wu"),
                 exit_code=0,
@@ -714,14 +782,14 @@ def test_authored_step_header_flows_to_payload() -> None:
             ),
         ),
     )
-    payload = build_sequence_payload(sequence, golden)
+    payload = build_sequence_payload(sequence, record)
     assert payload["frames"][0]["header"] == "Create the quarterly draft."
 
 
 def test_frame_headers_fall_back_to_leaf_help() -> None:
     """Without @step every frame still carries an imperative header from the leaf help."""
     sequence = _parsed_sequence()
-    payload = build_sequence_payload(sequence, _golden())
+    payload = build_sequence_payload(sequence, _record())
     headers = [frame["header"] for frame in payload["frames"]]
     # Every frame carries a non-empty header (payload contract for the widget).
     assert all("header" in frame for frame in payload["frames"])
@@ -735,7 +803,7 @@ def test_frame_headers_fall_back_to_leaf_help() -> None:
 def test_setup_frames_are_not_published() -> None:
     """Setup frames execute for verification but never enter reader-facing HTML."""
     sequence = _parsed_sequence()
-    payload = build_sequence_payload(sequence, _golden())
+    payload = build_sequence_payload(sequence, _record())
     html = render_sequence_html(payload)
     assert 'data-frame-kind="setup"' not in html
     assert [frame["kind"] for frame in payload["frames"]] == ["command", "command", "result"]
@@ -804,11 +872,11 @@ def test_all_static_sequence_builds_without_a_golden(tmp_path: Path, _isolated_s
 
 
 def test_mixed_sequence_renders_trailing_static_frame_without_output() -> None:
-    """A @static frame after the @result renders output-less and aligns the golden 1:1.
+    """A @static frame after the @result renders output-less and aligns the record 1:1.
 
-    The golden carries only the executed frames; the parsed body's static frame
-    is rendered from the parse alone (no golden), and the two executed frames
-    align with the two golden frames.
+    The record carries only the executed frames; the parsed body's static frame
+    is rendered from the parse alone (no record), and the two executed frames
+    align with the two record frames.
     """
     sequence = parse_sequence(
         sequence_id="file-303",
@@ -822,17 +890,17 @@ def test_mixed_sequence_renders_trailing_static_frame_without_output() -> None:
             "@blocked live-aeat The pull verb fetches from the AEAT sede; the sandbox refuses it."
         ),
     )
-    golden = SequenceGolden(
+    record = SequenceRecord(
         sequence_id="file-303",
         frames=(
-            GoldenFrame(
+            RecordFrame(
                 kind=FrameKind.COMMAND,
                 argv=("aeat", "app", "modelo", "work", "create", "303", "--year", "2026", "--period", "1T"),
                 exit_code=0,
                 envelope={"schema_version": 1, "command": "c", "status": "ok", "notices": [], "result": {}},
                 envelope_source="stdout",
             ),
-            GoldenFrame(
+            RecordFrame(
                 kind=FrameKind.RESULT,
                 argv=("aeat", "app", "modelo", "work", "verify", "wu"),
                 exit_code=0,
@@ -847,13 +915,13 @@ def test_mixed_sequence_renders_trailing_static_frame_without_output() -> None:
             ),
         ),
     )
-    payload = build_sequence_payload(sequence, golden)
+    payload = build_sequence_payload(sequence, record)
     assert [frame["kind"] for frame in payload["frames"]] == ["command", "result", "static"]
     static_frame = payload["frames"][-1]
     assert static_frame["exit_code"] is None
     assert static_frame["output"] == {"format": "empty", "body": ""}
     assert "expects" not in static_frame
-    # The executed frames still carry their golden output.
+    # The executed frames still carry their recorded output.
     assert payload["frames"][0]["output"]["format"] == "json"
 
     html = render_sequence_html(payload)

@@ -8,11 +8,16 @@ divergence or a failed ``@expect`` reds the docs build, and a peer pytest gate
 docs build. Neither surface re-implements execution or comparison — both wire
 the one engine.
 
+The check is also what produces the output a page renders: a clean check
+caches each sequence's verified record, and the ``cli-sequence`` directive
+renders only a record whose fingerprint is the committed golden. The hook runs
+at ``builder-inited``, before any page is read.
+
 ``docs/conf.py`` connects :func:`emit_cli_tree` and :func:`check_sequence_goldens`
 to ``builder-inited``; the same functions are importable by an isolated fixture
 Sphinx build so the gate can be exercised in a tmp docs tree without touching the
-committed docs (the golden/seed roots redirect through the directive's
-``cadrumo_sequences_goldens_root`` config seam).
+committed docs (the golden, record and seed roots redirect through the
+directive's ``cadrumo_sequences_*_root`` config seams).
 """
 
 from __future__ import annotations
@@ -30,6 +35,7 @@ __all__ = [
     "SEQUENCE_CHECK_SKIP_ENV",
     "check_sequence_goldens",
     "emit_cli_tree",
+    "run_sequence_check",
     "should_check_sequences",
     "should_emit_cli_tree",
 ]
@@ -46,9 +52,11 @@ _SKIP_EMIT_ENV = "CADRUMO_DOCS_SKIP_CLI_TREE"
 #: and skip the byte-identical repeats. A caller that sets this owes the check
 #: elsewhere in the same lane: the pytest goldens gate
 #: (``dev/docs/tests/test_sequence_goldens.py``) for the test harness and the
-#: POT extraction, and the first-built site root for the deploy, which refuses
-#: to publish unless exactly one of its four roots ran the check. A lone build
-#: never sets it; the hook stays connected and red-on-divergence.
+#: POT extraction, and the deploy's own check before it starts any site root.
+#: A skipped HTML build renders the verified records that check cached; a page
+#: whose record is missing runs its own check once rather than render
+#: unverified output (non-HTML builders render no sequence output at all). A
+#: lone build never sets it; the hook stays connected and red-on-divergence.
 #:
 #: Public because the deploy composes its per-root environments from it: a
 #: second literal copy of the key could drift from this one silently, which is
@@ -114,9 +122,9 @@ def should_check_sequences() -> bool:
     ``CADRUMO_*``), so its verdict is identical across those builds, and the
     lane runs it exactly once instead of once per build — through the dedicated
     pytest goldens gate for the test harness and the POT extraction, and through
-    the first-built site root for the deploy, which refuses to publish unless
-    exactly one root ran it. A build that is not part of such a lane never sets
-    the opt-out, so an ordinary docs build keeps failing on a golden divergence.
+    the deploy's own check before it builds any site root. A build that is not
+    part of such a lane never sets the opt-out, so an ordinary docs build keeps
+    failing on a golden divergence.
     """
     return not os.environ.get(SEQUENCE_CHECK_SKIP_ENV)
 
@@ -127,76 +135,108 @@ def _config_root(app: Sphinx, name: str) -> Path | None:
     return Path(value) if value else None
 
 
-def check_sequence_goldens(app: Sphinx, *, pages: list[str] | None = None) -> None:
-    """Execute the enrolled sequences and fail the build on any golden divergence.
+def run_sequence_check(
+    *,
+    docs_root: Path,
+    goldens_root: Path | None = None,
+    records_root: Path | None = None,
+    pages: list[str] | None = None,
+) -> tuple[str, ...]:
+    """Execute the enrolled sequences, caching their verified records; return the problems.
 
-    Calls the one engine check function
-    (:func:`~dev.docs.sequences.checks.check_sequences`) against the pages under the
-    build's source tree, comparing each executed transcript to its committed
-    golden. A non-empty problem set raises :class:`~sphinx.errors.SphinxError`
-    carrying every problem verbatim (each already names the page, sequence,
-    frame, argv, and diff) plus the exact ``refresh`` remedy, halting the build.
+    The one check both the Sphinx hook and the deploy run. A full check
+    (``pages`` is ``None``) reuses a recorded clean verdict only when every
+    enrolled sequence also has a verified record cached, because a page renders
+    from that record: a clean verdict with nothing to render is not a reason to
+    skip execution. Otherwise every enrolled page is checked in a bounded pool of
+    child interpreters (each sequence keeps its own fresh hermetic sandbox, so
+    execution is unchanged — only the scheduling is). Width 4 is the same
+    bounded-not-auto footprint the gate builds use for Sphinx ``-j``: sized for
+    co-residency on a shared machine, never for the whole box. A clean full
+    check records its verdict.
 
     Args:
-        app: The Sphinx application; ``app.srcdir`` is the pages tree and its
-            ``cadrumo_sequences_goldens_root`` config seam redirects the goldens.
+        docs_root: The pages tree.
+        goldens_root: The committed goldens, or ``None`` for ``docs/_sequences``.
+        records_root: Where records are cached, or ``None`` for the default.
         pages: When given, restrict the check to these docname-style page paths
-            (the incremental changed-page set); ``None`` checks every enrolled
-            page (a full build).
+            (the incremental changed-page set).
+
+    Returns:
+        Every problem the check reports; empty on a clean pass.
     """
-    from .sequences.checks import check_sequences_in_subprocess
-    from .sequences.golden_store import refresh_invocation
+    from .sequences.checks import check_sequences_in_subprocess, unverified_records
 
-    if not should_check_sequences():
-        return
-    docs_root = Path(app.srcdir)
-    goldens_root = _config_root(app, "cadrumo_sequences_goldens_root")
-
-    problems: list[str] = []
-    key: str | None = None
-    if pages is None:
-        from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-
-        from .sequences.verdict_cache import reused_verdict, verdict_key
-
-        with bundled_indexed_authority().operation() as operation:
-            generation = str(operation.generation)
-        key = verdict_key(docs_root=docs_root, goldens_root=goldens_root, authority_generation=generation)
-        reused = reused_verdict(key)
-        if reused is not None:
-            print(f"cli-sequence goldens: clean ({reused})", flush=True)
-            return
-    if pages is None:
-        # A full build checks every enrolled page; shard the pages across a
-        # BOUNDED pool of child interpreters (each sequence keeps its own fresh
-        # hermetic sandbox, so execution is unchanged — only the scheduling
-        # is). Width 4 is the same bounded-not-auto footprint the gate builds
-        # use for Sphinx ``-j``: sized for co-residency on a shared machine,
-        # never for the whole box.
-        problems.extend(
-            check_sequences_in_subprocess(
-                docs_root=docs_root,
-                goldens_root=goldens_root,
-                jobs=4,
-            ),
-        )
-    else:
+    if pages is not None:
+        problems: list[str] = []
         for page in pages:
             problems.extend(
                 check_sequences_in_subprocess(
                     docs_root=docs_root,
                     goldens_root=goldens_root,
+                    records_root=records_root,
                     page=page,
                 ),
             )
+        return tuple(problems)
 
+    from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+
+    from .sequences.verdict_cache import record_clean_verdict, reused_verdict, verdict_key
+
+    with bundled_indexed_authority().operation() as operation:
+        generation = str(operation.generation)
+    key = verdict_key(docs_root=docs_root, goldens_root=goldens_root, authority_generation=generation)
+    reused = reused_verdict(key)
+    if reused is not None and not unverified_records(
+        docs_root=docs_root,
+        goldens_root=goldens_root,
+        records_root=records_root,
+    ):
+        print(f"cli-sequence goldens: clean ({reused})", flush=True)
+        return ()
+    problems_tuple = check_sequences_in_subprocess(
+        docs_root=docs_root,
+        goldens_root=goldens_root,
+        records_root=records_root,
+        jobs=4,
+    )
+    if not problems_tuple:
+        record_clean_verdict(key)
+    return problems_tuple
+
+
+def check_sequence_goldens(app: Sphinx, *, pages: list[str] | None = None) -> None:
+    """Execute the enrolled sequences and fail the build on any golden divergence.
+
+    Runs :func:`run_sequence_check` against the pages under the build's source
+    tree. A clean check leaves every page's verified record cached for the
+    directive to render. A non-empty problem set raises
+    :class:`~sphinx.errors.SphinxError` carrying every problem verbatim (each
+    already names the page, sequence, frame, argv, and what changed) plus the
+    exact ``refresh`` remedy, halting the build.
+
+    Args:
+        app: The Sphinx application; ``app.srcdir`` is the pages tree and its
+            ``cadrumo_sequences_goldens_root`` and ``cadrumo_sequences_records_root``
+            config seams redirect the goldens and records.
+        pages: When given, restrict the check to these docname-style page paths
+            (the incremental changed-page set); ``None`` checks every enrolled
+            page (a full build).
+    """
+    from .sequences.golden_store import refresh_invocation
+
+    if not should_check_sequences():
+        return
+    problems = run_sequence_check(
+        docs_root=Path(app.srcdir),
+        goldens_root=_config_root(app, "cadrumo_sequences_goldens_root"),
+        records_root=_config_root(app, "cadrumo_sequences_records_root"),
+        pages=pages,
+    )
     if problems:
         detail = "\n".join(problems)
         raise SphinxError(
             f"{len(problems)} cli-sequence divergence(s) from committed goldens:\n{detail}\n"
             f"If the new behaviour is intended, update the golden(s) with: {refresh_invocation()}",
         )
-    if key is not None:
-        from .sequences.verdict_cache import record_clean_verdict
-
-        record_clean_verdict(key)

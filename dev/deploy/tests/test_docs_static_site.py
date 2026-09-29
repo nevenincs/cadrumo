@@ -26,6 +26,7 @@ from dev._paths import REPO_ROOT
 from dev.docs.build import pagefind_index_mode
 from dev.docs.pagefind_index import DECIDED_INJECTED_RECORD_KINDS
 from dev.docs.sequence_build_gate import SEQUENCE_CHECK_SKIP_ENV, should_check_sequences
+from dev.docs.sequences.record_store import RECORDS_DIR_ENV
 
 from .. import docs_static_site as _docs_static_site
 from ..docs_static_site import (
@@ -34,6 +35,8 @@ from ..docs_static_site import (
     _REQUIRED_ARTIFACTS,
     CANONICAL_DOCS_BASE_URL,
     _build_language_roots,
+    _build_site_roots,
+    _check_cli_sequences,
     _clear_apex,
     _compose_apex,
     _dry_run,
@@ -232,7 +235,7 @@ def test_the_language_roots_build_at_once_each_with_its_own_storage_and_every_fa
         return [sys.executable, "-c", _ROOT_STAND_IN, str(out_dir), str(len(languages))]
 
     with pytest.raises(SystemExit, match=r"failed for ca \(3\); refusing to publish") as refused:
-        _build_language_roots(REPO_ROOT, html_root, command_for=stand_in)
+        _build_language_roots(REPO_ROOT, html_root, records_root=tmp_path / "records", command_for=stand_in)
 
     assert "9)" not in str(refused.value), "the roots did not all run at once"
     storage_roots = {(html_root / language / "storage.txt").read_text(encoding="utf-8") for language in languages}
@@ -262,7 +265,7 @@ def test_concurrent_roots_share_the_cpus_the_full_scope_root_taking_half(cpus: i
 
 def test_language_build_environment_points_the_base_url_at_the_language_root() -> None:
     """Each localized build carries the full Pagefind contract and its own base URL."""
-    env = language_build_environment("hu", check_sequences=True)
+    env = language_build_environment("hu", records_root=Path("records"))
     assert env["CADRUMO_DOCS_BASE_URL"] == f"{CANONICAL_DOCS_BASE_URL}/hu"
     assert env["CADRUMO_DOCS_PAGEFIND_MODE"] == "full"
     assert env["CADRUMO_DOCS_JOBS"] == "auto"
@@ -285,47 +288,78 @@ def test_every_deploy_root_pins_the_full_record_injected_search_contract() -> No
     assert pagefind_index_mode(site_build_environment(base_environment={})) == "full"
     assert pagefind_index_mode(site_build_environment(base_environment=hostile_base)) == "full"
     for language in localized_languages():
-        assert pagefind_index_mode(language_build_environment(language, check_sequences=False)) == "full"
+        assert pagefind_index_mode(language_build_environment(language, records_root=Path("records"))) == "full"
 
 
-def test_exactly_one_site_root_runs_the_cli_sequence_goldens_check() -> None:
-    """The deploy pays for the goldens check once, and never zero times.
+def test_every_site_root_renders_the_checked_records_without_rechecking(tmp_path: Path) -> None:
+    """The deploy pays for the goldens check once, before the roots, and every root reads its records.
 
     The check's subprocess scrubs every ``CADRUMO_*`` key and pins English, so
-    the four roots cannot disagree and running it per-root buys four identical
-    answers. Read through :func:`should_check_sequences` - the build's own
-    resolver - so this pins the behaviour the build will select rather than a
-    key that merely looks right.
+    the roots cannot disagree, and they build at the same time, so a root that
+    ran the check would race the others reading its records. Read through
+    :func:`should_check_sequences` - the build's own resolver - so this pins
+    the behaviour the build will select rather than a key that merely looks
+    right.
     """
-    environments = _language_build_environments()
-    checking = [language for language, env in environments if SEQUENCE_CHECK_SKIP_ENV not in env]
+    records_root = tmp_path / "records"
+    environments = _language_build_environments(records_root)
 
     assert len(environments) == len(localized_languages())
-    assert len(checking) == 1
     for _language, env in environments:
+        assert env[RECORDS_DIR_ENV] == str(records_root)
         with scoped_env_var(SEQUENCE_CHECK_SKIP_ENV, env.get(SEQUENCE_CHECK_SKIP_ENV)):
-            assert should_check_sequences() is (SEQUENCE_CHECK_SKIP_ENV not in env)
+            assert should_check_sequences() is False
 
 
-def test_a_deploy_that_would_skip_the_goldens_check_everywhere_refuses() -> None:
-    """Losing the check on every root must stop the publish, not pass quietly.
-
-    Skipping the repeats is only sound because one root still runs it. A
-    refactor that drops that root would leave the deploy publishing a site
-    whose CLI sequences were never checked against their goldens -- and would
-    look exactly like a successful build.
-    """
+@pytest.mark.parametrize(
+    "environment",
+    [{RECORDS_DIR_ENV: "records"}, {SEQUENCE_CHECK_SKIP_ENV: "1", RECORDS_DIR_ENV: "other-records"}],
+    ids=["would-recheck", "unchecked-records"],
+)
+def test_a_root_that_would_not_render_the_checked_records_refuses(environment: dict[str, str]) -> None:
+    """A root that re-runs the check, or reads records nobody checked, must stop the publish."""
     with (
         _replacing(
             _docs_static_site,
             "language_build_environment",
-            lambda language, *, check_sequences: {SEQUENCE_CHECK_SKIP_ENV: "1"},
+            lambda language, *, records_root: dict(environment),
         ),
         pytest.raises(SystemExit) as refusal,
     ):
-        _language_build_environments()
+        _language_build_environments(Path("records"))
 
-    assert "exactly one site root" in str(refusal.value)
+    assert "Refusing to publish unchecked CLI sequences" in str(refusal.value)
+
+
+def test_the_site_build_checks_the_sequences_before_building_any_root() -> None:
+    calls = _direct_calls(_build_site_roots)
+    assert calls.index("_check_cli_sequences") < calls.index("_build_language_roots"), calls
+
+
+@pytest.mark.integration
+def test_a_failing_sequence_check_refuses_the_publish(tmp_path: Path) -> None:
+    """A real check over a page whose sequence has no committed golden stops the deploy."""
+    docs = tmp_path / "docs"
+    page = docs / "how-to" / "deploy-refusal.md"
+    page.parent.mkdir(parents=True)
+    page.write_text(
+        "# Deploy refusal\n\nCreate a profile with `aeat config profile create`.\n\n"
+        "```{cli-sequence} deploy-refusal-case\n:verify: Verify the listing succeeds.\n```\n",
+        encoding="utf-8",
+    )
+    contract = docs / "_sequences" / "contracts" / "how-to" / "deploy-refusal" / "deploy-refusal-case.seq"
+    contract.parent.mkdir(parents=True)
+    contract.write_text(
+        '@result aeat --format json config profile list\n@expect status == "success"\n',
+        encoding="utf-8",
+    )
+
+    with pytest.raises(SystemExit) as refusal:
+        _check_cli_sequences(tmp_path, records_root=tmp_path / "records")
+
+    message = str(refusal.value)
+    assert "refusing to publish" in message
+    assert "deploy-refusal-case" in message and "no committed golden" in message
 
 
 def test_validate_language_roots_accepts_a_complete_matrix(tmp_path: Path) -> None:

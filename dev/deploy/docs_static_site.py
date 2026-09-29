@@ -62,7 +62,8 @@ from dev.deploy.docs_asset_manifest import (
 from dev.deploy.docs_delivery_settings import configure_delivery, prepare_storage
 from dev.deploy.r2_objects import R2Bucket, deployment_lock, list_keys, object_inventory, read_object, upload_tree
 from dev.docs import i18n as _docs_i18n
-from dev.docs.sequence_build_gate import SEQUENCE_CHECK_SKIP_ENV
+from dev.docs.sequence_build_gate import SEQUENCE_CHECK_SKIP_ENV, run_sequence_check
+from dev.docs.sequences.record_store import RECORDS_DIR_ENV, default_records_root
 from dev.packaging.command_execution import CommandResult, run_command
 
 CANONICAL_DOCS_BASE_URL = "https://cadrumo.neve.md/docs"
@@ -462,7 +463,7 @@ def language_build_command(language: str, out_dir: Path) -> list[str]:
     return command
 
 
-def language_build_environment(language: str, *, check_sequences: bool) -> dict[str, str]:
+def language_build_environment(language: str, *, records_root: Path) -> dict[str, str]:
     """Return the deploy build environment for one localized site root.
 
     The shared deployment environment (parallel workers, full record-injected
@@ -471,17 +472,19 @@ def language_build_environment(language: str, *, check_sequences: bool) -> dict[
     Each localized root therefore carries the injected records too: a reader on
     ``/es/`` searches the same record kinds as a reader on the English root.
 
-    ``check_sequences`` selects whether this root runs the cli-sequence goldens
-    gate. The check's verdict cannot vary by root -- its subprocess scrubs every
-    ``CADRUMO_*`` key and pins English output -- so the four roots produce four
-    identical answers for four times the cost. One root runs it and the rest set
-    the documented opt-out; which root is decided by
-    :func:`_language_build_environments`, never here.
+    No root runs the cli-sequence goldens check. The deploy runs it once, before
+    any root starts (:func:`_check_cli_sequences`), and every root renders the
+    records that check verified from ``records_root``. The check's verdict cannot
+    vary by root -- its subprocess scrubs every ``CADRUMO_*`` key and pins
+    English output -- and the roots build at the same time, so a root that ran
+    it would race the others reading its records.
     """
-    environment = {**site_build_environment(), "CADRUMO_DOCS_BASE_URL": _language_site_url(language)}
-    if not check_sequences:
-        environment[SEQUENCE_CHECK_SKIP_ENV] = "1"
-    return environment
+    return {
+        **site_build_environment(),
+        "CADRUMO_DOCS_BASE_URL": _language_site_url(language),
+        SEQUENCE_CHECK_SKIP_ENV: "1",
+        RECORDS_DIR_ENV: str(records_root),
+    }
 
 
 def root_build_jobs(languages: Sequence[str], cpus: int) -> dict[str, str]:
@@ -502,33 +505,50 @@ def root_build_jobs(languages: Sequence[str], cpus: int) -> dict[str, str]:
     return {language: str(source_jobs if language == source else translated_jobs) for language in languages}
 
 
-def _language_build_environments() -> tuple[tuple[str, dict[str, str]], ...]:
+def _language_build_environments(records_root: Path) -> tuple[tuple[str, dict[str, str]], ...]:
     """Return each site root paired with the environment it is built under.
 
-    The cli-sequence goldens gate runs on exactly one root. Pairing the decision
-    with the languages here -- rather than branching inside the build loop --
-    makes the invariant checkable without running a build, and the refusal below
-    is the teeth: a future edit that skips the check on every root (silently
-    dropping the gate from the whole deploy) cannot reach a published site.
+    Every root skips the cli-sequence check and renders from ``records_root``,
+    the records the deploy's own check just verified. Pairing that with the
+    languages here -- rather than branching inside the build loop -- makes the
+    invariant checkable without running a build, and the refusal below is the
+    teeth: a root that would run the check races the others, and a root reading
+    other records renders output nobody checked.
     """
     environments = tuple(
-        (language, language_build_environment(language, check_sequences=index == 0))
-        for index, language in enumerate(localized_languages())
+        (language, language_build_environment(language, records_root=records_root))
+        for language in localized_languages()
     )
-    checked = [language for language, environment in environments if SEQUENCE_CHECK_SKIP_ENV not in environment]
-    if len(checked) != 1:
+    drifted = [
+        language
+        for language, environment in environments
+        if SEQUENCE_CHECK_SKIP_ENV not in environment or environment.get(RECORDS_DIR_ENV) != str(records_root)
+    ]
+    if drifted:
         raise SystemExit(
-            f"The deploy must run the cli-sequence goldens check on exactly one site root; "
-            f"{len(checked)} root(s) would run it ({', '.join(checked) or 'none'}). "
-            "Refusing to publish a site whose CLI sequences were never checked against their goldens.",
+            "Every site root must render the cli-sequence records the deploy checked, without re-running "
+            f"the check; {', '.join(drifted)} would not. Refusing to publish unchecked CLI sequences.",
         )
     return environments
+
+
+def _check_cli_sequences(repo_root: Path, *, records_root: Path) -> None:
+    """Run the cli-sequence goldens check once, before any site root is built.
+
+    A clean check leaves every enrolled sequence's verified record under
+    ``records_root``; a divergence stops the publish before a byte is built.
+    """
+    problems = run_sequence_check(docs_root=repo_root / "docs", records_root=records_root)
+    if problems:
+        detail = "\n".join(problems)
+        raise SystemExit(f"cli-sequence check failed; refusing to publish:\n{detail}")
 
 
 def _build_language_roots(
     repo_root: Path,
     html_root: Path,
     *,
+    records_root: Path,
     command_for: Callable[[str, Path], list[str]] = language_build_command,
 ) -> None:
     """Build every site root into its own subdirectory.
@@ -549,11 +569,13 @@ def _build_language_roots(
         repo_root: Repository root the builds run from.
         html_root: The composed HTML root; each root builds into its own
             subdirectory.
+        records_root: The cli-sequence records the deploy's check verified;
+            every root renders from them.
         command_for: DI seam for tests. Production runs the real build driver;
             a test passes a small real command to prove the concurrency and
             isolation without paying for four Sphinx builds.
     """
-    environments = _language_build_environments()
+    environments = _language_build_environments(records_root)
     cpus = os.cpu_count() or 1
     jobs = root_build_jobs([language for language, _ in environments], cpus)
     print(
@@ -1038,7 +1060,9 @@ def _build_site_roots(repo_root: Path) -> Path:
     """
     html_root = _site_root(repo_root)
     _clear_apex(html_root)
-    _build_language_roots(repo_root, html_root)
+    records_root = default_records_root()
+    _check_cli_sequences(repo_root, records_root=records_root)
+    _build_language_roots(repo_root, html_root, records_root=records_root)
     _compose_apex(html_root)
     return html_root
 

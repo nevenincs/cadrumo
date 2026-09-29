@@ -38,6 +38,7 @@ from .record_store import (
     verified_baseline,
     write_record,
 )
+from .recorded_faults import crash_findings, undeclared_error_findings, version_literal_findings
 from .runner import (
     _PROGRESS_JOURNAL_ENV,
     SequenceTranscript,
@@ -59,6 +60,7 @@ __all__ = [
     "oversized_frame_advisories",
     "refresh_sequences",
     "unused_capture_advisories",
+    "unverified_records",
 ]
 
 
@@ -365,7 +367,9 @@ def refresh_sequences(
     """Re-execute the addressed sequences and rewrite their golden files.
 
     Each run's record is written beside the golden it fingerprints, so the
-    refreshed pages render without a further execution.
+    refreshed pages render without a further execution. A run whose output
+    records a crash, an error outcome its frame never declared, or a hardcoded
+    version is refused rather than fingerprinted.
 
     Returns:
         ``(written, problems, advisories)``: the golden paths written, the
@@ -387,6 +391,14 @@ def refresh_sequences(
             all_problems.append(f"page {item.page!r}: {exc}")
             continue
         record = build_record(transcript)
+        faults = (
+            crash_findings(record, page=item.page)
+            + undeclared_error_findings(item.sequence, record, page=item.page)
+            + version_literal_findings(record, page=item.page)
+        )
+        if faults:
+            all_problems.extend(faults)
+            continue
         golden = golden_from_record(record)
         written.append(write_golden(golden, page=item.page, goldens_root=goldens_root))
         write_record(record, target=record_path(item.page, item.sequence_id, records_root=records_root))
@@ -407,7 +419,9 @@ def check_sequences(
     A sequence that passes has its record written as verified, which is what
     its page renders. One that diverges leaves its live record under the
     records root's diverged directory, named in the report, and keeps the last
-    verified record as the baseline its report is diffed against.
+    verified record as the baseline its report is diffed against. A record that
+    captures a crash, an error outcome its frame never declared, or a hardcoded
+    version fails the check even when it matches the golden.
 
     This is THE engine check function: the ``check`` CLI mode, the Sphinx
     ``builder-inited`` hook, and the pytest gate all call it, so a divergence
@@ -441,8 +455,13 @@ def check_sequences(
             all_problems.append(f"page {item.page!r}: {exc}")
             continue
         baseline = verified_baseline(item.page, golden, records_root=records_root)
-        sequence_problems = check_transcript(item.sequence, transcript, golden, page=item.page, baseline=baseline)
         record = build_record(transcript)
+        sequence_problems = (
+            check_transcript(item.sequence, transcript, golden, page=item.page, baseline=baseline)
+            + crash_findings(record, page=item.page)
+            + undeclared_error_findings(item.sequence, record, page=item.page)
+            + version_literal_findings(record, page=item.page)
+        )
         if sequence_problems:
             diverged = write_record(
                 record,
@@ -456,6 +475,34 @@ def check_sequences(
             write_record(record, target=record_path(item.page, item.sequence_id, records_root=records_root))
             diverged_record_path(item.page, item.sequence_id, records_root=records_root).unlink(missing_ok=True)
     return tuple(all_problems), tuple(advisories)
+
+
+def unverified_records(
+    *,
+    docs_root: Path | None = None,
+    goldens_root: Path | None = None,
+    records_root: Path | None = None,
+) -> tuple[str, ...]:
+    """Name every enrolled executed sequence that has no verified record to render.
+
+    Parse-only: nothing executes. A sequence is unverified when its golden is
+    missing or unreadable, or when no cached record fingerprints to it. A
+    discovery problem counts too, since the check would report it. An empty
+    tuple means every page can render without running the check again.
+    """
+    discovered, problems = discover_sequences(docs_root=docs_root)
+    missing = list(problems)
+    for item in discovered:
+        if not item.sequence.executed_frames:
+            continue
+        try:
+            golden = read_golden(item.page, item.sequence_id, goldens_root=goldens_root)
+        except SequenceEngineError as exc:
+            missing.append(str(exc))
+            continue
+        if verified_baseline(item.page, golden, records_root=records_root) is None:
+            missing.append(f"page {item.page!r} sequence {item.sequence_id!r}: no verified record")
+    return tuple(missing)
 
 
 def english_pinned_environment() -> dict[str, str]:

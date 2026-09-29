@@ -263,13 +263,19 @@ def diverged_record_path(page: str, sequence_id: str, *, records_root: Path | No
 
 
 def write_record(record: SequenceRecord, *, target: Path) -> Path:
-    """Write ``record`` to ``target`` as key-sorted UTF-8 JSON."""
+    """Write ``record`` to ``target`` as key-sorted UTF-8 JSON, atomically.
+
+    Concurrent builds can share one records root, so a reader must see either
+    the previous record or the new one, never a partial file.
+    """
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(
+    staging = target.with_name(f".{target.name}.{os.getpid()}.tmp")
+    staging.write_text(
         json.dumps(record.model_dump(mode="json"), ensure_ascii=False, sort_keys=True, indent=2) + "\n",
         encoding=_UTF_8,
         newline="\n",
     )
+    staging.replace(target)
     return target
 
 
