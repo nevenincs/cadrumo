@@ -1507,6 +1507,70 @@
             },
             {
               "expression": {
+                "args": [],
+                "binding": null,
+                "casilla_id": "iva.autorepercutido.intracomunitaria.devengado",
+                "date_binding": null,
+                "dispatch_table": null,
+                "literal": null,
+                "op": null,
+                "parameter": null
+              },
+              "formula_id": "modelo-303-dr303-11-projection",
+              "input_bindings": [],
+              "input_casilla_ids": [
+                "iva.autorepercutido.intracomunitaria.devengado"
+              ],
+              "input_parameters": [],
+              "input_relations": [],
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "source_refs": [
+                "aeat-dr-303-2024-early",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "target_casilla_id": "11"
+            },
+            {
+              "expression": {
+                "args": [],
+                "binding": null,
+                "casilla_id": "iva.autorepercutido.interior.devengado",
+                "date_binding": null,
+                "dispatch_table": null,
+                "literal": null,
+                "op": null,
+                "parameter": null
+              },
+              "formula_id": "modelo-303-dr303-13-projection",
+              "input_bindings": [],
+              "input_casilla_ids": [
+                "iva.autorepercutido.interior.devengado"
+              ],
+              "input_parameters": [],
+              "input_relations": [],
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "source_refs": [
+                "aeat-dr-303-2024-early",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "target_casilla_id": "13"
+            },
+            {
+              "expression": {
                 "args": [
                   {
                     "args": [],
@@ -1855,70 +1919,6 @@
                 "boe-modelo-303-2008-form"
               ],
               "target_casilla_id": "10"
-            },
-            {
-              "expression": {
-                "args": [],
-                "binding": null,
-                "casilla_id": "iva.autorepercutido.intracomunitaria.devengado",
-                "date_binding": null,
-                "dispatch_table": null,
-                "literal": null,
-                "op": null,
-                "parameter": null
-              },
-              "formula_id": "modelo-303-dr303-11-projection",
-              "input_bindings": [],
-              "input_casilla_ids": [
-                "iva.autorepercutido.intracomunitaria.devengado"
-              ],
-              "input_parameters": [],
-              "input_relations": [],
-              "legal_refs": [
-                "ley-37-1992:art-88",
-                "ley-37-1992:art-90",
-                "ley-37-1992:art-91",
-                "rd-1624-1992:art-71",
-                "orden-eha-3786-2008:art-1"
-              ],
-              "source_refs": [
-                "aeat-dr-303-2024-early",
-                "aeat-modelo-303-procedure",
-                "boe-modelo-303-2008-form"
-              ],
-              "target_casilla_id": "11"
-            },
-            {
-              "expression": {
-                "args": [],
-                "binding": null,
-                "casilla_id": "iva.autorepercutido.interior.devengado",
-                "date_binding": null,
-                "dispatch_table": null,
-                "literal": null,
-                "op": null,
-                "parameter": null
-              },
-              "formula_id": "modelo-303-dr303-13-projection",
-              "input_bindings": [],
-              "input_casilla_ids": [
-                "iva.autorepercutido.interior.devengado"
-              ],
-              "input_parameters": [],
-              "input_relations": [],
-              "legal_refs": [
-                "ley-37-1992:art-88",
-                "ley-37-1992:art-90",
-                "ley-37-1992:art-91",
-                "rd-1624-1992:art-71",
-                "orden-eha-3786-2008:art-1"
-              ],
-              "source_refs": [
-                "aeat-dr-303-2024-early",
-                "aeat-modelo-303-procedure",
-                "boe-modelo-303-2008-form"
-              ],
-              "target_casilla_id": "13"
             },
             {
               "expression": {

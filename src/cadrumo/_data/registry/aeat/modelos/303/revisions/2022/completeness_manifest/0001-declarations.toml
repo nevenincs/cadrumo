@@ -365,3 +365,19 @@ number = "iva.rectificacion-deducciones.inversion-sujeto-pasivo.base"
 [[revisions.2022.completeness_manifest.casillas]]
 casilla_id = "iva.rectificacion-deducciones.inversion-sujeto-pasivo"
 number = "iva.rectificacion-deducciones.inversion-sujeto-pasivo"
+
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "11"
+number = "11"
+
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "13"
+number = "13"
+
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "120"
+number = "120"
+
+[[revisions.2022.completeness_manifest.casillas]]
+casilla_id = "122"
+number = "122"

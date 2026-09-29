@@ -96,34 +96,6 @@ casilla_id = "iva.autorepercutido.intracomunitaria.devengado.base"
 # Devengado inversión del sujeto pasivo cuotas. Box 11 projects the AIC
 # devengado parity casilla (oficial casillas 10/11), NOT the netted
 # iva.autorepercutido.intracomunitaria.
-[[revisions.2023.formulas]]
-id = "modelo-303-dr303-11-projection"
-target_casilla_id = "11"
-rounding = "money-2"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
-
-[[revisions.2023.formulas.source_citations]]
-source_ref = "aeat-modelo-303-procedure"
-required_text = ["modelo 303"]
-
-[revisions.2023.formulas.expression]
-casilla_id = "iva.autorepercutido.intracomunitaria.devengado"
-
-[[revisions.2023.formulas]]
-id = "modelo-303-dr303-13-projection"
-target_casilla_id = "13"
-rounding = "money-2"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
-
-[[revisions.2023.formulas.source_citations]]
-source_ref = "aeat-modelo-303-procedure"
-required_text = ["modelo 303"]
-
-[revisions.2023.formulas.expression]
-casilla_id = "iva.autorepercutido.interior.devengado"
-
 # Rate (Tipo %) formulas for the two transitional rungs. See
 # parameters/0002-dr303-transitional-rate-percent.toml for the dated windows
 # and the grounding chain (RDL 20/2022:art-72 opens the window from

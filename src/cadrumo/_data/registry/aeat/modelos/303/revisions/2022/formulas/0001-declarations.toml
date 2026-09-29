@@ -519,6 +519,42 @@ required_text = ["modelo 303"]
 [revisions.2022.formulas.expression]
 casilla_id = "iva.cuota-devengada-total"
 
+# Box [11] projects the annual adquisiciones intracomunitarias cuota. The 2022
+# diseno de registro prints the row as "Adquisiciones intracomunitarias de bienes
+# y servicios - Cuota [11]" with no rate field of its own, exactly as every later
+# design does, so the projection holds for this revision as it does for theirs.
+[[revisions.2022.formulas]]
+id = "modelo-303-dr303-11-projection"
+target_casilla_id = "11"
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+additional_source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2022.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2022.formulas.expression]
+casilla_id = "iva.autorepercutido.intracomunitaria.devengado"
+
+# Box [13] projects the domestic inversion del sujeto pasivo cuota, the summand
+# modelo-303-iva-cuota-devengada-total already adds on this revision. The 2022
+# diseno prints the row as "Otras operaciones con inversion del sujeto pasivo
+# (excepto. adq. intracom) - Cuota [13]", unchanged in every later design.
+[[revisions.2022.formulas]]
+id = "modelo-303-dr303-13-projection"
+target_casilla_id = "13"
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+additional_source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2022.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2022.formulas.expression]
+casilla_id = "iva.autorepercutido.interior.devengado"
+
 # Box [64] = [46] + [58] + [76]: the 2022 diseno de registro prints "Suma de
 # resultados ( [46] + [58] + [76] ) [64]" (aeat-dr-303-2022, resultado campo 16).
 # [46] is the regimen general result (LIVA arts. 88 and 92), [58] the regimen

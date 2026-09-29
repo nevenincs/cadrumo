@@ -1128,6 +1128,54 @@
               "typed_enum": null
             },
             {
+              "binding_id": "modelo-303-casilla-122-inversion-sujeto-pasivo-base",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2026,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-37-1992:art-84",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "modelo": "303",
+              "period": "1T",
+              "readiness": "ledger data",
+              "relation_inputs": [],
+              "revision": "2026-y-siguientes",
+              "source": "ledger_iva_aggregation",
+              "source_refs": [
+                "aeat-dr-303-2026",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "modelo-303-casilla-120-no-sujetas-localizacion-base",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2026,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-37-1992:art-69",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "modelo": "303",
+              "period": "1T",
+              "readiness": "ledger data",
+              "relation_inputs": [],
+              "revision": "2026-y-siguientes",
+              "source": "ledger_iva_aggregation",
+              "source_refs": [
+                "aeat-dr-303-2026",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "typed_enum": null
+            },
+            {
               "binding_id": "modelo-303-autoconsumo-promotor-base",
               "borrador_capable": false,
               "encoded_options": [],
@@ -1213,54 +1261,6 @@
               "legal_refs": [
                 "ley-37-1992:art-88",
                 "ley-37-1992:art-91",
-                "rd-1624-1992:art-71",
-                "orden-eha-3786-2008:art-1"
-              ],
-              "modelo": "303",
-              "period": "1T",
-              "readiness": "ledger data",
-              "relation_inputs": [],
-              "revision": "2026-y-siguientes",
-              "source": "ledger_iva_aggregation",
-              "source_refs": [
-                "aeat-dr-303-2026",
-                "aeat-modelo-303-procedure",
-                "boe-modelo-303-2008-form"
-              ],
-              "typed_enum": null
-            },
-            {
-              "binding_id": "modelo-303-casilla-122-inversion-sujeto-pasivo-base",
-              "borrador_capable": false,
-              "encoded_options": [],
-              "filing_year": 2026,
-              "input_channel": "decimal",
-              "legal_refs": [
-                "ley-37-1992:art-84",
-                "rd-1624-1992:art-71",
-                "orden-eha-3786-2008:art-1"
-              ],
-              "modelo": "303",
-              "period": "1T",
-              "readiness": "ledger data",
-              "relation_inputs": [],
-              "revision": "2026-y-siguientes",
-              "source": "ledger_iva_aggregation",
-              "source_refs": [
-                "aeat-dr-303-2026",
-                "aeat-modelo-303-procedure",
-                "boe-modelo-303-2008-form"
-              ],
-              "typed_enum": null
-            },
-            {
-              "binding_id": "modelo-303-casilla-120-no-sujetas-localizacion-base",
-              "borrador_capable": false,
-              "encoded_options": [],
-              "filing_year": 2026,
-              "input_channel": "decimal",
-              "legal_refs": [
-                "ley-37-1992:art-69",
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
               ],

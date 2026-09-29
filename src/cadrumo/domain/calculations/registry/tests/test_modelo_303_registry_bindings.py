@@ -241,6 +241,13 @@ def test_modelo_303_iva_bindings_resolve_end_to_end_with_substrate_observations(
         "modelo-303-iva-soportado-importaciones-bienes-inversion-cuota": Decimal("0"),
         "modelo-303-iva-autorepercutido-intracomunitaria-deducible-bienes-inversion-base": Decimal("0"),
         "modelo-303-iva-autorepercutido-intracomunitaria-deducible-bienes-inversion-cuota": Decimal("0"),
+        # The two informational volúmenes are base-only and select categories no
+        # observation here carries: casilla 120 takes intra-community service
+        # supplies, which Spain does not tax under the place-of-supply rules, and
+        # casilla 122 takes the supplier's side of a domestic reverse charge.
+        # Both are proven zeros for this observation set, not absences.
+        "modelo-303-casilla-120-no-sujetas-localizacion-base": Decimal("0"),
+        "modelo-303-casilla-122-inversion-sujeto-pasivo-base": Decimal("0"),
     }
 
 
