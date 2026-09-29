@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#registry-conformance-rectification'
 date: '2026-09-27'
-modified: '2026-09-29'
+modified: '2026-09-30'
 body_schema: 'body-v2'
-body_hash: 'sha256:6f6506aa1ef83104b6c0f467dc5a4eb1cc83dcaa6f04ca0b749498d3e36cf52e'
+body_hash: 'sha256:eb90d66295088b51e74599853257b9663ae2220765127a67e6f2332d8b203883'
 related:
   - "[[2026-09-27-registry-conformance-rectification-plan]]"
 ---
@@ -212,6 +212,7 @@ related:
 - `S11` `verify:` `303 converter proof twice no-op; inspect_authoring_candidate publication_valid 0 findings; dev/registry 1764 passed with failures classified; delta migration tests 19 passed after pilot fix` -> `pass`
 - `S11` `D` `src/cadrumo/_data/registry/aeat/modelos/180/revisions/2019-2022/bindings/0002-type2-row-bindings.toml`
 - `S11` `verify:` `180 converter fingerprint unchanged; test_committed_authored_sections_are_consolidated` -> `pass`
+- `S11` `verify:` `registry_collapse_verification --modelo 180, 184, 182, 303 (equivalence, facts, indexed, cache, publication_readiness passed; 0 findings)` -> `pass`
 
 ## Notes
 
