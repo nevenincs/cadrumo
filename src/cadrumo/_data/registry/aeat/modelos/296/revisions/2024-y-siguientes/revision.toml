@@ -3,9 +3,10 @@
 # it. The 2024 design is not a revision of the 2023 one: aeat-dr-296-2023
 # carries THREE record types and aeat-dr-296-2024 carries FIVE, the two extra
 # being the Anexos al registro tipo 2 ("Valores negociables") that AEAT
-# introduced for ejercicio 2024. This edition cannot be materialised from the
-# earlier one by the merge, so it states itself in full.
-predecessor = { none = { cause = "official_structure_differs", reason = "aeat-dr-296-2023 carries three record types (declarante, perceptor, anexo de desglose de retenciones) and aeat-dr-296-2024 carries five, adding the two Anexos al registro tipo 2 for valores negociables -- relacion de pago a contribuyentes and relacion de certificados de pago -- first published for ejercicio 2024. The record set differs, so no merge from the 2023 edition produces this one.", legal_refs = ["orden-eha-3290-2008:art-6"], source_refs = ["aeat-dr-296-2024"] } }
+# introduced for ejercicio 2024. No merge from the earlier edition reproduces
+# this one, so it declares no predecessor; what both designs share is stored
+# against 2023 through the storage baselines below.
+predecessor = { none = { cause = "official_structure_differs", reason = "aeat-dr-296-2023 carries three record types (declarante, perceptor, anexo de desglose de retenciones) and aeat-dr-296-2024 carries five, adding the two Anexos al registro tipo 2 for valores negociables -- relacion de pago a contribuyentes and relacion de certificados de pago -- first published for ejercicio 2024, and fills perceptor positions 85-90 and 402-432 that the 2023 design leaves blank. The record set differs, so no merge from the 2023 edition produces this one and no predecessor is declared. The payload is stored against the 2023 edition through casilla_storage_baseline and family_storage_baseline: what both designs share is inherited, with overrides for this edition's design citations and lineage evidence, while the export layout and the projection endpoints of the fields and records new in 2024 are stated here. Storage reuse makes no continuity claim.", legal_refs = ["orden-eha-3290-2008:art-6"], source_refs = ["aeat-dr-296-2024"] } }
 binding_source_refs = ["aeat-modelo-296-procedure", "boe-modelo-296-form-layout"]
 casilla_source_refs = ["boe-modelo-296-form-text", "boe-modelo-296-form-layout"]
 application_link_source_refs = ["aeat-modelo-296-procedure"]
@@ -37,6 +38,11 @@ period_selector = { year_from = 2024, periods = ["0A"] }
 orden_aplicabilidad = ["orden-eha-3290-2008:art-6"]
 legal_refs = ["orden-eha-3290-2008:art-6", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-modelo-296-procedure", "boe-modelo-296-form-layout", "aeat-dr-296-2024"]
+# Storage reuse only, not legal continuity: casillas and keyed families are
+# stored as differences from the 2023 edition's effective members.
+casilla_storage_baseline = "2023"
+family_storage_baseline = "2023"
+scoped_families = ["workbook_parity_refs", "verification_expectations", "completeness_manifest"]
 
 [revisions."2024-y-siguientes".family_dispositions.parameters]
 reason = """
@@ -72,3 +78,304 @@ source_refs = [
     "boe-modelo-296-form-layout",
     "aeat-dr-296-2024",
 ]
+
+[[revisions."2024-y-siguientes".family_removals]]
+family = "deadline_windows"
+selector = {revision = "2023", id = "modelo-296-2023-0a"}
+
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "completeness_manifest"
+selector = {revision = "2023", id = "aeat-dr-296-2023"}
+replacement_id = "aeat-dr-296-2024"
+sequence_additions = {source_refs = ["aeat-dr-296-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "filing_schedules"
+selector = {revision = "2023", id = "modelo-296-anual"}
+sequence_additions = {source_refs = ["aeat-dr-296-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2023", id = "modelo-296-export"}
+sequence_additions = {source_refs = ["aeat-dr-296-2024"]}
+sequence_removals = {source_refs = [0]}
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2023", id = "m296-perceptor-intereses:field-apellidos-y-nombre-razon-social-o-deno"}
+sequence_additions = {source_refs = ["aeat-dr-296-2024"]}
+sequence_removals = {source_refs = [0]}
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2023", id = "m296-perceptor-intereses:field-ejercicio"}
+sequence_additions = {source_refs = ["aeat-dr-296-2024"]}
+sequence_removals = {source_refs = [0]}
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2023", id = "m296-perceptor-intereses:field-f-j"}
+sequence_additions = {source_refs = ["aeat-dr-296-2024"]}
+sequence_removals = {source_refs = [0]}
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2023", id = "m296-perceptor-intereses:field-identificador-de-registro-o-numero-de"}
+sequence_additions = {source_refs = ["aeat-dr-296-2024"]}
+sequence_removals = {source_refs = [0]}
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2023", id = "m296-perceptor-intereses:field-nif-del-declarante"}
+sequence_additions = {source_refs = ["aeat-dr-296-2024"]}
+sequence_removals = {source_refs = [0]}
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2023", id = "m296-perceptor-intereses:field-nif-del-perceptor"}
+sequence_additions = {source_refs = ["aeat-dr-296-2024"]}
+sequence_removals = {source_refs = [0]}
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2023", id = "m296-perceptor-intereses:field-nif-del-representante-legal"}
+sequence_additions = {source_refs = ["aeat-dr-296-2024"]}
+sequence_removals = {source_refs = [0]}
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2023", id = "m296-perceptor-intereses:field-retenciones-e-ingresos-a-cuenta-ingres"}
+sequence_additions = {source_refs = ["aeat-dr-296-2024"]}
+sequence_removals = {source_refs = [0]}
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2023", id = "m296-perceptor:field-apellidos-y-nombre-razon-social-o-deno"}
+sequence_additions = {source_refs = ["aeat-dr-296-2024"]}
+sequence_removals = {source_refs = [0]}
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2023", id = "m296-perceptor:field-base-retenciones-e-ingresos-a-cuenta"}
+sequence_additions = {source_refs = ["aeat-dr-296-2024"]}
+sequence_removals = {source_refs = [0]}
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2023", id = "m296-perceptor:field-ciudad"}
+sequence_additions = {source_refs = ["aeat-dr-296-2024"]}
+sequence_removals = {source_refs = [0]}
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2023", id = "m296-perceptor:field-clave"}
+sequence_additions = {source_refs = ["aeat-dr-296-2024"]}
+sequence_removals = {source_refs = [0]}
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2023", id = "m296-perceptor:field-codigo"}
+sequence_additions = {source_refs = ["aeat-dr-296-2024"]}
+sequence_removals = {source_refs = [0]}
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2023", id = "m296-perceptor:field-codigo-cuenta-valores"}
+sequence_additions = {source_refs = ["aeat-dr-296-2024"]}
+sequence_removals = {source_refs = [0]}
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2023", id = "m296-perceptor:field-codigo-emisor"}
+sequence_additions = {source_refs = ["aeat-dr-296-2024"]}
+sequence_removals = {source_refs = [0]}
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2023", id = "m296-perceptor:field-codigo-pais"}
+sequence_additions = {source_refs = ["aeat-dr-296-2024"]}
+sequence_removals = {source_refs = [0]}
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2023", id = "m296-perceptor:field-decimal"}
+sequence_additions = {source_refs = ["aeat-dr-296-2024"]}
+sequence_removals = {source_refs = [0]}
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2023", id = "m296-perceptor:field-decimal-numerico-parte-decimal"}
+sequence_additions = {source_refs = ["aeat-dr-296-2024"]}
+sequence_removals = {source_refs = [0]}
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2023", id = "m296-perceptor:field-decimal-numerico-parte-decimal-2"}
+sequence_additions = {source_refs = ["aeat-dr-296-2024"]}
+sequence_removals = {source_refs = [0]}
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2023", id = "m296-perceptor:field-decimal-numerico-parte-decimal-3"}
+sequence_additions = {source_refs = ["aeat-dr-296-2024"]}
+sequence_removals = {source_refs = [0]}
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2023", id = "m296-perceptor:field-declarante"}
+sequence_additions = {source_refs = ["aeat-dr-296-2024"]}
+sequence_removals = {source_refs = [0]}
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2023", id = "m296-perceptor:field-direccion-del-perceptor"}
+sequence_additions = {source_refs = ["aeat-dr-296-2024"]}
+sequence_removals = {source_refs = [0]}
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2023", id = "m296-perceptor:field-ejercicio"}
+sequence_additions = {source_refs = ["aeat-dr-296-2024"]}
+sequence_removals = {source_refs = [0]}
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2023", id = "m296-perceptor:field-ejercicio-devengo"}
+sequence_additions = {source_refs = ["aeat-dr-296-2024"]}
+sequence_removals = {source_refs = [0]}
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2023", id = "m296-perceptor:field-entero"}
+sequence_additions = {source_refs = ["aeat-dr-296-2024"]}
+sequence_removals = {source_refs = [0]}
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2023", id = "m296-perceptor:field-entero-numerico-parte-entera"}
+sequence_additions = {source_refs = ["aeat-dr-296-2024"]}
+sequence_removals = {source_refs = [0]}
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2023", id = "m296-perceptor:field-entero-numerico-parte-entera-2"}
+sequence_additions = {source_refs = ["aeat-dr-296-2024"]}
+sequence_removals = {source_refs = [0]}
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2023", id = "m296-perceptor:field-entero-numerico-parte-entera-3"}
+sequence_additions = {source_refs = ["aeat-dr-296-2024"]}
+sequence_removals = {source_refs = [0]}
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2023", id = "m296-perceptor:field-f-j"}
+sequence_additions = {source_refs = ["aeat-dr-296-2024"]}
+sequence_removals = {source_refs = [0]}
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2023", id = "m296-perceptor:field-fecha-de-devengo"}
+sequence_additions = {source_refs = ["aeat-dr-296-2024"]}
+sequence_removals = {source_refs = [0]}
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2023", id = "m296-perceptor:field-fecha-de-inicio-del-prestamo"}
+sequence_additions = {source_refs = ["aeat-dr-296-2024"]}
+sequence_removals = {source_refs = [0]}
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2023", id = "m296-perceptor:field-fecha-de-nacimiento"}
+sequence_additions = {source_refs = ["aeat-dr-296-2024"]}
+sequence_removals = {source_refs = [0]}
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2023", id = "m296-perceptor:field-fecha-de-vencimiento-del-prestamo"}
+sequence_additions = {source_refs = ["aeat-dr-296-2024"]}
+sequence_removals = {source_refs = [0]}
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2023", id = "m296-perceptor:field-identificador-de-registro-o-numero-de"}
+sequence_additions = {source_refs = ["aeat-dr-296-2024"]}
+sequence_removals = {source_refs = [0]}
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2023", id = "m296-perceptor:field-ingresos-a-cuenta-repercutidos"}
+sequence_additions = {source_refs = ["aeat-dr-296-2024"]}
+sequence_removals = {source_refs = [0]}
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2023", id = "m296-perceptor:field-naturaleza"}
+sequence_additions = {source_refs = ["aeat-dr-296-2024"]}
+sequence_removals = {source_refs = [0]}
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2023", id = "m296-perceptor:field-nif-del-declarante"}
+sequence_additions = {source_refs = ["aeat-dr-296-2024"]}
+sequence_removals = {source_refs = [0]}
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2023", id = "m296-perceptor:field-nif-del-perceptor"}
+sequence_additions = {source_refs = ["aeat-dr-296-2024"]}
+sequence_removals = {source_refs = [0]}
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2023", id = "m296-perceptor:field-nif-del-representante-legal"}
+sequence_additions = {source_refs = ["aeat-dr-296-2024"]}
+sequence_removals = {source_refs = [0]}
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2023", id = "m296-perceptor:field-nif-en-el-pais-de-residencia-fiscal"}
+sequence_additions = {source_refs = ["aeat-dr-296-2024"]}
+sequence_removals = {source_refs = [0]}
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2023", id = "m296-perceptor:field-pais-o-territorio-de-residencia-fiscal"}
+sequence_additions = {source_refs = ["aeat-dr-296-2024"]}
+sequence_removals = {source_refs = [0]}
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2023", id = "m296-perceptor:field-parte-decimal-del-importe-de-las-reten"}
+sequence_additions = {source_refs = ["aeat-dr-296-2024"]}
+sequence_removals = {source_refs = [0]}
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2023", id = "m296-perceptor:field-parte-entera-del-importe-de-las-retenc"}
+sequence_additions = {source_refs = ["aeat-dr-296-2024"]}
+sequence_removals = {source_refs = [0]}
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2023", id = "m296-perceptor:field-pendiente"}
+sequence_additions = {source_refs = ["aeat-dr-296-2024"]}
+sequence_removals = {source_refs = [0]}
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2023", id = "m296-perceptor:field-perceptor-mediador"}
+sequence_additions = {source_refs = ["aeat-dr-296-2024"]}
+sequence_removals = {source_refs = [0]}
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2023", id = "m296-perceptor:field-subclave"}
+sequence_additions = {source_refs = ["aeat-dr-296-2024"]}
+sequence_removals = {source_refs = [0]}
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "projection_endpoints"
+selector = {revision = "2023", id = "m296-perceptor:field-tipo-codigo"}
+sequence_additions = {source_refs = ["aeat-dr-296-2024"]}
+sequence_removals = {source_refs = [0]}
+[[revisions."2024-y-siguientes".family_positions]]
+family = "projection_endpoints"
+id = "m296-perceptor:field-clave-de-mercado"
+position = 4
+
+[[revisions."2024-y-siguientes".family_positions]]
+family = "projection_endpoints"
+id = "m296-perceptor:field-codigo-bic-del-perceptor-mediador"
+position = 6
+
+[[revisions."2024-y-siguientes".family_positions]]
+family = "projection_endpoints"
+id = "m296-perceptor:field-codigo-lei-del-perceptor"
+position = 9
+
+[[revisions."2024-y-siguientes".family_positions]]
+family = "projection_endpoints"
+id = "m296-perceptor:field-nif-del-pagador-anterior"
+position = 32
+
+[[revisions."2024-y-siguientes".family_positions]]
+family = "projection_endpoints"
+id = "m296-perceptor:field-procedimiento-especial-de-retenciones"
+position = 41
+
+[[revisions."2024-y-siguientes".casilla_overrides]]
+selector = { revision = "2023", id = "02" }
+fields = { continuidad_evidence = "aeat-dr-296-2023 y aeat-dr-296-2024, registro tipo 1, posiciones 145-159: BASE RETENCIONES E INGRESOS A CUENTA. Ambos disenos exigen la suma algebraica de las bases de los registros de perceptor, con el mismo signo y desglose decimal; continua el mismo total, no una identidad inferida de su posicion.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-y-siguientes".casilla_overrides]]
+selector = { revision = "2023", id = "03" }
+fields = { continuidad_evidence = "aeat-dr-296-2023 y aeat-dr-296-2024, registro tipo 1, posiciones 160-174: RETENCIONES E INGRESOS A CUENTA. Ambos disenos definen la suma de las retenciones de los registros de perceptor, sin cambio de poblacion ni de funcion.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2024-y-siguientes".casilla_overrides]]
+selector = { revision = "2023", id = "04" }
+fields = { continuidad_evidence = "aeat-dr-296-2023 y aeat-dr-296-2024, registro tipo 1, posiciones 175-189: RETENCIONES E INGRESOS A CUENTA INGRESADOS. Ambos disenos suman los perceptores con claves 3 a 25 y las claves 1 o 2 cuando PAGO es 1; la misma seleccion prueba la continuidad del total ingresado.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
