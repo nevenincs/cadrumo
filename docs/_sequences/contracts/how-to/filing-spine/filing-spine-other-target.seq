@@ -2,7 +2,7 @@
 @setup aeat --format json app modelo work create --modelo 303 --year 2026 --period 2T
 @capture another_work_unit_id result.work_unit_id
 @step Address a different visible target, such as another period.
-aeat --format json app modelo work status --modelo 303 --year 2026 --period 2T
+aeat app modelo work status --modelo 303 --year 2026 --period 2T
 @step Or address a different work unit by its reference number.
 @result aeat --format json app modelo work status {another_work_unit_id}
 @expect result.period.code == "2T"

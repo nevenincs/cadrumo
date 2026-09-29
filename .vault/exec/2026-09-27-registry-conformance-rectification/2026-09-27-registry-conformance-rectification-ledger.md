@@ -162,4 +162,3 @@ related:
 - `S02` Registry-wide the fix brings 22 storage-rooted editions across 11 modelos into assessment; none currently states a droppable restatement, so no registry source changes.
 - `S12` The ruling list is returned to the operator in the session report rather than persisted, as the brief directs.
 - `S11` Partial: closed-window re-keying only. Late authoring in 180, 303, 131, 193, 190, 184, 123, 202, 222, 151, 182, 210, 390 and the low items, and the whole-family restatements under explicit roots, remain open; Modelo 200's 2024 rows in its 2025-y-siguientes edition are returned for ruling.
-

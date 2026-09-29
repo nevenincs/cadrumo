@@ -1,5 +1,5 @@
 @step Show the year's overall obligation status.
-aeat --format json app overview status
+aeat app overview status
 @step List the modelo work units on record.
 @result aeat --format json app modelo work list
 @expect result.operation == "modelo.work.list"

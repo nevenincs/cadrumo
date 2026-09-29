@@ -3,8 +3,6 @@
     {
       "argv": [
         "aeat",
-        "--format",
-        "json",
         "app",
         "modelo",
         "iva-wallet",
@@ -18,30 +16,12 @@
         "--confirm"
       ],
       "captures": [],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "modelo.iva_wallet.seed",
-        "notices": [],
-        "result": {
-          "amount": "0",
-          "filing_year": 2025,
-          "operation": "modelo.iva_wallet.seed",
-          "period": {
-            "code": "4T",
-            "filing_year": 2025
-          },
-          "provenance": "operator_seed",
-          "register_status": null,
-          "taxpayer_nif": "sha256:1c9f9632"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
-      "envelope_source": "stdout",
+      "envelope": null,
+      "envelope_source": null,
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": null
+      "text": "operation\tmodelo.iva-wallet.seed\nfiling_year\t2025\nperiod\t4T\ntaxpayer_nif\tsha256:1c9f9632\namount\t0\nprovenance\toperator_seed\nregister_status\t\n"
     },
     {
       "argv": [
@@ -80,6 +60,6 @@
       "text": null
     }
   ],
-  "golden_schema_version": 1,
+  "golden_schema_version": 2,
   "sequence_id": "iva-lifecycle-wallet"
 }

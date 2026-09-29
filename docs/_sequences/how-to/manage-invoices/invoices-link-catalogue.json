@@ -26,60 +26,8 @@
           "value": "4ea9963064d9ee8b2b6b69349aa94dfeb5298f118bc99cdce546c040ed01d522"
         }
       ],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "ledger.add",
-        "notices": [],
-        "result": {
-          "bucket_event_ids": [
-            "1a40058c2f99a627ed9f29f75717ce90965acd0af4715a10567acbee518d12ca"
-          ],
-          "bucket_id": "<bucket-id>",
-          "review_status": "pending",
-          "transaction": {
-            "amount": "2000",
-            "attachment_ids": [],
-            "booked_date": "2026-02-12",
-            "business_classification": "NOT_YET_PROCESSED",
-            "business_pct": null,
-            "category_id": null,
-            "classification_confidence": null,
-            "classification_reason": "",
-            "classified_at": null,
-            "classified_by": "auto",
-            "counterparty": "",
-            "counterparty_country": null,
-            "counterparty_identification_state": null,
-            "created_at": "2026-04-01T09:00:00+00:00",
-            "currency": "EUR",
-            "date": "2026-02-12",
-            "description": "Cobro cliente DE",
-            "direction": "INCOMING",
-            "fx_rate": null,
-            "invoice_id": null,
-            "irpf_category": null,
-            "iva_amount": null,
-            "iva_category": null,
-            "iva_rate": null,
-            "lifecycle_state": "ACTIVE",
-            "m210_income_classification": null,
-            "modified_at": "2026-04-01T09:00:00+00:00",
-            "notes": "",
-            "prorrata_reference": null,
-            "purchase_invoice_evidence_id": null,
-            "source_jurisdiction": "ES",
-            "taxable_base": null,
-            "transaction_id": "4ea9963064d9ee8b2b6b69349aa94dfeb5298f118bc99cdce546c040ed01d522",
-            "usage_ratio_id": null,
-            "value_date": null,
-            "value_in_eur": null
-          },
-          "transaction_id": "4ea9963064d9ee8b2b6b69349aa94dfeb5298f118bc99cdce546c040ed01d522"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
-      "envelope_source": "stdout",
+      "envelope": null,
+      "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
       "stderr_text": null,
@@ -120,62 +68,8 @@
           "value": "74dbc61158fa07888e5c677cd0d01745883b4184f7c5caf7e1e0b9ac1b5f74ca"
         }
       ],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "ledger.invoice.add",
-        "notices": [],
-        "result": {
-          "base_total": "2000.00",
-          "base_total_eur": "2000.00",
-          "bucket_id": "<bucket-id>",
-          "counterparty_country": "DE",
-          "counterparty_name": "Kunde GmbH",
-          "counterparty_tax_id": "sha256:a9224776",
-          "currency": "EUR",
-          "fx_rate": null,
-          "fx_rate_date": null,
-          "fx_rate_source": null,
-          "grand_total": "2000.00",
-          "grand_total_eur": "2000.00",
-          "invoice_class": "ORDINARIA",
-          "invoice_id": "74dbc61158fa07888e5c677cd0d01745883b4184f7c5caf7e1e0b9ac1b5f74ca",
-          "invoice_number": "EU-CAT-050",
-          "issued_at": "2026-02-10",
-          "iva_category": "intra_community_supply",
-          "iva_total": "0.00",
-          "iva_total_eur": "0.00",
-          "kind": "issued",
-          "lines": [
-            {
-              "description": "EU-CAT-050",
-              "iva_amount": "0.00",
-              "iva_rate": "RATE_0",
-              "oss_rate_kind": null,
-              "quantity": "1",
-              "spending_category_id": null,
-              "subtotal": "2000.00",
-              "unit_price": "2000.00"
-            }
-          ],
-          "linked_transaction_ids": [],
-          "notes": "",
-          "operation_date": null,
-          "operation_date_role": null,
-          "operation_type": "E",
-          "payment_status": "PENDING",
-          "recargo_amount": null,
-          "rectifies_invoice_number": null,
-          "retention_amount": null,
-          "retention_rate": null,
-          "series": null,
-          "source_filename": null,
-          "source_row_index": null,
-          "source_sha256": null
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
-      "envelope_source": "stdout",
+      "envelope": null,
+      "envelope_source": null,
       "exit_code": 0,
       "kind": "setup",
       "stderr_text": null,
@@ -275,6 +169,6 @@
       "text": null
     }
   ],
-  "golden_schema_version": 1,
+  "golden_schema_version": 2,
   "sequence_id": "invoices-link-catalogue"
 }

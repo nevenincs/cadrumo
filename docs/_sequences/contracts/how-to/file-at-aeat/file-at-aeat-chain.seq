@@ -7,7 +7,7 @@
 @step Verify the draft; export refuses an unverified draft.
 @setup aeat --format json app modelo work verify {calculation_revision_id}
 @step Ask for the verified saved calculation before exporting anything.
-aeat --format json app modelo work revision --modelo 303 --year 2026 --period 1T --select latest-verified
+aeat app modelo work revision --modelo 303 --year 2026 --period 1T --select latest-verified
 @step Export the verified calculation; the file header carries Cadrumo's all-zero development software identity, so AEAT will not accept it for presentation.
 aeat --format json app modelo export --modelo 303 --year 2026 --period 1T --output ./modelo-303.boe
 @expect exit_code == 0

@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#export-parity'
 date: '2026-09-26'
-modified: '2026-09-27'
+modified: '2026-09-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:2a142eea228811f67d4adb18f92cb698758fd13b505d0a74ab9b4f4819aeb3c9'
+body_hash: 'sha256:2a094b1c38b6da37e67f6c078f68b405091c92077f69f8b8e30fbd80f76ef64e'
 related:
   - '[[2026-09-26-export-parity-adr]]'
   - '[[2026-09-26-export-parity-audit]]'
@@ -32,7 +32,7 @@ Auto-generated index of all documents tagged with `#export-parity`.
 - `2026-09-26-export-parity-adr` - `export-parity` adr: `development mock software identity for envelope exports` | (**status:** `accepted`)
 - `2026-09-26-export-parity-calculation-report-adr` - `export-parity` adr: `calculation report destinations for CSV and PDF` | (**status:** `accepted`)
 - `2026-09-26-export-parity-calculation-summary-pdf-adr` - `export-parity` adr: `calculation summary pdf` | (**status:** `accepted`)
-- `2026-09-27-export-parity-m390-adquisiciones-interiores-exentas-adr` - `export-parity` adr: `m390 adquisiciones interiores exentas` | (**status:** `proposed`)
+- `2026-09-27-export-parity-m390-adquisiciones-interiores-exentas-adr` - `export-parity` adr: `m390 adquisiciones interiores exentas` | (**status:** `accepted`)
 - `2026-09-27-export-parity-renta-withholding-sources-adr` - `export-parity` adr: `source Modelo 100 withholding credits from the perceptor side` | (**status:** `accepted`)
 
 ### audit
