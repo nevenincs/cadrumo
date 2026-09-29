@@ -1,0 +1,339 @@
+---
+tags:
+  - '#exec'
+  - '#export-parity'
+date: '2026-09-26'
+modified: '2026-09-27'
+body_schema: 'body-v2'
+body_hash: 'sha256:0c5827fc03fca7a5fa460b0f13c1573962326dc805b9db34e587b1bc6a004082'
+related:
+  - "[[2026-09-26-export-parity-plan]]"
+---
+
+# `export-parity` ledger
+
+## Changes
+
+- `S01` `M` `src/cadrumo/domain/filing/software_identity.py`
+- `S01` `M` `src/cadrumo/application/modelo/export.py`
+- `S01` `M` `src/cadrumo/application/modelo/export_ports.py`
+- `S01` `M` `src/cadrumo/application/modelo/quickfile.py`
+- `S01` `M` `src/cadrumo/entrypoints/adapter_composition.py`
+- `S01` `M` `src/cadrumo/entrypoints/cli/_modelo_export_cli.py`
+- `S01` `M` `src/cadrumo/entrypoints/cli/_modelo_payloads.py`
+- `S01` `M` `src/cadrumo/domain/modelos/errors.py`
+- `S01` `M` `src/cadrumo/core/errors/registry/_domain_part3.py`
+- `S01` `M` `dev/acceptance/iva/cli_journey.py`
+- `S01` `M` `dev/acceptance/iva/installed_m303_evidence_journey.py`
+- `S01` `M` `docs/_sequences`
+- `S01` `A` `.vault/adr/2026-09-26-export-parity-adr.md`
+- `S01` `verify:` `pytest export verb, M303 surface parity, output paths, e2e ledger, TUI modal and evidence screen, filing and domain suites` -> `pass`
+- `S01` `verify:` `just check-types` -> `pass`
+- `S01` `verify:` `docs sequences refreshed by generator; check divergences resolved` -> `pass`
+- `S01` `verify:` `installed-CLI M303 2025 lane export parsed back to oracle` -> `pass`
+- `S01` `by:` `orchestrator`
+- `S02` `M` `src/cadrumo/domain/calculations/registry/export_parse.py`
+- `S02` `M` `src/cadrumo/domain/calculations/registry/fixed_width_codec.py`
+- `S02` `M` `src/cadrumo/domain/calculations/registry/schema_exports.py`
+- `S02` `M` `src/cadrumo/domain/calculations/registry/tests/test_fixed_width_codec.py`
+- `S02` `M` `src/cadrumo/domain/calculations/registry/tests/test_filing_envelope_declaration.py`
+- `S02` `M` `src/cadrumo/application/filing/tests/test_modelo_303_exonerado_390_refusal.py`
+- `S02` `verify:` `pytest registry, filing, modelo, adapter suites: 5220 passed, 57 environmental browser-launch failures unchanged` -> `pass`
+- `S02` `verify:` `real M303 2025 file parses to iva.resultado 10.50; M390 2025 parses 360 casillas` -> `pass`
+- `S02` `by:` `orchestrator`
+- `S07` `M` `src/cadrumo/core/atomic_write.py`
+- `S07` `M` `src/cadrumo/core/tests/test_atomic_write.py`
+- `S07` `M` `src/cadrumo/application/modelo/export.py`
+- `S07` `M` `src/cadrumo/application/modelo/operator_inputs.py`
+- `S07` `M` `src/cadrumo/application/modelo/operation_definitions.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/_modelo_nonwork_calculations_command_specs.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/_modelo_export_cli.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/_modelo_review_package_cli.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_nonwork_command_specs.py`
+- `S07` `M` `src/cadrumo/entrypoints/tui/modelo/lifecycle.py`
+- `S07` `M` `src/cadrumo/entrypoints/tui/modelo/view/overview.py`
+- `S07` `M` `src/cadrumo/entrypoints/tui/modelo/view/tests/test_workspace_overview.py`
+- `S07` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_export_output_paths.py`
+- `S07` `M` `src/cadrumo/locales/en/cli.yml`
+- `S07` `M` `src/cadrumo/locales/es/cli.yml`
+- `S07` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S07` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S07` `M` `src/cadrumo/locales/en/common.yml`
+- `S07` `M` `src/cadrumo/locales/es/common.yml`
+- `S07` `M` `src/cadrumo/locales/ca/common.yml`
+- `S07` `M` `src/cadrumo/locales/hu/common.yml`
+- `S07` `verify:` `pytest entrypoints/tui/modelo + export verb + surface parity + output paths + application/modelo + atomic_write (1332)` -> `pass`
+- `S07` `verify:` `just check-types` -> `pass`
+- `S07` `verify:` `python -m dev.docs.sequences check` -> `pass`
+- `S07` `verify:` `python -m dev.locales status --check (baseline-identical 5 unassigned findings)` -> `pass`
+- `S08` `A` `src/cadrumo/application/modelo/export_sink.py`
+- `S08` `M` `src/cadrumo/application/modelo/export.py`
+- `S08` `M` `src/cadrumo/core/errors/registry/_application_part2.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/_modelo_export_cli.py`
+- `S08` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_export_output_paths.py`
+- `S08` `A` `src/cadrumo/adapters/outbound/workbook/__init__.py`
+- `S08` `A` `src/cadrumo/adapters/outbound/workbook/calc_sheets_xlsx.py`
+- `S08` `A` `src/cadrumo/adapters/outbound/workbook/tests/__init__.py`
+- `S08` `A` `src/cadrumo/adapters/outbound/workbook/tests/test_calc_sheets_xlsx.py`
+- `S08` `A` `src/cadrumo/adapters/outbound/workbook/tests/test_calc_sheets_workbook_export.py`
+- `S08` `M` `src/cadrumo/adapters/outbound/google/_calc_sheets_apply_formatting.py`
+- `S08` `M` `src/cadrumo/adapters/outbound/google/_calc_sheets_apply_values.py`
+- `S08` `M` `src/cadrumo/adapters/outbound/google/calc_sheets_apply.py`
+- `S08` `A` `src/cadrumo/adapters/outbound/google/tests/test_calc_sheets_transport_parity.py`
+- `S08` `M` `src/cadrumo/application/storage/calc_sheets/__init__.py`
+- `S08` `M` `src/cadrumo/application/storage/calc_sheets/export_tables.py`
+- `S08` `M` `src/cadrumo/application/storage/calc_sheets/records.py`
+- `S08` `A` `src/cadrumo/application/storage/calc_sheets/workbook_cells.py`
+- `S08` `A` `src/cadrumo/application/storage/calc_sheets/workbook_export.py`
+- `S08` `A` `src/cadrumo/application/storage/calc_sheets/tests/test_workbook_export.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/_modelo_spreadsheet_command_specs.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/_modelo_spreadsheet_payloads.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/modelo_spreadsheet_cli.py`
+- `S08` `A` `src/cadrumo/entrypoints/cli/tests/test_modelo_spreadsheet_export.py`
+- `S08` `M` `src/cadrumo/locales/en/cli.yml`
+- `S08` `M` `src/cadrumo/locales/es/cli.yml`
+- `S08` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S08` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S08` `M` `dev/quality/metadata/import_load_targets.json`
+- `S08` `verify:` `pytest (unit or integration) export surfaces + TUI modelo + application/modelo + atomic_write (1637 pass; 1 pre-existing TUI timing failure reproduced on ef8ad07c)` -> `pass`
+- `S08` `verify:` `pytest (unit or integration) CLI contract/schema/help suites + new spreadsheet export tests (656)` -> `pass`
+- `S08` `verify:` `pytest adapters/outbound/workbook + google + calc_sheets (411)` -> `pass`
+- `S08` `verify:` `ty check on changed modules` -> `pass`
+- `S08` `verify:` `just check-symbol-usage / check-export-consumption / check-module-reachability back to baseline counts` -> `pass`
+- `S08` `verify:` `python -m dev.locales status --check baseline-identical` -> `pass`
+- `S08` `verify:` `live: aeat app modelo spreadsheet export 303 2025 1T, refusal on existing file, --replace` -> `pass`
+- `S17` `M` `src/cadrumo/application/aggregation/modelo_bindings.py`
+- `S17` `M` `src/cadrumo/application/aggregation/modelo_bindings_actividad_assets.py`
+- `S17` `M` `src/cadrumo/application/aggregation/modelo_bindings_renta_expenses.py`
+- `S17` `M` `src/cadrumo/application/aggregation/renta_gasto_ledger.py`
+- `S17` `M` `src/cadrumo/application/aggregation/source_mesh.py`
+- `S17` `M` `src/cadrumo/application/aggregation/tests/test_modelo_bindings_actividad_assets.py`
+- `S17` `M` `src/cadrumo/application/aggregation/tests/test_modelo_source_mesh_ledger.py`
+- `S17` `M` `src/cadrumo/domain/renta/actividad_asset/claims.py`
+- `S17` `M` `src/cadrumo/domain/renta/ledger_expenses.py`
+- `S17` `A` `src/cadrumo/entrypoints/cli/tests/test_register_owned_acquisition_cli.py`
+- `S17` `verify:` `ruff check, ruff format --check, ty check on the changed modules` -> `pass`
+- `S16` `M` `src/cadrumo/application/aggregation/_iva_transaction.py`
+- `S16` `A` `src/cadrumo/application/aggregation/tests/test_zero_cuota_purchases_need_no_deduction_classification.py`
+- `S16` `M` `src/cadrumo/application/ledger/actions_common.py`
+- `S16` `M` `src/cadrumo/application/ledger/actions_manual.py`
+- `S16` `M` `src/cadrumo/application/ledger/models.py`
+- `S16` `A` `src/cadrumo/application/ledger/tests/test_preflight_zero_cuota_inputs.py`
+- `S16` `M` `src/cadrumo/domain/calculations/registry/ledger_iva_bindings.py`
+- `S16` `M` `src/cadrumo/domain/iva/deduction_facts.py`
+- `S16` `A` `src/cadrumo/domain/iva/tests/test_deduction_classification_admissibility.py`
+- `S16` `M` `src/cadrumo/entrypoints/cli/_app_ledger_classification_command_specs.py`
+- `S16` `M` `src/cadrumo/entrypoints/cli/_app_ledger_foundation_command_specs.py`
+- `S16` `M` `src/cadrumo/entrypoints/cli/_ledger.py`
+- `S16` `M` `src/cadrumo/entrypoints/cli/tests/test_app_ledger_common_parameter_identities.py`
+- `S16` `A` `src/cadrumo/entrypoints/cli/tests/test_m303_zero_cuota_and_investment_inputs_cli.py`
+- `S16` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S16` `M` `src/cadrumo/locales/en/cli.yml`
+- `S16` `M` `src/cadrumo/locales/es/cli.yml`
+- `S16` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S16` `verify:` `ruff check, ruff format --check, ty check on the 13 changed modules` -> `pass`
+- `S09` `M` `dev/quality/metadata/import_load_targets.json`
+- `S09` `M` `docs/api/cadrumo.adapters.outbound.rst`
+- `S09` `A` `docs/api/cadrumo.adapters.outbound.workbook.calc_sheets_xlsx.rst`
+- `S09` `A` `docs/api/cadrumo.adapters.outbound.workbook.rst`
+- `S09` `A` `docs/api/cadrumo.application.modelo.calculation_report.rst`
+- `S09` `A` `docs/api/cadrumo.application.modelo.calculation_report_document.rst`
+- `S09` `A` `docs/api/cadrumo.application.modelo.calculation_report_export.rst`
+- `S09` `A` `docs/api/cadrumo.application.modelo.calculation_report_provenance_key.rst`
+- `S09` `A` `docs/api/cadrumo.application.modelo.export_sink.rst`
+- `S09` `M` `docs/api/cadrumo.application.modelo.rst`
+- `S09` `A` `docs/api/cadrumo.application.modelo.withholding_detail_gate.rst`
+- `S09` `M` `docs/api/cadrumo.application.storage.calc_sheets.rst`
+- `S09` `A` `docs/api/cadrumo.application.storage.calc_sheets.workbook_cells.rst`
+- `S09` `A` `docs/api/cadrumo.application.storage.calc_sheets.workbook_export.rst`
+- `S09` `A` `docs/api/cadrumo.core.calculation_report_format.rst`
+- `S09` `A` `docs/api/cadrumo.core.keyed_digest.rst`
+- `S09` `A` `docs/api/cadrumo.core.modelo_export_artefact.rst`
+- `S09` `M` `docs/api/cadrumo.core.rst`
+- `S09` `M` `src/cadrumo/application/modelo/_work_review_assembly.py`
+- `S09` `A` `src/cadrumo/application/modelo/calculation_report.py`
+- `S09` `A` `src/cadrumo/application/modelo/calculation_report_document.py`
+- `S09` `A` `src/cadrumo/application/modelo/calculation_report_export.py`
+- `S09` `A` `src/cadrumo/application/modelo/calculation_report_provenance_key.py`
+- `S09` `M` `src/cadrumo/application/modelo/export.py`
+- `S09` `M` `src/cadrumo/application/modelo/operation_definitions.py`
+- `S09` `A` `src/cadrumo/application/modelo/tests/_calculation_report_fixture.py`
+- `S09` `A` `src/cadrumo/application/modelo/tests/test_calculation_report.py`
+- `S09` `A` `src/cadrumo/application/modelo/tests/test_calculation_report_provenance_key.py`
+- `S09` `M` `src/cadrumo/application/modelo/tests/test_lifecycle_operation_conformance.py`
+- `S09` `M` `src/cadrumo/application/modelo/work_review.py`
+- `S09` `A` `src/cadrumo/core/calculation_report_format.py`
+- `S09` `M` `src/cadrumo/core/errors/registry/_application_part2.py`
+- `S09` `A` `src/cadrumo/core/keyed_digest.py`
+- `S09` `A` `src/cadrumo/core/modelo_export_artefact.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/_modelo_payloads.py`
+- `S09` `A` `src/cadrumo/entrypoints/cli/_modelo_work_report_cli.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/modelo_work_command_specs.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/tests/test_export_m303_surface_parity.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_work_command_specs.py`
+- `S09` `A` `src/cadrumo/entrypoints/cli/tests/test_modelo_work_report_verb.py`
+- `S09` `M` `src/cadrumo/entrypoints/operation_composition.py`
+- `S09` `M` `src/cadrumo/entrypoints/tests/profile_persistence/file_flow_test_support.py`
+- `S09` `A` `src/cadrumo/entrypoints/tests/profile_persistence/test_calculation_report_export.py`
+- `S09` `M` `src/cadrumo/entrypoints/tests/test_lifecycle_operation_composition.py`
+- `S09` `M` `src/cadrumo/entrypoints/tests/test_work_rename_operation.py`
+- `S09` `M` `src/cadrumo/entrypoints/tests/test_workspace_refresh_target_resolution.py`
+- `S09` `M` `src/cadrumo/entrypoints/tui/modelo/lifecycle.py`
+- `S09` `M` `src/cadrumo/entrypoints/tui/modelo/view/overview.py`
+- `S09` `M` `src/cadrumo/entrypoints/tui/modelo/view/tests/test_workspace_overview.py`
+- `S09` `M` `src/cadrumo/locales/ca/application.yml`
+- `S09` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S09` `M` `src/cadrumo/locales/ca/common.yml`
+- `S09` `M` `src/cadrumo/locales/en/application.yml`
+- `S09` `M` `src/cadrumo/locales/en/cli.yml`
+- `S09` `M` `src/cadrumo/locales/en/common.yml`
+- `S09` `M` `src/cadrumo/locales/es/application.yml`
+- `S09` `M` `src/cadrumo/locales/es/cli.yml`
+- `S09` `M` `src/cadrumo/locales/es/common.yml`
+- `S09` `M` `src/cadrumo/locales/hu/application.yml`
+- `S09` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S09` `M` `src/cadrumo/locales/hu/common.yml`
+- `S09` `verify:` `re-run on eeb12dc9: pytest (unit or integration) of the tests this commit added or changed (241 across S09 and S15)` -> `pass`
+- `S15` `M` `dev/quality/metadata/import_load_targets.json`
+- `S15` `M` `src/cadrumo/application/aggregation/invoice_retencion.py`
+- `S15` `M` `src/cadrumo/application/aggregation/source_mesh.py`
+- `S15` `M` `src/cadrumo/application/aggregation/tests/test_withholding_source_resolver.py`
+- `S15` `M` `src/cadrumo/application/aggregation/withholding_filing_cadence.py`
+- `S15` `M` `src/cadrumo/application/aggregation/withholding_source.py`
+- `S15` `M` `src/cadrumo/application/modelo/calculation_actions.py`
+- `S15` `M` `src/cadrumo/application/modelo/preconditions.py`
+- `S15` `A` `src/cadrumo/application/modelo/tests/invoice_catalogue_fake.py`
+- `S15` `M` `src/cadrumo/application/modelo/tests/test_actions.py`
+- `S15` `M` `src/cadrumo/application/modelo/tests/test_objective_estimation_exclusion_advisory.py`
+- `S15` `A` `src/cadrumo/application/modelo/tests/test_withholding_detail_gate.py`
+- `S15` `A` `src/cadrumo/application/modelo/tests/transaction_catalogue_fake.py`
+- `S15` `M` `src/cadrumo/application/modelo/verification_actions.py`
+- `S15` `A` `src/cadrumo/application/modelo/withholding_detail_gate.py`
+- `S15` `M` `src/cadrumo/domain/modelos/calculation_revision.py`
+- `S15` `A` `src/cadrumo/entrypoints/cli/tests/test_modelo_190_withholding_detail_gate.py`
+- `S15` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_m193_disclosure_phase_calculation.py`
+- `S15` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_renta_annual_reconciliations_fold_in_live.py`
+- `S15` `M` `src/cadrumo/locales/ca/application.yml`
+- `S15` `M` `src/cadrumo/locales/en/application.yml`
+- `S15` `M` `src/cadrumo/locales/es/application.yml`
+- `S15` `M` `src/cadrumo/locales/hu/application.yml`
+- `S15` `verify:` `re-run on eeb12dc9: pytest (unit or integration) of the tests this commit added or changed (241 across S09 and S15)` -> `pass`
+- `S10` `M` `dev/quality/metadata/import_load_targets.json`
+- `S10` `A` `docs/api/cadrumo.entrypoints.tui.modelo.export_result.rst`
+- `S10` `M` `docs/api/cadrumo.entrypoints.tui.modelo.rst`
+- `S10` `M` `src/cadrumo/application/modelo/operation_definitions.py`
+- `S10` `A` `src/cadrumo/entrypoints/cli/tests/test_export_result_surface_parity.py`
+- `S10` `M` `src/cadrumo/entrypoints/tests/test_work_rename_operation.py`
+- `S10` `A` `src/cadrumo/entrypoints/tui/modelo/export_result.py`
+- `S10` `M` `src/cadrumo/entrypoints/tui/modelo/lifecycle.py`
+- `S10` `M` `src/cadrumo/entrypoints/tui/modelo/view/overview.py`
+- `S10` `A` `src/cadrumo/entrypoints/tui/modelo/view/tests/test_export_result_lifecycle.py`
+- `S10` `A` `src/cadrumo/entrypoints/tui/modelo/view/tests/test_export_result_screen.py`
+- `S10` `M` `src/cadrumo/locales/ca/common.yml`
+- `S10` `M` `src/cadrumo/locales/en/common.yml`
+- `S10` `M` `src/cadrumo/locales/es/common.yml`
+- `S10` `M` `src/cadrumo/locales/hu/common.yml`
+- `S10` `verify:` `agent worktree: focused suites 1464 pass; ruff/format/ty clean; import load targets and apidocs regenerated; symbol/export/reachability counts 12/10/1; import boundaries clean` -> `pass`
+- `S12` `M` `THIRD_PARTY_NOTICES.md`
+- `S12` `A` `dev/acceptance/calculation_summary_pdf/__init__.py`
+- `S12` `A` `dev/acceptance/calculation_summary_pdf/tests/__init__.py`
+- `S12` `A` `dev/acceptance/calculation_summary_pdf/tests/test_verapdf_conformance.py`
+- `S12` `A` `dev/acceptance/calculation_summary_pdf/verapdf_conformance.py`
+- `S12` `M` `dev/locales/tests/test_audit.py`
+- `S12` `M` `dev/packaging/tests/test_dependency_surface.py`
+- `S12` `M` `dev/quality/metadata/import_load_targets.json`
+- `S12` `M` `dev/tests/test_wheel_content_boundary.py`
+- `S12` `A` `docs/api/cadrumo.adapters.outbound.calculation_summary_pdf.rst`
+- `S12` `A` `docs/api/cadrumo.adapters.outbound.calculation_summary_pdf.structure_tagging.rst`
+- `S12` `A` `docs/api/cadrumo.adapters.outbound.calculation_summary_pdf.summary_container.rst`
+- `S12` `A` `docs/api/cadrumo.adapters.outbound.calculation_summary_pdf.summary_fonts.rst`
+- `S12` `A` `docs/api/cadrumo.adapters.outbound.calculation_summary_pdf.summary_layout.rst`
+- `S12` `A` `docs/api/cadrumo.adapters.outbound.calculation_summary_pdf.summary_reading.rst`
+- `S12` `M` `docs/api/cadrumo.adapters.outbound.rst`
+- `S12` `A` `docs/api/cadrumo.application.modelo.calculation_report_certification.rst`
+- `S12` `A` `docs/api/cadrumo.application.modelo.calculation_report_verification.rst`
+- `S12` `A` `docs/api/cadrumo.application.modelo.calculation_summary_pdf_ports.rst`
+- `S12` `A` `docs/api/cadrumo.application.modelo.calculation_summary_presentation.rst`
+- `S12` `M` `docs/api/cadrumo.application.modelo.rst`
+- `S12` `A` `docs/how-to/calculation-summary.md`
+- `S12` `M` `docs/how-to/index.md`
+- `S12` `M` `docs/index.md`
+- `S12` `A` `docs/locales/ca/LC_MESSAGES/how-to/calculation-summary.po`
+- `S12` `M` `docs/locales/ca/LC_MESSAGES/how-to/index.po`
+- `S12` `M` `docs/locales/ca/LC_MESSAGES/index.po`
+- `S12` `A` `docs/locales/es/LC_MESSAGES/how-to/calculation-summary.po`
+- `S12` `M` `docs/locales/es/LC_MESSAGES/how-to/index.po`
+- `S12` `M` `docs/locales/es/LC_MESSAGES/index.po`
+- `S12` `A` `docs/locales/hu/LC_MESSAGES/how-to/calculation-summary.po`
+- `S12` `M` `docs/locales/hu/LC_MESSAGES/how-to/index.po`
+- `S12` `M` `docs/locales/hu/LC_MESSAGES/index.po`
+- `S12` `M` `justfile`
+- `S12` `M` `pyproject.toml`
+- `S12` `A` `src/cadrumo/_data/calculation_summary_pdf/color/sRGB-IEC61966-2.1.icc`
+- `S12` `A` `src/cadrumo/_data/calculation_summary_pdf/fonts/HankenGrotesk-Bold.ttf`
+- `S12` `A` `src/cadrumo/_data/calculation_summary_pdf/fonts/HankenGrotesk-OFL.txt`
+- `S12` `A` `src/cadrumo/_data/calculation_summary_pdf/fonts/HankenGrotesk-Regular.ttf`
+- `S12` `A` `src/cadrumo/_data/calculation_summary_pdf/fonts/HankenGrotesk-SemiBold.ttf`
+- `S12` `A` `src/cadrumo/_data/calculation_summary_pdf/fonts/JetBrainsMono-Bold.ttf`
+- `S12` `A` `src/cadrumo/_data/calculation_summary_pdf/fonts/JetBrainsMono-OFL.txt`
+- `S12` `A` `src/cadrumo/_data/calculation_summary_pdf/fonts/JetBrainsMono-Regular.ttf`
+- `S12` `A` `src/cadrumo/adapters/outbound/calculation_summary_pdf/__init__.py`
+- `S12` `A` `src/cadrumo/adapters/outbound/calculation_summary_pdf/structure_tagging.py`
+- `S12` `A` `src/cadrumo/adapters/outbound/calculation_summary_pdf/summary_container.py`
+- `S12` `A` `src/cadrumo/adapters/outbound/calculation_summary_pdf/summary_fonts.py`
+- `S12` `A` `src/cadrumo/adapters/outbound/calculation_summary_pdf/summary_layout.py`
+- `S12` `A` `src/cadrumo/adapters/outbound/calculation_summary_pdf/summary_reading.py`
+- `S12` `A` `src/cadrumo/adapters/outbound/calculation_summary_pdf/tests/__init__.py`
+- `S12` `A` `src/cadrumo/adapters/outbound/calculation_summary_pdf/tests/summary_report_support.py`
+- `S12` `A` `src/cadrumo/adapters/outbound/calculation_summary_pdf/tests/test_summary_fonts.py`
+- `S12` `A` `src/cadrumo/adapters/outbound/calculation_summary_pdf/tests/test_summary_structure.py`
+- `S12` `A` `src/cadrumo/adapters/outbound/calculation_summary_pdf/tests/test_summary_verification.py`
+- `S12` `A` `src/cadrumo/adapters/outbound/calculation_summary_pdf/tests/test_summary_writer.py`
+- `S12` `A` `src/cadrumo/application/modelo/calculation_report_certification.py`
+- `S12` `M` `src/cadrumo/application/modelo/calculation_report_document.py`
+- `S12` `M` `src/cadrumo/application/modelo/calculation_report_export.py`
+- `S12` `A` `src/cadrumo/application/modelo/calculation_report_verification.py`
+- `S12` `A` `src/cadrumo/application/modelo/calculation_summary_pdf_ports.py`
+- `S12` `A` `src/cadrumo/application/modelo/calculation_summary_presentation.py`
+- `S12` `A` `src/cadrumo/application/modelo/tests/test_calculation_report_certification.py`
+- `S12` `A` `src/cadrumo/application/modelo/tests/test_calculation_summary_presentation.py`
+- `S12` `M` `src/cadrumo/core/calculation_report_format.py`
+- `S12` `M` `src/cadrumo/core/errors/registry/_adapters_part3.py`
+- `S12` `M` `src/cadrumo/core/errors/registry/_application_part2.py`
+- `S12` `M` `src/cadrumo/core/optional_extras.py`
+- `S12` `M` `src/cadrumo/entrypoints/cli/_modelo_payloads.py`
+- `S12` `M` `src/cadrumo/entrypoints/cli/_modelo_work_report_cli.py`
+- `S12` `M` `src/cadrumo/entrypoints/cli/modelo_work_command_specs.py`
+- `S12` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_work_command_specs.py`
+- `S12` `A` `src/cadrumo/entrypoints/cli/tests/test_modelo_work_report_pdf_verb.py`
+- `S12` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_work_report_verb.py`
+- `S12` `A` `src/cadrumo/entrypoints/tests/profile_persistence/test_calculation_summary_pdf.py`
+- `S12` `M` `src/cadrumo/locales/ca/adapters.yml`
+- `S12` `M` `src/cadrumo/locales/ca/application.yml`
+- `S12` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S12` `M` `src/cadrumo/locales/en/adapters.yml`
+- `S12` `M` `src/cadrumo/locales/en/application.yml`
+- `S12` `M` `src/cadrumo/locales/en/cli.yml`
+- `S12` `M` `src/cadrumo/locales/es/adapters.yml`
+- `S12` `M` `src/cadrumo/locales/es/application.yml`
+- `S12` `M` `src/cadrumo/locales/es/cli.yml`
+- `S12` `M` `src/cadrumo/locales/hu/adapters.yml`
+- `S12` `M` `src/cadrumo/locales/hu/application.yml`
+- `S12` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S12` `M` `uv.lock`
+- `S12` `verify:` `agent worktree: veraPDF 27/27 expectations, wheel content boundary 12, uv lock --check` -> `pass`
+
+## Notes
+
+- `S07` No-overwrite half of S07 landed in 6869e1a2; the typed export artefact contract half remains open, so S07 stays unchecked.
+- `S07` Full entrypoint suite: 39 failures outside export, all environmental (no PowerShell, no Chrome channel, no local LLM) or load-dependent and passing in isolation.
+- `S08` Committed in 1af2b083. just check-types crashed (ty produced no report under host load), not a type finding; ty run directly on the changed modules is clean.
+- `S08` S07 verification in 6869e1a2 ran only the default unit lane; the integration tests of the same files were re-run here and pass.
+- `S08` TUI offline-workbook export is not yet wired (tracked for S10); S07's typed sink landed here, so S07 closes with it.
+- `S17` Structural gates (symbol usage, export consumption, reachability, import boundaries) and import load-target regeneration were not run for this Step: the session's permission classifier refused them; left for the operator.
+- `S16` Modelo 390 box [230] (adquisiciones interiores exentas) stays unbound: no bundled AEAT instruction defines its population. Modelo 303 boxes [30]/[31] (bienes de inversion) carry no binding on any revision, so an investment purchase lands in [28]/[29]; recorded as a finding.
+- `S09` Delivered in 8d5a949a; logged and closed after the fact during plan housekeeping.
+- `S15` Delivered in a55c3c2d; logged and closed after the fact during plan housekeeping.
+- `S10` CLI/TUI parity is split by the import boundary: a CLI test checks the envelope against the operation result, TUI pilots check the visible table against independently measured file facts. The unverified-completeness case uses a hand-built service result (no verified-revision fixture exists for 165/185/189).
+- `S12` Integration fixes: the absent-value label dropped its em dash (operator rule: no em dash on a rendered page) and three PDF statements that name the producing software joined the product-identity inventory. The TUI PDF option is not wired yet; the hook is recorded for the next Step.
+

@@ -176,6 +176,7 @@ def _collect(period_token: str = _SETTLEMENT_PERIOD) -> tuple[CalculationSourceD
         observation_repository=CalculationObservationRepository(),
         prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET),
         transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET),
+        bienes_inversion_repository=BienesInversionIvaRegisterRepository(bucket_id=_BUCKET),
     )
 
 

@@ -349,7 +349,7 @@ modelo:
             help: Box 39 of the tax group's instalment payment settlement (Mod. 40.3
               LIS).
             label: Method under art. 40.3 LIS - TOTAL - Decreases
-          tipo-declaracion:
+          tipo-declaracion-resultado:
             label: Instalment payment method (art. 40.2 gross tax liability / art.
               40.3 taxable base)
       construct:

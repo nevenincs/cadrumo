@@ -178,6 +178,18 @@ CalculationSourceDiagnosticReason = Literal[
     # period by exactly this substitution.
     "devengo_date_proxy_attribution",
     "oss_no_live_source",
+    # An annual withholding summary whose per-perceptor-clave detail store holds
+    # NO observation for the year. The bound percepciones count is still
+    # materialised as an explicit zero so the casilla gets its fact and the
+    # calculate/pull surfaces stay identical, but the zero is a claim the store
+    # cannot support: the filing obligation for these resúmenes anuales is
+    # triggered by SATISFYING the declared rentas, so a declaration with no
+    # type-2 record either omits percepciones that exist or is not owed at all.
+    # Kept a reason of its own rather than folded into "source_issue" because a
+    # verification gate has to route on it: this is the one absence that must
+    # never reach filing grade unattended, and a shared advisory reason cannot
+    # be told apart from the advisories that legitimately pass.
+    "withholding_detail_absent",
     "missing_transaction_evidence",
     "administrador_retencion_rate_mismatch",
     # An ISSUED-side retención the ledger INFERRED from a cash shortfall whose
@@ -273,6 +285,16 @@ CalculationSourceDiagnosticReason = Literal[
     # every unrouted reason: nothing here is missing from the return, one of two
     # available figures was chosen over the other.
     "operator_override_diverges_from_computed",
+    # A ledger expense row withheld from a Renta expense total because the
+    # activity-asset register declares that transaction as an asset's
+    # acquisition. The purchase price is the amortizable base, deducted through
+    # the register's amortization charge (RIS art. 3.2 under LIS art. 12.1),
+    # never a current expense -- so nothing is missing from the return and this
+    # is NOT a durable unrouted condition. It exists because the withholding is
+    # invisible from the casilla: an operator who recorded a real business
+    # purchase and sees it absent from the expense total is owed the reason, and
+    # the amount it names is exactly the one the register replaced.
+    "register_owned_capital_acquisition",
     # A Modelo 193 payment-year record for income accrued in an earlier year,
     # whose base and withholding amounts no official source settles: the
     # withholding was declared in the accrual year's Modelo 123, and the record

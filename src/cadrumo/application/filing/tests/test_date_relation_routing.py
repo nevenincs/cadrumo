@@ -31,6 +31,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
+from ....core.errors.severity import BaseSeverity
 from ....core.period import Period
 from ....domain.calculations.registry.runtime_graph import enum_consumed_binding_ids
 from ....domain.calculations.registry.schema import RegistrySnapshot
@@ -192,3 +193,12 @@ def test_build_draft_replay_routes_m100_tax_residence_ccaa_string_enum() -> None
     assert draft.modelo == "100"
     assert draft.status is ModeloDraftStatus.LISTO_PARA_PRESENTAR
     assert next(value.value for value in draft.values if value.casilla_id == "0003") == Decimal("10000")
+    # The replay supplies no profile text for the declarant's bound identity
+    # casillas. They stay empty and are reported as advisories rather than
+    # passing the required check on a placeholder zero.
+    values = {value.casilla_id: value for value in draft.values}
+    assert draft.findings
+    for finding in draft.findings:
+        assert (finding.code, finding.severity) == ("casilla-required-text-unsupplied", BaseSeverity.INFO)
+        assert finding.casilla_id is not None
+        assert values[finding.casilla_id].value is None

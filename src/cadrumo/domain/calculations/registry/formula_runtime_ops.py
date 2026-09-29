@@ -93,7 +93,16 @@ def numeric_casilla_value(casilla_id: CasillaId, ctx: _EvalContext) -> Decimal:
     Generic accessor shared by the M210/IRNR, M131 módulos, and M303 módulos
     IVA formula-op families; each raises :class:`UnresolvedFormulaDependencyError`
     the same way for a casilla deferred by a non-blocking source gap.
+
+    A casilla the registry declares as text is refused outright: it has no
+    numeric value, populated or absent, so reading it as a number could only
+    manufacture a zero.
     """
+    if casilla_id in ctx.text_casilla_ids:
+        raise RegistryValidationError(
+            f"text casilla {casilla_id!r} cannot be read as a numeric formula operand",
+            context={"casilla_id": casilla_id},
+        )
     if casilla_id not in ctx.values:
         if casilla_id in ctx.unresolved_casilla_ids:
             raise UnresolvedFormulaDependencyError((casilla_id,))

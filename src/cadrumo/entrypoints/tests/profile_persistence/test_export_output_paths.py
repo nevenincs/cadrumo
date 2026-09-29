@@ -35,7 +35,12 @@ from cadrumo.application.modelo.action_errors import (
     ModeloPaymentElectionIncompatibleError,
     ModeloRefundAccountMissingError,
 )
-from cadrumo.application.modelo.export import ModeloExportCommand, ModeloExportOutputPathError, export_modelo_revision
+from cadrumo.application.modelo.export import (
+    ModeloExportCommand,
+    ModeloExportResult,
+    export_modelo_revision,
+)
+from cadrumo.application.modelo.export_sink import ModeloExportOutputPathError
 from cadrumo.application.modelo.revision_persistence import persist_filed_revision
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.directory_scan import (
@@ -58,7 +63,13 @@ from cadrumo.domain.deadlines.models import (
     RefundAccount,
     TaxpayerProfile,
 )
-from cadrumo.domain.filing.software_identity import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity
+from cadrumo.domain.filing.software_identity import (
+    DEVELOPMENT_MOCK_DEVELOPER_TAX_ID,
+    DEVELOPMENT_MOCK_PROGRAM_IDENTIFIER,
+    AeatProductSoftwareEvidence,
+    AeatProductSoftwareIdentity,
+    AeatSoftwareIdentityGrade,
+)
 from cadrumo.domain.justificante.schema import Justificante
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
 from cadrumo.domain.modelos.calculation_revision import (
@@ -72,7 +83,6 @@ from cadrumo.domain.modelos.calculation_revision_amendment import (
 )
 from cadrumo.domain.modelos.errors import (
     ModeloExportPriorDomiciliationElectionRequiredError,
-    ModeloExportProductIdentityUnavailableError,
 )
 from cadrumo.domain.modelos.filing_record import (
     AeatConfirmationState,
@@ -120,10 +130,10 @@ def test_export_modelo_303_wallet_only_revision_writes_fichero_with_redacted_wal
                 output_path=output_path,
                 actor="operator",
                 prior_domiciliation_election=PriorDomiciliationElection.KEEP,
-                product_software_identity=_product_software_identity(),
             ),
             workflow_profile=_typed_profile_with_charge_account(taxpayer_nif=taxpayer_nif, charge_iban=None),
             export_ports=modelo_export_ports_for_test(
+                product_software_identity=_product_software_identity(),
                 bucket_id=bucket_id,
                 taxpayer_tax_id=taxpayer_nif,
                 work_unit=work_repo,
@@ -173,52 +183,49 @@ def test_export_modelo_303_wallet_only_revision_writes_fichero_with_redacted_wal
         assert "synthetic-modelo-303-export" not in event_json
 
 
-def test_export_modelo_303_without_product_identity_names_the_developer_header_fields(
+def test_export_modelo_303_stamps_the_development_identity_into_the_developer_header_fields(
     isolated_backend: None,
     tmp_path: Path,
 ) -> None:
-    """A verified revision still refuses official export, naming the DP30300 bytes the developer must fill.
+    """Without a registered developer identity the DP30300 header carries the all-zero mock, graded as such.
 
     The official Modelo 303 record design reserves positions 93-96 for the
-    program version and 101-109 for the developer NIF; neither may be
-    fabricated, blanked or taken from the taxpayer.
+    program version and 101-109 for the developer NIF; neither may be taken
+    from the taxpayer, so the mock fills exactly those bytes and the result
+    reports it as the development identity.
     """
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         taxpayer_nif, bucket_id, verified, work_repo, calc_repo, event_repo = build_verified_modelo_303_revision(
             operation=_authority_operation_for_test,
         )
-        output_path = tmp_path / "modelo-303-without-identity.txt"
+        output_path = tmp_path / "modelo-303-development-identity.txt"
 
-        with pytest.raises(ModeloExportProductIdentityUnavailableError) as refused:
-            export_modelo_revision(
-                ModeloExportCommand(
-                    calculation_revision_id=verified.calculation_revision_id,
-                    output_path=output_path,
-                    actor="operator",
-                    prior_domiciliation_election=PriorDomiciliationElection.KEEP,
-                ),
-                workflow_profile=_typed_profile_with_charge_account(taxpayer_nif=taxpayer_nif, charge_iban=None),
-                export_ports=modelo_export_ports_for_test(
-                    bucket_id=bucket_id,
-                    taxpayer_tax_id=taxpayer_nif,
-                    work_unit=work_repo,
-                    calculation=calc_repo,
-                    bucket_event=event_repo,
-                ),
-                clock=datetime(2026, 5, 21, 12, 3, tzinfo=UTC),
-                operation=_authority_operation_for_test,
-            )
+        result = export_modelo_revision(
+            ModeloExportCommand(
+                calculation_revision_id=verified.calculation_revision_id,
+                output_path=output_path,
+                actor="operator",
+                prior_domiciliation_election=PriorDomiciliationElection.KEEP,
+            ),
+            workflow_profile=_typed_profile_with_charge_account(taxpayer_nif=taxpayer_nif, charge_iban=None),
+            export_ports=modelo_export_ports_for_test(
+                bucket_id=bucket_id,
+                taxpayer_tax_id=taxpayer_nif,
+                work_unit=work_repo,
+                calculation=calc_repo,
+                bucket_event=event_repo,
+            ),
+            clock=datetime(2026, 5, 21, 12, 3, tzinfo=UTC),
+            operation=_authority_operation_for_test,
+        )
 
-        assert refused.value.context == {
-            "calculation_revision_id": verified.calculation_revision_id,
-            "modelo": "303",
-            "record": "DP30300",
-            "program_positions": "93-96",
-            "developer_positions": "101-109",
-        }
-        assert get_registered_error_code(refused.value).code == "REFUSED_MODELO_EXPORT_PRODUCT_IDENTITY_UNAVAILABLE"
-        assert not output_path.exists()
-        assert not event_repo.load().for_bucket(bucket_id, event_types=(BucketEventType.MODELO_EXPORTED,))
+        written = output_path.read_bytes()
+        prefix_start = written.index(b"<T3030")
+        assert written[prefix_start + 92 : prefix_start + 96] == DEVELOPMENT_MOCK_PROGRAM_IDENTIFIER.encode("ascii")
+        assert written[prefix_start + 100 : prefix_start + 109] == DEVELOPMENT_MOCK_DEVELOPER_TAX_ID.encode("ascii")
+        assert taxpayer_nif.encode("ascii") not in written[prefix_start + 100 : prefix_start + 109]
+        assert result.software_identity_grade is AeatSoftwareIdentityGrade.DEVELOPMENT_MOCK
+        assert event_repo.load().for_bucket(bucket_id, event_types=(BucketEventType.MODELO_EXPORTED,))
 
 
 def test_export_modelo_303_without_a_prior_domiciliation_election_refuses_before_any_byte(
@@ -299,11 +306,11 @@ def test_public_domiciliacion_export_selects_typed_charge_account_for_did_only(
                 output_path=output_path,
                 actor="operator",
                 prior_domiciliation_election=PriorDomiciliationElection.KEEP,
-                product_software_identity=_product_software_identity(),
                 payment_election=PaymentElection.DOMICILIACION,
             ),
             workflow_profile=_typed_profile_with_charge_account(taxpayer_nif=taxpayer_nif, charge_iban=charge_iban),
             export_ports=modelo_export_ports_for_test(
+                product_software_identity=_product_software_identity(),
                 bucket_id=bucket_id,
                 taxpayer_tax_id=taxpayer_nif,
                 work_unit=work_repo,
@@ -496,10 +503,10 @@ def test_public_rectificativa_nota_three_keep_exports_full_refund_account_not_ch
                 output_path=output_path,
                 actor="operator",
                 prior_domiciliation_election=PriorDomiciliationElection.KEEP,
-                product_software_identity=_product_software_identity(),
             ),
             workflow_profile=_nota_three_profile(taxpayer_nif=taxpayer_nif, refund_account=refund_account),
             export_ports=modelo_export_ports_for_test(
+                product_software_identity=_product_software_identity(),
                 taxpayer_tax_id=taxpayer_nif,
                 work_unit=work_repo,
                 calculation=CalculationRevisionCatalogueRepository(m303_rectificativa_taxpayer_tax_id=taxpayer_nif),
@@ -551,10 +558,10 @@ def test_public_rectificativa_nota_three_keep_refuses_without_refund_account_bef
                     output_path=output_path,
                     actor="operator",
                     prior_domiciliation_election=PriorDomiciliationElection.KEEP,
-                    product_software_identity=_product_software_identity(),
                 ),
                 workflow_profile=_nota_three_profile(taxpayer_nif=taxpayer_nif, refund_account=None),
                 export_ports=modelo_export_ports_for_test(
+                    product_software_identity=_product_software_identity(),
                     taxpayer_tax_id=taxpayer_nif,
                     work_unit=work_repo,
                     calculation=CalculationRevisionCatalogueRepository(m303_rectificativa_taxpayer_tax_id=taxpayer_nif),
@@ -595,11 +602,11 @@ def test_public_rectificativa_nota_three_remains_incompatible_with_current_domic
                     output_path=output_path,
                     actor="operator",
                     prior_domiciliation_election=PriorDomiciliationElection.KEEP,
-                    product_software_identity=_product_software_identity(),
                     payment_election=PaymentElection.DOMICILIACION,
                 ),
                 workflow_profile=_nota_three_profile(taxpayer_nif=taxpayer_nif, refund_account=None),
                 export_ports=modelo_export_ports_for_test(
+                    product_software_identity=_product_software_identity(),
                     taxpayer_tax_id=taxpayer_nif,
                     work_unit=work_repo,
                     calculation=CalculationRevisionCatalogueRepository(m303_rectificativa_taxpayer_tax_id=taxpayer_nif),
@@ -740,11 +747,11 @@ def testprior_domiciliation_export_and_filing_events_keep_the_safe_baseline_u_pr
                 calculation_revision_id=rectificativa.calculation_revision_id,
                 output_path=output_path,
                 actor="operator",
-                product_software_identity=_product_software_identity(),
                 prior_domiciliation_election=PriorDomiciliationElection.CANCEL_OR_MODIFY,
             ),
             workflow_profile=_typed_profile_with_charge_account(taxpayer_nif=taxpayer_nif, charge_iban=None),
             export_ports=modelo_export_ports_for_test(
+                product_software_identity=_product_software_identity(),
                 taxpayer_tax_id=taxpayer_nif,
                 work_unit=work_repo,
                 calculation=calc_repo,
@@ -818,11 +825,11 @@ def test_public_domiciliacion_without_persisted_charge_account_refuses(
                     output_path=output_path,
                     actor="operator",
                     prior_domiciliation_election=PriorDomiciliationElection.KEEP,
-                    product_software_identity=_product_software_identity(),
                     payment_election=PaymentElection.DOMICILIACION,
                 ),
                 workflow_profile=_typed_profile_with_charge_account(taxpayer_nif=_taxpayer_nif, charge_iban=None),
                 export_ports=modelo_export_ports_for_test(
+                    product_software_identity=_product_software_identity(),
                     taxpayer_tax_id=_taxpayer_nif,
                     work_unit=work_repo,
                     calculation=calc_repo,
@@ -854,7 +861,6 @@ def test_public_cuenta_corriente_payment_election_is_capability_refused(
                     output_path=output_path,
                     actor="operator",
                     prior_domiciliation_election=PriorDomiciliationElection.KEEP,
-                    product_software_identity=_product_software_identity(),
                     payment_election=PaymentElection.CUENTA_CORRIENTE,
                 ),
                 workflow_profile=_typed_profile_with_charge_account(
@@ -862,6 +868,7 @@ def test_public_cuenta_corriente_payment_election_is_capability_refused(
                     charge_iban="ES7921000813610123456789",
                 ),
                 export_ports=modelo_export_ports_for_test(
+                    product_software_identity=_product_software_identity(),
                     taxpayer_tax_id=_taxpayer_nif,
                     work_unit=work_repo,
                     calculation=calc_repo,
@@ -892,10 +899,10 @@ def test_public_ingreso_export_omits_did_page(
                 output_path=output_path,
                 actor="operator",
                 prior_domiciliation_election=PriorDomiciliationElection.KEEP,
-                product_software_identity=_product_software_identity(),
             ),
             workflow_profile=_typed_profile_with_charge_account(taxpayer_nif=taxpayer_nif, charge_iban=None),
             export_ports=modelo_export_ports_for_test(
+                product_software_identity=_product_software_identity(),
                 taxpayer_tax_id=taxpayer_nif,
                 work_unit=work_repo,
                 calculation=calc_repo,
@@ -937,10 +944,10 @@ def test_export_refuses_existing_directory_output_and_leaves_no_tmp_orphan(
                     output_path=existing_dir,
                     actor="operator",
                     prior_domiciliation_election=PriorDomiciliationElection.KEEP,
-                    product_software_identity=_product_software_identity(),
                 ),
                 workflow_profile=_typed_profile_with_charge_account(taxpayer_nif=taxpayer_nif, charge_iban=None),
                 export_ports=modelo_export_ports_for_test(
+                    product_software_identity=_product_software_identity(),
                     taxpayer_tax_id=taxpayer_nif,
                     work_unit=work_repo,
                     calculation=calc_repo,
@@ -974,10 +981,10 @@ def test_export_refuses_empty_output_path(
                     output_path=Path(""),
                     actor="operator",
                     prior_domiciliation_election=PriorDomiciliationElection.KEEP,
-                    product_software_identity=_product_software_identity(),
                 ),
                 workflow_profile=_typed_profile_with_charge_account(taxpayer_nif=taxpayer_nif, charge_iban=None),
                 export_ports=modelo_export_ports_for_test(
+                    product_software_identity=_product_software_identity(),
                     taxpayer_tax_id=taxpayer_nif,
                     work_unit=work_repo,
                     calculation=calc_repo,
@@ -989,57 +996,53 @@ def test_export_refuses_empty_output_path(
         assert not any(p.suffix == ".tmp" for p in iter_directory(tmp_path, recursive=True))
 
 
-def test_export_success_path_is_idempotent_overwrite(
+def test_export_refuses_an_existing_file_unless_the_operator_chooses_to_replace_it(
     isolated_backend: None,
     tmp_path: Path,
 ) -> None:
-    """A valid file destination still exports, and a second export overwrites it cleanly."""
+    """An earlier export is never silently destroyed; an explicit replace rewrites it identically."""
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        taxpayer_nif, _bucket_id, verified, work_repo, calc_repo, event_repo = build_verified_modelo_303_revision(
+        taxpayer_nif, bucket_id, verified, work_repo, calc_repo, event_repo = build_verified_modelo_303_revision(
             operation=_authority_operation_for_test,
         )
         output_path = tmp_path / "modelo-303.txt"
         profile = _typed_profile_with_charge_account(taxpayer_nif=taxpayer_nif, charge_iban=None)
 
-        first = export_modelo_revision(
-            ModeloExportCommand(
-                calculation_revision_id=verified.calculation_revision_id,
-                output_path=output_path,
-                actor="operator",
-                prior_domiciliation_election=PriorDomiciliationElection.KEEP,
-                product_software_identity=_product_software_identity(),
-            ),
-            workflow_profile=profile,
-            export_ports=modelo_export_ports_for_test(
-                taxpayer_tax_id=taxpayer_nif,
-                work_unit=work_repo,
-                calculation=calc_repo,
-                bucket_event=event_repo,
-            ),
-            clock=datetime(2026, 5, 21, 12, 3, tzinfo=UTC),
-            operation=_authority_operation_for_test,
-        )
-        assert output_path.exists()
-        assert first.byte_size == output_path.stat().st_size
+        def export(*, replace_existing: bool, minute: int) -> ModeloExportResult:
+            return export_modelo_revision(
+                ModeloExportCommand(
+                    calculation_revision_id=verified.calculation_revision_id,
+                    output_path=output_path,
+                    actor="operator",
+                    prior_domiciliation_election=PriorDomiciliationElection.KEEP,
+                    replace_existing=replace_existing,
+                ),
+                workflow_profile=profile,
+                export_ports=modelo_export_ports_for_test(
+                    product_software_identity=_product_software_identity(),
+                    taxpayer_tax_id=taxpayer_nif,
+                    work_unit=work_repo,
+                    calculation=calc_repo,
+                    bucket_event=event_repo,
+                ),
+                clock=datetime(2026, 5, 21, 12, minute, tzinfo=UTC),
+                operation=_authority_operation_for_test,
+            )
 
-        second = export_modelo_revision(
-            ModeloExportCommand(
-                calculation_revision_id=verified.calculation_revision_id,
-                output_path=output_path,
-                actor="operator",
-                prior_domiciliation_election=PriorDomiciliationElection.KEEP,
-                product_software_identity=_product_software_identity(),
-            ),
-            workflow_profile=profile,
-            export_ports=modelo_export_ports_for_test(
-                taxpayer_tax_id=taxpayer_nif,
-                work_unit=work_repo,
-                calculation=calc_repo,
-                bucket_event=event_repo,
-            ),
-            clock=datetime(2026, 5, 21, 12, 4, tzinfo=UTC),
-            operation=_authority_operation_for_test,
+        first = export(replace_existing=False, minute=3)
+        earlier_bytes = output_path.read_bytes()
+        exported_events = len(event_repo.load().for_bucket(bucket_id, event_types=(BucketEventType.MODELO_EXPORTED,)))
+
+        with pytest.raises(ModeloExportOutputPathError) as refused:
+            export(replace_existing=False, minute=4)
+        assert refused.value.context is not None
+        assert refused.value.context["reason"] == "path is an existing file"
+        assert output_path.read_bytes() == earlier_bytes
+        assert (
+            len(event_repo.load().for_bucket(bucket_id, event_types=(BucketEventType.MODELO_EXPORTED,)))
+            == exported_events
         )
-        assert output_path.exists()
-        assert second.file_sha256 == first.file_sha256
+
+        replaced = export(replace_existing=True, minute=5)
+        assert replaced.file_sha256 == first.file_sha256
         assert not (output_path.with_name(output_path.name + ".tmp")).exists()

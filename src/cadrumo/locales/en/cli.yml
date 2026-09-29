@@ -821,6 +821,8 @@ cli:
           is not official AEAT filing evidence. Use AEAT justificante, declaration
           consultation, or CSV cotejo evidence after filing.
         output_help: Path to write the fichero-BOE artefact to.
+        replace_help: Replace a file already at --output. Without it, an existing
+          export file is refused so an earlier export is never destroyed.
         revision_help: Calculation revision id to export; defaults to the work unit's
           most recent verified-complete or filed revision.
         work_unit_id_help: Work unit id (SHA-256 or unambiguous prefix).
@@ -1182,6 +1184,11 @@ cli:
           refused_stale: refusing to compute against a workbook whose metadata stamps
             do not match the supplied snapshot (metadata_match={metadata_match});
             re-export, then re-pull
+        export:
+          output_help: Path to write the .xlsx workbook to; an existing file is refused
+            unless --replace is given
+        export_help: Export the registry calculation surface for a modelo+period to
+          a local .xlsx workbook with live formulas (the offline counterpart of push)
         modelo_help: Modelo id to export (e.g. 130, 303, 100)
         period_help: Filing period code (e.g. 1T, 2T, 0A)
         pull:
@@ -1354,6 +1361,10 @@ cli:
         discard_requires_yes: Discard is an auditable state transition. Re-run 'aeat
           app modelo work discard %{work_unit_id} --yes' to confirm.
         discard_yes_help: Explicitly confirm the discard operation
+        document_format_help: 'Document format of the calculation report: csv, or
+          pdf for the signed calculation summary (needs the optional pdf extra).'
+        document_only_help: Check the document alone, without opening the active profile's
+          store; without --trusted-key a valid result stays unpinned.
         file_help: Mark a verified revision as internally filed. Does NOT submit to
           AEAT
         file_idempotent_noop: 'Idempotent no-op: calculation revision %{calculation_revision_id}
@@ -1462,6 +1473,8 @@ cli:
         observed_at_help: When you confirmed the attestation, as an ISO 8601 instant
           with a UTC offset (for example 2025-03-31T12:00:00+00:00); not before the
           quarter closes and not in the future.
+        output_help: Path to write the calculation report to; its parent directory
+          must exist.
         output_language_help: Output language for rendered messages.
         override_help: Binding value with KEY=VALUE syntax (repeatable); run `aeat
           app modelo bindings list --missing` to see the bindings the calculation
@@ -1527,6 +1540,33 @@ cli:
           exclusive 40.3 casilla 34 and 40.2 casilla 03 relation channels, setting
           the unused modality to 0 when entering manual values.
         rename_help: Update the display name of a work unit
+        report:
+          development_software_identity: The filing file for this modelo would carry
+            Cadrumo's all-zero development software identity; AEAT will not accept
+            that file for presentation.
+          errors:
+            calculation_required: Work unit {work_unit_id} for modelo {modelo} has
+              no calculation to report; calculate and verify it first.
+        report_help: Write the work unit's verified or filed calculation as a local
+          calculation report; it is not official AEAT evidence.
+        report_verify:
+          errors:
+            file_not_found: No calculation summary was found at {path}.
+            trusted_key_invalid: --trusted-key must be a 64-character hexadecimal
+              Ed25519 public key.
+          later_changes: The summary matches the store as it stood at export; the
+            revision has moved on in its lifecycle since (for example, it was filed
+            or superseded).
+          refused: The calculation summary could not be verified; the checks name
+            the reason.
+          unpinned: 'The summary is consistent and its signature is valid, but no
+            key was pinned: give --trusted-key with the key received through another
+            channel, or verify it against the store of the profile that signed it.'
+        report_verify_help: 'Verify a calculation summary PDF: its integrity signature,
+          embedded data and pages, and, unless --document-only is given, that the
+          active profile''s encrypted store still reproduces it; this is not official
+          AEAT evidence.'
+        report_verify_path_help: Path of the calculation summary PDF to verify.
         rescate_contingencia_year_help: 'Year the pension-plan contingency (retirement,
           disability, death) occurred. Determines the LIRPF DT 12a apartado-4 time
           window (Ley 26/2014): if the window is closed for the rescate year, the
@@ -1633,6 +1673,8 @@ cli:
         status_calculate_summary: This active work unit can be calculated.
         status_discarded_summary: This work unit is discarded, so calculation is unavailable.
         status_help: Show the metadata of one work unit
+        trusted_key_help: Ed25519 public key (64 hex characters) you trust, received
+          through another channel; the summary must be signed with it.
         verify_help: Verify a draft calculation revision against the verified-complete
           contract
         verify_idempotent_noop: 'Idempotent no-op: calculation revision %{calculation_revision_id}
@@ -2775,6 +2817,9 @@ cli:
       help: Classify one ledger transaction in the active profile
       id_help: Ledger transaction id to classify
       id_required: A transaction id is required when --file is not provided.
+      investment_asset_id_help: Identity of the bienes de inversión register record
+        this acquisition deducts against, as declared on that record. Required by
+        an investment deduction kind and refused on any other.
       irpf_category_help: IRPF category id. Net-paid professional invoices use actividad_economica;
         net-paid rents use arrendamiento_local or arrendamiento_vivienda_afecto. Royalties
         and SGAE income are capital mobiliario under LIRPF art. 25.4 when the taxpayer

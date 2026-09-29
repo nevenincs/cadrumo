@@ -27,3 +27,5 @@ Submodules
    cadrumo.application.storage.calc_sheets.records
    cadrumo.application.storage.calc_sheets.row_set_assembly
    cadrumo.application.storage.calc_sheets.theme
+   cadrumo.application.storage.calc_sheets.workbook_cells
+   cadrumo.application.storage.calc_sheets.workbook_export

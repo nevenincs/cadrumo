@@ -42,6 +42,10 @@ aggregation:
     errors:
       bucket_mismatch: El bucket del repositorio de movimientos no coincide con el
         bucket de agregación solicitado.
+      deduction_authority_on_non_deducible_row: Una fila de IVA que no soporta cuota
+        deducible no puede llevar una clasificación de deducción; la categoría de
+        IVA %{category} se liquida como %{flow_direction}. Elimine el tipo de deducción
+        declarado o corrija la categoría.
       differentiated_sector_inactive_for_filing_year: Un sector diferenciado está
         inactivo para el ejercicio.
       differentiated_sector_without_filing_year_entry: Un sector diferenciado no tiene
@@ -52,6 +56,10 @@ aggregation:
         efectos del IVA española no es válida para una operación intracomunitaria.
       eu_member_state_on_export_transaction: Las operaciones de exportación o asimiladas
         no pueden llevar un Estado miembro de la UE; recibido %{member_state}.
+      inadmissible_deduction_classification: 'El tipo de deducción de IVA declarado
+        %{deduction_fact_kind} no es admisible en una fila de la categoría de IVA
+        %{iva_category}: %{refusal}. Corrija el tipo de deducción declarado, la categoría
+        de IVA o la evidencia vinculada.'
       investment_observations_missing_bienes_inversion_authority: Las observaciones
         de IVA de inversión requieren el registro explícito de bienes de inversión
         y una autoridad de perfil coincidente.
@@ -1996,6 +2004,11 @@ tui:
       legal: Referencia legal
       source: Referencia de origen
     export:
+      artefact:
+        calculation_report_csv: Informe de cálculo (CSV), solo registro local
+        calculation_report_pdf: Resumen del cálculo firmado (PDF), solo registro local
+        fichero_boe: Fichero BOE para presentar en la AEAT
+        label: Artefacto a exportar
       payment_election:
         cuenta_corriente: Cuenta corriente tributaria
         domiciliacion: Domiciliación bancaria
@@ -2009,6 +2022,53 @@ tui:
         compensar: Compensar en periodos posteriores
         devolver: Solicitar la devolución
         label: 'Resultado negativo: compensar o solicitar la devolución'
+      replace_existing:
+        label: Sustituir el archivo que ya exista en esta ruta
+      result:
+        close: Cerrar
+        completeness:
+          not_assessed: 'No evaluada: un informe de cálculo no es un fichero de presentación'
+          not_flagged: La exportación no ha emitido ningún aviso de integridad
+          unverified: 'Sin verificar: la revisión no declara manifiesto de integridad'
+        evidence_status:
+          local_calculation_report_not_official_aeat_filing_evidence: Informe de cálculo
+            local; no es evidencia oficial de presentación ante la AEAT
+          local_export_not_official_aeat_filing_evidence: Exportación local; no es
+            evidencia oficial de presentación ante la AEAT
+        label:
+          artefact: Artefacto exportado
+          byte_size: Tamaño (bytes)
+          calculation_revision_id: Revisión del cálculo
+          completeness: Integridad
+          evidence_status: Estado como evidencia
+          export_format: Formato
+          file_sha256: SHA-256 del fichero
+          output_path: Fichero
+          software_identity_grade: Identidad de software en la cabecera del fichero
+        software_identity_grade:
+          development_mock: Identidad de desarrollo (todo ceros); la AEAT no la acepta
+          none: 'Ninguna: el diseño de este fichero no reserva espacio para la identidad
+            de software'
+          reviewed: Registro de software revisado
+        title: Resultado de la exportación
+        unavailable: La exportación ha terminado, pero no se ha podido leer su resultado,
+          así que se desconocen su estado como evidencia, su integridad y su identidad
+          de software. Revise el fichero antes de confiar en él.
+        warning:
+          completeness_unverified: 'No se ha verificado la integridad de este fichero
+            de presentación: su revisión no declara manifiesto de integridad, así
+            que la comprobación de paridad estructural no ha podido confirmar que
+            todas las casillas obligatorias lleguen al fichero. Revise las casillas
+            exportadas frente al Diseño de Registros oficial antes de presentar.'
+          development_software_identity: La cabecera del fichero lleva la identidad
+            de software de desarrollo con todo ceros; la AEAT no aceptará este fichero
+            para su presentación.
+          development_software_identity_of_filing_file: El fichero de presentación
+            de este modelo llevaría la identidad de software de desarrollo con todo
+            ceros; la AEAT no aceptará ese fichero para su presentación.
+          not_official: 'Este fichero no es evidencia oficial de presentación ante
+            la AEAT. La evidencia oficial la emite la AEAT tras la presentación: justificante;
+            consulta de declaraciones presentadas; o cotejo por CSV.'
     finding_kind:
       advisory: Consejo
       blocking_rule: Regla no cumplida

@@ -28,6 +28,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.adapters.outbound.calculation_summary_pdf.structure_tagging.SummaryTagPlanMismatchError",
+        ErrorCode(
+            code="INTERNAL_CALCULATION_SUMMARY_TAG_PLAN_MISMATCH",
+            category=ErrorCategory.INTERNAL,
+            message_key="adapters.outbound.calculation_summary_pdf.errors.tag_plan_mismatch",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.adapters.persistence.storage.custody.kdf_supervision._CalibrationDeadlineElapsedError",
         ErrorCode(
             code="INTERNAL_CALIBRATION_DEADLINE_ELAPSED",

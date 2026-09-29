@@ -32,7 +32,7 @@ from ...domain.calculations.registry.ids import (
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.calculations.registry.schema_surfaces import CasillaConstraints
 from ...domain.filing.schema import ModeloScalar, ModeloValueKind
-from ...domain.modelos.calculation_revision import CalculationRevisionState
+from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
@@ -47,6 +47,7 @@ from ._row_source_identity_replay import ModeloRowSourceFingerprint
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ...domain.calculations.registry.schema import RegistrySnapshot
 
 
 class ModeloWorkOriginAnomaly(StrEnum):
@@ -113,6 +114,11 @@ class ModeloWorkReviewCasilla(BaseModel):
     official_reference: str | None
     section_path: tuple[str, ...]
     label: str
+    #: The registry's declared role for the casilla, or ``None`` when it declares
+    #: none. Carried because the role is what tells a reader a row's function --
+    #: an input figure, an intermediate, a settled result -- independently of the
+    #: label an operator reads and the modelo the row belongs to.
+    semantic_role: str | None = None
     data_type: str
     constraints: CasillaConstraints | None
     declared_input_kind: InputKind
@@ -121,6 +127,14 @@ class ModeloWorkReviewCasilla(BaseModel):
     relation_consumption: tuple[ModeloWorkRelationConsumption, ...]
     realised_kind: ModeloValueKind
     value: ModeloScalar
+    #: True when the persisted observation records that the casilla's declared
+    #: binding produced no source anchor for this period, so its stored zero is
+    #: a proven non-applicability rather than a measured figure. Carried because
+    #: no other field on this row can tell the two apart: the classifier folds
+    #: an absent-by-design observation into ``INHERITED`` with the zero the
+    #: registry materialised for it, which a consumer would otherwise read as a
+    #: value the taxpayer reported.
+    absent_by_design: bool = False
     origin_anomaly: ModeloWorkOriginAnomaly | None
     estado_casilla_oficial: EstadoCasillaOficial
     legal_refs: tuple[LegalRefId, ...]
@@ -207,6 +221,45 @@ class ModeloWorkReview(BaseModel):
     row_source_fingerprints: tuple[ModeloRowSourceFingerprint, ...] = ()
 
 
+def build_modelo_work_review_casillas(
+    *,
+    snapshot: RegistrySnapshot,
+    revision: CalculationRevision | None,
+    operation: PinnedAuthorityOperation,
+    blocking_findings: tuple[ModeloVerificationFinding, ...] = (),
+) -> tuple[ModeloWorkReviewCasilla, ...]:
+    """Assemble the review rows for one snapshot and one explicit revision.
+
+    The row assembly :func:`build_modelo_work_review` performs for a work
+    target's *current* revision, exposed for a caller that already holds the
+    revision it means to project -- the calculation report addresses one sealed
+    revision by id rather than whichever revision a work unit currently points
+    at. Rows come back in the snapshot's own casilla order, which is the
+    registry's section order and casilla numbering.
+
+    Args:
+        snapshot: The :class:`RegistrySnapshot` the revision was calculated against.
+        revision: The :class:`CalculationRevision` whose persisted observations realise each row, or
+            ``None`` to project the snapshot's declared schema with every row
+            unrealised.
+        operation: The pinned authority operation the snapshot came from; source
+            evidence bytes are read through it.
+        blocking_findings: Verification findings that block the revision, joined
+            onto the casilla each names.
+
+    Returns:
+        One :class:`ModeloWorkReviewCasilla` per casilla the snapshot declares.
+    """
+    from ._work_review_assembly import assemble_modelo_work_review_casillas
+
+    return assemble_modelo_work_review_casillas(
+        snapshot=snapshot,
+        revision=revision,
+        blocking_findings=blocking_findings,
+        operation=operation,
+    )
+
+
 def build_modelo_work_review(
     bucket_id: BucketId,
     modelo: ModeloCode,
@@ -244,4 +297,5 @@ __all__ = [
     "ModeloWorkReview",
     "ModeloWorkReviewCasilla",
     "build_modelo_work_review",
+    "build_modelo_work_review_casillas",
 ]

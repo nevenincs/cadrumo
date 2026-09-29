@@ -22,7 +22,13 @@ and returns its result as a :class:`CalculationSourceResolution`.
 Empty-store behaviour materialises an explicit ZERO count AND surfaces a
 non-blocking advisory (NOT a hard refusal) — a legitimate nil-percepciones
 filer must still be able to calculate, and the bound casilla requires its
-fact (``no-silent-under-declaration``: the zero is loud, not silent).
+fact (``no-silent-under-declaration``: the zero is loud, not silent). The
+advisory carries the ``withholding_detail_absent`` reason, which survives onto
+the persisted revision so
+:mod:`~cadrumo.application.modelo.withholding_detail_gate` can refuse the
+verified-complete transition: that zero is never filing grade unless the
+absence is proven, and refusing it HERE would split the calculate surface from
+the pull surface that shares this resolver.
 
 A settled prior-accrual Modelo 193 row carries amounts no official source
 settles, so each one surfaces its own non-blocking advisory beside its values.
@@ -46,6 +52,7 @@ from ...core.i18n.translatable import Translatable as tr
 from ...core.modelo import Modelo
 from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
+from ...domain.calculations.registry.ids import LegalRefId, SourceRefId
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.withholding_bindings import (
     WithholdingObservation,
@@ -115,6 +122,33 @@ _ANNUAL_WITHHOLDING_SOURCES: Mapping[str, _AnnualWithholdingSource] = MappingPro
 def _revision_declares_withholding_scalar(revision: ModeloRevision) -> bool:
     """True when the revision carries any scalar withholding binding to materialise."""
     return any(binding.source == BindingSourceKind.WITHHOLDING for binding in revision.bindings)
+
+
+def withholding_binding_grounding(revision: ModeloRevision) -> tuple[tuple[LegalRefId, ...], tuple[SourceRefId, ...]]:
+    """Return the sorted legal and source references the revision's withholding bindings declare.
+
+    Read off the compiled declarations rather than restated here, so a diagnostic
+    or finding about the withholding detail carries the provisions the registry
+    itself attaches to that detail. ``revision`` is the compiled :class:`ModeloRevision` whose
+    bindings are read.
+    """
+    bindings = tuple(binding for binding in revision.bindings if binding.source == BindingSourceKind.WITHHOLDING)
+    legal_refs = tuple(sorted({ref for binding in bindings for ref in binding.legal_refs}))
+    source_refs = tuple(sorted({ref for binding in bindings for ref in binding.source_refs}))
+    return legal_refs, source_refs
+
+
+def annual_withholding_periodic_source(modelo: str) -> Modelo | None:
+    """Return the periodic withholding modelo whose windows ``modelo``'s annual source reads.
+
+    ``None`` for a modelo that reads its own window, which is every modelo
+    outside :data:`_ANNUAL_WITHHOLDING_SOURCES`. Exposed so a later filing-grade
+    gate can name the periodic source whose absence it is judging without
+    restating the composition table: that table decides which quarters this
+    resolver totals, so the gate's question and the resolver's answer have to
+    come from the same declaration.
+    """
+    return _ANNUAL_WITHHOLDING_SOURCES.get(Modelo(modelo).value, _OWN_WINDOW).periodic_source
 
 
 def _provenance(observations: tuple[WithholdingObservation, ...]) -> tuple[CalculationSourceProvenance, ...]:
@@ -362,9 +396,10 @@ class WithholdingSourceResolver:
         binding_values = resolve_withholding_binding_values(context.revision, observations)
         diagnostics: tuple[CalculationSourceDiagnostic, ...] = ()
         if not observations:
+            legal_refs, source_refs = withholding_binding_grounding(context.revision)
             diagnostics = (
                 CalculationSourceDiagnostic(
-                    reason="source_issue",
+                    reason="withholding_detail_absent",
                     source_kind=_WITHHOLDING_SOURCE,
                     resolver_id=self.resolver_id,
                     message=(
@@ -374,6 +409,12 @@ class WithholdingSourceResolver:
                         "percepciones count is materialised as zero. Supply the per-perceptor records "
                         "through the modelo aggregate surface before filing."
                     ),
+                    remedy=(
+                        "Register the practised withholding through the modelo aggregate surface, or attest "
+                        "every periodic window of the year as carrying no retención, before verifying."
+                    ),
+                    legal_refs=legal_refs,
+                    source_refs=source_refs,
                 ),
             )
         phase_provenance: tuple[CalculationSourceProvenance, ...] = ()
@@ -392,4 +433,8 @@ class WithholdingSourceResolver:
         )
 
 
-__all__ = ["WithholdingSourceResolver"]
+__all__ = [
+    "WithholdingSourceResolver",
+    "annual_withholding_periodic_source",
+    "withholding_binding_grounding",
+]

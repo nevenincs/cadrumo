@@ -133,6 +133,11 @@ LEDGER_CLASSIFICATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 DEDUCTION_FACT_KIND_INPUT, "cli.ledger.classify.deduction_fact_kind_help"
             ),
             _optional_text_option(
+                "investment_asset_id",
+                ("--investment-asset-id",),
+                "cli.ledger.classify.investment_asset_id_help",
+            ),
+            _optional_text_option(
                 "counterparty_country", ("--counterparty-country",), "cli.ledger.classify.counterparty_country_help"
             ),
             _option_from_application_contract(

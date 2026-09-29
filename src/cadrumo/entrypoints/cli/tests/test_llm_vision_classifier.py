@@ -195,7 +195,14 @@ def test_vision_connection_error_carries_the_runtime_precondition_verdict() -> N
         spec = prompt_spec_with_saturation_fields(year=2025, operation=_authority_operation_for_test)
         ports = _llm_ports(unreachable_settings)
         classifier = ports.make_vision_classifier(spec, None)
-        with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
+        # The local adapter reads its endpoint from the process settings when it
+        # sends, not from the settings a client was built with, so the refused
+        # port must be set there too or a runtime serving the default port
+        # answers and the connection failure under test never happens.
+        with (
+            override_settings(cadrumo_llm_ollama_chat_url="http://127.0.0.1:1/api/chat"),
+            pytest.raises(PurchaseInvoiceEvidenceInputError) as raised,
+        ):
             classify_with_evidence(
                 vision_transaction("ev-1"),
                 evidence,

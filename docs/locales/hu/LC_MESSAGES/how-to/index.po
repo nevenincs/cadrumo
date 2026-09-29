@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-12 13:59+0200\n"
+"POT-Creation-Date: 2026-09-27 12:44+0000\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo localization <docs@cadrumo>\n"
 "Language: hu\n"
@@ -430,10 +430,22 @@ msgstr ""
 "ki, ami blokkolja az exportot."
 
 #: ../../how-to/index.md:281
+msgid "Share a calculation summary"
+msgstr "Számítási összesítő megosztása"
+
+#: ../../how-to/index.md:285
+msgid ""
+"Write a signed PDF of a verified calculation, and check a copy against "
+"your data."
+msgstr ""
+"Készítsen aláírt PDF-et egy ellenőrzött számításról, és vesse össze egy "
+"példányát az adataival."
+
+#: ../../how-to/index.md:288
 msgid "File at AEAT"
 msgstr "Benyújtás az AEAT-nál"
 
-#: ../../how-to/index.md:285
+#: ../../how-to/index.md:292
 msgid ""
 "Export the file, upload it at the AEAT portal yourself, record, and "
 "reconcile."
@@ -441,11 +453,11 @@ msgstr ""
 "Exportálja a fájlt, töltse fel maga az AEAT-portálon, rögzítse és "
 "egyeztesse."
 
-#: ../../how-to/index.md:288
+#: ../../how-to/index.md:295
 msgid "Reconcile a filing"
 msgstr "Egy benyújtás egyeztetése"
 
-#: ../../how-to/index.md:292
+#: ../../how-to/index.md:299
 msgid ""
 "Pull and store the AEAT justificante, then compare it with your local "
 "filing record."
@@ -453,15 +465,15 @@ msgstr ""
 "Húzza le és tárolja az AEAT justificantéját, majd hasonlítsa össze a "
 "helyi benyújtási nyilvántartásával."
 
-#: ../../how-to/index.md:297
+#: ../../how-to/index.md:304
 msgid "Tools and help"
 msgstr "Eszközök és segítség"
 
-#: ../../how-to/index.md:303
+#: ../../how-to/index.md:310
 msgid "Connect an agent (MCP)"
 msgstr "Ügynök csatlakoztatása (MCP)"
 
-#: ../../how-to/index.md:307
+#: ../../how-to/index.md:314
 msgid ""
 "Expose the toolset to Claude or any MCP client, with the safety boundary "
 "intact."
@@ -469,21 +481,21 @@ msgstr ""
 "Tedd elérhetővé az eszközkészletet Claude vagy bármely MCP-kliens "
 "számára, a biztonsági határ megtartásával."
 
-#: ../../how-to/index.md:310
+#: ../../how-to/index.md:317
 msgid "Troubleshooting"
 msgstr "Hibaelhárítás"
 
-#: ../../how-to/index.md:314
+#: ../../how-to/index.md:321
 msgid "Fix active-profile, storage, registry, and authentication problems."
 msgstr ""
 "Javítsa az aktív profil, a tároló, a nyilvántartás és a hitelesítés "
 "problémáit."
 
-#: ../../how-to/index.md:317
+#: ../../how-to/index.md:324
 msgid "Publish runtime authority"
 msgstr "Futásidejű hatóság közzététele"
 
-#: ../../how-to/index.md:321
+#: ../../how-to/index.md:328
 msgid "Publish and verify a signed registry authority as a release operator."
 msgstr ""
 "Kiadáskezelőként tegyen közzé és ellenőrizzen egy aláírt nyilvántartási "

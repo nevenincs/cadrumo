@@ -475,6 +475,28 @@ def test_wheel_keeps_required_functional_members(wheel_members: frozenset[str]) 
     )
 
 
+def test_wheel_ships_every_calculation_summary_pdf_asset(wheel_members: frozenset[str]) -> None:
+    """Every font, licence text and colour profile the summary PDF embeds ships in the wheel.
+
+    The expected set is the live source tree under the asset root, not a list
+    kept here, so a face added later is covered by adding it. The floor names
+    the three kinds the renderer cannot run without -- a TrueType face, its SIL
+    OFL text, and the output-intent profile -- so an empty or renamed tree
+    cannot pass as a complete one.
+    """
+
+    source_root = "src/cadrumo/_data/calculation_summary_pdf"
+    expected = {
+        f"{_WHEEL_PREFIX}/{path.removeprefix('src/cadrumo/')}"
+        for path in repository_files(REPO_ROOT, under=(source_root,))
+    }
+    assert any(member.endswith(".ttf") for member in expected), expected
+    assert any(member.endswith("-OFL.txt") for member in expected), expected
+    assert any(member.endswith(".icc") for member in expected), expected
+    missing = sorted(expected - wheel_members)
+    assert not missing, f"the wheel is missing calculation-summary PDF asset(s) the renderer embeds: {missing!r}"
+
+
 def test_wheel_ships_no_corpus_source_binaries(wheel_members: frozenset[str]) -> None:
     """No ``_data/corpus`` pdf/xls/xlsx member survives the wheel-split exclude."""
 

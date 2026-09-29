@@ -81,6 +81,7 @@ from ...domain.calculations.registry.schema import (
 )
 from ...domain.calculations.registry.schema_base import SettlementDirectionField
 from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition
+from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.calculations.registry.schema_references import SourceReference
 from ...domain.calculations.registry.schema_scalars import registry_scalar_value_type
 
@@ -145,6 +146,7 @@ class RegistryCasillaSchema(BaseModel):
     casilla_id: CasillaId
     value_type: str
     required: bool
+    operator_supplied: bool
     formula: FormulaId | None
     formula_input_casilla_ids: tuple[CasillaId, ...]
     legal_refs: tuple[LegalRefId, ...]
@@ -881,6 +883,7 @@ def _casilla_schema(
         casilla_id=casilla.id,
         value_type=registry_value_type(casilla.data_type),
         required=scalar_required,
+        operator_supplied=casilla.input_kind == InputKind.MANUAL,
         formula=formula_id,
         formula_input_casilla_ids=formula_input_casilla_ids,
         legal_refs=casilla.legal_refs,

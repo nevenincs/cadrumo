@@ -874,6 +874,9 @@ cli:
           AEAT, la consulta de declaracions presentades o el coteig CSV després de
           presentar.
         output_help: Ruta on escriure l'artefacte fichero-BOE.
+        replace_help: Substitueix un fitxer que ja existeix a --output. Sense aquesta
+          opció es rebutja un fitxer d'exportació existent per no destruir una exportació
+          anterior.
         revision_help: Identificador de la revisió de càlcul a exportar; per defecte,
           la revisió verificada o presentada més recent de la unitat de treball.
         work_unit_id_help: Identificador de la unitat de treball (SHA-256 o prefix
@@ -1263,6 +1266,12 @@ cli:
           refused_stale: rebutjant calcular contra un llibre les marques de metadades
             del qual no coincideixen amb el snapshot subministrat (metadata_match={metadata_match});
             reexporteu i torneu a recuperar
+        export:
+          output_help: Ruta on escriure el llibre .xlsx; un fitxer existent es rebutja
+            tret que s'indiqui --replace
+        export_help: Exporta la superfície de càlcul del registre d'un model i període
+          a un llibre .xlsx local amb fórmules actives (la contrapartida fora de línia
+          de push)
         modelo_help: Identificador del model a exportar (p. ex. 130, 303, 100)
         period_help: Codi de període (p. ex. 1T, 2T, 0A)
         pull:
@@ -1450,6 +1459,10 @@ cli:
         discard_requires_yes: El descart és una transició d'estat auditable. Torneu
           a executar 'aeat app modelo work discard %{work_unit_id} --yes' per confirmar.
         discard_yes_help: Confirmar explícitament l'operació de descart
+        document_format_help: 'Format de document de l''informe de càlcul: csv, o
+          pdf per al resum del càlcul signat (requereix el complement opcional pdf).'
+        document_only_help: Comprova només el document, sense obrir el magatzem del
+          perfil actiu; sense --trusted-key, un resultat vàlid queda sense clau ancorada.
         file_help: Marcar una revisió verificada com a internament presentada. NO
           envia a l'AEAT
         file_idempotent_noop: 'Operació idempotent sense efecte: la revisió de càlcul
@@ -1566,6 +1579,8 @@ cli:
         observed_at_help: Quan vau confirmar l'atestació, com a instant ISO 8601 amb
           desplaçament UTC (per exemple 2025-03-31T12:00:00+00:00); no abans del tancament
           del trimestre ni en el futur.
+        output_help: Camí on escriure l'informe de càlcul; el seu directori pare ha
+          d'existir.
         output_language_help: Idioma de sortida per als missatges renderitzats.
         override_help: Valor de binding amb sintaxi KEY=VALUE (repetible); executa
           `aeat app modelo bindings list --missing` per veure els bindings que necessita
@@ -1633,6 +1648,33 @@ cli:
           mútuament exclusius 40.3 casella 34 i 40.2 casella 03, posant 0 a la modalitat
           no usada quan introdueixis valors manuals.
         rename_help: Actualitzar el nom de visualització d'una unitat de treball
+        report:
+          development_software_identity: El fitxer de presentació d'aquest model portaria
+            la identitat de programari de desenvolupament de Cadrumo amb tot zeros;
+            l'AEAT no acceptarà aquest fitxer per presentar-lo.
+          errors:
+            calculation_required: La unitat de treball {work_unit_id} del model {modelo}
+              no té càlcul a informar; calculeu-la i verifiqueu-la primer.
+        report_help: Escriu el càlcul verificat o presentat de la unitat de treball
+          com a informe de càlcul local; no és evidència oficial de l'AEAT.
+        report_verify:
+          errors:
+            file_not_found: No s'ha trobat el resum del càlcul a {path}.
+            trusted_key_invalid: --trusted-key ha de ser una clau pública Ed25519
+              de 64 caràcters hexadecimals.
+          later_changes: El resum coincideix amb el magatzem tal com era en exportar-lo;
+            des d'aleshores la revisió ha avançat en el seu cicle (per exemple, s'ha
+            presentat o substituït).
+          refused: No s'ha pogut verificar el resum del càlcul; les comprovacions
+            indiquen el motiu.
+          unpinned: 'El resum és coherent i la signatura és vàlida, però no s''ha
+            ancorat cap clau: indiqueu --trusted-key amb la clau rebuda per un altre
+            canal, o verifiqueu-lo contra el magatzem del perfil que el va signar.'
+        report_verify_help: 'Verifica un resum del càlcul en PDF: la signatura d''integritat,
+          les dades adjuntes i les pàgines, i, llevat que s''indiqui --document-only,
+          que el magatzem xifrat del perfil actiu encara el reprodueix; no és evidència
+          oficial de l''AEAT.'
+        report_verify_path_help: Ruta del resum del càlcul en PDF que es verifica.
         rescate_contingencia_year_help: 'Any en que va esdevenir la contingència (jubilació,
           incapacitat, defunció) del pla de pensions. Determina la finestra temporal
           de l''apartat 4 DT 12a LIRPF (Llei 26/2014): si la finestra està tancada
@@ -1746,6 +1788,9 @@ cli:
         status_discarded_summary: Aquesta unitat de treball està descartada, de manera
           que el càlcul no està disponible.
         status_help: Mostrar les metadades d'una unitat de treball
+        trusted_key_help: Clau pública Ed25519 (64 caràcters hexadecimals) en què
+          confieu, rebuda per un altre canal; el resum ha d'estar signat amb aquesta
+          clau.
         verify_help: Verificar una revisió draft contra el contracte verified-complete
         verify_idempotent_noop: 'Operació idempotent sense efecte: la revisió de càlcul
           %{calculation_revision_id} ja està verificada; s''ha retornat l''informe
@@ -2987,6 +3032,9 @@ cli:
       help: Classificar un moviment del llibre al perfil actiu
       id_help: Id del moviment del llibre a classificar
       id_required: Cal un id de transacció quan no s'usa --file.
+      investment_asset_id_help: Identitat del registre de béns d'inversió contra la
+        qual es dedueix aquesta adquisició, tal com consta en aquest registre. Obligatòria
+        amb un tipus de deducció d'inversió i rebutjada en qualsevol altre.
       irpf_category_help: Identificador de categoria d'IRPF. Les factures professionals
         cobrades en net fan servir actividad_economica; els lloguers pagats en net
         fan servir arrendamiento_local o arrendamiento_vivienda_afecto. Royalties

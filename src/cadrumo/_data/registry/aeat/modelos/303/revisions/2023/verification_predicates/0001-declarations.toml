@@ -76,11 +76,10 @@ expression = 'equals(["27", "iva.cuota-devengada-total"])'
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 # ── Deducible cuota boxes (LIVA art. 92) ───────────────────────────────────
-[[revisions.2023.verification_predicates]]
-id = "equals:dr303-29-equals-iva-soportado-interiores"
-predicate_id = "modelo-303-dr303-29-equals-iva-soportado-interiores"
-expression = 'equals(["29", "iva.soportado.interiores"])'
-legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+# Box 29 carries no equals predicate. Its projection sums iva.soportado.interiores
+# and the deducible leg of domestic inversion del sujeto pasivo (LIVA art.
+# 84.Uno.2), which the diseno reserves no box for, so the box equals no single
+# semantic casilla and the two-casilla equals operator cannot state its identity.
 
 [[revisions.2023.verification_predicates]]
 id = "equals:dr303-33-equals-iva-soportado-importaciones"

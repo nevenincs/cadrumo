@@ -69,6 +69,7 @@ from ..verification_actions import (
 )
 from ..verification_predicates import evaluate_verification_predicates
 from ..workflow_gate import _RevisionInputsProvider, workflow_period_for_work_unit
+from .invoice_catalogue_fake import InvoiceCatalogueFake
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -503,6 +504,7 @@ def test_registry_snapshot_unresolved_finding_is_locale_neutral() -> None:
             target=target,
             profile=_resident_profile(),
             transaction_repository=_EmptyTransactionRepository(),
+            invoice_repository=InvoiceCatalogueFake(),
             operation=_authority_operation_for_test,
             work_profile=None,
         )

@@ -743,8 +743,8 @@ KNOWN_VERIFICATION_PREDICATE_OPERATORS: frozenset[str] = frozenset(
         # implication: when the operator-entered raw text value of the named
         # TEXT antecedent casilla equals the literal, the named consequent
         # (Decimal) casilla must be non-zero. ADVISORY-only (no BLOCKING_RULE
-        # branch is implemented), mirroring the existing equals (BLOCKING-only)
-        # / advisory_when_ratio_ge (ADVISORY-only) asymmetry. Authored for the
+        # branch is implemented), mirroring the advisory_when_ratio_ge
+        # (ADVISORY-only) asymmetry. Authored for the
         # M210 IRNR inmobiliaria branch (tipo_renta == "inmobiliaria" implies a
         # non-zero base_imponible), the one shape implies_nonzero cannot
         # express because its trigger is a categorical equality, not a
@@ -823,8 +823,11 @@ KNOWN_VERIFICATION_PREDICATE_OPERATORS: frozenset[str] = frozenset(
         # source, so box == source must hold for VERIFICADO_COMPLETO. The
         # projection cannot drift within one evaluation; the predicate's value is
         # catching a future mis-edit (a box re-flipped to manual, or a projection
-        # pointed at the wrong source). See the equals branch in
-        # _evaluate_predicate_expression.
+        # pointed at the wrong source). As an ADVISORY it fires when the two
+        # casillas differ: the shape for an identity whose operator-entered side
+        # may legitimately carry components the identity does not name. See the
+        # equals branches in _evaluate_predicate_expression and
+        # _evaluate_advisory_predicate_fires.
         "equals",
         "implies_any_nonzero",
         "implies_nonzero",

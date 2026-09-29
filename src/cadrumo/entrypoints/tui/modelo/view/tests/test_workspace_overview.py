@@ -12,7 +12,9 @@ from enum import Enum
 from types import SimpleNamespace
 
 import pytest
-from textual.widgets import Button, Input, Select, Static
+from textual.app import App
+from textual.widgets import Button, Checkbox, Input, Select, Static
+from textual.widgets._select import SelectOverlay
 from textual.widgets.select import InvalidSelectValueError
 
 from ......adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -31,9 +33,12 @@ from ......application.modelo.workspace_models import (
 )
 from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import tr
+from ......core.modelo_export_artefact import ModeloExportArtefact
+from ......core.optional_extras import PDF_EXTRA
 from ......core.payment_election import PaymentElection
 from ......core.prior_domiciliation_election import PriorDomiciliationElection
 from ......core.refund_election import RefundElection
+from ......tests.optional_extra_absence import optional_extra_absent
 from ....components.dialogs import ConfirmScreen
 from ....components.host import ScreenHostApp
 from ....components.widgets import ContentDataTable, NoticeBand
@@ -481,6 +486,11 @@ async def test_a_modelo_303_export_offers_each_election_preset_to_its_neutral_de
         for control in _ELECTION_CONTROLS:
             with pytest.raises(InvalidSelectValueError):
                 app.screen.query_one(control, Select).clear()
+        assert app.screen.query_one("#modelo-lifecycle-export-replace", Checkbox).value is False
+        assert (
+            app.screen.query_one("#modelo-lifecycle-export-artefact", Select).value
+            == ModeloExportArtefact.FICHERO_BOE.value
+        )
         app.screen.query_one("#modelo-lifecycle-export-path", Input).value = "modelo-303.boe"
         app.screen.query_one(_ELECTION_CONTROLS[0], Select).value = RefundElection.DEVOLVER.value
         app.screen.query_one(_ELECTION_CONTROLS[2], Select).value = PriorDomiciliationElection.CANCEL_OR_MODIFY.value
@@ -493,6 +503,8 @@ async def test_a_modelo_303_export_offers_each_election_preset_to_its_neutral_de
             "refund_election": RefundElection.DEVOLVER,
             "payment_election": PaymentElection.INGRESO,
             "prior_domiciliation_election": PriorDomiciliationElection.CANCEL_OR_MODIFY,
+            "replace_existing": False,
+            "artefact": ModeloExportArtefact.FICHERO_BOE,
             "output_path": "modelo-303.boe",
         }
     ]
@@ -502,7 +514,7 @@ async def test_a_modelo_303_export_offers_each_election_preset_to_its_neutral_de
 async def test_a_modelo_without_those_elections_exports_with_the_command_line_defaults(
     bucket_and_repository: tuple[str, WorkUnitCatalogueRepository],
 ) -> None:
-    """Modelo 130 offers no Modelo 303 choice, and submits what the command line applies when they are omitted."""
+    """Modelo 130 offers no Modelo 303 choice, submits the command-line defaults, and carries an explicit replace."""
     bucket_id, repository = bucket_and_repository
     actions = _ExportRecordingActions()
     app = ScreenHostApp(
@@ -511,8 +523,11 @@ async def test_a_modelo_without_those_elections_exports_with_the_command_line_de
 
     async with app.run_test() as pilot:
         await pilot.pause()
-        assert not app.screen.query(Select)
+        # The artefact choice is offered for every modelo; the declaration-shaping
+        # elections are the Modelo 303 ones and are absent here.
+        assert [control.id for control in app.screen.query(Select)] == ["modelo-lifecycle-export-artefact"]
         app.screen.query_one("#modelo-lifecycle-export-path", Input).value = "modelo-130.boe"
+        app.screen.query_one("#modelo-lifecycle-export-replace", Checkbox).value = True
         app.screen.query_one("#modelo-lifecycle-export", Button).press()
         await pilot.pause()
         await app.workers.wait_for_complete()
@@ -522,9 +537,117 @@ async def test_a_modelo_without_those_elections_exports_with_the_command_line_de
             "refund_election": RefundElection.COMPENSAR,
             "payment_election": PaymentElection.INGRESO,
             "prior_domiciliation_election": PriorDomiciliationElection.KEEP,
+            "replace_existing": True,
+            "artefact": ModeloExportArtefact.FICHERO_BOE,
             "output_path": "modelo-130.boe",
         }
     ]
+
+
+@pytest.mark.asyncio
+async def test_choosing_the_calculation_report_submits_that_artefact_not_the_filing_file(
+    bucket_and_repository: tuple[str, WorkUnitCatalogueRepository],
+) -> None:
+    """The artefact the operator picked is the artefact the export request carries."""
+    bucket_id, repository = bucket_and_repository
+    actions = _ExportRecordingActions()
+    app = ScreenHostApp(
+        ModeloWorkspaceOverviewScreen(_export_session(bucket_id, repository, modelo="130", actions=actions))
+    )
+
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        artefact = app.screen.query_one("#modelo-lifecycle-export-artefact", Select)
+        # Assigning a value the Select does not offer raises, so setting each
+        # member in turn proves every artefact is actually on the control.
+        for member in ModeloExportArtefact:
+            artefact.value = member.value
+        artefact.value = ModeloExportArtefact.CALCULATION_REPORT_CSV.value
+        app.screen.query_one("#modelo-lifecycle-export-path", Input).value = "modelo-130-report.csv"
+        app.screen.query_one("#modelo-lifecycle-export", Button).press()
+        await pilot.pause()
+        await app.workers.wait_for_complete()
+
+    assert actions.exported == [
+        {
+            "refund_election": RefundElection.COMPENSAR,
+            "payment_election": PaymentElection.INGRESO,
+            "prior_domiciliation_election": PriorDomiciliationElection.KEEP,
+            "replace_existing": False,
+            "artefact": ModeloExportArtefact.CALCULATION_REPORT_CSV,
+            "output_path": "modelo-130-report.csv",
+        }
+    ]
+
+
+def _offered_artefact_rows(app: App[object]) -> list[str]:
+    """The artefact control's rows, read off the overlay it opens, as the operator sees them."""
+    overlay = app.screen.query_one("#modelo-lifecycle-export-artefact", Select).query_one(SelectOverlay)
+    return [str(overlay.get_option_at_index(index).prompt) for index in range(overlay.option_count)]
+
+
+@pytest.mark.asyncio
+async def test_the_calculation_summary_pdf_is_offered_under_its_own_label_and_submitted_when_chosen(
+    bucket_and_repository: tuple[str, WorkUnitCatalogueRepository],
+) -> None:
+    """Where the pdf extra is installed the summary is a third choice, and choosing it asks for the PDF."""
+    bucket_id, repository = bucket_and_repository
+    actions = _ExportRecordingActions()
+    app = ScreenHostApp(
+        ModeloWorkspaceOverviewScreen(_export_session(bucket_id, repository, modelo="130", actions=actions))
+    )
+
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        assert _offered_artefact_rows(app) == [
+            tr("tui.modelo.export.artefact.fichero_boe"),
+            tr("tui.modelo.export.artefact.calculation_report_csv"),
+            tr("tui.modelo.export.artefact.calculation_report_pdf"),
+        ]
+        artefact = app.screen.query_one("#modelo-lifecycle-export-artefact", Select)
+        artefact.value = ModeloExportArtefact.CALCULATION_REPORT_PDF.value
+        app.screen.query_one("#modelo-lifecycle-export-path", Input).value = "modelo-130-summary.pdf"
+        app.screen.query_one("#modelo-lifecycle-export-replace", Checkbox).value = True
+        app.screen.query_one("#modelo-lifecycle-export", Button).press()
+        await pilot.pause()
+        await app.workers.wait_for_complete()
+
+    assert actions.exported == [
+        {
+            "refund_election": RefundElection.COMPENSAR,
+            "payment_election": PaymentElection.INGRESO,
+            "prior_domiciliation_election": PriorDomiciliationElection.KEEP,
+            "replace_existing": True,
+            "artefact": ModeloExportArtefact.CALCULATION_REPORT_PDF,
+            "output_path": "modelo-130-summary.pdf",
+        }
+    ]
+
+
+@pytest.mark.asyncio
+async def test_without_the_pdf_extra_the_summary_is_not_offered_and_cannot_be_chosen(
+    bucket_and_repository: tuple[str, WorkUnitCatalogueRepository],
+) -> None:
+    """An installation that cannot write the summary does not offer it, and offers nothing in its place."""
+    bucket_id, repository = bucket_and_repository
+    actions = _ExportRecordingActions()
+
+    with optional_extra_absent(PDF_EXTRA):
+        app = ScreenHostApp(
+            ModeloWorkspaceOverviewScreen(_export_session(bucket_id, repository, modelo="130", actions=actions))
+        )
+        async with app.run_test() as pilot:
+            await pilot.pause()
+            assert _offered_artefact_rows(app) == [
+                tr("tui.modelo.export.artefact.fichero_boe"),
+                tr("tui.modelo.export.artefact.calculation_report_csv"),
+            ]
+            artefact = app.screen.query_one("#modelo-lifecycle-export-artefact", Select)
+            with pytest.raises(InvalidSelectValueError):
+                artefact.value = ModeloExportArtefact.CALCULATION_REPORT_PDF.value
+            assert artefact.value == ModeloExportArtefact.FICHERO_BOE.value
+
+    assert actions.exported == []
 
 
 @pytest.mark.parametrize(

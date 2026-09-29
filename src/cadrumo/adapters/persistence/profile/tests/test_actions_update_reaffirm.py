@@ -196,3 +196,41 @@ def test_update_manual_transaction_fields_different_classification_bypasses_noop
 
     assert result.transaction.business_classification is BusinessClassification.PERSONAL
     assert result.bucket_event_ids != ()
+
+
+def test_update_manual_transaction_fields_asset_link_only_patch_is_saved_not_refused(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """A patch that only links the row to an investment asset is a change the no-op guards must see.
+
+    Both guards run on this path: the outer re-affirmation match and the inner
+    mutation check. Either one missing the link would return the stored row or
+    refuse the edit, and the register identity the operator supplied would be
+    dropped.
+    """
+
+    transaction_repository, event_repository = _repositories(secure_objects)
+    created = _create_classified_transaction(secure_objects, transaction_repository, event_repository)
+
+    with ledger_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        objects=secure_objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    ) as ports:
+        result = update_manual_transaction_fields(
+            bucket_id=_BUCKET_ID,
+            transaction_id=created.ref.transaction_id,
+            patch=ManualLedgerTransactionPatch(investment_asset_id="bi-0001"),
+            actor="operator-C",
+            source_command="aeat app ledger classify",
+            reaffirm=False,
+            ports=ports,
+            occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
+        )
+
+    assert result.bucket_event_ids != ()
+    assert result.transaction.investment_asset_id == "bi-0001"
+    stored = transaction_repository.load().get(result.transaction.transaction_id)
+    assert stored is not None
+    assert stored.investment_asset_id == "bi-0001"

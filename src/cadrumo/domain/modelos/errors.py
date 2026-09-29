@@ -42,16 +42,6 @@ class ModeloExportManifestError(ModeloExportError):
     """Raised when a modelo export manifest cannot be built or validated."""
 
 
-class ModeloExportProductIdentityUnavailableError(ModeloExportError):
-    """Raised when an official export envelope needs developer-owned header fields nobody has authorised.
-
-    The record design leaves the program identifier and the developer's tax
-    identifier to the software developer. Without a reviewed product identity
-    the export refuses instead of emitting blanks or placeholders; calculation
-    and verification are unaffected.
-    """
-
-
 class ModeloExportPriorDomiciliationElectionRequiredError(ModeloExportError):
     """Raised when a Modelo 303 export names no prior-domiciliation action.
 

@@ -151,6 +151,7 @@ _CANONICAL_POPULATION_RECIPES: frozenset[str] = frozenset(
         "test-locale-spelling",
         "test-ingest-corpus",
         "test-powershell-literal",
+        "test-calculation-summary-pdf",
     },
 )
 _FOCUSED_SELECTORS: frozenset[str] = frozenset({"test-cli", "test-tui", "test-smoke"})

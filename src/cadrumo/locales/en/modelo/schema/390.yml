@@ -89,6 +89,18 @@ modelo:
           iva-aic-servicios-tipo-7-5-cuota:
             label: Accrued VAT on intra-Community acquisitions of services at the
               7.5% rate - Tax amount
+          iva-anual-autorepercutido-interior-deducible-base:
+            label: Deductible reverse-charge VAT on current domestic transactions
+              - Taxable base (LIVA art. 84.Uno.2; part of official box 48)
+          iva-anual-autorepercutido-interior-deducible-cuota:
+            label: Deductible reverse-charge VAT on current domestic transactions
+              - deductible VAT amount (LIVA art. 84.Uno.2; part of official box 49)
+          iva-anual-autorepercutido-interior-deducible-inversion-base:
+            label: Deductible reverse-charge VAT on domestic capital goods - Taxable
+              base (LIVA art. 84.Uno.2; part of official box 50)
+          iva-anual-autorepercutido-interior-deducible-inversion-cuota:
+            label: Deductible reverse-charge VAT on domestic capital goods - deductible
+              VAT amount (LIVA art. 84.Uno.2; part of official box 51)
           iva-anual-compensacion-generada-ejercicio:
             label: Offset balance generated in the year
           iva-anual-compensacion-ultimo-periodo:
@@ -97,6 +109,54 @@ modelo:
             label: Total deductible VAT amount for the year
           iva-anual-cuota-devengada-total:
             label: Total accrued VAT amount for the year
+          iva-anual-deducible-aic-corrientes-todos-tipos-base:
+            label: Deductible input VAT on intra-Community acquisitions of current
+              goods, all rates - Taxable base (official box 56)
+          iva-anual-deducible-aic-corrientes-todos-tipos-cuota:
+            label: Deductible input VAT on intra-Community acquisitions of current
+              goods, all rates - deductible VAT amount (official box 57)
+          iva-anual-deducible-aic-inversion-todos-tipos-base:
+            label: Deductible input VAT on intra-Community acquisitions of capital
+              goods, all rates - Taxable base (official box 58)
+          iva-anual-deducible-aic-inversion-todos-tipos-cuota:
+            label: Deductible input VAT on intra-Community acquisitions of capital
+              goods, all rates - deductible VAT amount (official box 59)
+          iva-anual-deducible-aic-servicios-todos-tipos-base:
+            label: Deductible input VAT on intra-Community acquisitions of services,
+              all rates - Taxable base (official box 597)
+          iva-anual-deducible-aic-servicios-todos-tipos-cuota:
+            label: Deductible input VAT on intra-Community acquisitions of services,
+              all rates - deductible VAT amount (official box 598)
+          iva-anual-deducible-interiores-corrientes-soportado-base:
+            label: Deductible input VAT on current domestic transactions - Taxable
+              base (part of official box 48)
+          iva-anual-deducible-interiores-corrientes-soportado-cuota:
+            label: Deductible input VAT on current domestic transactions - deductible
+              VAT amount (part of official box 49)
+          iva-anual-deducible-interiores-inversion-soportado-base:
+            label: Deductible input VAT on domestic transactions in capital goods
+              - Taxable base (part of official box 50)
+          iva-anual-deducible-interiores-inversion-soportado-cuota:
+            label: Deductible input VAT on domestic transactions in capital goods
+              - deductible VAT amount (part of official box 51)
+          iva-anual-deducible-rectificacion-importaciones-base:
+            label: Adjustment of deductions on imports - Taxable base (part of official
+              box 639)
+          iva-anual-deducible-rectificacion-importaciones-cuota:
+            label: Adjustment of deductions on imports - deductible VAT amount (part
+              of official box 62)
+          iva-anual-deducible-rectificacion-interiores-base:
+            label: Adjustment of deductions on domestic transactions - Taxable base
+              (part of official box 639)
+          iva-anual-deducible-rectificacion-interiores-cuota:
+            label: Adjustment of deductions on domestic transactions - deductible
+              VAT amount (part of official box 62)
+          iva-anual-deducible-rectificacion-inversion-sujeto-pasivo-base:
+            label: Adjustment of deductions on reverse-charge transactions, domestic
+              and intra-Community - Taxable base (part of official box 639)
+          iva-anual-deducible-rectificacion-inversion-sujeto-pasivo-cuota:
+            label: Adjustment of deductions on reverse-charge transactions, domestic
+              and intra-Community - deductible VAT amount (part of official box 62)
           iva-anual-reconciliacion-deducible-303:
             label: Annual reconciliation - deductible VAT amount declared on Form
               303 returns
@@ -108,6 +168,9 @@ modelo:
               on Form 303 returns
           iva-anual-reconciliacion-resultado-303:
             label: Annual reconciliation - result declared on Form 303 returns
+          iva-anual-reconciliacion-resultados-liquidaciones:
+            label: Annual reconciliation - results of the year's returns ([95] - [97]
+              - [98] - [662])
           iva-anual-regimen-simplificado-aic-bienes-cuota-devengada:
             label: Accrued VAT on intra-Community acquisitions
           iva-anual-regimen-simplificado-cuota-resultante-agricola:

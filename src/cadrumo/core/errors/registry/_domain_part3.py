@@ -478,17 +478,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.modelos.errors.ModeloExportProductIdentityUnavailableError",
-        ErrorCode(
-            code="REFUSED_MODELO_EXPORT_PRODUCT_IDENTITY_UNAVAILABLE",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_modelo_export_product_identity_unavailable",
-            retryable=False,
-            public_message_from_registry=True,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.domain.modelos.errors.ModeloExportPriorDomiciliationElectionRequiredError",
         ErrorCode(
             code="REFUSED_MODELO_EXPORT_PRIOR_DOMICILIATION_ELECTION_REQUIRED",

@@ -130,6 +130,9 @@ _M303_AUTOREPERCUTIDO_INTERIOR_DEVENGADO_CASILLA: CasillaId = validated_casilla_
 _M303_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = validated_casilla_id("iva.cuota-devengada-total")
 _M303_SOPORTADO_INTERIORES_CASILLA: CasillaId = validated_casilla_id("iva.soportado.interiores")
 _M303_SOPORTADO_IMPORTACIONES_CASILLA: CasillaId = validated_casilla_id("iva.soportado.importaciones")
+_M303_AUTOREPERCUTIDO_INTERIOR_DEDUCIBLE_CASILLA: CasillaId = validated_casilla_id(
+    "iva.autorepercutido.interior.deducible"
+)
 _M303_AUTOREPERCUTIDO_INTRACOMUNITARIA_DEDUCIBLE_CASILLA: CasillaId = validated_casilla_id(
     "iva.autorepercutido.intracomunitaria.deducible"
 )
@@ -138,9 +141,9 @@ _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: CasillaId = validated_casilla_i
     "iva.compensacion-pendiente-periodos-anteriores"
 )
 
-# Full Stage-2 box → semantic-source projection map (the ten in-scope cuota boxes).
-# Each numbered box is projection-populated from the single semantic source it
-# copies; on any calculate box == source must hold (the projection contract).
+# Stage-2 box → semantic-source projection map: each of these numbered boxes is
+# projection-populated from the single semantic source it copies, so on any
+# calculate box == source must hold (the projection contract).
 _BOX_SOURCE_MAP: dict[CasillaId, CasillaId] = {
     _OFFICIAL_DEVENGADO_GENERAL_CUOTA: _M303_REPERCUTIDO_GENERAL_CASILLA,
     _OFFICIAL_REPERCUTIDO_REDUCIDO_CUOTA: _M303_REPERCUTIDO_REDUCIDO_CASILLA,
@@ -148,11 +151,21 @@ _BOX_SOURCE_MAP: dict[CasillaId, CasillaId] = {
     _OFFICIAL_AUTOREPERCUTIDO_INTRACOMUNITARIA_DEVENGADO: _M303_AUTOREPERCUTIDO_INTRACOMUNITARIA_DEVENGADO_CASILLA,
     _OFFICIAL_AUTOREPERCUTIDO_INTERIOR_DEVENGADO: _M303_AUTOREPERCUTIDO_INTERIOR_DEVENGADO_CASILLA,
     _OFFICIAL_CUOTA_DEVENGADA_TOTAL: _M303_CUOTA_DEVENGADA_TOTAL_CASILLA,
-    _OFFICIAL_DEDUCIBLE_INTERIORES_CUOTA: _M303_SOPORTADO_INTERIORES_CASILLA,
     _OFFICIAL_SOPORTADO_IMPORTACIONES_CUOTA: _M303_SOPORTADO_IMPORTACIONES_CASILLA,
     _OFFICIAL_AUTOREPERCUTIDO_INTRACOMUNITARIA_DEDUCIBLE: _M303_AUTOREPERCUTIDO_INTRACOMUNITARIA_DEDUCIBLE_CASILLA,
     _OFFICIAL_CUOTA_DEDUCIBLE_TOTAL: _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA,
 }
+
+# Boxes whose one projection sums several semantic casillas. Box 29 adds the
+# deducible leg of domestic inversion del sujeto pasivo (LIVA art. 84.Uno.2) to
+# the corrientes soportado, because the diseno reserves no box of its own for it.
+_BOX_COMPONENT_MAP: dict[CasillaId, tuple[CasillaId, ...]] = {
+    _OFFICIAL_DEDUCIBLE_INTERIORES_CUOTA: (
+        _M303_SOPORTADO_INTERIORES_CASILLA,
+        _M303_AUTOREPERCUTIDO_INTERIOR_DEDUCIBLE_CASILLA,
+    ),
+}
+_PROJECTED_BOXES: tuple[CasillaId, ...] = (*_BOX_SOURCE_MAP, *_BOX_COMPONENT_MAP)
 
 
 @pytest.fixture
@@ -393,6 +406,11 @@ def test_calculate_projects_official_boxes_from_semantic_sources(
         assert Decimal(values[box]) == Decimal(values[source]), (
             f"box {box} ({values[box]}) must equal its semantic source {source} ({values[source]})"
         )
+    for box, components in _BOX_COMPONENT_MAP.items():
+        component_sum = sum((Decimal(values[component]) for component in components), Decimal("0"))
+        assert Decimal(values[box]) == component_sum, (
+            f"box {box} ({values[box]}) must equal the sum of {components} ({component_sum})"
+        )
 
     # Non-vacuous: the seeded distinct cuotas land on their boxes.
     assert Decimal(values[_OFFICIAL_DEVENGADO_GENERAL_CUOTA]) == _SALE_CUOTA
@@ -546,7 +564,7 @@ def test_equals_consistency_predicate_blocks_a_drifted_box() -> None:
     equals_predicates = tuple(
         p for p in snap.revision.verification_predicates if p.expression.strip().startswith("equals(")
     )
-    assert len(equals_predicates) == len(_BOX_SOURCE_MAP), "every projected box must carry an equals predicate"
+    assert len(equals_predicates) == len(_BOX_SOURCE_MAP), "every single-source box must carry an equals predicate"
 
     profile = workflow_profile()
 
@@ -600,6 +618,17 @@ def test_each_projected_box_has_exactly_one_producing_formula() -> None:
         box_casilla = next(c for c in rev.casillas if c.id == box)
         assert box_casilla.binding is None, f"box {box} must carry no binding (projection only)"
 
+    for box, components in _BOX_COMPONENT_MAP.items():
+        assert target_counts[box] == 1, f"box {box} must have exactly one producing formula, got {target_counts[box]}"
+        expression = by_target[box].expression
+        assert expression.op == "add", f"box {box} projection must add its components, got {expression.op!r}"
+        assert tuple(arg.casilla_id for arg in expression.args) == components, (
+            f"box {box} projection must add exactly {components}"
+        )
+        assert all(arg.op is None for arg in expression.args), f"box {box} components must be bare leaves"
+        box_casilla = next(c for c in rev.casillas if c.id == box)
+        assert box_casilla.binding is None, f"box {box} must carry no binding (projection only)"
+
 
 def test_pull_and_calculate_paths_produce_equal_projected_box_values(
     secure_objects: SecureObjectRepository,
@@ -618,8 +647,9 @@ def test_pull_and_calculate_paths_produce_equal_projected_box_values(
     """
     # PATH A: live bucket-aggregation calculate.
     result = _seeded_calculation(secure_objects, operation=operation)
-    live = {box: Decimal(result.revision.casilla_values[box]) for box in _BOX_SOURCE_MAP}
-    live_sources = {src: Decimal(result.revision.casilla_values[src]) for src in _BOX_SOURCE_MAP.values()}
+    live = {box: Decimal(result.revision.casilla_values[box]) for box in _PROJECTED_BOXES}
+    sources = (*_BOX_SOURCE_MAP.values(), *(src for parts in _BOX_COMPONENT_MAP.values() for src in parts))
+    live_sources = {src: Decimal(result.revision.casilla_values[src]) for src in sources}
 
     # PATH B: standalone engine run over the same snapshot, seeded with the same
     # semantic source values the live path folded into the bound casillas. Both
@@ -663,7 +693,7 @@ def test_pull_and_calculate_paths_produce_equal_projected_box_values(
         },
         date_context={"filing_period": _date(2026, 3, 31)},
     )
-    relay_boxes = {box: relay.values[box] for box in _BOX_SOURCE_MAP}
+    relay_boxes = {box: relay.values[box] for box in _PROJECTED_BOXES}
 
     # Non-vacuous: at least the two seeded cuotas land on their boxes, non-zero.
     assert (
@@ -673,7 +703,7 @@ def test_pull_and_calculate_paths_produce_equal_projected_box_values(
     assert Decimal("0") < _SALE_CUOTA and Decimal("0") < _PURCHASE_CUOTA
 
     # Parity: every projected box equals across the two transports.
-    for box in _BOX_SOURCE_MAP:
+    for box in _PROJECTED_BOXES:
         assert live[box] == relay_boxes[box], f"box {box} diverged: live={live[box]!r} pull-path={relay_boxes[box]!r}"
 
 
