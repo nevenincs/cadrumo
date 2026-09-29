@@ -28,8 +28,8 @@ from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.runtime_graph import expression_binding_refs, expression_casilla_refs
 from cadrumo.domain.calculations.registry.schema import BindingDefinition, FormulaDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
-from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
 from ._modelo_100_registry_support import _loaded_registry
 

@@ -146,7 +146,7 @@ def test_committed_m130_retenciones_binding_reads_withheld_amount_fact() -> None
     assert selector_as_dict(binding) == {
         "modelo": "130",
         "target_casilla_id": _M130_INGRESOS_CASILLA,
-        "fact": "withheld_amount_sum",
+        "fact": "declared_withheld_amount_sum",
     }
     validate_ledger_renta_income_aggregation_binding_definition(binding)
 
@@ -184,7 +184,7 @@ def test_taxable_base_sum_fact_sums_only_declared_taxable_base() -> None:
     Grounds a fact no existing test asserted end to end through the
     resolver: ``modelo-130-actividad-economica-ingresos-taxable-base-
     cumulative`` runs on the same M130 revision as the ``ingresos_integros_
-    sum`` / ``withheld_amount_sum`` bindings already covered above, but no
+    sum`` / ``declared_withheld_amount_sum`` bindings already covered above, but no
     prior test read ITS resolved value (an earlier resolver call exercised
     it only as an unchecked side effect). An untagged row (no declared
     base) must contribute zero here — the opposite of ingresos_integros_
@@ -469,7 +469,7 @@ def test_selector_refuses_an_omitted_fact_and_names_the_accepted_set() -> None:
 
     detail = str(exc_info.value)
     assert "requires an explicit 'fact'" in detail
-    for fact in ("ingresos_integros_sum", "cash_received_sum", "taxable_base_sum", "withheld_amount_sum"):
+    for fact in ("ingresos_integros_sum", "cash_received_sum", "taxable_base_sum", "declared_withheld_amount_sum"):
         assert fact in detail, f"the refusal must name the accepted fact {fact!r}"
 
 

@@ -4149,24 +4149,13 @@ section = ["resultados", "inmuebles_res"]
 data_type = "decimal"
 semantic_role = "irpf_suma_retenciones_capital_inmobiliario_aggregate"
 legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-101", "ley-35-2006:art-99", "rd-439-2007:art-100"]
-# Casilla 0599 has no binding and no formula ON PURPOSE, and that is not an
-# unwired gap.
-#
-# AEAT pre-populates this box in the borrador from third-party Modelo 190
-# withholding data, which this application does not hold: the retentions were
-# declared by the PAYERS, not by the taxpayer. So there is nothing for a ledger
-# binding to aggregate, and the taxpayer confirms the figure AEAT already
-# supplied rather than deriving it.
-#
-# Recorded here because the adjudication is otherwise unrecordable and keeps
-# being re-made. The sibling axis carries the same fact for the EXPORT question
-# -- core.ExportExemptionReason.PRE_POPULATED_BY_AEAT names this exact casilla in
-# its own docstring -- but that member governs whether a box files a fixed-width
-# slot, and Modelo 100 exports xml_dictionary, so it does not apply here and is
-# deliberately dormant. The FEED question has no such member: input_kind's four
-# members are manual / bound / computed / informational, and none of them says
-# "supplied by AEAT from data we do not hold". Until one exists, this comment is
-# the record.
+# Casilla 0599 has no binding and the operator keys it, but not because the
+# figure is unavailable. It is the retención the taxpayer SUFFERED on its own
+# activity income, deductible under the articles cited below, and the ledger does
+# hold it: Modelo 130 casilla 06 credits the same withholding every quarter from
+# the same rows. What stands in the way is structural rather than evidential --
+# a renta-income aggregation projects onto exactly one casilla per modelo, and
+# for Modelo 100 that casilla is 0171.
 [[revisions."2020".casillas]]
 id = "0599"
 number = "0599"

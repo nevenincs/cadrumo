@@ -70,10 +70,12 @@ class ExportExemptionReason(StrEnum):
     """AEAT fills the box from third-party data the application does not hold.
 
     The box EXISTS on the record design and the taxpayer does file it, but its
-    value originates outside this application — Modelo 100 casilla 0599 is
-    pre-populated from third-party Modelo 190 withholding data. Modelling it by
-    omission was indistinguishable from an oversight, which is the specific
-    confusion this member removes.
+    value originates outside this application. Modelling that by omission was
+    indistinguishable from an oversight, which is the specific confusion this
+    member removes. A box whose figure the application CAN derive from the
+    taxpayer's own records is not this member's case, however AEAT prefills it:
+    an AEAT prefill is informative, and the taxpayer stays responsible for the
+    figure filed.
     """
 
     FILED_VIA_BINDING_FIELD = "filed_via_binding_field"
