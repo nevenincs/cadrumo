@@ -5,10 +5,11 @@ order: 3
 # Vaultspec
 
 `.vault/` preserves decisions and progress across sessions; `.vaultspec/` holds policy.
-This section owns routing, decision coverage, approval, and review. The `vaultspec` rule
-owns record boundaries; `vaultspec-cli` owns tool usage; `vaultspec-discovery` owns
-discovery; the plan template owns tiers and row syntax. Skills and personas apply these
-contracts.
+Both are removable development scaffolding: vault documents cite code by locator, and
+code never cites the vault. This section owns routing, decision coverage, approval, and
+review. The `vaultspec` rule owns record boundaries; `vaultspec-cli` owns tool usage;
+`vaultspec-discovery` owns discovery; the plan template owns tiers and row syntax.
+Skills and personas apply these contracts.
 
 ## Vocabulary
 
@@ -37,7 +38,7 @@ contracts.
 
 Discover governing decisions before changing code or vault records, at every horizon.
 Discovery is reading and investigation; it does not itself require a persisted record.
-Search across features as well as listing ADRs for the current feature.
+Search and list decisions across features as the `vaultspec-discovery` rule says.
 
 Assess decision coverage separately from planning need:
 
