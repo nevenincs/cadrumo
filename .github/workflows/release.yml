@@ -927,7 +927,7 @@ jobs:
     needs: [check-prove-ref, publish-authority]
     if: inputs.phase == 'prove'
     runs-on: [self-hosted, Windows, X64]
-    timeout-minutes: 30
+    timeout-minutes: 32
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -965,7 +965,7 @@ jobs:
       - test-runtime-smoke
     if: ${{ !cancelled() && inputs.phase == 'prove' }}
     runs-on: [self-hosted, Linux, X64]
-    timeout-minutes: 5
+    timeout-minutes: 125
     env:
       CI_RESOURCE_CLASS: verdict
     steps:

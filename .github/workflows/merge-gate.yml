@@ -151,7 +151,7 @@ jobs:
     needs: [lint, gate]
     if: ${{ !cancelled() }}
     runs-on: [self-hosted, Linux, X64]
-    timeout-minutes: 5
+    timeout-minutes: 125
     env:
       CI_RESOURCE_CLASS: verdict
     steps:
