@@ -10,7 +10,7 @@ related:
   - '[[2026-09-21-retenciones-workflow-observation-payment-contract-adr]]'
 modified: '2026-09-29'
 body_schema: body-v2
-body_hash: 'sha256:e3a574fe4dee226c8179a72160c68ea6b3dba60446d381cb2abdc0c82964d813'
+body_hash: 'sha256:5540eb900111a151b9719ffff2c62ed6f25d9fa51fbe24be7d565e859a138280'
 ---
 
 # `registry-conformance-rectification` plan
@@ -98,6 +98,8 @@ Implement the rulings the operator delegated on 2026-09-29, each within the exis
 - [ ] `P05.S24` - Move the private ingest corpus behind a capability marker, a configured root and its own recipe (ruling 18); `dev/ingest_harness/`.
 - [ ] `P05.S25` - Correct the 2024 Modelo 193 perceptor count to count records, and ground or downgrade the 2024 Modelo 190 relation to Modelo 111; `src/cadrumo/_data/registry/aeat/modelos/193/`.
 - [ ] `P05.S26` - Author Modelo 131's 2022 and 2023 modulos engine with dated reduction rows and open the 2026 parameter rows, after P05.S17 enrolls the modulos orden provisions; `src/cadrumo/_data/registry/aeat/modelos/131/`.
+- [ ] `P05.S27` - Ground Modelo 202's 2025 art. 40.2 base on the Modelo 200 box net of retenciones and ingresos a cuenta, which every era's instructions define it as; `src/cadrumo/_data/registry/aeat/modelos/202/`.
+- [ ] `P05.S28` - Make the open-row gate also report an open row a later edition restates unchanged, with a detector case; `dev/registry/tests/test_parameter_rows_stay_open_across_editions.py`.
 
 ## Parallelization
 
