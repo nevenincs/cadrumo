@@ -10,7 +10,7 @@ related:
   - '[[2026-09-21-retenciones-workflow-observation-payment-contract-adr]]'
 modified: '2026-09-29'
 body_schema: body-v2
-body_hash: 'sha256:93037a04a44843b17f95302c56f6b70b5da36d688001d050f483aa525d679715'
+body_hash: 'sha256:d83810f236dd254225fc2065b7f796b0c6454b3f8c9b4c90634d633bc05e6a4f'
 ---
 
 # `registry-conformance-rectification` plan
@@ -43,6 +43,7 @@ Rulings, 2026-09-29. Basis: the operator delegated the returned rulings to this 
 - 17, yes: a headroom refusal is respected by not loading the model, and the label reading stands with a visible notice, as for an unreachable runtime (P05.S23).
 - 18: a capability marker excluded from every lane, a configured corpus root with no machine default, and a dedicated recipe that fails rather than skips (P05.S24).
 - 5 (F2 and P1) is not ruled: its content is not in any persisted record.
+- Found in P04.S11: Modelo 131's 2026 parameter rows open like every other edition's, as P02.S07 set and the support declaration's horizon requires, keying only the annual values such as the general reduction; its 2022 and 2023 modulos engine is authored once the modulos orden provisions are catalogued (P05.S26).
 - Found in P04.S11: Modelo 190 and 193 extraction profiles stay undeclared for 2022 and 2023 until a printed specimen is captured, since the record design describes the file, not the PDF; the 2024 Modelo 193 perceptor count follows its design and counts records, and the 2024 Modelo 190 relation to Modelo 111 is grounded in 2024 instructions or loses filing grade (P05.S25).
 
 ## Steps
@@ -96,6 +97,7 @@ Implement the rulings the operator delegated on 2026-09-29, each within the exis
 - [ ] `P05.S23` - Let the label reading stand with a visible notice when the optional model fill is refused for headroom (ruling 17); `src/cadrumo/adapters/outbound/llm/`.
 - [ ] `P05.S24` - Move the private ingest corpus behind a capability marker, a configured root and its own recipe (ruling 18); `dev/ingest_harness/`.
 - [ ] `P05.S25` - Correct the 2024 Modelo 193 perceptor count to count records, and ground or downgrade the 2024 Modelo 190 relation to Modelo 111; `src/cadrumo/_data/registry/aeat/modelos/193/`.
+- [ ] `P05.S26` - Author Modelo 131's 2022 and 2023 modulos engine with dated reduction rows and open the 2026 parameter rows, after P05.S17 enrolls the modulos orden provisions; `src/cadrumo/_data/registry/aeat/modelos/131/`.
 
 ## Parallelization
 
