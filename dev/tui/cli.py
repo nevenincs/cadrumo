@@ -15,6 +15,7 @@ frame is a cached statement about a tree that existed earlier.
 
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 from typing import Annotated
@@ -26,6 +27,7 @@ from dev._paths import UTF_8
 from . import _coverage, _diff, _harness, _inventory, _raster, _viewports
 from ._artifacts import (
     DEFAULT_RUN_NAME,
+    RUNS_DIR,
     FailedFrame,
     FrameFailureKind,
     InterfaceRecord,
@@ -50,6 +52,17 @@ from ._artifacts import (
     write_index,
     write_manifest,
 )
+from ._review_catalogue import ReviewCatalogue
+from ._review_server import (
+    DEFAULT_REVIEW_PORT,
+    ReviewHTTPServer,
+    ReviewState,
+    TailnetUnavailableError,
+    is_wildcard_host,
+    serve,
+    tailnet_node,
+)
+from ._review_store import NoteImageState, ReviewStore, ReviewStoreVersionError, image_state
 
 app = typer.Typer(
     name="tui",
@@ -668,6 +681,123 @@ def diff_command(
 
     if changed or any(entry.change is not _diff.Change.UNCHANGED for entry in diffs):
         raise typer.Exit(code=1)
+
+
+def _url(host: str, port: int) -> str:
+    return f"http://[{host}]:{port}/" if ":" in host else f"http://{host}:{port}/"
+
+
+@app.command("serve")
+def serve_command(
+    host: Annotated[
+        str | None,
+        typer.Option("--host", help="Address to listen on. Omit to bind this machine's tailnet address only."),
+    ] = None,
+    port: Annotated[int, typer.Option("--port", min=1, max=65535, help="TCP port to listen on.")] = DEFAULT_REVIEW_PORT,
+) -> None:
+    """Serve the review runs to a browser, live, with notes kept on this machine.
+
+    Frames appear in the page as the render writes them, so a render can be
+    reviewed while it is still running. Notes and sign-offs are written to a
+    database outside the run tree and survive the server stopping, a
+    re-render, and a snapshot being replaced.
+
+    The default bind is the tailnet address and nothing else: the tailnet is
+    the only access control this server has. A wildcard address is refused.
+    """
+    name: str | None = None
+    if host is None:
+        try:
+            node = tailnet_node()
+        except TailnetUnavailableError as refusal:
+            _echo(f"cannot bind the tailnet: {refusal}. Pass --host 127.0.0.1 to review on this machine only.")
+            raise typer.Exit(code=1) from None
+        address, name = node.address, node.name
+    elif is_wildcard_host(host):
+        _echo(f"refusing to listen on {host!r}: that is every interface. Name the tailnet or loopback address.")
+        raise typer.Exit(code=1)
+    else:
+        address = host
+
+    store = ReviewStore()
+    try:
+        store.ensure()
+    except ReviewStoreVersionError as refusal:
+        _echo(str(refusal))
+        raise typer.Exit(code=1) from None
+
+    state = ReviewState(ReviewCatalogue(RUNS_DIR), store)
+    state.refresh()
+    try:
+        server = ReviewHTTPServer((address, port), state)
+    except OSError as refusal:
+        _echo(f"cannot listen on {address}:{port}: {refusal}")
+        raise typer.Exit(code=1) from None
+
+    _echo(f"visual review: {_url(address, port)}")
+    if name is not None:
+        _echo(f"               {_url(name, port)}")
+    _echo(f"watching {RUNS_DIR}")
+    _echo(f"notes kept in {store.path}")
+    _echo("Ctrl+C stops the server; the notes stay on disk.")
+    try:
+        serve(server)
+    except KeyboardInterrupt:
+        _echo("stopped")
+
+
+@app.command("notes")
+def notes_command(
+    include_resolved: Annotated[bool, typer.Option("--all", help="Include resolved notes.")] = False,
+    as_json: Annotated[bool, typer.Option("--json", help="Print the notes as JSON.")] = False,
+    run: Annotated[str, typer.Option("--run", help="Run whose images the notes are compared with.")] = DEFAULT_RUN,
+) -> None:
+    """Print the review notes left in the browser.
+
+    Each note is compared with the image the run holds now, so a note left on
+    a frame that has since been re-rendered says so instead of reading as a
+    remark about the current image.
+    """
+    store = ReviewStore()
+    if not store.exists():
+        _echo(f"no review notes yet; `serve` creates {store.path}")
+        return
+    try:
+        notes = store.notes(include_resolved=include_resolved)
+    except ReviewStoreVersionError as refusal:
+        _echo(str(refusal))
+        raise typer.Exit(code=1) from None
+
+    catalogue = ReviewCatalogue(RUNS_DIR, only=run)
+    catalogue.refresh()
+    view = catalogue.run(run)
+    digests = {} if view is None else {frame.key: frame.png_sha256 for frame in view.frames}
+    readings = [(note, image_state(note, digests.get(note.frame_key))) for note in notes]
+
+    if as_json:
+        payload = [{**note.model_dump(mode="json"), "image_state": str(state)} for note, state in readings]
+        _echo(json.dumps(payload, indent=2, ensure_ascii=False))
+        return
+    if not readings:
+        _echo("no notes" if include_resolved else "no open notes")
+        return
+    shown_key: str | None = None
+    for note, state in readings:
+        if note.frame_key != shown_key:
+            shown_key = note.frame_key
+            _echo("")
+            _echo(note.frame_key)
+        flags = []
+        if state is NoteImageState.CHANGED:
+            flags.append("frame re-rendered since")
+        elif state is NoteImageState.ABSENT:
+            flags.append(f"no image in run {run!r}")
+        if note.resolved_at is not None:
+            flags.append("resolved")
+        suffix = f"  [{', '.join(flags)}]" if flags else ""
+        _echo(f"  #{note.id} {note.created_at}{suffix}")
+        for line in note.body.splitlines():
+            _echo(f"    {line}")
 
 
 __all__ = ["app"]

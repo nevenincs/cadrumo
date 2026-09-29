@@ -523,6 +523,12 @@ cache/
 # as well; named explicitly so a reader greps the directory and finds why.
 /.tmp-tui-visual-inventory/
 
+# Review notes and sign-offs left through `python -m dev.tui serve`. Unlike the
+# renders above this IS durable local state -- nothing regenerates what a
+# reviewer wrote -- so it lives outside the run tree, and its `.sqlite3` file is
+# spared by the worktree clean. Local to this checkout, never committed.
+/.tui-review/
+
 # Ad-hoc local analysis/remediation scratch output (e.g. ty static-analysis
 # runs, remediation scripts and intermediate results). Regenerated per run
 # and never durable; promote a specific snapshot into .vault/ evidence

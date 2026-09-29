@@ -710,9 +710,10 @@ report-registry-edition-migration REGISTRY_ROOT MODELO WORK_DIR:
     @uv run --no-sync python -m dev.registry.edition_delta_migration --registry-root {{quote(REGISTRY_ROOT)}} --modelo {{MODELO}} --work-dir {{quote(WORK_DIR)}}
 
 # The dev.tui command family is limited to visual-review artefacts: inventory,
-# render, snapshot, rasterise, and diff. It has no service-control or test
-# authority, so one subject wrapper is truthful here.
-[doc('Run visual-review inventory, rendering, snapshot, rasterisation, or diff operations.')]
+# render, snapshot, rasterise, diff, and the foreground review server with its
+# notes. It has no service-control or test authority, so one subject wrapper is
+# truthful here.
+[doc('Run visual-review inventory, rendering, snapshot, rasterisation, diff, review-server, or notes operations.')]
 [group('tui')]
 tui-review *ARGS:
     @uv run --no-sync python -m dev.tui {{ARGS}}

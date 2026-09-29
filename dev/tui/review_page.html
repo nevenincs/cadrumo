@@ -1,0 +1,1002 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>TUI visual review</title>
+<style>
+:root {
+  --bg: #f4f5f7;
+  --panel: #ffffff;
+  --text: #15171c;
+  --muted: #5b6270;
+  --line: #dde1e7;
+  --chip: #e9ecf1;
+  --accent: #2f66e0;
+  --accent-text: #ffffff;
+  --ok: #1d7f47;
+  --ok-soft: #dff3e7;
+  --warn: #9a5b00;
+  --warn-soft: #fbeed8;
+  --bad: #b7312f;
+  --shot-bg: #0d0f13;
+  --radius: 10px;
+  --bar-h: 0px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0e1014;
+    --panel: #171a20;
+    --text: #e6e8ec;
+    --muted: #98a0ad;
+    --line: #262a33;
+    --chip: #20242c;
+    --accent: #6c9cff;
+    --accent-text: #0b0d11;
+    --ok: #52c68a;
+    --ok-soft: #173325;
+    --warn: #f0b24c;
+    --warn-soft: #3a2c13;
+    --bad: #ff6f6b;
+    --shot-bg: #000000;
+  }
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+body.detail-open { overflow: hidden; }
+button, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+.muted { color: var(--muted); }
+
+/* Header */
+.bar {
+  position: sticky; top: 0; z-index: 5;
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line);
+  padding: calc(8px + env(safe-area-inset-top)) 16px 8px;
+}
+.bar-row { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.bar-row + .bar-row { margin-top: 6px; }
+.bar h1 { font-size: 17px; margin: 0; white-space: nowrap; }
+.live { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); flex: none; }
+.live.on { background: var(--ok); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ok) 25%, transparent); }
+.spacer { flex: 1; }
+.stats { font-size: 13px; color: var(--muted); flex-wrap: wrap; column-gap: 10px; row-gap: 2px; }
+.stats b { color: var(--text); font-weight: 600; }
+.filters { overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+.filters::-webkit-scrollbar { display: none; }
+.chip {
+  border: 1px solid var(--line); background: var(--chip); border-radius: 999px;
+  padding: 5px 12px; white-space: nowrap; font-size: 14px;
+}
+.chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+select {
+  border: 1px solid var(--line); background: var(--panel); border-radius: 8px;
+  padding: 5px 8px; font-size: 14px; max-width: 12rem;
+}
+
+/* Grid */
+main { padding: 12px 16px 32px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+@media (min-width: 700px) { .grid { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; } }
+.group {
+  grid-column: 1 / -1; display: flex; align-items: baseline; gap: 8px;
+  margin: 14px 0 0; font-size: 15px; font-weight: 600; word-break: break-word;
+}
+.group:first-child { margin-top: 0; }
+.group .count { font-weight: 400; font-size: 13px; color: var(--muted); }
+.card {
+  display: flex; flex-direction: column; padding: 0; text-align: left;
+  background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+  overflow: hidden; min-width: 0; -webkit-tap-highlight-color: transparent;
+}
+.card img { display: block; width: 100%; height: auto; background: var(--shot-bg); }
+.card.reviewed img { opacity: .55; }
+.card.fresh { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.cap { display: flex; align-items: center; gap: 6px; padding: 6px 8px; font-size: 12.5px; min-width: 0; }
+.cap-main { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.badge {
+  flex: none; border-radius: 999px; padding: 1px 7px; font-size: 12px; font-weight: 600;
+  background: var(--chip); color: var(--muted);
+}
+.badge.ok { background: var(--ok-soft); color: var(--ok); }
+.badge.note { background: var(--warn-soft); color: var(--warn); }
+.badge.new { background: var(--accent); color: var(--accent-text); }
+.empty { color: var(--muted); padding: 32px 4px; text-align: center; }
+.empty code { background: var(--chip); padding: 1px 6px; border-radius: 6px; }
+
+/* Run panel */
+.run-panel { margin-top: 28px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); }
+.run-panel summary { padding: 10px 12px; cursor: pointer; font-weight: 600; }
+.run-panel .body { padding: 0 12px 12px; font-size: 14px; }
+.run-panel ul { padding-left: 18px; margin: 6px 0; }
+.run-panel li { margin: 3px 0; word-break: break-word; }
+.run-panel code { font-size: 12.5px; }
+
+/* Detail */
+.detail {
+  position: fixed; inset: 0; z-index: 10; background: var(--bg);
+  display: flex; flex-direction: column;
+}
+.detail[hidden] { display: none; }
+.detail-bar {
+  display: flex; align-items: center; gap: 10px;
+  padding: calc(8px + env(safe-area-inset-top)) 12px 8px;
+  border-bottom: 1px solid var(--line); background: var(--panel);
+}
+.detail-title { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.detail-title strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.detail-title span { font-size: 13px; color: var(--muted); }
+.plain { border: 0; background: none; padding: 6px 4px; color: var(--accent); font-weight: 600; }
+.detail-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.detail-inner { max-width: 1500px; margin: 0 auto; padding: 12px 16px 24px; }
+.banner {
+  border-radius: 8px; padding: 8px 12px; margin-bottom: 10px; font-size: 14px;
+  background: var(--warn-soft); color: var(--warn);
+}
+.shot {
+  margin: 0; background: var(--shot-bg); border-radius: 8px; overflow: hidden;
+  display: flex; justify-content: center; touch-action: pan-y pinch-zoom;
+}
+.shot img { display: block; max-width: 100%; height: auto; cursor: zoom-in; }
+.shot.actual { overflow-x: auto; justify-content: flex-start; touch-action: auto; }
+.shot.actual img { max-width: none; cursor: zoom-out; }
+.meta { font-size: 13px; color: var(--muted); margin: 8px 0 0; display: flex; flex-wrap: wrap; gap: 4px 12px; }
+.meta code { font-size: 12px; }
+.findings { list-style: none; padding: 0; margin: 10px 0 0; font-size: 14px; }
+.findings li { padding: 6px 10px; border-radius: 8px; background: var(--chip); margin-bottom: 6px; word-break: break-word; }
+.findings li.warn { background: var(--warn-soft); color: var(--warn); }
+.notes h3 { font-size: 15px; margin: 18px 0 8px; }
+.note-list { list-style: none; padding: 0; margin: 0 0 10px; }
+.note {
+  border: 1px solid var(--line); background: var(--panel); border-radius: var(--radius);
+  padding: 10px 12px; margin-bottom: 8px;
+}
+.note.resolved { opacity: .6; }
+.note p { margin: 0 0 6px; white-space: pre-wrap; word-break: break-word; }
+.note-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; font-size: 12.5px; color: var(--muted); }
+.note-meta .spacer { flex: 1; }
+.note-meta button { border: 0; background: none; color: var(--accent); padding: 4px 2px; font-size: 13px; }
+.note-meta button.danger { color: var(--bad); }
+textarea {
+  display: block; width: 100%; min-height: 84px; resize: vertical;
+  border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel);
+  padding: 10px 12px; font-size: 16px;
+}
+textarea:focus, select:focus, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.form-row { display: flex; justify-content: flex-end; margin-top: 8px; }
+.primary, .secondary {
+  border-radius: var(--radius); padding: 10px 14px; font-weight: 600; border: 1px solid transparent;
+}
+.primary { background: var(--accent); color: var(--accent-text); }
+.secondary { background: var(--chip); border-color: var(--line); }
+.secondary.on { background: var(--ok-soft); color: var(--ok); border-color: color-mix(in srgb, var(--ok) 40%, transparent); }
+button:disabled { opacity: .5; cursor: default; }
+details.text { margin-top: 16px; }
+details.text summary { cursor: pointer; color: var(--muted); font-size: 14px; }
+details.text pre {
+  margin: 8px 0 0; padding: 10px; border-radius: 8px; background: var(--shot-bg); color: #d7dae0;
+  font: 11px/1.25 ui-monospace, "Cascadia Mono", Consolas, monospace; overflow-x: auto;
+}
+.detail-actions {
+  display: grid; grid-template-columns: 48px 1fr 1.3fr 48px; gap: 8px;
+  padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--line); background: var(--panel);
+}
+.step { border: 1px solid var(--line); background: var(--chip); border-radius: var(--radius); font-size: 20px; line-height: 1; }
+@media (min-width: 900px) {
+  .detail-actions { grid-template-columns: 64px 220px 260px 64px; justify-content: center; }
+}
+
+.toast {
+  position: fixed; left: 50%; bottom: calc(76px + env(safe-area-inset-bottom)); transform: translateX(-50%);
+  background: var(--text); color: var(--bg); padding: 8px 14px; border-radius: 999px; font-size: 14px;
+  z-index: 20; opacity: 0; transition: opacity .2s; pointer-events: none; max-width: calc(100% - 32px);
+}
+.toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+<header class="bar">
+  <div class="bar-row">
+    <span id="live" class="live" title="Live updates disconnected"></span>
+    <h1>TUI visual review</h1>
+    <span class="spacer"></span>
+    <select id="run" aria-label="Run"></select>
+  </div>
+  <div class="bar-row stats" id="stats"></div>
+  <div class="bar-row filters">
+    <button class="chip" data-filter="all" aria-pressed="true">All</button>
+    <button class="chip" data-filter="todo" aria-pressed="false">To review</button>
+    <button class="chip" data-filter="notes" aria-pressed="false">Open notes</button>
+    <select id="viewport" aria-label="Viewport"><option value="">All sizes</option></select>
+    <select id="theme" aria-label="Theme"><option value="">Both themes</option></select>
+    <select id="sort" aria-label="Order">
+      <option value="surface">By surface</option>
+      <option value="newest">Newest first</option>
+    </select>
+  </div>
+</header>
+
+<main>
+  <div id="grid" class="grid"></div>
+  <details id="run-panel" class="run-panel">
+    <summary>Run details</summary>
+    <div class="body" id="run-body"></div>
+  </details>
+</main>
+
+<div id="detail" class="detail" hidden>
+  <div class="detail-bar">
+    <button id="close" class="plain" type="button">‹ Grid</button>
+    <div class="detail-title"><strong id="d-surface"></strong><span id="d-sub"></span></div>
+    <span id="d-pos" class="muted"></span>
+  </div>
+  <div class="detail-scroll" id="detail-scroll">
+    <div class="detail-inner">
+      <div id="d-banner" class="banner" hidden></div>
+      <figure id="shot" class="shot"><img id="d-img" alt=""></figure>
+      <div id="d-meta" class="meta"></div>
+      <ul id="d-findings" class="findings"></ul>
+      <section class="notes">
+        <h3>Notes</h3>
+        <ol id="d-notes" class="note-list"></ol>
+        <form id="note-form">
+          <textarea id="note-body" placeholder="What needs fixing in this frame?" aria-label="New note"></textarea>
+          <div class="form-row"><button id="note-save" class="primary" type="submit">Add note</button></div>
+        </form>
+      </section>
+      <details id="d-text-box" class="text">
+        <summary>Harness text reading</summary>
+        <pre id="d-text"></pre>
+      </details>
+    </div>
+  </div>
+  <nav class="detail-actions">
+    <button id="prev" class="step" type="button" aria-label="Previous frame">‹</button>
+    <button id="toggle-reviewed" class="secondary" type="button">Mark reviewed</button>
+    <button id="review-next" class="primary" type="button">Reviewed, next ›</button>
+    <button id="next" class="step" type="button" aria-label="Next frame">›</button>
+  </nav>
+</div>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script>
+'use strict';
+
+const $ = (selector) => document.querySelector(selector);
+const enc = encodeURIComponent;
+
+function el(tag, attrs, ...children) {
+  const node = document.createElement(tag);
+  for (const [key, value] of Object.entries(attrs || {})) {
+    if (value === null || value === undefined || value === false) continue;
+    if (key === 'class') node.className = value;
+    else if (key === 'text') node.textContent = value;
+    else if (key.startsWith('on')) node.addEventListener(key.slice(2), value);
+    else node.setAttribute(key, value === true ? '' : String(value));
+  }
+  node.append(...present(children));
+  return node;
+}
+
+const present = (children) => children.flat().filter((child) => child !== null && child !== undefined && child !== false);
+
+// Replaces a node's children, skipping the null/false placeholders that
+// conditional children produce; the DOM would otherwise render them as text.
+function fill(node, ...children) {
+  node.replaceChildren(...present(children));
+  return node;
+}
+
+const PREFS_KEY = 'tui-review.prefs';
+const ui = {
+  data: null,
+  run: null,
+  filter: 'all',
+  viewport: '',
+  theme: '',
+  sort: 'surface',
+  openStem: null,
+  fromGrid: false,
+  shownDigest: null,
+  shownStem: null,
+  actual: false,
+  live: false,
+  fresh: new Set(),
+  drafts: new Map(),
+  texts: new Map(),
+  cards: new Map(),
+  notesByKey: new Map(),
+  byStem: new Map(),
+  loading: false,
+  reloadQueued: false,
+};
+
+function readPrefs() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(PREFS_KEY) || '{}');
+    for (const key of ['filter', 'viewport', 'theme', 'sort']) {
+      if (typeof saved[key] === 'string') ui[key] = saved[key];
+    }
+  } catch (_) { /* storage unavailable: defaults stand */ }
+}
+
+function writePrefs() {
+  try {
+    localStorage.setItem(PREFS_KEY, JSON.stringify({
+      filter: ui.filter, viewport: ui.viewport, theme: ui.theme, sort: ui.sort,
+    }));
+  } catch (_) { /* storage unavailable: preferences last for this visit */ }
+}
+
+let toastTimer = null;
+function toast(text) {
+  const node = $('#toast');
+  node.textContent = text;
+  node.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => node.classList.remove('show'), 2600);
+}
+
+async function api(path, options) {
+  const init = { method: 'GET', ...(options || {}) };
+  if (init.body !== undefined) {
+    init.headers = { 'Content-Type': 'application/json' };
+    init.body = JSON.stringify(init.body);
+  }
+  const response = await fetch(path, init);
+  let payload = null;
+  try { payload = await response.json(); } catch (_) { payload = null; }
+  if (!response.ok) throw new Error((payload && payload.error) || response.statusText);
+  return payload;
+}
+
+function ago(iso) {
+  if (!iso) return '';
+  const seconds = (Date.now() - Date.parse(iso)) / 1000;
+  if (seconds < 45) return 'just now';
+  if (seconds < 3600) return `${Math.round(seconds / 60)} min ago`;
+  if (seconds < 86400) return `${Math.round(seconds / 3600)} h ago`;
+  return new Date(iso).toLocaleDateString();
+}
+
+function stamp(iso) {
+  return new Date(iso).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
+// ---- state -----------------------------------------------------------------
+
+const frameNotes = (frame) => ui.notesByKey.get(frame.key) || [];
+const openNotes = (frame) => frameNotes(frame).filter((note) => !note.resolved_at);
+const isReviewed = (frame) => {
+  const mark = ui.data.reviewed[frame.key];
+  return Boolean(mark && mark.png_sha256 === frame.digest);
+};
+
+function indexData(data) {
+  ui.byStem = new Map(data.frames.map((frame) => [frame.stem, frame]));
+  ui.notesByKey = new Map();
+  for (const note of data.notes) {
+    if (!ui.notesByKey.has(note.frame_key)) ui.notesByKey.set(note.frame_key, []);
+    ui.notesByKey.get(note.frame_key).push(note);
+  }
+}
+
+function announce(previous, data) {
+  const before = new Map(previous.frames.map((frame) => [frame.stem, frame.digest]));
+  let added = 0;
+  let updated = 0;
+  for (const frame of data.frames) {
+    if (!before.has(frame.stem)) { added += 1; ui.fresh.add(frame.stem); }
+    else if (before.get(frame.stem) !== frame.digest) { updated += 1; ui.fresh.add(frame.stem); }
+  }
+  const parts = [];
+  if (added) parts.push(`${added} new frame${added === 1 ? '' : 's'}`);
+  if (updated) parts.push(`${updated} updated`);
+  if (parts.length) toast(parts.join(', '));
+}
+
+async function load() {
+  if (ui.loading) { ui.reloadQueued = true; return; }
+  ui.loading = true;
+  try {
+    const data = await api('/api/state' + (ui.run ? `?run=${enc(ui.run)}` : ''));
+    const previous = ui.data;
+    if (!previous || previous.run !== data.run) {
+      ui.fresh.clear();
+      ui.cards.clear();
+    }
+    ui.data = data;
+    ui.run = data.run;
+    indexData(data);
+    if (previous && previous.run === data.run) announce(previous, data);
+    renderAll();
+  } catch (error) {
+    toast(`Could not load the review: ${error.message}`);
+  } finally {
+    ui.loading = false;
+    if (ui.reloadQueued) { ui.reloadQueued = false; load(); }
+  }
+}
+
+let loadTimer = null;
+function scheduleLoad() {
+  clearTimeout(loadTimer);
+  loadTimer = setTimeout(load, 250);
+}
+
+// ---- ordering and filters --------------------------------------------------
+
+function ordered() {
+  const frames = [...ui.data.frames];
+  if (ui.sort === 'newest') {
+    frames.sort((a, b) => b.modified_at.localeCompare(a.modified_at) || a.stem.localeCompare(b.stem));
+  }
+  return frames;
+}
+
+function matches(frame) {
+  if (ui.viewport && frame.viewport !== ui.viewport) return false;
+  if (ui.theme && frame.theme !== ui.theme) return false;
+  if (ui.filter === 'todo' && isReviewed(frame)) return false;
+  if (ui.filter === 'notes' && openNotes(frame).length === 0) return false;
+  return true;
+}
+
+function neighbour(direction) {
+  const frames = ordered();
+  let index = frames.findIndex((frame) => frame.stem === ui.openStem);
+  if (index < 0) index = direction > 0 ? -1 : frames.length;
+  for (let at = index + direction; at >= 0 && at < frames.length; at += direction) {
+    if (matches(frames[at])) return frames[at];
+  }
+  return null;
+}
+
+// ---- rendering: header -----------------------------------------------------
+
+function fillSelect(select, values, blankLabel, current) {
+  const options = [el('option', { value: '', text: blankLabel })];
+  for (const value of values) options.push(el('option', { value, text: value }));
+  select.replaceChildren(...options);
+  select.value = values.includes(current) ? current : '';
+}
+
+function renderHeader() {
+  const data = ui.data;
+  const runSelect = $('#run');
+  runSelect.replaceChildren(...data.runs.map((run) => el('option', { value: run.name, text: `${run.name} (${run.frames})` })));
+  if (data.run) runSelect.value = data.run;
+  runSelect.hidden = data.runs.length < 2;
+
+  const unique = (field) => [...new Set(data.frames.map((frame) => frame[field]))];
+  fillSelect($('#viewport'), unique('viewport'), 'All sizes', ui.viewport);
+  fillSelect($('#theme'), unique('theme'), 'Both themes', ui.theme);
+  $('#sort').value = ui.sort;
+  for (const chip of document.querySelectorAll('.chip')) {
+    chip.setAttribute('aria-pressed', String(chip.dataset.filter === ui.filter));
+  }
+  renderStats();
+}
+
+function renderStats() {
+  const data = ui.data;
+  if (!data) return;
+  const reviewed = data.frames.filter(isReviewed).length;
+  const keys = new Set(data.frames.map((frame) => frame.key));
+  const open = data.notes.filter((note) => !note.resolved_at && keys.has(note.frame_key)).length;
+  const parts = [
+    el('span', {}, el('b', { text: String(data.frames.length) }), ' frames'),
+    el('span', {}, el('b', { text: String(reviewed) }), ' reviewed'),
+    el('span', {}, el('b', { text: String(open) }), ` open note${open === 1 ? '' : 's'}`),
+  ];
+  if (data.latest_frame_at) parts.push(el('span', { text: `last frame ${ago(data.latest_frame_at)}` }));
+  fill($('#stats'), parts);
+}
+
+// ---- rendering: grid -------------------------------------------------------
+
+function thumbSize(frame) {
+  const width = Math.min(frame.width, 480);
+  return [width, Math.max(1, Math.round(frame.height * width / frame.width))];
+}
+
+function card(frame) {
+  let node = ui.cards.get(frame.stem);
+  if (!node) {
+    const img = el('img', { loading: 'lazy', decoding: 'async', alt: '' });
+    const caption = el('span', { class: 'cap' });
+    node = el('button', { class: 'card', type: 'button', onclick: () => openFrame(frame.stem) }, img, caption);
+    node._img = img;
+    node._caption = caption;
+    ui.cards.set(frame.stem, node);
+  }
+  const src = `/thumb/${enc(ui.run)}/${enc(frame.stem)}.webp?v=${frame.digest}`;
+  if (node.dataset.src !== src) {
+    const [width, height] = thumbSize(frame);
+    node._img.width = width;
+    node._img.height = height;
+    node._img.src = src;
+    node.dataset.src = src;
+  }
+  const reviewed = isReviewed(frame);
+  const open = openNotes(frame).length;
+  const fresh = ui.fresh.has(frame.stem);
+  node.classList.toggle('reviewed', reviewed);
+  node.classList.toggle('fresh', fresh);
+  const label = ui.sort === 'surface'
+    ? `${frame.viewport} · ${frame.theme}`
+    : `${frame.surface} · ${frame.viewport} · ${frame.theme}`;
+  node.setAttribute('aria-label', `${frame.surface}, ${frame.viewport}, ${frame.theme}${reviewed ? ', reviewed' : ''}${open ? `, ${open} open notes` : ''}`);
+  fill(node._caption,
+    el('span', { class: 'cap-main', text: label }),
+    fresh ? el('span', { class: 'badge new', text: 'new' }) : null,
+    open ? el('span', { class: 'badge note', text: `✎ ${open}` }) : null,
+    reviewed ? el('span', { class: 'badge ok', text: '✓' }) : null,
+  );
+  return node;
+}
+
+function renderGrid() {
+  const grid = $('#grid');
+  const data = ui.data;
+  if (!data.run) {
+    grid.replaceChildren(el('div', { class: 'empty' },
+      'No review run yet. Start one with ', el('code', { text: 'just tui-review render' }),
+      '; frames appear here as each one is written.'));
+    return;
+  }
+  const frames = ordered().filter(matches);
+  if (!frames.length) {
+    const text = data.frames.length
+      ? 'Nothing matches these filters.'
+      : `Run “${data.run}” has no frames yet. They appear here as the render writes them.`;
+    grid.replaceChildren(el('p', { class: 'empty', text }));
+    return;
+  }
+  const nodes = [];
+  if (ui.sort === 'surface') {
+    const groups = new Map();
+    for (const frame of frames) {
+      if (!groups.has(frame.surface)) groups.set(frame.surface, []);
+      groups.get(frame.surface).push(frame);
+    }
+    for (const [surface, members] of groups) {
+      const all = data.frames.filter((frame) => frame.surface === surface);
+      const done = all.filter(isReviewed).length;
+      nodes.push(el('h2', { class: 'group' }, surface, el('span', { class: 'count', text: `${done}/${all.length} reviewed` })));
+      for (const frame of members) nodes.push(card(frame));
+    }
+  } else {
+    for (const frame of frames) nodes.push(card(frame));
+  }
+  grid.replaceChildren(...nodes);
+}
+
+function renderRunPanel() {
+  const data = ui.data;
+  const body = $('#run-body');
+  const blocks = [];
+  const manifest = data.manifest;
+  if (!data.run) {
+    blocks.push(el('p', { text: 'No run on disk.' }));
+  } else if (!manifest || manifest.state === 'absent') {
+    blocks.push(el('p', { text: 'No manifest yet. A render writes it after its last frame, so refusals and crashes are listed here once the render finishes.' }));
+  } else if (manifest.state === 'unreadable') {
+    blocks.push(el('p', { text: `The manifest could not be read: ${manifest.detail}` }));
+  } else {
+    const coherent = manifest.state === 'current';
+    blocks.push(el('p', {
+      text: coherent
+        ? `Manifest written ${stamp(manifest.generated_at)}; it describes every frame shown.`
+        : `Manifest written ${stamp(manifest.generated_at)} describes ${manifest.described} of the ${data.frames.length} frames on disk, so it belongs to an earlier render. Its failures below may be out of date.`,
+    }));
+    if (manifest.spans_a_source_change) blocks.push(el('p', { class: 'muted', text: 'The TUI source changed while that render ran.' }));
+    if (manifest.blocked_surfaces.length) {
+      blocks.push(el('p', { text: 'Surfaces that produced no frame:' }),
+        el('ul', {}, manifest.blocked_surfaces.map((name) => el('li', {}, el('code', { text: name })))));
+    }
+    if (manifest.failures.length) {
+      blocks.push(el('p', { text: `Failed frames (${manifest.failures.length}):` }),
+        el('ul', {}, manifest.failures.map((failure) => el('li', {},
+          el('code', { text: failure.key }), ` — ${failure.kind}${failure.attempts > 1 ? ` after ${failure.attempts} attempts` : ''}`,
+          failure.reason ? el('div', { class: 'muted', text: failure.reason }) : null))));
+    }
+    if (manifest.skipped.length) {
+      blocks.push(el('p', { text: `Not attempted (${manifest.skipped.length}):` }),
+        el('ul', {}, manifest.skipped.map((entry) => el('li', {}, el('code', { text: entry.key }), ` — ${entry.reason}`))));
+    }
+  }
+  if (data.unrecognised.length) {
+    blocks.push(el('p', { text: 'PNG files that are not frames (not shown):' }),
+      el('ul', {}, data.unrecognised.map((name) => el('li', {}, el('code', { text: name })))));
+  }
+  const keys = new Set(data.frames.map((frame) => frame.key));
+  const elsewhere = data.notes.filter((note) => !note.resolved_at && !keys.has(note.frame_key));
+  if (elsewhere.length) {
+    blocks.push(el('p', { text: `Open notes on frames this run does not hold (${elsewhere.length}):` }),
+      el('ul', {}, elsewhere.map((note) => el('li', {}, el('code', { text: note.frame_key }), ` — #${note.id} ${note.body}`))));
+  }
+  blocks.push(el('p', { class: 'muted' }, 'Notes are stored on the server at ', el('code', { text: data.store }), '.'));
+  fill(body, blocks);
+}
+
+// ---- rendering: detail -----------------------------------------------------
+
+function current() {
+  return ui.openStem ? ui.byStem.get(ui.openStem) || null : null;
+}
+
+function renderDetail() {
+  const detail = $('#detail');
+  if (!ui.openStem || !ui.data) {
+    detail.hidden = true;
+    document.body.classList.remove('detail-open');
+    return;
+  }
+  detail.hidden = false;
+  document.body.classList.add('detail-open');
+  const frame = current();
+  const banner = $('#d-banner');
+  const disabled = !frame;
+  for (const id of ['#toggle-reviewed', '#review-next', '#note-save']) $(id).disabled = disabled;
+  $('#prev').disabled = !neighbour(-1);
+  $('#next').disabled = !neighbour(1);
+
+  if (!frame) {
+    banner.hidden = false;
+    banner.textContent = 'This frame is not in the run any more. It may be re-rendering; it will reappear here when it settles.';
+    $('#d-pos').textContent = '';
+    return;
+  }
+
+  ui.fresh.delete(frame.stem);
+  $('#d-surface').textContent = frame.surface;
+  $('#d-sub').textContent = `${frame.viewport} ${frame.columns}×${frame.rows} · ${frame.theme}`;
+  const visible = ordered().filter(matches);
+  const at = visible.findIndex((item) => item.stem === frame.stem);
+  $('#d-pos').textContent = at >= 0 ? `${at + 1}/${visible.length}` : '';
+
+  const img = $('#d-img');
+  const src = `/image/${enc(ui.run)}/${enc(frame.stem)}.png?v=${frame.digest}`;
+  const replaced = ui.shownStem === frame.stem && ui.shownDigest && ui.shownDigest !== frame.digest;
+  if (img.getAttribute('src') !== src) {
+    img.src = src;
+    img.alt = `${frame.surface} at ${frame.viewport}, ${frame.theme}`;
+  }
+  ui.shownStem = frame.stem;
+  ui.shownDigest = frame.digest;
+  applyZoom(frame);
+  if (replaced) {
+    banner.hidden = false;
+    banner.textContent = 'This frame was re-rendered while you were looking at it; the image above is the new one.';
+  } else if (banner.dataset.stem !== frame.stem) {
+    banner.hidden = true;
+  }
+  banner.dataset.stem = frame.stem;
+
+  fill($('#d-meta'),
+    el('span', { text: `${frame.width}×${frame.height}px` }),
+    el('span', { text: `${Math.round(frame.bytes / 1024)} KB` }),
+    el('span', { text: `rendered ${ago(frame.modified_at)}` }),
+    el('span', {}, 'sha ', el('code', { text: frame.digest.slice(0, 10) })),
+  );
+
+  const findings = [];
+  if (frame.recorded) {
+    for (const finding of frame.recorded.geometry_findings) findings.push(el('li', { class: 'warn', text: `Geometry: ${finding}` }));
+    if (frame.recorded.missing_glyphs.length) {
+      findings.push(el('li', { text: `The raster font lacks ${frame.recorded.missing_glyphs.join(' ')}; a blank box there is a font gap, not a defect.` }));
+    }
+  } else if (ui.data.manifest && ui.data.manifest.state !== 'absent') {
+    findings.push(el('li', { class: 'muted', text: 'No manifest record for this image yet; geometry readings arrive when the render finishes.' }));
+  }
+  fill($('#d-findings'), findings);
+
+  const reviewed = isReviewed(frame);
+  const toggle = $('#toggle-reviewed');
+  toggle.textContent = reviewed ? '✓ Reviewed' : 'Mark reviewed';
+  toggle.classList.toggle('on', reviewed);
+
+  renderNotes(frame);
+  renderText(frame);
+}
+
+function renderNotes(frame) {
+  const notes = frameNotes(frame);
+  const items = notes.map((note) => {
+    const earlier = note.png_sha256 !== frame.digest;
+    return el('li', { class: `note${note.resolved_at ? ' resolved' : ''}` },
+      el('p', { text: note.body }),
+      el('div', { class: 'note-meta' },
+        el('span', { text: `#${note.id} · ${stamp(note.created_at)}` }),
+        earlier ? el('span', { class: 'badge note', text: 'earlier image' }) : null,
+        note.resolved_at ? el('span', { class: 'badge ok', text: 'resolved' }) : null,
+        el('span', { class: 'spacer' }),
+        el('button', { type: 'button', text: note.resolved_at ? 'Reopen' : 'Resolve', onclick: () => setResolved(note, !note.resolved_at) }),
+        el('button', { type: 'button', class: 'danger', text: 'Delete', onclick: () => deleteNote(note) }),
+      ));
+  });
+  if (!items.length) items.push(el('li', { class: 'muted', text: 'No notes on this frame.' }));
+  fill($('#d-notes'), items);
+}
+
+async function renderText(frame) {
+  const box = $('#d-text-box');
+  box.hidden = !frame.text;
+  if (!frame.text || !box.open) return;
+  const pre = $('#d-text');
+  const key = `${ui.run}/${frame.stem}@${frame.digest}`;
+  if (pre.dataset.key === key) return;
+  pre.dataset.key = key;
+  if (!ui.texts.has(key)) {
+    pre.textContent = 'Loading…';
+    try {
+      const response = await fetch(`/text/${enc(ui.run)}/${enc(frame.stem)}.txt`);
+      ui.texts.set(key, response.ok ? await response.text() : 'No text reading on disk.');
+    } catch (error) {
+      pre.dataset.key = '';
+      pre.textContent = `Could not load the text reading: ${error.message}`;
+      return;
+    }
+  }
+  if (pre.dataset.key === key) pre.textContent = ui.texts.get(key);
+}
+
+function applyZoom(frame) {
+  const shot = $('#shot');
+  const img = $('#d-img');
+  shot.classList.toggle('actual', ui.actual);
+  img.style.width = ui.actual ? `${frame.width / (window.devicePixelRatio || 1)}px` : '';
+}
+
+function renderAll() {
+  renderHeader();
+  renderGrid();
+  renderRunPanel();
+  renderDetail();
+}
+
+// ---- navigation ------------------------------------------------------------
+
+function hashFor(stem) {
+  return `#/${enc(ui.run)}/${enc(stem)}`;
+}
+
+function saveDraft() {
+  if (!ui.openStem) return;
+  const text = $('#note-body').value;
+  if (text) ui.drafts.set(ui.openStem, text); else ui.drafts.delete(ui.openStem);
+}
+
+function restoreDraft() {
+  $('#note-body').value = (ui.openStem && ui.drafts.get(ui.openStem)) || '';
+}
+
+function openFrame(stem) {
+  ui.fromGrid = true;
+  location.hash = hashFor(stem);
+}
+
+function go(frame) {
+  if (!frame) return;
+  saveDraft();
+  history.replaceState(null, '', hashFor(frame.stem));
+  ui.openStem = frame.stem;
+  restoreDraft();
+  $('#detail-scroll').scrollTop = 0;
+  renderDetail();
+  renderGrid();
+}
+
+function step(direction) {
+  const target = neighbour(direction);
+  if (target) go(target);
+  else toast(direction > 0 ? 'That was the last frame in this view.' : 'That was the first frame in this view.');
+}
+
+function closeDetail() {
+  saveDraft();
+  if (ui.fromGrid) {
+    history.back();
+  } else {
+    history.replaceState(null, '', location.pathname + location.search);
+    route();
+  }
+}
+
+async function route() {
+  const match = /^#\/([^/]+)\/(.+)$/.exec(location.hash);
+  if (!match) {
+    if (ui.openStem) saveDraft();
+    ui.openStem = null;
+    ui.fromGrid = false;
+    ui.actual = false;
+    if (ui.data) { renderDetail(); renderGrid(); }
+    return;
+  }
+  const run = decodeURIComponent(match[1]);
+  const stem = decodeURIComponent(match[2]);
+  if (!ui.data || run !== ui.run) {
+    ui.run = run;
+    await load();
+  }
+  if (ui.openStem !== stem) {
+    saveDraft();
+    ui.openStem = stem;
+    ui.actual = false;
+    restoreDraft();
+    $('#detail-scroll').scrollTop = 0;
+  }
+  renderDetail();
+  renderGrid();
+}
+
+// ---- writes ----------------------------------------------------------------
+
+async function setReviewed(frame, reviewed) {
+  await api('/api/reviewed', {
+    method: 'POST',
+    body: { run: ui.run, stem: frame.stem, png_sha256: ui.shownDigest || frame.digest, reviewed },
+  });
+  await load();
+}
+
+async function setResolved(note, resolved) {
+  try {
+    await api(`/api/notes/${note.id}/resolved`, { method: 'POST', body: { resolved } });
+    await load();
+  } catch (error) { toast(error.message); }
+}
+
+async function deleteNote(note) {
+  if (!confirm(`Delete note #${note.id}?`)) return;
+  try {
+    await api(`/api/notes/${note.id}`, { method: 'DELETE' });
+    await load();
+  } catch (error) { toast(error.message); }
+}
+
+// ---- live updates ----------------------------------------------------------
+
+function setLive(on) {
+  ui.live = on;
+  const dot = $('#live');
+  dot.classList.toggle('on', on);
+  dot.title = on ? 'Live: new frames appear as they are written' : 'Live updates disconnected; retrying';
+}
+
+function connect() {
+  const source = new EventSource('/events');
+  source.addEventListener('change', (event) => {
+    setLive(true);
+    if (!ui.data || Number(event.data) !== ui.data.generation) scheduleLoad();
+  });
+  source.addEventListener('open', () => setLive(true));
+  source.addEventListener('error', () => setLive(false));
+}
+
+// ---- wiring ----------------------------------------------------------------
+
+function wire() {
+  for (const chip of document.querySelectorAll('.chip')) {
+    chip.addEventListener('click', () => { ui.filter = chip.dataset.filter; writePrefs(); renderAll(); });
+  }
+  $('#viewport').addEventListener('change', (event) => { ui.viewport = event.target.value; writePrefs(); renderAll(); });
+  $('#theme').addEventListener('change', (event) => { ui.theme = event.target.value; writePrefs(); renderAll(); });
+  $('#sort').addEventListener('change', (event) => { ui.sort = event.target.value; writePrefs(); renderAll(); });
+  $('#run').addEventListener('change', (event) => {
+    ui.run = event.target.value;
+    if (ui.openStem) history.replaceState(null, '', location.pathname + location.search);
+    ui.openStem = null;
+    load();
+  });
+
+  $('#close').addEventListener('click', closeDetail);
+  $('#prev').addEventListener('click', () => step(-1));
+  $('#next').addEventListener('click', () => step(1));
+  $('#toggle-reviewed').addEventListener('click', async () => {
+    const frame = current();
+    if (!frame) return;
+    try { await setReviewed(frame, !isReviewed(frame)); } catch (error) { toast(error.message); }
+  });
+  $('#review-next').addEventListener('click', async () => {
+    const frame = current();
+    if (!frame) return;
+    const target = neighbour(1);
+    try {
+      if (!isReviewed(frame)) await setReviewed(frame, true);
+      if (target) go(target); else toast('Reviewed. That was the last frame in this view.');
+    } catch (error) { toast(error.message); }
+  });
+
+  $('#d-img').addEventListener('click', () => {
+    const frame = current();
+    if (!frame) return;
+    ui.actual = !ui.actual;
+    applyZoom(frame);
+  });
+  $('#d-text-box').addEventListener('toggle', () => { const frame = current(); if (frame) renderText(frame); });
+
+  let touch = null;
+  const shot = $('#shot');
+  shot.addEventListener('touchstart', (event) => {
+    const zoomed = window.visualViewport && window.visualViewport.scale > 1.01;
+    if (event.touches.length !== 1 || ui.actual || zoomed) { touch = null; return; }
+    touch = { x: event.touches[0].clientX, y: event.touches[0].clientY, at: Date.now() };
+  }, { passive: true });
+  shot.addEventListener('touchend', (event) => {
+    if (!touch) return;
+    const dx = event.changedTouches[0].clientX - touch.x;
+    const dy = event.changedTouches[0].clientY - touch.y;
+    const quick = Date.now() - touch.at < 700;
+    touch = null;
+    if (quick && Math.abs(dx) > 60 && Math.abs(dy) < 50) step(dx < 0 ? 1 : -1);
+  }, { passive: true });
+
+  const form = $('#note-form');
+  const textarea = $('#note-body');
+  textarea.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) { event.preventDefault(); form.requestSubmit(); }
+  });
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const frame = current();
+    const body = textarea.value.trim();
+    if (!frame || !body) return;
+    const button = $('#note-save');
+    button.disabled = true;
+    try {
+      await api('/api/notes', {
+        method: 'POST',
+        body: { run: ui.run, stem: frame.stem, png_sha256: ui.shownDigest || frame.digest, body },
+      });
+      textarea.value = '';
+      ui.drafts.delete(frame.stem);
+      await load();
+      toast('Note saved on the server.');
+    } catch (error) {
+      toast(`Not saved: ${error.message}`);
+    } finally {
+      button.disabled = false;
+    }
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (!ui.openStem) return;
+    if (event.target.matches('textarea, input, select')) {
+      if (event.key === 'Escape') event.target.blur();
+      return;
+    }
+    if (event.metaKey || event.ctrlKey || event.altKey) return;
+    if (event.key === 'ArrowRight' || event.key === 'j') step(1);
+    else if (event.key === 'ArrowLeft' || event.key === 'k') step(-1);
+    else if (event.key === 'Escape') closeDetail();
+    else if (event.key === 'r') $('#toggle-reviewed').click();
+    else if (event.key === 'n') { event.preventDefault(); textarea.focus(); }
+    else return;
+    event.preventDefault();
+  });
+
+  window.addEventListener('hashchange', route);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') scheduleLoad(); });
+  setInterval(() => { if (!ui.live) load(); else renderStats(); }, 20000);
+}
+
+readPrefs();
+wire();
+load().then(route);
+connect();
+</script>
+</body>
+</html>

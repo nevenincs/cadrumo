@@ -24,6 +24,8 @@ uv run --no-sync python -m dev.tui runs               # the review runs on disk,
 uv run --no-sync python -m dev.tui snapshot baseline  # keep the current review under a name
 uv run --no-sync python -m dev.tui rasterise --run latest --cell-height 32
 uv run --no-sync python -m dev.tui diff baseline --against latest
+uv run --no-sync python -m dev.tui serve              # browse the runs live from the tailnet
+uv run --no-sync python -m dev.tui notes --json       # the notes left while browsing
 ```
 
 `rasterise` repaints an existing run's PNGs from the SVGs it already holds,
@@ -98,6 +100,38 @@ gave up on is indistinguishable from a run that was never asked for it.
   left in it would mark every frame changed on every run.
 - The `form` surface is declared SYNTHETIC by the harness. Do not read
   findings off its field content.
+
+## Reviewing from another device
+
+`serve` starts a small web server for looking at the runs from a phone or
+another machine on the tailnet. It asks the local `tailscale` client for this
+machine's tailnet address and binds that and nothing else, because the tailnet
+is its only access control; it refuses to start when Tailscale is not running
+rather than fall back to the local network.
+`--host 127.0.0.1` keeps it on this machine, `--port` moves it off 8740, and a
+wildcard address is refused.
+
+It does not wait for a render to finish. A render writes each PNG as it goes
+and the manifest only at the end, so the server watches the `png/` directory
+of every run and pushes a change to the open page as each frame lands. A frame
+appears once its file has stopped changing, never half written. Start `serve`
+first, then `render` in another terminal, and the page fills in over the run.
+
+In the page, filter by what still needs review or has open notes, open a
+frame, and either leave a note or mark it reviewed. `Reviewed, next` does both
+in one tap on a phone. Swipe or use the arrow keys to move between frames.
+
+Notes and sign-offs are stored by the server in
+`.tui-review/notes.sqlite3` (gitignored), outside the run tree, so they
+survive the server stopping, a re-render and `snapshot --replace`. Each one
+records the digest of the image it was made against. When a frame is
+re-rendered, its sign-off lapses and its notes are marked as made on an
+earlier image, so nothing reads as approval of pixels nobody has seen.
+
+`notes` prints the open notes grouped by frame, flagging any whose frame has
+been re-rendered since; `--all` includes resolved ones and `--json` gives a
+form another tool can read. `--run` names the run the notes are compared
+with, `current` by default.
 
 ## Coverage
 

@@ -90,6 +90,7 @@ _CURATED_DEV_DESTINATIONS: Final[dict[str, str]] = {
     "dev/registry/pipeline/generated_export_bootstrap_targets.toml": "the authored targets candidate staging reads",
     "dev/registry/pipeline/generated_tree_dispositions.toml": "the authored dispositions the tree screens read",
     "dev/release/burned_versions.json": "the release ledger of burned versions; durable state",
+    "dev/tui/review_page.html": "the page the visual review server serves; read, never written",
 }
 
 
