@@ -79,8 +79,9 @@ version = release
 # ── Build scope ──────────────────────────────────────────────────────────────
 # ``CADRUMO_DOCS_SCOPE`` selects how much of the set this invocation builds:
 #   * ``full`` (default, CI + deploy): the whole handbook including the API
-#     autodoc tree (``docs/api/**`` — ~1,150 ``automodule`` stubs that import the
-#     entire application) and the viewcode ``_modules`` source tree.
+#     autodoc tree (``docs/api/*.rst`` — ``automodule`` stubs that import the
+#     entire application, generated at ``builder-inited`` and never committed)
+#     and the viewcode ``_modules`` source tree.
 #   * ``user``: ONLY the operator-facing surface (index / how-to / explanation /
 #     reference / architecture / cli / glossary / the executed cli-sequences).
 #     The API autodoc tree and the ``_modules`` tree are excluded and the
@@ -184,12 +185,25 @@ _ONLY_SOURCES = {
     Path(item).as_posix() for item in os.environ.get("CADRUMO_DOCS_ONLY", "").split(os.pathsep) if item.strip()
 }
 if _ONLY_SOURCES:
-    for _source in _DOCS_ROOT.rglob("*"):
-        if _source.suffix not in {".md", ".rst"}:
-            continue
-        _relative = _source.relative_to(_DOCS_ROOT).as_posix()
-        if _relative not in _ONLY_SOURCES:
-            exclude_patterns.append(_relative)
+    _discovered_sources = {
+        _source.relative_to(_DOCS_ROOT).as_posix()
+        for _source in _DOCS_ROOT.rglob("*")
+        if _source.suffix in {".md", ".rst"}
+    }
+    if not _USER_SCOPE:
+        # The API stubs are written at builder-inited, after this list is taken,
+        # so the ones the build will generate are named by the generator rather
+        # than found on disk; otherwise every stub would join the read set.
+        from dev.docs.apidocs.manager import API_SOURCE_PACKAGE, ApiStubManager, stub_filename
+
+        _discovered_sources |= {
+            f"api/{stub_filename(_name)}"
+            for _name, _ in ApiStubManager(
+                src_cadrumo=_PROJECT_ROOT / "src" / API_SOURCE_PACKAGE,
+                docs_api=_DOCS_ROOT / "api",
+            ).discover_modules()
+        }
+    exclude_patterns += sorted(_discovered_sources - _ONLY_SOURCES)
 
 # The docs-check gate builds nitpicky (-n) with warnings-as-errors (-W), so
 # unresolved cross-references must be fixed or added to nitpick_ignore_regex
@@ -296,7 +310,6 @@ autodoc_mock_imports = [
     "pikepdf._core",
     "ofxtools",
     "openpyxl",
-    "reportlab",
     "argon2",
     "argon2.low_level",
     "keyring",
@@ -656,8 +669,8 @@ myst_fence_as_directive = ["mermaid"]
 # baseline is curated alongside autodoc_mock_imports - adding a mock import
 # without its ignore entry is incomplete.
 nitpick_ignore_regex = [
-    # Heavy native deps are replaced by autodoc mocks; their types have no
-    # cross-reference target.
+    # Heavy native deps are replaced by autodoc mocks, and ReportLab ships no
+    # inventory; their types have no cross-reference target.
     (
         r"py:.*",
         r"^(tree_sitter|tree_sitter_language_pack|qdrant_client|playwright|"
@@ -993,8 +1006,10 @@ if _USER_SCOPE:
     # MyST reports them itself, bypassing the ``missing-reference`` event that
     # ``_suppress_api_scope_reference`` answers, and consults this list before it
     # logs: a logging filter cannot stand in, because a parallel build's workers
-    # hand their warnings to the main process without passing through it.
-    nitpick_ignore_regex.append(("myst", r"api/.*"))
+    # hand their warnings to the main process without passing through it. The
+    # stubs exist only once a full-scope build generates them, so a path-form
+    # link is reported by the path its page wrote (``../api/cadrumo.rst``).
+    nitpick_ignore_regex.append(("myst", r"(\.\./)*api/.*"))
 
 # ── Linkcheck (advisory, never a blocking local gate) ─────────────────────────
 # `sphinx-build -b linkcheck` is CI-scheduled and advisory: several AEAT/BOE
@@ -1010,23 +1025,41 @@ linkcheck_timeout = 30
 def _specific_build_sources() -> list[Path] | None:
     """Return Sphinx command-line source filenames for a specific-file build.
 
+    The command line is parsed with Sphinx's own argument parser, so an option
+    placed after the positional directories is read as the option it is.
+    ``sphinx-autobuild`` invokes ``python -m sphinx build SOURCEDIR OUTPUTDIR -b
+    html -j auto``, and reading every non-option token after ``OUTPUTDIR`` as a
+    filename classified that whole-site build as a two-file build of ``html``
+    and ``auto``, which switched off every generated reference it serves.
+
     Returns:
-        ``None`` for the normal update/full build mode, otherwise the filenames
-        passed after ``sourcedir`` and ``outputdir``.
+        ``None`` for the normal update/full build mode or when this process is
+        not a Sphinx build of this source tree, otherwise the filenames given
+        after ``sourcedir`` and ``outputdir``.
     """
+    from sphinx.cmd.build import get_parser
+
     docs_root = Path(__file__).resolve().parent
     args = sys.argv[1:]
-    for index, arg in enumerate(args):
-        try:
-            if Path(arg).resolve() != docs_root:
-                continue
-        except OSError:
-            continue
-        first_filename = index + 2
-        if first_filename >= len(args):
-            return None
-        return [Path(item).resolve() for item in args[first_filename:] if not item.startswith("-")]
-    return None
+    if args[:1] == ["build"]:
+        args = args[1:]
+    if not any(_names_path(arg, docs_root) for arg in args):
+        return None
+    try:
+        parsed = get_parser().parse_args(args)
+    except SystemExit:
+        return None
+    if not _names_path(parsed.sourcedir, docs_root) or not parsed.filenames:
+        return None
+    return [Path(item).resolve() for item in parsed.filenames]
+
+
+def _names_path(argument: str, path: Path) -> bool:
+    """Return whether one command-line argument names *path*."""
+    try:
+        return Path(argument).resolve() == path
+    except OSError:
+        return False
 
 
 def _build_reads(relative_target: str) -> bool:
@@ -1060,11 +1093,20 @@ def _build_reads(relative_target: str) -> bool:
 
 def _should_generate_cli_reference() -> bool:
     """Return whether this Sphinx invocation needs generated ``docs/cli`` pages."""
-    if os.environ.get("CADRUMO_DOCS_FORCE_CLI_REFERENCE"):
-        return True
     if os.environ.get("CADRUMO_DOCS_SKIP_CLI_REFERENCE"):
         return False
     return _build_reads("cli")
+
+
+def _should_generate_api_stubs() -> bool:
+    """Return whether this Sphinx invocation needs generated ``docs/api`` stubs.
+
+    Only a full-scope build reads the API tree; user scope excludes it and
+    never imports the application to render it.
+    """
+    if _USER_SCOPE:
+        return False
+    return _build_reads("api")
 
 
 def _should_resolve_deferred_models() -> bool:
@@ -1074,8 +1116,6 @@ def _should_resolve_deferred_models() -> bool:
         # diagnostics report models; user scope loads no autodoc, so importing
         # the application here would defeat the whole point of the scope.
         return False
-    if os.environ.get("CADRUMO_DOCS_FORCE_DEFERRED_MODELS"):
-        return True
     if os.environ.get("CADRUMO_DOCS_SKIP_DEFERRED_MODELS"):
         return False
     specific_sources = _specific_build_sources()
@@ -1522,6 +1562,29 @@ def setup(app):
 
         generate_cli_reference(Path(__file__).resolve().parent)
 
+    def _generate_api_stubs(app):
+        """Write the ``api/*.rst`` automodule stubs fresh from the module tree.
+
+        The stubs are a pure function of the ``src/cadrumo`` module tree, so they
+        are build output: written into the source tree this build reads
+        (``app.srcdir``, which is a private copy when the build isolates its
+        source), gitignored, and never committed. Unchanged stubs keep their
+        bytes and mtime, so an incremental build re-reads only the pages whose
+        module set changed. Generating in ``builder-inited`` writes them before
+        Sphinx discovers the source tree for its read phase.
+
+        Args:
+            app: The Sphinx application instance.
+        """
+        if _skip_generated_output_for_i18n("api_stubs") or not _should_generate_api_stubs():
+            return
+        from dev.docs.apidocs.manager import API_SOURCE_PACKAGE, ApiStubManager
+
+        ApiStubManager(
+            src_cadrumo=_PROJECT_ROOT / "src" / API_SOURCE_PACKAGE,
+            docs_api=Path(app.srcdir) / "api",
+        ).scaffold()
+
     def _generate_glossary_reference(app):
         """Render the glossary fresh from the approved Handbook concepts.
 
@@ -1649,6 +1712,7 @@ def setup(app):
     app.connect("autodoc-skip-member", _skip_non_owner_autodoc_member, priority=100)
     app.connect("builder-inited", _resolve_deferred_models)
     app.connect("builder-inited", _generate_cli_reference)
+    app.connect("builder-inited", _generate_api_stubs)
     app.connect("builder-inited", _generate_glossary_reference)
     app.connect("builder-inited", _generate_casilla_reference)
     app.connect("builder-inited", _generate_legal_reference)

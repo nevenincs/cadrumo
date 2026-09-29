@@ -9,7 +9,7 @@ related:
   - '[[2026-07-13-docs-cli-sequences-adr]]'
 modified: '2026-09-29'
 body_schema: body-v2
-body_hash: 'sha256:cbafee83585028599ad48429af80fda8bfd34cc93ff7d9963a79dcce555bd029'
+body_hash: 'sha256:9bbaa8a6658e5de0a7a9181db4773e17be1daa645c194740f5399503277435b1'
 ---
 
 # `docs-build-workflow` plan
@@ -24,8 +24,8 @@ The decisions are D1 to D4 of the docs build workflow ADR; the goldens stay gove
 
 - [x] `S01` - Refuse sequence refresh, check and coherence on a stale local authority, naming the republish command; `dev/docs/sequences/`.
 - [ ] `S02` - Select the committed-goldens gate in the merge gate for docs, dev/docs and source changes, with a runner-persistent verdict cache; `dev/ci/change_scope.py, .github/workflows/`.
-- [ ] `S03` - Preview a page or a directory from committed goldens with a persistent doctree cache, and stop classifying docs-serve as a partial build; `dev/docs/build.py, dev/docs/serve.py, docs/conf.py, justfile`.
-- [ ] `S04` - Generate API stubs at build time, remove them from git, and guard the admitted module set with an independent derivation; `docs/conf.py, dev/docs/apidocs/, docs/api/, .gitignore, justfile`.
+- [x] `S03` - Preview a page or a directory from committed goldens with a persistent doctree cache, and stop classifying docs-serve as a partial build; `dev/docs/build.py, dev/docs/serve.py, docs/conf.py, justfile`.
+- [x] `S04` - Generate API stubs at build time, remove them from git, and guard the admitted module set with an independent derivation; `docs/conf.py, dev/docs/apidocs/, docs/api/, .gitignore, justfile`.
 - [ ] `S05` - Run the full docs build and owning gates, then open the pull request; `docs/, dev/docs/`.
 
 ## Parallelization

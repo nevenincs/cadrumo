@@ -268,11 +268,12 @@ check-identity:
 check-locales:
     @uv run --no-sync python -m dev.test_runs.command --family test-runs --label check-locales --signal locales-status -- uv run --no-sync python -m dev.locales status --json --check
 
-# Verify the committed API-reference stub tree without rewriting it.
-[doc('Verify that generated API documentation stubs match the source module tree.')]
+# The API stubs are generated at build time and never committed, so this
+# re-derives the documented module population independently of the generator.
+[doc('Verify that the generated API reference covers every module the declared exclusions admit.')]
 [group('check')]
 check-docs-api:
-    @uv run --no-sync python -m dev.docs.apidocs scaffold --check
+    @uv run --no-sync pytest -q -n0 -m unit dev/docs/tests/test_api_stubs.py
 
 # Verify that synonym ratification decisions agree with the shipped vocabulary.
 [doc('Verify the terminology synonym ratification queue.')]
@@ -381,14 +382,9 @@ check-persistence-write-paths:
 [group('check')]
 check-repository:
     @uv run --no-sync python -m dev.identity
-    @uv run --no-sync python -m dev.docs.apidocs scaffold --check
+    @just check-docs-api
     @uv run --no-sync python -m dev.actionlint
     @uv run --no-sync python -m dev.ci_contract
-
-[doc('Verify committed API-reference stubs without rewriting them.')]
-[group('check')]
-check-api-stubs:
-    @uv run --no-sync python -m dev.docs.apidocs scaffold --check
 
 # Verify workflow syntax and shell contracts without changing workflows. If
 # actionlint is unavailable, the check reports `just setup-repository-tools`.
@@ -1289,12 +1285,6 @@ report-registry-aeip:
 # recipe states whether it checks, generates committed state, writes disposable
 # local output, serves locally, provisions infrastructure, or publishes bytes.
 
-# Regenerate committed API-reference stubs through their owning generator.
-[doc('Generate committed API-reference stubs from the live source module tree; review the resulting diff.')]
-[group('docs')]
-docs-generate-api-stubs:
-    uv run --no-sync python -m dev.docs.apidocs scaffold
-
 # Regenerate committed CLI-sequence goldens through their owning runner.
 [doc('Generate committed CLI-sequence goldens through the owning sequence generator; review the resulting diff.')]
 [group('docs')]
@@ -1333,11 +1323,16 @@ report-terminology-coverage:
 docs-build:
     uv run --no-sync python -m dev.docs.build docs/conf.py
 
-# Build a single hand-authored page into disposable local output.
-[doc('Build one hand-authored documentation page into disposable local output; uploads nothing.')]
+# Preview one hand-authored page, or every page under a directory, into
+# disposable local output. PATH is relative to the repository or to docs/ and a
+# page may omit its suffix (`just docs-page how-to/modelo-303`, `just docs-page
+# how-to`). The preview renders cli-sequences from committed goldens without
+# executing them and keeps its doctree cache under var/docs-preview, so a repeat
+# run re-reads only changed pages; `docs-build` remains the full build and gate.
+[doc('Preview one documentation page or a directory of pages from committed goldens; uploads nothing.')]
 [group('docs')]
-docs-page PAGE:
-    uv run --no-sync python -m dev.docs.build --single-page {{quote(PAGE)}}
+docs-page PATH:
+    uv run --no-sync python -m dev.docs.build --single-page {{quote(PATH)}}
 
 # Serve the default user-scope documentation with live reload on docs/ edits.
 # The owning CLI's `--scope full` is required when API/docstring source watching

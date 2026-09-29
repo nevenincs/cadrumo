@@ -143,7 +143,7 @@ This result demonstrates the workflow, not the correct tax treatment for your ci
 | Find task-specific commands | [How-to guides](docs/how-to/index.md) |
 | Configure read-only AEAT access | [Authenticate with AEAT](docs/how-to/authenticate-with-aeat.md) |
 | Inspect the command tree | [Command-line interface (CLI) reference](docs/cli/index.rst) |
-| Integrate Python code | [Application programming interface (API) entry point](docs/api/cadrumo.rst) |
+| Integrate Python code | [Application programming interface (API) overview](docs/api/index.md) |
 | Understand records, formulas, and provenance | [From records to figures](docs/explanation/from-records-to-figures.md) |
 | Determine which modelos apply and inspect support | [Choose a modelo](docs/how-to/choose-modelo.md) |
 | Understand architecture and boundaries | [Architecture](docs/architecture/index.md) |
