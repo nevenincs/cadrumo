@@ -149,3 +149,13 @@ removed_fields = []
 [[revisions."2025".family_removals]]
 family = "deadline_windows"
 selector = {revision = "2024", id = "modelo-182-2024-0a"}
+
+# The informative construct is stated on 2024. This edition keys only what it
+# alone claims: its own deadline window, its own design, and the verification
+# expectation and workbook pin that are asserted per edition.
+[[revisions."2025".family_overrides]]
+family = "constructs"
+selector = {revision = "2024", id = "modelo-182-informative"}
+fields = {verification_expectations = ["modelo-182-informative-summary-verification"], workbook_parity_refs = ["modelo-182-orden-static-layout"]}
+sequence_additions = {deadline_windows = ["modelo-182-2025-0a"], source_refs = ["aeat-dr-182-2025"]}
+sequence_removals = {deadline_windows = [0], source_refs = [2]}

@@ -1,4 +1,4 @@
-[[revisions."2023-2024".applicability]]
+[[revisions."2022".applicability]]
 id = "m184-seed"
 applicable_entity_types = ["attribution_entity"]
 applicable_reason = "Modelo 184 (declaración informativa de entidades en régimen de atribución de rentas): la entidad declara las rentas obtenidas y las atribuibles a cada socio, comunero o partícipe en el ejercicio. Es la obligación propia de la entidad; la tributación de la renta corresponde a cada miembro."

@@ -1,6 +1,7 @@
 [revisions."2024"]
 id = "2024"
 application_link_source_refs = ["enrolled-modelo-182-procedure"]
+binding_source_refs = ["enrolled-modelo-182-procedure"]
 authority_grade = "applicability"
 casilla_source_refs = ["aeat-dr-182-2024", "enrolled-modelo-182-procedure"]
 # Applicability-grade historical epoch for modelo 182, ejercicio 2024, presented
@@ -42,9 +43,21 @@ casilla_source_refs = ["aeat-dr-182-2024", "enrolled-modelo-182-procedure"]
 # this modelo -- the five donativo_donor row bindings and the construct that
 # gathers them -- is grounded in the corpus only by enrolled-modelo-182-procedure,
 # a 1355-byte excerpt of Orden EHA/3021/2007 carrying arts. 1 and 5 and no anexo
-# at all. That excerpt names the modelo; it does not instruct a filing. Rather
-# than restate bindings this edition cannot ground in a record layout, it
-# declares no bindings, constructs, formulas, export layout, completeness
+# at all. That excerpt names the modelo; it does not instruct a filing.
+#
+# The bindings and the construct are nevertheless stated HERE, once, and the
+# 2025 edition inherits them. Their grounding does not change between the two
+# ejercicios: the bindings cite the same Orden EHA/3021/2007 excerpt, whose
+# window opens in 2007 and never closes, and every record field they carry sits
+# at the same position in both designs (tipo 2 18-26 N.I.F. DEL DECLARADO, 36-75
+# APELLIDOS Y NOMBRE, 79-83 % DE DEDUCCION, 84-96 IMPORTE, 132 RECURRENCIA
+# DONATIVOS; lines 208, 271, 371, 408 and 548 of both extracted designs).
+# Stating them on 2025 alone left ejercicio 2024 without a surface the law and
+# the design already gave it. The recurrencia binding carries the donor row's
+# own flag and cites no year-specific test, so the amended clave test is keyed
+# on the casilla, not on the binding. What stays on 2025 is what 2025 alone
+# claims: its verification expectation, its workbook pin and its completeness
+# manifest. This edition declares no formulas, export layout, completeness
 # manifest or verification expectations, and its 7 casillas are input_kind
 # 'manual' or 'informational' with no binding reference left dangling.
 #

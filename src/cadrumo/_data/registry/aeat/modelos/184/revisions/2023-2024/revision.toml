@@ -5,9 +5,12 @@ casilla_source_refs = ["aeat-dr-184-2023-2024"]
 live_cross_reference_source_refs = ["aeat-modelo-184-procedure"]
 reviewed_against = "2022"
 authority_grade = "filing"
-# The bundled AEAT design is independently and strictly parsed for this era;
-# older BOE designs are enrolled on their own revisions without copying this
-# layout backwards.
+# The bundled AEAT design is independently and strictly parsed for this era,
+# and its generated export layout, completeness manifest, verification
+# expectation and workbook pin stay per edition. The record-design casillas,
+# member-row bindings and informative construct the ejercicio 2022 design
+# already lays out are stated on 2022 and inherited here; this edition states
+# the two campos Orden HFP/1284/2023 art. 14 adds and keys its own grounding.
 valid_from = 2023-01-01
 valid_to = 2024-12-31
 period_selector = { year_from = 2023, year_to = 2024, periods = ["0A"] }
@@ -111,3 +114,139 @@ selector = {revision = "2022", id = "modelo-184-2022-0a"}
 [[revisions."2023-2024".family_removals]]
 family = "workbook_parity_refs"
 selector = {revision = "2022", id = "modelo-184-static-layout"}
+
+# Members stated on 2022 and inherited here. This edition keys only what it
+# alone claims: its own AEAT design as the grounding of the inherited bindings,
+# extractor link and extraction profile, and the construct's own deadline
+# windows, design, verification expectation and workbook pin.
+[[revisions."2023-2024".family_overrides]]
+family = "constructs"
+selector = {revision = "2022", id = "modelo-184-informative"}
+fields = {verification_expectations = ["modelo-184-informative-summary-verification"], workbook_parity_refs = ["modelo-184-dr"]}
+sequence_additions = {deadline_windows = ["modelo-184-2023-0a", "modelo-184-2024-0a"], source_refs = ["aeat-dr-184-2023-2024"]}
+sequence_removals = {deadline_windows = [0], source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2023-2024".family_overrides]]
+family = "application_links"
+selector = {revision = "2022", id = "modelo-184-extractor"}
+sequence_additions = {source_refs = ["aeat-dr-184-2023-2024"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023-2024".family_overrides]]
+family = "extraction_profiles"
+selector = {revision = "2022", id = "modelo-184-declaracion-pdf"}
+sequence_additions = {source_refs = ["aeat-dr-184-2023-2024"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023-2024".family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-184-member-row-nif"}
+sequence_additions = {source_refs = ["aeat-dr-184-2023-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2023-2024".family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-184-member-row-name"}
+sequence_additions = {source_refs = ["aeat-dr-184-2023-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2023-2024".family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-184-member-row-share"}
+sequence_additions = {source_refs = ["aeat-dr-184-2023-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2023-2024".family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-184-member-row-base-assigned"}
+sequence_additions = {source_refs = ["aeat-dr-184-2023-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2023-2024".family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-184-member-row-clave"}
+sequence_additions = {source_refs = ["aeat-dr-184-2023-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2023-2024".family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-184-member-row-subclave"}
+sequence_additions = {source_refs = ["aeat-dr-184-2023-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2023-2024".family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-184-member-row-codigo-provincia"}
+sequence_additions = {source_refs = ["aeat-dr-184-2023-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2023-2024".family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-184-member-row-miembro-a-31-diciembre"}
+sequence_additions = {source_refs = ["aeat-dr-184-2023-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2023-2024".family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-184-member-row-dias-miembro"}
+sequence_additions = {source_refs = ["aeat-dr-184-2023-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2023-2024".family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-184-member-row-domicilio-fiscal"}
+sequence_additions = {source_refs = ["aeat-dr-184-2023-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2023-2024".family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-184-member-row-naturaleza-inmueble"}
+sequence_additions = {source_refs = ["aeat-dr-184-2023-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2023-2024".family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-184-member-row-situacion-inmueble"}
+sequence_additions = {source_refs = ["aeat-dr-184-2023-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2023-2024".family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-184-member-row-referencia-catastral"}
+sequence_additions = {source_refs = ["aeat-dr-184-2023-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2023-2024".family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-184-member-row-clave-declarado"}
+sequence_additions = {source_refs = ["aeat-dr-184-2023-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2023-2024".family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-184-member-row-porcentaje-titularidad-inmueble"}
+sequence_additions = {source_refs = ["aeat-dr-184-2023-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2023-2024".family_overrides]]
+family = "bindings"
+selector = {revision = "2022", id = "modelo-184-member-row-dias-arrendamiento"}
+sequence_additions = {source_refs = ["aeat-dr-184-2023-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
